@@ -1,0 +1,76 @@
+<template>
+  <div class="list-wrap">
+    <div class="msg-item" v-for="item in list" :key="item.id">
+      <div class="left-info">
+        <img class="avatar" :src="item.subscriberr.avatar" alt="" />
+        <div class="text-col">
+          <div class="username">{{ item.subscriberr.nickname }}</div>
+          <div class="desc">{{ t("user.messages.subscribedText") }}</div>
+          <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
+        </div>
+      </div>
+    </div>
+    <EmptyState v-if="!list.length" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { defineProps } from "vue";
+import { useI18n } from "vue-i18n";
+import { formatTimestamp } from "@/util/utils";
+import EmptyState from "@/components/EmptyState.vue";
+
+const { t, locale } = useI18n();
+defineProps<{ list: any[] }>();
+</script>
+
+<style scoped lang="scss">
+.list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+.msg-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.8rem;
+  border: 1px solid rgba(251, 100, 182, 0.1);
+  border-radius: 1.2rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.msg-item:hover {
+  box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+}
+.left-info {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+.avatar {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 0.8rem;
+  object-fit: cover;
+}
+.text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.username {
+  font-weight: 500;
+  font-size: 1.4rem;
+  color: #101828;
+}
+.desc {
+  font-size: 1.4rem;
+  color: #4a5565;
+}
+.time {
+  font-size: 1.2rem;
+  color: #99a1af;
+  font-weight: 300;
+}
+</style>

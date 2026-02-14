@@ -1,0 +1,601 @@
+<template>
+  <div class="login">
+    <Header ref="headerRef" :cur="-1"></Header>
+
+    <div class="container">
+      <div class="title">{{ t("header.login") }}</div>
+      <div class="no-register">
+        {{ t("header.noRegister") }}<span @click="goRegister()">{{ t("header.goRegister") }}</span>
+      </div>
+
+      <div>
+        <div class="info">
+          <form id="emailForm">
+            <div class="email-item-box">
+              <div class="email-item-title"><span>*</span>{{ t("register.emailLabel") }}</div>
+              <div class="email-item">
+                <input
+                  id="email"
+                  class="email-ipt"
+                  type="text"
+                  v-model="email"
+                  :placeholder="t('register.email')"
+                  spellcheck="false"
+                  autocomplete="false"
+                  @blur="handleEmailVerify"
+                />
+              </div>
+              <div class="email-error" v-if="emailError">{{ emailError }}</div>
+            </div>
+
+            <div class="email-item-box">
+              <div class="email-item-title"><span>*</span>{{ t("register.passwordLabel") }}</div>
+              <div class="email-item">
+                <input
+                  id="password"
+                  class="email-ipt"
+                  :type="isShowPassword ? 'text' : 'password'"
+                  v-model="password"
+                  :placeholder="t('register.password')"
+                  maxlength="20"
+                  spellcheck="false"
+                  autocomplete="false"
+                  @blur="handlePasswordVerify"
+                />
+
+                <div
+                  class="icon"
+                  @click="isShowPassword = !isShowPassword"
+                  v-if="password && password.length > 0"
+                >
+                  <img src="@/assets/images/register/eye.png" v-if="isShowPassword" />
+                  <img src="@/assets/images/register/close.png" v-else />
+                </div>
+              </div>
+              <div class="email-error" v-if="passwordError">{{ passwordError }}</div>
+
+              <p class="forget-tip" @click="goForget()">{{ t("register.forgetLabel") }}</p>
+            </div>
+          </form>
+
+          <div class="email-btn" :class="isEnd ? 'on' : ''" @click="goEmailLogin()">
+            {{ t("header.login") }}
+          </div>
+        </div>
+
+        <div class="other-login">
+          <p class="other-login-title">
+            <b></b>
+            <span>{{ t("register.or") }}</span>
+            <b></b>
+          </p>
+
+          <div class="icon-box">
+            <div class="google-icon" @click="showGoogle()">
+              <img src="@/assets/images/register/google.png" alt="" />
+              <span>{{ t("register.google") }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip">
+          <div class="tip-text" v-if="locale == 'jp'">
+            {{ t("register.loginTip") }}
+            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            {{ t("register.infix") }}
+            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+            {{ t("register.tipEnd") }}
+          </div>
+
+          <div class="tip-text" v-else>
+            {{ t("register.loginTip") }}
+            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            {{ t("register.infix") }}
+            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <UploadMask v-if="isShowLoad" :visible="isShowLoad" :text="t('loading')" />
+  </div>
+</template>
+
+<script setup lang="ts" name="Register">
+import Header from "@/components/Header.vue";
+import UploadMask from "@/components/UploadMask.vue";
+
+import { computed, onMounted, ref } from "vue";
+import { baseUrl, redirectUrl } from "@/util/config";
+import { useI18n } from "vue-i18n";
+import { toast } from "@/util/toast";
+import api from "@/api/index";
+import router from "@/router";
+
+const { t, locale } = useI18n();
+
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
+
+const email = ref("");
+const isShowPassword = ref(false);
+const password = ref("");
+const emailError = ref("");
+const passwordError = ref("");
+
+const isShowLoad = ref(false);
+
+const isEnd = computed(() => {
+  if (email.value.length >= 2 && password.value.length >= 6) {
+    return true;
+  } else {
+    return false;
+  }
+});
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
+onMounted(() => {
+  const token = localStorage.getItem("token");
+  const type = localStorage.getItem("lType");
+
+  if (type && type == "1") {
+    googleLogin();
+  }
+
+  if (token) {
+    router.push("/");
+  } else {
+    initGoogle();
+  }
+});
+
+function goRegister() {
+  router.push({
+    path: "/register",
+  });
+}
+
+function goForget() {
+  router.push({
+    path: "/reset-password",
+  });
+}
+
+function initGoogle() {
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
+
+function showGoogle() {
+  isShowLoad.value = true;
+  localStorage.setItem("lType", "1");
+
+  const client_id = "258005297451-ovuch80d9h3t7mesfu7sgrdb3rntcbeu.apps.googleusercontent.com";
+  const redirect_uri = redirectUrl + "/login";
+  window.location.href =
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=" +
+    client_id +
+    "&redirect_uri=" +
+    redirect_uri +
+    "&response_type=code&scope=openid email profile&access_type=offline";
+
+  setTimeout(() => {
+    isShowLoad.value = false;
+  }, 1000);
+}
+
+function handleEmailVerify() {
+  if (!email.value) {
+    emailError.value = t("register.email");
+  } else {
+    emailError.value = "";
+  }
+}
+
+function handlePasswordVerify() {
+  if (
+    !password.value ||
+    password.value.length < 8 ||
+    password.value.length > 20 ||
+    !validatePassword(password.value)
+  ) {
+    passwordError.value = t("register.passwordError");
+  } else {
+    passwordError.value = "";
+  }
+}
+
+function goLink() {
+  localStorage.setItem("isBack", "1");
+}
+
+function validatePassword(password: string) {
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{6,20}$/u;
+  return regex.test(password);
+}
+
+function goEmailLogin() {
+  if (!isEnd.value) {
+    return false;
+  }
+
+  const data = {
+    email: email.value,
+    password: password.value,
+  };
+
+  api
+    .emailLogin(data)
+    .then((res: any) => {
+      if (res.code == 0) {
+        localStorage.setItem("token", res.data.token);
+
+        if (headerRef.value) {
+          headerRef.value.getLoginUserInfo()
+        }
+
+        router.push("/");
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      }
+    })
+    .catch((err: any) => {
+      console.log(err);
+    });
+}
+
+function googleLogin() {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const googleCode = urlParams.get("code");
+
+  if (!googleCode) {
+    isShowLoad.value = false;
+    localStorage.removeItem("lType");
+    return false;
+  }
+
+  const googleData = {
+    code: googleCode,
+    from_m: 0,
+  };
+
+  api
+    .googleLogin(googleData)
+    .then((res: any) => {
+      if (res.code == 0) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.removeItem("lType");
+
+        if (headerRef.value) {
+          headerRef.value.getLoginUserInfo()
+        }
+
+        router.push("/");
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+
+        localStorage.removeItem("lType");
+      }
+    })
+    .catch((err: any) => {
+      console.log(err);
+
+      localStorage.removeItem("lType");
+    });
+}
+</script>
+
+<style lang="scss" scoped>
+.login {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+
+  .container {
+    max-width: 48rem;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    padding: 16rem 0 3rem;
+
+    .title {
+      font: {
+        weight: 500;
+        size: 2rem;
+      }
+      line-height: 2rem;
+      text-align: center;
+      color: #101828;
+    }
+
+    .no-register {
+      margin: 1rem 0 4rem;
+      font-size: 1.6rem;
+      text-align: center;
+      color: #6a7282;
+
+      span {
+        color: #fb64b6;
+        cursor: pointer;
+      }
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem 0 3rem;
+
+      span {
+        font-size: 1.8rem;
+        color: rgba(255, 255, 255, 0.5);
+
+        &.step-text {
+          &.on {
+            color: #33a3ff;
+          }
+        }
+
+        &:nth-of-type(2) {
+          position: relative;
+          width: 18rem;
+          margin: 0 1rem;
+          border-bottom: 1px dashed transparent;
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(
+              90deg,
+              rgba(51, 163, 255, 0.1),
+              rgba(51, 163, 255, 0.5),
+              rgba(51, 163, 255, 0.1)
+            );
+            -webkit-mask: repeating-linear-gradient(
+              to right,
+              #000 0,
+              #000 4px,
+              transparent 4px,
+              transparent 8px
+            );
+            mask: repeating-linear-gradient(
+              to right,
+              #000 0,
+              #000 4px,
+              transparent 4px,
+              transparent 8px
+            );
+          }
+        }
+      }
+    }
+
+    .info {
+      .email-item-box {
+        margin: 0 0 2.4rem;
+        .email-item-title-box {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .email-item-title {
+          font-size: 1.4rem;
+          color: #4a5565;
+          span {
+            color: #fa2d47;
+          }
+        }
+
+        .email-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          margin: 1rem 0 0;
+
+          .email-ipt {
+            position: relative;
+            width: 100%;
+            height: 4.4rem;
+            padding: 1rem;
+            font: {
+              weight: normal;
+              size: 1.4rem;
+            }
+            border: 1px solid #fccee8;
+            -webkit-border-radius: 0.8rem;
+            border-radius: 0.8rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #101828;
+
+            &::placeholder {
+              font: {
+                weight: 300;
+                size: 1.2rem;
+              }
+              color: rgba(255, 255, 255, 0.7);
+            }
+
+            &:hover,
+            &:focus {
+              border: 1px solid #fb64b6;
+            }
+          }
+
+          .icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 2.4rem;
+            height: 2.4rem;
+            cursor: pointer;
+
+            img {
+              width: 2.4rem;
+              height: 2.4rem;
+            }
+          }
+        }
+
+        .email-error {
+          font: {
+            weight: 300;
+            size: 1.2rem;
+          }
+          color: #fa2d47;
+        }
+
+        .forget-tip {
+          margin: 1.2rem 0 0;
+          font: {
+            size: 1.4rem;
+          }
+          text-align: right;
+          color: #fb64b6;
+          cursor: pointer;
+        }
+      }
+
+      .email-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 4.8rem;
+        font: {
+          size: 1.6rem;
+        }
+        -webkit-border-radius: 0.8rem;
+        border-radius: 0.8rem;
+        background:
+          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        opacity: 0.7;
+        cursor: default;
+
+        &.on {
+          opacity: 1;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .tip {
+      margin: 2rem 0 0;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #6a7282;
+
+      :deep(a) {
+        color: #fb64b6;
+      }
+    }
+
+    .other-login {
+      margin: 2rem 0 0;
+
+      .other-login-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 1.4rem;
+        font-size: 1.4rem;
+        color: #6a7282;
+
+        b {
+          width: 21.2rem;
+          height: 1px;
+          background: rgba(251, 100, 182, 0.2);
+        }
+      }
+      .icon-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .google-icon {
+          position: relative;
+          width: 100%;
+          height: 4.8rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #fb64b6;
+          -webkit-border-radius: 0.8rem;
+          border-radius: 0.8rem;
+          cursor: pointer;
+
+          &:hover {
+            background: rgba(251, 100, 182, 0.06);
+          }
+
+          .g_id_signin {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 4。8rem;
+            opacity: 0;
+            overflow: hidden;
+            z-index: 600;
+          }
+        }
+
+        img {
+          width: 3.2rem;
+          height: 3.2rem;
+          margin: 0 1rem 0 0;
+          cursor: pointer;
+        }
+
+        span {
+          font-size: 1.4rem;
+          color: #fb64b6;
+        }
+      }
+    }
+  }
+
+  .load {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 800;
+    img {
+      width: 3.2rem;
+      height: 3.2rem;
+      animation: rotate 2s linear infinite;
+    }
+    p {
+      margin: 2rem 0 0;
+      font: {
+        size: 1.8rem;
+        weight: 500;
+      }
+      color: #ffffff;
+    }
+  }
+}
+</style>
