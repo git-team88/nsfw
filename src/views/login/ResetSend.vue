@@ -156,7 +156,7 @@ function confirmReset() {
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
         background:
-          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+          linear-gradient(170deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
         color: #ffffff;
         cursor: pointer;
       }

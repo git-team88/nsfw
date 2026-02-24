@@ -26,7 +26,7 @@
             v-for="(style, index) in styles"
             :key="index"
             class="style-item"
-            :class="{ selected: selectedStyle == (locale == 'jp' ? style.name_jp : locale == 'zh' ? style.name_cn : style.name) }"
+            :class="{ selected: isStyleSelected(style) }"
             @click="selectStyle(style.name)"
           >
             <img :src="style.image" :alt="locale == 'jp' ? style.name_jp : locale == 'zh' ? style.name_cn : style.name" />
@@ -75,6 +75,14 @@ const emit = defineEmits<{
 }>();
 
 const selectedStyle = ref<string | null>(props.currentSelectedStyle || null);
+
+const isStyleSelected = (style: any) => {
+  if (!selectedStyle.value) return false;
+  // Check if selectedStyle matches any of the name variants
+  return selectedStyle.value === style.name ||
+         selectedStyle.value === style.name_cn ||
+         selectedStyle.value === style.name_jp;
+};
 
 const selectStyle = (styleName: string) => {
   selectedStyle.value = styleName;

@@ -752,21 +752,29 @@ function formatContent(content: string): string {
 
   let result = content;
 
-  // 先处理 #标签：只匹配以 # 开头的词
-  // 匹配规则：# 前面是开头、空格或特殊字符，# 后面匹配完整词组
-  result = result.replace(/(^|[\s\u00A0])#([a-zA-Z0-9\u4e00-\u9fa5_.\-]+)/g, (match, prefix, tag) => {
-    return `${prefix}<a href="javascript:void(0)" class="tag-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByTag('#${tag}')">#${tag}</a>`;
+  // 处理 #标签
+  // 匹配规则：# 前面是开头、空格、特殊字符或任意字符，# 后面匹配完整词组（直到遇到空格、@、# 或其他特殊字符）
+  // 使用负向后顾(?<!<a[^>]*>) 避免处理已经转换的链接
+  result = result.replace(/(^|[\s\u00A0]|(?<!<a[^>]*>).?)#([a-zA-Z0-9\u4e00-\u9fa5_.\-]+)(?=\s|@|#|$|[^\w\u4e00-\u9fa5_.\-])/g, (match, prefix, tag) => {
+    // 如果prefix是完整的字符（不是空格或开头），需要保留它
+    const preservePrefix = prefix && prefix !== ' ' && prefix !== '\u00A0' && prefix !== '';
+    const displayPrefix = preservePrefix ? prefix : (prefix || '');
+    return `${displayPrefix}<a href="javascript:void(0)" class="tag-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByTag('#${tag}')">#${tag}</a>`;
   });
 
-  // 处理 @提及：只匹配以 @ 开头的词
-  // 匹配规则：@ 前面是开头、空格或特殊字符，@ 后面匹配完整词组（包括域名格式和多个@）
+  // 处理 @提及
+  // 匹配规则：@ 前面是开头、空格、特殊字符或任意字符，@ 后面匹配完整词组（包括域名格式和多个@）
   // 支持: @user, @user@domain.com, @herui@ifensi.com 等格式
-  result = result.replace(/(^|[\s\u00A0])@([a-zA-Z0-9\u4e00-\u9fa5_.\-@]+)/g, (match, prefix, mention) => {
+  // 匹配直到遇到空格、# 或其他特殊字符（但保留@符号用于邮箱格式）
+  result = result.replace(/(^|[\s\u00A0]|(?<!<a[^>]*>).?)@([a-zA-Z0-9\u4e00-\u9fa5_.\-@]+)(?=\s|#|$|(?![a-zA-Z0-9\u4e00-\u9fa5_.\-@]))/g, (match, prefix, mention) => {
     // 避免重复处理已经转换的链接
     if (match.includes('</a>') || match.includes('href=')) {
       return match;
     }
-    return `${prefix}<a href="javascript:void(0)" class="mention-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${mention}')">@${mention}</a>`;
+    // 如果prefix是完整的字符（不是空格或开头），需要保留它
+    const preservePrefix = prefix && prefix !== ' ' && prefix !== '\u00A0' && prefix !== '';
+    const displayPrefix = preservePrefix ? prefix : (prefix || '');
+    return `${displayPrefix}<a href="javascript:void(0)" class="mention-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${mention}')">@${mention}</a>`;
   });
 
   return result;
@@ -1141,9 +1149,8 @@ const isSensitiveContentLocked = computed(() => {
 
   // Check if user is teenager or content is sensitive
   const isTeenager = detail.value.is_teenager == 1;
-  const isSensitiveContent = detail.value.is_nsfw == '1';
 
-  return isTeenager || isSensitiveContent;
+  return isTeenager;
 });
 
 const isVideoLocked = computed(() => {
@@ -2788,7 +2795,7 @@ watch(
     border-radius: 0.8rem;
     color: #ffffff;
     cursor: pointer;
-    background: linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+    background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
 
     img {
       width: 2rem;
@@ -2947,6 +2954,7 @@ watch(
     color: #364153;
     line-height: 2rem;
     margin-bottom: 0.6rem;
+    word-break: break-all;
   }
 
   /* Comment Media (Images and Videos) */
@@ -3113,6 +3121,7 @@ watch(
   min-height: 8.6rem;
   display: flex;
   align-items: center;
+  z-index: 20;
 
   &.is-inputting {
     align-items: flex-end;

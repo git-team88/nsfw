@@ -75,7 +75,7 @@
                 </div>
               </div>
               <div class="content-info">
-                <div class="content-desc">{{ post.title }}</div>
+                <div class="content-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
                 <div class="content-meta">
                   <div class="author-info" @click.stop="goToUserHome(post.author.id)">
                     <img :src="post.author.avatar" alt="" class="author-avatar" />
@@ -182,6 +182,7 @@ interface Post {
   id: number;
   type: string;
   title: string;
+  description: string;
   cover: string;
   time: string;
   style?: CSSProperties;
@@ -323,6 +324,7 @@ async function loadData(fromLoadMore = false) {
             id: item.id,
             type: item.type === '1' ? 'image' : item.type === '2' ? 'article' : 'video',
             title: item.title || '',
+            description: item.content || '',
             cover: item.cover || '',
             time: formatTime(item.created_at),
             author: {
@@ -846,6 +848,7 @@ watch(postList, () => {
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      word-break: break-all;
     }
 
     .content-meta {

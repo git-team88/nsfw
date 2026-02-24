@@ -15,7 +15,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="error-state">
         <div class="error-message">{{ error }}</div>
-        <button class="retry-button" @click="loadCharacters">{{ t('characterLibrary.retry') }}</button>
+        <!-- <button class="retry-button" @click="loadCharacters">{{ t('characterLibrary.retry') }}</button> -->
       </div>
 
       <!-- Character Grid -->
@@ -297,7 +297,6 @@ onMounted(() => {
   font-size: 1.4rem;
   color: #ff4d4f;
   margin-bottom: 1.6rem;
-  max-width: 40rem;
 }
 
 .retry-button {

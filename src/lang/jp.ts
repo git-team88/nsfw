@@ -491,7 +491,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
   header: {
     title1: `ホーム`,
     title2: "作成",
-    title3: "マイプロジェクト",
+    title3: "私のプロジェクト",
     title4: "キャラクターライブラリ",
     recharge: "チャージ",
     register: "サインアップ",
@@ -739,9 +739,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     step2: "ステップ2",
     emailLabel: "メールアドレス",
     email: "メールアドレスを入力",
-    passwordLabel: "パスワード",
-    password: "パスワード：6-20文字（英数字、記号、スペースなし）",
-    passwordError: "パスワード：6-20文字（英数字、記号、スペースなし）",
+    passwordLabel: "パスワード（8〜20文字（半角英字＋数字＋記号／全角・スペース不可））",
+    password: "パスワード：8〜20文字（半角英字＋数字＋記号／全角・スペース不可）",
+    passwordError: "形式が正しくありません（8〜20文字／英字・数字・記号／全角・スペース不可）",
     codeLabel: "認証コード",
     code: "認証コードを入力",
     send: "コードを送信",
@@ -860,6 +860,11 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     nextPage: "次へ",
     of: "の",
     castBtn: "キャスト",
+    loading: "読み込み中...",
+    retry: "再試行",
+    error: {
+      loadFailed: "キャラクターの読み込みに失敗しました。もう一度お試しください。"
+    },
     emptyState: {
       title: "まだキャラクターがありません",
       description: "最初のキャラクターを作成して開始しましょう"

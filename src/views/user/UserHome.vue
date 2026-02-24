@@ -1066,6 +1066,8 @@ async function loadPosts(reset = false) {
     noMore.value = false;
   }
 
+
+
   loading.value = true;
   let authorId = route.query.id;
 
@@ -1879,8 +1881,7 @@ async function deletePost(post: Post) {
       justify-content: center;
       cursor: pointer;
       img.cover-img {
-        width: auto;
-        max-width: 100%;
+        width: 100%;
         display: block;
         height: 34.4rem;
         border-radius: 1.2rem;
@@ -1924,6 +1925,7 @@ async function deletePost(post: Post) {
         line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        word-break: break-all;
       }
 
       .card-footer {

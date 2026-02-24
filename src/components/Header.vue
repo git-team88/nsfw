@@ -381,7 +381,6 @@ function goNav(item: { path: string; name?: string }, index: number) {
 
 function goPath(type: { path: string; name: string }) {
   if (type.name === t('header.type1')) {
-    // Call getProject API to get real AI creations data
     fetchAICreations();
   } else {
     router.replace(type.path);
@@ -391,14 +390,11 @@ function goPath(type: { path: string; name: string }) {
 async function fetchAICreations() {
   isShowLoad.value = true;
   try {
-    // Call getProject API with appropriate parameters
-    // publish_type: 0 = all, type: 'all' = all types, page: 1, limit: 20
     const res = await api.getProject(0, 'all', 1, 20) as any;
 
     if (res.code === 0 || res.code === 200) {
-      const data = res.data?.data || res.data || [];
+      const data = res.data?.data_list || [];
 
-      // Format the data to match what the modal expects
       aiCreations.value = data.map((item: any) => ({
         id: item.id,
         type: item.type === '1' ? 'video' : 'image',
@@ -408,7 +404,6 @@ async function fetchAICreations() {
         createdAt: item.created_at
       }));
 
-      // Check if there are any AI creations
       if (aiCreations.value.length === 0) {
         toast(t('header.aiTip'));
       } else {

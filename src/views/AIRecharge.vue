@@ -13,7 +13,7 @@
           <div class="section-title-box">
             <div class="section-title">{{ t('aiRecharge.selectPlan') }}</div>
 
-            <span @click="goToComputingPowerRules">{{ t('aiRecharge.computingPowerRules') }}</span>
+            <span @click="goToComputingPowerRules">{{ t('aiRecharge.computingPowerRules') }} →</span>
           </div>
 
           <div class="plan-grid">
@@ -101,7 +101,7 @@ function goToComputingPowerRules() {
   max-width: 90ch;
   min-height: calc(100vh - 14rem);
   margin: 12rem auto 2rem;
-  padding: 2.4rem;
+  padding: 2.4rem 3rem;
   position: relative;
   border: 1px solid rgba(251, 100, 182, 0.2);
   -webkit-border-radius: 1.2rem;
@@ -139,12 +139,12 @@ function goToComputingPowerRules() {
 .content-box {
   .page-title {
     position: relative;
-    padding-bottom: 2.4rem;
+    padding-bottom: 1.6rem;
     font-size: 2.4rem;
     font-weight: 500;
     text-align: center;
     color: #fb64b6;
-    margin-bottom: 4rem;
+    margin-bottom: 3.6rem;
 
     &::after{
       position: absolute;
@@ -215,7 +215,7 @@ function goToComputingPowerRules() {
         }
 
         .plan-price {
-          font-size: 1.8rem;
+          font-size: 2.4rem;
           font-weight: 600;
           color: #364153;
           margin-bottom: 2.4rem;
@@ -230,11 +230,10 @@ function goToComputingPowerRules() {
 
   .agreements {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 1.2rem;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.4rem;
 
     .check-item {
       display: flex;
@@ -267,7 +266,7 @@ function goToComputingPowerRules() {
     width: 24rem;
     height: 4.8rem;
     margin: 0 auto;
-    background: #fb64b6;
+    background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
     color: #ffffff;
     border: none;
     border-radius: 0.8rem;
@@ -332,41 +331,6 @@ function goToComputingPowerRules() {
         &:last-child {
           margin-bottom: 0;
         }
-      }
-    }
-  }
-}
-
-@media (max-width: 1024px) {
-  .content-box {
-    .recharge-plan-section {
-      .plan-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 2rem 2.4rem;
-  }
-
-  .content-box {
-    .recharge-plan-section {
-      .plan-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.6rem;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .content-box {
-    .recharge-plan-section {
-      .plan-grid {
-        grid-template-columns: 1fr;
       }
     }
   }

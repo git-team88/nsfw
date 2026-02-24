@@ -52,7 +52,7 @@ const props = defineProps<{
   modelValue: { start: string; end: string };
   theme?: "pink" | "blue";
 }>();
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "change"]);
 const open = ref(false);
 const popStyle = ref<Record<string, string>>({});
 
@@ -169,6 +169,7 @@ function onApply() {
   tempStart.value = s;
   tempEnd.value = e;
   emit("update:modelValue", { start: s, end: e });
+  emit("change", { start: s, end: e }); // 触发 change 事件
   open.value = false;
 }
 

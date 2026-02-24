@@ -209,7 +209,6 @@ const showEmailModal = ref(false);
 const showUnbindModal = ref(false);
 const unbindType = ref<"email" | "google" | null>(null);
 const email = ref("");
-const emailTxt = ref(t("register.send"));
 const emailToken = ref("");
 const isHoverCode = ref(false);
 const isSend = ref(false);
@@ -223,6 +222,13 @@ const codeError = ref("");
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
 const isGrecaptchaReady = ref(false);
+
+const emailTxt = computed(() => {
+  if (isSend.value && count.value < 60) {
+    return `${count.value}`;
+  }
+  return t("register.send");
+});
 
 const emailBind = computed(() => userInfo.value.bind?.find((b) => b.type == "email"));
 const googleBind = computed(() => userInfo.value.bind?.find((b) => b.type == "google"));
@@ -285,6 +291,9 @@ function handleEmailAction() {
 }
 
 function closeEmailModal() {
+  emailError.value = "";
+  passwordError.value = "";
+  codeError.value = "";
   showEmailModal.value = false;
 }
 
@@ -297,7 +306,7 @@ function handleEmailVerify() {
 }
 
 function validatePassword(password: string) {
-  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{6,20}$/u;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{8,20}$/u;
   return regex.test(password);
 }
 
@@ -388,10 +397,10 @@ function timeCount() {
       timer.value = null;
       isSend.value = false;
       count.value = 60;
-      emailTxt.value = t("register.send");
+      // emailTxt 现在是 computed，会自动更新，所以不需要手动赋值
     } else {
       count.value -= 1;
-      emailTxt.value = `${count.value}`;
+      // emailTxt 现在是 computed，会自动更新为 count.value
     }
   }, 1000);
 }
@@ -726,7 +735,7 @@ function confirmUnbind() {
           weight: 300;
           size: 1.2rem;
         }
-        color: rgba(255, 255, 255, 0.7);
+        color: #6a7282;
       }
 
       &:hover,
@@ -767,7 +776,7 @@ function confirmUnbind() {
           weight: 300;
           size: 1.2rem;
         }
-        color: rgba(255, 255, 255, 0.7);
+        color: #6a7282;
       }
 
       &:hover,
@@ -799,6 +808,7 @@ function confirmUnbind() {
   }
 
   .email-error {
+    margin-top: 0.4rem;
     font: {
       weight: 300;
       size: 1.2rem;
@@ -881,7 +891,7 @@ function confirmUnbind() {
   text-align: center;
   font-size: 1.2rem;
   color: #6a7282;
-  margin-top: 1.2rem;
+  margin: 1.2rem 2.4rem 0;
 }
 .tip a {
   color: #fb64b6;

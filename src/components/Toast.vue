@@ -25,7 +25,7 @@
     setTimeout(() => {
       isShowToast.value = false
       toastMsg.value = ''
-    }, 3000)
+    }, 4000)
   }
 
   defineExpose({ show })

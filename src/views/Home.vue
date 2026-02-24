@@ -307,14 +307,13 @@
     <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
 
-    <!-- User Info Modal -->
-    <UserInfoModal
+    <!-- <UserInfoModal
       :visible="showUserInfoModal"
       :userInfo="userInfo"
       @confirm="handleUserInfoConfirm"
       @close="handleUserInfoCancel"
       @skip="handleUserInfoSkip"
-    />
+    /> -->
   </div>
 </template>
 
@@ -1194,7 +1193,7 @@ onMounted(() => {
     homePageRef.value.addEventListener('scroll', handleScroll);
   }
 
-  checkFirstRegister();
+  // checkFirstRegister();
 });
 
 onBeforeUnmount(() => {
@@ -1932,6 +1931,7 @@ function handleScroll() {
           line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          word-break: break-all;
         }
 
         .content-meta {

@@ -29,7 +29,9 @@
             </div>
 
             <div class="email-item-box">
-              <div class="email-item-title"><span>*</span>{{ t("register.passwordLabel") }}</div>
+              <div class="email-item-title">
+                <span>*</span>{{ t("register.passwordLabel") }}
+              </div>
               <div class="email-item">
                 <input
                   id="password"
@@ -160,6 +162,11 @@ function goRegister() {
 }
 
 function goForget() {
+  // 保存当前输入的邮箱到缓存
+  if (email.value) {
+    localStorage.setItem("lEmail", email.value);
+  }
+
   router.push({
     path: "/reset-password",
   });
@@ -217,7 +224,7 @@ function goLink() {
 }
 
 function validatePassword(password: string) {
-  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{6,20}$/u;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{8,20}$/u;
   return regex.test(password);
 }
 
@@ -325,6 +332,10 @@ function googleLogin() {
       span {
         color: #fb64b6;
         cursor: pointer;
+
+        &:hover{
+          text-decoration: underline;
+        }
       }
     }
 
@@ -427,7 +438,7 @@ function googleLogin() {
                 weight: 300;
                 size: 1.2rem;
               }
-              color: rgba(255, 255, 255, 0.7);
+              color: #6a7282;
             }
 
             &:hover,
@@ -452,6 +463,7 @@ function googleLogin() {
         }
 
         .email-error {
+          margin-top: 0.4rem;
           font: {
             weight: 300;
             size: 1.2rem;
@@ -467,6 +479,10 @@ function googleLogin() {
           text-align: right;
           color: #fb64b6;
           cursor: pointer;
+
+          &:hover{
+            text-decoration: underline;
+          }
         }
       }
 
@@ -502,6 +518,10 @@ function googleLogin() {
 
       :deep(a) {
         color: #fb64b6;
+
+        &:hover{
+          text-decoration: underline;
+        }
       }
     }
 

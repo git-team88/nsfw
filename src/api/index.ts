@@ -244,10 +244,13 @@ export default {
         "Content-Type": "application/json",
       },
     }),
-  postDetail: (id: number | string) =>
+  postDetail: (data: any) =>
     axios.request({
-      url: "post/getPostDetailPublic?post_id=" + id,
-      method: "GET",
+      url: "post/getPostDetailPublic",
+      method: "POST",
+      header: {
+        "Content-Type": "application/json",
+      },
     }),
   modifyPost: (data: any) =>
     axios.request({

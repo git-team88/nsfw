@@ -152,7 +152,6 @@ const { t, locale } = useI18n();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
-const emailTxt = ref(t("register.send"));
 const emailToken = ref("");
 const isHoverCode = ref(false);
 const isSend = ref(false);
@@ -169,6 +168,14 @@ const showBirthday = ref(false);
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
 const isGrecaptchaReady = ref(false);
+
+// 将 emailTxt 改为 computed，以便语言切换时自动更新
+const emailTxt = computed(() => {
+  if (isSend.value && count.value < 60) {
+    return `${count.value}`;
+  }
+  return t("register.send");
+});
 
 const isEnd = computed(() => {
   if (email.value.length >= 2 && password.value.length >= 4 && code.value.length >= 2) {
@@ -366,10 +373,10 @@ function timeCount() {
       timer.value = null;
       isSend.value = false;
       count.value = 60;
-      emailTxt.value = t("register.send");
+      // emailTxt 现在是 computed，会自动更新，所以不需要手动赋值
     } else {
       count.value -= 1;
-      emailTxt.value = `${count.value}`;
+      // emailTxt 现在是 computed，会自动更新为 count.value
     }
   }, 1000);
 }
@@ -401,7 +408,7 @@ function handleBirthdayConfirm(date: { year: number; month: number; day: number 
           }
 
           localStorage.setItem("token", res.data.token);
-          localStorage.setItem("isFirstRegister", "1");
+          // localStorage.setItem("isFirstRegister", "1");
           router.push("/");
         } else {
           showBirthday.value = false;
@@ -420,7 +427,7 @@ function goLink() {
 }
 
 function validatePassword(password: string) {
-  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{6,20}$/u;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{8,20}$/u;
   return regex.test(password);
 }
 
@@ -486,7 +493,7 @@ function googleRegister() {
         localStorage.removeItem("rType");
         localStorage.removeItem('birthday'); // Clean up birthday data
 
-        localStorage.setItem("isFirstRegister", "1");
+        // localStorage.setItem("isFirstRegister", "1");
         router.push("/");
       } else {
         window.location.href = "/register";
@@ -651,7 +658,7 @@ function googleRegister() {
                 weight: 300;
                 size: 1.2rem;
               }
-              color: rgba(255, 255, 255, 0.7);
+              color: #6a7282;
             }
 
             &:hover,
@@ -692,7 +699,7 @@ function googleRegister() {
                 weight: 300;
                 size: 1.2rem;
               }
-              color: rgba(255, 255, 255, 0.7);
+              color: #6a7282;
             }
 
             &:hover,
@@ -724,6 +731,7 @@ function googleRegister() {
         }
 
         .email-error {
+          margin-top: 0.4rem;
           font: {
             weight: 300;
             size: 1.2rem;
@@ -768,6 +776,10 @@ function googleRegister() {
 
       :deep(a) {
         color: #fb64b6;
+
+        &:hover{
+          text-decoration: underline;
+        }
       }
     }
 
@@ -831,135 +843,6 @@ function googleRegister() {
         span {
           font-size: 1.4rem;
           color: #fb64b6;
-        }
-      }
-    }
-
-    .age-info {
-      .age-title {
-        margin: 0 0 3rem;
-        font: {
-          size: 1.4rem;
-        }
-        text-align: center;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .age-list {
-        padding: 0 2.8rem;
-        .age-item {
-          width: 100%;
-          height: 4.8rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 0 2rem;
-          font-size: 1.4rem;
-          background: linear-gradient(
-            90deg,
-            rgba(51, 163, 255, 0) 0%,
-            rgba(51, 163, 255, 0.1) 50%,
-            rgba(51, 163, 255, 0) 100%
-          );
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          &:last-child {
-            margin: 0;
-          }
-
-          &:hover {
-            background: linear-gradient(
-              90deg,
-              rgba(51, 163, 255, 0) 0%,
-              rgba(51, 163, 255, 0.2) 50%,
-              rgba(51, 163, 255, 0) 100%
-            );
-          }
-
-          &.on {
-            position: relative;
-            z-index: 1;
-
-            &::before {
-              content: "";
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              border-radius: inherit;
-              background: linear-gradient(
-                90deg,
-                rgba(51, 163, 255, 0) 0%,
-                rgba(51, 163, 255, 0.2) 50%,
-                rgba(51, 163, 255, 0) 100%
-              );
-              background-blend-mode: screen;
-              z-index: -1;
-              padding: 1px;
-              -webkit-mask:
-                linear-gradient(white 0 0) content-box,
-                linear-gradient(white 0 0);
-              mask:
-                linear-gradient(white 0 0) content-box,
-                linear-gradient(white 0 0);
-              -webkit-mask-composite: destination-out;
-              mask-composite: exclude;
-            }
-            background: linear-gradient(
-              90deg,
-              rgba(51, 163, 255, 0) 0%,
-              rgba(51, 163, 255, 0.2) 50%,
-              rgba(51, 163, 255, 0) 100%
-            );
-            color: #33a3ff;
-          }
-        }
-      }
-
-      .age-btn-box {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 3rem 2.8rem 0;
-        .age-back {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 18rem;
-          height: 4.8rem;
-          font-size: 1.6rem;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid #33a3ff;
-          border-radius: 0.8rem;
-          color: #33a3ff;
-          cursor: pointer;
-          transition: all 0.3s ease;
-
-          &:hover {
-            background: rgba(51, 163, 255, 0.1);
-          }
-        }
-
-        .age-btn {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 18rem;
-          height: 4.8rem;
-          font-size: 1.6rem;
-          background: linear-gradient(90deg, #fb64b6 0%, #ff94ce 100%);
-          border-radius: 0.8rem;
-          color: #ffffff;
-          cursor: pointer;
-          transition: all 0.3s ease;
-
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(251, 100, 182, 0.3);
-          }
         }
       }
     }

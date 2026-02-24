@@ -45,6 +45,7 @@
 import api from "@/api";
 import Header from "@/components/Header.vue";
 import router from "@/router";
+import { baseUrl, siteKey } from "@/util/config";
 import { toast } from "@/util/toast";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -97,27 +98,29 @@ function goSendEmail() {
   }
 
   grecaptcha
-    .execute("6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF", { action: "register" })
+    .execute(siteKey, { action: "submit" })
     .then(function (token: any) {
       if (token) {
-        const data = {
-          email: email.value,
-          "g-recaptcha-response": token,
-        };
+        const formData = new FormData();
+        formData.append("email", email.value);
+        formData.append("g-recaptcha-response", token);
+        formData.append("siteKey", siteKey);
 
-        api
-          .resetSendEmail(data)
-          .then((res: any) => {
+        fetch(baseUrl + "login/sendEmailVerifyCode", {
+          method: "post",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((res) => {
             if (res.code == 0) {
+              toast(t("success"));
               localStorage.removeItem("lEmail");
               router.push("/reset-send");
             } else {
               toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
             }
           })
-          .catch((err: any) => {
-            console.log(err);
-          });
+          .catch((error) => toast(t("fail")));
       } else {
         toast(t("fail"));
       }
@@ -141,9 +144,8 @@ function goSendEmail() {
     .title {
       font: {
         weight: 500;
-        size: 2rem;
+        size: 3rem;
       }
-      line-height: 2rem;
       text-align: center;
       color: #101828;
     }
@@ -152,7 +154,7 @@ function goSendEmail() {
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      margin: 4rem 0;
+      margin: 4rem 0 6rem;
 
       .step-item {
         position: relative;
@@ -188,7 +190,6 @@ function goSendEmail() {
     }
 
     .content {
-      margin: 21rem 0 0;
       .email-title {
         font-size: 1.4rem;
         color: #4a5565;
@@ -218,7 +219,7 @@ function goSendEmail() {
               weight: 300;
               size: 1.2rem;
             }
-            color: rgba(255, 255, 255, 0.5);
+            color: #6a7282;
           }
 
           &:hover,
@@ -232,7 +233,7 @@ function goSendEmail() {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 18rem;
+        width: 100%;
         height: 4.8rem;
         margin: 0 auto;
         font: {
@@ -241,9 +242,9 @@ function goSendEmail() {
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
         background:
-          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+          linear-gradient( 170deg, #FB64B6 0%, #FF94CE 50%, #FB64B6 100%);
         color: #ffffff;
-        opacity: 0.7;
+        opacity: 0.8;
         cursor: default;
 
         &.on {

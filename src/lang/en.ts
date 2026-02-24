@@ -260,6 +260,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
 
 VIII. Other Provisions<br />
 If any clause of this Agreement is invalid or unenforceable in whole or in part for any reason, the remaining clauses of this Agreement shall remain valid and binding.`,
+
   privacy: `Privacy Policy<br />
 Welcome to use our products and related services! Please carefully read, understand and comply with this Privacy Policy.<br />
 “the Platform” refers to the official website and mobile application legally owned and operated by ACG Worlds Co., Ltd. (hereinafter referred to as “we”, “us” or “our company”) under the name of ACG Worlds. On the Platform, we provide you with services including AI content generation (text generation, image generation, audio and video generation), community publishing and other related services.<br />
@@ -300,7 +301,7 @@ When you use the publishing function, you may choose to upload images from your 
 Based on your publishing/interaction needs, the AI model system will process the original portrait information you actively upload. Such information is necessary for providing the Services. In accordance with legal requirements, we adopt strict encryption measures during the collection, transmission and storage of such information to ensure your information security.<br />
 When you share information or receive shared information, we will read contents such as codes and links in the clipboard to realize redirection and sharing of information content.<br />
 1.4 Interaction and Communication<br />
-When you conduct interactive communication, we will collect and publicly display your interaction records and content, including browsing, liking, commenting, following, collecting, reposting, sharing and @ other users.<br />
+When you conduct interactive communication, we will collect and publicly display your interaction records and content, including browsing, liking, commenting, following, collecting, reposting, sharing and {'@'} other users.<br />
 When you share or receive shared content, activity information and other materials, we need to access your clipboard to read codes, sharing links and URLs to realize services such as redirection, sharing, benefit collection and activity linkage, helping users open relevant content and improving user experience. We only identify clipboard content locally and upload it to the server only when it belongs to our instructions.<br />
 In addition, we may need to access your album to facilitate your sharing or receiving of shared videos or images.<br />
 1.5 Feedback<br />
@@ -686,9 +687,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     step2: "Step2",
     emailLabel: "Email Address",
     email: "Enter your email address",
-    passwordLabel: "Password",
-    password: "Password:6-20 chars (letters, numbers, symbols, no spaces)",
-    passwordError: "Password:6-20 chars (letters, numbers, symbols, no spaces)",
+    passwordLabel: "Password (8-20 chars (letters, numbers, symbols, no spaces))",
+    password: 'Password:8-20 chars (letters, numbers, symbols, no spaces)',
+    passwordError: 'Password:8-20 chars (letters, numbers, symbols, no spaces)',
     codeLabel: "Verification Code",
     code: "Enter verification code",
     send: "Send A Code",
