@@ -136,8 +136,8 @@
             <div class="filters">
               <DateRangePicker
                 v-model="dateRange"
-                :start-date="getStartDate()"
-                :end-date="getEndDate()"
+                :start-date="''"
+                :end-date="''"
                 theme="pink"
                 class="custom-date-picker"
                 @change="onDateChange"
@@ -499,7 +499,7 @@ const isSelf = computed(() => {
 });
 
 const currentTab = ref("all");
-const dateRange = ref({ start: getStartDate(), end: getEndDate() });
+const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
 // Tabs for filter-bar
@@ -1201,11 +1201,26 @@ async function loadPosts(reset = false) {
 }
 
 function goDetail(id: number) {
+  const queryParams: any = {
+    id: id,
+    type: 4,
+    uid: route.query.id || ''
+  };
+
+  // Add search keyword if present
+  if (searchKeyword.value) {
+    queryParams.keyword = searchKeyword.value;
+  }
+
+  // Add date range only if both start and end have values
+  if (dateRange.value && dateRange.value.start && dateRange.value.end) {
+    queryParams.start_day = dateRange.value.start;
+    queryParams.end_day = dateRange.value.end;
+  }
+
   router.push({
     path: '/detail',
-    query: {
-      id: id
-    }
+    query: queryParams
   });
 }
 

@@ -168,11 +168,11 @@
           <!-- Tabs -->
           <div class="content-tabs">
             <span
-              v-for="tab in contentTabs"
-              :key="tab.id"
+              v-for="(tab, index) in contentTabs"
+              :key="index"
               class="tab-btn"
               :class="{ active: activeContentTab == tab.id }"
-              @click="switchContentTab(tab.id)"
+              @click="switchContentTab(tab.id, index)"
             >
               {{ t(tab.label) }}
             </span>
@@ -234,14 +234,14 @@
             v-else-if="allContent.length > 0"
             class="waterfall"
             ref="waterfallRef"
+            :key="`waterfall-${activeContentTab}`"
             :style="{ height: containerHeight + 'px' }"
           >
             <div
-              v-for="item in displayContent"
+              v-for="(item, index) in displayContent"
               :key="item.id"
               class="content-item"
-              :style="item.style"
-              ref="contentCardRefs"
+              :ref="(el) => setContentCardRef(el, index)"
               @click="navigateToDetail(item.id)"
             >
               <div class="content-image">
@@ -307,18 +307,18 @@
     <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
 
-    <!-- <UserInfoModal
+    <UserInfoModal
       :visible="showUserInfoModal"
       :userInfo="userInfo"
       @confirm="handleUserInfoConfirm"
       @close="handleUserInfoCancel"
       @skip="handleUserInfoSkip"
-    /> -->
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -371,8 +371,15 @@ const isLoggedIn = computed(() => {
 
 // Waterfall layout state
 const waterfallRef = ref<HTMLElement | null>(null);
-const contentCardRefs = ref<HTMLElement[]>([]);
+const contentCardRefs = ref<(HTMLElement | null)[]>([]);
 const containerHeight = ref(0);
+
+// Function to set content card ref at specific index
+const setContentCardRef = (el: Element | ComponentPublicInstance | null, index: number) => {
+  if (el && el instanceof HTMLElement) {
+    contentCardRefs.value[index] = el;
+  }
+};
 
 // Content Types
 const contentTypes = ref([
@@ -453,6 +460,8 @@ const contentTabs = ref([
   { id: 'following', label: 'home.tab.following' },
   { id: 'subscriptions', label: 'home.tab.subscriptions' }
 ]);
+
+const tabCur = ref(0);
 
 // Content data
 const allContent = ref<any[]>([]);
@@ -710,7 +719,7 @@ const confirmVideoSettings = (settings: { language: string; aspectRatio: string 
 };
 
 // Switch content tab and reload data
-const switchContentTab = (tabId: string) => {
+const switchContentTab = (tabId: string, index: number) => {
   // Check if user is logged in when switching to following or subscriptions tabs
   if ((tabId === 'following' || tabId === 'subscriptions')) {
     const token = localStorage.getItem('token');
@@ -721,10 +730,17 @@ const switchContentTab = (tabId: string) => {
   }
 
   activeContentTab.value = tabId;
+  tabCur.value = index;
   currentPage.value = 1;
   hasMore.value = true;
   allContent.value = []; // Clear old data to show loading state
-  loadContent(1);
+  contentCardRefs.value = []; // Clear card refs to reset layout
+  containerHeight.value = 0; // Reset container height
+
+  // Use nextTick to ensure DOM is updated before loading new content
+  nextTick(() => {
+    loadContent(1);
+  });
 };
 
 // Trigger file upload dialog
@@ -973,12 +989,6 @@ const loadContent = async (page = 1) => {
       const data = res.data?.data || res.data || [];
 
       data.forEach((item: any) => {
-        item.style = {
-          position: "absolute",
-          left: "0",
-          top: "0"
-        };
-
         if (activeContentTab.value == 'suggested') {
           item.is_liked = item.is_liked || 0;
         } else {
@@ -1015,76 +1025,111 @@ const loadMoreContent = () => {
 };
 
 function layoutWaterfall() {
-  if (!waterfallRef.value || !allContent.value || allContent.value.length === 0) return;
+  if (!waterfallRef.value || !allContent.value || allContent.value.length === 0) {
+    return;
+  }
 
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const cardWidthRem = 25.8;
-  const gapRem = 1.6;
-  const cols = 4;
-
-  const columnHeights = new Array(cols).fill(0);
-
-  const cards = contentCardRefs.value;
-  if (!cards || cards.length === 0) return;
-
-  // Function to calculate and apply layout
-  const applyLayout = () => {
-    // Reset column heights
-    columnHeights.fill(0);
-
-    allContent.value.forEach((item, index) => {
-      const cardEl = cards[index];
-      if (!cardEl) return;
-
-      const minHeight = Math.min(...columnHeights);
-      const colIndex = columnHeights.indexOf(minHeight);
-
-      const leftRem = colIndex * (cardWidthRem + gapRem);
-      const topRem = minHeight / rootFontSize;
-
-      item.style = {
-        position: "absolute",
-        left: `${leftRem}rem`,
-        top: `${topRem}rem`,
-      };
-
-      // Use offsetHeight which includes the full card height (image + content-info)
-      columnHeights[colIndex] += cardEl.offsetHeight + gapRem * rootFontSize;
-    });
-
-    containerHeight.value = Math.max(...columnHeights);
-  };
-
-  // Apply initial layout immediately to prevent stacking
+  // Wait for next tick to ensure all DOM elements are rendered
   nextTick(() => {
+    const cards = contentCardRefs.value.filter(card => card !== null) as HTMLElement[];
+
+    if (!cards || cards.length === 0 || cards.length !== allContent.value.length) {
+      // If refs don't match content, retry after a short delay
+      setTimeout(() => layoutWaterfall(), 50);
+      return;
+    }
+
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const cardWidthRem = 25.8;
+    const gapRem = 1.6;
+    const cols = 4;
+
+    // Function to calculate and apply layout - GRID style, not waterfall
+    const applyLayout = () => {
+      // Track the maximum height in each row
+      const rowHeights: number[] = [];
+      let currentRow = 0;
+      let maxHeightInRow = 0;
+
+      cards.forEach((cardEl, index) => {
+        if (!cardEl) return;
+
+        // Calculate which column and row this card belongs to
+        const colIndex = index % cols;
+        const rowIndex = Math.floor(index / cols);
+
+        // If we moved to a new row, save the previous row's max height
+        if (rowIndex !== currentRow) {
+          rowHeights[currentRow] = maxHeightInRow;
+          currentRow = rowIndex;
+          maxHeightInRow = 0;
+        }
+
+        // Calculate position - grid layout (not waterfall)
+        const leftRem = colIndex * (cardWidthRem + gapRem);
+
+        // Calculate top position based on previous rows' heights
+        let topPx = 0;
+        for (let i = 0; i < rowIndex; i++) {
+          topPx += rowHeights[i] + gapRem * rootFontSize;
+        }
+        const topRem = topPx / rootFontSize;
+
+        // Apply styles directly to DOM element
+        cardEl.style.position = "absolute";
+        cardEl.style.left = `${leftRem}rem`;
+        cardEl.style.top = `${topRem}rem`;
+
+        // Track max height in current row
+        maxHeightInRow = Math.max(maxHeightInRow, cardEl.offsetHeight);
+      });
+
+      // Save the last row's height
+      rowHeights[currentRow] = maxHeightInRow;
+
+      // Calculate total container height
+      let totalHeight = 0;
+      rowHeights.forEach((height, index) => {
+        totalHeight += height;
+        if (index < rowHeights.length - 1) {
+          totalHeight += gapRem * rootFontSize;
+        }
+      });
+
+      containerHeight.value = totalHeight;
+    };
+
+    // Apply initial layout
     applyLayout();
 
-    // Then wait for images to load and recalculate
-    const images = Array.from(document.querySelectorAll('.content-item img'));
-    if (images.length > 0) {
-      const imageLoadPromises = images.map(img => {
-        return new Promise((resolve) => {
-          if ((img as HTMLImageElement).complete) {
-            resolve(true);
-          } else {
-            img.addEventListener('load', () => resolve(true), { once: true });
-            img.addEventListener('error', () => resolve(true), { once: true });
-            // Timeout fallback
-            setTimeout(() => resolve(true), 3000);
-          }
+    // Wait for images to load and recalculate
+    if (waterfallRef.value) {
+      const images = Array.from(waterfallRef.value.querySelectorAll('.content-item img'));
+      if (images.length > 0) {
+        const imageLoadPromises = images.map(img => {
+          return new Promise((resolve) => {
+            if ((img as HTMLImageElement).complete) {
+              resolve(true);
+            } else {
+              img.addEventListener('load', () => resolve(true), { once: true });
+              img.addEventListener('error', () => resolve(true), { once: true });
+              // Timeout fallback
+              setTimeout(() => resolve(true), 3000);
+            }
+          });
         });
-      });
 
-      Promise.all(imageLoadPromises).then(() => {
-        // Recalculate layout after images are loaded
-        applyLayout();
-      });
+        Promise.all(imageLoadPromises).then(() => {
+          // Recalculate layout after images are loaded
+          applyLayout();
+        });
+      }
     }
   });
 }
 
 const navigateToDetail = (id: string) => {
-  router.push({ path: '/detail', query: { id } });
+  router.push({ path: '/detail', query: { id: id , type: (tabCur.value + 1) } });
 };
 
 async function toggleLike(item: any) {

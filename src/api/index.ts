@@ -247,6 +247,7 @@ export default {
   postDetail: (data: any) =>
     axios.request({
       url: "post/getPostDetailPublic",
+      data: data,
       method: "POST",
       header: {
         "Content-Type": "application/json",

@@ -106,7 +106,7 @@
 
         <div class="tip">
           <div class="tip-text" v-if="locale == 'jp'">
-            {{ t("register.tipInfo") }}
+            <span v-html="t('register.tipInfo')"></span>
             <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
             <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
@@ -114,7 +114,7 @@
           </div>
 
           <div class="tip-text" v-else>
-            {{ t("register.tipInfo") }}
+            <span v-html="t('register.tipInfo')"></span>
             <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
             <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
@@ -168,13 +168,10 @@ const showBirthday = ref(false);
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
 const isGrecaptchaReady = ref(false);
+const hasEverSent = ref(false);
 
-// 将 emailTxt 改为 computed，以便语言切换时自动更新
 const emailTxt = computed(() => {
-  if (isSend.value && count.value < 60) {
-    return `${count.value}`;
-  }
-  return t("register.send");
+  return hasEverSent.value ? t("register.resend") : t("register.send");
 });
 
 const isEnd = computed(() => {
@@ -303,6 +300,7 @@ function handleSubmit() {
   }
 
   isSend.value = true;
+  hasEverSent.value = true;
 
   const data = {
     type: "email",
@@ -334,7 +332,6 @@ function handleSubmit() {
                     if (res.code == 0) {
                       toast(t("success"));
                       timeCount();
-                      // Set success message for code error
                       codeError.value = t('register.spamTip');
                     } else {
                       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
@@ -373,10 +370,8 @@ function timeCount() {
       timer.value = null;
       isSend.value = false;
       count.value = 60;
-      // emailTxt 现在是 computed，会自动更新，所以不需要手动赋值
     } else {
       count.value -= 1;
-      // emailTxt 现在是 computed，会自动更新为 count.value
     }
   }, 1000);
 }
@@ -724,7 +719,7 @@ function googleRegister() {
             color: #fb64b6;
             cursor: pointer;
             &.on {
-              opacity: 0.7;
+              color: #6a7282;
               cursor: not-allowed;
             }
           }

@@ -106,7 +106,7 @@ function goSendEmail() {
         formData.append("g-recaptcha-response", token);
         formData.append("siteKey", siteKey);
 
-        fetch(baseUrl + "login/sendEmailVerifyCode", {
+        fetch(baseUrl + "login/resetEmailPasswordReq", {
           method: "post",
           body: formData,
         })

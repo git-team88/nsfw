@@ -783,16 +783,99 @@ function formatContent(content: string): string {
 // API Data Load
 async function fetchDetail(newId: number) {
   try {
-    // Update id value first
     id.value = newId;
 
-    // Set loading state before fetching
     isLoading.value = true;
     comments.value = [];
     isLoadingComments.value = true;
 
-    // Fetch post detail from API
-    const res = await api.postDetail(newId) as any;
+    var data = null;
+    var type = route.query.type as string || "";
+
+    if (type == "2") {
+      data = {
+        post_id: newId,
+        fromIndexFollow: {}
+      }
+    } else if (type == "3") {
+      data = {
+        post_id: newId,
+        fromIndexSubscription: {}
+      }
+    } else if (type == "4") {
+      const bloggerId = route.query.uid as string || "";
+      const searchKeyword = route.query.keyword as string || "";
+      const startDay = route.query.start_day as string || "";
+      const endDay = route.query.end_day as string || "";
+
+      data = {
+        post_id: newId,
+        fromBloggerIndex: {
+          blogger_id: bloggerId,
+          keywords: searchKeyword,
+          start_day: startDay,
+          end_day: endDay
+        }
+      }
+    } else if (type == "5") {
+      const searchKeyword = route.query.keyword as string || "";
+      data = {
+        post_id: newId,
+        fromSearch: {
+          keywords: searchKeyword
+        }
+      }
+    } else {
+      data = {
+        post_id: newId,
+        fromIndexRecommend: {
+          "tab": "hot"
+        }
+      }
+    }
+
+    const formData = new FormData();
+
+    const appendFormData = (formData: FormData, data: any, parentKey: string = '') => {
+      if (data && typeof data === 'object' && !(data instanceof File)) {
+        const keys = Object.keys(data);
+
+        if (keys.length === 0) {
+          formData.append(parentKey, '{}');
+        } else {
+          keys.forEach(key => {
+            const value = data[key];
+            const formKey = parentKey ? `${parentKey}[${key}]` : key;
+
+            if (value && typeof value === 'object' && !(value instanceof File)) {
+              appendFormData(formData, value, formKey);
+            } else {
+              formData.append(formKey, value === null || value === undefined ? '' : value);
+            }
+          });
+        }
+      } else {
+        formData.append(parentKey, data);
+      }
+    };
+
+    appendFormData(formData, data);
+
+    const token = localStorage.getItem('token');
+
+    const headers: HeadersInit = {};
+
+    if (token) {
+      headers['token'] = token;
+    }
+
+    const response = await fetch(`${baseUrl}post/getPostDetailPublic`, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+
+    const res = await response.json();
 
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post;
@@ -2336,7 +2419,11 @@ async function toggleLike() {
       if (res.code === 0 || res.code === 200) {
         liked.value = true;
         // Use returned like count if available, otherwise increment
-        likes.value = Number(res.data?.like_count) ?? (previousLikes + 1);
+        if (res.data && typeof res.data.like_count !== 'undefined') {
+          likes.value = Number(res.data.like_count);
+        } else {
+          likes.value = previousLikes + 1;
+        }
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {
@@ -2348,7 +2435,11 @@ async function toggleLike() {
       if (res.code === 0 || res.code === 200) {
         liked.value = false;
         // Use returned like count if available, otherwise decrement
-        likes.value = Number(res.data?.like_count) ?? Math.max(0, previousLikes - 1);
+        if (res.data && typeof res.data.like_count !== 'undefined') {
+          likes.value = Number(res.data.like_count);
+        } else {
+          likes.value = Math.max(0, previousLikes - 1);
+        }
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {

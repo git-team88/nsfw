@@ -207,7 +207,7 @@ async function loadProjects(reset = false) {
     };
 
     const params = new URLSearchParams({
-      is_publish: statusMap[activeStatusTab.value]?.toString() || '1',
+      is_publish: activeStatusTab.value == 'unpublished' ? '2' : '1',
       project_type: typeMap[activeMainTab.value]?.toString() || 'story',
       page: currentPage.value.toString(),
       limit: itemsPerPage.value.toString()

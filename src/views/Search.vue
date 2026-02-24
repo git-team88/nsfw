@@ -517,7 +517,7 @@ const layoutWaterfall = () => {
 };
 
 function goToDetail(postId: number) {
-  router.push(`/detail?id=${postId}`);
+  router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(keyword.value || '')}`);
 }
 
 function goToUserHome(userId: number) {

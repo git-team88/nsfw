@@ -8,27 +8,47 @@
     <div class="drp-pop" v-if="open" :style="popStyle">
       <div class="field">
         <label>{{ t("user.interactive.startDate") }}</label>
-        <el-date-picker
-          v-model="tempStart"
-          type="date"
-          :placeholder="t('user.interactive.startDate')"
-          :disabled-date="disabledDate"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          :clearable="false"
-        />
+        <div class="date-input-wrapper">
+          <el-date-picker
+            v-model="tempStart"
+            type="date"
+            :placeholder="t('user.interactive.startDate')"
+            :disabled-date="disabledDate"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :clearable="false"
+          />
+          <button
+            v-if="tempStart"
+            class="clear-btn"
+            @click.stop="tempStart = ''"
+            type="button"
+          >
+            ×
+          </button>
+        </div>
       </div>
       <div class="field">
         <label>{{ t("user.interactive.endDate") }}</label>
-        <el-date-picker
-          v-model="tempEnd"
-          type="date"
-          :placeholder="t('user.interactive.endDate')"
-          :disabled-date="disabledDate"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          :clearable="false"
-        />
+        <div class="date-input-wrapper">
+          <el-date-picker
+            v-model="tempEnd"
+            type="date"
+            :placeholder="t('user.interactive.endDate')"
+            :disabled-date="disabledDate"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :clearable="false"
+          />
+          <button
+            v-if="tempEnd"
+            class="clear-btn"
+            @click.stop="tempEnd = ''"
+            type="button"
+          >
+            ×
+          </button>
+        </div>
       </div>
       <div class="actions">
         <button class="btn cancel" @click="onCancel">{{ t("user.interactive.cancel") }}</button>
@@ -65,8 +85,8 @@ const getSevenDaysBeforeCurrent = () => {
 };
 
 // 实际显示的值
-const start = ref(props.modelValue.start || getSevenDaysBeforeCurrent());
-const end = ref(props.modelValue.end || getCurrentDate());
+const start = ref(props.modelValue.start || '');
+const end = ref(props.modelValue.end || '');
 
 // 临时值，用于弹窗中的选择
 const tempStart = ref(start.value);
@@ -75,8 +95,8 @@ const tempEnd = ref(end.value);
 watch(
   () => props.modelValue,
   (v) => {
-    start.value = v.start || getSevenDaysBeforeCurrent();
-    end.value = v.end || getCurrentDate();
+    start.value = v.start || '';
+    end.value = v.end || '';
     tempStart.value = start.value;
     tempEnd.value = end.value;
   },
@@ -84,7 +104,16 @@ watch(
 );
 
 const displayText = computed(() => {
-  return `${start.value}~${end.value}`;
+  if (!start.value && !end.value) {
+    return `${t("user.interactive.startDate")} ~ ${t("user.interactive.endDate")}`;
+  }
+  if (!start.value) {
+    return `${t("user.interactive.startDate")} ~ ${end.value}`;
+  }
+  if (!end.value) {
+    return `${start.value} ~ ${t("user.interactive.endDate")}`;
+  }
+  return `${start.value} ~ ${end.value}`;
 });
 
 // Only disable future dates
@@ -147,17 +176,10 @@ function onApply() {
   let s = tempStart.value;
   let e = tempEnd.value;
 
-  if (!s || !e) {
-    toast(t("user.interactive.selectBothDates"));
-    return;
-  }
-
-  // Validate range: s <= e
   if (dayjs(s).isAfter(dayjs(e))) {
     [s, e] = [e, s];
   }
 
-  // Validate range: max 3 months
   const diffMonths = dayjs(e).diff(dayjs(s), "month", true);
   if (diffMonths > 3) {
     toast(t("user.interactive.maxThreeMonths"));
@@ -169,7 +191,7 @@ function onApply() {
   tempStart.value = s;
   tempEnd.value = e;
   emit("update:modelValue", { start: s, end: e });
-  emit("change", { start: s, end: e }); // 触发 change 事件
+  emit("change", { start: s, end: e });
   open.value = false;
 }
 
@@ -241,7 +263,7 @@ onBeforeUnmount(() => {
 
 .drp-trigger .text {
   font-size: 1.4rem;
-  color: #364153;
+  color: #6a7282;
 }
 
 .drp-trigger .arrow {
@@ -271,6 +293,35 @@ onBeforeUnmount(() => {
   font-size: 1.4rem;
   color: #364153;
   margin-bottom: 0.7rem;
+}
+
+.date-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 2.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    color: #999;
+  }
 }
 
 .actions {

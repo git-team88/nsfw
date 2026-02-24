@@ -82,7 +82,7 @@
 
         <div class="tip">
           <div class="tip-text" v-if="locale == 'jp'">
-            {{ t("register.loginTip") }}
+            <span v-html="t('register.loginTip')"></span>
             <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
             <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
@@ -90,7 +90,7 @@
           </div>
 
           <div class="tip-text" v-else>
-            {{ t("register.loginTip") }}
+            <span v-html="t('register.loginTip')"></span>
             <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
             <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
