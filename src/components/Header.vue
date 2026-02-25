@@ -458,6 +458,8 @@ function getMessageInfo() {
     .then((res) => {
       const data = res as any;
       if (data.code === 0) {
+        unTotal.value = data.data.total;
+
         newsCounts.value = {
           expiring: data.data.subscribe_expire,
           follow: data.data.follow,

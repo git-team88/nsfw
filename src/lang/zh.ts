@@ -1159,7 +1159,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       confirm: "确认",
     },
     topic: "添加话题",
-    mention: "@提及",
+    mention: `提及`,
     image: {
       imageLabel: "图片",
       uploadCta: "点击上传或拖拽图片到此处，最多10张",

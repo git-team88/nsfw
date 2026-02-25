@@ -560,7 +560,7 @@ function getCountry() {
         userRegion.value = false;
       }
     } else {
-      console.log()
+      userRegion.value = false;
     }
   }).catch(err => {
     console.log(err);

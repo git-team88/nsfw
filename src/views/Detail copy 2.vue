@@ -36,6 +36,7 @@
                   @playing="onVideoPlaying"
                 ></video>
 
+                <!-- 加载指示器 -->
                 <div class="video-loading" v-if="isVideoBuffering">
                   <div class="loading-spinner"></div>
                 </div>
