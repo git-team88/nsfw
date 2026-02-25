@@ -222,12 +222,10 @@ const codeError = ref("");
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
 const isGrecaptchaReady = ref(false);
+const hasEverSent = ref(false);
 
 const emailTxt = computed(() => {
-  if (isSend.value && count.value < 60) {
-    return `${count.value}`;
-  }
-  return t("register.send");
+  return hasEverSent.value ? t("register.resend") : t("register.send");
 });
 
 const emailBind = computed(() => userInfo.value.bind?.find((b) => b.type == "email"));
@@ -342,15 +340,16 @@ function handleSubmit() {
   }
 
   if (!isGrecaptchaReady.value) {
-    toast("Grecaptcha not loaded yet completed");
+    toast(t("grecaptcha.notLoaded"));
     return false;
   }
 
   if (typeof grecaptcha === "undefined" || typeof grecaptcha.execute !== "function") {
-    toast("Grecaptcha execute method not available");
+    toast(t("grecaptcha.notAble"));
     return false;
   }
 
+  hasEverSent.value = true;
   isSend.value = true;
 
   grecaptcha
@@ -801,7 +800,7 @@ function confirmUnbind() {
       color: #fb64b6;
       cursor: pointer;
       &.on {
-        opacity: 0.7;
+        color: #99A1AF;
         cursor: not-allowed;
       }
     }

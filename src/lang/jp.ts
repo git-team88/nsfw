@@ -1,4 +1,24 @@
 export default {
+  footer: {
+    nav: {
+      home: "ホーム",
+      myProjects: "マイプロジェクト",
+      characterLibrary: "キャラクターライブラリ",
+      myCommunity: "マイコミュニティ",
+      profile: "プロフィール"
+    },
+    policies: {
+      communityGuidelines: "コミュニティガイドライン",
+      termsOfService: "利用規約",
+      privacyPolicy: "プライバシーポリシー",
+      paidServices: "有料サービス"
+    },
+    copyright: "© 2026 AIクリエーションプラットフォーム. 全著作権所有."
+  },
+  grecaptcha: {
+    notLoaded: "Google reCAPTCHA がまだ読み込まれていません",
+    notAble: 'Google reCAPTCHA の実行メソッドが利用できません'
+  },
   agreeTitle: "利用規約",
   communityConvention: `コミュニティ規約<br />
 一、総則<br />
@@ -741,7 +761,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     emailLabel: "メールアドレス",
     email: "メールアドレスを入力",
     passwordLabel: "パスワード（8〜20文字（半角英字＋数字＋記号／全角・スペース不可））",
-    password: "パスワード：8〜20文字（半角英字＋数字＋記号／全角・スペース不可）",
+    password: "パスワードを入力してください",
     passwordError: "形式が正しくありません（8〜20文字／英字・数字・記号／全角・スペース不可）",
     codeLabel: "認証コード",
     code: "認証コードを入力",

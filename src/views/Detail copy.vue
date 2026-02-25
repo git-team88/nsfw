@@ -803,7 +803,7 @@ async function fetchDetail(newId: number) {
         fromIndexSubscription: {}
       }
     } else if (type == "4") {
-      const bloggerId = route.query.blogger_id as string || "";
+      const bloggerId = route.query.uid as string || "";
       const searchKeyword = route.query.keyword as string || "";
       const startDay = route.query.start_day as string || "";
       const endDay = route.query.end_day as string || "";
@@ -898,8 +898,8 @@ async function fetchDetail(newId: number) {
         isSubscribed: data.is_subscribed || false,
         commentsEnabled: data.comments_enabled !== false,
         isLast: data.is_last || false,
-        likes: Number(data.like_count || data.likes || 0),
-        liked: data.is_liked == 1 || data.is_liked === true,
+        likes: data.likes || data.like_count || 0,
+        liked: !!(data.is_liked),
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '1'
       };
@@ -907,7 +907,7 @@ async function fetchDetail(newId: number) {
       totalComments.value = res.data.comment_total || '';
 
       // Update local state
-      likes.value = detail.value.likes;
+      likes.value = Number(detail.value.likes);
       liked.value = detail.value.liked;
 
       // Store navigation info
@@ -2418,9 +2418,9 @@ async function toggleLike() {
       const res = await api.likePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
         liked.value = true;
-        // 优先使用后端返回的点赞数，如果没有则本地+1
-        if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
-          likes.value = Number(res.data.like_count || res.data.likes);
+        // Use returned like count if available, otherwise increment
+        if (res.data && typeof res.data.like_count !== 'undefined') {
+          likes.value = Number(res.data.like_count);
         } else {
           likes.value = previousLikes + 1;
         }
@@ -2434,9 +2434,9 @@ async function toggleLike() {
       const res = await api.dislikePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
         liked.value = false;
-        // 优先使用后端返回的点赞数，如果没有则本地-1
-        if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
-          likes.value = Number(res.data.like_count || res.data.likes);
+        // Use returned like count if available, otherwise decrement
+        if (res.data && typeof res.data.like_count !== 'undefined') {
+          likes.value = Number(res.data.like_count);
         } else {
           likes.value = Math.max(0, previousLikes - 1);
         }
@@ -2659,9 +2659,6 @@ watch(
   height: 100%;
   position: relative;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
   .video-wrapper {
     width: 100%;
@@ -2671,38 +2668,21 @@ watch(
     justify-content: center;
     position: relative;
 
-    > div {
+    .video-player {
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .video-player {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
       object-fit: contain;
       vertical-align: middle;
-      display: block;
     }
 
     .video-lock-overlay {
       position: relative;
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
 
       .lock_bg{
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
         cursor: default;
       }
@@ -3598,6 +3578,16 @@ watch(
       background-size: 100% 100%;
     }
   }
+}
+
+/* Video Controls */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-controls {

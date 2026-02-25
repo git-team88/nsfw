@@ -1,4 +1,24 @@
 export default {
+  footer: {
+    nav: {
+      home: "首页",
+      myProjects: "我的项目",
+      characterLibrary: "角色库",
+      myCommunity: "我的社区",
+      profile: "个人中心"
+    },
+    policies: {
+      communityGuidelines: "社区公约",
+      termsOfService: "服务条款",
+      privacyPolicy: "隐私政策",
+      paidServices: "付费服务"
+    },
+    copyright: "© 2026 AI创作平台. 保留所有权利."
+  },
+  grecaptcha: {
+    notLoaded: "验证码未加载完成，请稍后再试",
+    notAble: '验证码执行方法不可用'
+  },
   agreeTitle: "用户协议",
   communityConvention: `社区公约<br />
 一、总则<br />
@@ -787,7 +807,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     emailLabel: "邮箱地址",
     email: "请输入邮箱地址",
     passwordLabel: "密码（8-20位（字母、数字、符号，无空格））",
-    password: "密码：8-20位（字母、数字、符号，无空格）",
+    password: "请输入密码",
     passwordError: "密码：8-20位（字母、数字、符号，无空格）",
     codeLabel: "验证码",
     code: "请输入验证码",

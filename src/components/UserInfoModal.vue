@@ -33,6 +33,12 @@
             />
           </div>
         </div>
+
+        <div class="form-item">
+          <div class="label">{{ t("birthday.label") }}</div>
+
+          <BirthPicker v-model="dateValue" @change="handleDateChange" />
+        </div>
       </div>
 
       <button class="confirm-btn" @click="confirm">{{ t("userInfo.confirm") }}</button>
@@ -44,12 +50,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits, watch } from "vue";
+import { ref, defineEmits, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import defaultAvatar from "@/assets/images/user/pic.png";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
 import UploadMask from "@/components/UploadMask.vue";
+import BirthPicker from "./BirthPicker.vue";
 
 const { t, locale } = useI18n();
 const props = defineProps<{
@@ -63,7 +70,20 @@ const avatar = ref("");
 const fileInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 
-// Watch for userInfo changes and update form values
+const dateValue = ref<{ year: number | ""; month: number | ""; day: number | "" }>({
+  year: "",
+  month: "",
+  day: "",
+});
+
+const isValid = computed(() => {
+  return dateValue.value.year && dateValue.value.month && dateValue.value.day;
+});
+
+function handleDateChange(value: { year: number | ""; month: number | ""; day: number | "" }) {
+  dateValue.value = value;
+}
+
 watch(
   () => props.userInfo,
   (newInfo) => {
@@ -126,7 +146,21 @@ function confirm() {
     toast("Please enter username");
     return;
   }
-  emit("confirm", { username: username.value, avatar: avatar.value });
+
+  const userData: any = {
+    username: username.value,
+    avatar: avatar.value
+  };
+
+  if (isValid.value) {
+    userData.birth = {
+      year: dateValue.value.year,
+      month: dateValue.value.month,
+      day: dateValue.value.day
+    };
+  }
+
+  emit("confirm", userData);
 }
 
 function skip() {

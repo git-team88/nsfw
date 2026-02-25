@@ -97,7 +97,7 @@
           </p>
 
           <div class="icon-box">
-            <div class="google-icon" @click="toGoogle()">
+            <div class="google-icon" @click="showGoogle()">
               <img src="@/assets/images/register/google.png" alt="" />
               <span>{{ t("register.google") }}</span>
             </div>
@@ -123,11 +123,11 @@
       </div>
     </div>
 
-    <BirthdayModal
+    <!-- <BirthdayModal
       :visible="showBirthday"
       @confirm="handleBirthdayConfirm"
       @close="showBirthday = false"
-    />
+    /> -->
 
     <div class="load" v-if="isShowLoad">
       <img src="@/assets/images/base/load.png" alt="" />
@@ -138,7 +138,6 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
-import BirthdayModal from "@/components/BirthdayModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
@@ -153,7 +152,6 @@ const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
 const emailToken = ref("");
-const isHoverCode = ref(false);
 const isSend = ref(false);
 const isShowPassword = ref(false);
 const password = ref("");
@@ -181,8 +179,6 @@ const isEnd = computed(() => {
     return false;
   }
 });
-
-const registerType = ref(1);
 
 declare let grecaptcha: any;
 
@@ -229,11 +225,6 @@ function initGoogle() {
   script.async = true;
   script.defer = true;
   document.head.appendChild(script);
-}
-
-function toGoogle() {
-  registerType.value = 2;
-  showBirthday.value = true;
 }
 
 function showGoogle() {
@@ -295,7 +286,7 @@ function handleSubmit() {
   }
 
   if (!isGrecaptchaReady.value) {
-    toast("Grecaptcha not loaded yet completed");
+    toast(t("grecaptcha.notLoaded"));
     return false;
   }
 
@@ -376,47 +367,6 @@ function timeCount() {
   }, 1000);
 }
 
-function handleBirthdayConfirm(date: { year: number; month: number; day: number }) {
-  if (registerType.value == 2) {
-    // Store birthday in localStorage
-    localStorage.setItem('birthday', JSON.stringify(date));
-    showGoogle();
-  } else {
-    const emailData = {
-      email: email.value,
-      password: password.value,
-      code: code.value,
-      "g-recaptcha-response": emailToken.value,
-      year: date.year,
-      month: date.month,
-      day: date.day,
-    };
-
-    api
-      .emailRegister(emailData)
-      .then((res: any) => {
-        if (res.code == 0) {
-          showBirthday.value = false;
-
-          if (headerRef.value) {
-            headerRef.value.getLoginUserInfo()
-          }
-
-          localStorage.setItem("token", res.data.token);
-          // localStorage.setItem("isFirstRegister", "1");
-          router.push("/");
-        } else {
-          showBirthday.value = false;
-          toast(locale.value == "jp" ? res.msg_jp : res.msg);
-        }
-      })
-      .catch((err: any) => {
-        showBirthday.value = false;
-        toast(t('fail'));
-      });
-  }
-}
-
 function goLink() {
   localStorage.setItem("isBack", "1");
 }
@@ -451,7 +401,35 @@ function goEmailRegister() {
     return false;
   }
 
-  showBirthday.value = true;
+  const emailData = {
+      email: email.value,
+      password: password.value,
+      code: code.value,
+      "g-recaptcha-response": emailToken.value
+    };
+
+    api
+      .emailRegister(emailData)
+      .then((res: any) => {
+        if (res.code == 0) {
+          showBirthday.value = false;
+
+          if (headerRef.value) {
+            headerRef.value.getLoginUserInfo()
+          }
+
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("isFirstRegister", "1");
+          router.push("/");
+        } else {
+          showBirthday.value = false;
+          toast(locale.value == "jp" ? res.msg_jp : res.msg);
+        }
+      })
+      .catch((err: any) => {
+        showBirthday.value = false;
+        toast(t('fail'));
+      });
 }
 
 function googleRegister() {
@@ -468,15 +446,8 @@ function googleRegister() {
 
   isShowLoad.value = true;
 
-  // Read birthday from localStorage
-  const birthdayStr = localStorage.getItem('birthday');
-  const birthday = birthdayStr ? JSON.parse(birthdayStr) : { year: '', month: '', day: '' };
-
   const googleData = {
-    code: googleCode,
-    year: birthday.year,
-    month: birthday.month,
-    day: birthday.day,
+    code: googleCode
   };
 
   api
@@ -486,15 +457,13 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
-        localStorage.removeItem('birthday'); // Clean up birthday data
 
-        // localStorage.setItem("isFirstRegister", "1");
+        localStorage.setItem("isFirstRegister", "1");
         router.push("/");
       } else {
         window.location.href = "/register";
         isShowLoad.value = false;
         localStorage.removeItem("rType");
-        localStorage.removeItem('birthday'); // Clean up birthday data
         toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
       }
     })
@@ -502,7 +471,6 @@ function googleRegister() {
       window.location.href = "/register";
       isShowLoad.value = false;
       localStorage.removeItem("rType");
-      localStorage.removeItem('birthday'); // Clean up birthday data
       console.log(err);
     });
 }
@@ -719,7 +687,7 @@ function googleRegister() {
             color: #fb64b6;
             cursor: pointer;
             &.on {
-              color: #6a7282;
+              color: #99A1AF;
               cursor: not-allowed;
             }
           }

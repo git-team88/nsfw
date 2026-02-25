@@ -1,4 +1,24 @@
 export default {
+  footer: {
+    nav: {
+      home: "Home",
+      myProjects: "My Projects",
+      characterLibrary: "Character Library",
+      myCommunity: "My Community",
+      profile: "Profile"
+    },
+    policies: {
+      communityGuidelines: "Community Guidelines",
+      termsOfService: "Terms of Service",
+      privacyPolicy: "Privacy Policy",
+      paidServices: "Paid Services"
+    },
+    copyright: "© 2026 AI Creation Platform. All rights reserved."
+  },
+  grecaptcha: {
+    notLoaded: "Grecaptcha not loaded yet completed",
+    notAble: 'Grecaptcha execute method not available'
+  },
   agreeTitle: "User Agreement",
   communityConvention: `Community Convention<br />
 I. General Provisions<br />
@@ -689,7 +709,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     emailLabel: "Email Address",
     email: "Enter your email address",
     passwordLabel: "Password (8-20 chars (letters, numbers, symbols, no spaces))",
-    password: 'Password:8-20 chars (letters, numbers, symbols, no spaces)',
+    password: 'Enter your passwords',
     passwordError: 'Password:8-20 chars (letters, numbers, symbols, no spaces)',
     codeLabel: "Verification Code",
     code: "Enter verification code",

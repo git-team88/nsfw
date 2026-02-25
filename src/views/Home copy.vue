@@ -271,17 +271,6 @@
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ t('home.loading') }}</div>
           </div>
-
-          <!-- Pagination -->
-          <div v-if="!loading && allContent.length > 0 && Math.ceil(totalPosts / pageSize) > 1" class="pagination-wrapper">
-            <Pagination
-              v-model="currentPage"
-              :total="totalPosts"
-              :page-size="pageSize"
-              theme="pink"
-              @update:modelValue="handlePageChange"
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -315,6 +304,7 @@
       @confirm="confirmVideoSettings"
     />
 
+    <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
 
     <UserInfoModal
@@ -324,13 +314,6 @@
       @close="handleUserInfoCancel"
       @skip="handleUserInfoSkip"
     />
-
-    <!-- Footer -->
-    <Footer
-      :total-pages="Math.ceil(totalPosts / pageSize)"
-      :current-page="currentPage"
-      @page-change="handlePageChange"
-    ></Footer>
   </div>
 </template>
 
@@ -347,8 +330,6 @@ import VideoSettingsModal from '@/components/VideoSettingsModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
-import Pagination from '@/components/Pagination.vue';
-import Footer from '@/components/Footer.vue';
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -369,6 +350,7 @@ const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
 const loading = ref(false);
+const hasMore = ref(true);
 const activeContentType = ref('0');
 const isSearchFocused = ref(false);
 const selectedCharacters = ref<any[]>([]);
@@ -379,10 +361,6 @@ const isInputEmpty = ref(true);
 const uploadedImages = ref<any[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
-
-// Pagination variables
-const totalPosts = ref(0);
-const pageSize = ref(50);
 const homePageRef = ref<HTMLElement | null>(null);
 const currentStyleName = ref(''); // Current selected style name
 
@@ -754,6 +732,7 @@ const switchContentTab = (tabId: string, index: number) => {
   activeContentTab.value = tabId;
   tabCur.value = index;
   currentPage.value = 1;
+  hasMore.value = true;
   allContent.value = []; // Clear old data to show loading state
   contentCardRefs.value = []; // Clear card refs to reset layout
   containerHeight.value = 0; // Reset container height
@@ -985,7 +964,7 @@ const setCursorPosition = (element: HTMLElement, position: number) => {
 
 // Load content from API
 const loadContent = async (page = 1) => {
-  if (loading.value) return;
+  if (loading.value || !hasMore.value) return;
 
   const currentActiveTab = activeContentTab.value;
   loading.value = true;
@@ -994,16 +973,16 @@ const loadContent = async (page = 1) => {
 
     switch (currentActiveTab) {
       case 'suggested':
-        res = await api.homePostList(page, pageSize.value, '', 0) as any;
+        res = await api.homePostList(page, limit.value, '', 0) as any;
         break;
       case 'following':
-        res = await api.homeFollowList(page, pageSize.value, 0) as any;
+        res = await api.homeFollowList(page, limit.value, 0) as any;
         break;
       case 'subscriptions':
-        res = await api.homeSubscriptionList(page, pageSize.value, 0) as any;
+        res = await api.homeSubscriptionList(page, limit.value, 0) as any;
         break;
       default:
-        res = await api.homePostList(page, pageSize.value, '', 0) as any;
+        res = await api.homePostList(page, limit.value, '', 0) as any;
     }
 
     if (res.code === 0 || res.code === 200) {
@@ -1017,11 +996,14 @@ const loadContent = async (page = 1) => {
         }
       });
 
-      // Always replace content for pagination (not append)
-      allContent.value = data;
+      if (page === 1) {
+        allContent.value = data;
+      } else {
+        allContent.value = [...allContent.value, ...data];
+      }
 
-      // Update total count for pagination
-      totalPosts.value = Number(res.data?.allnums) || 0;
+      currentPage.value++;
+      hasMore.value = (currentPage.value-1) * limit.value <= Number(res.data?.allnums);
 
       nextTick(() => {
         layoutWaterfall();
@@ -1034,6 +1016,12 @@ const loadContent = async (page = 1) => {
   } finally {
     loading.value = false;
   }
+};
+
+const loadMoreContent = () => {
+  if (loading.value || !hasMore.value) return;
+
+  loadContent(currentPage.value);
 };
 
 function layoutWaterfall() {
@@ -1108,8 +1096,6 @@ function layoutWaterfall() {
         }
       });
 
-      // Just use the calculated content height
-      // No need to force fill viewport as Footer is outside main-content
       containerHeight.value = totalHeight;
     };
 
@@ -1191,19 +1177,22 @@ const handleSearch = () => {
   router.push({ path: "/search", query: { keyword: searchQuery.value.trim(), type: "post" } });
 };
 
+// Watch for type changes
 watch(activeContentType, () => {
   currentPage.value = 1;
-  allContent.value = [];
+  allContent.value = []; // Clear old data to show loading state
   loadContent(1);
 });
 
+// Watch for sort changes
 watch(sortOrder, () => {
   currentPage.value = 1;
-  allContent.value = [];
+  allContent.value = []; // Clear old data to show loading state
   loadContent(1);
 });
 
 const loadStyles = async () => {
+  // Only load styles if user is logged in
   if (!isLoggedIn.value) {
     return;
   }
@@ -1245,45 +1234,34 @@ onMounted(() => {
   loadContent(1);
   loadStyles();
 
-  window.addEventListener('resize', handleResize);
+  if (homePageRef.value) {
+    homePageRef.value.addEventListener('scroll', handleScroll);
+  }
 
-  checkFirstRegister();
+  // checkFirstRegister();
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize);
+  if (homePageRef.value) {
+    homePageRef.value.removeEventListener('scroll', handleScroll);
+  }
 });
 
-// Handle window resize
-let resizeTimer: ReturnType<typeof setTimeout> | null = null;
-function handleResize() {
-  // Debounce resize event
-  if (resizeTimer) {
-    clearTimeout(resizeTimer);
-  }
-  resizeTimer = setTimeout(() => {
-    if (allContent.value.length > 0) {
-      layoutWaterfall();
-    }
-  }, 200);
-}
-
+// Check first register and show user info modal
 async function checkFirstRegister() {
   const isFirstRegister = localStorage.getItem('isFirstRegister');
-  if (isFirstRegister == '1') {
+  if (isFirstRegister === '1') {
     showUserInfoModal.value = true;
-    localStorage.removeItem("isFirstRegister");
   }
 }
 
-function handleUserInfoConfirm(info: { username: string; avatar: string; birth?: { year: number | ''; month: number | ''; day: number | '' } }) {
+function handleUserInfoConfirm(info: { username: string; avatar: string }) {
   const originalNickname = userInfo.value?.info?.nickname || "";
   const originalAvatar = userInfo.value?.info?.avatar || "";
   const hasNicknameChanged = info.username !== originalNickname;
   const hasAvatarChanged = info.avatar !== originalAvatar;
-  const hasBirthChanged = info.birth && info.birth.year && info.birth.month && info.birth.day;
 
-  if (hasNicknameChanged || hasAvatarChanged || hasBirthChanged) {
+  if (hasNicknameChanged || hasAvatarChanged) {
     let operationsCount = 0;
     let completedOperations = 0;
     let hasError = false;
@@ -1291,6 +1269,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
     const checkAllOperationsComplete = () => {
       completedOperations++;
       if (completedOperations === operationsCount && !hasError) {
+        localStorage.removeItem("isFirstRegister");
         showUserInfoModal.value = false;
 
         if (headerRef.value) {
@@ -1312,7 +1291,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+            toast(res.msg);
           }
         })
         .catch((e: any) => {
@@ -1335,7 +1314,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+            toast(res.msg);
           }
         })
         .catch((e: any) => {
@@ -1344,49 +1323,29 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
           toast(t('fail'));
         });
     }
-
-    if (hasBirthChanged && info.birth) {
-      operationsCount++;
-      const birthData = {
-        year: info.birth.year,
-        month: info.birth.month,
-        day: info.birth.day
-      };
-
-      api
-        .modifyBirth(birthData)
-        .then((res: any) => {
-          if (res.code === 0 || res.code === 200) {
-            checkAllOperationsComplete();
-          } else {
-            hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
-          }
-        })
-        .catch((e: any) => {
-          hasError = true;
-          toast(t('fail'));
-        });
-    }
   } else {
+    localStorage.removeItem("isFirstRegister");
     showUserInfoModal.value = false;
   }
 }
 
 function handleUserInfoSkip() {
+  localStorage.removeItem("isFirstRegister");
   showUserInfoModal.value = false;
 }
 
 function handleUserInfoCancel() {
+  localStorage.removeItem("isFirstRegister");
   showUserInfoModal.value = false;
 }
 
-function handlePageChange(page: number) {
-  currentPage.value = page;
-  loadContent(page);
+function handleScroll() {
+  if (!homePageRef.value) return false;
 
-  if (homePageRef.value) {
-    homePageRef.value.scrollTo({ top: 0, behavior: 'smooth' });
+  const { scrollTop, clientHeight, scrollHeight } = homePageRef.value
+
+  if (scrollHeight - scrollTop - clientHeight < 5 && !loading.value && hasMore.value) {
+    loadMoreContent();
   }
 }
 </script>
@@ -1408,10 +1367,7 @@ function handlePageChange(page: number) {
   position: relative;
   width: 108rem;
   margin: 0 auto;
-  padding: 14rem 0 2rem;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  padding: 16rem 0 2rem;
 }
 
 /* Hero Section */
@@ -1426,13 +1382,14 @@ function handlePageChange(page: number) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 0 2rem;
 
     .hero-title {
       width: 100%;
       font-size: 3.6rem;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 6rem;
       font-style: italic;
       background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
       -webkit-background-clip: text;
@@ -1544,7 +1501,7 @@ function handlePageChange(page: number) {
     /* Input Area */
     .input-area {
       position: relative;
-      width: 108rem;
+      width: 80rem;
       padding: 1.6rem;
       background: rgba(255,255,255,0.8);
       box-shadow: 0px 0px 15px -3px rgba(251,100,182,0.2);
@@ -1963,11 +1920,8 @@ function handlePageChange(page: number) {
 
   /* Content Grid */
   .content-grid {
-    flex: 1; /* 自动填充剩余空间 */
-    min-height: calc(100vh - 60rem); /* 确保填充到页脚之前: 全屏 - header - hero - footer */
+    min-height: 40rem;
     position: relative;
-    display: flex;
-    flex-direction: column;
 
     .waterfall {
       position: relative;
@@ -2123,13 +2077,6 @@ function handlePageChange(page: number) {
 .loading-text {
   font-size: 1.6rem;
   color: #666;
-}
-
-.pagination-wrapper {
-  margin-top: 3rem;
-  margin-bottom: 3rem;
-  display: flex;
-  justify-content: center;
 }
 
 @keyframes spin {

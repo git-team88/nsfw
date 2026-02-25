@@ -93,7 +93,7 @@ function goSendEmail() {
   }
 
   if (!isGrecaptchaReady.value) {
-    toast("Grecaptcha not loaded yet completed");
+    toast(t("grecaptcha.notLoaded"));
     return false;
   }
 

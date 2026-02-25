@@ -3,7 +3,7 @@
     <Header ref="headerRef" :cur="-1"></Header>
 
     <div class="inner">
-      <div class="terms-detail-back" @click="goBack">
+      <div class="terms-detail-back" @click="goBack" v-if="!isHide">
         <img src="@/assets/images/base/back.png" alt="" />
       </div>
 
@@ -17,14 +17,24 @@
 
 <script setup lang="ts" name="ComputingPowerRules">
 import Header from "@/components/Header.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
 const { t } = useI18n();
 const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
+const isHide = ref(false);
 
+onMounted(async () => {
+  window.scrollTo(0, 0);
+
+  const isBack = localStorage.getItem("isBack");
+  if (isBack) {
+    isHide.value = true;
+    localStorage.removeItem("isBack");
+  }
+});
 function goBack() {
   router.go(-1);
 }

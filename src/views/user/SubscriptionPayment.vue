@@ -147,6 +147,7 @@ async function fetchAuthorInfo() {
 }
 
 function openLink() {
+  localStorage.setItem("isBack", "1");
   window.open("/payment-terms", "_blank");
 }
 

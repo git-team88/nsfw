@@ -162,6 +162,7 @@ function openWithdraw() {
 }
 
 function openCommunityConvention() {
+  localStorage.setItem("isBack", "1");
   window.open("/community-convention", "_blank");
 }
 

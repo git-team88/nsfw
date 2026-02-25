@@ -618,7 +618,8 @@ function goRecharge() {
 defineExpose({
   getUserInfo,
   getLoginUserInfo,
-  logout
+  logout,
+  goRegister
 });
 </script>
 
