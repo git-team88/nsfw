@@ -180,7 +180,7 @@ const totalCreations = ref(0);
 async function fetchCreations() {
   loading.value = true;
   try {
-    const res = await api.getProject(0, 'story', currentPage.value, itemsPerPage);
+    const res = await api.getProject(2, 1, 'story', currentPage.value, itemsPerPage);
     const data = res as unknown as { code: number; data?: any };
     if (data.code === 0 || data.code === 200) {
       creations.value = data.data?.data_list || [];

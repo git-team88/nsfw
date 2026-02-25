@@ -254,7 +254,11 @@
               <div class="content-info">
                 <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
                 <div class="content-meta">
-                  <div class="author-info">
+                  <div class="author-info" v-if="activeContentTab != 'suggested'">
+                    <img :src="item.author?.avatar || ''" alt="" class="author-avatar" />
+                    <span class="author-name">{{ item.author?.nickname }}</span>
+                  </div>
+                  <div class="author-info" v-else>
                     <img :src="item.author_info?.avatar || ''" alt="" class="author-avatar" />
                     <span class="author-name">{{ item.author_info?.nickname }}</span>
                   </div>

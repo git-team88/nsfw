@@ -866,18 +866,19 @@ function getEndDate() {
 }
 
 function showFollowList(tab: "following" | "fans") {
+  // 如果已经在这个标签页，不重复请求
+  if (viewMode.value === "follow" && followTab.value === tab) {
+    return;
+  }
+  
   viewMode.value = "follow";
   followTab.value = tab;
   fetchFollowList(true);
 
   const tabNum = tab === 'following' ? 2 : 3;
   const newQuery = { ...route.query };
-
-  // Only update tab parameter if it already exists in the query
-  if (route.query.tab) {
-    newQuery.tab = tabNum.toString();
-  }
-
+  newQuery.tab = tabNum.toString();
+  
   router.replace({
     path: "/user-home",
     query: newQuery,
@@ -885,11 +886,15 @@ function showFollowList(tab: "following" | "fans") {
 }
 
 function goToPosts() {
+  // 如果已经在作品页，不重复加载
+  if (viewMode.value === "posts") {
+    return;
+  }
+  
   viewMode.value = "posts";
   currentTab.value = "all";
   loadPosts(true);
 
-  // Update URL with tab parameter
   router.replace({
     path: "/user-home",
     query: {
@@ -970,17 +975,23 @@ async function toggleListFollow(user: FollowUser) {
     };
 
     if (user.isFollowed) {
+      // 取消关注
       const res = await api.unfollow(data);
       const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
       if (response.code === 200 || response.code === 0) {
         await fetchFollowList(true);
+        // 取消关注成功，当前用户的关注数减1
+        userInfo.value.following = Math.max(0, userInfo.value.following - 1);
         toast(t('success'));
       }
     } else {
+      // 关注
       const res = await api.follow(data);
       const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
       if (response.code === 200 || response.code === 0) {
         user.isFollowed = true;
+        // 关注成功，当前用户的关注数加1
+        userInfo.value.following = userInfo.value.following + 1;
         toast(t('success'));
       }
     }

@@ -390,7 +390,7 @@ function goPath(type: { path: string; name: string }) {
 async function fetchAICreations() {
   isShowLoad.value = true;
   try {
-    const res = await api.getProject(0, 'all', 1, 20) as any;
+    const res = await api.getProject(2, 1, 'story', 1, 20) as any;
 
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data_list || [];

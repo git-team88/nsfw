@@ -284,6 +284,10 @@ function googleLogin() {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("lType");
 
+        if (res.data && res.data.is_first == 1) {
+          localStorage.setItem("isFirstRegister", "1");
+        }
+
         if (headerRef.value) {
           headerRef.value.getLoginUserInfo()
         }

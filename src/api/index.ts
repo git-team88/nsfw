@@ -244,6 +244,11 @@ export default {
         "Content-Type": "application/json",
       },
     }),
+  modifyPostDetail: (id: number | string) =>
+    axios.request({
+      url: "post/getPostDetailPublic?post_id=" + id,
+      method: "GET",
+    }),
   postDetail: (data: any) =>
     axios.request({
       url: "post/getPostDetailPublic",
@@ -460,9 +465,9 @@ export default {
       responseType: "blob"
     }),
 
-  getProject: (publish_type: number, type: string, page: number, limit: number ) =>
+  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number ) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&project_type=' + type + '&page=' + page + '&limit=' + limit,
+      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&project_type=' + type + '&page=' + page + '&limit=' + limit,
       method: "GET",
       baseURL: aiUrl,
     }),

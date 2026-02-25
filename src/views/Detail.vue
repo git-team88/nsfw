@@ -14,8 +14,12 @@
           <template v-if="detail.type === '3'">
             <div class="video-wrapper">
               <div v-if="!isVideoLocked">
-                <div class="video-poster" v-if="!isPlaying && detail.cover">
+                <div class="video-poster" v-if="isVideoEnded && detail.cover">
                   <img :src="detail.cover" alt="Cover" />
+                </div>
+
+                <div class="video-loading" v-if="isVideoLoading">
+                  <div class="loading-spinner"></div>
                 </div>
 
                 <video
@@ -25,24 +29,28 @@
                   :poster="detail.cover"
                   preload="auto"
                   playsinline
-                  @play="isPlaying = true"
+                  autoplay
+                  muted
+                  controls
+                  controlslist="nodownload noremoteplayback noplaybackrate"
+                  disablePictureInPicture
+                  v-show="!isVideoLoading"
+                  @play="isPlaying = true; isVideoEnded = false"
                   @pause="isPlaying = false"
                   @timeupdate="onTimeUpdate"
                   @loadedmetadata="onLoadedMetadata"
                   @error="onVideoError"
-                  @click="togglePlay"
                   @canplay="onCanPlay"
                   @waiting="onVideoWaiting"
                   @playing="onVideoPlaying"
+                  @volumechange="onVolumeChange"
+                  @ended="onVideoEnded"
                 ></video>
-
-                <div class="video-loading" v-if="isVideoBuffering">
-                  <div class="loading-spinner"></div>
-                </div>
 
                 <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
                   <img src="@/assets/images/detail/play.png" alt="Play" />
                 </div>
+
               </div>
 
               <div v-if="isVideoLocked" class="video-lock-overlay">
@@ -589,7 +597,9 @@ const route = useRoute();
 
 // --- State ---
 const id = ref<number>(Number(route.query.id));
-const isPlaying = ref(false);
+const isPlaying = ref(true);
+const isVideoEnded = ref(false);
+const isVideoLoading = ref(true);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const isLoading = ref(false);
 const isVideoBuffering = ref(false);
@@ -604,7 +614,8 @@ const zoomLevel = ref(100);
 // Video State
 const currentTime = ref(0);
 const duration = ref(0);
-const volume = ref(1);
+// 从localStorage中读取音量设置，如果没有则使用默认值0
+const volume = ref(parseFloat(localStorage.getItem('videoVolume') || '0'));
 
 // Comment Video State
 const commentVideoRef = ref<HTMLVideoElement | null>(null);
@@ -806,22 +817,22 @@ async function fetchDetail(newId: number) {
     var type = route.query.type as string || "";
 
     if (type == "2") {
-      data = {
+      data = JSON.stringify({
         post_id: newId,
         fromIndexFollow: {}
-      }
+      })
     } else if (type == "3") {
-      data = {
+      data = JSON.stringify({
         post_id: newId,
         fromIndexSubscription: {}
-      }
+      })
     } else if (type == "4") {
-      const bloggerId = route.query.blogger_id as string || "";
+      const bloggerId = route.query.uid as string || "";
       const searchKeyword = route.query.keyword as string || "";
       const startDay = route.query.start_day as string || "";
       const endDay = route.query.end_day as string || "";
 
-      data = {
+      data = JSON.stringify({
         post_id: newId,
         fromBloggerIndex: {
           blogger_id: bloggerId,
@@ -829,50 +840,23 @@ async function fetchDetail(newId: number) {
           start_day: startDay,
           end_day: endDay
         }
-      }
+      })
     } else if (type == "5") {
       const searchKeyword = route.query.keyword as string || "";
-      data = {
+      data = JSON.stringify({
         post_id: newId,
         fromSearch: {
           keywords: searchKeyword
         }
-      }
+      })
     } else {
-      data = {
+      data = JSON.stringify({
         post_id: newId,
         fromIndexRecommend: {
           "tab": "hot"
         }
-      }
+      })
     }
-
-    const formData = new FormData();
-
-    const appendFormData = (formData: FormData, data: any, parentKey: string = '') => {
-      if (data && typeof data === 'object' && !(data instanceof File)) {
-        const keys = Object.keys(data);
-
-        if (keys.length === 0) {
-          formData.append(parentKey, '{}');
-        } else {
-          keys.forEach(key => {
-            const value = data[key];
-            const formKey = parentKey ? `${parentKey}[${key}]` : key;
-
-            if (value && typeof value === 'object' && !(value instanceof File)) {
-              appendFormData(formData, value, formKey);
-            } else {
-              formData.append(formKey, value === null || value === undefined ? '' : value);
-            }
-          });
-        }
-      } else {
-        formData.append(parentKey, data);
-      }
-    };
-
-    appendFormData(formData, data);
 
     const token = localStorage.getItem('token');
 
@@ -882,10 +866,10 @@ async function fetchDetail(newId: number) {
       headers['token'] = token;
     }
 
-    const response = await fetch(`${baseUrl}post/getPostDetailPublic`, {
+    const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
       headers: headers,
-      body: formData
+      body: data
     });
 
     const res = await response.json();
@@ -908,7 +892,7 @@ async function fetchDetail(newId: number) {
         content: data.content || "",
         permission: data.access_rights == '2' ? "partial" : data.access_rights == '0' ? "private" : "public",
         subscriptionPlans: data.subscription_plans || data.plans || [],
-        isSubscribed: data.is_subscribed || false,
+        isSubscribed: data.is_subscribed == 1 || false,
         commentsEnabled: data.comments_enabled !== false,
         isLast: data.is_last || false,
         likes: Number(data.like_count || data.likes || 0),
@@ -1018,6 +1002,7 @@ async function fetchDetail(newId: number) {
   // Reset states
   currentImageIndex.value = 0;
   isArticleExpanded.value = false;
+  isVideoLoading.value = true;
 
   // Load comments after fetching detail
   await loadComments();
@@ -1293,21 +1278,27 @@ function onTimeUpdate(e: Event) {
 function onLoadedMetadata(e: Event) {
   const v = e.target as HTMLVideoElement;
   duration.value = v.duration;
-  v.volume = volume.value;
+  v.volume = volume.value; // 使用从localStorage中读取的音量值
+  isPlaying.value = true;
 }
 
 function onCanPlay() {
-  // 视频有足够数据可以播放
+  // 视频有足够数据可以播放时
   isVideoBuffering.value = false;
+  isVideoLoading.value = false;
+  // 视频有足够数据可以播放时，确保视频开始播放
+  if (videoRef.value && videoRef.value.paused) {
+    videoRef.value.play().catch(error => {
+      console.error('Video play failed:', error);
+    });
+  }
 }
 
 function onVideoWaiting() {
-  // 视频正在等待数据
   isVideoBuffering.value = true;
 }
 
 function onVideoPlaying() {
-  // 视频正在播放
   isVideoBuffering.value = false;
 }
 
@@ -1315,6 +1306,37 @@ function onVideoError(e: Event) {
   const v = e.target as HTMLVideoElement;
   toast(t('detail.videoLoadingFailed'));
   isVideoBuffering.value = false;
+  isVideoLoading.value = false;
+  isPlaying.value = false;
+}
+
+function onVolumeChange(e: Event) {
+  const v = e.target as HTMLVideoElement;
+  // 当视频从静音状态切换到非静音状态时，将音量设置为60%
+  if (!v.muted && v.volume === 1) {
+    v.volume = 0.6;
+    volume.value = 0.6;
+    // 保存音量设置到localStorage
+    localStorage.setItem('videoVolume', volume.value.toString());
+  } else if (!v.muted && v.volume === 0) {
+    v.volume = 0.6;
+    volume.value = 0.6;
+    // 保存音量设置到localStorage
+    localStorage.setItem('videoVolume', volume.value.toString());
+  } else {
+    // 保存音量设置到localStorage
+    volume.value = v.volume;
+    localStorage.setItem('videoVolume', volume.value.toString());
+  }
+}
+
+function onVideoEnded() {
+  // 视频播放结束时，设置isPlaying为false，isVideoEnded为true，显示封面和播放按钮
+  isPlaying.value = false;
+  isVideoEnded.value = true;
+  if (videoRef.value) {
+    videoRef.value.pause();
+  }
 }
 
 function seekVideo(e: MouseEvent) {
@@ -1331,9 +1353,11 @@ function toggleMute() {
   if (volume.value > 0) {
     volume.value = 0;
   } else {
-    volume.value = 1;
+    volume.value = 0.6; // 当用户取消静音时，音量设置为60%
   }
   videoRef.value.volume = volume.value;
+  // 保存音量设置到localStorage
+  localStorage.setItem('videoVolume', volume.value.toString());
 }
 
 function updateVolume() {
@@ -1502,24 +1526,18 @@ function togglePlay() {
   }
 
   if (!videoRef.value.src) {
-    console.error('Video URL is empty:', detail.value.videoUrl);
     toast('Video URL is invalid. Please try again.');
     return;
   }
 
   if (videoRef.value.paused) {
-    console.log('Attempting to play video:', videoRef.value.src);
-    // 立即显示加载状态
     isVideoBuffering.value = true;
 
     videoRef.value.play().then(() => {
-      console.log('Video play successful');
       isPlaying.value = true;
       isVideoBuffering.value = false;
     }).catch(error => {
       console.error('Video play failed:', error);
-      console.error('Error message:', error.message);
-      console.error('Error name:', error.name);
       isPlaying.value = false;
       isVideoBuffering.value = false;
       toast('Video play failed: ' + error.message);
@@ -2753,7 +2771,7 @@ watch(
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1;
+      z-index: 5;
 
       img {
         max-width: 100%;
@@ -2765,16 +2783,32 @@ watch(
       }
     }
 
+    .video-placeholder {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: rgba(251, 100, 182, 0.06);
+      z-index: 1;
+    }
+
     .video-player {
       max-width: 100%;
       max-height: 100%;
-      width: 100%;
-      height: auto;
+      width: auto;
+      height: 100%;
       object-fit: contain;
       display: block;
       vertical-align: middle;
       position: relative;
       z-index: 2;
+    }
+
+    .video-poster img {
+      width: 100% !important;
+      height: auto !important;
+      object-fit: contain;
     }
 
     .video-lock-overlay {
@@ -2880,8 +2914,8 @@ watch(
     top: 50%;
     left: 50%;
     transform: translate(-50%, -42%);
-    pointer-events: none;
     z-index: 30;
+    cursor: pointer;
 
     img {
       width: 12rem;
@@ -2918,11 +2952,12 @@ watch(
 
 .nav-arrows {
   position: absolute;
-  right: 2.4rem;
-  bottom: 2.4rem;
+  right: 3rem;
+  top: 50%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  transform: translateY(-50%);
+  gap: 6rem;
   z-index: 10;
 
   .nav-btn {
@@ -2939,12 +2974,12 @@ watch(
         background-size: 100% 100%;
       }
 
-      &.disabled {
-        background: url("@/assets/images/detail/prev_dis.png") no-repeat;
-        background-size: 100% 100%;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
+      // &.disabled {
+      //   background: url("@/assets/images/detail/prev_dis.png") no-repeat;
+      //   background-size: 100% 100%;
+      //   cursor: not-allowed;
+      //   pointer-events: none;
+      // }
     }
 
     &.down {
@@ -2956,12 +2991,12 @@ watch(
         background-size: 100% 100%;
       }
 
-      &.disabled {
-        background: url("@/assets/images/detail/next_dis.png") no-repeat;
-        background-size: 100% 100%;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
+      // &.disabled {
+      //   background: url("@/assets/images/detail/next_dis.png") no-repeat;
+      //   background-size: 100% 100%;
+      //   cursor: not-allowed;
+      //   pointer-events: none;
+      // }
     }
   }
 }

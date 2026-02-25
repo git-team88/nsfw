@@ -65,18 +65,26 @@
 
               <!-- Project Cover -->
               <div class="card-cover">
-                <!-- Use images from result_async.generate_character_image -->
-                <div v-if="project.result_async?.generate_character_image && project.result_async.generate_character_image.length > 0" class="character-images">
+                <!-- Use video cover from result_async.final_video_output if available -->
+                <div v-if="project.result_async?.final_video_output?.video_cover_url" class="character-images">
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_character_image[0].main_image_url" alt="" />
+                    <img :src="project.result_async.final_video_output.video_cover_url" alt="" />
+                  </div>
+                </div>
+                <!-- Use images from result_async.generate_character_images if no video cover -->
+                <div v-else-if="project.result_async?.generate_character_images && project.result_async.generate_character_images.length > 0" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_character_images[0].main_image_url" alt="" />
                   </div>
                 </div>
                 <!-- Fallback to original cover if no character images -->
-                <img v-else :src="project.cover || project.cover_image || pic" alt="" class="cover-img" />
+                <img v-else :src="project.cover || pic" alt="" class="cover-img" />
                 <!-- Video Play Overlay -->
-                <div class="video-overlay" v-if="project.type === 'video' && (project.videoUrl || project.video_url)" @click="playVideo(project.videoUrl || project.video_url)">
+                <div class="video-overlay" v-if="project.type === 'video' && (project.videoUrl || project.video_url || project.result_async?.final_video_output?.video_url)" @click="playVideo(project.videoUrl || project.video_url || project.result_async?.final_video_output?.video_url)">
                   <img src="@/assets/images/detail/play.png" :alt="t('myProjects.labels.play')" />
                 </div>
               </div>

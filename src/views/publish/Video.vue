@@ -683,7 +683,7 @@ async function getPostDetails() {
   if (!postId.value) return;
 
   try {
-    const res = await api.postDetail(postId.value );
+    const res = await api.modifyPostDetail(postId.value );
     const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
     if (data.code === 0 || data.code === 200) {
       const postData = data.data.post;
