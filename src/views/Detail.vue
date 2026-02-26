@@ -296,6 +296,10 @@
                             class="c-video-player"
                             :poster="getVideoPoster(c.video_url.trim())"
                             controls
+                            controlslist="nodownload noremoteplayback noplaybackrate"
+                            disablePictureInPicture
+                            @click="toggleCommentVideoPlay"
+                            @play="onCommentVideoPlay"
                           ></video>
                         </div>
                         <img
@@ -371,7 +375,9 @@
                           :src="r.video_url.trim()"
                           class="c-video-player"
                           controls
+                          controlslist="nodownload noremoteplayback noplaybackrate"
                           @click="toggleCommentVideoPlay"
+                          @play="onCommentVideoPlay"
                         ></video>
                       </div>
                     </div>
@@ -614,8 +620,10 @@ const zoomLevel = ref(100);
 // Video State
 const currentTime = ref(0);
 const duration = ref(0);
+
 // 从localStorage中读取音量设置，如果没有则使用默认值0
-const volume = ref(parseFloat(localStorage.getItem('videoVolume') || '0'));
+const savedVolume = localStorage.getItem('videoVolume');
+const volume = ref(savedVolume ? parseFloat(savedVolume) : 0);
 
 // Comment Video State
 const commentVideoRef = ref<HTMLVideoElement | null>(null);
@@ -880,7 +888,7 @@ async function fetchDetail(newId: number) {
       detail.value = {
         id: data.id || newId,
         author: res.data.author,
-        isFollowed: data.is_followed || false,
+        isFollowed: data.is_followed == 1 || false,
         time: formatTimestamp(data.created_at) || "",
         title: data.title || "",
         description: data.content || data.description || "",
@@ -1279,6 +1287,7 @@ function onLoadedMetadata(e: Event) {
   const v = e.target as HTMLVideoElement;
   duration.value = v.duration;
   v.volume = volume.value; // 使用从localStorage中读取的音量值
+  v.muted = volume.value === 0; // 根据音量值设置静音状态
   isPlaying.value = true;
 }
 
@@ -1300,6 +1309,40 @@ function onVideoWaiting() {
 
 function onVideoPlaying() {
   isVideoBuffering.value = false;
+  // 暂停所有其他视频的播放
+  pauseAllOtherVideos();
+  // 关闭视频预览模态框
+  if (showPreviewModal.value) {
+    showPreviewModal.value = false;
+  }
+}
+
+function pauseAllOtherVideos() {
+  // 暂停所有评论区和回复区的视频
+  const commentVideos = document.querySelectorAll('.c-video-player');
+  commentVideos.forEach(video => {
+    (video as HTMLVideoElement).pause();
+  });
+}
+
+function onCommentVideoPlay(event: Event) {
+  // 暂停左侧主视频
+  if (videoRef.value) {
+    videoRef.value.pause();
+  }
+
+  // 暂停所有其他评论区和回复区的视频
+  const commentVideos = document.querySelectorAll('.c-video-player');
+  commentVideos.forEach(video => {
+    if (video !== event.currentTarget) {
+      (video as HTMLVideoElement).pause();
+    }
+  });
+
+  // 关闭视频预览模态框
+  if (showPreviewModal.value) {
+    showPreviewModal.value = false;
+  }
 }
 
 function onVideoError(e: Event) {
@@ -1312,19 +1355,16 @@ function onVideoError(e: Event) {
 
 function onVolumeChange(e: Event) {
   const v = e.target as HTMLVideoElement;
-  // 当视频从静音状态切换到非静音状态时，将音量设置为60%
+
   if (!v.muted && v.volume === 1) {
     v.volume = 0.6;
     volume.value = 0.6;
-    // 保存音量设置到localStorage
     localStorage.setItem('videoVolume', volume.value.toString());
   } else if (!v.muted && v.volume === 0) {
     v.volume = 0.6;
     volume.value = 0.6;
-    // 保存音量设置到localStorage
     localStorage.setItem('videoVolume', volume.value.toString());
-  } else {
-    // 保存音量设置到localStorage
+  } else if (!v.muted) {
     volume.value = v.volume;
     localStorage.setItem('videoVolume', volume.value.toString());
   }
@@ -1336,6 +1376,10 @@ function onVideoEnded() {
   isVideoEnded.value = true;
   if (videoRef.value) {
     videoRef.value.pause();
+    // 重置视频到开始位置，确保视频画面回到初始状态
+    videoRef.value.currentTime = 0;
+    // 确保视频不会自动播放下一遍
+    videoRef.value.autoplay = false;
   }
 }
 
@@ -1353,10 +1397,9 @@ function toggleMute() {
   if (volume.value > 0) {
     volume.value = 0;
   } else {
-    volume.value = 0.6; // 当用户取消静音时，音量设置为60%
+    volume.value = 0.6;
   }
   videoRef.value.volume = volume.value;
-  // 保存音量设置到localStorage
   localStorage.setItem('videoVolume', volume.value.toString());
 }
 
@@ -1554,8 +1597,23 @@ function toggleCommentVideoPlay(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
   if (video) {
     if (video.paused) {
+      // 暂停左侧主视频
+      if (videoRef.value) {
+        videoRef.value.pause();
+      }
+
+      // 暂停所有其他评论区和回复区的视频
+      const commentVideos = document.querySelectorAll('.c-video-player');
+      commentVideos.forEach(v => {
+        if (v !== video) {
+          (v as HTMLVideoElement).pause();
+        }
+      });
+
+      // 播放当前视频
       video.play();
     } else {
+      // 暂停当前视频
       video.pause();
     }
   }
@@ -2219,6 +2277,18 @@ function previewFileItem(file: any, index: number) {
     currentImageIndex.value = index;
     showLargeViewer.value = true;
   } else if (file.type === 'video') {
+    // 暂停左侧主视频
+    if (videoRef.value) {
+      videoRef.value.pause();
+    }
+
+    // 暂停所有评论区和回复区的视频
+    const commentVideos = document.querySelectorAll('.c-video-player');
+    commentVideos.forEach(video => {
+      (video as HTMLVideoElement).pause();
+    });
+
+    // 显示视频预览模态框
     showPreviewModal.value = true;
   }
 }

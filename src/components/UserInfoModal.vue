@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits, watch, computed } from "vue";
+import { ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import { toast } from "@/util/toast";

@@ -868,6 +868,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     input: {
       placeholder: "Please enter your plot to generate a short video. e.g.: A transfer student arrives at a high school in another world and discovers all his classmates have various superpowers."
     },
+    img: 'Image',
     option: {
       character: "Character",
       reference: "Reference",

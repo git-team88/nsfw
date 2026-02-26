@@ -61,6 +61,7 @@
       :visible="showDetailModal"
       :character="selectedCharacter"
       @close="closeCharacterDetail"
+      @cast="handleCastCharacter"
     />
   </div>
 </template>
@@ -115,6 +116,31 @@ function openCharacterDetail(character: any) {
 function closeCharacterDetail() {
   showDetailModal.value = false;
   selectedCharacter.value = null;
+}
+
+function handleCastCharacter(character: any) {
+  // Store character in local storage
+  try {
+    // Get existing characters from local storage
+    let selectedCharacters = JSON.parse(localStorage.getItem('selectedCharacters') || '[]');
+
+    // Check if character is already selected
+    const isCharacterExists = selectedCharacters.some((c: any) => c.id === character.id);
+    if (!isCharacterExists) {
+      // Add new character to the list
+      selectedCharacters.push(character);
+      // Save back to local storage
+      localStorage.setItem('selectedCharacters', JSON.stringify(selectedCharacters));
+    }
+  } catch (error) {
+    console.error('Error storing character:', error);
+  }
+
+  // Close the modal
+  closeCharacterDetail();
+
+  // Navigate to home page
+  router.push('/');
 }
 
 async function loadCharacters() {

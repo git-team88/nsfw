@@ -57,13 +57,11 @@
             class="waterfall"
             v-if="postList && postList.length > 0"
             ref="waterfallRef"
-            :style="{ height: containerHeight + 'px' }"
           >
             <div
               class="content-item"
               v-for="post in postList"
               :key="post.id"
-              :style="post.style"
               ref="postCardRefs"
               @click="goToDetail(post.id)"
             >
@@ -185,7 +183,6 @@ interface Post {
   description: string;
   cover: string;
   time: string;
-  style?: CSSProperties;
   author: {
     avatar: string;
     nickname: string;
@@ -334,11 +331,6 @@ async function loadData(fromLoadMore = false) {
             },
             like_count: parseInt(item.like_count || "0"),
             isLiked: item.is_liked == 1 || false,
-            style: {
-              position: "absolute",
-              left: "0",
-              top: "0",
-            } as CSSProperties,
           };
         });
 
@@ -442,78 +434,8 @@ async function loadMore() {
 const layoutWaterfall = () => {
   if (!waterfallRef.value || !postList.value || postList.value.length === 0) return;
 
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const cardWidthRem = 25.8;
-  const gapRem = 1.6;
-  const cols = 4;
-
-  // ✅ 改为从左到右顺序排列，而不是找最短列插入
-  // 行高度数组，记录每一行的最大高度
-  const rowHeights: number[] = [];
-  let currentRow = 0;
-  let currentRowHeight = 0;
-
-  // 先隐藏所有卡片，避免布局前显示在错误位置
-  if (postList.value) {
-    postList.value.forEach(post => {
-      if (!post.style) post.style = {};
-      post.style.opacity = 0;
-    });
-  }
-
-  // Use a small delay to ensure DOM is ready
-  setTimeout(() => {
-    const cards = postCardRefs.value;
-    if (!cards || cards.length === 0) return;
-
-    // Add null check
-    if (!postList.value) return;
-
-    postList.value.forEach((post, index) => {
-      const cardEl = cards[index];
-      if (!cardEl) return;
-
-      // 计算当前卡片在第几列（从 0 开始）
-      const colIndex = index % cols;
-
-      // 如果是第一列，说明开始新行
-      if (colIndex === 0) {
-        // 如果不是第一行，先保存上一行的高度
-        if (index > 0) {
-          rowHeights.push(currentRowHeight);
-        }
-        // 计算新行的起始位置（所有之前行的高度之和）
-        currentRow = Math.floor(index / cols);
-        currentRowHeight = 0;
-      }
-
-      // 计算位置
-      const leftRem = colIndex * (cardWidthRem + gapRem);
-      const prevRowsHeight = rowHeights.reduce((sum, h) => sum + h, 0);
-      const topRem = prevRowsHeight / rootFontSize;
-
-      post.style = {
-        position: "absolute",
-        left: `${leftRem}rem`,
-        top: `${topRem}rem`,
-        opacity: 1, // ✅ 布局完成后显示
-      };
-
-      // 更新当前行的最大高度
-      const cardHeight = cardEl.offsetHeight + gapRem * rootFontSize;
-      if (cardHeight > currentRowHeight) {
-        currentRowHeight = cardHeight;
-      }
-    });
-
-    // 保存最后一行的高度
-    if (postList.value.length > 0) {
-      rowHeights.push(currentRowHeight);
-    }
-
-    // 容器高度 = 所有行高度之和
-    containerHeight.value = rowHeights.reduce((sum, h) => sum + h, 0);
-  }, 50);
+  // Flex layout will handle positioning automatically
+  // No need for absolute positioning calculations
 };
 
 function goToDetail(postId: number) {
@@ -795,9 +717,10 @@ watch(postList, () => {
 .posts-container {
   margin: 2.4rem 0;
   .waterfall {
-    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
     width: 100%;
-    min-height: 40rem;
     margin: 0 auto;
   }
 }

@@ -15,7 +15,7 @@
           <div class="character-image-container">
             <img :src="character?.image" :alt="character?.name" class="character-image" />
           </div>
-          <button class="cast-btn">{{ t('characterLibrary.castBtn') }}</button>
+          <button class="cast-btn" @click="castCharacter">{{ t('characterLibrary.castBtn') }}</button>
         </div>
 
         <!-- Right Side: Character Info and Design Sheet -->
@@ -41,12 +41,19 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
+  (e: 'cast', character: any): void;
 }>();
 
 const { t, locale } = useI18n();
 
 function closeModal() {
   emit('close');
+}
+
+function castCharacter() {
+  if (props.character) {
+    emit('cast', props.character);
+  }
 }
 </script>
 

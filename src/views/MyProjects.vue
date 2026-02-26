@@ -51,13 +51,11 @@
             v-else
             class="waterfall"
             ref="waterfallRef"
-            :style="{ height: containerHeight + 'px' }"
           >
             <div
               class="project-card"
               v-for="project in projects"
               :key="project.id"
-              :style="project.style"
               ref="projectCardRefs"
             >
               <!-- Publish Button -->
@@ -142,10 +140,8 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const myProjectsRef = ref<HTMLElement | null>(null);
 
-// Waterfall layout state
-const waterfallRef = ref<HTMLElement | null>(null);
+// Layout state
 const projectCardRefs = ref<HTMLElement[]>([]);
-const containerHeight = ref(0);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
@@ -238,15 +234,7 @@ async function loadProjects(reset = false) {
       if (data.code === 200 || data.code === 0) {
         const newProjects = data.data?.data_list || data.data_list || [];
 
-        // Add style property for waterfall layout
-        newProjects.forEach((project: any) => {
-          project.style = {
-            position: "absolute",
-            left: "0",
-            top: "0",
-            width: "25.8rem"
-          } as CSSProperties;
-        });
+
 
         if (currentPage.value === 1) {
           projects.value = newProjects;
@@ -258,18 +246,13 @@ async function loadProjects(reset = false) {
         const totalCount = data.data?.data_count || data.data_count || 0;
         hasMore.value = projects.value.length < totalCount;
 
-        // Wait for images to load before layout
+        // Wait for images to load before updating loading state
         nextTick(() => {
           let loadedCount = 0;
           const total = newProjects.length;
           if (total === 0) {
-            // Set loading to false before layout to ensure DOM is rendered
             loadingMore.value = false;
             loading.value = false;
-            // Use nextTick to ensure DOM is updated
-            nextTick(() => {
-              layoutWaterfall();
-            });
             return;
           }
 
@@ -281,25 +264,15 @@ async function loadProjects(reset = false) {
               img.onload = img.onerror = () => {
                 loadedCount++;
                 if (loadedCount === total) {
-                  // Set loading to false before layout to ensure DOM is rendered
                   loadingMore.value = false;
                   loading.value = false;
-                  // Use nextTick to ensure DOM is updated
-                  nextTick(() => {
-                    layoutWaterfall();
-                  });
                 }
               };
             } else {
               loadedCount++;
               if (loadedCount === total) {
-                // Set loading to false before layout to ensure DOM is rendered
                 loadingMore.value = false;
                 loading.value = false;
-                // Use nextTick to ensure DOM is updated
-                nextTick(() => {
-                  layoutWaterfall();
-                });
               }
             }
           });
@@ -344,50 +317,10 @@ async function loadMoreProjects() {
   await loadProjects(false);
 }
 
-function layoutWaterfall() {
-  if (!waterfallRef.value || !projects.value || projects.value.length === 0) return;
 
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const cardWidthRem = 25.8;
-  const gapRem = 1.6;
-  const cols = 4;
-
-  const columnHeights = new Array(cols).fill(0);
-
-  // Use a small delay to ensure DOM is ready
-  setTimeout(() => {
-    const cards = projectCardRefs.value;
-    if (!cards || cards.length === 0) return;
-
-    projects.value.forEach((project, index) => {
-      const cardEl = cards[index];
-      if (!cardEl) return;
-
-      const minHeight = Math.min(...columnHeights);
-      const colIndex = columnHeights.indexOf(minHeight);
-
-      const leftRem = colIndex * (cardWidthRem + gapRem);
-      const topRem = minHeight / rootFontSize;
-
-      project.style = {
-        position: "absolute",
-        left: `${leftRem}rem`,
-        top: `${topRem}rem`,
-        width: `${cardWidthRem}rem`,
-        opacity: 1,
-      };
-
-      columnHeights[colIndex] += cardEl.offsetHeight + gapRem * rootFontSize;
-    });
-
-    containerHeight.value = Math.max(...columnHeights);
-  }, 50);
-}
 
 // Lifecycle
 onMounted(async () => {
-  window.addEventListener("resize", layoutWaterfall);
-
   // Load initial projects
   await loadProjects(true);
 
@@ -398,8 +331,6 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", layoutWaterfall);
-
   // Remove scroll event listener
   if (myProjectsRef.value) {
     myProjectsRef.value.removeEventListener('scroll', handleScroll);
@@ -435,7 +366,7 @@ function handleScroll() {
   max-width: 112.8rem;
   min-height: calc(100vh - 14rem);
   margin: 0 auto 2rem;
-  padding: 2.4rem;
+  padding: 2.4rem 0 2.4rem 2.4rem;
   border: 1px solid rgba(251,100,182,0.2);
   border-radius: 1.2rem;
   background: rgba(255,255,255,0.8);
@@ -502,19 +433,21 @@ function handleScroll() {
 
 .projects-box {
   min-height: 40rem;
-  padding: 0 0.8rem;
 }
 
 .projects-container {
   min-height: 40rem;
 
   .waterfall {
-    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
     width: 100%;
     margin: 0 auto;
   }
 
   .project-card {
+    width: 25.8rem;
     position: relative;
     overflow: hidden;
     break-inside: avoid;

@@ -93,7 +93,7 @@
                   @paste="handlePaste"
                   @focus="handleInputFocus"
                 >
-                  <span v-if="isInputEmpty && !isInputFocused" class="placeholder">{{ t('home.input.placeholder') }}</span>
+                  <span v-if="isInputEmpty" class="placeholder">{{ t('home.input.placeholder') }}</span>
                 </div>
 
                 <!-- Hidden file input for image upload -->
@@ -116,7 +116,7 @@
                     @click="selectAtItem(item)"
                   >
                     <img :src="item.image" :alt="item.name" />
-                    <span>{{ t('home.img') }}{{ index+1 }}</span>
+                    <span>{{ item.name }}</span>
                   </div>
                 </div>
 
@@ -235,6 +235,7 @@
             class="waterfall"
             ref="waterfallRef"
             :key="`waterfall-${activeContentTab}`"
+            :style="{ height: containerHeight + 'px' }"
           >
             <div
               v-for="(item, index) in displayContent"
@@ -379,12 +380,9 @@ const showAtDropdown = ref(false);
 const atDropdownItems = ref<any[]>([]);
 const editableInputRef = ref<HTMLElement | null>(null);
 const isInputEmpty = ref(true);
-const isInputFocused = ref(false);
 const uploadedImages = ref<any[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
-
-
 
 // Pagination variables
 const totalPosts = ref(0);
@@ -400,6 +398,7 @@ const isLoggedIn = computed(() => {
 // Waterfall layout state
 const waterfallRef = ref<HTMLElement | null>(null);
 const contentCardRefs = ref<(HTMLElement | null)[]>([]);
+const containerHeight = ref(0);
 
 // Function to set content card ref at specific index
 const setContentCardRef = (el: Element | ComponentPublicInstance | null, index: number) => {
@@ -533,16 +532,11 @@ const selectCharacter = (characters: any[]) => {
       selectedCharacters.value.push(newChar);
     }
   });
-
-  // Do not save to local storage - only characters from CharacterLibrary should be cached
-
   showCharacterModal.value = false;
 };
 
 const removeCharacter = (character: any) => {
   selectedCharacters.value = selectedCharacters.value.filter(c => c.id !== character.id);
-
-  // Do not update local storage - only characters from CharacterLibrary should be cached
 };
 
 const selectStyle = (style: any) => {
@@ -766,6 +760,7 @@ const switchContentTab = (tabId: string, index: number) => {
   currentPage.value = 1;
   allContent.value = []; // Clear old data to show loading state
   contentCardRefs.value = []; // Clear card refs to reset layout
+  containerHeight.value = 0; // Reset container height
 
   // Use nextTick to ensure DOM is updated before loading new content
   nextTick(() => {
@@ -844,27 +839,6 @@ async function uploadImage(file: File, mode: string): Promise<string> {
 
 // Remove uploaded image
 const removeUploadedImage = (id: string) => {
-  // First, remove references from input-textarea
-  if (editableInputRef.value) {
-    const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
-    imageTags.forEach(tag => {
-      const img = tag.querySelector('img');
-      if (img) {
-        // Find the image being removed
-        const imageToRemove = uploadedImages.value.find(img => img.id === id);
-        if (imageToRemove && (img.src.includes(imageToRemove.image) || imageToRemove.image.includes(img.src))) {
-          // If this tag corresponds to the image being removed, remove it
-          tag.remove();
-        }
-      }
-    });
-
-    // Update input empty state
-    const inputContent = editableInputRef.value.textContent || '';
-    isInputEmpty.value = inputContent.trim() === '';
-  }
-
-  // Then remove from uploadedImages array
   uploadedImages.value = uploadedImages.value.filter(img => img.id !== id);
 };
 
@@ -878,74 +852,9 @@ const handleInput = (event: Event) => {
   const textBeforeCursor = text.substring(0, cursorPosition);
   const atIndex = textBeforeCursor.lastIndexOf('@');
 
-  // Only show dropdown if:
-  // 1. There's an @ symbol
-  // 2. @ is the last character before cursor (just typed)
-  // 3. There are uploaded images
-  if (atIndex !== -1 &&
-      atIndex === textBeforeCursor.length - 1 &&
-      uploadedImages.value.length > 0) {
+  if (atIndex !== -1 && (atIndex === 0 || textBeforeCursor[atIndex - 1] === ' ')) {
     showAtDropdown.value = true;
     atDropdownItems.value = uploadedImages.value;
-
-    // Calculate dropdown position based on @ symbol position
-    try {
-      if (editableInputRef.value) {
-        // Find the @ symbol position in the text
-        let currentPosition = 0;
-        let foundAtSymbol = false;
-        let targetNode: Text | null = null;
-        let atSymbolIndex = 0;
-
-        // Traverse all text nodes to find the @ symbol
-        const traverseNodes = (node: Node) => {
-          if (foundAtSymbol) return;
-
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent || '';
-            const nodeAtIndex = text.indexOf('@', Math.max(0, atIndex - currentPosition));
-
-            if (nodeAtIndex !== -1 && currentPosition + nodeAtIndex === atIndex) {
-              targetNode = node as Text;
-              atSymbolIndex = nodeAtIndex;
-              foundAtSymbol = true;
-              return;
-            }
-            currentPosition += text.length;
-          } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-              traverseNodes(node.childNodes[i]);
-              if (foundAtSymbol) return;
-            }
-          }
-        };
-
-        traverseNodes(editableInputRef.value);
-
-        if (foundAtSymbol && targetNode) {
-          // Create a range for the @ symbol
-          const range = document.createRange();
-          range.setStart(targetNode, atSymbolIndex);
-          range.setEnd(targetNode, atSymbolIndex + 1);
-
-          const rect = range.getBoundingClientRect();
-          const inputInner = editableInputRef.value.parentElement;
-          const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
-
-          if (inputInner && dropdown) {
-            const inputInnerRect = inputInner.getBoundingClientRect();
-            // Calculate position relative to input-inner
-            const relativeTop = rect.bottom - inputInnerRect.top;
-            const relativeLeft = rect.right - inputInnerRect.left;
-
-            dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-            dropdown.style.left = `${relativeLeft}px`; // Position at the end of @ symbol
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error positioning dropdown:', error);
-    }
   } else {
     showAtDropdown.value = false;
   }
@@ -960,102 +869,16 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 // Handle input click
 const handleInputClick = () => {
-  // Only handle @ dropdown logic, don't update isInputEmpty
-  if (editableInputRef.value) {
-    const target = editableInputRef.value;
-    const text = target.textContent || '';
-    const cursorPosition = getCursorPosition(target);
-    const textBeforeCursor = text.substring(0, cursorPosition);
-    const atIndex = textBeforeCursor.lastIndexOf('@');
-
-    // Only show dropdown if:
-    // 1. There's an @ symbol
-    // 2. @ is the last character before cursor (just typed)
-    // 3. There are uploaded images
-    if (atIndex !== -1 &&
-        atIndex === textBeforeCursor.length - 1 &&
-        uploadedImages.value.length > 0) {
-      showAtDropdown.value = true;
-      atDropdownItems.value = uploadedImages.value;
-
-      // Calculate dropdown position based on @ symbol position
-      try {
-        // Find the @ symbol position in the text
-        let currentPosition = 0;
-        let foundAtSymbol = false;
-        let targetNode: Text | null = null;
-        let atSymbolIndex = 0;
-
-        // Traverse all text nodes to find the @ symbol
-        const traverseNodes = (node: Node) => {
-          if (foundAtSymbol) return;
-
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent || '';
-            const nodeAtIndex = text.indexOf('@', Math.max(0, atIndex - currentPosition));
-
-            if (nodeAtIndex !== -1 && currentPosition + nodeAtIndex === atIndex) {
-              targetNode = node as Text;
-              atSymbolIndex = nodeAtIndex;
-              foundAtSymbol = true;
-              return;
-            }
-            currentPosition += text.length;
-          } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-              traverseNodes(node.childNodes[i]);
-              if (foundAtSymbol) return;
-            }
-          }
-        };
-
-        traverseNodes(editableInputRef.value);
-
-        if (foundAtSymbol && targetNode) {
-          // Create a range for the @ symbol
-          const range = document.createRange();
-          range.setStart(targetNode, atSymbolIndex);
-          range.setEnd(targetNode, atSymbolIndex + 1);
-
-          const rect = range.getBoundingClientRect();
-          const inputInner = editableInputRef.value.parentElement;
-          const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
-
-          if (inputInner && dropdown) {
-            const inputInnerRect = inputInner.getBoundingClientRect();
-            // Calculate position relative to input-inner
-            const relativeTop = rect.bottom - inputInnerRect.top;
-            const relativeLeft = rect.right - inputInnerRect.left;
-
-            dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-            dropdown.style.left = `${relativeLeft}px`; // Position at the end of @ symbol
-          }
-        }
-      } catch (error) {
-        console.error('Error positioning dropdown:', error);
-      }
-    } else {
-      showAtDropdown.value = false;
-    }
-  }
+  handleInput({ target: editableInputRef.value } as Event);
 };
 
 // Handle input focus
 const handleInputFocus = () => {
   checkLogin();
-  isInputFocused.value = true;
 };
 
 // Handle input blur
 const handleInputBlur = () => {
-  isInputFocused.value = false;
-
-  // Update input empty state
-  if (editableInputRef.value) {
-    const inputContent = editableInputRef.value.textContent || '';
-    isInputEmpty.value = inputContent.trim() === '';
-  }
-
   // Delay hiding dropdown to allow click on dropdown items
   setTimeout(() => {
     showAtDropdown.value = false;
@@ -1106,66 +929,13 @@ const selectAtItem = (item: any) => {
   const atIndex = textBeforeCursor.lastIndexOf('@');
 
   if (atIndex !== -1) {
-    // Get the content before and after the @ symbol
-    const contentBeforeAt = text.substring(0, atIndex);
-    const contentAfterCursor = text.substring(cursorPosition);
+    const newText = text.substring(0, atIndex) + `@${item.name} ` + text.substring(cursorPosition);
+    target.textContent = newText;
 
-    // Create image tag
-    const imageTag = document.createElement('span');
-    imageTag.className = 'image-tag';
-    imageTag.contentEditable = 'false'; // Make the image tag non-editable
-
-    // Create image element
-    const img = document.createElement('img');
-    img.src = item.image;
-    img.alt = item.name;
-    img.className = 'image-tag-img';
-
-    // Create text node with image index
-    const imageIndex = uploadedImages.value.findIndex(img => img.id === item.id) + 1;
-    const textNode = document.createTextNode(`image${imageIndex}`);
-
-    // Append image and text to tag
-    imageTag.appendChild(img);
-    imageTag.appendChild(textNode);
-
-    // Clear the content
-    target.innerHTML = '';
-
-    // Create text nodes for the content before and after
-    const beforeNode = document.createTextNode(contentBeforeAt);
-    const afterNode = document.createTextNode('\u0020' + contentAfterCursor);
-
-    // Append everything to the target
-    target.appendChild(beforeNode);
-    target.appendChild(imageTag);
-
-    // Add a space after the image tag to ensure content doesn't go inside it
-    const spaceNode = document.createTextNode('\u0020');
-    target.appendChild(spaceNode);
-
-    // Add the content after cursor
-    target.appendChild(afterNode);
-
-    // Set cursor position after the space node (before afterNode if it exists)
-    const selection = window.getSelection();
-    if (selection) {
-      const range = document.createRange();
-      if (afterNode.textContent && afterNode.textContent.trim()) {
-        // If there's content after, set cursor before it
-        range.setStartBefore(afterNode);
-      } else {
-        // If no content after, set cursor after the space
-        range.setStartAfter(spaceNode);
-      }
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-
-    // Update input empty state after inserting image tag
-    const inputContent = target.textContent || '';
-    isInputEmpty.value = inputContent.trim() === '';
+    // Set cursor position after the inserted text
+    setTimeout(() => {
+      setCursorPosition(target, atIndex + item.name.length + 2);
+    }, 0);
   }
 
   showAtDropdown.value = false;
@@ -1277,8 +1047,102 @@ function layoutWaterfall() {
 
   // Wait for next tick to ensure all DOM elements are rendered
   nextTick(() => {
-    // Flex layout will handle positioning automatically
-    // No need for absolute positioning calculations
+    const cards = contentCardRefs.value.filter(card => card !== null) as HTMLElement[];
+
+    if (!cards || cards.length === 0 || cards.length !== allContent.value.length) {
+      // If refs don't match content, retry after a short delay
+      setTimeout(() => layoutWaterfall(), 50);
+      return;
+    }
+
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const cardWidthRem = 25.8;
+    const gapRem = 1.6;
+    const cols = 4;
+
+    // Function to calculate and apply layout - GRID style, not waterfall
+    const applyLayout = () => {
+      // Track the maximum height in each row
+      const rowHeights: number[] = [];
+      let currentRow = 0;
+      let maxHeightInRow = 0;
+
+      cards.forEach((cardEl, index) => {
+        if (!cardEl) return;
+
+        // Calculate which column and row this card belongs to
+        const colIndex = index % cols;
+        const rowIndex = Math.floor(index / cols);
+
+        // If we moved to a new row, save the previous row's max height
+        if (rowIndex !== currentRow) {
+          rowHeights[currentRow] = maxHeightInRow;
+          currentRow = rowIndex;
+          maxHeightInRow = 0;
+        }
+
+        // Calculate position - grid layout (not waterfall)
+        const leftRem = colIndex * (cardWidthRem + gapRem);
+
+        // Calculate top position based on previous rows' heights
+        let topPx = 0;
+        for (let i = 0; i < rowIndex; i++) {
+          topPx += rowHeights[i] + gapRem * rootFontSize;
+        }
+        const topRem = topPx / rootFontSize;
+
+        // Apply styles directly to DOM element
+        cardEl.style.position = "absolute";
+        cardEl.style.left = `${leftRem}rem`;
+        cardEl.style.top = `${topRem}rem`;
+
+        // Track max height in current row
+        maxHeightInRow = Math.max(maxHeightInRow, cardEl.offsetHeight);
+      });
+
+      // Save the last row's height
+      rowHeights[currentRow] = maxHeightInRow;
+
+      // Calculate total container height
+      let totalHeight = 0;
+      rowHeights.forEach((height, index) => {
+        totalHeight += height;
+        if (index < rowHeights.length - 1) {
+          totalHeight += gapRem * rootFontSize;
+        }
+      });
+
+      // Just use the calculated content height
+      // No need to force fill viewport as Footer is outside main-content
+      containerHeight.value = totalHeight;
+    };
+
+    // Apply initial layout
+    applyLayout();
+
+    // Wait for images to load and recalculate
+    if (waterfallRef.value) {
+      const images = Array.from(waterfallRef.value.querySelectorAll('.content-item img'));
+      if (images.length > 0) {
+        const imageLoadPromises = images.map(img => {
+          return new Promise((resolve) => {
+            if ((img as HTMLImageElement).complete) {
+              resolve(true);
+            } else {
+              img.addEventListener('load', () => resolve(true), { once: true });
+              img.addEventListener('error', () => resolve(true), { once: true });
+              // Timeout fallback
+              setTimeout(() => resolve(true), 3000);
+            }
+          });
+        });
+
+        Promise.all(imageLoadPromises).then(() => {
+          // Recalculate layout after images are loaded
+          applyLayout();
+        });
+      }
+    }
   });
 }
 
@@ -1381,18 +1245,6 @@ const loadStyles = async () => {
 
 onMounted(() => {
   getCountry();
-
-  // Load selected characters from local storage (only for characters cast from CharacterLibrary)
-  try {
-    const storedCharacters = localStorage.getItem('selectedCharacters');
-    if (storedCharacters) {
-      selectedCharacters.value = JSON.parse(storedCharacters);
-      // Clear the cache after loading to ensure characters are only displayed once
-      localStorage.removeItem('selectedCharacters');
-    }
-  } catch (error) {
-    console.error('Error loading selected characters:', error);
-  }
 
   loadContent(1);
   loadStyles();
@@ -1702,6 +1554,7 @@ function handlePageChange(page: number) {
       box-shadow: 0px 0px 15px -3px rgba(251,100,182,0.2);
       border: 2px solid #FB64B6;
       border-radius: 1.2rem;
+      overflow: hidden;
 
       &.unlimit{
         border: none;
@@ -1831,49 +1684,22 @@ function handlePageChange(page: number) {
           top: 0;
           left: 0;
           z-index: 1;
-          padding: 0;
-          margin: 0;
-          line-height: 2rem;
         }
 
-        :deep(.image-tag) {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.2rem;
-          padding: 0.2rem;
-          background: rgba(251,100,182,0.12);
-          border-radius: 0.2rem;
-          font-size: 1.2rem;
-          color: #6A7282;
-          margin: 0 0.6rem;
-          pointer-events: none;
-          user-select: none;
-          cursor: default;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          position: relative;
-          z-index: 1;
-
-          .image-tag-img {
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.2rem;
-            object-fit: cover;
-            pointer-events: none;
-            user-select: none;
-          }
+        &:focus .placeholder {
+          display: none;
         }
       }
 
       .at-dropdown {
         position: absolute;
-        width: 11rem;
-        padding: 1.2rem;
-        border: 1px solid rgba(251,100,182,0.2);
+        top: 100%;
+        left: 1rem;
+        right: 1rem;
+        background: white;
+        border: 1px solid #F5F5F5;
         border-radius: 0.8rem;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0px 0px 12px -4px rgba(0,0,0,0.18);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         z-index: 100;
         max-height: 20rem;
         overflow-y: auto;
@@ -1881,30 +1707,24 @@ function handlePageChange(page: number) {
         .dropdown-item {
           display: flex;
           align-items: center;
-          gap: 0.4rem;
-          margin-bottom: 1.2rem;
+          gap: 1rem;
+          padding: 1rem;
           cursor: pointer;
 
-          &:last-child{
-            margin-bottom: 0;
-          }
-
-          &:hover{
-            span{
-              color: #6A7282;
-            }
+          &:hover {
+            background: #F5F5F5;
           }
 
           img {
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.4rem;
             object-fit: cover;
           }
 
           span {
             font-size: 1.4rem;
-            color: #99A1AF;
+            color: #364153;
           }
         }
       }
@@ -2154,16 +1974,13 @@ function handlePageChange(page: number) {
     flex-direction: column;
 
     .waterfall {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.6rem;
+      position: relative;
       width: 100%;
       margin: 0 auto;
     }
 
     .content-item {
       width: 25.8rem;
-      height: auto;
       cursor: pointer;
       overflow: hidden;
       break-inside: avoid;

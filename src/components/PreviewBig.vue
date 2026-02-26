@@ -16,7 +16,11 @@
         />
       </div>
       <div class="video-player">
-        <video :src="videoUrl" controls autoplay></video>
+        <video :src="videoUrl"
+        controls
+        controlslist="nodownload noremoteplayback noplaybackrate"
+        disablePictureInPicture
+        autoplay></video>
       </div>
     </div>
   </div>

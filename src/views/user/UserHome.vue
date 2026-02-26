@@ -161,13 +161,11 @@
                 class="waterfall"
                 v-if="postList && postList.length > 0"
                 ref="waterfallRef"
-                :style="{ height: containerHeight + 'px' }"
               >
                 <div
                   class="post-card"
                   v-for="post in postList"
                   :key="post.id"
-                  :style="post.style"
                   ref="postCardRefs"
                 >
                 <div class="card-cover" @click="goDetail(post.id)">
@@ -401,7 +399,6 @@ interface Post {
   time: string;
   isPinned?: boolean;
   is_top?: string;
-  style?: CSSProperties;
 }
 
 // Subscription Plan Interface
@@ -516,9 +513,7 @@ const noMore = ref(false);
 const page = ref(1);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
-const waterfallRef = ref<HTMLElement | null>(null);
 const postCardRefs = ref<HTMLElement[]>([]);
-const containerHeight = ref(0);
 
 const activeCardMenuId = ref<string | number | null>(null);
 const cardMenuRefs = new Map<string | number, HTMLElement>();
@@ -619,88 +614,11 @@ const pinnedPosts = computed(() => {
   return postList.value ? postList.value.filter((p) => p.isPinned) : [];
 });
 
-const layoutWaterfall = () => {
-  if (!waterfallRef.value || !postList.value || postList.value.length === 0) return;
 
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const cardWidthRem = 25.8;
-  const gapRem = 1.6;
-  const cols = 4;
-
-  // ✅ 改为从左到右顺序排列，而不是找最短列插入
-  // 行高度数组，记录每一行的最大高度
-  const rowHeights: number[] = [];
-  let currentRow = 0;
-  let currentRowHeight = 0;
-
-  // 先隐藏所有卡片，避免布局前显示在错误位置
-  if (postList.value) {
-    postList.value.forEach(post => {
-      if (!post.style) post.style = {};
-      post.style.opacity = 0;
-    });
-  }
-
-  // Use a small delay to ensure DOM is ready
-  setTimeout(() => {
-    const cards = postCardRefs.value;
-    if (!cards || cards.length === 0) return;
-
-    if (!postList.value) return;
-
-    postList.value.forEach((post, index) => {
-      const cardEl = cards[index];
-      if (!cardEl) return;
-
-      // 计算当前卡片在第几列（从 0 开始）
-      const colIndex = index % cols;
-
-      // 如果是第一列，说明开始新行
-      if (colIndex === 0) {
-        // 如果不是第一行，先保存上一行的高度
-        if (index > 0) {
-          rowHeights.push(currentRowHeight);
-        }
-        // 计算新行的起始位置（所有之前行的高度之和）
-        currentRow = Math.floor(index / cols);
-        const prevRowsHeight = rowHeights.reduce((sum, h) => sum + h, 0);
-        currentRowHeight = 0;
-      }
-
-      // 计算位置
-      const leftRem = colIndex * (cardWidthRem + gapRem);
-      const prevRowsHeight = rowHeights.reduce((sum, h) => sum + h, 0);
-      const topRem = prevRowsHeight / rootFontSize;
-
-      post.style = {
-        position: "absolute",
-        left: `${leftRem}rem`,
-        top: `${topRem}rem`,
-        width: `${cardWidthRem}rem`,
-        opacity: 1, // ✅ 布局完成后显示
-      };
-
-      // 更新当前行的最大高度
-      const cardHeight = cardEl.offsetHeight + gapRem * rootFontSize;
-      if (cardHeight > currentRowHeight) {
-        currentRowHeight = cardHeight;
-      }
-    });
-
-    // 保存最后一行的高度
-    if (postList.value.length > 0) {
-      rowHeights.push(currentRowHeight);
-    }
-
-    // 容器高度 = 所有行高度之和
-    containerHeight.value = rowHeights.reduce((sum, h) => sum + h, 0);
-  }, 50);
-};
 
 // Lifecycle
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
-  window.addEventListener("resize", layoutWaterfall);
 
   // First fetch user info
   await fetchUserInfo();
@@ -755,7 +673,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
-  window.removeEventListener("resize", layoutWaterfall);
 
   // 清理 IntersectionObserver
   if (loadingSentinel.value && (loadingSentinel.value as any)._observer) {
@@ -765,7 +682,7 @@ onBeforeUnmount(() => {
 
 watch(viewMode, (newVal) => {
   if (newVal === "posts") {
-    layoutWaterfall();
+    // No need for layoutWaterfall with flexbox
   }
 });
 
@@ -870,7 +787,7 @@ function showFollowList(tab: "following" | "fans") {
   if (viewMode.value === "follow" && followTab.value === tab) {
     return;
   }
-  
+
   viewMode.value = "follow";
   followTab.value = tab;
   fetchFollowList(true);
@@ -878,7 +795,7 @@ function showFollowList(tab: "following" | "fans") {
   const tabNum = tab === 'following' ? 2 : 3;
   const newQuery = { ...route.query };
   newQuery.tab = tabNum.toString();
-  
+
   router.replace({
     path: "/user-home",
     query: newQuery,
@@ -890,7 +807,7 @@ function goToPosts() {
   if (viewMode.value === "posts") {
     return;
   }
-  
+
   viewMode.value = "posts";
   currentTab.value = "all";
   loadPosts(true);
@@ -1140,13 +1057,6 @@ async function loadPosts(reset = false) {
           cover: item.cover || '',
           time: formatTime(item.created_at),
           isPinned: item.is_top === '1' || false,
-          style: {
-            position: "absolute",
-            left: "0",
-            top: "0",
-            width: "25.8rem",
-            opacity: 0,
-          } as CSSProperties,
         };
       });
 
@@ -1156,12 +1066,11 @@ async function loadPosts(reset = false) {
         postList.value.push(...newPosts);
       sortPosts();
 
-      // Wait for images to load before layout
+      // Wait for images to load before updating loading state
       nextTick(() => {
         let loadedCount = 0;
         const total = newPosts.length;
         if (total === 0) {
-          layoutWaterfall();
           loading.value = false;
           return;
         }
@@ -1172,7 +1081,6 @@ async function loadPosts(reset = false) {
           img.onload = img.onerror = () => {
             loadedCount++;
             if (loadedCount === total) {
-              layoutWaterfall();
               loading.value = false;
             }
           };
@@ -1300,10 +1208,7 @@ async function pinPost(post: Post) {
     post.isPinned = true;
     post.is_top = '1'; // Update is_top to match API response format
     sortPosts();
-    // Re-layout waterfall after pinning
-    nextTick(() => {
-      layoutWaterfall();
-    });
+    // No need for layoutWaterfall with flexbox
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1332,10 +1237,7 @@ async function confirmReplacePin() {
     selectedReplaceId.value = null;
 
     sortPosts();
-    // Re-layout waterfall after pinning
-    nextTick(() => {
-      layoutWaterfall();
-    });
+    // No need for layoutWaterfall with flexbox
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1350,9 +1252,7 @@ async function unpinPost(post: Post) {
     post.is_top = '0';
     activeCardMenuId.value = null;
 
-    nextTick(() => {
-      layoutWaterfall();
-    });
+    // No need for layoutWaterfall with flexbox
     showToast(t("userHome.card.unpinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1886,21 +1786,22 @@ async function deletePost(post: Post) {
 
 .posts-container {
   min-height: 40rem;
-  padding: 0 2.4rem;
+  padding: 0 0 0 2.4rem;
 
   .waterfall {
-    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
     width: 100%;
     margin: 0 auto;
   }
 
   .post-card {
-    // transition: all 0.3s ease;
-    // overflow: hidden;
+    width: 25.8rem;
 
     .card-cover {
       position: relative;
-      width: 25.8rem;
+      width: 100%;
       height: 34.4rem;
       display: flex;
       align-items: center;
