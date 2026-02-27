@@ -1,6 +1,6 @@
 <template>
   <div class="user-messages">
-    <Header :cur="-1" @messageInfoLoaded="handleMessageInfoLoaded"></Header>
+    <Header :cur="-1" @messageInfoLoaded="handleMessageInfoLoaded" ref="headerRef"></Header>
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
@@ -72,6 +72,8 @@ import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 
+const emit = defineEmits(['messageInfoUpdated']);
+
 const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
@@ -82,6 +84,7 @@ const pageSize = ref(10);
 const total = ref(0);
 const listData = ref<Record<string, unknown>[]>([]);
 const loading = ref(false);
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 // Message counts for each tab
 const newsCounts = ref({
@@ -96,6 +99,13 @@ const newsCounts = ref({
 // Handle message info loaded from Header component
 function handleMessageInfoLoaded(messageInfo: any) {
   newsCounts.value = messageInfo;
+}
+
+// Handle message info updated from child components
+function handleMessageInfoUpdated(updatedCounts: any) {
+  newsCounts.value = updatedCounts;
+  // Emit event to update Header
+  emit('messageInfoUpdated', updatedCounts);
 }
 
 function switchTab(idx: number) {
@@ -144,25 +154,32 @@ async function fetchData() {
 
   try {
     let res;
+    let countKey: keyof typeof newsCounts.value;
 
     switch (activeTab.value) {
       case 0: // Subscription Expiring
         res = await api.messageExpireList(page.value, pageSize.value);
+        countKey = 'expiring';
         break;
       case 1: // Follow
         res = await api.messageFollowList(page.value, pageSize.value);
+        countKey = 'follow';
         break;
       case 2: // New Subscriptions
         res = await api.messageSubscribeList(page.value, pageSize.value);
+        countKey = 'subscription';
         break;
       case 3: // Likes
         res = await api.messageLikeList(page.value, pageSize.value);
+        countKey = 'like';
         break;
       case 4: // Comments
         res = await api.messageCommentList(page.value, pageSize.value);
+        countKey = 'comment';
         break;
       case 5: // Mentions
         res = await api.messageMentionsList(page.value, pageSize.value);
+        countKey = 'mention';
         break;
       default:
         return false;
@@ -176,6 +193,19 @@ async function fetchData() {
     if (r.code === 0 || r.code === 200) {
       listData.value = r.data?.data || [];
       total.value = r.data?.allnums || 0;
+
+      // Clear the unread count for this tab
+      newsCounts.value[countKey] = 0;
+
+      // Refresh message info to update Header
+      try {
+        // Call getMessageInfo directly on Header component
+        if (headerRef.value) {
+          headerRef.value.getMessageInfo();
+        }
+      } catch (error) {
+        console.error('Error updating message info:', error);
+      }
     } else {
       toast(r.msg || "Error");
     }
@@ -256,9 +286,9 @@ async function fetchData() {
   align-items: center;
   justify-content: center;
   min-width: 1.6rem;
-  height: 1.6rem;
+  min-height: 1.6rem;
   margin-left: 0.6rem;
-  padding: 0 0.6rem;
+  padding: 0.1rem 0.6rem 0.3rem;
   background: #fa2d47;
   color: #ffffff;
   border-radius: 0.8rem;

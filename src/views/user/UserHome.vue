@@ -1,6 +1,6 @@
 <template>
   <div class="user-homepage">
-    <Header :cur="-1"></Header>
+    <Header :cur="-1" ref="headerRef"></Header>
 
     <!-- Top Banner -->
     <div class="home-bg">
@@ -86,12 +86,12 @@
       <!-- Stats Bar -->
       <div class="stats-bar">
         <div
-          class="posts-title"
-          :class="{ active: viewMode === 'posts' }"
-          @click="goToPosts"
-        >
-          {{ t("userHome.posts") }} ({{ stats.all }})
-        </div>
+            class="posts-title"
+            :class="{ active: viewMode === 'posts' }"
+            @click="goToPosts"
+          >
+            {{ t("userHome.posts") }} ({{ formatNumber(userInfo.following) }})
+          </div>
         <div class="stats-nums">
           <div
             class="stat-item"
@@ -388,6 +388,7 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const uid = localStorage.getItem('uid');
 
 interface Post {
@@ -422,6 +423,7 @@ interface UserInfo {
   following: number;
   fans: number;
   likes: number;
+  posts: number;
   subPrice: string;
   subscription_plans: SubscriptionPlan[] | SubscriptionPlan | null;
 }
@@ -439,6 +441,7 @@ const userInfo = ref<UserInfo>({
   following: 0,
   fans: 0,
   likes: 0,
+  posts: 0,
   subPrice: "",
   subscription_plans: null,
 });
@@ -511,6 +514,7 @@ const postList = ref<Post[] | null>(null);
 const loading = ref(false);
 const noMore = ref(false);
 const page = ref(1);
+const limit = ref(10);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
 const postCardRefs = ref<HTMLElement[]>([]);
@@ -586,6 +590,7 @@ async function fetchUserInfo() {
         following: parseInt(data.data?.user?.following_count || '0'),
         fans: parseInt(data.data?.user?.follower_count || '0'),
         likes: parseInt(data.data?.total_like_count || '0'),
+        posts: parseInt(data.data?.total_posts || '0'),
         subPrice: subPrice,
       };
 
@@ -726,6 +731,7 @@ watch(() => route.query.id, async (newId, oldId) => {
       following: 0,
       fans: 0,
       likes: 0,
+      posts: 0,
       subPrice: "",
       subscription_plans: null,
     };
@@ -899,6 +905,10 @@ async function toggleListFollow(user: FollowUser) {
         await fetchFollowList(true);
         // 取消关注成功，当前用户的关注数减1
         userInfo.value.following = Math.max(0, userInfo.value.following - 1);
+        // 刷新头部数据
+        if (headerRef.value) {
+          headerRef.value.getUserInfo();
+        }
         toast(t('success'));
       }
     } else {
@@ -909,6 +919,10 @@ async function toggleListFollow(user: FollowUser) {
         user.isFollowed = true;
         // 关注成功，当前用户的关注数加1
         userInfo.value.following = userInfo.value.following + 1;
+        // 刷新头部数据
+        if (headerRef.value) {
+          headerRef.value.getUserInfo();
+        }
         toast(t('success'));
       }
     }
@@ -930,6 +944,10 @@ async function toggleFollow() {
       const res = await api.unfollow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 0;
+        // 刷新头部数据
+        if (headerRef.value) {
+          headerRef.value.getUserInfo();
+        }
         toast(t('success'));
       } else {
         toast(locale.value == 'jp' ? res.msg_jp : res.msg);
@@ -938,6 +956,10 @@ async function toggleFollow() {
       const res = await api.follow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 1;
+        // 刷新头部数据
+        if (headerRef.value) {
+          headerRef.value.getUserInfo();
+        }
         toast(t('success'));
       } else {
         toast(locale.value == 'jp' ? res.msg_jp : res.msg);
@@ -975,8 +997,8 @@ function reportUser() {
   reportModalVisible.value = true;
 }
 
-function handleReportSubmit(data: { target_type: string; target_id: number | string; reason: string; description: string; images: string[] }) {
-  console.log("User report submitted:", data);
+async function handleReportSubmit(data: { target_type: string; target_id: number | string; reason: string; description: string; images: string[] }) {
+
 }
 
 function onDateChange() {
@@ -993,8 +1015,6 @@ async function loadPosts(reset = false) {
     postList.value = null;
     noMore.value = false;
   }
-
-
 
   loading.value = true;
   let authorId = route.query.id;
@@ -1029,7 +1049,7 @@ async function loadPosts(reset = false) {
     const res = await api.authorHome(
       type,
       page.value,
-      10,
+      limit.value,
       authorId,
       searchKeyword.value,
       start,
@@ -1066,26 +1086,8 @@ async function loadPosts(reset = false) {
         postList.value.push(...newPosts);
       sortPosts();
 
-      // Wait for images to load before updating loading state
-      nextTick(() => {
-        let loadedCount = 0;
-        const total = newPosts.length;
-        if (total === 0) {
-          loading.value = false;
-          return;
-        }
-
-        newPosts.forEach((post: Post) => {
-          const img = new Image();
-          img.src = post.cover;
-          img.onload = img.onerror = () => {
-            loadedCount++;
-            if (loadedCount === total) {
-              loading.value = false;
-            }
-          };
-        });
-      });
+      // Set loading to false immediately after data is loaded
+      loading.value = false;
 
       // Update stats only when type is 0 (all)
       if (type === 0) {
@@ -1205,10 +1207,8 @@ async function pinPost(post: Post) {
 
   try {
     await api.postPin({ post_id: post.id });
-    post.isPinned = true;
-    post.is_top = '1'; // Update is_top to match API response format
-    sortPosts();
-    // No need for layoutWaterfall with flexbox
+    // 重新加载作品列表
+    await loadPosts(true);
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1220,24 +1220,15 @@ async function confirmReplacePin() {
   if (!selectedReplaceId.value || !pendingPinPost.value) return;
 
   try {
-    // Find old and unpin
-    const oldPost = postList.value ? postList.value.find((p) => p.id === selectedReplaceId.value) : undefined;
-    if (oldPost) {
-      oldPost.isPinned = false;
-      oldPost.is_top = '0'; // Update is_top to match API response format
-    }
-
-    // Pin new
+    // Pin new with replacement
     await api.postPin({ post_id: pendingPinPost.value.id, alter_id: selectedReplaceId.value?.toString() || '' });
-    pendingPinPost.value.isPinned = true;
-    pendingPinPost.value.is_top = '1'; // Update is_top to match API response format
 
     showPinLimitModal.value = false;
     pendingPinPost.value = null;
     selectedReplaceId.value = null;
 
-    sortPosts();
-    // No need for layoutWaterfall with flexbox
+    // 重新加载作品列表
+    await loadPosts(true);
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1248,11 +1239,10 @@ async function confirmReplacePin() {
 async function unpinPost(post: Post) {
   try {
     await api.postUnpin({ post_id: post.id });
-    post.isPinned = false;
-    post.is_top = '0';
     activeCardMenuId.value = null;
 
-    // No need for layoutWaterfall with flexbox
+    // 重新加载作品列表
+    await loadPosts(true);
     showToast(t("userHome.card.unpinnedSuccess"));
   } catch (error) {
     console.error(error);

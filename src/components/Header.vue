@@ -161,7 +161,7 @@ import { toast } from "@/util/toast";
 import api from "@/api/index";
 import router from "@/router";
 
-const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded']);
+const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated']);
 
 type ApiResp<T> = { code: number; msg: string; msg_jp: string; data: T };
 
@@ -479,6 +479,15 @@ function getMessageInfo() {
     });
 }
 
+// Handle message info updated from child components
+function handleMessageInfoUpdated(updatedCounts: typeof newsCounts.value) {
+  newsCounts.value = updatedCounts;
+  // Recalculate total unread count
+  unTotal.value = Object.values(updatedCounts).reduce((total, count) => total + count, 0);
+  // Emit updated message info to parent components
+  emit('messageInfoUpdated', updatedCounts);
+}
+
 function getUserInfo() {
   api
     .userInfo()
@@ -544,6 +553,7 @@ function showExit() {
 }
 
 function toUserHome() {
+  isShowExit.value = false;
   router.push({
     path: "/user-home",
     query: {
@@ -620,6 +630,7 @@ function goRecharge() {
 defineExpose({
   getUserInfo,
   getLoginUserInfo,
+  getMessageInfo,
   logout,
   goRegister
 });

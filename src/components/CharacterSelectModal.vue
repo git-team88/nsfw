@@ -84,6 +84,13 @@ const selectedCharacters = ref<any[]>([]);
 const loading = ref(false);
 const characterGridRef = ref<HTMLElement | null>(null);
 
+onMounted(() => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+  }
+});
+
 const toggleCharacterSelection = (character: any) => {
   const index = selectedCharacters.value.findIndex(c => c.id === character.id);
   if (index === -1) {
@@ -118,7 +125,6 @@ const loadCharacters = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error('No token found');
       loading.value = false;
       return;
     }

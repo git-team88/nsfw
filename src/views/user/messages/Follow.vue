@@ -2,7 +2,7 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id">
       <div class="left-info">
-        <img class="avatar" :src="item.follower.avatar" alt="" />
+        <img class="avatar" :src="item.follower.avatar" alt="" @click="goUserHome(item.follower.user_id)" />
         <div class="text-col">
           <div class="username">{{ item.follower.nickname }}</div>
           <div class="desc">{{ t("user.messages.followText") }}</div>
@@ -16,11 +16,17 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 import EmptyState from "@/components/EmptyState.vue";
 import { formatTimestamp } from "@/util/utils";
 
 const { t, locale } = useI18n();
+const router = useRouter();
 defineProps<{ list: any[] }>();
+
+function goUserHome(userId: string) {
+  router.push(`/user-home?id=${userId}`);
+}
 </script>
 
 <style scoped lang="scss">

@@ -26,7 +26,7 @@
             <div class="list-area" v-if="activeTab === 1">
               <div class="follow-item" v-for="item in listData" :key="item.id">
                 <div class="left">
-                  <img class="avatar" :src="item.avatar" alt="" />
+                  <img class="avatar" :src="item.avatar" alt="" @click="goUserHome(item.userId)" />
                   <div class="info">
                     <div class="name">{{ item.name }}</div>
                     <div class="id">ID:{{ item.userId }}</div>
@@ -45,7 +45,7 @@
             <div class="list-area" v-if="activeTab === 0">
               <div class="sub-item" v-for="item in listData" :key="item.id">
                 <div class="left">
-                  <img class="avatar" :src="item.avatar" alt="" />
+                  <img class="avatar" :src="item.avatar" alt="" @click="goUserHome(item.userId)" />
                   <div class="info">
                     <div class="name">{{ item.name }}</div>
                     <div class="id">ID:{{ item.userId }}</div>
@@ -106,11 +106,13 @@ import EmptyState from "@/components/EmptyState.vue";
 import Pagination from "@/components/Pagination.vue";
 import { ref, onMounted, onBeforeUnmount, watch, type CSSProperties } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import { formatTimestamp } from "@/util/utils";
 
 const { t, locale } = useI18n();
+const router = useRouter();
 const sidebarKey = ref("myfollows-subs");
 const activeTab = ref(0);
 const showMoreIndex = ref(-1);
@@ -216,6 +218,10 @@ watch(page, () => {
 function toggleAutoRenew(item: any) {
   item.autoRenew = !item.autoRenew;
   showMoreIndex.value = -1;
+}
+
+function goUserHome(userId: string) {
+  router.push(`/user-home?id=${userId}`);
 }
 
 function handleClickOutside(e: MouseEvent) {

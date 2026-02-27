@@ -1118,7 +1118,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
       }
     }
   } catch (error) {
-    console.error('Error loading comments:', error);
+    console.log('Error loading comments:', error);
     if (!append) {
       comments.value = [];
     }
@@ -1187,7 +1187,7 @@ async function loadReplies(comment: any, page: number = 1) {
       comment.hasMoreReplies = false;
     }
   } catch (error) {
-    console.error('Error loading replies:', error);
+    console.log('Error loading replies:', error);
     toast(t('fail'));
     // Keep initialReply on error
     if (comment.initialReply && comment.replies.length === 0) {
@@ -1768,7 +1768,6 @@ async function toggleReplyLike(r: any) {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
   } catch (error) {
-    console.error('Error toggling reply like:', error);
     toast(t('fail'));
   }
 }
@@ -1852,7 +1851,7 @@ const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
       }));
     }
   } catch (error) {
-    console.error("Search error:", error);
+    console.log("Search error:", error);
     dropdownItems.value = [];
   }
 }, 300);
@@ -2608,7 +2607,7 @@ async function share() {
     await navigator.clipboard.writeText(window.location.href);
     toast("Copied to clipboard");
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 }
 

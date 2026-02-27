@@ -2,7 +2,7 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.workId)">
       <div class="left-info">
-        <img class="avatar" :src="item.avatar" alt="" />
+        <img class="avatar" :src="item.poster.avatar" alt="" @click.stop="goUserHome(item.poster.user_id)" />
         <div class="text-col">
           <div class="username">{{ item.poster.nickname }}</div>
           <div class="desc">{{ t("user.messages.mentionsText") }}: {{ item.post.content }}</div>
@@ -33,6 +33,10 @@ defineProps<{ list: any[] }>();
 
 function toDetail(id: string | number) {
   router.push(`/detail?id=${id}`);
+}
+
+function goUserHome(userId: string) {
+  router.push(`/user-home?id=${userId}`);
 }
 </script>
 

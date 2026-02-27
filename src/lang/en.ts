@@ -476,7 +476,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     logoutConfirm: "Are you sure you want to log out?",
     userCard: {
       subscribeLabel: "Subscribe",
-      followersLabel: "Followers",
+      followersLabel: "Fans",
       postLabel: "Post",
     },
     menu: {
@@ -1224,7 +1224,16 @@ If you have any questions, complaints, comments or suggestions regarding persona
     agree: "Agree",
     paymentTerms: "Payment Terms",
     pay: "Pay",
-    success: "Subscription successful",
+    success: {
+      title: "Payment Successful!",
+      message: "Your subscription will take effect within a few minutes. Please refresh and check later.If it is still not active after 1 hour, please contact customer service.",
+      back: "Back to Sub Community"
+    },
+    failed: {
+      title: "Payment Failed!",
+      message: "Please check your payment account information or balance, then go back and try again.",
+      back: "Back to Payment"
+    }
   },
   userHome: {
     posts: "Posts",

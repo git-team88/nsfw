@@ -37,13 +37,20 @@
 
           <div class="timeline-box" ref="timelineRef">
             <div class="frames-strip">
-              <div
-                v-for="(frame, index) in frames"
-                :key="index"
-                class="frame-cell"
-                @click="onFrameClick(index)"
-              >
-                <img :src="frame" alt="" />
+              <!-- Skeleton loading for frames -->
+              <div v-if="isLoadingFrames" class="frame-skeleton-container">
+                <div v-for="i in 8" :key="'skeleton-' + i" class="frame-skeleton"></div>
+              </div>
+              <!-- Actual frames -->
+              <div v-else>
+                <div
+                  v-for="(frame, index) in frames"
+                  :key="index"
+                  class="frame-cell"
+                  @click="onFrameClick(index)"
+                >
+                  <img :src="frame" alt="" />
+                </div>
               </div>
             </div>
             <!-- Drag Handle -->
@@ -127,6 +134,8 @@ import { baseUrl } from "@/util/config";
 const props = defineProps<{
   visible: boolean;
   videoFile: File | null;
+  videoUrl?: string;
+  coverUrl?: string;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
@@ -147,6 +156,7 @@ const localImage = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
+const isLoadingFrames = ref(false);
 
 function getCropDimensions() {
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -178,7 +188,12 @@ watch(
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
       localImage.value = null;
-      if (props.videoFile && frames.value.length === 0) {
+      // If coverUrl is provided, use it as selectedFrame initially
+      if (props.coverUrl) {
+        selectedFrame.value = props.coverUrl;
+        detectOrientation(props.coverUrl);
+      }
+      if ((props.videoFile || props.videoUrl) && frames.value.length === 0) {
         generateFrames();
       }
     }
@@ -199,11 +214,18 @@ function changeTab(tab: string) {
 }
 
 async function generateFrames() {
-  if (!props.videoFile) return;
+  if (!props.videoFile && !props.videoUrl) return;
   frames.value = [];
+  isLoadingFrames.value = true;
 
   const video = document.createElement("video");
-  video.src = URL.createObjectURL(props.videoFile);
+  
+  if (props.videoFile) {
+    video.src = URL.createObjectURL(props.videoFile);
+  } else if (props.videoUrl) {
+    video.src = props.videoUrl;
+  }
+  
   video.muted = true;
   video.crossOrigin = "anonymous";
 
@@ -211,9 +233,18 @@ async function generateFrames() {
     video.onloadedmetadata = () => {
       resolve(true);
     };
+    video.onerror = () => {
+      console.error("Error loading video for frame generation");
+      resolve(false);
+    };
   });
 
   const duration = video.duration;
+  if (!duration) {
+    isLoadingFrames.value = false;
+    return;
+  }
+  
   const count = 8;
   const interval = duration / count;
 
@@ -230,13 +261,17 @@ async function generateFrames() {
     frames.value.push(data);
   }
 
-  if (frames.value.length > 0) {
+  if (frames.value.length > 0 && !props.coverUrl) {
     selectedFrame.value = frames.value[0];
     dragPos.value = 0;
     await detectOrientation(selectedFrame.value);
   }
 
-  URL.revokeObjectURL(video.src);
+  if (props.videoFile) {
+    URL.revokeObjectURL(video.src);
+  }
+  
+  isLoadingFrames.value = false;
 }
 
 // Drag Logic
@@ -646,6 +681,31 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
           width: 4.5rem;
           height: 6rem;
           object-fit: cover;
+        }
+      }
+
+      .frame-skeleton-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        gap: 0.8rem;
+      }
+
+      .frame-skeleton {
+        flex: 1;
+        height: 100%;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 0.4rem;
+      }
+
+      @keyframes loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
         }
       }
     }

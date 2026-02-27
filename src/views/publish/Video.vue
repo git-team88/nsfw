@@ -38,10 +38,13 @@
                       : t("submit.video.uploading")
                 }}
               </span>
-              <span class="video-meta" v-if="uploadSuccess || uploadError || isUpload">
-                <b>{{ t("submit.video.format") }}:</b>mp4 <b>{{ t("submit.video.size") }}:</b
-                >{{ videoSize }}MB <b>{{ t("submit.video.duration") }}:</b>{{ videoDuration }}s
-              </span>
+              <div class="video-meta-box">
+                <b>{{ t("submit.video.format") }}:</b>{{ videoType || 'mp4' }}
+                <span class="video-meta" v-if="(uploadSuccess || uploadError || isUpload) && !postId && !route.query.url">
+                   <b>{{ t("submit.video.size") }}:</b
+                  >{{ videoSize }}MB <b>{{ t("submit.video.duration") }}:</b>{{ videoDuration }}s
+                </span>
+              </div>
             </div>
             <div class="status-actions">
               <span class="action-link play" v-if="uploadSuccess" @click="previewVideo">{{
@@ -280,6 +283,8 @@
     <SetCoverModal
       v-model:visible="showCoverModal"
       :video-file="videoFile"
+      :video-url="videoUrl"
+      :cover-url="coverPreview"
       @confirm="onCoverConfirmed"
     />
 
@@ -318,11 +323,13 @@ const uploadError = ref("");
 const uploadProgress = ref(0);
 const videoSize = ref(0);
 const videoDuration = ref(0);
+const videoType = ref("");
 const videoFile = ref<File | null>(null);
 const videoUrl = ref("");
 const coverPreview = ref("");
 const showCoverModal = ref(false);
 const agreeTerms = ref(false);
+const sessionId = ref("");
 
 const videoInputRef = ref<HTMLInputElement | null>(null);
 const reuploadInputRef = ref<HTMLInputElement | null>(null);
@@ -466,6 +473,10 @@ async function startFakeUpload(file: File) {
       video.onloadedmetadata = () => {
         videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
         videoDuration.value = Math.round(video.duration);
+        // Extract video type from file extension
+        const fileName = file.name;
+        const extension = fileName.split('.').pop()?.toLowerCase() || '';
+        videoType.value = extension;
         resolve(true);
       };
     });
@@ -633,6 +644,9 @@ function previewVideo() {
   if (videoFile.value) {
     videoPreviewUrl.value = URL.createObjectURL(videoFile.value);
     showPreviewModal.value = true;
+  } else if (videoUrl.value) {
+    videoPreviewUrl.value = videoUrl.value;
+    showPreviewModal.value = true;
   }
 }
 
@@ -698,9 +712,8 @@ async function getPostDetails() {
         videoUrl.value = postData.video_url;
         uploadSuccess.value = true;
         uploadProgress.value = 100; // Set progress to 100% when editing with video URL
-        // Set default video size and duration for edit mode
-        videoSize.value = 0; // Default value, can be updated if API provides this information
-        videoDuration.value = 0; // Default value, can be updated if API provides this information
+
+        // Don't get video metadata for post_id case
       }
 
       // Update contenteditable div with description and handle #tags and @mentions
@@ -1133,9 +1146,16 @@ function updateDropdownPosition() {
   const range = selection.getRangeAt(0).cloneRange();
   const rect = range.getBoundingClientRect();
 
-  // Position relative to the viewport (using fixed positioning)
-  const absTop = rect.bottom + 5;
-  const absLeft = rect.left;
+  // Check if rect is valid (not at origin or with zero dimensions)
+  let absTop = rect.bottom + 5;
+  let absLeft = rect.left;
+
+  // If rect is invalid (likely after space deletion), use fallback position
+  if (rect.width === 0 && rect.height === 0 || absTop < 100 || absLeft < 10) {
+    const captionRect = captionRef.value.getBoundingClientRect();
+    absTop = captionRect.top + 26;
+    absLeft = captionRect.left;
+  }
 
   dropdownPosition.value = {
     top: absTop,
@@ -1371,6 +1391,7 @@ async function onSubmit() {
       is_nsfw: form.value.content == "yes" ? 1 : 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 0 : 1,
       video_url: videoUrl.value,
+      ...(sessionId.value && { session_id: sessionId.value }),
       ...(isEditMode && { post_id: postId.value })
     };
 
@@ -1424,7 +1445,27 @@ onMounted(async () => {
   getCountry();
   await checkSubscriptionStatus(); // Check subscription status on page load
 
-  if (postId.value) {
+  // Check if URL parameter 'session_id' exists
+  const sessionIdParam = route.query.session_id as string;
+  if (sessionIdParam) {
+    sessionId.value = sessionIdParam;
+  }
+
+  // Check if URL parameter 'url' exists
+  const urlParam = route.query.url as string;
+  if (urlParam) {
+    videoUrl.value = urlParam;
+    uploadSuccess.value = true;
+    uploadProgress.value = 100; // Set progress to 100%
+
+    // Check if URL parameter 'cover' exists
+    const coverParam = route.query.cover as string;
+    if (coverParam) {
+      coverPreview.value = coverParam;
+    }
+
+    // Don't get video metadata for URL parameter case
+  } else if (postId.value) {
     await getPostDetails();
   }
 });
@@ -1630,10 +1671,17 @@ watch(locale, () => {
     .status-text {
       font-size: 1.4rem;
     }
-    .video-meta {
+
+    .video-meta-box{
+      display: flex;
+      align-items: center;
+      margin-left: 0.6rem;
       font-size: 1.2rem;
       color: #6a7282;
-      margin-left: 0.6rem;
+
+      .video-meta {
+        margin-left: 0.6rem;
+      }
 
       b {
         font-weight: 400;

@@ -888,58 +888,33 @@ const handleInput = (event: Event) => {
     showAtDropdown.value = true;
     atDropdownItems.value = uploadedImages.value;
 
-    // Calculate dropdown position based on @ symbol position
+    // Calculate dropdown position based on cursor position
     try {
       if (editableInputRef.value) {
-        // Find the @ symbol position in the text
-        let currentPosition = 0;
-        let foundAtSymbol = false;
-        let targetNode: Text | null = null;
-        let atSymbolIndex = 0;
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
 
-        // Traverse all text nodes to find the @ symbol
-        const traverseNodes = (node: Node) => {
-          if (foundAtSymbol) return;
+          // Create a new range that spans from the @ symbol to the cursor
+          const atRange = document.createRange();
+          const textNode = range.startContainer;
+          if (textNode.nodeType === Node.TEXT_NODE) {
+            atRange.setStart(textNode, atIndex);
+            atRange.setEnd(textNode, cursorPosition);
 
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent || '';
-            const nodeAtIndex = text.indexOf('@', Math.max(0, atIndex - currentPosition));
+            const rect = atRange.getBoundingClientRect();
+            const inputInner = editableInputRef.value.parentElement;
+            const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
 
-            if (nodeAtIndex !== -1 && currentPosition + nodeAtIndex === atIndex) {
-              targetNode = node as Text;
-              atSymbolIndex = nodeAtIndex;
-              foundAtSymbol = true;
-              return;
-            }
-            currentPosition += text.length;
-          } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-              traverseNodes(node.childNodes[i]);
-              if (foundAtSymbol) return;
-            }
-          }
-        };
+            if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                // Calculate position relative to input-inner
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.right - inputInnerRect.left;
 
-        traverseNodes(editableInputRef.value);
-
-        if (foundAtSymbol && targetNode) {
-          // Create a range for the @ symbol
-          const range = document.createRange();
-          range.setStart(targetNode, atSymbolIndex);
-          range.setEnd(targetNode, atSymbolIndex + 1);
-
-          const rect = range.getBoundingClientRect();
-          const inputInner = editableInputRef.value.parentElement;
-          const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
-
-          if (inputInner && dropdown) {
-            const inputInnerRect = inputInner.getBoundingClientRect();
-            // Calculate position relative to input-inner
-            const relativeTop = rect.bottom - inputInnerRect.top;
-            const relativeLeft = rect.right - inputInnerRect.left;
-
-            dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-            dropdown.style.left = `${relativeLeft}px`; // Position at the end of @ symbol
+                dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
+                dropdown.style.left = `${relativeLeft}px`; // Position after the @ symbol
+              }
           }
         }
       }
@@ -1028,7 +1003,7 @@ const handleInputClick = () => {
             const relativeLeft = rect.right - inputInnerRect.left;
 
             dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-            dropdown.style.left = `${relativeLeft}px`; // Position at the end of @ symbol
+            dropdown.style.left = `${relativeLeft}px`; // Position after the @ symbol
           }
         }
       } catch (error) {

@@ -72,16 +72,20 @@
         </div>
 
         <!-- Pay Button -->
-        <button class="pay-btn" :disabled="!paymentAgree" @click="handlePay">
+        <button class="pay-btn" :disabled="!paymentAgree || isLoading" @click="handlePay">
           {{ t("subscribe.pay") }}
         </button>
       </div>
     </div>
+
+    <!-- Loading Mask -->
+    <UploadMask :visible="isLoading" :text="t('loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="SubscriptionPayment">
 import Header from "@/components/Header.vue";
+import UploadMask from "@/components/UploadMask.vue";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -111,6 +115,7 @@ const paymentMethods = ref([
 const selectedMethod = ref("A");
 const autoRenewAgree = ref(true);
 const paymentAgree = ref(true);
+const isLoading = ref(false);
 
 // Get author info from API
 async function fetchAuthorInfo() {
@@ -155,6 +160,8 @@ async function handlePay() {
   if (!paymentAgree.value) return;
 
   try {
+    isLoading.value = true;
+
     const uid = route.query.uid;
     if (!uid) {
       toast(t("error"));
@@ -168,20 +175,17 @@ async function handlePay() {
     }
 
     const res = await api.subscribe({ creator_id: userId });
-    const data = res as unknown as { code: number; msg: string };
+    const data = res as unknown as any;
     if (data.code === 0 || data.code === 200) {
-      toast(t("subscribe.success"));
-      // Jump back to user home with status
-      router.push({
-        path: "/user-home",
-        query: { subscribed: "1", id: uid },
-      });
+      window.location.href = data.data.url;
     } else {
       toast(data.msg || t("error"));
     }
   } catch (error) {
     console.error("Subscribe error:", error);
     toast(t("error"));
+  } finally {
+    isLoading.value = false;
   }
 }
 

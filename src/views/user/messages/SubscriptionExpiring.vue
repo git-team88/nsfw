@@ -2,7 +2,7 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id">
       <div class="left-info">
-        <img class="avatar" :src="item.subscriberr.avatar" alt="" />
+        <img class="avatar" :src="item.subscriberr.avatar" alt="" @click="goUserHome(item.subscriberr.user_id)" />
         <div class="text-col">
           <div class="username">{{ item.subscriberr.nickname }}</div>
           <div class="desc">{{ t("user.messages.expireText") }}</div>
@@ -34,6 +34,10 @@ const props = defineProps<{
 
 function toSubscribe(userId: string | number) {
   router.push(`/subscription-payment?uid=${userId}`);
+}
+
+function goUserHome(userId: string) {
+  router.push(`/user-home?id=${userId}`);
 }
 </script>
 

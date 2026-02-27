@@ -13,6 +13,8 @@ import CharacterLibrary from "@/views/CharacterLibrary.vue";
 
 import UserHome from "@/views/user/UserHome.vue";
 import SubscriptionPayment from "@/views/user/SubscriptionPayment.vue";
+import SubscriptionSuccess from "@/views/user/SubscriptionSuccess.vue";
+import SubscriptionFailed from "@/views/user/SubscriptionFailed.vue";
 import UserPersonalInfo from "@/views/user/Personal.vue";
 import UserPersonalEdit from "@/views/user/PersonalEdit.vue";
 import UserInteractive from "@/views/user/Interactive.vue";
@@ -146,6 +148,16 @@ const routes = [
     path: "/subscription-payment",
     name: "SubscriptionPayment",
     component: SubscriptionPayment,
+  },
+  {
+    path: "/subscription-success",
+    name: "SubscriptionSuccess",
+    component: SubscriptionSuccess,
+  },
+  {
+    path: "/subscription-fail",
+    name: "SubscriptionFailed",
+    component: SubscriptionFailed,
   },
   {
     path: "/user-personal",

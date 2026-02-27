@@ -147,7 +147,7 @@ export default {
     }),
   subscribe: (data: any) =>
     axios.request({
-      url: "post/subscribe",
+      url: "post/getPayUrl",
       data: data,
       method: "POST",
     }),
