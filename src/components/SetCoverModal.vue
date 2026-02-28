@@ -194,6 +194,9 @@ watch(
         detectOrientation(props.coverUrl);
       }
       if ((props.videoFile || props.videoUrl) && frames.value.length === 0) {
+        // Reset frames and show loading skeleton
+        frames.value = [];
+        isLoadingFrames.value = true;
         generateFrames();
       }
     }
@@ -343,6 +346,9 @@ function close() {
   emit("update:visible", false);
   activeTab.value = 'select';
   localImage.value = null;
+  // Reset frames so that skeleton loads on next open
+  frames.value = [];
+  selectedFrame.value = '';
 }
 
 function reupload() {

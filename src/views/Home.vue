@@ -86,6 +86,7 @@
                   ref="editableInputRef"
                   class="input-textarea"
                   contenteditable="true"
+                  spellcheck="false"
                   @input="handleInput"
                   @keydown="handleKeydown"
                   @click="handleInputClick"
@@ -113,7 +114,7 @@
                     v-for="(item, index) in atDropdownItems"
                     :key="index"
                     class="dropdown-item"
-                    @click="selectAtItem(item)"
+                    @mousedown.prevent="selectAtItem(item)"
                   >
                     <img :src="item.image" :alt="item.name" />
                     <span>{{ t('home.img') }}{{ index+1 }}</span>
@@ -791,11 +792,71 @@ const handleFileChange = async (event: Event) => {
         try {
           const uploadedUrl = await uploadImage(file, currentMode.value);
 
-          uploadedImages.value.push({
+          const newImage = {
             id: Date.now() + index.toString(),
             name: file.name,
             image: uploadedUrl
-          });
+          };
+
+          uploadedImages.value.push(newImage);
+
+          // Insert image tag into input-textarea
+          if (editableInputRef.value) {
+            const target = editableInputRef.value;
+            const text = target.textContent || '';
+            const isEmpty = text.trim() === '';
+
+            // Create image tag
+            const imageTag = document.createElement('span');
+            imageTag.className = 'image-tag';
+            imageTag.contentEditable = 'false'; // Make the image tag non-editable
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = newImage.image;
+            img.alt = newImage.name;
+            img.className = 'image-tag-img';
+
+            // Create text node with image index
+            const imageIndex = uploadedImages.value.length;
+            const textNode = document.createTextNode(`image${imageIndex}`);
+
+            // Append image and text to tag
+            imageTag.appendChild(img);
+            imageTag.appendChild(textNode);
+
+            // Insert image tag into input-textarea
+            // Always append to the end to ensure existing .image-tag tags are not removed
+            // Remove placeholder if present
+            const placeholder = target.querySelector('.placeholder');
+            if (placeholder) {
+              placeholder.remove();
+            }
+
+            // Append image tag to the end
+            target.appendChild(imageTag);
+
+            // Add a space after the image tag
+            const spaceNode = document.createTextNode('\u0020');
+            target.appendChild(spaceNode);
+
+            // Focus the input to ensure cursor is visible
+            target.focus();
+
+            // Set cursor position after the space
+            const selection = window.getSelection();
+            if (selection) {
+              const range = document.createRange();
+              range.setStartAfter(spaceNode);
+              range.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+
+            // Update input empty state
+            const inputContent = target.textContent || '';
+            isInputEmpty.value = inputContent.trim() === '';
+          }
         } catch (error) {
           console.error('Upload error for file', file.name, error);
           toast(t('fail'));
@@ -888,39 +949,70 @@ const handleInput = (event: Event) => {
     showAtDropdown.value = true;
     atDropdownItems.value = uploadedImages.value;
 
-    // Calculate dropdown position based on cursor position
-    try {
-      if (editableInputRef.value) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
+    // Calculate dropdown position based on @ symbol position
+    nextTick(() => {
+      try {
+        if (editableInputRef.value) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
 
-          // Create a new range that spans from the @ symbol to the cursor
-          const atRange = document.createRange();
-          const textNode = range.startContainer;
-          if (textNode.nodeType === Node.TEXT_NODE) {
-            atRange.setStart(textNode, atIndex);
-            atRange.setEnd(textNode, cursorPosition);
+            // 找到 @ 符号的位置
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
 
-            const rect = atRange.getBoundingClientRect();
-            const inputInner = editableInputRef.value.parentElement;
-            const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
+            // 遍历所有子节点查找 @ 符号
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) { // TEXT_NODE
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
 
-            if (inputInner && dropdown) {
-                const inputInnerRect = inputInner.getBoundingClientRect();
-                // Calculate position relative to input-inner
-                const relativeTop = rect.bottom - inputInnerRect.top;
-                const relativeLeft = rect.right - inputInnerRect.left;
-
-                dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-                dropdown.style.left = `${relativeLeft}px`; // Position after the @ symbol
+                // 检查 @ 是否在当前节点中
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) { // ELEMENT_NODE
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
               }
+              return false;
+            };
+
+            findAtSymbol(editableInputRef.value);
+
+            if (foundAtNode) {
+              // 创建一个 range 定位到 @ 符号后面
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = editableInputRef.value.parentElement;
+              const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                // 计算相对于 input-inner 的位置
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
+                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+              }
+            }
           }
         }
+      } catch (error) {
+        console.error('Error positioning dropdown:', error);
       }
-    } catch (error) {
-      console.error('Error positioning dropdown:', error);
-    }
+    });
   } else {
     showAtDropdown.value = false;
   }
@@ -954,61 +1046,64 @@ const handleInputClick = () => {
       atDropdownItems.value = uploadedImages.value;
 
       // Calculate dropdown position based on @ symbol position
-      try {
-        // Find the @ symbol position in the text
-        let currentPosition = 0;
-        let foundAtSymbol = false;
-        let targetNode: Text | null = null;
-        let atSymbolIndex = 0;
+      nextTick(() => {
+        try {
+          if (editableInputRef.value) {
+            // 找到 @ 符号的位置
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
 
-        // Traverse all text nodes to find the @ symbol
-        const traverseNodes = (node: Node) => {
-          if (foundAtSymbol) return;
+            // 遍历所有子节点查找 @ 符号
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) { // TEXT_NODE
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
 
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent || '';
-            const nodeAtIndex = text.indexOf('@', Math.max(0, atIndex - currentPosition));
+                // 检查 @ 是否在当前节点中
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) { // ELEMENT_NODE
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
 
-            if (nodeAtIndex !== -1 && currentPosition + nodeAtIndex === atIndex) {
-              targetNode = node as Text;
-              atSymbolIndex = nodeAtIndex;
-              foundAtSymbol = true;
-              return;
-            }
-            currentPosition += text.length;
-          } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-              traverseNodes(node.childNodes[i]);
-              if (foundAtSymbol) return;
+            findAtSymbol(editableInputRef.value);
+
+            if (foundAtNode) {
+              // 创建一个 range 定位到 @ 符号后面
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = editableInputRef.value.parentElement;
+              const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                // 计算相对于 input-inner 的位置
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
+                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+              }
             }
           }
-        };
-
-        traverseNodes(editableInputRef.value);
-
-        if (foundAtSymbol && targetNode) {
-          // Create a range for the @ symbol
-          const range = document.createRange();
-          range.setStart(targetNode, atSymbolIndex);
-          range.setEnd(targetNode, atSymbolIndex + 1);
-
-          const rect = range.getBoundingClientRect();
-          const inputInner = editableInputRef.value.parentElement;
-          const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
-
-          if (inputInner && dropdown) {
-            const inputInnerRect = inputInner.getBoundingClientRect();
-            // Calculate position relative to input-inner
-            const relativeTop = rect.bottom - inputInnerRect.top;
-            const relativeLeft = rect.right - inputInnerRect.left;
-
-            dropdown.style.top = `${relativeTop + 5}px`; // Add small margin
-            dropdown.style.left = `${relativeLeft}px`; // Position after the @ symbol
-          }
+        } catch (error) {
+          console.error('Error positioning dropdown:', error);
         }
-      } catch (error) {
-        console.error('Error positioning dropdown:', error);
-      }
+      });
     } else {
       showAtDropdown.value = false;
     }
@@ -1034,7 +1129,7 @@ const handleInputBlur = () => {
   // Delay hiding dropdown to allow click on dropdown items
   setTimeout(() => {
     showAtDropdown.value = false;
-  }, 200);
+  }, 300);
 };
 
 // Handle paste event to remove formatting
@@ -1072,76 +1167,108 @@ const handlePaste = (event: ClipboardEvent) => {
 
 // Select @ dropdown item
 const selectAtItem = (item: any) => {
-  if (!editableInputRef.value) return;
+  if (!editableInputRef.value) {
+    return;
+  }
 
   const target = editableInputRef.value;
+
+  // Create image tag
+  const imageTag = document.createElement('span');
+  imageTag.className = 'image-tag';
+  imageTag.contentEditable = 'false'; // Make the image tag non-editable
+
+  // Create image element
+  const img = document.createElement('img');
+  img.src = item.image;
+  img.alt = item.name;
+  img.className = 'image-tag-img';
+
+  // Create text node with image index
+  const imageIndex = uploadedImages.value.findIndex(img => img.id === item.id) + 1;
+  const textNode = document.createTextNode(`image${imageIndex}`);
+
+  // Append image and text to tag
+  imageTag.appendChild(img);
+  imageTag.appendChild(textNode);
+
+  // Find and remove @ symbol from the text content
   const text = target.textContent || '';
-  const cursorPosition = getCursorPosition(target);
-  const textBeforeCursor = text.substring(0, cursorPosition);
-  const atIndex = textBeforeCursor.lastIndexOf('@');
+  const lastAtIndex = text.lastIndexOf('@');
 
-  if (atIndex !== -1) {
-    // Get the content before and after the @ symbol
-    const contentBeforeAt = text.substring(0, atIndex);
-    const contentAfterCursor = text.substring(cursorPosition);
+  if (lastAtIndex !== -1) {
+    // Get all nodes and find the @ position
+    let currentPos = 0;
+    let foundAtNode: Node | null = null;
+    let atNodeOffset = 0;
 
-    // Create image tag
-    const imageTag = document.createElement('span');
-    imageTag.className = 'image-tag';
-    imageTag.contentEditable = 'false'; // Make the image tag non-editable
+    const findAtSymbol = (node: Node): boolean => {
+      if (node.nodeType === 3) { // TEXT_NODE
+        const nodeText = node.textContent || '';
+        const nodeLength = nodeText.length;
 
-    // Create image element
-    const img = document.createElement('img');
-    img.src = item.image;
-    img.alt = item.name;
-    img.className = 'image-tag-img';
-
-    // Create text node with image index
-    const imageIndex = uploadedImages.value.findIndex(img => img.id === item.id) + 1;
-    const textNode = document.createTextNode(`image${imageIndex}`);
-
-    // Append image and text to tag
-    imageTag.appendChild(img);
-    imageTag.appendChild(textNode);
-
-    // Clear the content
-    target.innerHTML = '';
-
-    // Create text nodes for the content before and after
-    const beforeNode = document.createTextNode(contentBeforeAt);
-    const afterNode = document.createTextNode('\u0020' + contentAfterCursor);
-
-    // Append everything to the target
-    target.appendChild(beforeNode);
-    target.appendChild(imageTag);
-
-    // Add a space after the image tag to ensure content doesn't go inside it
-    const spaceNode = document.createTextNode('\u0020');
-    target.appendChild(spaceNode);
-
-    // Add the content after cursor
-    target.appendChild(afterNode);
-
-    // Set cursor position after the space node (before afterNode if it exists)
-    const selection = window.getSelection();
-    if (selection) {
-      const range = document.createRange();
-      if (afterNode.textContent && afterNode.textContent.trim()) {
-        // If there's content after, set cursor before it
-        range.setStartBefore(afterNode);
-      } else {
-        // If no content after, set cursor after the space
-        range.setStartAfter(spaceNode);
+        // Check if @ is in this node
+        if (currentPos <= lastAtIndex && lastAtIndex < currentPos + nodeLength) {
+          foundAtNode = node;
+          atNodeOffset = lastAtIndex - currentPos;
+          return true;
+        }
+        currentPos += nodeLength;
+      } else if (node.nodeType === 1) { // ELEMENT_NODE
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (findAtSymbol(node.childNodes[i])) {
+            return true;
+          }
+        }
       }
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
+      return false;
+    };
 
-    // Update input empty state after inserting image tag
-    const inputContent = target.textContent || '';
-    isInputEmpty.value = inputContent.trim() === '';
+    findAtSymbol(target);
+
+    if (foundAtNode) {
+      try {
+        // Create a range to delete @ and insert image tag
+        const range = document.createRange();
+        range.setStart(foundAtNode as Node, atNodeOffset);
+        range.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+        // Delete the @ symbol
+        range.deleteContents();
+
+        // Insert the image tag
+        range.insertNode(imageTag);
+
+        // Add a space after the image tag
+        const spaceNode = document.createTextNode('\u0020');
+        range.setStartAfter(imageTag);
+        range.insertNode(spaceNode);
+
+        // Set cursor position after the space
+        range.setStartAfter(spaceNode);
+        range.collapse(true);
+
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        // Focus back to the input
+        target.focus();
+      } catch (error) {
+        console.log('[selectAtItem] 插入失败:', error);
+      }
+    } else {
+      console.log('[selectAtItem] 未找到 @ 符号所在节点');
+    }
+  } else {
+    console.log('[selectAtItem] 文本中没有 @ 符号');
   }
+
+  // Update input empty state after inserting image tag
+  const inputContent = target.textContent || '';
+  isInputEmpty.value = inputContent.trim() === '';
 
   showAtDropdown.value = false;
 };
@@ -1798,6 +1925,40 @@ function handlePageChange(page: number) {
         line-height: 2rem;
         resize: none;
         outline: none;
+        text-decoration: none;
+        border-bottom: none;
+        border: none;
+        /* Disable spell checking to remove red underlines */
+        spellcheck: false;
+        /* Disable grammar checking */
+        grammar: false;
+        /* Disable auto-correct */
+        -webkit-autocorrect: off;
+        autocorrect: off;
+        /* Disable auto-capitalize */
+        -webkit-autocapitalize: none;
+        autocapitalize: none;
+        /* Remove browser spell check underlines */
+        -webkit-text-decoration-skip: none;
+        text-decoration-skip: none;
+        /* Remove auto-correct underlines */
+        -webkit-user-modify: read-write-plaintext-only;
+        /* Remove any potential underlines from contenteditable */
+        &[contenteditable] {
+          text-decoration: none !important;
+          border: none !important;
+          outline: none !important;
+          /* Disable spell checking for contenteditable */
+          spellcheck: false;
+          /* Disable grammar checking */
+          grammar: false;
+          /* Disable auto-correct */
+          -webkit-autocorrect: off;
+          autocorrect: off;
+          /* Disable auto-capitalize */
+          -webkit-autocapitalize: none;
+          autocapitalize: none;
+        }
 
         .placeholder {
           color: #99A1AF;
@@ -2301,5 +2462,26 @@ function handlePageChange(page: number) {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Image tag styles */
+.image-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(251, 100, 182, 0.1);
+  border: 1px solid rgba(251, 100, 182, 0.3);
+  border-radius: 1.2rem;
+  font-size: 1.2rem;
+  color: #FB64B6;
+  margin: 0 0.2rem;
+}
+
+.image-tag-img {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
 </style>
