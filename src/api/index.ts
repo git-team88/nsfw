@@ -246,7 +246,7 @@ export default {
     }),
   modifyPostDetail: (id: number | string) =>
     axios.request({
-      url: "post/getPostDetailPublic?post_id=" + id,
+      url: "post/getMyPostDetail?post_id=" + id,
       method: "GET",
     }),
   postDetail: (data: any) =>

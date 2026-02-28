@@ -46,16 +46,17 @@ class Request {
       const code = res.data.code
       if (code == 101 || code == 100) {
         localStorage.removeItem('token')
-        localStorage.removeItem('connect')
         localStorage.removeItem('uid')
 
-        const currentPath = window.location.pathname;
-        const keepPaths = ["/detail", "/user-home", "character-library", "search"];
-        const shouldKeepPath = keepPaths.some(path => currentPath.includes(path));
+        router.push("/");
 
-        if (!shouldKeepPath) {
-          router.push("/");
-        }
+        // const currentPath = window.location.pathname;
+        // const keepPaths = ["/detail", "/user-home", "/search"];
+        // const shouldKeepPath = keepPaths.some(path => currentPath.includes(path));
+
+        // if (!shouldKeepPath) {
+        //   router.push("/");
+        // }
       }
       return res.data
     }, (err: any) => {

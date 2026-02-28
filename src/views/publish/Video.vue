@@ -285,6 +285,7 @@
       :video-file="videoFile"
       :video-url="videoUrl"
       :cover-url="coverPreview"
+      :extract-all-frames="true"
       @confirm="onCoverConfirmed"
     />
 

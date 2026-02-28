@@ -39,10 +39,10 @@
             <div class="frames-strip">
               <!-- Skeleton loading for frames -->
               <div v-if="isLoadingFrames" class="frame-skeleton-container">
-                <div v-for="i in 8" :key="'skeleton-' + i" class="frame-skeleton"></div>
+                <div v-for="i in estimatedFrameCount" :key="'skeleton-' + i" class="frame-skeleton"></div>
               </div>
               <!-- Actual frames -->
-              <div v-else>
+              <div class="frames-list" v-else>
                 <div
                   v-for="(frame, index) in frames"
                   :key="index"
@@ -54,7 +54,7 @@
               </div>
             </div>
             <!-- Drag Handle -->
-            <div class="drag-handle" :style="{ left: dragPos + '%' }" @mousedown="startDrag">
+            <div class="drag-handle" :style="{ left: dragPos + 'px' }" @mousedown="startDrag">
               <div class="line"></div>
             </div>
           </div>
@@ -128,7 +128,6 @@
 import { ref, watch, onUnmounted, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import UploadMask from "./UploadMask.vue";
-import api from "@/api/index";
 import { baseUrl } from "@/util/config";
 
 const props = defineProps<{
@@ -136,6 +135,7 @@ const props = defineProps<{
   videoFile: File | null;
   videoUrl?: string;
   coverUrl?: string;
+  extractAllFrames?: boolean;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
@@ -157,6 +157,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const uploadInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isLoadingFrames = ref(false);
+const estimatedFrameCount = ref(8);
 
 function getCropDimensions() {
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -177,7 +178,7 @@ const imageStyle = computed(() => {
 });
 
 const timelineRef = ref<HTMLElement | null>(null);
-const dragPos = ref(0); // 0-100%
+const dragPos = ref(0);
 const isDragging = ref(false);
 
 watch(
@@ -222,13 +223,13 @@ async function generateFrames() {
   isLoadingFrames.value = true;
 
   const video = document.createElement("video");
-  
+
   if (props.videoFile) {
     video.src = URL.createObjectURL(props.videoFile);
   } else if (props.videoUrl) {
     video.src = props.videoUrl;
   }
-  
+
   video.muted = true;
   video.crossOrigin = "anonymous";
 
@@ -237,7 +238,7 @@ async function generateFrames() {
       resolve(true);
     };
     video.onerror = () => {
-      console.error("Error loading video for frame generation");
+      console.log("Error loading video for frame generation");
       resolve(false);
     };
   });
@@ -247,8 +248,9 @@ async function generateFrames() {
     isLoadingFrames.value = false;
     return;
   }
-  
-  const count = 8;
+
+  const count = props.extractAllFrames ? Math.floor(duration) : 8;
+  estimatedFrameCount.value = count;
   const interval = duration / count;
 
   for (let i = 0; i < count; i++) {
@@ -264,16 +266,26 @@ async function generateFrames() {
     frames.value.push(data);
   }
 
-  if (frames.value.length > 0 && !props.coverUrl) {
-    selectedFrame.value = frames.value[0];
-    dragPos.value = 0;
-    await detectOrientation(selectedFrame.value);
+  if (frames.value.length > 0) {
+    if (!selectedFrame.value) {
+      selectedFrame.value = frames.value[0];
+      dragPos.value = 0;
+      await detectOrientation(selectedFrame.value);
+    } else if (props.coverUrl) {
+      const matchIndex = frames.value.findIndex(f => f === selectedFrame.value);
+      if (matchIndex >= 0) {
+        const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+        dragPos.value = (matchIndex + 0.5) * frameWidth;
+      } else {
+        dragPos.value = 0;
+      }
+    }
   }
 
   if (props.videoFile) {
     URL.revokeObjectURL(video.src);
   }
-  
+
   isLoadingFrames.value = false;
 }
 
@@ -286,20 +298,28 @@ function startDrag() {
 
 function onDragMove(e: MouseEvent) {
   if (!isDragging.value || !timelineRef.value) return;
+
   const rect = timelineRef.value.getBoundingClientRect();
-  let x = e.clientX - rect.left;
+  const scrollLeft = timelineRef.value.scrollLeft;
+
+  let x = e.clientX - rect.left + scrollLeft;
+
+  const framesList = timelineRef.value.querySelector('.frames-list') as HTMLElement;
+  const maxWidth = framesList ? framesList.scrollWidth : rect.width;
+
   if (x < 0) x = 0;
-  if (x > rect.width) x = rect.width;
+  if (x > maxWidth) x = maxWidth;
 
-  const percent = (x / rect.width) * 100;
-  dragPos.value = percent;
+  dragPos.value = x;
 
-  // Update selected frame based on position
+  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
   const index = Math.min(
-    Math.floor((percent / 100) * frames.value.length),
+    Math.floor(x / frameWidth),
     frames.value.length - 1,
   );
-  selectedFrame.value = frames.value[index];
+  if (index >= 0 && index < frames.value.length) {
+    selectedFrame.value = frames.value[index];
+  }
 }
 
 function onDragEnd() {
@@ -309,9 +329,14 @@ function onDragEnd() {
 }
 
 function onFrameClick(index: number) {
-  // Move drag handle to center of that frame
-  const percent = ((index + 0.5) / frames.value.length) * 100;
-  dragPos.value = percent;
+  if (!timelineRef.value) return;
+
+  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+  const clickedPosition = (index + 0.5) * frameWidth;
+
+  dragPos.value = clickedPosition;
+
   selectedFrame.value = frames.value[index];
   detectOrientation(selectedFrame.value);
 }
@@ -346,7 +371,7 @@ function close() {
   emit("update:visible", false);
   activeTab.value = 'select';
   localImage.value = null;
-  // Reset frames so that skeleton loads on next open
+
   frames.value = [];
   selectedFrame.value = '';
 }
@@ -669,20 +694,46 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     max-width: 100%;
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     height: 6rem;
     cursor: pointer;
+    overflow-x: auto; // 允许横向滚动
+    overflow-y: hidden;
+
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      height: 0.6rem;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 0.3rem;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #fb64b6;
+      border-radius: 0.3rem;
+
+      &:hover {
+        background: #e94a9e;
+      }
+    }
 
     .frames-strip {
       display: flex;
-      width: 100%;
+      min-width: 100%; // 确保至少占满容器
       height: 100%;
-      overflow: hidden;
 
+      .frames-list{
+        display: flex;
+        align-items: center;
+        min-width: max-content; // 根据内容自动扩展
+      }
       .frame-cell {
         display: flex;
         justify-content: center;
         height: 100%;
+        flex-shrink: 0; // 防止帧被压缩
         img {
           width: 4.5rem;
           height: 6rem;
@@ -692,18 +743,16 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
       .frame-skeleton-container {
         display: flex;
-        width: 100%;
+        min-width: 100%;
         height: 100%;
-        gap: 0.8rem;
       }
 
       .frame-skeleton {
-        flex: 1;
+        flex: 0 0 4.5rem;
         height: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
         animation: loading 1.5s infinite;
-        border-radius: 0.4rem;
       }
 
       @keyframes loading {
@@ -724,6 +773,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       margin-left: -2px; /* Center align */
       cursor: ew-resize;
       z-index: 10;
+      pointer-events: none; // 不阻挡滚动
 
       .line {
         width: 2px;
@@ -731,6 +781,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         margin: 0 auto;
         background: #fb64b6;
         box-shadow: 0px 0px 6px 0px rgba(251, 100, 182, 0.12);
+        pointer-events: auto; // 线本身可以拖动
       }
     }
   }

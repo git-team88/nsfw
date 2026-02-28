@@ -34,13 +34,21 @@
 <script setup lang="ts" name="ResetSend">
 import Header from "@/components/Header.vue";
 import router from "@/router";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t, locale } = useI18n();
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
+onMounted(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    router.push("/");
+    return false;
+  }
+});
 function backReset() {
   router.push("/reset-password");
 }

@@ -66,6 +66,13 @@ const isEnd = computed(() => {
 declare let grecaptcha: any;
 
 onMounted(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    router.push("/");
+    return false;
+  }
+
   const loginEmail = localStorage.getItem("lEmail");
   if (loginEmail) {
     email.value = loginEmail;
