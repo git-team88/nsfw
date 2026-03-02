@@ -704,7 +704,7 @@ async function getPostDetails() {
       const postData = data.data.post;
       form.value.title = postData.title || "";
       form.value.description = postData.content || "";
-      form.value.permission = postData.access_rights === '2' ? "partial" : postData.access_rights === '0' ? "private" : "public";
+      form.value.permission = postData.access_rights === '2' ? "partial" : postData.access_rights === '3' ? "private" : "public";
       form.value.content = postData.is_nsfw === '1' ? "yes" : "no";
       coverPreview.value = postData.cover || "";
 
@@ -1390,7 +1390,7 @@ async function onSubmit() {
       cover: coverPreview.value,
       content: form.value.description.trim(),
       is_nsfw: form.value.content == "yes" ? 1 : 0,
-      access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 0 : 1,
+      access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
       ...(sessionId.value && { session_id: sessionId.value }),
       ...(isEditMode && { post_id: postId.value })

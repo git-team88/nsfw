@@ -157,11 +157,13 @@ import LogoutModal from "@/components/LogoutModal.vue";
 
 import { onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import router from "@/router";
 
 const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated']);
+const route = useRoute();
 
 type ApiResp<T> = { code: number; msg: string; msg_jp: string; data: T };
 
@@ -571,7 +573,10 @@ function toUserHomeTab(tab: number) {
 
   router.replace({
     path: "/user-home",
-    query: tab ? { id: userId, tab: tab } : { id: userId },
+    query: {
+      id: userId,
+      type: tab
+    },
   });
 }
 

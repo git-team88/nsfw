@@ -697,6 +697,7 @@ const generateVideo = async () => {
       story_type: currentMode.value == 'unlimited' ? "nsfw_story" : "short_story",
       story_style: storyStyle,
       reference_images: uploadedImages.value.map(img => img.image),
+      emotion: "",
       others: {},
       addition_role: selectedCharacters.value.map(character => ({
         role_id: character.id,
@@ -827,11 +828,6 @@ const handleFileChange = async (event: Event) => {
 
             // Insert image tag into input-textarea
             // Always append to the end to ensure existing .image-tag tags are not removed
-            // Remove placeholder if present
-            const placeholder = target.querySelector('.placeholder');
-            if (placeholder) {
-              placeholder.remove();
-            }
 
             // Append image tag to the end
             target.appendChild(imageTag);
@@ -853,9 +849,8 @@ const handleFileChange = async (event: Event) => {
               selection.addRange(range);
             }
 
-            // Update input empty state
-            const inputContent = target.textContent || '';
-            isInputEmpty.value = inputContent.trim() === '';
+            // Update input empty state (Vue will handle placeholder)
+            isInputEmpty.value = false;
           }
         } catch (error) {
           console.error('Upload error for file', file.name, error);

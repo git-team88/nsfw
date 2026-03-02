@@ -90,7 +90,7 @@
             :class="{ active: viewMode === 'posts' }"
             @click="goToPosts"
           >
-            {{ t("userHome.posts") }} ({{ formatNumber(userInfo.following) }})
+            {{ t("userHome.posts") }} ({{ formatNumber(userInfo.posts) }})
           </div>
         <div class="stats-nums">
           <div
@@ -365,8 +365,7 @@ import {
   onMounted,
   onBeforeUnmount,
   watch,
-  nextTick,
-  type CSSProperties,
+  nextTick
 } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -619,37 +618,31 @@ const pinnedPosts = computed(() => {
   return postList.value ? postList.value.filter((p) => p.isPinned) : [];
 });
 
-
-
-// Lifecycle
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
   // First fetch user info
   await fetchUserInfo();
 
-  // Check URL for tab parameter and switch to corresponding tab
-  const tabParam = route.query.tab;
-  if (tabParam) {
-    const tab = parseInt(tabParam as string);
-    switch (tab) {
-      case 1:
-        goToPosts();
-        break;
-      case 2:
-        showFollowList('following');
-        break;
-      case 3:
-        showFollowList('fans');
-        break;
+    const tabParam = route.query.type;
+    if (tabParam) {
+      const tab = parseInt(tabParam as string);
+      switch (tab) {
+        case 1:
+          goToPosts(true);
+          break;
+        case 2:
+          showFollowList('following', true);
+          break;
+        case 3:
+          showFollowList('fans', true);
+          break;
+      }
+    } else {
+      goToPosts(true);
     }
-  } else {
-    // Default to posts
-    loadPosts(true);
-  }
 
   // Intersection Observer for infinite scroll
-  // 使用 nextTick 确保 DOM 已渲染
   nextTick(() => {
     if (loadingSentinel.value) {
       const observer = new IntersectionObserver(
@@ -670,7 +663,6 @@ onMounted(async () => {
       );
       observer.observe(loadingSentinel.value);
 
-      // 保存 observer 以便清理
       (loadingSentinel.value as any)._observer = observer;
     }
   });
@@ -679,7 +671,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
 
-  // 清理 IntersectionObserver
   if (loadingSentinel.value && (loadingSentinel.value as any)._observer) {
     (loadingSentinel.value as any)._observer.disconnect();
   }
@@ -697,27 +688,14 @@ watch(currentTab, () => {
   }
 });
 
-// Watch for route changes to update tab
-watch(() => route.query.tab, (newTab) => {
-  if (newTab) {
-    const tab = parseInt(newTab as string);
-    switch (tab) {
-      case 1:
-        goToPosts();
-        break;
-      case 2:
-        showFollowList('following');
-        break;
-      case 3:
-        showFollowList('fans');
-        break;
-    }
-  }
-});
+let lastId = ref(route.query.id);
+let lastType = ref(route.query.type);
 
-// Watch for route query id changes to fetch new user data
-watch(() => route.query.id, async (newId, oldId) => {
-  if (newId && newId !== oldId) {
+watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId, oldType]) => {
+  const idChanged = newId !== oldId;
+  const typeChanged = newType !== oldType;
+
+  if (idChanged) {
     // Reset states
     userInfo.value = {
       id: "",
@@ -741,30 +719,47 @@ watch(() => route.query.id, async (newId, oldId) => {
     noMore.value = false;
     page.value = 1;
     followPage.value = 1;
+    isPrivacyHidden.value = false;
 
     // Fetch new user info and data
     await fetchUserInfo();
 
-    // Check URL for tab parameter and switch to corresponding tab
-    const tabParam = route.query.tab;
+    const tabParam = newType;
     if (tabParam) {
       const tab = parseInt(tabParam as string);
       switch (tab) {
         case 1:
-          goToPosts();
+          goToPosts(true);
           break;
         case 2:
-          showFollowList('following');
+          showFollowList('following', true);
           break;
         case 3:
-          showFollowList('fans');
+          showFollowList('fans', true);
           break;
       }
     } else {
-      // Default to posts
-      loadPosts(true);
+      goToPosts(true);
     }
   }
+
+  else if (typeChanged && newType) {
+    const tab = parseInt(newType as string);
+    switch (tab) {
+      case 1:
+        goToPosts(true);
+        break;
+      case 2:
+        showFollowList('following', true);
+        break;
+      case 3:
+        showFollowList('fans', true);
+        break;
+    }
+  }
+
+  lastId.value = newId;
+  lastType.value = newType;
 });
 
 // Methods
@@ -788,43 +783,55 @@ function getEndDate() {
   return date.toISOString().split('T')[0];
 }
 
-function showFollowList(tab: "following" | "fans") {
-  // 如果已经在这个标签页，不重复请求
-  if (viewMode.value === "follow" && followTab.value === tab) {
-    return;
-  }
+function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | MouseEvent = false) {
+  // ✅ 判断是否从路由调用（fromRoute = true）还是从用户点击（MouseEvent）
+  const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
+
+  // ✅ 如果已经在同一个 tab，也要重新加载数据（刷新）
+  const isAlreadyOnSameTab = viewMode.value === "follow" && followTab.value === tab;
 
   viewMode.value = "follow";
   followTab.value = tab;
+
+  // Reset follow list and page when switching tabs or refreshing
+  followList.value = [];
+  followPage.value = 1;
+  isPrivacyHidden.value = false;
   fetchFollowList(true);
 
-  const tabNum = tab === 'following' ? 2 : 3;
-  const newQuery = { ...route.query };
-  newQuery.tab = tabNum.toString();
+  if (!fromRoute) {
+    const newQuery = { ...route.query };
+    delete newQuery.type;
 
-  router.replace({
-    path: "/user-home",
-    query: newQuery,
-  });
+    if (!isAlreadyOnSameTab) {
+      router.replace({
+        path: "/user-home",
+        query: newQuery,
+      });
+    }
+  }
 }
 
-function goToPosts() {
-  // 如果已经在作品页，不重复加载
-  if (viewMode.value === "posts") {
-    return;
-  }
+function goToPosts(fromRouteOrEvent: boolean | MouseEvent = false) {
+  const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
+
+  const isAlreadyOnPosts = viewMode.value === "posts";
 
   viewMode.value = "posts";
   currentTab.value = "all";
   loadPosts(true);
 
-  router.replace({
-    path: "/user-home",
-    query: {
-      ...route.query,
-      tab: "1"
-    },
-  });
+  if (!fromRoute) {
+    const newQuery = { ...route.query };
+    delete newQuery.type;
+
+    if (!isAlreadyOnPosts) {
+      router.replace({
+        path: "/user-home",
+        query: newQuery,
+      });
+    }
+  }
 }
 
 async function fetchFollowList(reset = false) {
@@ -898,28 +905,22 @@ async function toggleListFollow(user: FollowUser) {
     };
 
     if (user.isFollowed) {
-      // 取消关注
       const res = await api.unfollow(data);
       const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
       if (response.code === 200 || response.code === 0) {
         await fetchFollowList(true);
-        // 取消关注成功，当前用户的关注数减1
         userInfo.value.following = Math.max(0, userInfo.value.following - 1);
-        // 刷新头部数据
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
         toast(t('success'));
       }
     } else {
-      // 关注
       const res = await api.follow(data);
       const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
       if (response.code === 200 || response.code === 0) {
         user.isFollowed = true;
-        // 关注成功，当前用户的关注数加1
         userInfo.value.following = userInfo.value.following + 1;
-        // 刷新头部数据
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
@@ -944,7 +945,7 @@ async function toggleFollow() {
       const res = await api.unfollow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 0;
-        // 刷新头部数据
+
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
@@ -956,7 +957,7 @@ async function toggleFollow() {
       const res = await api.follow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 1;
-        // 刷新头部数据
+
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
@@ -1046,15 +1047,27 @@ async function loadPosts(reset = false) {
       end = dateRange.value.end;
     }
 
-    const res = await api.authorHome(
-      type,
-      page.value,
-      limit.value,
-      authorId,
-      searchKeyword.value,
-      start,
-      end
-    );
+    let res;
+    if (isSelf.value) {
+      res = await api.authorSelfHome(
+        type,  // ✅ 使用计算出的 type
+        page.value,
+        limit.value,
+        searchKeyword.value,
+        start,
+        end
+      );
+    } else {
+      res = await api.authorHome(
+        type,  // ✅ 使用计算出的 type
+        page.value,
+        limit.value,
+        authorId,
+        searchKeyword.value,
+        start,
+        end
+      );
+    }
 
     const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
     if (data.code === 200 || data.code === 0) {
@@ -1207,7 +1220,7 @@ async function pinPost(post: Post) {
 
   try {
     await api.postPin({ post_id: post.id });
-    // 重新加载作品列表
+
     await loadPosts(true);
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
@@ -1227,7 +1240,6 @@ async function confirmReplacePin() {
     pendingPinPost.value = null;
     selectedReplaceId.value = null;
 
-    // 重新加载作品列表
     await loadPosts(true);
     showToast(t("userHome.card.pinnedSuccess"));
   } catch (error) {
@@ -1241,7 +1253,6 @@ async function unpinPost(post: Post) {
     await api.postUnpin({ post_id: post.id });
     activeCardMenuId.value = null;
 
-    // 重新加载作品列表
     await loadPosts(true);
     showToast(t("userHome.card.unpinnedSuccess"));
   } catch (error) {
@@ -1273,71 +1284,12 @@ async function deletePost(post: Post) {
     showToast(t("userHome.card.deleteSuccess"));
   } catch (error) {
     console.error(error);
-    showToast("删除失败");
+    showToast(t('fail'));
   }
 }
 </script>
 
 <style scoped lang="scss">
-// :deep(.custom-date-picker) {
-//   width: 28rem !important;
-//   height: 4.8rem !important;
-
-//   .el-input__wrapper {
-//     padding: 0 1.2rem !important;
-//     border-radius: 0.8rem !important;
-//     background: #f5f5f5 !important;
-//     box-shadow: none !important;
-//     border: 1px solid transparent;
-//     transition: all 0.2s;
-
-//     &.is-focus {
-//       border-color: #fb64b6 !important;
-//       background: #ffffff !important;
-//     }
-
-//     .el-input__inner {
-//       color: #364153 !important;
-//       &::placeholder {
-//         color: #99a1af;
-//       }
-//     }
-
-//     .el-range-separator {
-//       color: #99a1af;
-//     }
-
-//     // Custom Icons
-//     .el-input__prefix {
-//       display: flex;
-//       align-items: center;
-//       .custom-date-icon {
-//         width: 1.6rem;
-//         height: 1.6rem;
-//       }
-//     }
-
-//     .el-input__suffix {
-//       display: none; // Hide default clear icon
-//     }
-//   }
-
-//   // Add custom arrow on the right
-//   position: relative;
-//   &::after {
-//     content: "";
-//     position: absolute;
-//     right: 1.2rem;
-//     top: 50%;
-//     transform: translateY(-50%);
-//     width: 1.2rem;
-//     height: 1.2rem;
-//     background: url("@/assets/images/user/down.png") no-repeat center;
-//     background-size: contain;
-//     pointer-events: none;
-//   }
-// }
-
 .user-homepage {
   min-height: 100vh;
   background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;

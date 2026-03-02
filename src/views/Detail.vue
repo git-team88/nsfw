@@ -266,7 +266,10 @@
                           <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
                         </button>
                         <div class="dropdown-menu" v-if="activeCommentMoreId === c.id">
-                          <span class="menu-item" @click="openReportModal('comment', c.id)">
+                          <span class="menu-item" v-if="c.user_id == uid" @click="deleteComment(c.id)">
+                            {{ t("detail.delete") }}
+                          </span>
+                          <span class="menu-item" v-else @click="openReportModal('comment', c.id)">
                             {{ t("detail.report") }}
                           </span>
                         </div>
@@ -345,8 +348,11 @@
                           <button class="c-more-btn" @click.stop="toggleCommentMore(r.id)">
                             <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
                           </button>
-                          <div class="dropdown-menu" v-if="activeCommentMoreId === r.id">
-                            <span class="menu-item" @click="openReportModal('reply', r.id)">
+                          <div class="dropdown-menu" v-if="activeCommentMoreId == r.id">
+                            <span class="menu-item" v-if="r.user_id == uid" @click="deleteComment(r.id)">
+                              {{ t("detail.delete") }}
+                            </span>
+                            <span class="menu-item" v-else @click="openReportModal('reply', r.id)">
                               {{ t("detail.report") }}
                             </span>
                           </div>
@@ -827,12 +833,16 @@ async function fetchDetail(newId: number) {
     if (type == "2") {
       data = JSON.stringify({
         post_id: newId,
-        fromIndexFollow: {}
+        fromIndexFollow: {
+          test: 1
+        }
       })
     } else if (type == "3") {
       data = JSON.stringify({
         post_id: newId,
-        fromIndexSubscription: {}
+        fromIndexSubscription: {
+          test: 1
+        }
       })
     } else if (type == "4") {
       const bloggerId = route.query.uid as string || "";
@@ -898,7 +908,7 @@ async function fetchDetail(newId: number) {
         images: res.data.images || [],
         articleHtml: formatContent(data.content || ""),
         content: data.content || "",
-        permission: data.access_rights == '2' ? "partial" : data.access_rights == '0' ? "private" : "public",
+        permission: data.access_rights == '2' ? "partial" : data.access_rights == '3' ? "private" : "public",
         subscriptionPlans: data.subscription_plans || data.plans || [],
         isSubscribed: data.is_subscribed == 1 || false,
         commentsEnabled: data.comments_enabled !== false,
@@ -1064,6 +1074,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
         const commentObj: any = {
           id: comment.id || comment.comment_id || Date.now(),
           author: comment.author || comment.nickname || "",
+          user_id: comment.user_id || "",
           avatar: comment.avatar || "",
           text: comment.text || comment.content || "",
           likes: comment.like_count || 0,
@@ -1086,6 +1097,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
           commentObj.initialReply = {
             id: firstChild.id || firstChild.reply_id || Date.now(),
             author: firstChild.author || firstChild.nickname || firstChild.user?.nickname || "",
+            user_id: firstChild.user_id || "",
             avatar: firstChild.avatar || firstChild.user?.avatar || "",
             text: firstChild.text || firstChild.content || "",
             created_at: firstChild.created_at || "",
@@ -1132,6 +1144,21 @@ async function loadComments(page: number = 1, append: boolean = false) {
   }
 }
 
+// Delete comment
+async function deleteComment(commentId: string) {
+  try {
+    const res = await api.deleteComment({ comment_id: commentId }) as any;
+    if (res.code === 0 || res.code === 200) {
+      // Reload comments after successful deletion
+      await loadComments(1, false);
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
+}
+
 // Load replies for a comment
 async function loadReplies(comment: any, page: number = 1) {
   try {
@@ -1151,6 +1178,7 @@ async function loadReplies(comment: any, page: number = 1) {
       let formattedReplies = repliesData.map((reply: any) => ({
         id: reply.id || reply.reply_id || Date.now(),
         author: reply.author || reply.nickname || reply.user?.nickname || "",
+        user_id: reply.user_id || "",
         avatar: reply.avatar || reply.user?.avatar || "",
         text: reply.text || reply.content || "",
         created_at: reply.created_at || "",
@@ -1251,6 +1279,8 @@ const isSensitiveContentLocked = computed(() => {
   } else if (isTeenager && isSensitive) {
     return true;
   } else if (!isTeenager && !isSensitive) {
+    return false;
+  } else if (!isTeenager && isSensitive) {
     return false;
   } else {
     return true;

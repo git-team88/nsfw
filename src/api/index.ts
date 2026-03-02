@@ -274,6 +274,16 @@ export default {
       method: "POST",
     }),
 
+  authorSelfInfo: () =>
+    axios.request({
+      url: "blogger/getBloggerinfo",
+      method: "GET",
+    }),
+  authorSelfHome: (type: number, page: number, limit: number, keywords: string, start: string, end: string) =>
+    axios.request({
+      url: "my/getList?type=" + type+ "&page="+ + page + "&limit=" + limit  + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end,
+      method: "GET",
+    }),
   authorInfo: (author_id: number | string) =>
     axios.request({
       url: "blogger/getBloggerInfoPublic?author_id=" + author_id,
@@ -416,6 +426,13 @@ export default {
       data: data,
       method: "POST",
     }),
+  deleteComment: (data: any) =>
+    axios.request({
+      url: "comment/delete",
+      data: data,
+      method: "POST",
+    }),
+
   likePost: (data: any) =>
     axios.request({
       url: "post/like",
