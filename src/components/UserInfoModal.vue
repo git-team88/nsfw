@@ -7,7 +7,7 @@
       <div class="container">
         <div class="form-item">
           <div class="label">
-            {{ t("userInfo.username") }} <span class="count">{{ username.length }}/18</span>
+            {{ t("userInfo.username") }} <span class="count">{{ username.length }}/18 ({{ t('user.personal.usernameWarning') }})</span>
           </div>
           <input
             class="ipt"
@@ -144,6 +144,11 @@ function handleFile(e: Event) {
 function confirm() {
   if (!username.value) {
     toast("Please enter username");
+    return;
+  }
+
+  if (username.value.includes('#') || username.value.includes('@') || username.value.includes(' ')) {
+    toast(t('user.personal.usernameWarning'));
     return;
   }
 

@@ -53,7 +53,7 @@
         </div>
 
         <div class="header-bean-box" v-if="isLogin">
-          <div class="header-bean">
+          <div class="header-bean" @click="goRechargeDetail">
             <img src="../assets/images/header/bean_icon.png" alt="" />
             <span>{{ bean }}</span>
           </div>
@@ -91,13 +91,17 @@
                   </div>
                 </div>
                 <div class="uc-stats">
-                  <div class="uc-stat" @click="toMyFollowsSubs()">
+                  <div class="uc-stat" @click="goPaymentHistory()">
                     <div class="uc-stat-num">{{ subscribeCount }}</div>
                     <div class="uc-stat-label">{{ t("header.userCard.subscribeLabel") }}</div>
                   </div>
-                  <div class="uc-stat" @click="toUserHomeTab(3)">
+                  <div class="uc-stat" @click="toUserHomeTab(2)">
                     <div class="uc-stat-num">{{ followersCountDisplay }}</div>
                     <div class="uc-stat-label">{{ t("header.userCard.followersLabel") }}</div>
+                  </div>
+                  <div class="uc-stat" @click="toUserHomeTab(3)">
+                    <div class="uc-stat-num">{{ fansCountDisplay }}</div>
+                    <div class="uc-stat-label">{{ t("header.userCard.fansLabel") }}</div>
                   </div>
                   <div class="uc-stat" @click="toUserHomeTab(1)">
                     <div class="uc-stat-num">{{ postCount }}</div>
@@ -162,7 +166,7 @@ import { toast } from "@/util/toast";
 import api from "@/api/index";
 import router from "@/router";
 
-const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated']);
+const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated', 'balanceInfoLoaded']);
 const route = useRoute();
 
 type ApiResp<T> = { code: number; msg: string; msg_jp: string; data: T };
@@ -177,9 +181,18 @@ const navIndex = ref(0);
 const provider = ref(null);
 const subscribeCount = ref(0);
 const followersCount = ref(0);
+const fansCount = ref(0);
 const postCount = ref(0);
 const followersCountDisplay = computed(() => {
   const v = followersCount.value;
+  if (v >= 1000) {
+    const k = Math.round(v / 1000);
+    return `${k}K`;
+  }
+  return `${v}`;
+});
+const fansCountDisplay = computed(() => {
+  const v = fansCount.value;
   if (v >= 1000) {
     const k = Math.round(v / 1000);
     return `${k}K`;
@@ -214,8 +227,8 @@ const menuItems = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
+  { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
-  { key: "myfollows-subs", label: "user.myFollowsSubs.title", path: "/user-my-follows-subs" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
   { key: "messages", label: "user.sidebar.messages", path: "/user-message" },
   { key: "privacy", label: "user.sidebar.privacy", path: "/user-privacy" },
@@ -324,6 +337,7 @@ onMounted(() => {
     isLogin.value = true;
     getUserInfo();
     getMessageInfo();
+    getBalance();
   }
 
   document.addEventListener("click", handleClick);
@@ -392,7 +406,7 @@ function goPath(type: { path: string; name: string }) {
 async function fetchAICreations() {
   isShowLoad.value = true;
   try {
-    const res = await api.getProject(2, 1, 'story', 1, 20) as any;
+    const res = await api.getProject(2, 1, 'story', 1, 10, 'desc') as any;
 
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data_list || [];
@@ -481,15 +495,6 @@ function getMessageInfo() {
     });
 }
 
-// Handle message info updated from child components
-function handleMessageInfoUpdated(updatedCounts: typeof newsCounts.value) {
-  newsCounts.value = updatedCounts;
-  // Recalculate total unread count
-  unTotal.value = Object.values(updatedCounts).reduce((total, count) => total + count, 0);
-  // Emit updated message info to parent components
-  emit('messageInfoUpdated', updatedCounts);
-}
-
 function getUserInfo() {
   api
     .userInfo()
@@ -498,7 +503,8 @@ function getUserInfo() {
       if (data.code === 0) {
         userInfo.value = data.data;
         subscribeCount.value = data.data.sub_count;
-        followersCount.value = data.data.fans_count;
+        followersCount.value = data.data.follow_count;
+        fansCount.value = data.data.fans_count;
         postCount.value = data.data.product_count;
         emit('userInfoLoaded', data.data);
       } else {
@@ -508,6 +514,21 @@ function getUserInfo() {
     .catch((err) => {
       console.log(err);
     });
+}
+
+function getBalance() {
+  api.userBalance().then((res: any) => {
+    if (res.code === 200) {
+      bean.value = res.data.balance;
+
+      emit('balanceInfoLoaded', res.data);
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  })
+  .catch((err) => {
+    toast(t('fail'));
+  });
 }
 
 function getLoginUserInfo() {
@@ -580,11 +601,7 @@ function toUserHomeTab(tab: number) {
   });
 }
 
-function toMyFollowsSubs() {
-  router.push({
-    path: "/user-my-follows-subs"
-  });
-}
+
 
 function navigateMenu(item: { path: string }) {
   isShowExit.value = false;
@@ -621,6 +638,16 @@ function cancelLogout() {
   isShowLogoutModal.value = false;
 }
 
+function goRechargeDetail() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+
+  router.push('/ai-points-details');
+}
+
 function goRecharge() {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -629,6 +656,10 @@ function goRecharge() {
   }
 
   router.push('/ai-recharge');
+}
+
+function goPaymentHistory() {
+  router.push('/user-payment-history');
 }
 
 // 暴露给父组件的方法

@@ -6,6 +6,24 @@
       <!-- Page Title -->
       <h2 class="page-title">{{ t('characterLibrary.title') }}</h2>
 
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <span
+          class="tab"
+          :class="{ active: activeTab === 'official' }"
+          @click="activeTab = 'official'"
+        >
+          {{ t('home.characterSelect.officialCharacters') }}
+        </span>
+        <span
+          class="tab"
+          :class="{ active: activeTab === 'my' }"
+          @click="activeTab = 'my'"
+        >
+          {{ t('home.characterSelect.myCharacters') }}
+        </span>
+      </div>
+
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="loading-spinner"></div>
@@ -19,7 +37,7 @@
       </div>
 
       <!-- Character Grid -->
-      <div v-else-if="characters.length > 0" class="character-grid">
+      <div v-else-if="filteredCharacters.length > 0" class="character-grid">
         <!-- Create New Button -->
         <!-- <div class="create-new-card" @click="goToCreatePage" @mouseenter="isHovering = true" @mouseleave="isHovering = false">
           <div class="create-new-icon">
@@ -30,12 +48,17 @@
 
         <!-- Character Cards -->
         <div
-          v-for="character in currentPageCharacters"
+          v-for="(character, index) in currentPageCharacters"
           :key="character.id"
           class="character-card"
           @click="openCharacterDetail(character)"
         >
-          <img :src="character.image" :alt="character.name" />
+          <!-- Power标识 -->
+          <div v-if="activeTab === 'official' && character.useCostPoints" class="character-power">
+            <img class="power-icon" src="@/assets/images/project/coin.png" alt="" />
+            <span class="power-value">{{ character.useCostPoints }}</span>
+          </div>
+          <img class="character-img" :src="character.image" :alt="character.name" />
           <span class="character-name">{{ character.name }}</span>
         </div>
       </div>
@@ -47,9 +70,9 @@
         @action="goToCreatePage"
       />
 
-      <div class="pagination-container" v-if="!isLoading && !error && totalPages > 1">
+      <div class="pagination-container" v-if="!isLoading && !error && totalCount > 0 && totalPages > 1">
         <Pagination
-          :total="characters.length"
+          :total="totalCount"
           :page-size="itemsPerPage"
           v-model:model-value="currentPage"
           theme="pink"
@@ -67,7 +90,7 @@
 </template>
 
 <script setup lang="ts" name="CharacterLibrary">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import Header from '@/components/Header.vue';
@@ -77,6 +100,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import addIcon from '@/assets/images/project/add.png';
 import addHoverIcon from '@/assets/images/project/add_hover.png';
 import api from '@/api/index';
+import { toast } from '@/util/toast';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -85,21 +109,25 @@ const router = useRouter();
 const characters = ref<any[]>([]);
 const currentPage = ref(1);
 const itemsPerPage = 20;
+const totalCount = ref(0);
 const showDetailModal = ref(false);
 const selectedCharacter = ref<any>(null);
 const isHovering = ref(false);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+const activeTab = ref('official');
 
 // Computed
+const filteredCharacters = computed(() => {
+  return characters.value;
+});
+
 const totalPages = computed(() => {
-  return Math.ceil(characters.value.length / itemsPerPage);
+  return Math.ceil(totalCount.value / itemsPerPage);
 });
 
 const currentPageCharacters = computed(() => {
-  const startIndex = (currentPage.value - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  return characters.value.slice(startIndex, endIndex);
+  return characters.value;
 });
 
 // Methods
@@ -147,24 +175,50 @@ async function loadCharacters() {
   isLoading.value = true;
   error.value = null;
   try {
-    const response = await api.getCharacters();
-    if (response && response.data) {
-      characters.value = response.data.map((item: any) => ({
-        id: item.id || item.character_id,
-        name: item.name || item.character_name,
-        image: item.image || item.character_image,
-        description: item.description || item.character_description,
-        designSheet: item.design_sheet || item.character_design_sheet
-      }));
+    // Use type 2 for official characters, 1 for user characters
+    const type = activeTab.value === 'official' ? 2 : 1;
+    const response = await api.getCharacters(type, currentPage.value, itemsPerPage) as any;
+    if (response.code == 200 && response.data) {
+      if (response.data.data_list) {
+        characters.value = response.data.data_list.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          image: item.main_image_url,
+          tri_image: item.tri_view_url,
+          description: item.desc,
+          useCostPoints: item.use_cost_points,
+          isOfficial: activeTab.value === 'official'
+        }));
+        // Capture total count from API response
+        totalCount.value = response.data.data_count || 0;
+      } else {
+        toast(t('fail'));
+        characters.value = [];
+        totalCount.value = 0;
+      }
+    } else {
+      toast(locale.value == 'jp' ?  response.msg_jp : response.msg)
+      characters.value = [];
+      totalCount.value = 0;
     }
   } catch (err) {
-    console.error('Failed to load characters:', err);
-    error.value = t('characterLibrary.error.loadFailed');
+    toast(t('fail'));
     characters.value = [];
+    totalCount.value = 0;
   } finally {
     isLoading.value = false;
   }
 }
+
+// Watchers
+watch(activeTab, () => {
+  currentPage.value = 1;
+  loadCharacters();
+});
+
+watch(currentPage, () => {
+  loadCharacters();
+});
 
 // Lifecycle
 onMounted(() => {
@@ -195,6 +249,40 @@ onMounted(() => {
   font-size: 2rem;
   color: #101828;
   margin-bottom: 2.4rem;
+}
+
+.tab-navigation {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 2.4rem;
+  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+
+  .tab {
+    flex: 0 0 auto;
+    padding: 0 0 2.4rem;
+    font-size: 1.6rem;
+    color: #6A7282;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    margin-right: 1.2rem;
+
+    &.active {
+      color: #101828;
+      font-weight: 500;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #fb64b6;
+        border-radius: 1px;
+      }
+    }
+  }
 }
 
 .character-grid {
@@ -247,7 +335,7 @@ onMounted(() => {
   border-radius: 0.8rem;
   cursor: pointer;
 
-  img {
+  .character-img {
     width: 100%;
     height: 100%;
     border-radius: 0.8rem;
@@ -273,6 +361,26 @@ onMounted(() => {
     text-overflow: ellipsis;
     background: rgba(255,255,255,0.9);
     backdrop-filter: blur(2px);
+  }
+
+  .character-power {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #99A1AF;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    font-size: 1.2rem;
+    z-index: 1;
+
+    .power-icon {
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-right: 0.4rem;
+    }
   }
 }
 

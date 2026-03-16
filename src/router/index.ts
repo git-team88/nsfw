@@ -15,9 +15,12 @@ import UserHome from "@/views/user/UserHome.vue";
 import SubscriptionPayment from "@/views/user/SubscriptionPayment.vue";
 import SubscriptionSuccess from "@/views/user/SubscriptionSuccess.vue";
 import SubscriptionFailed from "@/views/user/SubscriptionFailed.vue";
+import AIToolPaymentSuccess from "@/views/user/AIToolPaymentSuccess.vue";
+import AIToolPaymentFailed from "@/views/user/AIToolPaymentFailed.vue";
 import UserPersonalInfo from "@/views/user/Personal.vue";
 import UserPersonalEdit from "@/views/user/PersonalEdit.vue";
 import UserInteractive from "@/views/user/Interactive.vue";
+import InviteRevenue from "@/views/user/InviteRevenue.vue";
 import UserRevenue from "@/views/user/Revenue.vue";
 import UserMessages from "@/views/user/Messages.vue";
 import UserAccount from "@/views/user/Account.vue";
@@ -25,10 +28,10 @@ import UserProfileSettings from "@/views/user/Profile.vue";
 import UserProfileEdit from "@/views/user/ProfileEdit.vue";
 import UserSubscription from "@/views/user/Subscription.vue";
 import UserSubscriptionEdit from "@/views/user/SubscriptionEdit.vue";
-import MyFollowsSubs from "@/views/user/MyFollowsSubs.vue";
 import PaymentHistory from "@/views/user/PaymentHistory.vue";
-import Withdraw from "@/views/user/Withdraw.vue";
 import CommunityConvention from "@/views/user/CommunityConvention.vue";
+import AccountSuccess from "@/views/user/AccountSuccess.vue";
+import AccountFailed from "@/views/user/AccountFailed.vue";
 
 import UserPrivacy from "@/views/user/Privacy.vue";
 
@@ -41,6 +44,7 @@ import ResetPassword from "@/views/login/ResetPassword.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
 import PaymentTerms from "@/views/PaymentTerms.vue";
 import AIRecharge from "@/views/AIRecharge.vue";
+import AIRechargeDetails from "@/views/AIRechargeDetails.vue";
 import ComputingPowerRules from "@/views/ComputingPowerRules.vue";
 
 const routes = [
@@ -88,6 +92,11 @@ const routes = [
     path: "/ai-recharge",
     name: "AIRecharge",
     component: AIRecharge,
+  },
+  {
+    path: "/ai-points-details",
+    name: "AIRechargeDetails",
+    component: AIRechargeDetails,
   },
   {
     path: "/computing-rules",
@@ -160,6 +169,16 @@ const routes = [
     component: SubscriptionFailed,
   },
   {
+    path: "/aitool-payment-success",
+    name: "AIToolPaymentSuccess",
+    component: AIToolPaymentSuccess,
+  },
+  {
+    path: "/aitool-payment-fail",
+    name: "AIToolPaymentFailed",
+    component: AIToolPaymentFailed,
+  },
+  {
     path: "/user-personal",
     name: "UserPersonalInfo",
     component: UserPersonalInfo,
@@ -173,6 +192,11 @@ const routes = [
     path: "/user-interactive",
     name: "UserInteractive",
     component: UserInteractive,
+  },
+  {
+    path: "/user-invite",
+    name: "InviteRevenue",
+    component: InviteRevenue,
   },
   {
     path: "/user-revenue",
@@ -193,6 +217,16 @@ const routes = [
     path: "/user-subscription-edit",
     name: "UserSubscriptionEdit",
     component: UserSubscriptionEdit,
+  },
+  {
+    path: "/account-success",
+    name: "AccountSuccess",
+    component: AccountSuccess,
+  },
+  {
+    path: "/account-fail",
+    name: "AccountFailed",
+    component: AccountFailed,
   },
   {
     path: "/user-privacy",
@@ -220,19 +254,9 @@ const routes = [
     component: UserProfileEdit,
   },
   {
-    path: "/user-my-follows-subs",
-    name: "MyFollowsSubs",
-    component: MyFollowsSubs,
-  },
-  {
     path: "/user-payment-history",
     name: "PaymentHistory",
     component: PaymentHistory,
-  },
-  {
-    path: "/user-withdraw",
-    name: "Withdraw",
-    component: Withdraw,
   },
   {
     path: "/:pathMatch(.*)*",

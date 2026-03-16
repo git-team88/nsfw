@@ -43,7 +43,7 @@
     border-radius: .4rem;
     background: rgba(0, 0, 0, .4);
     color: #ffffff;
-    z-index: 900;
+    z-index: 2000;
     text-align: center;
     word-break: break-word;
   }

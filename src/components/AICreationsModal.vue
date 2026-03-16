@@ -82,7 +82,7 @@
           </div>
 
           <!-- Pagination -->
-          <div class="pagination-container" v-if="!loading && totalCreations > 0">
+          <div class="pagination-container" v-if="!loading && totalCreations > 0 && Math.ceil(totalCreations / itemsPerPage) > 1">
             <Pagination
               :total="totalCreations"
               :page-size="itemsPerPage"
@@ -180,7 +180,7 @@ const totalCreations = ref(0);
 async function fetchCreations() {
   loading.value = true;
   try {
-    const res = await api.getProject(2, 1, 'story', currentPage.value, itemsPerPage);
+    const res = await api.getProject(2, 1, 'story', currentPage.value, itemsPerPage, sortOrder.value);
     const data = res as unknown as { code: number; data?: any };
     if (data.code === 0 || data.code === 200) {
       creations.value = data.data?.data_list || [];
@@ -242,6 +242,8 @@ const setFilter = (filter: string) => {
 
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  currentPage.value = 1;
+  fetchCreations();
 };
 
 const isSelected = (creation: any) => {
@@ -421,6 +423,29 @@ const openPreviewModal = (creation: any) => {
   grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
   margin-bottom: 2.4rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 45rem;
+}
+
+.loading-spinner {
+  width: 4rem;
+  height: 4rem;
+  border: 4px solid rgba(251, 100, 182, 0.2);
+  border-top: 4px solid #fb64b6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.2rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .creation-card {

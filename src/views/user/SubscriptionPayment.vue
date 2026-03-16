@@ -24,7 +24,7 @@
         <p class="desc">{{ t("subscribe.desc") }}</p>
 
         <!-- Payment Methods -->
-        <div class="section-title">{{ t("subscribe.method") }}</div>
+        <!-- <div class="section-title">{{ t("subscribe.method") }}</div>
         <div class="payment-methods">
           <div
             v-for="method in paymentMethods"
@@ -43,7 +43,7 @@
 
             <span>{{ method.name }}</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- Agreements -->
         <div class="agreements">
@@ -179,10 +179,9 @@ async function handlePay() {
     if (data.code === 0 || data.code === 200) {
       window.location.href = data.data.url;
     } else {
-      toast(data.msg || t("error"));
+      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
     }
   } catch (error) {
-    console.error("Subscribe error:", error);
     toast(t("error"));
   } finally {
     isLoading.value = false;

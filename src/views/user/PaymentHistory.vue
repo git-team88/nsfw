@@ -9,63 +9,167 @@
             <div class="panel-title">{{ t("user.paymentHistory.title") }}</div>
           </div>
 
+          <div class="main-tabs">
+            <div
+              class="main-tab-item"
+              :class="{ active: activeMainTab === 'processing' }"
+              @click="switchMainTab('processing')"
+            >
+              {{ t('user.paymentHistory.processing') }}
+            </div>
+            <div
+              class="main-tab-item"
+              :class="{ active: activeMainTab === 'orderHistory' }"
+              @click="switchMainTab('orderHistory')"
+            >
+              {{ t('user.paymentHistory.orderHistory') }}
+            </div>
+          </div>
+
           <div class="tabs-row">
             <div class="tabs">
               <div
                 class="tab-item"
-                :class="{ active: activeTab === 'subscribe' }"
+                :class="{ active: activeSubTab === 'subscribe' }"
                 @click="switchTab('subscribe')"
               >
                 {{ t("user.paymentHistory.tabSubscribe") }}
               </div>
               <div
                 class="tab-item"
-                :class="{ active: activeTab === 'recharge' }"
+                :class="{ active: activeSubTab === 'recharge' }"
                 @click="switchTab('recharge')"
               >
                 {{ t("user.paymentHistory.tabRecharge") }}
               </div>
             </div>
-            <div class="date-range">
+            <div class="date-range" v-if="activeMainTab == 'orderHistory'">
               <DateRangePicker v-model="range" theme="pink" />
             </div>
           </div>
 
-          <div class="loading-box" v-if="loading">
-            <img src="@/assets/images/base/load.png" alt="" />
-          </div>
+          <template v-if="!loading && !autoRenewLoading">
+            <!-- Processing Tab Content -->
+            <div v-if="activeMainTab === 'processing'">
+              <div class="list-area" v-if="activeSubTab === 'subscribe'">
+                <div class="sub-item" v-for="item in processingList" :key="item.id">
+                  <div class="left">
+                    <img class="avatar" :src="item.avatar" alt="" @click="goUserHome(item.userId)" />
+                    <div class="info">
+                      <div class="name">{{ item.name }}</div>
+                      <div class="id">{{ t('user.paymentHistory.id') }}{{ item.userId }}</div>
+                    </div>
+                  </div>
+                  <div class="right">
+                    <div class="price-info">
+                      <div class="price">${{ item.price }}{{ t('user.paymentHistory.month') }}</div>
+                      <div class="date">
+                        {{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}
+                      </div>
+                    </div>
 
-          <template v-else>
-            <div class="table">
-              <div class="tbody">
-                <div class="tr" v-for="item in listData" :key="item.id">
-                  <div class="td time">{{ item.pay_time }}</div>
-                  <div class="td info">{{ t('user.paymentHistory.subscriptionType')}}</div>
-                  <div class="td quantity">1</div>
-                  <div class="td amount">${{ item.amount }}</div>
-                  <div class="td actions">
-                    <template v-if="item.is_invoiced === '1'">
-                      <button class="btn-view" @click="viewInvoice(item)">
-                        {{ t("user.paymentHistory.viewInvoice") }}
-                      </button>
-                      <button class="btn-download" @click="downloadInvoice(item)">
-                        {{ t("user.paymentHistory.downloadInvoice") }}
-                      </button>
-                    </template>
-                    <template v-else>
-                      <button class="btn-invoice" @click="openInvoiceModal(item)">
-                        {{ t("user.paymentHistory.issueInvoice") }}
-                      </button>
-                    </template>
+                    <div class="operate-box">
+                      <div class="menu-auto" v-if="!item.autoRenew" @click="turnOnAutoRenewal(item.id)">
+                        <b></b>
+                        {{ t("user.myFollowsSubs.autoRenewOn") }}
+                      </div>
 
+                      <div class="more-box" v-else>
+                        <img
+                          class="more-icon"
+                          src="@/assets/images/detail/menu.png"
+                          alt=""
+                          @click="toggleMoreMenu(item.id, $event)"
+                        />
+                        <div class="more-menu" v-if="showMoreMenu[item.id]" :style="menuStyle[item.id]">
+                          <div class="menu-item" @click="turnOffAutoRenewal(item.id)">
+                            {{ t("user.myFollowsSubs.autoRenewOff") }}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
                 </div>
+                <EmptyState v-if="!processingList.length" />
               </div>
-              <EmptyState v-if="!listData.length" />
+
+              <div class="list-area" v-else-if="activeSubTab === 'recharge'">
+                <div class="sub-item" v-for="item in processingList" :key="item.id">
+                  <div class="left">
+                    <div class="plan-info">
+                      <div class="plan-name">{{ item.plan_info?.name }}</div>
+                      <div class="compute-info">{{ item.plan_info?.description }}</div>
+                    </div>
+                  </div>
+                  <div class="right">
+                    <div class="price-info">
+                      <div class="price">${{ item.plan_info?.price }}{{ getTimeUnit(item.plan_info?.plan_id || 1) }}</div>
+                      <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}</div>
+                    </div>
+
+                    <div class="operate-box">
+                      <div class="more-box" v-if="item.subscription_info && item.subscription_info.cancel_at_period_end === 0">
+                        <img
+                          class="more-icon"
+                          src="@/assets/images/detail/menu.png"
+                          alt=""
+                          @click="toggleMoreMenu(item.id, $event)"
+                        />
+                        <div class="more-menu" v-if="showMoreMenu[item.id]" :style="menuStyle[item.id]">
+                          <div class="menu-item" @click="turnOffAutoRenewal(item.id)">
+                            {{ t("user.myFollowsSubs.autoRenewOff") }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item.id)">
+                        <b></b>
+                        {{ t("user.myFollowsSubs.autoRenewOn") }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <EmptyState v-if="!processingList.length" />
+              </div>
+
+              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && activeSubTab === 'recharge' && total > pageSize">
+                <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
+              </div>
             </div>
 
-            <div class="pagination-wrap" v-if="total > pageSize">
-              <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
+            <!-- Order History Tab Content -->
+            <div v-else-if="activeMainTab === 'orderHistory'">
+              <div class="table">
+                <div class="tbody" v-if="listData.length">
+                  <div class="tr" v-for="item in listData" :key="item.id">
+                    <div class="td time">{{ formatDate(item.issued_at || item.pay_time) }}</div>
+                    <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : t('user.paymentHistory.subscriptionType')}}</div>
+                    <div class="td quantity">{{ item.quantity || 1 }}</div>
+                    <div class="td amount">${{ item.amount || item.price }}</div>
+                    <div class="td actions">
+                      <template v-if="item.is_invoiced === '1'">
+                        <button class="btn-view" @click="viewInvoice(item)">
+                          {{ t("user.paymentHistory.viewInvoice") }}
+                        </button>
+                        <button class="btn-download" @click="downloadInvoice(item)">
+                          {{ t("user.paymentHistory.downloadInvoice") }}
+                        </button>
+                      </template>
+                      <template v-else>
+                        <button class="btn-invoice" @click="openInvoiceModal(item)">
+                          {{ t("user.paymentHistory.issueInvoice") }}
+                        </button>
+                      </template>
+
+                    </div>
+                  </div>
+                </div>
+                <EmptyState v-if="!listData.length" />
+              </div>
+
+              <div class="pagination-wrap" v-if="total > pageSize">
+                <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
+              </div>
             </div>
           </template>
         </div>
@@ -101,6 +205,8 @@
         </div>
       </div>
     </div>
+
+    <UploadMask :visible="autoRenewLoading" :text="t('loading')" />
   </div>
 </template>
 
@@ -110,78 +216,78 @@ import UserSidebar from "@/components/UserSidebar.vue";
 import EmptyState from "@/components/EmptyState.vue";
 import Pagination from "@/components/Pagination.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
-import { ref, onMounted, watch } from "vue";
+import UploadMask from "@/components/UploadMask.vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRouter } from "vue-router";
-import html2pdf from "html2pdf.js";
+import { useRouter, useRoute } from "vue-router";
 import dayjs from "dayjs";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
+import { formatTimestamp } from "@/util/utils";
 
 const { t, locale } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const sidebarKey = ref("payment-history");
-const activeTab = ref<"subscribe" | "recharge">("subscribe");
+const activeMainTab = ref<"processing" | "orderHistory">("processing");
+const activeSubTab = ref<"subscribe" | "recharge">("subscribe");
+const activeOrderHistoryTab = ref<"subscribe" | "recharge">("subscribe");
 
 const getCurrentDate = () => {
   return dayjs().format("YYYY-MM-DD");
 };
 
-const getSevenDaysBeforeCurrent = () => {
-  return dayjs().subtract(6, "day").format("YYYY-MM-DD");
+const getOneMonthBeforeCurrent = () => {
+  return dayjs().subtract(1, "month").format("YYYY-MM-DD");
 };
 
-const range = ref({ start: getSevenDaysBeforeCurrent(), end: getCurrentDate() });
+const range = ref({ start: getOneMonthBeforeCurrent(), end: getCurrentDate() });
 
 const loading = ref(false);
 const listData = ref<any[]>([]);
+const processingList = ref<any[]>([]);
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 
 const showInvoiceModal = ref(false);
-const showPreviewModal = ref(false);
 const invoiceEmail = ref("");
 const currentItem = ref<any>(null);
-const invoiceData = ref({
-  number: "",
-  date: "",
-  amount: 0,
-  itemName: "",
-});
 
-function generateInvoiceNumber() {
-  const chars = "0123456789ABCDEF";
-  let res = "";
-  for (let i = 0; i < 8; i++) res += chars[Math.floor(Math.random() * 16)];
-  res += "-";
-  for (let i = 0; i < 4; i++) res += chars[Math.floor(Math.random() * 16)];
-  return res;
-}
+const showMoreMenu = ref<Record<string, boolean>>({});
+const menuStyle = ref<Record<string, any>>({});
+const autoRenewLoading = ref(false);
 
-function formatDate(date: Date) {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+function switchMainTab(tab: "processing" | "orderHistory") {
+  if (activeMainTab.value === tab) return;
+  activeMainTab.value = tab;
+  activeSubTab.value = 'subscribe';
+  router.replace({
+    path: '/user-payment-history'
+  });
+  if (tab === 'processing') {
+    fetchProcessingData();
+  } else {
+    page.value = 1;
+    fetchData();
+  }
 }
 
 function switchTab(tab: "subscribe" | "recharge") {
-  if (activeTab.value === tab) return;
-  activeTab.value = tab;
-  page.value = 1;
-  fetchData();
+  router.replace({
+    path: '/user-payment-history'
+  });
+
+  if (activeMainTab.value === 'processing') {
+    if (activeSubTab.value === tab) return;
+    activeSubTab.value = tab;
+    fetchProcessingData();
+  } else {
+    if (activeSubTab.value === tab) return;
+    activeSubTab.value = tab;
+    page.value = 1;
+    fetchData();
+  }
 }
 
 async function fetchData() {
@@ -189,20 +295,24 @@ async function fetchData() {
   listData.value = [];
 
   try {
-    const res = await api.userPayList(page.value, pageSize.value) as any;
-    if (res.code === 0 || res.code === 200) {
-      const data = res.data?.data || res.data || [];
-
-      listData.value = data.filter((item: any) => {
-        if (activeTab.value === "subscribe") {
-          return item.name !== "AI Tool Recharge";
-        } else {
-          return item.name === "AI Tool Recharge";
-        }
-      });
-
-      total.value = res.data?.allnums || 0;
+    let res;
+    if (activeSubTab.value === "subscribe") {
+      res = await api.userPayList(page.value, pageSize.value, range.value.start, range.value.end) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data || res.data || [];
+        listData.value = data;
+        total.value = res.data?.allnums || 0;
+      }
     } else {
+      res = await api.userAiPayList(page.value, pageSize.value, range.value.start, range.value.end) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data || res.data || [];
+
+        listData.value = data;
+        total.value = res.data?.allnums || 0;
+      }
+    }
+    if (res && (res.code !== 0 && res.code !== 200)) {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
   } catch (error) {
@@ -212,8 +322,96 @@ async function fetchData() {
   }
 }
 
+async function fetchProcessingData() {
+  loading.value = true;
+  processingList.value = [];
+
+  try {
+    if (activeSubTab.value === 'subscribe') {
+      const res = await api.userSubscribeList(1, 10) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data || [];
+
+        processingList.value = data.map((item: any) => ({
+          id: item.id,
+          userId: item.author?.id || item.author_id,
+          name: item.author?.nickname || '',
+          avatar: item.author?.avatar || '',
+          price: item.plan?.price || 0,
+          startTime: item.start_at ? formatTimestamp(item.start_at) : item.created_at,
+          endTime: item.expire_at ? formatTimestamp(item.expire_at) : '',
+          autoRenew: item.status == '1'
+        }));
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      }
+    } else if (activeSubTab.value === 'recharge') {
+      const res = await api.computeDetail(101, '', '', page.value, pageSize.value) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data_list || [];
+        // 这里可以根据实际API返回的数据结构进行处理
+        processingList.value = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          planName: item.plan_name || item.planName ,
+          computeValue: item.compute_value || item.computeValue,
+          validPeriod: item.valid_period || item.validPeriod,
+          avatar: '',
+          price: item.amount || item.price || 0,
+          startTime: item.issued_at ? formatDate(item.issued_at) : item.created_at,
+          endTime: item.expire_at ? formatDate(item.expire_at) : '',
+          autoRenew: item.auto_renew || item.autoRenew || false,
+          subscription_info: item.subscription_info || null,
+          plan_info: {
+            name: item.plan_info?.name || '',
+            description: item.plan_info?.description || '',
+            price: item.plan_info?.price || 0,
+            plan_id: item.plan_info?.plan_id || 1
+          }
+        }));
+        total.value = res.data?.data_count || 0;
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      }
+    }
+  } catch (error) {
+    toast(t('fail'));
+  } finally {
+    loading.value = false;
+  }
+}
+
+function goUserHome(userId: string) {
+  router.push(`/user-home?id=${userId}`);
+}
+
+// Get time unit based on plan_id
+function getTimeUnit(planId: number) {
+  switch(planId) {
+    case 1:
+      return t('user.paymentHistory.month');
+    case 2:
+      return '/3Month';
+    case 3:
+      return '/6Month';
+    case 4:
+      return '/Year';
+    default:
+      return t('user.paymentHistory.month');
+  }
+}
+
+function formatDate(date: string) {
+  if (!date) return '';
+  return date.replace('T', ' ');
+}
+
 watch([page, range], () => {
-  fetchData();
+  if (activeMainTab.value === 'processing' && activeSubTab.value === 'recharge') {
+    fetchProcessingData();
+  } else {
+    fetchData();
+  }
 });
 
 function openInvoiceModal(item: any) {
@@ -293,24 +491,113 @@ async function downloadInvoice(item: any) {
   }
 }
 
-function downloadPDF() {
-  const content = document.getElementById("invoice-content");
-  if (!content) return;
+function toggleMoreMenu(itemId: string, event: MouseEvent) {
+  if (showMoreMenu.value[itemId]) {
+    showMoreMenu.value[itemId] = false;
+    return;
+  }
+  // 先关闭所有其他菜单
+  Object.keys(showMoreMenu.value).forEach(id => {
+    showMoreMenu.value[id] = false;
+  });
+  // 打开当前菜单
+  showMoreMenu.value[itemId] = true;
+  // 计算菜单位置
+  const target = event.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  const screenHeight = window.innerHeight;
+  const menuHeight = 40; // 估计高度
 
-  const opt = {
-    margin: 0.5,
-    filename: `invoice_${invoiceData.value.number}.pdf`,
-    image: { type: "jpeg" as const, quality: 0.98 },
-    html2canvas: { scale: 1.5, useCORS: true },
-    jsPDF: { unit: "in", format: "letter" },
-    pagebreak: { mode: "avoid-all" },
-  };
+  if (rect.bottom + menuHeight > screenHeight) {
+    menuStyle.value[itemId] = {
+      bottom: "100%",
+      top: "auto",
+      marginTop: "0",
+      marginBottom: "0.4rem",
+    };
+  } else {
+    menuStyle.value[itemId] = {
+      top: "100%",
+      bottom: "auto",
+      marginTop: "0.4rem",
+      marginBottom: "0",
+    };
+  }
+}
 
-  html2pdf().from(content).set(opt).save();
+async function turnOffAutoRenewal(itemId: string) {
+  // 隐藏下拉菜单
+  showMoreMenu.value[itemId] = false;
+  autoRenewLoading.value = true;
+  try {
+    const res = await api.cancelSubscribe(itemId) as any;
+    if (res.code === 0 || res.code === 200) {
+      // 重新获取数据以更新状态
+      fetchProcessingData();
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  } catch (error) {
+    toast(t('fail'));
+  } finally {
+    autoRenewLoading.value = false;
+  }
+}
+
+async function turnOnAutoRenewal(itemId: string) {
+  // 隐藏下拉菜单
+  showMoreMenu.value[itemId] = false;
+  autoRenewLoading.value = true;
+  try {
+    const res = await api.subscribe(itemId) as any;
+    if (res.code === 0 || res.code === 200) {
+      // 重新获取数据以更新状态
+      fetchProcessingData();
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  } catch (error) {
+    toast(t('fail'));
+  } finally {
+    autoRenewLoading.value = false;
+  }
+}
+
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest(".more-box")) {
+    // 关闭所有菜单
+    Object.keys(showMoreMenu.value).forEach(id => {
+      showMoreMenu.value[id] = false;
+    });
+  }
 }
 
 onMounted(() => {
-  fetchData();
+  // 处理URL中的type参数
+  const type = route.query.type as string;
+  if (type === '1') {
+    activeSubTab.value = 'subscribe';
+    fetchProcessingData();
+  } else if (type === '2') {
+    activeSubTab.value = 'recharge';
+    fetchProcessingData();
+  } else if (type === '4') {
+    // 跳转到支付历史下的AI充值工具tab
+    activeMainTab.value = 'orderHistory';
+    activeSubTab.value = 'recharge';
+    page.value = 1;
+    fetchData();
+  } else {
+    fetchProcessingData();
+  }
+  // 添加点击外部关闭菜单的事件监听器
+  document.addEventListener("click", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  // 移除点击外部关闭菜单的事件监听器
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
@@ -538,7 +825,7 @@ onMounted(() => {
   padding: 2.4rem 0;
 }
 .panel-top {
-  margin-bottom: 1.6rem;
+  margin-bottom: 2.4rem;
   padding: 0 3.6rem;
 }
 .panel-title {
@@ -547,24 +834,15 @@ onMounted(() => {
   color: #101828;
 }
 
-.tabs-row {
+.main-tabs {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 3.2rem;
   border-bottom: 1px solid rgba(251, 100, 182, 0.2);
-  margin-bottom: 2.4rem;
-  padding: 0 3.6rem 1.2rem;
+  margin-bottom: 1.6rem;
+  padding: 0 3.6rem;
 }
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: 3rem;
-  height: 4rem;
-}
-.tab-item {
-  display: flex;
-  align-items: center;
-  height: 100%;
+.main-tab-item {
+  padding-bottom: 1.8rem;
   font-size: 1.6rem;
   color: #6a7282;
   cursor: pointer;
@@ -575,7 +853,7 @@ onMounted(() => {
     &::after {
       content: "";
       position: absolute;
-      bottom: -1.2rem;
+      bottom: -1px;
       left: 0;
       width: 100%;
       height: 2px;
@@ -585,26 +863,66 @@ onMounted(() => {
   }
 }
 
-.loading-box {
+.sub-tabs {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40rem;
-  img {
-    width: 4rem;
-    height: 4rem;
-    animation: rotate 1.5s linear infinite;
+  gap: 3.2rem;
+  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  margin-bottom: 2.4rem;
+  padding: 0 3.6rem;
+}
+.sub-tab-item {
+  padding-bottom: 1.2rem;
+  font-size: 1.4rem;
+  color: #6a7282;
+  cursor: pointer;
+  position: relative;
+  &.active {
+    color: #fb64b6;
+    font-weight: 500;
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #fb64b6;
+      border-radius: 2px;
+    }
   }
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+.tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.6rem;
+  padding: 0 3.6rem;
+}
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  height: 3.2rem;
+}
+.tab-item {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 1.6rem;
+  font-size: 1.4rem;
+  color: #6a7282;
+  cursor: pointer;
+  position: relative;
+  &.active {
+    border-radius: 0.6rem;
+    border: 1px solid #FB64B6;
+    background: rgba(251,100,182,0.12);
+    color: #FB64B6;
   }
 }
+
+
 
 .table {
   padding: 0 3.6rem;
@@ -687,6 +1005,218 @@ onMounted(() => {
   margin-top: 2.4rem;
   display: flex;
   justify-content: center;
+}
+
+.list-area {
+  display: flex;
+  flex-direction: column;
+  padding: 0 3.6rem;
+  gap: 1.2rem;
+  min-height: 40rem;
+}
+
+.sub-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.8rem 2.4rem 1.8rem 1.8rem;
+  border: 1px solid rgba(251, 100, 182, 0.1);
+  border-radius: 0.8rem;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+  }
+  .left {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+    .avatar {
+      width: 5.2rem;
+      height: 5.2rem;
+      border-radius: 0.8rem;
+      object-fit: cover;
+    }
+    .info {
+      flex: 1;
+      .name {
+        max-width: 60rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 1.6rem;
+        color: #101828;
+      }
+      .id {
+        font-size: 1.4rem;
+        color: #99a1af;
+        margin-top: 0.8rem;
+      }
+    }
+    .plan-info {
+      flex: 1;
+    }
+    .plan-name {
+      font-size: 1.6rem;
+      color: #101828;
+      margin-bottom: 0.8rem;
+    }
+    .compute-info {
+      font-size: 1.4rem;
+      color: #99A1AF;
+    }
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    .price-info {
+      text-align: right;
+      .price {
+        font-size: 1.6rem;
+        color: #fb64b6;
+        font-weight: 500;
+      }
+      .date {
+        font-size: 1.4rem;
+        color: #99a1af;
+        margin-top: 0.4rem;
+      }
+    }
+    .operate-box {
+      margin-left: 2.4rem;
+      .more-box {
+        position: relative;
+        .more-icon {
+          width: 2.4rem;
+          height: 2.4rem;
+          cursor: pointer;
+        }
+        .more-menu {
+          position: absolute;
+          right: 0;
+          top: 2.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: auto;
+          min-width: 16rem;
+          background: #ffffff;
+          border: 1px solid rgba(251, 100, 182, 0.2);
+          border-radius: 0.6rem;
+          box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+          z-index: 10;
+          .menu-item {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #6a7282;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .menu-auto {
+        display: flex;
+        align-items: center;
+        gap: 2.4rem;
+        font-size: 1.4rem;
+        color: #00d3f2;
+
+        b {
+          width: 1px;
+          height: 2.4rem;
+          background: rgba(251, 100, 182, 0.2);
+        }
+      }
+    }
+    .price {
+      font-size: 1.6rem;
+      color: #fb64b6;
+      font-weight: 500;
+    }
+    .auto-renew-section {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-top: 0.4rem;
+    }
+    .auto-renew {
+      font-size: 1.4rem;
+      color: #99a1af;
+      &.auto-renewal {
+        color: #4caf50;
+      }
+    }
+    .auto-renew-btn {
+      padding: 0.4rem 1.2rem;
+      border: 1px solid #fb64b6;
+      border-radius: 0.6rem;
+      background: #fb64b6;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    .more-options {
+      position: relative;
+    }
+    .more-btn {
+      font-size: 1.6rem;
+      color: #99a1af;
+      cursor: pointer;
+      padding: 0 0.8rem;
+      &:hover {
+        color: #6a7282;
+      }
+    }
+    .more-menu {
+      position: absolute;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-width: 16rem;
+      background: #ffffff;
+      border: 1px solid rgba(251, 100, 182, 0.2);
+      border-radius: 0.6rem;
+      box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+      .menu-item {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        font-size: 1.2rem;
+        color: #6a7282;
+        cursor: pointer;
+      }
+    }
+    .operate-box {
+      .more-box {
+        position: relative;
+        .more-icon {
+          width: 2.4rem;
+          height: 2.4rem;
+          cursor: pointer;
+        }
+      }
+
+      .menu-auto {
+        display: flex;
+        align-items: center;
+        gap: 2.4rem;
+        font-size: 1.4rem;
+        color: #00d3f2;
+
+        b {
+          width: 1px;
+          height: 2.4rem;
+          background: rgba(251, 100, 182, 0.2);
+        }
+      }
+    }
+  }
 }
 
 .modal-mask {

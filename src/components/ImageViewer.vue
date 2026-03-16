@@ -116,7 +116,7 @@ function zoomOut() {
   position: fixed;
   inset: 0;
   background: #1f1f21;
-  z-index: 2000;
+  z-index: 1900;
   display: flex;
   align-items: center;
   justify-content: center;

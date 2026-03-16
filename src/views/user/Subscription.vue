@@ -1,6 +1,6 @@
 <template>
   <div class="user-subscription">
-    <Header :cur="-1"></Header>
+    <Header :cur="-1" @userInfoLoaded="handleUserInfoLoaded"></Header>
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
@@ -8,7 +8,31 @@
           <div class="panel-top">
             <div class="panel-title">{{ t("user.subscription.title") }}</div>
           </div>
+
           <div class="tip">{{ t("user.subscription.tip") }}</div>
+
+          <div class="account-section">
+            <div class="account-info">
+              <img src="@/assets/images/user/account.png" alt="" />
+              <div>
+                <div class="section-title">
+                  {{ t("user.subscription.accountTitle") }}
+                </div>
+                <div class="account-content">
+                  <div v-if="hasAccount" class="account-status">
+                    <img src="@/assets/images/user/success.png" alt="" />
+                    {{ t("user.subscription.accountCreated") }}
+                  </div>
+                  <span v-else>{{ t("user.subscription.accountContent") }}</span>
+                </div>
+              </div>
+            </div>
+
+            <span class="change-account-btn" v-if="hasAccount" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+            <button class="create-account-btn" v-else @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
+
+          </div>
+
           <div class="sections-wrap">
             <div class="section" v-if="!plan">
               <div class="disabled-box">
@@ -21,7 +45,10 @@
             <div class="section-info" v-else>
               <div class="section">
                 <div class="label-row">
-                  <div class="label">{{ t("user.subscription.priceLabel") }}</div>
+                  <div class="label">
+                    {{ t("user.subscription.priceLabel") }}
+                    <span>{{ t("user.subscription.priceLimit") }}</span>
+                  </div>
                   <button class="edit-link" @click="goEdit">
                     {{ t("user.subscription.edit") }}
                   </button>
@@ -42,11 +69,13 @@
       </div>
     </div>
   </div>
+  <UploadMask :visible="isLoading" :text="t('loading')" />
 </template>
 
 <script setup lang="ts" name="UserSubscription">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
+import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
@@ -59,13 +88,18 @@ const price = ref("");
 const description = ref("");
 const plan = ref<any>(null);
 const loading = ref(false);
+const isLoading = ref(false);
+const hasAccount = ref(false);
 
 onMounted(async () => {
   await fetchSubscription();
 });
 
+function handleUserInfoLoaded(userData: any) {
+  hasAccount.value = userData?.info?.blogger_status === '1';
+}
+
 async function fetchSubscription() {
-  loading.value = true;
   try {
     const res = await api.getSubscription();
 
@@ -76,18 +110,55 @@ async function fetchSubscription() {
       price.value = data.data?.plan?.price || "0";
       description.value = data.data?.plan?.description || t("user.subscription.benefitsText")
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'jp' ? data.msg_jp : data.msg)
     }
   } catch (error) {
-    console.error(error);
     toast(t("fail"));
-  } finally {
-    loading.value = false;
   }
 }
 
 function goEdit() {
+  // toast(t("user.subscription.priceChangeLimit"));
+  // return false;
   router.push("/user-subscription-edit");
+}
+
+async function handleCreateAccount() {
+  try {
+    isLoading.value = true;
+    const res = await api.createAccount();
+    const data = res as any;
+
+    if (data.code === 200 || data.code === 0) {
+      window.open(data.data?.url, '_blank');
+    } else {
+      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      isLoading.value = false;
+    }
+  } catch (error) {
+    isLoading.value = false;
+    toast(t("fail"));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function handleChangeAccount() {
+  try {
+    isLoading.value = true;
+    const res = await api.benefit();
+    const data = res as any;
+
+    if (data.code === 200 || data.code === 0) {
+      window.open(data.data?.url, '_blank');
+    } else {
+      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  } finally {
+    isLoading.value = false;
+  }
 }
 </script>
 
@@ -121,7 +192,7 @@ function goEdit() {
   margin: 0 0 2.4rem 1.2rem;
 }
 .panel-title {
-  font-weight: bold;
+  font-weight: 500;
   font-size: 2rem;
   color: #101828;
 }
@@ -145,6 +216,91 @@ function goEdit() {
   background: rgba(0, 211, 242, 0.06);
   color: #364153;
 }
+
+.account-section {
+  margin: 0 1.2rem 2.4rem;
+  padding: 1.6rem;
+  border-radius: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(251, 100, 182, 0.06);
+}
+
+.account-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+
+  img{
+    width: 5.2rem;
+    height: 5.2rem;
+  }
+}
+
+.section-title {
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+  font-size: 1.6rem;
+  color: #101828;
+  gap: 0.8rem;
+}
+
+.account-content {
+  font-size: 1.4rem;
+  color: #99A1AF;
+  flex: 1;
+}
+
+.create-account-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13.6rem;
+  height: 4.8rem;
+  background: #fb64b6;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.8rem;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 1;
+    }
+  }
+}
+
+.change-account-btn {
+  color: #FB64B6;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.account-status {
+  display: flex;
+  align-items: center;
+  font-size: 1.4rem;
+  color: #6A7282;
+  gap: 0.4rem;
+
+  img{
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
 .sections-wrap {
   padding: 1.2rem;
   border-radius: 1.2rem;
@@ -178,6 +334,12 @@ function goEdit() {
 .label {
   font-size: 1.4rem;
   color: #364153;
+
+  span{
+    font-size: 1.2rem;
+    color: #99a1af;
+    font-weight: normal;
+  }
 }
 .price-row {
   display: flex;

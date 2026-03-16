@@ -285,7 +285,7 @@ function googleLogin() {
         localStorage.removeItem("lType");
 
         if (res.data && res.data.is_first == 1) {
-          localStorage.setItem("isFirstRegister", "1");
+          localStorage.setItem("isFirstLogin", "1");
         }
 
         if (headerRef.value) {

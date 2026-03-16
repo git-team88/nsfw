@@ -248,7 +248,7 @@ async function fetchData() {
   margin: 0 0 2.4rem 0;
 }
 .panel-title {
-  font-weight: bold;
+  font-weight: 500;
   font-size: 2rem;
   color: #101828;
 }

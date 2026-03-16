@@ -22,7 +22,7 @@
           <img src="@/assets/images/register/check.png" alt="" v-else />
         </div>
 
-        <span>{{ t("submit.sensitiveDontAsk") }}</span>
+        <span @click="isCheck = !isCheck">{{ t("submit.sensitiveDontAsk") }}</span>
       </div>
     </div>
   </div>
@@ -39,6 +39,7 @@ const emit = defineEmits<{
   (e: "update:visible", v: boolean): void;
   (e: "confirm", dontAsk: boolean): void;
   (e: "cancel"): void;
+  (e: "dontAsk"): void;
 }>();
 const { t, locale } = useI18n();
 
@@ -49,11 +50,17 @@ function emitCancel() {
   emit("update:visible", false);
   emit("cancel");
   localDontAsk.value = false;
+  isCheck.value = false;
 }
 function emitConfirm() {
-  emit("confirm", localDontAsk.value);
+  if (isCheck.value == true) {
+    localStorage.setItem('sensitiveDontAsk', '1');
+  }
+
+  emit("confirm", isCheck.value);
   emit("update:visible", false);
   localDontAsk.value = false;
+  isCheck.value = false;
 }
 </script>
 

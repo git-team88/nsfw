@@ -568,26 +568,35 @@ async function fetchUserInfo() {
   if (Array.isArray(authorId)) {
     authorId = authorId[0];
   }
-  if (!authorId) return;
+
+  const localUid = localStorage.getItem('uid');
+  const isSelf = localUid === authorId;
 
   loadingUserInfo.value = true;
   try {
-    const res = await api.authorInfo(authorId);
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    let res;
+    if (isSelf) {
+      res = await api.authorSelfInfo();
+    } else {
+      if (!authorId) return;
+      res = await api.authorInfo(authorId);
+    }
+
+    const data = res as any;
     if (data.code === 200 || data.code === 0) {
       const subPrice = data.data?.sub_price || '';
       userInfo.value = {
-        id: data.data?.user?.id || '',
-        nickname: data.data?.user?.nickname || '',
-        avatar: data.data?.user?.avatar || '',
-        headerImage: data.data?.user_page?.page_banner || '',
-        is_follow: data.data?.is_follow,
-        is_subscribe: data.data?.is_subscribe,
-        subscribe_price: data.data?.subscribe_price,
-        subscription_plans:data.data?.subscription_plans || null,
-        description: data.data?.user_page?.page_desc || '',
-        following: parseInt(data.data?.user?.following_count || '0'),
-        fans: parseInt(data.data?.user?.follower_count || '0'),
+        id: data.data?.user?.id || data.data?.id || '',
+        nickname: data.data?.user?.nickname || data.data?.nickname || '',
+        avatar: data.data?.user?.avatar || data.data?.avatar || '',
+        headerImage: data.data?.user_page?.page_banner || data.data?.page_banner || '',
+        is_follow: data.data?.is_follow || 0,
+        is_subscribe: data.data?.is_subscribe || 0,
+        subscribe_price: data.data?.subscribe_price || '',
+        subscription_plans: data.data?.subscription_plans || null,
+        description: data.data?.user_page?.page_desc || data.data?.page_desc || '',
+        following: parseInt(data.data?.user?.following_count || data.data?.following_count || '0'),
+        fans: parseInt(data.data?.user?.follower_count || data.data?.follower_count || '0'),
         likes: parseInt(data.data?.total_like_count || '0'),
         posts: parseInt(data.data?.total_posts || '0'),
         subPrice: subPrice,

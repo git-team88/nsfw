@@ -1,6 +1,6 @@
 <template>
   <div class="list-wrap">
-    <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.workId)">
+    <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.post, item.comment)">
       <div class="left-info">
         <img class="avatar" :src="item.poster.avatar" alt="" @click.stop="goUserHome(item.poster.user_id)" />
         <div class="text-col">
@@ -26,13 +26,30 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { formatTimestamp } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
+import { toast } from "@/util/toast";
 
 const { t, locale } = useI18n();
 const router = useRouter();
 defineProps<{ list: any[] }>();
 
-function toDetail(id: string | number) {
-  router.push(`/detail?id=${id}`);
+function toDetail(post: any, comment: any) {
+  if (post && parseInt(post.access_rights) <= 0) {
+    toast(t('mentions.postDeleted'));
+    return false;
+  }
+
+  if (comment && comment.status != '1') {
+    toast(t('mentions.commentDeleted'));
+    return false;
+  }
+
+  if (comment && !comment.parent_id) {
+    router.push(`/detail?id=${post.post_id}&cid=${comment.comment_id}`);
+  } else if (comment && comment.parent_id) {
+    router.push(`/detail?id=${post.post_id}&cid=${comment.parent_id}&rid=${comment.comment_id}`);
+  } else {
+    router.push(`/detail?id=${post.post_id}`);
+  }
 }
 
 function goUserHome(userId: string) {

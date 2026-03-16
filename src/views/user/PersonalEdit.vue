@@ -13,7 +13,7 @@
             <div class="section">
               <div class="label">
                 <span>*</span>{{ t("user.personal.username")
-                }}<b class="count">{{ nickname.length }}/18</b>
+                }}<b class="count">{{ nickname.length }}/18 ({{ t('user.personal.usernameWarning') }})</b>
               </div>
               <input
                 class="input-text"
@@ -89,7 +89,7 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import BirthPicker from "@/components/BirthPicker.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 
@@ -288,6 +288,11 @@ function onCancel() {
   router.push("/user-personal");
 }
 function onSave() {
+  if (nickname.value.includes('#') || nickname.value.includes('@') || nickname.value.includes(' ')) {
+    toast(t('user.personal.usernameWarning'));
+    return;
+  }
+
   saving.value = true;
 
   const buildBirthdayString = () => {

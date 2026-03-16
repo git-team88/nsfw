@@ -1,6 +1,6 @@
 <template>
   <div class="submit-video">
-    <Header :cur="-1"></Header>
+    <Header ref="headerRef" :cur="-1" @user-info-loaded="handleUserInfoLoaded"></Header>
 
     <div class="container">
       <div class="back" @click="goBack">
@@ -232,7 +232,7 @@
         </div>
 
         <!-- Sensitive Content -->
-        <div class="section" v-if="userRegion">
+        <div class="section" v-if="userRegion && isAdult">
           <div class="form-item">
             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
             <div class="sensitive-options">
@@ -260,7 +260,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<a href="#">{{ t("submit.terms") }}</a></span
+            >{{ t("submit.agree") }}<a href="javascript:void(0)" @click="openCommunityConvention">{{ t("submit.terms") }}</a></span
           >
         </div>
       </div>
@@ -272,7 +272,7 @@
       @confirm="confirmSensitive"
     />
 
-    <ConfirmLeaveModal :show="isShowConfirm" @confirm="confirmLeave" />
+    <ConfirmLeaveModal :show="isShowConfirm" @confirm="confirmLeave" @cancel="cancelLeave" />
 
     <PreviewModal
       :visible="showPreviewModal"
@@ -384,8 +384,6 @@ const dropdownPosition = ref({ top: 0, left: 0 });
 const lastRange = ref<Range | null>(null);
 
 const showSensitiveConfirm = ref(false);
-const dontAskSensitive = ref(localStorage.getItem("dont_ask_sensitive") === "true");
-const pendingSensitiveValue = ref<"yes" | "no" | "">("");
 
 const toastShow = ref(false);
 const toastMsg = ref("");
@@ -395,6 +393,8 @@ let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);
+const isAdult = ref(false);
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 // Computed
 const captionLength = ref(0);
@@ -459,6 +459,16 @@ function confirmLeave() {
     router.push(pendingRoute.value.path);
   } else {
     router.go(-1);
+  }
+}
+
+function cancelLeave() {
+  isShowConfirm.value = false;
+}
+
+function handleUserInfoLoaded(userInfo: any) {
+  if (userInfo) {
+    isAdult.value = userInfo.is_adult == 1;
   }
 }
 
@@ -658,16 +668,21 @@ function pickCover() {
 function toggleSensitive(val: "yes" | "no") {
   if (form.value.content === val) return;
 
-  if (dontAskSensitive.value) {
-    form.value.content = val;
+  const dontAsk = localStorage.getItem('sensitiveDontAsk');
+
+  if (val == 'yes') {
+    if (dontAsk == '1') {
+      form.value.content = val;
+    } else {
+      showSensitiveConfirm.value = true;
+    }
   } else {
-    pendingSensitiveValue.value = val;
-    showSensitiveConfirm.value = true;
+    form.value.content = val;
   }
 }
 
 async function handlePermissionChange(permission: string, index: number) {
-  if (index === 1 && !hasActiveSubscription.value) {
+  if (index == 1 && !hasActiveSubscription.value) {
     toast(t('submit.subscriptionTip'));
     return;
   }
@@ -680,12 +695,7 @@ function cancelSensitive() {
 }
 
 function confirmSensitive() {
-  if (pendingSensitiveValue.value) {
-    form.value.content = pendingSensitiveValue.value as "yes" | "no";
-    if (dontAskSensitive.value) {
-      localStorage.setItem("dont_ask_sensitive", "true");
-    }
-  }
+  form.value.content = "yes";
   showSensitiveConfirm.value = false;
 }
 
@@ -1380,6 +1390,29 @@ async function onSubmit() {
     return;
   }
 
+  // 处理content参数，只在有span标签的@提及前面添加空格
+  let processedContent = form.value.description.trim();
+
+  // 获取输入框的HTML内容，检查是否有span标签的@提及
+  const el = captionRef.value;
+  if (el) {
+    // 检查输入框中的span标签
+    const mentionSpans = el.querySelectorAll('.tag.mention');
+    if (mentionSpans.length > 0) {
+      // 对于每个span标签的@提及，检查其在文本中的位置
+      mentionSpans.forEach((span) => {
+        const spanText = span.textContent || '';
+        if (spanText.startsWith('@')) {
+          const username = spanText.substring(1);
+          // 构建正则表达式，匹配@username，前面没有空格的情况
+          const regex = new RegExp(`(^|[^\s])@${username}`, 'g');
+          processedContent = processedContent.replace(regex, (match, prefix) => {
+            return `${prefix} @${username}`;
+          });
+        }
+      });
+    }
+  }
 
   isUpload.value = true;
 
@@ -1388,7 +1421,7 @@ async function onSubmit() {
       type: 3,
       title: form.value.title.trim(),
       cover: coverPreview.value,
-      content: form.value.description.trim(),
+      content: processedContent,
       is_nsfw: form.value.content == "yes" ? 1 : 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
@@ -1438,6 +1471,12 @@ function showToast(msg: string, icon: string) {
   toastTimer = setTimeout(() => {
     toastShow.value = false;
   }, 3000);
+}
+
+// Open community convention in new window
+function openCommunityConvention() {
+  localStorage.setItem("isBack", "1");
+  window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
 onMounted(async () => {

@@ -29,8 +29,8 @@
             :class="{ selected: isStyleSelected(style) }"
             @click="selectStyle(style.name)"
           >
-            <img :src="style.image" :alt="locale == 'jp' ? style.name_jp : locale == 'zh' ? style.name_cn : style.name" />
-            <div class="style-name">{{ locale == 'jp' ? style.name_jp : locale == 'zh' ? style.name_cn : style.name }}</div>
+            <img :src="style.image" :alt="locale == 'jp' ? style.name_ja : locale == 'zh' ? style.name_cn : style.name" />
+            <div class="style-name">{{ locale == 'jp' ? style.name_ja : locale == 'zh' ? style.name_cn : style.name }}</div>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ const props = defineProps<{
 const styles = ref<Array<{
   name: string;
   name_cn: string,
-  name_jp: string,
+  name_ja: string,
   image: string;
   description: string;
 }>>([]);
@@ -81,7 +81,7 @@ const isStyleSelected = (style: any) => {
   // Check if selectedStyle matches any of the name variants
   return selectedStyle.value === style.name ||
          selectedStyle.value === style.name_cn ||
-         selectedStyle.value === style.name_jp;
+         selectedStyle.value === style.name_ja;
 };
 
 const selectStyle = (styleName: string) => {
@@ -94,17 +94,26 @@ const handleClose = () => {
 
 const handleConfirm = () => {
   if (selectedStyle.value) {
-    // Find the style by comparing all possible name fields
-    const style = styles.value.find(s =>
-      s.name === selectedStyle.value ||
-      s.name_cn === selectedStyle.value ||
-      s.name_jp === selectedStyle.value
-    );
-    if (style) {
-      localStorage.setItem('selectedStyle', selectedStyle.value);
-      emit('confirm', style);
+      // Find the style by comparing all possible name fields
+      const style = styles.value.find(s =>
+        s.name === selectedStyle.value ||
+        s.name_cn === selectedStyle.value ||
+        s.name_ja === selectedStyle.value
+      );
+
+      if (style) {
+        // Store the entire style object with all language names and image
+        const styleData = {
+          name: style.name,
+          name_cn: style.name_cn,
+          name_ja: style.name_ja,
+          image: style.image
+        };
+
+        localStorage.setItem('selectedStyle', JSON.stringify(styleData));
+        emit('confirm', style);
+      }
     }
-  }
 };
 
 const loadStyles = async () => {
@@ -113,20 +122,20 @@ const loadStyles = async () => {
   try {
     const response = await api.getStoryStyles();
     if (response && response.data) {
-      styles.value = response.data.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        name_cn: item.name_cn,
-        name_jp: item.name_jp,
-        image: item.image
-      }));
+        styles.value = response.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          name_cn: item.name_cn,
+          name_ja: item.name_ja,
+          image: item.image
+        }));
 
       // Default to first style if no saved style or saved style not found
       if (styles.value && styles.value.length > 0) {
         // First priority: use currentSelectedStyle from props
         if (props.currentSelectedStyle) {
           const currentStyleExists = styles.value.some(s =>
-            s.name === props.currentSelectedStyle || s.name_cn === props.currentSelectedStyle || s.name_jp === props.currentSelectedStyle
+            s.name === props.currentSelectedStyle || s.name_cn === props.currentSelectedStyle || s.name_ja === props.currentSelectedStyle
           );
           if (currentStyleExists) {
             selectedStyle.value = props.currentSelectedStyle;
@@ -135,18 +144,32 @@ const loadStyles = async () => {
         // Second priority: use saved style from localStorage
         else {
           const savedStyle = localStorage.getItem('selectedStyle');
-          const savedStyleExists = savedStyle && styles.value.some(s =>
-            s.name === savedStyle || s.name_cn === savedStyle || s.name_jp === savedStyle
+          let savedStyleValue = savedStyle;
+
+          // Try to parse savedStyle as JSON object
+          try {
+            if (savedStyle) {
+              const parsedStyle = JSON.parse(savedStyle);
+              if (parsedStyle.name) {
+                savedStyleValue = parsedStyle.name;
+              }
+            }
+          } catch (e) {
+            // If parsing fails, use as string
+          }
+
+          const savedStyleExists = savedStyleValue && styles.value.some(s =>
+            s.name === savedStyleValue || s.name_cn === savedStyleValue || s.name_ja === savedStyleValue
           );
 
           if (savedStyleExists) {
-            selectedStyle.value = savedStyle;
+            selectedStyle.value = savedStyleValue;
           } else {
             // Default to first style based on current locale
             const firstStyle = styles.value[0];
-            selectedStyle.value = locale.value === 'jp'
-              ? firstStyle.name_jp
-              : locale.value === 'zh'
+            selectedStyle.value = locale.value == 'jp'
+              ? firstStyle.name_ja
+              : locale.value == 'zh'
               ? firstStyle.name_cn
               : firstStyle.name;
           }

@@ -13,7 +13,7 @@ export default {
       privacyPolicy: "Privacy Policy",
       paidServices: "Paid Services"
     },
-    copyright: "© 2026 AI Creation Platform. All rights reserved."
+    copyright: "© 2026 acgworlds Co., Ltd. All rights reserved."
   },
   grecaptcha: {
     notLoaded: "Grecaptcha not loaded yet completed",
@@ -234,7 +234,7 @@ III. Service Introduction<br />
 3.3.3 Unless you obtain our prior explicit written authorization, you shall not use the service in any unauthorized form, including but not limited to adaptation, reproduction, dissemination, crawling, mirroring, etc.<br />
 3.4 Service Changes<br />
 3.4.1 In order to improve user experience and meet more service needs of users, we will continuously strive to develop new services and provide you with service updates from time to time (such updates may take the form of service replacement, modification, function enhancement, version upgrade, suspension or termination of related services, etc.). To ensure the security of this service, the stability of various functions, the need for compliant operation or based on the overall service operation needs, we may also update the services or change or restrict the functional effects of some services.<br />
-3.4.2 In view of the particularity of network services, you have the right to stop using our services at any time, although we very much regret this. To the extent permitted by law, we may also change, interrupt or stop part or all of this service at any time.<br />v
+3.4.2 In view of the particularity of network services, you have the right to stop using our services at any time, although we very much regret this. To the extent permitted by law, we may also change, interrupt or stop part or all of this service at any time.<br />
 
 IV. User Account and Usage<br />
 4.1 You understand and confirm that before you start registering to use the services, you shall have the capacity for civil conduct appropriate to your acts as stipulated by law.If you do not have the capacity for civil conduct appropriate to your acts, please read this Agreement carefully and fully understand it accompanied by your legal guardian, and register to use the services only with the consent of your legal guardian. You and your guardian shall bear all consequences arising from your registration and use of the services.If you register on behalf of an enterprise, organization or other legal entity or actually use the services in other ways permitted by us, you represent and warrant that you have been fully authorized and have the right to register and use the services on behalf of such enterprise, organization or other legal entity and be bound by this Agreement. Meanwhile, you understand that failure to comply with the foregoing requirements may result in your inability to register and use the services normally.<br />
@@ -268,18 +268,14 @@ VII. User Code of Conduct<br />
 7.1.7 Use, rent, lend, copy, modify, link, reprint, compile, publish, publish or establish mirror sites for the content of which we own intellectual property rights or the content released by other users on the website.<br />
 7.1.8 Use the account to participate in any illegal or potentially illegal activities or transactions, including teaching crime methods, selling any illegal drugs, money laundering, fraud, etc.<br />
 7.1.9 Other acts in violation of laws and regulations, this Agreement, Platform Rules and infringement upon the legitimate rights and interests of others.<br />
-If we have reasonable grounds to believe that any of your acts violate or may violate the foregoing agreements, we may make independent judgments and take necessary measures to deal with them. In case of emergency, we may terminate the provision of services to you without prior notice and pursue relevant liabilities in accordance with the law and the Agreement.<br />
-7.2 Information Content Specifications7.2.1 The information content referred to in this clause refers to any content input, produced, copied, published, disseminated, uploaded and output by users during the use of products and services, including but not limited to the information displayed on personal homepages such as account avatars, nicknames, personal introductions, or text, images, audio, video and other information released and disseminated.<br />
-7.2.2 You understand and agree that we are always committed to providing users with a civilized, healthy, standardized and orderly network environment. You shall not use your account or services to directly or indirectly input, produce, copy, publish, disseminate, upload or output the following illegal and irregular content that interferes with normal operation and infringes upon the legitimate rights and interests of other users or third parties, including but not limited to:(1) Not in compliance with laws and regulations;(2) Spreading rumors, disturbing social order and undermining social stability;(3) Spreading obscenity, pornography, gambling, violence, terror or abetting crimes;(4) Insulting or slandering others and infringing upon their legitimate rights and interests;(5) Inciting regional discrimination and regional hatred;(6) Carrying out violent intimidation and threats against others and conducting human flesh search;(7) Involving disclosure, theft and infringement of others’ privacy, personal information or data;(8) Spreading vulgar language and damaging social public order and good customs;(9) Publishing, transmitting, disseminating or storing content infringing upon others’ legitimate rights such as reputation rights, portrait rights, intellectual property rights and trade secrets;(10) Producing, copying, publishing or disseminating harassment or any sexual or suggestive information;(11) Producing, copying, publishing or disseminating commercial promotion information, advertising information, excessive marketing information or spam information;(12) Publishing meaningless information or deliberately using character combinations to evade technical review;(13) Infringing upon the legitimate rights and interests of minors or damaging the physical and mental health of minors;(14) Publishing information about goods or services whose sale/promotion is prohibited or restricted unless legal and sufficient administrative permission is obtained;(15) Impersonating others or using the service or disseminating any information in the name of others, and maliciously using registered accounts to cause confusion among other users;(16) Containing terrorist, violent, bloody, high-risk content that endangers the physical and mental health of performers or others, including but not limited to:i. Content of any violence and/or self-mutilation;ii. Any content threatening life and health, endangering one’s own or others’ personal and/or property rights performed with dangerous instruments such as knives;iii. Content encouraging or inducing others to participate in dangerous or illegal activities that may cause personal injury or death;(17) Engaging in or assisting illegal or high-risk activities, such as military and warfare, development of weapons, explosives or dangerous materials, management or operation of critical infrastructure (such as transportation and energy), creation or distribution of controlled substances or services, activities with high economic damage risks including gambling, automatic credit qualification, employment and education decisions;(18) Other information in violation of laws, regulations, policies and public order and good customs, interfering with the normal operation of this product and related services or infringing upon the legitimate rights and interests of other users or third parties.<br />
-7.3 Service Usage Restrictions<br />
-7.3.1 Without our written permission, no user or third party shall, on its own or by authorizing, allowing or assisting any other person, conduct the following acts on the information content of the platform:(1) Copying, reading or adopting the information content for commercial purposes including but not limited to publicity, increasing reading volume and page views;(2) Displaying the information content on channels other than the source page of the platform after unauthorized editing, sorting and arrangement;(3) Adopting any form of identification methods including but not limited to special logos and special codes to independently or assist third parties in causing adverse effects such as traffic, reading volume guidance, diversion and hijacking on the information content of the platform;(4) Other acts of illegally obtaining or using the information content of the platform.<br />
-7.3.2 Without our written permission, no user or third party shall directly or indirectly steal text, images, audio, video and other information content of the platform in any way (including but not limited to hotlinking, redundant theft, illegal crawling, simulated download, deep linking, fake registration, etc.).<br />
-7.3.3 After obtaining our written permission, any user or third party’s sharing, forwarding and other acts of the information content of the platform shall also comply with the following specifications:(1) Without our prior written consent, the relevant data such as search hot words, hit rate, classification, search volume, click-through rate and reading volume obtained through crawling and statistics shall not be publicized, provided or disclosed to any third party in any way;(2) No form of modification shall be made to the source webpage of the platform, including but not limited to the homepage (profile page) link and advertising system link of the platform, nor shall the display of the source page of the platform be blocked, inserted, popped up or otherwise obstructed in any form;(3) Safe, effective and strict measures shall be taken to prevent the information content of the platform from being illegally obtained by third parties through any form including but not limited to “spider” programs;(4) The relevant data content shall not be used for purposes beyond the scope of our written permission, sold or commercially used in any form, or disclosed, provided to third parties or allowed third parties to use in any way;(5) The act of sharing, forwarding or copying the information content of the platform to any third party shall comply with this Agreement and other specifications and standards formulated by us for this purpose.<br />
-7.3.4 You shall not use new technologies and applications such as deep learning to produce, publish or disseminate false information. When you publish or disseminate non-real text, images, audio and video information produced based on new technologies and applications such as deep learning, virtual reality and generative artificial intelligence, or other information content that may cause public confusion or misunderstanding, you shall mark it in a prominent way. Meanwhile, without our explicit written consent, you shall not cover, smear or delete the prominent marks we have marked on the information content in any way.<br />
-7.3.5 If you apply for the generated synthetic content provided by the platform without explicit marks, you shall mark or prompt that the content is AI-generated synthetic content in other prominent ways during the use of such generated synthetic content. You shall not maliciously delete, tamper with, forge or conceal the marks of generated synthetic content we have marked.<br /><br />
-
-VIII. Other Provisions<br />
-If any clause of this Agreement is invalid or unenforceable in whole or in part for any reason, the remaining clauses of this Agreement shall remain valid and binding.`,
+If we have reasonable grounds to believe that any of your acts violate or may violate the foregoing agreements, we may make independent judgments and take necessary measures to deal with them. In case of emergency, we may terminate the provision of services to you without prior notice and pursue relevant liabilities in accordance with the law and the Agreement.<br />`,
+  inviteCode: {
+    title: "Invite Code",
+    enterCode: "Enter Invite Code",
+    confirm: "Confirm",
+    noCode: "No invitation code? Skip",
+    inviteError: "Enter invite code or skip."
+  },
 
   privacy: `Privacy Policy<br />
 Welcome to use our products and related services! Please carefully read, understand and comply with this Privacy Policy.<br />
@@ -468,7 +464,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     type2: "Local Videos",
     type3: "Local Photos",
     type4: "Articles",
-    aiTip: `You haven't generated any finished works yet. Please go ahead and create them first`,
+    aiTip: `You don't have any generated works yet. Please go generate them first.`,
     login: "Log in",
     logout: "Log Out",
     noRegister: "Don't have an account? ",
@@ -476,7 +472,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     logoutConfirm: "Are you sure you want to log out?",
     userCard: {
       subscribeLabel: "Subscribe",
-      followersLabel: "Fans",
+      followersLabel: "Followers",
+      fansLabel: "Fans",
       postLabel: "Post",
     },
     menu: {
@@ -498,15 +495,20 @@ If you have any questions, complaints, comments or suggestions regarding persona
       resend: "Resend Email",
     },
   },
+  mentions: {
+    postDeleted: "Post has been deleted",
+    commentDeleted: "Comment has been deleted"
+  },
   user: {
     sidebar: {
       title: "Personal Center",
       personalInfo: "Personal Info",
       account: "Account Management",
-      profile: "Community Settings",
+      profile: "Profile Settings",
       subscription: "Subscription Settings",
+      inviteRevenue: "Earn & Invite",
       revenue: "Revenue",
-      mySubscriptions: "My Follows and Subscriptions",
+      mySubscriptions: "My Subscriptions",
       interactive: "Interactive Data",
       messages: "Messages",
       privacy: "Privacy Settings",
@@ -535,6 +537,32 @@ If you have any questions, complaints, comments or suggestions regarding persona
       privacy: "Privacy Policy",
       terms: "Terms of Service",
       and: " and ",
+      success: {
+        title: "Account Created Successfully",
+        message: "Future earnings will be withdrawn through this account.",
+        back: "Return to Subscription Settings"
+      },
+      failed: {
+        title: "Account Creation Failed",
+        message: "The link has expired or creation failed. Please return and try again.",
+        back: "Return to Subscription Settings"
+      }
+    },
+    inviteRevenue: {
+      title: "Earn & Invite",
+      inviteText: `Join MoeGen, generate videos with one click using AI, and earn money by sharing videos! Register here → [<a href="{link}">{link}</a>], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
+      copy: "Copy Invite Link",
+      copyText: `Join MoeGen, generate videos with one click using AI, and earn money by sharing videos! Register here → [{link}], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
+      firstPurchaseStars: "Total Registered & First-Time Recharge (Users)",
+      totalRevenue: "Total Invitation Rewards (Computing Power)",
+      credits: " Credits",
+      rulesTitle: "Promotion Rules:",
+      rule: `When others register for MoeGen using your invitation code, you will receive a commission reward.<br />
+      Commission rule: A successful invitation is counted when the invited user registers and completes their first purchase. You will receive 10 credits for each successful invitation.<br />
+      These rules may be updated periodically. The revised rules will be announced on the official website before taking effect.<br />
+      Continuing to use the service after the updated rules take effect means you have read, understood, and accepted the revised rules.`,
+      copySuccess: "Invitation link copied",
+      viewDetails: "View Reward Details"
     },
     messages: {
       title: "Messages",
@@ -546,7 +574,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       tab6: "Mentions",
       subscribeNow: "Subscribe Now",
       expireText: "Your subscription is about to expire",
-      subscribedText: "Subscribed to your content",
+      subscribedText: "subscribed to your content",
       likedText: "Liked your work",
       commentedText: "Commented on yours:",
       repliedText: "Replied to you:",
@@ -559,6 +587,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       tip: "To access all features, please complete your profile.",
       username: "Username",
       usernameText: "Enter your username",
+      usernameWarning: `{'#'} {'@'} and spaces are not allowed`,
       avatar: "Avatar",
       upload: "Upload",
       confirm: "Confirm",
@@ -591,11 +620,18 @@ If you have any questions, complaints, comments or suggestions regarding persona
       edit: "Edit",
       tip: "After setting up the subscription plan, a 20% service fee will be deducted. You will receive 80% of the actual price.",
       priceLabel: "Monthly Price",
+      priceLimit: "(Price can only be changed once per day)",
+      priceChangeLimit: "Price can only be changed once per day. You have already made changes today. Please try again tomorrow.",
       perMonth: "/ month",
       benefitsLabel: "Benefits Description",
       benefitsText: "Subscribers can view all paid content during the subscription period.",
       disabled: "Subscription Function Disabled",
       cancel: "Cancel Subscription",
+      accountTitle: "Payment Account:",
+      accountContent: "(Will be used as withdrawal account after enabling subscription)",
+      createAccount: "Create",
+      accountCreated: "Created",
+      changeAccount: "View Account",
     },
     myFollowsSubs: {
       title: "My Follows and Subscriptions",
@@ -609,7 +645,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     paymentHistory: {
       title: "Payment History",
-      tabSubscribe: "subscribe",
+      processing: "Subscribing",
+      orderHistory: "Order History",
+      subscribe: "Subscribe",
+      aiToolRecharge: "AI Tool Recharge",
+      tabSubscribe: "Subscribe",
       tabRecharge: "AI Tool Recharge",
       issueInvoice: "Issue Invoice",
       viewInvoice: "View Invoice",
@@ -621,6 +661,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
       subscriptionType: "My Monthly Subscription",
       invoiceSuccess: "Invoice issued successfully",
       emailRequired: "Please enter your email address",
+      valid: "Valid:",
+      id: "ID:",
+      month: "/Month",
+      quantity: "1",
     },
     withdraw: {
       title: "Withdraw",
@@ -640,6 +684,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       overall: "Overall Data",
       individual: "Individual Work Data",
       download: "Download CSV",
+      csvFileName: "interactive-data",
       startDate: "Start Date",
       endDate: "End Date",
       selectDateRange: "Select Date Range",
@@ -647,6 +692,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       apply: "Apply",
       selectBothDates: "Please select both start and end dates",
       maxThreeMonths: "Date range cannot exceed 3 months",
+      maxOneYear: "Date range cannot exceed 1 year",
       date: "Date",
       dailyLikes: "Daily Total Likes",
       dailyComments: "Daily Total Comments",
@@ -654,26 +700,46 @@ If you have any questions, complaints, comments or suggestions regarding persona
       followerChange: "Follower change",
       totalFollowers: "Total followers",
       noData: "No data available",
+      csvHeaders: {
+        date: "Date",
+        change: "Follower Change",
+        total: "Total Followers",
+        likes: "Likes",
+        comments: "Comments",
+        title: "Work Title"
+      },
 
     },
     revenue: {
       total: "Total Revenue",
-      withdrawn: "Withdrawn Revenue",
-      pending: "Pending Withdrawal",
+      withdrawn: "Frozen earnings",
+      pending: "Withdrawable earnings",
       withdraw: "Withdraw",
+      withdrawRecord: "Detail",
       tabDetail: "Revenue Detail",
-      tabRecord: "Withdrawal Record",
       time: "Time",
       period: "Subscription Period",
       revenue: "Revenue",
       modalTitle: "Withdraw all pending earnings",
       confirm: "Confirm Withdrawal",
+      confirmWithdraw: "Confirm Withdraw",
+      agreeTerms: "Agree to Payment Terms",
       agreePrefix: "Agree to the",
       terms: "Terms of Service",
       totalWithdrawable: "Total Withdrawable Amount",
-      withdrawTip: "Withdrawals are allowed only 7 full days after earnings are credited, with no",
+      withdrawTip: "Earnings will be available for withdrawal after a 7-day cooling-off period, provided no",
       communityRule: "community rule",
-      withdrawTipEnd: " violations during this period.",
+      withdrawTipEnd: " are violated during this period.",
+      noProfit: "There is no withdrawable income temporarily.",
+      noData: "No data available",
+      withdrawSuccess: "Withdrawal successful",
+      csvFileName: "revenue-data",
+      csvHeaders: {
+        time: "Time",
+        period: "Subscription Period",
+        revenue: "Revenue",
+        withdraw: "Withdrawal Amount"
+      },
     },
   },
   pagination: {
@@ -892,7 +958,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       cancel: "Cancel",
       confirm: "Confirm",
       limit: 'You can select a maximum of 7 characters',
-      noCharacters: "No characters available"
+      noCharacters: "No characters available",
+      officialCharacters: "Official Characters",
+      myCharacters: "My Characters"
     },
     character: {
       selected: "Character selected",
@@ -933,7 +1001,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       name: "Creator"
     },
     error: {
-      emptyInput: "Please enter your plot"
+      emptyInput: "Please enter your plot",
+      maxItemsReached: "You can upload a maximum of 7 characters and reference images"
     },
     generate: {
       started: "Video generation started",
@@ -996,7 +1065,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     fanOnly: "Fan-Only Content",
     permission: "Permission Range",
     permPublic: "Public",
-    permPartial: "Partial User Visible",
+    permPartial: "Subscribers Only",
     permPrivate: "Self Visible",
     imgtip: "(First image public)",
     articleTip: "(First 4000 words public)",
@@ -1105,7 +1174,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       post: "Post Another",
     },
     agree: "I agree to the ",
-    terms: "Terms of Service",
+    terms: "Community Guidelines",
     cancelBtn: "Cancel",
     confirmBtn: "Confirm",
     sensitiveConfirmTitle: "Confirm to include sensitive content?",
@@ -1119,6 +1188,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
     publishing: 'Publishing...'
   },
 
+  deleteConfirm: {
+    title: "Confirm Deletion",
+    message: "After deleting the comment, all replies under the comment will be deleted. Are you sure you want to delete it?",
+    cancel: "Cancel",
+    confirm: "Confirm"
+  },
   detail: {
     prev: "Previous",
     next: "Next",
@@ -1171,19 +1246,56 @@ If you have any questions, complaints, comments or suggestions regarding persona
       private: "Only Me",
       public: "Public"
     },
-    videoLoadingFailed: "Video loading failed."
+    videoLoadingFailed: "Video loading failed.",
+    videoUrlInvalid: "Video URL is invalid. Please try again.",
+    videoPlayFailed: "Video play failed",
+    videoUrlCopied: "Video URL copied"
   },
   aiRecharge: {
     title: "AI Recharge",
     selectPlan: "Select Recharge Plan",
     viewDetails: "View Computing Power Details",
-    agreeTerms: "I agree to the terms of service",
+    agreeTerms: "I agree to the Terms of Service",
     subscribeNow: "Recharge Now",
     usageRules: "Computing Power Usage Rules",
-    rule1: "Video under 1 minute costs xx computing power",
-    rule2: "1 image generation costs xx computing power",
+    rule1: "Video within 1 minute consumes xx computing power",
+    rule2: "1 image generation consumes xx computing power",
     computingPowerRules: "Computing Power Rules",
-    credits: "Computing Power"
+    pointsDetails: "Points Details",
+    valid6Months: "Valid for 6 months from issuance",
+    valid12Months: "Valid for 12 months from issuance",
+    credits: "Credits",
+    compute: "Compute",
+    monthlyAutoRenew: "Monthly Auto-Renew",
+    quarterlyAutoRenewal: "Quarterly Auto-Renewal",
+    semiAnnualAutoRenewal: "Semi-Annual Auto-Renewal",
+    annualAutoRenewal: "Annual Auto-Renewal",
+    computePack: "Compute Pack",
+    periodMonth: "/month",
+    period3Month: "/3month",
+    period6Month: "/6month",
+    periodYear: "/year"
+  },
+  aiRechargeDetails: {
+    title: "Points Details",
+    selectPeriod: "Select Period",
+    date: "Date",
+    type: "Type",
+    amount: "Amount",
+    status: "Status",
+    balance: "Balance",
+    recharge: "Recharge",
+    paymentHistory: "Payment History",
+    all: "All",
+    consumption: "Consumption",
+    earned: "Earned",
+    rechargeTab: "Recharge",
+    inviteRewards: "Invite Rewards",
+    subscribe: "Subscribe",
+    boostPack: "Boost Pack",
+    generate: "Generate",
+    expired: "Expired",
+    invited: "New user"
   },
   computingPowerRules: {
     title: "Rules for Computing Power",
@@ -1227,7 +1339,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     success: {
       title: "Payment Successful!",
       message: "Your subscription will take effect within a few minutes. Please refresh and check later.If it is still not active after 1 hour, please contact customer service.",
-      back: "Back to Sub Community"
+      back: "Back to Sub Community",
+      backToHome: "Back to Home",
+      backToMyProjects: "Back to My Projects"
     },
     failed: {
       title: "Payment Failed!",
@@ -1300,7 +1414,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
 <p>Address: 1st Floor, Green Hills Taimei, 6-20-11 Hongo, Bunkyo-ku, Tokyo 113-0033, Japan</p>
 <p>Telephone Number: +81-7484-0659</p>
 <p>Email Address: support{'@'}acgworlds{'.'}co{'.'}jp</p>
-<p>Service URL: <a href="https://unlimited.creations.com" target="_blank">https://unlimited.creations.com (tentative)</a></p>
+<p>Service URL: <a href="" target="_blank">(tentative)</a></p>
 
 <h2>2. Scope of Application of This Statement</h2>
 <p>This statement applies to the following services provided by our company (ACGWORLDS Co., Ltd.):</p>

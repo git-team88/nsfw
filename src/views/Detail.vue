@@ -4,9 +4,7 @@
       <span></span>
     </div>
 
-    <UploadMask :visible="isLoading" :text="t('userHome.loading')"></UploadMask>
-
-    <UploadMask :visible="isUploading" :text="t('detail.uploading')"></UploadMask>
+    <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
     <div class="main-container">
       <div class="left-panel">
@@ -255,8 +253,8 @@
               <EmptyState v-if="comments.length === 0 && !isLoadingComments" class="empty-with-padding"></EmptyState>
 
               <!-- Comments List -->
-              <div v-if="comments.length > 0 && !isLoadingComments" class="comment-item" v-for="c in comments" :key="c.id">
-                <div class="comment-main">
+              <div v-if="comments.length > 0 && !isLoadingComments" class="comment-item" v-for="c in comments" :key="c.id" :data-comment-id="c.id">
+                <div class="comment-main" :style="{ backgroundColor: c.backgroundColor }">
                   <img class="c-avatar" :src="c.avatar" alt="" />
                   <div class="c-content">
                     <div class="c-header">
@@ -275,7 +273,7 @@
                         </div>
                       </div>
                     </div>
-                    <p class="c-text" v-html="formatContent(c.text)"></p>
+                    <p class="c-text" v-html="formatContent(c.content_replace || c.text || c.content)"></p>
 
                     <div class="c-media" v-if="c.images && c.images.length > 0">
                       <div class="c-images">
@@ -336,20 +334,20 @@
 
                 <!-- Replies -->
                 <div class="replies-list" v-if="c.showingReplies && c.replies && c.replies.length > 0">
-                  <div class="reply-item" v-for="r in c.replies" :key="r.id">
+                  <div class="reply-item" v-for="r in c.replies" :key="r.id" :style="{ backgroundColor: r.backgroundColor }">
                     <img class="c-avatar" :src="r.avatar" alt="" />
                     <div class="c-content">
                       <div class="c-header">
                         <div class="author-wrap">
                           <span class="c-author">{{ r.author }}</span>
-                          <span class="reply-to" v-if="r.reply_to_user_nickname != ''">@{{ r.reply_to_user_nickname }}</span>
+                          <span class="reply-to" v-if="r.reply_to_user_nickname">@{{ r.reply_to_user_nickname }}</span>
                         </div>
                         <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, r.id)">
                           <button class="c-more-btn" @click.stop="toggleCommentMore(r.id)">
                             <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
                           </button>
                           <div class="dropdown-menu" v-if="activeCommentMoreId == r.id">
-                            <span class="menu-item" v-if="r.user_id == uid" @click="deleteComment(r.id)">
+                            <span class="menu-item" v-if="r.user_id == uid" @click="deleteComment(r.id, true)">
                               {{ t("detail.delete") }}
                             </span>
                             <span class="menu-item" v-else @click="openReportModal('reply', r.id)">
@@ -358,7 +356,7 @@
                           </div>
                         </div>
                       </div>
-                      <p class="c-text" v-html="formatContent(r.text)"></p>
+                      <p class="c-text" v-html="formatContent(r.content_replace || r.text || r.content)"></p>
 
                     <!-- Reply Media (Images and Videos) -->
                     <div class="c-media" v-if="r.images && r.images.length > 0">
@@ -583,6 +581,13 @@
       :videoUrl="curVideoUrl"
       @close="closeBigViewer"
     />
+
+    <!-- Delete Confirm Modal -->
+    <DeleteConfirmModal
+      :visible="deleteModalVisible"
+      @close="handleDeleteCancel"
+      @confirm="handleDeleteConfirm"
+    />
   </div>
 </template>
 
@@ -592,6 +597,7 @@ import UploadMask from "@/components/UploadMask.vue";
 import PreviewModal from "@/components/PreviewModal.vue";
 import ImageViewer from "@/components/ImageViewer.vue";
 import PreviewBig from "@/components/PreviewBig.vue";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import router from "@/router";
 import { useRoute } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
@@ -614,6 +620,7 @@ const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const isLoading = ref(false);
+const loadText = ref(t('userHome.loading'));
 const isVideoBuffering = ref(false);
 
 // --- New State for Image/Article ---
@@ -639,6 +646,10 @@ const headerMoreVisible = ref(false);
 const headerMoreRef = ref<HTMLElement | null>(null);
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
+
+// Delete confirm modal
+const deleteModalVisible = ref(false);
+const commentToDelete = ref<string | null>(null);
 
 const reportModalTitle = computed(() => {
   if (reportTarget.value?.type === "comment" || reportTarget.value?.type === "reply") {
@@ -709,7 +720,6 @@ const lastRange = ref<Range | null>(null);
 const uploadedFiles = ref<any[]>([]);
 const imageInputRef = ref<HTMLInputElement | null>(null);
 const videoInputRef = ref<HTMLInputElement | null>(null);
-const isUploading = ref(false);
 const videoUrl = ref('');
 const videoSize = ref(0);
 
@@ -756,6 +766,7 @@ const detail = ref({
   images: [] as imgItem[],
   articleHtml: "",
   content: "",
+  content_replace: "",
   permission: "public", // public, private, partial
   subscriptionPlans: [] as string[],
   isSubscribed: false,
@@ -800,19 +811,18 @@ function formatContent(content: string): string {
     return `${displayPrefix}<a href="javascript:void(0)" class="tag-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByTag('#${tag}')">#${tag}</a>`;
   });
 
-  // 处理 @提及
-  // 匹配规则：@ 前面是开头、空格、特殊字符或任意字符，@ 后面匹配完整词组（包括域名格式和多个@）
-  // 支持: @user, @user@domain.com, @herui@ifensi.com 等格式
-  // 匹配直到遇到空格、# 或其他特殊字符（但保留@符号用于邮箱格式）
-  result = result.replace(/(^|[\s\u00A0]|(?<!<a[^>]*>).?)@([a-zA-Z0-9\u4e00-\u9fa5_.\-@]+)(?=\s|#|$|(?![a-zA-Z0-9\u4e00-\u9fa5_.\-@]))/g, (match, prefix, mention) => {
-    // 避免重复处理已经转换的链接
-    if (match.includes('</a>') || match.includes('href=')) {
-      return match;
+  // 处理 [mention:value|user] 格式
+  // 匹配规则：[mention:数字|用户名] 格式，用于标识用户
+  // 只有当value > 0时才显示为蓝色且可点击
+  result = result.replace(/\[mention:(\d+)\|([^\]]+)\]/g, (match, value, user) => {
+    const numValue = parseInt(value);
+    if (numValue > 0) {
+      // 真实用户，添加蓝色可点击的span标签
+      return `<span style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${user}')">${user}</span>`;
+    } else {
+      // 普通文案，只显示用户名
+      return user;
     }
-    // 如果prefix是完整的字符（不是空格或开头），需要保留它
-    const preservePrefix = prefix && prefix !== ' ' && prefix !== '\u00A0' && prefix !== '';
-    const displayPrefix = preservePrefix ? prefix : (prefix || '');
-    return `${displayPrefix}<a href="javascript:void(0)" class="mention-link" style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${mention}')">@${mention}</a>`;
   });
 
   return result;
@@ -820,6 +830,10 @@ function formatContent(content: string): string {
 
 // API Data Load
 async function fetchDetail(newId: number) {
+  // Get query parameters at the beginning
+  const type = route.query.type as string || "";
+  const cid = route.query.cid as string || "";
+
   try {
     id.value = newId;
 
@@ -828,9 +842,15 @@ async function fetchDetail(newId: number) {
     isLoadingComments.value = true;
 
     var data = null;
-    var type = route.query.type as string || "";
 
-    if (type == "2") {
+    if (type == "1")  {
+      data = JSON.stringify({
+        post_id: newId,
+        fromIndexRecommend: {
+          "tab": "hot"
+        }
+      })
+    } else if (type == "2") {
       data = JSON.stringify({
         post_id: newId,
         fromIndexFollow: {
@@ -869,10 +889,7 @@ async function fetchDetail(newId: number) {
       })
     } else {
       data = JSON.stringify({
-        post_id: newId,
-        fromIndexRecommend: {
-          "tab": "hot"
-        }
+        post_id: newId
       })
     }
 
@@ -901,13 +918,14 @@ async function fetchDetail(newId: number) {
         isFollowed: data.is_followed == 1 || false,
         time: formatTimestamp(data.created_at) || "",
         title: data.title || "",
-        description: data.content || data.description || "",
+        description: data.content_replace || data.content || data.description || "",
         type: data.type,
         videoUrl: data.video_url || "",
         cover: data.cover || "",
         images: res.data.images || [],
-        articleHtml: formatContent(data.content || ""),
+        articleHtml: formatContent(data.content_replace || data.content || ""),
         content: data.content || "",
+        content_replace: data.content_replace || "",
         permission: data.access_rights == '2' ? "partial" : data.access_rights == '3' ? "private" : "public",
         subscriptionPlans: data.subscription_plans || data.plans || [],
         isSubscribed: data.is_subscribed == 1 || false,
@@ -963,6 +981,7 @@ async function fetchDetail(newId: number) {
         images: [],
         articleHtml: "",
         content: "",
+        content_replace: "",
         permission: "public",
         subscriptionPlans: [],
         isSubscribed: false,
@@ -978,10 +997,10 @@ async function fetchDetail(newId: number) {
       comments.value = [];
       totalComments.value = '';
     }
+
   } catch (error) {
     toast(t('fail'));
 
-    // Clear data on error
     detail.value = {
       id: newId,
       author: {
@@ -999,6 +1018,7 @@ async function fetchDetail(newId: number) {
       images: [],
       articleHtml: "",
       content: "",
+      content_replace: "",
       permission: "public",
       subscriptionPlans: [],
       isSubscribed: false,
@@ -1024,6 +1044,166 @@ async function fetchDetail(newId: number) {
 
   // Load comments after fetching detail
   await loadComments();
+
+  // Load comment detail if cid parameter exists
+  if (cid) {
+    await loadCommentDetail(cid);
+  }
+
+  // Load comment detail to reply list if rid parameter exists
+  const rid = route.query.rid as string || "";
+  if (rid) {
+    await loadCommentToReplyList(rid);
+  }
+}
+
+async function loadCommentDetail(commentId: string) {
+  try {
+    const res = await api.commentDetail(commentId) as any;
+    if (res.code == 0 || res.code == 200) {
+      const commentData = res.data;
+      // Calculate total replies count
+      const totalReplies = commentData.reply_count || commentData.children_count || 0;
+      // Check if rid parameter exists
+      const rid = route.query.rid as string || "";
+      // Add the comment to the beginning of the comments list
+      const commentObj: any = {
+        id: commentData.id || commentData.comment_id || Date.now(),
+        author: commentData.author || commentData.nickname || "",
+        user_id: commentData.user_id || "",
+        avatar: commentData.avatar || "",
+        text: commentData.content_replace || commentData.text || commentData.content || "",
+        likes: commentData.like_count || 0,
+        liked: commentData.is_liked == 1 || false,
+        images: commentData.images || [],
+        video_url: commentData.video_url || "",
+        created_at: commentData.created_at || "",
+        reply_count: totalReplies,
+        replies: [],
+        initialReply: null,
+        replyPage: 0,
+        replyTotal: totalReplies,
+        hasMoreReplies: totalReplies > 1,
+        showingReplies: true,
+        isMentioned: true,
+        // Only add background color if there's no rid parameter
+        backgroundColor: rid ? '' : 'rgba(251, 100, 182, 0.04)'
+      };
+
+      // Check if there are children (replies) and process them
+      if (commentData.children && commentData.children.length > 0) {
+        // Store the first reply as initial reply
+        const firstChild = commentData.children[0];
+        commentObj.initialReply = {
+          id: firstChild.id || firstChild.reply_id || Date.now(),
+          author: firstChild.author || firstChild.nickname || firstChild.user?.nickname || "",
+          user_id: firstChild.user_id || "",
+          avatar: firstChild.avatar || firstChild.user?.avatar || "",
+          text: firstChild.content_replace || firstChild.content_replace || firstChild.text || firstChild.content || "",
+          created_at: firstChild.created_at || "",
+          likes: firstChild.like_count || 0,
+          liked: firstChild.is_liked == 1 || false,
+          replyTo: firstChild.replyTo || firstChild.reply_to || firstChild.target_user || "",
+          reply_to_user_nickname: firstChild.reply_to_user_nickname || ""
+        };
+        // Show the initial reply
+        commentObj.replies = [commentObj.initialReply];
+      }
+
+      // Load replies for cid comment if there are replies and no rid parameter
+      if (totalReplies > 0 && !rid) {
+        // If we have children data, use it for initialReply
+        if (commentData.children && commentData.children.length > 0) {
+          const firstChild = commentData.children[0];
+          commentObj.initialReply = {
+            id: firstChild.id || firstChild.reply_id || Date.now(),
+            author: firstChild.author || firstChild.nickname || firstChild.user?.nickname || "",
+            user_id: firstChild.user_id || "",
+            avatar: firstChild.avatar || firstChild.user?.avatar || "",
+            text: firstChild.content_replace || firstChild.content_replace || firstChild.text || firstChild.content || "",
+            created_at: firstChild.created_at || "",
+            likes: firstChild.like_count || 0,
+            liked: firstChild.is_liked == 1 || false,
+            replyTo: firstChild.replyTo || firstChild.reply_to || firstChild.target_user || "",
+            reply_to_user_nickname: firstChild.reply_to_user_nickname || ""
+          };
+          // Only show the first reply
+          commentObj.replies = [commentObj.initialReply];
+          // Set hasMoreReplies to true if there are more than 1 reply
+          commentObj.hasMoreReplies = totalReplies > 1;
+        } else {
+          // If no children data, load replies but only show the first one
+          await loadReplies(commentObj, 1);
+          // Ensure we only show the first reply
+          if (commentObj.replies.length > 0) {
+            // Set the first reply as initialReply
+            commentObj.initialReply = commentObj.replies[0];
+            // Only show the first reply
+            commentObj.replies = [commentObj.initialReply];
+            // Set hasMoreReplies to true if there are more than 1 reply
+            commentObj.hasMoreReplies = totalReplies > 1;
+          } else if (totalReplies > 0) {
+            // Create a placeholder reply to show
+            commentObj.initialReply = {
+              id: Date.now(),
+              author: "",
+              user_id: "",
+              avatar: "",
+              text: "",
+              created_at: "",
+              likes: 0,
+              liked: false,
+              replyTo: "",
+              reply_to_user_nickname: ""
+            };
+            commentObj.replies = [commentObj.initialReply];
+            commentObj.hasMoreReplies = totalReplies > 1;
+          }
+        }
+      }
+
+      // Add to the beginning of the comments list
+      comments.value.unshift(commentObj);
+    }
+  } catch (error) {
+    console.log('Error loading comment detail:', error);
+  }
+}
+
+async function loadCommentToReplyList(rid: string) {
+  try {
+    const res = await api.commentDetail(rid) as any;
+    if (res.code == 0 || res.code == 200) {
+      const commentData = res.data;
+      // Find the first comment in the comments list
+      const firstComment = comments.value[0];
+      if (firstComment) {
+        // Create the comment detail object to be added to replies
+        const commentDetailObj: any = {
+          id: commentData.id || commentData.comment_id || Date.now(),
+          author: commentData.author || commentData.nickname || "",
+          user_id: commentData.user_id || "",
+          avatar: commentData.avatar || "",
+          text: commentData.content_replace || commentData.text || commentData.content || "",
+          created_at: commentData.created_at || "",
+          likes: commentData.like_count || 0,
+          liked: commentData.is_liked == 1 || false,
+          replyTo: commentData.replyTo || commentData.reply_to || commentData.target_user || "",
+          reply_to_user_nickname: commentData.reply_to_user_nickname || "",
+          backgroundColor: 'rgba(251, 100, 182, 0.04)',
+          isRidComment: true
+        };
+
+        // Add the comment detail as the first item in the replies list
+        firstComment.replies.unshift(commentDetailObj);
+        firstComment.showingReplies = true;
+        // Store rid for filtering later
+        firstComment.rid = rid;
+      }
+    }
+  } catch (error) {
+    console.log('Error loading comment to reply list:', error);
+  }
 }
 
 // Search functions for # and @
@@ -1034,8 +1214,8 @@ function searchByTag(tag: string) {
 
 async function searchByMention(mention: string) {
   try {
-    // Extract username from mention (remove @ symbol)
-    const username = mention.substring(1);
+    // Extract username from mention (remove all @ symbols)
+    const username = mention.replace(/@/g, '');
 
     // Call getUserId API to get user ID
     const res = await api.getUserId({ nickname: username }) as any;
@@ -1076,7 +1256,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
           author: comment.author || comment.nickname || "",
           user_id: comment.user_id || "",
           avatar: comment.avatar || "",
-          text: comment.text || comment.content || "",
+          text: comment.content_replace || comment.text || comment.content || "",
           likes: comment.like_count || 0,
           liked: comment.is_liked == 1 || false,
           images: comment.images || [],
@@ -1099,7 +1279,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
             author: firstChild.author || firstChild.nickname || firstChild.user?.nickname || "",
             user_id: firstChild.user_id || "",
             avatar: firstChild.avatar || firstChild.user?.avatar || "",
-            text: firstChild.text || firstChild.content || "",
+            text: firstChild.content_replace || firstChild.content_replace || firstChild.text || firstChild.content || "",
             created_at: firstChild.created_at || "",
             likes: firstChild.like_count || 0,
             liked: firstChild.is_liked == 1 || false,
@@ -1115,10 +1295,17 @@ async function loadComments(page: number = 1, append: boolean = false) {
         return commentObj;
       });
 
+      // Filter out the comment with the same ID as cid parameter
+      const cid = route.query.cid as string || "";
+      const filteredComments = newComments.filter((comment: { id: string | number; }) => {
+        // Ensure both are strings for comparison
+        return String(comment.id) !== String(cid);
+      });
+
       if (append) {
-        comments.value = [...comments.value, ...newComments];
+        comments.value = [...comments.value, ...filteredComments];
       } else {
-        comments.value = newComments;
+        comments.value = filteredComments;
       }
 
       const totalComments = parseInt(res.data?.allnums) || 0;
@@ -1144,19 +1331,181 @@ async function loadComments(page: number = 1, append: boolean = false) {
   }
 }
 
-// Delete comment
-async function deleteComment(commentId: string) {
+// Delete comment - show confirm modal only if there are replies
+function deleteComment(commentId: string, isReply: boolean = false) {
+  // Close dropdown menu
+  activeCommentMoreId.value = null;
+
+  // Find the comment object
+  let comment = null;
+
+  // Check in main comments
+  for (const c of comments.value) {
+    if (String(c.id) === commentId) {
+      comment = c;
+      break;
+    }
+    // Check in replies
+    if (c.replies) {
+      for (const r of c.replies) {
+        if (String(r.id) === commentId) {
+          comment = r;
+          isReply = true;
+          break;
+        }
+      }
+      if (comment) break;
+    }
+  }
+
+  if (!comment) return;
+
+  // If it's a reply or a main comment with no replies, delete directly
+  let hasReplies = false;
+
+  // Check for reply count
+  const replyCount = comment.reply_count || comment.children_count || 0;
+  if (replyCount > 0) {
+    hasReplies = true;
+  }
+
+  // Check for children array
+  if (comment.children && comment.children.length > 0) {
+    hasReplies = true;
+  }
+
+  // Check for replies array
+  if (comment.replies && comment.replies.length > 0) {
+    hasReplies = true;
+  }
+
+  if (isReply || !hasReplies) {
+    // Directly delete without showing modal
+    handleDeleteConfirmDirect(commentId, isReply);
+  } else {
+    // Show confirm modal for main comments with replies
+    commentToDelete.value = commentId;
+    deleteModalVisible.value = true;
+  }
+}
+
+// Direct delete without showing modal
+async function handleDeleteConfirmDirect(commentId: string, isReply: boolean = false) {
   try {
     const res = await api.deleteComment({ comment_id: commentId }) as any;
     if (res.code === 0 || res.code === 200) {
-      // Reload comments after successful deletion
-      await loadComments(1, false);
+      toast(t('success'));
+
+      await updateCommentCount();
+
+      if (isReply) {
+        // For replies, find the parent comment and reload its replies
+        for (const comment of comments.value) {
+          if (comment.replies) {
+            const replyIndex = comment.replies.findIndex((r: { id: any; }) => String(r.id) === String(commentId));
+            if (replyIndex !== -1) {
+              // Reload replies for this comment
+              comment.replyPage = 0;
+              comment.replies = [];
+              await loadReplies(comment, 1);
+              break;
+            }
+          }
+        }
+      } else {
+        // For top-level comments, reload all comments
+        await loadComments(1, false);
+
+        const cid = route.query.cid as string || "";
+        if (cid) {
+          await loadCommentDetail(cid);
+        }
+
+        const rid = route.query.rid as string || "";
+        if (rid) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await loadCommentToReplyList(rid);
+        }
+      }
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
   } catch (error) {
     toast(t('fail'));
   }
+}
+
+async function updateCommentCount() {
+  try {
+    var data = JSON.stringify({
+      post_id: id.value
+    })
+
+    const token = localStorage.getItem('token');
+
+    const headers: HeadersInit = {};
+
+    if (token) {
+      headers['token'] = token;
+    }
+
+    const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers: headers,
+      body: data
+    });
+
+    const res = await response.json();
+
+    if (res.code === 0 || res.code === 200) {
+      totalComments.value = res.data.comment_total || '';
+    }
+  } catch (error) {
+    console.log('Error updating comment count:', error);
+  }
+}
+
+async function handleDeleteConfirm() {
+  if (!commentToDelete.value) return;
+
+  deleteModalVisible.value = false;
+
+  try {
+    const res = await api.deleteComment({ comment_id: commentToDelete.value }) as any;
+    if (res.code === 0 || res.code === 200) {
+      toast(t('success'));
+
+      // Update comment count without showing loading
+      await updateCommentCount();
+
+      // For top-level comments with replies, reload all comments
+      await loadComments(1, false);
+
+      const cid = route.query.cid as string || "";
+      if (cid) {
+        await loadCommentDetail(cid);
+      }
+
+      const rid = route.query.rid as string || "";
+      if (rid) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await loadCommentToReplyList(rid);
+      }
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  } catch (error) {
+    toast(t('fail'));
+  } finally {
+    deleteModalVisible.value = false;
+    commentToDelete.value = null;
+  }
+}
+
+// Handle delete cancel
+function handleDeleteCancel() {
+  deleteModalVisible.value = false;
+  commentToDelete.value = null;
 }
 
 // Load replies for a comment
@@ -1184,22 +1533,65 @@ async function loadReplies(comment: any, page: number = 1) {
         created_at: reply.created_at || "",
         likes: reply.like_count || 0,
         liked: reply.is_liked == 1 || false,
-        replyTo: reply.replyTo || reply.reply_to || reply.target_user || "",
+        replyTo: reply.replyTo || reply.reply_to || "",
         reply_to_user_nickname: reply.reply_to_user_nickname || ""
       }));
 
-      // If this is first page and we have an initialReply, filter it out from API response
-      if (page === 1 && comment.initialReply) {
-        const initialReplyId = comment.initialReply.id;
-        formattedReplies = formattedReplies.filter((reply: any) => reply.id !== initialReplyId);
-        // Prepend the initialReply to the list
-        comment.replies = [comment.initialReply, ...formattedReplies];
+      // Filter out rid comment if it exists
+      if (comment.rid) {
+        formattedReplies = formattedReplies.filter((reply: any) => reply.id !== comment.rid);
+      }
+
+      // Get rid comment if it exists in current replies
+      let ridComment = null;
+      if (comment.rid) {
+        ridComment = comment.replies.find((r: any) => r.isRidComment);
+      }
+
+      // If this is first page
+      if (page === 1) {
+        // If we have an initialReply, filter it out from API response
+        if (comment.initialReply) {
+          const initialReplyId = comment.initialReply.id;
+          formattedReplies = formattedReplies.filter((reply: any) => reply.id !== initialReplyId);
+          // Prepend the initialReply to the list
+          let newReplies = [comment.initialReply, ...formattedReplies];
+          // If there's a rid comment, add it to the beginning
+          if (ridComment) {
+            newReplies.unshift(ridComment);
+          }
+          comment.replies = newReplies;
+        } else if (formattedReplies.length > 0) {
+          // No initialReply but we have replies from API
+          // Set the first reply as initialReply
+          comment.initialReply = formattedReplies[0];
+          // Use all replies
+          let newReplies = formattedReplies;
+          // If there's a rid comment, add it to the beginning
+          if (ridComment) {
+            newReplies.unshift(ridComment);
+          }
+          comment.replies = newReplies;
+        } else {
+          // No initialReply and no replies from API
+          // Create a placeholder reply
+          comment.initialReply = {
+            id: Date.now(),
+            author: "",
+            user_id: "",
+            avatar: "",
+            text: "",
+            created_at: "",
+            likes: 0,
+            liked: false,
+            replyTo: "",
+            reply_to_user_nickname: ""
+          };
+          comment.replies = [comment.initialReply];
+        }
       } else if (page > 1) {
         // Append replies for subsequent pages
         comment.replies = [...comment.replies, ...formattedReplies];
-      } else {
-        // No initialReply, just use API response
-        comment.replies = formattedReplies;
       }
 
       comment.replyPage = page;
@@ -1209,17 +1601,30 @@ async function loadReplies(comment: any, page: number = 1) {
       // If API fails, keep initialReply if it exists
       if (comment.initialReply && comment.replies.length === 0) {
         comment.replies = [comment.initialReply];
+        // If there's a rid comment, add it to the beginning
+        if (comment.rid) {
+          const ridComment = comment.replies.find((r: any) => r.isRidComment);
+          if (ridComment) {
+            comment.replies.unshift(ridComment);
+          }
+        }
       }
       comment.replyPage = 1;
       comment.replyTotal = comment.reply_count || 0;
       comment.hasMoreReplies = false;
     }
   } catch (error) {
-    console.log('Error loading replies:', error);
     toast(t('fail'));
     // Keep initialReply on error
     if (comment.initialReply && comment.replies.length === 0) {
       comment.replies = [comment.initialReply];
+      // If there's a rid comment, add it to the beginning
+      if (comment.rid) {
+        const ridComment = comment.replies.find((r: any) => r.isRidComment);
+        if (ridComment) {
+          comment.replies.unshift(ridComment);
+        }
+      }
     }
     comment.replyPage = 1;
     comment.replyTotal = comment.reply_count || 0;
@@ -1316,19 +1721,18 @@ function onTimeUpdate(e: Event) {
 function onLoadedMetadata(e: Event) {
   const v = e.target as HTMLVideoElement;
   duration.value = v.duration;
-  v.volume = volume.value; // 使用从localStorage中读取的音量值
-  v.muted = volume.value === 0; // 根据音量值设置静音状态
+  v.volume = volume.value;
+  v.muted = volume.value === 0;
   isPlaying.value = true;
 }
 
 function onCanPlay() {
-  // 视频有足够数据可以播放时
   isVideoBuffering.value = false;
   isVideoLoading.value = false;
-  // 视频有足够数据可以播放时，确保视频开始播放
+
   if (videoRef.value && videoRef.value.paused) {
     videoRef.value.play().catch(error => {
-      console.error('Video play failed:', error);
+      console.log('Video play failed:', error);
     });
   }
 }
@@ -1369,7 +1773,6 @@ function onCommentVideoPlay(event: Event) {
     }
   });
 
-  // 关闭视频预览模态框
   if (showPreviewModal.value) {
     showPreviewModal.value = false;
   }
@@ -1377,10 +1780,10 @@ function onCommentVideoPlay(event: Event) {
 
 function onVideoError(e: Event) {
   const v = e.target as HTMLVideoElement;
-  toast(t('detail.videoLoadingFailed'));
   isVideoBuffering.value = false;
   isVideoLoading.value = false;
   isPlaying.value = false;
+  console.log('video error');
 }
 
 function onVolumeChange(e: Event) {
@@ -1594,12 +1997,12 @@ function goNext() {
 // Media
 function togglePlay() {
   if (!videoRef.value) {
-    console.error('Video element not found');
+    console.log('Video element not found');
     return;
   }
 
   if (!videoRef.value.src) {
-    toast('Video URL is invalid. Please try again.');
+    toast(t('detail.videoUrlInvalid'));
     return;
   }
 
@@ -1610,10 +2013,9 @@ function togglePlay() {
       isPlaying.value = true;
       isVideoBuffering.value = false;
     }).catch(error => {
-      console.error('Video play failed:', error);
       isPlaying.value = false;
       isVideoBuffering.value = false;
-      toast('Video play failed: ' + error.message);
+      toast(t('detail.videoPlayFailed') + ': ' + error.message);
     });
   } else {
     videoRef.value.pause();
@@ -1627,12 +2029,10 @@ function toggleCommentVideoPlay(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
   if (video) {
     if (video.paused) {
-      // 暂停左侧主视频
       if (videoRef.value) {
         videoRef.value.pause();
       }
 
-      // 暂停所有其他评论区和回复区的视频
       const commentVideos = document.querySelectorAll('.c-video-player');
       commentVideos.forEach(v => {
         if (v !== video) {
@@ -1640,10 +2040,8 @@ function toggleCommentVideoPlay(event: Event) {
         }
       });
 
-      // 播放当前视频
       video.play();
     } else {
-      // 暂停当前视频
       video.pause();
     }
   }
@@ -2108,6 +2506,7 @@ function selectDropdownItem(item: { label: string; value: string }) {
   commentInputRef.value.focus();
 }
 
+
 // File upload functionality
 function triggerFileUpload(type: "image" | "video") {
   // Validate file upload limits
@@ -2186,7 +2585,8 @@ async function handleFileUpload(event: Event) {
 }
 
 async function uploadVideo(file: File) {
-  isUploading.value = true;
+  loadText.value = t('detail.uploading');
+  isLoading.value = true;
 
   try {
     const video = document.createElement("video");
@@ -2251,7 +2651,7 @@ async function uploadVideo(file: File) {
   } catch (error) {
     toast(t('fail'));
   } finally {
-    isUploading.value = false;
+    isLoading.value = false;
   }
 }
 
@@ -2261,7 +2661,8 @@ async function uploadImage(file: File) {
     return '';
   }
 
-  isUploading.value = true;
+  loadText.value = t('detail.uploading');
+  isLoading.value = true;
 
   try {
     const formData = new FormData();
@@ -2291,7 +2692,7 @@ async function uploadImage(file: File) {
   } catch (error) {
     toast(t('fail'));
   } finally {
-    isUploading.value = false;
+    isLoading.value = false;
   }
 }
 
@@ -2365,7 +2766,13 @@ function startReply(comment: any, reply?: any) {
     return false;
   }
 
-  replyingTo.value = reply || comment;
+  if (reply) {
+    // If replying to a reply, attach the parent comment id to the reply object
+    reply.parentCommentId = comment.id;
+    replyingTo.value = reply;
+  } else {
+    replyingTo.value = comment;
+  }
   activateInput();
 }
 
@@ -2481,10 +2888,25 @@ async function expandReplies(c: any) {
 }
 
 async function collapseReplies(c: any) {
-  // Reset to showing only initialReply
+  // Reset to showing only initialReply and rid comment if exists
   c.showingReplies = true;
+  const newReplies = [];
+
+  // Add rid comment if it exists
+  if (c.rid) {
+    const ridComment = c.replies.find((r: any) => r.isRidComment);
+    if (ridComment) {
+      newReplies.push(ridComment);
+    }
+  }
+
+  // Add initialReply if it exists
   if (c.initialReply) {
-    c.replies = [c.initialReply];
+    newReplies.push(c.initialReply);
+  }
+
+  if (newReplies.length > 0) {
+    c.replies = newReplies;
   } else {
     c.replies = [];
     c.showingReplies = false;
@@ -2502,7 +2924,6 @@ async function submitComment() {
 
   const text = commentText.value.trim();
 
-  // 验证：文字、图片、视频至少有一种
   if (!text && uploadedFiles.value.length === 0) {
     toast(t('detail.enterComment'));
     return;
@@ -2514,27 +2935,69 @@ async function submitComment() {
   }
 
   try {
+    let parentId = 0;
+    let commentId = 0;
+    const isReply = !!replyingTo.value;
+    const parentCommentId = replyingTo.value?.parentCommentId || replyingTo.value?.id;
+
+    if (replyingTo.value) {
+      if (replyingTo.value.parentCommentId) {
+        parentId = replyingTo.value.parentCommentId;
+        // If we're replying to a reply, set reply_to_comment to the reply's id
+        commentId = replyingTo.value.id;
+      } else {
+        parentId = replyingTo.value.replyTo ? replyingTo.value.replyTo : replyingTo.value.id;
+        // If we're replying to a reply, set reply_to_comment to the reply's id
+        if (replyingTo.value.replyTo) {
+          commentId = replyingTo.value.id;
+        }
+      }
+    }
+
+    // 处理content参数，只在有span标签的@提及前面添加空格
+    let processedContent = text;
+
+    // 获取输入框的HTML内容，检查是否有span标签的@提及
+    const el = commentInputRef.value;
+    if (el) {
+      // 检查输入框中的span标签
+      const mentionSpans = el.querySelectorAll('.tag.mention');
+      if (mentionSpans.length > 0) {
+        // 对于每个span标签的@提及，检查其在文本中的位置
+        mentionSpans.forEach((span, index) => {
+          const spanText = span.textContent || '';
+          if (spanText.startsWith('@')) {
+            const username = spanText.substring(1);
+            // 构建正则表达式，匹配@username，前面没有空格的情况
+            const regex = new RegExp(`(^|[^\s])@${username}`, 'g');
+            processedContent = processedContent.replace(regex, (match, prefix) => {
+              return `${prefix} @${username}`;
+            });
+          }
+        });
+      }
+    }
+
     const commentData: {
       post_id: number;
       parent_id: number;
+      reply_to_comment: number;
       content: string;
       video_url: string;
       image_urls: string[];
     } = {
       post_id: id.value,
-      parent_id: replyingTo.value?.id || 0,
-      content: text,
+      parent_id: parentId,
+      reply_to_comment: commentId,
+      content: processedContent,
       video_url: "",
       image_urls: []
     };
 
-    // Handle file uploads if any
     if (uploadedFiles.value.length > 0) {
-      // Separate videos and images
       const videos = uploadedFiles.value.filter(file => file.type === 'video');
       const images = uploadedFiles.value.filter(file => file.type === 'image');
 
-      // Set video_url if there's a video
       if (videos.length > 0) {
         commentData.video_url = videos[0].url;
       }
@@ -2555,26 +3018,54 @@ async function submitComment() {
 
     const res = await response.json();
     if (res.code === 0 || res.code === 200) {
-      // 更新评论总数
-      const currentTotal = parseInt(totalComments.value) || 0;
-      totalComments.value = String(currentTotal + 1);
-
-      await loadComments();
-
-      if (replyingTo.value) {
-        const parentComment = comments.value.find((c) => c.id === replyingTo.value.id);
-        if (parentComment) {
-          await loadReplies(parentComment);
-        }
-      }
-
       cancelInput();
 
-      nextTick(() => {
-        if (commentsListRef.value) {
-          commentsListRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
+      await updateCommentCount();
+
+      if (isReply && parentCommentId) {
+        // For replies, only reload the specific comment's replies
+        for (const comment of comments.value) {
+          if (String(comment.id) === String(parentCommentId)) {
+            comment.replyPage = 0;
+            comment.replies = [];
+            await loadReplies(comment, 1);
+
+            nextTick(() => {
+              try {
+                const commentIdStr = String(parentCommentId);
+                const commentElement = document.querySelector(`[data-comment-id="${commentIdStr}"]`);
+                if (commentElement && scrollContentRef.value) {
+                  const rect = commentElement.getBoundingClientRect();
+                  const scrollRect = scrollContentRef.value.getBoundingClientRect();
+                  scrollContentRef.value.scrollTop += rect.top - scrollRect.top - 100;
+                }
+              } catch (error) {
+                console.log('Error scrolling to comment:', error);
+              }
+            });
+            break;
+          }
         }
-      });
+      } else {
+        await loadComments();
+
+        const cid = route.query.cid as string || "";
+        if (cid) {
+          await loadCommentDetail(cid);
+        }
+
+        const rid = route.query.rid as string || "";
+        if (rid) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await loadCommentToReplyList(rid);
+        }
+
+        nextTick(() => {
+          if (scrollContentRef.value) {
+            scrollContentRef.value.scrollTop = 0;
+          }
+        });
+      }
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -2599,7 +3090,7 @@ async function toggleLike() {
       const res = await api.likePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
         liked.value = true;
-        // 优先使用后端返回的点赞数，如果没有则本地+1
+
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
           likes.value = Number(res.data.like_count || res.data.likes);
         } else {
@@ -2615,7 +3106,6 @@ async function toggleLike() {
       const res = await api.dislikePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
         liked.value = false;
-        // 优先使用后端返回的点赞数，如果没有则本地-1
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
           likes.value = Number(res.data.like_count || res.data.likes);
         } else {
@@ -2635,7 +3125,7 @@ async function toggleLike() {
 async function share() {
   try {
     await navigator.clipboard.writeText(window.location.href);
-    toast("Copied to clipboard");
+    toast(t('detail.videoUrlCopied'));
   } catch (e) {
     console.log(e);
   }
@@ -3276,6 +3766,12 @@ watch(
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.6rem;
+
+    .author-wrap {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
     .c-author {
       font-size: 1.4rem;

@@ -13,7 +13,7 @@ export default {
       privacyPolicy: "隐私政策",
       paidServices: "付费服务"
     },
-    copyright: "© 2026 AI创作平台. 保留所有权利."
+    copyright: "© 2026 acgworlds株式会社. 保留所有权利."
   },
   grecaptcha: {
     notLoaded: "验证码未加载完成，请稍后再试",
@@ -335,6 +335,13 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
 7.3.5 您申请平台提供的没有添加显式标识的生成合成内容的，应当在使用该生成合成内容的过程中，以其他显著方式予以标识或提示该内容为人工智能生成合成内容。您不得恶意删除、篡改、伪造、隐匿我们已标注的生成合成内容标识。<br /><br />
 八. 其他规定<br />
 如本协议中的任何条款无论因何种原因完全或部分无效或不具有执行力，本协议的其余条款仍应有效并且有约束力。`,
+  inviteCode: {
+    title: "邀请码",
+    enterCode: "请输入邀请码",
+    confirm: "确认",
+    noCode: "没有邀请码？跳过",
+    inviteError: "填写邀请码或者点击跳过。"
+  },
   privacy: `隐私政策<br />
   欢迎使用产品及相关服务！ 请您仔细阅读、理解并遵守《隐私政策》。<br />
 指acgworlds株式会社（以下简称“我们”或“公司”）合法拥有并运营的、标注名称为的官方网站、APP。在平台中，我们向您提供AI内容生成（文生成、图生成、音视频生成）、发布到社区等服务。<br />
@@ -566,7 +573,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     type2: "本地视频",
     type3: "本地图片",
     type4: "文章",
-    aiTip: `您还没有生成完成的作品，请先去创作`,
+    aiTip: `您还没有生成好的作品，请先去生成`,
     login: "登录",
     logout: "退出登录",
     noRegister: "还没有账号？",
@@ -574,8 +581,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     logoutConfirm: "您确定要退出登录吗？",
     userCard: {
       subscribeLabel: "订阅",
-      followersLabel: "粉丝",
-      postLabel: "视频",
+      followersLabel: "关注",
+      fansLabel: "粉丝",
+      postLabel: "作品",
     },
     menu: {
       personalCenter: "个人中心",
@@ -596,6 +604,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       resend: "重新发送邮件",
     },
   },
+  mentions: {
+    postDeleted: "作品已被删除",
+    commentDeleted: "评论已被删除"
+  },
   user: {
     sidebar: {
       title: "个人中心",
@@ -603,6 +615,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       account: "账户管理",
       profile: "社区设置",
       subscription: "订阅设置",
+      inviteRevenue: "邀请赚钱",
       revenue: "收益",
       mySubscriptions: "我的关注与订阅",
       interactive: "互动数据",
@@ -633,6 +646,32 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       privacy: "隐私政策",
       terms: "服务条款",
       and: "和",
+      success: {
+        title: "创建账户成功",
+        message: "后续进行收益提现时，将提现到该账户中",
+        back: "返回订阅价格设置"
+      },
+      failed: {
+        title: "创建账户失败",
+        message: "链接过期或创建出错，请返回重试",
+        back: "返回订阅价格设置"
+      }
+    },
+    inviteRevenue: {
+      title: "邀请赚钱",
+      inviteText: `来MoeGen，AI 一键生视频，分享视频还能赚钱！注册点我→【<a href="{link}">{link}</a>】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
+      copy: "复制邀请链接",
+      copyText: `来MoeGen，AI 一键生视频，分享视频还能赚钱！注册点我→【{link}】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
+      firstPurchaseStars: "累计注册并首充（人数）",
+      totalRevenue: "邀请累计奖励（算力）",
+      credits: " 算力",
+      rulesTitle: "推广规则：",
+      rule: `若他人通过您分享的推广码注册【MoeGen】，您将获得佣金奖励。<br />
+      佣金奖励为：被邀请的用户注册并完成首充算邀请成功，每邀请成功1人奖励10算力。<br />
+      本规则会依据具体情况不定期地进行调整，变更后的规则在生效前会通过官方网站发布公告通知，请您及时关注最新规则。<br />
+      若您在本规则内容生效后仍继续使用，则表明您已充分阅读、理解并接受、遵守修改后的规则内容。`,
+      copySuccess: "邀请链接已复制",
+      viewDetails: "查看奖励明细",
     },
     messages: {
       title: "消息",
@@ -657,6 +696,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       tip: "请完善个人资料以使用全部功能。",
       username: "用户名",
       usernameText: "请输入用户名",
+      usernameWarning: `{'#'} {'@'} 和空格不允许使用`,
       avatar: "头像",
       upload: "上传",
       confirm: "确认",
@@ -669,10 +709,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     profile: {
       title: "社区设置",
       edit: "编辑",
-      bio: "个人简介",
-      headerImage: "头部图片",
-      defaultBio: "欢迎来到我的主页～",
-      sizeText: "尺寸：最大10MB • 格式：jpg、png、webp • 分辨率：1440×280",
+      bio: "简介",
+      headerImage: "头图",
+      defaultBio: "欢迎来到我的个人主页～",
+      sizeText: "大小：不超过10M • 格式：jpg、png、webp • 分辨率：1440×280",
       save: "保存",
     },
     privacy: {
@@ -685,15 +725,22 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       save: "保存",
     },
     subscription: {
-      title: "订阅计划设置",
+      title: "订阅价格设置",
       edit: "编辑",
-      tip: "设置订阅计划后，将扣除20%的服务费，您将获得实际价格的80%。",
-      priceLabel: "月付价格",
+      tip: "订阅方案收益平台会扣除20%手续费，实际到手为定价的80%",
+      priceLabel: "每月价格",
+      priceLimit: "（每天只能修改一次价格）",
+      priceChangeLimit: "每天只能改一次价格，今日已操作，请明天再来",
       perMonth: "/ 月",
       benefitsLabel: "权益说明",
-      benefitsText: "订阅期间，订阅者可查看所有付费内容。",
-      disabled: "订阅功能已关闭",
-      cancel: "取消订阅",
+      benefitsText: "订阅的用户在订阅期间，可以查看所有付费作品。",
+      disabled: "已关闭订阅功能",
+      cancel: "关闭订阅",
+      accountTitle: "收款账户：",
+      accountContent: "（开启订阅功能后，作为提现账户使用）",
+      createAccount: "创建",
+      accountCreated: "已创建",
+      changeAccount: "更改",
     },
     myFollowsSubs: {
       title: "我的关注与订阅",
@@ -707,6 +754,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     paymentHistory: {
       title: "支付历史",
+      processing: "订阅中",
+      orderHistory: "订单历史",
+      subscribe: "订阅",
+      aiToolRecharge: "AI工具充值",
       tabSubscribe: "订阅",
       tabRecharge: "AI工具充值",
       issueInvoice: "开具发票",
@@ -719,6 +770,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       subscriptionType: "我的月度订阅",
       invoiceSuccess: "发票开具成功",
       emailRequired: "请输入您的邮箱地址",
+      valid: "有效期：",
+      id: "ID：",
+      month: "/月",
+      quantity: "1",
     },
     withdraw: {
       title: "提现",
@@ -738,6 +793,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       overall: "整体数据",
       individual: "单个作品数据",
       download: "下载CSV",
+      csvFileName: "互动数据",
       startDate: "开始日期",
       endDate: "结束日期",
       selectDateRange: "选择日期范围",
@@ -745,6 +801,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       apply: "应用",
       selectBothDates: "请选择开始和结束日期",
       maxThreeMonths: "日期范围不能超过3个月",
+      maxOneYear: "日期范围不能超过1年",
       date: "日期",
       dailyLikes: "每日点赞总数",
       dailyComments: "每日评论总数",
@@ -752,26 +809,46 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       followerChange: "粉丝变化",
       totalFollowers: "总粉丝数",
       noData: "暂无数据",
+      csvHeaders: {
+        date: "日期",
+        change: "粉丝变化",
+        total: "总粉丝数",
+        likes: "点赞数",
+        comments: "评论数",
+        title: "作品标题"
+      },
 
     },
     revenue: {
       total: "总收益",
-      withdrawn: "已提现收益",
-      pending: "待提现收益",
+      withdrawn: "冻结期收益",
+      pending: "可提现收益",
       withdraw: "提现",
-      tabDetail: "收益详情",
-      tabRecord: "提现记录",
+      withdrawRecord: "明细",
+      tabDetail: "收益明细",
       time: "时间",
       period: "订阅周期",
       revenue: "收益",
       modalTitle: "提取所有待提现收益",
       confirm: "确认提现",
+      confirmWithdraw: "确认提现",
+      agreeTerms: "同意支付条款",
       agreePrefix: "同意",
       terms: "服务条款",
       totalWithdrawable: "可提现总额",
-      withdrawTip: "收益到账后需满7个自然日方可提现，且在此期间无",
-      communityRule: "社区规则",
-      withdrawTipEnd: "违规行为。",
+      withdrawTip: "收益到账后满7天冻结期，且期间未违反",
+      communityRule: "社区公约",
+      withdrawTipEnd: "，才可提现。",
+      noProfit: "暂无可提现收益",
+      noData: "暂无数据",
+      withdrawSuccess: "提现成功",
+      csvFileName: "收益数据",
+      csvHeaders: {
+        time: "时间",
+        period: "订阅周期",
+        revenue: "收益",
+        withdraw: "提现金额"
+      },
     },
   },
   pagination: {
@@ -783,10 +860,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   search: {
     placeholder: "搜索作品或用户",
     resultsFor: "搜索结果：",
-    posts: "视频",
+    posts: "作品",
     users: "用户",
     all: "全部",
-    video: "视频",
+    video: "作品",
     image: "图片",
     article: "文章",
     likes: "点赞",
@@ -990,7 +1067,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       cancel: "取消",
       confirm: "确认",
       limit: '角色最多选择7个',
-      noCharacters: "暂无角色"
+      noCharacters: "暂无角色",
+      officialCharacters: "官方角色",
+      myCharacters: "我的角色"
     },
     character: {
       selected: "角色已选择",
@@ -1000,7 +1079,11 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       title: "风格",
       loading: "加载风格中...",
       cancel: "取消",
-      confirm: "确认"
+      confirm: "确认",
+      empty: "暂无可用风格",
+      error: {
+        loadFailed: "风格加载失败，请重试。"
+      }
     },
     styleCategory: {
       all: "全部",
@@ -1027,7 +1110,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       name: "创作者"
     },
     error: {
-      emptyInput: "请输入剧情"
+      emptyInput: "请输入剧情",
+      maxItemsReached: "角色和参考图最多上传7张"
     },
     generate: {
       started: "视频生成已开始",
@@ -1089,7 +1173,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     fanOnly: "粉丝专属内容",
     permission: "权限范围",
     permPublic: "公开",
-    permPartial: "部分用户可见",
+    permPartial: "订阅用户可见",
     permPrivate: "仅自己可见",
     imgtip: "(第一张图片公开)",
     articleTip: "(前4000字公开)",
@@ -1188,7 +1272,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     confirm: {
       leaveTip:
-        "退出此类投稿编辑后，输入的内容将丢失。确定要退出吗？",
+        "退出发布编辑页后，输入的内容将丢失，是否确认退出？",
       continueEdit: "继续编辑",
       confirmExit: "确认退出",
     },
@@ -1198,7 +1282,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       post: "发布另一个",
     },
     agree: "我同意",
-    terms: "服务条款",
+    terms: "社区公约",
     cancelBtn: "取消",
     confirmBtn: "确认",
     sensitiveConfirmTitle: "确认包含敏感内容？",
@@ -1212,6 +1296,12 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     publishing: '发布中...'
   },
 
+  deleteConfirm: {
+    title: "确认删除",
+    message: "删除评论后，评论下的所有回复都会被删除，确定要删除吗？",
+    cancel: "取消",
+    confirm: "确定"
+  },
   detail: {
     prev: "上一页",
     next: "下一页",
@@ -1263,7 +1353,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       private: "仅自己可见",
       public: "公开"
     },
-    videoLoadingFailed: "视频加载失败。"
+    videoLoadingFailed: "视频加载失败。",
+    videoUrlInvalid: "视频地址无效，请重试。",
+    videoPlayFailed: "视频播放失败",
+    videoUrlCopied: "视频地址已复制"
   },
   subscribe: {
     title: "订阅",
@@ -1278,7 +1371,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     success: {
       title: "支付成功！",
       message: "您的订阅将在几分钟内生效。请刷新后稍后查看。如果1小时后仍然未激活，请联系客服。",
-      back: "返回订阅社区"
+      back: "返回订阅社区",
+      backToHome: "返回首页",
+      backToMyProjects: "返回我的项目"
     },
     failed: {
       title: "支付失败！",
@@ -1287,7 +1382,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   userHome: {
-    posts: "视频",
+    posts: "作品",
     following: "关注",
     fans: "粉丝",
     likes: "点赞",
@@ -1346,12 +1441,12 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   paymentTerms: {
     title: "基于《特定商交易法》的说明",
     content: `<h2>1. 经营者信息</h2>
-<p>销售经营者：ACGWORLDS株式会社（英：ACGWORLDS Co., Ltd.）</p>
+<p>销售经营者：ACGWORLDS株式会社</p>
 <p>运营负责人：代表董事　青木　一世</p>
 <p>地址：〒113-0033 东京都文京区本郷6-20-11 Green Hills 泰明 1号室</p>
 <p>电话号码：+81-7484-0659</p>
 <p>邮箱地址：support{'@'}acgworlds{'.'}co{'.'}jp</p>
-<p>服务URL：<a href="https://unlimited.creations.com" target="_blank">https://unlimited.creations.com（暂定）</a></p>
+<p>服务URL：<a href="" target="_blank">（暂定）</a></p>
 
 <h2>2. 本说明适用范围</h2>
 <p>本说明适用于本公司（ACGWORLDS株式会社）提供的以下服务：</p>
@@ -1440,7 +1535,41 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     rule1: "1分钟以内视频消耗xx算力",
     rule2: "1张图片生成消耗xx算力",
     computingPowerRules: "算力规则",
-    credits: "算力"
+    pointsDetails: "充值明细",
+    valid6Months: "自发放之日起6个月内有效",
+    valid12Months: "自发放之日起12个月内有效",
+    credits: "算力",
+    compute: "算力",
+    monthlyAutoRenew: "月度自动续费",
+    quarterlyAutoRenewal: "季度自动续费",
+    semiAnnualAutoRenewal: "半年自动续费",
+    annualAutoRenewal: "年度自动续费",
+    computePack: "计算包",
+    periodMonth: "/月",
+    period3Month: "/3月",
+    period6Month: "/6月",
+    periodYear: "/年"
+  },
+  aiRechargeDetails: {
+    title: "充值明细",
+    selectPeriod: "选择时间段",
+    date: "日期",
+    type: "类型",
+    amount: "金额",
+    status: "状态",
+    balance: "余额",
+    recharge: "去充值",
+    paymentHistory: "支付记录",
+    all: "全部",
+    consumption: "消耗",
+    earned: "获得",
+    rechargeTab: "充值",
+    inviteRewards: "邀请奖励",
+    subscribe: "订阅",
+    boostPack: "加油包",
+    generate: "生成",
+    expired: "过期",
+    invited: "新用户"
   },
   computingPowerRules: {
     title: "算力规则",

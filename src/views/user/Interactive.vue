@@ -214,11 +214,11 @@ function getDefaultDateRange() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const sevenDaysBefore = new Date(yesterday);
-  sevenDaysBefore.setDate(sevenDaysBefore.getDate() - 6);
+  const oneMonthBefore = new Date(yesterday);
+  oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
 
   return {
-    start: sevenDaysBefore.toISOString().split("T")[0],
+    start: oneMonthBefore.toISOString().split("T")[0],
     end: yesterday.toISOString().split("T")[0],
   };
 }
@@ -257,15 +257,15 @@ async function fetchFan(page: number) {
       totalFan.value = parseInt(res.data?.allnums || "0");
 
       // Transform data
-      fanRows.value = data.map((item: any, index: number) => {
-        const date = new Date(item.created_date);
+      fanRows.value = data.map((item: any) => {
+        const date = new Date(item.stat_date);
         const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
         const weekday = date.toLocaleDateString('en-US', options);
         return {
-          id: index + 1,
-          dateLabel: `${item.created_date} (${weekday})`,
-          change: parseInt(item.like_counts || "0"),
-          total: parseInt(item.comment_count || "0"),
+          id: parseInt(item.id || "0"),
+          dateLabel: `${item.stat_date}`,
+          change: parseInt(item.follower_delta || "0"),
+          total: parseInt(item.follower_total || "0"),
         };
       });
 
@@ -365,19 +365,28 @@ watch(tab, (newTab) => {
 
 // Watch for date range changes
 watch(
-  [range1, range2],
+  () => [range1.value.start, range1.value.end],
   () => {
     // Reset to first page when date range changes
-    pageFan.value = 1;
-    pageOverall.value = 1;
-    pageWork.value = 1;
-
-    // Fetch new data
-    fetchFan(pageFan.value);
-    fetchOverall(pageOverall.value);
-    fetchWork(pageWork.value);
+    if (tab.value === 'fan') {
+      pageFan.value = 1;
+      fetchFan(pageFan.value);
+    } else if (tab.value === 'work') {
+      pageOverall.value = 1;
+      fetchOverall(pageOverall.value);
+    }
   },
-  { deep: true },
+);
+
+watch(
+  () => [range2.value.start, range2.value.end],
+  () => {
+    // Only fetch work data when range2 changes and we're on work tab
+    if (tab.value === 'work') {
+      pageWork.value = 1;
+      fetchWork(pageWork.value);
+    }
+  },
 );
 
 function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
@@ -387,13 +396,18 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
     return;
   }
 
-  const header = cols.join(",");
+  // Get translated headers
+  const header = cols.map(col => {
+    // Map dateLabel to date for translation
+    const translatedCol = col === 'dateLabel' ? 'date' : col;
+    return t(`user.interactive.csvHeaders.${translatedCol}`);
+  }).join(",");
   const body = rows.map((r) => cols.map((c) => String(r[c] ?? "")).join(",")).join("\n");
   const blob = new Blob([header + "\n" + body], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "data.csv";
+  a.download = `${t('user.interactive.csvFileName')}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -488,6 +502,7 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   position: relative;
 }
 .tabs span.on {
+  font-weight: 500;
   color: #101828;
 }
 .tabs span.on::after {
@@ -668,6 +683,34 @@ td {
 }
 .empty-row{
   padding: 0 0 10rem;
+}
+.loading-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5rem 0;
+  .td {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .loading-spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid rgba(251, 100, 182, 0.3);
+    border-radius: 50%;
+    border-top-color: #fb64b6;
+    animation: spin 1s ease-in-out infinite;
+  }
+  span {
+    font-size: 1.4rem;
+    color: #6a7282;
+  }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 .block .pagination {
   margin: 2.4rem 0;

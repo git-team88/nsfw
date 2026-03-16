@@ -180,9 +180,9 @@ function onApply() {
     [s, e] = [e, s];
   }
 
-  const diffMonths = dayjs(e).diff(dayjs(s), "month", true);
-  if (diffMonths > 3) {
-    toast(t("user.interactive.maxThreeMonths"));
+  const diffYears = dayjs(e).diff(dayjs(s), "year", true);
+  if (diffYears > 1) {
+    toast(t("user.interactive.maxOneYear"));
     return;
   }
 

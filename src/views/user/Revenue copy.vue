@@ -1,29 +1,38 @@
 <template>
   <div class="user-revenue">
-    <Header :cur="-1" @userInfoLoaded="handleUserInfoLoaded"></Header>
+    <Header :cur="-1"></Header>
 
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
         <div class="panel">
-          <div class="panel-title">{{ t("user.sidebar.revenue") }}</div>
+          <div class="panel-title">{{ t("user.interactive.title") }}</div>
           <div class="metrics">
             <div class="metric fans">
-              <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
+              <div class="metric-label">{{ t("user.revenue.total") }}</div>
               <div class="metric-value pink">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)}` : "--" }}
+                {{ totalRevenue != null ? `$${formatSci(totalRevenue)}` : "--" }}
+              </div>
+            </div>
+            <div class="metric likes">
+              <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
+              <div class="metric-value blue">
+                {{ withdrawnRevenue != null ? `$${formatSci(withdrawnRevenue)}` : "--" }}
               </div>
             </div>
             <div class="metric comments">
               <div class="metric-label">{{ t("user.revenue.pending") }}</div>
               <div class="metric-value orange">
-                {{ (availableJpy != null) ? `${formatSci(availableJpy)}` : "--" }}
+                {{ (availableJpy != null && pendingJpy != null) ? `$${formatSci(availableJpy + pendingJpy)}` : "--" }}
               </div>
             </div>
           </div>
 
           <div class="withdraw-banner">
             <div class="banner-left">
+              <div class="banner-label">
+                {{ t("user.revenue.totalWithdrawable") }} <span class="amount">{{ totalWithdrawable != null ? `$${formatSci(totalWithdrawable)}` : "--" }}</span>
+              </div>
               <div class="banner-tip">
                 {{ t("user.revenue.withdrawTip") }}
                 <span class="pink" @click="openCommunityConvention">{{ t("user.revenue.communityRule") }}</span>
@@ -35,14 +44,55 @@
                 {{ t("user.revenue.withdrawRecord") }}
               </button>
               <button class="withdraw-btn primary" @click="openWithdrawModal">
+                <img src="@/assets/images/user/withdraw_icon.png" alt="" />
                 {{ t("user.revenue.withdraw") }}
               </button>
             </div>
+          </div>
+
+          <div class="block overall">
+            <div class="block-tools">
+              <div class="date-range">
+                <DateRangePicker v-model="range1" theme="pink" />
+              </div>
+              <button
+                class="download"
+                @click="downloadCsv(revenueRows, ['timeLabel', 'period', 'revenue']);"
+              >
+                <img class="dl-icon" :src="downloadIcon" alt="" />
+                <span>{{ t("user.interactive.download") }}</span>
+              </button>
+            </div>
+            <div class="table overall">
+              <div class="thead">
+                <div class="th">{{ t("user.revenue.time") }}</div>
+                <div class="th">{{ t("user.revenue.period") }}</div>
+                <div class="th">{{ t("user.revenue.revenue") }}</div>
+              </div>
+              <div class="tbody">
+                <div class="tr" v-for="row in pagedRevenue" :key="row.id">
+                  <div class="td">{{ row.timeLabel }}</div>
+                  <div class="td">{{ row.period }}</div>
+                  <div class="td">
+                    <span class="num-green">+{{ formatSci(row.revenue) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <EmptyState v-if="revenueRows.length === 0" />
+            <Pagination
+              v-if="Math.ceil(revenueRows.length / 5) > 1"
+              v-model="pageRevenue"
+              :total="revenueRows.length"
+              :pageSize="5"
+              theme="pink"
+            />
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Withdraw Modal Component -->
     <WithdrawModal
       :visible="showWithdrawModal"
       :total-withdrawable="availableJpy"
@@ -57,20 +107,29 @@
 <script setup lang="ts" name="UserRevenue">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
+import Pagination from "@/components/Pagination.vue";
+import DateRangePicker from "@/components/DateRangePicker.vue";
+import EmptyState from "@/components/EmptyState.vue";
 import WithdrawModal from "@/components/WithdrawModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref, onMounted } from "vue";
+import downloadIcon from "@/assets/images/user/download.png";
+import { ref, watch, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
+import router from "@/router";
+import dayjs from "dayjs";
 import {toast} from "@/util/toast";
 import api from "@/api/index";
 
 const { t, locale } = useI18n();
 const sidebarKey = ref("revenue");
 
+const totalRevenue = ref<number | null>(null);
+const withdrawnRevenue = ref<number | null>(null);
+const pendingRevenue = ref<number | null>(null);
+const totalWithdrawable = ref<number | null>(null);
 const availableJpy = ref<number | null>(null);
 const pendingJpy = ref<number | null>(null);
 
-const hasAccount = ref(false);
 const isLoading = ref(false);
 
 // Withdraw modal state
@@ -82,20 +141,29 @@ async function fetchBalance() {
     const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
 
     if (data.code === 200 || data.code === 0) {
+      totalRevenue.value = data.data?.total_revenue || 0;
+      withdrawnRevenue.value = data.data?.withdrawn_revenue || 0;
+      pendingRevenue.value = data.data?.pending_usd || 0;
+      totalWithdrawable.value = data.data?.available_usd || 0;
+      // Add JPY values for metric comments
       availableJpy.value = data.data?.available_jpy || 0;
       pendingJpy.value = data.data?.pending_jpy || 0;
+    } else {
+      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
     }
   } catch (error) {
+    console.error(error);
     toast(t("fail"));
   }
 }
 
 function openWithdrawModal() {
-  if (availableJpy.value && availableJpy.value > 0) {
-    showWithdrawModal.value = true;
-  } else {
-    toast(t("user.revenue.noProfit"));
-  }
+  showWithdrawModal.value = true;
+  // if (totalWithdrawable.value && totalWithdrawable.value > 0) {
+  //   showWithdrawModal.value = true;
+  // } else {
+  //   toast(t("user.revenue.noProfit"));
+  // }
 }
 
 function closeWithdrawModal() {
@@ -108,41 +176,17 @@ function confirmWithdraw() {
 }
 
 async function openWithdrawRecord() {
-  if (hasAccount.value) {
-    try {
-      isLoading.value = true;
-      const res = await api.benefit();
-      const data = res as any;
-
-      if (data.code === 200 || data.code === 0) {
-        window.open(data.data?.url, '_blank');
-      } else {
-        toast(locale.value == 'jp' ? data.msg_jp : data.msg);
-      }
-    } catch (error) {
-      toast(t("fail"));
-    } finally {
-      isLoading.value = false;
-    }
-  } else {
-    handleCreateAccount()
-  }
-}
-
-async function handleCreateAccount() {
   try {
     isLoading.value = true;
-    const res = await api.createAccount();
+    const res = await api.benefit();
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
       window.open(data.data?.url, '_blank');
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
-      isLoading.value = false;
     }
   } catch (error) {
-    isLoading.value = false;
     toast(t("fail"));
   } finally {
     isLoading.value = false;
@@ -152,10 +196,6 @@ async function handleCreateAccount() {
 onMounted(() => {
   fetchBalance();
 });
-
-function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status === '1';
-}
 
 function openCommunityConvention() {
   localStorage.setItem("isBack", "1");
@@ -167,7 +207,65 @@ function formatSci(n: number | null) {
   return Number(n).toLocaleString();
 }
 
+const getCurrentDate = () => {
+  return dayjs().format("YYYY-MM-DD");
+};
 
+const getSevenDaysBeforeCurrent = () => {
+  return dayjs().subtract(6, "day").format("YYYY-MM-DD");
+};
+
+const range1 = ref({ start: getSevenDaysBeforeCurrent(), end: getCurrentDate() });
+
+type RevenueRow = { id: number; timeLabel: string; period: string; revenue: number };
+type WithdrawRow = { id: number; timeLabel: string; withdraw: number };
+const revenueRows = ref<RevenueRow[]>([]);
+const withdrawRows = ref<WithdrawRow[]>([]);
+const pageRevenue = ref(1);
+const pageWithdraw = ref(1);
+const pagedRevenue = ref<RevenueRow[]>([]);
+const pagedWithdraw = ref<WithdrawRow[]>([]);
+async function fetchRevenue(page: number) {
+  const start = (page - 1) * 5;
+  await new Promise((r) => setTimeout(r, 120));
+  pagedRevenue.value = revenueRows.value.slice(start, start + 5);
+}
+async function fetchWithdraw(page: number) {
+  const start = (page - 1) * 5;
+  await new Promise((r) => setTimeout(r, 120));
+  pagedWithdraw.value = withdrawRows.value.slice(start, start + 5);
+}
+fetchRevenue(pageRevenue.value);
+fetchWithdraw(pageWithdraw.value);
+watch(pageRevenue, (p) => {
+  fetchRevenue(p);
+});
+watch(pageWithdraw, (p) => {
+  fetchWithdraw(p);
+});
+
+function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
+  // Check if rows is empty
+  if (!rows || rows.length === 0) {
+    toast(t('user.revenue.noData'));
+    return;
+  }
+
+  // Get translated headers
+  const header = cols.map(col => {
+    // Map timeLabel to time for translation
+    const translatedCol = col === 'timeLabel' ? 'time' : col;
+    return t(`user.revenue.csvHeaders.${translatedCol}`);
+  }).join(",");
+  const body = rows.map((r) => cols.map((c) => String(r[c] ?? "")).join(",")).join("\n");
+  const blob = new Blob([header + "\n" + body], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${t('user.revenue.csvFileName')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 </script>
 
 <style scoped lang="scss">
@@ -203,7 +301,7 @@ function formatSci(n: number | null) {
 }
 .metrics {
   display: flex;
-  gap: 2.4rem;
+  gap: 2rem;
   margin: 0 3.6rem 2.4rem;
 }
 .metric {
@@ -251,11 +349,15 @@ function formatSci(n: number | null) {
 
 .withdraw-banner {
   margin: 0 3.6rem 2.4rem;
-  padding: 2.4rem 2rem;
+  padding: 1.6rem 2.4rem;
   background: rgba(251, 100, 182, 0.06);
   border-radius: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   .banner-left {
+    width: 60rem;
     .banner-label {
       font-size: 1.6rem;
       color: #6a7282;
@@ -269,7 +371,7 @@ function formatSci(n: number | null) {
     .banner-tip {
       font-size: 1.2rem;
       color: #6a7282;
-      margin-bottom: 2.4rem;
+      margin-top: 0.8rem;
       .pink {
         cursor: pointer;
         color: #fb64b6;
@@ -279,10 +381,8 @@ function formatSci(n: number | null) {
 
   .btn-group {
     display: flex;
-    gap: 2.4rem;
+    gap: 1.2rem;
     align-items: center;
-    justify-content: flex-end;
-    margin-top: 2.4rem;
   }
 
   .withdraw-btn {

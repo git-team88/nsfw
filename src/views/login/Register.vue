@@ -55,13 +55,6 @@
             <div class="email-item-box">
               <div class="email-item-title-box">
                 <div class="email-item-title"><span>*</span>{{ t("register.codeLabel") }}</div>
-
-                <!-- <div class="email-item-title-intro">
-                  <span>{{ t('register.sendTip') }}</span>
-                  <img src="@/assets/images/user/icon.png" alt="" @mouseenter="isHoverCode = true" @mouseleave="isHoverCode = false" />
-                </div>
-
-                <div class="email-code-intro" v-if="isHoverCode">{{ t("register.sendIntro") }}</div> -->
               </div>
 
               <div class="email-item">
@@ -81,6 +74,21 @@
                 </button>
               </div>
               <div class="email-error" :class="{ 'success': codeError == t('register.spamTip') }" v-if="codeError">{{ codeError }}</div>
+
+              <div class="email-item-box" style="margin-top: 1.4rem;">
+                <div class="email-item-title">{{ t("inviteCode.title") }}</div>
+                <div class="email-item">
+                  <input
+                    id="inviteCode"
+                    class="email-ipt"
+                    type="text"
+                    v-model="inviteCode"
+                    :placeholder="t('inviteCode.enterCode')"
+                    spellcheck="false"
+                    autocomplete="false"
+                  />
+                </div>
+              </div>
             </div>
           </form>
 
@@ -123,11 +131,13 @@
       </div>
     </div>
 
-    <!-- <BirthdayModal
-      :visible="showBirthday"
-      @confirm="handleBirthdayConfirm"
-      @close="showBirthday = false"
-    /> -->
+    <InviteCodeModal
+      :visible="showInviteCodeModal"
+      :initial-code="inviteCode"
+      @close="showInviteCodeModal = false"
+      @confirm="handleInviteCodeConfirm"
+      @skip="handleInviteCodeSkip"
+    />
 
     <div class="load" v-if="isShowLoad">
       <img src="@/assets/images/base/load.png" alt="" />
@@ -138,6 +148,7 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
+import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
@@ -156,12 +167,14 @@ const isSend = ref(false);
 const isShowPassword = ref(false);
 const password = ref("");
 const code = ref("");
+const inviteCode = ref("");
 const emailError = ref("");
 const passwordError = ref("");
 const codeError = ref("");
 
 const isShowLoad = ref(false);
 const showBirthday = ref(false);
+const showInviteCodeModal = ref(false);
 
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
@@ -190,6 +203,12 @@ declare global {
 
 onMounted(() => {
   checkGrecaptcha();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  if (fromParam) {
+    inviteCode.value = fromParam;
+  }
 
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("rType");
@@ -228,6 +247,27 @@ function initGoogle() {
 }
 
 function showGoogle() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  if (fromParam) {
+    localStorage.setItem('inviteCode', fromParam);
+    redirectToGoogle();
+    return;
+  }
+  showInviteCodeModal.value = true;
+}
+
+function handleInviteCodeConfirm(inviteCode: string) {
+  showInviteCodeModal.value = false;
+  redirectToGoogle();
+}
+
+function handleInviteCodeSkip() {
+  showInviteCodeModal.value = false;
+  redirectToGoogle();
+}
+
+function redirectToGoogle() {
   isShowLoad.value = true;
   const client_id = "258005297451-ovuch80d9h3t7mesfu7sgrdb3rntcbeu.apps.googleusercontent.com";
   const redirect_uri = redirectUrl + "/register";
@@ -405,8 +445,9 @@ function goEmailRegister() {
       email: email.value,
       password: password.value,
       code: code.value,
+      invite_code: inviteCode.value,
       "g-recaptcha-response": emailToken.value
-    };
+  };
 
     api
       .emailRegister(emailData)
@@ -434,20 +475,21 @@ function goEmailRegister() {
 
 function googleRegister() {
   const urlParams = new URLSearchParams(window.location.search);
-  const type = localStorage.getItem("rType");
-
   const googleCode = urlParams.get("code");
+  const invite_code = localStorage.getItem("inviteCode");
 
   if (!googleCode) {
     isShowLoad.value = false;
     localStorage.removeItem("rType");
+    localStorage.removeItem("inviteCode");
     return false;
   }
 
   isShowLoad.value = true;
 
   const googleData = {
-    code: googleCode
+    code: googleCode,
+    invite_code: invite_code
   };
 
   api
@@ -457,6 +499,7 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
+        localStorage.removeItem('inviteCode');
 
         localStorage.setItem("isFirstRegister", "1");
         router.push("/");
@@ -464,6 +507,7 @@ function googleRegister() {
         window.location.href = "/register";
         isShowLoad.value = false;
         localStorage.removeItem("rType");
+        localStorage.removeItem('inviteCode');
         toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
       }
     })
@@ -471,6 +515,7 @@ function googleRegister() {
       window.location.href = "/register";
       isShowLoad.value = false;
       localStorage.removeItem("rType");
+      localStorage.removeItem('inviteCode');
       console.log(err);
     });
 }

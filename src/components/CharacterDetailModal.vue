@@ -15,16 +15,16 @@
           <div class="character-image-container">
             <img :src="character?.image" :alt="character?.name" class="character-image" />
           </div>
-          <button class="cast-btn" @click="castCharacter">{{ t('characterLibrary.castBtn') }}</button>
+          <button class="cast-btn" @click="castCharacter">{{ t('characterLibrary.castBtn') }}<span v-if="character?.isOfficial && character?.useCostPoints"> / {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}</span></button>
         </div>
 
         <!-- Right Side: Character Info and Design Sheet -->
         <div class="right-section">
           <h3 class="character-name">{{ character?.name }}</h3>
           <p class="character-description">{{ character?.description }}</p>
-          <!-- <div class="design-sheet">
-            <img :src="character?.designSheet" :alt="character?.name + ' Design Sheet'" class="design-sheet-image" />
-          </div> -->
+          <div class="design-sheet" v-if="character?.tri_image">
+            <img :src="character?.tri_image" alt="" class="design-sheet-image" />
+          </div>
         </div>
       </div>
     </div>
@@ -33,6 +33,7 @@
 
 <script setup lang="ts" name="CharacterDetailModal">
 import { useI18n } from 'vue-i18n';
+import router from '@/router';
 
 const props = defineProps<{
   visible: boolean;
@@ -52,7 +53,10 @@ function closeModal() {
 
 function castCharacter() {
   if (props.character) {
-    emit('cast', props.character);
+    // 将角色对象存在缓存中
+    localStorage.setItem('castedCharacter', JSON.stringify(props.character));
+    // 跳转到首页
+    router.push('/');
   }
 }
 </script>
@@ -127,7 +131,9 @@ function castCharacter() {
 
 .cast-btn {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: center;
   justify-content: center;
   width: 100%;
   height: 5.6rem;
@@ -150,6 +156,11 @@ function castCharacter() {
       height: 100%;
       background: rgba(255, 255, 255, 0.2);
     }
+  }
+
+  span {
+    margin-left: 0.6rem;
+    font-size: 1.2rem;
   }
 }
 

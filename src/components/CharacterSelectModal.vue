@@ -10,10 +10,28 @@
 
       <h3 class="modal-title">{{ t('home.characterSelect.title') }}</h3>
 
-      <div class="modal-body">
-        <div class="character-list" ref="characterGridRef" v-if="characters.length > 0">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <span
+          class="tab"
+          :class="{ active: activeTab === 'official' }"
+          @click="activeTab = 'official'"
+        >
+          {{ t('home.characterSelect.officialCharacters') }}
+        </span>
+        <span
+          class="tab"
+          :class="{ active: activeTab === 'my' }"
+          @click="activeTab = 'my'"
+        >
+          {{ t('home.characterSelect.myCharacters') }}
+        </span>
+      </div>
+
+      <div class="modal-body" ref="characterGridRef">
+        <div class="character-list" v-if="filteredCharacters.length > 0">
           <div
-            v-for="character in characters"
+            v-for="character in filteredCharacters"
             :key="character.id"
             class="character-item"
             :class="{ selected: selectedCharacters.some(c => c.id === character.id) }"
@@ -23,9 +41,15 @@
               <img :src="character.image" :alt="character.name" />
             </div>
             <div class="character-info">
-              <div class="character-name">{{ character.name }}</div>
+              <div class="character-name-box">
+                <span class="character-name">{{ character.name }}</span>
+                <span class="character-cost" v-if="activeTab === 'official' && character.useCostPoints">
+                  {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}
+                </span>
+              </div>
               <div class="character-description" v-if="character.description">{{ character.description }}</div>
             </div>
+
           </div>
         </div>
 
@@ -34,11 +58,16 @@
           <span>{{ t('home.loading') }}</span>
         </div>
 
-        <div class="no-characters" v-if="!loading && characters.length === 0">
+        <div class="loading-more" v-if="loadingMore">
+          <img src="@/assets/images/base/load.png" alt="Loading" />
+          <span>{{ t('home.loading') }}</span>
+        </div>
+
+        <div class="no-characters" v-if="!loading && !loadingMore && filteredCharacters.length === 0">
           <span>{{ t('home.characterSelect.noCharacters') }}</span>
         </div>
 
-        <!-- <div class="add-character" @click="addNewCharacter" v-if="!loading">
+        <!-- <div class="add-character" @click="addNewCharacter" v-if="!loading && !loadingMore">
           <b></b>
           <span>{{ t('home.characterSelect.new') }}</span>
         </div> -->
@@ -46,43 +75,65 @@
 
       <div class="modal-footer">
         <button class="modal-btn cancel" @click="handleClose">{{ t('home.styleSelect.cancel') }}</button>
-        <button class="modal-btn confirm" @click="handleConfirm">{{ t('home.styleSelect.confirm') }}</button>
+        <button class="modal-btn confirm" @click="handleConfirm">
+          {{ t('home.styleSelect.confirm') }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { aiUrl } from '@/util/config';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const router = useRouter();
-
-const props = defineProps<{
-  characters?: any[];
-  selectedCharacters?: any[];
-}>();
 
 const emit = defineEmits<{
   close: [];
-  confirm: [characters: any[]];
+  confirm: [characters: Array<{
+    id: string;
+    name: string;
+    image: string;
+    description: string;
+    isOfficial: boolean;
+    useCostPoints?: number;
+    tri_image?: string;
+  }>];
   delete: [id: string];
   loadMore: [];
 }>();
 
-const characters = ref<Array<{
+const selectedCharacters = ref<Array<{
   id: string;
   name: string;
   image: string;
   description: string;
+  isOfficial: boolean;
+  useCostPoints?: number;
+  tri_image?: string;
 }>>([]);
-const selectedCharacters = ref<any[]>([]);
 const loading = ref(false);
+const loadingMore = ref(false);
 const characterGridRef = ref<HTMLElement | null>(null);
+const activeTab = ref('official');
+const currentPage = ref(1);
+const hasMore = ref(true);
+
+// Filtered characters based on active tab
+const filteredCharacters = ref<Array<{
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  isOfficial: boolean;
+  useCostPoints?: number;
+  tri_image?: string;
+}>>([]);
 
 onMounted(() => {
   const token = localStorage.getItem('token');
@@ -91,7 +142,15 @@ onMounted(() => {
   }
 });
 
-const toggleCharacterSelection = (character: any) => {
+const toggleCharacterSelection = (character: {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  isOfficial: boolean;
+  useCostPoints?: number;
+  tri_image?: string;
+}) => {
   const index = selectedCharacters.value.findIndex(c => c.id === character.id);
   if (index === -1) {
     if (selectedCharacters.value.length >= 7) {
@@ -104,11 +163,7 @@ const toggleCharacterSelection = (character: any) => {
   }
 };
 
-const addNewCharacter = () => {
-  // Navigate to new character creation page
-  router.push('/character/create');
-  emit('close');
-};
+
 
 const handleClose = () => {
   selectedCharacters.value = [];
@@ -120,16 +175,29 @@ const handleConfirm = () => {
   handleClose();
 };
 
-const loadCharacters = async () => {
-  loading.value = true;
+const loadCharacters = async (isLoadMore = false) => {
+  if (loading.value || loadingMore.value) return;
+
+  if (isLoadMore) {
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
+    currentPage.value = 1;
+    filteredCharacters.value = [];
+    hasMore.value = true;
+  }
+
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       loading.value = false;
+      loadingMore.value = false;
       return;
     }
 
-    const response = await fetch(`${aiUrl}app/config/characters`, {
+    // Use type 2 for official characters, 1 for user characters
+    const type = activeTab.value === 'official' ? 2 : 1;
+    const response = await fetch(`${aiUrl}app/config/characters?type=${type}&page=${isLoadMore ? currentPage.value + 1 : 1}&limit=20`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -139,14 +207,41 @@ const loadCharacters = async () => {
 
     if (response.ok) {
       const data = await response.json();
-      characters.value = data.data || [];
+      let newCharacters = data.data?.data_list || [];
+
+      // Map the response data to the expected format
+      newCharacters = newCharacters.map((character: { id: number; name: string; main_image_url: string; desc: string; use_cost_points: number; tri_view_url: string }) => ({
+        id: character.id.toString(),
+        name: character.name,
+        image: character.main_image_url,
+        description: character.desc,
+        useCostPoints: character.use_cost_points,
+        tri_image: character.tri_view_url,
+        isOfficial: activeTab.value === 'official'
+      }));
+
+      if (isLoadMore) {
+        filteredCharacters.value = [...filteredCharacters.value, ...newCharacters];
+      } else {
+        filteredCharacters.value = newCharacters;
+      }
+
+      // Check if there are more characters to load
+      hasMore.value = newCharacters.length === 20;
+      currentPage.value = isLoadMore ? currentPage.value + 1 : 1;
     }
   } catch (error) {
     console.error('Failed to load characters:', error);
   } finally {
     loading.value = false;
+    loadingMore.value = false;
   }
 };
+
+// Watch for tab changes
+watch(activeTab, () => {
+  loadCharacters(false);
+});
 
 const handleScroll = () => {
   if (!characterGridRef.value) return;
@@ -154,13 +249,8 @@ const handleScroll = () => {
   const { scrollTop, clientHeight, scrollHeight } = characterGridRef.value;
   const threshold = 100;
 
-  if (scrollHeight - scrollTop - clientHeight < threshold && !loading.value) {
-    loading.value = true;
-    emit('loadMore');
-    // Simulate loading completion after API call
-    setTimeout(() => {
-      loading.value = false;
-    }, 1000);
+  if (scrollHeight - scrollTop - clientHeight < threshold && !loading.value && !loadingMore.value && hasMore.value) {
+    loadCharacters(true);
   }
 };
 
@@ -219,9 +309,36 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid rgba(251, 100, 182, 0.2);
 }
 
+.tab-navigation {
+  display: flex;
+  gap: 1.2rem;
+  margin: 1.6rem 2.4rem;
+
+  .tab {
+    display: flex;
+    align-items: center;
+    height: 3.2rem;
+    text-align: center;
+    padding: 0 1.6rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(251,100,182,0.2);
+    font-size: 1.4rem;
+    color: #6a7282;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+
+    &.active {
+      border: 1px solid #FB64B6;
+      background: rgba(251,100,182,0.12);
+      color: #fb64b6;
+    }
+  }
+}
+
 .modal-body {
   max-height: 42rem;
-  padding: 2rem 2.4rem;
+  padding: 0 2.4rem 2rem;
   overflow-y: auto;
 }
 
@@ -234,7 +351,6 @@ onBeforeUnmount(() => {
 
 .character-item {
   display: flex;
-  align-items: center;
   cursor: pointer;
   border: 2px solid #F5F5F5;
   border-radius: 0.8rem;
@@ -266,13 +382,24 @@ onBeforeUnmount(() => {
   flex: 1;
   min-width: 0;
 
+  .character-name-box{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
   .character-name {
-    margin-bottom: 0.4rem;
-    font-weight: 600;
+    font-weight: bold;
     font-size: 1.6rem;
     color: #0A0A0A;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .character-cost {
+    font-size: 1.2rem;
+    color: #fb64b6;
     white-space: nowrap;
   }
 

@@ -25,7 +25,7 @@
           <img src="@/assets/images/register/check.png" alt="" v-else />
         </div>
 
-        <span>{{ t("submit.sensitiveDontAsk") }}</span>
+        <span @click="isCheck = !isCheck">{{ t("submit.sensitiveDontAsk") }}</span>
       </div>
     </div>
   </div>
@@ -42,6 +42,7 @@ const isCheck = ref(false);
 const emit = defineEmits<{
   close: [];
   confirm: [];
+  dontAsk: [];
 }>();
 
 const handleClose = () => {
@@ -49,6 +50,9 @@ const handleClose = () => {
 };
 
 const handleConfirm = () => {
+  if (isCheck.value) {
+    localStorage.setItem('unlimitedDontAsk', '1');
+  }
   emit('confirm');
 };
 </script>

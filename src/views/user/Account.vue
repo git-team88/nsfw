@@ -421,7 +421,7 @@ function changeGoogle() {
   isShowLoad.value = true;
   localStorage.setItem("bType", "1");
 
-  const client_id = "258005297451-p10h38n8bnmvjib9iik98hq81geagr64.apps.googleusercontent.com";
+  const client_id = "258005297451-ovuch80d9h3t7mesfu7sgrdb3rntcbeu.apps.googleusercontent.com";
   const redirect_uri = redirectUrl + "/user-account";
   window.location.href =
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=" +
@@ -447,20 +447,20 @@ function handleGoogleBind() {
 
   isShowLoad.value = true;
   const googleData = {
-    code: googleCode,
+    code: googleCode
   };
 
   api
     .bindGoogle(googleData)
     .then((res: unknown) => {
-      const r = res as { code: number; msg?: string };
+      const r = res as any;
       if (r.code == 0 || r.code === 200) {
-        toast("Bound successfully");
+        toast(t('success'));
         getUserInfo();
         isShowLoad.value = false;
         localStorage.removeItem("bType");
       } else {
-        toast(r.msg || "Error");
+        toast(locale.value == 'jp' ?  r.msg_jp : r.msg)
         isShowLoad.value = false;
         localStorage.removeItem("bType");
       }

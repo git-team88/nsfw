@@ -77,6 +77,13 @@ export default {
       url: "user/unbindGoogle",
       method: "POST",
     }),
+  userInvite: (data: any) =>
+    axios.request({
+      url: "user/fillInviteCode",
+      data: data,
+      method: "POST",
+    }),
+
   userInfo: () =>
     axios.request({
       url: "user/getInfo",
@@ -141,16 +148,46 @@ export default {
     }),
   modifySubscription: (data: any) =>
     axios.request({
-      url: "post/modifySubscriptionPlan",
+      url: "post/modifySubscriptionPlanNew",
       data: data,
       method: "POST",
     }),
+  // subscribe: (data: any) =>
+  //   axios.request({
+  //     url: "post/getPayUrl",
+  //     data: data,
+  //     method: "POST",
+  //   }),
   subscribe: (data: any) =>
     axios.request({
-      url: "post/getPayUrl",
+      url: "post/generateSocialSubUrl",
       data: data,
       method: "POST",
     }),
+  cancelSubscribe: (data: any) =>
+    axios.request({
+      url: "post/getStripeCustomerPortalUrl",
+      data: data,
+      method: "POST",
+    }),
+
+  benefit: () =>
+    axios.request({
+      url: "post/generateBenefitUrl",
+      method: "POST",
+    }),
+  balance: () =>
+    axios.request({
+      url: "post/getBloggerBalance",
+      method: "POST",
+    }),
+
+  createAccount: () =>
+    axios.request({
+      url: "post/generateOnboardingUrl",
+      method: "POST",
+    }),
+
   homePostList: (page: number, limit: number, tab: string, type: number) =>
     axios.request({
       url: "index/getRecommendListPublic?page=" + page + "&limit=" + limit + "&tab=" + tab + '&type=' + type,
@@ -326,10 +363,26 @@ export default {
       url: "follow/getFollowedList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
-  userPayList: (page: number, limit: number) =>
+  userAIRechargeList: (page: number, limit: number) =>
     axios.request({
-      url: "order/getOrderList?page=" + page + "&limit=" + limit,
+      url: "post/getSubscribeList?page=" + page + "&limit=" + limit,
       method: "GET",
+    }),
+  userPayList: (page: number, limit: number, start: string, end: string) =>
+    axios.request({
+      url: "order/getOrderList?page=" + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      method: "GET",
+    }),
+  userAiPayList: (page: number, limit: number, start: string, end: string) =>
+    axios.request({
+      url: "user/getAiOrderList?page=" + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      method: "GET",
+    }),
+  AIRecharge: (data: any) =>
+    axios.request({
+      url: "post/getAIRechargeUrl",
+      data: data,
+      method: "POST",
     }),
 
   postPin: (data: any) =>
@@ -345,19 +398,30 @@ export default {
       method: "POST",
     }),
 
+  userInviteInfo: () =>
+    axios.request({
+      url: "user/getRewardCount",
+      method: "GET",
+    }),
+  userInviteList: (page: number, limit: number,) =>
+    axios.request({
+      url: "user/getRewardList?page="+ page + "&limit=" + limit,
+      method: "GET",
+    }),
+
   userWorkList: (page: number, limit: number, start: string, end: string) =>
     axios.request({
-      url: "stat/getDailyCountList?page="+ + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      url: "stat/getDailyCountList?page="+ page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
       method: "GET",
     }),
   userSingleWorkList: (page: number, limit: number, start: string, end: string) =>
     axios.request({
-      url: "stat/getPostCountList?page="+ + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      url: "stat/getPostCountList?page="+ page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
       method: "GET",
     }),
   userFansList: (page: number, limit: number, start: string, end: string) =>
     axios.request({
-      url: "stat/getFansCountList?page="+ + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      url: "stat/getFansCountList?page="+ page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
       method: "GET",
     }),
 
@@ -419,6 +483,11 @@ export default {
       header: {
         "Content-Type": "application/json",
       },
+    }),
+  commentDetail: (id: number | string) =>
+    axios.request({
+      url: "comment/getDetailPublic?comment_id=" + id,
+      method: "GET",
     }),
   likeComment: (data: any) =>
     axios.request({
@@ -482,21 +551,39 @@ export default {
       responseType: "blob"
     }),
 
-  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number ) =>
+  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number, order_type: string ) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&project_type=' + type + '&page=' + page + '&limit=' + limit,
+      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&project_type=' + type + '&page=' + page + '&limit=' + limit + '&order_type=' + order_type,
       method: "GET",
       baseURL: aiUrl,
     }),
-  getCharacters: () =>
+  getCharacters: (type: number, page: number, limit: number) =>
     axios.request({
-      url: "app/config/characters",
+      url: `app/config/characters?type=${type}&page=${page}&limit=${limit}`,
       method: "GET",
       baseURL: aiUrl,
     }),
   getStoryStyles: () =>
     axios.request({
       url: "app/config/story-styles",
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  computeDetail: (type: number, start: string, end: string, page: number, limit: number) =>
+    axios.request({
+      url: `app/credit/ledger?type=${type}&date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  computeConsume: (start: string, end: string, page: number, limit: number) =>
+    axios.request({
+      url: `/app/credit/usage?date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  userBalance: () =>
+    axios.request({
+      url: "app/credit/balance",
       method: "GET",
       baseURL: aiUrl,
     }),

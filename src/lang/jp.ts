@@ -13,7 +13,7 @@ export default {
       privacyPolicy: "プライバシーポリシー",
       paidServices: "有料サービス"
     },
-    copyright: "© 2026 AIクリエーションプラットフォーム. 全著作権所有."
+    copyright: "© 2026 acgworlds株式会社. 全著作権所有."
   },
   grecaptcha: {
     notLoaded: "Google reCAPTCHA がまだ読み込まれていません",
@@ -335,6 +335,13 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
 7.3.5 プラットフォームが明示的な識別子を追加していない生成合成コンテンツの提供を申請する場合は、その生成合成コンテンツを使用する過程で、他の顕著な方法でそのコンテンツが人工知能によって生成された合成コンテンツであることを識別または提示する必要があります。当社が既に付した生成合成コンテンツの識別子を悪意的に削除、改ざん、偽造、隠匿してはなりません。<br /><br />
 八. その他の規定<br />
 本契約のいかなる条項がいかなる理由によっても完全または部分的に無効または执行力を欠く場合でも、本契約のその他の条項は引き続き有効で拘束力を有します。`,
+  inviteCode: {
+    title: "招待コード",
+    enterCode: "招待コードを入力してください",
+    confirm: "確定",
+    noCode: "招待コードがない？スキップ",
+    inviteError: "招待コードを入力するか、スキップしてください。"
+  },
   privacy: `プライバシーポリシー<br />
 本製品および関連サービスをご利用いただき、ありがとうございます。事前に「プライバシーポリシー」をよくお読みいただき、内容をご理解・ご同意のうえご利用ください。<br />
 ここにいう「当プラットフォーム」とは、acgworlds 株式会社（以下「当社」または「私たち」）が適法に所有・運営する、「acgworlds」を名称とする公式 Web サイトおよびアプリケーションを指します。当プラットフォームでは、AI コンテンツ生成（文章生成・画像生成・音声・動画生成）、コミュニティへの投稿などのサービスを提供しています。<br />
@@ -520,7 +527,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     type2: "ローカル動画",
     type3: "ローカル写真",
     type4: "記事",
-    aiTip: `まだ完成した作品を生成していません。まず作成してください`,
+    aiTip: `まだ生成済みの作品がありません。先に作品を生成してください。`,
     login: "ログイン",
     logout: "ログアウト",
     noRegister: "アカウントをお持ちでない方は",
@@ -528,8 +535,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     logoutConfirm: "ログアウトしますか？",
     userCard: {
       subscribeLabel: "購読",
-      followersLabel: "フォロワー",
-      postLabel: "投稿",
+      followersLabel: "フォロー",
+      fansLabel: "フォロワー",
+      postLabel: "作品",
     },
     menu: {
       personalCenter: "パーソナルセンター",
@@ -550,6 +558,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       resend: "メールを再送",
     },
   },
+  mentions: {
+    postDeleted: "投稿が削除されました",
+    commentDeleted: "コメントが削除されました"
+  },
   user: {
     sidebar: {
       title: "パーソナルセンター",
@@ -557,12 +569,29 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       account: "アカウント管理",
       profile: "コミュニティ設定",
       subscription: "購読設定",
+      inviteRevenue: '招待報酬',
       revenue: "収益",
       mySubscriptions: "フォローと購読",
       interactive: "インタラクティブデータ",
       messages: "メッセージ",
       privacy: "プライバシー設定",
       logout: "ログアウト",
+    },
+    inviteRevenue: {
+      title: "招待で報酬",
+      inviteText: `MoeGenへようこそ！AIでワンクリック動画生成、動画を共有して報酬ゲット！登録はこちら→【<a href="{link}">{link}</a>】、招待コード【{code}】を入力。新規ユーザーを招待すると即時報酬がもらえます！`,
+      copy: "招待リンクをコピー",
+      copyText: `MoeGenへようこそ！AIでワンクリック動画生成、動画を共有して報酬ゲット！登録はこちら→【{link}】、招待コード【{code}】を入力。新規ユーザーを招待すると即時報酬がもらえます！`,
+      firstPurchaseStars: "登録＆初回課金 累計人数",
+      totalReward: "招待報酬 合計（算力）",
+      credits: " クレジット",
+      rulesTitle: "紹介ルール：",
+      rule: `あなたの紹介コードで他人がMoeGenに登録した場合、あなたに紹介報酬が付与されます。<br />
+      報酬ルール：招待されたユーザーが登録し初回課金を完了すると招待成功となり、1人につき10クレジットが付与されます。<br />
+      本ルールは状況に応じて不定期に変更される場合があります。変更後のルールは公式サイトで告知いたします。<br />
+      ルール変更後もサービスを利用し続けた場合、変更後のルールに同意したものとみなします。`,
+      copySuccess: "招待リンクをコピーしました",
+      viewDetails: "報酬詳細を見る"
     },
     account: {
       title: "アカウント管理",
@@ -587,6 +616,16 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       privacy: "プライバシーポリシー",
       terms: "利用規約",
       and: "および",
+      success: {
+        title: "アカウント作成成功",
+        message: "今後の収益はこのアカウントを通じて引き出されます。",
+        back: "購読価格設定に戻る"
+      },
+      failed: {
+        title: "アカウント作成失敗",
+        message: "リンクの有効期限が切れたか、作成に失敗しました。戻ってやり直してください。",
+        back: "購読価格設定に戻る"
+      }
     },
     messages: {
       title: "メッセージ",
@@ -611,6 +650,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       tip: "すべての機能にアクセスするには、プロフィールを完成させてください。",
       username: "ユーザー名",
       usernameText: "ユーザー名を入力",
+      usernameWarning: `{'#'} {'@'} とスペースは使用できません`,
       avatar: "アバター",
       upload: "アップロード",
       confirm: "確認",
@@ -643,11 +683,18 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       edit: "編集",
       tip: "購読プランを設定した後、20%のサービス料が差し引かれます。実際の価格の80%を受け取ります。",
       priceLabel: "月額料金",
+      priceLimit: "（1日に1回だけ価格を変更できます）",
+      priceChangeLimit: "1日に1回だけ価格を変更できます。今日は既に変更されています。明日もう一度お試しください。",
       perMonth: "/ 月",
       benefitsLabel: "特典説明",
       benefitsText: "購読者は購読期間中にすべての有料コンテンツを閲覧することができます。",
       disabled: "購読機能が無効",
       cancel: "購読をキャンセル",
+      accountTitle: "支払いアカウント：",
+      accountContent: "（購読を有効にした後、引き出しアカウントとして使用されます）",
+      createAccount: "作成",
+      accountCreated: "作成済み",
+      changeAccount: "アカウントを表示",
     },
     myFollowsSubs: {
       title: "フォローと購読",
@@ -661,6 +708,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     },
     paymentHistory: {
       title: "支払い履歴",
+      processing: "購読中",
+      orderHistory: "注文履歴",
+      subscribe: "購読",
+      aiToolRecharge: "AIツールチャージ",
       tabSubscribe: "購読",
       tabRecharge: "AIツールチャージ",
       issueInvoice: "請求書を発行",
@@ -673,6 +724,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       subscriptionType: "マイマンスリーサブスクリプション",
       invoiceSuccess: "請求書が正常に発行されました",
       emailRequired: "メールアドレスを入力してください",
+      valid: "有効期限：",
+      id: "ID：",
+      month: "/月",
+      quantity: "1",
     },
     withdraw: {
       title: "引き出し",
@@ -692,6 +747,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       overall: "全体データ",
       individual: "個別作品データ",
       download: "CSVをダウンロード",
+      csvFileName: "インタラクティブデータ",
       startDate: "開始日",
       endDate: "終了日",
       selectDateRange: "日付範囲を選択",
@@ -699,6 +755,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       apply: "適用",
       selectBothDates: "请选择开始和结束日期",
       maxThreeMonths: "日付範囲は3ヶ月以内",
+      maxOneYear: "日付範囲は1年以内",
       date: "日付",
       dailyLikes: "日間合計いいね",
       dailyComments: "日間合計コメント",
@@ -706,26 +763,45 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       followerChange: "フォロワーの変化",
       totalFollowers: "フォロワー合計",
       noData: "データがありません",
-
+      csvHeaders: {
+        date: "日付",
+        change: "フォロワーの変化",
+        total: "フォロワー合計",
+        likes: "いいね数",
+        comments: "コメント数",
+        title: "作品タイトル"
+      },
     },
     revenue: {
       total: "総収益",
-      withdrawn: "引き出し済み収益",
-      pending: "引き出し待ち",
+      withdrawn: "凍結期間の収益",
+      pending: "出金可能な収益",
       withdraw: "引き出し",
+      withdrawRecord: "明細",
       tabDetail: "収益詳細",
-      tabRecord: "引き出し記録",
       time: "時間",
       period: "購読期間",
       revenue: "収益",
       modalTitle: "保留中の収益をすべて引き出す",
       confirm: "引き出しを確認",
+      confirmWithdraw: "引き出しを確認",
+      agreeTerms: "支払い条件に同意する",
       agreePrefix: "に同意する",
       terms: "利用規約",
       totalWithdrawable: "引き出し可能な合計額",
-      withdrawTip: "収益が入金されてから7日間経過した後にのみ引き出しが可能で、この期間中に",
-      communityRule: "コミュニティルール",
-      withdrawTipEnd: "違反行為がないこと。",
+      withdrawTip: "収益到着後、7 間の凍結期間を経過し、かつその期間中にコミュニティ規約に違反しなかった場合",
+      communityRule: "コミュニティ規約",
+      withdrawTipEnd: "のみ、出金可能です。",
+      noProfit: "現在、引き出し可能な収益はありません。",
+      noData: "データがありません",
+      withdrawSuccess: "引き出しが成功しました",
+      csvFileName: "収益データ",
+      csvHeaders: {
+        time: "時間",
+        period: "購読期間",
+        revenue: "収益",
+        withdraw: "引き出し額"
+      },
     },
   },
   pagination: {
@@ -737,7 +813,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
   search: {
     placeholder: "キーワードで検索",
     resultsFor: "検索結果：",
-    posts: "投稿",
+    posts: "作品",
     users: "ユーザー",
     all: "すべて",
     video: "動画",
@@ -902,7 +978,41 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     rule1: "1分未満の動画はxxコンピューティングパワー",
     rule2: "1枚の画像生成はxxコンピューティングパワー",
     computingPowerRules: "けいさんりょくそく",
-    credits: "計算リソース"
+    pointsDetails: "ポイント詳細",
+    valid6Months: "発行から6ヶ月間有効",
+    valid12Months: "発行から12ヶ月間有効",
+    credits: "計算リソース",
+    compute: "コンピュート",
+    monthlyAutoRenew: "月額自動更新",
+    quarterlyAutoRenewal: "四半期自動更新",
+    semiAnnualAutoRenewal: "半年自動更新",
+    annualAutoRenewal: "年額自動更新",
+    computePack: "コンピュートパック",
+    periodMonth: "/ヶ月",
+    period3Month: "/3ヶ月",
+    period6Month: "/6ヶ月",
+    periodYear: "/年"
+  },
+  aiRechargeDetails: {
+    title: "ポイント詳細",
+    selectPeriod: "期間を選択",
+    date: "日付",
+    type: "タイプ",
+    amount: "金額",
+    status: "ステータス",
+    balance: "残高",
+    recharge: "チャージ",
+    paymentHistory: "支払い履歴",
+    all: "すべて",
+    consumption: "消費",
+    earned: "獲得",
+    rechargeTab: "チャージ",
+    inviteRewards: "招待報酬",
+    subscribe: "購読",
+    boostPack: "ブーストパック",
+    generate: "生成",
+    expired: "期限切れ",
+    invited: "新規ユーザー"
   },
   home: {
     hero: {
@@ -956,7 +1066,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       cancel: "キャンセル",
       confirm: "確認",
       limmit: 'キャラクターは最大7つまで選択できます',
-      noCharacters: "キャラクターがありません"
+      noCharacters: "キャラクターがありません",
+      officialCharacters: "公式キャラクター",
+      myCharacters: "マイキャラクター"
     },
     character: {
       selected: "キャラクターが選択されました",
@@ -966,7 +1078,11 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       title: "スタイル",
       loading: "スタイルを読み込み中...",
       cancel: "キャンセル",
-      confirm: "確認"
+      confirm: "確認",
+      empty: "スタイルがありません",
+      error: {
+        loadFailed: "スタイルの読み込みに失敗しました。再試行してください。"
+      }
     },
     styleCategory: {
       all: "すべて",
@@ -993,7 +1109,8 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       name: "クリエイター"
     },
     error: {
-      emptyInput: "プロットを入力してください"
+      emptyInput: "プロットを入力してください",
+      maxItemsReached: "キャラクターとリファレンス画像は最大7つまでアップロードできます"
     },
     generate: {
       started: "動画生成が開始されました",
@@ -1055,7 +1172,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     fanOnly: "ファン限定コンテンツ",
     permission: "アクセス範囲",
     permPublic: "公開",
-    permPartial: "一部のユーザーに表示",
+    permPartial: "サブスクライバーのみ表示",
     permPrivate: "自分のみ表示",
     imgtip: "(最初の画像は公開)",
     articleTip: "(最初の4000文字は公開)",
@@ -1154,7 +1271,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     },
     confirm: {
       leaveTip:
-        "この種の投稿編集を終了すると、入力した内容が失われます。終了してもよろしいですか？",
+        "公開編集ページを退出すると、入力した内容は失われます。退出してもよろしいですか？",
       continueEdit: "編集を続ける",
       confirmExit: "終了を確認",
     },
@@ -1164,7 +1281,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       post: "別の投稿をする",
     },
     agree: "に同意します ",
-    terms: "利用規約",
+    terms: "コミュニティガイドライン",
     cancelBtn: "キャンセル",
     confirmBtn: "確認",
     sensitiveConfirmTitle: "センシティブコンテンツを含めることを確認しますか？",
@@ -1178,6 +1295,12 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     publishing: '公開中...'
   },
 
+  deleteConfirm: {
+    title: "削除の確認",
+    message: "コメントを削除すると、コメントの下のすべての返信が削除されます。本当に削除しますか？",
+    cancel: "キャンセル",
+    confirm: "確認"
+  },
   detail: {
     prev: "前へ",
     next: "次へ",
@@ -1195,7 +1318,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     addComment: "コメントを追加...",
     topicMention: `#トピック, {'@'}メンション`,
     uploadTip: 'コメントは最大1つの動画または4枚の画像をアップロードすることをサポートし、画像と動画を同時にアップロードすることはできません',
-    post: "投稿",
+    post: "作品",
     reply: "返信",
     expandReplies: "返信を展開",
     collapseReplies: "返信を折りたたむ",
@@ -1227,7 +1350,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       private: "自分のみ",
       public: "公開"
     },
-    videoLoadingFailed: "動画の読み込みに失敗しました。"
+    videoLoadingFailed: "動画の読み込みに失敗しました。",
+    videoUrlInvalid: "動画のURLが無効です。もう一度お試しください。",
+    videoPlayFailed: "動画の再生に失敗しました",
+    videoUrlCopied: "動画のURLをコピーしました"
   },
   subscribe: {
     title: "購読",
@@ -1242,7 +1368,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     success: {
       title: "購読成功!",
       message: "あなたのサブスクリプションは数分以内に有効になります。数分後に更新して確認してください。1時間後も有効になっていない場合は、カスタマーサービスにお問い合わせください。",
-      back: "サブコミュニティに戻る"
+      back: "サブコミュニティに戻る",
+      backToHome: "ホームに戻る",
+      backToMyProjects: "マイプロジェクトに戻る"
     },
     failed: {
       title: "支払いが失敗しました！",
@@ -1251,7 +1379,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     }
   },
   userHome: {
-    posts: "投稿",
+    posts: "作品",
     following: "フォロー中",
     fans: "フォロワー",
     likes: "いいね",
@@ -1310,12 +1438,12 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
   paymentTerms: {
     title: "特定商取引法に基づく表記",
     content: `<h2>1. 事業者情報</h2>
-<p>販売事業者：ACGWORLDS株式会社（英：ACGWORLDS Co., Ltd.）</p>
+<p>販売事業者：ACGWORLDS株式会社</p>
 <p>運営責任者：代表取締役　青木　一世</p>
 <p>所在地：〒113-0033 東京都文京区本郷6-20-11 グリーンヒルズ泰明１号室</p>
 <p>電話番号：+81-7484-0659</p>
 <p>メールアドレス：support{'@'}acgworlds{'.'}co{'.'}jp</p>
-<p>サービスURL：<a href="https://unlimited.creations.com" target="_blank">https://unlimited.creations.com（仮）</a></p>
+<p>サービスURL：<a href="" target="_blank">（仮）</a></p>
 
 <h2>2. 本表記の対象（重要）</h2>
 <p>本表記は、当社（ACGWORLDS株式会社）が提供する以下のサービスに適用されます。</p>

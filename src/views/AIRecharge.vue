@@ -13,20 +13,27 @@
           <div class="section-title-box">
             <div class="section-title">{{ t('aiRecharge.selectPlan') }}</div>
 
-            <span @click="goToComputingPowerRules">{{ t('aiRecharge.computingPowerRules') }} →</span>
+            <div class="rules-links">
+              <span @click="goToComputingPowerRules">{{ t('aiRecharge.computingPowerRules') }} →</span>
+              <span @click="goToPointsDetails">{{ t('aiRecharge.pointsDetails') }} →</span>
+            </div>
           </div>
 
           <div class="plan-grid">
             <div
-              v-for="(plan, index) in rechargePlans"
-              :key="index"
+              v-for="plan in rechargePlans"
+              :key="plan.plan_id"
               class="plan-item"
-              :class="{ active: selectedPlan === index }"
-              @click="selectPlan(index)"
+              :class="{ active: selectedPlan === plan.plan_id }"
+              @click="selectPlan(plan.plan_id)"
             >
-              <span class="plan-price">{{ plan.price }}</span>
-            <span class="plan-credits">{{ plan.credits }}</span>
-            <span>{{ t('aiRecharge.credits') }}</span>
+              <span class="plan-title">{{ t(`aiRecharge.${plan.title}`) }}</span>
+              <div class="plan-price-container">
+                <span class="plan-price">{{ plan.price }}</span>
+                <span class="plan-period">{{ plan.period ? t(`aiRecharge.${plan.period}`) : '' }}</span>
+              </div>
+              <span class="plan-credits">{{ plan.credits }} {{ t('aiRecharge.compute') }}</span>
+              <span class="plan-valid">{{ t(`aiRecharge.${plan.valid}`) }}</span>
             </div>
           </div>
         </div>
@@ -44,38 +51,79 @@
           </div>
         </div>
 
-        <button class="pay-btn" :disabled="!agreeTerms">
-          {{ t('aiRecharge.subscribeNow') }}
+        <button class="pay-btn" :disabled="!agreeTerms || isLoading" :class="{ loading: isLoading }" @click="handleRecharge">
+          <span>{{ t('aiRecharge.subscribeNow') }}</span>
         </button>
       </div>
     </div>
+
+    <UploadMask :visible="isLoading" :text="t('loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="AIRecharge">
 import Header from "@/components/Header.vue";
+import UploadMask from "@/components/UploadMask.vue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
+import api from "@/api/index";
+import { toast } from "@/util/toast";
+import { set } from "lodash-es";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-// Recharge plans data
 const rechargePlans = ref([
-  { price: "$7", credits: "980" },
-  { price: "$20", credits: "2800" },
-  { price: "$50", credits: "7000" },
-  { price: "$100", credits: "14000" },
-  { price: "$200", credits: "28000" }
+  { plan_id: 1, title: 'monthlyAutoRenew', price: '$7', period: 'periodMonth', credits: "980", valid: 'valid6Months' },
+  { plan_id: 2, title: 'quarterlyAutoRenewal', price: '$20', period: 'period3Month', credits: "3,000", valid: 'valid6Months' },
+  { plan_id: 3, title: 'semiAnnualAutoRenewal', price: '$50', period: 'period6Month', credits: "6,300", valid: 'valid6Months' },
+  { plan_id: 4, title: 'annualAutoRenewal', price: '$98', period: 'periodYear', credits: "13,200", valid: 'valid12Months' },
+  { plan_id: 5, title: 'computePack', price: '$7', period: '', credits: "950", valid: 'valid6Months' },
+  { plan_id: 6, title: 'computePack', price: '$20', period: '', credits: "2,800", valid: 'valid6Months' },
+  { plan_id: 7, title: 'computePack', price: '$50', period: '', credits: "6,500", valid: 'valid6Months' },
+  { plan_id: 8, title: 'computePack', price: '$98', period: '', credits: "13,000", valid: 'valid6Months' }
 ]);
 
-const selectedPlan = ref(0);
+const selectedPlan = ref(1);
 const agreeTerms = ref(true);
+const isLoading = ref(false);
 
-function selectPlan(index: number) {
-  selectedPlan.value = index;
+function selectPlan(planId: number) {
+  selectedPlan.value = planId;
+}
+
+async function handleRecharge() {
+  if (!agreeTerms.value) return;
+
+  isLoading.value = true;
+  try {
+    if (!selectedPlan.value) {
+      return false;
+    }
+
+    const response = await api.AIRecharge({
+      plan_id: selectedPlan.value
+    });
+
+    const data = response as any;
+    if (data.code === 0 || data.code === 200) {
+      if (data.data) {
+        window.location.href = data.data.url.url;
+      }
+    } else {
+      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+    }
+  } catch (error) {
+    toast(t('error'));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function goToPointsDetails() {
+  router.push('/ai-points-details');
 }
 
 function goBack() {
@@ -172,11 +220,28 @@ function goToComputingPowerRules() {
       color: #364153;
     }
 
-    span{
-      font-size: 1.4rem;
-      color: #FB64B6;
-      cursor: pointer;
+    .rules-links {
+      display: flex;
+      align-items: center;
+      span{
+        font-size: 1.4rem;
+        color: #00D3F2;
+        cursor: pointer;
+
+        &:last-child{
+          margin-left: 3rem;
+          color: #FB64B6;
+        }
+      }
     }
+  }
+
+  .plan-type-title {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #364153;
+    margin-bottom: 1.6rem;
+    text-align: left;
   }
 
   .recharge-plan-section {
@@ -187,7 +252,7 @@ function goToComputingPowerRules() {
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 2rem;
+      gap: 1.4rem;
       margin-bottom: 2.4rem;
 
       .plan-item {
@@ -195,36 +260,59 @@ function goToComputingPowerRules() {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 15.2rem;
-        height: 15.2rem;
+        width: 20rem;
+        height: 21.6rem;
         border: 1px solid rgba(251, 100, 182, 0.2);
         border-radius: 1.2rem;
         font-size: 1.4rem;
         color: #6A7282;
         cursor: pointer;
+        padding: 1.6rem;
 
         &:hover {
           border-color: #fb64b6;
         }
 
         &.active {
-          background-color: #FB64B6;
-          color: #ffffff;
+          border-color: #fb64b6;
+          background-color: rgba(251,100,182,0.12);
+        }
 
-          .plan-price {
-            color: #ffffff;
-          }
+        .plan-title {
+          font-size: 1.4rem;
+          margin-bottom: 2.4rem;
+          text-align: center;
+        }
+
+        .plan-price-container {
+          display: flex;
+          align-items: baseline;
+          margin-bottom: 2.4rem;
         }
 
         .plan-price {
           font-size: 2.4rem;
           font-weight: 600;
-          color: #364153;
-          margin-bottom: 2.4rem;
+          color: #FB64B6;
+        }
+
+        .plan-period {
+          font-size: 1.4rem;
+          color: #6A7282;
+          margin-left: 0.4rem;
         }
 
         .plan-credits {
-          margin-bottom: .4rem;
+          font-size: 1.6rem;
+          font-weight: 500;
+          margin-bottom: 1.6rem;
+          color: #4A5565;
+        }
+
+        .plan-valid {
+          font-size: 1.2rem;
+          text-align: center;
+          color: #99A1AF;
         }
       }
     }
@@ -264,7 +352,9 @@ function goToComputingPowerRules() {
   }
 
   .pay-btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 24rem;
     height: 4.8rem;
     margin: 0 auto;
@@ -298,6 +388,70 @@ function goToComputingPowerRules() {
         &::after {
           opacity: 0;
         }
+      }
+    }
+
+    &.loading {
+      span::before {
+        content: '';
+        display: inline-block;
+        width: 1.6rem;
+        height: 1.6rem;
+        margin-right: 0.8rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #ffffff;
+        animation: spin 1s ease-in-out infinite;
+      }
+    }
+
+    span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* 加载遮罩层样式 */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      padding: 3rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 2rem rgba(0, 0, 0, 0.2);
+
+      .loading-spinner {
+        width: 4rem;
+        height: 4rem;
+        border: 0.4rem solid rgba(251, 100, 182, 0.3);
+        border-radius: 50%;
+        border-top-color: #fb64b6;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1.6rem;
+      }
+
+      span {
+        font-size: 1.6rem;
+        color: #364153;
       }
     }
   }

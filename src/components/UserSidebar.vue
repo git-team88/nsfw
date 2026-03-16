@@ -43,8 +43,8 @@ const items = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
+  { key: "inviteRevenue", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
-  { key: "myfollows-subs", label: "user.myFollowsSubs.title", path: "/user-my-follows-subs" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
   { key: "messages", label: "user.sidebar.messages", path: "/user-message" },
   { key: "privacy", label: "user.sidebar.privacy", path: "/user-privacy" },
@@ -73,7 +73,6 @@ function confirmLogout() {
   if (!shouldKeepPath) {
     router.push("/");
   } else {
-    // 如果在需要保持的路径上，刷新页面以更新登录状态
     window.location.reload();
   }
 }
