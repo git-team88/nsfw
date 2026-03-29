@@ -15,10 +15,10 @@
             <img :src="userInfo.avatar || defaultAvatar" class="avatar" />
             <div class="meta">
               <div class="nickname">{{ userInfo.nickname }}</div>
-              <div class="id">ID: {{ userInfo.id }}</div>
+              <!-- <div class="id">ID: {{ userInfo.id }}</div> -->
             </div>
           </div>
-          <div class="price-tag">${{ subscriptionPlans.price }}/{{ t("subscribe.month") }}</div>
+          <div class="price-tag"><span>{{ subscriptionPlans.price }} {{t('aiRecharge.unit')}}</span>/{{ t("subscribe.month") }}</div>
         </div>
 
         <p class="desc">{{ t("subscribe.desc") }}</p>
@@ -48,17 +48,6 @@
         <!-- Agreements -->
         <div class="agreements">
           <div class="check-item">
-            <div class="checkbox" @click="autoRenewAgree = !autoRenewAgree">
-              <img v-if="autoRenewAgree" src="@/assets/images/register/check_active.png" alt="" />
-              <img v-else src="@/assets/images/register/check.png" alt="" />
-            </div>
-
-            <span>
-              {{ t("subscribe.agreeAutoRenew") }}
-              <!-- <a href="#" @click.prevent="openLink">{{ t("subscribe.autoRenewTerms") }}</a> -->
-            </span>
-          </div>
-          <div class="check-item">
             <div class="checkbox" @click="paymentAgree = !paymentAgree">
               <img v-if="paymentAgree" src="@/assets/images/register/check_active.png" alt="" />
               <img v-else src="@/assets/images/register/check.png" alt="" />
@@ -75,6 +64,11 @@
         <button class="pay-btn" :disabled="!paymentAgree || isLoading" @click="handlePay">
           {{ t("subscribe.pay") }}
         </button>
+
+        <!-- Auto-renewal Note -->
+        <div class="auto-renewal-note">
+          {{ t('subscribe.autoRenewalNote') }}
+        </div>
       </div>
     </div>
 
@@ -177,7 +171,7 @@ async function handlePay() {
     const res = await api.subscribe({ creator_id: userId });
     const data = res as unknown as any;
     if (data.code === 0 || data.code === 200) {
-      window.location.href = data.data.url;
+      window.open(data.data?.url, '_blank');
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
     }
@@ -197,44 +191,29 @@ onMounted(() => {
 <style scoped lang="scss">
 .subscription-page {
   width: 100%;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
-  max-width: 72rem;
-  min-height: calc(100vh - 14rem);
-  margin: 12rem auto 2rem;
-  padding: 2.4rem 3.6rem;
-  position: relative;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.8);
+  max-width: 65rem;
+  margin: 14rem auto 2rem;
 
   .back {
     position: fixed;
     left: 50%;
-    top: 12rem;
+    top: 14rem;
     width: 4rem;
     height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transform: translateX(-55rem);
-    border: 1px solid rgba(251, 100, 182, 0.2);
-    -webkit-border-radius: 0.8rem;
-    border-radius: 0.8rem;
     cursor: pointer;
     z-index: 10;
 
-    &:hover {
-      border: 1px solid rgba(251, 100, 182, 0.5);
-      background: rgba(251, 100, 182, 0.06);
-    }
-
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 4rem;
+      height: 4rem;
     }
   }
 }
@@ -243,7 +222,7 @@ onMounted(() => {
   .page-title {
     font-size: 2rem;
     font-weight: 500;
-    color: #101828;
+    color: #99A1AF;
     margin-bottom: 2.4rem;
   }
 
@@ -261,7 +240,6 @@ onMounted(() => {
         width: 4.8rem;
         height: 4.8rem;
         border-radius: 0.8rem;
-        border: 1px solid #fb64b6;
         object-fit: cover;
       }
       .meta {
@@ -285,18 +263,22 @@ onMounted(() => {
       min-width: 12.8rem;
       height: 4.8rem;
       padding: 0.8rem 1.6rem;
-      background: rgba(0, 211, 242, 0.06);
-      color: #00d3f2;
+      background: #F5F5F5;
+      color: #6A7282;
       border-radius: 0.8rem;
       font-weight: 500;
-      font-size: 1.8rem;
-      border: 1px solid #00d3f2;
+      font-size: 1.4rem;
+
+      span{
+        font-size: 1.8rem;
+        color: #fb64b6;
+      }
     }
   }
 
   .desc {
     font-size: 1.2rem;
-    color: #99a1af;
+    color: #6A7282;
     line-height: 2rem;
     margin-bottom: 2.4rem;
   }
@@ -352,7 +334,7 @@ onMounted(() => {
       align-items: center;
       gap: 0.6rem;
       font-size: 1.4rem;
-      color: #6a7282;
+      color: #99A1AF;
 
       .checkbox {
         width: 2.4rem;
@@ -395,7 +377,7 @@ onMounted(() => {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
       }
     }
 
@@ -409,6 +391,13 @@ onMounted(() => {
         }
       }
     }
+  }
+
+  .auto-renewal-note {
+    margin-top: 1.2rem;
+    font-size: 1.2rem;
+    color: #99A1AF;
+    line-height: 1.8rem;
   }
 }
 </style>

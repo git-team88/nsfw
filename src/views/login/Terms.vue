@@ -47,11 +47,10 @@ function goBack() {
 .terms {
   position: relative;
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
+  min-height: 100vh;
   scroll-behavior: smooth;
-  padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  padding: 14rem 0 0;
+  background: #FFFFFF;
 
   .inner {
     max-width: 144rem;
@@ -68,33 +67,20 @@ function goBack() {
       align-items: center;
       justify-content: center;
       transform: translateX(-55rem);
-      border: 1px solid rgba(251, 100, 182, 0.2);
-      -webkit-border-radius: 0.8rem;
-      border-radius: 0.8rem;
       cursor: pointer;
       z-index: 10;
 
-      &:hover {
-        border: 1px solid rgba(251, 100, 182, 0.5);
-        background: rgba(251, 100, 182, 0.06);
-      }
-
       img {
-        width: 2.4rem;
-        height: 2.4rem;
+        width: 4rem;
+        height: 4rem;
       }
     }
 
     .terms-detail {
-      max-width: 92rem;
-      min-height: calc(100vh - 12rem);
-      margin: 0 auto;
-      padding: 3rem;
-      border: 1px solid rgba(251,100,182,0.2);
-      -webkit-border-radius: 1.2rem;
-      border-radius: 1.2rem;
-      line-height: 1.7;
-      background: rgba(255,255,255,0.8);
+      max-width: 86rem;
+      margin: 0 auto 2rem;
+      font-size: 1.4rem;
+      line-height: 2.8rem;
       color: #364153;
 
       :deep(h1) {

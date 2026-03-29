@@ -48,7 +48,7 @@ function backToMyProjects() {
 <style scoped lang="scss">
 .subscription-success-page {
   width: 100%;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
@@ -106,18 +106,16 @@ function backToMyProjects() {
     .back-home-btn{
       width: 24rem;
       height: 4.8rem;
-      border: 1px solid #fb64b6;
       border-radius: 0.8rem;
       font-size: 1.6rem;
       font-weight: 500;
       background: none;
       cursor: pointer;
-      color: #fb64b6;
+      background: #F5F5F5;
+      color: #6A7282;
       transition: opacity 0.2s;
 
-      &:hover {
-        background: rgba(251, 100, 182, 0.06);
-      }
+      color: #fb64b6;
     }
 
     .back-btn {
@@ -142,7 +140,7 @@ function backToMyProjects() {
           top: 0;
           width: 100%;
           height: 100%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
           z-index: 1;
         }
       }

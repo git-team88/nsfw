@@ -64,17 +64,9 @@
             >
 
               <div class="creation-thumbnail">
-                <div v-if="creation.result_async?.generate_character_image && creation.result_async.generate_character_image.length > 0" class="character-images">
-                  <div
-                    class="character-image-item"
-                  >
-                    <img :src="creation.result_async?.generate_character_image[0]?.main_image_url" alt="" />
-                  </div>
-                </div>
+                <img :src="creation.result_async.final_video_output.video_cover_url" alt="" class="cover-img" />
 
-                <img v-else :src="creation.cover || creation.cover_image || ''" alt="" class="cover-img" />
-
-                <div class="video-overlay" v-if="creation.type === 'video'" @click.stop="openPreviewModal(creation)">
+                <div class="video-overlay" @click.stop="openPreviewModal(creation)">
                   <img class="play-icon-img" src="@/assets/images/detail/play.png" alt="" />
                 </div>
               </div>
@@ -97,27 +89,27 @@
       <div class="modal-footer">
         <div class="selection">
           <!-- Selection Info -->
-          <div class="selection-info">
+          <!-- <div class="selection-info">
             <p>{{ t('aiCreations.selectionInfo') }}</p>
             <span class="clear-all-btn" @click="clearAllSelections">
               {{ t('aiCreations.clearAll') }}
             </span>
-          </div>
+          </div> -->
 
           <!-- Selected Items Preview -->
-          <div v-if="selectedCreations.length > 0" class="selected-items">
+          <!-- <div v-if="selectedCreations.length > 0" class="selected-items">
             <div
               v-for="item in selectedCreations"
               :key="item.id"
               class="selected-item"
             >
-              <img class="selected-img" :src="item.thumbnail" :alt="item.title" />
+              <img class="selected-img" :src="item.final_video_cover || item.video_cover || item.thumbnail" :alt="item.title" />
               <div v-if="item.type === 'video'" class="video-badge" @click.stop="openPreviewModal(item)">
                 <img src="@/assets/images/detail/play.png" alt="Play" class="play-icon-small" />
               </div>
               <img src="@/assets/images/project/delete.png" class="remove-item-btn" @click.stop="removeSelection(item)" />
             </div>
-          </div>
+          </div> -->
         </div>
 
         <div class="modal-btn">
@@ -253,25 +245,9 @@ const isSelected = (creation: any) => {
 const selectCreation = (creation: any) => {
   const existingIndex = selectedCreations.value.findIndex(item => item.id === creation.id);
   if (existingIndex > -1) {
-    selectedCreations.value.splice(existingIndex, 1);
-    return;
-  }
-
-  const hasDifferentType = selectedCreations.value.some(item => item.type !== creation.type);
-  if (hasDifferentType) {
-    toast(t('aiCreations.selectTip'));
-    return;
-  }
-
-  if (creation.type === 'video') {
-    // Only allow one video selection
-    selectedCreations.value = [creation];
+    selectedCreations.value = [];
   } else {
-    // For images, check if under limit
-    if (selectedCreations.value.length < 10) {
-      // Add image if under limit
-      selectedCreations.value.push(creation);
-    }
+    selectedCreations.value = [creation];
   }
 };
 
@@ -292,16 +268,24 @@ const removeSelection = (creation: any) => {
 };
 
 const confirmSelection = () => {
-  if (selectedCreations.value.length === 0) return;
-
-  const firstItem = selectedCreations.value[0];
-  if (firstItem.type === 'video') {
-    // Redirect to video publish page
-    router.push('/submit/video');
-  } else {
-    // Redirect to image publish page
-    router.push('/submit/image');
+  if (selectedCreations.value.length === 0) {
+    toast(t('aiCreations.selectVideoFirst'));
+    return;
   }
+
+  const selectedCreation = selectedCreations.value[0];
+  const videoUrl = selectedCreation.result_async.final_video_output.video_url;
+  const coverUrl = selectedCreation.result_async.final_video_output.video_cover_url;
+  const sessionId = selectedCreation.session_id || selectedCreation.sessionId;
+
+  router.push({
+    path: '/publish/video',
+    query: {
+      session_id: sessionId,
+      url: videoUrl,
+      cover: coverUrl,
+    }
+  });
 
   closeModal();
 };
@@ -349,7 +333,7 @@ const openPreviewModal = (creation: any) => {
   display: flex;
   align-items: center;
   padding: 1.8rem 2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   h3 {
     font-size: 1.6rem;
@@ -391,7 +375,7 @@ const openPreviewModal = (creation: any) => {
     }
 
     &:hover:not(.active) {
-      border-color: rgba(251, 100, 182, 0.2);
+      border-color: #F5F5F5;
     }
   }
 }
@@ -436,8 +420,8 @@ const openPreviewModal = (creation: any) => {
 .loading-spinner {
   width: 4rem;
   height: 4rem;
-  border: 4px solid rgba(251, 100, 182, 0.2);
-  border-top: 4px solid #fb64b6;
+  border: 0.4rem solid #F5F5F5;
+  border-top: 0.4rem solid #6A7282;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.2rem;
@@ -577,7 +561,7 @@ const openPreviewModal = (creation: any) => {
   align-items: flex-end;
   gap: 1.2rem;
   padding: 1.2rem 2rem 1.8rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
 
   .modal-btn{
     display: flex;
@@ -592,13 +576,12 @@ const openPreviewModal = (creation: any) => {
     height: 4.8rem;
     border-radius: 0.8rem;
     font-size: 1.4rem;
-    border: 1px solid rgba(251,100,182,0.2);
-    color: #fb64b6;
+    background: #F5F5F5;
+    color: #6A7282;
     cursor: pointer;
 
     &:hover {
-      border-color: #FB64B6;
-      background: rgba(251, 100, 182, 0.06);
+      color: #FB64B6;
     }
   }
 
@@ -610,7 +593,7 @@ const openPreviewModal = (creation: any) => {
     height: 4.8rem;
     border-radius: 0.8rem;
     font-size: 1.4rem;
-    background: #fb64b6;
+    background: #FB64B6;
     color: #ffffff;
     cursor: pointer;
 
@@ -628,7 +611,7 @@ const openPreviewModal = (creation: any) => {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
       }
     }
   }

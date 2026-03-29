@@ -39,7 +39,10 @@
               </div>
               <div class="price-options">
                 <div class="price-option" @click="selectedId = 0">
-                  <div class="radio-circle" :class="{ active: selectedId === 0 }"></div>
+                  <div class="radio-circle">
+                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == 0" />
+                    <img src="@/assets/images/header/check.png" alt="" v-else />
+                  </div>
                   <span class="price-text">{{ t("user.subscription.cancel") }}</span>
                 </div>
                 <div
@@ -48,8 +51,11 @@
                   :key="option.id"
                   @click="selectedId = option.id"
                 >
-                  <div class="radio-circle" :class="{ active: selectedId === option.id }"></div>
-                  <span class="price-text">$ {{ option.price }}</span>
+                  <div class="radio-circle">
+                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.id" />
+                    <img src="@/assets/images/header/check.png" alt="" v-else />
+                  </div>
+                  <span class="price-text">{{ option.price }} {{ t('aiRecharge.unit') }}</span>
                 </div>
               </div>
             </div>
@@ -95,9 +101,9 @@ const { t, locale } = useI18n();
 
 const sidebarKey = ref("subscription");
 const priceOptions = [
-  { id: 45, price: "9.90" },
-  { id: 46, price: "19.90" },
-  { id: 47, price: "29.90" }
+  { id: 45, price: "1000" },
+  { id: 46, price: "2000" },
+  { id: 47, price: "3000" }
 ];
 const selectedId = ref(0);
 const benefits = ref("");
@@ -123,12 +129,11 @@ async function fetchSubscription() {
 
     if (data.code === 200 || data.code === 0) {
       plan.value = data.data?.plan;
-      const price = data.data?.plan?.price;
       const description = data.data?.plan?.description;
+      const planId = data.data?.plan?.plan_id;
 
       if (plan.value) {
-        // 找到对应的id
-        const option = priceOptions.find(opt => opt.price === price);
+        const option = priceOptions.find(opt => opt.id == planId);
         selectedId.value = option?.id || 1;
       } else {
         selectedId.value = 0;
@@ -160,10 +165,8 @@ async function handleCreateAccount() {
       window.open(data.data?.url, '_blank');
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
-      isLoading.value = false;
     }
   } catch (error) {
-    isLoading.value = false;
     toast(t("fail"));
   } finally {
     isLoading.value = false;
@@ -225,24 +228,18 @@ async function onSave() {
 .user-subscription-edit {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 4.8rem;
+  padding-right: 4.8rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
-}
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem;
+  padding-top: 14rem;
 }
 .panel-top {
   display: flex;
@@ -253,7 +250,7 @@ async function onSave() {
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 .tip {
   display: flex;
@@ -261,10 +258,10 @@ async function onSave() {
   height: 5.4rem;
   margin: 0 1.2rem 1.2rem;
   padding: 1rem 1.6rem;
-  border: 1px solid rgba(0, 211, 242, 0.2);
+  border: 1px solid rgba(251,100,182,0.2);;
   border-radius: 0.8rem;
   font-size: 1.4rem;
-  background: rgba(0, 211, 242, 0.06);
+  background: rgba(251,100,182,0.06);
   color: #364153;
 }
 
@@ -275,7 +272,7 @@ async function onSave() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(251, 100, 182, 0.06);
+  background: #F5F5F5;
 }
 
 .account-info {
@@ -327,14 +324,14 @@ async function onSave() {
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
       z-index: 1;
     }
   }
 }
 
 .change-account-btn {
-  color: #FB64B6;
+  color: #99A1AF;
   font-size: 1.4rem;
   cursor: pointer;
 }
@@ -354,14 +351,14 @@ async function onSave() {
 .sections-wrap {
   padding: 1.2rem;
   border-radius: 1.2rem;
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;;
 }
 .section {
   margin-bottom: 2.4rem;
 }
 .label {
   font-size: 1.4rem;
-  color: #364153;
+  color: #6A7282;
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -389,23 +386,11 @@ async function onSave() {
   gap: 0.8rem;
   cursor: pointer;
   .radio-circle {
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid #99a1af;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    &.active {
-      border-color: #fb64b6;
-      &::after {
-        content: "";
-        width: 1rem;
-        height: 1rem;
-        background: #fb64b6;
-        border-radius: 50%;
-      }
+    width: 2.4rem;
+    height: 2.4rem;
+    img{
+      width: 100%;
+      height: 100%;
     }
   }
   .price-text {
@@ -419,9 +404,9 @@ async function onSave() {
   margin-top: 1.6rem;
   padding: 1.8rem 1.6rem;
   font-family: inherit;
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  border: 1px solid #FFFFFF;
   border-radius: 0.8rem;
-  background: #ffffff;
+  background: #FFFFFF;
   outline: none;
   color: #364153;
 }
@@ -429,7 +414,7 @@ async function onSave() {
   border: 1px solid #fb64b6;
 }
 .textarea::placeholder {
-  color: #99a1af;
+  color: #99A1AF;
 }
 .actions {
   display: flex;
@@ -447,13 +432,11 @@ async function onSave() {
   position: relative;
 }
 .btn-cancel {
-  border: 1px solid #fb64b6;
-  background: none;
-  color: #fb64b6;
+  background: #FFFFFF;
+  color: #6A7282;
 }
 .btn-cancel:hover {
-  background: rgba(251, 100, 182, 0.06);
-  border-color: rgba(251, 100, 182, 0.35);
+  color: #fb64b6;
 }
 .btn-save {
   background: #fb64b6;
@@ -465,7 +448,7 @@ async function onSave() {
   position: absolute;
   inset: 0;
   border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 .btn:disabled {
   opacity: 0.6;

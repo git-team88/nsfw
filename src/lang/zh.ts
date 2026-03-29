@@ -339,8 +339,79 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     title: "邀请码",
     enterCode: "请输入邀请码",
     confirm: "确认",
-    noCode: "没有邀请码？跳过",
+    noCode: "没有邀请码？",
+    skip: '跳过',
     inviteError: "填写邀请码或者点击跳过。"
+  },
+  novel: {
+    untitled: "未命名",
+    generate: "生成",
+    generating: "正在生成",
+    projectName: "作品名",
+    waitingNote: "等待生成期间，可以先去浏览其他内容",
+    generationProgress: "生成进度",
+    generationTerminated: "生成过程已终止",
+    estimatedTime: "预计30分钟",
+    queueInfo: "前方还有{count}个任务，预计{estimatedTime}分钟",
+    waiting: "等待中",
+    estimatedMinutes: "预估{minutes}分钟",
+    novelOutline: "小说大纲",
+    newChapter: "新章节",
+    generatingStatus: "努力生成中，去别的逛逛~~~",
+    similarContent: "相似内容",
+    outlineWillBeGeneratedHere: "小说大纲将在此处生成",
+    generateNextChapter: "生成下一章",
+    generateAllChapters: "全部生成",
+    nextChapterTitle: "生成下一章",
+    allChaptersTitle: "生成全部章节",
+    charge: "充值",
+    cancel: "取消",
+    confirm: "确定",
+    chaptersToGenerate: "待生成章节（{count}）",
+    generationFailed: "生成失败",
+    basicInfo: "基本信息",
+    totalChapters: "总章数：",
+    chaptersLabel: "章",
+    wordsPerChapter: "每章字数：",
+    wordsLabel: "字",
+    genreLabel: "类型标签：",
+    writingStyle: "写作风格：",
+    storySummary: "故事概要",
+    characterGallery: "角色图鉴",
+    mainCharacter: "主角",
+    supportingCharacter: "配角",
+    chapterPlot: "分章情节",
+    chapterLabel: "第",
+    chapterColon: "章 :",
+    regenerate: "重新生成",
+    computingPower: "算力",
+    totalWords: "总字数",
+    outlinePlaceholder: "请输入创意描述...",
+    send: "发送",
+    edit: "修改",
+    complete: "完成",
+    minutes: "分钟",
+    error: {
+      noSessionId: "缺少会话ID",
+      fetchFailed: "获取失败",
+      generationFailed: "生成失败",
+      generationFailedMessage: "很抱歉当前生成过程出现异常",
+      contactSupport: "若点击重试依然不能正常生成，请联系客服，我们将在第一时间为您处理",
+      supportEmail: `客服邮箱：acgworlds{'@'}acgworlds{'.'}com`,
+      emptyProjectName: "请输入项目名称",
+      emptyRegenerateContent: "请输入创意描述"
+    },
+    guide: {
+      next: "下一步",
+      skip: "跳过",
+      finish: "完成"
+    },
+    retry: "点击重试",
+    language: {
+      zh: "中文",
+      en: "英文",
+      jp: "日文"
+    }
   },
   privacy: `隐私政策<br />
   欢迎使用产品及相关服务！ 请您仔细阅读、理解并遵守《隐私政策》。<br />
@@ -729,7 +800,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       edit: "编辑",
       tip: "订阅方案收益平台会扣除20%手续费，实际到手为定价的80%",
       priceLabel: "每月价格",
-      priceLimit: "（每天只能修改一次价格）",
+      priceLimit: "（注意：每天只能修改一次价格）",
       priceChangeLimit: "每天只能改一次价格，今日已操作，请明天再来",
       perMonth: "/ 月",
       benefitsLabel: "权益说明",
@@ -873,7 +944,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     follow: "关注",
     following: "已关注",
     followed: "关注成功",
-    unfollowed: "取消关注成功",
+    unfollow: "取消关注",
     followFailed: "关注用户失败",
     enterKeyword: "请输入关键词搜索",
     searchFailed: "搜索失败，请重试",
@@ -981,9 +1052,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   myProjects: {
     title: "我的项目",
     tabs: {
-      series: "系列",
-      videos: "视频",
-      images: "图片",
+      manju: "漫剧",
+      manhua: "漫画",
+      novel: "小说",
     },
     status: {
       unpublished: "未发布",
@@ -997,6 +1068,20 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       projectCover: "项目封面",
       play: "播放",
     },
+    menu: {
+      rename: "重命名",
+      delete: "删除"
+    },
+    renameModal: {
+      title: "重命名",
+      workTitle: "作品标题",
+      enterNewTitle: "输入新标题",
+      cancel: "取消",
+      confirm: "确认"
+    },
+    confirm: {
+      delete: "确定要删除这个项目吗？"
+    }
   },
   characterLibrary: {
     title: "角色库",
@@ -1027,6 +1112,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
         unlimited: "已切换到无限模式"
       }
     },
+    novel: {
+      placeholder: "请输入小说大纲..."
+    },
+    totalWords: "总字数",
     unlimitedMode: {
       title: "启用无限模式？",
       description: "仅18岁以上用户可启用无限模式。启用后，创作主题范围将不受限制。",
@@ -1041,7 +1130,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       subscriptions: "我的订阅"
     },
     input: {
-      placeholder: "请输入你的剧情来生成短视频。例如：一个转学生来到异世界的高中，发现所有同学都有各种超能力。"
+      placeholder: "请输入你的剧情来生成短视频。例如：一个转学生来到异世界的高中，发现所有同学都有各种超能力。",
+      placeholderComic: "请输入创意描述来生成漫画。"
     },
     img: '图片',
     option: {
@@ -1121,7 +1211,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     loadMore: "加载更多",
     contentType: {
       all: "全部",
-      video: "视频",
+      video: "漫剧",
+      comic: "漫画",
+      novel: "小说",
       image: "图片",
       article: "文章"
     },
@@ -1140,7 +1232,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   aiCreations: {
-    title: "从未发布的AI视频中选择",
+    title: "从未发布的AI作品中选择",
     filter: {
       all: "全部",
       video: "视频",
@@ -1154,7 +1246,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     clearAll: "清空全部",
     cancel: "取消",
     confirm: "确认",
-    selectTip: "只能选择同一类型的项目，请先清空当前选择。"
+    selectTip: "只能选择同一类型的项目，请先清空当前选择。",
+    selectVideoTip: "只能选择视频类型的项目",
+    selectVideoFirst: "请先选择一个视频"
   },
   submit: {
     tabs: {
@@ -1238,7 +1332,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       select: "选择封面",
       upload: "上传封面",
       loadingFrames: "加载封面中...",
-      dragOrClick: "拖拽文件到此处或点击选择",
+      dragOrClick: `拖拽文件到此处或<span>点击选择</span>`,
       uploadTip: "图片格式(PNG/JPG/Webp)、图片大小(≤ 10MB)",
       reupload: "上传新封面",
       confirm: "确认",
@@ -1308,7 +1402,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     first: "第一页",
     last: "最后一页",
     follow: "关注",
+    following: "已关注",
     followed: "已关注",
+    unfollow: "取消关注",
     report: "举报",
     expand: "展开",
     collapse: "收起",
@@ -1368,6 +1464,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     agree: "同意",
     paymentTerms: "支付条款",
     pay: "支付",
+    autoRenewalNote: "注：此套餐为自动续费服务。续费时将按照最新的当前价格收费。您可以随时在支付记录中手动关闭自动续费。",
     success: {
       title: "支付成功！",
       message: "您的订阅将在几分钟内生效。请刷新后稍后查看。如果1小时后仍然未激活，请联系客服。",
@@ -1390,7 +1487,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     showLess: "显示更少",
     subscribe: "订阅",
     subscribed: '已订阅',
-    subscribePrice: "订阅 ${price}/月",
+    subscribePrice: "订阅 {price} 日元/月",
     editProfile: "编辑社区",
     share: "分享",
     shareSuccess: "已复制社区地址",
@@ -1523,6 +1620,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
 <p>・如因用户操作导致问题（例如收款地址/链选择错误等），本公司可能无法处理。</p>
 
 <h2>13. 平台使用手续费（面向创作者）</h2>
+<p>作为创作者的服务费，本公司将按规定方式，计算并收取每笔交易金额的 5%（含相当于消费税的金额）。</p>
   `
   },
   aiRecharge: {
@@ -1548,7 +1646,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     periodMonth: "/月",
     period3Month: "/3月",
     period6Month: "/6月",
-    periodYear: "/年"
+    periodYear: "/年",
+    unit: '日元'
   },
   aiRechargeDetails: {
     title: "充值明细",
@@ -1604,5 +1703,18 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   common: {
     noData: "暂无可用数据",
   },
-  fail: "失败"
+  fail: "失败",
+  process: {
+    taskProgress: "任务进度",
+    novel: "小说",
+    comic: "漫画",
+    manju: "漫剧",
+    outline: "大纲",
+    chapter: "章节",
+    script: "剧本",
+    clearCompleted: "清除已完成",
+    generateFailed: "生成失败",
+    clearTask: "清除任务",
+    inQueue: "队列中"
+  }
 };

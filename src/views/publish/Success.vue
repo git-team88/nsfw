@@ -53,7 +53,7 @@ function postAnother() {
   width: 100%;
   min-height: 100vh;
   padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #FFFFFF;
+  background: #FFFFFF;
 }
 .container{
   position: relative;

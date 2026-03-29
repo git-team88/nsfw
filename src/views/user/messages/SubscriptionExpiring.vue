@@ -45,20 +45,19 @@ function goUserHome(userId: string) {
 .list-wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 0.8rem;
 }
 .msg-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.1);
   border-radius: 1.2rem;
   transition: all 0.2s;
   cursor: pointer;
 }
 .msg-item:hover {
-  box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+  box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
 }
 .left-info {
   display: flex;
@@ -77,17 +76,16 @@ function goUserHome(userId: string) {
   gap: 0.6rem;
 }
 .username {
-  font-weight: 500;
   font-size: 1.4rem;
-  color: #101828;
+  color: #6A7282;
 }
 .desc {
   font-size: 1.4rem;
-  color: #4a5565;
+ color: #364153;
 }
 .time {
   font-size: 1.2rem;
-  color: #99a1af;
+  color: #99A1AF;
   font-weight: 300;
 }
 .action-btn {
@@ -107,6 +105,20 @@ function goUserHome(userId: string) {
   align-items: center;
   gap: 0.6rem;
   box-shadow: 0px 2px 15px -3px rgba(251, 100, 182, 0.16);
+
+  &:hover{
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 .btn-icon {
   width: 1.6rem;

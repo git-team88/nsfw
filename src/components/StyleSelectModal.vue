@@ -30,7 +30,9 @@
             @click="selectStyle(style.name)"
           >
             <img :src="style.image" :alt="locale == 'jp' ? style.name_ja : locale == 'zh' ? style.name_cn : style.name" />
-            <div class="style-name">{{ locale == 'jp' ? style.name_ja : locale == 'zh' ? style.name_cn : style.name }}</div>
+            <div class="style-name">
+              {{ locale == 'jp' ? style.name_ja : locale == 'zh' ? style.name_cn : style.name }}
+            </div>
           </div>
         </div>
 
@@ -226,7 +228,7 @@ onMounted(() => {
     color: #364153;
     margin: 0;
     padding: 1.8rem 2rem;
-    border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+    border-bottom: 1px solid #F5F5F5;
   }
 
   .modal-body {
@@ -267,14 +269,17 @@ onMounted(() => {
         .style-name {
           position: absolute;
           left: 0;
-          bottom: 1rem;
+          bottom: 0;
           font-size: 1.4rem;
-          color: #101828;
+          color: #364153;
           text-align: center;
           width: 100%;
+          padding: 0.6rem 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          border-radius: 0 0 0.8rem 0.8rem;
+          background: linear-gradient( 180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 100%);
           z-index: 1;
         }
       }
@@ -365,7 +370,7 @@ onMounted(() => {
     justify-content: flex-end;
     gap: 2.4rem;
     padding: 1.8rem 2.4rem ;
-    border-top: 1px solid rgba(251, 100, 182, 0.2);
+    border-top: 1px solid #F5F5F5;
 
     .modal-btn {
       display: flex;
@@ -379,17 +384,16 @@ onMounted(() => {
       cursor: pointer;
 
       &.cancel {
-        border: 1px solid #fb64b6;
-        background: none;
-        color: #fb64b6;
+        background: #F5F5F5;
+        color: #6A7282;
 
         &:hover {
-          background: rgba(251, 100, 182, 0.06);
+          color: #FB64B6;
         }
       }
 
       &.confirm {
-        background: #fb64b6;
+        background: #FB64B6;
         color: #ffffff;
 
         &:hover:not(:disabled) {
@@ -401,7 +405,7 @@ onMounted(() => {
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
         }

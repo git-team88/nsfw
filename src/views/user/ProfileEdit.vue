@@ -23,7 +23,7 @@
             <div class="section">
               <div class="label-row">
                 <div class="label">{{ t("user.profile.headerImage") }}</div>
-                <button class="reupload" @click="pickHeader">{{ t("submit.reupload") }}</button>
+                <button class="reupload" @click="pickHeader">{{ t("submit.video.reupload") }}</button>
               </div>
               <div class="header-wrap">
                 <img class="header-img" :src="headerUrl || headerImgDefault" alt="" />
@@ -164,48 +164,43 @@ function onSave() {
 .user-profile-edit {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 4.8rem;
+  padding-right: 4.8rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 14rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem;
-}
+
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 1.2rem 1.2rem;
+  margin: 0 0 2.4rem 1.2rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
 .content {
   padding: 1.2rem;
   border-radius: 1.2rem;
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;
 }
 .section {
   margin-bottom: 2.4rem;
 }
 .label {
   font-size: 1.4rem;
-  color: #364153;
+  color: #6A7282;
 }
 .label-row {
   display: flex;
@@ -216,11 +211,11 @@ function onSave() {
   width: 100%;
   height: 12rem;
   margin-top: 1.6rem;
-  padding: 1.8rem 1.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  padding: 1.6rem;
+  border: 1px solid #FFFFFF;
   border-radius: 0.8rem;
   font-family: inherit;
-  background: #ffffff;
+  background: #FFFFFF;
   outline: none;
   color: #364153;
 }
@@ -228,12 +223,12 @@ function onSave() {
   border: 1px solid #fb64b6;
 }
 .textarea::placeholder {
-  color: #99a1af;
+  color: #99A1AF;
 }
 .reupload {
   background: none;
   border: none;
-  color: #00d3f2;
+  color: #FB64B6;
   cursor: pointer;
   font-size: 1.2rem;
 }
@@ -295,7 +290,7 @@ function onSave() {
   position: absolute;
   inset: 0;
   border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 .btn:disabled {
   opacity: 0.6;

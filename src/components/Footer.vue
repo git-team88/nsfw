@@ -61,7 +61,7 @@ const navigateTo = (path: string) => {
   align-items: center;
   padding: 0 2.4rem 2.4rem;
   margin-top: 3rem;
-  border-top: 1px solid rgba(251,100,182,0.1);
+  border-top: 1px solid #F5F5F5;
   background: rgba(255,255,255,0.8);
 }
 
@@ -73,7 +73,7 @@ const navigateTo = (path: string) => {
   width: 100%;
   height: 7rem;
   margin-bottom: 2.4rem;
-  border-bottom: 1px solid rgba(251,100,182,0.1);
+  border-bottom: 1px solid #F5F5F5;
 }
 
 .nav-item {

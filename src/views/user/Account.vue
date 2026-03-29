@@ -15,7 +15,6 @@
                 <div class="action-group" v-if="!loading">
                   <span
                     class="action-btn"
-                    :class="emailBind ? 'on' : ''"
                     @click="handleEmailAction"
                     >{{ emailBind ? t("user.account.change") : t("user.account.link") }}</span
                   >
@@ -38,7 +37,7 @@
               <div class="item-header">
                 <div class="label">{{ t("user.account.google") }}</div>
                 <div class="action-group" v-if="!loading">
-                  <span class="action-btn" :class="googleBind ? 'on' : ''" @click="changeGoogle">{{
+                  <span class="action-btn" @click="changeGoogle">{{
                     googleBind ? t("user.account.change") : t("user.account.link")
                   }}</span>
                   <span
@@ -69,7 +68,7 @@
 
         <form class="email-form" id="emailForm" @submit.prevent="handleSubmit">
           <div class="email-item-box">
-            <div class="email-item-title"><span>*</span>{{ t("register.emailLabel") }}</div>
+            <div class="email-item-title">{{ t("register.emailLabel") }}</div>
             <div class="email-item">
               <input
                 id="email"
@@ -86,7 +85,7 @@
           </div>
 
           <div class="email-item-box">
-            <div class="email-item-title"><span>*</span>{{ t("register.passwordLabel") }}</div>
+            <div class="email-item-title">{{ t("register.passwordLabel") }}</div>
             <div class="email-item">
               <input
                 id="password"
@@ -114,7 +113,7 @@
 
           <div class="email-item-box">
             <div class="email-item-title-box">
-              <div class="email-item-title"><span>*</span>{{ t("register.codeLabel") }}</div>
+              <div class="email-item-title">{{ t("register.codeLabel") }}</div>
 
               <div class="email-code-intro" v-if="isHoverCode">{{ t("register.sendIntro") }}</div>
             </div>
@@ -513,24 +512,18 @@ function confirmUnbind() {
 .user-account {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
-}
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem 3.6rem;
+  padding-top: 14rem;
 }
 .panel-top {
   display: flex;
@@ -541,11 +534,11 @@ function confirmUnbind() {
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
 .item {
-  margin-bottom: 3.2rem;
+  margin-bottom: 2.4rem;
 }
 .item:last-child {
   margin-bottom: 0;
@@ -558,7 +551,7 @@ function confirmUnbind() {
 }
 .label {
   font-size: 1.4rem;
-  color: #364153;
+  color: #99A1AF;
 }
 .action-group {
   display: flex;
@@ -581,26 +574,19 @@ function confirmUnbind() {
 }
 .unbind-btn {
   font-size: 1.4rem;
-  color: #fa2d47;
-  background: none;
-  border: none;
+  color: #99A1AF;
   cursor: pointer;
-  padding: 0;
 }
 .unbind-btn:hover {
   text-decoration: underline;
 }
 .value-box {
   width: 100%;
-  height: 4.8rem;
   display: flex;
   align-items: center;
-  padding: 0 1.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
   color: #364153;
+  font-weight: 500;
   font-size: 1.4rem;
-  background: #fff;
 }
 
 .modal-mask {
@@ -624,7 +610,7 @@ function confirmUnbind() {
   align-items: center;
   justify-content: space-between;
   padding: 0 1.8rem 1.8rem 2.4rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 }
 .modal-title {
   font-weight: 500;
@@ -638,7 +624,7 @@ function confirmUnbind() {
 }
 .email-form {
   padding: 1.8rem 3.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 }
 .email-item-box {
   margin-bottom: 2rem;
@@ -700,7 +686,7 @@ function confirmUnbind() {
   }
   .email-item-title {
     font-size: 1.4rem;
-    color: #4a5565;
+    color: #6A7282;
     span {
       color: #fa2d47;
     }
@@ -723,18 +709,14 @@ function confirmUnbind() {
         weight: normal;
         size: 1.4rem;
       }
-      border: 1px solid #fccee8;
+      border: 1px solid #F5F5F5;
       -webkit-border-radius: 0.8rem;
       border-radius: 0.8rem;
-      background: rgba(255, 255, 255, 0.9);
+      background: #F5F5F5;
       color: #101828;
 
       &::placeholder {
-        font: {
-          weight: 300;
-          size: 1.2rem;
-        }
-        color: #6a7282;
+        color: #99A1AF;
       }
 
       &:hover,
@@ -764,18 +746,14 @@ function confirmUnbind() {
       font: {
         size: 1.4rem;
       }
-      border: 1px solid #fccee8;
+      border: 1px solid #F5F5F5;
       -webkit-border-radius: 0.8rem;
       border-radius: 0.8rem;
-      background: rgba(255, 255, 255, 0.9);
+      background: #F5F5F5;
       color: #101828;
 
       &::placeholder {
-        font: {
-          weight: 300;
-          size: 1.2rem;
-        }
-        color: #6a7282;
+        color: #99A1AF;
       }
 
       &:hover,
@@ -874,13 +852,28 @@ function confirmUnbind() {
   justify-content: center;
   width: 24rem;
   height: 4.8rem;
-  background: linear-gradient(135deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), #fb64b6;
+  background: #FB64B6;
   border-radius: 0.8rem;
   color: #ffffff;
   font-size: 1.4rem;
   border: none;
   cursor: pointer;
   margin: 1.8rem auto 0;
+  transition: all 0.3s;
+
+  &:hover:not(:disabled) {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 .confirm-btn:disabled {
   opacity: 0.6;
@@ -889,7 +882,7 @@ function confirmUnbind() {
 .tip {
   text-align: center;
   font-size: 1.2rem;
-  color: #6a7282;
+  color: #99A1AF;
   margin: 1.2rem 2.4rem 0;
 }
 .tip a {
@@ -936,16 +929,15 @@ function confirmUnbind() {
 .cancel-btn {
   min-width: 13.6rem;
   height: 4.8rem;
-  background: none;
-  border: 1px solid #fb64b6;
+  background: #F5F5F5;
   border-radius: 0.8rem;
-  color: #fb64b6;
+  color: #6A7282;
   font-size: 1.4rem;
   cursor: pointer;
   transition: all 0.3s;
 }
 .cancel-btn:hover {
-  background: rgba(251, 100, 182, 0.06);
+  color: #FB64B6;
 }
 .confirm-unbind-btn {
   min-width: 13.6rem;
@@ -967,7 +959,7 @@ function confirmUnbind() {
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 0.8rem;
     z-index: 5;
   }

@@ -6,7 +6,8 @@
       <div class="projects-header">
         <h2>{{ t('myProjects.title') }}</h2>
 
-        <!-- <div class="main-tabs">
+        <!-- Main Tabs: 漫剧, 漫画, 小说 -->
+        <div class="main-tabs">
           <div
             v-for="tab in mainTabs"
             :key="tab.value"
@@ -16,10 +17,10 @@
           >
             {{ t(`myProjects.tabs.${tab.value}`) }}
           </div>
-        </div> -->
+        </div>
 
-        <!-- Status Tabs: Unpublished / Released -->
-        <div class="status-tabs">
+        <!-- Status Tabs: Unpublished / Released (only for 漫剧) -->
+        <!-- <div v-if="activeMainTab == 'manju'" class="status-tabs">
           <div
             v-for="tab in statusTabs"
             :key="tab.value"
@@ -29,7 +30,12 @@
           >
             {{ t(`myProjects.status.${tab.value}`) }}
           </div>
-        </div>
+        </div> -->
+      </div>
+
+      <!-- Process List -->
+      <div class="process-section">
+        <ProcessList />
       </div>
 
       <!-- Projects List -->
@@ -58,11 +64,11 @@
               :key="project.id"
               ref="projectCardRefs"
             >
-              <!-- Publish Button -->
-              <div class="publish-btn" v-if="activeMainTab == 'unpublished'">{{ t('myProjects.buttons.publish') }}</div>
 
               <!-- Project Cover -->
-              <div class="card-cover">
+              <div class="card-cover" v-if="activeMainTab == 'manju'">
+                <div class="publish-btn" @click="toPublish(project)" v-if="activeStatusTab == 'unpublished' && project.is_final == 1"> {{ t('myProjects.buttons.publish') }}</div>
+
                 <!-- Use video cover from result_async.final_video_output if available -->
                 <div v-if="project.result_async?.final_video_output?.video_cover_url" class="character-images">
                   <div
@@ -82,19 +88,60 @@
                 <!-- Fallback to original cover if no character images -->
                 <img v-else :src="project.cover || pic" alt="" class="cover-img" />
                 <!-- Video Play Overlay -->
-                <div class="video-overlay" v-if="project.type === 'video' && (project.videoUrl || project.video_url || project.result_async?.final_video_output?.video_url)" @click="playVideo(project.videoUrl || project.video_url || project.result_async?.final_video_output?.video_url)">
-                  <img src="@/assets/images/detail/play.png" :alt="t('myProjects.labels.play')" />
+                <div class="video-overlay" v-if="project.result_async?.final_video_output?.video_url" @click="playVideo(project.result_async?.final_video_output?.video_url)">
+                  <img src="@/assets/images/detail/play.png" alt="" />
+                </div>
+                <!-- Edit Button -->
+                <div class="edit-btn" @click="openEditPage(project.session_id, 1)">{{ t('myProjects.buttons.edit') }}</div>
+              </div>
+
+              <div class="card-cover" v-if="activeMainTab == 'manhua'">
+                <div v-if="project.result_async?.generate_character_images && project.result_async.generate_character_images.length > 0" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_character_images[0].main_image_url" alt="" />
+                  </div>
+                </div>
+
+                <img v-else :src="project.cover || pic" alt="" class="cover-img" />
+
+                <div class="edit-btn" @click="openEditPage(project.session_id, 2)">{{ t('myProjects.buttons.edit') }}</div>
+              </div>
+
+              <div v-else-if="activeMainTab == 'novel'">
+                <div v-if="project.name" class="novel-cover">
+                  <b>“</b>
+                  <span>{{ project.name }}</span>
+                  <div class="edit-btn" @click="openEditPage(project.session_id, 3)">{{ t('myProjects.buttons.edit') }}</div>
+                </div>
+                <div v-else class="card-cover">
+                  <img :src="pic" alt="" class="cover-img" />
+                  <div class="edit-btn" @click="openEditPage(project.session_id, 3)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
               </div>
 
-              <!-- Edit Button -->
-              <div class="edit-btn" @click="openEditPage(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
-
               <!-- Project Info -->
               <div class="card-info">
-                <div class="card-desc">{{ project.name || '' }}</div>
+                <div class="card-desc" v-if="project.name">{{ project.name }}</div>
                 <div class="card-footer">
                   <span class="time">{{ project.created_at || project.updated_at || '' }}</span>
+                  <!-- Three-dot Menu -->
+                  <div class="more-btn-wrap" :ref="(el) => setMenuRef(el, project.id)">
+                    <img
+                      src="@/assets/images/detail/menu.png"
+                      @click.stop="toggleMenu(project.id, $event)"
+                    />
+                    <!-- Dropdown Menu -->
+                    <div
+                      class="dropdown-menu"
+                      v-if="activeMenuProjectId === project.id"
+                      :class="dropdownPos"
+                    >
+                      <div class="menu-item" @click="openRenameModal(project.session_id, project.name)">{{ t('myProjects.menu.rename') }}</div>
+                      <div class="menu-item delete" @click="deleteProject(project.session_id)">{{ t('myProjects.menu.delete') }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -112,23 +159,37 @@
         :videoUrl="currentVideoUrl"
         @close="closeVideoModal"
       />
+
+      <!-- Rename Modal -->
+      <RenameModal
+        :visible="showRenameModal"
+        :projectId="selectedProjectId"
+        :currentName="selectedProjectName"
+        @close="closeRenameModal"
+        @confirm="handleRenameConfirm"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts" name="MyProjects">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, type CSSProperties } from 'vue';
+import { ref, onMounted, onBeforeUnmount, nextTick, type CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PreviewModal from '@/components/PreviewModal.vue';
+import RenameModal from '@/components/RenameModal.vue';
+import ProcessList from '@/components/ProcessList.vue';
 import { aiUrl } from '@/util/config';
 import pic from '@/assets/images/base/cover.png'
+import api from '@/api/index';
+import { toast } from '@/util/toast';
+import router from '@/router';
 
 const { t, locale } = useI18n();
 
 // State
-const activeMainTab = ref('series');
+const activeMainTab = ref('manju');
 const activeStatusTab = ref('unpublished');
 const projects = ref<any[]>([]);
 const loading = ref(false);
@@ -137,8 +198,16 @@ const hasMore = ref(true);
 const showVideoModal = ref(false);
 const currentVideoUrl = ref('');
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(20);
 const myProjectsRef = ref<HTMLElement | null>(null);
+
+// Menu and Rename State
+const activeMenuProjectId = ref<number | null>(null);
+const showRenameModal = ref(false);
+const selectedProjectId = ref<string | number>('');
+const selectedProjectName = ref('');
+const menuRefs = new Map<string | number, HTMLElement>();
+const dropdownPos = ref("bottom");
 
 // Layout state
 const projectCardRefs = ref<HTMLElement[]>([]);
@@ -146,9 +215,9 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
 const mainTabs = ref([
-  { value: 'series' },
-  { value: 'videos' },
-  { value: 'images' }
+  { value: 'manju' },
+  { value: 'manhua' },
+  { value: 'novel' }
 ]);
 
 const statusTabs = ref([
@@ -173,8 +242,29 @@ function switchStatusTab(tab: string) {
   loadProjects(true);
 }
 
-function openEditPage(projectId: number) {
-  window.open(`/tools/space/${projectId}`, '_blank');
+function toPublish(project: any) {
+  const videoUrl = project.result_async.final_video_output.video_url;
+  const coverUrl = project.result_async.final_video_output.video_cover_url;
+  const sessionId = project.session_id;
+
+  router.push({
+    path: '/publish/video',
+    query: {
+      session_id: sessionId,
+      url: videoUrl,
+      cover: coverUrl,
+    }
+  });
+}
+
+function openEditPage(sessionId: string, type: number) {
+  if (type == 3) {
+    router.push(`/novel/${sessionId}`);
+  } else if (type == 2) {
+    window.open(`/tools/comic/${sessionId}`, '_blank');
+  } else {
+    window.open(`/tools/space/${sessionId}`, '_blank');
+  }
 }
 
 function playVideo(videoUrl: string) {
@@ -185,6 +275,119 @@ function playVideo(videoUrl: string) {
 function closeVideoModal() {
   showVideoModal.value = false;
   currentVideoUrl.value = '';
+}
+
+function setMenuRef(el: object | null, id: number) {
+  if (el) menuRefs.set(id, el as HTMLElement);
+}
+
+function toggleMenu(projectId: number, event?: MouseEvent) {
+  if (activeMenuProjectId.value === projectId) {
+    activeMenuProjectId.value = null;
+  } else {
+    activeMenuProjectId.value = projectId;
+    if (event) {
+      const clickY = event.clientY;
+      const screenHeight = window.innerHeight;
+      // If click is in the bottom 30% of the screen, show menu on top
+      if (clickY > screenHeight * 0.7) {
+        dropdownPos.value = "top";
+      } else {
+        dropdownPos.value = "bottom";
+      }
+    }
+  }
+}
+
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as Node;
+
+  // Close menu if clicked outside
+  if (activeMenuProjectId.value !== null) {
+    const el = menuRefs.get(activeMenuProjectId.value);
+    if (el && !el.contains(target)) {
+      activeMenuProjectId.value = null;
+    }
+  }
+}
+
+function openRenameModal(projectId: string | number, projectName: string) {
+  selectedProjectId.value = projectId;
+  selectedProjectName.value = projectName;
+  showRenameModal.value = true;
+  activeMenuProjectId.value = null;
+}
+
+function closeRenameModal() {
+  showRenameModal.value = false;
+  selectedProjectId.value = '';
+  selectedProjectName.value = '';
+}
+
+async function handleRenameConfirm(newName: string) {
+  try {
+    const response = await api.modifyProject({
+      session_id: selectedProjectId.value,
+      name: newName
+    });
+
+    const data = response as unknown as { code: number; message: string; data?: any };
+    if (data.code == 200) {
+      // Temporarily remove scroll event listener to prevent duplicate requests
+      if (myProjectsRef.value) {
+        myProjectsRef.value.removeEventListener('scroll', handleScroll);
+      }
+
+      await loadProjects(true);
+
+      if (myProjectsRef.value) {
+        myProjectsRef.value.scrollTop = 0;
+        // Re-add scroll event listener after a short delay
+        setTimeout(() => {
+          myProjectsRef.value?.addEventListener('scroll', handleScroll);
+        }, 500);
+      }
+
+      closeRenameModal();
+    } else {
+      toast(data.message);
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
+}
+
+async function deleteProject(projectId: string) {
+  try {
+    const response = await api.deleteProject({
+      session_id: projectId
+    });
+
+    const data = response as unknown as { code: number; message: string; data?: any };
+    if (data.code === 200) {
+      // Temporarily remove scroll event listener to prevent duplicate requests
+      if (myProjectsRef.value) {
+        myProjectsRef.value.removeEventListener('scroll', handleScroll);
+      }
+
+      await loadProjects(true);
+
+      // Scroll to top
+      if (myProjectsRef.value) {
+        myProjectsRef.value.scrollTop = 0;
+        // Re-add scroll event listener after a short delay
+        setTimeout(() => {
+          myProjectsRef.value?.addEventListener('scroll', handleScroll);
+        }, 500);
+      }
+
+      activeMenuProjectId.value = null;
+    } else {
+      toast(data.message);
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
 }
 
 async function loadProjects(reset = false) {
@@ -200,19 +403,13 @@ async function loadProjects(reset = false) {
   try {
     // Map tab values to API parameters
     const statusMap: Record<string, number> = {
-      'unpublished': 1,
-      'released': 2
-    };
-
-    const typeMap: Record<string, string> = {
-      'series': 'story',
-      'videos': 'normal_video',
-      'images': 'normal_image'
+      'unpublished': 0,
+      'released': 1
     };
 
     const params = new URLSearchParams({
-      is_publish: activeStatusTab.value == 'unpublished' ? '2' : '1',
-      project_type: typeMap[activeMainTab.value]?.toString() || 'story',
+      is_publish: '0',
+      story_type: activeMainTab.value,
       page: currentPage.value.toString(),
       limit: itemsPerPage.value.toString()
     });
@@ -233,8 +430,6 @@ async function loadProjects(reset = false) {
 
       if (data.code === 200 || data.code === 0) {
         const newProjects = data.data?.data_list || data.data_list || [];
-
-
 
         if (currentPage.value === 1) {
           projects.value = newProjects;
@@ -328,6 +523,9 @@ onMounted(async () => {
   if (myProjectsRef.value) {
     myProjectsRef.value.addEventListener('scroll', handleScroll);
   }
+
+  // Add click outside event listener
+  document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
@@ -335,6 +533,9 @@ onBeforeUnmount(() => {
   if (myProjectsRef.value) {
     myProjectsRef.value.removeEventListener('scroll', handleScroll);
   }
+
+  // Remove click outside event listener
+  document.removeEventListener('click', handleClickOutside);
 });
 
 // Handle scroll event for auto loading
@@ -355,21 +556,14 @@ function handleScroll() {
 <style lang="scss" scoped>
 .my-projects {
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  padding: 14rem 0 0;
+  background: #FFFFFF;
   scroll-behavior: smooth;
 }
 
 .container {
-  max-width: 112.8rem;
-  min-height: calc(100vh - 14rem);
+  max-width: 108rem;
   margin: 0 auto 2rem;
-  padding: 2.4rem 0 2.4rem 2.4rem;
-  border: 1px solid rgba(251,100,182,0.2);
-  border-radius: 1.2rem;
-  background: rgba(255,255,255,0.8);
 }
 
 .projects-header {
@@ -378,15 +572,15 @@ function handleScroll() {
   h2 {
     font-weight: 500;
     font-size: 2rem;
-    color: #101828;
+    color: #99A1AF;
     margin-bottom: 2.4rem;
   }
 
   .main-tabs {
     display: flex;
     gap: 3rem;
-    border-bottom: 1px solid rgba(251,100,182,0.2);
-    margin-bottom: 1.6rem;
+    border-bottom: 1px solid #F5F5F5;
+    margin-bottom: 2rem;
 
     .tab-item {
       padding: 0 0 2rem;
@@ -406,6 +600,7 @@ function handleScroll() {
   .status-tabs {
     display: flex;
     gap: 1.2rem;
+    margin-bottom: 1.6rem;
 
     .tab-item {
       display: flex;
@@ -414,22 +609,53 @@ function handleScroll() {
       padding: 0 1.6rem;
       border-radius: 0.6rem;
       font-size: 1.4rem;
-      border: 1px solid transparent;
-      color: #6a7282;
+      color: #99A1AF;
       cursor: pointer;
+      position: relative;
 
       &:hover{
-        border-color: rgba(251,100,182,0.2);
+        color: #6A7282;
       }
 
       &.active {
-        border-color: #FB64B6;
-        background: rgba(251, 100, 182, 0.12);
-        color: #fb64b6;
+        background: #F5F5F5;
+        color: #6A7282;
       }
     }
   }
 }
+
+/* Process Section */
+.process-section {
+  margin-bottom: 3.2rem;
+}
+
+  // .status-tabs {
+  //   display: flex;
+  //   gap: 1.2rem;
+
+  //   .tab-item {
+  //     display: flex;
+  //     align-items: center;
+  //     height: 3.2rem;
+  //     padding: 0 1.6rem;
+  //     border-radius: 0.6rem;
+  //     font-size: 1.4rem;
+  //     border: 1px solid transparent;
+  //     color: #6a7282;
+  //     cursor: pointer;
+
+  //     &:hover{
+  //       border-color: rgba(251,100,182,0.2);
+  //     }
+
+  //     &.active {
+  //       border-color: #FB64B6;
+  //       background: rgba(251, 100, 182, 0.12);
+  //       color: #fb64b6;
+  //     }
+  //   }
+  // }
 
 .projects-box {
   min-height: 40rem;
@@ -449,7 +675,6 @@ function handleScroll() {
   .project-card {
     width: 25.8rem;
     position: relative;
-    overflow: hidden;
     break-inside: avoid;
 
     .publish-btn {
@@ -459,8 +684,8 @@ function handleScroll() {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #fb64b6;
-      color: #ffffff;
+      background: #FFFFFF;
+      color: #364153;
       min-width: 6rem;
       height: 2.8rem;
       padding: 0 1rem;
@@ -477,6 +702,8 @@ function handleScroll() {
       width: 100%;
       height: 33.4rem;
       overflow: hidden;
+      border-radius: 1.2rem;
+      background: #F5F5F5;
 
       .cover-img {
         width: 100%;
@@ -522,27 +749,70 @@ function handleScroll() {
       }
     }
 
+    .novel-cover{
+      display: flex;
+      justify-content: center;
+      position: relative;
+      width: 25.8rem;
+      height: 34.4rem;
+      padding: 7rem 3.6rem 0;
+      border-radius: 1.2rem;
+      font-size: 2.4rem;
+      line-height: 3.6rem;
+      background: rgba(251, 100, 182, 0.5);
+      color: #364153;
+
+      &:hover {
+        .edit-btn {
+          opacity: 1;
+        }
+      }
+
+      b{
+        position: absolute;
+        left: 3rem;
+        top: 4rem;
+        font-weight: normal;
+        font-size: 4.8rem;
+        color: #364153;
+      }
+
+      span{
+        height: 22rem;
+        overflow-y: hidden;
+        word-break: break-all;
+      }
+    }
+
     .edit-btn {
       position: absolute;
-      bottom: 10rem;
+      bottom: 2.4rem;
       left: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transform: translateX(-50%);
-      background: linear-gradient( 155deg, #FB64B6 0%, #FF94CE 50%, #FB64B6 100%);
+      background: #FB64B6;
       color: #ffffff;
-      padding: 1.2rem 2rem;
+      padding: 0 2rem;
       min-width: 9.8rem;
+      height: 4rem;
       border-radius: 0.8rem;
       font-size: 1.4rem;
-      text-align: center;
       cursor: pointer;
       z-index: 10;
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
-    &:hover {
-      .publish-btn,
+    .card-cover:hover {
       .edit-btn {
+        opacity: 1;
+      }
+    }
+
+    &:hover {
+      .publish-btn {
         opacity: 1;
       }
     }
@@ -569,7 +839,48 @@ function handleScroll() {
 
         .time {
           font-size: 1.2rem;
-          color: #99a1af;
+          color: #99A1AF;
+        }
+
+        .more-btn-wrap {
+          position: relative;
+          img {
+            width: 1.8rem;
+            height: 1.8rem;
+            cursor: pointer;
+          }
+
+          .dropdown-menu {
+            position: absolute;
+            right: 0;
+            border-radius: 0.8rem;
+            padding: 0.6rem 0;
+            z-index: 10;
+            min-width: 10rem;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+
+            &.bottom {
+              top: 100%;
+              margin-top: 0.4rem;
+            }
+            &.top {
+              bottom: 100%;
+              margin-bottom: 0.4rem;
+            }
+
+            .menu-item {
+              padding: 0.6rem 0;
+              font-size: 1.4rem;
+              color: #6a7282;
+              cursor: pointer;
+              text-align: center;
+              &:hover {
+                font-weight: bold;
+                color: #101828;
+              }
+            }
+          }
         }
       }
     }
@@ -590,21 +901,21 @@ function handleScroll() {
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 5rem 0 0;
+  min-height: 40rem;
 
   .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(251, 100, 182, 0.1);
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
-    border-top-color: #fb64b6;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 2rem;
   }
 
   p {
     font-size: 1.6rem;
-    color: #6a7282;
+    color: #6A7282;
   }
 }
 

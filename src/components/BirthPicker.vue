@@ -2,7 +2,7 @@
   <div class="date-row">
     <!-- Month -->
     <div class="select-container">
-      <div class="select-box" :class="{ active: showMonth }" @click.stop="toggleMonth">
+      <div class="select-box" :class="{ active: showMonth, 'edit': isEdit }" @click.stop="toggleMonth">
         <span class="selected" :class="month ? 'on' : ''">{{ month || "MM" }}</span>
         <img src="@/assets/images/user/down.png" class="arrow" />
         <div class="options" v-if="showMonth">
@@ -22,7 +22,7 @@
 
     <!-- Day -->
     <div class="select-container">
-      <div class="select-box" :class="{ active: showDay }" @click.stop="toggleDay">
+      <div class="select-box" :class="{ active: showDay, 'edit': isEdit }" @click.stop="toggleDay">
         <div class="selected" :class="day ? 'on' : ''">{{ day || "DD" }}</div>
         <img src="@/assets/images/user/down.png" class="arrow" />
         <div class="options" v-if="showDay">
@@ -43,7 +43,7 @@
 
     <!-- Year -->
     <div class="select-container">
-      <div class="select-box" :class="{ active: showYear }" @click.stop="toggleYear">
+      <div class="select-box" :class="{ active: showYear, 'edit': isEdit }" @click.stop="toggleYear">
         <div class="selected" :class="year ? 'on' : ''">{{ year || "YYYY" }}</div>
         <img src="@/assets/images/user/down.png" class="arrow" />
         <div class="options" v-if="showYear">
@@ -71,6 +71,7 @@ import { useI18n } from "vue-i18n";
 const props = withDefaults(
   defineProps<{
     modelValue?: { year: number | ""; month: number | ""; day: number | "" };
+    isEdit?: boolean;
   }>(),
   {},
 );
@@ -241,7 +242,7 @@ onUnmounted(() => {
   flex: 1;
   width: 10rem;
   height: 4.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
   display: flex;
   align-items: center;
@@ -249,7 +250,11 @@ onUnmounted(() => {
   padding: 0 1.2rem;
   position: relative;
   cursor: pointer;
-  background: #fff;
+  background: #F5F5F5;
+
+  &.edit{
+    background: #FFFFFF;
+  }
 }
 
 .select-box.active {
@@ -288,8 +293,8 @@ onUnmounted(() => {
   max-height: 20.4rem;
   padding: 0.6rem 0;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  background: #FFFFFF;
+  box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
   border-radius: 0.8rem;
   margin-top: 0.8rem;
   z-index: 10;

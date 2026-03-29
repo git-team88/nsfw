@@ -20,7 +20,7 @@
               <div class="name-row">
                 <span class="nickname">{{ userInfo.nickname }}</span>
               </div>
-              <div class="id-row">{{ t("userHome.info.id") }}: {{ userInfo.id }}</div>
+              <!-- <div class="id-row">{{ t("userHome.info.id") }}: {{ userInfo.id }}</div> -->
             </div>
 
             <div class="actions">
@@ -35,7 +35,8 @@
                   :class="{ followed: userInfo.is_follow == 1 }"
                   @click="toggleFollow"
                 >
-                  {{ userInfo.is_follow == 1 ? t("detail.followed") : t("detail.follow") }}
+                  <span class="btn-text">{{ userInfo.is_follow == 1 ? t("detail.following") : t("detail.follow") }}</span>
+                  <span class="hover-text" v-if="userInfo.is_follow == 1">{{ t("detail.unfollow") }}</span>
                 </button>
                 <button
                   class="btn subscribe"
@@ -48,7 +49,7 @@
                 </button>
               </template>
               <button class="btn share" @click="sharePage">
-                <img src="@/assets/images/user/share.png" alt="" />
+                <span class="share-icon"></span>
                 {{ t("userHome.share") }}
               </button>
               <div class="more-menu-wrap" ref="moreMenuRef" v-if="!isSelf">
@@ -87,7 +88,6 @@
       <div class="stats-bar">
         <div
             class="posts-title"
-            :class="{ active: viewMode === 'posts' }"
             @click="goToPosts"
           >
             {{ t("userHome.posts") }} ({{ formatNumber(userInfo.posts) }})
@@ -118,7 +118,7 @@
 
       <div class="container">
         <!-- Posts View -->
-        <template v-if="viewMode === 'posts'">
+        <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
           <div class="filter-bar">
             <!-- <div class="tabs">
@@ -1301,7 +1301,7 @@ async function deletePost(post: Post) {
 <style scoped lang="scss">
 .user-homepage {
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
   padding-bottom: 2rem;
 }
 
@@ -1328,7 +1328,7 @@ async function deletePost(post: Post) {
 }
 
 .main-content {
-  max-width: 112.8rem;
+  max-width: 108rem;
   margin: -12rem auto 0;
 }
 
@@ -1354,7 +1354,6 @@ async function deletePost(post: Post) {
       width: 10rem;
       height: 10rem;
       border-radius: 0.8rem;
-      border: 3px solid rgba(251, 100, 182, 0.5);
       object-fit: cover;
     }
   }
@@ -1416,7 +1415,7 @@ async function deletePost(post: Post) {
                 top: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
               }
             }
           }
@@ -1425,6 +1424,8 @@ async function deletePost(post: Post) {
             background: #fb64b6;
             color: #ffffff;
             border: none;
+            position: relative;
+            overflow: hidden;
 
             &:hover {
               position: relative;
@@ -1436,28 +1437,28 @@ async function deletePost(post: Post) {
                 top: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
               }
+            }
+
+            .hover-text {
+              display: none;
             }
 
             &.followed {
               position: relative;
-              border: 1px solid rgba(251, 100, 182, 0.2);
-              background: #ffffff;
-              color: rgba(251, 100, 182, 0.5);
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(251, 100, 182, 0.06);
-              }
+              background: #F5F5F5;
+              color: #6A7282;
 
               &:hover {
-                border: 1px solid #fb64b6;
+                color: #fb64b6;
+
+                .btn-text {
+                  display: none;
+                }
+                .hover-text {
+                  display: inline;
+                }
               }
             }
           }
@@ -1479,54 +1480,35 @@ async function deletePost(post: Post) {
                 top: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
               }
             }
 
             &.subscribed {
               position: relative;
-              border: 1px solid rgba(0, 211, 242, 0.2);
-              background: #ffffff;
-              color: rgba(0, 211, 242, 0.5);
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 211, 242, 0.06);
-              }
-
-              &:hover {
-                border: 1px solid #00d3f2;
-              }
+              background: #F5F5F5;
+              color: #6A7282;
             }
           }
           &.share {
-            background: #ffffff;
-            border: 1px solid #c27aff;
-            color: #c27aff;
+            background: #F5F5F5;
+            color: #6A7282;
             padding: 0 1.6rem;
 
-            &:hover {
-              position: relative;
-              transition: all 0.2s;
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(194, 122, 255, 0.06);
-              }
-            }
-            img {
+            .share-icon {
+              display: inline-block;
               width: 2.4rem;
               height: 2.4rem;
+              background-image: url('@/assets/images/user/share.png');
+              background-size: cover;
+            }
+
+            &:hover {
+              color: #fb64b6;
+
+              .share-icon {
+                background-image: url('@/assets/images/user/share_hover.png');
+              }
             }
           }
           &.more {
@@ -1554,9 +1536,8 @@ async function deletePost(post: Post) {
             top: 100%;
             margin-top: 0.2rem;
             background: #ffffff;
-            border: 1px solid rgba(251, 100, 182, 0.2);
             border-radius: 0.6rem;
-            box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
             z-index: 100;
             cursor: pointer;
 
@@ -1568,7 +1549,7 @@ async function deletePost(post: Post) {
               height: 2.8rem;
               padding: 0.5rem 1rem;
               font-size: 1.2rem;
-              color: #6a7282;
+              color: #6A7282;
             }
           }
         }
@@ -1618,11 +1599,16 @@ async function deletePost(post: Post) {
 
   .posts-title {
     font-size: 1.6rem;
-    font-weight: bold;
-    color: #101828;
+    font-weight: 500;
+    color: #99A1AF;
     cursor: pointer;
+
+    &:hover{
+      color: #364153;
+    }
+
     &.active {
-      color: #fb64b6;
+      color: #101828;
     }
   }
 
@@ -1631,8 +1617,16 @@ async function deletePost(post: Post) {
     gap: 2.4rem;
     font-size: 1.4rem;
     .stat-item {
-      color: #6a7282;
+      color: #99A1AF;
       cursor: pointer;
+
+      &:hover:not(:last-child){
+        color: #fb64b6;
+        .val {
+          color: #fb64b6;
+        }
+      }
+
       &.active {
         color: #fb64b6;
 
@@ -1641,18 +1635,12 @@ async function deletePost(post: Post) {
         }
       }
       .val {
-        color: #101828;
-        font-weight: 600;
+        color: #364153;
+        font-weight: 500;
         margin-left: 0.4rem;
       }
     }
   }
-}
-
-.container {
-  border-radius: 1.2rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  background: rgba(255, 255, 255, 0.8);
 }
 
 .filter-bar {
@@ -1661,7 +1649,6 @@ async function deletePost(post: Post) {
   align-items: center;
   height: 7.2rem;
   margin-bottom: 2.4rem;
-  padding: 0 1.2rem 0 2.4rem;
   border-bottom: 1px solid #f2f4f7;
 
   &.cur{
@@ -1707,7 +1694,7 @@ async function deletePost(post: Post) {
         width: 28rem;
         height: 4.8rem;
         background: #f5f5f5;
-        border: 1px solid transparent;
+        border: 1px solid #f5f5f5;
         border-radius: 0.8rem;
         padding: 0 5rem 0 1.2rem;
         font-size: 1.4rem;
@@ -1719,7 +1706,6 @@ async function deletePost(post: Post) {
 
         &:focus {
           border-color: #fb64b6;
-          background: #ffffff;
         }
       }
       .search-icon {
@@ -1737,7 +1723,6 @@ async function deletePost(post: Post) {
 
 .posts-container {
   min-height: 40rem;
-  padding: 0 0 0 2.4rem;
 
   .waterfall {
     display: flex;
@@ -1781,10 +1766,9 @@ async function deletePost(post: Post) {
         position: absolute;
         top: 0.8rem;
         left: 0.8rem;
-        background: rgba(255, 255, 255, 0.5);
-        color: #fb64b6;
+        background: #FFFFFF;
+        color: #364153;
         padding: 0.7rem 1rem;
-        border: 1px solid rgba(251, 100, 182, 0.5);
         border-radius: 0.6rem;
         font-size: 1.2rem;
       }
@@ -1813,7 +1797,7 @@ async function deletePost(post: Post) {
 
         .time {
           font-size: 1.2rem;
-          color: #99a1af;
+          color: #99A1AF;
         }
 
         .more-btn-wrap {
@@ -1827,13 +1811,12 @@ async function deletePost(post: Post) {
           .dropdown-menu {
             position: absolute;
             right: 0;
-            background: #ffffff;
-            border: 1px solid rgba(251, 100, 182, 0.2);
             border-radius: 0.8rem;
             padding: 0.6rem 0;
             z-index: 10;
             min-width: 10rem;
-            box-shadow: 0px 0px 12px -4px rgba(0, 0, 0, 0.18);
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
 
             &.bottom {
               top: 100%;
@@ -1883,8 +1866,8 @@ async function deletePost(post: Post) {
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid rgba(251, 100, 182, 0.2);
-    border-top: 0.4rem solid #fb64b6;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1.6rem;
@@ -1892,7 +1875,7 @@ async function deletePost(post: Post) {
 
   .loading-text {
     font-size: 1.6rem;
-    color: #666;
+    color: #6A7282;
   }
 
   @keyframes spin {
@@ -1908,7 +1891,7 @@ async function deletePost(post: Post) {
 .follow-container {
   background: #ffffff;
   border-radius: 1.2rem;
-  padding: 0 2.4rem 2.4rem;
+  padding: 0 0 2.4rem;
   min-height: 40rem;
 
   .loading-state {
@@ -1922,8 +1905,8 @@ async function deletePost(post: Post) {
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid rgba(251, 100, 182, 0.2);
-    border-top: 0.4rem solid #fb64b6;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1.6rem;
@@ -1931,7 +1914,7 @@ async function deletePost(post: Post) {
 
   .loading-text {
     font-size: 1.6rem;
-    color: #666;
+    color: #6A7282;
   }
 
   @keyframes spin {
@@ -1957,7 +1940,7 @@ async function deletePost(post: Post) {
     p {
       font-weight: bold;
       font-size: 1.6rem;
-      color: #364153;
+      color: #99A1AF;
     }
   }
 
@@ -1983,14 +1966,6 @@ async function deletePost(post: Post) {
     &:hover {
       background: #ffffff;
       box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.06);
-
-      .card-top {
-        .user-meta {
-          .nickname {
-            color: #fb64b6;
-          }
-        }
-      }
     }
 
     .card-top {
@@ -2015,7 +1990,7 @@ async function deletePost(post: Post) {
         }
         .fans-count {
           font-size: 1.2rem;
-          color: #6a7282;
+          color: #99A1AF;
         }
       }
 
@@ -2041,7 +2016,7 @@ async function deletePost(post: Post) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
         }
@@ -2051,25 +2026,11 @@ async function deletePost(post: Post) {
         }
 
         &.followed {
-          background: rgba(251, 100, 182, 0.06);
-          border: 1px solid rgba(251, 100, 182, 0.2);
-          color: rgba(251, 100, 182, 0.5);
+          background: #F5F5F5;
+          color: #6A7282;
 
           &:hover {
-            position: relative;
-            border: 1px solid #fb64b6;
-            background: #ffffff;
             color: #fb64b6;
-
-            &::after {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(251, 100, 182, 0.06);
-            }
 
             .btn-text {
               display: none;
@@ -2085,7 +2046,6 @@ async function deletePost(post: Post) {
     .card-bio {
       height: 3.6rem;
       font-size: 1.2rem;
-      color: #6a7282;
       line-height: 1.8rem;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -2158,7 +2118,7 @@ async function deletePost(post: Post) {
       align-items: center;
       padding: 0 2.4rem 1.8rem;
       margin-bottom: 1.8rem;
-      border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+      border-bottom: 1px solid #F5F5F5;;
 
       .title {
         font-size: 1.6rem;
@@ -2170,7 +2130,7 @@ async function deletePost(post: Post) {
     .modal-desc {
       padding: 0 2.4rem;
       font-size: 1.4rem;
-      color: #364153;
+      color: #99A1AF;
       margin-bottom: 1.8rem;
     }
 
@@ -2179,7 +2139,7 @@ async function deletePost(post: Post) {
       gap: 1.2rem;
       margin-bottom: 1.8rem;
       padding: 0 2.4rem 2.4rem;
-      border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+      border-bottom: 1px solid #F5F5F5;
 
       .pinned-item {
         flex: 1;
@@ -2227,11 +2187,11 @@ async function deletePost(post: Post) {
       cursor: pointer;
 
       &:disabled {
-        opacity: 0.7;
+        background: rgba(251, 100, 182, 0.5);
         cursor: not-allowed;
       }
 
-      &:hover {
+      &:hover:not(:disabled) {
         position: relative;
 
         &::after {
@@ -2241,7 +2201,7 @@ async function deletePost(post: Post) {
           top: 0;
           width: 100%;
           height: 100%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
         }
       }
     }

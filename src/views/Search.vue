@@ -7,7 +7,7 @@
       <div class="search-bar">
         <div class="search-input-wrap">
           <input
-            v-model="keyword"
+            v-model="inputKeyword"
             type="text"
             class="search-input"
             :placeholder="t('search.placeholder')"
@@ -21,7 +21,7 @@
       <div class="search-results">
         <div class="results-header">
           <h2>{{ t('search.resultsFor') }}
-            <span>[{{ keyword }}]</span>
+            <span>[{{ searchKeyword }}]</span>
           </h2>
 
           <!-- Tabs: Posts / Users -->
@@ -98,7 +98,7 @@
             class="user-card"
           >
             <div class="card-top">
-              <img :src="user.avatar" alt="User Avatar" class="user-avatar" @click="goToUserHome(user.id)" />
+              <img :src="user.avatar" alt="Avatar" class="user-avatar" @click="goToUserHome(user.id)" />
               <div class="user-meta" @click="goToUserHome(user.id)">
                 <div class="nickname">{{ user.nickname }}</div>
                 <div class="fans-count">
@@ -117,7 +117,7 @@
                     : t('search.follow')
                 }}</span>
                 <span class="hover-text" v-if="user.is_followed">{{
-                  t('search.unfollowed')
+                  t('search.unfollow')
                 }}</span>
               </button>
             </div>
@@ -126,7 +126,7 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading && !postList" class="loading-state">
+        <div v-if="isLoading && ((activeTab === 'posts' && !postList) || (activeTab === 'users' && users.length === 0))" class="loading-state">
           <div class="loading-spinner"></div>
           <p>{{ t('search.loading') }}</p>
         </div>
@@ -193,7 +193,8 @@ interface Post {
 }
 
 // State
-const keyword = ref(route.query.keyword as string || '');
+const inputKeyword = ref(route.query.keyword as string || '');
+const searchKeyword = ref(route.query.keyword as string || '');
 const activeTab = ref(route.query.type === 'user' ? 'users' : 'posts');
 const postFilter = ref('all');
 
@@ -219,6 +220,7 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 // Posts
 const postList = ref<Post[] | null>(null);
 const postsPage = ref(1);
+const postsLimit = ref(10);
 const postsHasMore = ref(true);
 
 // Users
@@ -232,11 +234,14 @@ const isLoadingMore = ref(false);
 
 // Methods
 function performSearch() {
+  // Update searchKeyword with the input value
+  searchKeyword.value = inputKeyword.value;
+
   // Update URL with the new keyword
   router.replace({
     path: '/search',
     query: {
-      keyword: keyword.value,
+      keyword: inputKeyword.value,
       type: activeTab.value === 'users' ? 'user' : 'post'
     }
   });
@@ -261,10 +266,14 @@ function switchTab(tab: string) {
   router.replace({
     path: '/search',
     query: {
-      keyword: keyword.value,
+      keyword: searchKeyword.value,
       type: tab === 'users' ? 'user' : 'post'
     }
   });
+
+  // Reset loading states
+  isLoading.value = false;
+  isLoadingMore.value = false;
 
   // Always load data when switching tabs, regardless of keyword
   if (tab === 'posts') {
@@ -299,10 +308,10 @@ async function loadData(fromLoadMore = false) {
   try {
     if (activeTab.value === 'posts') {
       const res = await api.searchPost({
-        keyword: keyword.value,
+        keyword: searchKeyword.value,
         type: postFilter.value === 'all' ? '' : postFilter.value,
         page: postsPage.value,
-        limit: 10
+        limit: postsLimit.value
       }) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
 
       if (res.code === 0 || res.code === 200) {
@@ -334,16 +343,27 @@ async function loadData(fromLoadMore = false) {
           };
         });
 
-        if (!postList.value) {
-          postList.value = [];
+        // For initial search, replace the list instead of pushing
+        if (fromLoadMore) {
+          // For load more, push to the list
+          if (!postList.value) {
+            postList.value = [];
+          }
+          postList.value.push(...newPosts);
+        } else {
+          // For initial search, replace the list
+          postList.value = newPosts;
         }
-        postList.value.push(...newPosts);
 
         const totalPosts = Number(res.data?.allnums) || 0;
-        const loadedPosts = postList.value.length;
+        const loadedPosts = postList.value ? postList.value.length : 0;
         postsHasMore.value = loadedPosts < totalPosts;
 
         postsPage.value++;
+
+        // Update loading state immediately
+        isLoading.value = false;
+        isLoadingMore.value = false;
 
         // Wait for images to load before layout
         nextTick(() => {
@@ -351,8 +371,6 @@ async function loadData(fromLoadMore = false) {
           const total = newPosts.length;
           if (total === 0) {
             layoutWaterfall();
-            isLoading.value = false;
-            isLoadingMore.value = false;
             return;
           }
 
@@ -363,8 +381,6 @@ async function loadData(fromLoadMore = false) {
               loadedCount++;
               if (loadedCount === total) {
                 layoutWaterfall();
-                isLoading.value = false;
-                isLoadingMore.value = false;
               }
             };
           });
@@ -377,7 +393,7 @@ async function loadData(fromLoadMore = false) {
     } else {
       // Use real API for users search
       const res = await api.searchUserList(
-        keyword.value,
+        searchKeyword.value,
         usersPage.value,
         18
       ) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
@@ -396,14 +412,6 @@ async function loadData(fromLoadMore = false) {
         usersHasMore.value = loadedUsers < totalUsers;
 
         usersPage.value++;
-
-        console.log('🔄 Search: users 数据加载完成', {
-          newCount: userList.length,
-          totalLoaded: loadedUsers,
-          totalAvailable: totalUsers,
-          hasMore: usersHasMore.value,
-          nextPage: usersPage.value
-        });
 
         isLoading.value = false;
         isLoadingMore.value = false;
@@ -439,7 +447,7 @@ const layoutWaterfall = () => {
 };
 
 function goToDetail(postId: number) {
-  router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(keyword.value || '')}`);
+  router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
 }
 
 function goToUserHome(userId: number) {
@@ -513,7 +521,7 @@ async function toggleFollow(user: any) {
       // Update the UI only after API success
       users.value[userIndex].is_followed = !isCurrentlyFollowing;
       // Show success message
-      toast(isCurrentlyFollowing ? t('search.unfollowed') : t('search.followed'));
+      toast(isCurrentlyFollowing ? t('search.unfollow') : t('search.followed'));
     } else {
       // Show error message if API call failed
       toast(t('common.fail'));
@@ -604,7 +612,7 @@ watch(postList, () => {
   width: 100%;
   min-height: 100vh;
   padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
@@ -620,8 +628,8 @@ watch(postList, () => {
     .search-input {
       width: 100%;
       height: 4.8rem;
-      background: rgba(255,255,255,0.8);
-      border: 1px solid rgba(251,100,182,0.2);
+      background: #F5F5F5;
+      border: 1px solid #F5F5F5;
       border-radius: 0.8rem;
       padding: 0 6rem 0 1.2rem;
       font-family: inherit;
@@ -658,17 +666,17 @@ watch(postList, () => {
     h2 {
       font-weight: normal;
       font-size: 1.6rem;
-      color: #6A7282;
+      color: #99A1AF;
       margin-bottom: 2.4rem;
 
       span{
-        color: #fb64b6;
+        color: #6A7282;
       }
     }
     .result-tabs {
       display: flex;
       gap: 3rem;
-      border-bottom: 1px solid rgba(251,100,182,0.2);
+      border-bottom: 1px solid #F5F5F5;
       .tab-item {
         padding: 0 0 2rem;
         font-size: 1.6rem;
@@ -676,9 +684,13 @@ watch(postList, () => {
         cursor: pointer;
         border-bottom: 2px solid transparent;
 
+        &:hover{
+          color: #101828;
+        }
+
         &.active {
           font-weight: 500;
-          color: #fb64b6;
+          color: #101828;
           border-bottom-color: #fb64b6;
         }
       }
@@ -794,7 +806,7 @@ watch(postList, () => {
 
         .author-name {
           font-size: 1.2rem;
-          color: #6A7282;
+          color: #99A1AF;
         }
       }
 
@@ -805,7 +817,7 @@ watch(postList, () => {
 
         span {
           font-size: 1.2rem;
-          color: #6a7282;
+          color: #99A1AF;
         }
 
         img{
@@ -840,13 +852,6 @@ watch(postList, () => {
   &:hover {
     background: #ffffff;
     box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.06);
-    .card-top {
-      .user-meta {
-        .nickname {
-          color: #fb64b6;
-        }
-      }
-    }
   }
   .card-top {
     display: flex;
@@ -892,7 +897,7 @@ watch(postList, () => {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
           z-index: 1;
         }
       }
@@ -900,23 +905,12 @@ watch(postList, () => {
         display: none;
       }
       &.followed {
-        background: rgba(251, 100, 182, 0.06);
-        border: 1px solid rgba(251, 100, 182, 0.2);
-        color: rgba(251, 100, 182, 0.5);
+        background: #F5F5F5;
+        color: #99A1AF;
         &:hover {
           position: relative;
-          border: 1px solid #fb64b6;
-          background: #ffffff;
           color: #fb64b6;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(251, 100, 182, 0.06);
-          }
+
           .btn-text {
             display: none;
           }
@@ -950,18 +944,13 @@ watch(postList, () => {
   padding: 6rem 0;
 
   .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(251, 100, 182, 0.1);
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
-    border-top-color: #fb64b6;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 2rem;
-    &.small {
-      width: 30px;
-      height: 30px;
-      border-width: 3px;
-    }
   }
   p {
     font-size: 1.6rem;
@@ -976,15 +965,15 @@ watch(postList, () => {
   gap: 1rem;
   padding: 3rem 0;
   .loading-spinner {
-    width: 30px;
-    height: 30px;
-    border: 3px solid rgba(251, 100, 182, 0.1);
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
-    border-top-color: #fb64b6;
     animation: spin 1s ease-in-out infinite;
   }
   p {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     color: #6a7282;
   }
 }

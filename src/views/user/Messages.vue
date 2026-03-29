@@ -36,7 +36,10 @@
             </div>
           </div>
 
-          <div v-if="loading" class="loading-box">{{ t('home.loading') }}</div>
+          <div v-if="loading" class="loading-box">
+            <div class="loading-spinner"></div>
+            <span>{{ t('home.loading') }}</span>
+          </div>
           <div class="content-area" v-else>
             <SubscriptionExpiring v-if="activeTab === 0" :list="listData" />
             <Follow v-if="activeTab === 1" :list="listData" />
@@ -222,49 +225,48 @@ async function fetchData() {
 .user-messages {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding: 14rem 0 2rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem 3.6rem;
-}
+
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 2.4rem 0;
+  margin-bottom: 2.4rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
 .tabs {
   display: flex;
   gap: 3.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #f5f5f5;
   margin-bottom: 2.4rem;
 }
 .tab-item {
   font-size: 1.6rem;
-  color: #6a7282;
+  color: #6A7282;
   padding-bottom: 1.8rem;
   cursor: pointer;
   position: relative;
+
+  &:hover{
+    color: #101828;
+  }
 }
 .tab-item.active {
   color: #101828;
@@ -301,11 +303,22 @@ async function fetchData() {
 }
 .loading-box {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 40rem;
   font-size: 1.4rem;
   color: #99a1af;
+
+  .loading-spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1.2rem;
+  }
 }
 .pagination-wrap {
   margin-top: 2.4rem;

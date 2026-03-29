@@ -274,7 +274,7 @@ async function submit() {
   justify-content: space-between;
   align-items: center;
   padding: 1.8rem 2.4rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   h3 {
     font-size: 1.6rem;
@@ -307,23 +307,21 @@ async function submit() {
   padding: 0 1.2rem;
   border-radius: 0.8rem;
   cursor: pointer;
-  color: #4a5565;
+  color: #6A7282;
 
   &:hover {
-    background: rgba(251, 100, 182, 0.06);
+    color: #4A5565;
   }
 
   &.active {
-    background: rgba(251, 100, 182, 0.06);
+    background: #F5F5F5;
     .label-text {
-      color: #fb64b6;
-      font-weight: 500;
+      color: #4A5565;
     }
   }
 
   .label-text {
-    font-size: 1.5rem;
-    color: #344054;
+    font-size: 1.4rem;
   }
 
   .radio {
@@ -341,7 +339,7 @@ async function submit() {
   margin-bottom: 2.4rem;
   font-size: 1.6rem;
   font-weight: 500;
-  color: #101828;
+  color: #364153;
 }
 
 .form-item {
@@ -357,11 +355,11 @@ async function submit() {
     margin-bottom: 1.2rem;
     .label {
       font-size: 1.4rem;
-      color: #4a5565;
+      color: #6A7282;
     }
     .count {
       font-size: 1.2rem;
-      color: #99a1af;
+      color: #99A1AF;
     }
   }
 }
@@ -370,12 +368,12 @@ async function submit() {
   width: 100%;
   height: 13.6rem;
   padding: 1rem;
-  border: 1px solid #f5f5f5;
+  border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
   resize: none;
   font-family: inherit;
   font-size: 1.4rem;
-  background: #f5f5f5;
+  background: #F5F5F5;
   color: #364153;
 
   &::placeholder {
@@ -429,18 +427,12 @@ async function submit() {
 .upload-btn {
   width: 10rem;
   height: 10rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
   border-radius: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;
   cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: rgba(251, 100, 182, 0.5);
-  }
 
   &.uploading {
     cursor: not-allowed;
@@ -470,7 +462,7 @@ async function submit() {
 
 .modal-footer {
   padding: 1.8rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: center;
 
@@ -499,7 +491,7 @@ async function submit() {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
       }
     }
 

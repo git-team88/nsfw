@@ -23,7 +23,9 @@
       </div>
       <div class="modal-footer">
         <button class="confirm-btn" @click="confirm">{{ t('inviteCode.confirm') }}</button>
-        <div class="skip-link" @click="skip">{{ t('inviteCode.noCode') }}→</div>
+        <div class="skip-link" @click="skip">{{ t('inviteCode.noCode') }}
+          <span>{{ t('inviteCode.skip') }}→</span>
+        </div>
       </div>
     </div>
   </div>
@@ -131,19 +133,19 @@ const skip = () => {
 .modal-header {
   width: 100%;
   padding: 1.8rem 2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   h3 {
     font-size: 1.6rem;
     font-weight: 500;
-    color: #101828;
+    color: #364153;
     margin: 0;
   }
 }
 
 .modal-description {
   font-size: 1.4rem;
-  color: #4A5565;
+  color: #6A7282;
   margin: 0 0 1.2rem;
 }
 
@@ -157,13 +159,12 @@ const skip = () => {
   width: 100%;
   height: 5rem;
   padding: 1rem;
-  border: 1px solid rgba(251,100,182,0.2);
+  border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
   font-size: 1.4rem;
-  font-weight: 500;
   color: #101828;
   outline: none;
-  background: rgba(255,255,255,0.9);
+  background: #F5F5F5;
 }
 
 .invite-code-input:focus {
@@ -180,7 +181,7 @@ const skip = () => {
   flex-direction: column;
   gap: 1.2rem;
   padding: 1.8rem 0;
-  border-top: 1px solid rgba(251,100,182,0.2);
+  border-top: 1px solid #F5F5F5;;
 }
 
 .confirm-btn {
@@ -196,13 +197,30 @@ const skip = () => {
   font-size: 1.4rem;
   border: none;
   cursor: pointer;
-  font-weight: 500;
+
+  &:hover{
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 
 .skip-link {
   text-align: center;
   font-size: 1.2rem;
-  color: #6A7282;
+  color: #99A1AF;
   cursor: pointer;
+
+  span{
+    color: #6A7282;
+  }
 }
 </style>

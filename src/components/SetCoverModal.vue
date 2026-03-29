@@ -70,7 +70,7 @@
             @dragover.prevent
           >
             <img src="@/assets/images/publish/upload.png" alt="" />
-            <div class="modal-text">{{ t("submit.cover.dragOrClick") }}</div>
+            <div class="modal-text" v-html='t("submit.cover.dragOrClick")'></div>
             <div class="modal-tip">{{ t("submit.cover.uploadTip") }}</div>
             <input
               type="file"
@@ -585,7 +585,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-header {
   height: 6rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -602,9 +602,13 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       display: flex;
       align-items: center;
       font-size: 1.6rem;
-      color: #667085;
+      color: #6A7282;
       cursor: pointer;
       position: relative;
+
+      &:hover{
+        color: #101828;
+      }
 
       &.active {
         color: #101828;
@@ -663,7 +667,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border: 1px solid #fb64b6;
     box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
     pointer-events: none;
     z-index: 5;
@@ -711,12 +714,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #fb64b6;
+      background: #FB64B6;
       border-radius: 0.3rem;
-
-      &:hover {
-        background: #e94a9e;
-      }
     }
 
     .frames-strip {
@@ -808,7 +807,11 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     .modal-text {
       margin: 2.4rem 0 1.2rem;
       font-size: 1.4rem;
-      color: #101828;
+      color: #364153;
+
+      :deep(span){
+        color: #FB64B6;
+      }
     }
 
     .modal-tip {
@@ -853,7 +856,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        border: 1px solid #fb64b6;
         box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
         pointer-events: none;
         z-index: 5;
@@ -867,7 +869,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-footer {
   padding: 1.8rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: flex-end;
   gap: 1.2rem;
@@ -919,7 +921,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
       }
     }
   }

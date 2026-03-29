@@ -154,7 +154,8 @@
               @click="toggleFollow"
             >
               <img v-if="!detail.isFollowed" src="@/assets/images/detail/follow.png" alt="" />
-              <span>{{ detail.isFollowed ? t("detail.followed") : t("detail.follow") }}</span>
+              <span class="btn-text">{{ detail.isFollowed ? t("detail.following") : t("detail.follow") }}</span>
+              <span class="hover-text" v-if="detail.isFollowed">{{ t("detail.unfollow") }}</span>
             </button>
           </div>
         </div>
@@ -1087,7 +1088,7 @@ async function loadCommentDetail(commentId: string) {
         showingReplies: true,
         isMentioned: true,
         // Only add background color if there's no rid parameter
-        backgroundColor: rid ? '' : 'rgba(251, 100, 182, 0.04)'
+        backgroundColor: rid ? '' : '#F5F5F5'
       };
 
       // Check if there are children (replies) and process them
@@ -1190,7 +1191,7 @@ async function loadCommentToReplyList(rid: string) {
           liked: commentData.is_liked == 1 || false,
           replyTo: commentData.replyTo || commentData.reply_to || commentData.target_user || "",
           reply_to_user_nickname: commentData.reply_to_user_nickname || "",
-          backgroundColor: 'rgba(251, 100, 182, 0.04)',
+          backgroundColor: '#F5F5F5',
           isRidComment: true
         };
 
@@ -1295,12 +1296,16 @@ async function loadComments(page: number = 1, append: boolean = false) {
         return commentObj;
       });
 
-      // Filter out the comment with the same ID as cid parameter
+      // Filter out the comment with the same ID as cid or rid parameter only if they exist
       const cid = route.query.cid as string || "";
-      const filteredComments = newComments.filter((comment: { id: string | number; }) => {
-        // Ensure both are strings for comparison
-        return String(comment.id) !== String(cid);
-      });
+      const rid = route.query.rid as string || "";
+      let filteredComments = newComments;
+      if (cid || rid) {
+        filteredComments = newComments.filter((comment: { id: string | number; }) => {
+          // Ensure both are strings for comparison
+          return String(comment.id) !== String(cid) && String(comment.id) !== String(rid);
+        });
+      }
 
       if (append) {
         comments.value = [...comments.value, ...filteredComments];
@@ -1539,7 +1544,7 @@ async function loadReplies(comment: any, page: number = 1) {
 
       // Filter out rid comment if it exists
       if (comment.rid) {
-        formattedReplies = formattedReplies.filter((reply: any) => reply.id !== comment.rid);
+        formattedReplies = formattedReplies.filter((reply: any) => String(reply.id) !== String(comment.rid));
       }
 
       // Get rid comment if it exists in current replies
@@ -1553,7 +1558,7 @@ async function loadReplies(comment: any, page: number = 1) {
         // If we have an initialReply, filter it out from API response
         if (comment.initialReply) {
           const initialReplyId = comment.initialReply.id;
-          formattedReplies = formattedReplies.filter((reply: any) => reply.id !== initialReplyId);
+          formattedReplies = formattedReplies.filter((reply: any) => String(reply.id) !== String(initialReplyId));
           // Prepend the initialReply to the list
           let newReplies = [comment.initialReply, ...formattedReplies];
           // If there's a rid comment, add it to the beginning
@@ -3028,6 +3033,7 @@ async function submitComment() {
           if (String(comment.id) === String(parentCommentId)) {
             comment.replyPage = 0;
             comment.replies = [];
+            comment.showingReplies = true; // Ensure replies are visible
             await loadReplies(comment, 1);
 
             nextTick(() => {
@@ -3260,9 +3266,9 @@ watch(
 .loading-spinner {
   width: 4rem;
   height: 4rem;
-  border: 3px solid rgba(251, 100, 182, 0.1);
+  border: 0.4rem solid #F5F5F5;
+  border-top: 0.4rem solid #6A7282;
   border-radius: 50%;
-  border-top-color: #fb64b6;
   animation: spin 1s ease-in-out infinite;
 }
 
@@ -3318,7 +3324,7 @@ watch(
 /* Left Panel */
 .left-panel {
   flex: 1;
-  background: rgba(251, 100, 182, 0.06);
+  background: #1F1F21;
   position: relative;
   display: flex;
   align-items: center;
@@ -3471,7 +3477,7 @@ watch(
                 top: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
                 z-index: 100;
               }
             }
@@ -3525,8 +3531,8 @@ watch(
     .loading-spinner {
       width: 5rem;
       height: 5rem;
-      border: 0.4rem solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fb64b6;
+      border: 0.4rem solid #F5F5F5;
+      border-top: 0.4rem solid #6A7282;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -3618,7 +3624,6 @@ watch(
       width: 4.8rem;
       height: 4.8rem;
       border-radius: 0.8rem;
-      border: 1px solid #fb64b6;
       object-fit: cover;
     }
 
@@ -3644,7 +3649,27 @@ watch(
     border-radius: 0.8rem;
     color: #ffffff;
     cursor: pointer;
-    background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+    background: #fb64b6;
+    position: relative;
+    overflow: hidden;
+
+    &:hover{
+      position: relative;
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+      }
+    }
+
+    .hover-text {
+      display: none;
+    }
 
     img {
       width: 2rem;
@@ -3652,9 +3677,19 @@ watch(
     }
 
     &.followed {
-      border: 1px solid rgba(251, 100, 182, 0.2);
-      background: none;
-      color: #fb64b6;
+      background: #F5F5F5;
+      color: #6A7282;
+
+      &:hover{
+        color: #fb64b6;
+
+        .btn-text {
+          display: none;
+        }
+        .hover-text {
+          display: inline;
+        }
+      }
     }
   }
 }
@@ -3676,30 +3711,30 @@ watch(
     padding: 0.7rem 1.2rem;
     border-radius: 0.4rem;
     font-size: 1.2rem;
-    background: rgba(251, 100, 182, 0.12);
-    color: #fb64b6;
+    background: #F5F5F5;
+    color: #6A7282;
   }
 }
 
 .post-info {
   margin: 0 0.6rem 1.8rem;
   padding-bottom: 1.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   .post-title {
     font-size: 1.6rem;
     font-weight: 500;
-    color: #101828;
+    color: #364153;
     margin-bottom: 0.8rem;
     line-height: 1.4;
   }
 
   .post-desc {
     font-size: 1.4rem;
-    color: #364153;
+    color: #6A7282;
     margin-bottom: 0.8rem;
     word-break: break-all;
-    line-height: 1.5;
+    line-height: 2.4rem;
 
     :deep(a){
       text-decoration: none;
@@ -3712,8 +3747,12 @@ watch(
     justify-content: space-between;
 
     .post-time {
+      font: {
+        weight: 300;
+        size: 1.2rem
+      }
       font-size: 1.2rem;
-      color: #99a1af;
+      color: #99A1AF;
     }
 
     .more-btn {
@@ -3733,7 +3772,7 @@ watch(
   .comments-header {
     margin: 0 0.6rem 1.8rem;
     font-size: 1.4rem;
-    color: #99a1af;
+    color: #99A1AF;
   }
 }
 
@@ -3751,7 +3790,6 @@ watch(
     width: 4rem;
     height: 4rem;
     border-radius: 0.6rem;
-    border: 1px solid #fb64b6;
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -3882,7 +3920,7 @@ watch(
         align-items: center;
         gap: 0.6rem;
         cursor: pointer;
-        color: #6a7282;
+        color: #99A1AF;
         font-size: 1.2rem;
 
         b {
@@ -3971,7 +4009,7 @@ watch(
   right: 0;
   width: 60rem;
   padding: 1.8rem 2.4rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
   background: #ffffff;
   min-height: 8.6rem;
   display: flex;
@@ -4095,7 +4133,7 @@ watch(
       min-height: 10rem;
       margin-bottom: 1.2rem;
       padding: 0.8rem 1.2rem 2.4rem;
-      border: 1px solid rgba(251, 100, 182, 0.2);
+      border: 1px solid #F5F5F5;
       border-radius: 0.8rem;
       background: #f5f5f5;
 
@@ -4302,10 +4340,9 @@ watch(
   right: -1.8rem;
   top: 100%;
   margin-top: 0.2rem;
-  background: #ffffff;
-  border: 1px solid rgba(251, 100, 182, 0.2);
   border-radius: 0.6rem;
-  box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+  box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
   z-index: 100;
   cursor: pointer;
 
@@ -4317,7 +4354,7 @@ watch(
     height: 2.8rem;
     padding: 0.5rem 1rem;
     font-size: 1.2rem;
-    color: #6a7282;
+    color: #6A7282;
   }
 }
 
@@ -4336,11 +4373,6 @@ watch(
     height: 4.8rem;
     background: url("@/assets/images/detail/close.png");
     background-size: 100% 100%;
-
-    &:hover {
-      background: url("@/assets/images/detail/close_hover.png");
-      background-size: 100% 100%;
-    }
   }
 }
 
@@ -4579,7 +4611,7 @@ watch(
 .article-body {
   margin: 0 0.6rem 1.8rem;
   padding-bottom: 1.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   .post-title {
     font-size: 1.8rem;
@@ -4691,7 +4723,7 @@ watch(
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
         }

@@ -29,7 +29,7 @@
             >
               <span class="plan-title">{{ t(`aiRecharge.${plan.title}`) }}</span>
               <div class="plan-price-container">
-                <span class="plan-price">{{ plan.price }}</span>
+                <span class="plan-price">{{ plan.price }}{{ t('aiRecharge.unit') }}</span>
                 <span class="plan-period">{{ plan.period ? t(`aiRecharge.${plan.period}`) : '' }}</span>
               </div>
               <span class="plan-credits">{{ plan.credits }} {{ t('aiRecharge.compute') }}</span>
@@ -76,14 +76,14 @@ const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const rechargePlans = ref([
-  { plan_id: 1, title: 'monthlyAutoRenew', price: '$7', period: 'periodMonth', credits: "980", valid: 'valid6Months' },
-  { plan_id: 2, title: 'quarterlyAutoRenewal', price: '$20', period: 'period3Month', credits: "3,000", valid: 'valid6Months' },
-  { plan_id: 3, title: 'semiAnnualAutoRenewal', price: '$50', period: 'period6Month', credits: "6,300", valid: 'valid6Months' },
-  { plan_id: 4, title: 'annualAutoRenewal', price: '$98', period: 'periodYear', credits: "13,200", valid: 'valid12Months' },
-  { plan_id: 5, title: 'computePack', price: '$7', period: '', credits: "950", valid: 'valid6Months' },
-  { plan_id: 6, title: 'computePack', price: '$20', period: '', credits: "2,800", valid: 'valid6Months' },
-  { plan_id: 7, title: 'computePack', price: '$50', period: '', credits: "6,500", valid: 'valid6Months' },
-  { plan_id: 8, title: 'computePack', price: '$98', period: '', credits: "13,000", valid: 'valid6Months' }
+  { plan_id: 1, title: 'monthlyAutoRenew', price: '1000', period: 'periodMonth', credits: "980", valid: 'valid6Months' },
+  { plan_id: 2, title: 'quarterlyAutoRenewal', price: '2000', period: 'period3Month', credits: "3,000", valid: 'valid6Months' },
+  { plan_id: 3, title: 'semiAnnualAutoRenewal', price: '4000', period: 'period6Month', credits: "6,300", valid: 'valid6Months' },
+  { plan_id: 4, title: 'annualAutoRenewal', price: '8000', period: 'periodYear', credits: "13,200", valid: 'valid12Months' },
+  { plan_id: 5, title: 'computePack', price: '1000', period: '', credits: "950", valid: 'valid6Months' },
+  { plan_id: 6, title: 'computePack', price: '2000', period: '', credits: "2,800", valid: 'valid6Months' },
+  { plan_id: 7, title: 'computePack', price: '4000', period: '', credits: "6,500", valid: 'valid6Months' },
+  { plan_id: 8, title: 'computePack', price: '8000', period: '', credits: "13,000", valid: 'valid6Months' }
 ]);
 
 const selectedPlan = ref(1);
@@ -110,7 +110,7 @@ async function handleRecharge() {
     const data = response as any;
     if (data.code === 0 || data.code === 200) {
       if (data.data) {
-        window.location.href = data.data.url.url;
+        window.open(data.data?.url.url, '_blank');
       }
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
@@ -144,44 +144,30 @@ function goToComputingPowerRules() {
 <style lang="scss" scoped>
 .ai-recharge {
   width: 100%;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
-  max-width: 90ch;
-  min-height: calc(100vh - 14rem);
-  margin: 12rem auto 2rem;
-  padding: 2.4rem 3rem;
+  width: 85.6rem;
+  margin: 14rem auto 2rem;
   position: relative;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.8);
 
   .back {
     position: fixed;
     left: 50%;
-    top: 12rem;
+    top: 14rem;
     width: 4rem;
     height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transform: translateX(-55rem);
-    border: 1px solid rgba(251, 100, 182, 0.2);
-    -webkit-border-radius: 0.8rem;
-    border-radius: 0.8rem;
     cursor: pointer;
     z-index: 10;
 
-    &:hover {
-      border: 1px solid rgba(251, 100, 182, 0.5);
-      background: rgba(251, 100, 182, 0.06);
-    }
-
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 4rem;
+      height: 4rem;
     }
   }
 }
@@ -189,24 +175,11 @@ function goToComputingPowerRules() {
 .content-box {
   .page-title {
     position: relative;
-    padding-bottom: 1.6rem;
     font-size: 2.4rem;
     font-weight: 500;
     text-align: center;
-    color: #fb64b6;
+    color: #101828;
     margin-bottom: 3.6rem;
-
-    &::after{
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      content: '';
-      width: 6rem;
-      height: .4rem;
-      border-radius: .4rem;
-      background: linear-gradient(0deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
-    }
   }
 
   .section-title-box{
@@ -225,12 +198,11 @@ function goToComputingPowerRules() {
       align-items: center;
       span{
         font-size: 1.4rem;
-        color: #00D3F2;
+        color: #99A1AF;
         cursor: pointer;
 
         &:last-child{
           margin-left: 3rem;
-          color: #FB64B6;
         }
       }
     }
@@ -252,7 +224,7 @@ function goToComputingPowerRules() {
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 1.4rem;
+      gap: 1.6rem;
       margin-bottom: 2.4rem;
 
       .plan-item {
@@ -262,9 +234,10 @@ function goToComputingPowerRules() {
         justify-content: center;
         width: 20rem;
         height: 21.6rem;
-        border: 1px solid rgba(251, 100, 182, 0.2);
+        border: 1px solid #F5F5F5;
         border-radius: 1.2rem;
         font-size: 1.4rem;
+        background: #F5F5F5;
         color: #6A7282;
         cursor: pointer;
         padding: 1.6rem;
@@ -275,7 +248,6 @@ function goToComputingPowerRules() {
 
         &.active {
           border-color: #fb64b6;
-          background-color: rgba(251,100,182,0.12);
         }
 
         .plan-title {
@@ -291,9 +263,9 @@ function goToComputingPowerRules() {
         }
 
         .plan-price {
-          font-size: 2.4rem;
+          font-size: 2.2rem;
           font-weight: 600;
-          color: #FB64B6;
+          color: #364153;
         }
 
         .plan-period {
@@ -330,7 +302,7 @@ function goToComputingPowerRules() {
       align-items: center;
       gap: 0.6rem;
       font-size: 1.4rem;
-      color: #6a7282;
+      color: #99A1AF;
 
       .checkbox {
         width: 2.4rem;
@@ -358,7 +330,7 @@ function goToComputingPowerRules() {
     width: 24rem;
     height: 4.8rem;
     margin: 0 auto;
-    background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+    background: #fb64b6;
     color: #ffffff;
     border: none;
     border-radius: 0.8rem;
@@ -376,7 +348,7 @@ function goToComputingPowerRules() {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
       }
     }
 
@@ -442,16 +414,16 @@ function goToComputingPowerRules() {
       .loading-spinner {
         width: 4rem;
         height: 4rem;
-        border: 0.4rem solid rgba(251, 100, 182, 0.3);
+        border: 0.4rem solid #F5F5F5;
+        border-top: 0.4rem solid #6A7282;
         border-radius: 50%;
-        border-top-color: #fb64b6;
         animation: spin 1s ease-in-out infinite;
         margin-bottom: 1.6rem;
       }
 
       span {
         font-size: 1.6rem;
-        color: #364153;
+        color: #6A7282;
       }
     }
   }

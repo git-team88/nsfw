@@ -5,7 +5,7 @@
         <img class="avatar" :src="item.poster.avatar" alt="" @click.stop="goUserHome(item.poster.user_id)" />
         <div class="text-col">
           <div class="username">{{ item.poster.nickname }}</div>
-          <div class="desc">{{ t("user.messages.mentionsText") }}: {{ item.post.content }}</div>
+          <div class="desc">{{ t("user.messages.mentionsText") }}: <span class="content">{{ item.post.content }}</span></div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
       </div>
@@ -61,20 +61,19 @@ function goUserHome(userId: string) {
 .list-wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 0.8rem;
 }
 .msg-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.1);
   border-radius: 1.2rem;
   transition: all 0.2s;
   cursor: pointer;
 }
 .msg-item:hover {
-  box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+  box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
 }
 .left-info {
   display: flex;
@@ -94,16 +93,24 @@ function goUserHome(userId: string) {
 }
 .username {
   font-size: 1.4rem;
-  color: #101828;
+  color: #6A7282;
 }
 .desc {
-  max-width: 54rem;
+  display: flex;
+  align-items: center;
   font-size: 1.4rem;
-  color: #4a5565;
+  color: #364153;
+}
+.content {
+  max-width: 44rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #364153;
 }
 .time {
   font-size: 1.2rem;
-  color: #99a1af;
+  color: #99A1AF;
   font-weight: 300;
 }
 
@@ -116,7 +123,7 @@ function goUserHome(userId: string) {
   .line {
     width: 1px;
     height: 4rem;
-    background: rgba(251, 100, 182, 0.1);
+    background: #F5F5F5;
   }
 }
 
@@ -135,7 +142,8 @@ function goUserHome(userId: string) {
   font-weight: 500;
   font-size: 1.4rem;
   line-height: 2rem;
-  color: #364153;
+  color: #99A1AF;
+  word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;

@@ -8,11 +8,13 @@ import i18n from "./lang/i18n";
 import router from "./router";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
+import ProcessList from "./components/ProcessList.vue";
 
 const app = createApp(App);
 app.use(i18n);
 app.use(router);
 app.use(ElementPlus);
+app.component("ProcessList", ProcessList);
 
 const pinia = createPinia();
 app.use(pinia);

@@ -181,8 +181,8 @@
         position: absolute;
         top: 1.4rem;
         right: 2rem;
-        width: 3rem;
-        height: 3rem;
+        width: 2rem;
+        height: 2rem;
         z-index: 660;
         cursor: pointer;
         &:hover{
@@ -194,7 +194,6 @@
         margin: 0 0 2rem;
         padding: 0 0 2rem;
         font: {
-          weight: bold;
           size: 1.8rem;
         }
         text-align: center;
@@ -203,10 +202,11 @@
 
       .content{
         height: 34rem;
-        margin: 2.4rem 0 3rem;
+        margin: 2.4rem 0 1rem;
+        font-size: 1.4rem;
         overflow-y: scroll;
         line-height: 1.7;
-        color: #4A5565;
+        color: #6A7282;
 
         :deep(h1) { font-weight: bold; font-size: 2.4rem; margin: 0 0 1rem 0; color: #4A5565;}
         :deep(.sub) { color: #4A5565; margin-top: 0; }
@@ -227,7 +227,7 @@
       }
 
       .tip{
-        margin: 0 0 1rem;
+        margin: 0 0 0.6rem;
         font: {
           size: 1.4rem;
         }
@@ -239,7 +239,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 0 0 2rem;
+        margin: 0 0 0.6rem;
         span{
           position: relative;
           min-width: 18rem;
@@ -252,34 +252,26 @@
           line-height: 4.8rem;
           -webkit-border-radius: .8rem;
           border-radius: .8rem;
-          background: #FB64B6;
+          background: rgba(251,100,182,0.5);
           color: #FFFFFF;
           cursor: default;
-
-          &::after{
-            position: absolute;
-            left: 0;
-            top: 0;
-            content: '';
-            width: 100%;
-            height: 4.8rem;
-            background: rgba(255, 255, 255, 0.5);
-            z-index: 1;
-          }
         }
         &.on{
           span{
+            background: #FB64B6;
             cursor: pointer;
 
-            &::after{
-              position: absolute;
-              left: 0;
-              top: 0;
-              content: '';
-              width: 100%;
-              height: 4.8rem;
-              background: none;
-              z-index: -1;
+            &:hover{
+              position: relative;
+              &::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.1);
+              }
             }
           }
         }

@@ -983,7 +983,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 100vh;
   padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
   position: relative;
@@ -1419,7 +1419,7 @@ onBeforeUnmount(() => {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
       z-index: 1;
     }
   }

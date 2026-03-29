@@ -381,44 +381,30 @@ function goToPaymentHistory() {
 <style lang="scss" scoped>
 .ai-recharge-details {
   width: 100%;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
-  max-width: 90ch;
-  min-height: calc(100vh - 14rem);
-  margin: 12rem auto 2rem;
-  padding: 2.4rem 0;
+  width: 84rem;
+  margin: 14rem auto 2rem;
   position: relative;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.8);
 
   .back {
     position: fixed;
     left: 50%;
-    top: 12rem;
+    top: 14rem;
     width: 4rem;
     height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transform: translateX(-55rem);
-    border: 1px solid rgba(251, 100, 182, 0.2);
-    -webkit-border-radius: 0.8rem;
-    border-radius: 0.8rem;
     cursor: pointer;
     z-index: 10;
 
-    &:hover {
-      border: 1px solid rgba(251, 100, 182, 0.5);
-      background: rgba(251, 100, 182, 0.06);
-    }
-
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 4rem;
+      height: 4rem;
     }
   }
 }
@@ -426,24 +412,11 @@ function goToPaymentHistory() {
 .content-box {
   .page-title {
     position: relative;
-    padding-bottom: 1.6rem;
     font-size: 2.4rem;
     font-weight: 500;
     text-align: center;
-    color: #fb64b6;
+    color: #101828;
     margin-bottom: 3.6rem;
-
-    &::after{
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      content: '';
-      width: 6rem;
-      height: .4rem;
-      border-radius: .4rem;
-      background: linear-gradient(0deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
-    }
   }
 
   // Balance Section
@@ -451,9 +424,9 @@ function goToPaymentHistory() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 3rem 2.4rem;
+    margin: 0 0 2.4rem;
     padding: 2.4rem;
-    background-color: rgba(251,100,182,0.06);
+    background-color: #F5F5F5;
     border-radius: 1.2rem;
 
     .balance-box {
@@ -504,12 +477,28 @@ function goToPaymentHistory() {
       .recharge-btn {
         background-color: #fb64b6;
         color: #ffffff;
+
+        &:hover{
+          position: relative;
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
       }
 
       .payment-history-btn {
         background-color: #ffffff;
-        color: #fb64b6;
-        border: 1px solid #fb64b6;
+        color: #6A7282;
+
+        &:hover {
+          color: #fb64b6;
+        }
       }
     }
   }
@@ -520,9 +509,9 @@ function goToPaymentHistory() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.6rem;
-    padding: 0 3rem 1.2rem;
-    border-bottom: 1px solid rgba(251,100,182,0.2);
+    margin-bottom: 2rem;
+    padding: 0 0 1.2rem;
+    border-bottom: 1px solid #F5F5F5;
 
     .tabs {
       display: flex;
@@ -538,8 +527,12 @@ function goToPaymentHistory() {
         cursor: pointer;
         position: relative;
 
+        &:hover{
+          color: #101828;
+        }
+
         &.active {
-          color: #fb64b6;
+          color: #101828;
           font-weight: 500;
 
           &::after {
@@ -563,7 +556,6 @@ function goToPaymentHistory() {
 
   .subnav-section {
     margin-bottom: 1.6rem;
-    padding: 0 3rem;
 
     .subnav-tabs {
       display: flex;
@@ -575,14 +567,17 @@ function goToPaymentHistory() {
         height: 3.2rem;
         padding: 0 1.6rem;
         font-size: 1.4rem;
-        color: #6A7282;
+        color: #99A1AF;
         cursor: pointer;
         border-radius: 0.8rem;
 
+        &:hover{
+          color: #6A7282;
+        }
+
         &.active {
-          color: #fb64b6;
-          background: rgba(251,100,182,0.12);
-          border: 1px solid #fb64b6;
+          color: #6A7282;
+          background: #F5F5F5;
         }
       }
     }
@@ -590,7 +585,7 @@ function goToPaymentHistory() {
 
   // Transaction List
   .transaction-list {
-    margin: 0 3rem 2.4rem;
+    margin: 0 0 2.4rem;
 
     .transaction-item {
       display: flex;
@@ -656,8 +651,8 @@ function goToPaymentHistory() {
         justify-content: center;
 
         img {
-          width: 5.2rem;
-          height: 5.2rem;
+          width: 2.2rem;
+          height: 2.2rem;
         }
       }
 
@@ -675,7 +670,7 @@ function goToPaymentHistory() {
       .reward-source {
         margin-bottom: 0.6rem;
         font-size: 1.6rem;
-        color: #101828;
+        color: #364153;
       }
 
       .transaction-type {
@@ -685,8 +680,9 @@ function goToPaymentHistory() {
       }
 
       .transaction-amount {
+        font-weight: 500;
         font-size: 1.6rem;
-        color: #6A7282;
+        color: #364153;
         text-align: right;
       }
 
@@ -705,7 +701,7 @@ function goToPaymentHistory() {
 
       .user-nickname {
         font-size: 1.2rem;
-        color: #364153;
+        color: #6A7282;
 
         span{
           color: #99A1AF;

@@ -512,7 +512,7 @@ function googleRegister() {
 .register {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .container {
     max-width: 48rem;

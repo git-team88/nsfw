@@ -8,7 +8,7 @@
           <div class="panel-top">
             <div class="panel-title">{{ t("user.personal.title") }}</div>
           </div>
-          <div class="panel-id">ID:{{ userInfo.info?.id || "" }}</div>
+          <!-- <div class="panel-id">ID:{{ userInfo.info?.id || "" }}</div> -->
           <div class="content">
             <div class="section">
               <div class="label">
@@ -32,7 +32,7 @@
                 <img class="avatar-img" :src="avatarUrl" alt="" />
 
                 <div class="reupload-box">
-                  <button class="reupload" @click="pickAvatar">{{ t("submit.reupload") }}</button>
+                  <button class="reupload" @click="pickAvatar">{{ t("submit.video.reupload") }}</button>
                   <input
                     ref="avatarInputRef"
                     type="file"
@@ -48,7 +48,7 @@
             <div class="section">
               <div class="label"><span>*</span>{{ t("birthday.label") }}</div>
 
-              <BirthPicker v-model="dateValue" @change="handleDateChange" />
+              <BirthPicker v-model="dateValue" :isEdit="true" @change="handleDateChange" />
             </div>
 
             <div class="actions">
@@ -378,122 +378,23 @@ function onSave() {
 </script>
 
 <style scoped lang="scss">
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.confirm-modal {
-  width: 40rem;
-  background: #fff;
-  border-radius: 1.2rem;
-  overflow: hidden;
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.6rem 2.4rem;
-    border-bottom: 1px solid #f2f4f7;
-
-    .title {
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: #101828;
-    }
-    .close-btn {
-      width: 2rem;
-      height: 2rem;
-      cursor: pointer;
-    }
-  }
-
-  .modal-body {
-    padding: 2.4rem;
-
-    .desc {
-      font-size: 1.4rem;
-      color: #344054;
-      margin-bottom: 1.6rem;
-      line-height: 1.5;
-    }
-
-    .dont-ask {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      cursor: pointer;
-
-      .checkbox {
-        width: 1.6rem;
-        height: 1.6rem;
-        img {
-          width: 100%;
-          height: 100%;
-        }
-      }
-      span {
-        font-size: 1.4rem;
-        color: #667085;
-      }
-    }
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1.2rem;
-    padding: 1.6rem 2.4rem;
-    border-top: 1px solid #f2f4f7;
-
-    button {
-      padding: 0.8rem 1.6rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .btn-cancel {
-      border: 1px solid #d0d5dd;
-      background: #fff;
-      color: #344054;
-    }
-    .btn-confirm {
-      border: none;
-      background: #fb64b6;
-      color: #fff;
-    }
-  }
-}
-
 .user-personal-edit {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 4.8rem;
+  padding-right: 4.8rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 14rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem;
-}
+
 .panel-top {
   display: flex;
   align-items: center;
@@ -514,12 +415,12 @@ function onSave() {
 .content {
   padding: 1.2rem;
   border-radius: 1.2rem;
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;
 
   .label {
     margin-bottom: 1.6rem;
     font-size: 1.4rem;
-    color: #364153;
+    color: #6A7282;
   }
   .label span {
     color: #fa2d47;
@@ -538,6 +439,10 @@ function onSave() {
 }
 .section {
   margin-bottom: 2.4rem;
+
+  .select-box{
+    background: #F5F5F5;
+  }
 }
 
 .sensitive-row {
@@ -592,14 +497,13 @@ function onSave() {
   height: 11.2rem;
   border-radius: 0.8rem;
   object-fit: cover;
-  border: 2px solid #fb64b6;
 }
 .reupload-box {
   position: relative;
   cursor: pointer;
 }
 .reupload {
-  color: #00d3f2;
+  color: #FB64B6;
   font-size: 1.4rem;
   background: none;
   border: none;
@@ -620,12 +524,12 @@ function onSave() {
   width: 100%;
   height: 4.8rem;
   padding: 0 1.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  border: 1px solid #FFFFFF;
   border-radius: 0.8rem;
   outline: none;
   color: #364153;
   font-size: 1.4rem;
-  background: #fff;
+  background: #FFFFFF;
 }
 .input-text:focus {
   border-color: #fb64b6;
@@ -685,16 +589,15 @@ function onSave() {
   position: relative;
 }
 .btn-cancel {
-  border: 1px solid #fb64b6;
-  background: none;
-  color: #fb64b6;
+  background: #FFFFFF;
+  color: #6A7282;
 }
 .btn-cancel:hover {
-  background: rgba(251, 100, 182, 0.06);
-  border-color: rgba(251, 100, 182, 0.35);
+  color: #FB64B6;
 }
 .btn-save {
-  background: #fb64b6;
+  position: relative;
+  background: #FB64B6;
   border: none;
   color: #fff;
 }
@@ -703,7 +606,7 @@ function onSave() {
   position: absolute;
   inset: 0;
   border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 .btn:disabled {
   opacity: 0.6;

@@ -32,7 +32,7 @@ function backToSubscription() {
 <style scoped lang="scss">
 .account-failed-page {
   width: 100%;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 
 .container {
@@ -103,7 +103,7 @@ function backToSubscription() {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
         z-index: 1;
       }
     }

@@ -11,134 +11,360 @@
 
           <!-- Input Area -->
           <div class="input-area-box">
-            <!-- Mode Switch -->
-            <div class="mode-switch">
+            <!-- Content Type Selector -->
+            <div class="content-type-selector">
               <div
-                class="mode-btn"
-                :class="{ active: currentMode === 'normal' }"
-                @click="switchMode('normal', 1)"
-              >
-                <div class="mode-img">
-                  <img :src="currentMode == 'normal' ? normalActiveIcon : normalIcon" alt="" />
-                </div>
-                <span>{{ t('home.mode.normal') }}</span>
-              </div>
-
-              <div
-                class="mode-btn"
-                :class="{ active: currentMode === 'unlimited' }"
-                @click="switchMode('unlimited', 2)"
-                v-if="userRegion"
-              >
-                <div class="mode-img">
-                  <img :src="currentMode == 'unlimited' ? activeIcon : icon" alt="" />
-                </div>
-                <span>{{ t('home.mode.unlimited') }}</span>
-              </div>
-
-              <!-- <div
-                v-for="(mode, index) in modeOptions"
-                :key="mode.id"
-                class="mode-btn"
-                :class="{ active: currentMode === mode.id }"
-                @click="switchMode(mode.id)"
-              >
-                <div class="mode-img" v-if="index == 1">
-                  <img :src="currentMode === mode.id ? activeIcon : icon" alt="" />
-                </div>
-                <div class="mode-img" v-else>
-                  <img :src="currentMode === mode.id ? normalActiveIcon : normalIcon" alt="" />
-                </div>
-                <span>{{ t(mode.label) }}</span>
-              </div> -->
+              v-for="(type, index) in contentTypeOptions"
+              :key="type.value"
+              class="type-btn"
+              :class="{ active: contentType == type.value }"
+              @click="selectContentType(type.value)"
+            >
+              <img :src="contentType == type.value ? normalActiveIcon : normalIcon" alt="" />
+              <span>{{ t(type.label) }}</span>
+            </div>
             </div>
 
-            <!-- Text Input -->
-            <div class="input-area" :class="currentMode == 'unlimited' ? 'unlimit' : ''">
-              <div class="input-inner">
-                <!-- Combined Characters and Images List -->
-                <div class="selected-items" v-if="combinedItems.length > 0">
-                  <!-- Combined Items -->
+            <!-- Video Mode Content -->
+            <div v-if="contentType == 'video'">
+              <!-- Input Area -->
+              <div class="input-area">
+                <div class="input-inner">
+                  <!-- Combined Characters and Images List -->
+                  <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
+                    <!-- Combined Items -->
+                    <div
+                      v-for="(item, index) in combinedItems"
+                      :key="item.id"
+                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                    >
+                      <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+
+                      <div class="image-box">
+                        <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
+
+                        <span class="img-bg"></span>
+                      </div>
+
+                      <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                    </div>
+                  </div>
+
                   <div
-                    v-for="(item, index) in combinedItems"
-                    :key="item.id"
-                    :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                  >
-                    <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                    <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
-                    <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                    <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                    ref="editableInputRef"
+                    :key="`input-${inputKey}`"
+                    class="input-textarea"
+                    contenteditable="true"
+                    spellcheck="false"
+                    @input="handleInput"
+                    @keydown="handleKeydown"
+                    @click="handleInputClick"
+                    @blur="handleInputBlur"
+                    @paste="handlePaste"
+                    @focus="handleInputFocus"
+                    :data-placeholder="currentPlaceholder"
+                  ></div>
+
+                  <!-- Hidden file input for image upload -->
+                  <input
+                    ref="fileInputRef"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="file-input"
+                    style="display: none;"
+                    @change="handleFileChange"
+                  />
+
+                  <!-- @ Dropdown -->
+                  <div v-if="showAtDropdown" class="at-dropdown">
+                    <div
+                      v-for="(item, index) in atDropdownItems"
+                      :key="index"
+                      class="dropdown-item"
+                      @mousedown.prevent="selectAtItem(item)"
+                    >
+                      <div class="dropdown-img">
+                        <img :src="item.image" :alt="item.name" />
+                      </div>
+
+                      <span v-if="item.type === 'character'">{{ item.name }}</span>
+                      <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                    </div>
+                  </div>
+
+                  <div class="input-box">
+                    <div class="input-options">
+                      <!-- Mode Selector for Video -->
+                      <div class="video-selector" @click="toggleVideoModeDropdown" :class="{ open: showVideoModeDropdown }">
+                        <div class="selector-header">
+                          <div class="selector-img" v-if="currentVideoMode == 'normal'">
+                            <img :src="novelNormalIcon" alt="" />
+                          </div>
+                          <div class="selector-img" v-else>
+                            <img :src="novelUnlimitIcon" alt="" />
+                          </div>
+                          <span>{{ t(currentVideoMode == 'normal' ? 'home.mode.normal' : 'home.mode.unlimited') }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showVideoModeDropdown">
+                          <div
+                            v-for="mode in modeOptions"
+                            :key="mode.name"
+                            class="dropdown-item"
+                            :class="{ active: currentVideoMode == mode.name }"
+                            @click.stop="switchVideoMode(mode.name, mode.name == 'normal' ? 1 : 2)"
+                          >
+
+                            <div class="item-img" v-if="mode?.name == 'normal'">
+                              <img :src="novelNormalIcon" alt="" />
+                            </div>
+                            <div class="item-img" v-if="userRegion && mode?.name == 'unlimited'">
+                              <img :src="novelUnlimitIcon" alt="" />
+                            </div>
+                            <span>{{ t(mode.label || '') }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
+                        <img src="@/assets/images/home/role_icon.png" alt="" />
+                        <span>{{ t('home.option.character') }}</span>
+                      </div>
+                      <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
+                        <img src="@/assets/images/home/img_icon.png" alt="" />
+                        <span>{{ t('home.option.reference') }}</span>
+                      </div>
+                      <div class="option-btn style-btn" @click="() => { if (checkLogin()) showStyleModal = true }">
+                        <img src="@/assets/images/home/style_icon.png" alt="" />
+                        <span>{{ isLoggedIn ? (currentStyleName || t('home.option.style')) : t('home.option.style') }}</span>
+                      </div>
+                      <!-- <div class="option-btn script-btn" @click="showScriptModal = true">
+                        <img src="@/assets/images/home/text_icon.png" alt="" />
+                        <span>{{ t('home.option.script') }}</span>
+                      </div> -->
+                      <div class="option-btn settings-btn" @click="() => { if (checkLogin()) openVideoSettingsModal() }">
+                      <img src="@/assets/images/home/set_icon.png" alt="" />
+                      <span>{{ t('home.option.settings') }}</span>
+                    </div>
+                    </div>
+
+                    <div class="generate-btn" :class="currentVideoMode == 'unlimited' ? 'unlimit' : ''" @click="generateVideo">
+                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div
-                  ref="editableInputRef"
-                  class="input-textarea"
-                  contenteditable="true"
-                  spellcheck="false"
-                  @input="handleInput"
-                  @keydown="handleKeydown"
-                  @click="handleInputClick"
-                  @blur="handleInputBlur"
-                  @paste="handlePaste"
-                  @focus="handleInputFocus"
-                  :data-placeholder="t('home.input.placeholder')"
-                ></div>
+            <!-- Comic Mode Content -->
+            <div v-else-if="contentType == 'comic'">
+              <!-- Input Area -->
+              <div class="input-area">
+                <div class="input-inner">
+                  <!-- Combined Characters and Images List -->
+                  <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
+                    <!-- Combined Items -->
+                    <div
+                      v-for="(item, index) in combinedItems"
+                      :key="item.id"
+                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                    >
+                      <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
 
-                <!-- Hidden file input for image upload -->
-                <input
-                  ref="fileInputRef"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  class="file-input"
-                  style="display: none;"
-                  @change="handleFileChange"
-                />
+                      <div class="image-box">
+                        <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
 
-                <!-- @ Dropdown -->
-                <div v-if="showAtDropdown" class="at-dropdown">
+                        <span class="img-bg"></span>
+                      </div>
+
+                      <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                    </div>
+                  </div>
+
                   <div
-                    v-for="(item, index) in atDropdownItems"
-                    :key="index"
-                    class="dropdown-item"
-                    @mousedown.prevent="selectAtItem(item)"
-                  >
-                    <div class="dropdown-img">
-                      <img :src="item.image" :alt="item.name" />
+                    ref="editableInputRef"
+                    :key="`input-${inputKey}`"
+                    class="input-textarea"
+                    contenteditable="true"
+                    spellcheck="false"
+                    @input="handleInput"
+                    @keydown="handleKeydown"
+                    @click="handleInputClick"
+                    @blur="handleInputBlur"
+                    @paste="handlePaste"
+                    @focus="handleInputFocus"
+                    :data-placeholder="currentPlaceholder"
+                  ></div>
+
+                  <!-- Hidden file input for image upload -->
+                  <input
+                    ref="fileInputRef"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="file-input"
+                    style="display: none;"
+                    @change="handleFileChange"
+                  />
+
+                  <!-- @ Dropdown -->
+                  <div v-if="showAtDropdown" class="at-dropdown">
+                    <div
+                      v-for="(item, index) in atDropdownItems"
+                      :key="index"
+                      class="dropdown-item"
+                      @mousedown.prevent="selectAtItem(item)"
+                    >
+                      <div class="dropdown-img">
+                        <img :src="item.image" :alt="item.name" />
+                      </div>
+
+                      <span v-if="item.type === 'character'">{{ item.name }}</span>
+                      <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                    </div>
+                  </div>
+
+                  <div class="input-box">
+                    <div class="input-options">
+                      <!-- Mode Selector for Comic -->
+                      <div class="video-selector" @click="toggleVideoModeDropdown" :class="{ open: showVideoModeDropdown }">
+                        <div class="selector-header">
+                          <div class="selector-img" v-if="currentVideoMode == 'normal'">
+                            <img :src="novelNormalIcon" alt="" />
+                          </div>
+                          <div class="selector-img" v-else>
+                            <img :src="novelUnlimitIcon" alt="" />
+                          </div>
+                          <span>{{ t(currentVideoMode === 'normal' ? 'home.mode.normal' : 'home.mode.unlimited') }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showVideoModeDropdown">
+                          <div
+                            v-for="mode in modeOptions"
+                            :key="mode.name"
+                            class="dropdown-item"
+                            :class="{ active: currentVideoMode == mode.name }"
+                            @click.stop="switchVideoMode(mode.name, mode.name == 'normal' ? 1 : 2)"
+                          >
+
+                            <div class="item-img" v-if="mode?.name == 'normal'">
+                              <img :src="novelNormalIcon" alt="" />
+                            </div>
+                            <div class="item-img" v-if="userRegion && mode?.name == 'unlimited'">
+                              <img :src="novelUnlimitIcon" alt="" />
+                            </div>
+                            <span>{{ t(mode.label || '') }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
+                        <img src="@/assets/images/home/role_icon.png" alt="" />
+                        <span>{{ t('home.option.character') }}</span>
+                      </div>
+                      <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
+                        <img src="@/assets/images/home/img_icon.png" alt="" />
+                        <span>{{ t('home.option.reference') }}</span>
+                      </div>
                     </div>
 
-                    <span v-if="item.type === 'character'">{{ item.name }}</span>
-                    <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                    <div class="generate-btn" :class="currentVideoMode == 'unlimited' ? 'unlimit' : ''" @click="generateComic">
+                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div class="input-box">
-                  <div class="input-options">
-                    <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
-                      <img src="@/assets/images/home/role_icon.png" alt="" />
-                      <span>{{ t('home.option.character') }}</span>
-                    </div>
-                    <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
-                      <img src="@/assets/images/home/img_icon.png" alt="" />
-                      <span>{{ t('home.option.reference') }}</span>
-                    </div>
-                    <div class="option-btn style-btn" @click="() => { if (checkLogin()) showStyleModal = true }">
-                      <img src="@/assets/images/home/style_icon.png" alt="" />
-                      <span>{{ isLoggedIn ? (currentStyleName || t('home.option.style')) : t('home.option.style') }}</span>
-                    </div>
-                    <!-- <div class="option-btn script-btn" @click="showScriptModal = true">
-                      <img src="@/assets/images/home/text_icon.png" alt="" />
-                      <span>{{ t('home.option.script') }}</span>
-                    </div> -->
-                    <div class="option-btn settings-btn" @click="() => { if (checkLogin()) openVideoSettingsModal() }">
-                    <img src="@/assets/images/home/set_icon.png" alt="" />
-                    <span>{{ t('home.option.settings') }}</span>
-                  </div>
-                  </div>
+            <!-- Novel Mode Content -->
+            <div v-else-if="contentType == 'novel'" class="novel-mode-content">
+              <div class="input-area novel-input-area">
+                <div class="input-inner">
+                  <textarea
+                    class="novel-textarea"
+                    :placeholder="t('home.novel.placeholder')"
+                    v-model="novelInput"
+                    spellcheck="false"
+                  ></textarea>
 
-                  <div class="generate-btn" :class="currentMode == 'unlimited' ? 'unlimit' : ''" @click="generateVideo">
-                    <b></b>
+                  <div class="input-box">
+                    <div class="input-options novel-input-options">
+                      <!-- Mode Selector -->
+                      <div class="novel-selector" @click="toggleModeDropdown" :class="{ open: showModeDropdown }">
+                        <div class="selector-header">
+                          <div class="selector-img" v-if="currentNovelMode === 'normal'">
+                            <img :src="novelNormalIcon" alt="" />
+                          </div>
+                          <div class="selector-img" v-else>
+                            <img :src="novelUnlimitIcon" alt="" />
+                          </div>
+                          <span>{{ t(currentNovelMode === 'normal' ? 'home.mode.normal' : 'home.mode.unlimited') }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown mode" v-if="showModeDropdown">
+                          <div
+                            v-for="mode in modeOptions"
+                            :key="mode.name"
+                            class="dropdown-item"
+                            :class="{ active: currentNovelMode == mode?.name }"
+                            @click.stop="switchNovelMode(mode.name, mode.name === 'normal' ? 1 : 2)"
+                          >
+                            <div class="item-img" v-if="mode.name == 'normal'">
+                              <img :src="novelNormalIcon" alt="" />
+                            </div>
+                            <div class="item-img" v-else-if="mode.name == 'unlimited' || userRegion">
+                              <img :src="novelUnlimitIcon" alt="" />
+                            </div>
+                            <span>{{ t(mode?.label || '') }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Word Count Selector -->
+                      <div class="novel-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
+                        <div class="selector-header">
+                          <span>{{ t('home.totalWords') }}: {{ selectedWordCount }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showWordCountDropdown">
+                          <div
+                            v-for="count in wordCountOptions"
+                            :key="count.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedWordCount === count.value }"
+                            @click.stop="selectWordCount(count.value)"
+                          >
+                            <span>{{ count.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Language Selector -->
+                      <div class="novel-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
+                        <div class="selector-header">
+                          <span>{{ selectedLanguage }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showLanguageDropdown">
+                          <div
+                            v-for="lang in languageOptions"
+                            :key="lang.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedLanguage == lang.value }"
+                            @click.stop="selectLanguage(lang.value)"
+                          >
+                            <span>{{ lang.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="generate-btn" @click="navigateToNovelGenerate">
+                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -153,6 +379,8 @@
           <img src="@/assets/images/home/banner.png" alt="" />
         </div>
       </div>
+
+      <ProcessList />
 
       <!-- Content Section -->
       <div class="content-section">
@@ -328,6 +556,12 @@
       @skip="handleInviteCodeSkip"
     />
 
+    <!-- Guide Modal -->
+    <GuideModal
+      :visible="showGuideModal"
+      @close="showGuideModal = false"
+    />
+
     <!-- Footer -->
     <Footer
       :total-pages="Math.ceil(totalPosts / pageSize)"
@@ -351,16 +585,17 @@ import UploadMask from '@/components/UploadMask.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
 import InviteCodeModal from '@/components/InviteCodeModal.vue';
+import GuideModal from '@/components/GuideModal.vue';
 import Pagination from '@/components/Pagination.vue';
 import Footer from '@/components/Footer.vue';
+import ProcessList from '@/components/ProcessList.vue';
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
 import normalIcon from '@/assets/images/home/normal.png';
 import normalActiveIcon from '@/assets/images/home/normal_active.png';
-
-import icon from '@/assets/images/home/select.png';
-import activeIcon from '@/assets/images/home/select_active.png';
+import novelNormalIcon from '@/assets/images/novel/normal.png';
+import novelUnlimitIcon from '@/assets/images/novel/unlimit.png';
 
 import likeActive from '@/assets/images/detail/like_active.png';
 import like from '@/assets/images/detail/like.png';
@@ -368,24 +603,155 @@ import like from '@/assets/images/detail/like.png';
 const { t, locale } = useI18n();
 
 // State
-const currentMode = ref('normal');
+const currentNovelMode = ref('normal');
 const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
 const loading = ref(false);
 const activeContentType = ref('0');
 const isSearchFocused = ref(false);
-const selectedCharacters = ref<any[]>([]);
+
+// Helper functions to get current state based on contentType
+const getSelectedCharacters = () => contentType.value === 'video' ? selectedCharactersVideo : selectedCharactersComic;
+const getUploadedImages = () => contentType.value === 'video' ? uploadedImagesVideo : uploadedImagesComic;
+const getCombinedItems = () => contentType.value === 'video' ? combinedItemsVideo : combinedItemsComic;
+const getIsInputEmpty = () => contentType.value === 'video' ? isInputEmptyVideo : isInputEmptyComic;
+const getCurrentVideoMode = () => contentType.value === 'video' ? currentVideoMode : currentComicMode;
+const getCurrentPlaceholder = () => contentType.value === 'video' ? t('home.input.placeholder') : t('home.input.placeholderComic');
+
+// State for video tab
+const selectedCharactersVideo = ref<any[]>([]);
+const uploadedImagesVideo = ref<any[]>([]);
+const combinedItemsVideo = ref<any[]>([]);
+const isInputEmptyVideo = ref(true);
+
+// State for comic tab
+const selectedCharactersComic = ref<any[]>([]);
+const uploadedImagesComic = ref<any[]>([]);
+const combinedItemsComic = ref<any[]>([]);
+const isInputEmptyComic = ref(true);
+const inputContentVideo = ref('');
+const inputContentComic = ref('');
+const inputHtmlVideo = ref('');
+const inputHtmlComic = ref('');
+
+// Mode states - separate for video and comic
+const currentVideoMode = ref('normal');
+const currentComicMode = ref('normal');
+
 const showAtDropdown = ref(false);
 const atDropdownItems = ref<any[]>([]);
 const editableInputRef = ref<HTMLElement | null>(null);
-const isInputEmpty = ref(true);
 const isInputFocused = ref(false);
-const uploadedImages = ref<any[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
-// Combined items array to maintain order
-const combinedItems = ref<any[]>([]);
+const justSwitchedTab = ref(false);
+const inputKey = ref(0);
+
+// Computed properties for template
+const selectedCharacters = computed(() => getSelectedCharacters().value);
+const uploadedImages = computed(() => getUploadedImages().value);
+const combinedItems = computed(() => getCombinedItems().value);
+const isInputEmpty = computed({
+  get: () => getIsInputEmpty().value,
+  set: (value: boolean) => {
+    getIsInputEmpty().value = value;
+  }
+});
+
+const currentPlaceholder = computed(() => getCurrentPlaceholder());
+
+// Content type
+const contentType = ref('novel'); // video, comic, novel
+const contentTypeOptions = ref([
+  { value: 'novel', label: 'home.contentType.novel' },
+  { value: 'comic', label: 'home.contentType.comic' },
+  { value: 'video', label: 'home.contentType.video' }
+]);
+
+// Word count and language settings
+const selectedWordCount = ref('100K');
+const showWordCountDropdown = ref(false);
+const wordCountOptions = ref([
+  { value: '100K', label: '100K' },
+  { value: '500K', label: '500K' },
+  { value: '10M', label: '10M' }
+]);
+
+const selectedLanguage = ref(t('novel.language.en'));
+const showLanguageDropdown = ref(false);
+const languageOptions = [
+  { value: 'zh', label: t('novel.language.zh') },
+  { value: 'en', label: t('novel.language.en') },
+  { value: 'jp', label: t('novel.language.jp') }
+];
+
+// Mode dropdown for novel mode
+const showModeDropdown = ref(false);
+const novelInput = ref('');
+
+// Mode dropdown for video mode
+const showVideoModeDropdown = ref(false);
+
+const navigateToNovelGenerate = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  if (!novelInput.value.trim()) {
+    toast(t('home.error.emptyInput'));
+    return;
+  }
+
+  try {
+    const sessionId = uuidv4();
+
+    const params = {
+      ratio: "9:16",
+      language: selectedLanguage.value == 'Chinese' ? 'cn' : selectedLanguage.value == 'English' ? 'en' : 'jp',
+      story_type: "novel",
+      story_mode: currentNovelMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      story_style: "",
+      reference_images: [],
+      emotion: "",
+      others: {
+        content: novelInput.value.trim()
+      },
+      addition_characters: [],
+      total_words: selectedWordCount.value == '10M' ? '100' : selectedWordCount.value == '500K' ? '50' : '10',
+    };
+
+    const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify(params)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.code == 200 || data.code == 0) {
+        const novelSettings = {
+          wordCount: selectedWordCount.value,
+          language: selectedLanguage.value
+        };
+        localStorage.setItem('novelSettings', JSON.stringify(novelSettings));
+
+        router.push(`/novel/${sessionId}`);
+      } else {
+        toast(data.message);
+      }
+    } else {
+      toast(t('fail'));
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
+};
 
 
 
@@ -427,8 +793,8 @@ const sortOptions = ref([
 
 // Mode Options
 const modeOptions = ref([
-  { id: 'normal', label: 'home.mode.normal' },
-  { id: 'unlimited', label: 'home.mode.unlimited' }
+  { id: 'normal', label: 'home.mode.normal', name: 'normal' },
+  { id: 'unlimited', label: 'home.mode.unlimited', name: 'unlimited' }
 ]);
 
 const userRegion = ref(false);
@@ -436,13 +802,11 @@ const userRegion = ref(false);
 // Modals
 const showUnlimitedModal = ref(false);
 const showCharacterModal = ref(false);
-const showReferenceModal = ref(false);
-const showScriptModal = ref(false);
 const showStyleModal = ref(false);
-const showSettingsModal = ref(false);
 const showVideoSettingsModal = ref(false);
 const showUserInfoModal = ref(false);
 const showInviteCodeModal = ref(false);
+const showGuideModal = ref(false);
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -513,7 +877,10 @@ const checkLogin = () => {
 
 // Check if total items (characters + images) has reached the limit
 const checkItemLimit = () => {
-  const totalItems = selectedCharacters.value.length + uploadedImages.value.length;
+  const currentSelectedCharacters = getSelectedCharacters();
+  const currentUploadedImages = getUploadedImages();
+
+  const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length;
   if (totalItems >= 7) {
     toast(t('home.error.maxItemsReached'));
     return false;
@@ -555,7 +922,7 @@ const displayContent = computed(() => {
 });
 
 // Methods
-const switchMode = (mode: string, index: number) => {
+const switchVideoMode = (mode: string, index: number) => {
   if (index == 2) {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -565,23 +932,57 @@ const switchMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentMode.value = 'unlimited';
+      currentVideoMode.value = 'unlimited';
+
+      showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentMode.value = 'normal';
+    currentVideoMode.value = 'normal';
+    showVideoModeDropdown.value = false;
+  }
+};
+
+const switchNovelMode = (mode: string, index: number) => {
+  if (index == 2) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return false;
+    }
+
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentNovelMode.value = 'unlimited';
+      showModeDropdown.value = false;
+    } else {
+      showUnlimitedModal.value = true;
+    }
+  } else {
+    currentNovelMode.value = 'normal';
+    showModeDropdown.value = false;
   }
 };
 
 const confirmUnlimitedMode = () => {
-  currentMode.value = 'unlimited';
+  if (contentType.value === 'video') {
+    currentVideoMode.value = 'unlimited';
+  } else if (contentType.value === 'comic') {
+    currentComicMode.value = 'unlimited';
+  } else if (contentType.value === 'novel') {
+    currentNovelMode.value = 'unlimited';
+  }
   showUnlimitedModal.value = false;
 };
 
 const selectCharacter = (characters: any[]) => {
+  const currentSelectedCharacters = getSelectedCharacters();
+  const currentUploadedImages = getUploadedImages();
+  const currentCombinedItems = getCombinedItems();
+
   // Check total count before adding new characters
-  const totalItems = selectedCharacters.value.length + uploadedImages.value.length + characters.length;
+  const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length + characters.length;
   if (totalItems > 7) {
     toast(t('home.error.maxItemsReached'));
     showCharacterModal.value = false;
@@ -591,10 +992,10 @@ const selectCharacter = (characters: any[]) => {
   // Append new characters instead of replacing
   characters.forEach(newChar => {
     // Only add if not already in the list
-    if (!selectedCharacters.value.some(c => c.id === newChar.id)) {
-      selectedCharacters.value.push(newChar);
+    if (!currentSelectedCharacters.value.some(c => c.id === newChar.id)) {
+      currentSelectedCharacters.value.push(newChar);
       // Add to combined items array with type information
-      combinedItems.value.push({ ...newChar, type: 'character' });
+      currentCombinedItems.value.push({ ...newChar, type: 'character' });
 
       // Insert character tag into input-textarea
       if (editableInputRef.value) {
@@ -656,6 +1057,9 @@ const selectCharacter = (characters: any[]) => {
 };
 
 const removeCharacter = (character: any) => {
+  const currentSelectedCharacters = getSelectedCharacters();
+  const currentCombinedItems = getCombinedItems();
+
   // First, remove references from input-textarea
   if (editableInputRef.value) {
     const characterTags = editableInputRef.value.querySelectorAll('.character-tag-input');
@@ -678,9 +1082,9 @@ const removeCharacter = (character: any) => {
   }
 
   // Then remove from selectedCharacters array
-  selectedCharacters.value = selectedCharacters.value.filter(c => c.id !== character.id);
+  currentSelectedCharacters.value = currentSelectedCharacters.value.filter(c => c.id !== character.id);
   // Also remove from combinedItems array
-  combinedItems.value = combinedItems.value.filter(item => !(item.type === 'character' && item.id === character.id));
+  currentCombinedItems.value = currentCombinedItems.value.filter(item => !(item.type === 'character' && item.id === character.id));
 
   // Do not update local storage - only characters from CharacterLibrary should be cached
 };
@@ -697,6 +1101,103 @@ const selectStyle = (style: any) => {
     currentStyleName.value = displayName;
   }
   showStyleModal.value = false;
+};
+
+// Content type selection
+const selectContentType = (type: string) => {
+  // If we just switched tabs, don't save or restore content
+  if (justSwitchedTab.value) {
+    contentType.value = type;
+    // Ensure input is cleared
+    nextTick(() => {
+      if (editableInputRef.value) {
+        editableInputRef.value.innerHTML = '';
+        isInputEmpty.value = true;
+      }
+    });
+    return;
+  }
+
+  // Save current content before switching
+  if (editableInputRef.value) {
+    if (contentType.value == 'video') {
+      inputContentVideo.value = editableInputRef.value.textContent || '';
+      inputHtmlVideo.value = editableInputRef.value.innerHTML;
+    } else if (contentType.value == 'comic') {
+      inputContentComic.value = editableInputRef.value.textContent || '';
+      inputHtmlComic.value = editableInputRef.value.innerHTML;
+    }
+  }
+
+  contentType.value = type;
+
+  currentVideoMode.value = 'normal'
+  currentComicMode.value = 'normal'
+  currentNovelMode.value = 'normal'
+
+  nextTick(() => {
+    if (editableInputRef.value) {
+      if (type === 'video') {
+        editableInputRef.value.innerHTML = inputHtmlVideo.value;
+        isInputEmpty.value = inputContentVideo.value.trim() === '';
+      } else if (type === 'comic') {
+        editableInputRef.value.innerHTML = inputHtmlComic.value;
+        isInputEmpty.value = inputContentComic.value.trim() === '';
+      } else {
+        editableInputRef.value.textContent = '';
+      }
+    }
+  });
+};
+
+// Mode dropdown for novel mode
+const toggleModeDropdown = () => {
+  showModeDropdown.value = !showModeDropdown.value;
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
+  showVideoModeDropdown.value = false;
+};
+
+// Mode dropdown for video mode
+const toggleVideoModeDropdown = () => {
+  showVideoModeDropdown.value = !showVideoModeDropdown.value;
+  showModeDropdown.value = false;
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
+};
+
+// Word count and language selection methods
+const toggleWordCountDropdown = () => {
+  showWordCountDropdown.value = !showWordCountDropdown.value;
+  showLanguageDropdown.value = false;
+  showModeDropdown.value = false;
+};
+
+const toggleLanguageDropdown = () => {
+  showLanguageDropdown.value = !showLanguageDropdown.value;
+  showWordCountDropdown.value = false;
+  showModeDropdown.value = false;
+};
+
+const selectWordCount = (value: string) => {
+  selectedWordCount.value = value;
+  showWordCountDropdown.value = false;
+};
+
+const selectLanguage = (value: string) => {
+  selectedLanguage.value = value;
+  showLanguageDropdown.value = false;
+};
+
+// Close dropdowns when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.novel-selector') && !target.closest('.video-selector')) {
+    showWordCountDropdown.value = false;
+    showLanguageDropdown.value = false;
+    showModeDropdown.value = false;
+    showVideoModeDropdown.value = false;
+  }
 };
 
 function getCountry() {
@@ -838,12 +1339,12 @@ const generateVideo = async () => {
 
     // Prepare data for ai_director
     const aiDirectorData = {
-      storyType: currentMode.value == 'unlimited' ? "nsfw_story" : "short_story",
+      storyType: currentVideoMode.value == 'unlimited' ? "nsfw_story" : "short_story",
       initialPrompt: inputContent.trim(),
       selectedStyle: storyStyle || null,
       selectedCharacter: null,
-      referenceImages: uploadedImages.value.map(img => img.image),
-      characters: selectedCharacters.value,
+      referenceImages: uploadedImagesVideo.value.map(img => img.image),
+      characters: selectedCharactersVideo.value,
       timestamp: Date.now()
     };
 
@@ -863,7 +1364,6 @@ const generateVideo = async () => {
       }
     } catch (error) {
       console.error('Error loading video settings:', error);
-      localStorage.setItem('videoSettings', JSON.stringify(videoSettings));
     }
 
     // 生成角色和图片的索引映射
@@ -871,12 +1371,12 @@ const generateVideo = async () => {
     const imageMap: Record<string, number> = {};
 
     // 角色索引基于角色列表的顺序
-    selectedCharacters.value.forEach((character, index) => {
+    selectedCharactersVideo.value.forEach((character, index) => {
       characterMap[character.id] = index + 1;
     });
 
     // 图片索引基于图片列表的顺序
-    uploadedImages.value.forEach((image, index) => {
+    uploadedImagesVideo.value.forEach((image, index) => {
       imageMap[image.id] = index + 1;
     });
 
@@ -893,7 +1393,7 @@ const generateVideo = async () => {
             // 处理角色标签
             const img = element.querySelector('img');
             if (img) {
-              const character = selectedCharacters.value.find(c =>
+              const character = selectedCharactersVideo.value.find(c =>
                 c.image === img.src || img.src.includes(c.image)
               );
               if (character) {
@@ -905,7 +1405,7 @@ const generateVideo = async () => {
             // 处理图片标签
             const imgElement = element.querySelector('img');
             if (imgElement) {
-              const image = uploadedImages.value.find(img =>
+              const image = uploadedImagesVideo.value.find(img =>
                 img.image === imgElement.src || imgElement.src.includes(img.image)
               );
               if (image) {
@@ -933,17 +1433,18 @@ const generateVideo = async () => {
     const params = {
       ratio: videoSettings.aspectRatio,
       language: videoSettings.language,
-      story_type: currentMode.value == 'unlimited' ? "nsfw_story" : "short_story",
+      story_type: "manju",
+      story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: storyStyle,
-      reference_images: uploadedImages.value.map(img => img.image),
+      reference_images: uploadedImagesVideo.value.map(img => img.image),
       emotion: "",
       others: {
         content: processedContent,
-        list: combinedItems.value,
+        list: combinedItemsVideo.value,
         style: currentStyleData,
         use_computing: 0
       },
-      addition_characters: selectedCharacters.value.map(character => ({
+      addition_characters: selectedCharactersVideo.value.map(character => ({
         id: character.id,
         name: character.name,
         desc: character.description,
@@ -968,15 +1469,158 @@ const generateVideo = async () => {
 
         if (editableInputRef.value) {
           editableInputRef.value.textContent = '';
+          isInputEmptyVideo.value = true;
           isInputEmpty.value = true;
+          selectedCharactersVideo.value = [];
+          uploadedImagesVideo.value = [];
+          combinedItemsVideo.value = [];
+          inputContentVideo.value = '';
+          inputHtmlVideo.value = '';
         }
       } else {
-        toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+        toast(data.message)
       }
     } else {
       toast(t('fail'));
     }
   } catch (error) {
+    toast(t('fail'));
+  }
+};
+
+const generateComic = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  if (!editableInputRef.value) {
+    toast(t('home.error.emptyInput'));
+    return;
+  }
+
+  const inputContent = editableInputRef.value.textContent || '';
+  if (!inputContent.trim()) {
+    toast(t('home.error.emptyInput'));
+    return;
+  }
+
+  const sessionId = uuidv4();
+
+  // 生成角色和图片的索引映射
+  const characterMap: Record<string, number> = {};
+  const imageMap: Record<string, number> = {};
+
+  // 角色索引基于角色列表的顺序
+  selectedCharactersComic.value.forEach((character, index) => {
+    characterMap[character.id] = index + 1;
+  });
+
+  // 图片索引基于图片列表的顺序
+  uploadedImagesComic.value.forEach((image, index) => {
+    imageMap[image.id] = index + 1;
+  });
+
+  // 先创建一个干净的文本内容，不包含标签
+  let processedContent = '';
+  if (editableInputRef.value) {
+    // 遍历所有子节点，构建干净的文本内容
+    const processNode = (node: Node) => {
+      if (node.nodeType === 3) { // 文本节点
+        processedContent += node.textContent || '';
+      } else if (node.nodeType === 1) { // 元素节点
+        const element = node as Element;
+        if (element.classList.contains('character-tag-input')) {
+            // 处理角色标签
+            const img = element.querySelector('img');
+            if (img) {
+              const character = selectedCharactersComic.value.find(c =>
+                c.image == img.src || img.src.includes(c.image)
+              );
+              if (character) {
+                const charIndex = characterMap[character.id] || 1;
+                processedContent += `<chr_${charIndex}>`;
+              }
+            }
+          } else if (element.classList.contains('image-tag')) {
+            // 处理图片标签
+            const imgElement = element.querySelector('img');
+            if (imgElement) {
+              const image = uploadedImagesComic.value.find(img =>
+                img.image === imgElement.src || imgElement.src.includes(img.image)
+              );
+              if (image) {
+                const imgIndex = imageMap[image.id] || 1;
+                processedContent += `<ref_${imgIndex}>`;
+              }
+            }
+        } else {
+          // 处理其他元素节点
+          for (let i = 0; i < element.childNodes.length; i++) {
+            processNode(element.childNodes[i]);
+          }
+        }
+      }
+    };
+
+    // 处理输入框的所有子节点
+    for (let i = 0; i < editableInputRef.value.childNodes.length; i++) {
+      processNode(editableInputRef.value.childNodes[i]);
+    }
+  } else {
+    processedContent = inputContent.trim();
+  }
+
+  const params = {
+    ratio: "9:16",
+    language: "",
+    story_type: "manhua",
+    story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+    story_style: "",
+    reference_images: uploadedImagesComic.value.map(img => img.image),
+    emotion: "",
+    others: {
+      content: processedContent,
+      list: combinedItemsComic.value
+    },
+    addition_characters: selectedCharactersComic.value.map(character => ({
+      id: character.id,
+      name: character.name,
+      desc: character.description,
+      main_image_url: character.image,
+      tri_view_url: character.tri_image
+    }))
+  };
+
+  const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'token': token
+    },
+    body: JSON.stringify(params)
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    if (data.code === 200 || data.code === 0) {
+      window.open(`/tools/space/${sessionId}`, '_blank');
+
+      if (editableInputRef.value) {
+        editableInputRef.value.textContent = '';
+        isInputEmptyComic.value = true;
+        isInputEmpty.value = true;
+        selectedCharactersComic.value = [];
+        uploadedImagesComic.value = [];
+        combinedItemsComic.value = [];
+        inputContentComic.value = '';
+        inputHtmlComic.value = '';
+      }
+    } else {
+      toast(data.message)
+    }
+  } else {
     toast(t('fail'));
   }
 };
@@ -1004,15 +1648,57 @@ const switchContentTab = (tabId: string, index: number) => {
     }
   }
 
+  // Set flag to prevent content restoration
+  justSwitchedTab.value = true;
+
+  // Update input key to force re-render of input elements
+  inputKey.value++;
+
   activeContentTab.value = tabId;
   tabCur.value = index;
   currentPage.value = 1;
   allContent.value = []; // Clear old data to show loading state
   contentCardRefs.value = []; // Clear card refs to reset layout
 
+  // Clear selected characters and images for both video and comic modes
+  selectedCharactersVideo.value = [];
+  uploadedImagesVideo.value = [];
+  combinedItemsVideo.value = [];
+  inputContentVideo.value = '';
+  inputHtmlVideo.value = '';
+  isInputEmptyVideo.value = true;
+
+  selectedCharactersComic.value = [];
+  uploadedImagesComic.value = [];
+  combinedItemsComic.value = [];
+  inputContentComic.value = '';
+  inputHtmlComic.value = '';
+  isInputEmptyComic.value = true;
+
+  // Clear novel input
+  novelInput.value = '';
+
+  // Reset mode, style, and settings to original values
+  currentNovelMode.value = 'normal';
+  currentVideoMode.value = 'normal';
+  currentComicMode.value = 'normal';
+  selectedWordCount.value = '100K';
+  selectedLanguage.value = 'English';
+  currentStyleName.value = '';
+
+  // Clear current content type's input
+  if (editableInputRef.value) {
+    editableInputRef.value.innerHTML = '';
+    isInputEmpty.value = true;
+  }
+
   // Use nextTick to ensure DOM is updated before loading new content
   nextTick(() => {
     loadContent(1);
+    // Reset flag after a short delay
+    setTimeout(() => {
+      justSwitchedTab.value = false;
+    }, 100);
   });
 };
 
@@ -1024,10 +1710,14 @@ const triggerFileUpload = () => {
 };
 
 const handleFileChange = async (event: Event) => {
+  const currentSelectedCharacters = getSelectedCharacters();
+  const currentUploadedImages = getUploadedImages();
+  const currentCombinedItems = getCombinedItems();
+
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
     // Check total count before uploading new images
-    const totalItems = selectedCharacters.value.length + uploadedImages.value.length + input.files.length;
+    const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length + input.files.length;
     if (totalItems > 7) {
       toast(t('home.error.maxItemsReached'));
       input.value = '';
@@ -1040,7 +1730,7 @@ const handleFileChange = async (event: Event) => {
       const files = Array.from(input.files);
       const uploadPromises = files.map(async (file, index) => {
         try {
-          const uploadedUrl = await uploadImage(file, currentMode.value);
+          const uploadedUrl = await uploadImage(file, currentVideoMode.value);
 
           const newImage = {
             id: Date.now() + index.toString(),
@@ -1048,9 +1738,9 @@ const handleFileChange = async (event: Event) => {
             image: uploadedUrl
           };
 
-          uploadedImages.value.push(newImage);
+          currentUploadedImages.value.push(newImage);
           // Add to combined items array with type information
-          combinedItems.value.push({ ...newImage, type: 'image' });
+          currentCombinedItems.value.push({ ...newImage, type: 'image' });
 
           // Insert image tag into input-textarea
           if (editableInputRef.value) {
@@ -1070,7 +1760,7 @@ const handleFileChange = async (event: Event) => {
             img.className = 'image-tag-img';
 
             // Create text node with image index
-            const imageIndex = uploadedImages.value.length;
+            const imageIndex = currentUploadedImages.value.length;
             const textNode = document.createTextNode(`image${imageIndex}`);
 
             // Append image and text to tag
@@ -1147,6 +1837,9 @@ async function uploadImage(file: File, mode: string): Promise<string> {
 
 // Remove uploaded image
 const removeUploadedImage = (id: string) => {
+  const currentUploadedImages = getUploadedImages();
+  const currentCombinedItems = getCombinedItems();
+
   // First, remove references from input-textarea
   if (editableInputRef.value) {
     const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
@@ -1154,7 +1847,7 @@ const removeUploadedImage = (id: string) => {
       const img = tag.querySelector('img');
       if (img) {
         // Find the image being removed
-        const imageToRemove = uploadedImages.value.find(img => img.id === id);
+        const imageToRemove = currentUploadedImages.value.find(img => img.id === id);
         if (imageToRemove && (img.src.includes(imageToRemove.image) || imageToRemove.image.includes(img.src))) {
           // If this tag corresponds to the image being removed, remove it
           // Check if there's a space after the tag and remove it too
@@ -1173,9 +1866,9 @@ const removeUploadedImage = (id: string) => {
   }
 
   // Then remove from uploadedImages array
-  uploadedImages.value = uploadedImages.value.filter(img => img.id !== id);
+  currentUploadedImages.value = currentUploadedImages.value.filter(img => img.id !== id);
   // Also remove from combinedItems array
-  combinedItems.value = combinedItems.value.filter(item => !(item.type === 'image' && item.id === id));
+  currentCombinedItems.value = currentCombinedItems.value.filter(item => !(item.type === 'image' && item.id === id));
 
   // Update image order in input-textarea
   // Note: Using nextTick to ensure DOM is updated before modifying it
@@ -1186,13 +1879,13 @@ const removeUploadedImage = (id: string) => {
         imageTags.forEach(tag => {
           const img = tag.querySelector('img');
           if (img) {
-            // Find the corresponding image in uploadedImages
-            const image = uploadedImages.value.find(imgItem =>
+            // Find the corresponding image in currentUploadedImages
+            const image = currentUploadedImages.value.find(imgItem =>
               imgItem.image === img.src || img.src.includes(imgItem.image)
             );
             if (image) {
               // Update the image index
-              const imageIndex = uploadedImages.value.findIndex(imgItem => imgItem.id === image.id) + 1;
+              const imageIndex = currentUploadedImages.value.findIndex(imgItem => imgItem.id === image.id) + 1;
               // Update the text content
               const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
               if (textNode) {
@@ -1218,16 +1911,20 @@ const handleInput = (event: Event) => {
   const textBeforeCursor = text.substring(0, cursorPosition);
   const atIndex = textBeforeCursor.lastIndexOf('@');
 
+  const currentSelectedCharacters = getSelectedCharacters();
+  const currentUploadedImages = getUploadedImages();
+  const currentCombinedItems = getCombinedItems();
+
   // Only show dropdown if:
   // 1. There's an @ symbol
   // 2. @ is the last character before cursor (just typed)
   // 3. There are uploaded images or selected characters
   if (atIndex !== -1 &&
       atIndex === textBeforeCursor.length - 1 &&
-      (uploadedImages.value.length > 0 || selectedCharacters.value.length > 0)) {
+      (currentUploadedImages.value.length > 0 || currentSelectedCharacters.value.length > 0)) {
     showAtDropdown.value = true;
     // Use the existing combinedItems array
-    atDropdownItems.value = combinedItems.value;
+    atDropdownItems.value = currentCombinedItems.value;
 
     // Calculate dropdown position based on @ symbol position
     nextTick(() => {
@@ -1369,16 +2066,20 @@ const handleInputClick = () => {
     const textBeforeCursor = text.substring(0, cursorPosition);
     const atIndex = textBeforeCursor.lastIndexOf('@');
 
+    const currentSelectedCharacters = getSelectedCharacters();
+    const currentUploadedImages = getUploadedImages();
+    const currentCombinedItems = getCombinedItems();
+
     // Only show dropdown if:
     // 1. There's an @ symbol
     // 2. @ is the last character before cursor (just typed)
     // 3. There are uploaded images or selected characters
     if (atIndex !== -1 &&
         atIndex === textBeforeCursor.length - 1 &&
-        (uploadedImages.value.length > 0 || selectedCharacters.value.length > 0)) {
+        (currentUploadedImages.value.length > 0 || currentSelectedCharacters.value.length > 0)) {
       showAtDropdown.value = true;
       // Use the existing combinedItems array
-    atDropdownItems.value = combinedItems.value;
+      atDropdownItems.value = currentCombinedItems.value;
 
       // Calculate dropdown position based on @ symbol position
       nextTick(() => {
@@ -1546,8 +2247,9 @@ const selectAtItem = (item: any) => {
     img.alt = item.name;
     img.className = 'image-tag-img';
 
+    const currentUploadedImages = getUploadedImages();
     // Create text node with image index
-    const imageIndex = uploadedImages.value.findIndex(img => img.id === item.id) + 1;
+    const imageIndex = currentUploadedImages.value.findIndex(img => img.id === item.id) + 1;
     textNode = document.createTextNode(`image${imageIndex}`);
   }
 
@@ -1901,12 +2603,41 @@ onMounted(() => {
   getCountry();
   loadSelectedStyle();
 
+  // Load video mode settings from local storage
+  try {
+    const storedVideoMode = localStorage.getItem('currentVideoMode');
+    if (storedVideoMode) {
+      currentVideoMode.value = storedVideoMode;
+    }
+    const storedComicMode = localStorage.getItem('currentComicMode');
+    if (storedComicMode) {
+      currentComicMode.value = storedComicMode;
+    }
+  } catch (error) {
+    console.error('Error loading video mode settings:', error);
+  }
+
+  // Load novel settings from local storage
+  try {
+    const storedNovelSettings = localStorage.getItem('novelSettings');
+    if (storedNovelSettings) {
+      const novelSettings = JSON.parse(storedNovelSettings);
+      if (novelSettings.wordCount) {
+        selectedWordCount.value = novelSettings.wordCount;
+      }
+      if (novelSettings.language) {
+        selectedLanguage.value = novelSettings.language;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading novel settings:', error);
+  }
+
   // Load selected characters from local storage (only for characters cast from CharacterLibrary)
   try {
     const storedCharacters = localStorage.getItem('selectedCharacters');
     if (storedCharacters) {
-      selectedCharacters.value = JSON.parse(storedCharacters);
-      // Clear the cache after loading to ensure characters are only displayed once
+      // Clear the cache after loading as we no longer use the old variable
       localStorage.removeItem('selectedCharacters');
     }
   } catch (error) {
@@ -1918,12 +2649,17 @@ onMounted(() => {
     const castedCharacter = localStorage.getItem('castedCharacter');
     if (castedCharacter) {
       const character = JSON.parse(castedCharacter);
+
+      const currentSelectedCharacters = getSelectedCharacters();
+      const currentUploadedImages = getUploadedImages();
+      const currentCombinedItems = getCombinedItems();
+
       // Check if character is already in the list
-      if (!selectedCharacters.value.some(c => c.id === character.id)) {
+      if (!currentSelectedCharacters.value.some(c => c.id === character.id)) {
         // Check if total items exceed limit
-        if (selectedCharacters.value.length + uploadedImages.value.length < 7) {
-          selectedCharacters.value.push(character);
-          combinedItems.value.push({ ...character, type: 'character' });
+        if (currentSelectedCharacters.value.length + currentUploadedImages.value.length < 7) {
+          currentSelectedCharacters.value.push(character);
+          currentCombinedItems.value.push({ ...character, type: 'character' });
 
           // Insert character tag into input-textarea
           if (editableInputRef.value) {
@@ -1981,12 +2717,14 @@ onMounted(() => {
   loadStyles();
 
   window.addEventListener('resize', handleResize);
+  document.addEventListener('click', handleClickOutside);
 
   checkFirstRegister();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
+  document.removeEventListener('click', handleClickOutside);
 });
 
 // Handle window resize
@@ -2038,6 +2776,8 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
+
+        showGuideModal.value = true;
       }
     };
 
@@ -2117,6 +2857,8 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
 
 function handleUserInfoSkip() {
   showUserInfoModal.value = false;
+
+  showGuideModal.value = true;
 }
 
 function handleInviteCodeConfirm(code: string) {
@@ -2144,6 +2886,8 @@ function handleInviteCodeSkip() {
 
 function handleUserInfoCancel() {
   showUserInfoModal.value = false;
+
+  showGuideModal.value = true;
 }
 
 function handlePageChange(page: number) {
@@ -2159,14 +2903,8 @@ function handlePageChange(page: number) {
 <style scoped lang="scss">
 .home-page {
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
-  background-image: url('@/assets/images/home/bg.png');
-  scroll-behavior: smooth;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  min-height: 100vh;
+  background: #FFFFFF;
 }
 
 .main-content {
@@ -2198,14 +2936,214 @@ function handlePageChange(page: number) {
       font-weight: bold;
       text-align: center;
       margin-bottom: 3rem;
-      font-style: italic;
-      background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
+      background: #101828;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    /* Mode Switch */
+    .content-type-selector {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      gap: 0.8rem;
+      padding: 0 1.2rem;
+      width: 100%;
+
+      .type-btn {
+        position: relative;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.8rem;
+        padding: 0.7rem 1.2rem;
+        border-radius: 0.6rem 0.6rem 0 0;
+        cursor: pointer;
+
+        img{
+          width: 0.8rem;
+          height: 0.8rem;
+        }
+
+        span {
+          font-size: 1.4rem;
+          color: #99A1AF;
+        }
+
+        &:first-child {
+          border: 1px solid #F5F5F5;
+          border-bottom: none;
+
+          &.active {
+            background: rgba(251,100,182,0.12);
+            border: 1px solid rgba(251,100,182,0.12);
+            border-bottom: none;
+
+            span {
+              color: #364153;
+            }
+          }
+        }
+
+        &:nth-of-type(2),
+        &:nth-of-type(3) {
+          border: 1px solid #F5F5F5;
+          border-bottom: none;
+
+          &.active {
+            background: rgba(251,100,182,0.12);
+            border: 1px solid rgba(251,100,182,0.12);
+            border-bottom: none;
+
+            span {
+              color: #364153;
+            }
+          }
+        }
+      }
+    }
+
+    .novel-mode-content {
+      .novel-input-area {
+        box-shadow: 0px 0px 18px 0px rgba(251,100,182,0.18);
+      }
+
+      .novel-textarea {
+        width: 100%;
+        min-height: 11rem;
+        max-height: 24rem;
+        font-family: inherit;
+        font-size: 1.4rem;
+        line-height: 2.8rem;
+        resize: none;
+        outline: none;
+        border: none;
+        color: #364153;
+        background: transparent;
+
+        &::placeholder {
+          color: #99A1AF;
+        }
+      }
+
+      .novel-input-options {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .novel-selector {
+        position: relative;
+        cursor: pointer;
+
+        .selector-header {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          padding: 0.8rem 1.2rem;
+          border-radius: 0.8rem;
+          transition: all 0.3s ease;
+
+
+          &:hover {
+            background: #F5F5F5;
+          }
+
+          .selector-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+
+            img {
+              width: 2rem;
+              height: 2rem;
+            }
+          }
+
+          span {
+            font-size: 1.4rem;
+            color: #99A1AF;
+          }
+
+          .dropdown-arrow {
+            width: 2rem;
+            height: 2rem;
+            transition: transform 0.3s ease;
+          }
+        }
+
+        &.open .dropdown-arrow {
+          transform: rotate(180deg);
+        }
+
+        .dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 1rem;
+          padding: 1.2rem;
+          background: #FFFFFF;
+          border-radius: 0.8rem;
+          box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.06);
+          z-index: 20;
+          min-width: 16rem;
+          width: max-content;
+
+          &.mode{
+            .dropdown-item {
+              justify-content: flex-start;
+              color: #99A1AF;
+
+              &:hover {
+                color: #6A7282;
+              }
+
+              &.active{
+                background: #F5F5F5;
+                color: #6A7282;
+              }
+            }
+          }
+
+          .dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            font-size: 1.4rem;
+            border-radius: 0.6rem;
+            color: #6A7282;
+
+            &:hover {
+              color: #101828;
+            }
+
+            &.active {
+              font-weight: 500;
+              color: #101828;
+            }
+
+            .item-img {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 2rem;
+              height: 2rem;
+
+              img {
+                width: 2rem;
+                height: 2rem;
+              }
+            }
+          }
+        }
+      }
+    }
+
     .mode-switch {
       display: flex;
       gap: 0.8rem;
@@ -2216,7 +3154,7 @@ function handlePageChange(page: number) {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.8rem 1.2rem;
+        padding: 0.7rem 1.2rem;
         border-radius: 0.6rem 0.6rem 0 0;
         cursor: pointer;
 
@@ -2235,56 +3173,27 @@ function handlePageChange(page: number) {
 
         span {
           font-size: 1.4rem;
+          color: #99A1AF;
         }
 
         &:first-child{
-          border: 1px solid rgba(251,100,182,0.2);
+          border: 1px solid #F5F5F5;
           border-bottom: none;
-          background: rgba(251,100,182,0.03);
-
-          span{
-            color: rgba(251,100,182,0.6);
-          }
 
           &.active {
             background: rgba(251,100,182,0.12);
-            border: 1px solid #FB64B6;
+            border: 1px solid rgba(251,100,182,0.12);
             border-bottom: none;
-            color: #FB64B6;
 
             span{
-              color: #FB64B6;
+              color: #364153;
             }
           }
         }
 
         &:nth-of-type(2){
-          background: linear-gradient( 135deg, rgba(194, 122, 255, 0.1) 0%, rgba(255, 127, 250, 0.1) 50%, rgba(251, 100, 243, 0.1) 100%), #FFFFFF;
-
-          &:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: inherit;
-            background: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-            padding: 1px 1px 0;
-            -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-            mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-            z-index: 1;
-          }
-
-          span{
-            background: linear-gradient(45deg, rgba(194, 122, 255, 0.6), rgba(255, 127, 250, 0.6), rgba(251, 100, 243, 0.6));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-          }
+          border: 1px solid #F5F5F5;
+          border-bottom: none;
 
           &.active {
             background: linear-gradient( 135deg, rgba(194, 122, 255, 0.2) 0%, rgba(255, 127, 250, 0.2) 50%, rgba(251, 100, 243, 0.2) 100%), #FFFFFF;
@@ -2294,11 +3203,7 @@ function handlePageChange(page: number) {
             }
 
             span{
-              background: linear-gradient(45deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-              -webkit-background-clip: text;
-              background-clip: text;
-              -webkit-text-fill-color: transparent;
-              color: transparent;
+              color: #364153;
             }
           }
 
@@ -2311,38 +3216,68 @@ function handlePageChange(page: number) {
       position: relative;
       width: 108rem;
       padding: 1.6rem;
-      background: rgba(255,255,255,0.8);
-      box-shadow: 0px 0px 15px -3px rgba(251,100,182,0.2);
-      border: 2px solid transparent;
+      background: #FFFFFF;
+      box-shadow: 0px 0px 18px 0px rgba(251,100,182,0.18);;
       border-radius: 1.2rem;
 
       &.unlimit{
-        &::before{
-          content: "";
-          position: absolute;
-          top: -2px;
-          left: -2px;
-          width: 100%;
-          height: 100%;
-          border-radius: inherit;
-          background: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-          padding: 2px;
-          -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-          mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-          -webkit-mask-composite: destination-out;
-          mask-composite: exclude;
-          z-index: 1;
-        }
-      }
-
-      &:not(.unlimit) {
-        background: linear-gradient(#ffffff, #ffffff) padding-box,
-                    linear-gradient(360deg, #FB64B6, #FB64B6) border-box;
+        box-shadow: -9px 9px 18px 0px rgba(194,122,255,0.12), 9px -9px 18px 0px rgba(255,127,250,0.12);
       }
 
       .input-inner{
         position: relative;
         z-index: 10;
+      }
+
+      .input-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.6rem;
+
+        .word-count-selector, .language-selector {
+          position: relative;
+          cursor: pointer;
+
+          .control-label {
+            font-size: 1.4rem;
+            color: #6A7282;
+            padding: 0.4rem 1.2rem;
+            border-radius: 0.6rem;
+            background: #F5F5F5;
+            display: inline-block;
+
+            &:hover {
+              background: #E5E7EB;
+            }
+          }
+
+          .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0.4rem;
+            padding: 0.8rem;
+            border-radius: 0.8rem;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+            z-index: 100;
+            min-width: 12rem;
+
+            .dropdown-item {
+              padding: 0.8rem 1.2rem;
+              font-size: 1.4rem;
+              color: #6A7282;
+              cursor: pointer;
+              border-radius: 0.4rem;
+
+              &:hover {
+                background: #F5F5F5;
+                color: #364153;
+              }
+            }
+          }
+        }
       }
 
       .selected-items {
@@ -2357,10 +3292,9 @@ function handlePageChange(page: number) {
           align-items: center;
           justify-content: center;
           gap: 0.8rem;
-          width: 4.4rem;
-          height: 4.4rem;
+          width: 6.4rem;
+          height: 6.4rem;
           border-radius: 0.4rem;
-          background: rgba(251,100,182,0.12);
 
           .image-index {
             position: absolute;
@@ -2375,7 +3309,28 @@ function handlePageChange(page: number) {
             border-radius: 0.2rem;
             background: rgba(245, 245, 245, 0.8);
             color: #364153;
-            z-index: 5;
+            z-index: 10;
+          }
+
+          .image-box{
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.4rem;
+            background: #F5F5F5;
+
+            span{
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient( 0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+              z-index: 2;
+            }
           }
         }
 
@@ -2384,8 +3339,8 @@ function handlePageChange(page: number) {
 
           .character-avatar {
             width: auto;
-            max-width: 4.4rem;
-            height: 4.4rem;
+            max-width: 6.4rem;
+            height: 6.4rem;
             border-radius: 0.4rem;
             object-fit: contain;
           }
@@ -2396,23 +3351,23 @@ function handlePageChange(page: number) {
             left: 0;
             right: 0;
             padding: 0.4rem;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 0 0 0.4rem 0.4rem;
-            font-size: 0.8rem;
+            font-size: 1.2rem;
             color: #364153;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            z-index: 10;
           }
 
           .remove-btn {
             position: absolute;
             top: 0.2rem;
             right: 0.2rem;
-            width: 1.2rem;
-            height: 1.2rem;
+            width: 1.6rem;
+            height: 1.6rem;
             cursor: pointer;
+            z-index: 10;
           }
         }
 
@@ -2433,6 +3388,7 @@ function handlePageChange(page: number) {
             width: 1.2rem;
             height: 1.2rem;
             cursor: pointer;
+            z-index: 10;
           }
         }
       }
@@ -2440,11 +3396,11 @@ function handlePageChange(page: number) {
       .input-textarea {
         position: relative;
         width: 100%;
-        min-height: 9rem;
+        min-height: 11rem;
         max-height: 24rem;
         font-family: inherit;
         font-size: 1.4rem;
-        line-height: 2rem;
+        line-height: 2.8rem;
         resize: none;
         outline: none;
         text-decoration: none;
@@ -2471,7 +3427,7 @@ function handlePageChange(page: number) {
 
         &:empty:not(:focus)::before {
           content: attr(data-placeholder);
-          color: #999;
+          color: #99A1AF;
           pointer-events: none;
         }
 
@@ -2492,7 +3448,7 @@ function handlePageChange(page: number) {
           align-items: center;
           gap: 0.2rem;
           padding: 0.2rem;
-          background: rgba(251,100,182,0.12);
+          background: #F5F5F5;
           border-radius: 0.2rem;
           font-size: 1.2rem;
           color: #6A7282;
@@ -2522,7 +3478,7 @@ function handlePageChange(page: number) {
           align-items: center;
           gap: 0.2rem;
           padding: 0.2rem;
-          background: rgba(251,100,182,0.12);
+          background: #F5F5F5;
           border-radius: 0.2rem;
           font-size: 1.2rem;
           color: #6A7282;
@@ -2552,10 +3508,9 @@ function handlePageChange(page: number) {
         position: absolute;
         width: 11rem;
         padding: 1.2rem;
-        border: 1px solid rgba(251,100,182,0.2);
         border-radius: 0.8rem;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0px 0px 12px -4px rgba(0,0,0,0.18);
+        background: #FFFFFF;
+        box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
         z-index: 100;
         max-height: 20rem;
         overflow-y: auto;
@@ -2584,17 +3539,15 @@ function handlePageChange(page: number) {
             width: 2rem;
             height: 2rem;
             border-radius: 0.2rem;
-            background: rgba(251,100,182,0.12);
+            background: #F5F5F5;
 
             img {
               width: auto;
-              max-width: 100%;
+              width: 2rem;
               height: 2rem;
-              border-radius: 0.2rem;
               object-fit: contain;
             }
           }
-
 
           span {
             font-size: 1.4rem;
@@ -2609,12 +3562,13 @@ function handlePageChange(page: number) {
         justify-content: space-between;
         margin-top: 2rem;
         padding-top: 1.6rem;
-        border-top: 1px solid rgba(251,100,182,0.1);
+        border-top: 1px solid #F5F5F5;
       }
 
       .input-options {
         display: flex;
         align-items: center;
+        gap: 0.8rem;
 
         .option-btn {
           display: flex;
@@ -2636,6 +3590,100 @@ function handlePageChange(page: number) {
 
           &:hover {
             background: #F5F5F5;
+          }
+        }
+
+        .video-selector {
+          position: relative;
+          cursor: pointer;
+
+          .selector-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.8rem;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #F5F5F5;
+            }
+
+            .selector-img {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 2rem;
+              height: 2rem;
+
+              img {
+                width: 2rem;
+                height: 2rem;
+              }
+            }
+
+            span {
+              font-size: 1.4rem;
+              color: #99A1AF;
+            }
+
+            .dropdown-arrow {
+              width: 2rem;
+              height: 2rem;
+              transition: transform 0.3s ease;
+            }
+          }
+
+          &.open .dropdown-arrow {
+            transform: rotate(180deg);
+          }
+
+          .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0.4rem;
+            padding: 0.8rem;
+            background: #FFFFFF;
+            border: 1px solid #F5F5F5;
+            border-radius: 0.8rem;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            min-width: 16rem;
+            width: max-content;
+
+            .dropdown-item {
+              display: flex;
+              align-items: center;
+              gap: 0.8rem;
+              padding: 0.8rem 1.2rem;
+              font-size: 1.4rem;
+              border-radius: 0.6rem;
+              transition: all 0.3s ease;
+              color: #99A1AF;
+
+              &:hover {
+                color: #6A7282;
+              }
+
+              &.active {
+                background: #F5F5F5;
+                color: #6A7282;
+              }
+
+              .item-img {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 2rem;
+                height: 2rem;
+
+                img {
+                  width: 2rem;
+                  height: 2rem;
+                }
+              }
+            }
           }
         }
       }
@@ -2699,7 +3747,7 @@ function handlePageChange(page: number) {
     align-items: center;
     margin-bottom: 2.4rem;
     padding-bottom: 1.2rem;
-    border-bottom: 1px solid rgba(251,100,182,0.2);
+    border-bottom: 1px solid #F5F5F5;
 
     /* Content Tabs */
     .content-tabs {
@@ -2745,10 +3793,10 @@ function handlePageChange(page: number) {
       height: 4.8rem;
       display: flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(251, 100, 182, 0.2);
+      border: 1px solid #F5F5F5;
+      background: #F5F5F5;
       border-radius: 0.8rem;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
 
       &:has(.search-input:focus) {
         border-color: #fb64b6;
@@ -2761,9 +3809,10 @@ function handlePageChange(page: number) {
         font-size: 1.4rem;
         outline: none;
         background: transparent;
+        color: #364153;
 
         &::placeholder {
-          color: #99a1af;
+          color: #99A1AF;
         }
       }
 
@@ -2926,7 +3975,7 @@ function handlePageChange(page: number) {
 
             .author-name {
               font-size: 1.2rem;
-              color: #6A7282;
+              color: #99A1AF;
             }
           }
 
@@ -2937,7 +3986,7 @@ function handlePageChange(page: number) {
 
             span {
               font-size: 1.2rem;
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             img{
@@ -2994,8 +4043,8 @@ function handlePageChange(page: number) {
 .loading-spinner {
   width: 4rem;
   height: 4rem;
-  border: 0.4rem solid rgba(251, 100, 182, 0.2);
-  border-top: 0.4rem solid #fb64b6;
+  border: 0.4rem solid #F5F5F5;
+  border-top: 0.4rem solid #6A7282;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.6rem;
@@ -3003,7 +4052,7 @@ function handlePageChange(page: number) {
 
 .loading-text {
   font-size: 1.6rem;
-  color: #666;
+  color: #6A7282;
 }
 
 .pagination-wrapper {

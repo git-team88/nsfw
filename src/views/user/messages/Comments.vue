@@ -50,7 +50,7 @@ function goUserHome(userId: string) {
 .list-wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 0.8rem;
 }
 .msg-item {
   display: flex;
@@ -81,22 +81,25 @@ function goUserHome(userId: string) {
   gap: 0.6rem;
 }
 .username {
-  font-weight: 500;
   font-size: 1.4rem;
-  color: #101828;
+  color: #6A7282;
 }
 .desc {
-  max-width: 54rem;
+  display: flex;
+  align-items: center;
   font-size: 1.4rem;
-  color: #4a5565;
+  color: #364153;
 }
 .content {
+  max-width: 44rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #364153;
-  font-weight: 500;
 }
 .time {
   font-size: 1.2rem;
-  color: #99a1af;
+  color: #99A1AF;
   font-weight: 300;
 }
 
@@ -109,7 +112,7 @@ function goUserHome(userId: string) {
   .line {
     width: 1px;
     height: 4rem;
-    background: rgba(251, 100, 182, 0.1);
+    background: #F5F5F5;
   }
 }
 
@@ -128,7 +131,8 @@ function goUserHome(userId: string) {
   font-weight: 500;
   font-size: 1.4rem;
   line-height: 2rem;
-  color: #364153;
+  color: #99A1AF;
+  word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;

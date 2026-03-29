@@ -129,17 +129,16 @@ const handleConfirm = () => {
       cursor: pointer;
 
       &.cancel {
-        border: 1px solid #fb64b6;
-        background: none;
-        color: #fb64b6;
+        background: #F5F5F5;
+        color: #6A7282;
 
         &:hover {
-          background: rgba(251, 100, 182, 0.06);
+          color: #FB64B6;
         }
       }
 
       &.confirm {
-        background: #fb64b6;
+        background: #FB64B6;
         color: #ffffff;
 
         &:hover:not(:disabled) {
@@ -151,7 +150,7 @@ const handleConfirm = () => {
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
         }

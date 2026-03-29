@@ -84,15 +84,16 @@ function go() {
 .pagination{
   display:flex; align-items:center; justify-content: center; gap:1rem; flex-wrap:wrap;
 }
-.pg-btn{ height:3.2rem; padding:0 1rem; border:none; border-radius:.6rem; background:#fff; color:#364153; cursor: pointer;}
+.pg-btn{ height:3.2rem; padding:0 1rem; border:none; background:none; color:#364153; cursor: pointer;}
 .pg-btn:disabled{ cursor:default; color: #99A1AF;}
 .pg-btn{ display:flex; align-items:center; gap:.6rem; }
 .pg-icon{ width:1.6rem; height:1.6rem; }
 .pg-pages{ display:flex; gap:.6rem; }
-.pg-num{ height:3.2rem; min-width:3.2rem; padding:0 .6rem; border:none; border-radius:.6rem; background:#fff; color:#364153; transition: all .15s ease; cursor: pointer;}
+.pg-num{ height:3.2rem; min-width:3.2rem; padding:0 .6rem; border:none; border-radius:.6rem; background: none; color:#6A7282; cursor: pointer;}
+.pg-num:hover{ color: 364153;}
 .pg-ellipsis{ display:flex; align-items:center; justify-content:center; width:3.2rem; color:#99A1AF; }
-.pg-go{ display:flex; align-items:center; gap:.6rem; font-size: 1.4rem; color:#6A7282; }
-.pg-input{ width:5rem; height:3.2rem; padding:0 .6rem; border-radius:.6rem; text-align: center; background: #FFFFFF;}
+.pg-go{ display:flex; align-items:center; gap:.6rem; font-size: 1.4rem; color:#99A1AF; }
+.pg-input{ width:5rem; height:3.2rem; padding:0 .6rem; border-radius:.6rem; text-align: center; background: #F5F5F5;}
 .pg-go-btn{ height:3.2rem; padding:0 .8rem; border:none; border-radius:.6rem; background:none; color:#fff; }
 
 .theme-blue .pg-go-btn{ color:#00D3F2; cursor: pointer; }
@@ -104,10 +105,8 @@ box-shadow: 0px 2px 8px 0px rgba(0,211,242,0.3); color:#FFFFFF; }
 .theme-blue .pg-input:focus{ border: 1px solid #00D3F2;}
 
 .theme-pink .pg-go-btn{ color:#FB64B6; cursor: pointer; }
-.theme-pink .pg-go-btn:hover{background: rgba(251,100,182,0.12);}
-.theme-pink .pg-num:hover{ background: rgba(251,100,182,0.12); color: #FB64B6;}
-.theme-pink .pg-num.on, .theme-pink .pg-num.on:hover{ background: linear-gradient( 0deg, #FB64B6 0%, #FF94CE 50%, #FB64B6 100%);
-box-shadow: 0px 2px 8px 0px rgba(251,100,182,0.3); color:#FFFFFF; }
-.theme-pink .pg-input{ border: 1px solid #FCCEE8;}
+.theme-pink .pg-num:hover{ color: 364153;}
+.theme-pink .pg-num.on, .theme-pink .pg-num.on:hover{ background: #FB64B6; color:#FFFFFF; }
+.theme-pink .pg-input{ background: #F5F5F5;}
 .theme-pink .pg-input:focus{ border: 1px solid #FB64B6;}
 </style>

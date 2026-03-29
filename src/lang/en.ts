@@ -273,10 +273,80 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     title: "Invite Code",
     enterCode: "Enter Invite Code",
     confirm: "Confirm",
-    noCode: "No invitation code? Skip",
+    noCode: "No invitation code? ",
+    skip: 'Skip',
     inviteError: "Enter invite code or skip."
   },
-
+  novel: {
+    untitled: "Untitled",
+    generate: "Generate",
+    generating: "Generating...",
+    projectName: "Project Name",
+    waitingNote: "You can browse other content while waiting for generation",
+    generationProgress: "Generation Progress",
+    generationTerminated: "Generation Terminated",
+    estimatedTime: "Estimated 30 minutes",
+    queueInfo: "There are {count} tasks ahead, estimated {estimatedTime} minutes",
+    waiting: "Waiting",
+    estimatedMinutes: "Estimated {minutes} minutes",
+    novelOutline: "Novel Outline",
+    newChapter: "New Chapter",
+    generatingStatus: "Generating, go browse other content~~~",
+    similarContent: "Similar Content",
+    outlineWillBeGeneratedHere: "Novel outline will be generated here",
+    generateNextChapter: "Generate Next Chapter",
+    generateAllChapters: "Generate All",
+    nextChapterTitle: "Generate Next Chapter",
+    allChaptersTitle: "Generate All",
+    charge: "Charge",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    chaptersToGenerate: "Pending Chapters ({count})",
+    generationFailed: "Generation Failed",
+    basicInfo: "Basic Information",
+    totalChapters: "Total chapters: ",
+    chaptersLabel: " chapters",
+    wordsPerChapter: "Words per chapter: ",
+    wordsLabel: " words",
+    genreLabel: "Genre: ",
+    writingStyle: "Writing style: ",
+    storySummary: "Story Summary",
+    characterGallery: "Character Gallery",
+    mainCharacter: "Main Character",
+    supportingCharacter: "Supporting Character",
+    chapterPlot: "Chapter Plot",
+    chapterLabel: "Chapter ",
+    chapterColon: ": ",
+    regenerate: "Regenerate",
+    computingPower: "computing power",
+    totalWords: "Total Words",
+    outlinePlaceholder: "Please enter creative description...",
+    send: "Send",
+    edit: "Edit",
+    complete: "Complete",
+    minutes: "minutes",
+    error: {
+      noSessionId: "Missing session ID",
+      fetchFailed: "Fetch failed",
+      generationFailed: "Generation failed",
+      generationFailedMessage: "Sorry, there was an exception during the current generation process",
+      contactSupport: "If you still can't generate normally after clicking retry, please contact customer service and we will handle it for you as soon as possible",
+      supportEmail: `Customer service email: acgworlds{'@'}acgworlds{'.'}com`,
+      emptyProjectName: "Please enter project name",
+      emptyRegenerateContent: "Please enter creative description"
+    },
+    guide: {
+      next: "Next",
+      skip: "Skip",
+      finish: "Finish"
+    },
+    retry: "Click to retry",
+    language: {
+      zh: "Chinese",
+      en: "English",
+      jp: "Japanese"
+    },
+  },
   privacy: `Privacy Policy<br />
 Welcome to use our products and related services! Please carefully read, understand and comply with this Privacy Policy.<br />
 “the Platform” refers to the official website and mobile application legally owned and operated by ACG Worlds Co., Ltd. (hereinafter referred to as “we”, “us” or “our company”) under the name of ACG Worlds. On the Platform, we provide you with services including AI content generation (text generation, image generation, audio and video generation), community publishing and other related services.<br />
@@ -620,7 +690,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       edit: "Edit",
       tip: "After setting up the subscription plan, a 20% service fee will be deducted. You will receive 80% of the actual price.",
       priceLabel: "Monthly Price",
-      priceLimit: "(Price can only be changed once per day)",
+      priceLimit: "(Note:Price can only be changed once per day)",
       priceChangeLimit: "Price can only be changed once per day. You have already made changes today. Please try again tomorrow.",
       perMonth: "/ month",
       benefitsLabel: "Benefits Description",
@@ -764,7 +834,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     follow: "Follow",
     following: "Following",
     followed: "Followed",
-    unfollowed: "Unfollowed",
+    unfollow: "Unfollow",
     followFailed: "Failed to follow user",
     enterKeyword: "Please enter a keyword to search",
     searchFailed: "Search failed, please try again",
@@ -872,9 +942,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
   myProjects: {
     title: "My Projects",
     tabs: {
-      series: "Series",
-      videos: "Videos",
-      images: "Images",
+      manju: "Video",
+      manhua: "Comic",
+      novel: "Novel",
     },
     status: {
       unpublished: "Unpublished",
@@ -888,6 +958,20 @@ If you have any questions, complaints, comments or suggestions regarding persona
       projectCover: "Project Cover",
       play: "Play",
     },
+    menu: {
+      rename: "Rename",
+      delete: "Delete"
+    },
+    renameModal: {
+      title: "Rename",
+      workTitle: "Work Title",
+      enterNewTitle: "Enter new title",
+      cancel: "Cancel",
+      confirm: "Confirm"
+    },
+    confirm: {
+      delete: "Are you sure you want to delete this project?"
+    }
   },
   characterLibrary: {
     title: "Character Library",
@@ -918,6 +1002,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
         unlimited: "Switched to Unlimited Mode"
       }
     },
+    novel: {
+      placeholder: "Please enter novel outline..."
+    },
+    totalWords: "Total Words",
     unlimitedMode: {
       title: "Enable Unlimited Mode?",
       description: "Only users aged 18 and above can enable Unlimited Mode. Once enabled, the range of creative themes will be unrestricted.",
@@ -932,7 +1020,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       subscriptions: "My Subscriptions"
     },
     input: {
-      placeholder: "Please enter your plot to generate a short video. e.g.: A transfer student arrives at a high school in another world and discovers all his classmates have various superpowers."
+      placeholder: "Please enter your plot to generate a short video. e.g.: A transfer student arrives at a high school in another world and discovers all his classmates have various superpowers.",
+      placeholderComic: "Please enter your creative description to generate a comic."
     },
     img: 'Image',
     option: {
@@ -1014,6 +1103,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     contentType: {
       all: "All",
       video: "Video",
+      comic: "Comic",
+      novel: "Novel",
       image: "Image",
       article: "Article"
     },
@@ -1032,7 +1123,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   aiCreations: {
-    title: "Select from unpublished AI videos",
+    title: "Select from Unpublished AI Works",
     filter: {
       all: "All",
       video: "Video",
@@ -1046,7 +1137,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     clearAll: "Clear all",
     cancel: "Cancel",
     confirm: "Confirm",
-    selectTip: 'You can only select items of the same type. Please clear your current selection first.'
+    selectTip: 'You can only select items of the same type. Please clear your current selection first.',
+    selectVideoTip: "Only video items can be selected",
+    selectVideoFirst: "Please select a video first"
   },
   submit: {
     tabs: {
@@ -1130,7 +1223,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       select: "Select Cover",
       upload: "Upload Cover",
       loadingFrames: "Loading cover...",
-      dragOrClick: "Drag files here or click to select.",
+      dragOrClick: `Drag files here or <span>click to select.</span>`,
       uploadTip: "Image Format(PNG/JPG/Webp),Image Size(≤ 10MB)",
       reupload: "Upload new cover",
       confirm: "Confirm",
@@ -1200,7 +1293,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     first: "First",
     last: "Last",
     follow: "Follow",
+    following: "Following",
     followed: "Following",
+    unfollow: "Unfollow",
     report: "Report",
     expand: "Expand",
     collapse: "Collapse",
@@ -1274,7 +1369,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     periodMonth: "/month",
     period3Month: "/3month",
     period6Month: "/6month",
-    periodYear: "/year"
+    periodYear: "/year",
+    unit: 'JPY'
   },
   aiRechargeDetails: {
     title: "Points Details",
@@ -1336,6 +1432,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     agree: "Agree",
     paymentTerms: "Payment Terms",
     pay: "Pay",
+    autoRenewalNote: "Note: This package is an auto-renewal service. Renewal will be charged at the latest current price. You may manually turn off auto-renewal in your payment records at any time.",
     success: {
       title: "Payment Successful!",
       message: "Your subscription will take effect within a few minutes. Please refresh and check later.If it is still not active after 1 hour, please contact customer service.",
@@ -1358,7 +1455,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     showLess: "Show Less",
     subscribe: "Subscribe",
     subscribed: 'Subscribed',
-    subscribePrice: "Subscribe ${price}/mo",
+    subscribePrice: "Subscribe {price} JPY/mo",
     editProfile: "Edit Community",
     share: "Share",
     shareSuccess: "Community address copied",
@@ -1498,4 +1595,16 @@ If you have any questions, complaints, comments or suggestions regarding persona
     noData: "No data available at the moment.",
   },
   fail: "Fail",
+  process: {
+    taskProgress: "Task Progress",
+    novel: "Novel",
+    comic: "Comic",
+    manju: "Manju",
+    outline: "Outline",
+    script: "Script",
+    clearCompleted: "Clear Completed",
+    generateFailed: "Generation Failed",
+    clearTask: "Clear Task",
+    inQueue: "In Queue"
+  },
 };

@@ -56,7 +56,9 @@
               </div>
               <div class="email-error" v-if="passwordError">{{ passwordError }}</div>
 
-              <p class="forget-tip" @click="goForget()">{{ t("register.forgetLabel") }}</p>
+              <p class="forget-tip" @click="goForget()">
+                <span>{{ t("register.forgetLabel") }}</span>
+              </p>
             </div>
           </form>
 
@@ -311,7 +313,7 @@ function googleLogin() {
 .login {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .container {
     max-width: 48rem;
@@ -346,59 +348,6 @@ function googleLogin() {
       }
     }
 
-    .step {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 2rem 0 3rem;
-
-      span {
-        font-size: 1.8rem;
-        color: rgba(255, 255, 255, 0.5);
-
-        &.step-text {
-          &.on {
-            color: #33a3ff;
-          }
-        }
-
-        &:nth-of-type(2) {
-          position: relative;
-          width: 18rem;
-          margin: 0 1rem;
-          border-bottom: 1px dashed transparent;
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(
-              90deg,
-              rgba(51, 163, 255, 0.1),
-              rgba(51, 163, 255, 0.5),
-              rgba(51, 163, 255, 0.1)
-            );
-            -webkit-mask: repeating-linear-gradient(
-              to right,
-              #000 0,
-              #000 4px,
-              transparent 4px,
-              transparent 8px
-            );
-            mask: repeating-linear-gradient(
-              to right,
-              #000 0,
-              #000 4px,
-              transparent 4px,
-              transparent 8px
-            );
-          }
-        }
-      }
-    }
-
     .info {
       .email-item-box {
         margin: 0 0 2.4rem;
@@ -411,9 +360,9 @@ function googleLogin() {
 
         .email-item-title {
           font-size: 1.4rem;
-          color: #4a5565;
+          color: #6A7282;
           span {
-            color: #fa2d47;
+            color: #FA2D47;
           }
         }
 
@@ -434,18 +383,14 @@ function googleLogin() {
               weight: normal;
               size: 1.4rem;
             }
-            border: 1px solid #fccee8;
+            border: 1px solid #F5F5F5;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5F5F5;
             color: #101828;
 
             &::placeholder {
-              font: {
-                weight: 300;
-                size: 1.2rem;
-              }
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             &:hover,
@@ -487,8 +432,10 @@ function googleLogin() {
           color: #fb64b6;
           cursor: pointer;
 
-          &:hover{
-            text-decoration: underline;
+          span{
+            &:hover{
+              text-decoration: underline;
+            }
           }
         }
       }
@@ -504,15 +451,26 @@ function googleLogin() {
         }
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        background:
-          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+        background: rgba(251,100,182,0.5);
         color: #ffffff;
-        opacity: 0.7;
         cursor: default;
 
         &.on {
-          opacity: 1;
+          background: #FB64B6;
           cursor: pointer;
+        }
+
+        &:hover {
+          position: relative;
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+          }
         }
       }
     }
@@ -521,7 +479,7 @@ function googleLogin() {
       margin: 2rem 0 0;
       font-size: 1.2rem;
       text-align: center;
-      color: #6a7282;
+      color: #99A1AF;
 
       :deep(a) {
         color: #fb64b6;
@@ -541,12 +499,12 @@ function googleLogin() {
         justify-content: space-between;
         margin: 0 0 1.4rem;
         font-size: 1.4rem;
-        color: #6a7282;
+        color: #6A7282;
 
         b {
           width: 21.2rem;
           height: 1px;
-          background: rgba(251, 100, 182, 0.2);
+          background: #F5F5F5;
         }
       }
       .icon-box {
@@ -561,13 +519,15 @@ function googleLogin() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid #fb64b6;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
+          background: #F5F5F5;
           cursor: pointer;
 
-          &:hover {
-            background: rgba(251, 100, 182, 0.06);
+          &:hover{
+            span{
+              color: #FB64B6;
+            }
           }
 
           .g_id_signin {
@@ -575,7 +535,7 @@ function googleLogin() {
             left: 0;
             top: 0;
             width: 100%;
-            height: 4。8rem;
+            height: 4.8rem;
             opacity: 0;
             overflow: hidden;
             z-index: 600;
@@ -591,37 +551,9 @@ function googleLogin() {
 
         span {
           font-size: 1.4rem;
-          color: #fb64b6;
+          color: #6A7282;
         }
       }
-    }
-  }
-
-  .load {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 800;
-    img {
-      width: 3.2rem;
-      height: 3.2rem;
-      animation: rotate 2s linear infinite;
-    }
-    p {
-      margin: 2rem 0 0;
-      font: {
-        size: 1.8rem;
-        weight: 500;
-      }
-      color: #ffffff;
     }
   }
 }

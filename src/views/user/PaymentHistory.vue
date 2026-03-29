@@ -62,14 +62,14 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">${{ item.price }}{{ t('user.paymentHistory.month') }}</div>
+                      <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}{{ t('user.paymentHistory.month') }}</div>
                       <div class="date">
                         {{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}
                       </div>
                     </div>
 
                     <div class="operate-box">
-                      <div class="menu-auto" v-if="!item.autoRenew" @click="turnOnAutoRenewal(item.id)">
+                      <div class="menu-auto" v-if="!item.autoRenew" @click="turnOnAutoRenewal(item, 1)">
                         <b></b>
                         {{ t("user.myFollowsSubs.autoRenewOn") }}
                       </div>
@@ -104,12 +104,12 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">${{ item.plan_info?.price }}{{ getTimeUnit(item.plan_info?.plan_id || 1) }}</div>
+                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.plan_id || 1) }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}</div>
                     </div>
 
                     <div class="operate-box">
-                      <div class="more-box" v-if="item.subscription_info && item.subscription_info.cancel_at_period_end === 0">
+                      <div class="more-box" v-if="item.subscription_info && item.subscription_info.cancel_at_period_end == 0">
                         <img
                           class="more-icon"
                           src="@/assets/images/detail/menu.png"
@@ -122,7 +122,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item.id)">
+                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item, 2)">
                         <b></b>
                         {{ t("user.myFollowsSubs.autoRenewOn") }}
                       </div>
@@ -145,7 +145,7 @@
                     <div class="td time">{{ formatDate(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">${{ item.amount || item.price }}</div>
+                    <div class="td amount">{{ item.amount || item.price }}{{ t('aiRecharge.unit') }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -391,11 +391,11 @@ function getTimeUnit(planId: number) {
     case 1:
       return t('user.paymentHistory.month');
     case 2:
-      return '/3Month';
+      return t('aiRecharge.period3Month');
     case 3:
-      return '/6Month';
+      return t('aiRecharge.period6Month');
     case 4:
-      return '/Year';
+      return t('aiRecharge.periodYear');
     default:
       return t('user.paymentHistory.month');
   }
@@ -526,14 +526,12 @@ function toggleMoreMenu(itemId: string, event: MouseEvent) {
 }
 
 async function turnOffAutoRenewal(itemId: string) {
-  // 隐藏下拉菜单
   showMoreMenu.value[itemId] = false;
   autoRenewLoading.value = true;
   try {
-    const res = await api.cancelSubscribe(itemId) as any;
+    const res = await api.cancelSubscribe() as any;
     if (res.code === 0 || res.code === 200) {
-      // 重新获取数据以更新状态
-      fetchProcessingData();
+      window.open(res.data?.url, '_blank');
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -544,15 +542,19 @@ async function turnOffAutoRenewal(itemId: string) {
   }
 }
 
-async function turnOnAutoRenewal(itemId: string) {
-  // 隐藏下拉菜单
-  showMoreMenu.value[itemId] = false;
+async function turnOnAutoRenewal(item: any, type: number) {
+  showMoreMenu.value[item.id] = false;
   autoRenewLoading.value = true;
   try {
-    const res = await api.subscribe(itemId) as any;
+    var id = '';
+    if (type == 1) {
+      id = item.user_id
+    } else {
+      id = item.author_id
+    }
+    const res = await api.subscribe({ creator_id: id }) as any;
     if (res.code === 0 || res.code === 200) {
-      // 重新获取数据以更新状态
-      fetchProcessingData();
+      window.open(res.data?.url, '_blank');
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -781,103 +783,48 @@ onBeforeUnmount(() => {
   }
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #invoice-content,
-  #invoice-content * {
-    visibility: visible;
-  }
-  #invoice-content {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none;
-    padding: 0;
-  }
-  .no-print {
-    display: none !important;
-  }
-}
-
 .user-payment-history {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 14rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem 0;
-}
+
 .panel-top {
   margin-bottom: 2.4rem;
-  padding: 0 3.6rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
 .main-tabs {
   display: flex;
   gap: 3.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
-  margin-bottom: 1.6rem;
-  padding: 0 3.6rem;
+  border-bottom: 1px solid #F5F5F5;
+  margin-bottom: 2rem;
 }
 .main-tab-item {
   padding-bottom: 1.8rem;
   font-size: 1.6rem;
-  color: #6a7282;
+  color: #6A7282;
   cursor: pointer;
   position: relative;
+
+  &:hover{color: #6A7282;}
   &.active {
     color: #101828;
-    font-weight: 500;
-    &::after {
-      content: "";
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: #fb64b6;
-      border-radius: 2px;
-    }
-  }
-}
-
-.sub-tabs {
-  display: flex;
-  gap: 3.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
-  margin-bottom: 2.4rem;
-  padding: 0 3.6rem;
-}
-.sub-tab-item {
-  padding-bottom: 1.2rem;
-  font-size: 1.4rem;
-  color: #6a7282;
-  cursor: pointer;
-  position: relative;
-  &.active {
-    color: #fb64b6;
     font-weight: 500;
     &::after {
       content: "";
@@ -897,7 +844,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.6rem;
-  padding: 0 3.6rem;
 }
 .tabs {
   display: flex;
@@ -910,36 +856,40 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 100%;
   padding: 0 1.6rem;
+  border-radius: 0.6rem;
   font-size: 1.4rem;
-  color: #6a7282;
+  color: #99A1AF;
   cursor: pointer;
   position: relative;
+
+  &:hover{
+    color: #6A7282;
+  }
   &.active {
-    border-radius: 0.6rem;
-    border: 1px solid #FB64B6;
-    background: rgba(251,100,182,0.12);
-    color: #FB64B6;
+    background: #F5F5F5;
+    color: #6A7282;
   }
 }
 
-
-
 .table {
-  padding: 0 3.6rem;
   min-height: 40rem;
 }
 .tbody {
-  border-top: 1px solid rgba(251, 100, 182, 0.05);
+  border-top: 1px solid #F5F5F5;
 }
 .tr {
   display: flex;
   align-items: center;
   padding: 1.4rem 2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.05);
+  border-bottom: 1px solid #F5F5F5;
   cursor: pointer;
 
   &:hover {
-    background: rgba(251, 100, 182, 0.04);
+    background: #F5F5F5;
+
+    .btn-view{
+      background: #FFFFFF;
+    }
   }
 }
 .td {
@@ -948,6 +898,7 @@ onBeforeUnmount(() => {
 }
 .time {
   width: 17rem;
+  color: #6A7282;
 }
 .info {
   flex: 1;
@@ -955,6 +906,7 @@ onBeforeUnmount(() => {
 .quantity {
   width: 13rem;
   text-align: center;
+  color: #6A7282;
 }
 .amount {
   width: 13rem;
@@ -973,21 +925,38 @@ onBeforeUnmount(() => {
   background: #fb64b6;
   border-radius: 0.8rem;
   border: none;
-  color: #fff;
+  color: #FFFFFF;
   font-size: 1.4rem;
   cursor: pointer;
+
+  &:hover {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 5;
+    }
+  }
 }
 
 .btn-view {
   width: 13.6rem;
   height: 4rem;
-  border: 1px solid #fb64b6;
   border-radius: 0.8rem;
-  color: #fb64b6;
   background: none;
   font-size: 1.4rem;
-  background: rgba(251, 100, 182, 0.08);
+  background: #F5F5F5;
+  color: #6A7282;
   cursor: pointer;
+
+  &:hover{
+    color: #FB64B6;
+  }
 }
 
 .btn-download {
@@ -999,6 +968,20 @@ onBeforeUnmount(() => {
   color: #ffffff;
   font-size: 1.4rem;
   cursor: pointer;
+
+  &:hover {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 
 .pagination-wrap {
@@ -1010,8 +993,7 @@ onBeforeUnmount(() => {
 .list-area {
   display: flex;
   flex-direction: column;
-  padding: 0 3.6rem;
-  gap: 1.2rem;
+  gap: 0.8rem;
   min-height: 40rem;
 }
 
@@ -1020,12 +1002,11 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.8rem 2.4rem 1.8rem 1.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.1);
   border-radius: 0.8rem;
   cursor: pointer;
 
   &:hover {
-    box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+    box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
   }
   .left {
     flex: 1;
@@ -1046,11 +1027,11 @@ onBeforeUnmount(() => {
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: 1.6rem;
-        color: #101828;
+        color: #364153;
       }
       .id {
         font-size: 1.4rem;
-        color: #99a1af;
+        color: #99A1AF;
         margin-top: 0.8rem;
       }
     }
@@ -1075,13 +1056,12 @@ onBeforeUnmount(() => {
       text-align: right;
       .price {
         font-size: 1.6rem;
-        color: #fb64b6;
-        font-weight: 500;
+        color: #364153;
       }
       .date {
         font-size: 1.4rem;
-        color: #99a1af;
-        margin-top: 0.4rem;
+        color: #99A1AF;
+        margin-top: 0.6rem;
       }
     }
     .operate-box {
@@ -1102,11 +1082,11 @@ onBeforeUnmount(() => {
           justify-content: center;
           width: auto;
           min-width: 16rem;
-          background: #ffffff;
-          border: 1px solid rgba(251, 100, 182, 0.2);
           border-radius: 0.6rem;
-          box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+          background: #FFFFFF;
+          box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
           z-index: 10;
+
           .menu-item {
             width: 100%;
             padding: 0.8rem 1rem;
@@ -1123,19 +1103,14 @@ onBeforeUnmount(() => {
         align-items: center;
         gap: 2.4rem;
         font-size: 1.4rem;
-        color: #00d3f2;
+        color: #FB64B6;
 
         b {
           width: 1px;
           height: 2.4rem;
-          background: rgba(251, 100, 182, 0.2);
+          background: #F5F5F5;
         }
       }
-    }
-    .price {
-      font-size: 1.6rem;
-      color: #fb64b6;
-      font-weight: 500;
     }
     .auto-renew-section {
       display: flex;
@@ -1179,10 +1154,10 @@ onBeforeUnmount(() => {
       justify-content: center;
       width: auto;
       min-width: 16rem;
-      background: #ffffff;
-      border: 1px solid rgba(251, 100, 182, 0.2);
       border-radius: 0.6rem;
-      box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+      box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
+
       z-index: 10;
       .menu-item {
         width: 100%;
@@ -1207,12 +1182,12 @@ onBeforeUnmount(() => {
         align-items: center;
         gap: 2.4rem;
         font-size: 1.4rem;
-        color: #00d3f2;
+        color: #FB64B6;
 
         b {
           width: 1px;
           height: 2.4rem;
-          background: rgba(251, 100, 182, 0.2);
+          background: #F5F5F5;
         }
       }
     }
@@ -1320,7 +1295,7 @@ onBeforeUnmount(() => {
           width: 100%;
           height: 100%;
           border-radius: 0.6rem;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
           z-index: 3;
         }
       }

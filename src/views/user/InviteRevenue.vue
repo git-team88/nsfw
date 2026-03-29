@@ -103,31 +103,24 @@ function goToAiPointsDetails() {
 .invite-revenue {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  margin-bottom: 2rem;
-  padding: 12rem 0 0;
-}
-.panel {
-  min-height: calc(100vh - 14rem);
-  padding: 2.4rem 3.6rem 0;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
+  padding-top: 14rem;
 }
 .panel-title {
+  margin-bottom: 2.4rem;
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
-  margin-bottom: 2.4rem;
+  color: #99A1AF;
 }
 
 .invite-link-section {
@@ -137,7 +130,7 @@ function goToAiPointsDetails() {
 .withdraw-banner {
   margin: 0 0 2.4rem;
   padding: 1.6rem 1.8rem;
-  background: rgba(251, 100, 182, 0.06);
+  background: #F5F5F5;
   border-radius: 0.8rem;
   display: flex;
   align-items: center;
@@ -149,11 +142,11 @@ function goToAiPointsDetails() {
     .banner-tip {
       font-size: 1.4rem;
       color: #364153;
-      line-height: 2.2rem;
+      line-height: 2.4rem;
       word-break: break-word;
 
       :deep(a){
-        color: #FB64B6;
+        color: #364153;
 
         &:hover{
           text-decoration: underline;
@@ -170,18 +163,21 @@ function goToAiPointsDetails() {
     height: 4.8rem;
     padding: 0 2.4rem;
     background: #FFFFFF;
-    border: 1px solid #FB64B6;
     border-radius: 0.8rem;
-    color: #FB64B6;
+    color: #6A7282;
     font-weight: 500;
     font-size: 1.6rem;
     cursor: pointer;
+
+    &:hover{
+      color: #FB64B6;
+    }
   }
 }
 
 .metrics {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   margin: 0 0 2.4rem;
 }
 .metric {
@@ -191,26 +187,20 @@ function goToAiPointsDetails() {
   align-items: flex-start;
   justify-content: space-between;
   height: 14.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
   border-radius: 0.8rem;
   padding: 2.4rem;
-  background: #fff;
+  background: #F5F5F5;
 }
 
 .metric-label {
   color: #99A1AF;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 .metric-value {
   margin-top: 1.6rem;
   font-weight: 500;
   font-size: 3.2rem;
-  color: #fb64b6;
-
-  .stats-unit {
-    font-size: 1.4rem;
-    color: #99A1AF;
-  }
+  color: #364153;
 }
 
 .metrics-footer {
@@ -223,14 +213,14 @@ function goToAiPointsDetails() {
 }
 
 .block-title {
-  margin-bottom: 1.8rem;
-  font-size: 1.6rem;
-  font-weight: 500;
+  margin-bottom: 1.2rem;
+  font-size: 1.4rem;
+  color: #364153;
 }
 
 .rules-content {
   font-size: 1.4rem;
-  color: #6A7282;
+  color: #99A1AF;
   line-height: 2.4rem;
 }
 </style>

@@ -113,35 +113,30 @@ function toggle(key: string) {
 .user-privacy {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 14rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem 3.6rem;
-}
+
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 2.4rem 0;
+  margin-bottom: 2.4rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
 .item {
@@ -149,7 +144,7 @@ function toggle(key: string) {
   align-items: center;
   justify-content: space-between;
   height: 5.6rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.1);
+  border-bottom: 1px solid #F5F5F5;
 }
 .label {
   font-size: 1.4rem;

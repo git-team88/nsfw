@@ -339,7 +339,8 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
     title: "招待コード",
     enterCode: "招待コードを入力してください",
     confirm: "確定",
-    noCode: "招待コードがない？スキップ",
+    noCode: "招待コードがない？",
+    skip: 'スキップ',
     inviteError: "招待コードを入力するか、スキップしてください。"
   },
   privacy: `プライバシーポリシー<br />
@@ -683,7 +684,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       edit: "編集",
       tip: "購読プランを設定した後、20%のサービス料が差し引かれます。実際の価格の80%を受け取ります。",
       priceLabel: "月額料金",
-      priceLimit: "（1日に1回だけ価格を変更できます）",
+      priceLimit: "（注意：1日に1回だけ価格を変更できます）",
       priceChangeLimit: "1日に1回だけ価格を変更できます。今日は既に変更されています。明日もう一度お試しください。",
       perMonth: "/ 月",
       benefitsLabel: "特典説明",
@@ -826,7 +827,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     follow: "フォロー",
     following: "フォロー中",
     followed: "フォローしました",
-    unfollowed: "フォロー解除しました",
+    unfollow: "フォロー解除",
     followFailed: "ユーザーのフォローに失敗しました",
     enterKeyword: "検索するにはキーワードを入力してください",
     searchFailed: "検索に失敗しました。もう一度お試しください",
@@ -934,9 +935,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
   myProjects: {
     title: "マイプロジェクト",
     tabs: {
-      series: "シリーズ",
-      videos: "動画",
-      images: "画像",
+      manju: "動画",
+      manhua: "漫画",
+      novel: "小説",
     },
     status: {
       unpublished: "未公開",
@@ -950,6 +951,20 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       projectCover: "プロジェクトカバー",
       play: "再生",
     },
+    menu: {
+      rename: "名前を変更",
+      delete: "削除"
+    },
+    renameModal: {
+      title: "名前を変更",
+      workTitle: "作品のタイトル",
+      enterNewTitle: "新しいタイトルを入力",
+      cancel: "キャンセル",
+      confirm: "確認"
+    },
+    confirm: {
+      delete: "このプロジェクトを削除してもよろしいですか？"
+    }
   },
   characterLibrary: {
     title: "キャラクターライブラリ",
@@ -991,7 +1006,8 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     periodMonth: "/ヶ月",
     period3Month: "/3ヶ月",
     period6Month: "/6ヶ月",
-    periodYear: "/年"
+    periodYear: "/年",
+    unit: '円'
   },
   aiRechargeDetails: {
     title: "ポイント詳細",
@@ -1026,6 +1042,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
         unlimited: "アンリミテッドモードに切り替えました"
       }
     },
+    novel: {
+      placeholder: "小説の大綱を入力してください..."
+    },
+    totalWords: "総単語数",
     unlimitedMode: {
       title: "アンリミテッドモードを有効にしますか？",
       description: "18歳以上のユーザーのみがアンリミテッドモードを有効にすることができます。有効にすると、創造的なテーマの範囲が制限なくなります。",
@@ -1040,7 +1060,8 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       subscriptions: "購読中"
     },
     input: {
-      placeholder: "ショートビデオを生成するためのプロットを入力してください。例：异世界の高校に転校生がやって来て、クラスメイト全員が様々な特殊能力を持っていることを発見する。"
+      placeholder: "ショートビデオを生成するためのプロットを入力してください。例：异世界の高校に転校生がやって来て、クラスメイト全員が様々な特殊能力を持っていることを発見する。",
+      placeholderComic: "漫画を生成するためのクリエイティブな説明を入力してください。"
     },
     img: '画像',
     option: {
@@ -1119,8 +1140,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     loading: "読み込み中...",
     loadMore: "もっと読み込む",
     contentType: {
-      all: "すべて",
-      video: "動画",
+      all: "全て",
+      video: "マンガドラマ",
+      comic: "漫画",
+      novel: "小説",
       image: "画像",
       article: "記事"
     },
@@ -1139,7 +1162,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     }
   },
   aiCreations: {
-    title: "未公開のAI動画から選択",
+    title: "「未公開の AI 作品から選択」",
     filter: {
       all: "すべて",
       video: "動画",
@@ -1153,7 +1176,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     clearAll: "すべてクリア",
     cancel: "キャンセル",
     confirm: "確認",
-    selectTip: '同じタイプのアイテムのみ選択できます。現在の選択を最初にクリアしてください。'
+    selectTip: '同じタイプのアイテムのみ選択できます。現在の選択を最初にクリアしてください。',
+    selectVideoTip: "動画タイプのアイテムのみ選択できます",
+    selectVideoFirst: "まず動画を選択してください"
   },
   submit: {
     tabs: {
@@ -1237,7 +1262,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       select: "カバーを選択",
       upload: "カバーをアップロード",
       loadingFrames: "カバーを読み込み中...",
-      dragOrClick: "ファイルをここにドラッグするか、クリックして選択してください。",
+      dragOrClick: `ファイルをドラッグするか、<span>クリックして選択。</span>`,
       uploadTip: "画像形式(PNG/JPG/Webp)、画像サイズ(≤ 10MB)",
       reupload: "新しいカバーをアップロード",
       confirm: "確認",
@@ -1307,7 +1332,9 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     first: "最初",
     last: "最後",
     follow: "フォロー",
+    following: "フォロー中",
     followed: "フォロー中",
+    unfollow: "フォロー解除",
     report: "報告",
     expand: "展開",
     collapse: "折りたたむ",
@@ -1387,7 +1414,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     showLess: "少なく見る",
     subscribe: "購読",
     subscribed: '購読済み',
-    subscribePrice: "月額 {price} で購読",
+    subscribePrice: "購読 {price} 円/月",
     editProfile: "プロフィールを編集",
     share: "シェア",
     shareSuccess: "複製されたコミュニティアドレス",
@@ -1527,6 +1554,86 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     noData: "利用可能なデータがありません",
   },
   fail: "失敗",
+  novel: {
+    untitled: "無題",
+    generate: "生成",
+    generating: "生成中",
+    projectName: "作品名",
+    waitingNote: "生成中は他のコンテンツを閲覧できます",
+    generationProgress: "生成進捗",
+    generationTerminated: "生成が中断されました",
+    estimatedTime: "約30分",
+    queueInfo: "先に{count}つのタスクがあり、約{estimatedTime}分",
+    waiting: "待機中",
+    estimatedMinutes: "約{minutes}分",
+    novelOutline: "小説のあらすじ",
+    newChapter: "新しい章",
+    generatingStatus: "生成中、他のコンテンツを閲覧してみてください~~~",
+    similarContent: "類似コンテンツ",
+    outlineWillBeGeneratedHere: "小説のあらすじがここに生成されます",
+    generateNextChapter: "次の章を生成",
+    generateAllChapters: "全て生成",
+    nextChapterTitle: "次の章を生成",
+    allChaptersTitle: "全ての章を生成",
+    charge: "チャージ",
+    cancel: "キャンセル",
+    confirm: "確認",
+    chaptersToGenerate: "未生成の章（{count}）",
+    generationFailed: "生成に失敗しました",
+    basicInfo: "基本情報",
+    totalChapters: "総章数：",
+    chaptersLabel: "章",
+    wordsPerChapter: "1章あたりの文字数：",
+    wordsLabel: "文字",
+    genreLabel: "ジャンル：",
+    writingStyle: "執筆スタイル：",
+    storySummary: "ストーリー概要",
+    characterGallery: "キャラクター図鑑",
+    mainCharacter: "主人公",
+    supportingCharacter: "サブキャラクター",
+    chapterPlot: "各章のプロット",
+    chapterLabel: "第",
+    chapterColon: "章：",
+    regenerate: "再生成",
+    computingPower: "計算力",
+    totalWords: "総文字数",
+    outlinePlaceholder: "クリエイティブな説明を入力してください...",
+    send: "送信",
+    edit: "編集",
+    complete: "完了",
+    minutes: "分",
+    error: {
+      noSessionId: "セッションIDがありません",
+      fetchFailed: "取得に失敗しました",
+      generationFailed: "生成に失敗しました",
+      generationFailedMessage: "申し訳ありませんが、現在の生成プロセスで例外が発生しました",
+      contactSupport: "リトライをクリックしても正常に生成できない場合は、カスタマーサービスにお問い合わせください。できるだけ早く対応いたします",
+      supportEmail: `カスタマーサービスメール: acgworlds{'@'}acgworlds{'.'}com`,
+      emptyProjectName: "プロジェクト名を入力してください",
+      emptyRegenerateContent: "創造的な説明を入力してください"
+    },
+    guide: {
+      next: "次へ",
+      skip: "スキップ",
+      finish: "完了"
+    },
+    retry: "リトライをクリック",
+    language: {
+      zh: "中国語",
+      en: "英語",
+      jp: "日本語"
+    }
+  },
+  process: {
+    taskProgress: "タスク進捗",
+    novel: "小説",
+    comic: "漫画",
+    manju: "漫劇",
+    outline: "アウトライン",
+    chapter: "章",
+    script: "スクリプト",
+    clearCompleted: "完了したものをクリア"
+  },
   computingPowerRules: {
     title: "コンピューティングパワー利用規約",
     content: `<h2>1. 「コンピューティングパワー」とは何ですか？</h2>

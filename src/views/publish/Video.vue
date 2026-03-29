@@ -1,10 +1,11 @@
 <template>
-  <div class="submit-video">
+  <div class="submit-video" :class="uploadSuccess ? 'on' : ''">
     <Header ref="headerRef" :cur="-1" @user-info-loaded="handleUserInfoLoaded"></Header>
 
     <div class="container">
       <div class="back" @click="goBack">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <img src="@/assets/images/publish/back.png" alt="" v-if="uploadSuccess" />
+        <img src="@/assets/images/base/back.png" alt="" v-else />
       </div>
 
       <!-- <div class="tabs">
@@ -21,94 +22,102 @@
 
       <!-- Video Upload Section -->
       <div class="section-video">
-        <div class="form-label-box">
-          <label class="form-label"><b>*</b>{{t('submit.tabs.video') }}</label>
-        </div>
-
         <!-- Upload Status Area -->
-      <div class="upload-status-box" v-if="uploadSuccess">
-        <div class="status-header">
-            <div class="status-info" :class="{ success: uploadSuccess && !isUpload, error: uploadError && !isUpload }">
-              <span class="status-text">
-                {{
-                  uploadSuccess && !isUpload
-                    ? t("submit.video.uploadSuccess")
-                    : uploadError && !isUpload
-                      ? t("submit.video.uploadFailed")
-                      : t("submit.video.uploading")
-                }}
-              </span>
-              <div class="video-meta-box">
-                <b>{{ t("submit.video.format") }}:</b>{{ videoType || 'mp4' }}
-                <span class="video-meta" v-if="(uploadSuccess || uploadError || isUpload) && !postId && !route.query.url">
-                   <b>{{ t("submit.video.size") }}:</b
-                  >{{ videoSize }}MB <b>{{ t("submit.video.duration") }}:</b>{{ videoDuration }}s
-                </span>
-              </div>
-            </div>
-            <div class="status-actions">
-              <span class="action-link play" v-if="uploadSuccess" @click="previewVideo">{{
-                t("submit.video.playBtn")
-              }}</span>
+         <div v-if="uploadSuccess">
+          <div class="form-label-box">
+            <span><b>*</b>{{t('submit.tabs.video') }}</span>
+          </div>
 
-              <div class="reupload-video-box" @click="reuploadVideo">
-                <span class="action-link reupload">{{
-                  t("submit.video.reuploadBtn")
+          <div class="upload-status-box">
+            <div class="status-header">
+              <div class="status-info" :class="{ success: uploadSuccess && !isUpload, error: uploadError && !isUpload }">
+                <span class="status-text">
+                  {{
+                    uploadSuccess && !isUpload
+                      ? t("submit.video.uploadSuccess")
+                      : uploadError && !isUpload
+                        ? t("submit.video.uploadFailed")
+                        : t("submit.video.uploading")
+                  }}
+                </span>
+                <div class="video-meta-box">
+                  {{ t("submit.video.format") }}:{{ videoType || 'mp4' }}
+                  <span class="video-meta" v-if="(uploadSuccess || uploadError || isUpload) && !postId && !route.query.url">
+                    {{ t("submit.video.size") }}:
+                    >{{ videoSize }}MB {{ t("submit.video.duration") }}:{{ videoDuration }}s
+                  </span>
+                </div>
+              </div>
+              <div class="status-actions">
+                <span class="action-link play" v-if="uploadSuccess" @click="previewVideo">{{
+                  t("submit.video.playBtn")
                 }}</span>
 
-                <input
-                  ref="reuploadInputRef"
-                  type="file"
-                  accept="video/mp4,video/MOV,video/AVI"
-                  class="reupload-file"
-                  title=""
-                  @change="onVideoPicked"
-                />
+                <div class="reupload-video-box" @click="reuploadVideo">
+                  <span class="action-link reupload">{{
+                    t("submit.video.reuploadBtn")
+                  }}</span>
+
+                  <input
+                    ref="reuploadInputRef"
+                    type="file"
+                    accept="video/mp4,video/MOV,video/AVI"
+                    class="reupload-file"
+                    title=""
+                    @change="onVideoPicked"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="status-progress-bar">
-            <div
-              class="progress-fill"
-              :class="{ success: uploadSuccess, error: uploadError, uploading: isUpload }"
-              :style="{ width: uploadProgress + '%' }"
-            ></div>
+            <div class="status-progress-bar">
+              <div
+                class="progress-fill"
+                :class="{ success: uploadSuccess, error: uploadError, uploading: isUpload }"
+                :style="{ width: uploadProgress + '%' }"
+              ></div>
+            </div>
           </div>
         </div>
 
         <!-- Default Upload Area -->
-        <div class="upload-area-box" v-else>
-          <div class="upload-area" @dragover.prevent @drop.prevent="onDropFile">
-            <div class="upload-info">
-              <p>{{ t("submit.video.uploadCta") }}</p>
-              <button class="btn" @click="pickVideo">{{ t("submit.video.uploadBtn") }}</button>
-            </div>
-            <div class="upload-spec">
-              <div class="upload-spec-item">
-                <span class="upload-spec-title">{{ t("submit.video.specFormat") }}</span>
-                <span>{{ t("submit.video.formatInfo") }}</span>
+         <div v-else>
+          <div class="upload-title">
+            {{t('submit.tabs.video') }}
+          </div>
+
+          <div class="upload-area-box">
+            <div class="upload-area" @dragover.prevent @drop.prevent="onDropFile">
+              <div class="upload-info">
+                <p>{{ t("submit.video.uploadCta") }}</p>
+                <button class="btn" @click="pickVideo">{{ t("submit.video.uploadBtn") }}</button>
               </div>
-              <div class="upload-spec-item">
-                <span class="upload-spec-title">{{ t("submit.video.specSize") }}</span>
-                <div class="upload-spec-info">
-                  <span>{{ t("submit.video.sizeInfo1") }}</span>
-                  <span>|</span>
-                  <span>{{ t("submit.video.sizeInfo2") }}</span>
+              <div class="upload-spec">
+                <div class="upload-spec-item">
+                  <span class="upload-spec-title">{{ t("submit.video.specFormat") }}</span>
+                  <span>{{ t("submit.video.formatInfo") }}</span>
+                </div>
+                <div class="upload-spec-item">
+                  <span class="upload-spec-title">{{ t("submit.video.specSize") }}</span>
+                  <div class="upload-spec-info">
+                    <span>{{ t("submit.video.sizeInfo1") }}</span>
+                    <span>|</span>
+                    <span>{{ t("submit.video.sizeInfo2") }}</span>
+                  </div>
+                </div>
+                <div class="upload-spec-item">
+                  <span class="upload-spec-title">{{ t("submit.video.specResolution") }}</span>
+                  <span>{{ t("submit.video.resolutionInfo") }}</span>
                 </div>
               </div>
-              <div class="upload-spec-item">
-                <span class="upload-spec-title">{{ t("submit.video.specResolution") }}</span>
-                <span>{{ t("submit.video.resolutionInfo") }}</span>
-              </div>
+              <input
+                ref="videoInputRef"
+                type="file"
+                accept="video/mp4,video/MOV,video/AVI"
+                class="hidden-file"
+                title=""
+                @change="onVideoPicked"
+              />
             </div>
-            <input
-              ref="videoInputRef"
-              type="file"
-              accept="video/mp4,video/MOV,video/AVI"
-              class="hidden-file"
-              title=""
-              @change="onVideoPicked"
-            />
           </div>
         </div>
       </div>
@@ -232,15 +241,15 @@
         </div>
 
         <!-- Sensitive Content -->
-        <div class="section" v-if="userRegion && isAdult">
+        <div class="section">
           <div class="form-item">
             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
-            <div class="sensitive-options">
-              <div class="option" @click="toggleSensitive('yes')">
+            <div class="sensitive-options" :class="{ disabled: postId }">
+              <div class="option" @click="toggleSensitive('yes')" :class="{ disabled: postId }">
                 <img :src="form.content === 'yes' ? selectActive : select" alt="" />
                 <span>{{ t("submit.yes") }}</span>
               </div>
-              <div class="option" @click="toggleSensitive('no')">
+              <div class="option" @click="toggleSensitive('no')" :class="{ disabled: postId }">
                 <img :src="form.content === 'no' ? selectActive : select" alt="" />
                 <span>{{ t("submit.no") }}</span>
               </div>
@@ -250,7 +259,7 @@
 
         <!-- Submit -->
         <div class="submit-row">
-          <button class="submit" :disabled="!canSubmit" @click="onSubmit">
+          <button class="submit" :class="!canSubmit ? 'dis' : ''" :disabled="!canSubmit" @click="onSubmit">
             {{ t("submit.submit") }}
           </button>
         </div>
@@ -314,6 +323,8 @@ import router from "@/router";
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 import { baseUrl } from "@/util/config";
+
+const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
 
@@ -420,7 +431,9 @@ async function checkSubscriptionStatus() {
 
 // Methods
 function goBack() {
-  if (videoFile.value || form.value.title || captionLength.value > 0) {
+  const isVideoFromUrl = !!route.query.url;
+
+  if (videoFile.value || form.value.title || captionLength.value > 0 || isVideoFromUrl) {
     isShowConfirm.value = true;
     return;
   }
@@ -666,6 +679,7 @@ function pickCover() {
 }
 
 function toggleSensitive(val: "yes" | "no") {
+  if (postId.value) return;
   if (form.value.content === val) return;
 
   const dontAsk = localStorage.getItem('sensitiveDontAsk');
@@ -889,7 +903,7 @@ async function handleCaptionInput(e: Event) {
   const range = selection.getRangeAt(0);
   const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
 
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+  const match = textBefore.match(/([#@])([^#@\s]*)$/u);
   if (match) {
     const trigger = match[1] as "#" | "@";
     const query = match[2];
@@ -1005,71 +1019,149 @@ function handleCaptionKeydown(e: KeyboardEvent) {
 
     if (textNode.nodeType === Node.TEXT_NODE) {
       const textBefore = textNode.textContent?.substring(0, range.startOffset) || "";
-      const match = textBefore.match(/#([^\s#@]+)$/);
 
-      if (match) {
-        // Count existing topic tags (with class "tag topic")
-        if (captionRef.value) {
-          const existingTopicTags = captionRef.value.querySelectorAll('.tag.topic');
-          if (existingTopicTags.length >= 5) {
+      // Check if there's a # followed by content
+      const hashMatch = textBefore.match(/#([^#@]+)$/u);
+
+      if (hashMatch) {
+        const tagContent = hashMatch[1];
+        // Check if the content contains Chinese characters or spaces
+        const hasChineseChars = /[\u4e00-\u9fa5]/.test(tagContent);
+        const hasSpaces = tagContent.includes(" ");
+        const hasApostrophes = tagContent.includes("'") || tagContent.includes("\"");
+
+        if (hasApostrophes) {
+          // For pinyin input (with apostrophes), just confirm the input
+          return;
+        } else if (hasChineseChars || hasSpaces) {
+          // For Chinese characters or content with spaces, create the tag
+          // Count existing topic tags (with class "tag topic")
+          if (captionRef.value) {
+            const existingTopicTags = captionRef.value.querySelectorAll('.tag.topic');
+            if (existingTopicTags.length >= 5) {
+              e.preventDefault();
+              showToast(t('submit.video.toastTopicLimit'), "");
+              return;
+            }
+          }
+
+          // Calculate new length after adding the tag
+          const fullMatch = "#" + tagContent.trim();
+          const currentText = captionRef.value?.innerText || "";
+          const currentLength = currentText.length;
+          const spaceText = " ";
+          const newLength = currentLength - (range.startOffset - hashMatch.index!) + fullMatch.length + spaceText.length;
+
+          // Check if adding the tag would exceed the limit
+          if (newLength > DESC_MAX) {
             e.preventDefault();
-            showToast(t('submit.video.toastTopicLimit'), "");
             return;
           }
-        }
 
-        // Calculate new length after adding the tag
-        const fullMatch = match[0]; // e.g., "#hello"
-        const currentText = captionRef.value?.innerText || "";
-        const currentLength = currentText.length;
-        const spaceText = " ";
-        const newLength = currentLength - (range.startOffset - match.index!) + fullMatch.length + spaceText.length;
-
-        // Check if adding the tag would exceed the limit
-        if (newLength > DESC_MAX) {
           e.preventDefault();
+
+          const matchStartIndex = hashMatch.index!;
+
+          // Create a new range to select the hashtag text
+          const tagRange = document.createRange();
+          tagRange.setStart(textNode, matchStartIndex);
+          tagRange.setEnd(textNode, range.startOffset);
+
+          // Delete the original text
+          tagRange.deleteContents();
+
+          // Create the blue tag span (without space)
+          const span = document.createElement("span");
+          span.className = "tag topic";
+          span.contentEditable = "false";
+          span.textContent = fullMatch; // Only the hashtag and content
+          span.style.color = "#00d3f2";
+
+          // Insert the span
+          tagRange.insertNode(span);
+
+          // Insert a real visible space after the tag
+          const space = document.createTextNode("\u0020");
+          tagRange.setStartAfter(span);
+          tagRange.insertNode(space);
+
+          // Move cursor AFTER the space
+          tagRange.setStart(space, 1); // Position at offset 1 (after the space character)
+          tagRange.collapse(true);
+
+          selection.removeAllRanges();
+          selection.addRange(tagRange);
+
+          // Hide dropdown after creating tag
+          showDropdown.value = false;
+
+          updateCaptionStats();
+          return;
+        } else {
+          // For non-Chinese content, create the tag immediately
+          // Count existing topic tags (with class "tag topic")
+          if (captionRef.value) {
+            const existingTopicTags = captionRef.value.querySelectorAll('.tag.topic');
+            if (existingTopicTags.length >= 5) {
+              e.preventDefault();
+              showToast(t('submit.video.toastTopicLimit'), "");
+              return;
+            }
+          }
+
+          // Calculate new length after adding the tag
+          const fullMatch = hashMatch[0]; // e.g., "#hello"
+          const currentText = captionRef.value?.innerText || "";
+          const currentLength = currentText.length;
+          const spaceText = " ";
+          const newLength = currentLength - (range.startOffset - hashMatch.index!) + fullMatch.length + spaceText.length;
+
+          // Check if adding the tag would exceed the limit
+          if (newLength > DESC_MAX) {
+            e.preventDefault();
+            return;
+          }
+
+          e.preventDefault();
+
+          const matchStartIndex = hashMatch.index!;
+
+          // Create a new range to select the hashtag text
+          const tagRange = document.createRange();
+          tagRange.setStart(textNode, matchStartIndex);
+          tagRange.setEnd(textNode, range.startOffset);
+
+          // Delete the original text
+          tagRange.deleteContents();
+
+          // Create the blue tag span (without space)
+          const span = document.createElement("span");
+          span.className = "tag topic";
+          span.contentEditable = "false";
+          span.textContent = fullMatch; // Only the hashtag, no space
+          span.style.color = "#00d3f2";
+
+          // Insert the span
+          tagRange.insertNode(span);
+
+          // Insert a real visible space after the tag
+          const space = document.createTextNode("\u0020");
+          tagRange.setStartAfter(span);
+          tagRange.insertNode(space);
+
+          // Move cursor AFTER the space
+          tagRange.setStart(space, 1); // Position at offset 1 (after the space character)
+          tagRange.collapse(true);
+
+          selection.removeAllRanges();
+          selection.addRange(tagRange);
+
+          // Hide dropdown after creating tag
+          showDropdown.value = false;
+
+          updateCaptionStats();
           return;
         }
-
-        e.preventDefault();
-
-        const matchStartIndex = match.index!;
-
-        // Create a new range to select the hashtag text
-        const tagRange = document.createRange();
-        tagRange.setStart(textNode, matchStartIndex);
-        tagRange.setEnd(textNode, range.startOffset);
-
-        // Delete the original text
-        tagRange.deleteContents();
-
-        // Create the blue tag span (without space)
-        const span = document.createElement("span");
-        span.className = "tag topic";
-        span.contentEditable = "false";
-        span.textContent = fullMatch; // Only the hashtag, no space
-        span.style.color = "#00d3f2";
-
-        // Insert the span
-        tagRange.insertNode(span);
-
-        // Insert a real visible space after the tag
-        const space = document.createTextNode("\u0020");
-        tagRange.setStartAfter(span);
-        tagRange.insertNode(space);
-
-        // Move cursor AFTER the space
-        tagRange.setStart(space, 1); // Position at offset 1 (after the space character)
-        tagRange.collapse(true);
-
-        selection.removeAllRanges();
-        selection.addRange(tagRange);
-
-        // Hide dropdown after creating tag
-        showDropdown.value = false;
-
-        updateCaptionStats();
-        return;
       }
     }
   }
@@ -1353,6 +1445,8 @@ async function onSubmit() {
 
   // Check if in edit mode
   const isEditMode = !!postId.value;
+  // Check if video is from URL parameter
+  const isVideoFromUrl = !!route.query.url;
 
   // Always require video URL
   if (!videoUrl.value) {
@@ -1360,8 +1454,8 @@ async function onSubmit() {
     return;
   }
 
-  // In create mode, require video file
-  if (!isEditMode && !videoFile.value) {
+  // In create mode and not from URL, require video file
+  if (!isEditMode && !isVideoFromUrl && !videoFile.value) {
     toast(t("submit.video.toastUploadFirst"));
     return;
   }
@@ -1372,8 +1466,8 @@ async function onSubmit() {
     return;
   }
 
-  // Check if upload was successful
-  if (!uploadSuccess.value) {
+  // Check if upload was successful (except when video is from URL parameter)
+  if (!isVideoFromUrl && !uploadSuccess.value) {
     toast(t("submit.video.toastUploadFailed"));
     return;
   }
@@ -1491,16 +1585,16 @@ onMounted(async () => {
     sessionId.value = sessionIdParam;
   }
 
-  // Check if URL parameter 'url' exists
+  // Check if URL parameter 'url' exists and has value
   const urlParam = route.query.url as string;
-  if (urlParam) {
+  if (urlParam && urlParam.trim()) {
     videoUrl.value = urlParam;
     uploadSuccess.value = true;
     uploadProgress.value = 100; // Set progress to 100%
 
     // Check if URL parameter 'cover' exists
     const coverParam = route.query.cover as string;
-    if (coverParam) {
+    if (coverParam && coverParam.trim()) {
       coverPreview.value = coverParam;
     }
 
@@ -1526,42 +1620,36 @@ watch(locale, () => {
 .submit-video {
   width: 100%;
   min-height: 100vh;
-  padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  padding: 14rem 0 0;
+  background: #FFFFFF;
+
+  &.on{
+    background: #F5F5F5;
+  }
 }
 
 .container {
-  position: relative;
-  max-width: 90rem;
-  min-height: calc(100vh - 14rem);
+  width: 84rem;
   margin: 0 auto 2rem;
-  padding: 0 0 2rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.8);
+  position: relative;
 }
 
 .back {
   position: fixed;
   left: 50%;
-  top: 12rem;
+  top: 14rem;
   width: 4rem;
   height: 4rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: translateX(-55rem);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
   cursor: pointer;
   z-index: 10;
-  &:hover {
-    background: rgba(251, 100, 182, 0.06);
-  }
+
   img {
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 4rem;
+    height: 4rem;
   }
 }
 
@@ -1599,17 +1687,21 @@ watch(locale, () => {
 
 .section-video {
   margin-bottom: 1.2rem;
-  padding: 2.4rem 3rem 0;
 }
 
 .form-label-box {
   display: flex;
   align-items: center;
-  margin-bottom: 1.2rem;
 
   span {
-    font-size: 1.2rem;
-    color: #99a1af;
+    font-weight: 500;
+    font-size: 1.4rem;
+    color: #101828;
+
+    b {
+      color: #fa2d47;
+      margin-right: 0.4rem;
+    }
   }
 }
 
@@ -1622,17 +1714,33 @@ watch(locale, () => {
   }
 }
 
+.upload-title{
+  margin-bottom: 4rem;
+  font-weight: 500;
+  font-size: 2rem;
+  color: #99A1AF;
+}
+
 .upload-area-box {
   position: relative;
   padding: 4rem 0;
   -webkit-border-radius: 0.8rem;
   border-radius: 0.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.5);
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;
   cursor: pointer;
 
-  &:hover {
-    background: rgba(251, 100, 182, 0.08);
+  &:hover{
+    position: relative;
+    &::after{
+      position: absolute;
+      left: 0;
+      top: 0;
+      content: '';
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: rgba(0,0,0,0.06);
+    }
   }
 }
 
@@ -1648,7 +1756,7 @@ watch(locale, () => {
     p {
       margin-bottom: 2.4rem;
       font-size: 1.4rem;
-      color: #101828;
+      color: #364153;
     }
   }
 }
@@ -1660,7 +1768,7 @@ watch(locale, () => {
   font-size: 1.4rem;
   border: none;
   border-radius: 0.8rem;
-  background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+  background: #fb64b6;
   color: #ffffff;
   cursor: pointer;
 }
@@ -1687,10 +1795,10 @@ watch(locale, () => {
 
 /* New Upload Status Box */
 .upload-status-box {
+  margin-top: 1.2rem;
   padding: 2.4rem 2rem;
   border-radius: 0.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.5);
-  background: rgba(251, 100, 182, 0.04);
+  background: #FFFFFF;
 
   .status-header {
     display: flex;
@@ -1717,15 +1825,10 @@ watch(locale, () => {
       align-items: center;
       margin-left: 0.6rem;
       font-size: 1.2rem;
-      color: #6a7282;
+      color: #99a1af;
 
       .video-meta {
         margin-left: 0.6rem;
-      }
-
-      b {
-        font-weight: 400;
-        color: #99a1af;
       }
     }
 
@@ -1743,6 +1846,8 @@ watch(locale, () => {
 
   .status-actions {
     display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 1.6rem;
     .action-link {
       font-size: 1.4rem;
@@ -1806,7 +1911,6 @@ watch(locale, () => {
 }
 
 .section {
-  padding: 0 3rem;
   margin-bottom: 2.4rem;
 }
 
@@ -1816,7 +1920,7 @@ watch(locale, () => {
   gap: 2.4rem;
   padding: 1.2rem 2.4rem;
   border-radius: 0.8rem;
-  background: rgba(251, 100, 182, 0.04);
+  background: #FFFFFF;
   .form-label {
     color: #99a1af;
     margin: 0;
@@ -1870,8 +1974,8 @@ watch(locale, () => {
 
 .caption-container {
   margin-top: 1.2rem;
-  border: 1px solid #fccee8;
   border-radius: 0.8rem;
+  background: #FFFFFF;
   overflow: hidden;
 
   .input-wrap {
@@ -1891,7 +1995,7 @@ watch(locale, () => {
     width: calc(100% - 3.6rem);
     height: 1px;
     margin: 0 1.8rem;
-    background: rgba(251, 100, 182, 0.1);
+    background: #F5F5F5;
   }
 
   .textarea-wrap {
@@ -1981,6 +2085,14 @@ watch(locale, () => {
       color: #364153;
     }
   }
+  &.disabled {
+    .option {
+      cursor: not-allowed;
+      img {
+        opacity: 0.5;
+      }
+    }
+  }
 }
 
 .submit-row {
@@ -1996,14 +2108,13 @@ watch(locale, () => {
       weight: 500;
       size: 1.6rem;
     }
-    background: linear-gradient(155deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
-    box-shadow: 0px 2px 15px -3px rgba(251, 100, 182, 0.16);
+    background: #fb64b6;
     color: #ffffff;
     cursor: pointer;
 
-    &:disabled {
+    &:hover:not(:disabled) {
       position: relative;
-      cursor: not-allowed;
+      position: relative;
 
       &::after {
         content: "";
@@ -2012,9 +2123,14 @@ watch(locale, () => {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
         z-index: 1;
       }
+    }
+
+    &.dis{
+      background: rgba(251,100,182,0.5);
+      cursor: not-allowed;
     }
   }
 }
@@ -2036,7 +2152,7 @@ watch(locale, () => {
   }
   .agreement-text {
     font-size: 1.4rem;
-    color: #6a7282;
+    color: #99A1AF;
     a {
       color: #fb64b6;
       text-decoration: none;
@@ -2149,7 +2265,7 @@ watch(locale, () => {
           top: 0;
           width: 100%;
           height: 100%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
           z-index: 1;
         }
       }

@@ -139,7 +139,7 @@ function goSendEmail() {
 .reset {
   width: 100%;
   height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .container {
     max-width: 48rem;
@@ -165,17 +165,17 @@ function goSendEmail() {
 
       .step-item {
         position: relative;
-        padding: 0 0 3rem;
+        padding: 0 0 2.4rem;
 
         &.on {
           span {
-            color: #fb64b6;
+            color: #364153;
           }
         }
 
         span {
           font-size: 1.6rem;
-          color: #4a5565;
+          color: #99A1AF;
 
           &:last-child {
             position: absolute;
@@ -184,7 +184,7 @@ function goSendEmail() {
             width: max-content;
             font-size: 1.4rem;
             transform: translateX(-50%);
-            color: #6a7282;
+            color: #99A1AF;
           }
         }
       }
@@ -199,7 +199,7 @@ function goSendEmail() {
     .content {
       .email-title {
         font-size: 1.4rem;
-        color: #4a5565;
+        color: #6A7282;
       }
       .email-info {
         position: relative;
@@ -209,24 +209,19 @@ function goSendEmail() {
         .email-ipt {
           position: relative;
           width: 100%;
-          height: 4.4rem;
+          height: 5rem;
           padding: 1rem;
           font: {
             weight: normal;
             size: 1.4rem;
           }
-          border: 1px solid #fccee8;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
-          background: rgba(255, 255, 255, 0.9);
+          background: #F5F5F5;
           color: #101828;
 
           &::placeholder {
-            font: {
-              weight: 300;
-              size: 1.2rem;
-            }
-            color: #6a7282;
+            color: #99A1AF;
           }
 
           &:hover,
@@ -248,14 +243,12 @@ function goSendEmail() {
         }
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        background:
-          linear-gradient( 170deg, #FB64B6 0%, #FF94CE 50%, #FB64B6 100%);
+        background: rgba(251, 100, 182, 0.5);
         color: #ffffff;
-        opacity: 0.8;
         cursor: default;
 
         &.on {
-          opacity: 1;
+          background: #FB64B6;
           cursor: pointer;
         }
       }

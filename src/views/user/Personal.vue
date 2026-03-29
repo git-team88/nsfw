@@ -8,42 +8,31 @@
           <div class="panel-top">
             <div class="panel-title">{{ t("user.personal.title") }}</div>
           </div>
-          <div class="panel-id">ID:{{ userInfo.info?.id || "--" }}</div>
+          <!-- <div class="panel-id">ID:{{ userInfo.info?.id || "--" }}</div> -->
           <div class="content">
             <div class="section">
               <div class="label-row">
-                <div class="label"><span>*</span>{{ t("user.personal.username") }}</div>
+                <div class="label">{{ t("user.personal.username") }}</div>
                 <button class="edit-link" @click="goEdit">{{ t("user.profile.edit") }}</button>
               </div>
               <div class="username-box">{{ userInfo.info?.nickname || "-" }}</div>
             </div>
             <div class="section">
-              <div class="label"><span>*</span>{{ t("user.personal.avatar") }}</div>
+              <div class="label">{{ t("user.personal.avatar") }}</div>
               <img class="avatar-img" :src="userInfo.info?.avatar" alt="" />
             </div>
 
             <div class="section">
-              <div class="label"><span>*</span>{{ t("birthday.label") }}</div>
+              <div class="label">{{ t("birthday.label") }}</div>
               <div class="birth-box">
-                <div class="birth-item">
-                  <span class="birth-date">{{ dateValue.month }}</span>
-                  <span class="birth-text">{{ t("birthday.month") }}</span>
-                </div>
-                <div class="birth-item">
-                  <span class="birth-date">{{ dateValue.day }}</span>
-                  <span class="birth-text">{{ t("birthday.day") }}</span>
-                </div>
-                <div class="birth-item">
-                  <span class="birth-date">{{ dateValue.year }}</span>
-                  <span class="birth-text">{{ t("birthday.year") }}</span>
-                </div>
+                {{ dateValue.month }}-{{ dateValue.day }}-{{ dateValue.year }}
               </div>
             </div>
           </div>
 
           <div class="sensitive-row" v-if="userRegion">
             <div class="switch-box">
-              <div class="label" :class="{ disabled: !isAdult }">
+              <div class="label">
                 {{ t("user.personal.sensitive") }}
               </div>
 
@@ -189,35 +178,30 @@ function onToggleSensitive() {
 .user-personal {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 14rem;
 }
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem;
-}
+
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 2.4rem 1.2rem;
+  margin: 0 0 2.4rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 .panel-id {
   margin: 0 0 1.2rem 1.2rem;
@@ -225,19 +209,12 @@ function onToggleSensitive() {
   color: #fb64b6;
 }
 
-.content {
-  padding: 1.2rem;
-  border-radius: 1.2rem;
-}
-.content:hover {
-  background: rgba(251, 100, 182, 0.04);
-}
 .section {
-  margin-bottom: 2.4rem;
+  margin-bottom: 1.8rem;
 }
 
 .sensitive-row {
-  margin: 2.4rem 1.2rem 0;
+  margin: 2.4rem 0 0;
 
   .switch-box {
     display: flex;
@@ -246,10 +223,7 @@ function onToggleSensitive() {
     margin-bottom: 1.2rem;
 
     .label {
-      color: #4a5565;
-      &.disabled {
-        color: #99a1af;
-      }
+      color: #99A1AF;
     }
   }
 
@@ -289,10 +263,7 @@ function onToggleSensitive() {
 }
 .label {
   font-size: 1.4rem;
-  color: #364153;
-}
-.label span {
-  color: #fa2d47;
+  color: #99A1AF;
 }
 .edit-link {
   background: none;
@@ -310,10 +281,8 @@ function onToggleSensitive() {
   font-weight: 500;
 }
 .username-box {
-  margin-top: 1.6rem;
-  padding: 1.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
+  margin-top: 1.2rem;
+  font-weight: 500;
   color: #364153;
   font-size: 1.4rem;
 }
@@ -322,32 +291,12 @@ function onToggleSensitive() {
   height: 11.2rem;
   border-radius: 0.8rem;
   object-fit: cover;
-  border: 2px solid #fb64b6;
-  margin-top: 1.6rem;
+  margin-top: 1.2rem;
 }
 .birth-box {
-  display: flex;
-  align-items: center;
-  gap: 1.6rem;
-  margin-top: 1.6rem;
-}
-.birth-item {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  margin-top: 1.2rem;
+  font-weight: 500;
   font-size: 1.4rem;
-}
-.birth-date {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 10rem;
-  height: 5rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
   color: #364153;
-}
-.birth-text {
-  color: #6a7282;
 }
 </style>

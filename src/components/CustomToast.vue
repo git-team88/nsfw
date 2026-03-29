@@ -28,7 +28,7 @@ const props = defineProps<{
 
   &.pink {
     .toast-content {
-      border-color: rgba(250, 45, 71, 0.5);
+      box-shadow: 0px 0px 32px 0px rgba(0,0,0,0.2);
 
       &::before {
         content: "";
@@ -48,7 +48,7 @@ const props = defineProps<{
 
   &.blue {
     .toast-content {
-      border-color: rgba(5, 223, 114, 0.5);
+      box-shadow: 0px 0px 32px 0px rgba(0,0,0,0.2);
 
       &::before {
         content: "";
@@ -61,7 +61,7 @@ const props = defineProps<{
       }
 
       .toast-msg {
-        color: #05df72;
+        color: #05DF72;
       }
     }
   }

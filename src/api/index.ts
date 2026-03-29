@@ -164,10 +164,9 @@ export default {
       data: data,
       method: "POST",
     }),
-  cancelSubscribe: (data: any) =>
+  cancelSubscribe: () =>
     axios.request({
       url: "post/getStripeCustomerPortalUrl",
-      data: data,
       method: "POST",
     }),
 
@@ -577,13 +576,117 @@ export default {
     }),
   computeConsume: (start: string, end: string, page: number, limit: number) =>
     axios.request({
-      url: `/app/credit/usage?date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
+      url: `app/credit/usage?date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
       method: "GET",
       baseURL: aiUrl,
     }),
   userBalance: () =>
     axios.request({
       url: "app/credit/balance",
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  userSelect: (session_id: string) =>
+    axios.request({
+      url: `app/config/user-selected?session_id=${session_id}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  estimateTime: (session_id: string) =>
+    axios.request({
+      url: `ai/novel/time/estimate?session_id=${session_id}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  detailProject: (session_id: string) =>
+    axios.request({
+      url: `app/project/${session_id}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  modifyProject: (data: any) =>
+    axios.request({
+      url: "app/project/rename",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  deleteProject: (data: any) =>
+    axios.request({
+      url: "app/project/delete",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  novelOutline: (data: any) =>
+    axios.request({
+      url: "ai/novel/generate_novel_outline",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  novelNext: (data: any) =>
+    axios.request({
+      url: "ai/novel/generate_novel_next_chapter",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  novelAll: (data: any) =>
+    axios.request({
+      url: "ai/novel/generate_novel_all_chapters",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  novelEstimate: (data: any) =>
+    axios.request({
+      url: "ai/novel/points/estimate",
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  taskPolling: (task_id: string) =>
+    axios.request({
+      url: `app/script_task_status?task_id=` + task_id,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  detailChapter: (session_id: string, chapter: number | string) =>
+    axios.request({
+      url: `app/chapter/${session_id}/${chapter}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  totalProcess: () =>
+    axios.request({
+      url: `app/progress/display`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  readProject: () =>
+    axios.request({
+      url: "app/progress/set-all-readed",
+      method: "POST",
+      baseURL: aiUrl,
+    }),
+  modifyChapterTitle: (data: any) =>
+    axios.request({
+      url: "app/chapter/rename",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
+  modifyChapterContent: (data: any) =>
+    axios.request({
+      url: "app/chapter/content/update",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
+  chapterStream: (sessionId: string) =>
+    axios.request({
+      url: `app/stream_read/${sessionId}`,
       method: "GET",
       baseURL: aiUrl,
     }),

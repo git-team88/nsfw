@@ -87,8 +87,8 @@ function openLink() {
 
 .modal-close {
   position: absolute;
-  right: 1.2rem;
-  top: 2rem;
+  right: 1.4rem;
+  top: 1.6rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -102,7 +102,7 @@ function openLink() {
 
 .modal-title {
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
   margin-bottom: 3rem;
   font-weight: 500;
   text-align: center;
@@ -110,7 +110,7 @@ function openLink() {
 
 .modal-amount {
   font-size: 3.2rem;
-  color: #fb64b6;
+  color: #364153;
   font-weight: 500;
   text-align: center;
 }
@@ -139,7 +139,7 @@ function openLink() {
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
       z-index: 1;
     }
   }
@@ -155,8 +155,8 @@ function openLink() {
   align-items: center;
   gap: 0.6rem;
   justify-content: center;
-  color: #6A7282;
-  font-size: 1.2rem;
+  color: #99A1AF;
+  font-size: 1.4rem;
 }
 
 .check-btn {

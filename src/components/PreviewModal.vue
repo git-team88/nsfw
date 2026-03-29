@@ -57,7 +57,7 @@ const closeModal = () => {
   z-index: 1000;
   .preview-content {
     position: relative;
-    width: 50rem;
+    width: 54rem;
     padding: 2.4rem 3.6rem;
     background: #ffffff;
     border-radius: 1.2rem;
@@ -85,14 +85,15 @@ const closeModal = () => {
   }
   .video-player {
     display: flex;
-
     justify-content: center;
     width: 100%;
-    height: 24rem;
+    height: 30rem;
+    border-radius: 0.8rem;
+    background: #F5F5F5;
+
     video {
       width: auto;
       height: 100%;
-      border-radius: 0.8rem;
     }
   }
 }

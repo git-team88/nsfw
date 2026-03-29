@@ -22,7 +22,7 @@
       <div class="right">
         <div class="header-news-box" v-if="isLogin">
           <div class="header-news" @click="showNewsMenu()">
-            <span class="news-icon" alt=""></span>
+            <img class="news-icon" src="@/assets/images/header/news_icon.png" alt="" />
             <span class="circle" v-if="unTotal > 0"></span>
           </div>
           <div class="news-dropdown" v-if="isShowNewsMenu">
@@ -39,7 +39,7 @@
         </div>
 
         <div class="language">
-          <span class="language-icon" @click="showLang"></span>
+          <img class="language-icon" src="@/assets/images/header/language_icon.png" @click="showLang" />
 
           <div class="language-select" v-if="isShowLang">
             <span
@@ -87,7 +87,7 @@
                   <img class="uc-avatar" :src="userInfo?.info?.avatar" alt="" />
                   <div class="uc-meta">
                     <div class="uc-name">{{ userInfo?.info?.nickname || "" }}</div>
-                    <div class="uc-id">ID: {{ userInfo?.info?.id || "" }}</div>
+                    <!-- <div class="uc-id">ID: {{ userInfo?.info?.id || "" }}</div> -->
                   </div>
                 </div>
                 <div class="uc-stats">
@@ -691,10 +691,10 @@ defineExpose({
     height: 100%;
     margin: 0 auto;
     padding: 0 2rem 0 3rem;
-    border: 1px solid #fccee8;
     -webkit-border-radius: 1.2rem;
     border-radius: 1.2rem;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.06);
     backdrop-filter: blur(3px);
 
     .left {
@@ -704,14 +704,14 @@ defineExpose({
 
       .logo {
         display: flex;
-        width: 8rem;
-        height: 2.4rem;
+        width: 15rem;
+        height: 5rem;
         margin: 0 3rem 0 0;
         cursor: pointer;
 
         img {
           width: auto;
-          height: 2.4rem;
+          height: 5rem;
         }
       }
 
@@ -730,18 +730,16 @@ defineExpose({
           font-size: 1.6rem;
           -webkit-border-radius: 1.2rem;
           border-radius: 1.2rem;
-          color: #6a7282;
+          color: #6A7282;
           cursor: pointer;
 
           &:hover {
-            background: rgba(251, 100, 182, 0.06);
-            color: #fb64b6;
+            color: #364153;
           }
 
           &.on {
-            border: 1px solid #fb64b6;
-            background: rgba(251, 100, 182, 0.12);
-            color: #fb64b6;
+            background: #F5F5F5;
+            color: #364153;
           }
         }
       }
@@ -759,19 +757,18 @@ defineExpose({
         .language-icon {
           width: 4rem;
           height: 4rem;
-          background: url("@/assets/images/header/language_icon.png") no-repeat;
-          background-size: 100% 100%;
+          border-radius: 1.2rem;
+          transition: all ease 0.2s;
           cursor: pointer;
 
           &:hover {
-            background: url("@/assets/images/header/language_hover.png") no-repeat;
-            background-size: 100% 100%;
+            background: #F5F5F5;
           }
         }
 
         .language-select {
           position: absolute;
-          left: 0;
+          left: 50%;
           top: 5rem;
           display: flex;
           flex-direction: column;
@@ -779,10 +776,11 @@ defineExpose({
           justify-content: center;
           width: 8rem;
           padding: 1.2rem 0;
-          border: 1px solid rgba(251, 100, 182, 0.2);
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
-          background: rgba(255, 255, 255, 0.9);
+          transform: translateX(-50%);
+          background: #FFFFFF;
+          box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
 
           span {
             width: 100%;
@@ -820,14 +818,13 @@ defineExpose({
             cursor: pointer;
 
             .news-icon {
-              width: 3.2rem;
-              height: 3.2rem;
-              background: url("@/assets/images/header/news_icon.png") no-repeat;
-              background-size: 100% 100%;
+              width: 4rem;
+              height: 4rem;
+              border-radius: 1.2rem;
+              transition: all ease 0.2s;
 
               &:hover {
-                background: url("@/assets/images/header/news_hover.png") no-repeat;
-                background-size: 100% 100%;
+                background: #F5F5F5;
               }
             }
 
@@ -849,10 +846,10 @@ defineExpose({
             min-width: 17rem;
             max-width: 30rem;
             width: max-content;
-            background: rgba(255,255,255,0.9);
-            border: 1px solid rgba(251, 100, 182, 0.2);
             border-radius: 0.8rem;
             padding: 0.6rem 1.2rem;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
             z-index: 10;
 
             .news-item {
@@ -865,6 +862,10 @@ defineExpose({
               color: #6A7282;
               cursor: pointer;
               white-space: nowrap;
+
+              &:hover{
+                color: #101828;
+              }
 
               span{
                 flex-shrink: 0;
@@ -890,9 +891,9 @@ defineExpose({
         display: flex;
         align-items: center;
         margin: 0 1rem;
-        border: 1px solid rgba(251, 100, 182, 0.5);
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
+        background: #F5F5F5;
 
         .header-bean {
           display: flex;
@@ -904,7 +905,7 @@ defineExpose({
           &:hover {
             -webkit-border-radius: 0.6rem 0 0 0.6rem;
             border-radius: 0.6rem 0 0 0.6rem;
-            background: rgba(251, 100, 182, 0.06);
+            background: #DDDDDD;
           }
 
           img {
@@ -915,14 +916,14 @@ defineExpose({
 
           span {
             font-size: 1.4rem;
-            color: #101828;
+            color: #6A7282;
           }
         }
 
         .header-line {
           width: 1px;
           height: 1rem;
-          background: rgba(251, 100, 182, 0.2);
+          background: #99A1AF;
         }
 
         .header-recharge {
@@ -931,13 +932,13 @@ defineExpose({
           height: 4rem;
           padding: 0 0.6rem;
           font-size: 1.2rem;
-          color: #fb64b6;
+          color: #101828;
           cursor: pointer;
 
           &:hover {
             -webkit-border-radius: 0 0.6rem 0.6rem 0;
             border-radius: 0 0.6rem 0.6rem 0;
-            background: rgba(251, 100, 182, 0.06);
+            background: #DDDDDD;
           }
         }
       }
@@ -953,11 +954,12 @@ defineExpose({
           font-size: 1.4rem;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
-          background: linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+          background: #FB64B6;
           color: #ffffff;
           cursor: pointer;
 
           &:hover {
+            position: relative;
             &::after {
               content: "";
               position: absolute;
@@ -965,7 +967,7 @@ defineExpose({
               left: 0;
               width: 100%;
               height: 100%;
-              background: rgba(255, 255, 255, 0.2);
+              background: rgba(255, 255, 255, 0.1);
             }
           }
         }
@@ -979,11 +981,11 @@ defineExpose({
           width: 100%;
           padding: 1.2rem 0;
           font-size: 1.4rem;
-          border: 1px solid rgba(251, 100, 182, 0.2);
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
           text-align: center;
-          background: rgba(255, 255, 255, 0.9);
+          background: #FFFFFF;
+          box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
           color: #6a7282;
 
           span {
@@ -1020,14 +1022,14 @@ defineExpose({
             font: {
               size: 1.4rem;
             }
-            border: 1px solid #fb64b6;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            color: #fb64b6;
+            background: #F5F5F5;
+            color: #6A7282;
             cursor: pointer;
 
             &:hover {
-              background: rgba(251, 100, 182, 0.06);
+              color: #fb64b6;
             }
           }
 
@@ -1044,9 +1046,22 @@ defineExpose({
             }
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+            background: #FB64B6;
             color: #ffffff;
             cursor: pointer;
+
+            &:hover {
+              position: relative;
+              &::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.1);
+              }
+            }
           }
         }
 
@@ -1060,7 +1075,6 @@ defineExpose({
             img {
               width: 4rem;
               height: 4rem;
-              border: 1px solid #fb64b6;
               -webkit-border-radius: 0.8rem;
               border-radius: 0.8rem;
               object-fit: cover;
@@ -1073,15 +1087,16 @@ defineExpose({
             right: 0;
             top: 5rem;
             width: 28rem;
-            border: 1px solid rgba(251, 100, 182, 0.2);
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 1);
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
             z-index: 1;
 
             .us-top-box {
+              margin-bottom: 0.2rem;
               padding: 1.2rem;
-              border-bottom: 1px solid rgba(251, 100, 182, 0.06);
+              border-bottom: 1px solid #F5F5F5;
               cursor: pointer;
 
               .uc-top {
@@ -1089,9 +1104,8 @@ defineExpose({
                 align-items: center;
 
                 .uc-avatar {
-                  width: 4.8rem;
-                  height: 4.8rem;
-                  border: 1px solid #fb64b6;
+                  width: 4.2rem;
+                  height: 4.2rem;
                   -webkit-border-radius: 0.8rem;
                   border-radius: 0.8rem;
                   margin-right: 1.2rem;
@@ -1152,11 +1166,11 @@ defineExpose({
                 cursor: pointer;
 
                 &:hover {
-                  background: rgba(251, 100, 182, 0.06);
+                  background: #F5F5F5;;
                 }
 
                 &.logout {
-                  border-top: 1px solid rgba(251, 100, 182, 0.06);
+                  border-top: 1px solid #F5F5F5;
                   color: #99a1af;
                 }
 

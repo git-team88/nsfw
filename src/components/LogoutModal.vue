@@ -40,14 +40,14 @@ function handleConfirm() {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .logout-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 1000;
 
   .modal-overlay {
     position: absolute;
@@ -100,12 +100,11 @@ function handleConfirm() {
       }
 
       .btn-cancel {
-        border: 1px solid #fb64b6;
-        background: none;
-        color: #fb64b6;
+        background: #F5F5F5;
+        color: #6A7282;
 
         &:hover {
-          background: rgba(251, 100, 182, 0.06);
+          color: #fb64b6;
         }
       }
       .btn-confirm {
@@ -122,7 +121,7 @@ function handleConfirm() {
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
         }

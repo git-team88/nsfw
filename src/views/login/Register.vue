@@ -525,7 +525,7 @@ function googleRegister() {
 .register {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .container {
     max-width: 48rem;
@@ -617,22 +617,9 @@ function googleRegister() {
           }
         }
 
-        .email-code-intro {
-          position: absolute;
-          right: 0;
-          top: 2.6rem;
-          padding: 0.6rem;
-          font-size: 1.4rem;
-          -webkit-border-radius: 0.4rem;
-          border-radius: 0.4rem;
-          border: 1px solid rgba(251,100,182,0.2);
-          background: rgba(255, 255, 255, 0.9);
-          color: #6a7282;
-          z-index: 10;
-        }
         .email-item-title {
           font-size: 1.4rem;
-          color: #4a5565;
+          color: #6A7282;
           span {
             color: #fa2d47;
           }
@@ -655,18 +642,13 @@ function googleRegister() {
               weight: normal;
               size: 1.4rem;
             }
-            border: 1px solid #fccee8;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5F5F5;
             color: #101828;
 
             &::placeholder {
-              font: {
-                weight: 300;
-                size: 1.2rem;
-              }
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             &:hover,
@@ -696,18 +678,13 @@ function googleRegister() {
             font: {
               size: 1.4rem;
             }
-            border: 1px solid #fccee8;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5F5F5;
             color: #101828;
 
             &::placeholder {
-              font: {
-                weight: 300;
-                size: 1.2rem;
-              }
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             &:hover,
@@ -763,15 +740,26 @@ function googleRegister() {
         }
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        background:
-          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+        background: rgba(251,100,182,0.5);
         color: #ffffff;
-        opacity: 0.7;
         cursor: default;
 
         &.on {
-          opacity: 1;
+          background: #FB64B6;
           cursor: pointer;
+        }
+
+        &:hover {
+          position: relative;
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+          }
         }
       }
     }
@@ -780,7 +768,7 @@ function googleRegister() {
       margin: 2rem 0 0;
       font-size: 1.2rem;
       text-align: center;
-      color: #6a7282;
+      color: #99A1AF;
 
       :deep(a) {
         color: #fb64b6;
@@ -800,12 +788,12 @@ function googleRegister() {
         justify-content: space-between;
         margin: 0 0 1.4rem;
         font-size: 1.4rem;
-        color: #6a7282;
+        color: #6A7282;
 
         b {
           width: 21.2rem;
           height: 1px;
-          background: rgba(251, 100, 182, 0.2);
+          background: #F5F5F5;
         }
       }
       .icon-box {
@@ -820,13 +808,15 @@ function googleRegister() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid #fb64b6;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
+          background: #F5F5F5;
           cursor: pointer;
 
-          &:hover {
-            background: rgba(251, 100, 182, 0.06);
+          &:hover{
+            span{
+              color: #FB64B6;
+            }
           }
 
           .g_id_signin {
@@ -850,7 +840,7 @@ function googleRegister() {
 
         span {
           font-size: 1.4rem;
-          color: #fb64b6;
+          color: #6A7282;
         }
       }
     }

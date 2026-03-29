@@ -48,7 +48,7 @@ function goBack() {
   overflow-y: auto;
   scroll-behavior: smooth;
   padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .inner {
     max-width: 144rem;

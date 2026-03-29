@@ -85,12 +85,12 @@ function cancelLogout() {
 <style scoped lang="scss">
 .user-sidebar {
   width: 29rem;
-  padding: 12rem 1.2rem 2rem;
-  border-right: 1px solid rgba(251, 100, 182, 0.2);
+  padding: 13rem 1.2rem 2rem;
   position: sticky;
   top: 0;
   align-self: flex-start;
   height: 100vh;
+  background: #F5F5F5;
   overflow: auto;
 }
 .title {
@@ -115,17 +115,16 @@ function cancelLogout() {
   padding: 0 0 0 1.8rem;
   border-radius: 0.8rem;
   cursor: pointer;
-  color: #6a7282;
+  color: #6A7282;
   position: relative;
 }
 .item:hover {
-  background: rgba(251, 100, 182, 0.04);
-  color: #fb64b6;
+  color: #364153;
 }
 .item.on {
   font-weight: 500;
-  background: rgba(251, 100, 182, 0.08);
-  color: #fb64b6;
+  background: #FFFFFF;
+  color: #364153;
 }
 .item.on::before {
   content: "";
@@ -143,7 +142,7 @@ function cancelLogout() {
   left: 3.6rem;
   bottom: 2.4rem;
   font-size: 1.4rem;
-  color: #99a1af;
+  color: #99A1AF;
   cursor: pointer;
 }
 </style>

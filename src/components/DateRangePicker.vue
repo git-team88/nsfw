@@ -246,14 +246,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 0.6rem;
-  background: #fff;
+  background: #F5F5F5;
   color: #6a7282;
   cursor: pointer;
-  transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
 }
 
 .drp-trigger .icon {
@@ -281,10 +277,9 @@ onBeforeUnmount(() => {
   top: 5rem;
   width: 36rem;
   padding: 2rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
   border-radius: 0.8rem;
-  background: #ffffff;
-  box-shadow: 0px 10px 30px 0px rgba(0, 0, 0, 0.1);
+  background: #FFFFFF;
+  box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.1);
   z-index: 500;
 }
 
@@ -341,14 +336,13 @@ onBeforeUnmount(() => {
 }
 
 .btn.cancel {
-  background: #fff;
-  border: 1px solid;
+  background: #F5F5F5;
   cursor: pointer;
 }
 
 .btn.apply {
   border: none;
-  color: #fff;
+  color: #FFFFFF;
   cursor: pointer;
 }
 
@@ -373,8 +367,9 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 4rem;
-    border: 1px solid rgba(0, 211, 242, 0.2) !important;
+    border: 1px solid #F5F5F5 !important;
     border-radius: 0.8rem !important;
+    background: #F5F5F5 !important;
     box-shadow: none !important;
   }
   :deep(.el-input__wrapper:hover) {
@@ -423,13 +418,12 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 4rem;
-    border: 1px solid rgba(251, 100, 182, 0.2) !important;
+    border: 1px solid #F5F5F5 !important;
     border-radius: 0.8rem !important;
+    background: #F5F5F5 !important;
     box-shadow: none !important;
   }
-  :deep(.el-input__wrapper:hover) {
-    border-color: #fb64b6 !important;
-  }
+
   :deep(.el-input__wrapper.is-focus) {
     border-color: #fb64b6 !important;
   }
@@ -440,15 +434,30 @@ onBeforeUnmount(() => {
 }
 
 .theme-pink .btn.cancel {
-  border-color: rgba(251, 100, 182, 0.6);
-  color: #fb64b6;
+  background: #F5F5F5;
+  color: #6A7282;
 }
 
 .theme-pink .btn.cancel:hover {
-  background: rgba(251, 100, 182, 0.12);
+  color: #FB64B6;
 }
 
 .theme-pink .btn.apply {
   background: #fb64b6;
+
+  &:hover{
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 </style>

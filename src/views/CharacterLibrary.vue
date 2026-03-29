@@ -24,6 +24,11 @@
         </span>
       </div>
 
+      <!-- Process List -->
+      <div class="process-section">
+        <ProcessList />
+      </div>
+
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="loading-spinner"></div>
@@ -97,6 +102,7 @@ import Header from '@/components/Header.vue';
 import CharacterDetailModal from '@/components/CharacterDetailModal.vue';
 import Pagination from '@/components/Pagination.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import ProcessList from '@/components/ProcessList.vue';
 import addIcon from '@/assets/images/project/add.png';
 import addHoverIcon from '@/assets/images/project/add_hover.png';
 import api from '@/api/index';
@@ -230,24 +236,19 @@ onMounted(() => {
 .character-library {
   width: 100%;
   min-height: 100vh;
-  padding: 12rem 0 0;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  padding: 14rem 0 0;
+  background: #FFFFFF;
 }
 
 .container {
-  max-width: 112.8rem;
-  min-height: calc(100vh - 14rem);
+  max-width: 108rem;
   margin: 0 auto 2rem;
-  padding: 2.4rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.8);
 }
 
 .page-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
   margin-bottom: 2.4rem;
 }
 
@@ -255,17 +256,20 @@ onMounted(() => {
   display: flex;
   gap: 3rem;
   margin-bottom: 2.4rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
 
   .tab {
     flex: 0 0 auto;
-    padding: 0 0 2.4rem;
+    padding: 0 0 1.8rem;
     font-size: 1.6rem;
     color: #6A7282;
     cursor: pointer;
     position: relative;
-    transition: all 0.2s ease;
     margin-right: 1.2rem;
+
+    &:hover{
+      color: #101828;
+    }
 
     &.active {
       color: #101828;
@@ -283,6 +287,11 @@ onMounted(() => {
       }
     }
   }
+}
+
+/* Process Section */
+.process-section {
+  margin-bottom: 3.2rem;
 }
 
 .character-grid {
@@ -331,8 +340,8 @@ onMounted(() => {
   position: relative;
   width: 20rem;
   height: 26.7rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
   border-radius: 0.8rem;
+  box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.12);
   cursor: pointer;
 
   .character-img {
@@ -360,7 +369,6 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(2px);
   }
 
   .character-power {
@@ -401,8 +409,8 @@ onMounted(() => {
 .loading-spinner {
   width: 4rem;
   height: 4rem;
-  border: 0.4rem solid rgba(251, 100, 182, 0.2);
-  border-top: 0.4rem solid #fb64b6;
+  border: 0.4rem solid #F5F5F5;
+  border-top: 0.4rem solid #6A7282;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.6rem;
@@ -415,7 +423,7 @@ onMounted(() => {
 
 .loading-text {
   font-size: 1.6rem;
-  color: #666;
+  color: #6A7282;
 }
 
 .error-state {

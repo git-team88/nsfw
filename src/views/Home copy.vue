@@ -31,7 +31,7 @@
                 v-if="userRegion"
               >
                 <div class="mode-img">
-                  <img :src="currentMode == 'unlimited' ? activeIcon : icon" alt="" />
+                  <img :src="currentMode == 'unlimited' ? activeIcon : normalIcon" alt="" />
                 </div>
                 <span>{{ t('home.mode.unlimited') }}</span>
               </div>
@@ -56,29 +56,24 @@
             <!-- Text Input -->
             <div class="input-area" :class="currentMode == 'unlimited' ? 'unlimit' : ''">
               <div class="input-inner">
-                <!-- Selected Characters List -->
-                <div class="selected-characters" v-if="selectedCharacters.length > 0">
+                <!-- Combined Characters and Images List -->
+                <div class="selected-items" v-if="combinedItems.length > 0">
+                  <!-- Combined Items -->
                   <div
-                    v-for="character in selectedCharacters"
-                    :key="character.id"
-                    class="character-tag"
+                    v-for="(item, index) in combinedItems"
+                    :key="item.id"
+                    :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
                   >
-                    <img :src="character.image" :alt="character.name" class="character-avatar" />
-                    <span class="character-name">{{ character.name }}</span>
-                    <img class="remove-btn" src="@/assets/images/home/delete.png" alt="Remove" @click="removeCharacter(character)" />
-                  </div>
-                </div>
+                    <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
 
-                <!-- Uploaded Images List -->
-                <div class="uploaded-images" v-if="uploadedImages.length > 0">
-                  <div
-                    v-for="(image, index) in uploadedImages"
-                    :key="image.id"
-                    class="uploaded-image-item"
-                  >
-                    <span class="image-index">{{ index + 1 }}</span>
-                    <img :src="image.image" :alt="image.name" class="uploaded-image" />
-                    <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeUploadedImage(image.id)" />
+                    <div class="image-box">
+                      <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
+
+                      <span class="img-bg"></span>
+                    </div>
+
+                    <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                    <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                   </div>
                 </div>
 
@@ -86,15 +81,15 @@
                   ref="editableInputRef"
                   class="input-textarea"
                   contenteditable="true"
+                  spellcheck="false"
                   @input="handleInput"
                   @keydown="handleKeydown"
                   @click="handleInputClick"
                   @blur="handleInputBlur"
                   @paste="handlePaste"
                   @focus="handleInputFocus"
-                >
-                  <span v-if="isInputEmpty" class="placeholder">{{ t('home.input.placeholder') }}</span>
-                </div>
+                  :data-placeholder="t('home.input.placeholder')"
+                ></div>
 
                 <!-- Hidden file input for image upload -->
                 <input
@@ -113,20 +108,24 @@
                     v-for="(item, index) in atDropdownItems"
                     :key="index"
                     class="dropdown-item"
-                    @click="selectAtItem(item)"
+                    @mousedown.prevent="selectAtItem(item)"
                   >
-                    <img :src="item.image" :alt="item.name" />
-                    <span>{{ item.name }}</span>
+                    <div class="dropdown-img">
+                      <img :src="item.image" :alt="item.name" />
+                    </div>
+
+                    <span v-if="item.type === 'character'">{{ item.name }}</span>
+                    <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                   </div>
                 </div>
 
                 <div class="input-box">
                   <div class="input-options">
-                    <div class="option-btn character-btn" @click="() => { if (checkLogin()) showCharacterModal = true }">
+                    <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                       <img src="@/assets/images/home/role_icon.png" alt="" />
                       <span>{{ t('home.option.character') }}</span>
                     </div>
-                    <div class="option-btn reference-btn" @click="() => { if (checkLogin()) triggerFileUpload() }">
+                    <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
                       <img src="@/assets/images/home/img_icon.png" alt="" />
                       <span>{{ t('home.option.reference') }}</span>
                     </div>
@@ -235,7 +234,6 @@
             class="waterfall"
             ref="waterfallRef"
             :key="`waterfall-${activeContentTab}`"
-            :style="{ height: containerHeight + 'px' }"
           >
             <div
               v-for="(item, index) in displayContent"
@@ -254,7 +252,11 @@
               <div class="content-info">
                 <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
                 <div class="content-meta">
-                  <div class="author-info">
+                  <div class="author-info" v-if="activeContentTab != 'suggested'">
+                    <img :src="item.author?.avatar || ''" alt="" class="author-avatar" />
+                    <span class="author-name">{{ item.author?.nickname }}</span>
+                  </div>
+                  <div class="author-info" v-else>
                     <img :src="item.author_info?.avatar || ''" alt="" class="author-avatar" />
                     <span class="author-name">{{ item.author_info?.nickname }}</span>
                   </div>
@@ -270,6 +272,17 @@
           <div v-if="loading" class="loading-state">
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ t('home.loading') }}</div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="!loading && allContent.length > 0 && Math.ceil(totalPosts / pageSize) > 1" class="pagination-wrapper">
+            <Pagination
+              v-model="currentPage"
+              :total="totalPosts"
+              :page-size="pageSize"
+              theme="pink"
+              @update:modelValue="handlePageChange"
+            />
           </div>
         </div>
       </div>
@@ -304,7 +317,6 @@
       @confirm="confirmVideoSettings"
     />
 
-    <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
 
     <UserInfoModal
@@ -314,6 +326,20 @@
       @close="handleUserInfoCancel"
       @skip="handleUserInfoSkip"
     />
+
+    <InviteCodeModal
+      :visible="showInviteCodeModal"
+      @close="handleInviteCodeSkip"
+      @confirm="handleInviteCodeConfirm"
+      @skip="handleInviteCodeSkip"
+    />
+
+    <!-- Footer -->
+    <Footer
+      :total-pages="Math.ceil(totalPosts / pageSize)"
+      :current-page="currentPage"
+      @page-change="handlePageChange"
+    ></Footer>
   </div>
 </template>
 
@@ -330,13 +356,14 @@ import VideoSettingsModal from '@/components/VideoSettingsModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
+import InviteCodeModal from '@/components/InviteCodeModal.vue';
+import Pagination from '@/components/Pagination.vue';
+import Footer from '@/components/Footer.vue';
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
 import normalIcon from '@/assets/images/home/normal.png';
 import normalActiveIcon from '@/assets/images/home/normal_active.png';
-
-import icon from '@/assets/images/home/select.png';
 import activeIcon from '@/assets/images/home/select_active.png';
 
 import likeActive from '@/assets/images/detail/like_active.png';
@@ -350,7 +377,6 @@ const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
 const loading = ref(false);
-const hasMore = ref(true);
 const activeContentType = ref('0');
 const isSearchFocused = ref(false);
 const selectedCharacters = ref<any[]>([]);
@@ -358,9 +384,18 @@ const showAtDropdown = ref(false);
 const atDropdownItems = ref<any[]>([]);
 const editableInputRef = ref<HTMLElement | null>(null);
 const isInputEmpty = ref(true);
+const isInputFocused = ref(false);
 const uploadedImages = ref<any[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
+// Combined items array to maintain order
+const combinedItems = ref<any[]>([]);
+
+
+
+// Pagination variables
+const totalPosts = ref(0);
+const pageSize = ref(50);
 const homePageRef = ref<HTMLElement | null>(null);
 const currentStyleName = ref(''); // Current selected style name
 
@@ -372,7 +407,6 @@ const isLoggedIn = computed(() => {
 // Waterfall layout state
 const waterfallRef = ref<HTMLElement | null>(null);
 const contentCardRefs = ref<(HTMLElement | null)[]>([]);
-const containerHeight = ref(0);
 
 // Function to set content card ref at specific index
 const setContentCardRef = (el: Element | ComponentPublicInstance | null, index: number) => {
@@ -412,6 +446,7 @@ const showStyleModal = ref(false);
 const showSettingsModal = ref(false);
 const showVideoSettingsModal = ref(false);
 const showUserInfoModal = ref(false);
+const showInviteCodeModal = ref(false);
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -420,6 +455,54 @@ function handleUserInfoLoaded(info: any) {
   userInfo.value = info;
   // Update userRegion based on user info
   updateUnlimitedModeVisibility();
+}
+
+// Load selected style from localStorage on component mount
+function loadSelectedStyle() {
+  try {
+    const savedStyleData = localStorage.getItem('selectedStyle');
+    if (savedStyleData) {
+      try {
+        // 尝试解析为对象
+        const styleData = JSON.parse(savedStyleData);
+        // 根据当前语言显示对应的名称
+        let displayName = styleData.name;
+        if (locale.value === 'zh' && styleData.name_cn) {
+          displayName = styleData.name_cn;
+        } else if (locale.value === 'jp' && styleData.name_ja) {
+          displayName = styleData.name_ja;
+        }
+        currentStyleName.value = displayName;
+      } catch (e) {
+        // 如果解析失败，可能是旧的字符串格式
+        currentStyleName.value = savedStyleData;
+      }
+    } else if (styles.value.length > 0) {
+        // 如果没有保存的风格，使用第一个风格
+        const firstStyle = styles.value[0];
+        if (firstStyle) {
+          // 存储包含三种语言名称和图片的对象到 localStorage
+          const styleData = {
+            name: firstStyle.name, // 英文名称，用于接口调用
+            name_cn: firstStyle.name_cn, // 中文名称
+            name_ja: firstStyle.name_ja, // 日文名称
+            image: firstStyle.image // 风格图片
+          };
+          localStorage.setItem('selectedStyle', JSON.stringify(styleData));
+
+          // 根据当前语言显示对应的名称
+          let displayName = firstStyle.name;
+          if (locale.value === 'zh' && firstStyle.name_cn) {
+            displayName = firstStyle.name_cn;
+          } else if (locale.value === 'jp' && firstStyle.name_ja) {
+            displayName = firstStyle.name_ja;
+          }
+          currentStyleName.value = displayName;
+        }
+      }
+  } catch (error) {
+    console.error('Error loading selected style:', error);
+  }
 }
 
 // Check if user is logged in
@@ -432,19 +515,23 @@ const checkLogin = () => {
   return true;
 };
 
+// Check if total items (characters + images) has reached the limit
+const checkItemLimit = () => {
+  const totalItems = selectedCharacters.value.length + uploadedImages.value.length;
+  if (totalItems >= 7) {
+    toast(t('home.error.maxItemsReached'));
+    return false;
+  }
+  return true;
+};
+
 // Content Pagination
 const currentPage = ref(1);
 const limit = ref(50);
 
 // Mock Data
 const characters = ref([]);
-const styles = ref<Array<{
-  id: string;
-  name: string;
-  name_cn?: string;
-  name_jp?: string;
-  image: string;
-}>>([]);
+const styles = ref<Array<{ id: string; name: string; name_cn?: string; name_ja?: string; image: string }>>([]);
 
 const styleCategories = ref([
   { id: 'all', name: t('home.styleCategory.all') },
@@ -479,16 +566,14 @@ const switchMode = (mode: string, index: number) => {
       router.push('/login');
       return false;
     }
-  }
 
-  if (mode === 'unlimited' && currentMode.value !== 'unlimited') {
-    const hasConfirmed = localStorage.getItem('unlimitedModeConfirmed') === 'true';
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentMode.value = 'unlimited';
     } else {
       showUnlimitedModal.value = true;
     }
-  } else if (mode === 'normal') {
+  } else {
     currentMode.value = 'normal';
   }
 };
@@ -499,25 +584,121 @@ const confirmUnlimitedMode = () => {
 };
 
 const selectCharacter = (characters: any[]) => {
+  // Check total count before adding new characters
+  const totalItems = selectedCharacters.value.length + uploadedImages.value.length + characters.length;
+  if (totalItems > 7) {
+    toast(t('home.error.maxItemsReached'));
+    showCharacterModal.value = false;
+    return;
+  }
+
   // Append new characters instead of replacing
   characters.forEach(newChar => {
     // Only add if not already in the list
     if (!selectedCharacters.value.some(c => c.id === newChar.id)) {
       selectedCharacters.value.push(newChar);
+      // Add to combined items array with type information
+      combinedItems.value.push({ ...newChar, type: 'character' });
+
+      // Insert character tag into input-textarea
+      if (editableInputRef.value) {
+        const target = editableInputRef.value;
+
+        // Clear any existing content if input is empty
+        if (target.textContent?.trim() === '') {
+          target.innerHTML = '';
+        }
+
+        // Create character tag
+        const characterTag = document.createElement('span');
+        characterTag.className = 'character-tag-input';
+        characterTag.contentEditable = 'false'; // Make the character tag non-editable
+        characterTag.dataset.characterId = newChar.id; // Add character ID for easier removal
+
+        // Create image element
+        const img = document.createElement('img');
+        img.src = newChar.image;
+        img.alt = newChar.name;
+        img.className = 'character-tag-img';
+
+        // Create text node with character name
+        const textNode = document.createTextNode(newChar.name);
+
+        // Append image and text to tag
+        characterTag.appendChild(img);
+        characterTag.appendChild(textNode);
+
+        // Append character tag to the end
+        target.appendChild(characterTag);
+
+        // Add a space after the character tag for better readability
+        const spaceNode = document.createTextNode(' ');
+        target.appendChild(spaceNode);
+
+        // Focus the input to ensure cursor is visible
+        target.focus();
+
+        // Set cursor position after the space
+        const selection = window.getSelection();
+        if (selection) {
+          const range = document.createRange();
+          range.setStartAfter(spaceNode);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        // Update input empty state (Vue will handle placeholder)
+        isInputEmpty.value = false;
+      }
     }
   });
+
+  // Do not save to local storage - only characters from CharacterLibrary should be cached
+
   showCharacterModal.value = false;
 };
 
 const removeCharacter = (character: any) => {
+  // First, remove references from input-textarea
+  if (editableInputRef.value) {
+    const characterTags = editableInputRef.value.querySelectorAll('.character-tag-input');
+    characterTags.forEach(tag => {
+      const img = tag.querySelector('img');
+      if (img && (img.src.includes(character.image) || character.image.includes(img.src))) {
+        // If this tag corresponds to the character being removed, remove it
+        // Check if there's a space after the tag and remove it too
+        const nextSibling = tag.nextSibling;
+        if (nextSibling && nextSibling.nodeType === 3 && nextSibling.textContent?.trim() === '') {
+          nextSibling.remove();
+        }
+        tag.remove();
+      }
+    });
+
+    // Update input empty state
+    const inputContent = editableInputRef.value.textContent || '';
+    isInputEmpty.value = inputContent.trim() === '';
+  }
+
+  // Then remove from selectedCharacters array
   selectedCharacters.value = selectedCharacters.value.filter(c => c.id !== character.id);
+  // Also remove from combinedItems array
+  combinedItems.value = combinedItems.value.filter(item => !(item.type === 'character' && item.id === character.id));
+
+  // Do not update local storage - only characters from CharacterLibrary should be cached
 };
 
 const selectStyle = (style: any) => {
   if (style) {
-    const styleName = style.name;
-    localStorage.setItem('selectedStyle', styleName);
-    currentStyleName.value = styleName;
+    // 根据当前语言显示对应的名称
+    let displayName = style.name;
+    if (locale.value === 'zh' && style.name_cn) {
+      displayName = style.name_cn;
+    } else if (locale.value === 'jp' && style.name_ja) {
+      displayName = style.name_ja;
+    }
+    currentStyleName.value = displayName;
   }
   showStyleModal.value = false;
 };
@@ -538,7 +719,7 @@ function getCountry() {
         userRegion.value = false;
       }
     } else {
-      console.log()
+      userRegion.value = false;
     }
   }).catch(err => {
     console.log(err);
@@ -588,34 +769,87 @@ const generateVideo = async () => {
   }
 
   try {
+    let savedStyleData = null;
+    let storyStyle = "";
+    let currentStyleData = null;
+
+    try {
+      savedStyleData = localStorage.getItem('selectedStyle');
+      if (!savedStyleData && styles.value.length > 0) {
+        const firstStyle = styles.value[0];
+        if (firstStyle) {
+          const styleData = {
+            name: firstStyle.name,
+            name_cn: firstStyle.name_cn,
+            name_ja: firstStyle.name_ja,
+            image: firstStyle.image
+          };
+          savedStyleData = JSON.stringify(styleData);
+          localStorage.setItem('selectedStyle', savedStyleData);
+
+          let displayName = firstStyle.name;
+          if (locale.value === 'zh' && firstStyle.name_cn) {
+            displayName = firstStyle.name_cn;
+          } else if (locale.value === 'jp' && firstStyle.name_ja) {
+            displayName = firstStyle.name_ja;
+          }
+          currentStyleName.value = displayName;
+          storyStyle = firstStyle.name;
+          currentStyleData = styleData;
+        }
+      } else if (savedStyleData) {
+        try {
+          const styleData = JSON.parse(savedStyleData);
+          storyStyle = styleData.name;
+
+          let styleImage = styleData.image;
+          if (!styleImage && styles.value && styles.value.length > 0) {
+            const matchingStyle = styles.value.find(s =>
+              s.name === styleData.name ||
+              s.name_cn === styleData.name ||
+              s.name_ja === styleData.name ||
+              s.name === styleData.name_cn ||
+              s.name === styleData.name_ja
+            );
+            if (matchingStyle && matchingStyle.image) {
+              styleImage = matchingStyle.image;
+            }
+          }
+
+          currentStyleData = {
+            name: styleData.name,
+            name_cn: styleData.name_cn || styleData.name,
+            name_ja: styleData.name_ja || styleData.name,
+            image: styleImage || ''
+          };
+
+          localStorage.setItem('selectedStyle', JSON.stringify(currentStyleData));
+
+          let displayName = styleData.name;
+          if (locale.value === 'zh' && styleData.name_cn) {
+            displayName = styleData.name_cn;
+          } else if (locale.value === 'jp' && styleData.name_ja) {
+            displayName = styleData.name_ja;
+          }
+          currentStyleName.value = displayName;
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading selected style:', error);
+    }
+
     // Prepare data for ai_director
     const aiDirectorData = {
       storyType: currentMode.value == 'unlimited' ? "nsfw_story" : "short_story",
       initialPrompt: inputContent.trim(),
-      selectedStyle: null as string | null,
+      selectedStyle: storyStyle || null,
       selectedCharacter: null,
       referenceImages: uploadedImages.value.map(img => img.image),
       characters: selectedCharacters.value,
       timestamp: Date.now()
     };
-
-    try {
-      let savedStyle = localStorage.getItem('selectedStyle');
-      if (!savedStyle && styles.value.length > 0) {
-        const firstStyle = styles.value[0];
-        if (firstStyle && firstStyle.name) {
-          savedStyle = firstStyle.name ? firstStyle.name : 'Ghibli Style';
-          localStorage.setItem('selectedStyle', savedStyle);
-        }
-      } else {
-        localStorage.setItem('selectedStyle', 'Ghibli Style');
-      }
-      if (savedStyle) {
-        aiDirectorData.selectedStyle = savedStyle;
-      }
-    } catch (error) {
-      console.error('Error loading selected style:', error);
-    }
 
     const sessionId = uuidv4();
 
@@ -636,26 +870,68 @@ const generateVideo = async () => {
       localStorage.setItem('videoSettings', JSON.stringify(videoSettings));
     }
 
-    let storyStyle = "";
-    try {
-      let savedStyle = localStorage.getItem('selectedStyle');
-      if (!savedStyle && styles.value.length > 0) {
-        const firstStyle = styles.value[0];
-        if (firstStyle) {
-          let localeStyleName: string | undefined;
-          localeStyleName = firstStyle.name;
+    // 生成角色和图片的索引映射
+    const characterMap: Record<string, number> = {};
+    const imageMap: Record<string, number> = {};
 
-          if (localeStyleName) {
-            savedStyle = localeStyleName;
-            localStorage.setItem('selectedStyle', savedStyle);
+    // 角色索引基于角色列表的顺序
+    selectedCharacters.value.forEach((character, index) => {
+      characterMap[character.id] = index + 1;
+    });
+
+    // 图片索引基于图片列表的顺序
+    uploadedImages.value.forEach((image, index) => {
+      imageMap[image.id] = index + 1;
+    });
+
+    // 先创建一个干净的文本内容，不包含标签
+    let processedContent = '';
+    if (editableInputRef.value) {
+      // 遍历所有子节点，构建干净的文本内容
+      const processNode = (node: Node) => {
+        if (node.nodeType === 3) { // 文本节点
+          processedContent += node.textContent || '';
+        } else if (node.nodeType === 1) { // 元素节点
+          const element = node as Element;
+          if (element.classList.contains('character-tag-input')) {
+            // 处理角色标签
+            const img = element.querySelector('img');
+            if (img) {
+              const character = selectedCharacters.value.find(c =>
+                c.image === img.src || img.src.includes(c.image)
+              );
+              if (character) {
+                const charIndex = characterMap[character.id] || 1;
+                processedContent += `<chr_${charIndex}>`;
+              }
+            }
+          } else if (element.classList.contains('image-tag')) {
+            // 处理图片标签
+            const imgElement = element.querySelector('img');
+            if (imgElement) {
+              const image = uploadedImages.value.find(img =>
+                img.image === imgElement.src || imgElement.src.includes(img.image)
+              );
+              if (image) {
+                const imgIndex = imageMap[image.id] || 1;
+                processedContent += `<ref_${imgIndex}>`;
+              }
+            }
+          } else {
+            // 处理其他元素节点
+            for (let i = 0; i < element.childNodes.length; i++) {
+              processNode(element.childNodes[i]);
+            }
           }
         }
+      };
+
+      // 处理输入框的所有子节点
+      for (let i = 0; i < editableInputRef.value.childNodes.length; i++) {
+        processNode(editableInputRef.value.childNodes[i]);
       }
-      if (savedStyle) {
-        storyStyle = savedStyle;
-      }
-    } catch (error) {
-      console.error('Error loading selected style:', error);
+    } else {
+      processedContent = inputContent.trim();
     }
 
     const params = {
@@ -664,11 +940,19 @@ const generateVideo = async () => {
       story_type: currentMode.value == 'unlimited' ? "nsfw_story" : "short_story",
       story_style: storyStyle,
       reference_images: uploadedImages.value.map(img => img.image),
-      others: {},
-      addition_role: selectedCharacters.value.map(character => ({
-        role_id: character.id,
-        role_name: character.name,
-        role_image: character.image
+      emotion: "",
+      others: {
+        content: processedContent,
+        list: combinedItems.value,
+        style: currentStyleData,
+        use_computing: 0
+      },
+      addition_characters: selectedCharacters.value.map(character => ({
+        id: character.id,
+        name: character.name,
+        desc: character.description,
+        main_image_url: character.image,
+        tri_view_url: character.tri_image
       }))
     };
 
@@ -684,13 +968,8 @@ const generateVideo = async () => {
     if (response.ok) {
       const data = await response.json();
       if (data.code === 200 || data.code === 0) {
-        const contentToSave = inputContent.trim() + `<MARKED>${videoSettings.language},${videoSettings.aspectRatio},${storyStyle ? storyStyle : 'Ghibli Style'},情绪跳过不选择</MARKED>`;
-
-        localStorage.setItem('generatedContent', contentToSave);
-
         window.open(`/tools/space/${sessionId}`, '_blank');
 
-        // Clear input content after successful generation
         if (editableInputRef.value) {
           editableInputRef.value.textContent = '';
           isInputEmpty.value = true;
@@ -732,10 +1011,8 @@ const switchContentTab = (tabId: string, index: number) => {
   activeContentTab.value = tabId;
   tabCur.value = index;
   currentPage.value = 1;
-  hasMore.value = true;
   allContent.value = []; // Clear old data to show loading state
   contentCardRefs.value = []; // Clear card refs to reset layout
-  containerHeight.value = 0; // Reset container height
 
   // Use nextTick to ensure DOM is updated before loading new content
   nextTick(() => {
@@ -753,6 +1030,14 @@ const triggerFileUpload = () => {
 const handleFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
+    // Check total count before uploading new images
+    const totalItems = selectedCharacters.value.length + uploadedImages.value.length + input.files.length;
+    if (totalItems > 7) {
+      toast(t('home.error.maxItemsReached'));
+      input.value = '';
+      return;
+    }
+
     isUploading.value = true;
 
     try {
@@ -761,11 +1046,63 @@ const handleFileChange = async (event: Event) => {
         try {
           const uploadedUrl = await uploadImage(file, currentMode.value);
 
-          uploadedImages.value.push({
+          const newImage = {
             id: Date.now() + index.toString(),
             name: file.name,
             image: uploadedUrl
-          });
+          };
+
+          uploadedImages.value.push(newImage);
+          // Add to combined items array with type information
+          combinedItems.value.push({ ...newImage, type: 'image' });
+
+          // Insert image tag into input-textarea
+          if (editableInputRef.value) {
+            const target = editableInputRef.value;
+            const text = target.textContent || '';
+            const isEmpty = text.trim() === '';
+
+            // Create image tag
+            const imageTag = document.createElement('span');
+            imageTag.className = 'image-tag';
+            imageTag.contentEditable = 'false'; // Make the image tag non-editable
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = newImage.image;
+            img.alt = newImage.name;
+            img.className = 'image-tag-img';
+
+            // Create text node with image index
+            const imageIndex = uploadedImages.value.length;
+            const textNode = document.createTextNode(`image${imageIndex}`);
+
+            // Append image and text to tag
+            imageTag.appendChild(img);
+            imageTag.appendChild(textNode);
+
+            // Insert image tag into input-textarea
+            // Always append to the end to ensure existing .image-tag tags are not removed
+
+            // Append image tag to the end
+        target.appendChild(imageTag);
+
+        // Focus the input to ensure cursor is visible
+        target.focus();
+
+        // Set cursor position after the image tag
+        const selection = window.getSelection();
+        if (selection) {
+          const range = document.createRange();
+          range.setStartAfter(imageTag);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+            // Update input empty state (Vue will handle placeholder)
+            isInputEmpty.value = false;
+          }
         } catch (error) {
           console.error('Upload error for file', file.name, error);
           toast(t('fail'));
@@ -814,7 +1151,65 @@ async function uploadImage(file: File, mode: string): Promise<string> {
 
 // Remove uploaded image
 const removeUploadedImage = (id: string) => {
+  // First, remove references from input-textarea
+  if (editableInputRef.value) {
+    const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
+    imageTags.forEach(tag => {
+      const img = tag.querySelector('img');
+      if (img) {
+        // Find the image being removed
+        const imageToRemove = uploadedImages.value.find(img => img.id === id);
+        if (imageToRemove && (img.src.includes(imageToRemove.image) || imageToRemove.image.includes(img.src))) {
+          // If this tag corresponds to the image being removed, remove it
+          // Check if there's a space after the tag and remove it too
+          const nextSibling = tag.nextSibling;
+          if (nextSibling && nextSibling.nodeType === 3 && nextSibling.textContent?.trim() === '') {
+            nextSibling.remove();
+          }
+          tag.remove();
+        }
+      }
+    });
+
+    // Update input empty state
+    const inputContent = editableInputRef.value.textContent || '';
+    isInputEmpty.value = inputContent.trim() === '';
+  }
+
+  // Then remove from uploadedImages array
   uploadedImages.value = uploadedImages.value.filter(img => img.id !== id);
+  // Also remove from combinedItems array
+  combinedItems.value = combinedItems.value.filter(item => !(item.type === 'image' && item.id === id));
+
+  // Update image order in input-textarea
+  // Note: Using nextTick to ensure DOM is updated before modifying it
+  nextTick(() => {
+    if (editableInputRef.value) {
+      try {
+        const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
+        imageTags.forEach(tag => {
+          const img = tag.querySelector('img');
+          if (img) {
+            // Find the corresponding image in uploadedImages
+            const image = uploadedImages.value.find(imgItem =>
+              imgItem.image === img.src || img.src.includes(imgItem.image)
+            );
+            if (image) {
+              // Update the image index
+              const imageIndex = uploadedImages.value.findIndex(imgItem => imgItem.id === image.id) + 1;
+              // Update the text content
+              const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
+              if (textNode) {
+                textNode.textContent = `image${imageIndex}`;
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error updating image order:', error);
+      }
+    }
+  });
 };
 
 // Handle input for @ dropdown
@@ -827,9 +1222,81 @@ const handleInput = (event: Event) => {
   const textBeforeCursor = text.substring(0, cursorPosition);
   const atIndex = textBeforeCursor.lastIndexOf('@');
 
-  if (atIndex !== -1 && (atIndex === 0 || textBeforeCursor[atIndex - 1] === ' ')) {
+  // Only show dropdown if:
+  // 1. There's an @ symbol
+  // 2. @ is the last character before cursor (just typed)
+  // 3. There are uploaded images or selected characters
+  if (atIndex !== -1 &&
+      atIndex === textBeforeCursor.length - 1 &&
+      (uploadedImages.value.length > 0 || selectedCharacters.value.length > 0)) {
     showAtDropdown.value = true;
-    atDropdownItems.value = uploadedImages.value;
+    // Use the existing combinedItems array
+    atDropdownItems.value = combinedItems.value;
+
+    // Calculate dropdown position based on @ symbol position
+    nextTick(() => {
+      try {
+        if (editableInputRef.value) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+
+            // 找到 @ 符号的位置
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
+
+            // 遍历所有子节点查找 @ 符号
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) { // TEXT_NODE
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
+
+                // 检查 @ 是否在当前节点中
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) { // ELEMENT_NODE
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+
+            findAtSymbol(editableInputRef.value);
+
+            if (foundAtNode) {
+              // 创建一个 range 定位到 @ 符号后面
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = editableInputRef.value.parentElement;
+              const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                // 计算相对于 input-inner 的位置
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
+                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error positioning dropdown:', error);
+      }
+    });
   } else {
     showAtDropdown.value = false;
   }
@@ -839,25 +1306,169 @@ const handleInput = (event: Event) => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     showAtDropdown.value = false;
+  } else if (event.key === 'Backspace') {
+    if (editableInputRef.value) {
+      const target = editableInputRef.value;
+      const selection = window.getSelection();
+
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+
+        // Check if cursor is at the start of the input
+        if (range.startOffset === 0 && range.startContainer === target.firstChild) {
+          return; // Do nothing if at the start
+        }
+
+        // Check if cursor is right after a character or image tag
+        let previousSibling: Node | null = range.startContainer;
+        if (range.startOffset > 0) {
+          // If cursor is in the middle of a text node, check the previous node
+          if (previousSibling && previousSibling.nodeType === 3) { // Text node
+            const textBeforeCursor = previousSibling.textContent?.substring(0, range.startOffset) || '';
+            if (textBeforeCursor.trim() === '') {
+              // If only whitespace before cursor, check previous element
+              previousSibling = previousSibling.previousSibling;
+            }
+          }
+        } else {
+          // If cursor is at the start of a node, check the previous node
+          previousSibling = previousSibling?.previousSibling || null;
+        }
+
+        // Check if previous sibling is a character or image tag
+        while (previousSibling) {
+          if (previousSibling.nodeType === 1) { // Element node
+            const element = previousSibling as HTMLElement;
+            if (element.classList.contains('character-tag-input') || element.classList.contains('image-tag')) {
+              // Delete the tag and any preceding whitespace
+              const whitespaceNode = element.previousSibling;
+              if (whitespaceNode && whitespaceNode.nodeType === 3 && whitespaceNode.textContent?.trim() === '') {
+                whitespaceNode.remove();
+              }
+              element.remove();
+
+              // Update input empty state
+              const inputContent = target.textContent || '';
+              isInputEmpty.value = inputContent.trim() === '';
+
+              // Prevent default backspace behavior
+              event.preventDefault();
+              return;
+            }
+          }
+          previousSibling = previousSibling.previousSibling;
+        }
+      }
+    }
   }
 };
 
 // Handle input click
 const handleInputClick = () => {
-  handleInput({ target: editableInputRef.value } as Event);
+  // Only handle @ dropdown logic, don't update isInputEmpty
+  if (editableInputRef.value) {
+    const target = editableInputRef.value;
+    const text = target.textContent || '';
+    const cursorPosition = getCursorPosition(target);
+    const textBeforeCursor = text.substring(0, cursorPosition);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+
+    // Only show dropdown if:
+    // 1. There's an @ symbol
+    // 2. @ is the last character before cursor (just typed)
+    // 3. There are uploaded images or selected characters
+    if (atIndex !== -1 &&
+        atIndex === textBeforeCursor.length - 1 &&
+        (uploadedImages.value.length > 0 || selectedCharacters.value.length > 0)) {
+      showAtDropdown.value = true;
+      // Use the existing combinedItems array
+    atDropdownItems.value = combinedItems.value;
+
+      // Calculate dropdown position based on @ symbol position
+      nextTick(() => {
+        try {
+          if (editableInputRef.value) {
+            // 找到 @ 符号的位置
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
+
+            // 遍历所有子节点查找 @ 符号
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) { // TEXT_NODE
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
+
+                // 检查 @ 是否在当前节点中
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) { // ELEMENT_NODE
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+
+            findAtSymbol(editableInputRef.value);
+
+            if (foundAtNode) {
+              // 创建一个 range 定位到 @ 符号后面
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = editableInputRef.value.parentElement;
+              const dropdown = document.querySelector('.at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                // 计算相对于 input-inner 的位置
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
+                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error positioning dropdown:', error);
+        }
+      });
+    } else {
+      showAtDropdown.value = false;
+    }
+  }
 };
 
 // Handle input focus
 const handleInputFocus = () => {
   checkLogin();
+  isInputFocused.value = true;
 };
 
 // Handle input blur
 const handleInputBlur = () => {
+  isInputFocused.value = false;
+
+  // Update input empty state
+  if (editableInputRef.value) {
+    const inputContent = editableInputRef.value.textContent || '';
+    isInputEmpty.value = inputContent.trim() === '';
+  }
+
   // Delay hiding dropdown to allow click on dropdown items
   setTimeout(() => {
     showAtDropdown.value = false;
-  }, 200);
+  }, 300);
 };
 
 // Handle paste event to remove formatting
@@ -895,23 +1506,155 @@ const handlePaste = (event: ClipboardEvent) => {
 
 // Select @ dropdown item
 const selectAtItem = (item: any) => {
-  if (!editableInputRef.value) return;
+  if (!editableInputRef.value) {
+    return;
+  }
 
   const target = editableInputRef.value;
-  const text = target.textContent || '';
-  const cursorPosition = getCursorPosition(target);
-  const textBeforeCursor = text.substring(0, cursorPosition);
-  const atIndex = textBeforeCursor.lastIndexOf('@');
 
-  if (atIndex !== -1) {
-    const newText = text.substring(0, atIndex) + `@${item.name} ` + text.substring(cursorPosition);
-    target.textContent = newText;
-
-    // Set cursor position after the inserted text
-    setTimeout(() => {
-      setCursorPosition(target, atIndex + item.name.length + 2);
-    }, 0);
+  // Clear any existing content if input is empty
+  if (target.textContent?.trim() === '') {
+    target.innerHTML = '';
   }
+
+  // Create appropriate tag based on item type
+  let itemTag: HTMLElement;
+  let img: HTMLImageElement;
+  let textNode: Text;
+
+  if (item.type === 'character') {
+    // Create character tag
+    itemTag = document.createElement('span');
+    itemTag.className = 'character-tag-input';
+    itemTag.contentEditable = 'false'; // Make the character tag non-editable
+    itemTag.dataset.itemId = item.id; // Add item ID for easier removal
+
+    // Create image element
+    img = document.createElement('img');
+    img.src = item.image;
+    img.alt = item.name;
+    img.className = 'character-tag-img';
+
+    // Create text node with character name
+    textNode = document.createTextNode(item.name);
+  } else {
+    // Create image tag
+    itemTag = document.createElement('span');
+    itemTag.className = 'image-tag';
+    itemTag.contentEditable = 'false'; // Make the image tag non-editable
+    itemTag.dataset.itemId = item.id; // Add item ID for easier removal
+
+    // Create image element
+    img = document.createElement('img');
+    img.src = item.image;
+    img.alt = item.name;
+    img.className = 'image-tag-img';
+
+    // Create text node with image index
+    const imageIndex = uploadedImages.value.findIndex(img => img.id === item.id) + 1;
+    textNode = document.createTextNode(`image${imageIndex}`);
+  }
+
+  // Append image and text to tag
+  itemTag.appendChild(img);
+  itemTag.appendChild(textNode);
+
+  // Find and remove @ symbol from the text content
+  const text = target.textContent || '';
+  const lastAtIndex = text.lastIndexOf('@');
+
+  if (lastAtIndex !== -1) {
+    // Get all nodes and find the @ position
+    let currentPos = 0;
+    let foundAtNode: Node | null = null;
+    let atNodeOffset = 0;
+
+    const findAtSymbol = (node: Node): boolean => {
+      if (node.nodeType === 3) { // TEXT_NODE
+        const nodeText = node.textContent || '';
+        const nodeLength = nodeText.length;
+
+        // Check if @ is in this node
+        if (currentPos <= lastAtIndex && lastAtIndex < currentPos + nodeLength) {
+          foundAtNode = node;
+          atNodeOffset = lastAtIndex - currentPos;
+          return true;
+        }
+        currentPos += nodeLength;
+      } else if (node.nodeType === 1) { // ELEMENT_NODE
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (findAtSymbol(node.childNodes[i])) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    findAtSymbol(target);
+
+    if (foundAtNode) {
+      try {
+        // Create a range to delete @ and insert image tag
+        const range = document.createRange();
+        range.setStart(foundAtNode, atNodeOffset);
+        range.setEnd(foundAtNode, atNodeOffset + 1);
+
+        // Delete the @ symbol
+        range.deleteContents();
+
+        // Insert the item tag
+        range.insertNode(itemTag);
+
+        // Add a space after the item tag for better readability
+        const spaceNode = document.createTextNode(' ');
+        if (itemTag.parentNode) {
+          itemTag.parentNode.insertBefore(spaceNode, itemTag.nextSibling);
+        }
+
+        // 确保itemTag已经在DOM中
+        if (spaceNode.parentNode) {
+          const tagRange = document.createRange();
+          tagRange.setStartAfter(spaceNode);
+          tagRange.collapse(true);
+
+          const selection = window.getSelection();
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(tagRange);
+          }
+        }
+
+        // Focus back to the input
+        target.focus();
+      } catch (error) {
+        console.log('[selectAtItem] 插入失败:', error);
+        // 失败时直接在末尾添加
+        target.appendChild(itemTag);
+        // Add a space after the item tag
+        target.appendChild(document.createTextNode(' '));
+        target.focus();
+      }
+    } else {
+      console.log('[selectAtItem] 未找到 @ 符号所在节点');
+      // 未找到时直接在末尾添加
+      target.appendChild(itemTag);
+      // Add a space after the item tag
+      target.appendChild(document.createTextNode(' '));
+      target.focus();
+    }
+  } else {
+    console.log('[selectAtItem] 文本中没有 @ 符号');
+    // 没有@符号时直接在末尾添加
+    target.appendChild(itemTag);
+    // Add a space after the item tag
+    target.appendChild(document.createTextNode(' '));
+    target.focus();
+  }
+
+  // Update input empty state after inserting image tag
+  const inputContent = target.textContent || '';
+  isInputEmpty.value = inputContent.trim() === '';
 
   showAtDropdown.value = false;
 };
@@ -964,7 +1707,7 @@ const setCursorPosition = (element: HTMLElement, position: number) => {
 
 // Load content from API
 const loadContent = async (page = 1) => {
-  if (loading.value || !hasMore.value) return;
+  if (loading.value) return;
 
   const currentActiveTab = activeContentTab.value;
   loading.value = true;
@@ -973,16 +1716,16 @@ const loadContent = async (page = 1) => {
 
     switch (currentActiveTab) {
       case 'suggested':
-        res = await api.homePostList(page, limit.value, '', 0) as any;
+        res = await api.homePostList(page, pageSize.value, '', 0) as any;
         break;
       case 'following':
-        res = await api.homeFollowList(page, limit.value, 0) as any;
+        res = await api.homeFollowList(page, pageSize.value, 0) as any;
         break;
       case 'subscriptions':
-        res = await api.homeSubscriptionList(page, limit.value, 0) as any;
+        res = await api.homeSubscriptionList(page, pageSize.value, 0) as any;
         break;
       default:
-        res = await api.homePostList(page, limit.value, '', 0) as any;
+        res = await api.homePostList(page, pageSize.value, '', 0) as any;
     }
 
     if (res.code === 0 || res.code === 200) {
@@ -996,14 +1739,11 @@ const loadContent = async (page = 1) => {
         }
       });
 
-      if (page === 1) {
-        allContent.value = data;
-      } else {
-        allContent.value = [...allContent.value, ...data];
-      }
+      // Always replace content for pagination (not append)
+      allContent.value = data;
 
-      currentPage.value++;
-      hasMore.value = (currentPage.value-1) * limit.value <= Number(res.data?.allnums);
+      // Update total count for pagination
+      totalPosts.value = Number(res.data?.allnums) || 0;
 
       nextTick(() => {
         layoutWaterfall();
@@ -1018,12 +1758,6 @@ const loadContent = async (page = 1) => {
   }
 };
 
-const loadMoreContent = () => {
-  if (loading.value || !hasMore.value) return;
-
-  loadContent(currentPage.value);
-};
-
 function layoutWaterfall() {
   if (!waterfallRef.value || !allContent.value || allContent.value.length === 0) {
     return;
@@ -1031,100 +1765,8 @@ function layoutWaterfall() {
 
   // Wait for next tick to ensure all DOM elements are rendered
   nextTick(() => {
-    const cards = contentCardRefs.value.filter(card => card !== null) as HTMLElement[];
-
-    if (!cards || cards.length === 0 || cards.length !== allContent.value.length) {
-      // If refs don't match content, retry after a short delay
-      setTimeout(() => layoutWaterfall(), 50);
-      return;
-    }
-
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const cardWidthRem = 25.8;
-    const gapRem = 1.6;
-    const cols = 4;
-
-    // Function to calculate and apply layout - GRID style, not waterfall
-    const applyLayout = () => {
-      // Track the maximum height in each row
-      const rowHeights: number[] = [];
-      let currentRow = 0;
-      let maxHeightInRow = 0;
-
-      cards.forEach((cardEl, index) => {
-        if (!cardEl) return;
-
-        // Calculate which column and row this card belongs to
-        const colIndex = index % cols;
-        const rowIndex = Math.floor(index / cols);
-
-        // If we moved to a new row, save the previous row's max height
-        if (rowIndex !== currentRow) {
-          rowHeights[currentRow] = maxHeightInRow;
-          currentRow = rowIndex;
-          maxHeightInRow = 0;
-        }
-
-        // Calculate position - grid layout (not waterfall)
-        const leftRem = colIndex * (cardWidthRem + gapRem);
-
-        // Calculate top position based on previous rows' heights
-        let topPx = 0;
-        for (let i = 0; i < rowIndex; i++) {
-          topPx += rowHeights[i] + gapRem * rootFontSize;
-        }
-        const topRem = topPx / rootFontSize;
-
-        // Apply styles directly to DOM element
-        cardEl.style.position = "absolute";
-        cardEl.style.left = `${leftRem}rem`;
-        cardEl.style.top = `${topRem}rem`;
-
-        // Track max height in current row
-        maxHeightInRow = Math.max(maxHeightInRow, cardEl.offsetHeight);
-      });
-
-      // Save the last row's height
-      rowHeights[currentRow] = maxHeightInRow;
-
-      // Calculate total container height
-      let totalHeight = 0;
-      rowHeights.forEach((height, index) => {
-        totalHeight += height;
-        if (index < rowHeights.length - 1) {
-          totalHeight += gapRem * rootFontSize;
-        }
-      });
-
-      containerHeight.value = totalHeight;
-    };
-
-    // Apply initial layout
-    applyLayout();
-
-    // Wait for images to load and recalculate
-    if (waterfallRef.value) {
-      const images = Array.from(waterfallRef.value.querySelectorAll('.content-item img'));
-      if (images.length > 0) {
-        const imageLoadPromises = images.map(img => {
-          return new Promise((resolve) => {
-            if ((img as HTMLImageElement).complete) {
-              resolve(true);
-            } else {
-              img.addEventListener('load', () => resolve(true), { once: true });
-              img.addEventListener('error', () => resolve(true), { once: true });
-              // Timeout fallback
-              setTimeout(() => resolve(true), 3000);
-            }
-          });
-        });
-
-        Promise.all(imageLoadPromises).then(() => {
-          // Recalculate layout after images are loaded
-          applyLayout();
-        });
-      }
-    }
+    // Flex layout will handle positioning automatically
+    // No need for absolute positioning calculations
   });
 }
 
@@ -1177,22 +1819,24 @@ const handleSearch = () => {
   router.push({ path: "/search", query: { keyword: searchQuery.value.trim(), type: "post" } });
 };
 
-// Watch for type changes
 watch(activeContentType, () => {
   currentPage.value = 1;
-  allContent.value = []; // Clear old data to show loading state
+  allContent.value = [];
   loadContent(1);
 });
 
-// Watch for sort changes
 watch(sortOrder, () => {
   currentPage.value = 1;
-  allContent.value = []; // Clear old data to show loading state
+  allContent.value = [];
   loadContent(1);
+});
+
+// Watch for language changes and update style display accordingly
+watch(() => locale.value, (newLang) => {
+  loadSelectedStyle();
 });
 
 const loadStyles = async () => {
-  // Only load styles if user is logged in
   if (!isLoggedIn.value) {
     return;
   }
@@ -1204,22 +1848,51 @@ const loadStyles = async () => {
         id: item.id,
         name: item.name,
         name_cn: item.name_cn,
-        name_jp: item.name_jp,
+        name_ja: item.name_ja, // 改为 name_ja
         image: item.image
       }));
 
       // Initialize currentStyleName if not set
       if (!currentStyleName.value) {
-        let savedStyle = localStorage.getItem('selectedStyle');
-        if (!savedStyle && styles.value.length > 0) {
+        let savedStyleData = localStorage.getItem('selectedStyle');
+        if (!savedStyleData && styles.value.length > 0) {
           const firstStyle = styles.value[0];
-          if (firstStyle && firstStyle.name) {
-            savedStyle = firstStyle.name;
-            localStorage.setItem('selectedStyle', savedStyle);
+          if (firstStyle) {
+            // 存储包含三种语言名称和图片的对象到 localStorage
+            const styleData = {
+              name: firstStyle.name, // 英文名称，用于接口调用
+              name_cn: firstStyle.name_cn, // 中文名称
+              name_ja: firstStyle.name_ja, // 日文名称
+              image: firstStyle.image // 风格图片
+            };
+            savedStyleData = JSON.stringify(styleData);
+            localStorage.setItem('selectedStyle', savedStyleData);
+
+            // 根据当前语言显示对应的名称
+            let displayName = firstStyle.name;
+            if (locale.value === 'zh' && firstStyle.name_cn) {
+              displayName = firstStyle.name_cn;
+            } else if (locale.value === 'jp' && firstStyle.name_ja) {
+              displayName = firstStyle.name_ja;
+            }
+            currentStyleName.value = displayName;
           }
-        }
-        if (savedStyle) {
-          currentStyleName.value = savedStyle;
+        } else if (savedStyleData) {
+          try {
+            // 尝试解析为对象
+            const styleData = JSON.parse(savedStyleData);
+            // 根据当前语言显示对应的名称
+            let displayName = styleData.name;
+            if (locale.value === 'zh' && styleData.name_cn) {
+              displayName = styleData.name_cn;
+            } else if (locale.value === 'jp' && styleData.name_jp) {
+              displayName = styleData.name_jp;
+            }
+            currentStyleName.value = displayName;
+          } catch (e) {
+            // 如果解析失败，可能是旧的字符串格式
+            currentStyleName.value = savedStyleData;
+          }
         }
       }
     }
@@ -1230,38 +1903,133 @@ const loadStyles = async () => {
 
 onMounted(() => {
   getCountry();
+  loadSelectedStyle();
+
+  // Load selected characters from local storage (only for characters cast from CharacterLibrary)
+  try {
+    const storedCharacters = localStorage.getItem('selectedCharacters');
+    if (storedCharacters) {
+      selectedCharacters.value = JSON.parse(storedCharacters);
+      // Clear the cache after loading to ensure characters are only displayed once
+      localStorage.removeItem('selectedCharacters');
+    }
+  } catch (error) {
+    console.error('Error loading selected characters:', error);
+  }
+
+  // Check for casted character from CharacterDetailModal
+  try {
+    const castedCharacter = localStorage.getItem('castedCharacter');
+    if (castedCharacter) {
+      const character = JSON.parse(castedCharacter);
+      // Check if character is already in the list
+      if (!selectedCharacters.value.some(c => c.id === character.id)) {
+        // Check if total items exceed limit
+        if (selectedCharacters.value.length + uploadedImages.value.length < 7) {
+          selectedCharacters.value.push(character);
+          combinedItems.value.push({ ...character, type: 'character' });
+
+          // Insert character tag into input-textarea
+          if (editableInputRef.value) {
+            const target = editableInputRef.value;
+
+            // Create character tag
+            const characterTag = document.createElement('span');
+            characterTag.className = 'character-tag-input';
+            characterTag.contentEditable = 'false'; // Make the character tag non-editable
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = character.image;
+            img.alt = character.name;
+            img.className = 'character-tag-img';
+
+            // Create text node with character name
+            const textNode = document.createTextNode(character.name);
+
+            // Append image and text to tag
+            characterTag.appendChild(img);
+            characterTag.appendChild(textNode);
+
+            // Append character tag to the end
+            target.appendChild(characterTag);
+
+            // Focus the input to ensure cursor is visible
+            target.focus();
+
+            // Set cursor position after the character tag
+            const selection = window.getSelection();
+            if (selection) {
+              const range = document.createRange();
+              range.setStartAfter(characterTag);
+              range.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+
+            // Update input empty state
+            isInputEmpty.value = false;
+          }
+
+          // Remove from cache
+          localStorage.removeItem('castedCharacter');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error loading casted character:', error);
+    localStorage.removeItem('castedCharacter');
+  }
 
   loadContent(1);
   loadStyles();
 
-  if (homePageRef.value) {
-    homePageRef.value.addEventListener('scroll', handleScroll);
-  }
+  window.addEventListener('resize', handleResize);
 
-  // checkFirstRegister();
+  checkFirstRegister();
 });
 
 onBeforeUnmount(() => {
-  if (homePageRef.value) {
-    homePageRef.value.removeEventListener('scroll', handleScroll);
-  }
+  window.removeEventListener('resize', handleResize);
 });
 
-// Check first register and show user info modal
+// Handle window resize
+let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+function handleResize() {
+  // Debounce resize event
+  if (resizeTimer) {
+    clearTimeout(resizeTimer);
+  }
+  resizeTimer = setTimeout(() => {
+    if (allContent.value.length > 0) {
+      layoutWaterfall();
+    }
+  }, 200);
+}
+
 async function checkFirstRegister() {
+  const isFirstLogin = localStorage.getItem('isFirstLogin');
   const isFirstRegister = localStorage.getItem('isFirstRegister');
-  if (isFirstRegister === '1') {
+
+  if (isFirstLogin == '1') {
+    showInviteCodeModal.value = true;
+    localStorage.removeItem("isFirstLogin");
+  }
+
+  if (isFirstRegister == '1') {
     showUserInfoModal.value = true;
+    localStorage.removeItem("isFirstRegister");
   }
 }
 
-function handleUserInfoConfirm(info: { username: string; avatar: string }) {
+function handleUserInfoConfirm(info: { username: string; avatar: string; birth?: { year: number | ''; month: number | ''; day: number | '' } }) {
   const originalNickname = userInfo.value?.info?.nickname || "";
   const originalAvatar = userInfo.value?.info?.avatar || "";
   const hasNicknameChanged = info.username !== originalNickname;
   const hasAvatarChanged = info.avatar !== originalAvatar;
+  const hasBirthChanged = info.birth && info.birth.year && info.birth.month && info.birth.day;
 
-  if (hasNicknameChanged || hasAvatarChanged) {
+  if (hasNicknameChanged || hasAvatarChanged || hasBirthChanged) {
     let operationsCount = 0;
     let completedOperations = 0;
     let hasError = false;
@@ -1269,7 +2037,6 @@ function handleUserInfoConfirm(info: { username: string; avatar: string }) {
     const checkAllOperationsComplete = () => {
       completedOperations++;
       if (completedOperations === operationsCount && !hasError) {
-        localStorage.removeItem("isFirstRegister");
         showUserInfoModal.value = false;
 
         if (headerRef.value) {
@@ -1291,7 +2058,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string }) {
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(res.msg);
+            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
           }
         })
         .catch((e: any) => {
@@ -1314,7 +2081,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string }) {
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(res.msg);
+            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
           }
         })
         .catch((e: any) => {
@@ -1323,29 +2090,72 @@ function handleUserInfoConfirm(info: { username: string; avatar: string }) {
           toast(t('fail'));
         });
     }
+
+    if (hasBirthChanged && info.birth) {
+      operationsCount++;
+      const birthData = {
+        year: info.birth.year,
+        month: info.birth.month,
+        day: info.birth.day
+      };
+
+      api
+        .modifyBirth(birthData)
+        .then((res: any) => {
+          if (res.code === 0 || res.code === 200) {
+            checkAllOperationsComplete();
+          } else {
+            hasError = true;
+            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+          }
+        })
+        .catch((e: any) => {
+          hasError = true;
+          toast(t('fail'));
+        });
+    }
   } else {
-    localStorage.removeItem("isFirstRegister");
     showUserInfoModal.value = false;
   }
 }
 
 function handleUserInfoSkip() {
-  localStorage.removeItem("isFirstRegister");
   showUserInfoModal.value = false;
+}
+
+function handleInviteCodeConfirm(code: string) {
+  const data = {
+    invite_code: code,
+  }
+
+  api.userInvite(data).then((res: any) => {
+    if (res.code == 200 || res.code == 0) {
+      showInviteCodeModal.value = false;
+      showUserInfoModal.value = true;
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  }).catch(() => {
+    toast(t('fail'));
+  });
+}
+
+function handleInviteCodeSkip() {
+  showInviteCodeModal.value = false;
+
+  showUserInfoModal.value = true;
 }
 
 function handleUserInfoCancel() {
-  localStorage.removeItem("isFirstRegister");
   showUserInfoModal.value = false;
 }
 
-function handleScroll() {
-  if (!homePageRef.value) return false;
+function handlePageChange(page: number) {
+  currentPage.value = page;
+  loadContent(page);
 
-  const { scrollTop, clientHeight, scrollHeight } = homePageRef.value
-
-  if (scrollHeight - scrollTop - clientHeight < 5 && !loading.value && hasMore.value) {
-    loadMoreContent();
+  if (homePageRef.value) {
+    homePageRef.value.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 </script>
@@ -1353,21 +2163,18 @@ function handleScroll() {
 <style scoped lang="scss">
 .home-page {
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
-  background-image: url('@/assets/images/home/bg.png');
-  scroll-behavior: smooth;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  min-height: 100vh;
+  background: #FFFFFF;
 }
 
 .main-content {
   position: relative;
   width: 108rem;
   margin: 0 auto;
-  padding: 16rem 0 2rem;
+  padding: 14rem 0 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Hero Section */
@@ -1382,22 +2189,19 @@ function handleScroll() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 2rem;
 
     .hero-title {
       width: 100%;
       font-size: 3.6rem;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 6rem;
-      font-style: italic;
-      background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
+      margin-bottom: 3rem;
+      background: #101828;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    /* Mode Switch */
     .mode-switch {
       display: flex;
       gap: 0.8rem;
@@ -1408,7 +2212,7 @@ function handleScroll() {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.8rem 1.2rem;
+        padding: 0.7rem 1.2rem;
         border-radius: 0.6rem 0.6rem 0 0;
         cursor: pointer;
 
@@ -1427,56 +2231,27 @@ function handleScroll() {
 
         span {
           font-size: 1.4rem;
+          color: #99A1AF;
         }
 
         &:first-child{
-          border: 1px solid rgba(251,100,182,0.2);
+          border: 1px solid #F5F5F5;
           border-bottom: none;
-          background: rgba(251,100,182,0.03);
-
-          span{
-            color: rgba(251,100,182,0.6);
-          }
 
           &.active {
             background: rgba(251,100,182,0.12);
-            border: 1px solid #FB64B6;
+            border: 1px solid rgba(251,100,182,0.12);
             border-bottom: none;
-            color: #FB64B6;
 
             span{
-              color: #FB64B6;
+              color: #364153;
             }
           }
         }
 
         &:nth-of-type(2){
-          background: linear-gradient( 135deg, rgba(194, 122, 255, 0.1) 0%, rgba(255, 127, 250, 0.1) 50%, rgba(251, 100, 243, 0.1) 100%), #FFFFFF;
-
-          &:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: inherit;
-            background: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-            padding: 1px 1px 0;
-            -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-            mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-            z-index: 1;
-          }
-
-          span{
-            background: linear-gradient(45deg, rgba(194, 122, 255, 0.6), rgba(255, 127, 250, 0.6), rgba(251, 100, 243, 0.6));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-          }
+          border: 1px solid #F5F5F5;
+          border-bottom: none;
 
           &.active {
             background: linear-gradient( 135deg, rgba(194, 122, 255, 0.2) 0%, rgba(255, 127, 250, 0.2) 50%, rgba(251, 100, 243, 0.2) 100%), #FFFFFF;
@@ -1486,11 +2261,7 @@ function handleScroll() {
             }
 
             span{
-              background: linear-gradient(45deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-              -webkit-background-clip: text;
-              background-clip: text;
-              -webkit-text-fill-color: transparent;
-              color: transparent;
+              color: #364153;
             }
           }
 
@@ -1501,32 +2272,14 @@ function handleScroll() {
     /* Input Area */
     .input-area {
       position: relative;
-      width: 80rem;
+      width: 108rem;
       padding: 1.6rem;
-      background: rgba(255,255,255,0.8);
-      box-shadow: 0px 0px 15px -3px rgba(251,100,182,0.2);
-      border: 2px solid #FB64B6;
+      background: #FFFFFF;
+      box-shadow: 0px 0px 18px 0px rgba(251,100,182,0.18);;
       border-radius: 1.2rem;
-      overflow: hidden;
 
       &.unlimit{
-        border: none;
-        &::before{
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          border-radius: inherit;
-          background: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
-          padding: 2px;
-          -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-          mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-          -webkit-mask-composite: destination-out;
-          mask-composite: exclude;
-          z-index: 1;
-        }
+        box-shadow: -9px 9px 18px 0px rgba(194,122,255,0.12), 9px -9px 18px 0px rgba(255,127,250,0.12);
       }
 
       .input-inner{
@@ -1534,56 +2287,21 @@ function handleScroll() {
         z-index: 10;
       }
 
-      .selected-characters {
+      .selected-items {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
-        margin-bottom: 1rem;
-
-        .character-tag {
-          display: flex;
-          align-items: center;
-          gap: 0.8rem;
-          padding: 0.4rem 0.8rem 0.4rem 0.4rem;
-          background: #F5F5F5;
-          border-radius: 0.4rem;
-          font-size: 1.4rem;
-
-          .character-avatar {
-            width: 2.1rem;
-            height: 2.8rem;
-            border-radius: 0.2rem;
-            overflow: hidden;
-
-            img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-            }
-          }
-
-          .character-name {
-            color: #6A7282;
-          }
-
-          .remove-btn {
-            width: 1.2rem;
-            height: 1.2rem;
-            cursor: pointer;
-          }
-        }
-      }
-
-      .uploaded-images {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.8rem;
         margin-bottom: 1.2rem;
 
-        .uploaded-image-item {
+        .item-tag {
           position: relative;
           display: flex;
           align-items: center;
+          justify-content: center;
+          gap: 0.8rem;
+          width: 6.4rem;
+          height: 6.4rem;
+          border-radius: 0.4rem;
 
           .image-index {
             position: absolute;
@@ -1598,8 +2316,69 @@ function handleScroll() {
             border-radius: 0.2rem;
             background: rgba(245, 245, 245, 0.8);
             color: #364153;
-            z-index: 5;
+            z-index: 10;
           }
+
+          .image-box{
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.4rem;
+            background: #F5F5F5;
+
+            span{
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient( 0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+              z-index: 2;
+            }
+          }
+        }
+
+        .character-tag {
+          position: relative;
+
+          .character-avatar {
+            width: auto;
+            max-width: 6.4rem;
+            height: 6.4rem;
+            border-radius: 0.4rem;
+            object-fit: contain;
+          }
+
+          .character-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.4rem;
+            font-size: 1.2rem;
+            color: #364153;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 10;
+          }
+
+          .remove-btn {
+            position: absolute;
+            top: 0.2rem;
+            right: 0.2rem;
+            width: 1.6rem;
+            height: 1.6rem;
+            cursor: pointer;
+          }
+        }
+
+        .uploaded-image-item {
+          position: relative;
 
           .uploaded-image {
             width: 4.4rem;
@@ -1626,9 +2405,36 @@ function handleScroll() {
         max-height: 24rem;
         font-family: inherit;
         font-size: 1.4rem;
-        line-height: 2rem;
+        line-height: 2.8rem;
         resize: none;
         outline: none;
+        text-decoration: none;
+        border-bottom: none;
+        border: none;
+        -webkit-autocorrect: off;
+        -webkit-autocapitalize: none;
+        -webkit-text-decoration-skip: none;
+        text-decoration-skip: none;
+        -webkit-user-modify: read-write-plaintext-only;
+        color: #364153;
+
+        &[contenteditable] {
+          text-decoration: none !important;
+          border: none !important;
+          outline: none !important;
+          spellcheck: false;
+          grammar: false;
+          -webkit-autocorrect: off;
+          autocorrect: off;
+          -webkit-autocapitalize: none;
+          autocapitalize: none;
+        }
+
+        &:empty:not(:focus)::before {
+          content: attr(data-placeholder);
+          color: #99A1AF;
+          pointer-events: none;
+        }
 
         .placeholder {
           color: #99A1AF;
@@ -1637,22 +2443,79 @@ function handleScroll() {
           top: 0;
           left: 0;
           z-index: 1;
+          padding: 0;
+          margin: 0;
+          line-height: 2rem;
         }
 
-        &:focus .placeholder {
-          display: none;
+        :deep(.character-tag-input) {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.2rem;
+          padding: 0.2rem;
+          background: #F5F5F5;
+          border-radius: 0.2rem;
+          font-size: 1.2rem;
+          color: #6A7282;
+          margin: 0 0.3rem;
+          pointer-events: none;
+          user-select: none;
+          cursor: default;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          position: relative;
+          z-index: 1;
+
+          .character-tag-img {
+            width: auto;
+            max-width: 2rem;
+            height: 2rem;
+            border-radius: 0.2rem;
+            object-fit: contain;
+            pointer-events: none;
+            user-select: none;
+          }
+        }
+
+        :deep(.image-tag) {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.2rem;
+          padding: 0.2rem;
+          background: #F5F5F5;
+          border-radius: 0.2rem;
+          font-size: 1.2rem;
+          color: #6A7282;
+          margin: 0 0.6rem;
+          pointer-events: none;
+          user-select: none;
+          cursor: default;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          position: relative;
+          z-index: 1;
+
+          .image-tag-img {
+            width: auto;
+            max-width: 2rem;
+            height: 2rem;
+            border-radius: 0.2rem;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+          }
         }
       }
 
       .at-dropdown {
         position: absolute;
-        top: 100%;
-        left: 1rem;
-        right: 1rem;
-        background: white;
-        border: 1px solid #F5F5F5;
+        width: 11rem;
+        padding: 1.2rem;
         border-radius: 0.8rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background: #FFFFFF;
+        box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
         z-index: 100;
         max-height: 20rem;
         overflow-y: auto;
@@ -1660,24 +2523,42 @@ function handleScroll() {
         .dropdown-item {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          padding: 1rem;
+          gap: 0.4rem;
+          margin-bottom: 1.2rem;
           cursor: pointer;
 
-          &:hover {
-            background: #F5F5F5;
+          &:last-child{
+            margin-bottom: 0;
           }
 
-          img {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 0.4rem;
-            object-fit: cover;
+          &:hover{
+            span{
+              color: #6A7282;
+            }
           }
+
+          .dropdown-img{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.2rem;
+            background: #F5F5F5;
+
+            img {
+              width: auto;
+              max-width: 100%;
+              height: 2rem;
+              border-radius: 0.2rem;
+              object-fit: contain;
+            }
+          }
+
 
           span {
             font-size: 1.4rem;
-            color: #364153;
+            color: #99A1AF;
           }
         }
       }
@@ -1688,7 +2569,7 @@ function handleScroll() {
         justify-content: space-between;
         margin-top: 2rem;
         padding-top: 1.6rem;
-        border-top: 1px solid rgba(251,100,182,0.1);
+        border-top: 1px solid #F5F5F5;
       }
 
       .input-options {
@@ -1778,7 +2659,7 @@ function handleScroll() {
     align-items: center;
     margin-bottom: 2.4rem;
     padding-bottom: 1.2rem;
-    border-bottom: 1px solid rgba(251,100,182,0.2);
+    border-bottom: 1px solid #F5F5F5;
 
     /* Content Tabs */
     .content-tabs {
@@ -1824,10 +2705,10 @@ function handleScroll() {
       height: 4.8rem;
       display: flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(251, 100, 182, 0.2);
+      border: 1px solid #F5F5F5;
+      background: #F5F5F5;
       border-radius: 0.8rem;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
 
       &:has(.search-input:focus) {
         border-color: #fb64b6;
@@ -1840,9 +2721,10 @@ function handleScroll() {
         font-size: 1.4rem;
         outline: none;
         background: transparent;
+        color: #364153;
 
         &::placeholder {
-          color: #99a1af;
+          color: #99A1AF;
         }
       }
 
@@ -1920,17 +2802,23 @@ function handleScroll() {
 
   /* Content Grid */
   .content-grid {
-    min-height: 40rem;
+    flex: 1; /* 自动填充剩余空间 */
+    min-height: calc(100vh - 60rem); /* 确保填充到页脚之前: 全屏 - header - hero - footer */
     position: relative;
+    display: flex;
+    flex-direction: column;
 
     .waterfall {
-      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.6rem;
       width: 100%;
       margin: 0 auto;
     }
 
     .content-item {
       width: 25.8rem;
+      height: auto;
       cursor: pointer;
       overflow: hidden;
       break-inside: avoid;
@@ -1999,7 +2887,7 @@ function handleScroll() {
 
             .author-name {
               font-size: 1.2rem;
-              color: #6A7282;
+              color: #99A1AF;
             }
           }
 
@@ -2010,7 +2898,7 @@ function handleScroll() {
 
             span {
               font-size: 1.2rem;
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             img{
@@ -2076,7 +2964,14 @@ function handleScroll() {
 
 .loading-text {
   font-size: 1.6rem;
-  color: #666;
+  color: #6A7282;
+}
+
+.pagination-wrapper {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes spin {
@@ -2086,5 +2981,26 @@ function handleScroll() {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Image tag styles */
+.image-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(251, 100, 182, 0.1);
+  border: 1px solid rgba(251, 100, 182, 0.3);
+  border-radius: 1.2rem;
+  font-size: 1.2rem;
+  color: #FB64B6;
+  margin: 0 0.2rem;
+}
+
+.image-tag-img {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
 </style>

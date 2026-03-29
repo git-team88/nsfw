@@ -62,7 +62,7 @@ function confirmReset() {
 .reset {
   width: 100%;
   height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 
   .container {
     max-width: 48rem;
@@ -89,17 +89,17 @@ function confirmReset() {
 
       .step-item {
         position: relative;
-        padding: 0 0 3rem;
+        padding: 0 0 2.4rem;
 
         &.on {
           span {
-            color: #fb64b6;
+            color: #364153;
           }
         }
 
         span {
           font-size: 1.6rem;
-          color: #4a5565;
+          color: #99A1AF;
 
           &:last-child {
             position: absolute;
@@ -108,7 +108,7 @@ function confirmReset() {
             width: max-content;
             font-size: 1.4rem;
             transform: translateX(-50%);
-            color: #6a7282;
+            color: #99A1AF;
           }
         }
       }
@@ -126,7 +126,7 @@ function confirmReset() {
         margin: 0 0 1.2rem;
         font-size: 1.4rem;
         line-height: 2.2rem;
-        color: #364153;
+        color: #6A7282;
 
         &:last-child {
           margin: 0;
@@ -146,11 +146,15 @@ function confirmReset() {
         height: 4.8rem;
         margin: 1.4rem 0 0;
         font-size: 1.6rem;
-        border: 1px solid #fb64b6;
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        color: #fb64b6;
+        background: #F5F5F5;
+        color: #6A7282;
         cursor: pointer;
+
+        &:hover{
+          color: #FB64B6;
+        }
       }
 
       .reset-btn {
@@ -163,10 +167,22 @@ function confirmReset() {
         font-size: 1.6rem;
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        background:
-          linear-gradient(170deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+        background: #FB64B6;
         color: #ffffff;
         cursor: pointer;
+
+        &:hover {
+          position: relative;
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
       }
     }
   }

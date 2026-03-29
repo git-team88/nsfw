@@ -10,6 +10,7 @@ import Detail from "@/views/Detail.vue";
 import Search from "@/views/Search.vue";
 import MyProjects from "@/views/MyProjects.vue";
 import CharacterLibrary from "@/views/CharacterLibrary.vue";
+import NovelGenerate from "@/views/NovelGenerate.vue";
 
 import UserHome from "@/views/user/UserHome.vue";
 import SubscriptionPayment from "@/views/user/SubscriptionPayment.vue";
@@ -37,7 +38,6 @@ import UserPrivacy from "@/views/user/Privacy.vue";
 
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
-import RegisterSuccess from "@/views/login/RegisterSuccess.vue";
 import Terms from "@/views/login/Terms.vue";
 import Privacy from "@/views/login/Privacy.vue";
 import ResetPassword from "@/views/login/ResetPassword.vue";
@@ -62,11 +62,6 @@ const routes = [
     path: "/register",
     name: "Register",
     component: Register,
-  },
-  {
-    path: "/register-success",
-    name: "RegisterSuccess",
-    component: RegisterSuccess,
   },
   {
     path: "/reset-send",
@@ -147,6 +142,11 @@ const routes = [
     path: "/character-library",
     name: "CharacterLibrary",
     component: CharacterLibrary,
+  },
+  {
+    path: "/novel/:id",
+    name: "NovelGenerate",
+    component: NovelGenerate,
   },
   {
     path: "/user-home",

@@ -6,17 +6,17 @@
       <div class="main">
         <div class="panel-title">{{ t("user.interactive.title") }}</div>
         <div class="metrics">
-          <div class="metric fans">
+          <div class="metric">
             <div class="metric-label">{{ t("user.interactive.fansTotal") }}</div>
-            <div class="metric-value pink">{{ formatSci(fansTotal) }}</div>
+            <div class="metric-value">{{ formatSci(fansTotal) }}</div>
           </div>
-          <div class="metric likes">
+          <div class="metric">
             <div class="metric-label">{{ t("user.interactive.likesTotal") }}</div>
-            <div class="metric-value blue">{{ formatSci(likesTotal) }}</div>
+            <div class="metric-value">{{ formatSci(likesTotal) }}</div>
           </div>
-          <div class="metric comments">
+          <div class="metric">
             <div class="metric-label">{{ t("user.interactive.commentsTotal") }}</div>
-            <div class="metric-value orange">{{ formatSci(commentsTotal) }}</div>
+            <div class="metric-value">{{ formatSci(commentsTotal) }}</div>
           </div>
         </div>
 
@@ -50,10 +50,8 @@
             </div>
             <div class="tbody">
               <div v-if="loadingFan" class="loading-row">
-                <div class="td" colspan="3">
-                  <div class="loading-spinner"></div>
-                  <span>{{ t('home.loading') }}</span>
-                </div>
+                <div class="loading-spinner"></div>
+                <span>{{ t('home.loading') }}</span>
               </div>
               <div v-else-if="pagedFan.length === 0" class="empty-row">
                 <EmptyState />
@@ -94,10 +92,8 @@
             </div>
             <div class="tbody">
               <div v-if="loadingOverall" class="loading-row">
-                <div class="td" colspan="3">
-                  <div class="loading-spinner"></div>
-                  <span>{{ t('home.loading') }}</span>
-                </div>
+                <div class="loading-spinner"></div>
+                <span>{{ t('home.loading') }}</span>
               </div>
               <div v-else-if="pagedOverall.length === 0" class="empty-row">
                 <EmptyState />
@@ -122,7 +118,7 @@
           <div class="block-title">{{ t("user.interactive.individual") }}</div>
           <div class="block-tools">
             <div class="date-range">
-              <DateRangePicker v-model="range2" theme="blue" />
+              <DateRangePicker v-model="range2" theme="pink" />
             </div>
             <button
               class="download"
@@ -141,10 +137,8 @@
             </div>
             <div class="tbody">
               <div v-if="loadingWork" class="loading-row">
-                <div class="td" colspan="4">
-                  <div class="loading-spinner"></div>
-                  <span>{{ t('home.loading') }}</span>
-                </div>
+                <div class="loading-spinner"></div>
+                <span>{{ t('home.loading') }}</span>
               </div>
               <div v-else-if="pagedWork.length === 0" class="empty-row">
                 <EmptyState />
@@ -417,35 +411,30 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
 .user-interactive {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
-  min-height: calc(100vh - 14rem);
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  margin: 12rem 0 2rem;
-  padding-top: 2.4rem;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
+  padding-top: 14rem;
 }
 
 .panel-title {
-  margin: 0 3.6rem;
+  margin-bottom: 2.4rem;
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
-  margin-bottom: 2.4rem;
+  color: #99A1AF;
 }
 .metrics {
   display: flex;
   gap: 2rem;
-  margin: 0 3.6rem 2.4rem;
+  margin-bottom: 2.4rem;
 }
 .metric {
   flex: 1;
@@ -454,52 +443,36 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   align-items: flex-start;
   justify-content: space-between;
   height: 14.6rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
   padding: 2.4rem;
-  background: #fff;
-}
-.metric.fans {
-  border-color: rgba(251, 100, 182, 0.2);
-  box-shadow: 0px 2px 8px 0px rgba(251, 100, 182, 0.05);
-}
-.metric.likes {
-  border-color: rgba(0, 211, 242, 0.2);
-  box-shadow: 0px 2px 8px 0px rgba(0, 211, 242, 0.05);
-}
-.metric.comments {
-  border-color: rgba(255, 158, 69, 0.2);
-  box-shadow: 0px 2px 8px 0px rgba(255, 105, 0, 0.05);
+  background: #F5F5F5;
+  border-radius: 0.8rem;
 }
 .metric-label {
-  color: #6a7282;
-  font-size: 1.2rem;
+  color: #99A1AF;
+  font-size: 1.4rem;
 }
 .metric-value {
   font-size: 3.2rem;
+  color: #364153;
 }
-.metric-value.pink {
-  color: #fb64b6;
-}
-.metric-value.blue {
-  color: #00d3f2;
-}
-.metric-value.orange {
-  color: #ff9e45;
-}
+
 .tabs {
   display: flex;
   gap: 3rem;
-  padding: 0 3.6rem 2rem;
+  padding: 0 0 2rem;
   position: relative;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;;
 }
 .tabs span {
   height: auto;
   cursor: pointer;
   font-size: 1.4rem;
-  color: #6a7282;
+  color: #6A7282;
   position: relative;
+
+  &:hover{
+    color: #101828;
+  }
 }
 .tabs span.on {
   font-weight: 500;
@@ -539,16 +512,14 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   border-color: rgba(0, 211, 242, 0.2);
 }
 .block.work .block-title {
-  color: #00d3f2;
-  background: linear-gradient(90deg, rgba(0, 211, 242, 0.1) 0%, rgba(0, 211, 242, 0) 100%);
-  border-top: 1px solid rgba(0, 211, 242, 0.2);
-  border-bottom: 1px solid rgba(0, 211, 242, 0.2);
+  color: #fb64b6;
+  background: linear-gradient(90deg, rgba(251, 100, 182, 0.1) 0%, rgba(251, 100, 182, 0) 100%);
+  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
 }
 .block-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 3.6rem;
   margin: 2.4rem 0;
 }
 
@@ -583,11 +554,10 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   background: #fb64b6;
 }
 .block.work .download {
-  background: #00d3f2;
+  background: #fb64b6;
 }
 .download:hover {
   position: relative;
-  box-shadow: 0px 2px 15px -3px rgba(251, 100, 182, 0.16);
   &::before {
     content: "";
     position: absolute;
@@ -596,7 +566,7 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
     width: 100%;
     height: 100%;
     border-radius: 0.6rem;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     z-index: 3;
   }
 }
@@ -608,17 +578,17 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 1rem;
   overflow: hidden;
-  margin: 0 3.6rem 2.4rem;
+  margin: 0 0 2.4rem;
 }
 .thead,
 .tr {
   display: grid;
 }
 .table.overall {
-  border: 1px solid rgba(251, 100, 182, 0.1);
+  border: 1px solid #F5F5F5;
 }
 .table.work {
-  border: 1px solid rgba(0, 211, 242, 0.1);
+  border: 1px solid #F5F5F5;
 }
 .table.overall .thead,
 .table.overall .tr {
@@ -645,14 +615,14 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
 
 .table.overall .thead,
 .table.overall .tr {
-  border-bottom: 1px solid rgba(251, 100, 182, 0.05);
+  border-bottom: 1px solid #F5F5F5;
 }
 .table.work .thead,
 .table.work .tr {
-  border-bottom: 1px solid rgba(0, 211, 242, 0.05);
+  border-bottom: 1px solid #F5F5F5;
 }
 .th {
-  color: #6a7282;
+  color: #99A1AF;
 }
 td {
   color: #364153;
@@ -664,10 +634,10 @@ td {
   background: none;
 }
 .table.overall .tbody .tr:hover {
-  background: rgba(251, 100, 182, 0.04);
+  background: #F5F5F5;
 }
 .table.work .tbody .tr:hover {
-  background: rgba(0, 211, 242, 0.04);
+  background: #F5F5F5;
 }
 .table.work .tbody .td.info {
   display: flex;
@@ -686,26 +656,23 @@ td {
 }
 .loading-row {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 5rem 0;
-  .td {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-  }
+  gap: 1.2rem;
+
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid rgba(251, 100, 182, 0.3);
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
     border-radius: 50%;
-    border-top-color: #fb64b6;
     animation: spin 1s ease-in-out infinite;
+    box-sizing: border-box;
   }
   span {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     color: #6a7282;
   }
 }

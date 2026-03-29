@@ -205,7 +205,7 @@ function close() {
 .title {
   font-size: 1.6rem;
   font-weight: 500;
-  color: #101828;
+  color: #364153;
   margin-bottom: 1.8rem;
   margin-left: 1.8rem;
 }
@@ -213,8 +213,8 @@ function close() {
 .container {
   margin-bottom: 1.8rem;
   padding: 1.8rem 3.2rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;;
+  border-bottom: 1px solid #F5F5F5;;
 }
 .form-item {
   margin-bottom: 1.8rem;
@@ -240,11 +240,11 @@ function close() {
   align-items: center;
   width: 100%;
   height: 5rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
+  border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
   padding: 1rem 1.2rem;
   font-size: 1.4rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: #F5F5F5;
   color: #101828;
   outline: none;
 }
@@ -265,7 +265,6 @@ function close() {
   height: 8rem;
   border-radius: 0.8rem;
   object-fit: cover;
-  border: 1px solid #fb64b6;
 }
 .upload-btn {
   font-size: 1.4rem;
@@ -286,21 +285,24 @@ function close() {
   font-size: 1.4rem;
   border: none;
   cursor: pointer;
-  font-weight: 500;
+
+  &:hover:not(:disabled){
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+  }
 }
 .confirm-btn:disabled {
   position: relative;
   cursor: not-allowed;
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.5);
-    z-index: 1;
-  }
 }
 .skip-btn {
   text-align: center;

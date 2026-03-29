@@ -61,44 +61,31 @@ function goEdit() {
 .user-profile {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(0deg, rgba(254, 251, 253, 0.5), rgba(254, 251, 253, 0.5)), #ffffff;
+  background: #FFFFFF;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 144rem;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 6rem;
+  padding-right: 6rem;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
-}
-.panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem;
+  padding-top: 14rem;
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 1.2rem 1.2rem;
+  margin: 0 0 2.4rem;
 }
 .panel-title {
   font-weight: 500;
   font-size: 2rem;
-  color: #101828;
+  color: #99A1AF;
 }
 
-.content {
-  padding: 1.2rem;
-  border-radius: 1.2rem;
-}
-.content:hover {
-  background: rgba(251, 100, 182, 0.04);
-}
 .section {
   margin-bottom: 2.4rem;
 }
@@ -112,7 +99,7 @@ function goEdit() {
 }
 .label {
   font-size: 1.4rem;
-  color: #364153;
+  color: #99A1AF;
 }
 .edit-link {
   background: none;
@@ -123,23 +110,16 @@ function goEdit() {
   padding: 0;
 }
 .bio {
-  min-height: 5.4rem;
-  display: flex;
-  align-items: center;
-  margin-top: 1.6rem;
-  padding: 1.6rem;
+  margin-top: 1.2rem;
+  font-weight: 500;
   font-size: 1.4rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 0.8rem;
   color: #364153;
-  background: #ffffff;
 }
 .header-img {
   width: 100%;
   height: 16rem;
-  margin-top: 1.6rem;
+  margin-top: 1.2rem;
   object-fit: cover;
   border-radius: 0.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.2);
 }
 </style>
