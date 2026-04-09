@@ -26,7 +26,10 @@
         <div class="project-name">
           <span v-if="!isEditingName" class="project-name-display">{{ projectName || t('novel.untitled') }}</span>
           <div v-else class="project-name-edit-container">
-            <input type="text" v-model="projectName" class="project-name-input" ref="projectNameInputRef" spellcheck="false" />
+            <div class="project-name-input-wrapper">
+              <input type="text" v-model="projectName" class="project-name-input" ref="projectNameInputRef" spellcheck="false" @input="projectName = projectName.substring(0, 30)" maxlength="30" />
+              <span class="project-name-counter">{{ projectName.length }}/30</span>
+            </div>
             <div class="edit-actions">
               <img class="save-icon" src="@/assets/images/novel/check.png" alt="Save" @click="saveProjectName" />
               <img class="cancel-icon" src="@/assets/images/novel/cancel.png" alt="Cancel" @click="cancelEditProjectName" />
@@ -41,7 +44,7 @@
           <!-- Generation Status -->
           <div v-if="taskStatus == 'DOING' && shouldShowEstimatedTime && !hasFailed && !outlineContent" class="generation-status">
             <span class="status-text">{{ t('novel.generatingStatus') }}</span>
-            <button class="similar-content-btn">{{ t('novel.similarContent') }}</button>
+            <button class="similar-content-btn" @click="goToSimilar()">{{ t('novel.similarContent') }}</button>
           </div>
 
           <!-- Generation Status / Progress / Chapters -->
@@ -55,7 +58,7 @@
               </div>
 
               <div class="progress-content">
-                <span class="progress-label">{{ t('novel.novelOutline') }}</span>
+                <span class="progress-label">{{ currentStepName == 'outline' ? t('novel.novelOutline') : t('novel.newChapter') }}</span>
                 <div class="progress-status">
                   <img class="status-dot" src="@/assets/images/novel/doing.png" alt="" />
                   <span class="status-text">{{ t('novel.waiting') }}</span>
@@ -89,7 +92,7 @@
               </div>
 
               <div class="progress-content">
-                <span class="progress-label">{{ t('novel.novelOutline') }}</span>
+                <span class="progress-label">{{ currentStepName === 'outline' ? t('novel.novelOutline') : t('novel.newChapter') }}</span>
                 <div class="progress-status">
                   <img class="status-dot on" src="@/assets/images/novel/load.png" alt="Loading" />
                   <span class="status-text">{{ queueInfo ? t('novel.waiting') : t('novel.generating') }}</span>
@@ -98,7 +101,7 @@
             </div>
           </div>
 
-          <div v-else-if="hasFailed" class="progress-section">
+          <div v-else-if="taskStatus === 'FAIL'" class="progress-section">
             <div class="progress-info">
               <span class="progress-label">{{ t('novel.generationProgress') }}</span>
               <span class="progress-time">
@@ -107,7 +110,7 @@
             </div>
 
             <div class="progress-content">
-              <span class="progress-label">{{ lastGenerationType == 'outline' ? t('novel.novelOutline') : t('novel.newChapter') }}</span>
+              <span class="progress-label">{{ currentStepName == 'outline' || lastGenerationType == 'outline' ? t('novel.novelOutline') : t('novel.newChapter') }}</span>
               <div class="progress-status">
                 <img class="status-dot" src="@/assets/images/novel/fail_icon.png" alt="Error" />
                 <span class="status-text">{{ t('novel.generationFailed') }}</span>
@@ -115,7 +118,7 @@
             </div>
           </div>
 
-          <div v-else-if="outlineData && !hasFailed" class="text-wrapper-1">
+          <div v-else-if="outlineData && taskStatus === 'SUCCESS' && chapterCount > stepChapterIndex" class="text-wrapper-1">
             <span class="text_3">{{ t('novel.chaptersToGenerate', { count: chapterCount - stepChapterIndex }) }}</span>
             <span class="text_4" @click="callNovelAllChapters">{{ t('novel.generateAllChapters') }}</span>
           </div>
@@ -131,19 +134,28 @@
           </div>
 
           <!-- Chapter List -->
-          <div v-if="outlineData && outlineData.outline" class="chapter-list">
+          <div v-if="chapters.length > 0" class="chapter-list">
             <div
-              v-for="chapter in outlineData.outline.slice(0, stepChapterIndex)"
-              :key="chapter.chapter"
+              v-for="chapter in chapters"
+              :key="chapter.id"
               class="chapter-item"
-              :class="{ 'on': currentChapter && currentChapter.chapter === chapter.chapter }"
+              :class="{ 'on': currentChapter && currentChapter.chapter === chapter.chapter, 'published': chapter.is_publish !== 2 }"
               @click="handleChapterItemClick(chapter.chapter)"
             >
               <div v-if="!editingChapterId || editingChapterId !== chapter.chapter" class="chapter-item-content">
-                <span class="chapter-item-label">{{ t('novel.chapterLabel') }}{{ chapter.chapter }}{{ t('novel.chapterColon') }}</span>
+                <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                 <span class="chapter-item-title">{{ chapter.title }}</span>
+                <span
+                  v-if="chapter.is_publish == 2"
+                  class="chapter-publish-btn unpublish"
+                  @click.stop="handlePublishChapter(chapter)"
+                >{{ t('novel.publish') }}</span>
+                <span
+                  v-else
+                  class="chapter-publish-btn published"
+                >{{ t('novel.published') }}</span>
                 <img
-                  v-if="currentChapter && currentChapter.chapter === chapter.chapter && currentChapter.content"
+                  v-if="chapter.is_publish == 2"
                   class="edit-chapter-btn"
                   src="@/assets/images/novel/edit.png"
                   alt="Edit"
@@ -152,31 +164,30 @@
               </div>
               <div v-else class="chapter-title-edit">
                 <div class="chapter-edit-content">
-                  <span class="chapter-item-label">{{ t('novel.chapterLabel') }}{{ chapter.chapter }}{{ t('novel.chapterColon') }}</span>
+                  <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                   <input
                     type="text"
                     v-model="editingChapterTitle"
                     class="chapter-title-input"
-                    @keyup.enter="saveChapterTitle(chapter.chapter)"
-                    @blur="saveChapterTitle(chapter.chapter)"
-                    @input="editingChapterTitle = editingChapterTitle.substring(0, 60)"
-                    :maxlength="60"
+                    @input="editingChapterTitle = editingChapterTitle.substring(0, 30)"
+                    @blur="handleChapterTitleBlur"
+                    :maxlength="30"
                     :ref="el => chapterTitleInputs[chapter.chapter] = el"
                   />
-                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/60</span>
+                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/30</span>
                 </div>
                 <div class="chapter-edit-actions">
                   <img
                     class="edit-action-btn"
                     src="@/assets/images/novel/check.png"
                     alt="Save"
-                    @click="saveChapterTitle(chapter.chapter)"
+                    @mousedown.prevent="saveChapterTitle(chapter.chapter)"
                   />
                   <img
                     class="edit-action-btn"
                     src="@/assets/images/novel/cancel.png"
                     alt="Cancel"
-                    @click.stop="editingChapterId = null; editingChapterTitle = ''"
+                    @mousedown.prevent="cancelChapterTitle"
                   />
                 </div>
               </div>
@@ -249,6 +260,129 @@
 
 
         </div>
+
+        <!-- Cover Edit Section - Fixed at bottom -->
+        <div v-if="isEditingCover" class="cover-edit-section" ref="coverEditSectionRef">
+          <div v-if="!isGeneratingCover && !showCoverResult">
+            <div class="cover-edit-header">
+              <span class="cover-edit-title">{{ t('novel.editCover') }}:</span>
+              <button class="cancel-cover-edit-btn" @click="toggleCoverEdit">{{ t('novel.cancel') }}</button>
+            </div>
+
+            <div class="cover-edit-content">
+              <!-- Input Area -->
+              <div class="input-area">
+                <div class="input-inner">
+                  <!-- Combined Characters and Images List -->
+                  <div class="selected-items" v-if="combinedCoverItems.length > 0">
+                    <!-- Combined Items -->
+                    <div
+                      v-for="(item, index) in combinedCoverItems"
+                      :key="item.id"
+                      :class="['item-tag', 'uploaded-image-item']"
+                    >
+                      <span class="image-index">{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+
+                      <div class="image-box">
+                        <img :src="item.image" :alt="item.name" class="uploaded-image" />
+                        <span class="img-bg"></span>
+                      </div>
+
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeUploadedCoverImage(item.id)" />
+                    </div>
+                  </div>
+
+                  <div
+                    ref="coverInputRef"
+                    class="input-textarea"
+                    contenteditable="true"
+                    spellcheck="false"
+                    @input="handleCoverInput"
+                    @keydown="handleCoverKeydown"
+                    @click="handleCoverInputClick"
+                    @blur="handleCoverInputBlur"
+                    @paste="handleCoverPaste"
+                    @focus="handleCoverInputFocus"
+                    :data-placeholder="t('novel.coverInputPlaceholder')"
+                  ></div>
+
+                  <!-- Hidden file input for image upload -->
+                  <input
+                    ref="coverFileInputRef"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="file-input"
+                    style="display: none;"
+                    @change="handleCoverFileChange"
+                  />
+
+                  <!-- @ Dropdown -->
+                  <div v-if="showCoverAtDropdown" class="at-dropdown">
+                    <div
+                      v-for="(item, index) in coverAtDropdownItems"
+                      :key="index"
+                      class="dropdown-item"
+                      @mousedown.prevent="selectCoverAtItem(item)"
+                    >
+                      <div class="dropdown-img">
+                        <img :src="item.image" :alt="item.name" />
+                      </div>
+                      <span v-if="item.type === 'character'">{{ item.name }}</span>
+                      <span v-else>{{ t('home.img') }}{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+                    </div>
+                  </div>
+
+                  <div class="input-box">
+                    <div class="input-options">
+                      <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkCoverItemLimit()) triggerCoverFileUpload() }">
+                        <img src="@/assets/images/novel/upload.png" alt="" />
+                      </div>
+                    </div>
+
+                    <div class="input-cover-right">
+                      <div class="cover-cost-display">
+                        <span class="cover-cost">{{ coverCost }}</span>
+                        <img src="@/assets/images/novel/coin.png" alt="" />
+                      </div>
+
+                      <div class="generate-btn" @click="generateNovelCover">
+                        <img src="@/assets/images/home/send.png" alt="Send" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+           <!-- Generating Cover State -->
+            <div v-else-if="isGeneratingCover" class="cover-generating-state">
+              <span class="generating-text">{{ t('novel.generatingCover') }}</span>
+              <div class="skeleton-loader">
+                <div class="skeleton-line content"></div>
+              </div>
+            </div>
+
+            <!-- Cover Result State -->
+            <div v-else-if="showCoverResult" class="cover-result-state">
+              <span class="result-title">{{ t('novel.modifiedCover') }}:</span>
+              <div class="cover-result-image">
+                <img :src="generatedCover" alt="" />
+                <img class="zoom-cover-btn" src="@/assets/images/novel/zoom.png" alt="Zoom" @click="zoomCoverImage(generatedCover)" />
+              </div>
+              <div class="result-actions">
+                <button class="abandon-btn" @click="abandonCover">
+                  {{ t('novel.abandon') }}
+                </button>
+                <button class="use-btn" @click="useCover">
+                  {{ t('novel.use') }}
+                </button>
+              </div>
+              <span class="result-note">{{ t('novel.coverNote') }}</span>
+            </div>
+
+        </div>
       </div>
     </div>
 
@@ -270,12 +404,12 @@
       <div class="novel-outline">
         <div class="outline-title">
           <h2 v-if="!currentChapter">{{ t('novel.novelOutline') }}</h2>
-          <h2 v-else>{{ t('novel.chapterLabel') }}{{ currentChapter.chapter }}{{ t('novel.chapterColon') }} {{ currentChapter.title }}</h2>
+          <h2 v-else>{{ t('novel.chapter', { chapter: currentChapter.chapter }) }} {{ currentChapter.title }}</h2>
           <button v-if="!isLoading && outlineData && !hasFailed && !currentChapter && taskStatus !== 'DOING' && !(currentStepName == 'chapter' && stepChapterIndex >= 1)" class="regenerate-btn" @click="regenerateOutline">
             {{ t('novel.regenerate') }}
           </button>
           <template v-else-if="currentChapter && !hasFailed">
-            <button v-if="!isEditingChapter && taskStatus !== 'DOING'" class="regenerate-btn" @click="startEditChapter">
+            <button v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && currentChapter.chapter === stepChapterIndex" class="regenerate-btn" @click="startEditChapter">
               {{ t('novel.edit') }}
             </button>
             <div v-else-if="isEditingChapter" class="edit-chapter-actions">
@@ -304,7 +438,7 @@
 
           <!-- Outline Streaming Display with Typewriter Effect -->
           <div v-else-if="isGeneratingOutline && outlineStreamText && !outlineStreamDone && !hasFailed" class="outline-stream-content">
-            <pre class="stream-text">{{ outlineStreamText }}</pre>
+            <pre class="stream-text">{{ outlineStreamText }}<span class="typing-cursor"></span></pre>
           </div>
 
           <!-- Failed State Display -->
@@ -325,16 +459,30 @@
 
           <!-- Chapter Content -->
           <div v-else-if="currentChapter" class="chapter-content" ref="chapterContentRef">
-            <div class="chapter-text">
-              <p v-if="!isEditingChapter" class="paragraph">{{ displayedContent }}</p>
-              <textarea
-                v-else
-                v-model="editingChapterContent"
-                class="chapter-edit-textarea"
-                @input="handleChapterEditInput"
-                ref="chapterEditTextareaRef"
-                spellcheck="false"
-              ></textarea>
+            <div class="chapter-text" v-if="!isEditingChapter">
+              <p class="paragraph">{{ displayedContent }}<span v-if="isChapterTyping || (taskStatus === 'DOING' && !displayedContent)" class="typing-cursor" :class="{ 'blink': !displayedContent || isWaitingForData }"></span></p>
+            </div>
+
+            <div class="chapter-textarea" v-else>
+              <div class="chapter-edit-wrapper">
+                <textarea
+                  v-model="editingChapterContent"
+                  class="chapter-edit-textarea"
+                  @input="handleChapterEditInput"
+                  ref="chapterEditTextareaRef"
+                  spellcheck="false"
+                  :maxlength="20000"
+                ></textarea>
+                <div class="chapter-edit-counter">{{ editingChapterContent.length }}/20000</div>
+              </div>
+            </div>
+
+            <!-- Cover Image Display -->
+            <div v-if="coverTaskId" class="chapter-cover">
+              <div v-if="coverLoading" class="skeleton-loader">
+                <div class="skeleton-line cover-skeleton"></div>
+              </div>
+              <img v-else-if="coverImage" :src="coverImage" alt="Cover" class="cover-image" />
             </div>
           </div>
 
@@ -391,9 +539,32 @@
             <!-- 分章情节 -->
             <div v-if="outlineData.outline" class="section chapters">
               <h3 class="section-title">{{ t('novel.chapterPlot') }}</h3>
-              <div v-for="chapter in outlineData.outline" :key="chapter.chapter" class="chapter-card">
-                <div class="chapter-number">{{ t('novel.chapterLabel') }}{{ chapter.chapter }}{{ t('novel.chapterColon') }}</div>
+              <div
+                v-for="chapter in outlineData.outline"
+                :key="chapter.chapter"
+                class="chapter-card"
+                :class="{ 'current-chapter': chapter.chapter === stepChapterIndex && taskStatus === 'DOING' }"
+                @click="goToChapter(chapter.chapter)"
+              >
+                <div class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</div>
                 <div class="chapter-title">{{ chapter.title }}</div>
+              </div>
+            </div>
+
+            <!-- 小说封面 -->
+            <div class="section novel-cover">
+              <h3 class="section-title">{{ t('novel.novelCover') }}</h3>
+              <div class="cover-container">
+                <div v-if="coverLoading" class="skeleton-loader cover-skeleton-wrapper">
+                  <div class="skeleton-line cover-skeleton"></div>
+                </div>
+                <div class="cover-image" v-else-if="coverImage">
+                  <img :src="coverImage" alt="Novel Cover" />
+                </div>
+                <div class="cover-placeholder" v-else-if="!coverTaskId">
+                  <span>{{ t('novel.coverPlaceholder') }}</span>
+                </div>
+                <img v-if="showCoverEditBtn" class="edit-cover-btn" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
               </div>
             </div>
           </div>
@@ -412,7 +583,7 @@
           <button v-if="currentChapter" class="prev-btn" @click="goPrevChapter">
             <img src="@/assets/images/novel/prev.png" alt="" />
           </button>
-          <button v-if="!currentChapter && currentStepName === 'chapter' && stepChapterIndex >= 1" class="next-btn" @click="goNextChapter">
+          <button v-if="showNextArrow" class="next-btn" @click="goNextChapter">
             <img src="@/assets/images/novel/next.png" alt="" />
           </button>
         </div>
@@ -428,6 +599,23 @@
       </div>
     </div>
 
+    <!-- Cover Action Confirmation Modal -->
+    <ExitConfirmModal
+      :visible="showCoverActionConfirmModal"
+      @cancel="cancelCoverAction"
+      @confirm="confirmCoverAction"
+    />
+
+    <!-- Upload Mask -->
+    <UploadMask :visible="isUploading" />
+
+    <!-- Cover Zoom Modal -->
+    <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
+      <div class="cover-zoom-content" @click.stop>
+        <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeCoverZoomModal" />
+        <img :src="zoomedCoverImage" alt="" class="zoomed-cover-image" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -437,7 +625,9 @@ import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { toast } from '@/util/toast';
 import api from '@/api/index';
-import { aiUrl } from '@/util/config';
+import { aiUrl, baseUrl } from '@/util/config';
+import ExitConfirmModal from '@/components/ExitConfirmModal.vue';
+import UploadMask from '@/components/UploadMask.vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -465,16 +655,37 @@ const taskStatus = ref<string>('');
 const chapterCount = ref<number>(0);
 const hasFailed = ref<boolean>(false);
 const outlineData = ref<any>(null);
+const chapters = ref<any[]>([]);
 const showRegenerateInput = ref<boolean>(false);
 const regenerateContent = ref<string>('');
 const selectedWordCount = ref<string>('100K');
 const selectedLanguage = ref<string>('en');
 const wordCountOptions = ['100K', '500K', '10M'];
-const languageOptions = [
-  { value: 'zh', label: t('novel.language.zh') },
+const languageOptions = computed(() => [
+  { value: 'cn', label: t('novel.language.zh') },
   { value: 'en', label: t('novel.language.en') },
   { value: 'jp', label: t('novel.language.jp') }
-];
+]);
+
+// Cover related state
+const novelCover = ref<string>('');
+const isEditingCover = ref<boolean>(false);
+const coverInputRef = ref<HTMLElement | null>(null);
+const coverFileInputRef = ref<HTMLInputElement | null>(null);
+const coverEditSectionRef = ref<HTMLElement | null>(null);
+const uploadedCoverImages = ref<any[]>([]);
+const combinedCoverItems = ref<any[]>([]);
+const showCoverAtDropdown = ref<boolean>(false);
+const coverAtDropdownItems = ref<any[]>([]);
+const lastCoverRange = ref<Range | null>(null);
+const isCoverComposing = ref<boolean>(false);
+const coverInputKey = ref<number>(0);
+const isGeneratingCover = ref<boolean>(false);
+const coverGenerationTaskId = ref<string>('');
+const coverPollingInterval = ref<number | null>(null);
+const generatedCover = ref<string>('');
+const showCoverResult = ref<boolean>(false);
+const showCoverEditBtn = ref<boolean>(true);
 const showWordCountDropdown = ref(false);
 const showLanguageDropdown = ref(false);
 const currentChapter = ref<any>(null);
@@ -490,6 +701,7 @@ const estimatedTimeFetched = ref<boolean>(false);
 const isGeneratingOutline = ref<boolean>(false);
 const generatingChapter = ref<number | null>(null);
 const isChapterTyping = ref<boolean>(false);
+const isWaitingForData = ref<boolean>(false);
 const stepChapterIndex = ref<number>(0);
 const streamReaderController = ref<AbortController | null>(null);
 const topic = ref<string>('');
@@ -500,13 +712,69 @@ const userSelectedSettings = ref<any>(null);
 const taskStartAt = ref<string>('');
 const countdownTimer = ref<number | null>(null);
 
+// Cover action confirmation modal
+const showCoverActionConfirmModal = ref<boolean>(false);
+const pendingCoverAction = ref<string>(''); // 'next' or 'all'
+
 // State for chapter title editing
 const editingChapterId = ref<number | null>(null);
 const editingChapterTitle = ref<string>('');
+const originalChapterTitle = ref<string>('');
+const isSavingChapterTitle = ref<boolean>(false);
 const chapterTitleInputs = ref<{[key: number]: any}>({});
 const nextChapterPoints = ref<number>(10);
 const allChaptersPoints = ref<number>(100);
+const coverCost = ref<number>(0);
 const isFetchingNovelOutline = ref<boolean>(false);
+
+// Cover image state
+const coverImage = ref<string>('');
+const coverLoading = ref<boolean>(false);
+const coverTaskId = ref<string>('');
+const coverPollTimer = ref<number | null>(null);
+const isUploading = ref<boolean>(false);
+const showCoverZoomModal = ref<boolean>(false);
+const zoomedCoverImage = ref<string>('');
+
+// Start polling for cover image
+const startCoverPolling = (taskId: string) => {
+  coverTaskId.value = taskId;
+  coverLoading.value = true;
+
+  const poll = async () => {
+    try {
+      const res = await api.coverTaskPolling(taskId) as any;
+      if (res.code === 200 && res.data?.status === 'SUCCESS') {
+        coverImage.value = res.data.result?.image_url || '';
+        coverLoading.value = false;
+        if (coverPollTimer.value) {
+          clearInterval(coverPollTimer.value);
+          coverPollTimer.value = null;
+        }
+      } else if (res.data?.status === 'FAIL') {
+        coverLoading.value = false;
+        if (coverPollTimer.value) {
+          clearInterval(coverPollTimer.value);
+          coverPollTimer.value = null;
+        }
+      }
+    } catch (error) {
+      console.error('Error polling cover:', error);
+    }
+  };
+
+  poll();
+  coverPollTimer.value = window.setInterval(poll, 3000);
+};
+
+// Stop polling for cover image
+const stopCoverPolling = () => {
+  if (coverPollTimer.value) {
+    clearInterval(coverPollTimer.value);
+    coverPollTimer.value = null;
+  }
+  coverTaskId.value = '';
+};
 
 // Outline streaming state
 const outlineStreamParser = ref<OutlineStreamParser | null>(null);
@@ -534,7 +802,22 @@ const startOutlineStream = async () => {
       // Hide loading screen once we start receiving data
       if (text.length > 0) {
         isLoading.value = false;
+        // 初始滚动到顶部，确保内容从开始处显示
+        nextTick(() => {
+          if (outlineContentRef.value) {
+            outlineContentRef.value.scrollTop = 0;
+          }
+        });
       }
+      // Auto-scroll outline content to bottom during streaming
+      nextTick(() => {
+        nextTick(() => {
+          if (outlineContentRef.value) {
+            // Force scroll to bottom
+            outlineContentRef.value.scrollTop = outlineContentRef.value.scrollHeight;
+          }
+        });
+      });
     },
     onComplete: (finalText, metadata) => {
       outlineStreamDone.value = true;
@@ -559,14 +842,26 @@ const startOutlineStream = async () => {
       }
 
       isLoading.value = false;
+      isGeneratingOutline.value = false;
       taskStatus.value = 'SUCCESS';
+      hasFailed.value = false;
+
+      // Start polling for cover image
+      if (coverTaskId.value) {
+        startCoverPolling(coverTaskId.value);
+      }
+
+      // Reset currentChapter to show "待生成章节" section in left sidebar
+      currentChapter.value = null;
     },
     onError: (error) => {
       outlineStreamError.value = error;
       hasFailed.value = true;
       taskStatus.value = 'FAIL';
       isLoading.value = false;
+      isGeneratingOutline.value = false;
     },
+    t: t
   });
 
   outlineStreamParser.value.start(sessionId.value, token);
@@ -588,6 +883,25 @@ const shouldShowActionButtons = computed(() => {
   return true;
 });
 
+// Show next arrow: on outline page with chapters, or on a chapter that's not the latest
+const showNextArrow = computed(() => {
+  // Don't show while typing
+  if (isChapterTyping.value) return false;
+  if (stepChapterIndex.value < 1) return false;
+
+  // On outline page (no currentChapter), show next arrow if there are chapters generated
+  if (!currentChapter.value && outlineData.value && chapterCount.value > 0) {
+    return true;
+  }
+
+  // On a chapter, show next arrow if not the latest generated chapter
+  if (currentChapter.value && currentChapter.value.chapter < stepChapterIndex.value) {
+    return true;
+  }
+
+  return false;
+});
+
 const shouldShowGenerateButtons = computed(() => {
   if (!shouldShowActionButtons.value) return false;
 
@@ -597,26 +911,20 @@ const shouldShowGenerateButtons = computed(() => {
   // Don't show buttons while typewriter is still printing chapter content
   if (isChapterTyping.value) return false;
 
-  // Show buttons on outline page if outline data exists and we have chapters to generate
-  if (!currentChapter.value) {
-    if (outlineData.value && outlineData.value.outline && chapterCount.value > 0 && stepChapterIndex.value < chapterCount.value) {
-      return true;
-    }
-    return false;
-  }
+  // Never show on outline page
+  if (!currentChapter.value) return false;
 
-  if (currentChapter.value.chapter >= chapterCount.value) {
-    return false;
-  }
+  // Only show on the latest chapter (stepChapterIndex)
+  if (currentChapter.value.chapter !== stepChapterIndex.value) return false;
 
-  // Only show buttons when viewing the current chapter (being generated or just generated)
-  // Check if this is the current chapter being generated
-  return currentChapter.value.chapter === stepChapterIndex.value;
+  // Don't show if all chapters are generated
+  if (currentChapter.value.chapter >= chapterCount.value) return false;
+
+  return true;
 });
 
 const selectedLanguageLabel = computed(() => {
-  const lang = languageOptions.find(l => l.value == selectedLanguage.value);
-  console.log(selectedLanguage.value)
+  const lang = languageOptions.value.find(l => l.value == selectedLanguage.value);
   return lang ? lang.label : t('novel.language.zh');
 });
 
@@ -679,23 +987,36 @@ const handleStructuredData = async (result: any) => {
   }
 };
 
-// Fetch points estimate for next chapter and all chapters
+// Fetch points estimate for next chapter, all chapters, and cover
 const fetchPointsEstimate = async () => {
   try {
+    // Estimate for next chapter
     const nextChapterEstimateRes = await api.novelEstimate({
       session_id: sessionId.value,
-      is_all: false
+      step_name: 'chapter',
+      from_chapter: stepChapterIndex.value || 1
     }) as any;
-    if (nextChapterEstimateRes.code === 200 && nextChapterEstimateRes.data?.total_points) {
+    if (nextChapterEstimateRes.code == 200 && nextChapterEstimateRes.data?.total_points) {
       nextChapterPoints.value = nextChapterEstimateRes.data.total_points;
     }
 
+    // Estimate for all chapters
     const allChaptersEstimateRes = await api.novelEstimate({
       session_id: sessionId.value,
-      is_all: true
+      step_name: 'chapter',
+      from_chapter: stepChapterIndex.value || 1
     }) as any;
-    if (allChaptersEstimateRes.code === 200 && allChaptersEstimateRes.data?.total_points) {
+    if (allChaptersEstimateRes.code == 200 && allChaptersEstimateRes.data?.total_points) {
       allChaptersPoints.value = allChaptersEstimateRes.data.total_points;
+    }
+
+    // Estimate for cover
+    const coverEstimateRes = await api.novelEstimate({
+      session_id: sessionId.value,
+      step_name: 'cover'
+    }) as any;
+    if (coverEstimateRes.code == 200 && coverEstimateRes.data?.total_points) {
+      coverCost.value = coverEstimateRes.data.total_points;
     }
   } catch (error) {
     console.error('Error fetching points estimate:', error);
@@ -710,6 +1031,8 @@ const allChaptersCost = computed(() => allChaptersPoints.value);
 const originalRegenerateContent = ref<string>('');
 
 const regenerateOutline = async () => {
+  hideEdit();
+
   // Fetch latest user settings
   await fetchUserSelectedSettings();
 
@@ -742,8 +1065,8 @@ const regenerateOutline = async () => {
   }
 
   // Set language if available
-  if (userSelectedSettings.value?.others?.lang) {
-    selectedLanguage.value = userSelectedSettings.value.others.lang;
+  if (userSelectedSettings.value?.language) {
+    selectedLanguage.value = userSelectedSettings.value.language;
   }
 };
 
@@ -851,8 +1174,8 @@ const sendRegenerateRequest = async () => {
       }
 
       // Update word count and language if available
-      if (userSelectedRes.data.others.total_words) {
-        switch (userSelectedRes.data.others.total_words) {
+      if (userSelectedRes.data.total_words) {
+        switch (userSelectedRes.data.total_words) {
           case 10:
             selectedWordCount.value = '100K';
             break;
@@ -866,8 +1189,8 @@ const sendRegenerateRequest = async () => {
             selectedWordCount.value = '100K';
         }
       }
-      if (userSelectedRes.data.others.lang) {
-        selectedLanguage.value = userSelectedRes.data.others.lang;
+      if (userSelectedRes.data.language) {
+        selectedLanguage.value = userSelectedRes.data.language;
       }
 
       // Update novelSettings in local storage
@@ -940,11 +1263,28 @@ const startEditChapter = () => {
     originalChapterContent.value = currentChapter.value.content;
     editingChapterContent.value = currentChapter.value.content;
     isEditingChapter.value = true;
+
     nextTick(() => {
       if (chapterEditTextareaRef.value) {
         chapterEditTextareaRef.value.focus();
         chapterEditTextareaRef.value.setSelectionRange(0, 0);
+        // Scroll textarea to top
+        chapterEditTextareaRef.value.scrollTop = 0;
       }
+      // Restore scroll position to keep it at the top
+      if (outlineContentRef.value) {
+        outlineContentRef.value.scrollTop = 0;
+      }
+
+      // Use setTimeout to ensure scroll position is set after browser's auto-scroll
+      setTimeout(() => {
+        if (chapterEditTextareaRef.value) {
+          chapterEditTextareaRef.value.scrollTop = 0;
+        }
+        if (outlineContentRef.value) {
+          outlineContentRef.value.scrollTop = 0;
+        }
+      }, 0);
     });
   }
 };
@@ -986,6 +1326,11 @@ const fetchEstimatedTime = async () => {
         const elapsedSeconds = currentTimestamp - startTimestamp;
         const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 600) - elapsedSeconds);
         initialMinutes = Math.ceil(remainingSeconds / 60);
+      } else if (startTime.value) {
+        // Fallback: use startTime if taskStartAt is not available
+        const elapsedSeconds = Math.floor((Date.now() - startTime.value) / 1000);
+        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 600) - elapsedSeconds);
+        initialMinutes = Math.ceil(remainingSeconds / 60);
       }
 
       // Ensure at least 1 minute
@@ -1025,6 +1370,11 @@ const autoResizeTextarea = (textarea: HTMLTextAreaElement) => {
 
 // Handle chapter edit input
 const handleChapterEditInput = () => {
+  // Limit input to 20000 characters
+  if (editingChapterContent.value.length > 20000) {
+    editingChapterContent.value = editingChapterContent.value.substring(0, 20000);
+  }
+
   nextTick(() => {
     if (chapterEditTextareaRef.value) {
       autoResizeTextarea(chapterEditTextareaRef.value);
@@ -1054,6 +1404,7 @@ const saveEditChapter = async () => {
         if (modifyRes.code === 200) {
           // Update local data
           currentChapter.value.content = editingChapterContent.value;
+          displayedContent.value = editingChapterContent.value;
         } else {
           console.error('Error modifying chapter content:', modifyRes.message);
           toast(t('novel.error.fetchFailed'));
@@ -1070,6 +1421,7 @@ const saveEditChapter = async () => {
 // Start editing chapter title
 const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
   editingChapterId.value = chapterId;
+  originalChapterTitle.value = currentTitle;
   editingChapterTitle.value = currentTitle;
   nextTick(() => {
     if (chapterTitleInputs.value[chapterId]) {
@@ -1080,6 +1432,7 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
 
 // Save edited chapter title
 const saveChapterTitle = async (chapterId: number) => {
+  isSavingChapterTitle.value = true;
   try {
     // Call API to modify chapter title
     const modifyRes = await api.modifyChapterTitle({
@@ -1088,7 +1441,7 @@ const saveChapterTitle = async (chapterId: number) => {
       title: editingChapterTitle.value
     }) as any;
 
-    if (modifyRes.code === 200) {
+    if (modifyRes.code == 200) {
       // Update local data
       if (outlineData.value && outlineData.value.outline) {
         const chapter = outlineData.value.outline.find((c: any) => c.chapter === chapterId);
@@ -1110,7 +1463,19 @@ const saveChapterTitle = async (chapterId: number) => {
   } finally {
     // Reset editing state regardless of API result
     editingChapterId.value = null;
-    editingChapterTitle.value = '';
+    isSavingChapterTitle.value = false;
+  }
+};
+
+const cancelChapterTitle = () => {
+  editingChapterId.value = null;
+  editingChapterTitle.value = originalChapterTitle.value;
+};
+
+const handleChapterTitleBlur = () => {
+  // Only cancel if not saving
+  if (!isSavingChapterTitle.value) {
+    cancelChapterTitle();
   }
 };
 
@@ -1134,31 +1499,12 @@ const printContent = (content: string) => {
 
   // Find # CH followed by digits and start from after there if it exists
   let startContent = content;
-  const chapterStartMatch = content.match(/# CH\d+/);
-  if (chapterStartMatch && chapterStartMatch.index !== undefined) {
-    const chapterStartIndex = chapterStartMatch.index + chapterStartMatch[0].length;
-    if (chapterStartIndex > -1) {
-      startContent = content.substring(chapterStartIndex);
-      // Replace newline characters with actual line breaks
-      startContent = startContent.replace(/\\n/g, '\n');
-    }
-  }
-
-  // Filter out content after "让我验证衔接一致性："
-  const verifyMatch = startContent.indexOf('让我验证衔接一致性：');
-  if (verifyMatch > -1) {
-    startContent = startContent.substring(0, verifyMatch);
-  }
+  startContent = startContent.replace(/\\n/g, '\n');
 
   // Clear any existing interval
   if (printerInterval.value) {
     clearInterval(printerInterval.value);
   }
-
-  // Add scroll event listener to detect user scrolling
-  const handleScroll = () => {
-    userScrolled = true;
-  };
 
   // Get the appropriate scroll element based on current content
   const getScrollElement = () => {
@@ -1166,9 +1512,31 @@ const printContent = (content: string) => {
   };
 
   const scrollElement = getScrollElement();
+
+  // Add scroll event listener to detect user scrolling
+  let programmaticScroll = false;
+  let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
+  const handleScroll = () => {
+    if (programmaticScroll) return; // Ignore scroll events triggered by our own code
+    userScrolled = true;
+    // Resume auto-scroll after 3 seconds of no user scrolling
+    if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+    scrollIdleTimer = setTimeout(() => {
+      userScrolled = false;
+    }, 3000);
+  };
+
   if (scrollElement) {
     scrollElement.addEventListener('scroll', handleScroll);
   }
+
+  const doAutoScroll = () => {
+    if (!userScrolled && scrollElement) {
+      programmaticScroll = true;
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+      requestAnimationFrame(() => { programmaticScroll = false; });
+    }
+  };
 
   printerInterval.value = window.setInterval(() => {
     if (charIndex < startContent.length) {
@@ -1176,15 +1544,14 @@ const printContent = (content: string) => {
       charIndex++;
 
       // Auto scroll to bottom only if user hasn't scrolled
-      if (!userScrolled && scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
+      doAutoScroll();
     } else {
       if (printerInterval.value) {
         clearInterval(printerInterval.value);
         printerInterval.value = null;
       }
       // Remove scroll event listener
+      if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
       if (scrollElement) {
         scrollElement.removeEventListener('scroll', handleScroll);
       }
@@ -1193,6 +1560,36 @@ const printContent = (content: string) => {
 };
 
 function goHome() {
+  hideEdit();
+
+  // Clean up stream reader before leaving
+  try {
+    if (streamReaderController.value) {
+      streamReaderController.value.abort();
+      streamReaderController.value = null;
+    }
+  } catch (e: any) {
+    streamReaderController.value = null;
+  }
+
+  try {
+    if (printerInterval.value) {
+      clearInterval(printerInterval.value);
+      printerInterval.value = null;
+    }
+  } catch (e: any) {
+    printerInterval.value = null;
+  }
+
+  try {
+    if (outlineStreamParser.value) {
+      outlineStreamParser.value.destroy();
+      outlineStreamParser.value = null;
+    }
+  } catch (e: any) {
+    outlineStreamParser.value = null;
+  }
+
   router.push("/");
 }
 
@@ -1201,8 +1598,16 @@ function goUser() {
   if (!token) {
     router.push("/login");
   } else {
+    hideEdit();
+
     router.push("/user-personal");
   }
+}
+
+function goToSimilar() {
+  hideEdit();
+
+  router.push("/similar");
 }
 
 // Stream read from stream_url
@@ -1295,22 +1700,31 @@ const readStream = async (streamUrl: string, chapterNum: number) => {
       chapterContent = fullContent;
     }
 
-    // Find # CH followed by digits and start from after there if it exists
-    let displayContent = chapterContent;
-    const chapterStartMatch = chapterContent.match(/# CH\d+/);
-    if (chapterStartMatch && chapterStartMatch.index !== undefined) {
-      const chapterStartIndex = chapterStartMatch.index + chapterStartMatch[0].length;
-      if (chapterStartIndex > -1) {
-        displayContent = chapterContent.substring(chapterStartIndex);
-        // Replace newline characters with actual line breaks
-        displayContent = displayContent.replace(/\\n/g, '\n');
-      }
-    }
+    // Find ```json and start from after there if it exists, otherwise don't show any content
+    let displayContent = '';
+    const jsonStartMatch = chapterContent.match(/```json/);
+    if (jsonStartMatch && jsonStartMatch.index !== undefined) {
+      // Find the JSON content after ```json
+      const jsonStartIndex = jsonStartMatch.index + jsonStartMatch[0].length;
+      const jsonContent = chapterContent.substring(jsonStartIndex);
 
-    // Filter out content after "让我验证衔接一致性："
-    const verifyMatch = displayContent.indexOf('让我验证衔接一致性：');
-    if (verifyMatch > -1) {
-      displayContent = displayContent.substring(0, verifyMatch);
+      // Try to parse the JSON content
+      try {
+        // Find the end of JSON (next ```)
+        const jsonEndMatch = jsonContent.match(/```/);
+        if (jsonEndMatch && jsonEndMatch.index !== undefined) {
+          const jsonStr = jsonContent.substring(0, jsonEndMatch.index).trim();
+          const jsonData = JSON.parse(jsonStr);
+          if (jsonData.content) {
+            displayContent = jsonData.content;
+            // Replace newline characters with actual line breaks
+            displayContent = displayContent.replace(/\\n/g, '\n');
+          }
+        }
+      } catch (e) {
+        // If parsing fails, don't show any content
+        displayContent = '';
+      }
     }
 
     // Printer effect for the content
@@ -1318,12 +1732,22 @@ const readStream = async (streamUrl: string, chapterNum: number) => {
     let userScrolled = false;
 
     // Add scroll event listener to detect user scrolling
+    let programmaticScroll = false;
+    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
     const handleScroll = () => {
+      if (programmaticScroll) return; // Ignore scroll events triggered by our own code
       userScrolled = true;
+      // Resume auto-scroll after 3 seconds of no user scrolling
+      if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+      scrollIdleTimer = setTimeout(() => {
+        userScrolled = false;
+      }, 3000);
     };
 
-    // Hide loading screen since we're starting to display content
-    isLoading.value = false;
+    // Only hide loading screen when we have content to display
+    if (displayContent) {
+      isLoading.value = false;
+    }
 
     // Use chapterContentRef since we're displaying chapter content
     const scrollElement = chapterContentRef.value;
@@ -1331,26 +1755,47 @@ const readStream = async (streamUrl: string, chapterNum: number) => {
       scrollElement.addEventListener('scroll', handleScroll);
     }
 
+    const doAutoScroll = () => {
+      // Get the latest scroll element each time to ensure it's always valid
+      const currentScrollElement = chapterContentRef.value;
+      if (!userScrolled && currentScrollElement) {
+        programmaticScroll = true;
+        // Use requestAnimationFrame to ensure DOM is updated before scrolling
+        requestAnimationFrame(() => {
+          currentScrollElement.scrollTop = currentScrollElement.scrollHeight;
+          requestAnimationFrame(() => { programmaticScroll = false; });
+        });
+      }
+    };
+
     const printInterval = setInterval(() => {
       if (charIndex < displayContent.length) {
         displayedContent.value += displayContent[charIndex];
         charIndex++;
 
         // Auto scroll to bottom only if user hasn't scrolled
-        if (!userScrolled && scrollElement) {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
-        }
+        doAutoScroll();
       } else {
-        clearInterval(printInterval);
+        clearInterval(printerInterval.value);
         // Stream completed
         taskStatus.value = 'SUCCESS';
+        isGeneratingOutline.value = false;
+        hasFailed.value = false;
         currentChapter.value.content = chapterContent;
+        // Reset currentChapter to show "待生成章节" section in left sidebar
+        currentChapter.value = null;
         // Remove scroll event listener
+        if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
         if (scrollElement) {
           scrollElement.removeEventListener('scroll', handleScroll);
         }
       }
     }, 10);
+
+    // Initial scroll to bottom when content starts displaying
+    setTimeout(() => {
+      doAutoScroll();
+    }, 100);
 
   } catch (error: any) {
     if (error.name === 'AbortError') {
@@ -1364,6 +1809,15 @@ const readStream = async (streamUrl: string, chapterNum: number) => {
 
 // Call novelNext API
 const callNovelNext = async (retryChapter?: number) => {
+  hideEdit();
+
+  // Check if there's an unprocessed cover generation result
+  if (showCoverResult.value) {
+    pendingCoverAction.value = 'next';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   try {
     const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
 
@@ -1374,6 +1828,18 @@ const callNovelNext = async (retryChapter?: number) => {
       title: nextChapterData?.title || '',
       content: ''
     };
+
+    // Add new chapter to chapters array if not exists
+    const existingChapter = chapters.value.find((c: any) => c.chapter === nextChapterIndex);
+    if (!existingChapter) {
+      chapters.value.push({
+        id: `temp-${nextChapterIndex}`,
+        chapter: nextChapterIndex,
+        title: nextChapterData?.title || t('novel.untitled'),
+        is_publish: 2 // 未发布状态
+      });
+    }
+
     displayedContent.value = '';
     isLoading.value = true;
     hasFailed.value = false;
@@ -1385,9 +1851,11 @@ const callNovelNext = async (retryChapter?: number) => {
     stepChapterIndex.value = nextChapterIndex;
     currentStepName.value = 'chapter';
 
+    const generateMode = retryChapter !== undefined ? 'retry' : 'new';
     const novelNextRes = await api.novelNext({
       session_id: sessionId.value,
-      chapter: nextChapterIndex
+      chapter: nextChapterIndex,
+      generate_mode: generateMode
     }) as any;
 
     if (novelNextRes.code !== 200) {
@@ -1420,7 +1888,15 @@ const callNovelNext = async (retryChapter?: number) => {
   }
 };
 
+function hideEdit() {
+  if (isEditingCover.value) {
+    isEditingCover.value = false;
+  }
+}
+
 const goPrevChapter = async () => {
+  hideEdit();
+
   if (!currentChapter.value) {
     return;
   }
@@ -1430,56 +1906,54 @@ const goPrevChapter = async () => {
     // Go to previous chapter
     try {
       isLoading.value = true;
+
+      // Stop any ongoing stream first
+      if (streamReaderController.value) {
+        streamReaderController.value.abort();
+        streamReaderController.value = null;
+      }
+      if (printerInterval.value) {
+        clearInterval(printerInterval.value);
+        printerInterval.value = null;
+      }
+
       const res = await api.detailChapter(sessionId.value, currentChapterNum - 1) as any;
-      if (res.code === 200) {
-        const result = res.data;
+      if (res.code == 200 && res.data) {
+        isEditingChapter.value = false;
+        taskStatus.value = 'SUCCESS';
+        isChapterTyping.value = false;
+        isGeneratingOutline.value = false;
+        hasFailed.value = false;
 
-        if (result) {
-          isEditingChapter.value = false;
+        let filteredContent = res.data.content || '';
+        filteredContent = filteredContent.replace(/\\n/g, '\n');
 
-          // Filter the content
-          let filteredContent = result.content;
-
-          // Find # CH followed by digits and start from after there if it exists
-          const chapterStartMatch = filteredContent.match(/# CH\d+/);
-          if (chapterStartMatch) {
-            const chapterStartIndex = chapterStartMatch.index + chapterStartMatch[0].length;
-            if (chapterStartIndex > -1) {
-              filteredContent = filteredContent.substring(chapterStartIndex);
-              // Replace newline characters with actual line breaks
-              filteredContent = filteredContent.replace(/\\n/g, '\n');
-            }
-          }
-
-          // Filter out content after "让我验证衔接一致性："
-          const verifyMatch = filteredContent.indexOf('让我验证衔接一致性：');
-          if (verifyMatch > -1) {
-            filteredContent = filteredContent.substring(0, verifyMatch);
-          }
-
-          // Update result content with filtered content
-          result.content = filteredContent;
-
-          // Set current chapter
-          currentChapter.value = result;
-
-          if (outlineData.value?.base_info?.total_chapters) {
-            chapterCount.value = outlineData.value.base_info.total_chapters;
-          }
-
-          // Check if this chapter is currently being generated
-          const prevChapterNum = currentChapterNum - 1;
-          if (generatingChapter.value === prevChapterNum && taskStatus.value === 'DOING') {
-            // Show printer effect
-            printContent(filteredContent);
-          } else {
-            // Directly display filtered content
-            displayedContent.value = filteredContent;
-          }
+        const chapterStartMatch = filteredContent.match(/# CH\d+/);
+        if (chapterStartMatch && chapterStartMatch.index !== undefined) {
+          filteredContent = filteredContent.substring(chapterStartMatch.index + chapterStartMatch[0].length);
         }
+
+        const verifyMatch = filteredContent.indexOf('让我验证衔接一致性：');
+        if (verifyMatch > -1) {
+          filteredContent = filteredContent.substring(0, verifyMatch);
+        }
+
+        const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === currentChapterNum - 1);
+        currentChapter.value = {
+          chapter: currentChapterNum - 1,
+          title: chapterData?.title || res.data.title || '',
+          content: filteredContent
+        };
+        displayedContent.value = filteredContent;
+        // 滚动到内容开始处
+        nextTick(() => {
+          if (chapterContentRef.value) {
+            chapterContentRef.value.scrollTop = 0;
+          }
+        });
       }
     } catch (error) {
-      // Handle error
+      console.error('Error navigating to previous chapter:', error);
     } finally {
       isLoading.value = false;
     }
@@ -1487,6 +1961,17 @@ const goPrevChapter = async () => {
     // Go to novel outline
     try {
       isLoading.value = true;
+
+      // Stop any ongoing stream first
+      if (streamReaderController.value) {
+        streamReaderController.value.abort();
+        streamReaderController.value = null;
+      }
+      if (printerInterval.value) {
+        clearInterval(printerInterval.value);
+        printerInterval.value = null;
+      }
+
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
       if (detailProjectRes.code === 200) {
@@ -1555,72 +2040,132 @@ const handleChapterStream = async (streamUrl: string, chapterNum: number, chapte
 };
 
 const goNextChapter = async () => {
+  hideEdit();
+
   // If currentChapter is null (on outline page), go to first chapter
   const currentChapterNum = currentChapter.value ? currentChapter.value.chapter : 0;
   const nextChapterNum = currentChapterNum + 1;
 
+  // Don't go beyond generated chapters
+  if (nextChapterNum > stepChapterIndex.value) return;
+
+  await goToChapter(nextChapterNum);
+};
+
+// Go to specific chapter
+const goToChapter = async (chapterNum: number) => {
+  hideEdit();
+
+  // Check if this is the currently generating chapter with DOING status
+  // Or if this chapter is at/beyond stepChapterIndex (meaning generation was triggered for this chapter)
+  const isCurrentlyGenerating = (chapterNum === stepChapterIndex.value && taskStatus.value === 'DOING') ||
+                                (chapterNum >= stepChapterIndex.value && taskStatus.value === 'DOING');
+
+  if (isCurrentlyGenerating) {
+    // Use stream to fetch chapter content
+    try {
+      isLoading.value = true;
+      isChapterTyping.value = false;
+      taskStatus.value = 'DOING';
+      lastGenerationType.value = 'chapter';
+      isGeneratingOutline.value = false;
+      generatingChapter.value = chapterNum;
+
+      const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+      currentChapter.value = {
+        chapter: chapterNum,
+        title: chapterData?.title || '',
+        content: ''
+      };
+      displayedContent.value = '';
+
+      // Fetch chapter stream
+      await fetchChapterStream(chapterNum);
+    } catch (error) {
+      console.error('Error fetching chapter stream:', error);
+      toast(t('novel.error.fetchFailed'));
+      isLoading.value = false;
+      hasFailed.value = true;
+      taskStatus.value = 'FAIL';
+    }
+    return;
+  }
+
+  // Check if this chapter has failed
+  // If taskStatus is FAIL and we're clicking on the stepChapterIndex (the chapter that failed), show failure
+  const hasFailedChapter = chapterNum === stepChapterIndex.value && taskStatus.value === 'FAIL';
+
+  if (hasFailedChapter) {
+    // Show failed state - don't need to fetch detailChapter
+    const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+    currentChapter.value = {
+      chapter: chapterNum,
+      title: chapterData?.title || '',
+      content: ''
+    };
+    displayedContent.value = '';
+    hasFailed.value = true;
+    isLoading.value = false;
+    return;
+  }
+
+  // If clicking on a future chapter that hasn't been generated yet
+  if (chapterNum > stepChapterIndex.value) {
+    // Cannot view chapters that haven't been generated yet
+    return;
+  }
+
+  // Otherwise, use detailChapter API (including already generated chapters)
   try {
     isLoading.value = true;
 
-    // Call chapterStream API to get stream data
-    const streamRes = await api.chapterStream(sessionId.value) as any;
+    // Stop any ongoing stream first
+    if (streamReaderController.value) {
+      streamReaderController.value.abort();
+      streamReaderController.value = null;
+    }
+    if (printerInterval.value) {
+      clearInterval(printerInterval.value);
+      printerInterval.value = null;
+    }
 
-    if (streamRes.code === 200 && streamRes.data?.stream_url) {
-      // Get next chapter data from outline
-      const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter === nextChapterNum);
-      await handleChapterStream(streamRes.data.stream_url, nextChapterNum, nextChapterData);
-    } else {
-      // Fallback to detailChapter if no stream_url
-      const res = await api.detailChapter(sessionId.value, nextChapterNum) as any;
-      if (res.code === 200) {
-        const result = res.data;
-        if (result) {
-          isEditingChapter.value = false;
+    const res = await api.detailChapter(sessionId.value, chapterNum) as any;
+    if (res.code === 200 && res.data) {
+      isEditingChapter.value = false;
+      taskStatus.value = 'SUCCESS';
+      isChapterTyping.value = false;
+      isGeneratingOutline.value = false;
 
-          // Filter the content
-          let filteredContent = result.content;
+      let filteredContent = res.data.content || '';
+      filteredContent = filteredContent.replace(/\\n/g, '\n');
 
-          // Find # CH followed by digits and start from after there if it exists
-          const chapterStartMatch = filteredContent.match(/# CH\d+/);
-          if (chapterStartMatch) {
-            const chapterStartIndex = chapterStartMatch.index + chapterStartMatch[0].length;
-            if (chapterStartIndex > -1) {
-              filteredContent = filteredContent.substring(chapterStartIndex);
-              // Replace newline characters with actual line breaks
-              filteredContent = filteredContent.replace(/\\n/g, '\n');
-            }
-          }
-
-          // Filter out content after "让我验证衔接一致性："
-          const verifyMatch = filteredContent.indexOf('让我验证衔接一致性：');
-          if (verifyMatch > -1) {
-            filteredContent = filteredContent.substring(0, verifyMatch);
-          }
-
-          // Update result content with filtered content
-          result.content = filteredContent;
-
-          // Set current chapter
-          currentChapter.value = result;
-
-          // Ensure chapterCount is set from outlineData if available
-          if (outlineData.value?.base_info?.total_chapters) {
-            chapterCount.value = outlineData.value.base_info.total_chapters;
-          }
-
-          // Check if this chapter is currently being generated
-          if (generatingChapter.value === nextChapterNum && taskStatus.value === 'DOING') {
-            // Show printer effect
-            printContent(filteredContent);
-          } else {
-            // Directly display filtered content
-            displayedContent.value = filteredContent;
-          }
-        }
+      const chapterStartMatch = filteredContent.match(/# CH\d+/);
+      if (chapterStartMatch && chapterStartMatch.index !== undefined) {
+        filteredContent = filteredContent.substring(chapterStartMatch.index + chapterStartMatch[0].length);
       }
+
+      const verifyMatch = filteredContent.indexOf('让我验证衔接一致性：');
+      if (verifyMatch > -1) {
+        filteredContent = filteredContent.substring(0, verifyMatch);
+      }
+
+      const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+      // Use API title first, fallback to outline title
+      currentChapter.value = {
+        chapter: chapterNum,
+        title: res.data.title || chapterData?.title || '',
+        content: filteredContent
+      };
+      displayedContent.value = filteredContent;
+      hasFailed.value = false;
+      nextTick(() => {
+        if (chapterContentRef.value) {
+          chapterContentRef.value.scrollTop = 0;
+        }
+      });
     }
   } catch (error) {
-    // Handle error
+    console.error('Error navigating to chapter:', error);
   } finally {
     isLoading.value = false;
   }
@@ -1628,9 +2173,35 @@ const goNextChapter = async () => {
 
 // Call novelAllChapters API
 const callNovelAllChapters = async () => {
+  hideEdit();
+
+  // Check if there's an unprocessed cover generation result
+  if (showCoverResult.value) {
+    pendingCoverAction.value = 'all';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   try {
-    // Determine the first chapter to generate
-    const firstChapterIndex = stepChapterIndex.value + 1 || 1;
+    // Determine the first chapter to generate and generate mode
+    let fromChapter: number;
+    let generateMode: string;
+
+    if (taskStatus.value === 'FAIL') {
+      // If there's a failed chapter, retry from that chapter
+      fromChapter = stepChapterIndex.value;
+      generateMode = 'retry';
+    } else if (currentChapter.value?.chapter) {
+      // If current chapter generated successfully, start from next chapter
+      fromChapter = currentChapter.value.chapter + 1;
+      generateMode = 'new';
+    } else {
+      // No chapters generated yet, start from 1
+      fromChapter = 1;
+      generateMode = 'new';
+    }
+
+    const firstChapterIndex = fromChapter;
     const firstChapterData = outlineData.value?.outline?.find((c: any) => c.chapter === firstChapterIndex);
 
     // Immediately set UI state
@@ -1650,7 +2221,11 @@ const callNovelAllChapters = async () => {
     stepChapterIndex.value = firstChapterIndex;
     currentStepName.value = 'chapter';
 
-    const novelAllRes = await api.novelAll({ session_id: sessionId.value }) as any;
+    const novelAllRes = await api.novelAll({
+      session_id: sessionId.value,
+      generate_mode: generateMode,
+      from_chapter: fromChapter
+    }) as any;
 
     if (novelAllRes.code !== 200) {
       toast(novelAllRes.message || t('novel.error.fetchFailed'));
@@ -1658,6 +2233,13 @@ const callNovelAllChapters = async () => {
       hasFailed.value = true;
       taskStatus.value = 'FAIL';
       return;
+    }
+
+    // Get cover task_id from response
+    if (novelAllRes.data?.task_id) {
+      coverTaskId.value = novelAllRes.data.task_id;
+    } else {
+      coverTaskId.value = '';
     }
 
     // Fetch estimated time
@@ -1734,8 +2316,42 @@ const handleChapterInfoClick = async () => {
 
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
+  hideEdit();
+
+  // Check if this chapter has failed - only when clicking on the failed chapter (stepChapterIndex with FAIL status)
+  const hasFailedChapter = chapterNum === stepChapterIndex.value && taskStatus.value === 'FAIL';
+
+  if (hasFailedChapter) {
+    // Show failed state - don't need to fetch detailChapter
+    const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+    currentChapter.value = {
+      chapter: chapterNum,
+      title: chapterData?.title || '',
+      content: ''
+    };
+    displayedContent.value = '';
+    outlineContent.value = '';
+    hasFailed.value = true;
+    isLoading.value = false;
+    return;
+  }
+
+  // Stop any ongoing stream first
+  if (streamReaderController.value) {
+    streamReaderController.value.abort();
+    streamReaderController.value = null;
+  }
+  if (printerInterval.value) {
+    clearInterval(printerInterval.value);
+    printerInterval.value = null;
+  }
+  isGeneratingOutline.value = false;
+  outlineContent.value = '';
+  displayedContent.value = '';
+  currentChapter.value = null;
+  isLoading.value = true;
+
   try {
-    isLoading.value = true;
     const res = await api.detailChapter(sessionId.value, chapterNum) as any;
     if (res.code === 200) {
       const result = res.data;
@@ -1764,9 +2380,23 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
         // Update result content with filtered content
         result.content = filteredContent;
+        hasFailed.value = false;
 
-        // Set current chapter
-        currentChapter.value = result;
+        // Get outline chapter title for reference
+        const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+        // Use API title first, fallback to outline title
+        currentChapter.value = {
+          chapter: result.chapter,
+          title: result.title || chapterData?.title || '',
+          content: filteredContent
+        };
+
+        // Scroll to top
+        nextTick(() => {
+          if (chapterContentRef.value) {
+            chapterContentRef.value.scrollTop = 0;
+          }
+        });
 
         // Ensure chapterCount is set from outlineData if available
         if (outlineData.value?.base_info?.total_chapters) {
@@ -1780,6 +2410,12 @@ const handleChapterItemClick = async (chapterNum: number) => {
         } else {
           // Directly display filtered content
           displayedContent.value = filteredContent;
+          // 滚动到内容开始处
+          nextTick(() => {
+            if (chapterContentRef.value) {
+              chapterContentRef.value.scrollTop = 0;
+            }
+          });
         }
       }
     }
@@ -1790,12 +2426,46 @@ const handleChapterItemClick = async (chapterNum: number) => {
   }
 };
 
+// Handle publish chapter button click
+const handlePublishChapter = (chapter: any) => {
+  // Get session_id from route params
+  const session_id = route.params.id as string;
+
+  // Get cover from detail data
+  const cover = '';
+
+  // Get chapter index
+  const index = chapter.chapter;
+
+  // Get project name
+  const title = projectName.value || '';
+
+  // Navigate to novel publish page with params
+  router.push({
+    path: '/publish/novel',
+    query: {
+      session_id,
+      cover,
+      index,
+      title
+    }
+  });
+};
+
 // Handle outline preview click
 const handleOutlinePreviewClick = async () => {
+  hideEdit();
+
   // Don't allow click if no outline data
   if (!outlineData.value || !outlineData.value.outline) {
     return;
   }
+
+  // Set currentChapter to null to show outline area with skeleton loader
+  currentChapter.value = null;
+  displayedContent.value = '';
+  outlineContent.value = '';
+  isGeneratingOutline.value = false;
 
   try {
     isLoading.value = true;
@@ -1803,11 +2473,10 @@ const handleOutlinePreviewClick = async () => {
     if (detailProjectRes.code === 200) {
       const resultAsync = detailProjectRes.data?.result_async;
       const stepName = detailProjectRes.data?.step_name;
+      const stepStatus = detailProjectRes.data?.step_status;
 
       if (resultAsync) {
-        // Ensure currentChapter is null before handling outline data
-        currentChapter.value = null;
-        // Reset hasFailed to false
+        // Reset hasFailed when viewing outline
         hasFailed.value = false;
 
         // Handle the structured data, but skip points estimate if step_name is chapter
@@ -1871,6 +2540,10 @@ const handleOutlinePreviewClick = async () => {
 
         // Force re-render
         await nextTick();
+        // Scroll to top
+        if (outlineContentRef.value) {
+          outlineContentRef.value.scrollTop = 0;
+        }
       }
     }
   } catch (error) {
@@ -1940,6 +2613,13 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       return;
     }
 
+    // Get cover task_id from response
+    if (novelOutlineRes.data?.task_id) {
+      coverTaskId.value = novelOutlineRes.data.task_id;
+    } else {
+      coverTaskId.value = '';
+    }
+
     // Reset state for new generation
     estimatedTime.value = null;
     originalEstimatedSeconds.value = null;
@@ -1972,6 +2652,22 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       }
     } catch (error) {
       console.error('Error fetching novel estimate:', error);
+    }
+
+    // Fetch detailProject to get task status and task_start_at
+    try {
+      const detailProjectRes = await api.detailProject(sessionId.value) as any;
+      if (detailProjectRes.code === 200 && detailProjectRes.data) {
+        taskStatus.value = detailProjectRes.data.status || 'DOING';
+        if (detailProjectRes.data.task_start_at) {
+          taskStartAt.value = detailProjectRes.data.task_start_at;
+        }
+        if (detailProjectRes.data.step_name) {
+          currentStepName.value = detailProjectRes.data.step_name;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching detailProject:', error);
     }
 
     // Start outline stream instead of polling
@@ -2028,22 +2724,20 @@ const fetchUserSelectedSettings = async () => {
 // Fetch chapter stream and handle output via stream_read
 const fetchChapterStream = async (chapterIndex: number) => {
   try {
-    // Clean up any existing stream reader
+    // Stop any existing stream first
     if (streamReaderController.value) {
       streamReaderController.value.abort();
+      streamReaderController.value = null;
     }
-
-    // Stop polling if it's running
-    if (pollingInterval.value) {
-      clearInterval(pollingInterval.value);
-      pollingInterval.value = null;
-    }
-
-    // Clear any existing printer interval
     if (printerInterval.value) {
       clearInterval(printerInterval.value);
       printerInterval.value = null;
     }
+
+    // Ensure loading is shown before starting stream
+    isLoading.value = true;
+    displayedContent.value = '';
+    isWaitingForData.value = true;
 
     const token = localStorage.getItem('token');
     streamReaderController.value = new AbortController();
@@ -2072,19 +2766,48 @@ const fetchChapterStream = async (chapterIndex: number) => {
     let streamDone = false;
     let lastContent = '';      // Track the latest content from SSE to detect incremental vs full replacement
     let sseBuffer = '';        // Buffer for incomplete SSE lines
-    let userScrolled = false;
+    let autoScroll = true;
+    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Hide skeleton once we start the typewriter
     displayedContent.value = '';
+    isWaitingForData.value = true;
 
     // Wait for DOM to mount chapter content view
     await nextTick();
 
-    const handleScroll = () => { userScrolled = true; };
-    const scrollElement = chapterContentRef.value;
+    let programmaticScroll = false;
+    const handleScroll = () => {
+      if (programmaticScroll) return;
+      autoScroll = false;
+      if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+      scrollIdleTimer = setTimeout(() => {
+        autoScroll = true;
+      }, 3000);
+    };
+
+    // Wait for DOM to update and get scroll element
+    await nextTick();
+    await nextTick();
+    let scrollElement = chapterContentRef.value;
+
+    // If scroll element not found, try to get it after a short delay
+    if (!scrollElement) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      scrollElement = chapterContentRef.value;
+    }
+
     if (scrollElement) {
       scrollElement.addEventListener('scroll', handleScroll);
+      scrollElement.scrollTop = 0;
     }
+
+    const doAutoScroll = () => {
+      if (scrollElement) {
+        // Force scroll to bottom
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    };
 
     // Start typewriter timer: 30ms per character
     isChapterTyping.value = true;
@@ -2094,19 +2817,26 @@ const fetchChapterStream = async (chapterIndex: number) => {
         if (streamDone) {
           clearInterval(typewriterTimer);
           isChapterTyping.value = false;
+          isWaitingForData.value = false;
+          if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
           if (scrollElement) {
             scrollElement.removeEventListener('scroll', handleScroll);
           }
+        } else {
+          // Waiting for more data from stream
+          isWaitingForData.value = true;
         }
         return;
       }
 
+      isWaitingForData.value = false;
       pendingConsumed++;
       displayedContent.value = pendingText.substring(0, pendingConsumed);
 
-      if (!userScrolled && scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
+      // Use nextTick to ensure DOM is updated before scrolling
+      nextTick(() => {
+        doAutoScroll();
+      });
     }, 30);
 
     // Hide skeleton once typewriter starts
@@ -2144,6 +2874,19 @@ const fetchChapterStream = async (chapterIndex: number) => {
         // Parse JSON and extract content
         try {
           const jsonData = JSON.parse(dataStr);
+
+          // Extract chapter info from JSON if available
+          if (jsonData.chapter_number !== undefined) {
+            const chapterNum = jsonData.chapter_number;
+            const chapterTitle = jsonData.title || '';
+            if (currentChapter.value && currentChapter.value.chapter !== chapterNum) {
+              currentChapter.value.chapter = chapterNum;
+            }
+            if (currentChapter.value && chapterTitle) {
+              currentChapter.value.title = chapterTitle;
+            }
+          }
+
           if (jsonData.content) {
             const newContent = jsonData.content;
 
@@ -2204,9 +2947,17 @@ const fetchChapterStream = async (chapterIndex: number) => {
     // Update final state
     taskStatus.value = 'SUCCESS';
     generatingChapter.value = null;
+    hasFailed.value = false;
     if (currentChapter.value) {
       currentChapter.value.content = pendingText;
     }
+
+    // Start polling for cover image if task_id exists
+    if (coverTaskId.value) {
+      startCoverPolling(coverTaskId.value);
+    }
+
+    // Keep currentChapter to display content with cover below
 
   } catch (error: any) {
     if (error.name === 'AbortError') return;
@@ -2214,6 +2965,7 @@ const fetchChapterStream = async (chapterIndex: number) => {
     taskStatus.value = 'FAIL';
     isLoading.value = false;
     isChapterTyping.value = false;
+    stopCoverPolling();
   }
 };
 
@@ -2275,15 +3027,39 @@ const fetchNovelOutline = async () => {
       taskStartAt.value = detailProjectRes.data.task_start_at;
     }
 
+    // Get chapters from detailProject response
+    if (detailProjectRes.data?.chapters) {
+      chapters.value = detailProjectRes.data.chapters;
+      // Update chapterCount based on chapters length
+      chapterCount.value = detailProjectRes.data.chapters.length;
+    }
+
     // Get step_name from detailProject response
     if (detailProjectRes.data?.step_name) {
       currentStepName.value = detailProjectRes.data.step_name;
 
       // Set initial state based on step_name
-      if (currentStepName.value === 'outline') {
+      if (currentStepName.value == 'outline') {
         // Show novel outline area
         currentChapter.value = null;
-      } else if (currentStepName.value === 'chapter') {
+
+        // Check if outline is being generated
+        const stepStatus = detailProjectRes.data?.step_status;
+
+        if (stepStatus === 'DOING') {
+          // Outline is being generated - show loading state
+          isLoading.value = true;
+          hasFailed.value = false;
+          taskStatus.value = 'DOING';
+          isGeneratingOutline.value = true;
+          lastGenerationType.value = 'outline';
+          startTime.value = Date.now();
+          fetchEstimatedTime();
+
+          // Start outline stream
+          startOutlineStream();
+        }
+      } else if (currentStepName.value == 'chapter') {
         // Show chapter area
         const stepStatus = detailProjectRes.data?.step_status;
         const chapterStreamUrl = detailProjectRes.data?.chapter_stream_url;
@@ -2316,11 +3092,59 @@ const fetchNovelOutline = async () => {
         // Set stepChapterIndex to the current chapter index
         if (chapterIndex) {
           stepChapterIndex.value = chapterIndex;
+
+          // Check if chapterIndex is greater than chapters length, add generating chapter if needed
+          const existingChapter = chapters.value.find((c: any) => c.chapter === chapterIndex);
+          if (!existingChapter && (stepStatus === 'PREPARE' || stepStatus === 'DOING')) {
+            // Get chapter title from outline data if available
+            const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterIndex);
+            chapters.value.push({
+              id: `temp-${chapterIndex}`,
+              chapter: chapterIndex,
+              title: chapterData?.title || t('novel.untitled'),
+              is_publish: 2 // 未发布状态
+            });
+          }
+        }
+
+        if (stepStatus === 'SUCCESS' && chapterIndex) {
+          // Chapter generation completed - fetch and display the chapter content
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            if (chapterRes.code === 200 && chapterRes.data) {
+              const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
+              currentChapter.value = {
+                chapter: chapterIndex,
+                title: chapterData?.title || chapterRes.data.title || '',
+                content: chapterRes.data.content || ''
+              };
+              taskStatus.value = 'SUCCESS';
+              hasFailed.value = false;
+
+              // Process content: handle escape characters and filter
+              let content = chapterRes.data.content || '';
+              content = content.replace(/\\n/g, '\n');
+
+              displayedContent.value = content;
+
+              // Scroll to top
+              nextTick(() => {
+                if (chapterContentRef.value) {
+                  chapterContentRef.value.scrollTop = 0;
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching chapter data:', error);
+          }
+          isLoading.value = false;
+          isFetchingNovelOutline.value = false;
+          return;
         }
 
         if ((stepStatus === 'PREPARE' || stepStatus === 'DOING') && chapterIndex) {
           // Set up chapter state before streaming
-          const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterIndex);
+          const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
           currentChapter.value = {
             chapter: chapterIndex,
             title: chapterData?.title || '',
@@ -2349,12 +3173,32 @@ const fetchNovelOutline = async () => {
           isLoading.value = false;
           isFetchingNovelOutline.value = false;
           return;
+        } else if (stepStatus === 'FAIL' && chapterIndex) {
+          // Chapter generation failed - show failed state
+          const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
+          currentChapter.value = {
+            chapter: chapterIndex,
+            title: chapterData?.title || '',
+            content: ''
+          };
+          displayedContent.value = '';
+          hasFailed.value = true;
+          taskStatus.value = 'FAIL';
+          generatingChapter.value = chapterIndex;
+          currentStepName.value = 'chapter';
+          lastGenerationType.value = 'chapter';
+
+          // Fetch points estimate
+          await fetchPointsEstimate();
+          isLoading.value = false;
+          isFetchingNovelOutline.value = false;
+          return;
         } else if (chapterIndex) {
           // step_status is SUCCESS or other non-DOING state: fetch chapter detail and display directly
           try {
             const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
             if (chapterRes.code === 200 && chapterRes.data) {
-              const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterIndex);
+              const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
               currentChapter.value = {
                 chapter: chapterIndex,
                 title: chapterData?.title || chapterRes.data.title || '',
@@ -2366,18 +3210,6 @@ const fetchNovelOutline = async () => {
               // Process content: handle escape characters and filter
               let content = chapterRes.data.content || '';
               content = content.replace(/\\n/g, '\n');
-
-              // Filter # CH header
-              const chapterStartMatch = content.match(/# CH\d+/);
-              if (chapterStartMatch && chapterStartMatch.index !== undefined) {
-                content = content.substring(chapterStartMatch.index + chapterStartMatch[0].length);
-              }
-
-              // Filter verification text
-              const verifyMatch = content.indexOf('让我验证衔接一致性：');
-              if (verifyMatch > -1) {
-                content = content.substring(0, verifyMatch);
-              }
 
               currentChapter.value.content = content;
               displayedContent.value = content;
@@ -2424,6 +3256,18 @@ const fetchNovelOutline = async () => {
           // Start outline stream instead of polling
           startOutlineStream();
           fetchEstimatedTime();
+          // Fetch queue info
+          try {
+            const novelEstimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
+            if (novelEstimateRes.code === 200 && novelEstimateRes.data?.in_queue_count > 0) {
+              queueInfo.value = {
+                count: novelEstimateRes.data.in_queue_count,
+                estimatedTime: novelEstimateRes.data.estimated_time || 30
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching novel estimate:', error);
+          }
         } else if (status != 'SUCCESS' && status != 'FAIL') {
           callNovelOutline('new');
         } else if (status == 'SUCCESS') {
@@ -2467,6 +3311,18 @@ const fetchNovelOutline = async () => {
           if (status == 'DOING') {
             startTime.value = Date.now();
             fetchEstimatedTime();
+            // Fetch queue info
+            try {
+              const novelEstimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
+              if (novelEstimateRes.code === 200 && novelEstimateRes.data?.in_queue_count > 0) {
+                queueInfo.value = {
+                  count: novelEstimateRes.data.in_queue_count,
+                  estimatedTime: novelEstimateRes.data.estimated_time || 30
+                };
+              }
+            } catch (error) {
+              console.error('Error fetching novel estimate:', error);
+            }
           }
         }
 
@@ -2556,14 +3412,19 @@ const startPolling = () => {
   }, 3000);
 };
 
-// Close dropdowns when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement;
-  if (!target.closest('.novel-selector')) {
-    showWordCountDropdown.value = false;
-    showLanguageDropdown.value = false;
+// Handle click outside cover edit section
+function handleClickOutside(event: MouseEvent) {
+  // Check if cover edit section is open
+  if (isEditingCover.value && coverEditSectionRef.value) {
+    // Check if click is inside cover edit section
+    if (!coverEditSectionRef.value.contains(event.target as Node)) {
+      // If showing result, show exit confirmation
+      if (showCoverResult.value) {
+        showExitConfirmModal.value = true;
+      }
+    }
   }
-};
+}
 
 // Lifecycle
 onMounted(() => {
@@ -2571,7 +3432,19 @@ onMounted(() => {
   fetchUserBalance();
   fetchNovelOutline();
   document.addEventListener('click', handleClickOutside);
+  window.addEventListener('beforeunload', handleBeforeUnload);
 });
+
+// Handle before unload event
+function handleBeforeUnload(event: BeforeUnloadEvent) {
+  // Check if there's an unprocessed cover generation result
+  if (showCoverResult.value) {
+    // This will trigger the browser's default confirmation dialog
+    event.preventDefault();
+    event.returnValue = '';
+    return '';
+  }
+}
 
 onBeforeUnmount(() => {
   if (printerInterval.value) {
@@ -2589,13 +3462,16 @@ onBeforeUnmount(() => {
   if (outlineStreamParser.value) {
     outlineStreamParser.value.destroy();
   }
+  stopCoverPolling();
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 
 class OutlineStreamParser {
   onText: (text: string) => void;
   onComplete: (text: string, data?: any) => void;
   onError: (error: string) => void;
+  t: (key: string) => string;
 
   rawBuf: string = '';
   jsonBuf: string = '';
@@ -2617,14 +3493,15 @@ class OutlineStreamParser {
   parsedCharNames: Set<string> = new Set();
   parsedOutlineChapters: Set<number> = new Set();
 
-  novelTitle: string = '小说名称';
+  novelTitle: string = '';
   totalChapters: number = 0;
   abortController: AbortController | null = null;
 
-  constructor({ onText, onComplete, onError }: { onText: (text: string) => void; onComplete: (text: string, data?: any) => void; onError: (error: string) => void }) {
+  constructor({ onText, onComplete, onError, t }: { onText: (text: string) => void; onComplete: (text: string, data?: any) => void; onError: (error: string) => void; t: (key: string) => string }) {
     this.onText = onText;
     this.onComplete = onComplete;
     this.onError = onError;
+    this.t = t;
   }
 
   async start(sessionId: string, token: string) {
@@ -2706,7 +3583,7 @@ class OutlineStreamParser {
 
     if (this.parseStage === 0) {
       if (!this.headerWritten) {
-        this.pendingText += '小说大纲\n\n基本信息\n';
+        this.pendingText += `${this.t('novel.novelOutline')}\n\n${this.t('novel.basicInfo')}\n`;
         this.headerWritten = true;
       }
 
@@ -2714,7 +3591,7 @@ class OutlineStreamParser {
         const m = s.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           this.novelTitle = m[1].replace(/\\"/g, '"');
-          this.pendingText += `标题：${this.novelTitle}\n`;
+          this.pendingText += `${this.t('novel.title')}：${this.novelTitle}\n`;
           this.parsedTitle = true;
         }
       }
@@ -2723,7 +3600,7 @@ class OutlineStreamParser {
         const m = s.match(/"total_chapters"\s*:\s*(\d+)/);
         if (m) {
           this.totalChapters = parseInt(m[1]);
-          this.pendingText += `总章数：${this.totalChapters} 章\n`;
+          this.pendingText += `${this.t('novel.totalChapters')}：${this.totalChapters} ${this.t('novel.chaptersLabel')}\n`;
           this.parsedTotalChapters = true;
         }
       }
@@ -2732,7 +3609,7 @@ class OutlineStreamParser {
         const m = s.match(/"genre"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           const genre = m[1].replace(/\\"/g, '"');
-          if (genre) this.pendingText += `类型标签：${genre}\n`;
+          if (genre) this.pendingText += `${this.t('novel.genreLabel')}：${genre}\n`;
           this.parsedGenre = true;
         }
       }
@@ -2741,7 +3618,7 @@ class OutlineStreamParser {
         const m = s.match(/"writing_style"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           const style = m[1].replace(/\\"/g, '"');
-          if (style) this.pendingText += `写作风格：${style}\n`;
+          if (style) this.pendingText += `${this.t('novel.writingStyle')}：${style}\n`;
           this.pendingText += '\n';
           this.parsedStyle = true;
         }
@@ -2757,7 +3634,7 @@ class OutlineStreamParser {
         const m = s.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           const summary = m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
-          this.pendingText += `故事概要\n${summary}\n\n`;
+          this.pendingText += `${this.t('novel.storySummary')}\n${summary}\n\n`;
           this.parsedSummary = true;
         }
       }
@@ -2776,14 +3653,14 @@ class OutlineStreamParser {
         this.parsedCharNames.add(name);
 
         if (!this.charHeaderWritten) {
-          this.pendingText += '角色图鉴\n';
+          this.pendingText += `${this.t('novel.characterGallery')}\n`;
           this.charHeaderWritten = true;
         }
         const type = m[3].replace(/\\"/g, '"');
         const desc = m[2].replace(/\\"/g, '"').replace(/\\n/g, '\n');
         if (type) this.pendingText += `${type}\n`;
-        this.pendingText += `姓名：${name}\n`;
-        this.pendingText += `描述：${desc}\n\n`;
+        this.pendingText += `${this.t('novel.name')}：${name}\n`;
+        this.pendingText += `${this.t('novel.description')}：${desc}\n\n`;
       }
 
       if (s.includes('"outline"')) {
@@ -2805,12 +3682,12 @@ class OutlineStreamParser {
         this.parsedOutlineChapters.add(chNum);
 
         if (!this.outlineHeaderWritten) {
-          this.pendingText += '分章情节\n';
+          this.pendingText += `${this.t('novel.chapterPlot')}\n`;
           this.outlineHeaderWritten = true;
         }
         const chTitle = m[2].replace(/\\"/g, '"');
         const chDesc = m[3].replace(/\\"/g, '"').replace(/\\n/g, '\n');
-        this.pendingText += `第${chNum}章 ${chTitle}\n`;
+        this.pendingText += `${this.t('novel.chapterLabel')}${chNum} ${chTitle}\n`;
         this.pendingText += `${chDesc}\n\n`;
       }
     }
@@ -2869,31 +3746,31 @@ class OutlineStreamParser {
     const chars = json.characters || [];
     const outline = json.outline || [];
 
-    let text = '小说大纲\n\n';
-    text += '基本信息\n';
-    text += `标题：${bi.title || '小说名称'}\n`;
-    text += `总章数：${bi.total_chapters || 0} 章\n`;
-    if (bi.genre) text += `类型标签：${bi.genre}\n`;
-    if (bi.writing_style) text += `写作风格：${bi.writing_style}\n`;
+    let text = `${this.t('novel.novelOutline')}\n\n`;
+    text += `${this.t('novel.basicInfo')}\n`;
+    text += `${this.t('novel.title')}：${bi.title || this.t('novel.untitled')}\n`;
+    text += `${this.t('novel.totalChapters')}：${bi.total_chapters || 0} ${this.t('novel.chaptersLabel')}\n`;
+    if (bi.genre) text += `${this.t('novel.genreLabel')}：${bi.genre}\n`;
+    if (bi.writing_style) text += `${this.t('novel.writingStyle')}：${bi.writing_style}\n`;
     text += '\n';
 
     if (ss.summary) {
-      text += `故事概要\n${ss.summary}\n\n`;
+      text += `${this.t('novel.storySummary')}\n${ss.summary}\n\n`;
     }
 
     if (chars.length > 0) {
-      text += '角色图鉴\n';
+      text += `${this.t('novel.characterGallery')}\n`;
       for (const c of chars) {
         if (c.type) text += `${c.type}\n`;
-        text += `姓名：${c.name || ''}\n`;
-        text += `描述：${c.description || ''}\n\n`;
+        text += `${this.t('novel.name')}：${c.name || ''}\n`;
+        text += `${this.t('novel.description')}：${c.description || ''}\n\n`;
       }
     }
 
     if (outline.length > 0) {
-      text += '分章情节\n';
+      text += `${this.t('novel.chapterPlot')}\n`;
       for (const ch of outline) {
-        text += `第${ch.chapter}章 ${ch.title || ''}\n`;
+        text += `${this.t('novel.chapterLabel')}${ch.chapter} ${ch.title || ''}\n`;
         text += `${ch.description || ''}\n\n`;
       }
     }
@@ -2906,8 +3783,400 @@ class OutlineStreamParser {
     if (this.abortController) this.abortController.abort();
   }
 }
+
+// Cover edit functions
+async function toggleCoverEdit() {
+  isEditingCover.value = !isEditingCover.value;
+  if (isEditingCover.value) {
+    // Reset cover input
+    combinedCoverItems.value = [];
+    uploadedCoverImages.value = [];
+    coverInputKey.value++;
+
+    // Fetch cover cost when opening edit modal
+    try {
+      const coverEstimateRes = await api.novelEstimate({
+        session_id: sessionId.value,
+        step_name: 'cover'
+      }) as any;
+      if (coverEstimateRes.code == 200 && coverEstimateRes.data?.total_points) {
+        coverCost.value = coverEstimateRes.data.total_points;
+      }
+    } catch (error) {
+      console.error('Error fetching cover cost:', error);
+    }
+
+    nextTick(() => {
+      if (coverInputRef.value) {
+        coverInputRef.value.focus();
+      }
+    });
+  }
+}
+
+// Cancel cover action
+function cancelCoverAction() {
+  showCoverActionConfirmModal.value = false;
+}
+
+// Confirm cover action
+function confirmCoverAction() {
+  showCoverActionConfirmModal.value = false;
+
+  isGeneratingCover.value = false;
+  showCoverResult.value = false;
+  generatedCover.value = '';
+  isEditingCover.value = false;
+  showCoverEditBtn.value = true;
+}
+
+function handleCoverInput() {
+  if (!coverInputRef.value) return;
+
+  const text = coverInputRef.value.innerText || coverInputRef.value.textContent || "";
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+
+  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+  if (match) {
+    const trigger = match[1] as "#" | "@";
+    const query = match[2];
+
+    if (trigger === "@") {
+      showCoverAtDropdown.value = true;
+      lastCoverRange.value = range.cloneRange();
+      updateCoverAtDropdownItems();
+    } else {
+      showCoverAtDropdown.value = false;
+    }
+  } else {
+    showCoverAtDropdown.value = false;
+  }
+}
+
+function handleCoverKeydown(event: KeyboardEvent) {
+  if (isCoverComposing.value) return;
+
+  if (event.key === "Escape") {
+    showCoverAtDropdown.value = false;
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    generateNovelCover();
+  }
+}
+
+function handleCoverInputClick() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+
+  if (match && match[1] === "@") {
+    showCoverAtDropdown.value = true;
+    lastCoverRange.value = range.cloneRange();
+    updateCoverAtDropdownItems();
+  } else {
+    showCoverAtDropdown.value = false;
+  }
+}
+
+function handleCoverInputBlur() {
+  setTimeout(() => {
+    showCoverAtDropdown.value = false;
+  }, 200);
+}
+
+function handleCoverPaste(event: ClipboardEvent) {
+  // Handle paste event if needed
+}
+
+function handleCoverInputFocus() {
+  // Handle focus event if needed
+}
+
+// Upload image to server
+async function uploadCoverImage(file: File): Promise<string> {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push('/login');
+    return '';
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('mode', 'normal');
+
+  const parma = {
+    method: "POST",
+    headers: {
+      token: token,
+    },
+    body: formData,
+  };
+
+  const res = await fetch(`${baseUrl}user/uploadImage`, parma);
+  const data = await res.json();
+  if (data.code === 0 || data.code === 200) {
+    return data.data.url || '';
+  } else {
+    throw new Error(data.msg);
+  }
+}
+
+// Handle cover file change
+async function handleCoverFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const files = input.files;
+  if (!files || files.length === 0) return;
+
+  isUploading.value = true;
+
+  try {
+    const filesArray = Array.from(files);
+    const uploadPromises = filesArray.map(async (file, index) => {
+      try {
+        const uploadedUrl = await uploadCoverImage(file);
+        const imageId = Date.now() + index;
+        uploadedCoverImages.value.push({
+          id: imageId,
+          image: uploadedUrl,
+          file: file
+        });
+        combinedCoverItems.value.push({
+          id: imageId,
+          type: 'image',
+          image: uploadedUrl
+        });
+      } catch (error) {
+        console.error('Upload error for file', file.name, error);
+        toast(t('fail'));
+      }
+    });
+
+    await Promise.all(uploadPromises);
+  } catch (error) {
+    toast(t('fail'));
+  } finally {
+    isUploading.value = false;
+  }
+
+  // Reset input
+  input.value = '';
+}
+
+function triggerCoverFileUpload() {
+  coverFileInputRef.value?.click();
+}
+
+function removeUploadedCoverImage(imageId: number) {
+  uploadedCoverImages.value = uploadedCoverImages.value.filter(img => img.id !== imageId);
+  combinedCoverItems.value = combinedCoverItems.value.filter(item => item.id !== imageId);
+}
+
+function selectCoverAtItem(item: any) {
+  if (!lastCoverRange.value || !coverInputRef.value) return;
+
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  const range = lastCoverRange.value;
+  const textNode = range.startContainer;
+  const offset = range.startOffset;
+  const textContent = textNode.textContent || "";
+  const textBefore = textContent.substring(0, offset);
+  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+
+  if (match) {
+    const triggerIndex = match.index!;
+    // Set range to cover the trigger and the typed query
+    range.setStart(textNode, triggerIndex);
+    range.setEnd(textNode, offset);
+    range.deleteContents();
+  }
+
+  // Insert the selected item
+  const span = document.createElement("span");
+  span.className = `tag ${item.type === 'character' ? 'character' : 'image'}`;
+  span.contentEditable = "false";
+  span.innerHTML = `@${item.name || `img${uploadedCoverImages.value.findIndex(img => img.id === item.id) + 1}`}`;
+  span.style.color = "#00d3f2";
+
+  range.insertNode(span);
+
+  // Insert a space after the tag
+  const space = document.createTextNode(" ");
+  range.setStartAfter(span);
+  range.insertNode(space);
+  range.setStartAfter(space);
+  range.collapse(true);
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  showCoverAtDropdown.value = false;
+  coverInputRef.value.focus();
+}
+
+function updateCoverAtDropdownItems() {
+  // Only include uploaded images
+  const images = uploadedCoverImages.value.map(img => ({
+    id: img.id,
+    type: 'image',
+    image: img.image
+  }));
+
+  coverAtDropdownItems.value = images;
+}
+
+function checkLogin() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+  return true;
+}
+
+function checkCoverItemLimit() {
+  if (combinedCoverItems.value.length >= 5) {
+    toast(t('home.itemLimitReached'));
+    return false;
+  }
+  return true;
+}
+
+// Process prompt to replace image spans with <ref_X> format
+function processCoverPrompt() {
+  if (!coverInputRef.value) return '';
+
+  // Get all span elements in the input
+  const spans = coverInputRef.value.querySelectorAll('span.uploaded-image-item');
+  let prompt = coverInputRef.value.innerText || coverInputRef.value.textContent || "";
+
+  // Replace each span with <ref_X> format
+  spans.forEach((span, index) => {
+    const imageIndex = index + 1;
+    prompt = prompt.replace(span.textContent || '', `<ref_${imageIndex}>`);
+  });
+
+  return prompt.trim();
+}
+
+// Abandon generated cover
+function abandonCover() {
+  showCoverResult.value = false;
+  generatedCover.value = '';
+  isEditingCover.value = false;
+  showCoverEditBtn.value = true;
+}
+
+// Use generated cover
+async function useCover() {
+  try {
+    // Call API to save novel cover
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${aiUrl}ai/novel/save_novel_cover'`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        cover_url: generatedCover.value
+      })
+    });
+
+    const res = await response.json();
+
+    if (res.code == 200) {
+      // Cover saved successfully
+      novelCover.value = generatedCover.value;
+      showCoverResult.value = false;
+      isEditingCover.value = false;
+      showCoverEditBtn.value = true;
+      toast(t('novel.coverGenerated'));
+    } else {
+      showCoverEditBtn.value = true;
+      toast(res.message || t('novel.coverGenerateFailed'));
+    }
+  } catch (error) {
+    console.error('Error saving cover:', error);
+    showCoverEditBtn.value = true;
+    toast(t('novel.coverGenerateFailed'));
+  }
+}
+
+// Zoom cover image
+function zoomCoverImage(imageUrl: string) {
+  zoomedCoverImage.value = imageUrl;
+  showCoverZoomModal.value = true;
+}
+
+function closeCoverZoomModal() {
+  showCoverZoomModal.value = false;
+  zoomedCoverImage.value = '';
+}
+
+async function generateNovelCover() {
+  if (!coverInputRef.value) return;
+
+  const prompt = processCoverPrompt();
+  if (!prompt) {
+    toast(t('novel.coverInputEmpty'));
+    return;
+  }
+
+  try {
+    // Prepare reference images
+    const newReferenceImages = uploadedCoverImages.value.map(img => img.image);
+
+    // Start generating cover
+    isGeneratingCover.value = true;
+    showCoverEditBtn.value = false;
+
+    // Call API to renew novel cover
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${aiUrl}ai/novel/renew_novel_cover`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        prompt: prompt,
+        new_reference_images: newReferenceImages
+      })
+    });
+
+    const res = await response.json();
+
+    if (res.code == 200 && res.data.url) {
+      // Cover generated successfully
+      generatedCover.value = res.data.result.generate_novel_cover;
+      showCoverResult.value = true;
+      isGeneratingCover.value = false;
+    } else {
+      isGeneratingCover.value = false;
+      showCoverEditBtn.value = true;
+      toast(res.message || t('novel.coverGenerateFailed'));
+    }
+  } catch (error) {
+    console.error('Error generating cover:', error);
+    isGeneratingCover.value = false;
+    showCoverEditBtn.value = true;
+    toast(t('novel.coverGenerateFailed'));
+  }
+}
 </script>
 
 <style scoped lang="scss">
-@import '@/scss/NovelGenerate.scss';
+ @use '@/scss/NovelGenerate.scss';
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="list-wrap">
-    <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.workId)">
+    <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.post)">
       <div class="left-info">
         <img class="avatar" :src="item.liker.avatar" alt="" @click.stop="goUserHome(item.liker.user_id)" />
         <div class="text-col">
@@ -32,8 +32,13 @@ const { t, locale } = useI18n();
 const router = useRouter();
 defineProps<{ list: any[] }>();
 
-function toDetail(id: string | number) {
-  router.push(`/detail?id=${id}`);
+function toDetail(post: any) {
+  if (post && parseInt(post.access_rights) <= 0) {
+    toast(t('mentions.postDeleted'));
+    return false;
+  }
+
+  router.push(`/detail?id=${post.post_id}`);
 }
 
 function goUserHome(userId: string) {

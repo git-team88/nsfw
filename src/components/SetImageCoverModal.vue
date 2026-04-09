@@ -36,11 +36,21 @@
           </div>
 
           <div class="images-strip">
+            <!-- Cover Image -->
+            <div
+              v-if="coverImage"
+              class="image-cell"
+              :class="{ selected: selectedIndex == -1 }"
+              @click="onCoverClick"
+            >
+              <img :src="coverImage" alt="Cover" />
+            </div>
+            <!-- Regular Images -->
             <div
               v-for="(image, index) in images"
               :key="index"
               class="image-cell"
-              :class="{ selected: selectedIndex === index }"
+              :class="{ selected: selectedIndex == index }"
               @click="onImageClick(index)"
             >
               <img :src="image" alt="" />
@@ -58,7 +68,7 @@
             @dragover.prevent
           >
             <img src="@/assets/images/publish/upload.png" alt="" />
-            <div class="modal-text">{{ t("submit.cover.dragOrClick") }}</div>
+            <div class="modal-text" v-html='t("submit.cover.dragOrClick")'></div>
             <div class="modal-tip">{{ t("submit.cover.uploadTip") }}</div>
             <input
               type="file"
@@ -123,6 +133,7 @@ import { baseUrl } from "@/util/config";
 const props = defineProps<{
   visible: boolean;
   images: string[];
+  coverImage?: string;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
@@ -171,7 +182,13 @@ watch(
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
       localImage.value = null;
-      if (props.images.length > 0 && !selectedImage.value) {
+      if (props.coverImage) {
+        // 优先选择封面图片
+        selectedImage.value = props.coverImage;
+        selectedIndex.value = -1;
+        detectOrientation(selectedImage.value);
+      } else if (props.images.length > 0 && !selectedImage.value) {
+        // 其次选择第一张图片
         selectedImage.value = props.images[0];
         selectedIndex.value = 0;
         detectOrientation(selectedImage.value);
@@ -197,6 +214,14 @@ function onImageClick(index: number) {
   selectedImage.value = props.images[index];
   selectedIndex.value = index;
   detectOrientation(selectedImage.value);
+}
+
+function onCoverClick() {
+  if (props.coverImage) {
+    selectedImage.value = props.coverImage;
+    selectedIndex.value = -1;
+    detectOrientation(selectedImage.value);
+  }
 }
 
 function triggerUpload() {
@@ -413,7 +438,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -441,7 +466,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-header {
   height: 6rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -519,7 +544,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border: 1px solid #fb64b6;
     box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
     pointer-events: none;
     z-index: 5;
@@ -554,6 +578,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       overflow: hidden;
       cursor: pointer;
       border: 1px solid transparent;
+      position: relative;
 
       &:hover {
         border-color: #fb64b6;
@@ -567,6 +592,21 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+
+      .cover-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+        font-size: 1rem;
+        text-align: center;
+        padding: 0.2rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
@@ -593,12 +633,17 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     .modal-text {
       margin: 2.4rem 0 1.2rem;
       font-size: 1.4rem;
-      color: #101828;
+      color: #364153;
+
+      :deep(span){
+        color: #FB64B6;
+        cursor: pointer;
+      }
     }
 
     .modal-tip {
       font-size: 1.2rem;
-      color: #99a1af;
+      color: #99A1AF;
     }
   }
 
@@ -638,7 +683,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        border: 1px solid #fb64b6;
         box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
         pointer-events: none;
         z-index: 5;
@@ -652,7 +696,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-footer {
   padding: 1.8rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: flex-end;
   gap: 1.2rem;

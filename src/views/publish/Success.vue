@@ -37,14 +37,13 @@ function toProfile() {
   }
 }
 function postAnother() {
-  router.push('/publish/video')
-  // const type = (route.query.type as string)
-  // const map: Record<string, string> = {
-  //   3: '/publish/video',
-  //   1: '/publish/image',
-  //   2: '/publish/article'
-  // }
-  // router.push(map[type] || '/publish/video')
+  const type = (route.query.type as string)
+  const map: Record<string, string> = {
+    3: '/publish/video',
+    1: '/publish/comic',
+    2: '/publish/novel'
+  }
+  router.push(map[type] || '/publish/video')
 }
 </script>
 
@@ -52,19 +51,13 @@ function postAnother() {
 .submit-success{
   width: 100%;
   min-height: 100vh;
-  padding: 12rem 0 0;
+  padding: 14rem 0 0;
   background: #FFFFFF;
 }
 .container{
   position: relative;
   max-width: 90rem;
-  min-height: calc(100vh - 12rem);
   margin: 0 auto;
-  padding: 6rem 0;
-  border: 1px solid rgba(251,100,182,0.2);
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
-  background:rgba(255,255,255,0.8);
 }
 
 .content{

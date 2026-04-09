@@ -86,12 +86,17 @@
 
       <!-- Stats Bar -->
       <div class="stats-bar">
-        <div
-            class="posts-title"
-            @click="goToPosts"
+        <div class="posts-title">
+          <div
+            v-for="type in contentTypes"
+            :key="type.id"
+            class="type-item"
+            :class="{ active: activeContentType == type.id }"
+            @click="setActiveContentType(type.id)"
           >
-            {{ t("userHome.posts") }} ({{ formatNumber(userInfo.posts) }})
+            {{ type.label }} ({{ type.count }})
           </div>
+        </div>
         <div class="stats-nums">
           <div
             class="stat-item"
@@ -121,36 +126,34 @@
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
           <div class="filter-bar">
-            <!-- <div class="tabs">
+            <div class="tabs">
               <div
-                v-for="tab in tabs"
-                :key="tab.key"
+                v-for="tab in collectionTabs"
+                :key="tab.id"
                 class="tab-item"
-                :class="{ active: currentTab === tab.key }"
-                @click="currentTab = tab.key"
+                :class="{ active: activeCollectionTab == tab.id }"
+                @click="setActiveCollectionTab(tab.id)"
               >
-                {{ tab.label }}({{ tab.count }})
+                {{ tab.label }}
               </div>
-            </div> -->
+            </div>
 
             <div class="filters">
-              <DateRangePicker
-                v-model="dateRange"
-                :start-date="''"
-                :end-date="''"
-                theme="pink"
-                class="custom-date-picker"
-                @change="onDateChange"
-              />
-              <div class="search-box">
-                <input
-                  type="text"
-                  v-model="searchKeyword"
-                  :placeholder="t('userHome.filter.search')"
-                  @keyup.enter="doSearch"
+              <div class="sort-box">
+                <img class="sort-btn" :src="sortBy == 'newest' ? ascIcon : descIcon" alt="" @click="toggleSort" />
+              </div>
+
+              <div class="more-menu-wrap" ref="collectionMenuRef" v-if="isSelf && activeCollectionTab !== 0">
+                <img
+                  src="@/assets/images/detail/menu.png"
+                  alt=""
+                  @click="showCollectionMenu = !showCollectionMenu"
                 />
 
-                <img class="search-icon" src="@/assets/images/user/search.png" alt="" @click="doSearch" />
+                <div class="dropdown-menu bottom" v-if="showCollectionMenu">
+                  <div class="menu-item" @click="editCollectionName">{{ t('userHome.collection.editName') }}</div>
+                  <div class="menu-item delete" v-if="currentCollection?.items?.length === 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -228,7 +231,7 @@
 
         <!-- Follow/Fans List View -->
         <template v-else>
-          <div class="filter-bar cur">
+          <div class="filter-bar">
             <div class="tabs">
               <div
                 v-for="tab in [{ key: 'following', label: t('userHome.tabs.following') }, { key: 'fans', label: t('userHome.tabs.fans') }]"
@@ -346,6 +349,15 @@
       :targetType="reportTarget"
       @submit="handleReportSubmit"
     />
+
+    <!-- Edit Collection Modal -->
+    <EditCollectionModal
+      :visible="showEditCollectionModal"
+      :collection-id="editingCollectionId"
+      :collection-name="editingCollectionName"
+      @close="showEditCollectionModal = false"
+      @save="handleEditCollectionSave"
+    />
   </div>
 </template>
 
@@ -356,9 +368,12 @@ import EmptyState from "@/components/EmptyState.vue";
 import ReportModal from "@/components/ReportModal.vue";
 import CustomToast from "@/components/CustomToast.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
+import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import defaultHeaderImg from "@/assets/images/user/pic.png";
 import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
+import ascIcon from "@/assets/images/user/asc.png";
+import descIcon from "@/assets/images/user/desc.png";
 import {
   ref,
   computed,
@@ -491,6 +506,7 @@ function getSubscriptionPrice() {
 }
 
 const moreMenuRef = ref<HTMLElement | null>(null);
+const collectionMenuRef = ref<HTMLElement | null>(null);
 
 const isSelf = computed(() => {
   const localUid = localStorage.getItem("uid");
@@ -501,13 +517,69 @@ const currentTab = ref("all");
 const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
-// Tabs for filter-bar
-const tabs = ref([
-  { key: 'all', label: t('userHome.tabs.all'), count: computed(() => stats.value.all) },
-  { key: 'video', label: t('userHome.tabs.video'), count: computed(() => stats.value.video) },
-  { key: 'image', label: t('userHome.tabs.image'), count: computed(() => stats.value.image) },
-  { key: 'article', label: t('userHome.tabs.article'), count: computed(() => stats.value.article) }
+// Content types
+const contentTypes = computed(() => [
+  { id: 2, label: t('userHome.contentType.novel'), count: userInfo.value.total_posts_2 || 0 },
+  { id: 1, label: t('userHome.contentType.comic'), count: userInfo.value.total_posts_1 || 0 },
+  { id: 3, label: t('userHome.contentType.video'), count: userInfo.value.total_posts_3 || 0 }
 ]);
+
+const activeContentType = ref(2);
+
+// Collection tabs
+const collectionTabs = ref([
+  { id: 0, label: t('userHome.collection.all') }
+]);
+
+const activeCollectionTab = ref(0);
+const sortBy = ref('oldest');
+const showCollectionMenu = ref(false);
+
+// Edit collection modal
+const showEditCollectionModal = ref(false);
+const editingCollectionId = ref('');
+const editingCollectionName = ref('');
+
+// Collections data
+const collections = ref<any[]>([]);
+
+const currentCollection = computed(() => {
+  if (activeCollectionTab.value === 0) return null;
+  return collections.value.find(col => col.id === activeCollectionTab.value) || null;
+});
+
+// Fetch collections based on content type
+async function fetchCollections() {
+  try {
+    let authorId = route.query.id;
+    // Ensure authorId is a string
+    if (Array.isArray(authorId)) {
+      authorId = authorId[0];
+    }
+    if (!authorId) return;
+
+    const response = await api.getCollection(activeContentType.value, 1, 50, authorId) as any;
+    if (response.code == 0) {
+      const collectionData = response.data?.data || [];
+      collections.value = collectionData;
+
+      // Update collection tabs
+      collectionTabs.value = [
+        { id: 0, label: t('userHome.collection.all') }
+      ];
+
+      // Add collection tabs after "all"
+      collectionData.forEach((collection: any) => {
+        collectionTabs.value.push({
+          id: collection.id,
+          label: `${collection.title} (${collection.chapters?.length || 0})`
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching collections:', error);
+  }
+}
 
 const postList = ref<Post[] | null>(null);
 const loading = ref(false);
@@ -600,6 +672,12 @@ async function fetchUserInfo() {
         likes: parseInt(data.data?.total_like_count || '0'),
         posts: parseInt(data.data?.total_posts || '0'),
         subPrice: subPrice,
+        novelCount: parseInt(data.data?.novelCount || data.data?.novel_count || '0'),
+        comicCount: parseInt(data.data?.comicCount || data.data?.comic_count || '0'),
+        total_posts: parseInt(data.data?.total_posts || '0'),
+        total_posts_1: parseInt(data.data?.total_posts_1 || '0'),
+        total_posts_2: parseInt(data.data?.total_posts_2 || '0'),
+        total_posts_3: parseInt(data.data?.total_posts_3 || '0'),
       };
 
     } else {
@@ -650,6 +728,9 @@ onMounted(async () => {
     } else {
       goToPosts(true);
     }
+
+  // Fetch collections
+  fetchCollections();
 
   // Intersection Observer for infinite scroll
   nextTick(() => {
@@ -771,6 +852,12 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
   lastType.value = newType;
 });
 
+// Watch for language changes
+watch(() => locale.value, () => {
+  // Re-fetch collections to update translations
+  fetchCollections();
+});
+
 // Methods
 function formatNumber(num: number) {
   if (num >= 10000) {
@@ -790,6 +877,53 @@ function getStartDate() {
 function getEndDate() {
   const date = new Date();
   return date.toISOString().split('T')[0];
+}
+
+// Set active content type
+function setActiveContentType(typeId: number) {
+  activeContentType.value = typeId;
+  activeCollectionTab.value = 0; // Reset to "All" tab
+  fetchCollections();
+  loadPosts(true);
+}
+
+// Set active collection tab
+function setActiveCollectionTab(tabId: number) {
+  activeCollectionTab.value = tabId;
+  loadPosts(true);
+}
+
+// Delete collection
+async function deleteCollection() {
+  showCollectionMenu.value = false;
+
+  if (!currentCollection.value) return;
+
+  try {
+    // Get book_id from current collection
+    const book_id = currentCollection.value.id;
+
+    // Call delete collection API
+    await api.deleteCollection({ book_id });
+
+    // Refresh collections
+    await fetchCollections();
+
+    // Reset to all tab
+    activeCollectionTab.value = 0;
+
+    // Show success message
+    toast(t('userHome.collection.deleted'));
+  } catch (error) {
+    console.error('Error deleting collection:', error);
+    toast(t('fail'));
+  }
+}
+
+// Toggle sort order
+function toggleSort() {
+  sortBy.value = sortBy.value === 'newest' ? 'oldest' : 'newest';
+  loadPosts(true);
 }
 
 function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | MouseEvent = false) {
@@ -1039,14 +1173,8 @@ async function loadPosts(reset = false) {
   }
 
   try {
-    // Map currentTab to API type
-    const typeMap = {
-      all: 0,
-      video: 3,
-      image: 1,
-      article: 2
-    };
-    const type = typeMap[currentTab.value as keyof typeof typeMap] || 0;
+    // Use activeContentType as API type
+    const type = activeContentType.value;
 
     // Format date range if provided
     let start = '';
@@ -1056,25 +1184,35 @@ async function loadPosts(reset = false) {
       end = dateRange.value.end;
     }
 
+    // Determine sort order
+    const sort = sortBy.value == 'newest' ? '1' : '0';
+
+    // Determine book_id for collections
+    const book_id = activeCollectionTab.value !== 0 ? activeCollectionTab.value : '';
+
     let res;
     if (isSelf.value) {
       res = await api.authorSelfHome(
-        type,  // ✅ 使用计算出的 type
+        type,
         page.value,
         limit.value,
         searchKeyword.value,
         start,
-        end
+        end,
+        sort,
+        book_id
       );
     } else {
       res = await api.authorHome(
-        type,  // ✅ 使用计算出的 type
+        type,  // ✅ 使用 activeContentType
         page.value,
         limit.value,
         authorId,
         searchKeyword.value,
         start,
-        end
+        end,
+        sort,
+        book_id
       );
     }
 
@@ -1150,16 +1288,26 @@ function goDetail(id: number) {
     uid: route.query.id || ''
   };
 
-  // Add search keyword if present
-  if (searchKeyword.value) {
-    queryParams.keyword = searchKeyword.value;
-  }
+  // if (searchKeyword.value) {
+  //   queryParams.keyword = searchKeyword.value;
+  // }
 
-  // Add date range only if both start and end have values
-  if (dateRange.value && dateRange.value.start && dateRange.value.end) {
-    queryParams.start_day = dateRange.value.start;
-    queryParams.end_day = dateRange.value.end;
-  }
+  // if (dateRange.value && dateRange.value.start && dateRange.value.end) {
+  //   queryParams.start_day = dateRange.value.start;
+  //   queryParams.end_day = dateRange.value.end;
+  // }
+
+  // if (activeContentType.value == 2) {
+  //   router.push({
+  //     path: '/novel-detail',
+  //     query: queryParams
+  //   });
+  // } else {
+  //   router.push({
+  //     path: '/detail',
+  //     query: queryParams
+  //   });
+  // }
 
   router.push({
     path: '/detail',
@@ -1197,11 +1345,48 @@ function handleClickOutside(e: MouseEvent) {
     showMoreMenu.value = false;
   }
 
+  // Collection menu
+  if (collectionMenuRef.value && !collectionMenuRef.value.contains(target)) {
+    showCollectionMenu.value = false;
+  }
+
   // Card menu
   if (activeCardMenuId.value !== null) {
     const el = cardMenuRefs.get(activeCardMenuId.value);
     if (el && !el.contains(target)) {
       activeCardMenuId.value = null;
+    }
+  }
+}
+
+// Edit collection name
+function editCollectionName() {
+  if (currentCollection.value) {
+    // Close dropdown menu
+    showCollectionMenu.value = false;
+
+    editingCollectionId.value = currentCollection.value.id;
+    editingCollectionName.value = currentCollection.value.title;
+    showEditCollectionModal.value = true;
+  }
+}
+
+// Handle edit collection save
+function handleEditCollectionSave(collection: { id: string | number; name: string }) {
+  showEditCollectionModal.value = false;
+
+  // Update collection in collections array
+  const index = collections.value.findIndex(col => col.id === collection.id);
+  if (index !== -1) {
+    collections.value[index].title = collection.name;
+  }
+
+  // Update collection tabs
+  const tabIndex = collectionTabs.value.findIndex(tab => tab.id === collection.id);
+  if (tabIndex !== -1) {
+    const collectionData = collections.value.find(col => col.id === collection.id);
+    if (collectionData) {
+      collectionTabs.value[tabIndex].label = `${collection.name} (${collectionData.chapters?.length || 0})`;
     }
   }
 }
@@ -1274,12 +1459,12 @@ function editPost(post: Post) {
   activeCardMenuId.value = null;
 
   // Navigate to edit page based on post type
-  if (post.type === 'video') {
+  if (post.type == 'video') {
     router.push({ path: '/publish/video', query: { post_id: post.id.toString() } });
-  } else if (post.type === 'article') {
-    router.push({ path: '/publish/article', query: { post_id: post.id.toString() } });
-  } else if (post.type === 'image') {
-    router.push({ path: '/publish/image', query: { post_id: post.id.toString() } });
+  } else if (post.type == 'article') {
+    router.push({ path: '/publish/novel', query: { post_id: post.id.toString() } });
+  } else if (post.type == 'image') {
+    router.push({ path: '/publish/comic', query: { post_id: post.id.toString() } });
   }
 }
 
@@ -1290,6 +1475,11 @@ async function deletePost(post: Post) {
       postList.value = postList.value.filter((p) => p.id !== post.id);
     }
     activeCardMenuId.value = null;
+
+    // Update collections list and user info after deleting post
+    await fetchCollections();
+    await fetchUserInfo();
+
     showToast(t("userHome.card.deleteSuccess"));
   } catch (error) {
     console.error(error);
@@ -1336,7 +1526,7 @@ async function deletePost(post: Post) {
   display: flex;
   align-items: flex-start;
   gap: 1.2rem;
-  margin-bottom: 2.4rem;
+  margin-bottom: 3rem;
   border-radius: 1.2rem;
   padding: 2.4rem;
   background: linear-gradient(0deg, rgba(255, 255, 255, 0.8) 0%, #ffffff 100%);
@@ -1526,30 +1716,40 @@ async function deletePost(post: Post) {
         .more-menu-wrap {
           position: relative;
           img {
-            width: 2.4rem;
-            height: 2.4rem;
+            width: 1.8rem;
+            height: 1.8rem;
             cursor: pointer;
           }
+
           .dropdown-menu {
             position: absolute;
-            right: -1.8rem;
-            top: 100%;
-            margin-top: 0.2rem;
-            background: #ffffff;
-            border-radius: 0.6rem;
-            box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
-            z-index: 100;
-            cursor: pointer;
+            right: 0;
+            border-radius: 0.8rem;
+            padding: 0.6rem 0;
+            z-index: 10;
+            min-width: 10rem;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+
+            &.bottom {
+              top: 100%;
+              margin-top: 0.4rem;
+            }
+            &.top {
+              bottom: 100%;
+              margin-bottom: 0.4rem;
+            }
 
             .menu-item {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-width: 5.8rem;
-              height: 2.8rem;
-              padding: 0.5rem 1rem;
-              font-size: 1.2rem;
-              color: #6A7282;
+              padding: 0.6rem 0;
+              font-size: 1.4rem;
+              color: #6a7282;
+              cursor: pointer;
+              text-align: center;
+              &:hover {
+                font-weight: bold;
+                color: #101828;
+              }
             }
           }
         }
@@ -1594,21 +1794,38 @@ async function deletePost(post: Post) {
 .stats-bar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.8rem;
+  align-items: flex-start;
+  margin-bottom: 2.4rem;
+  border-bottom: 1px solid #f2f4f7;
 
   .posts-title {
+    display: flex;
+    gap: 3rem;
     font-size: 1.6rem;
-    font-weight: 500;
-    color: #99A1AF;
+    color: #6A7282;
     cursor: pointer;
 
-    &:hover{
-      color: #364153;
-    }
+    .type-item {
+      padding-bottom: 2.4rem;
+      &:hover{
+        color: #101828;
+      }
 
-    &.active {
-      color: #101828;
+      &.active {
+        position: relative;
+        color: #101828;
+        font-weight: 500;
+
+        &::after{
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          content: "";
+          width: 100%;
+          height: 0.2rem;
+          background-color: #FB64B6;
+        }
+      }
     }
   }
 
@@ -1645,77 +1862,93 @@ async function deletePost(post: Post) {
 
 .filter-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  height: 7.2rem;
   margin-bottom: 2.4rem;
-  border-bottom: 1px solid #f2f4f7;
-
-  &.cur{
-    justify-content: flex-start;
-  }
 
   .tabs {
     display: flex;
-    gap: 3rem;
+    gap: 1.6rem;
     height: 100%;
     .tab-item {
       display: flex;
       align-items: center;
-      font-size: 1.6rem;
-      color: #6a7282;
+      font-size: 1.4rem;
+      color: #6A7282;
       cursor: pointer;
       position: relative;
+      padding: 0.8rem 1.2rem;
+      border-radius: 0.6rem;
 
       &.active {
-        color: #101828;
-        font-weight: 600;
-        &::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 0.2rem;
-          background: #fb64b6;
-        }
+        background: #F5F5F5;
       }
     }
   }
 
   .filters {
     display: flex;
-    gap: 1.6rem;
+    gap: 2rem;
     align-items: center;
 
-    .search-box {
-      position: relative;
-      input {
-        width: 28rem;
-        height: 4.8rem;
-        background: #f5f5f5;
-        border: 1px solid #f5f5f5;
-        border-radius: 0.8rem;
-        padding: 0 5rem 0 1.2rem;
-        font-size: 1.4rem;
-        outline: none;
+    .sort-box {
+      display: flex;
 
-        &::placeholder {
-          color: #99a1af;
-        }
+      .sort-btn {
+        width: 2.4rem;
+        height: 2.4rem;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
 
-        &:focus {
-          border-color: #fb64b6;
+        &:hover {
+          opacity: 0.8;
         }
       }
-      .search-icon {
-        position: absolute;
-        right: 0.6rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 3.6rem;
-        height: 3.6rem;
+    }
+
+    .more-menu-wrap {
+      position: relative;
+      img {
+        width: 2rem;
+        height: 2rem;
         cursor: pointer;
+      }
+
+      .dropdown-menu {
+        position: absolute;
+        right: 0;
+        border-radius: 0.8rem;
+        padding: 1.2rem 0.8rem;
+        z-index: 10;
+        min-width: 10rem;
+        width: max-content;
+        background: rgba(255,255,255,0.9);
+        box-shadow: 0px 0px 12px -4px rgba(0,0,0,0.18);
+
+        &.bottom {
+          top: 100%;
+          margin-top: 0.6rem;
+        }
+        &.top {
+          bottom: 100%;
+          margin-bottom: 0.6rem;
+        }
+
+        .menu-item {
+          margin-bottom: 1.2rem;
+          font-size: 1.4rem;
+          color: #99A1AF;
+          cursor: pointer;
+          text-align: center;
+
+          &:last-child{
+            margin-bottom: 0;
+          }
+
+          &:hover {
+            color: #364153;
+          }
+        }
       }
     }
   }
@@ -1783,8 +2016,8 @@ async function deletePost(post: Post) {
         margin-bottom: 1.2rem;
         line-height: 2rem;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
         word-break: break-all;
@@ -2088,7 +2321,7 @@ async function deletePost(post: Post) {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 999;
   display: flex;
   justify-content: center;

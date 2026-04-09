@@ -110,7 +110,12 @@
               </div>
 
               <div v-else-if="activeMainTab == 'novel'">
-                <div v-if="project.name" class="novel-cover">
+                <div v-if="project.result_async && project.result_async.generate_novel_cover" class="card-cover">
+                  <img :src="project.result_async.generate_novel_cover" alt="" class="cover-img" />
+                  <div class="edit-btn" @click="openEditPage(project.session_id, 3)">{{ t('myProjects.buttons.edit') }}</div>
+                </div>
+
+                <div v-else-if="project.name" class="novel-cover">
                   <b>“</b>
                   <span>{{ project.name }}</span>
                   <div class="edit-btn" @click="openEditPage(project.session_id, 3)">{{ t('myProjects.buttons.edit') }}</div>
@@ -189,7 +194,7 @@ import router from '@/router';
 const { t, locale } = useI18n();
 
 // State
-const activeMainTab = ref('manju');
+const activeMainTab = ref('novel');
 const activeStatusTab = ref('unpublished');
 const projects = ref<any[]>([]);
 const loading = ref(false);
@@ -215,9 +220,9 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
 const mainTabs = ref([
-  { value: 'manju' },
+  { value: 'novel' },
   { value: 'manhua' },
-  { value: 'novel' }
+  { value: 'manju' }
 ]);
 
 const statusTabs = ref([
@@ -700,7 +705,7 @@ function handleScroll() {
     .card-cover {
       position: relative;
       width: 100%;
-      height: 33.4rem;
+      height: 34.4rem;
       overflow: hidden;
       border-radius: 1.2rem;
       background: #F5F5F5;
@@ -825,11 +830,9 @@ function handleScroll() {
         color: #101828;
         margin-bottom: 1.2rem;
         line-height: 2rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .card-footer {

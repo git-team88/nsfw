@@ -267,22 +267,22 @@ const navList = ref([
 ]);
 
 const typeList = ref([
-  {
-    name: t("header.type1"),
-    path: "/ai",
-  },
+  // {
+  //   name: t("header.type1"),
+  //   path: "/ai",
+  // },
   {
     name: t("header.type2"),
     path: "/publish/video",
   },
-  // {
-  //   name: t("header.type3"),
-  //   path: "/publish/image",
-  // },
-  // {
-  //   name: t("header.type4"),
-  //   path: "/publish/article",
-  // },
+  {
+    name: t("header.type3"),
+    path: "/publish/comic",
+  },
+  {
+    name: t("header.type4"),
+    path: "/publish/novel",
+  },
 ]);
 
 const props = defineProps<{
@@ -310,22 +310,22 @@ watch(locale, () => {
   ];
 
   typeList.value = [
-    {
-      name: t("header.type1"),
-      path: "/ai",
-    },
+    // {
+    //   name: t("header.type1"),
+    //   path: "/ai",
+    // },
     {
       name: t("header.type2"),
       path: "/publish/video",
     },
-    // {
-    //   name: t("header.type3"),
-    //   path: "/publish/image",
-    // },
-    // {
-    //   name: t("header.type4"),
-    //   path: "/publish/article",
-    // },
+    {
+      name: t("header.type3"),
+      path: "/publish/comic",
+    },
+    {
+      name: t("header.type4"),
+      path: "/publish/novel",
+    },
   ];
 });
 
@@ -396,17 +396,18 @@ function goNav(item: { path: string; name?: string }, index: number) {
 }
 
 function goPath(type: { path: string; name: string }) {
-  if (type.name === t('header.type1')) {
-    fetchAICreations();
-  } else {
-    router.replace(type.path);
-  }
+  router.replace(type.path);
+  // if (type.name == t('header.type1')) {
+  //   fetchAICreations();
+  // } else {
+  //   router.replace(type.path);
+  // }
 }
 
 async function fetchAICreations() {
   isShowLoad.value = true;
   try {
-    const res = await api.getProject(2, 1, 'story', 1, 10, 'desc') as any;
+    const res = await api.getProject(2, 1, 'story', 1, 10, 'desc', 1) as any;
 
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data_list || [];

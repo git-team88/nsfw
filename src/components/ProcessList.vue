@@ -44,15 +44,22 @@
             />
               <div class="item-info">
                 <div class="item-type">{{ getItemLabel(category.type, category.items[category.currentIndex]) }}</div>
-                <div class="item-title">{{ category.items[category.currentIndex].name }}</div>
+                <div class="item-title" v-if="category.items[category.currentIndex].name">{{ category.items[category.currentIndex].name }}</div>
               </div>
             </div>
 
-            <div v-if="isTaskWaiting(category.items[category.currentIndex])" class="item-waiting">
-              <span class="waiting-text">
-                {{ $i18n.locale === 'zh' ? `${t('process.inQueue')}，前面还有${category.items[category.currentIndex].queue_count || 0}个任务` : `${t('process.inQueue')}, there are ${category.items[category.currentIndex].queue_count || 0} tasks ahead` }}
+            <!-- Queue information -->
+            <div v-if="shouldShowQueueInfo(category.items[category.currentIndex]) && getQueueCount(category.type) > 0" class="item-queue-info">
+              <span class="queue-text">
+                {{ t('process.queueInfo', { count: getQueueCount(category.type) }) }}
               </span>
             </div>
+
+            <!-- <div v-else-if="isTaskWaiting(category.items[category.currentIndex])" class="item-waiting">
+              <span class="waiting-text">
+                {{ t('process.queueInfo', { count: getQueueCount(category.type) }) }}
+              </span>
+            </div> -->
 
             <div v-else-if="category.items[category.currentIndex].status != 'FAIL'" class="item-progress">
               <div
@@ -158,17 +165,29 @@ const doingCount = computed(() => {
          (processData.value.manju_doing_count || 0);
 });
 
+const getQueueCount = (type: string) => {
+  if (!processData.value) return 0;
+  if (type == 'novel') {
+    return processData.value.novel_doing_count || 0;
+  } else if (type == 'manhua') {
+    return processData.value.manhua_doing_count || 0;
+  } else if (type == 'manju') {
+    return processData.value.manju_doing_count || 0;
+  }
+  return 0;
+};
+
 const getStatusIcon = (status: string, item?: any) => {
-  if (item?.type === 'novel' && item?.steps) {
-    const chapterStep = item.steps.find((step: any) => step.step_name === 'chapter');
+  if (item?.type == 'novel' && item?.steps) {
+    const chapterStep = item.steps.find((step: any) => step.step_name == 'chapter');
     if (chapterStep) {
-      if (chapterStep.step_status === 'SUCCESS' && chapterStep.step_chapter_index === item.total_chapters) {
+      if (chapterStep.step_status == 'SUCCESS' && chapterStep.step_chapter_index == item.total_chapters) {
         return successIcon;
-      } else if (chapterStep.step_status === 'DOING') {
+      } else if (chapterStep.step_status == 'DOING') {
         return doingIcon;
-      } else if (chapterStep.step_status === 'PREPARE') {
+      } else if (chapterStep.step_status == 'PREPARE') {
         return doingIcon; // 等待中也显示doing图标
-      } else if (chapterStep.step_status === 'FAIL') {
+      } else if (chapterStep.step_status == 'FAIL') {
         return failIcon; // 失败状态显示fail图标
       }
     }
@@ -196,60 +215,53 @@ const getCompletedCount = (items: any[]) => {
   }).length;
 };
 
-const isTaskWaiting = (item: any) => {
-  if (item.type === 'novel' && item.steps) {
-    const currentStep = item.steps.find((step: any) => step.step_status === 'DOING') || item.steps[0];
-    return currentStep && currentStep.step_status === 'PREPARE';
+const shouldShowQueueInfo = (item: any) => {
+  if (item.step_status == 'PREPARE' &&
+    (!item.step_name || item.step_name == 'outline')) {
+    return true;
   }
-  return item.status === 'PREPARE';
+  return false;
 };
 
 const getProgress = (item: any) => {
-  if (item.type === 'novel' && item.steps) {
-    // 找到当前步骤
-    const currentStep = item.steps.find((step: any) => step.step_status === 'DOING') || item.steps[0];
+  if (item.step_status == 'FAIL') {
+    // 失败状态，显示当前进度
+    if (item.is_batch_chapter == 1 && currentStep.step_name == 'chapter' && item.total_chapters) {
+      const currentChapter = currentStep.step_chapter_index || 1;
+      const totalChapters = item.total_chapters;
+      return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
+    }
+    return 0;
+  }
 
-    if (currentStep) {
-      if (currentStep.step_status === 'FAIL') {
-        // 失败状态，显示当前进度
-        if (item.is_batch_chapter === 1 && currentStep.step_name === 'chapter' && item.total_chapters) {
-          const currentChapter = currentStep.step_chapter_index || 1;
-          const totalChapters = item.total_chapters;
-          return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
-        }
-        return 0;
+  if (item.is_batch_chapter == 1) {
+    // 生成全部章节，根据当前章节数计算进度
+    if (currentStep.step_name === 'chapter' && item.total_chapters) {
+      const currentChapter = currentStep.step_chapter_index || 1;
+      const totalChapters = item.total_chapters;
+      return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
+    }
+  } else if (item.is_batch_chapter == 2) {
+    // 单章生成，根据时间计算进度
+    if (item.task_start_at && item.current_timestamp) {
+      // 转换开始时间为时间戳（秒）
+      const startTimestamp = new Date(item.task_start_at).getTime() / 1000;
+      const currentTimestamp = item.current_timestamp;
+
+      // 计算已过时间（秒）
+      const elapsedSeconds = currentTimestamp - startTimestamp;
+
+      // 根据当前步骤选择预估时间
+      let estimatedSeconds = 600; // 默认10分钟
+      if (currentStep.step_name == 'outline' && item.max_outline_estimate_seconds) {
+        estimatedSeconds = item.max_outline_estimate_seconds;
+      } else if (currentStep.step_name == 'chapter' && item.max_chapter_estimate_seconds) {
+        estimatedSeconds = item.max_chapter_estimate_seconds;
       }
 
-      if (item.is_batch_chapter === 1) {
-        // 生成全部章节，根据当前章节数计算进度
-        if (currentStep.step_name === 'chapter' && item.total_chapters) {
-          const currentChapter = currentStep.step_chapter_index || 1;
-          const totalChapters = item.total_chapters;
-          return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
-        }
-      } else if (item.is_batch_chapter === 2) {
-        // 单章生成，根据时间计算进度
-        if (item.task_start_at && item.current_timestamp) {
-          // 转换开始时间为时间戳（秒）
-          const startTimestamp = new Date(item.task_start_at).getTime() / 1000;
-          const currentTimestamp = item.current_timestamp;
-
-          // 计算已过时间（秒）
-          const elapsedSeconds = currentTimestamp - startTimestamp;
-
-          // 根据当前步骤选择预估时间
-          let estimatedSeconds = 600; // 默认10分钟
-          if (currentStep.step_name === 'outline' && item.max_outline_estimate_seconds) {
-            estimatedSeconds = item.max_outline_estimate_seconds;
-          } else if (currentStep.step_name === 'chapter' && item.max_chapter_estimate_seconds) {
-            estimatedSeconds = item.max_chapter_estimate_seconds;
-          }
-
-          // 计算进度，最大100%
-          const progress = Math.min(100, Math.round((elapsedSeconds / estimatedSeconds) * 100));
-          return progress;
-        }
-      }
+      // 计算进度，最大100%
+      const progress = Math.min(100, Math.round((elapsedSeconds / estimatedSeconds) * 100));
+      return progress;
     }
   }
   // 默认返回item中的progress值或0
@@ -369,13 +381,25 @@ const checkLoginStatus = () => {
   isLogin.value = !!token;
 };
 
+// Handle click outside to close dropdown
+const handleClickOutside = (event: MouseEvent) => {
+  const processContainer = document.querySelector('.process-container');
+  if (processContainer && !processContainer.contains(event.target as Node) && isDropdownOpen.value) {
+    isDropdownOpen.value = false;
+  }
+};
+
 onMounted(() => {
   checkLoginStatus();
   startPolling();
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
   stopPolling();
+  // Remove click outside listener
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
@@ -503,6 +527,7 @@ onUnmounted(() => {
           align-items: center;
           gap: 0.5rem;
           margin-top: 0.6rem;
+          padding-left: 2.4rem;
 
           .progress-bar {
             flex: 1;
@@ -536,6 +561,7 @@ onUnmounted(() => {
           display: flex;
           align-items: center;
           margin-top: 0.6rem;
+          padding-left: 2.4rem;
 
           .waiting-text {
             font-size: 1.2rem;
@@ -548,6 +574,7 @@ onUnmounted(() => {
           align-items: center;
           justify-content: space-between;
           margin-top: 0.6rem;
+          padding-left: 2.4rem;
 
           .fail-text {
             font-size: 1.2rem;
@@ -563,6 +590,16 @@ onUnmounted(() => {
             &:hover {
               color: #364153;
             }
+          }
+        }
+
+        .item-queue-info {
+          margin-top: 0.6rem;
+          padding-left: 2.4rem;
+
+          .queue-text {
+            font-size: 1.2rem;
+            color: #99A1AF;
           }
         }
       }

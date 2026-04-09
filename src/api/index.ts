@@ -1,5 +1,6 @@
 import axios from "../util/request";
 import { aiUrl } from "../util/config";
+
 export default {
   messageList: (data: any) =>
     axios.request({
@@ -225,6 +226,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  getSimilar: (data: any) =>
+    axios.request({
+      url: "post/searchPostsPublic",
+      data: data,
+      method: "POST",
+    }),
 
   getVideoId: (data: any) =>
     axios.request({
@@ -315,9 +322,9 @@ export default {
       url: "blogger/getBloggerinfo",
       method: "GET",
     }),
-  authorSelfHome: (type: number, page: number, limit: number, keywords: string, start: string, end: string) =>
+  authorSelfHome: (type: number, page: number, limit: number, keywords: string, start: string, end: string, sort: string, book_id: string | number) =>
     axios.request({
-      url: "my/getList?type=" + type+ "&page="+ + page + "&limit=" + limit  + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end,
+      url: "my/getList?type=" + type+ "&page="+ + page + "&limit=" + limit  + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id,
       method: "GET",
     }),
   authorInfo: (author_id: number | string) =>
@@ -325,9 +332,9 @@ export default {
       url: "blogger/getBloggerInfoPublic?author_id=" + author_id,
       method: "GET",
     }),
-  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string) =>
+  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number) =>
     axios.request({
-      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end,
+      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id,
       method: "GET",
     }),
   authorFollowList: (page: number, limit: number, author_id: number | string) =>
@@ -537,22 +544,46 @@ export default {
       },
     }),
 
-   issueInvoice: (data: any) =>
+  issueInvoice: (data: any) =>
     axios.request({
       url: "order/issueInvoice",
       data: data,
       method: "POST",
     }),
-   downInvoice: (order_id: string) =>
+  downInvoice: (order_id: string) =>
     axios.request({
       url: "order/downloadInvoice?order_id=" + order_id,
       method: "GET",
       responseType: "blob"
     }),
 
-  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number, order_type: string ) =>
+  getCollection: (type: number | string, page: number, limit: number, user_id: number | string ) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&project_type=' + type + '&page=' + page + '&limit=' + limit + '&order_type=' + order_type,
+      url: "book/getBookList?type=" + type + '&page=' + page + '&limit=' + limit + '&user_id=' + user_id,
+      method: "GET"
+    }),
+  addCollection: (data: any) =>
+    axios.request({
+      url: "book/addBook",
+      data: data,
+      method: "POST",
+    }),
+  modifyCollection: (data: any) =>
+    axios.request({
+      url: "book/updateBookName",
+      data: data,
+      method: "POST",
+    }),
+  deleteCollection: (data: any) =>
+    axios.request({
+      url: "book/deleteBook",
+      data: data,
+      method: "POST",
+    }),
+
+  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number, order_type: string, has_chapter: number ) =>
+    axios.request({
+      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&order_type=' + order_type + '&has_chapter=' + has_chapter,
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -652,6 +683,12 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
+  coverTaskPolling: (task_id: string) =>
+    axios.request({
+      url: `app/task_status?task_id=` + task_id,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
   detailChapter: (session_id: string, chapter: number | string) =>
     axios.request({
       url: `app/chapter/${session_id}/${chapter}`,
@@ -690,4 +727,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
+  singleCollection: (book_id: string, page: number, limit: number) =>
+    axios.request({
+      url: `book/getBookChaptersList?book_id=${book_id}&page=${page}&limit=${limit}`,
+      method: "GET"
+    })
 };

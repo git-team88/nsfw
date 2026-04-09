@@ -1,557 +1,741 @@
 <template>
   <div class="detail-view">
-    <div class="close-page-btn" @click="closePage">
-      <span></span>
-    </div>
+    <div class="" v-if="detail.type == '1' || detail.type == '3'">
+      <div class="close-page-btn" @click="isCollectionMode ? exitCollectionMode() : closePage()">
+        <span v-if="!isCollectionMode"></span>
+        <span class="back-icon" v-else></span>
+      </div>
 
-    <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
+      <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
-    <div class="main-container">
-      <div class="left-panel">
-        <div class="media-container">
-          <template v-if="detail.type === '3'">
-            <div class="video-wrapper">
-              <div v-if="!isVideoLocked">
-                <div class="video-poster" v-if="isVideoEnded && detail.cover">
-                  <img :src="detail.cover" alt="Cover" />
+      <div class="main-container">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type === '1' || detail?.type === '2', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type === '1' }" @wheel="handleLeftPanelWheel">
+          <div class="media-container" :key="detail?.id">
+            <template v-if="isCollectionMode">
+              <!-- Video content -->
+              <div v-if="detail.type == '3'" class="video-wrapper">
+                <div v-if="!isVideoLocked">
+                  <div class="video-poster" v-if="isVideoEnded && currentCollection.cover">
+                    <img :src="currentCollection.cover" alt="Cover" />
+                  </div>
+
+                  <div class="video-loading" v-if="isVideoLoading">
+                    <div class="loading-spinner"></div>
+                  </div>
+
+                  <video
+                    ref="videoRef"
+                    class="video-player"
+                    :src="currentCollection.videoUrl || detail.videoUrl"
+                    :poster="currentCollection.cover"
+                    preload="auto"
+                    playsinline
+                    autoplay
+                    muted
+                    controls
+                    controlslist="nodownload noremoteplayback noplaybackrate"
+                    disablePictureInPicture
+                    v-show="!isVideoLoading"
+                    @play="isPlaying = true; isVideoEnded = false"
+                    @pause="isPlaying = false"
+                    @timeupdate="onTimeUpdate"
+                    @loadedmetadata="onLoadedMetadata"
+                    @error="onVideoError"
+                    @canplay="onCanPlay"
+                    @waiting="onVideoWaiting"
+                    @playing="onVideoPlaying"
+                    @volumechange="onVolumeChange"
+                    @ended="onVideoEnded"
+                  ></video>
+
+                  <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  </div>
+
+                  <!-- Custom Fullscreen Toggle Button -->
+                  <div class="fullscreen-btn" @click.stop="togglePageFullscreen">
+                    <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                    <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                  </div>
+
                 </div>
 
-                <div class="video-loading" v-if="isVideoLoading">
-                  <div class="loading-spinner"></div>
-                </div>
+                <div v-if="isVideoLocked" class="video-lock-overlay">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
 
-                <video
-                  ref="videoRef"
-                  class="video-player"
-                  :src="detail.videoUrl"
-                  :poster="detail.cover"
-                  preload="auto"
-                  playsinline
-                  autoplay
-                  muted
-                  controls
-                  controlslist="nodownload noremoteplayback noplaybackrate"
-                  disablePictureInPicture
-                  v-show="!isVideoLoading"
-                  @play="isPlaying = true; isVideoEnded = false"
-                  @pause="isPlaying = false"
-                  @timeupdate="onTimeUpdate"
-                  @loadedmetadata="onLoadedMetadata"
-                  @error="onVideoError"
-                  @canplay="onCanPlay"
-                  @waiting="onVideoWaiting"
-                  @playing="onVideoPlaying"
-                  @volumechange="onVolumeChange"
-                  @ended="onVideoEnded"
-                ></video>
-
-                <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
-                  <img src="@/assets/images/detail/play.png" alt="Play" />
-                </div>
-
-              </div>
-
-              <div v-if="isVideoLocked" class="video-lock-overlay">
-                <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
-
-                <div class="lock-content">
-                  <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
-                  <div class="lock-info">
-                    <!-- Paid content lock -->
-                    <template v-if="isPaidContentLocked">
-                      <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
-                      <span class="lock-btn" @click="onSubscribe">
-                        {{ t("detail.lock.subscribe") }}
-                      </span>
-                    </template>
-                    <!-- Teenager or sensitive content lock -->
-                    <template v-else-if="isSensitiveContentLocked">
-                      <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
-                      <span class="lock-btn" @click="navigateToProfileSettings">
-                        {{ t("detail.lock.profileSettings") }}
-                      </span>
-                    </template>
+                  <div class="lock-content">
+                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
+                    <div class="lock-info">
+                      <!-- Paid content lock -->
+                      <template v-if="isPaidContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </template>
+                      <!-- Teenager or sensitive content lock -->
+                      <template v-else-if="isSensitiveContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
+                        <span class="lock-btn" @click="navigateToProfileSettings">
+                          {{ t("detail.lock.profileSettings") }}
+                        </span>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </template>
 
-          <!-- <template v-else-if="detail.type === '1'">
-            <div class="image-gallery">
-              <div class="gallery-counter" v-if="(detail.images?.length || 0) > 1">
-                {{ currentImageIndex + 1 }}/{{ detail.images?.length || 0 }}
+              <!-- Image content -->
+              <div v-else-if="detail.type == '1'" class="comic-gallery">
+                <div class="comic-scroll" ref="comicScrollRef" @scroll="handleComicScroll">
+                  <div
+                    class="comic-image-wrap"
+                    v-for="(img, index) in currentCollection.images || detail.images"
+                    :key="index"
+                    @mouseenter="hoveredComicIndex = index"
+                    @mouseleave="hoveredComicIndex = -1"
+                    @click="toggleComicZoom(index)"
+                  >
+                    <img :src="img.image_url" alt="" class="comic-image" />
+                    <div class="comic-zoom-icon" v-if="hoveredComicIndex == index">
+                      <img v-if="!isImageFullscreen" src="@/assets/images/detail/big.png" alt="Zoom" @click.stop="toggleComicZoom(index)" />
+                      <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" @click.stop="toggleComicZoom(index)" />
+                    </div>
+                  </div>
+                </div>
+                <div class="comic-controls">
+                  <div class="control-btn left" @click="scrollComicLeft">
+                    <img src="@/assets/images/detail/left.png" alt="Left" />
+                  </div>
+                  <div class="control-btn right" @click="scrollComicRight">
+                    <img src="@/assets/images/detail/right.png" alt="Right" />
+                  </div>
+                </div>
               </div>
+            </template>
 
-              <div class="gallery-content" ref="galleryContentRef">
-                <template v-if="isImageLocked(currentImageIndex)">
-                  <div class="locked-view">
-                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="Locked" />
-                    <div class="lock-tip">
-                      <span>{{ t("detail.lock.tip") }}</span>
+            <template v-else-if="detail.type == '3'">
+              <div class="video-wrapper">
+                <div v-if="!isVideoLocked">
+                  <div class="video-poster" v-if="isVideoEnded && detail.cover">
+                    <img :src="detail.cover" alt="Cover" />
+                  </div>
+
+                  <div class="video-loading" v-if="isVideoLoading">
+                    <div class="loading-spinner"></div>
+                  </div>
+
+                  <video
+                    ref="videoRef"
+                    class="video-player"
+                    :src="detail.videoUrl"
+                    :poster="detail.cover"
+                    preload="auto"
+                    playsinline
+                    autoplay
+                    muted
+                    controls
+                    controlslist="nodownload noremoteplayback noplaybackrate nofullscreen"
+                    disablePictureInPicture
+                    v-show="!isVideoLoading"
+                    @play="isPlaying = true; isVideoEnded = false"
+                    @pause="isPlaying = false"
+                    @timeupdate="onTimeUpdate"
+                    @loadedmetadata="onLoadedMetadata"
+                    @error="onVideoError"
+                    @canplay="onCanPlay"
+                    @waiting="onVideoWaiting"
+                    @playing="onVideoPlaying"
+                    @volumechange="onVolumeChange"
+                    @ended="onVideoEnded"
+                  ></video>
+
+                  <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  </div>
+
+                  <!-- Custom Fullscreen Toggle Button -->
+                  <div class="fullscreen-btn" @click.stop="togglePageFullscreen">
+                    <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                    <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                  </div>
+
+                </div>
+
+                <div v-if="isVideoLocked" class="video-lock-overlay">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
+
+                  <div class="lock-content">
+                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
+                    <div class="lock-info">
+                      <!-- Paid content lock -->
+                      <template v-if="isPaidContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </template>
+                      <!-- Teenager or sensitive content lock -->
+                      <template v-else-if="isSensitiveContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
+                        <span class="lock-btn" @click="navigateToProfileSettings">
+                          {{ t("detail.lock.profileSettings") }}
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="detail.type == '1'">
+              <div class="image-stack">
+                <div
+                  class="image-stack-item"
+                  v-for="(img, index) in detail.images"
+                  :key="index"
+                >
+                  <template v-if="isImageLocked(index)">
+                    <div class="locked-view">
+                      <div class="locked-inner">
+                        <div class="lock-tip">
+                          <span>{{ t("detail.lock.tip") }}</span>
+                          <span class="subs-btn" @click="onSubscribe">
+                            {{ t("detail.lock.subscribe") }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div
+                      class="image-wrap"
+                      @click="handleImageClick(index)"
+                      @mouseenter="hoveredImageIndex = index"
+                      @mouseleave="hoveredImageIndex = -1"
+                    >
+                      <img
+                        class="stacked-image"
+                        :src="img.image_url || ''"
+                        alt=""
+                      />
+                      <div class="image-zoom-icon" v-if="hoveredImageIndex === index">
+                        <img v-if="!isImageFullscreen" src="@/assets/images/detail/big.png" alt="Zoom" />
+                        <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" />
+                      </div>
+                    </div>
+                    <div class="subscribe-overlay" v-if="index == 0 && detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+                      <span class="subs-tip">{{ t("detail.lock.tip") }}</span>
                       <span class="subs-btn" @click="onSubscribe">
                         {{ t("detail.lock.subscribe") }}
                       </span>
                     </div>
-                  </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            <!-- Collection Info Bar -->
+            <div
+              class="collection-info-bar"
+              :class="{ 'near-bottom': detail.type == '1' && isNearBottom }"
+              v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode"
+              @click="enterCollectionMode"
+            >
+
+              <div class="collection-info">
+                <template v-if="detail.type == '2'">
+                  <span class="comic-title">{{ detail.title }}</span>
                 </template>
                 <template v-else>
-                  <img
-                    class="current-image"
-                    :src="detail.images[currentImageIndex]?.image_url || ''"
-                    alt=""
-                    @click="openLargeViewer(1)"
-                  />
+                  {{ t('detail.collection') }}:{{ detail.book_title }}
                 </template>
               </div>
-
-              <div
-                class="gallery-nav prev"
-                :class="currentImageIndex <= 0 ? 'dis' : ''"
-                @click.stop="prevImage"
-                v-if="detail.images.length > 1"
-              >
-                <span></span>
-              </div>
-              <div
-                class="gallery-nav next"
-                :class="currentImageIndex >= detail.images.length - 1 ? 'dis' : ''"
-                @click.stop="nextImage"
-                v-if="detail.images.length > 1"
-              >
-                <span></span>
+              <div class="collection-line"></div>
+              <div class="collection-status">
+                <template v-if="detail.type == '1' && isNearBottom">
+                  下一集
+                </template>
+                <template v-else>
+                  {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
+                </template>
               </div>
             </div>
-          </template> -->
 
-          <!-- <template v-else-if="detail.type === '2'">
-            <div class="article-cover" @click="openLargeViewer(2)">
-              <img :src="detail.cover" alt="Cover" />
+            <!-- Collection Mode Info Bar -->
+            <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0">
+              <div class="current-episode">
+                <span class="episode-title">{{ currentCollectionIndex + 1 }}集：{{ currentCollection?.title }}</span>
+              </div>
             </div>
-          </template> -->
-        </div>
-
-        <!-- Page Navigation Arrows (Bottom Right) -->
-        <div class="nav-arrows">
-          <button class="nav-btn up" @click.stop="goPrev" v-if="!isFirst"></button>
-          <button class="nav-btn down" @click.stop="goNext" v-if="!isLast"></button>
-        </div>
-      </div>
-
-      <!-- Right Side: Info & Comments -->
-      <div class="right-panel">
-        <!-- Right Header: User Info & Actions -->
-        <div class="right-header" :class="{ 'with-border': isScrolled }">
-          <div class="user-info" @click="navigateToUserHome">
-            <img class="avatar" :src="detail.author.avatar" alt="" />
-            <span class="nickname">{{ detail.author.nickname }}</span>
           </div>
 
-          <div v-if="detail.author.id != uid">
-            <button
-              class="follow-btn"
-              :class="{ followed: detail.isFollowed }"
-              @click="toggleFollow"
-            >
-              <img v-if="!detail.isFollowed" src="@/assets/images/detail/follow.png" alt="" />
-              <span class="btn-text">{{ detail.isFollowed ? t("detail.following") : t("detail.follow") }}</span>
-              <span class="hover-text" v-if="detail.isFollowed">{{ t("detail.unfollow") }}</span>
-            </button>
+          <div class="nav-arrows on" v-if="isCollectionMode">
+            <button class="nav-btn up" @click="navigateToChapter({ post_id: prevChapterId })" v-if="prevChapterId"></button>
+            <button class="nav-btn down" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId"></button>
+          </div>
+
+          <div class="nav-arrows" v-else>
+            <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
+            <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
           </div>
         </div>
 
-        <!-- Scrollable Content Area -->
-        <div class="scroll-content" ref="scrollContentRef" @scroll="handleScroll">
-          <!-- Article Content Mode -->
-          <div v-if="detail.type === '2'" class="article-body">
-            <div class="header-actions">
-              <div class="perm-tag">{{ permText }}</div>
-            </div>
-
-            <h1 class="post-title">{{ detail.title }}</h1>
-
-            <div class="article-text" :class="{ collapsed: !isArticleExpanded }">
-              <div v-html="detail.articleHtml"></div>
-            </div>
-
-            <div class="article-actions" v-if="shouldShowExpand">
-              <div
-                class="expand-btn"
-                :class="isArticleExpanded ? 'hide' : ''"
-                @click="toggleExpand"
-              >
-                <img :src="isArticleExpanded ? expandIcon : collapseIcon" alt="" />
-                {{ isArticleExpanded ? t("detail.collapse") : t("detail.expand") }}
+        <!-- Right Side: Info & Comments -->
+        <div class="right-panel" v-show="!isRightPanelHidden">
+          <!-- Right Header: User Info & Actions -->
+          <div class="right-header-box" :class="{ 'with-border': isScrolled }">
+            <div class="right-header">
+              <div class="user-info" @click="navigateToUserHome">
+                <img class="avatar" :src="detail.author.avatar" alt="" />
+                <span class="nickname">{{ detail.author.nickname }}</span>
               </div>
-            </div>
 
-            <div class="article-lock" v-if="isArticleLocked">
-              <div class="lock-overlay">
-                <img src="@/assets/images/detail/lock.png" alt="" />
-
-                <div class="lock-info">
-                  <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
-                  <button class="lock-btn" @click="onSubscribe">
-                    {{ t("detail.lock.subscribe") }}
+              <div class="right-header-actions">
+                <div v-if="detail.author.id != uid">
+                  <button
+                    class="follow-btn"
+                    :class="{ followed: detail.isFollowed }"
+                    @click="toggleFollow"
+                  >
+                    <img v-if="!detail.isFollowed" src="@/assets/images/detail/follow.png" alt="" />
+                    <span class="btn-text">{{ detail.isFollowed ? t("detail.following") : t("detail.follow") }}</span>
+                    <span class="hover-text" v-if="detail.isFollowed">{{ t("detail.unfollow") }}</span>
                   </button>
                 </div>
-
-              </div>
-            </div>
-
-            <div class="post-time-box article-meta">
-              <span class="post-time">{{ detail.time }}</span>
-              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
-                <div class="more-btn" @click.stop="toggleHeaderMore">
-                  <img src="@/assets/images/detail/menu.png" alt="" />
-                </div>
-                <div class="dropdown-menu" v-if="headerMoreVisible">
-                  <span class="menu-item" @click="openReportModal('post', detail.id)">
-                    {{ t("detail.report") }}
-                  </span>
+                <div class="close-right-panel-btn" v-if="isPageFullscreen && isCollectionMode" @click="closeRightPanel">
+                  <img src="@/assets/images/detail/close.png" alt="Close" />
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Standard Content Mode (Video/Image) -->
-          <div v-else class="post-info">
-            <div class="header-actions">
-              <div class="perm-tag">{{ permText }}</div>
-            </div>
-            <h1 class="post-title">{{ detail.title }}</h1>
-            <p class="post-desc" v-html="formatContent(detail.description)"></p>
-
-            <div class="post-time-box">
-              <span class="post-time">{{ detail.time }}</span>
-
-              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
-                <div class="more-btn" @click.stop="toggleHeaderMore">
-                  <img src="@/assets/images/detail/menu.png" alt="" />
-                </div>
-                <div class="dropdown-menu" v-if="headerMoreVisible">
-                  <span class="menu-item" @click="openReportModal('post', detail.id)">
-                    {{ t("detail.report") }}
-                  </span>
-                </div>
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+              <div
+                class="tab-item"
+                :class="{ active: activeTab == 'detail' }"
+                @click="activeTab = 'detail'"
+              >
+                {{ t('detail.detail') }}
+              </div>
+              <div
+                class="tab-item"
+                :class="{ active: activeTab == 'collection' }"
+                @click="activeTab = 'collection'; loadCollections()"
+              >
+                {{ t('detail.collection') }}
               </div>
             </div>
           </div>
 
-          <div class="comments-section">
-            <div class="comments-header">
-              <span>{{ t("detail.comments", { num: totalComments }) }}</span>
-            </div>
+          <div class="scroll-content" ref="scrollContentRef" @scroll="handleScroll" v-if="activeTab == 'detail'">
+            <!-- Scrollable Content Area -->
+            <div>
+              <!-- Standard Content Mode (Video/Image) -->
+              <div class="post-info">
+                <div class="header-actions" v-if='detail.permission == "partial"'>
+                  <div class="perm-tag">{{ permText }}</div>
+                </div>
+                <h1 class="post-title">{{ detail.title }}</h1>
+                <p class="post-desc" v-html="formatContent(detail.description)"></p>
 
-            <div class="comments-list" ref="commentsListRef">
-              <!-- Loading State -->
-              <div v-if="isLoadingComments" class="loading-more">
-                <div class="loading-spinner"></div>
-                <p>{{ t('detail.loadingComments') }}</p>
-              </div>
+                <div class="post-time-box">
+                  <span class="post-time">{{ detail.time }}</span>
 
-              <!-- Empty State -->
-              <EmptyState v-if="comments.length === 0 && !isLoadingComments" class="empty-with-padding"></EmptyState>
-
-              <!-- Comments List -->
-              <div v-if="comments.length > 0 && !isLoadingComments" class="comment-item" v-for="c in comments" :key="c.id" :data-comment-id="c.id">
-                <div class="comment-main" :style="{ backgroundColor: c.backgroundColor }">
-                  <img class="c-avatar" :src="c.avatar" alt="" />
-                  <div class="c-content">
-                    <div class="c-header">
-                      <span class="c-author">{{ c.author }}</span>
-                      <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, c.id)">
-                        <button class="c-more-btn" @click.stop="toggleCommentMore(c.id)">
-                          <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
-                        </button>
-                        <div class="dropdown-menu" v-if="activeCommentMoreId === c.id">
-                          <span class="menu-item" v-if="c.user_id == uid" @click="deleteComment(c.id)">
-                            {{ t("detail.delete") }}
-                          </span>
-                          <span class="menu-item" v-else @click="openReportModal('comment', c.id)">
-                            {{ t("detail.report") }}
-                          </span>
-                        </div>
-                      </div>
+                  <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
+                    <div class="more-btn" @click.stop="toggleHeaderMore">
+                      <img src="@/assets/images/detail/menu.png" alt="" />
                     </div>
-                    <p class="c-text" v-html="formatContent(c.content_replace || c.text || c.content)"></p>
-
-                    <div class="c-media" v-if="c.images && c.images.length > 0">
-                      <div class="c-images">
-                        <div class="c-image"
-                          v-for="(imgUrl, index) in c.images"
-                          :key="index"
-                          @click="previewCommentImage(imgUrl.image_url)">
-                          <img
-                            :src="imgUrl.image_url"
-                            alt=""
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="c-media" v-if="c.video_url">
-                      <div class="c-video">
-                        <div class="video-wrapper">
-                          <video
-                            :src="c.video_url.trim()"
-                            class="c-video-player"
-                            :poster="getVideoPoster(c.video_url.trim())"
-                            controls
-                            controlslist="nodownload noremoteplayback noplaybackrate"
-                            disablePictureInPicture
-                            @click="toggleCommentVideoPlay"
-                            @play="onCommentVideoPlay"
-                          ></video>
-                        </div>
-                        <img
-                          src="@/assets/images/detail/zoom.png"
-                          alt=""
-                          class="zoom-icon"
-                          @click.stop="fullscreenCommentVideo(c.video_url.trim())"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="c-footer">
-                      <span class="c-time">{{ c.created_at }}</span>
-                      <div class="c-actions">
-                        <div
-                          class="action-btn like-btn"
-                          :class="{ active: c.liked }"
-                          @click="toggleCommentLike(c)"
-                        >
-                          <b></b>
-                          <span>{{ c.likes }}</span>
-                        </div>
-                        <div class="action-btn reply-btn" @click="startReply(c)">
-                          <b></b>
-                          <span>{{ t("detail.reply") }}</span>
-                        </div>
-                      </div>
+                    <div class="dropdown-menu" v-if="headerMoreVisible">
+                      <span class="menu-item" @click="openReportModal('post', detail.id)">
+                        {{ t("detail.report") }}
+                      </span>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- Replies -->
-                <div class="replies-list" v-if="c.showingReplies && c.replies && c.replies.length > 0">
-                  <div class="reply-item" v-for="r in c.replies" :key="r.id" :style="{ backgroundColor: r.backgroundColor }">
-                    <img class="c-avatar" :src="r.avatar" alt="" />
-                    <div class="c-content">
-                      <div class="c-header">
-                        <div class="author-wrap">
-                          <span class="c-author">{{ r.author }}</span>
-                          <span class="reply-to" v-if="r.reply_to_user_nickname">@{{ r.reply_to_user_nickname }}</span>
+              <div class="comments-section">
+                <div class="comments-header">
+                  <span>{{ t("detail.comments", { num: totalComments }) }}</span>
+                </div>
+
+                <div class="comments-list" ref="commentsListRef">
+                  <!-- Loading State -->
+                  <div v-if="isLoadingComments" class="loading-more">
+                    <div class="loading-spinner"></div>
+                    <p>{{ t('detail.loadingComments') }}</p>
+                  </div>
+
+                  <!-- Empty State -->
+                  <EmptyState v-if="comments.length === 0 && !isLoadingComments" class="empty-with-padding"></EmptyState>
+
+                  <!-- Comments List -->
+                  <div v-if="comments.length > 0 && !isLoadingComments" class="comment-item" v-for="c in comments" :key="c.id" :data-comment-id="c.id">
+                    <div class="comment-main" :style="{ backgroundColor: c.backgroundColor }">
+                      <img class="c-avatar" :src="c.avatar" alt="" />
+                      <div class="c-content">
+                        <div class="c-header">
+                          <span class="c-author">{{ c.author }}</span>
+                          <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, c.id)">
+                            <button class="c-more-btn" @click.stop="toggleCommentMore(c.id)">
+                              <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
+                            </button>
+                            <div class="dropdown-menu" v-if="activeCommentMoreId === c.id">
+                              <span class="menu-item" v-if="c.user_id == uid" @click="deleteComment(c.id)">
+                                {{ t("detail.delete") }}
+                              </span>
+                              <span class="menu-item" v-else @click="openReportModal('comment', c.id)">
+                                {{ t("detail.report") }}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, r.id)">
-                          <button class="c-more-btn" @click.stop="toggleCommentMore(r.id)">
-                            <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
-                          </button>
-                          <div class="dropdown-menu" v-if="activeCommentMoreId == r.id">
-                            <span class="menu-item" v-if="r.user_id == uid" @click="deleteComment(r.id, true)">
-                              {{ t("detail.delete") }}
-                            </span>
-                            <span class="menu-item" v-else @click="openReportModal('reply', r.id)">
-                              {{ t("detail.report") }}
-                            </span>
+                        <p class="c-text" v-html="formatContent(c.content_replace || c.text || c.content)"></p>
+
+                        <div class="c-media" v-if="c.images && c.images.length > 0">
+                          <div class="c-images">
+                            <div class="c-image"
+                              v-for="(imgUrl, index) in c.images"
+                              :key="index"
+                              @click="previewCommentImage(imgUrl.image_url)">
+                              <img
+                                :src="imgUrl.image_url"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="c-media" v-if="c.video_url">
+                          <div class="c-video">
+                            <div class="video-wrapper">
+                              <video
+                                :src="c.video_url.trim()"
+                                class="c-video-player"
+                                :poster="getVideoPoster(c.video_url.trim())"
+                                controls
+                                controlslist="nodownload noremoteplayback noplaybackrate"
+                                disablePictureInPicture
+                                @click="toggleCommentVideoPlay"
+                                @play="onCommentVideoPlay"
+                              ></video>
+                            </div>
+                            <img
+                              src="@/assets/images/detail/zoom.png"
+                              alt=""
+                              class="zoom-icon"
+                              @click.stop="fullscreenCommentVideo(c.video_url.trim())"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="c-footer">
+                          <span class="c-time">{{ c.created_at }}</span>
+                          <div class="c-actions">
+                            <div
+                              class="action-btn like-btn"
+                              :class="{ active: c.liked }"
+                              @click="toggleCommentLike(c)"
+                            >
+                              <b></b>
+                              <span>{{ c.likes }}</span>
+                            </div>
+                            <div class="action-btn reply-btn" @click="startReply(c)">
+                              <b></b>
+                              <span>{{ t("detail.reply") }}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <p class="c-text" v-html="formatContent(r.content_replace || r.text || r.content)"></p>
-
-                    <!-- Reply Media (Images and Videos) -->
-                    <div class="c-media" v-if="r.images && r.images.length > 0">
-                      <div class="c-images">
-                        <div class="c-image"
-                          v-for="(imgUrl, index) in r.images"
-                          :key="index"
-                          @click="previewCommentImage(imgUrl.image_url)">
-                          <img
-                            :src="imgUrl.image_url"
-                            alt=""
-                          />
-                        </div>
-                      </div>
                     </div>
 
-                    <div class="c-media" v-if="r.video_url">
-                      <div class="c-video">
-                        <video
-                          :src="r.video_url.trim()"
-                          class="c-video-player"
-                          controls
-                          controlslist="nodownload noremoteplayback noplaybackrate"
-                          @click="toggleCommentVideoPlay"
-                          @play="onCommentVideoPlay"
-                        ></video>
-                      </div>
-                    </div>
+                    <!-- Replies -->
+                    <div class="replies-list" v-if="c.showingReplies && c.replies && c.replies.length > 0">
+                      <div class="reply-item" v-for="r in c.replies" :key="r.id" :style="{ backgroundColor: r.backgroundColor }">
+                        <img class="c-avatar" :src="r.avatar" alt="" />
+                        <div class="c-content">
+                          <div class="c-header">
+                            <div class="author-wrap">
+                              <span class="c-author">{{ r.author }}</span>
+                              <span class="reply-to" v-if="r.reply_to_user_nickname">@{{ r.reply_to_user_nickname }}</span>
+                            </div>
+                            <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, r.id)">
+                              <button class="c-more-btn" @click.stop="toggleCommentMore(r.id)">
+                                <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
+                              </button>
+                              <div class="dropdown-menu" v-if="activeCommentMoreId == r.id">
+                                <span class="menu-item" v-if="r.user_id == uid" @click="deleteComment(r.id, true)">
+                                  {{ t("detail.delete") }}
+                                </span>
+                                <span class="menu-item" v-else @click="openReportModal('reply', r.id)">
+                                  {{ t("detail.report") }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <p class="c-text" v-html="formatContent(r.content_replace || r.text || r.content)"></p>
 
-                    <div class="c-footer">
-                      <span class="c-time">{{ r.created_at }}</span>
-                      <div class="c-actions">
-                        <div
-                          class="action-btn like-btn"
-                          :class="{ active: r.liked }"
-                          @click="toggleReplyLike(r)"
-                        >
-                          <b></b>
-                          <span>{{ r.likes }}</span>
+                        <!-- Reply Media (Images and Videos) -->
+                        <div class="c-media" v-if="r.images && r.images.length > 0">
+                          <div class="c-images">
+                            <div class="c-image"
+                              v-for="(imgUrl, index) in r.images"
+                              :key="index"
+                              @click="previewCommentImage(imgUrl.image_url)">
+                              <img
+                                :src="imgUrl.image_url"
+                                alt=""
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div class="action-btn reply-btn" @click="startReply(c, r)">
-                          <b></b>
-                          <span>{{ t("detail.reply") }}</span>
+
+                        <div class="c-media" v-if="r.video_url">
+                          <div class="c-video">
+                            <video
+                              :src="r.video_url.trim()"
+                              class="c-video-player"
+                              controls
+                              controlslist="nodownload noremoteplayback noplaybackrate"
+                              @click="toggleCommentVideoPlay"
+                              @play="onCommentVideoPlay"
+                            ></video>
+                          </div>
+                        </div>
+
+                        <div class="c-footer">
+                          <span class="c-time">{{ r.created_at }}</span>
+                          <div class="c-actions">
+                            <div
+                              class="action-btn like-btn"
+                              :class="{ active: r.liked }"
+                              @click="toggleReplyLike(r)"
+                            >
+                              <b></b>
+                              <span>{{ r.likes }}</span>
+                            </div>
+                            <div class="action-btn reply-btn" @click="startReply(c, r)">
+                              <b></b>
+                              <span>{{ t("detail.reply") }}</span>
+                            </div>
+                          </div>
+                        </div>
                         </div>
                       </div>
-                    </div>
+
+                      <!-- Expand/Collapse Replies Button -->
+                      <div class="replies-btn" v-if="c.showingReplies && c.hasMoreReplies" @click="expandReplies(c)">
+                        <img src="@/assets/images/detail/show.png" />
+                        <span v-if="c.replies.length === 1">
+                          {{ t("detail.expandReplies") }} {{ c.reply_count - 1 }} {{ t("detail.moreReplies") }}
+                        </span>
+                        <span v-else>
+                          {{ t("detail.loadMoreReplies") }}
+                        </span>
+                      </div>
+
+                      <!-- Collapse Replies Button -->
+                      <div class="replies-btn hide" v-if="c.showingReplies && !c.hasMoreReplies && c.replies.length > 1" @click="collapseReplies(c)">
+                        <img src="@/assets/images/detail/hide.png" />
+                        <span>{{ t("detail.collapseReplies") }}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Expand/Collapse Replies Button -->
-                  <div class="replies-btn" v-if="c.showingReplies && c.hasMoreReplies" @click="expandReplies(c)">
-                    <img src="@/assets/images/detail/show.png" />
-                    <span v-if="c.replies.length === 1">
-                      {{ t("detail.expandReplies") }} {{ c.reply_count - 1 }} {{ t("detail.moreReplies") }}
-                    </span>
-                    <span v-else>
-                      {{ t("detail.loadMoreReplies") }}
-                    </span>
+                  <!-- Loading More -->
+                  <div v-if="loadingMore" class="loading-more">
+                    <div class="loading-spinner"></div>
+                    <span>{{ t('detail.loading') }}</span>
                   </div>
 
-                  <!-- Collapse Replies Button -->
-                  <div class="replies-btn hide" v-if="c.showingReplies && !c.hasMoreReplies && c.replies.length > 1" @click="collapseReplies(c)">
-                    <img src="@/assets/images/detail/hide.png" />
-                    <span>{{ t("detail.collapseReplies") }}</span>
+                  <!-- No More Comments -->
+                  <div v-if="!loadingMore && !hasMoreComments && comments.length > 0" class="no-more">
+                    {{ t('detail.noMore') }}
                   </div>
                 </div>
               </div>
 
-              <!-- Loading More -->
-              <div v-if="loadingMore" class="loading-more">
-                <div class="loading-spinner"></div>
-                <span>{{ t('detail.loading') }}</span>
-              </div>
-
-              <!-- No More Comments -->
-              <div v-if="!loadingMore && !hasMoreComments && comments.length > 0" class="no-more">
-                {{ t('detail.noMore') }}
-              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Right Footer -->
-        <div class="right-footer" ref="rightFooterRef" :class="{ 'is-inputting': isInputting }">
-          <div v-if="!isInputting" class="footer-default">
-            <div class="fake-input" @click="activateInput">
-              {{ t('detail.addComment') }}
-            </div>
-            <div class="footer-actions">
-              <div class="icon-action footer-like" :class="{ active: liked }" @click="toggleLike">
-                <b></b>
-                <span>{{ formatNumber(likes) }}</span>
-              </div>
-              <div class="icon-action footer-share" @click="share">
-                <b></b>
-                <span>{{ t("detail.share") }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div v-else class="footer-input">
-            <div class="reply-indicator" v-if="replyingTo">
-              <div class="reply-author">@{{ replyingTo.author }}</div>
-              <div class="reply-text">{{ replyingTo.text }}</div>
-            </div>
-            <div class="input-wrapper">
-              <div
-                ref="commentInputRef"
-                class="real-input"
-                :class="{ 'empty': isInputEmpty }"
-                :contenteditable="true"
-                :data-placeholder="t('detail.topicMention')"
-                @input="handleInput"
-                @keydown="handleKeydown"
-                @compositionstart="handleCompositionStart"
-                @compositionend="handleCompositionEnd"
-                @paste="handlePaste"
-                @click="handleInputClick"
-                @blur="onInputBlur"
-              ></div>
-
-              <span class="char-count" :class="{ 'over-limit': currentLength > MAX_LENGTH }">{{ currentLength }}/{{ MAX_LENGTH }}</span>
-
-              <div class="input-footer">
-                <div class="uploaded-files" v-if="uploadedFiles.length">
-                  <div class="file-item" v-for="(file, index) in uploadedFiles" :key="index">
-                    <div v-if="file.type === 'video'" class="video-preview" @click="previewFileItem(file, index)">
-                      <video :src="videoUrl" muted></video>
-                      <img class="video-icon" src="@/assets/images/detail/play.png" alt="" />
-                    </div>
-                    <img v-else :src="file.url" alt="" @click="previewFileItem(file, index)" />
-
-                    <img src="@/assets/images/project/delete.png" class="remove-file" @click="removeFile(index)" />
+            <!-- Right Footer -->
+            <div class="right-footer" ref="rightFooterRef" :class="{ 'is-inputting': isInputting }">
+              <div v-if="!isInputting" class="footer-default">
+                <div class="fake-input" @click="activateInput">
+                  {{ t('detail.addComment') }}
+                </div>
+                <div class="footer-actions">
+                  <div class="icon-action footer-like" :class="{ active: liked }" @click="toggleLike">
+                    <b></b>
+                    <span>{{ formatNumber(likes) }}</span>
+                  </div>
+                  <div class="icon-action footer-share" @click="share">
+                    <b></b>
+                    <span>{{ t("detail.share") }}</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="input-bottom">
-              <div class="upload-btn-box">
-                <img src="@/assets/images/detail/upload-image.png" alt="" @click="triggerFileUpload('image')" />
-                <img src="@/assets/images/detail/upload-video.png" alt="" @click="triggerFileUpload('video')" />
-              </div>
+              <div v-else class="footer-input">
+                <div class="reply-indicator" v-if="replyingTo">
+                  <div class="reply-author">@{{ replyingTo.author }}</div>
+                  <div class="reply-text">{{ replyingTo.text }}</div>
+                </div>
+                <div class="input-wrapper">
+                  <div
+                    ref="commentInputRef"
+                    class="real-input"
+                    :class="{ 'empty': isInputEmpty }"
+                    :contenteditable="true"
+                    :data-placeholder="t('detail.topicMention')"
+                    @input="handleInput"
+                    @keydown="handleKeydown"
+                    @compositionstart="handleCompositionStart"
+                    @compositionend="handleCompositionEnd"
+                    @paste="handlePaste"
+                    @click="handleInputClick"
+                    @blur="onInputBlur"
+                  ></div>
 
-              <div class="input-actions">
-                <span class="cancel-btn" @click="cancelInput"></span>
-                <span class="send-btn" @click="submitComment"></span>
-              </div>
-            </div>
+                  <span class="char-count" :class="{ 'over-limit': currentLength > MAX_LENGTH }">{{ currentLength }}/{{ MAX_LENGTH }}</span>
 
-            <!-- Mention/Topic Dropdown -->
-            <div
-              v-if="showDropdown"
-              class="mention-dropdown"
-            >
-              <div class="dropdown-list">
+                  <div class="input-footer">
+                    <div class="uploaded-files" v-if="uploadedFiles.length">
+                      <div class="file-item" v-for="(file, index) in uploadedFiles" :key="index">
+                        <div v-if="file.type === 'video'" class="video-preview" @click="previewFileItem(file, index)">
+                          <video :src="videoUrl" muted></video>
+                          <img class="video-icon" src="@/assets/images/detail/play.png" alt="" />
+                        </div>
+                        <img v-else :src="file.url" alt="" @click="previewFileItem(file, index)" />
+
+                        <img src="@/assets/images/project/delete.png" class="remove-file" @click="removeFile(index)" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="input-bottom">
+                  <div class="upload-btn-box">
+                    <img src="@/assets/images/detail/upload-image.png" alt="" @click="triggerFileUpload('image')" />
+                    <img src="@/assets/images/detail/upload-video.png" alt="" @click="triggerFileUpload('video')" />
+                  </div>
+
+                  <div class="input-actions">
+                    <span class="cancel-btn" @click="cancelInput"></span>
+                    <span class="send-btn" @click="submitComment"></span>
+                  </div>
+                </div>
+
+                <!-- Mention/Topic Dropdown -->
                 <div
-                  v-for="item in dropdownItems"
-                  :key="item.value"
-                  class="dropdown-item"
-                  @click="selectDropdownItem(item)"
+                  v-if="showDropdown"
+                  class="mention-dropdown"
                 >
-                  <div class="item-left">
-                    <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
-                    <span class="label">{{ dropdownType + item.label }}</span>
-                  </div>
-                  <div class="item-right">
-                    <span class="stats">
-                      {{ dropdownType === '#' ? `${item.views} views` : `${item.followers} followers` }}
-                    </span>
+                  <div class="dropdown-list">
+                    <div
+                      v-for="item in dropdownItems"
+                      :key="item.value"
+                      class="dropdown-item"
+                      @click="selectDropdownItem(item)"
+                    >
+                      <div class="item-left">
+                        <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
+                        <span class="label">{{ dropdownType + item.label }}</span>
+                      </div>
+                      <div class="item-right">
+                        <span class="stats">
+                          {{ dropdownType === '#' ? `${item.views} views` : `${item.followers} followers` }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- File Inputs (Hidden) -->
+              <input
+                ref="imageInputRef"
+                type="file"
+                accept="image/*"
+                multiple
+                class="hidden-file-input"
+                @change="handleFileUpload"
+              />
+              <input
+                ref="videoInputRef"
+                type="file"
+                accept="video/*"
+                class="hidden-file-input"
+                @change="handleFileUpload"
+              />
+            </div>
+          </div>
+
+          <!-- Collection Tab Content -->
+          <div v-else-if="activeTab === 'collection'">
+            <div class="collection-list" ref="collectionListRef" @scroll="handleCollectionScroll">
+              <!-- Loading State -->
+              <div v-if="isLoadingCollections" class="loading-more">
+                <div class="loading-spinner"></div>
+                <p>{{ t('detail.loadingCollections') }}</p>
+              </div>
+
+              <!-- Empty State -->
+              <EmptyState v-if="collections.length === 0 && !isLoadingCollections" class="empty-with-padding"></EmptyState>
+
+              <!-- Collections List -->
+              <div v-if="collections.length > 0 && !isLoadingCollections"
+                  class="collection-item"
+                  v-for="(item, index) in collections"
+                  :key="item.id"
+                  :class="{ 'active': item.post_id == detail.id }"
+                  @click="playCollectionItem(item)">
+                <div class="collection-content">
+                  <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
+                    <img class="collection-cover" :src="item.cover" alt="" />
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id !== uid">{{ t('detail.subscribe') }}</div>
+                    <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
+                      {{ item.duration }}
+                    </div>
+                    <div class="collection-playing-overlay" v-if="isCollectionItemPlaying(index)">
+                      <div class="playing-icon">
+                        <img v-if="item.type == '3'" src="@/assets/images/detail/c_play.png" alt="Playing" />
+                        <img v-else src="@/assets/images/detail/reading.png" alt="Reading" />
+                      </div>
+                      <div class="playing-text">{{ item.type == '3' ? t('detail.playing') : t('detail.reading') }}</div>
+                    </div>
+                  </div>
+                  <div class="collection-info" :class="item.access_rights == '2' ? 'on' : ''">
+                    <div class="collection-title">{{ item.title }}</div>
+                    <div class="collection-stats">
+                      <div class="collection-views" :class="{ 'active': item.liked }" @click.stop="toggleCollectionLike(item)">
+                        <b></b>
+                        <span>{{ formatNumber(item.likes) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading More Collections -->
+              <div v-if="loadingMoreCollections" class="loading-more">
+                <div class="loading-spinner"></div>
+                <p>{{ t('detail.loadingCollections') }}</p>
+              </div>
+
+              <!-- No More Collections -->
+              <div v-if="!isLoadingCollections && !loadingMoreCollections && collections.length > 0 && !hasMoreCollections" class="no-more">
+                {{ t('detail.noMoreCollections') }}
               </div>
             </div>
           </div>
 
-          <!-- File Inputs (Hidden) -->
-          <input
-            ref="imageInputRef"
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden-file-input"
-            @change="handleFileUpload"
-          />
-          <input
-            ref="videoInputRef"
-            type="file"
-            accept="video/*"
-            class="hidden-file-input"
-            @change="handleFileUpload"
-          />
         </div>
       </div>
+    </div>
+
+    <div v-else-if="detail.type == '2'">
+      <NovelDetail></NovelDetail>
     </div>
 
     <!-- Large Image Viewer -->
@@ -593,14 +777,15 @@
 </template>
 
 <script setup lang="ts" name="Detail">
+import NovelDetail from "@/views/NovelDetail.vue"
 import ReportModal from "@/components/ReportModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import PreviewModal from "@/components/PreviewModal.vue";
 import ImageViewer from "@/components/ImageViewer.vue";
 import PreviewBig from "@/components/PreviewBig.vue";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
-import router from "@/router";
-import { useRoute } from "vue-router";
+
+import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
@@ -613,6 +798,7 @@ import { baseUrl } from "@/util/config";
 
 const { t, locale } = useI18n();
 const route = useRoute();
+const router = useRouter();
 
 // --- State ---
 const id = ref<number>(Number(route.query.id));
@@ -624,12 +810,23 @@ const isLoading = ref(false);
 const loadText = ref(t('userHome.loading'));
 const isVideoBuffering = ref(false);
 
+// Fullscreen state
+const isPageFullscreen = ref(false);
+const isRightPanelHidden = ref(false);
+const userClosedRightPanel = ref(false);
+
 // --- New State for Image/Article ---
 const currentImageIndex = ref(0);
 const showLargeViewer = ref(false);
 const showBigViewer = ref(false);
 const isArticleExpanded = ref(false);
 const zoomLevel = ref(100);
+
+// Comic State
+const hoveredComicIndex = ref(-1);
+const isComicFullscreen = ref<{ [key: number]: boolean }>({});
+const comicScrollRef = ref<HTMLElement | null>(null);
+const isNearBottom = ref(false);
 
 // Video State
 const currentTime = ref(0);
@@ -641,6 +838,10 @@ const volume = ref(savedVolume ? parseFloat(savedVolume) : 0);
 
 // Comment Video State
 const commentVideoRef = ref<HTMLVideoElement | null>(null);
+
+// Image Fullscreen State
+const isImageFullscreen = ref(false);
+const hoveredImageIndex = ref(-1);
 
 // Header & Report
 const headerMoreVisible = ref(false);
@@ -750,7 +951,39 @@ const largeImage = ref([] as imgItem[])
 const bigImage = ref([] as imgItem[])
 
 // Detail Data
-const detail = ref({
+interface DetailData {
+  id: number;
+  author: {
+    avatar: string;
+    nickname: string;
+    id: string;
+  };
+  isFollowed: boolean;
+  time: string;
+  title: string;
+  description: string;
+  type: string;
+  videoUrl: string;
+  cover: string;
+  images: imgItem[];
+  articleHtml: string;
+  content: string;
+  content_replace: string;
+  permission: string;
+  subscriptionPlans: string[];
+  isSubscribed: boolean;
+  commentsEnabled: boolean;
+  isLast: boolean;
+  likes: number;
+  liked: boolean;
+  is_teenager: number;
+  is_nsfw: string;
+  book_id: string;
+  book_title: string;
+  chapter_index: string | number;
+}
+
+const detail = ref<DetailData>({
   id: id.value,
   author: {
     avatar: "",
@@ -761,23 +994,271 @@ const detail = ref({
   time: "",
   title: "",
   description: "",
-  type: "", // video, image, article
+  type: "",
   videoUrl: "",
   cover: "",
-  images: [] as imgItem[],
+  images: [],
   articleHtml: "",
   content: "",
   content_replace: "",
-  permission: "public", // public, private, partial
-  subscriptionPlans: [] as string[],
+  permission: "public",
+  subscriptionPlans: [],
   isSubscribed: false,
   commentsEnabled: true,
   isLast: false,
   likes: 0,
   liked: false,
   is_teenager: 1,
-  is_nsfw: '1'
+  is_nsfw: '1',
+  book_id: '',
+  book_title: '',
+  chapter_index: ''
 });
+
+// Tab state
+const activeTab = ref('detail');
+
+// Collection Mode
+const isCollectionMode = ref(false);
+const currentCollectionIndex = ref(0);
+
+// Collections
+const collections = ref<any[]>([]);
+const isLoadingCollections = ref(false);
+const currentCollectionPage = ref(1);
+const hasMoreCollections = ref(true);
+const loadingMoreCollections = ref(false);
+
+// Chapter navigation (for collection mode)
+const chapterCount = ref(0);
+const prevChapterId = ref('');
+const nextChapterId = ref('');
+
+// Current collection
+const currentCollection = computed(() => {
+  return collections.value[currentCollectionIndex.value] || null;
+});
+
+// Enter collection mode
+function enterCollectionMode() {
+  isCollectionMode.value = true;
+  activeTab.value = 'collection';
+  isRightPanelHidden.value = false;
+  loadChapters();
+}
+
+// Load chapters (collection episodes)
+async function loadChapters() {
+  if (!detail.value.book_id || Number(detail.value.book_id) === 0) return;
+
+  try {
+    const response = await api.singleCollection(Number(detail.value.book_id), 1, 50) as any;
+    if (response.code == 0) {
+      collections.value = response.data?.data || [];
+      chapterCount.value = response.data?.allnums || 0;
+      // 加载章节列表后设置导航
+      setChapterNavigation();
+    }
+  } catch (error) {
+    console.error('Error loading chapters:', error);
+  }
+}
+
+// Navigate to chapter
+function navigateToChapter(chapter: any) {
+  if (!chapter || !chapter.post_id) return;
+  router.replace({
+    path: '/detail',
+    query: {
+      ...route.query,
+      id: chapter.post_id
+    }
+  });
+
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    isCollectionMode.value = true;
+  }
+}
+
+// Set chapter navigation
+function setChapterNavigation() {
+  // First try to find by post_id (more reliable)
+  let currentIndex = collections.value.findIndex(chapter => {
+    return chapter.post_id == detail.value.id;
+  });
+
+  // If not found by post_id, try to find by chapter_index
+  if (currentIndex == -1 && detail.value.chapter_index) {
+    currentIndex = collections.value.findIndex(chapter => {
+      return Number(chapter.chapter_index) == Number(detail.value.chapter_index);
+    });
+  }
+
+  // Reset navigation
+  prevChapterId.value = '';
+  nextChapterId.value = '';
+
+  if (currentIndex > 0) {
+    prevChapterId.value = collections.value[currentIndex - 1].post_id;
+  }
+
+  if (currentIndex < collections.value.length - 1) {
+    nextChapterId.value = collections.value[currentIndex + 1].post_id;
+  }
+
+  // Update current collection index
+  if (currentIndex !== -1) {
+    currentCollectionIndex.value = currentIndex;
+  }
+}
+
+// Exit collection mode
+function exitCollectionMode() {
+  isCollectionMode.value = false;
+  activeTab.value = 'detail';
+  currentCollectionIndex.value = 0;
+}
+
+// Check if a collection item is "active" (highlighted in the list)
+function isCollectionItemActive(index: number): boolean {
+  const item = collections.value[index];
+  if (!item) return false;
+
+  return item.post_id && detail.value.id && item.post_id == detail.value.id;
+}
+
+// Check if a collection item is currently "playing"
+function isCollectionItemPlaying(index: number): boolean {
+  if (isCollectionMode.value) {
+    return currentCollectionIndex.value == index && isPlaying.value;
+  }
+  // In non-collection mode, the current post is "playing" if video is playing
+  const item = collections.value[index];
+
+  return item && item.post_id == detail.value.id && isPlaying.value;
+}
+
+// Toggle page fullscreen
+function togglePageFullscreen() {
+  const detailView = document.querySelector('.detail-view') as HTMLElement | null;
+  if (!detailView) return;
+
+  if (!document.fullscreenElement) {
+    // Entering fullscreen
+    if (isCollectionMode.value) {
+      // Collection mode: keep right panel visible
+      isRightPanelHidden.value = false;
+    } else {
+      // Non-collection mode: hide right panel
+      isRightPanelHidden.value = true;
+    }
+    detailView.requestFullscreen().catch((err) => {
+      console.log('Fullscreen request failed:', err);
+    });
+  } else {
+    // Exiting fullscreen
+    if (isCollectionMode.value) {
+      isRightPanelHidden.value = false;
+    }
+    document.exitFullscreen();
+  }
+}
+
+// Close right panel in fullscreen (collection mode)
+function closeRightPanel() {
+  isRightPanelHidden.value = true;
+  userClosedRightPanel.value = true;
+}
+
+// Restore right panel when clicking image in fullscreen (user had closed it manually)
+function restoreRightPanel() {
+  if (userClosedRightPanel.value) {
+    isRightPanelHidden.value = false;
+    userClosedRightPanel.value = false;
+  }
+}
+
+// Handle mouse wheel on left panel for video navigation (non-collection mode only)
+let wheelDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+function handleLeftPanelWheel(event: WheelEvent) {
+  // Only in non-collection mode and for video type
+  if (isCollectionMode.value) return;
+  // For image type (1) and comic type (2), don't handle wheel - use right scrollbar instead
+  if (detail.value.type === '1' || detail.value.type === '2') return;
+  if (detail.value.type !== '3') return;
+
+  // Debounce to prevent rapid switching
+  if (wheelDebounceTimer) return;
+
+  wheelDebounceTimer = setTimeout(() => {
+    wheelDebounceTimer = null;
+  }, 800);
+
+  if (event.deltaY > 0) {
+    // Scroll down -> next
+    goNext();
+  } else if (event.deltaY < 0) {
+    // Scroll up -> prev
+    goPrev();
+  }
+}
+
+// Play collection item
+function playCollectionItem(chapter: any) {
+  if (chapter) {
+    navigateToChapter(chapter);
+  }
+
+  if (isCollectionMode.value) {
+    // 停止当前播放的视频
+    if (videoRef.value) {
+      videoRef.value.pause();
+    }
+
+    // 切换到点击的合集项目
+    const index = collections.value.findIndex(item => item.post_id == chapter.post_id);
+    if (index !== -1) {
+      currentCollectionIndex.value = index;
+    }
+
+    // 重置视频状态
+    isVideoLoading.value = true;
+    isVideoEnded.value = false;
+
+    // 模拟视频加载完成
+    setTimeout(() => {
+      isVideoLoading.value = false;
+      isPlaying.value = true;
+    }, 1000);
+  } else {
+    // 进入合集模式并播放点击的项目
+    enterCollectionMode();
+    setTimeout(() => {
+      const index = collections.value.findIndex(item => item.post_id == chapter.post_id);
+      if (index !== -1) {
+        currentCollectionIndex.value = index;
+      }
+    }, 100);
+  }
+}
+
+// Collection list scroll ref
+const collectionListRef = ref<HTMLElement | null>(null);
+
+// Handle collection list scroll for load more
+function handleCollectionScroll() {
+  const collectionList = collectionListRef.value;
+  if (!collectionList || loadingMoreCollections.value || !hasMoreCollections.value) return;
+
+  const scrollTop = collectionList.scrollTop;
+  const scrollHeight = collectionList.scrollHeight;
+  const clientHeight = collectionList.clientHeight;
+
+  // Check if scrolled to near bottom (within 10px)
+  if (scrollHeight - scrollTop - clientHeight <= 10) {
+    loadCollections(true);
+  }
+}
 
 const likes = ref(0);
 const liked = ref(false);
@@ -787,6 +1268,8 @@ const hasPrev = ref(false);
 const hasNext = ref(false);
 const prevId = ref<string | null>(null);
 const nextId = ref<string | null>(null);
+const isSliding = ref(false);
+const isSlidingIn = ref(false);
 
 const comments = ref<any[]>([]);
 const totalComments = ref('');
@@ -935,8 +1418,16 @@ async function fetchDetail(newId: number) {
         likes: Number(data.like_count || data.likes || 0),
         liked: data.is_liked == 1 || data.is_liked === true,
         is_teenager: data.is_teenager,
-        is_nsfw: data.is_nsfw || '1'
-      };
+        is_nsfw: data.is_nsfw || '1',
+        book_id: data.book_id || '',
+        book_title: data.book_title || '',
+        chapter_index: data.chapter_index || ''
+      } as DetailData;
+
+      // Load chapters if it's part of a collection
+      if (detail.value.book_id !== '' && Number(detail.value.book_id) > 0) {
+        await loadChapters();
+      }
 
       totalComments.value = res.data.comment_total || '';
 
@@ -991,7 +1482,10 @@ async function fetchDetail(newId: number) {
         likes: 0,
         liked: false,
         is_teenager: 1,
-        is_nsfw: '1'
+        is_nsfw: '1',
+        book_id: "",
+        book_title: "",
+        chapter_index: ""
       };
       likes.value = 0;
       liked.value = false;
@@ -1028,7 +1522,10 @@ async function fetchDetail(newId: number) {
       likes: 0,
       liked: false,
       is_teenager: 1,
-      is_nsfw: '1'
+      is_nsfw: '1',
+      book_id: "",
+      book_title: "",
+      chapter_index: ""
     };
     likes.value = 0;
     liked.value = false;
@@ -1211,6 +1708,67 @@ async function loadCommentToReplyList(rid: string) {
 function searchByTag(tag: string) {
   const url = router.resolve({ path: "/search", query: { keyword: tag.substring(1), type: "post" } }).href;
   window.open(url, "_blank");
+}
+
+// Load collections
+async function loadCollections(append: boolean = false) {
+  try {
+    if (append) {
+      loadingMoreCollections.value = true;
+    } else {
+      isLoadingCollections.value = true;
+      currentCollectionPage.value = 1;
+      hasMoreCollections.value = true;
+    }
+
+    const page = append ? currentCollectionPage.value + 1 : 1;
+    const pageSize = 50;
+
+    // 有book_id且值大于0，使用真实API调用
+    if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+      const response = await api.singleCollection(Number(detail.value.book_id), page, pageSize) as any;
+      if (response.code === 0) {
+        const newCollections = response.data?.data || [];
+
+        const transformedCollections = newCollections.map((chapter: any) => ({
+          post_id: chapter.post_id,
+          title: chapter.title,
+          cover: chapter.cover,
+          likes: chapter.like_count || 0,
+          liked: chapter.is_liked == 1 || false,
+          author: detail.value.author.nickname,
+          type: detail.value.type,
+          duration: chapter.duration,
+          isSubscribed: detail.value.isSubscribed,
+          requiresSubscription: chapter.access_rights == '2' || false
+        }));
+
+        // 检查是否有更多数据
+        hasMoreCollections.value = newCollections.length == response.data.allnums;
+
+        if (append) {
+          collections.value = [...collections.value, ...transformedCollections];
+          currentCollectionPage.value = page;
+        } else {
+          collections.value = transformedCollections;
+        }
+      }
+    } else {
+      // 如果没有book_id或book_id值不大于0，清空collections
+      if (!append) {
+        collections.value = [];
+        hasMoreCollections.value = false;
+      }
+    }
+  } catch (error) {
+    console.log('Error loading collections:', error);
+    if (!append) {
+      collections.value = [];
+    }
+  } finally {
+    isLoadingCollections.value = false;
+    loadingMoreCollections.value = false;
+  }
 }
 
 async function searchByMention(mention: string) {
@@ -1639,12 +2197,23 @@ async function loadReplies(comment: any, page: number = 1) {
   }
 }
 
-const isFirst = computed(() => !hasPrev.value);
-const isLast = computed(() => !hasNext.value);
+const isFirst = computed(() => {
+  if (isCollectionMode.value) {
+    return currentCollectionIndex.value <= 0;
+  }
+  return !hasPrev.value;
+});
+
+const isLast = computed(() => {
+  if (isCollectionMode.value) {
+    return currentCollectionIndex.value >= collections.value.length - 1;
+  }
+  return !hasNext.value;
+});
 
 const permText = computed(() => {
-  if (detail.value.permission === "partial") return t("detail.permissionText.partial");
-  if (detail.value.permission === "private") return t("detail.permissionText.private");
+  if (detail.value.permission == "partial") return t("detail.permissionText.partial");
+  if (detail.value.permission == "private") return t("detail.permissionText.private");
   return t("detail.permissionText.public");
 });
 
@@ -1819,6 +2388,35 @@ function onVideoEnded() {
     // 确保视频不会自动播放下一遍
     videoRef.value.autoplay = false;
   }
+
+  // 在合集模式下，自动跳转到下一集，但如果是最后一集则暂停
+  if (isCollectionMode.value && currentCollectionIndex.value < collections.value.length - 1) {
+    // 获取下一集
+    const nextEpisode = collections.value[currentCollectionIndex.value + 1];
+    // 检查下一集是否需要订阅以及用户是否已订阅
+    const needSubscription = nextEpisode.requiresSubscription && !nextEpisode.isSubscribed;
+
+    // 延迟一段时间后自动跳转，给用户时间看到视频结束画面
+    setTimeout(() => {
+      currentCollectionIndex.value++;
+      // 重置视频状态
+      isVideoLoading.value = true;
+      isVideoEnded.value = false;
+
+      // 模拟视频加载完成
+      setTimeout(() => {
+        isVideoLoading.value = false;
+        // 如果下一集需要订阅但用户没订阅，不自动播放，保持暂停状态
+        if (!needSubscription) {
+          isPlaying.value = true;
+        }
+      }, 1000);
+    }, 2000);
+  }
+  // 如果是最后一集，保持暂停状态
+  else if (isCollectionMode.value && currentCollectionIndex.value >= collections.value.length - 1) {
+    // 保持当前状态，不自动播放
+  }
 }
 
 function seekVideo(e: MouseEvent) {
@@ -1862,7 +2460,11 @@ function zoomOut() {
 }
 
 function closePage() {
-  router.back();
+  if (window.history.length <= 1) {
+    router.push('/');
+  } else {
+    router.back();
+  }
 }
 
 function navigateToProfileSettings() {
@@ -1964,6 +2566,45 @@ function toggleExpand() {
   isArticleExpanded.value = !isArticleExpanded.value;
 }
 
+function handleComicScroll() {
+  const el = comicScrollRef.value;
+  if (!el) return;
+  const scrollTop = el.scrollTop;
+  const scrollHeight = el.scrollHeight;
+  const clientHeight = el.clientHeight;
+  isNearBottom.value = scrollHeight - scrollTop - clientHeight <= 20;
+}
+
+function toggleComicZoom(index: number) {
+  isComicFullscreen.value[index] = !isComicFullscreen.value[index];
+}
+
+function toggleImageFullscreen() {
+  const detailView = document.querySelector('.detail-view') as HTMLElement | null;
+  if (!detailView) return;
+
+  if (!document.fullscreenElement) {
+    isImageFullscreen.value = true;
+    detailView.requestFullscreen().catch((err) => {
+      console.log('Fullscreen request failed:', err);
+    });
+    if (isCollectionMode.value) {
+      isRightPanelHidden.value = false;
+      activeTab.value = 'collection';
+    } else {
+      isRightPanelHidden.value = true;
+    }
+  } else {
+    isImageFullscreen.value = false;
+    document.exitFullscreen();
+  }
+}
+
+function handleImageClick(index: number) {
+  toggleImageFullscreen();
+  restoreRightPanel();
+}
+
 function onSubscribe() {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -1976,27 +2617,67 @@ function onSubscribe() {
 
 // Navigation
 function goPrev() {
-  if (isFirst.value || !prevId.value) return;
-  // 保留当前路由的所有查询参数，只更新 id
-  router.replace({
-    path: '/detail',
-    query: {
-      ...route.query,
-      id: prevId.value
+  if (!isCollectionMode.value && isFirst.value) return;
+  if (isCollectionMode.value && !prevChapterId.value) return;
+
+  // 添加滑出动画
+  isSliding.value = true;
+  isSlidingIn.value = false;
+
+  setTimeout(() => {
+    if (isCollectionMode.value) {
+      // 在合集模式下，切换到上一个合集项目
+      const chapter = collections.value.find(c => c.post_id === prevChapterId.value);
+      if (chapter) {
+        navigateToChapter(chapter);
+      }
+    } else if (prevId.value) {
+      // 保留当前路由的所有查询参数，只更新 id
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: prevId.value
+        }
+      });
     }
-  });
+    // 重置动画状态
+    setTimeout(() => {
+      isSliding.value = false;
+    }, 300);
+  }, 300);
 }
 
 function goNext() {
-  if (isLast.value || !nextId.value) return;
-  // 保留当前路由的所有查询参数，只更新 id
-  router.replace({
-    path: '/detail',
-    query: {
-      ...route.query,
-      id: nextId.value
+  if (!isCollectionMode.value && isLast.value) return;
+  if (isCollectionMode.value && !nextChapterId.value) return;
+
+  // 添加滑出动画
+  isSliding.value = true;
+  isSlidingIn.value = false;
+
+  setTimeout(() => {
+    if (isCollectionMode.value) {
+      // 在合集模式下，切换到下一个合集项目
+      const chapter = collections.value.find(c => c.post_id === nextChapterId.value);
+      if (chapter) {
+        navigateToChapter(chapter);
+      }
+    } else if (nextId.value) {
+      // 保留当前路由的所有查询参数，只更新 id
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: nextId.value
+        }
+      });
     }
-  });
+    // 重置动画状态
+    setTimeout(() => {
+      isSliding.value = false;
+    }, 300);
+  }, 300);
 }
 
 // Media
@@ -2784,6 +3465,17 @@ function startReply(comment: any, reply?: any) {
 function handleScroll() {
   if (scrollContentRef.value) {
     isScrolled.value = scrollContentRef.value.scrollTop > 10;
+
+    // Check if scrolled to near bottom (within 10px) for loading more comments
+    if (!loadingMore.value && hasMoreComments.value) {
+      const scrollTop = scrollContentRef.value.scrollTop;
+      const scrollHeight = scrollContentRef.value.scrollHeight;
+      const clientHeight = scrollContentRef.value.clientHeight;
+
+      if (scrollHeight - scrollTop - clientHeight <= 10) {
+        loadComments(currentPage.value + 1, true);
+      }
+    }
   }
 }
 
@@ -3128,6 +3820,42 @@ async function toggleLike() {
   }
 }
 
+// Toggle like for collection item
+async function toggleCollectionLike(item: any) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  try {
+    const previousLiked = item.liked;
+    const previousLikes = item.likes;
+    if (!item.liked) {
+      // Like collection item
+      const res = await api.likePost({ post_id: item.id }) as any;
+      if (res.code == 0 || res.code == 200) {
+        item.liked = true;
+
+        likes.value = previousLikes + 1;
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      }
+    } else {
+      // Unlike collection item
+      const res = await api.dislikePost({ post_id: item.id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        item.liked = false;
+        item.likes = Math.max(0, previousLikes - 1);
+      } else {
+        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      }
+    }
+  } catch (error) {s
+    toast(t('fail'));
+  }
+}
+
 async function share() {
   try {
     await navigator.clipboard.writeText(window.location.href);
@@ -3137,8 +3865,8 @@ async function share() {
   }
 }
 
-function formatNumber(n: number) {
-  if (n === 0) return '0';
+function formatNumber(n: number | undefined) {
+  if (n === 0 || n === undefined) return '0';
   return n.toLocaleString();
 }
 
@@ -3208,6 +3936,45 @@ function handleCommentsScroll() {
   }
 }
 
+// Handle fullscreen change event on document
+function handleFullscreenChange() {
+  const fullscreenEl = document.fullscreenElement;
+  isPageFullscreen.value = fullscreenEl !== null;
+
+  const collectionInfoBar = document.querySelector('.collection-info-bar') as HTMLElement | null;
+  const collectionModeBar = document.querySelector('.collection-mode-bar') as HTMLElement | null;
+  const navArrows = document.querySelector('.nav-arrows') as HTMLElement | null;
+
+  if (isPageFullscreen.value) {
+    // Page is in fullscreen mode — elevate z-index of overlay elements
+    if (collectionInfoBar) {
+      collectionInfoBar.style.zIndex = '10000';
+    }
+    if (collectionModeBar) {
+      collectionModeBar.style.zIndex = '10000';
+    }
+    if (navArrows) {
+      navArrows.style.zIndex = '10000';
+    }
+  } else {
+    // Exited fullscreen — restore z-index
+    if (collectionInfoBar) {
+      collectionInfoBar.style.zIndex = '10';
+    }
+    if (collectionModeBar) {
+      collectionModeBar.style.zIndex = '10';
+    }
+    if (navArrows) {
+      navArrows.style.zIndex = '10';
+    }
+    // 退出全屏时，如果是图片类型，恢复右侧面板显示
+    if (detail.value.type === '1') {
+      isRightPanelHidden.value = false;
+      activeTab.value = isCollectionMode.value ? 'collection' : 'detail';
+    }
+  }
+}
+
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
 
@@ -3221,6 +3988,9 @@ onMounted(() => {
     if (scrollContent) {
       scrollContent.addEventListener('scroll', handleCommentsScroll);
     }
+
+    // Listen for fullscreen change on document (handles video -> page fullscreen promotion)
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
   });
 
   const resizeObserver = new ResizeObserver(() => {
@@ -3240,6 +4010,9 @@ onBeforeUnmount(() => {
   if (scrollContent) {
     scrollContent.removeEventListener('scroll', handleCommentsScroll);
   }
+
+  // Remove fullscreen change listener
+  document.removeEventListener('fullscreenchange', handleFullscreenChange);
 });
 
 watch(
@@ -3253,1577 +4026,6 @@ watch(
 );
 </script>
 
-<style scoped lang="scss">
-.detail-view {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-.loading-spinner {
-  width: 4rem;
-  height: 4rem;
-  border: 0.4rem solid #F5F5F5;
-  border-top: 0.4rem solid #6A7282;
-  border-radius: 50%;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* No Comments State */
-.no-comments {
-  text-align: center;
-  padding: 40px 0;
-  color: #99a1af;
-  font-size: 14px;
-}
-
-/* Loading Comments State */
-.loading-more {
-  text-align: center;
-  padding: 2rem 0;
-  color: #99a1af;
-  font-size: 1.4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.6rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.no-more {
-  text-align: center;
-  padding: 2rem 0;
-  color: #99a1af;
-  font-size: 1.2rem;
-}
-
-/* Tag and Mention Links */
-:deep(.tag-link),
-:deep(.mention-link) {
-  color: #00d3f2;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.main-container {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-/* Left Panel */
-.left-panel {
-  flex: 1;
-  background: #1F1F21;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.media-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .video-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-
-    > div {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .video-poster {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-
-      img {
-        max-width: 100%;
-        max-height: 100%;
-        width: 100%;
-        height: auto;
-        object-fit: contain;
-        display: block;
-      }
-    }
-
-    .video-placeholder {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      background: rgba(251, 100, 182, 0.06);
-      z-index: 1;
-    }
-
-    .video-player {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      vertical-align: middle;
-      position: relative;
-      z-index: 2;
-    }
-
-    .video-poster img {
-      width: 100% !important;
-      height: auto !important;
-      object-fit: contain;
-    }
-
-    .video-lock-overlay {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      .lock_bg{
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        cursor: default;
-      }
-
-      .lock-content {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        transform: translateX(-50%) translateY(-18%);
-        cursor: default;
-        z-index: 10;
-
-        img {
-          width: 11rem;
-          height: 11rem;
-        }
-
-        .lock-info{
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1.2rem;
-          width: max-content;
-          margin-top: 8rem;
-          padding: 1rem 2.4rem;
-          border-radius: 1rem;
-          background: #FFFFFF;
-          .lock-txt {
-            max-width: 30rem;
-            font-size: 1.4rem;
-            color: #364153;
-          }
-
-          .lock-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fb64b6;
-            color: #ffffff;
-            height: 4rem;
-            padding: 0 2.4rem;
-            border-radius: 0.8rem;
-            cursor: pointer;
-            font-size: 1.4rem;
-
-            &:hover{
-              position: relative;
-
-              &::after{
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.1);
-                z-index: 100;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .image-viewer {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    overflow: auto;
-    img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-  }
-
-  .play-overlay,
-  .pause-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -42%);
-    z-index: 30;
-    cursor: pointer;
-
-    img {
-      width: 12rem;
-      height: 12rem;
-    }
-  }
-
-  .video-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 25;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .loading-spinner {
-      width: 5rem;
-      height: 5rem;
-      border: 0.4rem solid #F5F5F5;
-      border-top: 0.4rem solid #6A7282;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.nav-arrows {
-  position: absolute;
-  right: 3rem;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-  transform: translateY(-50%);
-  gap: 6rem;
-  z-index: 10;
-
-  .nav-btn {
-    width: 4.8rem;
-    height: 4.8rem;
-    cursor: pointer;
-
-    &.up {
-      background: url("@/assets/images/detail/prev.png") no-repeat;
-      background-size: 100% 100%;
-
-      &:hover {
-        background: url("@/assets/images/detail/prev_hover.png") no-repeat;
-        background-size: 100% 100%;
-      }
-
-      // &.disabled {
-      //   background: url("@/assets/images/detail/prev_dis.png") no-repeat;
-      //   background-size: 100% 100%;
-      //   cursor: not-allowed;
-      //   pointer-events: none;
-      // }
-    }
-
-    &.down {
-      background: url("@/assets/images/detail/next.png") no-repeat;
-      background-size: 100% 100%;
-
-      &:hover {
-        background: url("@/assets/images/detail/next_hover.png") no-repeat;
-        background-size: 100% 100%;
-      }
-
-      // &.disabled {
-      //   background: url("@/assets/images/detail/next_dis.png") no-repeat;
-      //   background-size: 100% 100%;
-      //   cursor: not-allowed;
-      //   pointer-events: none;
-      // }
-    }
-  }
-}
-
-/* Right Panel */
-.right-panel {
-  position: relative;
-  width: 60rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.right-header {
-  position: sticky;
-  top: 0;
-  right: 0;
-  padding: 2.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    cursor: pointer;
-
-    .avatar {
-      width: 4.8rem;
-      height: 4.8rem;
-      border-radius: 0.8rem;
-      object-fit: cover;
-    }
-
-    .nickname {
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: #101828;
-    }
-  }
-
-  .follow-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    min-width: 13.6rem;
-    height: 4.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 1rem;
-    gap: 1.2rem;
-    font-size: 1.4rem;
-    border-radius: 0.8rem;
-    color: #ffffff;
-    cursor: pointer;
-    background: #fb64b6;
-    position: relative;
-    overflow: hidden;
-
-    &:hover{
-      position: relative;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        z-index: 1;
-      }
-    }
-
-    .hover-text {
-      display: none;
-    }
-
-    img {
-      width: 2rem;
-      height: 2rem;
-    }
-
-    &.followed {
-      background: #F5F5F5;
-      color: #6A7282;
-
-      &:hover{
-        color: #fb64b6;
-
-        .btn-text {
-          display: none;
-        }
-        .hover-text {
-          display: inline;
-        }
-      }
-    }
-  }
-}
-
-.scroll-content {
-  flex: 1;
-  overflow-y: auto;
-  padding-left: 1.8rem;
-  padding-right: 1.8rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  margin: 0 0 1.2rem;
-
-  .perm-tag {
-    padding: 0.7rem 1.2rem;
-    border-radius: 0.4rem;
-    font-size: 1.2rem;
-    background: #F5F5F5;
-    color: #6A7282;
-  }
-}
-
-.post-info {
-  margin: 0 0.6rem 1.8rem;
-  padding-bottom: 1.2rem;
-  border-bottom: 1px solid #F5F5F5;
-
-  .post-title {
-    font-size: 1.6rem;
-    font-weight: 500;
-    color: #364153;
-    margin-bottom: 0.8rem;
-    line-height: 1.4;
-  }
-
-  .post-desc {
-    font-size: 1.4rem;
-    color: #6A7282;
-    margin-bottom: 0.8rem;
-    word-break: break-all;
-    line-height: 2.4rem;
-
-    :deep(a){
-      text-decoration: none;
-    }
-  }
-
-  .post-time-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .post-time {
-      font: {
-        weight: 300;
-        size: 1.2rem
-      }
-      font-size: 1.2rem;
-      color: #99A1AF;
-    }
-
-    .more-btn {
-      width: 2rem;
-      height: 2rem;
-      cursor: pointer;
-
-      img {
-        width: 2rem;
-        height: 2rem;
-      }
-    }
-  }
-}
-
-.comments-section {
-  .comments-header {
-    margin: 0 0.6rem 1.8rem;
-    font-size: 1.4rem;
-    color: #99A1AF;
-  }
-}
-
-.comment-item {
-  margin-bottom: 1.2rem;
-
-  .comment-main {
-    display: flex;
-    gap: 1.2rem;
-    padding: 0.6rem;
-    border-radius: 0.8rem;
-  }
-
-  .c-avatar {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 0.6rem;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .c-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .c-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.6rem;
-
-    .author-wrap {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .c-author {
-      font-size: 1.4rem;
-      color: #6a7282;
-    }
-
-    .reply-to {
-      color: #fb64b6;
-      margin-left: 1.2rem;
-      font-size: 1.2rem;
-    }
-
-    .c-more-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s;
-
-      img {
-        width: 2rem;
-        height: 2rem;
-      }
-    }
-  }
-
-  .comment-main:hover .c-more-btn,
-  .reply-item:hover .c-more-btn,
-  .c-more-wrap:hover .c-more-btn {
-    opacity: 1;
-  }
-
-  .c-text {
-    font-size: 1.4rem;
-    color: #364153;
-    line-height: 2rem;
-    margin-bottom: 0.6rem;
-    word-break: break-all;
-  }
-
-  /* Comment Media (Images and Videos) */
-  .c-media {
-    margin: 0.6rem 0 1rem;
-
-    .c-images {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-
-      .c-image {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 10.8rem;
-        height: 10.8rem;
-        border-radius: 0.8rem;
-        background: #F5F5F5;
-        cursor: pointer;
-
-        img{
-          max-width: 100%;
-          width: auto;
-          height: 10.8rem;
-          border-radius: 0.8rem;
-          object-fit: contain;
-        }
-      }
-    }
-
-    .c-video {
-      position: relative;
-      max-width: 24rem;
-      .c-video-player {
-        width: 100%;
-        max-height: 20rem;
-        object-fit: cover;
-        border-radius: 0.8rem;
-      }
-
-      img{
-        position: absolute;
-        right: 0.8rem;
-        bottom: 0.8rem;
-        width: 2.2rem;
-        height: 2.2rem;
-        cursor: pointer;
-        z-index: 5;
-      }
-    }
-  }
-
-  .c-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .c-time {
-      font-size: 1.2rem;
-      color: #99a1af;
-    }
-
-    .c-actions {
-      display: flex;
-      gap: 1.8rem;
-
-      .action-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        cursor: pointer;
-        color: #99A1AF;
-        font-size: 1.2rem;
-
-        b {
-          width: 1.8rem;
-          height: 1.8rem;
-        }
-
-        &.like-btn {
-          b {
-            background: url("@/assets/images/detail/like.png") no-repeat;
-            background-size: 100% 100%;
-          }
-
-          &:hover {
-            b {
-              background: url("@/assets/images/detail/like_hover.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-
-          &.active {
-            b {
-              background: url("@/assets/images/detail/like_active.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-        }
-
-        &.reply-btn {
-          b {
-            background: url("@/assets/images/detail/reply.png") no-repeat;
-            background-size: 100% 100%;
-          }
-
-          &:hover {
-            b {
-              background: url("@/assets/images/detail/reply_hover.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-
-          &.active {
-            b {
-              background: url("@/assets/images/detail/reply_active.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-.replies-list {
-  margin-left: 4.8rem;
-  margin-top: 0.4rem;
-
-  .reply-item {
-    display: flex;
-    gap: 0.8rem;
-    margin-bottom: 0.6rem;
-    padding: 0.6rem;
-    border-radius: 0.8rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .replies-btn {
-    margin-left: 0;
-    margin-top: 0.8rem;
-    margin-bottom: 0.8rem;
-  }
-}
-
-.comment-item > .replies-btn {
-  margin-left: 4.8rem;
-  margin-top: 0.8rem;
-}
-
-/* Right Footer */
-.right-footer {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 60rem;
-  padding: 1.8rem 2.4rem;
-  border-top: 1px solid #F5F5F5;
-  background: #ffffff;
-  min-height: 8.6rem;
-  display: flex;
-  align-items: center;
-  z-index: 20;
-
-  &.is-inputting {
-    align-items: flex-end;
-  }
-
-  .footer-default {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-
-    .fake-input {
-      flex: 1;
-      height: 5rem;
-      background: #f5f5f5;
-      border-radius: 0.8rem;
-      padding: 1.2rem;
-      display: flex;
-      align-items: center;
-      color: #99a1af;
-      font-size: 1.4rem;
-      cursor: text;
-    }
-
-    .footer-actions {
-      display: flex;
-      align-items: center;
-      gap: 1.8rem;
-
-      .icon-action {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        cursor: pointer;
-        color: #6a7282;
-        font-size: 1.4rem;
-
-        b {
-          width: 2.4rem;
-          height: 2.4rem;
-        }
-
-        &.footer-like {
-          b {
-            background: url("@/assets/images/detail/like.png") no-repeat;
-            background-size: 100% 100%;
-          }
-
-          &:hover {
-            color: #fb64b6;
-
-            b {
-              background: url("@/assets/images/detail/like_hover.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-
-          &.active {
-            color: #fb64b6;
-
-            b {
-              background: url("@/assets/images/detail/like_active.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-        }
-
-        &.footer-share {
-          b {
-            background: url("@/assets/images/detail/share.png") no-repeat;
-            background-size: 100% 100%;
-          }
-
-          &:hover {
-            color: #00d3f2;
-
-            b {
-              background: url("@/assets/images/detail/share_hover.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-
-          &.active {
-            b {
-              background: url("@/assets/images/detail/share_active.png") no-repeat;
-              background-size: 100% 100%;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .footer-input {
-    position: relative;
-    width: 100%;
-
-    .reply-indicator {
-      margin-bottom: 1.2rem;
-
-      .reply-author {
-        font-size: 1.2rem;
-        margin-bottom: 0.6rem;
-        color: #99a1af;
-      }
-      .reply-text {
-        font-size: 1.4rem;
-        line-height: 2rem;
-        color: #6a7282;
-      }
-    }
-
-    .input-wrapper {
-      position: relative;
-      width: 100%;
-      min-height: 10rem;
-      margin-bottom: 1.2rem;
-      padding: 0.8rem 1.2rem 2.4rem;
-      border: 1px solid #F5F5F5;
-      border-radius: 0.8rem;
-      background: #f5f5f5;
-
-      &:focus-within {
-        border: 1px solid #fb64b6;
-      }
-
-      .real-input{
-        width: 100%;
-        min-height: 6rem;
-        max-height: 12rem;
-        cursor: text;
-        outline: none;
-        overflow-y: auto;
-        font-size: 1.4rem;
-        line-height: 2rem;
-        color: #364153;
-        white-space: pre-wrap;
-        word-break: break-word;
-        position: relative;
-
-        &.empty:before {
-          content: attr(data-placeholder);
-          position: absolute;
-          top: 0;
-          left: 0;
-          color: #99a1af;
-          pointer-events: none;
-        }
-
-        :deep(.tag) {
-          color: #00d3f2;
-          margin-right: 0.4rem;
-          user-select: none;
-        }
-      }
-
-      .char-count {
-        position: absolute;
-        right: 1.2rem;
-        bottom: 0.8rem;
-        font-size: 1.2rem;
-        color: #99a1af;
-
-        &.over-limit {
-          color: #fa2d47;
-        }
-      }
-    }
-  }
-
-  .input-actions-top {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 0.8rem;
-
-    .action-btn {
-      padding: 0.5rem 1rem;
-      border: none;
-      background: #f5f5f5;
-      border-radius: 0.6rem;
-      font-size: 1.2rem;
-      color: #6a7282;
-      cursor: pointer;
-
-      &.upload-btn {
-        padding: 0.5rem;
-
-        img {
-          width: 1.6rem;
-          height: 1.6rem;
-        }
-      }
-    }
-  }
-
-  .input-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.8rem;
-
-    .uploaded-files {
-      display: flex;
-      gap: 0.8rem;
-
-      .file-item {
-        position: relative;
-        width: 6.4rem;
-        height: 6.4rem;
-        border-radius: 0.4rem;
-        background: #FFFFFF;
-        overflow: hidden;
-
-        img {
-          max-width: 100%;
-          width: auto;
-          height: 6.4rem;
-          object-fit: contain;
-          cursor: pointer;
-        }
-
-        .video-preview {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          .video-icon {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translateX(-50%) translateY(-42%);
-            width: 4rem;
-            height: 4rem;
-            cursor: pointer;
-          }
-        }
-
-        .remove-file {
-          position: absolute;
-          top: 0.2rem;
-          right: 0.2rem;
-          width: 1.6rem;
-          height: 1.6rem;
-          font-size: 1.4rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-      }
-    }
-  }
-
-  .input-bottom{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .upload-btn-box{
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-      img{
-        width: 3.8rem;
-        height: 3.8rem;
-        cursor: pointer;
-      }
-    }
-
-    .input-actions {
-      display: flex;
-      gap: 0.6rem;
-
-      .cancel-btn {
-        width: 5rem;
-        height: 5rem;
-        background: url("@/assets/images/detail/cancel.png") no-repeat;
-        background-size: 100% 100%;
-        cursor: pointer;
-
-        &:hover {
-          background: url("@/assets/images/detail/cancel_hover.png") no-repeat;
-          background-size: 100% 100%;
-        }
-      }
-
-      .send-btn {
-        width: 4.8rem;
-        height: 4.8rem;
-        background: url("@/assets/images/detail/send.png") no-repeat;
-        background-size: 100% 100%;
-        cursor: pointer;
-        transition: box-shadow 0.2s ease;
-
-        &:hover {
-          background: url("@/assets/images/detail/send_hover.png") no-repeat;
-          background-size: 100% 100%;
-        }
-      }
-    }
-  }
-}
-
-.scroll-content {
-  flex: 1;
-  overflow-y: auto;
-  padding-left: 1.8rem;
-  padding-right: 1.8rem;
-  padding-bottom: 8.6rem;
-  transition: padding-bottom 0.2s ease;
-}
-
-/* Dropdown Menu */
-.more-menu-wrap,
-.c-more-wrap {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  right: -1.8rem;
-  top: 100%;
-  margin-top: 0.2rem;
-  border-radius: 0.6rem;
-  background: #FFFFFF;
-  box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
-  z-index: 100;
-  cursor: pointer;
-
-  .menu-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 5.8rem;
-    height: 2.8rem;
-    padding: 0.5rem 1rem;
-    font-size: 1.2rem;
-    color: #6A7282;
-  }
-}
-
-.close-page-btn {
-  position: fixed;
-  top: 2.4rem;
-  left: 2.4rem;
-  width: 4.8rem;
-  height: 4.8rem;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  z-index: 100;
-  span {
-    width: 4.8rem;
-    height: 4.8rem;
-    background: url("@/assets/images/detail/close.png");
-    background-size: 100% 100%;
-  }
-}
-
-.video-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 8rem;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 0.8rem;
-  z-index: 10;
-}
-
-.progress-bar-wrap {
-  width: 100%;
-  height: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.progress-bar {
-  width: 46rem;
-  height: 0.4rem;
-  background: #4b5563;
-  border-radius: 0.2rem;
-  position: relative;
-  overflow: hidden;
-  transition: height 0.2s;
-
-  .progress-fill {
-    height: 100%;
-    background: #ffffff;
-    border-radius: 0.2rem;
-  }
-}
-
-.controls-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 46rem;
-  color: #ffffff;
-  font-weight: 500;
-  font-size: 1.4rem;
-}
-
-.volume-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-
-  .volume-icon {
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-    filter: brightness(0) invert(1);
-  }
-
-  .volume-slider-container {
-    width: 0;
-    overflow: hidden;
-    transition: width 0.3s;
-    display: flex;
-    align-items: center;
-  }
-
-  &:hover .volume-slider-container {
-    width: 8rem;
-  }
-
-  .volume-slider {
-    width: 7rem;
-    height: 0.4rem;
-    -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 0.2rem;
-    outline: none;
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 1.2rem;
-      height: 1.2rem;
-      background: #fff;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-  }
-}
-
-.image-gallery {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.gallery-counter {
-  position: absolute;
-  top: 2.4rem;
-  right: 2.4rem;
-  background: #ffffff;
-  color: #4a5565;
-  padding: 0.5rem 1.6rem;
-  border-radius: 0.6rem;
-  font-size: 1.2rem;
-  z-index: 2;
-}
-.gallery-content {
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-
-  .current-image {
-    max-width: 100%;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    cursor: zoom-in;
-  }
-}
-.gallery-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4.8rem;
-  height: 4.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-
-  span {
-    width: 4.8rem;
-    height: 4.8rem;
-  }
-
-  &.prev {
-    left: 2.4rem;
-    span {
-      background: url("@/assets/images/detail/left.png") no-repeat;
-      background-size: 100% 100%;
-    }
-
-    &.dis {
-      cursor: not-allowed;
-      span {
-        background: url("@/assets/images/detail/left_dis.png") no-repeat;
-        background-size: 100% 100%;
-      }
-    }
-  }
-  &.next {
-    right: 2.4rem;
-    span {
-      background: url("@/assets/images/detail/right.png") no-repeat;
-      background-size: 100% 100%;
-    }
-
-    &.dis {
-      cursor: not-allowed;
-      span {
-        background: url("@/assets/images/detail/right_dis.png") no-repeat;
-        background-size: 100% 100%;
-      }
-    }
-  }
-}
-.locked-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.6rem;
-  width: 100%;
-  height: 100%;
-  background: #fdf2f8; /* Light pink bg */
-
-  .lock-icon {
-    width: 4rem;
-    height: 4rem;
-  }
-  .lock-tip {
-    background: #fff;
-    padding: 1.2rem 2rem;
-    border-radius: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-
-    span {
-      font-size: 1.4rem;
-      color: #364153;
-    }
-    .subs-btn {
-      background: #fb64b6;
-      color: #fff;
-      border: none;
-      padding: 0.6rem 1.6rem;
-      border-radius: 0.4rem;
-      cursor: pointer;
-    }
-  }
-}
-
-/* Article */
-.article-cover {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: zoom-in;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-}
-.article-body {
-  margin: 0 0.6rem 1.8rem;
-  padding-bottom: 1.2rem;
-  border-bottom: 1px solid #F5F5F5;
-
-  .post-title {
-    font-size: 1.8rem;
-    font-weight: 500;
-    color: #101828;
-    margin-bottom: 1.2rem;
-    line-height: 2.6rem;
-  }
-}
-.article-text {
-  font-size: 1.4rem;
-  line-height: 2rem;
-  color: #6a7282;
-  margin-bottom: 1.2rem;
-
-  &.collapsed {
-    display: -webkit-box;
-    -webkit-line-clamp: 10;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-.expand-btn {
-  color: #00d3f2;
-  font-size: 1.2rem;
-  cursor: pointer;
-  margin-bottom: 1.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-
-  &.hide {
-    color: #99a1af;
-  }
-
-  img {
-    width: 1.8rem;
-    height: 1.8rem;
-  }
-}
-
-.replies-btn {
-  color: #00d3f2;
-  font-size: 1.2rem;
-  cursor: pointer;
-  margin-bottom: 1.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-
-  &.hide {
-    color: #99a1af;
-  }
-
-  img {
-    width: 1.8rem;
-    height: 1.8rem;
-  }
-}
-.article-lock {
-  margin: 1.2rem 0;
-  background: url("../assets/images/detail/not_open.png") no-repeat;
-  background-size: 100% 100%;
-  padding: 3rem;
-  border-radius: 1.2rem;
-
-  .lock-overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.6rem;
-
-    img {
-      width: 9rem;
-      height: 9rem;
-    }
-
-    .lock-info{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-width: 42rem;
-      width: max-content;
-      padding: 1rem 2.4rem;
-      border-radius: 1rem;
-      background: #FFFFFF;
-      .lock-txt {
-        max-width: 30rem;
-        font-size: 1.4rem;
-        color: #364153;
-      }
-      .lock-btn {
-        background: #fb64b6;
-        color: #fff;
-        border: none;
-        height: 4rem;
-        padding: 0 2.4rem;
-        border-radius: 0.8rem;
-        cursor: pointer;
-        font-size: 1.4rem;
-
-        &:hover{
-          position: relative;
-
-          &::after{
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
-        }
-      }
-    }
-  }
-}
-
-.article-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  .post-time {
-    font-size: 1.2rem;
-    color: #99a1af;
-  }
-
-  .more-btn {
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-
-    img {
-      width: 2rem;
-      height: 2rem;
-    }
-  }
-}
-
-/* Mention/Topic Dropdown */
-.mention-dropdown {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 1rem);
-  width: 48rem;
-  background: #ffffff;
-  border-radius: 0.8rem;
-  box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.12);
-  z-index: 100;
-  max-height: 23rem;
-  overflow-y: auto;
-
-  .dropdown-list {
-    padding: 0.8rem 0;
-
-    .dropdown-item {
-      padding: 0.8rem 1.6rem;
-      min-height: 4rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-
-      &:hover {
-        background: rgba(251, 100, 182, 0.06);
-      }
-
-      .item-left {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-
-        .avatar {
-          width: 3.2rem;
-          height: 3.2rem;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .label {
-          font-size: 1.4rem;
-          color: #364153;
-        }
-      }
-
-      .item-right {
-        .stats {
-          font-size: 1.2rem;
-          color: #99a1af;
-        }
-      }
-    }
-  }
-}
-
-/* Empty State with Padding */
-.empty-with-padding {
-  padding-bottom: 40px;
-}
-
-/* Tag styles */
-:deep(.tag) {
-  color: #00d3f2;
-  margin-right: 0.4rem;
-  user-select: none;
-}
-
-/* Hidden file inputs */
-.hidden-file-input {
-  display: none;
-}
+<style lang="scss" scoped>
+  @use '@/scss/Detail.scss';
 </style>

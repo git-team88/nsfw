@@ -2,12 +2,15 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 
 import PublishVideo from "@/views/publish/Video.vue";
-// import PublishImage from "@/views/publish/Image.vue";
-// import PublishArticle from "@/views/publish/Article.vue";
+import PublishComic from "@/views/publish/Comic.vue";
+import PublishNovel from "@/views/publish/Novel.vue";
 import PublishSuccess from "@/views/publish/Success.vue";
 
 import Detail from "@/views/Detail.vue";
+import NovelDetail from "@/views/NovelDetail.vue";
+
 import Search from "@/views/Search.vue";
+import Similar from "@/views/Similar.vue";
 import MyProjects from "@/views/MyProjects.vue";
 import CharacterLibrary from "@/views/CharacterLibrary.vue";
 import NovelGenerate from "@/views/NovelGenerate.vue";
@@ -46,6 +49,10 @@ import PaymentTerms from "@/views/PaymentTerms.vue";
 import AIRecharge from "@/views/AIRecharge.vue";
 import AIRechargeDetails from "@/views/AIRechargeDetails.vue";
 import ComputingPowerRules from "@/views/ComputingPowerRules.vue";
+
+import CreativePartner from "@/views/CreativePartner.vue";
+import CreativePartnerReview from "@/views/CreativePartnerReview.vue";
+import CreativePartnerPricing from "@/views/CreativePartnerPricing.vue";
 
 const routes = [
   {
@@ -108,16 +115,16 @@ const routes = [
     name: "PublishVideo",
     component: PublishVideo,
   },
-  // {
-  //   path: "/publish/image",
-  //   name: "PublishImage",
-  //   component: PublishImage,
-  // },
-  // {
-  //   path: "/publish/article",
-  //   name: "PublishArticle",
-  //   component: PublishArticle,
-  // },
+  {
+    path: "/publish/comic",
+    name: "PublishComic",
+    component: PublishComic,
+  },
+  {
+    path: "/publish/novel",
+    name: "PublishNovel",
+    component: PublishNovel,
+  },
   {
     path: "/publish/success",
     name: "PublishSuccess",
@@ -129,9 +136,19 @@ const routes = [
     component: Detail,
   },
   {
+    path: "/novel-detail",
+    name: "NovelDetail",
+    component: NovelDetail,
+  },
+  {
     path: "/search",
     name: "Search",
     component: Search,
+  },
+  {
+    path: "/similar",
+    name: "Similar",
+    component: Similar,
   },
   {
     path: "/my-projects",
@@ -257,6 +274,21 @@ const routes = [
     path: "/user-payment-history",
     name: "PaymentHistory",
     component: PaymentHistory,
+  },
+  {
+    path: "/creative-partner",
+    name: "CreativePartner",
+    component: CreativePartner,
+  },
+  {
+    path: "/creative-partner-review",
+    name: "CreativePartnerReview",
+    component: CreativePartnerReview,
+  },
+  {
+    path: "/creative-partner-pricing",
+    name: "CreativePartnerPricing",
+    component: CreativePartnerPricing,
   },
   {
     path: "/:pathMatch(.*)*",

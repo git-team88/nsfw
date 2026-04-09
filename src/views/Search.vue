@@ -38,21 +38,21 @@
           </div>
 
           <!-- Post Type Filters -->
-          <!-- <div class="post-filters" v-if="activeTab === 'posts'">
+          <div class="post-filters" v-if="activeTab === 'posts'">
             <div
               v-for="filter in postFilters"
               :key="filter.value"
               class="filter-item"
-              :class="{ active: postFilter === filter.value }"
-              @click="setPostFilter(filter.value)"
+              :class="{ active: postFilter == filter.id }"
+              @click="setPostFilter(filter.id)"
             >
               {{ filter.label }}
             </div>
-          </div> -->
+          </div>
         </div>
 
         <!-- Posts Grid (Masonry Layout) -->
-        <div v-if="activeTab === 'posts'" class="posts-container">
+        <div v-if="activeTab == 'posts'" class="posts-container">
           <div
             class="waterfall"
             v-if="postList && postList.length > 0"
@@ -67,10 +67,29 @@
             >
               <div class="content-image">
                 <img :src="post.cover" alt="" />
+                <!-- Type Icon -->
+                <div class="type-icon" v-if="post.type">
+                  <img v-if="post.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
+                  <img v-else-if="post.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
+                  <img v-else-if="post.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                </div>
                 <!-- Video Play Icon -->
-                <div v-if="post.type === 'video'" class="play-icon">
+                <div v-if="post.type == '3'" class="play-icon">
                   <img src="@/assets/images/detail/play.png" alt="" />
                 </div>
+
+                <div class="content-bottom">
+                  <!-- Like Count -->
+                  <div class="content-stats" @click.stop="toggleLike(post)">
+                    <img :src="post.isLiked ? likeActive : like" alt="" />
+                    <span>{{ formatNumber(post.like_count) }}</span>
+                  </div>
+                  <!-- Video Duration -->
+                  <div class="video-duration" v-if="post.type == '3' && post.duration">
+                    {{ formatDuration(post.duration) }}
+                  </div>
+                </div>
+
               </div>
               <div class="content-info">
                 <div class="content-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
@@ -78,10 +97,6 @@
                   <div class="author-info" @click.stop="goToUserHome(post.author.id)">
                     <img :src="post.author.avatar" alt="" class="author-avatar" />
                     <span class="author-name">{{ post.author.nickname }}</span>
-                  </div>
-                  <div class="content-stats" @click.stop="toggleLike(post)">
-                    <img :src="post.isLiked ? likeActive : like" alt="" />
-                    <span>{{ formatNumber(post.like_count) }}</span>
                   </div>
                 </div>
               </div>
@@ -173,7 +188,7 @@ const checkLogin = () => {
 };
 
 import likeActive from '@/assets/images/detail/like_active.png';
-import like from '@/assets/images/detail/like.png';
+import like from '@/assets/images/home/like.png';
 
 // Types
 interface Post {
@@ -183,6 +198,7 @@ interface Post {
   description: string;
   cover: string;
   time: string;
+  duration: number;
   author: {
     avatar: string;
     nickname: string;
@@ -196,7 +212,7 @@ interface Post {
 const inputKeyword = ref(route.query.keyword as string || '');
 const searchKeyword = ref(route.query.keyword as string || '');
 const activeTab = ref(route.query.type === 'user' ? 'users' : 'posts');
-const postFilter = ref('all');
+const postFilter = ref(0);
 
 // Tabs and filters data
 const tabs = ref([
@@ -205,10 +221,10 @@ const tabs = ref([
 ]);
 
 const postFilters = ref([
-  { value: 'all', label: t('search.all') },
-  { value: 'video', label: t('search.video') },
-  { value: 'image', label: t('search.image') },
-  { value: 'article', label: t('search.article') }
+  { id: 0, label: t('home.contentType.all') },
+  { id: 2, label: t('home.contentType.novel') },
+  { id: 1, label: t('home.contentType.comic') },
+  { id: 3, label: t('home.contentType.video') }
 ]);
 
 // Refs for waterfall layout
@@ -231,6 +247,20 @@ const usersHasMore = ref(true);
 // Loading
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
+
+watch(() => locale.value, () => {
+  tabs.value = [
+    { value: 'posts', label: t('search.posts') },
+    { value: 'users', label: t('search.users') }
+  ]
+
+  postFilters.value = [
+    { id: 0, label: t('home.contentType.all') },
+    { id: 2, label: t('home.contentType.novel') },
+    { id: 1, label: t('home.contentType.comic') },
+    { id: 3, label: t('home.contentType.video') }
+  ]
+});
 
 // Methods
 function performSearch() {
@@ -306,15 +336,15 @@ async function loadData(fromLoadMore = false) {
   }
 
   try {
-    if (activeTab.value === 'posts') {
+    if (activeTab.value == 'posts') {
       const res = await api.searchPost({
         keyword: searchKeyword.value,
-        type: postFilter.value === 'all' ? '' : postFilter.value,
+        type: postFilter.value,
         page: postsPage.value,
         limit: postsLimit.value
       }) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
 
-      if (res.code === 0 || res.code === 200) {
+      if (res.code == 0 || res.code == 200) {
         const newPosts = (res.data?.data || []).map((item: any) => {
           // Format timestamp to readable date
           const formatTime = (timestamp: string) => {
@@ -328,11 +358,12 @@ async function loadData(fromLoadMore = false) {
 
           return {
             id: item.id,
-            type: item.type === '1' ? 'image' : item.type === '2' ? 'article' : 'video',
+            type: item.type,
             title: item.title || '',
             description: item.content || '',
             cover: item.cover || '',
             time: formatTime(item.created_at),
+            duration: item.duration || 0,
             author: {
               avatar: item.author?.avatar,
               nickname: item.author?.nickname || '',
@@ -446,7 +477,12 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(postId: number) {
+function goToDetail(postId: number, type: number) {
+  // if (type === 2) {
+  //   router.push(`/novel-detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
+  // } else {
+  //   router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
+  // }
   router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
 }
 
@@ -541,6 +577,12 @@ function formatNumber(num: number | string): string {
     return (n / 1000).toFixed(1) + 'K';
   }
   return n.toString();
+}
+
+function formatDuration(duration: number) {
+  const minutes = Math.floor(duration / 60);
+  const seconds = Math.floor(duration % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 // Lifecycle
@@ -697,28 +739,20 @@ watch(postList, () => {
     }
     .post-filters {
       display: flex;
-      gap: 3rem;
-      height: 100%;
-      margin-top: 1.6rem;
+      gap: 1.2rem;
+      margin: 2.4rem 0;
       .filter-item {
         display: flex;
         align-items: center;
-        padding: 0.6rem 1.6rem;
-        border: 1px solid transparent;
-        font-size: 1.4rem;
+        height: 3.2rem;
+        padding: 0 1.6rem;
         border-radius: 0.6rem;
-        color: #6a7282;
+        font-size: 1.4rem;
+        color: #6A7282;
         cursor: pointer;
-        position: relative;
-
-        &:hover{
-          border-color: rgba(251,100,182,0.2);
-        }
 
         &.active {
-          border-color: #FB64B6;
-          background: rgba(251,100,182,0.12);
-          color: #FB64B6;
+          background: #F5F5F5;
         }
       }
     }
@@ -756,6 +790,20 @@ watch(postList, () => {
       object-fit: cover;
     }
 
+    /* Type Icon */
+    .type-icon {
+      position: absolute;
+      top: 0.1rem;
+      left: 0.1rem;
+      z-index: 1;
+
+      img {
+        width: 4rem;
+        height: 4rem;
+        object-fit: contain;
+      }
+    }
+
     /* Play Icon */
     .play-icon {
       position: absolute;
@@ -770,21 +818,54 @@ watch(postList, () => {
         object-fit: contain;
       }
     }
+
+    .content-bottom{
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 6.4rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 1.2rem 1.2rem;
+      border-radius: 0 0 1.2rem 1.2rem;
+      background: linear-gradient( 0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+    }
+
+    .content-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      z-index: 1;
+
+      span {
+        font-size: 1.2rem;
+        color: #FFFFFF;
+      }
+
+      img {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+    }
+
+    .video-duration {
+      font-size: 1.4rem;
+      color: rgba(255, 255, 255, 0.7);
+      z-index: 1;
+    }
   }
   .content-info {
     padding: 1.2rem 0 0;
 
     .content-desc {
-      font-size: 1.4rem;
-      color: #101828;
-      line-height: 2rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      word-break: break-all;
-    }
+          font-size: 1.4rem;
+          color: #101828;
+          line-height: 2rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
     .content-meta {
       display: flex;
@@ -810,21 +891,7 @@ watch(postList, () => {
         }
       }
 
-      .content-stats {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
 
-        span {
-          font-size: 1.2rem;
-          color: #99A1AF;
-        }
-
-        img{
-          width: 1.8rem;
-          height: 1.8rem;
-        }
-      }
     }
   }
 }

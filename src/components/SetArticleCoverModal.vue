@@ -18,28 +18,41 @@
         <!-- Select from Background Colors -->
         <div v-if="activeTab === 'select'" class="tab-content select-mode">
           <div class="preview-container">
-            <div class="preview-box">
-              <div
-                v-if="selectedBackground"
-                class="preview-bg"
-                :class="selectedBackground.color == '#494949' ? 'one' : ''"
-                :style="{ backgroundColor: selectedBackground.color }"
-              >
-                <div class="quote-mark">"</div>
-                <div class="title-input-container">
-                  <textarea
-                    v-model="coverTitle"
-                    class="title-text"
-                    :maxlength="20"
-                    :placeholder="t('submit.titlePlaceholder')"
-                    rows="3"
-                  ></textarea>
-                  <!-- <span class="title-count">{{ coverTitle.length }}/20</span> -->
+            <div class="preview-box" :class="{ 'ai-generating': aiGenerating }">
+              <div class="preview-text" v-if="selectedBackground && !aiGenerating">
+                <div
+                  v-if="!selectedBackground.isImage"
+                  class="preview-bg"
+                  :class="selectedBackground.color == '#494949' ? 'one' : ''"
+                  :style="{ backgroundColor: selectedBackground.color }"
+                >
+                  <div class="quote-mark">"</div>
+                  <div class="title-input-container">
+                    <textarea
+                      v-model="coverTitle"
+                      class="title-text"
+                      :maxlength="20"
+                      :placeholder="t('submit.titlePlaceholder')"
+                      rows="3"
+                    ></textarea>
+                    <!-- <span class="title-count">{{ coverTitle.length }}/20</span> -->
+                  </div>
+                </div>
+                <div v-else class="preview-img-container">
+                  <img :src="selectedBackground.color" class="preview-img" />
                 </div>
               </div>
-              <div v-else class="placeholder">
+              <div v-else-if="!aiGenerating" class="placeholder">
                 {{ t("submit.cover.selectBackground") }}
               </div>
+              <div v-else class="ai-loading">
+                <div class="loading-strip"></div>
+              </div>
+            </div>
+            <div class="ai-generate-btn-container">
+              <button class="ai-generate-btn" @click="generateAICover" :disabled="aiGenerating">
+                {{ t('submit.cover.aiGenerate') }}/{{ coverCost }} {{ t('submit.cover.power') }}
+              </button>
             </div>
           </div>
 
@@ -50,10 +63,13 @@
               class="background-cell"
               :class="{ selected: selectedBackground && selectedBackground.color === bg.color }"
               @click="selectBackground(bg)"
-              :style="{ backgroundColor: bg.color }"
+              :style="{ backgroundColor: bg.isImage ? 'transparent' : bg.color }"
             >
-              <div class="bg-preview">
+              <div class="bg-preview" v-if="!bg.isImage">
                 <div class="mini-title">Aa</div>
+              </div>
+              <div class="bg-preview-img" v-else>
+                <img :src="bg.color" class="bg-img" />
               </div>
             </div>
           </div>
@@ -69,7 +85,7 @@
             @dragover.prevent
           >
             <img src="@/assets/images/publish/upload.png" alt="" />
-            <div class="modal-text">{{ t("submit.cover.dragOrClick") }}</div>
+            <div class="modal-text" v-html='t("submit.cover.dragOrClick")'></div>
             <div class="modal-tip">{{ t("submit.cover.uploadTip") }}</div>
             <input
               type="file"
@@ -125,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { baseUrl } from "@/util/config";
 import UploadMask from "./UploadMask.vue";
@@ -146,6 +162,15 @@ const uploadInput = ref<HTMLInputElement | null>(null);
 const previewImgRef = ref<HTMLImageElement | null>(null);
 const coverTitle = ref(props.title); // Editable title for cover
 const loading = ref(false); // Loading state for upload
+const aiGenerating = ref(false); // Loading state for AI generation
+const coverCost = ref(0); // Cost for AI cover generation
+
+// Watch for visible changes to fetch cover cost
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    fetchCoverCost();
+  }
+});
 
 // Crop related variables
 const imgOffsetY = ref(0);
@@ -189,7 +214,76 @@ function changeTab(tab: string) {
   activeTab.value = tab;
 }
 
-function selectBackground(bg: { color: string }) {
+// Fetch cover cost estimate
+async function fetchCoverCost() {
+  try {
+    const sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      console.error('No session ID found');
+      return;
+    }
+
+    const response = await fetch(`${baseUrl}/ai/novelEstimate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        step_name: 'cover',
+      }),
+    });
+
+    const data = await response.json();
+    if (data.code === 0 || data.code === 200) {
+      coverCost.value = data.data?.points || 0;
+    }
+  } catch (error) {
+    console.error('Error fetching cover cost:', error);
+  }
+}
+
+// Generate AI cover
+async function generateAICover() {
+  try {
+    aiGenerating.value = true;
+
+    const sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      console.error('No session ID found');
+      aiGenerating.value = false;
+      return;
+    }
+
+    const response = await fetch(`${baseUrl}/ai/novelGenerateCover`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        content: coverTitle.value,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.code === 0 || data.code === 200) {
+      const coverUrl = data.data?.cover_url || data.cover_url;
+      if (coverUrl) {
+        // Add the generated cover to the backgrounds list and select it
+        const newBackground = { color: coverUrl, isImage: true };
+        backgroundOptions.unshift(newBackground);
+        selectedBackground.value = newBackground;
+      }
+    }
+  } catch (error) {
+    console.error('Error generating AI cover:', error);
+  } finally {
+    aiGenerating.value = false;
+  }
+}
+
+function selectBackground(bg: { color: string; isImage?: boolean }) {
   selectedBackground.value = bg;
 }
 
@@ -342,34 +436,44 @@ async function confirm() {
   loading.value = true;
   try {
     if (activeTab.value === "select" && selectedBackground.value) {
-      // Generate cover with selected background and edited title
-      const coverUrl = await generateCover(selectedBackground.value.color, coverTitle.value);
+      if (selectedBackground.value.isImage) {
+        // For AI-generated image covers, use the URL directly
+        const coverUrl = selectedBackground.value.color;
+        emit("confirm", coverUrl);
+        close();
+      } else {
+        // Generate cover with selected background and edited title
+        const coverUrl = await generateCover(selectedBackground.value.color, coverTitle.value);
 
-      // Upload cover to server
-      const token = localStorage.getItem("token");
-      if (token) {
-        // Convert data URL to Blob
-        const response = await fetch(coverUrl);
-        const blob = await response.blob();
-        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-        const formData = new FormData();
-        formData.append("file", file);
+        // Upload cover to server
+        const token = localStorage.getItem("token");
+        if (token) {
+          // Convert data URL to Blob
+          const response = await fetch(coverUrl);
+          const blob = await response.blob();
+          const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+          const formData = new FormData();
+          formData.append("file", file);
 
-        const parma = {
-          method: "POST",
-          headers: {
-            token: token,
-          },
-          body: formData,
-        };
+          const parma = {
+            method: "POST",
+            headers: {
+              token: token,
+            },
+            body: formData,
+          };
 
-        const res = await fetch(baseUrl + "/user/uploadImage", parma);
-        const data = await res.json();
-        if (data.code === 0 || data.code === 200) {
-          const url = (data?.data && (data.data.url || data.data)) || data?.url;
-          if (typeof url === "string") {
-            emit("confirm", url);
-            close();
+          const res = await fetch(baseUrl + "/user/uploadImage", parma);
+          const data = await res.json();
+          if (data.code === 0 || data.code === 200) {
+            const url = (data?.data && (data.data.url || data.data)) || data?.url;
+            if (typeof url === "string") {
+              emit("confirm", url);
+              close();
+            } else {
+              emit("confirm", coverUrl);
+              close();
+            }
           } else {
             emit("confirm", coverUrl);
             close();
@@ -378,9 +482,6 @@ async function confirm() {
           emit("confirm", coverUrl);
           close();
         }
-      } else {
-        emit("confirm", coverUrl);
-        close();
       }
     } else if (activeTab.value === "upload" && localImage.value) {
         // Crop the image and upload
@@ -426,8 +527,12 @@ async function confirm() {
   } catch (error) {
     console.error("Cover upload error:", error);
     if (activeTab.value === "select" && selectedBackground.value) {
-      const coverUrl = await generateCover(selectedBackground.value.color, coverTitle.value);
-      emit("confirm", coverUrl);
+      if (selectedBackground.value.isImage) {
+        emit("confirm", selectedBackground.value.color);
+      } else {
+        const coverUrl = await generateCover(selectedBackground.value.color, coverTitle.value);
+        emit("confirm", coverUrl);
+      }
     } else if (activeTab.value === "upload" && localImage.value) {
       emit("confirm", localImage.value);
     }
@@ -520,7 +625,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -548,7 +653,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
 .modal-header {
   height: 6rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-bottom: 1px solid #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -598,9 +703,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
   align-items: center;
 
   .preview-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    position: relative;
   }
 
   .preview-box {
@@ -612,6 +715,126 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     justify-content: center;
     overflow: hidden;
     background: #f5f5f5;
+
+    &.ai-generating {
+      background: linear-gradient( 29deg, #F0F0F0 0%, #F5F5F5 25%, #F0F0F0 50%, #F5F5F5 75%, #F0F0F0 100%), #FCCEE8;
+      animation: loading-pulse 1.5s infinite;
+    }
+  }
+
+  .preview-text{
+    width: 15rem;
+    height: 20rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .ai-loading {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loading-strip {
+    width: 80%;
+    height: 20%;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+    animation: loading-shift 1.5s infinite;
+  }
+
+  .ai-generate-btn-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  .ai-generate-btn {
+    position: relative;
+    bottom: 0;
+    right: -13rem;
+    border: 1px solid;
+    border-image: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1)) 1 1;
+    border-radius: 0.8rem;
+    font-size: 1.4rem;
+    padding: 1rem;
+    cursor: pointer;
+    box-shadow: 0px 0px 12px 0px rgba(251,100,182,0.12);
+    overflow: hidden;
+    z-index: 1;
+
+    /* Gradient text */
+    color: transparent;
+    background: linear-gradient(90deg, #ffffff, #f0f0f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
+      border-radius: 0.8rem;
+      z-index: -1;
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  .preview-img-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .bg-preview-img {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @keyframes loading-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes loading-shift {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
   }
 
   .preview-bg {
@@ -641,7 +864,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
   .title-input-container {
     position: relative;
-    width: 90%;
+    width: 80%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -658,9 +881,8 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     outline: none;
     max-width: 100%;
     resize: none;
-    height: auto;
-    min-height: 3rem;
-    line-height: 1.4;
+    height: 6rem;
+    line-height: 1.6;
   }
 
   .title-count {
@@ -722,7 +944,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
 .upload-mode {
   height: 100%;
-  padding: 3rem 0;
+  padding: 0.4rem 0;
 
   .upload-area {
     width: 100%;
@@ -741,7 +963,11 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     .modal-text {
       margin: 2.4rem 0 1.2rem;
       font-size: 1.4rem;
-      color: #101828;
+      color: #364153;
+
+      :deep(span){
+        color: #FB64B6;
+      }
     }
 
     .modal-tip {
@@ -800,7 +1026,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
 .modal-footer {
   padding: 1.8rem;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: flex-end;
   gap: 1.2rem;
