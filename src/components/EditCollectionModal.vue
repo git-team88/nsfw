@@ -9,7 +9,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">{{ t('collection.collectionName') }}
-            <span class="character-counter">{{ collectionName.length }}/30</span>
+            <span class="character-counter">{{ collectionName.length }}/60</span>
           </label>
 
           <div class="input-with-counter">
@@ -19,7 +19,7 @@
               class="form-input"
               :placeholder="t('collection.placeholder')"
               @input="handleInput"
-              maxlength="30"
+              maxlength="60"
             />
           </div>
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>

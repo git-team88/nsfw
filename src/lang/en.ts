@@ -346,15 +346,19 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     edit: "Edit",
     complete: "Complete",
     minutes: "minutes",
+    hours: "hours",
+    tenMinutes: "10 minutes",
     error: {
       noSessionId: "Missing session ID",
       fetchFailed: "Fetch failed",
       generationFailed: "Generation failed",
       generationFailedMessage: "Sorry, there was an exception during the current generation process",
       contactSupport: "If you still can't generate normally after clicking retry, please contact customer service and we will handle it for you as soon as possible",
+      calcDeductRule: "Failed generation steps will not deduct computing power.",
       supportEmail: `Customer service email: acgworlds{'@'}acgworlds{'.'}com`,
       emptyProjectName: "Please enter project name",
-      emptyRegenerateContent: "Please enter creative description"
+      emptyRegenerateContent: "Please enter creative description",
+      estimateFailed: "Failed to estimate computing power, please try again later"
     },
     guide: {
       next: "Next",
@@ -384,7 +388,23 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     coverNote: "Cannot be undone after selection",
     confirmExitEdit: "Confirm Exit Edit?",
     exitEditMessage: "After exiting, the generated content will not be saved. And the computing power consumed for modifications will not be refunded.",
-    exit: "Exit"
+    exit: "Exit",
+    insufficientBalance: "Insufficient computing power, please recharge",
+    insufficientBalanceMessage: "If there are ongoing tasks, the system will temporarily freeze part of the computing power balance, which is temporarily unavailable; after the generation task ends and completes settlement, the freeze will be automatically lifted.",
+    goRecharge: "Go to recharge",
+    taskLimitExceeded: "The number of ongoing tasks has exceeded the limit",
+    taskLimitExceededMessage: "For novel, comic, and manhua generation tasks, a maximum of 4 tasks can be in progress simultaneously for each type. Please wait for the ongoing tasks to complete before initiating new tasks.",
+    iKnow: "I know",
+    computingPowerEstimate: "Computing Power Estimate Explanation",
+    computingPowerEstimateNote: `1.This estimated computing power is for reference only, and there may be slight differences in actual consumption.<br />
+    2.The actual computing power will be deducted uniformly after the task is completed.<br />
+    3.During the task completion period, the system will temporarily freeze part of the computing power balance; when multiple new tasks are started simultaneously, the frozen computing power cannot be used.<br />
+    4.The frozen computing power will be automatically released after the current task is completed and settled.`,
+    confirmComputingPower: "Confirm Estimated Computing Power",
+    confirmComputingPowerMessage: "This generation consumes an estimated {power} computing power, do you confirm generation?",
+    confirmGenerate: "Confirm Generation",
+    confirmGenerateAllChapters: "Novel Outline",
+    estimatedConsumption: "This generation is estimated to consume <span>{power}</span> computing power<br />Estimated time is approximately {time}, do you confirm generation?",
   },
   privacy: `Privacy Policy<br />
 Welcome to use our products and related services! Please carefully read, understand and comply with this Privacy Policy.<br />
@@ -1288,6 +1308,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
       confirm: "Confirm",
       aiGenerate: "AI Generate",
       power: "Power",
+      generatingAlert: "The cover is still being generated. Please wait for it to complete, or switch to another cover.",
+      ok: "OK",
+      aiGenerateTitle: "AI Generate Cover",
+      aiGeneratePlaceholder: "Please enter requirements for generating cover",
+      aiGenerateStart: "Start Generating",
+      minCharacters: "Please enter at least 10 characters",
     },
     topic: "Add topic",
     mention: "Tag people",
@@ -1454,6 +1480,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     updatedChapters: "Updated {count} chapters",
     enterCollectionMode: "Click here to enter collection and read next chapter",
     viewCollection: "View Collection",
+    nextEpisode: 'Next Episode',
   },
   aiRecharge: {
     title: "AI Recharge",
@@ -1502,35 +1529,32 @@ If you have any questions, complaints, comments or suggestions regarding persona
     expired: "Expired",
     invited: "New user"
   },
-  computingPowerRules: {
-    title: "Rules for Computing Power",
-    content: `<h2>What is "Computing Power"?</h2>
-<p>"Computing Power" is a virtual item designed by us to allow users to access more platform services through relevant consumption.</p>
-<p>"Computing Power" may only be obtained and used by registered users on the platform to redeem the right to use specified functions or value-added services.</p>
-<p>For the avoidance of doubt, the "Computing Power" service refers to the network technology and related services provided by the platform to users. It is not a network payment service. "Computing Power" is not a token, virtual currency, or prepaid voucher, and has no monetary or prepaid value.</p>
-
-<h2>What are the types, validity periods, acquisition methods, and consumption rules of "Computing Power"?</h2>
-<p>Obtained upon registration: Valid for 7 days from the date of acquisition.</p>
-<p>Obtained via recharge: Valid for 1 year from the date of recharge.</p>
-<p>Consumed for generation: Using AI creation and other functions will consume Computing Power. The specific amount shall be subject to the display on the relevant interface. Corresponding Computing Power will be deducted when a generation request is submitted; if generation fails, the deducted Computing Power will be refunded.</p>
-<p>Note: Product strategy adjustments may change the validity period and applicable consumption rules of Computing Power. The revised rules shall take effect upon publication. Users' paid service rights purchased before the adjustment will not be affected. For details, please refer to the in-system announcements, usage query channels, or contact platform customer service.</p>
-
-<h2>What are the pricing standards for purchasing Computing Power?</h2>
-<p>Standard pricing: 1 USD = 100 Computing Power.</p>
-<p>Promotional pricing: We may launch occasional purchase promotions. Promotional prices are subject to the display on the relevant product interface and event rules.</p>
-<p>We may update and optimize "Computing Power" services, functions, pricing plans, and user rights from time to time. The final amount of "Computing Power" you receive shall be subject to the display on the relevant product service promotions and payment pages.</p>
-
-<h2>What is the consumption order of Computing Power?</h2>
-<p>Computing Power is consumed based on its remaining validity period: Computing Power with a shorter remaining validity period is used prior to that with a longer remaining validity period.</p>
-
-<h2>What can Computing Power be used for and how to use it?</h2>
-<p>Currently, after recharging Computing Power, users may consume it to use AI creation and other functions on the platform and our cooperative platforms. Specific services are subject to the display on the relevant interface.</p>
-
-<h2>How to check Computing Power balance and usage details?</h2>
-<p>You may view your Computing Power usage details via:</p>
-<p>Web: [Navigation Bar] – [Computing Power Details]</p>
-  `
-  },
+  computingPowerRules: `Computing Power Usage Rules<br />
+    1.What is "Computing Power"?<br />
+    "Computing Power" is a virtual item designed by us to meet users' needs for using more platform services and making relevant consumptions.<br />
+    "Computing Power" can only be obtained by registered users within the platform and redeemed for the right to use specified functions or value-added services.<br />
+    For the avoidance of doubt, the "Computing Power" service is a network technology and related service provided by the platform to users. It is not a network payment service. "Computing Power" is neither a token, virtual currency nor a prepayment voucher, and has no monetary or prepaid value.<br />
+    2.What are the categories, validity periods, acquisition and consumption methods of "Computing Power"?<br />
+    Obtained by registration: valid for 7 days from the date of acquisition.<br />
+    Obtained by recharge: valid for 6 months from the date of recharge.<br />
+    Consumption for generation:<br />
+    Using functions such as AI creation will consume Computing Power. The specific amount shall be subject to the display on the relevant interface at that time, and the corresponding Computing Power will be deducted when the generation action occurs.<br />
+    The estimated Computing Power is for reference only, and there may be slight differences in actual consumption.<br />
+    The actual Computing Power will be deducted uniformly after the task is completed.<br />
+    During the unfinished task period, the system will temporarily freeze part of the Computing Power balance. When multiple new tasks are started at the same time, the frozen Computing Power cannot be used.<br />
+    Frozen Computing Power will be automatically unfrozen after the current task is completed and settled.<br />
+    Note: Changes in product strategies may result in adjustments to the validity period and applicable consumption rules of Computing Power. The relevant rules shall take effect on the date of issuance. Users' rights to use paid services already paid for before such adjustments take effect will not be affected. For details, please pay attention to the in-system announcements, use the query channels, or contact platform customer service.<br />
+    3.What is the charging standard for purchasing Computing Power?<br />
+    Standard pricing: 1 USD = 100 Computing Power.<br />
+    Discounted pricing: We may launch occasional purchase promotions. Discounted prices are subject to the publicity on relevant product interfaces and activity rules.<br />
+    We may update and optimize various "Computing Power" services, functions, charging plans and user rights from time to time. The final "Computing Power" quota you receive shall be subject to the display on relevant product service promotions and payment pages.<br />
+    4.What is the Computing Power consumption sequence?<br />
+    According to the validity period of all your "Computing Power", the one with a shorter remaining validity period will be consumed prior to that with a longer remaining validity period.
+    5.What is "Computing Power" used for and how to use it?<br />
+    Currently, after recharging "Computing Power", users can use functions such as AI creation by consuming "Computing Power" on the platform and our cooperative platforms. Specific services are subject to the display on the relevant interface at that time.
+    6.How to check "Computing Power" balance and usage details?<br />
+    You can view Computing Power usage details through the following channel:<br />
+    Webpage: [Navigation Bar] - [Computing Power Details]`,
   subscribe: {
     title: "Subscribe",
     month: "Month",

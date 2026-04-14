@@ -265,7 +265,7 @@
             <div class="collection-row">
               <div class="collection-select">
                 <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                  <span class="select-value">{{ selectedCollection || (isNoCollection ? t('collection.noCollection') : t('submit.video.selectProject')) }}</span>
+                  <span class="select-value">{{ selectedCollection || t('collection.noCollection') }}</span>
                   <div class="select-actions">
                     <div class="select-clear" v-if="selectedCollection && isCollectionHovered" @click.stop="clearCollection">
                       <img src="@/assets/images/publish/delete_icon.png" alt="Clear" />
@@ -567,8 +567,10 @@ const isShowConfirm = ref(false);
 const pendingRoute = ref<{ path: string } | null>(null);
 const tabIndex = ref(2);
 
-const TITLE_MAX = 30;
+const TITLE_MAX = 60;
 const DESC_MAX = 4000;
+
+const uid = localStorage.getItem("uid") || '';
 
 const form = ref({
   title: "",
@@ -645,13 +647,17 @@ const tabList = [
 ];
 
 // Change tab
-function changeTab(tab, index) {
+function changeTab(tab: { name: string; path: string }, index: number) {
   if (uploadSuccess.value || videoFile.value || form.value.title || captionLength.value > 0) {
     isShowConfirm.value = true;
     pendingRoute.value = { path: tab.path };
   } else {
     router.replace(tab.path);
   }
+}
+
+function goToHome() {
+  router.push('/');
 }
 
 
@@ -675,12 +681,13 @@ const selectedModalEpisode = ref(1);
 
 // Collection
 const selectedCollection = ref('');
+const selectedCollectionId = ref<number | ''>('');
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const isCollectionHovered = ref(false);
 const showCreateCollectionModal = ref(false);
-const isNoCollection = ref(false);
+const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
   { value: '1', label: '第一集' },
@@ -706,7 +713,7 @@ const canSubmit = computed(() => {
 });
 
 // Collection methods
-function toggleCollectionDropdown(event) {
+function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
@@ -717,7 +724,7 @@ function toggleCollectionDropdown(event) {
   }
 }
 
-function toggleEpisodeDropdown(event) {
+function toggleEpisodeDropdown(event: Event) {
   event.stopPropagation();
   showEpisodeDropdown.value = !showEpisodeDropdown.value;
   showCollectionDropdown.value = false;
@@ -728,29 +735,58 @@ function createNewCollection() {
   showCreateCollectionModal.value = true;
 }
 
-function selectCollection(id) {
+async function selectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
     selectedCollection.value = collection.name;
-    // 参考Novel.vue的逻辑，设置默认集数
-    const chapterCount = collection.chapters ? collection.chapters.length : 0;
-    const defaultEpisode = chapterCount + 1;
-    selectedEpisodeNumber.value = defaultEpisode.toString();
+    selectedCollectionId.value = collection.id;
 
-    // 更新集数数组，基于合集中的章节
-    episodes.value = [];
-    // 先添加已有的章节
-    collection.chapters.forEach((chapter, index) => {
-      episodes.value.push({
-        value: (index + 1).toString(),
-        label: chapter.title || `第${index + 1}集`
+    try {
+      // Request collection details to get the current chapter count
+      const response = await api.singleCollection(id.toString(), 1, 1) as any;
+      if (response.code == 0 && response.data) {
+        // Get the total chapter count from the response
+        const allnum = response.data.allnums || '0';
+        const defaultEpisode = parseInt(allnum) + 1;
+        selectedEpisodeNumber.value = defaultEpisode.toString();
+
+        // Update episodes array based on collection chapters
+        episodes.value = [];
+        // 先添加已有的章节
+        collection.chapters.forEach((chapter: any, index: number) => {
+          episodes.value.push({
+            value: (index + 1).toString(),
+            label: chapter.title || `第${index + 1}集`
+          });
+        });
+        // 添加新的一集
+        episodes.value.push({
+          value: defaultEpisode.toString(),
+          label: `第${defaultEpisode}集`
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching collection details:', error);
+      // Fallback to local chapter count if API call fails
+      const chapterCount = collection.chapters ? collection.chapters.length : 0;
+      const defaultEpisode = chapterCount + 1;
+      selectedEpisodeNumber.value = defaultEpisode.toString();
+
+      // Update episodes array based on collection chapters
+      episodes.value = [];
+      // 先添加已有的章节
+      collection.chapters.forEach((chapter: any, index: number) => {
+        episodes.value.push({
+          value: (index + 1).toString(),
+          label: chapter.title || `第${index + 1}集`
+        });
       });
-    });
-    // 添加新的一集
-    episodes.value.push({
-      value: defaultEpisode.toString(),
-      label: `第${defaultEpisode}集`
-    });
+      // 添加新的一集
+      episodes.value.push({
+        value: defaultEpisode.toString(),
+        label: `第${defaultEpisode}集`
+      });
+    }
   }
   showCollectionDropdown.value = false;
   isNoCollection.value = false;
@@ -758,17 +794,18 @@ function selectCollection(id) {
 
 function clearCollection() {
   selectedCollection.value = '';
+  selectedCollectionId.value = '';
   showCollectionDropdown.value = false;
   showEpisodeDropdown.value = false;
   isNoCollection.value = true;
 }
 
-function selectEpisode(value) {
+function selectEpisode(value: string) {
   selectedEpisodeNumber.value = value;
   showEpisodeDropdown.value = false;
 }
 
-function getEpisodeLabel(value) {
+function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
   return episode ? episode.label : '第一集';
 }
@@ -780,20 +817,8 @@ async function fetchCollections(loadMore = false) {
   isLoadingCollections.value = true;
 
   try {
-    // Get user_id from local storage or session
-    const userInfoStr = localStorage.getItem('userInfo');
-    let user_id = '';
-    if (userInfoStr) {
-      try {
-        const userInfo = JSON.parse(userInfoStr);
-        user_id = userInfo.id || '';
-      } catch (e) {
-        console.error('Error parsing userInfo:', e);
-      }
-    }
-
     const page = loadMore ? currentCollectionPage.value + 1 : 1;
-    const response = await api.getCollection(3, page, collectionPageSize.value, user_id) as any;
+    const response = await api.getCollection(3, page, collectionPageSize.value, uid) as any;
 
     if (response.code == 0) {
       const newCollections = response.data?.data || [];
@@ -827,7 +852,7 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleCreateCollection(collection) {
+async function handleCreateCollection(collection: { name: string }) {
   // Refresh collections list from API
   await fetchCollections(false);
   // Select the newly created collection
@@ -845,7 +870,7 @@ function handleCloseCreateCollectionModal() {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(2, 0, 'manju', currentPage.value, pageSize.value, 'desc', 1, 1) as any;
+    const response = await api.getProject(2, 0, 'manju', currentPage.value, pageSize.value, 'desc', 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
@@ -954,7 +979,7 @@ function closeViewModal() {
   selectedProject.value = null;
 }
 
-function handlePublish(project: any, episode: number) {
+async function handlePublish(project: any, episode: number) {
   console.log('Publishing project:', project.name, 'Episode:', episode);
 
   const episodeText = t('submit.video.episode', { episode });
@@ -970,6 +995,54 @@ function handlePublish(project: any, episode: number) {
   // Set cover from project
   if (project.cover) {
     coverPreview.value = project.cover;
+  }
+
+  // Handle collection logic based on the project name
+  if (project.name) {
+    try {
+      // Search for collection by title
+      const searchRes = await api.searchCollection({ title: project.name, type: 2 }) as any;
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          // Create new collection
+          const createRes = await api.addCollection({ title: project.name, type: 2 }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = project.name;
+            selectedCollectionId.value = createRes.data.book_id;
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          // Get collection details to determine episode number
+          const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnums = collectionRes.data.allnums || '0';
+            const episodeNumber = parseInt(allnums) + 1;
+
+            selectedCollection.value = project.name;
+            selectedCollectionId.value = book_id;
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+
+            // Update episodes array
+            episodes.value = [];
+            for (let i = 1; i <= episodeNumber; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: t('chapter', { chapter: i })
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling collection from title:', error);
+    }
   }
 
   // Store episode for publish
@@ -1389,6 +1462,12 @@ async function getPostDetails() {
         }
 
         captionLength.value = content.length;
+      }
+
+      // Set selected collection from book_title
+      if (postData.book_title) {
+        selectedCollection.value = postData.book_title;
+        isNoCollection.value = false;
       }
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
@@ -2039,7 +2118,7 @@ async function onSubmit() {
       is_nsfw: form.value.content == "yes" ? 1 : 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
-      book_id: selectedCollection.value ? (selectedCollection.id || 0) : 0,
+      book_id: selectedCollection.value ? (selectedCollectionId.value || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
       ...(session_id ? { session_id } : {}),
       ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
@@ -2114,6 +2193,55 @@ onMounted(async () => {
     const coverParam = route.query.cover as string;
     if (coverParam && coverParam.trim()) {
       coverPreview.value = coverParam;
+    }
+
+    // Handle collection logic if title is provided
+    const title = route.query.title as string;
+    if (title) {
+      try {
+        // Search for collection by title
+        const searchRes = await api.searchCollection({ title, type: 2 }) as any;
+
+        if (searchRes.code === 0) {
+          const book_id = searchRes.data?.book_id || 0;
+
+          if (book_id === 0) {
+            // Create new collection
+            const createRes = await api.addCollection({ title, type: 2 }) as any;
+
+            if (createRes.code === 0 && createRes.data?.id) {
+              selectedCollection.value = title;
+              selectedCollectionId.value = createRes.data.id;
+              selectedEpisodeNumber.value = '1';
+              isNoCollection.value = false;
+            }
+          } else {
+            // Get collection details to determine episode number
+            const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+            if (collectionRes.code === 0 && collectionRes.data) {
+              const allnums = collectionRes.data.allnums || '0';
+              const episodeNumber = parseInt(allnums) + 1;
+
+              selectedCollection.value = title;
+              selectedCollectionId.value = book_id;
+              selectedEpisodeNumber.value = episodeNumber.toString();
+              isNoCollection.value = false;
+
+              // Update episodes array
+              episodes.value = [];
+              for (let i = 1; i <= episodeNumber; i++) {
+                episodes.value.push({
+                  value: i.toString(),
+                  label: t('chapter', { chapter: i })
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error handling collection from route:', error);
+      }
     }
   } else if (postId.value) {
     await getPostDetails();

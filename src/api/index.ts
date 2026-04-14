@@ -568,6 +568,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  searchCollection: (data: any) =>
+    axios.request({
+      url: "book/searchBooks",
+      data: data,
+      method: "POST",
+    }),
   modifyCollection: (data: any) =>
     axios.request({
       url: "book/updateBookName",
@@ -695,9 +701,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  totalProcess: () =>
+  totalProcess: (verbose: boolean) =>
     axios.request({
-      url: `app/progress/display`,
+      url: `app/progress/display?verbose=` + verbose,
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -731,5 +737,12 @@ export default {
     axios.request({
       url: `book/getBookChaptersList?book_id=${book_id}&page=${page}&limit=${limit}`,
       method: "GET"
-    })
+    }),
+  generateCover: (data: any) =>
+    axios.request({
+      url: "ai/novel/generate_novel_cover_by_prompt",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
 };

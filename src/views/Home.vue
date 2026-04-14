@@ -1,6 +1,13 @@
 <template>
   <div class="home-page" ref="homePageRef">
-    <Header ref="headerRef" :cur="0" @user-info-loaded="handleUserInfoLoaded"></Header>
+    <Header ref="headerRef" :cur="0" @user-info-loaded="handleUserInfoLoaded" @balance-info-loaded="handleBalanceInfoLoaded"></Header>
+
+    <!-- Insufficient Balance Modal -->
+    <InsufficientBalanceModal
+      :visible="showInsufficientBalanceModal"
+      @cancel="showInsufficientBalanceModal = false"
+      @recharge="goRecharge"
+    />
 
     <!-- Main Content -->
     <div class="main-content">
@@ -345,7 +352,7 @@
                       <!-- Language Selector -->
                       <div class="novel-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
                         <div class="selector-header">
-                          <span>{{ selectedLanguage }}</span>
+                          <span>{{ selectedLanguageText }}</span>
                           <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
                         </div>
                         <div class="dropdown" v-if="showLanguageDropdown">
@@ -354,7 +361,7 @@
                             :key="lang.value"
                             class="dropdown-item"
                             :class="{ active: selectedLanguage == lang.value }"
-                            @click.stop="selectLanguage(lang.value)"
+                            @click.stop="selectLanguage(lang)"
                           >
                             <span>{{ lang.label }}</span>
                           </div>
@@ -362,9 +369,17 @@
                       </div>
                     </div>
 
-                    <div class="generate-btn" @click="navigateToNovelGenerate">
-                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    <div class="generate-box">
+                      <div v-if="isLoggedIn" class="cover-cost-display">
+                        <!-- <img src="@/assets/images/novel/coin.png" alt="" /> -->
+                        <span class="cover-cost">{{ estimatedComputingPower }} {{ t('novel.computingPower') }}</span>
+                        <img class="info-icon" src="@/assets/images/novel/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
+                      </div>
+                      <div class="generate-btn" @click="navigateToNovelGenerate">
+                        <img src="@/assets/images/home/send.png" alt="Send" />
+                      </div>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -577,6 +592,19 @@
       @close="showGuideModal = false"
     />
 
+    <!-- Computing Power Estimate Modal -->
+    <ComputingPowerEstimateModal
+      :visible="showComputingPowerEstimateModal"
+      @cancel="showComputingPowerEstimateModal = false"
+      @confirm="showComputingPowerEstimateModal = false"
+    />
+
+    <!-- Task Limit Exceeded Modal -->
+    <TaskLimitExceededModal
+      :visible="showTaskLimitExceededModal"
+      @close="showTaskLimitExceededModal = false"
+    />
+
     <!-- Footer -->
     <Footer
       :total-pages="Math.ceil(totalPosts / pageSize)"
@@ -596,6 +624,7 @@ import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import CharacterSelectModal from '@/components/CharacterSelectModal.vue';
 import StyleSelectModal from '@/components/StyleSelectModal.vue';
 import VideoSettingsModal from '@/components/VideoSettingsModal.vue';
+import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
@@ -604,6 +633,8 @@ import GuideModal from '@/components/GuideModal.vue';
 import Pagination from '@/components/Pagination.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
+import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
+import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -693,13 +724,14 @@ const wordCountOptions = ref([
   { value: '10M', label: '10M' }
 ]);
 
-const selectedLanguage = ref(t('novel.language.en'));
+const selectedLanguageText = ref('');
+const selectedLanguage = ref('');
 const showLanguageDropdown = ref(false);
-const languageOptions = [
-  { value: 'zh', label: t('novel.language.zh') },
+const languageOptions = computed(() => [
+  { value: 'cn', label: t('novel.language.zh') },
   { value: 'en', label: t('novel.language.en') },
   { value: 'jp', label: t('novel.language.jp') }
-];
+]);
 
 // Mode dropdown for novel mode
 const showModeDropdown = ref(false);
@@ -720,12 +752,34 @@ const navigateToNovelGenerate = async () => {
     return;
   }
 
+  // Check if user has sufficient balance
+  if (balanceInfo.value) {
+    const overFreezeRate = balanceInfo.value.over_freeze_rate || 1;
+    const coverCost = balanceInfo.value.cover_cost || 0;
+    const requiredBalance = Math.round(coverCost * overFreezeRate);
+    const userBalance = balanceInfo.value.balance || 0;
+
+    if (requiredBalance > userBalance) {
+      showInsufficientBalanceModal.value = true;
+      return;
+    }
+  }
+
+  console.log(selectedLanguage.value)
+
   try {
+    // Check if user has reached the task limit
+    const totalProcessRes = await api.totalProcess(false) as any;
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+      showTaskLimitExceededModal.value = true;
+      return;
+    }
+
     const sessionId = uuidv4();
 
     const params = {
       ratio: "9:16",
-      language: selectedLanguage.value == 'Chinese' ? 'cn' : selectedLanguage.value == 'English' ? 'en' : 'jp',
+      language: selectedLanguage.value,
       story_type: "novel",
       story_mode: currentNovelMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
@@ -764,8 +818,14 @@ const navigateToNovelGenerate = async () => {
       toast(t('fail'));
     }
   } catch (error) {
+    console.error('Error in navigateToNovelGenerate:', error);
     toast(t('fail'));
   }
+}
+
+function goRecharge() {
+  router.push('/ai-recharge');
+  showInsufficientBalanceModal.value = false;
 };
 
 
@@ -822,6 +882,14 @@ const showVideoSettingsModal = ref(false);
 const showUserInfoModal = ref(false);
 const showInviteCodeModal = ref(false);
 const showGuideModal = ref(false);
+const showComputingPowerEstimateModal = ref(false);
+
+// Balance info
+const balanceInfo = ref<any>(null);
+
+// Task limit modal
+const showTaskLimitExceededModal = ref(false);
+const showInsufficientBalanceModal = ref(false);
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -831,6 +899,35 @@ function handleUserInfoLoaded(info: any) {
   // Update userRegion based on user info
   updateUnlimitedModeVisibility();
 }
+
+function handleBalanceInfoLoaded(info: any) {
+  balanceInfo.value = info;
+}
+
+// Computed property to calculate estimated computing power
+const estimatedComputingPower = computed(() => {
+  if (!balanceInfo.value || !balanceInfo.value.single_image_cost) {
+    return '';
+  }
+
+  // Convert selected word count to number of words in thousands
+  let wordCountInThousands = 0;
+  if (selectedWordCount.value == '100K') {
+    wordCountInThousands = 10;
+  } else if (selectedWordCount.value == '500K') {
+    wordCountInThousands = 50;
+  } else if (selectedWordCount.value == '10M') {
+    wordCountInThousands = 100;
+  }
+
+  // Calculate estimated computing power
+  const outlineRate = balanceInfo.value.outline_rate;
+  const estimatedPower = wordCountInThousands * outlineRate;
+
+  // Round to nearest integer and ensure minimum value is 1
+  const roundedPower = Math.round(estimatedPower);
+  return Math.max(1, roundedPower);
+});
 
 // Load selected style from localStorage on component mount
 function loadSelectedStyle() {
@@ -1205,8 +1302,9 @@ const selectWordCount = (value: string) => {
   showWordCountDropdown.value = false;
 };
 
-const selectLanguage = (value: string) => {
-  selectedLanguage.value = value;
+const selectLanguage = (item: any) => {
+  selectedLanguage.value = item.value;
+  selectedLanguageText.value = item.label;
   showLanguageDropdown.value = false;
 };
 
@@ -1705,7 +1803,6 @@ const switchContentTab = (tabId: string, index: number) => {
   currentVideoMode.value = 'normal';
   currentComicMode.value = 'normal';
   selectedWordCount.value = '100K';
-  selectedLanguage.value = 'English';
   currentStyleName.value = '';
 
   // Clear current content type's input
@@ -2653,6 +2750,20 @@ onMounted(() => {
       }
       if (novelSettings.language) {
         selectedLanguage.value = novelSettings.language;
+        selectedLanguageText.value = novelSettings.language == 'cn' ? t('novel.language.zh') : novelSettings.language == 'jp' ? t('novel.language.jp') : t('novel.language.en');
+      }
+    } else {
+      // Set language based on system locale if no novelSettings
+      const systemLocale = locale.value;
+      if (systemLocale == 'zh') {
+        selectedLanguage.value = 'cn';
+        selectedLanguageText.value = t('novel.language.zh');
+      } else if (systemLocale == 'jp') {
+        selectedLanguage.value = 'jp';
+        selectedLanguageText.value = t('novel.language.jp');
+      } else {
+        selectedLanguage.value = 'en';
+        selectedLanguageText.value = t('novel.language.en');
       }
     }
   } catch (error) {

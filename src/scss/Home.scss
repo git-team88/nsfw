@@ -785,6 +785,32 @@
         }
       }
 
+      .generate-box{
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+      }
+
+      .cover-cost-display {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+
+        .cover-cost {
+          font-size: 1.4rem;
+          color: #99A1AF;
+        }
+
+        img {
+          width: 2rem;
+          height: 2rem;
+        }
+
+        .info-icon {
+          cursor: pointer;
+        }
+      }
+
       .generate-btn {
         display: flex;
         width: 4.4rem;

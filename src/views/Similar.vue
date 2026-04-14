@@ -308,8 +308,10 @@ function goToDetail(contentId: number, type: number) {
   }
 }
 
-function goToUserHome(userId: number) {
-  router.push(`/user-home?id=${userId}`);
+function goToUserHome(userId: number | undefined) {
+  if (userId) {
+    router.push(`/user-home?id=${userId}`);
+  }
 }
 
 async function toggleLike(item: Content) {

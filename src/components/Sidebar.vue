@@ -19,11 +19,11 @@
           </div>
         </div>
         <div class="close-btn" @click="close">
-          <img src="@/assets/images/detail/close.png" alt="Close" />
+          <img src="@/assets/images/detail/close.png" alt="" />
         </div>
       </div>
 
-      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: isInputting ? '200px' : '100px' }">
+      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: isInputting ? '20rem' : '90px' }">
         <!-- Comments tab -->
         <div class="comments-tab" v-if="activeTab == 'comment'">
           <div class="comments-header">
@@ -47,11 +47,11 @@
                 <div class="c-content">
                   <div class="c-header">
                     <span class="c-author">{{ comment.author }}</span>
-                    <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, comment.id)">
-                      <button class="c-more-btn" @click.stop="toggleCommentMore(comment.id)">
+                    <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, Number(comment.id))">
+                      <button class="c-more-btn" @click.stop="toggleCommentMore(Number(comment.id))">
                         <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
                       </button>
-                      <div class="dropdown-menu" v-if="activeCommentMoreId == comment.id">
+                      <div class="dropdown-menu" v-if="activeCommentMoreId == Number(comment.id)">
                         <span class="menu-item" v-if="comment.user_id == uid" @click="deleteComment(comment.id)">
                           {{ t("detail.delete") }}
                         </span>
@@ -118,11 +118,11 @@
                   <div class="c-content">
                     <div class="c-header">
                       <span class="c-author">{{ reply.author }}</span>
-                      <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, reply.id)">
-                        <button class="c-more-btn" @click.stop="toggleCommentMore(reply.id)">
-                          <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
-                        </button>
-                        <div class="dropdown-menu" v-if="activeCommentMoreId === reply.id">
+                      <div class="c-more-wrap" :ref="(el) => setCommentMoreRef(el, Number(reply.id))">
+                            <button class="c-more-btn" @click.stop="toggleCommentMore(Number(reply.id))">
+                              <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
+                            </button>
+                            <div class="dropdown-menu" v-if="activeCommentMoreId == Number(reply.id)">
                           <span class="menu-item" v-if="reply.user_id == uid" @click="deleteComment(reply.id)">
                             {{ t("detail.delete") }}
                           </span>
@@ -155,7 +155,7 @@
               </div>
 
               <!-- Show more replies button -->
-              <div v-if="!comment.showingReplies && comment.replies_count > 0" class="show-more-replies" @click="loadReplies(comment.id)">
+              <div v-if="!comment.showingReplies && comment.replies_count > 0" class="show-more-replies" @click="loadReplies(comment)">
                 {{ t('detail.showMoreReplies', { count: comment.replies_count }) }}
               </div>
             </div>
@@ -336,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps, defineEmits, watch, nextTick } from 'vue';
+import { ref, computed, defineProps, defineEmits, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -381,8 +381,10 @@ const commentText = ref('');
 const activeTab = ref(props.activeTab);
 const isLoadingComments = ref(false);
 const commentsListRef = ref<HTMLElement | null>(null);
-const activeCommentMoreId = ref('');
-const commentMoreRefs = ref<Record<string, HTMLElement>>({});
+const activeCommentMoreId = ref<number | null>(null);
+const commentMoreRefs = ref<Map<number, HTMLElement>>(new Map());
+const commentToDelete = ref<string | number>('');
+const deleteModalVisible = ref(false);
 
 // Watch for changes in detail prop
 watch(() => props.detail, (newDetail) => {
@@ -426,6 +428,8 @@ const isScrolled = ref(false);
 const scrollContentRef = ref<HTMLElement | null>(null);
 const isRightPanelHidden = ref(false);
 const isCollectionMode = ref(false);
+const videoSize = ref<number>(0);
+const isPageFullscreen = ref(false);
 
 // Chapters
 const chapters = ref<any[]>([]);
@@ -444,48 +448,180 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
   };
 };
 
+// onMounted(() => {
+//   document.addEventListener("click", handleClickOutside);
+// });
+
+// onBeforeUnmount(() => {
+//   document.removeEventListener("click", handleClickOutside);
+// });
+
+// function handleClickOutside(event: MouseEvent) {
+//   if (activeCommentMoreId.value != null) {
+//     const el = commentMoreRefs.value.get(activeCommentMoreId.value);
+//     if (el && !el.contains(target)) {
+//       activeCommentMoreId.value = null;
+//     }
+//   }
+
+//   // Hide mention dropdown when clicking outside
+//   if (showDropdown.value) {
+//     const dropdown = document.querySelector('.mention-dropdown');
+//     const inputWrapper = commentInputRef.value?.parentElement;
+//     if (dropdown && !dropdown.contains(target) && inputWrapper && !inputWrapper.contains(target)) {
+//       showDropdown.value = false;
+//     }
+//   }
+// }
+
 // Set comment more ref
-function setCommentMoreRef(el: HTMLElement, id: string) {
-  if (el) {
-    commentMoreRefs.value[id] = el;
+function setCommentMoreRef(el: any, id: number) {
+  if (el && el.nodeType === 1) {
+    commentMoreRefs.value.set(id, el as HTMLElement);
   }
 }
 
 // Toggle comment more menu
-function toggleCommentMore(id: string) {
-  if (activeCommentMoreId.value === id) {
-    activeCommentMoreId.value = '';
+function toggleCommentMore(id: number) {
+  if (activeCommentMoreId.value == id) {
+    activeCommentMoreId.value = null;
   } else {
     activeCommentMoreId.value = id;
   }
 }
 
+// Open report modal
+function openReportModal(type: string, id: string | number) {
+  emit('open-report-modal', type, id);
+  // Close the dropdown menu after opening the report modal
+  activeCommentMoreId.value = null;
+}
+
+// Close dropdown menu when clicking outside
+function closeDropdownOnClickOutside(event: MouseEvent) {
+  const target = event.target as Node;
+
+  if (activeCommentMoreId.value !== null) {
+    const el = commentMoreRefs.value.get(activeCommentMoreId.value);
+    if (el && !el.contains(target)) {
+      activeCommentMoreId.value = null;
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdownOnClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdownOnClickOutside);
+});
+
 function formatNumber(n: number) {
-  if (n === 0) return '0';
+  if (n == 0) return '0';
   return n.toLocaleString();
 }
 
 // Delete comment
-function deleteComment(id: string) {
-  if (confirm(t('detail.confirmDelete'))) {
-    api.deleteComment(id)
-      .then((response: any) => {
-        if (response.code === 0) {
-          comments.value = comments.value.filter(comment => comment.id !== id);
-          totalComments.value = (parseInt(totalComments.value) - 1).toString();
-          activeCommentMoreId.value = '';
-          toast(t('detail.commentDeleted'));
+function deleteComment(commentId: string | number, isReply: boolean = false) {
+  // Close dropdown menu
+  activeCommentMoreId.value = null;
 
-          // Emit event to update post data in parent component
-          emit('update-post-data', {
-            totalComments: totalComments.value
-          });
+  // Find the comment object
+  let comment = null;
+
+  // Check in main comments
+  for (const c of comments.value) {
+    if (Number(c.id) === Number(commentId)) {
+      comment = c;
+      break;
+    }
+    // Check in replies
+    if (c.replies) {
+      for (const r of c.replies) {
+        if (Number(r.id) === Number(commentId)) {
+          comment = r;
+          isReply = true;
+          break;
         }
-      })
-      .catch((error) => {
-        console.error('Error deleting comment:', error);
-        toast(t('fail'));
-      });
+      }
+      if (comment) break;
+    }
+  }
+
+  if (!comment) return;
+
+  // If it's a reply or a main comment with no replies, delete directly
+  let hasReplies = false;
+
+  // Check for reply count
+  const replyCount = comment.reply_count || comment.children_count || 0;
+  if (replyCount > 0) {
+    hasReplies = true;
+  }
+
+  // Check for children array
+  if (comment.children && comment.children.length > 0) {
+    hasReplies = true;
+  }
+
+  // Check for replies array
+  if (comment.replies && comment.replies.length > 0) {
+    hasReplies = true;
+  }
+
+  if (isReply || !hasReplies) {
+    // Directly delete without showing modal
+    handleDeleteConfirmDirect(commentId, isReply);
+  } else {
+    // Show confirm modal for main comments with replies
+    commentToDelete.value = commentId;
+    deleteModalVisible.value = true;
+  }
+}
+
+async function handleDeleteConfirmDirect(commentId: string | number, isReply: boolean = false) {
+  try {
+    const res = await api.deleteComment({ comment_id: String(commentId) }) as any;
+    if (res.code === 0 || res.code === 200) {
+      toast(t('success'));
+
+      await updateCommentCount();
+
+      if (isReply) {
+        // For replies, find the parent comment and reload its replies
+        for (const comment of comments.value) {
+          if (comment.replies) {
+            const replyIndex = comment.replies.findIndex((r: { id: any; }) => String(r.id) === String(commentId));
+            if (replyIndex !== -1) {
+              // Reload replies for this comment
+              comment.replyPage = 0;
+              comment.replies = [];
+              await loadReplies(comment, 1);
+              break;
+            }
+          }
+        }
+      } else {
+        // For top-level comments, reload all comments
+        await loadComments(1, false);
+
+        const cid = route.query.cid as string || "";
+        if (cid) {
+          await loadCommentDetail(cid);
+        }
+
+        const rid = route.query.rid as string || "";
+        if (rid) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await loadCommentToReplyList(rid);
+        }
+      }
+    } else {
+      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    }
+  } catch (error) {
+    toast(t('fail'));
   }
 }
 
@@ -505,7 +641,7 @@ function previewCommentImage(imgUrl: string) {
 
 // Like comment
 function likeComment(id: string, liked: boolean) {
-  api.likeComment(id, liked)
+  api.likeComment({ comment_id: id, action: liked ? 'unlike' : 'like' })
     .then((response: any) => {
       if (response.code === 0) {
         // Update comment likes
@@ -603,7 +739,7 @@ function replyToComment(id: string, author: string) {
 }
 
 // Load replies with page
-async function loadReplies(comment: any, page: number) {
+async function loadReplies(comment: any, page: number = 1) {
   try {
     const response = await api.replyList(comment.id, page, 5) as any;
     if (response.code === 0) {
@@ -702,7 +838,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
       }
 
       const totalCount = parseInt(res.data?.allnums) || 0;
-      totalComments.value = totalCount.toString();
+
       currentPage.value = page;
       hasMoreComments.value = comments.value.length < totalCount;
     } else {
@@ -1076,7 +1212,7 @@ async function loadCommentToReplyList(rid: string) {
 function toggleLike() {
   if (!props.detail.id) return;
 
-  api.likePost(props.detail.id, !liked.value)
+  api.likePost({ post_id: props.detail.id, action: liked.value ? 'unlike' : 'like' })
     .then((response: any) => {
       if (response.code === 0) {
         liked.value = !liked.value;
@@ -1093,6 +1229,34 @@ function toggleLike() {
       console.error('Error toggling like:', error);
       toast(t('fail'));
     });
+}
+
+// Share function
+function share() {
+  // Implement share functionality
+  console.log('Share functionality');
+}
+
+// Composition event handlers
+function handleCompositionStart() {
+  isComposing.value = true;
+}
+
+function handleCompositionEnd() {
+  isComposing.value = false;
+  handleInput();
+}
+
+// Paste handler
+function handlePaste(event: ClipboardEvent) {
+  // Implement paste functionality
+  console.log('Paste functionality');
+}
+
+// Input blur handler
+function onInputBlur() {
+  // Implement blur functionality
+  console.log('Input blur');
 }
 
 function activateInput() {
@@ -1681,7 +1845,7 @@ function handleFullscreenChange() {
       navArrows.style.zIndex = '10';
     }
     // 退出全屏时，如果是图片类型，恢复右侧面板显示
-    if (detail.value.type === '1') {
+    if (props.detail.type === '1') {
       isRightPanelHidden.value = false;
       activeTab.value = isCollectionMode.value ? 'collection' : 'detail';
     }
@@ -1696,6 +1860,7 @@ function closePreviewModal() {
 // Close sidebar
 function close() {
   cancelInput();
+  activeTab.value = 'comment';
   emit('close');
 }
 
@@ -1745,7 +1910,7 @@ async function loadChapters(isLoadMore = false) {
     const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
     const userId = userInfo?.id || 0;
 
-    const response = await api.singleCollection(Number(props.detail.book_id), page, pageSize.value) as any;
+    const response = await api.singleCollection(String(props.detail.book_id), page, pageSize.value) as any;
     if (response.code === 0) {
       const newChapters = (response.data?.data || []).map((chapter: any) => ({
         ...chapter,
@@ -1853,7 +2018,7 @@ function navigateToUserHome() {
 function toggleFollow() {
   if (!props.detail.author.id) return;
 
-  api.followUser(props.detail.author.id, !props.detail.isFollowed)
+  api.follow({ user_id: props.detail.author.id, action: props.detail.isFollowed ? 'unfollow' : 'follow' })
     .then((response: any) => {
       if (response.code === 0) {
         // This will not update the parent component's state
@@ -1861,7 +2026,7 @@ function toggleFollow() {
         console.log('Follow status changed');
       }
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error('Error toggling follow:', error);
       toast(t('fail'));
     });
@@ -1870,7 +2035,7 @@ function toggleFollow() {
 // Load more replies
 function loadMoreReplies(comment: any) {
   if (comment.reply_count > comment.replies.length) {
-    api.getCommentReplies(comment.id, comment.replies.length, 10)
+    api.replyList(comment.id, Math.floor(comment.replies.length / 10) + 1, 10)
       .then((response: any) => {
         if (response.code === 0) {
           if (!comment.replies) {
@@ -1879,7 +2044,7 @@ function loadMoreReplies(comment: any) {
           comment.replies = [...comment.replies, ...(response.data?.data || [])];
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Error loading more replies:', error);
       });
   }
@@ -1887,7 +2052,7 @@ function loadMoreReplies(comment: any) {
 
 // Like reply
 function likeReply(id: string, liked: boolean) {
-  api.likeComment(id, liked)
+  api.likeComment({ comment_id: id, action: liked ? 'unlike' : 'like' })
     .then((response: any) => {
       if (response.code === 0) {
         // Update reply likes
@@ -1903,7 +2068,7 @@ function likeReply(id: string, liked: boolean) {
         });
       }
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error('Error liking reply:', error);
       toast(t('fail'));
     });
@@ -2773,7 +2938,6 @@ function likeReply(id: string, liked: boolean) {
               color: #6A7282;
               border-radius: 0.6rem;
               font-size: 1.4rem;
-              margin-right: 1.6rem;
             }
 
             .chapter-actions {
@@ -2856,6 +3020,53 @@ function likeReply(id: string, liked: boolean) {
 /* Hidden file inputs */
 .hidden-file-input {
   display: none;
+}
+
+/* Dropdown Menu */
+.c-more-wrap {
+  position: relative;
+}
+
+.c-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  img {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+.comment-main:hover .c-more-btn,
+.reply-item:hover .c-more-btn,
+.c-more-wrap:hover .c-more-btn {
+  opacity: 1;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: -1.8rem;
+  top: 100%;
+  margin-top: 0.2rem;
+  border-radius: 0.6rem;
+  background: #FFFFFF;
+  box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
+  z-index: 100;
+  cursor: pointer;
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5.8rem;
+    height: 2.8rem;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    color: #6A7282;
+  }
 }
 
 </style>

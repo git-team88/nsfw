@@ -93,14 +93,14 @@
                   <button
                     class="chapter-btn up"
                     @click="increaseEpisode"
-                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).length === 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).findIndex((chapter: any) => chapter.chapter === selectedEpisode.value) >= selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).length - 1"
+                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).length === 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).findIndex((chapter: any) => chapter.chapter == selectedEpisode) >= selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).length - 1"
                   >
                     <span class="arrow-icon"></span>
                   </button>
                   <button
                     class="chapter-btn down"
                     @click="decreaseEpisode"
-                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).length === 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).findIndex((chapter: any) => chapter.chapter === selectedEpisode.value) <= 0"
+                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).length == 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).findIndex((chapter: any) => chapter.chapter == selectedEpisode) <= 0"
                   >
                     <span class="arrow-icon"></span>
                   </button>
@@ -126,6 +126,7 @@
                 :maxlength="TITLE_MAX"
                 :placeholder="t('submit.titlePlaceholder')"
                 @input="handleTitleInput"
+                @blur="handleTitleBlur"
               />
               <span class="char-count-local">{{ form.title.length }}/{{ TITLE_MAX }}</span>
             </div>
@@ -225,6 +226,7 @@
                 :maxlength="TITLE_MAX"
                 :placeholder="t('submit.titlePlaceholder')"
                 @input="handleTitleInput"
+                @blur="handleTitleBlur"
               />
               <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
             </div>
@@ -299,7 +301,7 @@
             <div class="collection-row">
               <div class="collection-select">
                 <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                  <span class="select-value">{{ selectedCollection?.name || (isNoCollection ? t('collection.noCollection') : '小说作品项目名称') }}</span>
+                  <span class="select-value">{{ selectedCollection?.name || t('collection.noCollection') }}</span>
                   <div class="select-actions">
                     <div class="select-clear" v-if="selectedCollection && isCollectionHovered" @click.stop="clearCollection">
                       <img src="@/assets/images/publish/delete_icon.png" alt="Clear" />
@@ -506,8 +508,10 @@ const contentOptions = [
 
 const agreeTerms = ref(true);
 
-const TITLE_MAX = 30;
-const DESC_MAX = 20000;
+const TITLE_MAX = 60;
+const DESC_MAX = 50000;
+
+const uid = localStorage.getItem('uid') || '';
 
 const tabList = ref([
   {
@@ -559,6 +563,8 @@ const captionLength = ref(0);
 const showDropdown = ref(false);
 const dropdownItems = ref<any[]>([]);
 const dropdownPosition = ref({ top: 0, left: 0 });
+const dropdownType = ref('');
+
 
 // Handle dropdown item selection
 function selectDropdownItem(item: any) {
@@ -645,7 +651,7 @@ const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const isCollectionHovered = ref(false);
 const showCreateCollectionModal = ref(false);
-const isNoCollection = ref(false);
+const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
   { value: '1', label: t('chapter', { chapter: 1 }) },
@@ -705,6 +711,57 @@ watch(uploadOption, (newOption) => {
 function handleTitleInput() {
   if (form.value.title.trim()) {
     generateCoverFromTitle();
+  }
+}
+
+// Handle title blur and upload cover
+async function handleTitleBlur() {
+  if (form.value.title.trim()) {
+    generateCoverFromTitle();
+
+    // Only upload cover if not in local upload tab
+    if (coverPreview.value && uploadOption.value !== 'local') {
+      isUpload.value = true;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        isUpload.value = false;
+        return false;
+      }
+
+      try {
+        const response = await fetch(coverPreview.value);
+        const blob = await response.blob();
+        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const parma = {
+          method: "POST",
+          headers: {
+            token: token,
+          },
+          body: formData,
+        };
+
+        const res = await fetch(baseUrl + "user/uploadImage", parma);
+        const data = await res.json();
+        if (data.code === 0 || data.code === 200) {
+          const url = (data?.data && (data.data.url || data.data)) || data?.url;
+          if (typeof url === "string") {
+            coverPreview.value = url;
+          }
+        } else {
+          toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+        }
+      } catch (error) {
+        console.error("Cover upload error:", error);
+        toast(t('fail'));
+      } finally {
+        isUpload.value = false;
+      }
+
+    }
   }
 }
 
@@ -963,6 +1020,15 @@ async function getPostDetails() {
       if (!coverPreview.value && form.value.title.trim()) {
         generateCoverFromTitle();
       }
+
+      // Set selected collection from book_title
+      if (postData.book_title) {
+        selectedCollection.value = {
+          id: postData.book_id || 0,
+          name: postData.book_title
+        };
+        isNoCollection.value = false;
+      }
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
     }
@@ -987,6 +1053,10 @@ function goBack() {
   }
 
   router.go(-1);
+}
+
+function goToHome() {
+  router.push('/');
 }
 
 function changeTab(item: { path: string }, index: number) {
@@ -1123,10 +1193,9 @@ async function onSubmit() {
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
       ...(session_id ? { session_id } : {}),
-      ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {}))
+      ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
+      ...(isEditMode && { post_id: postId.value })
     };
-
-    console.log(payload)
 
     const headers = new Headers();
 
@@ -1149,7 +1218,7 @@ async function onSubmit() {
     const result = await response.text();
     const res = JSON.parse(result);
 
-    if (res.code === 0 || res.code === 200) {
+    if (res.code == 0 || res.code == 200) {
       toast(t("success"));
       router.push(`/publish/success?type=${2}`);
     } else {
@@ -1262,7 +1331,7 @@ async function handleDocumentUpload(e: Event) {
 
     // Update the caption with the document content
     if (captionRef.value) {
-      // Limit to 20000 characters
+      // Limit to 50000 characters
       const limitedContent = textContent.substring(0, DESC_MAX);
       captionRef.value.innerText = limitedContent;
       captionLength.value = limitedContent.length;
@@ -1424,7 +1493,7 @@ function confirmSensitive() {
 }
 
 // Collection methods
-function toggleCollectionDropdown(event) {
+function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
@@ -1437,7 +1506,7 @@ function toggleCollectionDropdown(event) {
   }
 }
 
-function toggleEpisodeDropdown(event) {
+function toggleEpisodeDropdown(event: Event) {
   event.stopPropagation();
   showEpisodeDropdown.value = !showEpisodeDropdown.value;
   showCollectionDropdown.value = false;
@@ -1448,25 +1517,49 @@ function createNewCollection() {
   showCreateCollectionModal.value = true;
 }
 
-function selectCollection(id) {
+async function selectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
     selectedCollection.value = {
       id: collection.id,
       name: collection.title
     };
-    // Set default episode number to number of existing chapters + 1
-    const chapterCount = collection.chapters ? collection.chapters.length : 0;
-    const defaultEpisode = chapterCount + 1;
-    selectedEpisodeNumber.value = defaultEpisode.toString();
 
-    // Update episodes array based on collection chapters
-    episodes.value = [];
-    for (let i = 1; i <= defaultEpisode; i++) {
-      episodes.value.push({
-        value: i.toString(),
-        label: t('chapter', { chapter: i })
-      });
+    try {
+      // Request collection details to get the current chapter count
+      const response = await api.singleCollection(id.toString(), 1, 1) as any;
+      if (response.code == 0 && response.data) {
+        // Get the total chapter count from the response
+        const allnum = response.data.allnums || '0';
+        const defaultEpisode = parseInt(allnum) + 1;
+
+        console.log(defaultEpisode)
+        selectedEpisodeNumber.value = defaultEpisode.toString();
+
+        // Update episodes array based on collection chapters
+        episodes.value = [];
+        for (let i = 1; i <= defaultEpisode; i++) {
+          episodes.value.push({
+            value: i.toString(),
+            label: t('chapter', { chapter: i })
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching collection details:', error);
+      // Fallback to local chapter count if API call fails
+      const chapterCount = collection.chapters ? collection.chapters.length : 0;
+      const defaultEpisode = chapterCount + 1;
+      selectedEpisodeNumber.value = defaultEpisode.toString();
+
+      // Update episodes array based on collection chapters
+      episodes.value = [];
+      for (let i = 1; i <= defaultEpisode; i++) {
+        episodes.value.push({
+          value: i.toString(),
+          label: t('chapter', { chapter: i })
+        });
+      }
     }
   }
   showCollectionDropdown.value = false;
@@ -1480,17 +1573,17 @@ function clearCollection() {
   isNoCollection.value = true;
 }
 
-function selectEpisode(value) {
+function selectEpisode(value: string) {
   selectedEpisodeNumber.value = value;
   showEpisodeDropdown.value = false;
 }
 
-function getEpisodeLabel(value) {
+function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
   return episode ? episode.label : t('chapter', { chapter: 1 });
 }
 
-async function handleCreateCollection(collection) {
+async function handleCreateCollection(collection: { id: string | number; name: string }) {
   selectedCollection.value = collection;
   selectedEpisodeNumber.value = '1';
   showCreateCollectionModal.value = false;
@@ -1502,7 +1595,7 @@ function handleCloseCreateCollectionModal() {
 }
 
 // Project dropdown methods
-function toggleProjectDropdown(event) {
+function toggleProjectDropdown(event: Event) {
   event.stopPropagation();
   showProjectDropdown.value = !showProjectDropdown.value;
   showCollectionDropdown.value = false;
@@ -1527,7 +1620,7 @@ function handleClickOutside(event: MouseEvent) {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(2, 0, 'novel', currentPage.value, pageSize.value, 'desc', 1, 1) as any;
+    const response = await api.getProject(2, 0, 'novel', currentPage.value, pageSize.value, 'desc', 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
@@ -1624,8 +1717,6 @@ async function fetchCollections(loadMore = false) {
   if (isLoadingCollections.value || (!loadMore && !hasMoreCollections.value)) return;
 
   isLoadingCollections.value = true;
-
-  const uid = localStorage.getItem('uid')
 
   try {
     const page = loadMore ? currentCollectionPage.value + 1 : 1;
@@ -1755,6 +1846,59 @@ async function handlePublish(publishData?: any) {
 
   // Generate cover from title
   generateCoverFromTitle();
+
+  // Handle collection logic based on the project name
+  const projectName = publishData?.project?.name || selectedProject.value?.name;
+  if (projectName) {
+    try {
+      // Search for collection by title
+      const searchRes = await api.searchCollection({ title: projectName, type: 2 }) as any;
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          // Create new collection
+          const createRes = await api.addCollection({ title: projectName, type: 2 }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: projectName
+            };
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          // Get collection details to determine episode number
+          const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnums = collectionRes.data.allnums || '0';
+            const episodeNumber = parseInt(allnums) + 1;
+
+            selectedCollection.value = {
+              id: book_id,
+              name: projectName
+            };
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+
+            // Update episodes array
+            episodes.value = [];
+            for (let i = 1; i <= episodeNumber; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: t('chapter', { chapter: i })
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling collection from title:', error);
+    }
+  }
 
   // Upload cover to server
   if (coverPreview.value) {
@@ -1961,6 +2105,58 @@ onMounted(async () => {
               captionLength.value = form.value.description.length;
             }
           }, 0);
+
+          // Handle collection logic if title is provided
+          if (title) {
+            try {
+              // Search for collection by title
+              const searchRes = await api.searchCollection({ title, type: 2 }) as any;
+
+              if (searchRes.code == 0) {
+                const book_id = searchRes.data?.book_id || 0;
+
+                if (book_id == 0) {
+                  // Create new collection
+                  const createRes = await api.addCollection({ title, type: 2 }) as any;
+
+                  if (createRes.code == 0 && createRes.data?.book_id) {
+                    selectedCollection.value = {
+                      id: createRes.data.book_id,
+                      name: title
+                    };
+                    selectedEpisodeNumber.value = '1';
+                    isNoCollection.value = false;
+                  }
+                } else {
+                  // Get collection details to determine episode number
+                  const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+                  if (collectionRes.code == 0 && collectionRes.data) {
+                    const allnums = collectionRes.data.allnums || '0';
+                    const episodeNumber = parseInt(allnums) + 1;
+
+                    selectedCollection.value = {
+                      id: book_id,
+                      name: title
+                    };
+                    selectedEpisodeNumber.value = episodeNumber.toString();
+                    isNoCollection.value = false;
+
+                    // Update episodes array
+                    episodes.value = [];
+                    for (let i = 1; i <= episodeNumber; i++) {
+                      episodes.value.push({
+                        value: i.toString(),
+                        label: t('chapter', { chapter: i })
+                      });
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error handling collection from route:', error);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching chapter details:', error);

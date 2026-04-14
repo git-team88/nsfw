@@ -1,10 +1,10 @@
 <template>
-  <div v-if="isLogin" class="process-container">
+  <div v-if="isLogin && totalCount > 0" class="process-container">
     <div class="process-header" @click="toggleDropdown">
       <div class="process-title">
-        <img class="status-icon" src="@/assets/images/process/doing.png" alt="status" />
-        <span>{{ t('process.taskProgress') }} ({{ doingCount }}/{{ totalCount }})</span>
-      </div>
+          <img class="status-icon" src="@/assets/images/process/doing.png" alt="status" />
+          <span>{{ t('process.taskProgress') }}{{ totalCount > 1 ? ` (${doingCount}/${totalCount})` : '' }}</span>
+        </div>
       <img class="dropdown-arrow" :src="arrowIcon" :class="{ 'rotated': isDropdownOpen }" alt="arrow" />
     </div>
 
@@ -224,6 +224,13 @@ const shouldShowQueueInfo = (item: any) => {
 };
 
 const getProgress = (item: any) => {
+  // 获取当前步骤
+  const currentStep = item.steps ? (item.steps.find((step: any) => step.step_status === 'DOING') || item.steps[0]) : null;
+  
+  if (!currentStep) {
+    return item.progress || 0;
+  }
+  
   if (item.step_status == 'FAIL') {
     // 失败状态，显示当前进度
     if (item.is_batch_chapter == 1 && currentStep.step_name == 'chapter' && item.total_chapters) {
@@ -271,8 +278,8 @@ const getProgress = (item: any) => {
 const fetchProcessData = async () => {
   try {
     // 真实API调用
-    const res = await api.totalProcess() as any;
-    if (res.code === 200) {
+    const res = await api.totalProcess(true) as any;
+    if (res.code == 200) {
       processData.value = res.data;
     }
   } catch (error) {
@@ -334,9 +341,9 @@ const navigateToItem = (item: any, type: string) => {
   if (type === 'novel') {
     router.push(`/novel/${item.session_id}`);
   } else if (type === 'manhua') {
-    window.open(`/tools/comic/${item.session_id}`, _blank);
+    window.open(`/tools/comic/${item.session_id}`, '_blank');
   } else if (type === 'manju') {
-    window.open(`/tools/space/${item.session_id}`, _blank);
+    window.open(`/tools/space/${item.session_id}`, '_blank');
   }
 };
 

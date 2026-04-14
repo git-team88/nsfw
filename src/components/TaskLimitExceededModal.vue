@@ -1,13 +1,13 @@
 <template>
-  <div v-if="visible" class="exit-confirm-modal">
+  <div v-if="visible" class="task-limit-exceeded-modal">
     <div class="modal-content">
       <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
 
-      <h3 class="modal-title">{{ t('novel.confirmExitEdit') }}</h3>
-      <p class="modal-message">{{ t('novel.exitEditMessage') }}</p>
+      <h3 class="modal-title">{{ t('novel.taskLimitExceeded') }}</h3>
+      <p class="modal-message">{{ t('novel.taskLimitExceededMessage') }}</p>
       <div class="modal-actions">
         <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-exit-btn" @click="$emit('confirm')">{{ t('novel.exit') }}</button>
+        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.iKnow') }}</button>
       </div>
     </div>
   </div>
@@ -28,9 +28,8 @@ const emit = defineEmits<{
 }>();
 </script>
 
-<style scoped lang="scss">
-/* Exit Confirm Modal */
-.exit-confirm-modal {
+<style lang="scss" scoped>
+.task-limit-exceeded-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -54,7 +53,7 @@ const emit = defineEmits<{
 
     .close-btn {
       position: absolute;
-      top: 2rem;
+      top: 1.2rem;
       right: 1.2rem;
       width: 2rem;
       height: 2rem;
@@ -74,6 +73,7 @@ const emit = defineEmits<{
       color: #6A7282;
       margin-bottom: 3.4rem;
       text-align: center;
+      line-height: 1.6;
     }
 
     .modal-actions {
@@ -97,7 +97,7 @@ const emit = defineEmits<{
         }
       }
 
-      .modal-exit-btn {
+      .modal-confirm-btn {
         min-width: 13.6rem;
         height: 4.8rem;
         border: none;

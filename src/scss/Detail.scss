@@ -449,7 +449,7 @@
 
   &.on {
     position: fixed;
-    left: 50%;
+    left: 53%;
     right: auto;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -1245,8 +1245,7 @@
   }
 }
 
-// For type 1 (novel), set collection-info-bar bottom to 3rem
-.type-1 .collection-info-bar {
+.type-1 .collection-info-bar, .type-1 .collection-mode-bar {
   bottom: 3rem;
 }
 
@@ -1654,19 +1653,8 @@
     .locked-view {
       width: 100%;
       height: 47rem;
-      background: url('@/assets/images/detail/not_open.png') no-repeat;
+      background: url('@/assets/images/detail/not_open.jpg') no-repeat;
       background-size: cover;
-
-      .locked-inner{
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(3px);
-      }
     }
   }
 }

@@ -569,6 +569,10 @@
           .select-value {
             font-size: 1.4rem;
             color: #101828;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .select-actions {
@@ -625,6 +629,9 @@
             font-size: 1.4rem;
             color: #6A7282;
             cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
             &:last-child{
               margin-bottom: 0;

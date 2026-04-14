@@ -1,13 +1,10 @@
 <template>
-  <div v-if="visible" class="exit-confirm-modal">
+  <div v-if="visible" class="generate-all-chapters-modal">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
-
-      <h3 class="modal-title">{{ t('novel.confirmExitEdit') }}</h3>
-      <p class="modal-message">{{ t('novel.exitEditMessage') }}</p>
+      <p class="modal-message" v-html="t('novel.estimatedConsumption', { power: computingPower, time: estimatedTime })"></p>
       <div class="modal-actions">
         <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-exit-btn" @click="$emit('confirm')">{{ t('novel.exit') }}</button>
+        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -20,6 +17,8 @@ const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
+  computingPower: number;
+  estimatedTime: string;
 }>();
 
 const emit = defineEmits<{
@@ -28,9 +27,8 @@ const emit = defineEmits<{
 }>();
 </script>
 
-<style scoped lang="scss">
-/* Exit Confirm Modal */
-.exit-confirm-modal {
+<style lang="scss" scoped>
+.generate-all-chapters-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -50,30 +48,18 @@ const emit = defineEmits<{
     width: 50rem;
     background-color: #ffffff;
     border-radius: 1.2rem;
-    padding: 1.8rem 2.4rem 2.4rem;
-
-    .close-btn {
-      position: absolute;
-      top: 2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
-      cursor: pointer;
-    }
-
-    .modal-title {
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: #364153;
-      margin-bottom: 3.6rem;
-      text-align: center;
-    }
+    padding: 4.4rem 2.4rem 2.4rem;
 
     .modal-message {
       font-size: 1.4rem;
       color: #6A7282;
-      margin-bottom: 3.4rem;
+      margin-bottom: 2.4rem;
       text-align: center;
+      line-height: 1.6;
+
+      :deep(span) {
+        color: #FB64B6;
+      }
     }
 
     .modal-actions {
@@ -97,7 +83,7 @@ const emit = defineEmits<{
         }
       }
 
-      .modal-exit-btn {
+      .modal-confirm-btn {
         min-width: 13.6rem;
         height: 4.8rem;
         border: none;

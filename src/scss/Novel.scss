@@ -755,6 +755,12 @@
             &:hover {
               border: none;
             }
+            .select-value {
+              flex: 1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
             .select-actions {
               display: flex;
               align-items: center;
@@ -795,6 +801,9 @@
               font-size: 1.4rem;
               color: #6A7282;
               cursor: pointer;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
 
               &:last-child{
                 margin-bottom: 0;

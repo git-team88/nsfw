@@ -16,12 +16,20 @@
 
       <div class="modal-body">
         <!-- Select from Background Colors -->
-        <div v-if="activeTab === 'select'" class="tab-content select-mode">
+        <div v-if="activeTab == 'select'" class="tab-content select-mode">
           <div class="preview-container">
             <div class="preview-box" :class="{ 'ai-generating': aiGenerating }">
               <div class="preview-text" v-if="selectedBackground && !aiGenerating">
+                <div v-if="selectedBackground.isImage" class="preview-img-container">
+                  <img
+                    :src="selectedBackground.color"
+                    class="preview-img"
+                    ref="previewImgRef"
+                  />
+                </div>
+
                 <div
-                  v-if="!selectedBackground.isImage"
+                  v-else
                   class="preview-bg"
                   :class="selectedBackground.color == '#494949' ? 'one' : ''"
                   :style="{ backgroundColor: selectedBackground.color }"
@@ -31,22 +39,18 @@
                     <textarea
                       v-model="coverTitle"
                       class="title-text"
-                      :maxlength="20"
+                      :maxlength="30"
                       :placeholder="t('submit.titlePlaceholder')"
-                      rows="3"
                     ></textarea>
                     <!-- <span class="title-count">{{ coverTitle.length }}/20</span> -->
                   </div>
-                </div>
-                <div v-else class="preview-img-container">
-                  <img :src="selectedBackground.color" class="preview-img" />
                 </div>
               </div>
               <div v-else-if="!aiGenerating" class="placeholder">
                 {{ t("submit.cover.selectBackground") }}
               </div>
               <div v-else class="ai-loading">
-                <div class="loading-strip"></div>
+                <div class="skeleton"></div>
               </div>
             </div>
             <div class="ai-generate-btn-container">
@@ -56,20 +60,34 @@
             </div>
           </div>
 
-          <div class="backgrounds-strip">
-            <div
-              v-for="(bg, index) in backgroundOptions"
-              :key="index"
-              class="background-cell"
-              :class="{ selected: selectedBackground && selectedBackground.color === bg.color }"
-              @click="selectBackground(bg)"
-              :style="{ backgroundColor: bg.isImage ? 'transparent' : bg.color }"
-            >
-              <div class="bg-preview" v-if="!bg.isImage">
-                <div class="mini-title">Aa</div>
+          <div class="backgrounds-section-box" ref="backgroundsSectionBoxRef">
+            <div class="backgrounds-strip" v-if="imageOptions.length > 0" :style="{ justifyContent: hasScrollbar ? 'flex-start' : 'center' }">
+              <div
+                v-for="(img, index) in imageOptions"
+                :key="index"
+                class="background-cell"
+                :class="{ selected: selectedBackground && selectedBackground.color === img.color && selectedBackground.isImage }"
+                @click="selectImage(img)"
+                :style="{ backgroundColor: '#F5F5F5' }"
+              >
+                <div class="bg-preview-img">
+                  <img :src="img.color" class="bg-img" />
+                </div>
               </div>
-              <div class="bg-preview-img" v-else>
-                <img :src="bg.color" class="bg-img" />
+            </div>
+
+            <div class="backgrounds-strip" :style="{ justifyContent: hasScrollbar ? 'flex-start' : 'center' }">
+              <div
+                v-for="(bg, index) in backgroundColorOptions"
+                :key="index"
+                class="background-cell"
+                :class="{ selected: selectedBackground && selectedBackground.color === bg.color && !selectedBackground.isImage }"
+                @click="selectBackground(bg)"
+                :style="{ backgroundColor: bg.color }"
+              >
+                <div class="bg-preview">
+                  <div class="mini-title">Aa</div>
+                </div>
               </div>
             </div>
           </div>
@@ -102,7 +120,6 @@
                 alt=""
                 class="preview-img"
                 ref="previewImgRef"
-                :style="imageStyle"
               />
               <div class="crop-frame"></div>
             </div>
@@ -135,16 +152,29 @@
         </button>
       </div>
 
-      <UploadMask :visible="loading"></UploadMask>
     </div>
   </div>
+
+  <UploadMask :visible="loading"></UploadMask>
+
+  <!-- AI Generate Cover Modal -->
+  <AIGenerateCoverModal
+    :visible="showAIGenerateModal"
+    :cover-cost="coverCost"
+    :default-prompt="coverTitle"
+    @update:visible="showAIGenerateModal = $event"
+    @generation="handleGeneration"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onUnmounted, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { baseUrl } from "@/util/config";
 import UploadMask from "./UploadMask.vue";
+import AIGenerateCoverModal from "./AIGenerateCoverModal.vue";
+import api from "@/api/index";
+import { toast } from "@/util/toast";
 
 const props = defineProps<{
   visible: boolean;
@@ -155,21 +185,31 @@ const emit = defineEmits(["update:visible", "confirm"]);
 const { t, locale } = useI18n();
 
 const activeTab = ref("select"); // select | upload
-const selectedBackground = ref<{ color: string } | null>({ color: "#FCCEE8" }); // Default to pink background
+const selectedBackground = ref<{ color: string; isImage?: boolean; backgroundColor?: string } | null>({ color: "#FCCEE8" }); // Default to pink background
 const localImage = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadInput = ref<HTMLInputElement | null>(null);
 const previewImgRef = ref<HTMLImageElement | null>(null);
+const backgroundsSectionBoxRef = ref<HTMLElement | null>(null);
 const coverTitle = ref(props.title); // Editable title for cover
 const loading = ref(false); // Loading state for upload
 const aiGenerating = ref(false); // Loading state for AI generation
-const coverCost = ref(0); // Cost for AI cover generation
+const coverCost = ref(''); // Cost for AI cover generation
+const isMounted = ref(true); // Track if component is mounted
+const hasScrollbar = ref(false); // Track if backgrounds-section-box has scrollbar
+const showAlert = ref(false); // Track if AI generation alert should be shown
+const showAIGenerateModal = ref(false); // Track if AI generate modal should be shown
 
 // Watch for visible changes to fetch cover cost
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     fetchCoverCost();
   }
+});
+
+// Watch for title changes to update coverTitle
+watch(() => props.title, (newVal) => {
+  coverTitle.value = newVal;
 });
 
 // Crop related variables
@@ -193,19 +233,17 @@ function getCropDimensions() {
 
 const cropDimensions = computed(() => getCropDimensions());
 
-const imageStyle = computed(() => {
-  return {
-    transform: `translate(${imgOffsetX.value}px, ${imgOffsetY.value}px) scale(${imgScale.value})`,
-  };
-});
-
-const backgroundOptions = [
+// Background color options
+const backgroundColorOptions = ref([
   { color: "#494949" }, // Pink
   { color: "#BDFFF9" }, // Blue
   { color: "#FCCEE8" }, // Purple
   { color: "#CEF0FE" }, // Green
   { color: "#FFF7C6" }, // Orange
-];
+]);
+
+// Image options (AI generated or uploaded)
+const imageOptions = ref<{ color: string; isImage: boolean; backgroundColor?: string }[]>([]);
 
 function changeTab(tab: string) {
   if (localImage.value) {
@@ -217,63 +255,45 @@ function changeTab(tab: string) {
 // Fetch cover cost estimate
 async function fetchCoverCost() {
   try {
-    const sessionId = localStorage.getItem('session_id');
-    if (!sessionId) {
-      console.error('No session ID found');
-      return;
-    }
-
-    const response = await fetch(`${baseUrl}/ai/novelEstimate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        step_name: 'cover',
-      }),
-    });
-
-    const data = await response.json();
-    if (data.code === 0 || data.code === 200) {
-      coverCost.value = data.data?.points || 0;
+    const res = await api.userBalance() as any;
+    if (res.code == 0 || res.code == 200) {
+      coverCost.value = res.data?.single_image_cost ? res.data.single_image_cost.toString() : '';
+    } else {
+      toast(res.message);
     }
   } catch (error) {
     console.error('Error fetching cover cost:', error);
+    coverCost.value = '';
   }
 }
 
 // Generate AI cover
-async function generateAICover() {
+function generateAICover() {
+  // Show AI generate modal
+  showAIGenerateModal.value = true;
+  // Default prompt is set via prop in the AIGenerateCoverModal component
+}
+
+// Handle generation event
+async function handleGeneration(prompt: string) {
   try {
+    showAIGenerateModal.value = false;
+    // Set loading state
     aiGenerating.value = true;
+    // Clear selected background during generation
+    selectedBackground.value = null;
 
-    const sessionId = localStorage.getItem('session_id');
-    if (!sessionId) {
-      console.error('No session ID found');
-      aiGenerating.value = false;
-      return;
-    }
-
-    const response = await fetch(`${baseUrl}/ai/novelGenerateCover`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        content: coverTitle.value,
-      }),
+    // Call API to generate cover
+    const response = await api.generateCover({
+      prompt: prompt
     });
 
-    const data = await response.json();
-    if (data.code === 0 || data.code === 200) {
-      const coverUrl = data.data?.cover_url || data.cover_url;
+    if (response.data?.code == 0 || response.data?.code == 200) {
+      let coverUrl = response.data?.cover_url;
       if (coverUrl) {
-        // Add the generated cover to the backgrounds list and select it
-        const newBackground = { color: coverUrl, isImage: true };
-        backgroundOptions.unshift(newBackground);
-        selectedBackground.value = newBackground;
+        const newImage = { color: coverUrl, isImage: true, backgroundColor: "#F5F5F5" };
+        imageOptions.value.unshift(newImage);
+        selectedBackground.value = newImage;
       }
     }
   } catch (error) {
@@ -285,6 +305,22 @@ async function generateAICover() {
 
 function selectBackground(bg: { color: string; isImage?: boolean }) {
   selectedBackground.value = bg;
+  // Reset image crop when selecting a background color
+  imgOffsetY.value = 0;
+  imgOffsetX.value = 0;
+  imgScale.value = 1;
+}
+
+function selectImage(img: { color: string; isImage: boolean; backgroundColor?: string }) {
+  selectedBackground.value = img;
+  // Reset image crop when selecting a new image
+  imgOffsetY.value = 0;
+  imgOffsetX.value = 0;
+  imgScale.value = 1;
+  // Detect image orientation and set initial scale
+  if (img.color) {
+    detectOrientation(img.color);
+  }
 }
 
 function triggerUpload() {
@@ -316,9 +352,13 @@ function onDrop(e: DragEvent) {
 }
 
 function close() {
-  emit("update:visible", false);
-  activeTab.value = 'select';
-  localImage.value = null;
+  if (aiGenerating.value) {
+    showAlert.value = true;
+  } else {
+    emit("update:visible", false);
+    activeTab.value = 'select';
+    localImage.value = null;
+  }
 }
 
 function reupload() {
@@ -433,9 +473,13 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 async function confirm() {
+  if (aiGenerating.value) {
+    showAlert.value = true;
+    return;
+  }
   loading.value = true;
   try {
-    if (activeTab.value === "select" && selectedBackground.value) {
+    if (activeTab.value == "select" && selectedBackground.value) {
       if (selectedBackground.value.isImage) {
         // For AI-generated image covers, use the URL directly
         const coverUrl = selectedBackground.value.color;
@@ -555,19 +599,19 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
   // Draw quote mark
   ctx.font = "200px Arial";
-  ctx.fillStyle = backgroundColor === "#494949" ? "rgba(255, 247, 198, 0.3)" : "rgba(255, 255, 255, 0.3)";
+  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#58474C";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText('"', 60, 60);
+  ctx.fillText('"', 100, 80);
 
   // Draw title
-  ctx.font = "40px Arial";
-  ctx.fillStyle = backgroundColor === "#494949" ? "#FFF7C6" : "#444550";
+  ctx.font = "60px Arial";
+  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#58474C";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   // Split title into lines if too long
-  const maxWidth = canvas.width - 40; // 20px margin on each side
+  const maxWidth = canvas.width - 200;
   const lines: string[] = [];
   let currentLine = "";
 
@@ -610,7 +654,7 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
   }
 
   // Draw lines
-  const lineHeight = 50;
+  const lineHeight = 90;
   const firstLineY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
 
   lines.forEach((line, index) => {
@@ -736,43 +780,42 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 1.6rem;
   }
 
-  .loading-strip {
-    width: 80%;
-    height: 20%;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 4px;
-    animation: loading-shift 1.5s infinite;
+  .skeleton {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: skeleton-loading 1.5s infinite;
+  }
+
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 
   .ai-generate-btn-container {
-    display: flex;
-    justify-content: center;
-  }
-
-  .ai-generate-btn {
-    position: relative;
+    position: absolute;
     bottom: 0;
     right: -13rem;
-    border: 1px solid;
-    border-image: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1)) 1 1;
+    display: flex;
+    justify-content: center;
     border-radius: 0.8rem;
-    font-size: 1.4rem;
-    padding: 1rem;
-    cursor: pointer;
+    background: linear-gradient( 90deg, rgba(194, 122, 255, 0.07) 0%, rgba(255, 127, 250, 0.07) 50%, rgba(251, 100, 243, 0.07) 100%);
     box-shadow: 0px 0px 12px 0px rgba(251,100,182,0.12);
     overflow: hidden;
     z-index: 1;
-
-    /* Gradient text */
-    color: transparent;
-    background: linear-gradient(90deg, #ffffff, #f0f0f0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    cursor: pointer;
 
     &::before {
       content: "";
@@ -781,10 +824,26 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
-      border-radius: 0.8rem;
+      border-radius: inherit;
+      background: linear-gradient(360deg, rgba(194, 122, 255, 1), rgba(255, 127, 250, 1), rgba(251, 100, 243, 1));
       z-index: -1;
+      padding: 1px;
+      -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
+      mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
     }
+  }
+
+  .ai-generate-btn {
+    font-size: 1.4rem;
+    padding: 1rem;
+    color: transparent;
+    background: linear-gradient(135deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    cursor: pointer;
 
     &:disabled {
       opacity: 0.7;
@@ -843,7 +902,6 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     position: relative;
 
     &.one{
@@ -858,22 +916,22 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     font-size: 4rem;
     color: #58474c;
     position: absolute;
-    top: 2rem;
+    top: 1.6rem;
     left: 1.8rem;
   }
 
   .title-input-container {
     position: relative;
-    width: 80%;
+    width: 70%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    padding-top: 5rem;
     z-index: 1;
   }
 
   .title-text {
     font-weight: 500;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     color: #58474c;
     text-align: center;
     background: transparent;
@@ -881,8 +939,8 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     outline: none;
     max-width: 100%;
     resize: none;
-    height: 6rem;
-    line-height: 1.6;
+    height: 13rem;
+    line-height: 1.5;
   }
 
   .title-count {
@@ -896,12 +954,30 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     font-size: 1.4rem;
   }
 
-  .backgrounds-strip {
+  .backgrounds-section-box{
     display: flex;
+    align-items: center;
     justify-content: center;
     gap: 0.8rem;
-    overflow-x: auto;
     width: 100%;
+    overflow-x: auto;
+  }
+
+  .backgrounds-section {
+    margin-bottom: 2rem;
+
+    .section-title {
+      font-size: 1.4rem;
+      color: #364153;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+  }
+
+  .backgrounds-strip {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.8rem;
 
     .background-cell {
       width: 5.4rem;
@@ -1092,4 +1168,6 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 .hidden {
   display: none;
 }
+
+
 </style>

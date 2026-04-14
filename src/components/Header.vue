@@ -272,16 +272,16 @@ const typeList = ref([
   //   path: "/ai",
   // },
   {
-    name: t("header.type2"),
-    path: "/publish/video",
+    name: t("header.type4"),
+    path: "/publish/novel",
   },
   {
     name: t("header.type3"),
     path: "/publish/comic",
   },
   {
-    name: t("header.type4"),
-    path: "/publish/novel",
+    name: t("header.type2"),
+    path: "/publish/video",
   },
 ]);
 

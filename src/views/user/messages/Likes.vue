@@ -27,6 +27,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { formatTimestamp } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
+import { toast } from "@/util/toast";
 
 const { t, locale } = useI18n();
 const router = useRouter();

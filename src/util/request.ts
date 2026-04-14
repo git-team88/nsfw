@@ -8,7 +8,7 @@ class Request {
   timeout: number;
   constructor() {
     this.baseURL = baseUrl
-    this.timeout = 100000
+    this.timeout = 120000
   }
   setInterceptor = (instance: any) => {
     instance.interceptors.request.use((config: { method: string; paramsSerializer: (params: any) => string; header: any; data: string; headers: { token?: any; "Content-Type"?: string; }; }) => {

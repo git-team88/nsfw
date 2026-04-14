@@ -9,7 +9,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type === '1' || detail?.type === '2', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type === '1' }" @wheel="handleLeftPanelWheel">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
           <div class="media-container" :key="detail?.id">
             <template v-if="isCollectionMode">
               <!-- Video content -->
@@ -90,7 +90,7 @@
                 <div class="comic-scroll" ref="comicScrollRef" @scroll="handleComicScroll">
                   <div
                     class="comic-image-wrap"
-                    v-for="(img, index) in currentCollection.images || detail.images"
+                    v-for="(img, index) in detail.images"
                     :key="index"
                     @mouseenter="hoveredComicIndex = index"
                     @mouseleave="hoveredComicIndex = -1"
@@ -102,13 +102,14 @@
                       <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" @click.stop="toggleComicZoom(index)" />
                     </div>
                   </div>
-                </div>
-                <div class="comic-controls">
-                  <div class="control-btn left" @click="scrollComicLeft">
-                    <img src="@/assets/images/detail/left.png" alt="Left" />
-                  </div>
-                  <div class="control-btn right" @click="scrollComicRight">
-                    <img src="@/assets/images/detail/right.png" alt="Right" />
+
+                  <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+                    <div class="lock-tip">
+                      <span>{{ t("detail.lock.tip") }}</span>
+                      <span class="subs-btn" @click="onSubscribe">
+                        {{ t("detail.lock.subscribe") }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -189,7 +190,7 @@
             </template>
 
             <template v-else-if="detail.type == '1'">
-              <div class="image-stack">
+              <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll">
                 <div
                   class="image-stack-item"
                   v-for="(img, index) in detail.images"
@@ -197,13 +198,11 @@
                 >
                   <template v-if="isImageLocked(index)">
                     <div class="locked-view">
-                      <div class="locked-inner">
-                        <div class="lock-tip">
-                          <span>{{ t("detail.lock.tip") }}</span>
-                          <span class="subs-btn" @click="onSubscribe">
-                            {{ t("detail.lock.subscribe") }}
-                          </span>
-                        </div>
+                      <div class="lock-tip">
+                        <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="subs-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
                       </div>
                     </div>
                   </template>
@@ -219,16 +218,19 @@
                         :src="img.image_url || ''"
                         alt=""
                       />
-                      <div class="image-zoom-icon" v-if="hoveredImageIndex === index">
+                      <div class="image-zoom-icon" v-if="hoveredImageIndex == index">
                         <img v-if="!isImageFullscreen" src="@/assets/images/detail/big.png" alt="Zoom" />
                         <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" />
                       </div>
                     </div>
-                    <div class="subscribe-overlay" v-if="index == 0 && detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
-                      <span class="subs-tip">{{ t("detail.lock.tip") }}</span>
-                      <span class="subs-btn" @click="onSubscribe">
-                        {{ t("detail.lock.subscribe") }}
-                      </span>
+
+                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+                      <div class="lock-tip">
+                        <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="subs-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </div>
                     </div>
                   </template>
                 </div>
@@ -244,7 +246,7 @@
             >
 
               <div class="collection-info">
-                <template v-if="detail.type == '2'">
+                <template v-if="detail.type == '1' || detail.type == '3'">
                   <span class="comic-title">{{ detail.title }}</span>
                 </template>
                 <template v-else>
@@ -253,8 +255,11 @@
               </div>
               <div class="collection-line"></div>
               <div class="collection-status">
-                <template v-if="detail.type == '1' && isNearBottom">
-                  下一集
+                <template v-if="detail.type == '1' && isNearBottom && nextChapterId">
+                  {{ t('detail.nextEpisode') }}
+                </template>
+                <template v-else-if="detail.type == '1' && isNearBottom && !nextChapterId">
+                  {{ t('detail.viewCollection') }}
                 </template>
                 <template v-else>
                   {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
@@ -263,7 +268,7 @@
             </div>
 
             <!-- Collection Mode Info Bar -->
-            <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0">
+            <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0 && isCollectionMode">
               <div class="current-episode">
                 <span class="episode-title">{{ currentCollectionIndex + 1 }}集：{{ currentCollection?.title }}</span>
               </div>
@@ -381,7 +386,7 @@
                             <button class="c-more-btn" @click.stop="toggleCommentMore(c.id)">
                               <img src="@/assets/images/detail/menu.png" alt="" class="dots-icon" />
                             </button>
-                            <div class="dropdown-menu" v-if="activeCommentMoreId === c.id">
+                            <div class="dropdown-menu" v-if="activeCommentMoreId == c.id">
                               <span class="menu-item" v-if="c.user_id == uid" @click="deleteComment(c.id)">
                                 {{ t("detail.delete") }}
                               </span>
@@ -826,6 +831,7 @@ const zoomLevel = ref(100);
 const hoveredComicIndex = ref(-1);
 const isComicFullscreen = ref<{ [key: number]: boolean }>({});
 const comicScrollRef = ref<HTMLElement | null>(null);
+const imageStackRef = ref<HTMLElement | null>(null);
 const isNearBottom = ref(false);
 
 // Video State
@@ -1040,19 +1046,37 @@ const currentCollection = computed(() => {
 });
 
 // Enter collection mode
-function enterCollectionMode() {
-  isCollectionMode.value = true;
+async function enterCollectionMode() {
+  if (detail.value.type == '1') {
+    if (nextChapterId.value) {
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: nextChapterId.value
+        }
+      });
+    }
+  }
+
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    isCollectionMode.value = true;
+  }
   activeTab.value = 'collection';
   isRightPanelHidden.value = false;
-  loadChapters();
+
+  await loadChapters();
+
 }
 
 // Load chapters (collection episodes)
 async function loadChapters() {
-  if (!detail.value.book_id || Number(detail.value.book_id) === 0) return;
+  if (!detail.value.book_id || Number(detail.value.book_id) == 0) {
+    return;
+  }
 
   try {
-    const response = await api.singleCollection(Number(detail.value.book_id), 1, 50) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
     if (response.code == 0) {
       collections.value = response.data?.data || [];
       chapterCount.value = response.data?.allnums || 0;
@@ -1324,6 +1348,8 @@ async function fetchDetail(newId: number) {
     isLoading.value = true;
     comments.value = [];
     isLoadingComments.value = true;
+    // Reset isNearBottom when fetching new detail
+    isNearBottom.value = false;
 
     var data = null;
 
@@ -1726,7 +1752,7 @@ async function loadCollections(append: boolean = false) {
 
     // 有book_id且值大于0，使用真实API调用
     if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-      const response = await api.singleCollection(Number(detail.value.book_id), page, pageSize) as any;
+      const response = await api.singleCollection(String(detail.value.book_id), page, pageSize) as any;
       if (response.code === 0) {
         const newCollections = response.data?.data || [];
 
@@ -2572,7 +2598,22 @@ function handleComicScroll() {
   const scrollTop = el.scrollTop;
   const scrollHeight = el.scrollHeight;
   const clientHeight = el.clientHeight;
-  isNearBottom.value = scrollHeight - scrollTop - clientHeight <= 20;
+  // Set isNearBottom to true when scrolled to bottom for the first time
+  if (scrollHeight - scrollTop - clientHeight <= 20) {
+    isNearBottom.value = true;
+  }
+}
+
+function handleImageStackScroll() {
+  const el = imageStackRef.value;
+  if (!el) return;
+  const scrollTop = el.scrollTop;
+  const scrollHeight = el.scrollHeight;
+  const clientHeight = el.clientHeight;
+  // Set isNearBottom to true when scrolled to bottom for the first time
+  if (scrollHeight - scrollTop - clientHeight <= 20) {
+    isNearBottom.value = true;
+  }
 }
 
 function toggleComicZoom(index: number) {
@@ -2839,7 +2880,7 @@ function setCommentMoreRef(el: any, id: number) {
 }
 
 function toggleCommentMore(id: number) {
-  if (activeCommentMoreId.value === id) {
+  if (activeCommentMoreId.value == id) {
     activeCommentMoreId.value = null;
   } else {
     activeCommentMoreId.value = id;
@@ -3851,7 +3892,7 @@ async function toggleCollectionLike(item: any) {
         toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
       }
     }
-  } catch (error) {s
+  } catch (error) {
     toast(t('fail'));
   }
 }

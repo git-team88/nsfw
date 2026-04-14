@@ -1,19 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 
-import PublishVideo from "@/views/publish/Video.vue";
-import PublishComic from "@/views/publish/Comic.vue";
-import PublishNovel from "@/views/publish/Novel.vue";
 import PublishSuccess from "@/views/publish/Success.vue";
-
-import Detail from "@/views/Detail.vue";
-import NovelDetail from "@/views/NovelDetail.vue";
-
 import Search from "@/views/Search.vue";
 import Similar from "@/views/Similar.vue";
 import MyProjects from "@/views/MyProjects.vue";
 import CharacterLibrary from "@/views/CharacterLibrary.vue";
-import NovelGenerate from "@/views/NovelGenerate.vue";
 
 import UserHome from "@/views/user/UserHome.vue";
 import SubscriptionPayment from "@/views/user/SubscriptionPayment.vue";
@@ -113,17 +105,17 @@ const routes = [
   {
     path: "/publish/video",
     name: "PublishVideo",
-    component: PublishVideo,
+    component: () => import("@/views/publish/Video.vue"),
   },
   {
     path: "/publish/comic",
     name: "PublishComic",
-    component: PublishComic,
+    component: () => import("@/views/publish/Comic.vue"),
   },
   {
     path: "/publish/novel",
     name: "PublishNovel",
-    component: PublishNovel,
+    component: () => import("@/views/publish/Novel.vue"),
   },
   {
     path: "/publish/success",
@@ -133,12 +125,12 @@ const routes = [
   {
     path: "/detail",
     name: "Detail",
-    component: Detail,
+    component: () => import("@/views/Detail.vue"),
   },
   {
     path: "/novel-detail",
     name: "NovelDetail",
-    component: NovelDetail,
+    component: () => import("@/views/NovelDetail.vue"),
   },
   {
     path: "/search",
@@ -163,7 +155,7 @@ const routes = [
   {
     path: "/novel/:id",
     name: "NovelGenerate",
-    component: NovelGenerate,
+    component: () => import("@/views/NovelGenerate.vue"),
   },
   {
     path: "/user-home",

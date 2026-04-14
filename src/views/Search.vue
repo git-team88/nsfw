@@ -41,7 +41,7 @@
           <div class="post-filters" v-if="activeTab === 'posts'">
             <div
               v-for="filter in postFilters"
-              :key="filter.value"
+              :key="filter.id"
               class="filter-item"
               :class="{ active: postFilter == filter.id }"
               @click="setPostFilter(filter.id)"
@@ -318,7 +318,7 @@ function switchTab(tab: string) {
   loadData();
 }
 
-function setPostFilter(filter: string) {
+function setPostFilter(filter: number) {
   postFilter.value = filter;
   postsPage.value = 1;
   postsHasMore.value = true;
@@ -477,7 +477,7 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(postId: number, type: number) {
+function goToDetail(postId: number) {
   // if (type === 2) {
   //   router.push(`/novel-detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
   // } else {

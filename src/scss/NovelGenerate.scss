@@ -86,6 +86,10 @@
           font-size: 1.6rem;
           font-weight: 500;
           color: #364153;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
         }
 
         .project-name-input {
@@ -689,6 +693,14 @@
         line-height: 2.8rem;
         text-align: center;
         color: #6A7282;
+        margin-bottom: 1.2rem;
+      }
+
+      .failed-tip{
+        font-size: 1.4rem;
+        line-height: 2.8rem;
+        text-align: center;
+        color: #6A7282;
         margin-bottom: 2.4rem;
       }
 
@@ -698,7 +710,7 @@
         justify-content: center;
         min-width: 13.6rem;
         height: 4.8rem;
-        background-color: #ec4899;
+        background-color: #FB64B6;
         color: #FFFFFF;
         border: none;
         border-radius: 0.8rem;
@@ -972,14 +984,25 @@
 
           .chapters {
             .chapter-card {
-              display: flex;
-              align-items: center;
+              margin-top: 1.2rem;
               font-size: 1.4rem;
               line-height: 3rem;
               color: #364153;
 
-              .chapter-title{
-                margin-left: 0.4rem;
+              &:nth-of-type(1){
+                margin-top: 0;
+              }
+
+              .chapter-title-box{
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+              }
+              .chapter-title {
+                color: #6A7282;
+              }
+
+              .chapter-desc {
                 color: #6A7282;
               }
             }
@@ -1006,8 +1029,8 @@
 
           .stream-text {
             font-size: 1.4rem;
-            line-height: 2.4rem;
-            color: #6A7282;
+            line-height: 2.2rem;
+            color: #364153;
             white-space: pre-wrap;
             word-break: break-word;
             margin: 0;
@@ -1046,10 +1069,15 @@
       margin-top: 1.6rem;
       align-items: center;
 
-      .left, .right{
+      .left{
         display: flex;
         align-items: center;
         gap: 2.4rem;
+      }
+
+      .right{
+        display: flex;
+        align-items: center;
       }
 
       .prev-btn {
@@ -1108,6 +1136,7 @@
         }
 
         &.primary {
+          margin-left: 2.4rem;
           background: #FB64B6;
           border-color: #FB64B6;
           color: #FFFFFF;
@@ -1130,6 +1159,18 @@
 
         .action-btn-cost {
           font-size: 1.2rem;
+        }
+      }
+
+      .info-icon-container {
+        display: flex;
+        align-items: center;
+        margin-left: 1.2rem;
+
+        .info-icon {
+          width: 2rem;
+          height: 2rem;
+          cursor: pointer;
         }
       }
     }
@@ -1184,14 +1225,18 @@
       }
     }
 
-    .chapter-cover {
-      margin-top: 2rem;
+    .cover-skeleton-wrapper {
+      width: 15rem;
+      height: 20rem;
       display: flex;
       justify-content: center;
 
       .cover-skeleton {
         width: 15rem;
         height: 20rem;
+        background: linear-gradient(90deg, #F5F5F5 25%, #E5E7EB 50%, #F5F5F5 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
         border-radius: 0.6rem;
       }
     }
@@ -1209,8 +1254,8 @@
     }
 
     .edit-cover-btn {
-      width: 1.8rem;
-      height: 1.8rem;
+      width: 2rem;
+      height: 2rem;
       cursor: pointer;
     }
   }
@@ -1487,97 +1532,22 @@
   50% { opacity: 0; }
 }
 
-/* Exit Confirm Modal */
-.exit-confirm-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-
-  .modal-content {
-    background-color: white;
-    border-radius: 1rem;
-    padding: 2.4rem;
-    width: 40rem;
-    max-width: 90%;
-    box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.15);
-
-    .modal-title {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #364153;
-      margin-bottom: 1.6rem;
-      text-align: center;
-    }
-
-    .modal-message {
-      font-size: 1.4rem;
-      color: #6A7282;
-      line-height: 1.5;
-      margin-bottom: 2.4rem;
-      text-align: center;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: center;
-      gap: 1.2rem;
-
-      .modal-cancel-btn,
-      .modal-exit-btn {
-        padding: 0.8rem 2.4rem;
-        border-radius: 0.6rem;
-        font-size: 1.4rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .modal-cancel-btn {
-        background: #FFFFFF;
-        border: 1px solid #99A1AF;
-        color: #6A7282;
-
-        &:hover {
-          background: #F5F5F5;
-        }
-      }
-
-      .modal-exit-btn {
-        background: #FB64B6;
-        border: 1px solid #FB64B6;
-        color: #FFFFFF;
-
-        &:hover {
-          background: #EC4899;
-        }
-      }
-    }
-  }
-}
-
 /* Cover Generating State */
 .cover-generating-state {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem 0;
 
   .generating-text {
     font-size: 1.4rem;
     color: #6A7282;
-    margin-bottom: 1.6rem;
+    margin-bottom: 1.2rem;
   }
 
   .skeleton-loader {
-    width: 15rem;
-    height: 20rem;
+    width: 100%;
+    height: 18rem;
     position: relative;
     overflow: hidden;
     background-color: #f0f0f0;
@@ -1612,6 +1582,9 @@
   }
 
   .cover-result-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
     width: 100%;
     height: 18rem;
@@ -1708,7 +1681,7 @@
   .cover-zoom-content {
     position: relative;
     height: 64rem;
-    max-width: 64rem;
+    max-width: 110rem;
     display: flex;
     align-items: center;
     justify-content: center;

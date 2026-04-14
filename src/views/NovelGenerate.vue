@@ -27,8 +27,8 @@
           <span v-if="!isEditingName" class="project-name-display">{{ projectName || t('novel.untitled') }}</span>
           <div v-else class="project-name-edit-container">
             <div class="project-name-input-wrapper">
-              <input type="text" v-model="projectName" class="project-name-input" ref="projectNameInputRef" spellcheck="false" @input="projectName = projectName.substring(0, 30)" maxlength="30" />
-              <span class="project-name-counter">{{ projectName.length }}/30</span>
+              <input type="text" v-model="projectName" class="project-name-input" ref="projectNameInputRef" spellcheck="false" maxlength="60" />
+              <span class="project-name-counter">{{ projectName.length }}/60</span>
             </div>
             <div class="edit-actions">
               <img class="save-icon" src="@/assets/images/novel/check.png" alt="Save" @click="saveProjectName" />
@@ -101,7 +101,7 @@
             </div>
           </div>
 
-          <div v-else-if="taskStatus === 'FAIL'" class="progress-section">
+          <div v-else-if="taskStatus == 'FAIL'" class="progress-section">
             <div class="progress-info">
               <span class="progress-label">{{ t('novel.generationProgress') }}</span>
               <span class="progress-time">
@@ -120,7 +120,7 @@
 
           <div v-else-if="outlineData && taskStatus === 'SUCCESS' && chapterCount > stepChapterIndex" class="text-wrapper-1">
             <span class="text_3">{{ t('novel.chaptersToGenerate', { count: chapterCount - stepChapterIndex }) }}</span>
-            <span class="text_4" @click="callNovelAllChapters">{{ t('novel.generateAllChapters') }}</span>
+            <span class="text_4" @click="confirmGenerateAllChapters">{{ t('novel.generateAllChapters') }}</span>
           </div>
 
           <!-- Novel Outline Preview -->
@@ -139,7 +139,7 @@
               v-for="chapter in chapters"
               :key="chapter.id"
               class="chapter-item"
-              :class="{ 'on': currentChapter && currentChapter.chapter === chapter.chapter, 'published': chapter.is_publish !== 2 }"
+              :class="{ 'on': currentChapter && currentChapter.chapter === chapter.chapter, 'published': chapter.is_publish === 1 }"
               @click="handleChapterItemClick(chapter.chapter)"
             >
               <div v-if="!editingChapterId || editingChapterId !== chapter.chapter" class="chapter-item-content">
@@ -151,7 +151,7 @@
                   @click.stop="handlePublishChapter(chapter)"
                 >{{ t('novel.publish') }}</span>
                 <span
-                  v-else
+                  v-else-if="chapter.is_publish == 1"
                   class="chapter-publish-btn published"
                 >{{ t('novel.published') }}</span>
                 <img
@@ -452,6 +452,7 @@
               {{ t('novel.error.contactSupport') }}<br />
               {{ t('novel.error.supportEmail') }}
             </p>
+            <p class="failed-tip">{{ t('novel.error.calcDeductRule') }}</p>
             <button class="retry-button" @click="handleRetry">
               {{ t('novel.retry') }}
             </button>
@@ -476,14 +477,6 @@
                 <div class="chapter-edit-counter">{{ editingChapterContent.length }}/20000</div>
               </div>
             </div>
-
-            <!-- Cover Image Display -->
-            <div v-if="coverTaskId" class="chapter-cover">
-              <div v-if="coverLoading" class="skeleton-loader">
-                <div class="skeleton-line cover-skeleton"></div>
-              </div>
-              <img v-else-if="coverImage" :src="coverImage" alt="Cover" class="cover-image" />
-            </div>
           </div>
 
           <!-- Structured Content -->
@@ -495,7 +488,7 @@
                 <span class="info-label">{{ t('novel.totalChapters') }}</span>
                 <span class="info-value">{{ outlineData.base_info.total_chapters }}{{ t('novel.chaptersLabel') }}</span>
               </div>
-              <div class="info-item" v-if="outlineData.base_info.words_per_chapter">
+              <div class="info-item" v-if="outlineData.base_info.words_per_chapter && outlineData.base_info.words_per_chapter.length === 2">
                 <span class="info-label">{{ t('novel.wordsPerChapter') }}</span>
                 <span class="info-value">{{ outlineData.base_info.words_per_chapter[0] }}-{{ outlineData.base_info.words_per_chapter[1] }}{{ t('novel.wordsLabel') }}</span>
               </div>
@@ -546,25 +539,51 @@
                 :class="{ 'current-chapter': chapter.chapter === stepChapterIndex && taskStatus === 'DOING' }"
                 @click="goToChapter(chapter.chapter)"
               >
-                <div class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</div>
-                <div class="chapter-title">{{ chapter.title }}</div>
+                <div class="chapter-title-box">
+                  <span class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
+                  <span class="chapter-title">{{ chapter.title }}</span>
+                </div>
+
+                <div class="chapter-desc">{{ chapter.description }}</div>
               </div>
             </div>
+
+            <!-- 小说封面 -->
+            <div class="section novel-cover" v-if="outlineData.outline">
+              <h3 class="section-title">{{ t('novel.novelCover') }}</h3>
+              <div class="cover-container">
+                <div v-if="coverLoading" class="cover-skeleton-wrapper">
+                  <div class="skeleton-line cover-skeleton"></div>
+                </div>
+                <div class="cover-image" v-else-if="coverImage">
+                  <img :src="coverImage" alt="" />
+                </div>
+                <div class="cover-placeholder" v-else-if="!coverTaskId">
+                  <span>{{ t('novel.coverPlaceholder') }}</span>
+                </div>
+                <img v-if="showCoverEditBtn && coverImage" class="edit-cover-btn" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Final Outline Stream Text (fallback) -->
+          <div v-else-if="outlineStreamDone && outlineStreamText" class="outline-stream-content">
+            <pre class="stream-text">{{ outlineStreamText }}</pre>
 
             <!-- 小说封面 -->
             <div class="section novel-cover">
               <h3 class="section-title">{{ t('novel.novelCover') }}</h3>
               <div class="cover-container">
-                <div v-if="coverLoading" class="skeleton-loader cover-skeleton-wrapper">
+                <div v-if="coverLoading" class="cover-skeleton-wrapper">
                   <div class="skeleton-line cover-skeleton"></div>
                 </div>
                 <div class="cover-image" v-else-if="coverImage">
-                  <img :src="coverImage" alt="Novel Cover" />
+                  <img :src="coverImage" alt="" />
                 </div>
                 <div class="cover-placeholder" v-else-if="!coverTaskId">
                   <span>{{ t('novel.coverPlaceholder') }}</span>
                 </div>
-                <img v-if="showCoverEditBtn" class="edit-cover-btn" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
+                <img v-if="showCoverEditBtn && coverImage" class="edit-cover-btn" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
               </div>
             </div>
           </div>
@@ -595,7 +614,12 @@
           <button class="action-btn primary" @click="callNovelAllChapters">
             {{ t('novel.allChaptersTitle') }} <span class="action-btn-cost">/{{ allChaptersCost }}{{ t('novel.computingPower') }}</span>
           </button>
+
+          <div class="info-icon-container">
+            <img class="info-icon" src="@/assets/images/novel/intro.png" alt="Info" @click="showComputingPowerEstimateModal = true" />
+          </div>
         </div>
+
       </div>
     </div>
 
@@ -616,11 +640,49 @@
         <img :src="zoomedCoverImage" alt="" class="zoomed-cover-image" />
       </div>
     </div>
+
+    <!-- Confirm Computing Power Modal -->
+    <ConfirmComputingPowerModal
+      :visible="showConfirmComputingPowerModal"
+      :computing-power="estimatedComputingPower"
+      @cancel="showConfirmComputingPowerModal = false"
+      @confirm="() => { showConfirmComputingPowerModal = false; executeRetryAction(); }"
+    />
+
+    <!-- Insufficient Balance Modal -->
+    <InsufficientBalanceModal
+      :visible="showInsufficientBalanceModal"
+      @cancel="showInsufficientBalanceModal = false"
+      @recharge="() => { showInsufficientBalanceModal = false; }"
+    />
+
+    <!-- Generate All Chapters Modal -->
+    <GenerateAllChaptersModal
+      :visible="showGenerateAllChaptersModal"
+      :computing-power="estimatedComputingPower"
+      :estimated-time="modalEstimatedTime"
+      @cancel="showGenerateAllChaptersModal = false"
+      @confirm="() => { showGenerateAllChaptersModal = false; callNovelAllChapters(); }"
+    />
+
+    <!-- Computing Power Estimate Modal -->
+    <ComputingPowerEstimateModal
+      :visible="showComputingPowerEstimateModal"
+      @cancel="showComputingPowerEstimateModal = false"
+      @confirm="showComputingPowerEstimateModal = false"
+    />
+
+    <!-- Task Limit Exceeded Modal -->
+    <TaskLimitExceededModal
+      :visible="showTaskLimitExceededModal"
+      @close="showTaskLimitExceededModal = false"
+    />
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { toast } from '@/util/toast';
@@ -628,6 +690,11 @@ import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
 import ExitConfirmModal from '@/components/ExitConfirmModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
+import ConfirmComputingPowerModal from '@/components/ConfirmComputingPowerModal.vue';
+import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
+import GenerateAllChaptersModal from '@/components/GenerateAllChaptersModal.vue';
+import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
+import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -666,9 +733,9 @@ const languageOptions = computed(() => [
   { value: 'en', label: t('novel.language.en') },
   { value: 'jp', label: t('novel.language.jp') }
 ]);
+const isBatchChapter = ref<number>(0);
 
 // Cover related state
-const novelCover = ref<string>('');
 const isEditingCover = ref<boolean>(false);
 const coverInputRef = ref<HTMLElement | null>(null);
 const coverFileInputRef = ref<HTMLInputElement | null>(null);
@@ -685,7 +752,7 @@ const coverGenerationTaskId = ref<string>('');
 const coverPollingInterval = ref<number | null>(null);
 const generatedCover = ref<string>('');
 const showCoverResult = ref<boolean>(false);
-const showCoverEditBtn = ref<boolean>(true);
+const showCoverEditBtn = ref<boolean>(false);
 const showWordCountDropdown = ref(false);
 const showLanguageDropdown = ref(false);
 const currentChapter = ref<any>(null);
@@ -694,6 +761,7 @@ const isEditingChapter = ref<boolean>(false);
 const editingChapterContent = ref<string>('');
 const originalChapterContent = ref<string>('');
 const estimatedTime = ref<number | null>(null);
+const modalEstimatedTime = ref<string>('');
 const originalEstimatedSeconds = ref<number | null>(null);
 const displayMinutes = ref<number>(0);
 const startTime = ref<number | null>(null);
@@ -704,6 +772,7 @@ const isChapterTyping = ref<boolean>(false);
 const isWaitingForData = ref<boolean>(false);
 const stepChapterIndex = ref<number>(0);
 const streamReaderController = ref<AbortController | null>(null);
+
 const topic = ref<string>('');
 const lastGenerationType = ref<string>('outline');
 const queueInfo = ref<{ count: number, estimatedTime: number } | null>(null);
@@ -715,6 +784,18 @@ const countdownTimer = ref<number | null>(null);
 // Cover action confirmation modal
 const showCoverActionConfirmModal = ref<boolean>(false);
 const pendingCoverAction = ref<string>(''); // 'next' or 'all'
+const pendingChapter = ref<any>(null); // Store chapter information for publish action
+const pendingChapterId = ref<number | null>(null); // Store chapter ID for edit action
+const pendingChapterTitle = ref<string>(''); // Store chapter title for edit action
+
+// Confirm computing power modal
+const showConfirmComputingPowerModal = ref<boolean>(false);
+const showInsufficientBalanceModal = ref<boolean>(false);
+const showGenerateAllChaptersModal = ref<boolean>(false);
+const showComputingPowerEstimateModal = ref<boolean>(false);
+const showTaskLimitExceededModal = ref<boolean>(false);
+const estimatedComputingPower = ref<number>(0);
+const retryAction = ref<string>(''); // 'outline', 'chapter', 'all'
 
 // State for chapter title editing
 const editingChapterId = ref<number | null>(null);
@@ -722,8 +803,8 @@ const editingChapterTitle = ref<string>('');
 const originalChapterTitle = ref<string>('');
 const isSavingChapterTitle = ref<boolean>(false);
 const chapterTitleInputs = ref<{[key: number]: any}>({});
-const nextChapterPoints = ref<number>(10);
-const allChaptersPoints = ref<number>(100);
+const nextChapterPoints = ref<number>(0);
+const allChaptersPoints = ref<number>(0);
 const coverCost = ref<number>(0);
 const isFetchingNovelOutline = ref<boolean>(false);
 
@@ -740,19 +821,34 @@ const zoomedCoverImage = ref<string>('');
 const startCoverPolling = (taskId: string) => {
   coverTaskId.value = taskId;
   coverLoading.value = true;
+  // Set isGeneratingOutline to false immediately to show structured outline content
+  isGeneratingOutline.value = false;
+  taskStatus.value = 'DOING';
+  hasFailed.value = false;
 
   const poll = async () => {
     try {
       const res = await api.coverTaskPolling(taskId) as any;
-      if (res.code === 200 && res.data?.status === 'SUCCESS') {
-        coverImage.value = res.data.result?.image_url || '';
+      if (res.code == 200 && res.data?.status == 'SUCCESS') {
+        coverImage.value = res.data.result?.generate_novel_cover || '';
         coverLoading.value = false;
+        showCoverEditBtn.value = true;
+        // Set status to success when cover generation is successful
+        taskStatus.value = 'SUCCESS';
+        hasFailed.value = false;
+        // Reset currentChapter to show "待生成章节" section in left sidebar
+        currentChapter.value = null;
+        // Reset stepChapterIndex to 0 to show "待生成章节" section
+        stepChapterIndex.value = 0;
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
         }
-      } else if (res.data?.status === 'FAIL') {
+      } else if (res.data?.status == 'FAIL') {
         coverLoading.value = false;
+        // Set status to fail when cover generation fails
+        taskStatus.value = 'FAIL';
+        hasFailed.value = true;
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
@@ -760,6 +856,14 @@ const startCoverPolling = (taskId: string) => {
       }
     } catch (error) {
       console.error('Error polling cover:', error);
+      // Set status to fail when polling fails
+      taskStatus.value = 'FAIL';
+      hasFailed.value = true;
+      coverLoading.value = false;
+      if (coverPollTimer.value) {
+        clearInterval(coverPollTimer.value);
+        coverPollTimer.value = null;
+      }
     }
   };
 
@@ -832,27 +936,30 @@ const startOutlineStream = async () => {
         chapterCount.value = metadata.totalChapters;
       }
 
-        try {
+      // Parse outline data before starting cover polling
+      try {
         const json = outlineStreamParser.value?.extractJson(outlineStreamParser.value?.rawBuf || '');
-        if (json && json.base_info) {
-          outlineData.value = json;
+        if (json) {
+          if (json.base_info) {
+            outlineData.value = json;
+          }
         }
       } catch (e) {
         console.error('Error parsing outline data:', e);
       }
 
+      // Hide loading state after parsing outline data
       isLoading.value = false;
-      isGeneratingOutline.value = false;
-      taskStatus.value = 'SUCCESS';
-      hasFailed.value = false;
 
       // Start polling for cover image
       if (coverTaskId.value) {
         startCoverPolling(coverTaskId.value);
+      } else {
+        // If no cover task, set status to success immediately
+        isGeneratingOutline.value = false;
+        taskStatus.value = 'SUCCESS';
+        hasFailed.value = false;
       }
-
-      // Reset currentChapter to show "待生成章节" section in left sidebar
-      currentChapter.value = null;
     },
     onError: (error) => {
       outlineStreamError.value = error;
@@ -911,14 +1018,17 @@ const shouldShowGenerateButtons = computed(() => {
   // Don't show buttons while typewriter is still printing chapter content
   if (isChapterTyping.value) return false;
 
-  // Never show on outline page
-  if (!currentChapter.value) return false;
-
-  // Only show on the latest chapter (stepChapterIndex)
-  if (currentChapter.value.chapter !== stepChapterIndex.value) return false;
-
   // Don't show if all chapters are generated
-  if (currentChapter.value.chapter >= chapterCount.value) return false;
+  if (currentChapter.value && currentChapter.value.chapter >= chapterCount.value) return false;
+
+  // Don't show buttons if step_name is chapter when viewing outline
+  if (!currentChapter.value && currentStepName.value === 'chapter') return false;
+
+  // For outline page, show buttons if outline is available
+  if (!currentChapter.value) return true;
+
+  // For chapter page, only show on the latest chapter (stepChapterIndex)
+  if (currentChapter.value.chapter !== stepChapterIndex.value) return false;
 
   return true;
 });
@@ -928,18 +1038,34 @@ const selectedLanguageLabel = computed(() => {
   return lang ? lang.label : t('novel.language.zh');
 });
 
+watch(() => shouldShowGenerateButtons.value, (newValue) => {
+  if (newValue) {
+    fetchPointsEstimate();
+  }
+});
+
 // Parse and handle structured outline data
 const handleStructuredData = async (result: any) => {
   try {
     let parsedResult;
     if (typeof result === 'string') {
       parsedResult = JSON.parse(result);
+      // Check if parsed result has generate_novel_cover field
+      if (parsedResult.generate_novel_cover) {
+        coverImage.value = parsedResult.generate_novel_cover;
+        showCoverEditBtn.value = true;
+      }
       // Check if parsed result has generate_novel_outline field
       if (parsedResult.generate_novel_outline) {
         parsedResult = parsedResult.generate_novel_outline;
       }
     } else {
       parsedResult = result;
+      // Check if result has generate_novel_cover field
+      if (parsedResult.generate_novel_cover) {
+        coverImage.value = parsedResult.generate_novel_cover;
+        showCoverEditBtn.value = true;
+      }
       // Check if result has generate_novel_outline field
       if (parsedResult.generate_novel_outline) {
         parsedResult = parsedResult.generate_novel_outline;
@@ -955,8 +1081,10 @@ const handleStructuredData = async (result: any) => {
       }
       // Don't clear outlineData when viewing a chapter
       // outlineData.value = null;
-      // Fetch points estimate for chapter data
-      await fetchPointsEstimate();
+      // Fetch points estimate for chapter data only if generation hasn't failed
+      if (!hasFailed.value) {
+        await fetchPointsEstimate();
+      }
       return;
     }
 
@@ -978,8 +1106,10 @@ const handleStructuredData = async (result: any) => {
       }
     }
 
-    // Fetch points estimate for next chapter and all chapters
-    await fetchPointsEstimate();
+    // Fetch points estimate for next chapter and all chapters only if generation hasn't failed
+    // if (!hasFailed.value) {
+    //   await fetchPointsEstimate();
+    // }
   } catch (error) {
     console.error('Error parsing structured data:', error);
     outlineContent.value = typeof result === 'string' ? result : JSON.stringify(result);
@@ -988,35 +1118,48 @@ const handleStructuredData = async (result: any) => {
 };
 
 // Fetch points estimate for next chapter, all chapters, and cover
-const fetchPointsEstimate = async () => {
+const fetchPointsEstimate = async (includeCover = false) => {
   try {
-    // Estimate for next chapter
-    const nextChapterEstimateRes = await api.novelEstimate({
-      session_id: sessionId.value,
-      step_name: 'chapter',
-      from_chapter: stepChapterIndex.value || 1
-    }) as any;
-    if (nextChapterEstimateRes.code == 200 && nextChapterEstimateRes.data?.total_points) {
-      nextChapterPoints.value = nextChapterEstimateRes.data.total_points;
+    // Don't fetch if all chapters are generated
+    if (currentChapter.value && currentChapter.value.chapter >= chapterCount.value && !includeCover) {
+      return;
     }
 
-    // Estimate for all chapters
-    const allChaptersEstimateRes = await api.novelEstimate({
-      session_id: sessionId.value,
-      step_name: 'chapter',
-      from_chapter: stepChapterIndex.value || 1
-    }) as any;
-    if (allChaptersEstimateRes.code == 200 && allChaptersEstimateRes.data?.total_points) {
-      allChaptersPoints.value = allChaptersEstimateRes.data.total_points;
+    // Only fetch chapter estimates if not just fetching cover estimate
+    if (!includeCover) {
+      // Calculate from_chapter: if stepChapterIndex is 0 (outline), use 1; otherwise use stepChapterIndex + 1
+      const fromChapter = stepChapterIndex.value == 0 ? 1 : stepChapterIndex.value + 1;
+
+      // Estimate for next chapter
+      const nextChapterEstimateRes = await api.novelEstimate({
+        session_id: sessionId.value,
+        step_name: 'chapter',
+        from_chapter: fromChapter
+      }) as any;
+      if (nextChapterEstimateRes.code == 200 && nextChapterEstimateRes.data?.total_points) {
+        nextChapterPoints.value = nextChapterEstimateRes.data.total_points;
+      }
+
+      // Estimate for all chapters
+      const allChaptersEstimateRes = await api.novelEstimate({
+        session_id: sessionId.value,
+        step_name: 'all_chapters',
+        from_chapter: fromChapter
+      }) as any;
+      if (allChaptersEstimateRes.code == 200 && allChaptersEstimateRes.data?.total_points) {
+        allChaptersPoints.value = allChaptersEstimateRes.data.total_points;
+      }
     }
 
-    // Estimate for cover
-    const coverEstimateRes = await api.novelEstimate({
-      session_id: sessionId.value,
-      step_name: 'cover'
-    }) as any;
-    if (coverEstimateRes.code == 200 && coverEstimateRes.data?.total_points) {
-      coverCost.value = coverEstimateRes.data.total_points;
+    // Estimate for cover (only if includeCover is true)
+    if (includeCover) {
+      const coverEstimateRes = await api.novelEstimate({
+        session_id: sessionId.value,
+        step_name: 'cover'
+      }) as any;
+      if (coverEstimateRes.code == 200 && coverEstimateRes.data?.total_points) {
+        coverCost.value = coverEstimateRes.data.total_points;
+      }
     }
   } catch (error) {
     console.error('Error fetching points estimate:', error);
@@ -1036,6 +1179,8 @@ const regenerateOutline = async () => {
   // Fetch latest user settings
   await fetchUserSelectedSettings();
 
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
   showRegenerateInput.value = true;
 
   // Store original content from user settings
@@ -1100,6 +1245,10 @@ const selectLanguage = (lang: string) => {
 
 // Send regenerate request
 const sendRegenerateRequest = async () => {
+  // Hide dropdowns when sending regenerate request
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
+
   if (!regenerateContent.value?.trim()) {
     toast(t('novel.error.emptyRegenerateContent'));
     return;
@@ -1202,6 +1351,10 @@ const sendRegenerateRequest = async () => {
     }
 
     // Hide regenerate input and clear content
+    // First hide dropdowns
+    showWordCountDropdown.value = false;
+    showLanguageDropdown.value = false;
+    // Then hide the entire regenerate section
     showRegenerateInput.value = false;
     regenerateContent.value = '';
 
@@ -1219,6 +1372,13 @@ const sendRegenerateRequest = async () => {
 
 // Start editing project name
 const startEditProjectName = () => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'editProjectName';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   originalProjectName.value = projectName.value;
   isEditingName.value = true;
   nextTick(() => {
@@ -1291,12 +1451,9 @@ const startEditChapter = () => {
 
 // Fetch estimated time
 const fetchEstimatedTime = async () => {
-  if (estimatedTimeFetched.value) {
-    return;
-  }
   try {
     const res = await api.estimateTime(sessionId.value) as any;
-    if (res.code === 200 && res.data) {
+    if (res.code == 200 && res.data) {
       // Get estimated time in seconds from API
       let apiEstimatedSeconds;
       if (isGeneratingOutline.value) {
@@ -1319,17 +1476,27 @@ const fetchEstimatedTime = async () => {
       // Calculate initial display minutes
       let initialMinutes = Math.ceil((originalEstimatedSeconds.value || 600) / 60);
 
-      // If we have task_start_at, subtract elapsed time
-      if (taskStartAt.value && res.current_timestamp) {
-        const startTimestamp = new Date(taskStartAt.value).getTime() / 1000;
-        const currentTimestamp = res.current_timestamp;
+      // Check if we're in chapter generation mode (next chapter or all chapters)
+      // In this case, use startTime instead of taskStartAt since we don't have fresh task_start_at
+      if (lastGenerationType.value == 'chapter' && startTime.value) {
+        // Use startTime for chapter generation
+        const startTimestamp = startTime.value / 1000;
+        const currentTimestamp = res.data.current_timestamp;
         const elapsedSeconds = currentTimestamp - startTimestamp;
-        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 600) - elapsedSeconds);
+        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 0) - elapsedSeconds);
+        initialMinutes = Math.ceil(remainingSeconds / 60);
+      } else if (taskStartAt.value && res.data.current_timestamp) {
+        // Handle ISO format with T separator
+        const formattedTaskStartAt = taskStartAt.value.replace('T', ' ');
+        const startTimestamp = new Date(formattedTaskStartAt).getTime() / 1000;
+        const currentTimestamp = res.data.current_timestamp;
+        const elapsedSeconds = currentTimestamp - startTimestamp;
+        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 0) - elapsedSeconds);
         initialMinutes = Math.ceil(remainingSeconds / 60);
       } else if (startTime.value) {
         // Fallback: use startTime if taskStartAt is not available
         const elapsedSeconds = Math.floor((Date.now() - startTime.value) / 1000);
-        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 600) - elapsedSeconds);
+        const remainingSeconds = Math.max(0, (originalEstimatedSeconds.value || 0) - elapsedSeconds);
         initialMinutes = Math.ceil(remainingSeconds / 60);
       }
 
@@ -1420,6 +1587,16 @@ const saveEditChapter = async () => {
 
 // Start editing chapter title
 const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    // Store chapter information for later use
+    pendingCoverAction.value = 'editChapterTitle';
+    pendingChapterId.value = chapterId;
+    pendingChapterTitle.value = currentTitle;
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   editingChapterId.value = chapterId;
   originalChapterTitle.value = currentTitle;
   editingChapterTitle.value = currentTitle;
@@ -1560,6 +1737,13 @@ const printContent = (content: string) => {
 };
 
 function goHome() {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'home';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // Clean up stream reader before leaving
@@ -1572,6 +1756,7 @@ function goHome() {
     streamReaderController.value = null;
   }
 
+  // Clean up polling before leaving
   try {
     if (printerInterval.value) {
       clearInterval(printerInterval.value);
@@ -1610,202 +1795,7 @@ function goToSimilar() {
   router.push("/similar");
 }
 
-// Stream read from stream_url
-const readStream = async (streamUrl: string, chapterNum: number) => {
-  try {
-    const token = localStorage.getItem('token');
-    streamReaderController.value = new AbortController();
 
-    const response = await fetch(streamUrl, {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json',
-        'token': token || ''
-      },
-      signal: streamReaderController.value.signal
-    });
-
-    if (!response.ok) {
-      throw new Error(`Stream request failed with status: ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No reader available');
-    }
-
-    const decoder = new TextDecoder();
-    let fullContent = '';
-
-    // Initialize chapter state
-    taskStatus.value = 'DOING';
-    currentChapter.value = {
-      chapter: chapterNum,
-      title: '',
-      content: ''
-    };
-    displayedContent.value = '';
-    outlineContent.value = '';
-
-    // Update step chapter index
-    stepChapterIndex.value = chapterNum;
-
-    // Read all chunks first
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      const chunk = decoder.decode(value, { stream: true });
-      fullContent += chunk;
-    }
-
-    // Parse the complete SSE response
-    let chapterContent = '';
-    try {
-      // Split by lines
-      const lines = fullContent.trim().split('\n');
-      let allContent = '';
-
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (trimmedLine) {
-          // Check if it's an SSE data line
-          if (trimmedLine.startsWith('data:')) {
-            // Extract JSON part after 'data: '
-            const jsonStr = trimmedLine.substring(5).trim();
-            if (jsonStr) {
-              const jsonData = JSON.parse(jsonStr);
-              if (jsonData.content) {
-                allContent += jsonData.content + '\n';
-              }
-            }
-          } else {
-            // Not an SSE data line, try to parse as JSON directly
-            try {
-              const jsonData = JSON.parse(trimmedLine);
-              if (jsonData.content) {
-                allContent += jsonData.content + '\n';
-              }
-            } catch (e) {
-              // Not JSON, add as-is
-              allContent += trimmedLine + '\n';
-            }
-          }
-        }
-      }
-
-      chapterContent = allContent.trim();
-    } catch (e) {
-      chapterContent = fullContent;
-    }
-
-    // Find ```json and start from after there if it exists, otherwise don't show any content
-    let displayContent = '';
-    const jsonStartMatch = chapterContent.match(/```json/);
-    if (jsonStartMatch && jsonStartMatch.index !== undefined) {
-      // Find the JSON content after ```json
-      const jsonStartIndex = jsonStartMatch.index + jsonStartMatch[0].length;
-      const jsonContent = chapterContent.substring(jsonStartIndex);
-
-      // Try to parse the JSON content
-      try {
-        // Find the end of JSON (next ```)
-        const jsonEndMatch = jsonContent.match(/```/);
-        if (jsonEndMatch && jsonEndMatch.index !== undefined) {
-          const jsonStr = jsonContent.substring(0, jsonEndMatch.index).trim();
-          const jsonData = JSON.parse(jsonStr);
-          if (jsonData.content) {
-            displayContent = jsonData.content;
-            // Replace newline characters with actual line breaks
-            displayContent = displayContent.replace(/\\n/g, '\n');
-          }
-        }
-      } catch (e) {
-        // If parsing fails, don't show any content
-        displayContent = '';
-      }
-    }
-
-    // Printer effect for the content
-    let charIndex = 0;
-    let userScrolled = false;
-
-    // Add scroll event listener to detect user scrolling
-    let programmaticScroll = false;
-    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
-    const handleScroll = () => {
-      if (programmaticScroll) return; // Ignore scroll events triggered by our own code
-      userScrolled = true;
-      // Resume auto-scroll after 3 seconds of no user scrolling
-      if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-      scrollIdleTimer = setTimeout(() => {
-        userScrolled = false;
-      }, 3000);
-    };
-
-    // Only hide loading screen when we have content to display
-    if (displayContent) {
-      isLoading.value = false;
-    }
-
-    // Use chapterContentRef since we're displaying chapter content
-    const scrollElement = chapterContentRef.value;
-    if (scrollElement) {
-      scrollElement.addEventListener('scroll', handleScroll);
-    }
-
-    const doAutoScroll = () => {
-      // Get the latest scroll element each time to ensure it's always valid
-      const currentScrollElement = chapterContentRef.value;
-      if (!userScrolled && currentScrollElement) {
-        programmaticScroll = true;
-        // Use requestAnimationFrame to ensure DOM is updated before scrolling
-        requestAnimationFrame(() => {
-          currentScrollElement.scrollTop = currentScrollElement.scrollHeight;
-          requestAnimationFrame(() => { programmaticScroll = false; });
-        });
-      }
-    };
-
-    const printInterval = setInterval(() => {
-      if (charIndex < displayContent.length) {
-        displayedContent.value += displayContent[charIndex];
-        charIndex++;
-
-        // Auto scroll to bottom only if user hasn't scrolled
-        doAutoScroll();
-      } else {
-        clearInterval(printerInterval.value);
-        // Stream completed
-        taskStatus.value = 'SUCCESS';
-        isGeneratingOutline.value = false;
-        hasFailed.value = false;
-        currentChapter.value.content = chapterContent;
-        // Reset currentChapter to show "待生成章节" section in left sidebar
-        currentChapter.value = null;
-        // Remove scroll event listener
-        if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-        if (scrollElement) {
-          scrollElement.removeEventListener('scroll', handleScroll);
-        }
-      }
-    }, 10);
-
-    // Initial scroll to bottom when content starts displaying
-    setTimeout(() => {
-      doAutoScroll();
-    }, 100);
-
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      return;
-    }
-    hasFailed.value = true;
-    taskStatus.value = 'FAIL';
-    outlineContent.value = t('novel.error.generationFailed');
-  }
-};
 
 // Call novelNext API
 const callNovelNext = async (retryChapter?: number) => {
@@ -1816,6 +1806,17 @@ const callNovelNext = async (retryChapter?: number) => {
     pendingCoverAction.value = 'next';
     showCoverActionConfirmModal.value = true;
     return;
+  }
+
+  // Check if user has reached the task limit
+  try {
+    const totalProcessRes = await api.totalProcess(false) as any;
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+      showTaskLimitExceededModal.value = true;
+      return;
+    }
+  } catch (error) {
+    console.error('Error checking task limit:', error);
   }
 
   try {
@@ -1859,6 +1860,14 @@ const callNovelNext = async (retryChapter?: number) => {
     }) as any;
 
     if (novelNextRes.code !== 200) {
+      // Handle insufficient balance error
+      if (novelNextRes.code === 40011) {
+        showInsufficientBalanceModal.value = true;
+        isLoading.value = false;
+        hasFailed.value = true;
+        taskStatus.value = 'FAIL';
+        return;
+      }
       toast(t('novel.error.fetchFailed'));
       isLoading.value = false;
       hasFailed.value = true;
@@ -1866,18 +1875,37 @@ const callNovelNext = async (retryChapter?: number) => {
       return;
     }
 
+    // Get task_id from response
+    const taskId = novelNextRes.data?.task_id || '';
+
+    // Use the time from API response as start time if available
+    if (novelNextRes.time) {
+      const startTimeDate = new Date(novelNextRes.time);
+      if (!isNaN(startTimeDate.getTime())) {
+        startTime.value = startTimeDate.getTime();
+      } else {
+        startTime.value = Date.now();
+      }
+    } else {
+      startTime.value = Date.now();
+    }
+
     // Fetch estimated time
     estimatedTime.value = null;
     originalEstimatedSeconds.value = null;
     displayMinutes.value = 0;
     estimatedTimeFetched.value = false;
-    startTime.value = Date.now();
     fetchEstimatedTime();
 
     await fetchUserBalance();
 
-    // Always use stream_read to fetch chapter content
-    await fetchChapterStream(nextChapterIndex);
+    // Use polling to fetch chapter content
+    await fetchChapterStream(nextChapterIndex, taskId);
+
+    // Update points estimate after chapter generation only if generation hasn't failed
+    if (!hasFailed.value) {
+      await fetchPointsEstimate();
+    }
 
   } catch (error) {
     console.error('Error calling novelNext:', error);
@@ -1889,12 +1917,21 @@ const callNovelNext = async (retryChapter?: number) => {
 };
 
 function hideEdit() {
-  if (isEditingCover.value) {
-    isEditingCover.value = false;
-  }
+  // Hide all editing states
+  isEditingName.value = false;
+  isEditingChapter.value = false;
+  editingChapterId.value = null;
+  isEditingCover.value = false;
 }
 
 const goPrevChapter = async () => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'prevChapter';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   if (!currentChapter.value) {
@@ -1907,10 +1944,10 @@ const goPrevChapter = async () => {
     try {
       isLoading.value = true;
 
-      // Stop any ongoing stream first
-      if (streamReaderController.value) {
-        streamReaderController.value.abort();
-        streamReaderController.value = null;
+      // Stop any ongoing polling
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
       }
       if (printerInterval.value) {
         clearInterval(printerInterval.value);
@@ -1962,10 +1999,10 @@ const goPrevChapter = async () => {
     try {
       isLoading.value = true;
 
-      // Stop any ongoing stream first
-      if (streamReaderController.value) {
-        streamReaderController.value.abort();
-        streamReaderController.value = null;
+      // Stop any ongoing polling
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
       }
       if (printerInterval.value) {
         clearInterval(printerInterval.value);
@@ -1992,54 +2029,16 @@ const goPrevChapter = async () => {
   }
 };
 
-// Handle chapter streaming with common logic
-const handleChapterStream = async (streamUrl: string, chapterNum: number, chapterData?: any) => {
-  // Clean up any existing stream reader
-  if (streamReaderController.value) {
-    streamReaderController.value.abort();
-  }
 
-  // Stop polling since we're using stream
-  if (pollingInterval.value) {
-    clearInterval(pollingInterval.value);
-    pollingInterval.value = null;
-  }
-
-  // Start streaming
-  generatingChapter.value = chapterNum;
-  hasFailed.value = false;
-  taskStatus.value = 'DOING';
-  lastGenerationType.value = 'chapter';
-  isGeneratingOutline.value = false;
-
-  // Update user balance
-  await fetchUserBalance();
-
-  // Fetch estimated time
-  estimatedTime.value = null;
-  originalEstimatedSeconds.value = null;
-  displayMinutes.value = 0;
-  estimatedTimeFetched.value = false;
-  await fetchEstimatedTime();
-
-  // Initialize currentChapter to show chapter info in right area
-  if (chapterData) {
-    currentChapter.value = {
-      chapter: chapterNum,
-      title: chapterData.title,
-      content: ''
-    };
-  }
-
-  // Ensure chapterCount is set from outlineData if available
-  if (outlineData.value?.base_info?.total_chapters) {
-    chapterCount.value = outlineData.value.base_info.total_chapters;
-  }
-
-  await readStream(streamUrl, chapterNum);
-};
 
 const goNextChapter = async () => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'nextChapter';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // If currentChapter is null (on outline page), go to first chapter
@@ -2062,9 +2061,12 @@ const goToChapter = async (chapterNum: number) => {
                                 (chapterNum >= stepChapterIndex.value && taskStatus.value === 'DOING');
 
   if (isCurrentlyGenerating) {
-    // Use stream to fetch chapter content
+    // Use polling to fetch chapter content
     try {
-      isLoading.value = true;
+      // Don't set isLoading if we're viewing outline during chapter generation
+      if (currentChapter.value) {
+        isLoading.value = true;
+      }
       isChapterTyping.value = false;
       taskStatus.value = 'DOING';
       lastGenerationType.value = 'chapter';
@@ -2119,10 +2121,10 @@ const goToChapter = async (chapterNum: number) => {
   try {
     isLoading.value = true;
 
-    // Stop any ongoing stream first
-    if (streamReaderController.value) {
-      streamReaderController.value.abort();
-      streamReaderController.value = null;
+    // Stop any ongoing polling
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
     }
     if (printerInterval.value) {
       clearInterval(printerInterval.value);
@@ -2182,6 +2184,17 @@ const callNovelAllChapters = async () => {
     return;
   }
 
+  // Check if user has reached the task limit
+  try {
+    const totalProcessRes = await api.totalProcess(false) as any;
+    if (totalProcessRes.code === 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+      showTaskLimitExceededModal.value = true;
+      return;
+    }
+  } catch (error) {
+    console.error('Error checking task limit:', error);
+  }
+
   try {
     // Determine the first chapter to generate and generate mode
     let fromChapter: number;
@@ -2228,6 +2241,14 @@ const callNovelAllChapters = async () => {
     }) as any;
 
     if (novelAllRes.code !== 200) {
+      // Handle insufficient balance error
+      if (novelAllRes.code === 40011) {
+        showInsufficientBalanceModal.value = true;
+        isLoading.value = false;
+        hasFailed.value = true;
+        taskStatus.value = 'FAIL';
+        return;
+      }
       toast(novelAllRes.message || t('novel.error.fetchFailed'));
       isLoading.value = false;
       hasFailed.value = true;
@@ -2235,11 +2256,16 @@ const callNovelAllChapters = async () => {
       return;
     }
 
-    // Get cover task_id from response
-    if (novelAllRes.data?.task_id) {
-      coverTaskId.value = novelAllRes.data.task_id;
+    // Use the time from API response as start time if available
+    if (novelAllRes.time) {
+      const startTimeDate = new Date(novelAllRes.time);
+      if (!isNaN(startTimeDate.getTime())) {
+        startTime.value = startTimeDate.getTime();
+      } else {
+        startTime.value = Date.now();
+      }
     } else {
-      coverTaskId.value = '';
+      startTime.value = Date.now();
     }
 
     // Fetch estimated time
@@ -2247,13 +2273,17 @@ const callNovelAllChapters = async () => {
     originalEstimatedSeconds.value = null;
     displayMinutes.value = 0;
     estimatedTimeFetched.value = false;
-    startTime.value = Date.now();
     fetchEstimatedTime();
 
     await fetchUserBalance();
 
-    // Use stream_read to fetch chapter content
+    // Use polling to fetch chapter content
     await fetchChapterStream(firstChapterIndex);
+
+    // Update points estimate after chapter generation only if generation hasn't failed
+    if (!hasFailed.value) {
+      await fetchPointsEstimate();
+    }
 
   } catch (error) {
     console.error('Error calling novelAll:', error);
@@ -2265,15 +2295,113 @@ const callNovelAllChapters = async () => {
 };
 
 // Handle retry on failed generation
-const handleRetry = () => {
+const handleRetry = async () => {
+  let estimateRes;
   if (lastGenerationType.value == 'outline') {
-    callNovelOutline('retry');
+    estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'outline' }) as any;
+    retryAction.value = 'outline';
   } else if (lastGenerationType.value == 'chapter') {
+    if (isBatchChapter.value == 1) {
+      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'all_chapters', from_chapter: stepChapterIndex.value || 1 }) as any;
+      retryAction.value = 'all';
+    } else {
+      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'chapter', from_chapter: currentChapter.value?.chapter || 1 }) as any;
+      retryAction.value = 'chapter';
+    }
+  }
+
+  if (estimateRes && estimateRes.code == 200) {
+    estimatedComputingPower.value = estimateRes.data.total_points;
+    showConfirmComputingPowerModal.value = true;
+  } else {
+    toast(estimateRes.message);
+  }
+};
+
+// Execute retry action after confirmation
+const executeRetryAction = () => {
+  if (retryAction.value == 'outline') {
+    callNovelOutline('retry');
+  } else if (retryAction.value == 'chapter') {
     callNovelNext(currentChapter.value?.chapter);
+  } else if (retryAction.value == 'all') {
+    callNovelAllChapters();
+  }
+};
+
+// Function to confirm generate all chapters
+const confirmGenerateAllChapters = async () => {
+  hideEdit();
+  try {
+    // Check if user has reached the task limit
+    try {
+      const totalProcessRes = await api.totalProcess(false) as any;
+      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+        showTaskLimitExceededModal.value = true;
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking task limit:', error);
+    }
+
+    // Calculate from_chapter based on current stepChapterIndex
+    const fromChapter = stepChapterIndex.value == 0 ? 1 : stepChapterIndex.value + 1;
+
+    const estimateRes = await
+      api.novelEstimate({
+        session_id: sessionId.value,
+        type: 'all_chapters',
+        from_chapter: fromChapter,
+      }) as any;
+
+    const timeRes = await api.estimateTime(sessionId.value) as any;
+
+    if (estimateRes.code == 200 && timeRes.code == 200) {
+      // Set the estimated computing power from the API response
+      estimatedComputingPower.value = estimateRes.data.total_points || 0;
+
+      // Get the estimated time in seconds and format it
+      const seconds = timeRes.data.max_chapter_estimate_seconds || 0;
+      let formattedTime = '';
+
+      if (seconds > 0) {
+        if (seconds < 3600) {
+          // Less than an hour, show integer minutes
+          const minutes = Math.round(seconds / 60);
+          formattedTime = `${minutes}${t('novel.minutes')}`;
+        } else {
+          // More than an hour, show hours and minutes
+          const hours = Math.floor(seconds / 3600);
+          const remainingSeconds = seconds % 3600;
+          const minutes = Math.round(remainingSeconds / 60);
+          formattedTime = `${hours}${t('novel.hours')}${minutes}${t('novel.minutes')}`;
+        }
+      }
+
+      modalEstimatedTime.value = formattedTime;
+
+      // Show the modal
+      showGenerateAllChaptersModal.value = true;
+    } else {
+      // If API call fails, show error message and proceed with default values
+      toast(t('novel.error.estimateFailed'));
+      estimatedComputingPower.value = 0;
+      modalEstimatedTime.value = t('novel.tenMinutes');
+      showGenerateAllChaptersModal.value = true;
+    }
+  } catch (error) {
+    toast(t('novel.error.estimateFailed'));
   }
 };
 
 function goRechargeDetail() {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'recharge';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
@@ -2316,6 +2444,13 @@ const handleChapterInfoClick = async () => {
 
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'chapter';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // Check if this chapter has failed - only when clicking on the failed chapter (stepChapterIndex with FAIL status)
@@ -2336,10 +2471,10 @@ const handleChapterItemClick = async (chapterNum: number) => {
     return;
   }
 
-  // Stop any ongoing stream first
-  if (streamReaderController.value) {
-    streamReaderController.value.abort();
-    streamReaderController.value = null;
+  // Stop any ongoing polling
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value);
+    pollingInterval.value = null;
   }
   if (printerInterval.value) {
     clearInterval(printerInterval.value);
@@ -2348,8 +2483,21 @@ const handleChapterItemClick = async (chapterNum: number) => {
   isGeneratingOutline.value = false;
   outlineContent.value = '';
   displayedContent.value = '';
-  currentChapter.value = null;
+  // Set currentChapter to basic info before loading to show chapter title and skeleton
+  const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterNum);
+  currentChapter.value = {
+    chapter: chapterNum,
+    title: chapterData?.title || '',
+    content: ''
+  };
   isLoading.value = true;
+
+  // Check if this is the latest chapter and it's being generated
+  if (chapterNum === stepChapterIndex.value && taskStatus.value === 'DOING') {
+    // Use polling to fetch chapter content
+    await fetchChapterStream(chapterNum);
+    return;
+  }
 
   try {
     const res = await api.detailChapter(sessionId.value, chapterNum) as any;
@@ -2428,11 +2576,20 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
 // Handle publish chapter button click
 const handlePublishChapter = (chapter: any) => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    // Store chapter information for later use
+    pendingCoverAction.value = 'publish';
+    pendingChapter.value = chapter;
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   // Get session_id from route params
   const session_id = route.params.id as string;
 
-  // Get cover from detail data
-  const cover = '';
+  // Get cover from coverImage
+  const cover = coverImage.value || '';
 
   // Get chapter index
   const index = chapter.chapter;
@@ -2454,6 +2611,13 @@ const handlePublishChapter = (chapter: any) => {
 
 // Handle outline preview click
 const handleOutlinePreviewClick = async () => {
+  // Check if there's an unprocessed cover generation result
+  if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'outline';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // Don't allow click if no outline data
@@ -2461,19 +2625,23 @@ const handleOutlinePreviewClick = async () => {
     return;
   }
 
-  // Set currentChapter to null to show outline area with skeleton loader
+  // Set currentChapter to null to show outline area
   currentChapter.value = null;
   displayedContent.value = '';
   outlineContent.value = '';
   isGeneratingOutline.value = false;
 
   try {
-    isLoading.value = true;
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
-    if (detailProjectRes.code === 200) {
+    if (detailProjectRes.code == 200) {
       const resultAsync = detailProjectRes.data?.result_async;
       const stepName = detailProjectRes.data?.step_name;
       const stepStatus = detailProjectRes.data?.step_status;
+
+      // Update currentStepName with the step_name from API
+      if (stepName) {
+        currentStepName.value = stepName;
+      }
 
       if (resultAsync) {
         // Reset hasFailed when viewing outline
@@ -2482,38 +2650,43 @@ const handleOutlinePreviewClick = async () => {
         // Handle the structured data, but skip points estimate if step_name is chapter
         try {
           let parsedResult;
-          if (typeof resultAsync === 'string') {
+          if (typeof resultAsync == 'string') {
             parsedResult = JSON.parse(resultAsync);
+            // Check if parsed result has generate_novel_cover field
+            if (parsedResult.generate_novel_cover) {
+              coverImage.value = parsedResult.generate_novel_cover;
+              showCoverEditBtn.value = true;
+            }
             // Check if parsed result has generate_novel_outline field
             if (parsedResult.generate_novel_outline) {
               parsedResult = parsedResult.generate_novel_outline;
             }
           } else {
             parsedResult = resultAsync;
+            // Check if result has generate_novel_cover field
+            if (parsedResult.generate_novel_cover) {
+              coverImage.value = parsedResult.generate_novel_cover;
+              showCoverEditBtn.value = true;
+            }
             // Check if result has generate_novel_outline field
             if (parsedResult.generate_novel_outline) {
               parsedResult = parsedResult.generate_novel_outline;
             }
           }
 
-          // Check if this is chapter data
-          if (parsedResult && parsedResult.chapter !== undefined) {
-            currentChapter.value = parsedResult;
-            // Update step chapter index when viewing a chapter
-            if (parsedResult.chapter > stepChapterIndex.value) {
-              stepChapterIndex.value = parsedResult.chapter;
-            }
-            // Don't clear outlineData when viewing a chapter
-            // Don't fetch points estimate if step_name is chapter
-            if (stepName !== 'chapter') {
-              await fetchPointsEstimate();
-            }
-            return;
-          }
-
-          // This is outline data
+          // This is outline data - always show outline content when user clicks outline
+          // Don't show chapter data even if it's in the response
           outlineData.value = parsedResult;
           currentChapter.value = null;
+
+          // Check if outline generation failed
+          if (stepName === 'outline' && stepStatus === 'FAIL') {
+            // Set hasFailed to true to show failure message
+            hasFailed.value = true;
+          } else {
+            // Reset hasFailed for other cases
+            hasFailed.value = false;
+          }
           // Don't reset stepChapterIndex to 0 when viewing outline
 
           if (outlineData.value?.base_info?.total_chapters) {
@@ -2528,8 +2701,8 @@ const handleOutlinePreviewClick = async () => {
             }
           }
 
-          // Don't fetch points estimate if step_name is chapter
-          if (stepName !== 'chapter') {
+          // Don't fetch points estimate if step_name is chapter or generation has failed
+          if (stepName !== 'chapter' && !hasFailed.value) {
             await fetchPointsEstimate();
           }
         } catch (error) {
@@ -2582,6 +2755,17 @@ const fetchUserBalance = async () => {
 // Call novelOutline API
 const callNovelOutline = async (type: string, retryCount = 0) => {
   try {
+    // Check if user has reached the task limit
+    try {
+      const totalProcessRes = await api.totalProcess(false) as any;
+      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+        showTaskLimitExceededModal.value = true;
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking task limit:', error);
+    }
+
     // Only fetch user settings if topic is not already set (e.g. not called from sendRegenerateRequest)
     if (!topic.value) {
       try {
@@ -2602,9 +2786,14 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
     }) as any;
 
     if (novelOutlineRes.code !== 200) {
+      // Handle insufficient balance error
+      if (novelOutlineRes.code == 40011) {
+        showInsufficientBalanceModal.value = true;
+        isLoading.value = false;
+        return;
+      }
       // Retry once if failed and it's the first attempt
       if (retryCount === 0) {
-        console.log('novelOutline failed, retrying...');
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
         return callNovelOutline(type, retryCount + 1);
       }
@@ -2613,11 +2802,16 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       return;
     }
 
-    // Get cover task_id from response
-    if (novelOutlineRes.data?.task_id) {
-      coverTaskId.value = novelOutlineRes.data.task_id;
-    } else {
-      coverTaskId.value = '';
+    // Set cover task_id to session_id
+    coverTaskId.value = sessionId.value;
+
+    // Check if it's the first generation
+    const isFirstGenerate = localStorage.getItem('isFirstGenerate');
+    if (!isFirstGenerate) {
+      // Set isFirstGenerate to 1 in local storage
+      localStorage.setItem('isFirstGenerate', '1');
+      // Show computing power estimate modal
+      showComputingPowerEstimateModal.value = true;
     }
 
     // Reset state for new generation
@@ -2625,9 +2819,9 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
     originalEstimatedSeconds.value = null;
     displayMinutes.value = 0;
     estimatedTimeFetched.value = false;
-    startTime.value = Date.now();
     isGeneratingOutline.value = true;
     isLoading.value = true;
+    hasFailed.value = false;
     lastGenerationType.value = 'outline';
     queueInfo.value = null;
 
@@ -2644,7 +2838,7 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
     try {
       const novelEstimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
 
-      if (novelEstimateRes.code === 200 && novelEstimateRes.data?.in_queue_count > 0) {
+      if (novelEstimateRes.code == 200 && novelEstimateRes.data?.in_queue_count > 0) {
         queueInfo.value = {
           count: novelEstimateRes.data.in_queue_count,
           estimatedTime: novelEstimateRes.data.estimated_time || 30 // Default to 30 minutes if not provided
@@ -2665,6 +2859,19 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
         if (detailProjectRes.data.step_name) {
           currentStepName.value = detailProjectRes.data.step_name;
         }
+        // Check if detailProject has cover information
+        if (detailProjectRes.data?.result_async) {
+          try {
+            let result = detailProjectRes.data.result_async;
+
+            if (result.generate_novel_cover) {
+              coverImage.value = result.generate_novel_cover;
+              showCoverEditBtn.value = true;
+            }
+          } catch (error) {
+            console.error('Error parsing cover from detailProject:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching detailProject:', error);
@@ -2678,8 +2885,7 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
   } catch (error) {
     console.error('Error calling novelOutline:', error);
     // Retry once if failed and it's the first attempt
-    if (retryCount === 0) {
-      console.log('novelOutline failed, retrying...');
+    if (retryCount == 0) {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
       return callNovelOutline(type, retryCount + 1);
     }
@@ -2721,70 +2927,34 @@ const fetchUserSelectedSettings = async () => {
   }
 };
 
-// Fetch chapter stream and handle output via stream_read
-const fetchChapterStream = async (chapterIndex: number) => {
+// Fetch chapter content via polling instead of streaming
+const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => {
   try {
-    // Stop any existing stream first
-    if (streamReaderController.value) {
-      streamReaderController.value.abort();
-      streamReaderController.value = null;
-    }
+    // Stop any existing polling
     if (printerInterval.value) {
       clearInterval(printerInterval.value);
       printerInterval.value = null;
     }
-
-    // Ensure loading is shown before starting stream
-    isLoading.value = true;
-    displayedContent.value = '';
-    isWaitingForData.value = true;
-
-    const token = localStorage.getItem('token');
-    streamReaderController.value = new AbortController();
-
-    const response = await fetch(`${aiUrl}app/stream_read/${sessionId.value}`, {
-      headers: {
-        'Accept': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'token': token || '',
-      },
-      signal: streamReaderController.value.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
     }
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No readable stream');
+    // Ensure loading is shown before starting polling
+    // Only show loading if we're still viewing a chapter
+    // Don't show loading if we're viewing outline
+    if (currentChapter.value) {
+      isLoading.value = true;
+      displayedContent.value = '';
+      isWaitingForData.value = true;
     }
-
-    const decoder = new TextDecoder();
-    let pendingText = '';      // Full text to display (producer writes here)
-    let pendingConsumed = 0;   // How many chars the typewriter has consumed
-    let streamDone = false;
-    let lastContent = '';      // Track the latest content from SSE to detect incremental vs full replacement
-    let sseBuffer = '';        // Buffer for incomplete SSE lines
-    let autoScroll = true;
-    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
-
-    // Hide skeleton once we start the typewriter
-    displayedContent.value = '';
-    isWaitingForData.value = true;
 
     // Wait for DOM to mount chapter content view
     await nextTick();
 
     let programmaticScroll = false;
-    const handleScroll = () => {
-      if (programmaticScroll) return;
-      autoScroll = false;
-      if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-      scrollIdleTimer = setTimeout(() => {
-        autoScroll = true;
-      }, 3000);
-    };
+    let autoScroll = true;
+    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Wait for DOM to update and get scroll element
     await nextTick();
@@ -2798,6 +2968,14 @@ const fetchChapterStream = async (chapterIndex: number) => {
     }
 
     if (scrollElement) {
+      const handleScroll = () => {
+        if (programmaticScroll) return;
+        autoScroll = false;
+        if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+        scrollIdleTimer = setTimeout(() => {
+          autoScroll = true;
+        }, 3000);
+      };
       scrollElement.addEventListener('scroll', handleScroll);
       scrollElement.scrollTop = 0;
     }
@@ -2809,155 +2987,129 @@ const fetchChapterStream = async (chapterIndex: number) => {
       }
     };
 
-    // Start typewriter timer: 30ms per character
-    isChapterTyping.value = true;
-    const typewriterTimer = setInterval(() => {
-      if (pendingConsumed >= pendingText.length) {
-        // Nothing to consume, check if stream is done
-        if (streamDone) {
-          clearInterval(typewriterTimer);
-          isChapterTyping.value = false;
-          isWaitingForData.value = false;
-          if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-          if (scrollElement) {
-            scrollElement.removeEventListener('scroll', handleScroll);
-          }
-        } else {
-          // Waiting for more data from stream
-          isWaitingForData.value = true;
-        }
-        return;
-      }
+    // Start polling for task status
+    let pollingCount = 0;
+    pollingInterval.value = window.setInterval(async () => {
+      try {
+        // Call task polling API with the provided taskId or sessionId as fallback
+        const pollingResponse = await api.taskPolling(taskId || sessionId.value) as any;
 
-      isWaitingForData.value = false;
-      pendingConsumed++;
-      displayedContent.value = pendingText.substring(0, pendingConsumed);
+        if (pollingResponse.code == 200 && pollingResponse.data) {
+          const taskData = pollingResponse.data;
 
-      // Use nextTick to ensure DOM is updated before scrolling
-      nextTick(() => {
-        doAutoScroll();
-      });
-    }, 30);
-
-    // Hide skeleton once typewriter starts
-    isLoading.value = false;
-
-    // Read SSE stream
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      sseBuffer += chunk;
-
-      // Process complete lines from buffer
-      const lines = sseBuffer.split('\n');
-      // Keep the last element (may be incomplete line)
-      sseBuffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue;
-
-        // Extract data after "data:" prefix
-        let dataStr = '';
-        if (trimmedLine.startsWith('data: ')) {
-          dataStr = trimmedLine.substring(6);
-        } else if (trimmedLine.startsWith('data:')) {
-          dataStr = trimmedLine.substring(5);
-        } else {
-          continue; // Skip non-data lines
-        }
-
-        if (!dataStr) continue;
-
-        // Parse JSON and extract content
-        try {
-          const jsonData = JSON.parse(dataStr);
-
-          // Extract chapter info from JSON if available
-          if (jsonData.chapter_number !== undefined) {
-            const chapterNum = jsonData.chapter_number;
-            const chapterTitle = jsonData.title || '';
-            if (currentChapter.value && currentChapter.value.chapter !== chapterNum) {
-              currentChapter.value.chapter = chapterNum;
+          // Check task status
+          if (taskData.status == 'SUCCESS') {
+            // Clear polling interval
+            if (pollingInterval.value) {
+              clearInterval(pollingInterval.value);
+              pollingInterval.value = null;
             }
-            if (currentChapter.value && chapterTitle) {
-              currentChapter.value.title = chapterTitle;
+
+            // Hide loading
+            isLoading.value = false;
+
+            // Get content from response
+            let content = '';
+            // Check the nested data structure
+            if (taskData.result && taskData.result.content) {
+              content = taskData.result.content;
+            } else if (taskData.content) {
+              content = taskData.content;
             }
-          }
 
-          if (jsonData.content) {
-            const newContent = jsonData.content;
+            // Filter chapter content
+            content = filterChapterContent(content);
 
-            // The SSE may send full content each time (replacement) or incremental
-            // If new content starts with old content, it's a replacement — take the new part
-            if (lastContent && newContent.startsWith(lastContent)) {
-              const increment = newContent.substring(lastContent.length);
-              if (increment) {
-                pendingText += increment;
+            // Start typewriter effect
+            let pendingText = content;
+            let pendingConsumed = 0;
+
+            // Start typewriter timer: 30ms per character
+            isChapterTyping.value = true;
+            const typewriterTimer = setInterval(() => {
+              if (pendingConsumed >= pendingText.length) {
+                // Typewriter done
+                clearInterval(typewriterTimer);
+                isChapterTyping.value = false;
+                isWaitingForData.value = false;
+                if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+                if (scrollElement) {
+                  // scrollElement.removeEventListener('scroll', handleScroll);
+                }
+
+                // Update final state
+                taskStatus.value = 'SUCCESS';
+                generatingChapter.value = null;
+                hasFailed.value = false;
+                // Only update currentChapter if we're still viewing a chapter
+                // Don't update if we're viewing outline
+                if (currentChapter.value) {
+                  currentChapter.value.content = pendingText;
+                }
+                // Hide estimated time display after chapter generation completes
+                estimatedTime.value = null;
+                displayMinutes.value = 0;
+
+                return;
               }
-            } else if (lastContent && newContent.length > lastContent.length) {
-              // Full replacement with more content
-              pendingText = filterChapterContent(newContent);
-              pendingConsumed = Math.min(pendingConsumed, pendingText.length);
-            } else if (!lastContent) {
-              // First content received
-              pendingText = filterChapterContent(newContent);
+
+              isWaitingForData.value = false;
+              pendingConsumed++;
+              displayedContent.value = pendingText.substring(0, pendingConsumed);
+
+              // Use nextTick to ensure DOM is updated before scrolling
+              nextTick(() => {
+                // Get the latest scroll element to ensure it's still valid
+                const latestScrollElement = chapterContentRef.value;
+                if (latestScrollElement) {
+                  // Force scroll to bottom
+                  latestScrollElement.scrollTop = latestScrollElement.scrollHeight;
+                }
+              });
+            }, 30);
+          } else if (taskData.status === 'FAIL') {
+            // Clear polling interval
+            if (pollingInterval.value) {
+              clearInterval(pollingInterval.value);
+              pollingInterval.value = null;
             }
 
-            lastContent = newContent;
+            // Update state for failure
+            hasFailed.value = true;
+            taskStatus.value = 'FAIL';
+            isLoading.value = false;
+            isChapterTyping.value = false;
+            isWaitingForData.value = false;
+            stopCoverPolling();
+          } else if (taskData.status === 'DOING') {
+            // Task is still in progress, continue polling
+            isWaitingForData.value = true;
+            // Keep loading visible during polling only if we're still viewing a chapter
+            // Don't show loading if we're viewing outline
+            if (currentChapter.value) {
+              isLoading.value = true;
+            }
           }
-        } catch (e) {
-          // Not valid JSON, skip
         }
+
+        pollingCount++;
+      } catch (error) {
+        console.error('Error polling task status:', error);
+        // Clear polling interval on error
+        if (pollingInterval.value) {
+          clearInterval(pollingInterval.value);
+          pollingInterval.value = null;
+        }
+
+        // Update state for failure
+        hasFailed.value = true;
+        taskStatus.value = 'FAIL';
+        isLoading.value = false;
+        isChapterTyping.value = false;
+        isWaitingForData.value = false;
+        stopCoverPolling();
       }
-    }
-
-    // Process any remaining buffer
-    if (sseBuffer.trim()) {
-      const trimmedLine = sseBuffer.trim();
-      let dataStr = '';
-      if (trimmedLine.startsWith('data: ')) {
-        dataStr = trimmedLine.substring(6);
-      } else if (trimmedLine.startsWith('data:')) {
-        dataStr = trimmedLine.substring(5);
-      }
-      if (dataStr) {
-        try {
-          const jsonData = JSON.parse(dataStr);
-          if (jsonData.content) {
-            const newContent = jsonData.content;
-            if (lastContent && newContent.startsWith(lastContent)) {
-              const increment = newContent.substring(lastContent.length);
-              if (increment) pendingText += increment;
-            } else if (!lastContent || newContent.length > lastContent.length) {
-              pendingText = filterChapterContent(newContent);
-              pendingConsumed = Math.min(pendingConsumed, pendingText.length);
-            }
-            lastContent = newContent;
-          }
-        } catch (e) {}
-      }
-    }
-
-    // Mark stream as done
-    streamDone = true;
-
-    // Update final state
-    taskStatus.value = 'SUCCESS';
-    generatingChapter.value = null;
-    hasFailed.value = false;
-    if (currentChapter.value) {
-      currentChapter.value.content = pendingText;
-    }
-
-    // Start polling for cover image if task_id exists
-    if (coverTaskId.value) {
-      startCoverPolling(coverTaskId.value);
-    }
-
-    // Keep currentChapter to display content with cover below
+    }, 3000); // Poll every 3 seconds
 
   } catch (error: any) {
     if (error.name === 'AbortError') return;
@@ -2965,6 +3117,7 @@ const fetchChapterStream = async (chapterIndex: number) => {
     taskStatus.value = 'FAIL';
     isLoading.value = false;
     isChapterTyping.value = false;
+    isWaitingForData.value = false;
     stopCoverPolling();
   }
 };
@@ -2990,7 +3143,8 @@ const fetchNovelOutline = async () => {
     return;
   }
   isFetchingNovelOutline.value = true;
-  isLoading.value = true;
+  // Don't set isLoading to true here - wait until we know the step_name and step_status
+  // isLoading.value = true;
   try {
     if (!sessionId.value) {
       toast(t('novel.error.noSessionId'));
@@ -3027,6 +3181,25 @@ const fetchNovelOutline = async () => {
       taskStartAt.value = detailProjectRes.data.task_start_at;
     }
 
+    // Check if detailProject has cover information
+    if (detailProjectRes.data?.result_async) {
+      try {
+        let result = detailProjectRes.data.result_async;
+
+        if (result.generate_novel_cover) {
+          coverImage.value = result.generate_novel_cover;
+          showCoverEditBtn.value = true;
+        }
+      } catch (error) {
+        console.error('Error parsing cover from detailProject:', error);
+      }
+    }
+
+    // Get is_batch_chapter from detailProject response
+    if (detailProjectRes.data?.is_batch_chapter) {
+      isBatchChapter.value = detailProjectRes.data.is_batch_chapter;
+    }
+
     // Get chapters from detailProject response
     if (detailProjectRes.data?.chapters) {
       chapters.value = detailProjectRes.data.chapters;
@@ -3053,11 +3226,56 @@ const fetchNovelOutline = async () => {
           taskStatus.value = 'DOING';
           isGeneratingOutline.value = true;
           lastGenerationType.value = 'outline';
-          startTime.value = Date.now();
           fetchEstimatedTime();
 
           // Start outline stream
           startOutlineStream();
+        } else if (stepStatus === 'FAIL') {
+          // Outline generation failed - show failed state
+          isLoading.value = false;
+          hasFailed.value = true;
+          taskStatus.value = 'FAIL';
+          isGeneratingOutline.value = false;
+          lastGenerationType.value = 'outline';
+        } else if (stepStatus === 'SUCCESS') {
+          // Outline generation succeeded - show success state
+          isLoading.value = false;
+          hasFailed.value = false;
+          taskStatus.value = 'SUCCESS';
+          isGeneratingOutline.value = false;
+          lastGenerationType.value = 'outline';
+          stepChapterIndex.value = 0;
+
+          // Check if result_async has generate_novel_cover field
+          const resultAsync = detailProjectRes.data?.result_async;
+          if (resultAsync) {
+            try {
+              let result = resultAsync;
+              if (typeof result === 'string') {
+                result = JSON.parse(result);
+              }
+              if (result.generate_novel_cover) {
+                coverImage.value = result.generate_novel_cover;
+                showCoverEditBtn.value = true;
+              } else {
+                // No cover yet, start polling for cover
+                coverTaskId.value = sessionId.value;
+                coverLoading.value = true;
+                startCoverPolling(sessionId.value);
+              }
+            } catch (error) {
+              console.error('Error parsing cover from result_async:', error);
+              // If parsing fails, start polling for cover
+              coverTaskId.value = sessionId.value;
+              coverLoading.value = true;
+              startCoverPolling(sessionId.value);
+            }
+          } else {
+            // No result_async, start polling for cover
+            coverTaskId.value = sessionId.value;
+            coverLoading.value = true;
+            startCoverPolling(sessionId.value);
+          }
         }
       } else if (currentStepName.value == 'chapter') {
         // Show chapter area
@@ -3095,7 +3313,7 @@ const fetchNovelOutline = async () => {
 
           // Check if chapterIndex is greater than chapters length, add generating chapter if needed
           const existingChapter = chapters.value.find((c: any) => c.chapter === chapterIndex);
-          if (!existingChapter && (stepStatus === 'PREPARE' || stepStatus === 'DOING')) {
+          if (!existingChapter && (stepStatus === 'PREPARE' || stepStatus === 'DOING' || stepStatus === 'FAIL')) {
             // Get chapter title from outline data if available
             const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter === chapterIndex);
             chapters.value.push({
@@ -3108,11 +3326,18 @@ const fetchNovelOutline = async () => {
         }
 
         if (stepStatus === 'SUCCESS' && chapterIndex) {
+          // Set up chapter state before fetching content to avoid showing outline skeleton
+          const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
+          currentChapter.value = {
+            chapter: chapterIndex,
+            title: chapterData?.title || '',
+            content: ''
+          };
+
           // Chapter generation completed - fetch and display the chapter content
           try {
             const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
             if (chapterRes.code === 200 && chapterRes.data) {
-              const chapterData = chapters.value.find((c: any) => c.chapter === chapterIndex);
               currentChapter.value = {
                 chapter: chapterIndex,
                 title: chapterData?.title || chapterRes.data.title || '',
@@ -3164,13 +3389,11 @@ const fetchNovelOutline = async () => {
           originalEstimatedSeconds.value = null;
           displayMinutes.value = 0;
           estimatedTimeFetched.value = false;
-          startTime.value = Date.now();
           fetchEstimatedTime();
 
           // Call fetchChapterStream to handle chapter streaming
           await fetchChapterStream(chapterIndex);
           // Return early to avoid polling logic
-          isLoading.value = false;
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus === 'FAIL' && chapterIndex) {
@@ -3188,8 +3411,10 @@ const fetchNovelOutline = async () => {
           currentStepName.value = 'chapter';
           lastGenerationType.value = 'chapter';
 
-          // Fetch points estimate
-          await fetchPointsEstimate();
+          // Fetch points estimate only if generation hasn't failed
+          if (!hasFailed.value) {
+            await fetchPointsEstimate();
+          }
           isLoading.value = false;
           isFetchingNovelOutline.value = false;
           return;
@@ -3218,8 +3443,10 @@ const fetchNovelOutline = async () => {
             console.error('Error fetching chapter data:', error);
           }
 
-          // Fetch points estimate for chapter step
-          await fetchPointsEstimate();
+          // Fetch points estimate for chapter step only if generation hasn't failed
+          if (!hasFailed.value) {
+            await fetchPointsEstimate();
+          }
           // Return early to avoid polling logic
           isLoading.value = false;
           isFetchingNovelOutline.value = false;
@@ -3237,95 +3464,40 @@ const fetchNovelOutline = async () => {
       // If step_name has no value and status_message has no value, directly call novelOutline API
       if (!stepName && !statusMessage) {
         callNovelOutline('new');
-      } else {
-        const initialPollingRes = await api.taskPolling(sessionId.value) as any;
-
-        if (initialPollingRes.code !== 200) {
-          toast(initialPollingRes.message);
-          isLoading.value = false;
-          return;
-        }
-
-        const status = initialPollingRes.data?.status;
-        taskStatus.value = status;
-
-        if (status == 'DOING' && currentStepName.value !== 'chapter') {
-          startTime.value = Date.now();
-          isGeneratingOutline.value = !currentChapter.value;
-          isLoading.value = true;
-          // Start outline stream instead of polling
-          startOutlineStream();
-          fetchEstimatedTime();
-          // Fetch queue info
-          try {
-            const novelEstimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
-            if (novelEstimateRes.code === 200 && novelEstimateRes.data?.in_queue_count > 0) {
-              queueInfo.value = {
-                count: novelEstimateRes.data.in_queue_count,
-                estimatedTime: novelEstimateRes.data.estimated_time || 30
-              };
-            }
-          } catch (error) {
-            console.error('Error fetching novel estimate:', error);
-          }
-        } else if (status != 'SUCCESS' && status != 'FAIL') {
-          callNovelOutline('new');
-        } else if (status == 'SUCCESS') {
-          isLoading.value = false;
-          hasFailed.value = false;
-          const result = initialPollingRes.data?.result;
-          handleStructuredData(result);
-        } else if (status == 'FAIL') {
-          isLoading.value = false;
-          hasFailed.value = true;
-          outlineContent.value = initialPollingRes.data?.error_msg || initialPollingRes.data?.result || t('novel.error.generationFailed');
-        }
       }
     } else {
       // If result_async has value and step_name is outline, no need to poll
-      if (currentStepName.value === 'outline') {
+      if (currentStepName.value == 'outline') {
         isLoading.value = false;
-        hasFailed.value = false;
-        // Try to parse result_async if it's available
-        if (detailProjectRes.data?.result_async) {
-          try {
-            let result = detailProjectRes.data.result_async;
-            // Check if result is string and parse it
-            if (typeof result === 'string') {
-              result = JSON.parse(result);
+        // Only set hasFailed to false if stepStatus is not FAIL
+        const stepStatus = detailProjectRes.data?.step_status;
+        if (stepStatus !== 'FAIL') {
+          hasFailed.value = false;
+          // Try to parse result_async if it's available
+          if (detailProjectRes.data?.result_async) {
+            try {
+              let result = detailProjectRes.data.result_async;
+              // Check if result is string and parse it
+              if (typeof result === 'string') {
+                result = JSON.parse(result);
+              }
+              // Check if result has generate_novel_cover field
+              if (result.generate_novel_cover) {
+                coverImage.value = result.generate_novel_cover;
+                showCoverEditBtn.value = true;
+              }
+              // Check if result has generate_novel_outline field
+              if (result.generate_novel_outline) {
+                result = result.generate_novel_outline;
+              }
+              handleStructuredData(result);
+            } catch (error) {
+              console.error('Error parsing result_async:', error);
             }
-            // Check if result has generate_novel_outline field
-            if (result.generate_novel_outline) {
-              result = result.generate_novel_outline;
-            }
-            handleStructuredData(result);
-          } catch (error) {
-            console.error('Error parsing result_async:', error);
           }
         }
       } else {
-        const initialPollingRes = await api.taskPolling(sessionId.value) as any;
-        if (initialPollingRes.code == 200) {
-          const status = initialPollingRes.data?.status;
-          taskStatus.value = status;
-          if (status == 'DOING') {
-            startTime.value = Date.now();
-            fetchEstimatedTime();
-            // Fetch queue info
-            try {
-              const novelEstimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
-              if (novelEstimateRes.code === 200 && novelEstimateRes.data?.in_queue_count > 0) {
-                queueInfo.value = {
-                  count: novelEstimateRes.data.in_queue_count,
-                  estimatedTime: novelEstimateRes.data.estimated_time || 30
-                };
-              }
-            } catch (error) {
-              console.error('Error fetching novel estimate:', error);
-            }
-          }
-        }
-
+        // For non-outline step_names, start outline stream directly
         if (currentStepName.value !== 'chapter') {
           // Start outline stream instead of polling
           startOutlineStream();
@@ -3333,8 +3505,10 @@ const fetchNovelOutline = async () => {
       }
     }
   } catch (error) {
-    toast(t('Fail'));
+    toast(t('fail'));
     isLoading.value = false;
+  } finally {
+    isFetchingNovelOutline.value = false;
   }
 };
 
@@ -3420,17 +3594,20 @@ function handleClickOutside(event: MouseEvent) {
     if (!coverEditSectionRef.value.contains(event.target as Node)) {
       // If showing result, show exit confirmation
       if (showCoverResult.value) {
-        showExitConfirmModal.value = true;
+        ExitConfirmModal.value = true;
       }
     }
   }
 }
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
   fetchUserInfo();
   fetchUserBalance();
-  fetchNovelOutline();
+  await fetchNovelOutline();
+
+  // Don't fetch points estimate here as it's already called in handleStructuredData
+
   document.addEventListener('click', handleClickOutside);
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
@@ -3447,20 +3624,11 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 }
 
 onBeforeUnmount(() => {
-  if (printerInterval.value) {
-    clearInterval(printerInterval.value);
-  }
   if (pollingInterval.value) {
     clearInterval(pollingInterval.value);
   }
   if (countdownTimer.value) {
     clearInterval(countdownTimer.value);
-  }
-  if (streamReaderController.value) {
-    streamReaderController.value.abort();
-  }
-  if (outlineStreamParser.value) {
-    outlineStreamParser.value.destroy();
   }
   stopCoverPolling();
   document.removeEventListener('click', handleClickOutside);
@@ -3471,7 +3639,7 @@ class OutlineStreamParser {
   onText: (text: string) => void;
   onComplete: (text: string, data?: any) => void;
   onError: (error: string) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: object) => string;
 
   rawBuf: string = '';
   jsonBuf: string = '';
@@ -3484,6 +3652,7 @@ class OutlineStreamParser {
   parseStage: number = 0;
   parsedTitle: boolean = false;
   parsedTotalChapters: boolean = false;
+  parsedWordsPerChapter: boolean = false;
   parsedGenre: boolean = false;
   parsedStyle: boolean = false;
   parsedSummary: boolean = false;
@@ -3591,7 +3760,6 @@ class OutlineStreamParser {
         const m = s.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           this.novelTitle = m[1].replace(/\\"/g, '"');
-          this.pendingText += `${this.t('novel.title')}：${this.novelTitle}\n`;
           this.parsedTitle = true;
         }
       }
@@ -3600,8 +3768,20 @@ class OutlineStreamParser {
         const m = s.match(/"total_chapters"\s*:\s*(\d+)/);
         if (m) {
           this.totalChapters = parseInt(m[1]);
-          this.pendingText += `${this.t('novel.totalChapters')}：${this.totalChapters} ${this.t('novel.chaptersLabel')}\n`;
+          this.pendingText += `${this.t('novel.totalChapters')}${this.totalChapters} ${this.t('novel.chaptersLabel')}\n`;
           this.parsedTotalChapters = true;
+        }
+      }
+
+      // Add words per chapter if available, even if total chapters already parsed
+      if (!this.parsedWordsPerChapter) {
+        // Try different formats for words_per_chapter
+        const wordsMatch = s.match(/"words_per_chapter"\s*:\s*\[(\d+),\s*(\d+)\]/);
+        if (wordsMatch) {
+          const minWords = wordsMatch[1];
+          const maxWords = wordsMatch[2];
+          this.pendingText += `${this.t('novel.wordsPerChapter')}${minWords}-${maxWords}${this.t('novel.wordsLabel')}\n`;
+          this.parsedWordsPerChapter = true;
         }
       }
 
@@ -3609,7 +3789,7 @@ class OutlineStreamParser {
         const m = s.match(/"genre"\s*:\s*"((?:[^"\\]|\\.)*)"/);
         if (m) {
           const genre = m[1].replace(/\\"/g, '"');
-          if (genre) this.pendingText += `${this.t('novel.genreLabel')}：${genre}\n`;
+          if (genre) this.pendingText += `${this.t('novel.genreLabel')}${genre}\n`;
           this.parsedGenre = true;
         }
       }
@@ -3687,7 +3867,7 @@ class OutlineStreamParser {
         }
         const chTitle = m[2].replace(/\\"/g, '"');
         const chDesc = m[3].replace(/\\"/g, '"').replace(/\\n/g, '\n');
-        this.pendingText += `${this.t('novel.chapterLabel')}${chNum} ${chTitle}\n`;
+        this.pendingText += `${this.t('novel.chapter', { chapter: chNum })} ${chTitle}\n`;
         this.pendingText += `${chDesc}\n\n`;
       }
     }
@@ -3748,8 +3928,10 @@ class OutlineStreamParser {
 
     let text = `${this.t('novel.novelOutline')}\n\n`;
     text += `${this.t('novel.basicInfo')}\n`;
-    text += `${this.t('novel.title')}：${bi.title || this.t('novel.untitled')}\n`;
     text += `${this.t('novel.totalChapters')}：${bi.total_chapters || 0} ${this.t('novel.chaptersLabel')}\n`;
+    if (bi.words_per_chapter && bi.words_per_chapter.length === 2) {
+      text += `${this.t('novel.wordsPerChapter')}${bi.words_per_chapter[0]}-${bi.words_per_chapter[1]}${this.t('novel.wordsLabel')}\n`;
+    }
     if (bi.genre) text += `${this.t('novel.genreLabel')}：${bi.genre}\n`;
     if (bi.writing_style) text += `${this.t('novel.writingStyle')}：${bi.writing_style}\n`;
     text += '\n';
@@ -3770,7 +3952,7 @@ class OutlineStreamParser {
     if (outline.length > 0) {
       text += `${this.t('novel.chapterPlot')}\n`;
       for (const ch of outline) {
-        text += `${this.t('novel.chapterLabel')}${ch.chapter} ${ch.title || ''}\n`;
+        text += `${this.t('novel.chapter', { chapter: ch.chapter })} ${ch.title || ''}\n`;
         text += `${ch.description || ''}\n\n`;
       }
     }
@@ -3786,24 +3968,16 @@ class OutlineStreamParser {
 
 // Cover edit functions
 async function toggleCoverEdit() {
-  isEditingCover.value = !isEditingCover.value;
+  isEditingCover.value = true;
   if (isEditingCover.value) {
     // Reset cover input
     combinedCoverItems.value = [];
     uploadedCoverImages.value = [];
     coverInputKey.value++;
 
-    // Fetch cover cost when opening edit modal
-    try {
-      const coverEstimateRes = await api.novelEstimate({
-        session_id: sessionId.value,
-        step_name: 'cover'
-      }) as any;
-      if (coverEstimateRes.code == 200 && coverEstimateRes.data?.total_points) {
-        coverCost.value = coverEstimateRes.data.total_points;
-      }
-    } catch (error) {
-      console.error('Error fetching cover cost:', error);
+    // Fetch cover cost when opening edit modal only if generation hasn't failed
+    if (!hasFailed.value) {
+      await fetchPointsEstimate(true);
     }
 
     nextTick(() => {
@@ -3828,6 +4002,35 @@ function confirmCoverAction() {
   generatedCover.value = '';
   isEditingCover.value = false;
   showCoverEditBtn.value = true;
+
+  // Handle the action based on pendingCoverAction
+  if (pendingCoverAction.value === 'next') {
+    callNovelNext();
+  } else if (pendingCoverAction.value === 'all') {
+    callNovelAllChapters();
+  } else if (pendingCoverAction.value === 'home') {
+    goHome();
+  } else if (pendingCoverAction.value === 'outline') {
+    handleOutlinePreviewClick();
+  } else if (pendingCoverAction.value === 'recharge') {
+    goRechargeDetail();
+  } else if (pendingCoverAction.value === 'editProjectName') {
+    startEditProjectName();
+  } else if (pendingCoverAction.value === 'publish' && pendingChapter.value) {
+    handlePublishChapter(pendingChapter.value);
+  } else if (pendingCoverAction.value === 'editChapterTitle' && pendingChapterId.value !== null) {
+    startEditChapterTitle(pendingChapterId.value, pendingChapterTitle.value);
+  } else if (pendingCoverAction.value === 'prevChapter') {
+    goPrevChapter();
+  } else if (pendingCoverAction.value === 'nextChapter') {
+    goNextChapter();
+  }
+
+  // Reset pending variables
+  pendingCoverAction.value = '';
+  pendingChapter.value = null;
+  pendingChapterId.value = null;
+  pendingChapterTitle.value = '';
 }
 
 function handleCoverInput() {
@@ -4081,7 +4284,7 @@ async function useCover() {
   try {
     // Call API to save novel cover
     const token = localStorage.getItem('token') || '';
-    const response = await fetch(`${aiUrl}ai/novel/save_novel_cover'`, {
+    const response = await fetch(`${aiUrl}ai/novel/save_novel_cover`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -4096,15 +4299,14 @@ async function useCover() {
     const res = await response.json();
 
     if (res.code == 200) {
-      // Cover saved successfully
-      novelCover.value = generatedCover.value;
+      coverImage.value = generatedCover.value;
       showCoverResult.value = false;
       isEditingCover.value = false;
       showCoverEditBtn.value = true;
-      toast(t('novel.coverGenerated'));
+      toast(t('success'));
     } else {
       showCoverEditBtn.value = true;
-      toast(res.message || t('novel.coverGenerateFailed'));
+      toast(res.message);
     }
   } catch (error) {
     console.error('Error saving cover:', error);
@@ -4158,15 +4360,22 @@ async function generateNovelCover() {
 
     const res = await response.json();
 
-    if (res.code == 200 && res.data.url) {
+    if (res.code == 200) {
       // Cover generated successfully
-      generatedCover.value = res.data.result.generate_novel_cover;
+      generatedCover.value = res.data.cover_url;
       showCoverResult.value = true;
       isGeneratingCover.value = false;
     } else {
+      // Handle insufficient balance error
+      if (res.code == 40011) {
+        showInsufficientBalanceModal.value = true;
+        isGeneratingCover.value = false;
+        showCoverEditBtn.value = true;
+        return;
+      }
       isGeneratingCover.value = false;
       showCoverEditBtn.value = true;
-      toast(res.message || t('novel.coverGenerateFailed'));
+      toast(res.message);
     }
   } catch (error) {
     console.error('Error generating cover:', error);

@@ -190,7 +190,7 @@ async function handleRecharge() {
   if (!agreeTerms.value) return;
   isLoading.value = true;
   try {
-    const response = await api.AIRechargePartner({ plan_id: selectedPlan.value, is_partner: true });
+    const response = await api.AIRecharge({ plan_id: selectedPlan.value, is_partner: true });
     const data = response as any;
     if (data.code === 0 || data.code === 200) {
       if (data.data) window.open(data.data?.url.url, '_blank');

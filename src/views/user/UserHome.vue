@@ -134,7 +134,11 @@
                 :class="{ active: activeCollectionTab == tab.id }"
                 @click="setActiveCollectionTab(tab.id)"
               >
-                {{ tab.label }}
+                <span v-if="tab.id == 0" class="tab-label">{{ tab.label }}</span>
+                <template v-else>
+                  <span class="tab-title">{{ tab.title }}</span>
+                  <span class="tab-count">({{ tab.count }})</span>
+                </template>
               </div>
             </div>
 
@@ -152,7 +156,7 @@
 
                 <div class="dropdown-menu bottom" v-if="showCollectionMenu">
                   <div class="menu-item" @click="editCollectionName">{{ t('userHome.collection.editName') }}</div>
-                  <div class="menu-item delete" v-if="currentCollection?.items?.length === 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
+                  <div class="menu-item delete" v-if="currentCollection?.chapters?.length === 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
                 </div>
               </div>
             </div>
@@ -369,7 +373,7 @@ import ReportModal from "@/components/ReportModal.vue";
 import CustomToast from "@/components/CustomToast.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
-import defaultHeaderImg from "@/assets/images/user/pic.png";
+import defaultHeaderImg from "@/assets/images/user/pic.jpg";
 import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import ascIcon from "@/assets/images/user/asc.png";
@@ -440,6 +444,12 @@ interface UserInfo {
   posts: number;
   subPrice: string;
   subscription_plans: SubscriptionPlan[] | SubscriptionPlan | null;
+  novelCount?: number;
+  comicCount?: number;
+  total_posts?: number;
+  total_posts_1?: number;
+  total_posts_2?: number;
+  total_posts_3?: number;
 }
 
 // User Info
@@ -458,6 +468,12 @@ const userInfo = ref<UserInfo>({
   posts: 0,
   subPrice: "",
   subscription_plans: null,
+  novelCount: 0,
+  comicCount: 0,
+  total_posts: 0,
+  total_posts_1: 0,
+  total_posts_2: 0,
+  total_posts_3: 0,
 });
 
 const reportTarget = ref<{ type: string; id: number | string } | null>(null);
@@ -527,7 +543,14 @@ const contentTypes = computed(() => [
 const activeContentType = ref(2);
 
 // Collection tabs
-const collectionTabs = ref([
+interface CollectionTab {
+  id: number;
+  label?: string;
+  title?: string;
+  count?: number;
+}
+
+const collectionTabs = ref<CollectionTab[]>([
   { id: 0, label: t('userHome.collection.all') }
 ]);
 
@@ -572,7 +595,8 @@ async function fetchCollections() {
       collectionData.forEach((collection: any) => {
         collectionTabs.value.push({
           id: collection.id,
-          label: `${collection.title} (${collection.chapters?.length || 0})`
+          title: collection.title,
+          count: collection.chapters?.length || 0
         });
       });
     }
@@ -1386,7 +1410,8 @@ function handleEditCollectionSave(collection: { id: string | number; name: strin
   if (tabIndex !== -1) {
     const collectionData = collections.value.find(col => col.id === collection.id);
     if (collectionData) {
-      collectionTabs.value[tabIndex].label = `${collection.name} (${collectionData.chapters?.length || 0})`;
+      collectionTabs.value[tabIndex].title = collection.name;
+      collectionTabs.value[tabIndex].count = collectionData.chapters?.length || 0;
     }
   }
 }
@@ -1868,11 +1893,14 @@ async function deletePost(post: Post) {
 
   .tabs {
     display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     gap: 1.6rem;
     height: 100%;
     .tab-item {
       display: flex;
-      align-items: center;
+      align-items: baseline;
+      flex-shrink: 0;
       font-size: 1.4rem;
       color: #6A7282;
       cursor: pointer;
@@ -1882,6 +1910,13 @@ async function deletePost(post: Post) {
 
       &.active {
         background: #F5F5F5;
+      }
+
+      .tab-title {
+        max-width: 16rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }

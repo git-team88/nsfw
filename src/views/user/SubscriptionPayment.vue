@@ -12,7 +12,7 @@
         <!-- Creator Info -->
         <div class="creator-info">
           <div class="info-left">
-            <img :src="userInfo.avatar || defaultAvatar" class="avatar" />
+            <img :src="userInfo.avatar" class="avatar" />
             <div class="meta">
               <div class="nickname">{{ userInfo.nickname }}</div>
               <!-- <div class="id">ID: {{ userInfo.id }}</div> -->
@@ -132,7 +132,7 @@ async function fetchAuthorInfo() {
       userInfo.value = {
         id: data.data?.user?.id || "",
         nickname: data.data?.user?.nickname || "",
-        avatar: data.data?.user?.avatar || "",
+        avatar: data.data?.user?.avatar || defaultAvatar,
       };
 
       subscriptionPlans.value = data.data?.subscription_plans || [];

@@ -62,7 +62,7 @@ import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
-import headerImgDefault from "@/assets/images/user/pic.png";
+import headerImgDefault from "@/assets/images/user/pic.jpg";
 import { baseUrl } from "@/util/config";
 import { toast } from "@/util/toast";
 import router from "@/router";
