@@ -2,8 +2,8 @@
   <div v-if="isLogin && totalCount > 0" class="process-container">
     <div class="process-header" @click="toggleDropdown">
       <div class="process-title">
-          <img class="status-icon" src="@/assets/images/process/doing.png" alt="status" />
-          <span>{{ t('process.taskProgress') }}{{ totalCount > 1 ? ` (${doingCount}/${totalCount})` : '' }}</span>
+          <img class="status-icon" src="@/assets/images/process/wait.png" alt="status" />
+          <span>{{ t('process.taskProgress') }}{{ totalCount >= 1 ? ` (${doingCount}/${totalCount})` : '' }}</span>
         </div>
       <img class="dropdown-arrow" :src="arrowIcon" :class="{ 'rotated': isDropdownOpen }" alt="arrow" />
     </div>
@@ -39,7 +39,8 @@
             <div class="item-top">
               <img
               class="item-status"
-              :src="getStatusIcon(category.items[category.currentIndex].status, category.items[category.currentIndex])"
+              :class="{'doing': category.items[category.currentIndex].step_status == 'DOING'}"
+              :src="getStatusIcon(category.items[category.currentIndex].step_status)"
               alt="status"
             />
               <div class="item-info">
@@ -49,9 +50,9 @@
             </div>
 
             <!-- Queue information -->
-            <div v-if="shouldShowQueueInfo(category.items[category.currentIndex]) && getQueueCount(category.type) > 0" class="item-queue-info">
+            <div v-if="shouldShowQueueInfo(category.items[category.currentIndex]) && getQueuePosition(category.items[category.currentIndex]) > 0" class="item-queue-info">
               <span class="queue-text">
-                {{ t('process.queueInfo', { count: getQueueCount(category.type) }) }}
+                {{ t('process.queueInfo', { count: getQueuePosition(category.items[category.currentIndex]) }) }}
               </span>
             </div>
 
@@ -61,15 +62,18 @@
               </span>
             </div> -->
 
-            <div v-else-if="category.items[category.currentIndex].status != 'FAIL'" class="item-progress">
+            <div v-else-if="category.items[category.currentIndex].step_status == 'PREPARE'" class="item-waiting">
+              <span class="waiting-text">{{ t('process.queueInfo', { count: getQueuePosition(category.items[category.currentIndex]) }) }}</span>
+            </div>
+            <div v-else-if="category.items[category.currentIndex].step_status != 'FAIL'" class="item-progress">
               <div
                 class="progress-bar"
               >
                 <div
                   class="progress-fill"
                   :class="{
-                    'success': category.items[category.currentIndex].status == 'SUCCESS',
-                    'doing': category.items[category.currentIndex].status == 'DOING'
+                    'success': category.items[category.currentIndex].step_status == 'SUCCESS',
+                    'doing': category.items[category.currentIndex].step_status == 'DOING'
                   }"
                   :style="{ width: getProgress(category.items[category.currentIndex]) + '%' }"
                 ></div>
@@ -79,7 +83,7 @@
 
             <div v-else class="item-fail">
               <span class="fail-text">{{ t('process.generateFailed') }}</span>
-                <span class="clear-task" @click.stop="clearTask(category.items[category.currentIndex])">{{ t('process.clearTask') }}</span>
+              <span class="clear-task" @click.stop="clearTask(category.items[category.currentIndex])">{{ t('process.clearTask') }}</span>
             </div>
           </div>
         </div>
@@ -103,6 +107,7 @@ import arrowIcon from '@/assets/images/process/arrow.png';
 import successIcon from '@/assets/images/process/success.png';
 import doingIcon from '@/assets/images/process/doing.png';
 import failIcon from '@/assets/images/process/fail.png';
+import waitIcon from '@/assets/images/process/wait.png';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -116,6 +121,9 @@ const categoryIndices = ref<{ [key: string]: number }>({
 });
 const isLogin = ref(false);
 let pollingTimer: number | null = null;
+
+// Track start times for batch generation tasks
+const batchTaskStartTimes = ref<Map<string, number>>(new Map());
 
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -178,41 +186,40 @@ const getQueueCount = (type: string) => {
 };
 
 const getStatusIcon = (status: string, item?: any) => {
-  if (item?.type == 'novel' && item?.steps) {
-    const chapterStep = item.steps.find((step: any) => step.step_name == 'chapter');
-    if (chapterStep) {
-      if (chapterStep.step_status == 'SUCCESS' && chapterStep.step_chapter_index == item.total_chapters) {
-        return successIcon;
-      } else if (chapterStep.step_status == 'DOING') {
-        return doingIcon;
-      } else if (chapterStep.step_status == 'PREPARE') {
-        return doingIcon; // 等待中也显示doing图标
-      } else if (chapterStep.step_status == 'FAIL') {
-        return failIcon; // 失败状态显示fail图标
-      }
-    }
+  // if (item?.type == 'novel' && item?.steps) {
+  //   const chapterStep = item.steps.find((step: any) => step.step_name == 'chapter');
+  //   if (chapterStep) {
+  //     if (chapterStep.step_status == 'SUCCESS' && chapterStep.step_chapter_index == item.total_chapters) {
+  //       return successIcon;
+  //     } else if (chapterStep.step_status == 'DOING') {
+  //       return doingIcon;
+  //     } else if (chapterStep.step_status == 'PREPARE') {
+  //       return waitIcon; // 等待中显示wait图标
+  //     } else if (chapterStep.step_status == 'FAIL') {
+  //       return failIcon; // 失败状态显示fail图标
+  //     }
+  //   }
+  // }
+
+  if (status == 'SUCCESS') {
+    return successIcon; // 等待中显示success图标
+  } else if (status == 'DOING') {
+    return doingIcon; // 等待中显示doing图标
+  } else if (status == 'PREPARE') {
+    return waitIcon; // 等待中显示wait图标
+  } else if (status == 'FAIL') {
+    return failIcon; // 失败状态显示fail图标
   }
-  if (status === 'SUCCESS') {
-    return successIcon;
-  } else if (status === 'DOING' || status === 'PREPARE') {
-    return doingIcon;
-  } else if (status === 'FAIL') {
-    return failIcon;
-  }
-  return doingIcon;
 };
 
 const getCompletedCount = (items: any[]) => {
   return items.filter(item => {
-    if (item.type === 'novel' && item.steps) {
-      const chapterStep = item.steps.find((step: any) => step.step_name === 'chapter');
-      if (chapterStep) {
-        return chapterStep.step_status === 'SUCCESS' &&
-               chapterStep.step_chapter_index === item.total_chapters;
-      }
-    }
-    return item.status === 'SUCCESS';
+    return item.step_status == 'SUCCESS';
   }).length;
+};
+
+const getQueuePosition = (item: any) => {
+  return item.queue_position || 0;
 };
 
 const shouldShowQueueInfo = (item: any) => {
@@ -224,55 +231,51 @@ const shouldShowQueueInfo = (item: any) => {
 };
 
 const getProgress = (item: any) => {
-  // 获取当前步骤
-  const currentStep = item.steps ? (item.steps.find((step: any) => step.step_status === 'DOING') || item.steps[0]) : null;
-  
-  if (!currentStep) {
-    return item.progress || 0;
+  // For SUCCESS status, show 100%
+  if (item.step_status == 'SUCCESS') {
+    return 100;
   }
-  
+
+  // For FAIL status, show 0% (failure content is displayed separately)
   if (item.step_status == 'FAIL') {
-    // 失败状态，显示当前进度
-    if (item.is_batch_chapter == 1 && currentStep.step_name == 'chapter' && item.total_chapters) {
-      const currentChapter = currentStep.step_chapter_index || 1;
-      const totalChapters = item.total_chapters;
-      return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
-    }
     return 0;
   }
 
-  if (item.is_batch_chapter == 1) {
-    // 生成全部章节，根据当前章节数计算进度
-    if (currentStep.step_name === 'chapter' && item.total_chapters) {
-      const currentChapter = currentStep.step_chapter_index || 1;
-      const totalChapters = item.total_chapters;
-      return Math.min(100, Math.round((currentChapter / totalChapters) * 100));
+  let progress = 0;
+
+  if (item.task_start_at && processData.value.current_timestamp) {
+    const startTimestamp = new Date(item.task_start_at).getTime() / 1000;
+    const currentTimestamp = processData.value.current_timestamp;
+    const elapsedSeconds = currentTimestamp - startTimestamp;
+
+    // Get estimated time based on step type
+    let estimatedSeconds = 600; // Default 10 minutes
+    if (item.step_name == 'outline') {
+      estimatedSeconds = processData.value?.max_outline_estimate_seconds || 600;
+    } else {
+      estimatedSeconds = processData.value?.max_chapter_estimate_seconds || 600;
     }
-  } else if (item.is_batch_chapter == 2) {
-    // 单章生成，根据时间计算进度
-    if (item.task_start_at && item.current_timestamp) {
-      // 转换开始时间为时间戳（秒）
-      const startTimestamp = new Date(item.task_start_at).getTime() / 1000;
-      const currentTimestamp = item.current_timestamp;
 
-      // 计算已过时间（秒）
-      const elapsedSeconds = currentTimestamp - startTimestamp;
+    // Calculate remaining time in minutes
+    const remainingSeconds = Math.max(1, estimatedSeconds - elapsedSeconds);
+    const remainingMinutes = remainingSeconds / 60;
 
-      // 根据当前步骤选择预估时间
-      let estimatedSeconds = 600; // 默认10分钟
-      if (currentStep.step_name == 'outline' && item.max_outline_estimate_seconds) {
-        estimatedSeconds = item.max_outline_estimate_seconds;
-      } else if (currentStep.step_name == 'chapter' && item.max_chapter_estimate_seconds) {
-        estimatedSeconds = item.max_chapter_estimate_seconds;
-      }
-
-      // 计算进度，最大100%
-      const progress = Math.min(100, Math.round((elapsedSeconds / estimatedSeconds) * 100));
-      return progress;
+    if (remainingMinutes <= 1) {
+      // If remaining time is 1 minute or less, show 99%
+      progress = 99;
+    } else {
+      // Calculate progress based on remaining time
+      // Total estimated time in minutes
+      const totalMinutes = estimatedSeconds / 60;
+      // Progress = (1 - (remaining minutes / total minutes)) * 100
+      progress = Math.min(99, Math.round((1 - (remainingMinutes / totalMinutes)) * 100));
     }
+  } else {
+    // If no time data, start at 20%
+    progress = 20;
   }
-  // 默认返回item中的progress值或0
-  return item.progress || 0;
+
+  return progress;
 };
 
 const fetchProcessData = async () => {
@@ -280,6 +283,22 @@ const fetchProcessData = async () => {
     // 真实API调用
     const res = await api.totalProcess(true) as any;
     if (res.code == 200) {
+      // Clear start times for completed or failed tasks
+      if (res.data) {
+        const allTasks = [
+          ...(res.data.novel_list || []),
+          ...(res.data.manhua_list || []),
+          ...(res.data.manju_list || [])
+        ];
+
+        allTasks.forEach(task => {
+          if (task.status === 'SUCCESS' || task.status === 'FAIL') {
+            const taskKey = task.session_id || task.id;
+            batchTaskStartTimes.value.delete(taskKey);
+          }
+        });
+      }
+
       processData.value = res.data;
     }
   } catch (error) {
@@ -292,7 +311,7 @@ const startPolling = () => {
     // 立即执行一次
     fetchProcessData();
     // 设置10秒轮询
-    pollingTimer = window.setInterval(fetchProcessData, 10000);
+    pollingTimer = window.setInterval(fetchProcessData, 20000);
   }
 };
 
@@ -304,17 +323,44 @@ const stopPolling = () => {
 };
 
 const getItemLabel = (type: string, item: any) => {
-  if (type == 'novel') {
-    if (item.steps) {
-      const currentStep = item.steps.find((step: any) => step.step_status === 'DOING') || item.steps[0];
-      if (currentStep && currentStep.step_name == 'chapter') {
-        return t('process.novel') + '-' + t('process.chapter');
-      } else {
-        return t('process.novel') + '-' + t('process.outline');
+  if (item.step_name == 'outline') {
+    if (type == 'novel') return t('process.novel') + '-' + t('process.outline');
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.outline');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.outline');
+  } else if (item.step_name == 'character') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.character');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.character');
+  } else if (item.step_name == 'cover') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.cover');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.cover');
+  } else if (item.step_name == 'chapter') {
+    // Handle chapter step differently based on status and type
+    if (item.step_status == 'DOING' && item.is_batch_chapter != 1) {
+      // Non-batch generation, DOING status: show "新章节" (New Chapter)
+      if (type == 'novel') return t('process.novel') + '-' + t('novel.newChapter');
+      if (type == 'manhua') return t('process.comic') + '-' + t('novel.newChapter');
+      if (type == 'manju') return t('process.manju') + '-' + t('novel.newChapter');
+    } else if (item.step_status == 'SUCCESS' && item.step_chapter_index) {
+      // SUCCESS status: show chapter/episode number
+      const chapterIndex = item.step_chapter_index;
+      if (type == 'novel') {
+        return t('process.novel') + '-' + t('novel.chapter') + chapterIndex;
+      } else if (type == 'manhua') {
+        return t('process.comic') + '-' + t('comic.episode') + chapterIndex;
+      } else if (type == 'manju') {
+        return t('process.manju') + '-' + t('comic.episode') + chapterIndex;
       }
     } else {
-      return t('process.novel') + '-' + t('process.outline');
+      // Default chapter label
+      if (type == 'novel') return t('process.novel') + '-' + t('novel.newChapter');
+      if (type == 'manhua') return t('process.comic') + '-' + t('novel.newChapter');
+      if (type == 'manju') return t('process.manju') + '-' + t('novel.newChapter');
     }
+  }
+
+  // Default labels
+  if (type == 'novel') {
+    return t('process.novel') + '-' + t('process.outline');
   } else if (type == 'manhua') {
     return t('process.comic') + '-' + t('process.script');
   } else if (type == 'manju') {
@@ -338,19 +384,19 @@ const nextItem = (categoryIndex: number) => {
 };
 
 const navigateToItem = (item: any, type: string) => {
-  if (type === 'novel') {
+  if (type == 'novel') {
     router.push(`/novel/${item.session_id}`);
-  } else if (type === 'manhua') {
+  } else if (type == 'manhua') {
     window.open(`/tools/comic/${item.session_id}`, '_blank');
-  } else if (type === 'manju') {
-    window.open(`/tools/space/${item.session_id}`, '_blank');
+  } else if (type == 'manju') {
+    window.open(`/tools/video/${item.session_id}`, '_blank');
   }
 };
 
 const clearCompleted = async () => {
   try {
     const res = await api.readProject() as any;
-    if (res.code === 200) {
+    if (res.code == 200) {
       await fetchProcessData();
     }
   } catch (error) {
@@ -367,7 +413,7 @@ const clearTask = async (item: any) => {
       if (processData.value) {
         const listKey = `${item.type}_list`;
         if (processData.value[listKey]) {
-          const index = processData.value[listKey].findIndex((i: any) => i.session_id === item.session_id);
+          const index = processData.value[listKey].findIndex((i: any) => i.session_id == item.session_id);
           if (index > -1) {
             processData.value[listKey].splice(index, 1);
             // 如果当前显示的索引超出范围，重置为0
@@ -396,17 +442,24 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
+const handleLogout = () => {
+  isLogin.value = false;
+  stopPolling();
+};
+
 onMounted(() => {
   checkLoginStatus();
   startPolling();
   // Add click outside listener
   document.addEventListener('click', handleClickOutside);
+  window.addEventListener('userLogout', handleLogout);
 });
 
 onUnmounted(() => {
   stopPolling();
   // Remove click outside listener
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('userLogout', handleLogout);
 });
 </script>
 
@@ -509,14 +562,27 @@ onUnmounted(() => {
           width: 1.8rem;
           height: 1.8rem;
           margin-right: 0.6rem;
+
+          &.doing {
+            animation: spin 1s linear infinite;
+          }
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
         }
 
         .item-info {
           flex: 1;
+          min-width: 0;
 
           .item-type {
             font-size: 1.2rem;
             color: #364153;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
 
           .item-title {
@@ -559,6 +625,9 @@ onUnmounted(() => {
           }
 
           .progress-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             font-size: 1.2rem;
             color: #99A1AF;
           }

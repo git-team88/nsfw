@@ -13,7 +13,7 @@
             v-for="filter in typeFilters"
             :key="filter.id"
             class="filter-item"
-            :class="{ active: activeFilter === filter.id }"
+            :class="{ active: activeFilter == filter.id }"
             @click="setActiveFilter(filter.id)"
           >
             {{ filter.label }}
@@ -155,7 +155,7 @@ const typeFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 2, label: t('home.contentType.novel') },
   { id: 1, label: t('home.contentType.comic') },
-  { id: 3, label: t('home.contentType.video') }
+  { id: 3, label: t('home.contentType.drama') }
 ]);
 
 // Refs for waterfall layout
@@ -167,12 +167,15 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
 
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
+
 watch(() => locale.value, () => {
   typeFilters.value = [
     { id: 0, label: t('home.contentType.all') },
     { id: 2, label: t('home.contentType.novel') },
     { id: 1, label: t('home.contentType.comic') },
-    { id: 3, label: t('home.contentType.video') }
+    { id: 3, label: t('home.contentType.drama') }
   ]
 });
 
@@ -188,6 +191,12 @@ function setActiveFilter(filter: number) {
 async function loadData(fromLoadMore = false) {
   if (isLoading.value || isLoadingMore.value) return;
 
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current filter and page at the time of the request
+  const currentFilter = activeFilter.value;
+  const currentPageValue = currentPage.value;
+
   if (fromLoadMore) {
     isLoadingMore.value = true;
   } else {
@@ -200,6 +209,20 @@ async function loadData(fromLoadMore = false) {
       page: currentPage.value,
       limit: pageSize.value
     }) as unknown as { code: number; msg: string; data?: any };
+
+    // Check if this request is still the latest one
+    if (requestId !== currentRequestId.value) {
+      isLoading.value = false;
+      isLoadingMore.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the filter or page has changed while the request was in flight
+    if (currentFilter !== activeFilter.value || currentPageValue !== currentPage.value) {
+      isLoading.value = false;
+      isLoadingMore.value = false;
+      return; // Skip processing this response as the filter or page has changed
+    }
 
     if (res.code == 0 || res.code == 200) {
       const newContent = (res.data?.data || []).map((item: any) => {
@@ -372,6 +395,8 @@ function formatNumber(num: number | string): string {
 
 // Lifecycle
 onMounted(async () => {
+  window.scrollTo(0, 0);
+
   window.addEventListener("resize", layoutWaterfall);
 
   // Set up intersection observer for infinite scroll
@@ -568,19 +593,19 @@ watch(contentList, () => {
     padding: 1.2rem 0 0;
 
     .content-desc {
-          font-size: 1.4rem;
-          color: #101828;
-          line-height: 2rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+      margin-bottom: 1.2rem;
+      font-size: 1.4rem;
+      color: #101828;
+      line-height: 2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .content-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 1.2rem;
 
       .author-info {
         display: flex;

@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
     margin-bottom: 0.6rem;
   }
   .character-name {
-    font-weight: bold;
+    font-weight: 500;
     font-size: 1.6rem;
     color: #0A0A0A;
     overflow: hidden;

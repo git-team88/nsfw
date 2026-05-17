@@ -10,27 +10,27 @@
           </div>
 
           <div class="tabs">
-            <div class="tab-item" :class="{ active: activeTab === 0 }" @click="switchTab(0)">
+            <div class="tab-item" :class="{ active: activeTab == 0 }" @click="switchTab(0)">
               {{ t("user.messages.tab1") }}
               <span v-if="newsCounts.expiring > 0" class="count-dot">{{ newsCounts.expiring }}</span>
             </div>
-            <div class="tab-item" :class="{ active: activeTab === 1 }" @click="switchTab(1)">
+            <div class="tab-item" :class="{ active: activeTab == 1 }" @click="switchTab(1)">
               {{ t("user.messages.tab2") }}
               <span v-if="newsCounts.follow > 0" class="count-dot">{{ newsCounts.follow }}</span>
             </div>
-            <div class="tab-item" :class="{ active: activeTab === 2 }" @click="switchTab(2)">
+            <div class="tab-item" :class="{ active: activeTab == 2 }" @click="switchTab(2)">
               {{ t("user.messages.tab3") }}
               <span v-if="newsCounts.subscription > 0" class="count-dot">{{ newsCounts.subscription }}</span>
             </div>
-            <div class="tab-item" :class="{ active: activeTab === 3 }" @click="switchTab(3)">
+            <div class="tab-item" :class="{ active: activeTab == 3 }" @click="switchTab(3)">
               {{ t("user.messages.tab4") }}
               <span v-if="newsCounts.like > 0" class="count-dot">{{ newsCounts.like }}</span>
             </div>
-            <div class="tab-item" :class="{ active: activeTab === 4 }" @click="switchTab(4)">
+            <div class="tab-item" :class="{ active: activeTab == 4 }" @click="switchTab(4)">
               {{ t("user.messages.tab5") }}
               <span v-if="newsCounts.comment > 0" class="count-dot">{{ newsCounts.comment }}</span>
             </div>
-            <div class="tab-item" :class="{ active: activeTab === 5 }" @click="switchTab(5)">
+            <div class="tab-item" :class="{ active: activeTab == 5 }" @click="switchTab(5)">
               {{ t("user.messages.tab6") }}
               <span v-if="newsCounts.mention > 0" class="count-dot">{{ newsCounts.mention }}</span>
             </div>
@@ -87,6 +87,9 @@ const pageSize = ref(10);
 const total = ref(0);
 const listData = ref<Record<string, unknown>[]>([]);
 const loading = ref(false);
+
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 // Message counts for each tab
@@ -152,6 +155,12 @@ watch(
 );
 
 async function fetchData() {
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current tab at the time of the request
+  const currentTab = activeTab.value;
+  const currentPage = page.value;
+
   loading.value = true;
   listData.value = [];
 
@@ -186,6 +195,18 @@ async function fetchData() {
         break;
       default:
         return false;
+    }
+
+    // Check if this request is still the latest one
+    if (requestId !== currentRequestId.value) {
+      loading.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the tab or page has changed while the request was in flight
+    if (currentTab !== activeTab.value || currentPage !== page.value) {
+      loading.value = false;
+      return; // Skip processing this response as the tab or page has changed
     }
 
     const r = res as unknown as {

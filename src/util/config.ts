@@ -3,9 +3,9 @@ export const redirectUrl = "https://testapp.addaiaroot.com";
 export const aiUrl = "https://testapi.addaiaroot.com/";
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
-// export const baseUrl = "http://192.168.1.30/";
-// export const redirectUrl = "http://localhost:5175";
-// export const aiUrl = "https://manju-api.h.xiqiu.top:81/";
+// export const baseUrl = "https://api.moegen.ai/";
+// export const redirectUrl = "https://www.moegen.ai";
+// export const aiUrl = "https://api2.moegen.ai/";
 
 // Creative Partner Program - Google Forms
 // フォーム①: 応募フォーム（1次審査）

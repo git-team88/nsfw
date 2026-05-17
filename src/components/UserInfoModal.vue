@@ -35,7 +35,10 @@
         </div>
 
         <div class="form-item">
-          <div class="label">{{ t("birthday.label") }}</div>
+          <div class="label">
+            {{ t("birthday.label") }}
+            <span class="birthday-tip">{{ t("user.personal.birthdayCannotEdit") }}</span>
+          </div>
 
           <BirthPicker v-model="dateValue" @change="handleDateChange" />
         </div>
@@ -120,7 +123,10 @@ function handleFile(e: Event) {
 
   const formData = new FormData();
   formData.append("file", file);
-  const parma = { method: "POST", headers: { token }, body: formData };
+
+  const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+  const parma = { method: "POST", headers: { token, ...authHeaders }, body: formData };
 
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())
@@ -223,12 +229,20 @@ function close() {
   margin-bottom: 0;
 }
 .label {
+  display: flex;
+  align-items: center;
   font-size: 1.4rem;
   color: #4a5565;
   margin-bottom: 0.6rem;
   display: flex;
   align-items: center;
   gap: 0.6rem;
+
+  .birthday-tip {
+    font-size: 1.2rem;
+    color: #99A1AF;
+    font-weight: normal;
+  }
 }
 .count {
   font-size: 1.2rem;

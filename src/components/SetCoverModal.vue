@@ -35,29 +35,42 @@
             </div>
           </div>
 
-          <div class="timeline-box" ref="timelineRef">
-            <div class="frames-strip">
-              <!-- Skeleton loading for frames -->
-              <div v-if="isLoadingFrames" class="frame-skeleton-container">
-                <div v-for="i in estimatedFrameCount" :key="'skeleton-' + i" class="frame-skeleton"></div>
-              </div>
-              <!-- Actual frames -->
-              <div class="frames-list" v-else>
-                <div
-                  v-for="(frame, index) in frames"
-                  :key="index"
-                  class="frame-cell"
-                  @click="onFrameClick(index)"
-                >
-                  <img :src="frame" alt="" />
+          <div class="modal-list">
+            <div
+              v-if="coverUrl"
+              class="cover-cell"
+              :class="{ selected: selectedFrame == coverUrl }"
+              @click="onCoverClick"
+            >
+              <img :src="coverUrl" alt="" />
+            </div>
+
+            <div class="timeline-box" ref="timelineRef">
+              <div class="frames-strip">
+                <!-- Skeleton loading for frames -->
+                <div v-if="isLoadingFrames" class="frame-skeleton-container">
+                  <div v-if="coverUrl" class="frame-skeleton cover-skeleton"></div>
+                  <div v-for="i in estimatedFrameCount" :key="'skeleton-' + i" class="frame-skeleton"></div>
+                </div>
+                <!-- Actual frames -->
+                <div class="frames-list" v-else>
+                  <div
+                    v-for="(frame, index) in frames"
+                    :key="index"
+                    class="frame-cell"
+                    @click="onFrameClick(index)"
+                  >
+                    <img :src="frame" alt="" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- Drag Handle -->
-            <div class="drag-handle" :style="{ left: dragPos + 'px' }" @mousedown="startDrag">
-              <div class="line"></div>
+              <!-- Drag Handle -->
+              <div class="drag-handle" :style="{ left: dragPos + 'px' }" @mousedown="startDrag">
+                <div class="line"></div>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- Upload Local -->
@@ -160,12 +173,9 @@ const isLoadingFrames = ref(false);
 const estimatedFrameCount = ref(8);
 
 function getCropDimensions() {
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const CROP_W_REM = 15; // From CSS: width: 15rem;
-  const CROP_H_REM = 20; // From CSS: height: 20rem;
   return {
-    width: CROP_W_REM * rootFontSize,
-    height: CROP_H_REM * rootFontSize,
+    width: 1200,
+    height: 1600,
   };
 }
 
@@ -181,10 +191,11 @@ const timelineRef = ref<HTMLElement | null>(null);
 const dragPos = ref(0);
 const isDragging = ref(false);
 
+// Watch for visible change to initialize
 watch(
-  () => props.visible,
-  (val) => {
-    if (val) {
+  [() => props.visible, () => props.videoFile, () => props.videoUrl],
+  ([newVisible, newVideoFile, newVideoUrl], [oldVisible, oldVideoFile, oldVideoUrl]) => {
+    if (newVisible) {
       activeTab.value = "select"; // Default first tab
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
@@ -194,14 +205,22 @@ watch(
         selectedFrame.value = props.coverUrl;
         detectOrientation(props.coverUrl);
       }
-      if ((props.videoFile || props.videoUrl) && frames.value.length === 0) {
+      // Regenerate frames if videoFile or videoUrl changed
+      if ((newVideoFile || newVideoUrl) &&
+          (newVideoFile !== oldVideoFile || newVideoUrl !== oldVideoUrl)) {
         // Reset frames and show loading skeleton
+        frames.value = [];
+        isLoadingFrames.value = true;
+        generateFrames();
+      } else if ((newVideoFile || newVideoUrl) && frames.value.length === 0) {
+        // Generate frames if none exist
         frames.value = [];
         isLoadingFrames.value = true;
         generateFrames();
       }
     }
   },
+  { deep: true }
 );
 
 watch(localImage, (newVal) => {
@@ -328,6 +347,19 @@ function onDragEnd() {
   document.removeEventListener("mouseup", onDragEnd);
 }
 
+function onCoverClick() {
+  if (!timelineRef.value || !props.coverUrl) return;
+
+  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+  const clickedPosition = 0.5 * frameWidth;
+
+  dragPos.value = clickedPosition;
+
+  selectedFrame.value = props.coverUrl;
+  detectOrientation(selectedFrame.value);
+}
+
 function onFrameClick(index: number) {
   if (!timelineRef.value) return;
 
@@ -421,15 +453,18 @@ async function mockUpload(dataUrl: string): Promise<string> {
   try {
     const response = await fetch(dataUrl);
     const blob = await response.blob();
-    const file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+    const file = new File([blob], 'cover.png', { type: 'image/png' });
 
     const formData = new FormData();
     formData.append('file', file);
+
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -504,52 +539,127 @@ async function detectOrientation(dataUrl: string) {
   img.src = dataUrl;
   await new Promise((r) => (img.onload = r));
 
-  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const naturalRatio = img.naturalWidth / img.naturalHeight;
-  const targetRatio = CROP_W / CROP_H;
+  // Calculate based on crop frame aspect ratio (3:4)
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const previewContainerW = 47 * rootFontSize;
+  const previewContainerH = 22.4 * rootFontSize;
+  
+  // Crop frame is 15rem x 20rem = 3:4 aspect ratio
+  const cropFrameW = 15 * rootFontSize;
+  const cropFrameH = 20 * rootFontSize;
+  const cropRatio = cropFrameW / cropFrameH; // 3:4 = 0.75
 
-  if (naturalRatio > targetRatio) {
-    // Landscape relative to crop frame
-    imgScale.value = CROP_H / img.naturalHeight;
+  const naturalRatio = img.naturalWidth / img.naturalHeight;
+
+  // Calculate scale to fit image to crop frame aspect ratio
+  // Ensure the entire crop frame is filled with the image
+  if (naturalRatio > cropRatio) {
+    // Image is wider than 3:4, scale by height to fill crop frame
+    imgScale.value = cropFrameH / img.naturalHeight;
   } else {
-    // Portrait relative to crop frame
-    imgScale.value = CROP_W / img.naturalWidth;
+    // Image is taller than 3:4, scale by width to fill crop frame
+    imgScale.value = cropFrameW / img.naturalWidth;
   }
 
-  imgOffsetX.value = 0;
-  imgOffsetY.value = 0;
+  // Ensure scale does not exceed 100% to maintain image clarity
+  // If image is smaller than crop frame, don't upscale
+  if (imgScale.value > 1) {
+    imgScale.value = 1;
+  }
+
+  // Calculate offsets to center the image in preview container
+  const previewScaledWidth = img.naturalWidth * imgScale.value;
+  const previewScaledHeight = img.naturalHeight * imgScale.value;
+
+  imgOffsetX.value = (previewContainerW - previewScaledWidth) / 2;
+  imgOffsetY.value = (previewContainerH - previewScaledHeight) / 2;
+  
   isPortrait.value = img.naturalHeight >= img.naturalWidth;
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {
-  const img = new Image();
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (dataUrl.startsWith('http')) {
+      img.crossOrigin = "Anonymous";
+    }
+    img.onload = () => {
+      try {
+        const { width: TARGET_W, height: TARGET_H } = cropDimensions.value;
 
-  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const imgEl = previewImgRef.value!;
-  const imgRect = imgEl.getBoundingClientRect();
+        // Calculate the target aspect ratio (3:4)
+        const targetRatio = TARGET_W / TARGET_H; // 3:4 = 0.75
+        const naturalRatio = img.naturalWidth / img.naturalHeight;
 
-  // The crop frame is centered in the preview-crop-box
-  // Let's get the box rect
-  const boxEl = imgEl.parentElement!;
-  const boxRect = boxEl.getBoundingClientRect();
+        // Determine the optimal source rectangle from original image
+        let sx, sy, sw, sh;
 
-  const cropLeft = boxRect.left + (boxRect.width - CROP_W) / 2;
-  const cropTop = boxRect.top + (boxRect.height - CROP_H) / 2;
+        if (naturalRatio >= targetRatio) {
+          // Image is wider than 3:4, use full height and calculate width
+          sh = img.naturalHeight;
+          sw = Math.round(sh * targetRatio);
+          // Center horizontally
+          sx = Math.round((img.naturalWidth - sw) / 2);
+          sy = 0;
+        } else {
+          // Image is taller than 3:4, use full width and calculate height
+          sw = img.naturalWidth;
+          sh = Math.round(sw / targetRatio);
+          // Center vertically
+          sx = 0;
+          sy = Math.round((img.naturalHeight - sh) / 2);
+        }
 
-  const scale = (img.naturalWidth * imgScale.value) / img.naturalWidth;
-  const sx = (cropLeft - imgRect.left) / scale;
-  const sy = (cropTop - imgRect.top) / scale;
-  const sw = CROP_W / scale;
-  const sh = CROP_H / scale;
+        // Apply user's drag offset
+        const scale = imgScale.value;
+        if (scale > 0 && scale <= 1) {
+          // Calculate how much user has moved the image
+          const maxOffsetX = (sw - img.naturalWidth * scale) / 2;
+          const maxOffsetY = (sh - img.naturalHeight * scale) / 2;
+          
+          // Convert preview offset to image coordinates
+          const offsetX = imgOffsetX.value / scale;
+          const offsetY = imgOffsetY.value / scale;
+          
+          // Apply offset with bounds
+          sx = Math.max(0, Math.min(sx + offsetX, img.naturalWidth - sw));
+          sy = Math.max(0, Math.min(sy + offsetY, img.naturalHeight - sh));
+        }
 
-  const canvas = document.createElement("canvas");
-  canvas.width = CROP_W;
-  canvas.height = CROP_H;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.9);
+        // Ensure values are integers
+        sx = Math.round(sx);
+        sy = Math.round(sy);
+        sw = Math.round(sw);
+        sh = Math.round(sh);
+
+        // Use original cropped area size as output size to maintain image quality
+        const canvas = document.createElement("canvas");
+        canvas.width = sw;
+        canvas.height = sh;
+
+        const ctx = canvas.getContext("2d")!;
+        
+        // Disable image smoothing to preserve text sharpness
+        ctx.imageSmoothingEnabled = false;
+
+        // Draw without resizing to maintain original quality
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+        try {
+          resolve(canvas.toDataURL("image/png"));
+        } catch (e) {
+          console.warn('Canvas is tainted, returning original image');
+          resolve(dataUrl);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
+    img.src = dataUrl;
+  });
 }
 </script>
 
@@ -636,7 +746,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  align-items: center;
 
   .preview-container {
     display: flex;
@@ -693,6 +802,30 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     color: #999;
   }
 
+  .modal-list{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    .cover-cell {
+      display: flex;
+      justify-content: center;
+      height: 100%;
+      flex-shrink: 0;
+      border: 1px solid #FFFFFF;
+
+      img {
+        width: 4.5rem;
+        height: 6rem;
+        object-fit: cover;
+      }
+
+      &.selected {
+        border-color: #FB64B6;
+      }
+    }
+  }
+
   .timeline-box {
     max-width: 100%;
     position: relative;
@@ -747,6 +880,14 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       }
 
       .frame-skeleton {
+        flex: 0 0 4.5rem;
+        height: 100%;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+      }
+
+      .cover-skeleton {
         flex: 0 0 4.5rem;
         height: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

@@ -2,7 +2,7 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.post, item.comment)">
       <div class="left-info">
-        <img class="avatar" :src="item.poster.avatar" alt="" @click.stop="goUserHome(item.poster.user_id)" />
+        <img class="avatar" :src="item.poster.avatar || defaultAvatar" alt="" @click.stop="goUserHome(item.poster.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
           <div class="username">{{ item.poster.nickname }}</div>
           <div class="desc">{{ t("user.messages.mentionsText") }}: <span class="content">{{ item.post.content }}</span></div>
@@ -27,6 +27,7 @@ import { useRouter } from "vue-router";
 import { formatTimestamp } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
 import { toast } from "@/util/toast";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
 const router = useRouter();

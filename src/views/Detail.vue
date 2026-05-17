@@ -2,13 +2,19 @@
   <div class="detail-view">
     <div class="" v-if="detail.type == '1' || detail.type == '3'">
       <div class="close-page-btn" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-        <span v-if="!isCollectionMode"></span>
-        <span class="back-icon" v-else></span>
+        <div class="back-icon-container" v-if="isCollectionMode">
+          <span class="back-icon"></span>
+          <div class="info-tooltip">
+            {{ t('detail.exitCollectionPlayMode') }}
+          </div>
+        </div>
+
+        <span v-else></span>
       </div>
 
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
-      <div class="main-container">
+      <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
         <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
           <div class="media-container" :key="detail?.id">
             <template v-if="isCollectionMode">
@@ -89,21 +95,16 @@
               <div v-else-if="detail.type == '1'" class="comic-gallery">
                 <div class="comic-scroll" ref="comicScrollRef" @scroll="handleComicScroll">
                   <div
-                    class="comic-image-wrap"
-                    v-for="(img, index) in detail.images"
-                    :key="index"
-                    @mouseenter="hoveredComicIndex = index"
-                    @mouseleave="hoveredComicIndex = -1"
-                    @click="toggleComicZoom(index)"
-                  >
-                    <img :src="img.image_url" alt="" class="comic-image" />
-                    <div class="comic-zoom-icon" v-if="hoveredComicIndex == index">
-                      <img v-if="!isImageFullscreen" src="@/assets/images/detail/big.png" alt="Zoom" @click.stop="toggleComicZoom(index)" />
-                      <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" @click.stop="toggleComicZoom(index)" />
+                      class="comic-image-wrap"
+                      v-for="(img, index) in detail.images"
+                      :key="index"
+                      @click="toggleComicZoom(index)"
+                      :style="{ cursor: (isComicFullscreen[index] || false) ? 'zoom-out' : 'zoom-in' }"
+                    >
+                      <img :src="img.image_url" alt="" class="comic-image" />
                     </div>
-                  </div>
 
-                  <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+                  <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
                     <div class="lock-tip">
                       <span>{{ t("detail.lock.tip") }}</span>
                       <span class="subs-btn" @click="onSubscribe">
@@ -190,7 +191,7 @@
             </template>
 
             <template v-else-if="detail.type == '1'">
-              <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll">
+              <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
                 <div
                   class="image-stack-item"
                   v-for="(img, index) in detail.images"
@@ -210,21 +211,15 @@
                     <div
                       class="image-wrap"
                       @click="handleImageClick(index)"
-                      @mouseenter="hoveredImageIndex = index"
-                      @mouseleave="hoveredImageIndex = -1"
                     >
                       <img
                         class="stacked-image"
                         :src="img.image_url || ''"
                         alt=""
                       />
-                      <div class="image-zoom-icon" v-if="hoveredImageIndex == index">
-                        <img v-if="!isImageFullscreen" src="@/assets/images/detail/big.png" alt="Zoom" />
-                        <img v-else src="@/assets/images/detail/small.png" alt="Unzoom" />
-                      </div>
                     </div>
 
-                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
                       <div class="lock-tip">
                         <span>{{ t("detail.lock.tip") }}</span>
                         <span class="subs-btn" @click="onSubscribe">
@@ -242,10 +237,9 @@
               class="collection-info-bar"
               :class="{ 'near-bottom': detail.type == '1' && isNearBottom }"
               v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode"
-              @click="enterCollectionMode"
             >
 
-              <div class="collection-info">
+              <div class="collection-info" @click="enterCurrentChapter">
                 <template v-if="detail.type == '1' || detail.type == '3'">
                   <span class="comic-title">{{ detail.title }}</span>
                 </template>
@@ -254,7 +248,7 @@
                 </template>
               </div>
               <div class="collection-line"></div>
-              <div class="collection-status">
+              <div class="collection-status" @click="enterNextOrCurrentChapter">
                 <template v-if="detail.type == '1' && isNearBottom && nextChapterId">
                   {{ t('detail.nextEpisode') }}
                 </template>
@@ -270,7 +264,9 @@
             <!-- Collection Mode Info Bar -->
             <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0 && isCollectionMode">
               <div class="current-episode">
-                <span class="episode-title">{{ currentCollectionIndex + 1 }}集：{{ currentCollection?.title }}</span>
+                <span class="episode-number">第{{ currentCollectionIndex + 1 }}集</span>
+                <span class="episode-line"></span>
+                <span class="episode-title">{{ currentCollection?.title }}</span>
               </div>
             </div>
           </div>
@@ -292,12 +288,12 @@
           <div class="right-header-box" :class="{ 'with-border': isScrolled }">
             <div class="right-header">
               <div class="user-info" @click="navigateToUserHome">
-                <img class="avatar" :src="detail.author.avatar" alt="" />
-                <span class="nickname">{{ detail.author.nickname }}</span>
+                <img class="avatar" :src="detail.author?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                <span class="nickname">{{ detail.author?.nickname }}</span>
               </div>
 
               <div class="right-header-actions">
-                <div v-if="detail.author.id != uid">
+                <div v-if="detail.author?.id != uid">
                   <button
                     class="follow-btn"
                     :class="{ followed: detail.isFollowed }"
@@ -327,6 +323,7 @@
                 class="tab-item"
                 :class="{ active: activeTab == 'collection' }"
                 @click="activeTab = 'collection'; loadCollections()"
+                v-if="collections.length > 0"
               >
                 {{ t('detail.collection') }}
               </div>
@@ -347,7 +344,7 @@
                 <div class="post-time-box">
                   <span class="post-time">{{ detail.time }}</span>
 
-                  <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
+                  <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author?.id != uid">
                     <div class="more-btn" @click.stop="toggleHeaderMore">
                       <img src="@/assets/images/detail/menu.png" alt="" />
                     </div>
@@ -378,7 +375,7 @@
                   <!-- Comments List -->
                   <div v-if="comments.length > 0 && !isLoadingComments" class="comment-item" v-for="c in comments" :key="c.id" :data-comment-id="c.id">
                     <div class="comment-main" :style="{ backgroundColor: c.backgroundColor }">
-                      <img class="c-avatar" :src="c.avatar" alt="" />
+                      <img class="c-avatar" :src="c.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <div class="c-content">
                         <div class="c-header">
                           <span class="c-author">{{ c.author }}</span>
@@ -458,7 +455,7 @@
                     <!-- Replies -->
                     <div class="replies-list" v-if="c.showingReplies && c.replies && c.replies.length > 0">
                       <div class="reply-item" v-for="r in c.replies" :key="r.id" :style="{ backgroundColor: r.backgroundColor }">
-                        <img class="c-avatar" :src="r.avatar" alt="" />
+                        <img class="c-avatar" :src="r.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                         <div class="c-content">
                           <div class="c-header">
                             <div class="author-wrap">
@@ -800,6 +797,7 @@ import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -1069,6 +1067,67 @@ async function enterCollectionMode() {
 
 }
 
+// Enter current chapter
+async function enterCurrentChapter() {
+  // Only navigate if the current ID is different from the route ID
+  if (String(detail.value.id) !== route.query.id) {
+    // Enter current chapter
+    router.replace({
+      path: '/detail',
+      query: {
+        ...route.query,
+        id: detail.value.id
+      }
+    });
+  }
+
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    isCollectionMode.value = true;
+    activeTab.value = 'collection';
+    isRightPanelHidden.value = false;
+    await loadChapters();
+  }
+}
+
+// Enter next chapter if available, otherwise enter current chapter
+async function enterNextOrCurrentChapter() {
+  // If showing "更新至第 X 集" (not next episode), enter collection mode first
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    isCollectionMode.value = true;
+    activeTab.value = 'collection';
+    isRightPanelHidden.value = false;
+    await loadChapters();
+  }
+
+  // Only navigate to next chapter if showing "下一集" (isNearBottom and nextChapterId exists)
+  if (isNearBottom.value && nextChapterId.value) {
+    // Only navigate if the next chapter ID is different from the route ID
+    if (nextChapterId.value !== route.query.id) {
+      // Enter next chapter if available
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: nextChapterId.value
+        }
+      });
+    }
+  } else if (!nextChapterId.value) {
+    // Only navigate if the current ID is different from the route ID
+    if (String(detail.value.id) !== route.query.id) {
+      // Enter current chapter if no next chapter
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: detail.value.id
+        }
+      });
+    }
+  }
+  // If showing "更新至第 X 集", do not navigate - just enter collection mode
+}
+
 // Load chapters (collection episodes)
 async function loadChapters() {
   if (!detail.value.book_id || Number(detail.value.book_id) == 0) {
@@ -1089,7 +1148,7 @@ async function loadChapters() {
 }
 
 // Navigate to chapter
-function navigateToChapter(chapter: any) {
+async function navigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
   router.replace({
     path: '/detail',
@@ -1102,10 +1161,15 @@ function navigateToChapter(chapter: any) {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
   }
+
+  activeTab.value = 'collection';
+  isRightPanelHidden.value = false;
+
+  await loadChapters();
 }
 
 // Set chapter navigation
-function setChapterNavigation() {
+async function setChapterNavigation() {
   // First try to find by post_id (more reliable)
   let currentIndex = collections.value.findIndex(chapter => {
     return chapter.post_id == detail.value.id;
@@ -1134,6 +1198,12 @@ function setChapterNavigation() {
   if (currentIndex !== -1) {
     currentCollectionIndex.value = currentIndex;
   }
+
+  // Don't set activeTab to 'collection' here - leave it as 'detail' by default
+  // activeTab.value = 'collection';
+  isRightPanelHidden.value = false;
+
+  // await loadChapters();
 }
 
 // Exit collection mode
@@ -1141,6 +1211,15 @@ function exitCollectionMode() {
   isCollectionMode.value = false;
   activeTab.value = 'detail';
   currentCollectionIndex.value = 0;
+  // Reset isNearBottom to false when exiting collection mode
+  isNearBottom.value = false;
+  // Scroll to top when exiting collection mode
+  if (imageStackRef.value) {
+    imageStackRef.value.scrollTop = 0;
+  }
+  if (comicScrollRef.value) {
+    comicScrollRef.value.scrollTop = 0;
+  }
 }
 
 // Check if a collection item is "active" (highlighted in the list)
@@ -1410,6 +1489,11 @@ async function fetchDetail(newId: number) {
     if (token) {
       headers['token'] = token;
     }
+
+    const authToken = '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['ts'] = ts;
+    headers['sign'] = sign;
 
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
@@ -2038,6 +2122,11 @@ async function updateCommentCount() {
       headers['token'] = token;
     }
 
+    const authToken = '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['ts'] = ts;
+    headers['sign'] = sign;
+
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
       headers: headers,
@@ -2617,7 +2706,26 @@ function handleImageStackScroll() {
 }
 
 function toggleComicZoom(index: number) {
-  isComicFullscreen.value[index] = !isComicFullscreen.value[index];
+  const detailView = document.querySelector('.detail-view') as HTMLElement | null;
+  if (!detailView) return;
+
+  if (!document.fullscreenElement) {
+    // Entering fullscreen
+    isComicFullscreen.value[index] = true;
+    detailView.requestFullscreen().catch((err) => {
+      console.log('Fullscreen request failed:', err);
+    });
+    if (isCollectionMode.value) {
+      isRightPanelHidden.value = false;
+      activeTab.value = 'collection';
+    } else {
+      isRightPanelHidden.value = true;
+    }
+  } else {
+    // Exiting fullscreen
+    isComicFullscreen.value[index] = false;
+    document.exitFullscreen();
+  }
 }
 
 function toggleImageFullscreen() {
@@ -2661,64 +2769,44 @@ function goPrev() {
   if (!isCollectionMode.value && isFirst.value) return;
   if (isCollectionMode.value && !prevChapterId.value) return;
 
-  // 添加滑出动画
-  isSliding.value = true;
-  isSlidingIn.value = false;
-
-  setTimeout(() => {
-    if (isCollectionMode.value) {
-      // 在合集模式下，切换到上一个合集项目
-      const chapter = collections.value.find(c => c.post_id === prevChapterId.value);
-      if (chapter) {
-        navigateToChapter(chapter);
-      }
-    } else if (prevId.value) {
-      // 保留当前路由的所有查询参数，只更新 id
-      router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: prevId.value
-        }
-      });
+  if (isCollectionMode.value) {
+    // 在合集模式下，直接切换到上一个合集项目
+    const chapter = collections.value.find(c => c.post_id === prevChapterId.value);
+    if (chapter) {
+      navigateToChapter(chapter);
     }
-    // 重置动画状态
-    setTimeout(() => {
-      isSliding.value = false;
-    }, 300);
-  }, 300);
+  } else if (prevId.value) {
+    // 在非合集模式下，直接切换页面
+    router.replace({
+      path: '/detail',
+      query: {
+        ...route.query,
+        id: prevId.value
+      }
+    });
+  }
 }
 
 function goNext() {
   if (!isCollectionMode.value && isLast.value) return;
   if (isCollectionMode.value && !nextChapterId.value) return;
 
-  // 添加滑出动画
-  isSliding.value = true;
-  isSlidingIn.value = false;
-
-  setTimeout(() => {
-    if (isCollectionMode.value) {
-      // 在合集模式下，切换到下一个合集项目
-      const chapter = collections.value.find(c => c.post_id === nextChapterId.value);
-      if (chapter) {
-        navigateToChapter(chapter);
-      }
-    } else if (nextId.value) {
-      // 保留当前路由的所有查询参数，只更新 id
-      router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: nextId.value
-        }
-      });
+  if (isCollectionMode.value) {
+    // 在合集模式下，直接切换到下一个合集项目
+    const chapter = collections.value.find(c => c.post_id === nextChapterId.value);
+    if (chapter) {
+      navigateToChapter(chapter);
     }
-    // 重置动画状态
-    setTimeout(() => {
-      isSliding.value = false;
-    }, 300);
-  }, 300);
+  } else if (nextId.value) {
+    // 在非合集模式下，直接切换页面
+    router.replace({
+      path: '/detail',
+      query: {
+        ...route.query,
+        id: nextId.value
+      }
+    });
+  }
 }
 
 // Media
@@ -3395,10 +3483,13 @@ async function uploadImage(file: File) {
     const formData = new FormData();
     formData.append('file', file);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -3745,11 +3836,16 @@ async function submitComment() {
       }
     }
 
+    const authToken = token || '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
     const response = await fetch(`${baseUrl}comment/createComment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'token': token
+        'token': token,
+        ts,
+        sign
       },
       body: JSON.stringify(commentData)
     });

@@ -362,8 +362,15 @@ function handleSubmit() {
         formData.append("g-recaptcha-response", token);
         formData.append("siteKey", siteKey);
 
+        const userToken = localStorage.getItem("token") || "";
+        const { ts, sign } = window.AntiCrawler.generateAuthParams(userToken);
+
         fetch(baseUrl + "login/sendEmailVerifyCode", {
           method: "post",
+          headers: {
+            "ts": ts,
+            "sign": sign
+          },
           body: formData,
         })
           .then((response) => response.json())

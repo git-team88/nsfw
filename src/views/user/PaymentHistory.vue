@@ -9,42 +9,33 @@
             <div class="panel-title">{{ t("user.paymentHistory.title") }}</div>
           </div>
 
-          <div class="main-tabs">
-            <div
-              class="main-tab-item"
-              :class="{ active: activeMainTab === 'processing' }"
-              @click="switchMainTab('processing')"
-            >
-              {{ t('user.paymentHistory.processing') }}
-            </div>
-            <div
-              class="main-tab-item"
-              :class="{ active: activeMainTab === 'orderHistory' }"
-              @click="switchMainTab('orderHistory')"
-            >
-              {{ t('user.paymentHistory.orderHistory') }}
-            </div>
-          </div>
-
           <div class="tabs-row">
             <div class="tabs">
               <div
                 class="tab-item"
-                :class="{ active: activeSubTab === 'subscribe' }"
+                :class="{ active: activeSubTab == 'subscribe' }"
                 @click="switchTab('subscribe')"
               >
                 {{ t("user.paymentHistory.tabSubscribe") }}
               </div>
               <div
                 class="tab-item"
-                :class="{ active: activeSubTab === 'recharge' }"
+                :class="{ active: activeSubTab == 'recharge' }"
                 @click="switchTab('recharge')"
               >
                 {{ t("user.paymentHistory.tabRecharge") }}
               </div>
             </div>
-            <div class="date-range" v-if="activeMainTab == 'orderHistory'">
-              <DateRangePicker v-model="range" theme="pink" />
+            <div class="actions-right" v-if="hasData">
+              <button class="view-all-btn" @click="viewAllPaymentHistory">
+                {{ t('user.paymentHistory.viewAll') }}
+              </button>
+              <div class="info-icon" @mouseenter="showInfo = true" @mouseleave="showInfo = false">
+                <img src="@/assets/images/novel/intro.png" alt="Info" />
+                <div class="info-tooltip" v-if="showInfo">
+                  {{ t('user.paymentHistory.infoTooltip') }}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -54,7 +45,7 @@
               <div class="list-area" v-if="activeSubTab === 'subscribe'">
                 <div class="sub-item" v-for="item in processingList" :key="item.id">
                   <div class="left">
-                    <img class="avatar" :src="item.avatar" alt="" @click="goUserHome(item.userId)" />
+                    <img class="avatar" :src="item.avatar || defaultAvatar" alt="" @click="goUserHome(item.userId)" @error="($event.target as HTMLImageElement).src = defaultAvatar" />
                     <div class="info">
                       <div class="name">{{ item.name }}</div>
                       <div class="id">{{ t('user.paymentHistory.id') }}{{ item.userId }}</div>
@@ -217,13 +208,14 @@ import EmptyState from "@/components/EmptyState.vue";
 import Pagination from "@/components/Pagination.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import dayjs from "dayjs";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 import { formatTimestamp } from "@/util/utils";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -257,6 +249,15 @@ const currentItem = ref<any>(null);
 const showMoreMenu = ref<Record<string, boolean>>({});
 const menuStyle = ref<Record<string, any>>({});
 const autoRenewLoading = ref(false);
+const showInfo = ref(false);
+
+const hasData = computed(() => {
+  if (activeMainTab.value === 'processing') {
+    return processingList.value.length > 0;
+  } else {
+    return listData.value.length > 0;
+  }
+});
 
 function switchMainTab(tab: "processing" | "orderHistory") {
   if (activeMainTab.value === tab) return;
@@ -455,7 +456,7 @@ async function viewInvoice(item: any) {
 
     if (res instanceof Blob) {
       const url = window.URL.createObjectURL(res);
-      window.open(url, '_blank');
+      window.location.href = url;
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -531,7 +532,7 @@ async function turnOffAutoRenewal(itemId: string) {
   try {
     const res = await api.cancelSubscribe() as any;
     if (res.code === 0 || res.code === 200) {
-      window.open(res.data?.url, '_blank');
+      window.location.href = res.data?.url;
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -553,8 +554,8 @@ async function turnOnAutoRenewal(item: any, type: number) {
       id = item.author_id
     }
     const res = await api.subscribe({ creator_id: id }) as any;
-    if (res.code === 0 || res.code === 200) {
-      window.open(res.data?.url, '_blank');
+    if (res.code == 0 || res.code == 200) {
+      window.location.href = res.data?.url;
     } else {
       toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
     }
@@ -562,6 +563,16 @@ async function turnOnAutoRenewal(item: any, type: number) {
     toast(t('fail'));
   } finally {
     autoRenewLoading.value = false;
+  }
+}
+
+async function viewAllPaymentHistory() {
+  const uid = localStorage.getItem('uid');
+  const res = await api.cancelSubscribe() as any;
+  if (res.code == 0 || res.code == 200) {
+    window.location.href = res.data?.url;
+  } else {
+    toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
   }
 }
 
@@ -578,13 +589,13 @@ function handleClickOutside(e: MouseEvent) {
 onMounted(() => {
   // 处理URL中的type参数
   const type = route.query.type as string;
-  if (type === '1') {
+  if (type == '1') {
     activeSubTab.value = 'subscribe';
     fetchProcessingData();
-  } else if (type === '2') {
+  } else if (type == '2') {
     activeSubTab.value = 'recharge';
     fetchProcessingData();
-  } else if (type === '4') {
+  } else if (type == '4') {
     // 跳转到支付历史下的AI充值工具tab
     activeMainTab.value = 'orderHistory';
     activeSubTab.value = 'recharge';
@@ -809,14 +820,24 @@ onBeforeUnmount(() => {
   color: #99A1AF;
 }
 
-.main-tabs {
+.tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 6rem;
+  margin-bottom: 2.4rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #F5F5F5;
+}
+.tabs {
   display: flex;
   gap: 3.2rem;
-  border-bottom: 1px solid #F5F5F5;
-  margin-bottom: 2rem;
+  height: 100%;
 }
-.main-tab-item {
-  padding-bottom: 1.8rem;
+.tab-item {
+  display: flex;
+  align-items: center;
+  height: 100%;
   font-size: 1.6rem;
   color: #6A7282;
   cursor: pointer;
@@ -829,7 +850,7 @@ onBeforeUnmount(() => {
     &::after {
       content: "";
       position: absolute;
-      bottom: -1px;
+      bottom: -1.2rem;
       left: 0;
       width: 100%;
       height: 2px;
@@ -839,35 +860,80 @@ onBeforeUnmount(() => {
   }
 }
 
-.tabs-row {
+.actions-right {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.6rem;
+  gap: 1rem;
 }
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  height: 3.2rem;
-}
-.tab-item {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  padding: 0 1.6rem;
-  border-radius: 0.6rem;
-  font-size: 1.4rem;
-  color: #99A1AF;
-  cursor: pointer;
-  position: relative;
 
-  &:hover{
-    color: #6A7282;
+.view-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18rem;
+  height: 4.8rem;
+  background: #fb64b6;
+  color: #fff;
+  border: none;
+  border-radius: 0.8rem;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 1.6rem;
+
+  &:hover {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 5;
+    }
   }
-  &.active {
-    background: #F5F5F5;
+}
+
+.info-icon {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .info-tooltip {
+    position: absolute;
+    top: 100%;
+    right: -1.6rem;
+    margin-top: 1.6rem;
+    padding: 1rem;
+    background: #FFFFFF;
     color: #6A7282;
+    font-size: 1.2rem;
+    border-radius: 0.8rem;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.06);
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -1rem;
+      right: 0.8rem;
+      width: 3.4rem;
+      height: 1.2rem;
+      background: url('@/assets/images/detail/intro.png') no-repeat center center;
+      background-size: 100% 100%;
+    }
   }
 }
 

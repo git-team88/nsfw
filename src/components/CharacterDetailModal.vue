@@ -176,7 +176,7 @@ function castCharacter() {
 
 .character-name {
   font-size: 3.2rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #364153;
   margin: 0;
 }

@@ -134,6 +134,7 @@ const props = defineProps<{
   visible: boolean;
   images: string[];
   coverImage?: string;
+  isCanvasGenerated?: boolean;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
@@ -182,16 +183,26 @@ watch(
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
       localImage.value = null;
-      if (props.coverImage) {
-        // 优先选择封面图片
+      
+      // Check if cover is canvas-generated (not from uploaded images)
+      if (props.isCanvasGenerated) {
+        // For canvas-generated covers, don't select it, let user choose from images
+        selectedImage.value = '';
+        selectedIndex.value = -1;
+      } else if (props.coverImage) {
+        // For uploaded/URL covers, select the cover image
         selectedImage.value = props.coverImage;
         selectedIndex.value = -1;
         detectOrientation(selectedImage.value);
       } else if (props.images.length > 0 && !selectedImage.value) {
-        // 其次选择第一张图片
+        // Select first image from the list
         selectedImage.value = props.images[0];
         selectedIndex.value = 0;
         detectOrientation(selectedImage.value);
+      } else {
+        // Reset selection
+        selectedImage.value = '';
+        selectedIndex.value = -1;
       }
     }
   },

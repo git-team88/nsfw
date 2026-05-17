@@ -9,14 +9,22 @@
         <!-- 左侧部分 -->
         <div class="left-section">
           <div class="project-name">{{ project?.name }}</div>
-          <img :src="project?.result_async?.generate_manhua_cover || project?.cover || 'https://picsum.photos/300/400?random=1'" alt="Project cover" class="project-cover" />
-          <button class="publish-btn" @click="$emit('publish', project, selectedEpisode)">{{ t('submit.image.projectView.publishEpisode') }}</button>
+          <img :src="project?.result_async?.generate_manhua_cover" alt="Project cover" class="project-cover" />
+          <button class="publish-btn" :class="{ 'published': isEpisodePublished }" :disabled="isEpisodePublished" @click="handlePublish">
+            {{ isEpisodePublished ? t('submit.image.projectView.published') : t('submit.image.projectView.publishEpisode') }}
+          </button>
         </div>
 
         <!-- 右侧部分 -->
         <div class="right-section">
           <div class="right-header">
-            <span class="detail-title">{{ t('submit.image.projectView.detail') }}</span>
+            <div class="detail-title-container">
+              <span class="detail-title">{{ t('submit.image.projectView.detail') }}</span>
+              <div v-if="currentChapter?.is_publish == 1" class="published-badge">
+                <img class="published-dot" src="@/assets/images/publish/publish.png" alt="" />
+                <span class="published-text">{{ t('submit.image.projectView.publishedIndicator') }}</span>
+              </div>
+            </div>
             <div class="episode-nav">
               <button v-if="currentPage > 1" class="nav-btn prev" @click="prevPage">
                 <img src="@/assets/images/publish/prev.png" alt="Previous" />
@@ -24,11 +32,14 @@
               <div class="episode-tabs">
                 <button
                   v-for="episode in visibleEpisodes"
-                  :key="episode"
+                  :key="episode.chapter"
                   class="episode-tab"
-                  :class="{ active: selectedEpisode == episode }"
-                  @click="selectEpisode(episode)"
-                >{{ episode }}</button>
+                  :class="{ active: selectedEpisode == episode.chapter }"
+                  @click="selectEpisode(episode.chapter)"
+                >
+                  {{ episode.chapter }}
+                  <img v-if="episode.is_publish == 1" class="published-icon" src="@/assets/images/publish/publish.png" alt="" />
+                </button>
               </div>
               <button v-if="currentPage < totalPages" class="nav-btn next" @click="nextPage">
                 <img src="@/assets/images/publish/next.png" alt="Next" />
@@ -38,8 +49,7 @@
 
           <div class="right-body">
             <div class="episode-title">{{ t('submit.image.projectView.episodeSummary') }}</div>
-            <p class="episode-desc" v-if="isLoading">{{ t('loading') }}</p>
-            <p class="episode-desc" v-else>{{ episodeDescription }}</p>
+            <p class="episode-desc">{{ chapterDescription }}</p>
             <div class="episode-images" v-if="!isLoading">
               <img
                 v-for="(image, index) in episodeImages"
@@ -61,7 +71,7 @@
 </template>
 
 <script setup lang="ts" name="ProjectCoimcViewModal">
-import { ref, computed, defineProps, defineEmits, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -84,12 +94,12 @@ const emit = defineEmits(['close', 'publish']);
 const selectedEpisode = ref(1);
 const currentPage = ref(1);
 const episodesPerPage = 10;
+// 计算总集数
 const totalEpisodes = computed(() => {
   // 优先使用 project 中已生成的集数信息
   if (props.project?.chapters) {
-    // 过滤出未发布的章节
-    const unpublishedChapters = props.project.chapters.filter((chapter: any) => chapter.is_publish === 2);
-    return unpublishedChapters.length;
+    // 显示所有章节，不需要过滤
+    return props.project.chapters.length;
   } else if (props.project?.total_episodes) {
     return props.project.total_episodes;
   } else if (props.project?.totalEpisodes) {
@@ -119,22 +129,21 @@ const totalPages = computed(() => {
 // 计算当前页显示的集数
 const visibleEpisodes = computed(() => {
   if (props.project?.chapters) {
-    // 过滤出未发布的章节并按 chapter 排序
-    const unpublishedChapters = props.project.chapters
-      .filter((chapter: any) => chapter.is_publish === 2)
+    // 显示所有章节并按 chapter 排序
+    const allChapters = props.project.chapters
       .sort((a: any, b: any) => a.chapter - b.chapter);
 
     // 计算当前页的章节
     const start = (currentPage.value - 1) * episodesPerPage;
     const end = start + episodesPerPage;
-    return unpublishedChapters.slice(start, end).map((chapter: any) => chapter.chapter);
+    return allChapters.slice(start, end);
   } else {
     // 原逻辑作为备用
     const start = (currentPage.value - 1) * episodesPerPage + 1;
     const end = Math.min(start + episodesPerPage - 1, totalEpisodes.value);
     const episodes = [];
     for (let i = start; i <= end; i++) {
-      episodes.push(i);
+      episodes.push({ chapter: i, is_publish: 2 }); // 默认未发布
     }
     return episodes;
   }
@@ -154,9 +163,33 @@ const episodeDescription = computed(() => {
   return '';
 });
 
+// 章节详情描述
+const chapterDescription = computed(() => {
+  if (chapterData.value?.chapter_description) {
+    return chapterData.value.chapter_description;
+  }
+  return '';
+});
+
 // 集数图片 - 使用真实数据（final_images）
 const episodeImages = computed(() => {
   return chapterData.value?.final_images || chapterData.value?.images || chapterData.value?.result_async?.final_images || chapterData.value?.result_async?.images || [];
+});
+
+// 当前章节信息
+const currentChapter = computed(() => {
+  if (props.project?.chapters) {
+    return props.project.chapters.find((item: any) => item.chapter == selectedEpisode.value);
+  }
+  return null;
+});
+
+// Check if current episode is published
+const isEpisodePublished = computed(() => {
+  if (!currentChapter.value) {
+    return false;
+  }
+  return Number(currentChapter.value.is_publish) === 1;
 });
 
 // 获取章节详情
@@ -185,22 +218,16 @@ function selectEpisode(episode: number) {
   fetchChapterDetail();
 }
 
-// 监听选中集数变化
-watch(selectedEpisode, () => {
-  fetchChapterDetail();
-});
-
 // 监听 project 变化，初始化数据
 watch(() => props.project, () => {
   if (props.project) {
     if (props.project.chapters) {
-      // 过滤出未发布的章节并按 chapter 排序
-      const unpublishedChapters = props.project.chapters
-        .filter((chapter: any) => chapter.is_publish === 2)
+      // 显示所有章节并按 chapter 排序
+      const allChapters = props.project.chapters
         .sort((a: any, b: any) => a.chapter - b.chapter);
 
-      if (unpublishedChapters.length > 0) {
-        selectedEpisode.value = unpublishedChapters[0].chapter;
+      if (allChapters.length > 0) {
+        selectedEpisode.value = allChapters[0].chapter;
         fetchChapterDetail();
         return;
       }
@@ -211,12 +238,22 @@ watch(() => props.project, () => {
   }
 }, { immediate: true });
 
+// 发布本集
+function handlePublish() {
+  emit('publish', {
+    project: props.project,
+    episode: selectedEpisode.value
+  });
+}
+
+// 上一页
 function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--;
   }
 }
 
+// 下一页
 function nextPage() {
   if (currentPage.value < totalPages.value) {
     currentPage.value++;
@@ -248,7 +285,6 @@ function nextPage() {
 .modal-content {
   display: flex;
   height: 56rem;
-  min-height: calc(100vh - 34rem);
 }
 
 /* 左侧部分 */
@@ -259,7 +295,6 @@ function nextPage() {
   background: #F5F5F5;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .project-name {
@@ -305,6 +340,24 @@ function nextPage() {
       border-radius: inherit;
     }
   }
+
+  &.published {
+    background-color: rgba(251, 100, 182, 0.5);
+    color: #FFFFFF;
+    cursor: not-allowed;
+
+    &:hover {
+      &::after {
+        display: none;
+      }
+    }
+  }
+
+  &:disabled {
+    background-color: rgba(251, 100, 182, 0.5);
+    color: #FFFFFF;
+    cursor: not-allowed;
+  }
 }
 
 /* 右侧部分 */
@@ -347,6 +400,7 @@ function nextPage() {
 }
 
 .episode-tab {
+  position: relative;
   min-width: 4rem;
   height: 4rem;
   background: #F5F5F5;
@@ -366,6 +420,37 @@ function nextPage() {
 
   &:hover:not(.active) {
     color: #FB64B6;
+  }
+
+  .published-icon {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.4rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+.detail-title-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.published-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.2rem;
+  color: #99A1AF;
+
+  .published-dot {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .published-text {
+    font-size: 1.2rem;
   }
 }
 
@@ -406,15 +491,15 @@ function nextPage() {
   flex-shrink: 0;
 
   img {
-    width: 1.6rem;
-    height: 1.6rem;
+    width: 2rem;
+    height: 2rem;
   }
 }
 
 .right-body {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 2rem;
+  padding-bottom: 1rem;
 }
 
 .episode-title {

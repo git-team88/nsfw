@@ -174,10 +174,13 @@ async function onFileChange(e: Event) {
     const formData = new FormData();
     formData.append('file', file);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -216,11 +219,17 @@ async function submit() {
     };
 
     const token = localStorage.getItem('token');
+
+    const authToken = token || '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
     const response = await fetch(`${baseUrl}report/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { token })
+        ...(token && { token }),
+        ts,
+        sign
       },
       body: JSON.stringify(reportData)
     });
@@ -471,7 +480,7 @@ async function submit() {
     height: 4.8rem;
     border-radius: 0.8rem;
     font-size: 1.6rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     border: none;
     transition: all 0.2s;

@@ -46,9 +46,15 @@
             </div>
 
             <div class="section">
-              <div class="label"><span>*</span>{{ t("birthday.label") }}</div>
+              <div class="label">
+                <span>*</span>{{ t("birthday.label") }}
+                <b class="birthday-tip">{{ t("user.personal.birthdayCannotEdit") }}</b>
+              </div>
 
-              <BirthPicker v-model="dateValue" :isEdit="true" @change="handleDateChange" />
+              <div v-if="hasBirthday" class="birth-box">
+                {{ formatDatePart(dateValue.month) }}-{{ formatDatePart(dateValue.day) }}-{{ dateValue.year }}
+              </div>
+              <BirthPicker v-else v-model="dateValue" :isEdit="true" @change="handleDateChange" />
             </div>
 
             <div class="actions">
@@ -89,7 +95,7 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import BirthPicker from "@/components/BirthPicker.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 
@@ -139,7 +145,18 @@ const dateValue = ref<{ year: number | ""; month: number | ""; day: number | "" 
   day: "",
 });
 
+// Check if birthday exists initially from user info
+const hasBirthday = computed(() => {
+  return !!initialValues.value.birthday;
+});
+
 const isAdult = ref(false);
+
+// Format date part to add leading zero
+function formatDatePart(value: number | ""): string {
+  if (value === "" || value === undefined || value === null) return "";
+  return String(value).padStart(2, '0');
+}
 
 function onToggleSensitive() {
   if (!isAdult.value) return;
@@ -256,7 +273,10 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
 
   const formData = new FormData();
   formData.append("file", file);
-  const parma = { method: "POST", headers: { token }, body: formData };
+
+  const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+  const parma = { method: "POST", headers: { token, ...authHeaders }, body: formData };
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())
     .then(
@@ -331,7 +351,9 @@ function onSave() {
     });
   }
 
-  if (hasBirthdayChanged && currentBirthday) {
+  // Only allow birthday modification if initially there was no birthday
+  const hadBirthdayInitially = initialValues.value.birthday;
+  if (hasBirthdayChanged && currentBirthday && !hadBirthdayInitially) {
     operations.push(() => {
       return api.modifyBirth({
         year: dateValue.value.year,
@@ -344,6 +366,8 @@ function onSave() {
           }
         });
     });
+  } else if (hadBirthdayInitially && hasBirthdayChanged) {
+    toast(t('user.personal.birthdayCannotEdit'));
   }
 
   if (operations.length === 0) {
@@ -538,6 +562,20 @@ function onSave() {
   color: #99a1af;
 }
 
+.birthday-tip {
+  font-weight: normal;
+  font-size: 1.2rem;
+  color: #99A1AF;
+  margin-left: 0.4rem;
+  font-weight: normal;
+}
+
+.birth-box {
+  font-weight: 500;
+  font-size: 1.4rem;
+  color: #364153;
+}
+
 .age-options {
   display: flex;
   gap: 2.4rem;
@@ -609,7 +647,7 @@ function onSave() {
   background: rgba(255, 255, 255, 0.1);
 }
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: default;
 }
 </style>

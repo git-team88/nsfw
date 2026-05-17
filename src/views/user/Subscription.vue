@@ -37,7 +37,7 @@
             <div class="section" v-if="!plan">
               <div class="disabled-box">
                 <span>{{ t("user.subscription.disabled") }}</span>
-                <button class="edit-link" @click="goEdit">
+                <button class="edit-link" @click="handleEditClick">
                   {{ t("user.subscription.edit") }}
                 </button>
               </div>
@@ -49,7 +49,7 @@
                     {{ t("user.subscription.priceLabel") }}
                     <span>{{ t("user.subscription.priceLimit") }}</span>
                   </div>
-                  <button class="edit-link" @click="goEdit">
+                  <button class="edit-link" @click="handleEditClick">
                     {{ t("user.subscription.edit") }}
                   </button>
                 </div>
@@ -69,13 +69,23 @@
       </div>
     </div>
   </div>
+
   <UploadMask :visible="isLoading" :text="t('loading')" />
+
+  <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
+
+  <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
+
+  <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" />
 </template>
 
 <script setup lang="ts" name="UserSubscription">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import KycRequiredModal from "@/components/KycRequiredModal.vue";
+import KycReviewingModal from "@/components/KycReviewingModal.vue";
+import AccountRequiredModal from "@/components/AccountRequiredModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
@@ -91,12 +101,46 @@ const loading = ref(false);
 const isLoading = ref(false);
 const hasAccount = ref(false);
 
+// KYC 相关状态
+const showKycRequiredModal = ref(false);
+const showKycReviewingModal = ref(false);
+const kycStatusChecked = ref(false);
+const showAccountRequiredModal = ref(false);
+
 onMounted(async () => {
   await fetchSubscription();
 });
 
 function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status === '1';
+  hasAccount.value = userData?.info?.blogger_status == '1';
+}
+
+async function fetchKycDetail() {
+  try {
+    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    if (kycRes.code === 0 || kycRes.code === 200) {
+      const kycData = kycRes.data;
+
+      // 检查数据是否为空
+      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
+
+      if (isDataEmpty) {
+        // 未认证，显示需要认证弹窗
+        showKycRequiredModal.value = true;
+      } else {
+        // 有数据，检查 status
+        const status = kycData.status;
+        if (status == 0 || status == '0' || status == 2 || status == '2') {
+          // 审核中或未通过，显示审核弹窗
+          showKycReviewingModal.value = true;
+        } else {
+          kycStatusChecked.value = true;
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function fetchSubscription() {
@@ -117,10 +161,32 @@ async function fetchSubscription() {
   }
 }
 
-function goEdit() {
-  // toast(t("user.subscription.priceChangeLimit"));
-  // return false;
-  router.push("/user-subscription-edit");
+async function handleEditClick() {
+  try {
+    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    if (kycRes.code === 0 || kycRes.code === 200) {
+      const kycData = kycRes.data;
+
+      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
+
+      if (isDataEmpty) {
+        showKycRequiredModal.value = true;
+      } else {
+        const status = kycData.status;
+        if (status == '0' || status == '2') {
+          showKycReviewingModal.value = true;
+        } else {
+          if (!hasAccount.value) {
+            showAccountRequiredModal.value = true;
+          } else {
+            router.push("/user-subscription-edit");
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function handleCreateAccount() {
@@ -130,7 +196,7 @@ async function handleCreateAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.open(data.data?.url, '_blank');
+      window.location.href = data.data?.url;
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
     }
@@ -148,7 +214,7 @@ async function handleChangeAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.open(data.data?.url, '_blank');
+      window.location.href = data.data?.url;
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
     }

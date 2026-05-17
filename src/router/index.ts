@@ -153,6 +153,11 @@ const routes = [
     component: CharacterLibrary,
   },
   {
+    path: "/generate",
+    name: "Generate",
+    component: () => import("@/views/Generate.vue"),
+  },
+  {
     path: "/novel/:id",
     name: "NovelGenerate",
     component: () => import("@/views/NovelGenerate.vue"),
@@ -202,11 +207,11 @@ const routes = [
     name: "UserInteractive",
     component: UserInteractive,
   },
-  {
-    path: "/user-invite",
-    name: "InviteRevenue",
-    component: InviteRevenue,
-  },
+  // {
+  //   path: "/user-invite",
+  //   name: "InviteRevenue",
+  //   component: InviteRevenue,
+  // },
   {
     path: "/user-revenue",
     name: "UserRevenue",
@@ -221,6 +226,11 @@ const routes = [
     path: "/user-subscription",
     name: "UserSubscription",
     component: UserSubscription,
+  },
+  {
+    path: "/user-kyc",
+    name: "UserKyc",
+    component: () => import("@/views/user/KycVerify.vue"),
   },
   {
     path: "/user-subscription-edit",
@@ -267,21 +277,21 @@ const routes = [
     name: "PaymentHistory",
     component: PaymentHistory,
   },
-  {
-    path: "/creative-partner",
-    name: "CreativePartner",
-    component: CreativePartner,
-  },
-  {
-    path: "/creative-partner-review",
-    name: "CreativePartnerReview",
-    component: CreativePartnerReview,
-  },
-  {
-    path: "/creative-partner-pricing",
-    name: "CreativePartnerPricing",
-    component: CreativePartnerPricing,
-  },
+  // {
+  //   path: "/creative-partner",
+  //   name: "CreativePartner",
+  //   component: CreativePartner,
+  // },
+  // {
+  //   path: "/creative-partner-review",
+  //   name: "CreativePartnerReview",
+  //   component: CreativePartnerReview,
+  // },
+  // {
+  //   path: "/creative-partner-pricing",
+  //   name: "CreativePartnerPricing",
+  //   component: CreativePartnerPricing,
+  // },
   {
     path: "/:pathMatch(.*)*",
     redirect: "/",

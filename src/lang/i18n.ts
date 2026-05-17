@@ -21,9 +21,10 @@ interface TranslationMessages {
   [key: string]: {
     [nestedKey: string]:
       | string
+      | string[]
       | Additional
       | {
-          [deeperNestedKey: string]: string;
+          [deeperNestedKey: string]: string | string[];
         };
   };
 }

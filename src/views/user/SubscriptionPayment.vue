@@ -171,7 +171,7 @@ async function handlePay() {
     const res = await api.subscribe({ creator_id: userId });
     const data = res as unknown as any;
     if (data.code === 0 || data.code === 200) {
-      window.open(data.data?.url, '_blank');
+      window.location.href = data.data?.url;
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
     }

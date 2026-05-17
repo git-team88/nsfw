@@ -62,63 +62,68 @@
             </div>
           </div>
 
-          <!-- Project Grid -->
-          <div v-else class="project-grid">
-            <div
-              v-for="(project, index) in projects"
-              :key="project.id"
-              class="project-item"
-              :class="{ selected: selectedProjectId == project.id }"
-              @click="selectProject(project)"
-            >
-              <img :src="project.cover" alt="" class="project-image" />
-              <div class="view-icon" @click.stop="openViewModal(project)">
-                <img src="@/assets/images/publish/play.png" alt="Play" />
+          <div v-else>
+            <!-- Project Grid -->
+            <div class="project-grid">
+              <div
+                v-for="(project, index) in projects"
+                :key="project.id"
+                class="project-item"
+                :class="{ selected: selectedProjectId == project.id }"
+                @click="selectProject(project)"
+              >
+                <img :src="project.result_async.generate_manju_cover" alt="" class="project-image" />
+                <div class="view-icon" @click.stop="openViewModal(project)">
+                  <img src="@/assets/images/publish/play.png" alt="Play" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Pagination -->
-          <Pagination
-            v-if="projects.length > 0"
-            :total="totalProjects"
-            :page-size="pageSize"
-            v-model="currentPage"
-            theme="pink"
-          />
+            <!-- Pagination -->
+            <Pagination
+              v-if="projects.length > 0 && totalProjects > pageSize"
+              :total="totalProjects"
+              :page-size="pageSize"
+              v-model="currentPage"
+              theme="pink"
+            />
 
-          <!-- Episode Selection -->
-          <div v-if="projects.length > 0" class="episode-selection">
-            <label>{{ t('submit.video.selectEpisode') }}</label>
-            <div class="episode-select">
-              <input
-                type="text"
-                class="episode-input"
-                :value="selectedEpisode"
-                readonly
-              />
-              <div class="episode-buttons">
-                <button
-                  class="episode-btn up"
-                  @click="increaseEpisode"
-                  :disabled="selectedEpisode >= (selectedProject?.totalEpisodes || 1)"
-                >
-                  <span class="arrow-icon"></span>
-                </button>
-                <button
-                  class="episode-btn down"
-                  @click="decreaseEpisode"
-                  :disabled="selectedEpisode <= 1"
-                >
-                  <span class="arrow-icon"></span>
-                </button>
+            <!-- Chapter Selection -->
+            <div class="chapter-selection">
+              <label>{{ t('submit.video.selectEpisode') }}</label>
+              <div class="chapter-dropdown">
+                <div class="custom-select" :class="{ 'open': showChapterDropdown }" @click="toggleChapterDropdown($event)">
+                  <span class="select-value">{{ getChapterLabel(selectedEpisode) }}</span>
+                  <div class="select-arrow">
+                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                  </div>
+                </div>
+                <div class="custom-dropdown" v-if="showChapterDropdown">
+                  <div
+                    class="chapter-dropdown-item"
+                    :class="{ 'selected': selectedEpisode == chapter.chapter }"
+                    v-for="chapter in selectedProject?.chapters || []"
+                    :key="chapter.chapter"
+                    @click="selectChapter(chapter)"
+                  >
+                    <span class="chapter-number">{{ t('submit.video.episode', { episode: chapter.chapter }) }}</span>
+                    <span class="chapter-status" v-if="chapter.is_publish == 1">{{ t('novel.published') }}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Publish Button -->
-          <div v-if="projects.length > 0" class="publish-section">
-            <button class="publish-btn" @click="handlePublish(selectedProject, selectedEpisode)">{{ t('submit.cover.confirm') }}</button>
+            <!-- Publish Button -->
+            <div class="publish-section">
+              <button
+                class="publish-btn"
+                :class="{ 'published': isChapterPublished }"
+                @click="handlePublish"
+                :disabled="isChapterPublished || !isProjectSelected"
+              >
+                {{ isChapterPublished ? t('novel.published') : t('submit.cover.confirm') }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -150,7 +155,7 @@
             <input
               ref="videoInputRef"
               type="file"
-              accept="video/mp4,video/MOV,video/AVI"
+              accept="video/mp4,video/MOV"
               class="hidden-file"
               title=""
               @change="onVideoPicked"
@@ -201,7 +206,7 @@
                     <input
                       ref="reuploadInputRef"
                       type="file"
-                      accept="video/mp4,video/MOV,video/AVI"
+                      accept="video/mp4,video/MOV"
                       class="reupload-file"
                       title=""
                       @change="onVideoPicked"
@@ -388,13 +393,13 @@
                     <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
                     <span class="label">{{ item.label }}</span>
                   </div>
-                  <div class="item-right">
+                  <!-- <div class="item-right">
                     <span class="stats">
                       {{
                         dropdownType === "#" ? `${item.views} views` : `${item.followers} followers`
                       }}
                     </span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -478,7 +483,7 @@
     <!-- Project View Modal -->
     <ProjectVideoViewModal
       :visible="showViewModal"
-      :project="selectedProject"
+      :project="previewProject"
       @close="closeViewModal"
       @publish="handlePublish"
     />
@@ -673,11 +678,20 @@ const totalProjects = ref(1000);
 const pageSize = ref(8);
 
 // Episode selection
-const selectedEpisode = ref(1);
+const selectedEpisode = ref(null);
 
 // View modal
 const showViewModal = ref(false);
-const selectedModalEpisode = ref(1);
+const selectedModalEpisode = ref(null);
+
+// Chapter dropdown
+const showChapterDropdown = ref(false);
+
+// Project details cache
+const projectDetailsCache = ref<Record<string, any>>({});
+
+// Preview modal project (separate from selected project)
+const previewProject = ref<any>(null);
 
 // Collection
 const selectedCollection = ref('');
@@ -690,7 +704,7 @@ const showCreateCollectionModal = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
-  { value: '1', label: '第一集' },
+  { value: '1', label: t('submit.video.episode', { episode: 1 }) },
 ]);
 
 // Collection pagination
@@ -710,6 +724,34 @@ const showSubscriptionModal = ref(false);
 const captionLength = ref(0);
 const canSubmit = computed(() => {
   return uploadSuccess.value && coverPreview.value;
+});
+
+// Watch route changes to update tabIndex
+watch(() => route.path, (newPath) => {
+  const tab = tabList.find(t => t.path === newPath);
+  if (tab) {
+    const index = tabList.indexOf(tab);
+    tabIndex.value = index;
+  }
+});
+
+// Watch uploadOption changes to fetch projects when switching to history
+watch(uploadOption, (newOption) => {
+  if (newOption === 'history') {
+    fetchProjects();
+  }
+});
+
+// Check if selected chapter is already published
+const isChapterPublished = computed(() => {
+  if (!selectedProject.value?.chapters || !selectedEpisode.value) return false;
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
+  return chapter?.is_publish == 1;
+});
+
+// Check if a project is selected
+const isProjectSelected = computed(() => {
+  return !!selectedProject.value && !!selectedEpisode.value;
 });
 
 // Collection methods
@@ -743,7 +785,7 @@ async function selectCollection(id: number) {
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id.toString(), 1, 1) as any;
+      const response = await api.singleCollection(id, 1, 100) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
         const allnum = response.data.allnums || '0';
@@ -753,16 +795,26 @@ async function selectCollection(id: number) {
         // Update episodes array based on collection chapters
         episodes.value = [];
         // 先添加已有的章节
-        collection.chapters.forEach((chapter: any, index: number) => {
-          episodes.value.push({
-            value: (index + 1).toString(),
-            label: chapter.title || `第${index + 1}集`
+        if (response.data.data && response.data.data.length > 0) {
+          response.data.data.forEach((chapter: any, index: number) => {
+            episodes.value.push({
+              value: (index + 1).toString(),
+              label: t('submit.video.episode', { episode: index + 1 })
+            });
           });
-        });
+        } else if (collection.chapters && collection.chapters.length > 0) {
+          // Fallback to collection.chapters if response.data.data is not available
+          collection.chapters.forEach((chapter: any, index: number) => {
+            episodes.value.push({
+              value: (index + 1).toString(),
+              label: t('submit.video.episode', { episode: index + 1 })
+            });
+          });
+        }
         // 添加新的一集
         episodes.value.push({
           value: defaultEpisode.toString(),
-          label: `第${defaultEpisode}集`
+          label: t('submit.video.episode', { episode: defaultEpisode })
         });
       }
     } catch (error) {
@@ -775,16 +827,18 @@ async function selectCollection(id: number) {
       // Update episodes array based on collection chapters
       episodes.value = [];
       // 先添加已有的章节
-      collection.chapters.forEach((chapter: any, index: number) => {
-        episodes.value.push({
-          value: (index + 1).toString(),
-          label: chapter.title || `第${index + 1}集`
+      if (collection.chapters && collection.chapters.length > 0) {
+        collection.chapters.forEach((chapter: any, index: number) => {
+          episodes.value.push({
+            value: (index + 1).toString(),
+            label: t('submit.video.episode', { episode: index + 1 })
+          });
         });
-      });
+      }
       // 添加新的一集
       episodes.value.push({
         value: defaultEpisode.toString(),
-        label: `第${defaultEpisode}集`
+        label: t('submit.video.episode', { episode: defaultEpisode })
       });
     }
   }
@@ -807,7 +861,7 @@ function selectEpisode(value: string) {
 
 function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : '第一集';
+  return episode ? episode.label : t('submit.video.episode', { episode: 1 });
 }
 
 // Fetch collections
@@ -857,7 +911,12 @@ async function handleCreateCollection(collection: { name: string }) {
   await fetchCollections(false);
   // Select the newly created collection
   selectedCollection.value = collection.name;
-  selectedEpisodeNumber.value = '1';
+  // Find and set the new collection ID
+  const newCollection = collections.value.find(c => c.title === collection.name);
+  if (newCollection) {
+    selectedCollectionId.value = newCollection.id;
+  }
+  // Keep current episode number, don't reset to 1
   showCreateCollectionModal.value = false;
   isNoCollection.value = false;
 }
@@ -866,12 +925,31 @@ function handleCloseCreateCollectionModal() {
   showCreateCollectionModal.value = false;
 }
 
+// Chapter dropdown functions
+function toggleChapterDropdown(event: Event) {
+  event.stopPropagation();
+  showChapterDropdown.value = !showChapterDropdown.value;
+}
+
+function getChapterLabel(chapterNumber: number | null) {
+  if (!chapterNumber || !selectedProject.value?.chapters) return '';
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === chapterNumber);
+  if (!chapter) return '';
+  return t('submit.video.episode', { episode: chapterNumber });
+}
+
+function selectChapter(chapter: any) {
+  selectedEpisode.value = chapter.chapter;
+  selectedModalEpisode.value = chapter.chapter;
+  showChapterDropdown.value = false;
+}
+
 // Project list methods
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(2, 0, 'manju', currentPage.value, pageSize.value, 'desc', 1) as any;
-    if (response.code !== 200) {
+    const response = await api.getProject(0, 'manju', currentPage.value, 10, 1) as any;
+    if (response.code != 200) {
       toast(t('fail'));
       return;
     }
@@ -880,6 +958,10 @@ async function fetchProjects() {
 
     if (response.data.data_count) {
       totalProjects.value = response.data.data_count;
+    }
+
+    if(projects.value && projects.value.length > 0) {
+      await selectProject(projects.value[0]);
     }
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -891,30 +973,65 @@ async function fetchProjects() {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
-  selectedEpisode.value = 1;
-  selectedModalEpisode.value = 1;
+
+  if (project.result_async?.generate_manju_cover) {
+    coverPreview.value = project.result_async.generate_manju_cover;
+  }
+
+  // Check if project details are in cache
+  if (project.session_id && projectDetailsCache.value[project.session_id]) {
+    // Use cached project details
+    const cachedProject = projectDetailsCache.value[project.session_id];
+    Object.assign(project, cachedProject);
+
+    // Set cover from cached project details
+    if (project.cover) {
+      coverPreview.value = project.cover;
+    } else if (project.result_async?.generate_manju_cover) {
+      coverPreview.value = project.result_async.generate_manju_cover;
+    }
+
+    // Show all chapters
+    if (project.chapters && project.chapters.length > 0) {
+      // Sort chapters by chapter number
+      project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+      // If there are chapters, set default episode to the first one
+      if (project.chapters.length > 0) {
+        selectedEpisode.value = project.chapters[0].chapter;
+        selectedModalEpisode.value = project.chapters[0].chapter;
+      }
+    }
+    return;
+  }
 
   // Request project details
   try {
-    const res = await api.detailProject(project.session_id) as any;
-    if (res.code === 200 && res.data) {
-      // Update project with details
-      Object.assign(project, res.data);
+    if (project.session_id) {
+      const res = await api.detailProject(project.session_id) as any;
+      if (res.code === 200 && res.data) {
+        // Update project with details
+        Object.assign(project, res.data);
 
-      // Filter chapters to only include unpublished ones (is_publish = 2)
-      if (project.chapters && project.chapters.length > 0) {
-        const unpublishedChapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
+        // Set cover from project details
+        if (project.cover) {
+          coverPreview.value = project.cover;
+        } else if (project.result_async?.generate_manju_cover) {
+          coverPreview.value = project.result_async.generate_manju_cover;
+        }
 
-        // If there are unpublished chapters, request details for the first one
-        if (unpublishedChapters.length > 0) {
-          const chapterId = unpublishedChapters[0].id;
-          const chapterRes = await api.detailChapter(project.session_id, chapterId) as any;
-          if (chapterRes.code === 200 && chapterRes.data) {
-            // Update chapter with details
-            const chapterIndex = unpublishedChapters.findIndex((c: any) => c.id === chapterId);
-            if (chapterIndex !== -1) {
-              Object.assign(unpublishedChapters[chapterIndex], chapterRes.data);
-            }
+        // Cache project details
+        projectDetailsCache.value[project.session_id] = { ...project };
+
+        // Show all chapters
+        if (project.chapters && project.chapters.length > 0) {
+          // Sort chapters by chapter number
+          project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+          // If there are chapters, set default episode to the first one
+          if (project.chapters.length > 0) {
+            selectedEpisode.value = project.chapters[0].chapter;
+            selectedModalEpisode.value = project.chapters[0].chapter;
           }
         }
       }
@@ -924,51 +1041,43 @@ async function selectProject(project: any) {
   }
 }
 
-function decreaseEpisode() {
-  // Get unpublished chapters
-  const unpublishedChapters = selectedProject.value?.chapters?.filter((chapter: any) => chapter.is_publish == 2) || [];
-  if (unpublishedChapters.length == 0) return;
 
-  // Find current chapter index in unpublished chapters
-  const currentIndex = unpublishedChapters.findIndex((chapter: any) => chapter.chapter == selectedEpisode.value);
-  if (currentIndex > 0) {
-    // Move to previous chapter in unpublished list
-    selectedEpisode.value = unpublishedChapters[currentIndex - 1].chapter;
-  }
-}
-
-function increaseEpisode() {
-  // Get unpublished chapters
-  const unpublishedChapters = selectedProject.value?.chapters?.filter((chapter: any) => chapter.is_publish == 2) || [];
-  if (unpublishedChapters.length == 0) return;
-
-  // Find current chapter index in unpublished chapters
-  const currentIndex = unpublishedChapters.findIndex((chapter: any) => chapter.chapter == selectedEpisode.value);
-  if (currentIndex < unpublishedChapters.length - 1) {
-    // Move to next chapter in unpublished list
-    selectedEpisode.value = unpublishedChapters[currentIndex + 1].chapter;
-  }
-}
 
 // Modal methods
 async function openViewModal(project: any) {
-  selectedProject.value = project;
-  selectedModalEpisode.value = 1;
+  previewProject.value = project;
 
-  // Request project details to get chapters array
-  try {
-    const res = await api.detailProject(project.session_id) as any;
-    if (res.code === 200 && res.data) {
-      // Update project with details
-      Object.assign(project, res.data);
+  // Check if project details are in cache
+  if (projectDetailsCache.value[project.session_id]) {
+    // Use cached project details
+    const cachedProject = projectDetailsCache.value[project.session_id];
+    Object.assign(project, cachedProject);
 
-      // Filter chapters to only include unpublished ones (is_publish = 2)
-      if (project.chapters && project.chapters.length > 0) {
-        project.chapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
-      }
+    // Show all chapters
+    if (project.chapters && project.chapters.length > 0) {
+      // Sort chapters by chapter number
+      project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
     }
-  } catch (error) {
-    console.error('Error fetching project details:', error);
+  } else {
+    // Request project details to get chapters array
+    try {
+      const res = await api.detailProject(project.session_id) as any;
+      if (res.code === 200 && res.data) {
+        // Update project with details
+        Object.assign(project, res.data);
+
+        // Cache project details
+        projectDetailsCache.value[project.session_id] = { ...project };
+
+        // Show all chapters
+        if (project.chapters && project.chapters.length > 0) {
+          // Sort chapters by chapter number
+          project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
   }
 
   showViewModal.value = true;
@@ -976,39 +1085,105 @@ async function openViewModal(project: any) {
 
 function closeViewModal() {
   showViewModal.value = false;
-  selectedProject.value = null;
+  previewProject.value = null;
 }
 
-async function handlePublish(project: any, episode: number) {
-  console.log('Publishing project:', project.name, 'Episode:', episode);
+async function handlePublish() {
+  const project = selectedProject.value;
+  const episode = selectedEpisode.value;
 
-  const episodeText = t('submit.video.episode', { episode });
-  form.value.title = `${project.name} ${episodeText}`;
-
-  // Set video URL from project
-  if (project.video_url) {
-    videoUrl.value = project.video_url;
-    uploadSuccess.value = true;
-    uploadProgress.value = 100;
+  if (!project) {
+    toast(t('submit.video.selectVideoFirst'));
+    return;
   }
 
-  // Set cover from project
-  if (project.cover) {
-    coverPreview.value = project.cover;
+  if (!episode) {
+    toast(t('submit.video.selectEpisode'));
+    return;
+  }
+
+  const episodeText = t('submit.video.episode', { episode });
+  let episodeTitle = '';
+
+  // Get chapter details to get video, cover, and title from chapter data
+  try {
+    // Check if session_id exists
+    if (project.session_id) {
+      // Set cover from project cover, not chapter cover
+      if (project.cover) {
+        coverPreview.value = project.cover;
+      } else if (project.result_async?.generate_manju_cover) {
+        coverPreview.value = project.result_async.generate_manju_cover;
+      }
+
+      const chapterRes = await api.detailChapter(project.session_id, episode) as any;
+      if (chapterRes.code == 200) {
+        const chapterData = chapterRes.data;
+        const resultAsync = chapterRes.data.result_async;
+
+        // Get title from chapter data
+        if (chapterData.title) {
+          episodeTitle = chapterData.title;
+        }
+
+        // Get description from chapter data
+        let episodeDescription = '';
+        if (chapterData.chapter_description) {
+          episodeDescription = chapterData.chapter_description;
+        }
+
+        // Set video URL from final_video_output.video_url field
+        if (resultAsync?.final_video_output?.video_url) {
+          videoUrl.value = resultAsync.final_video_output.video_url;
+          uploadSuccess.value = true;
+          uploadProgress.value = 100;
+        }
+
+        // Set description
+        if (episodeDescription) {
+          form.value.description = episodeDescription;
+          nextTick(() => {
+            if (captionRef.value) {
+              captionRef.value.innerText = episodeDescription;
+            }
+          });
+        }
+      }
+    } else {
+      // Set title using project name and episode if session_id is not available
+      form.value.title = `${project.name} ${episodeText}`;
+    }
+  } catch (error) {
+    console.error('Error fetching chapter details for publish:', error);
+
+    // Set title using project name and episode if API call fails
+    form.value.title = `${project.name} ${episodeText}`;
+  }
+
+  // Generate title: Episode X Title 「Project Name」
+  if (episodeTitle) {
+    if (project.name) {
+      form.value.title = `${episodeText} ${episodeTitle} 「${project.name}」`;
+    } else {
+      form.value.title = `${episodeText} ${episodeTitle}`;
+    }
+  } else {
+    // Fallback to project name and episode
+    form.value.title = `${project.name} ${episodeText}`;
   }
 
   // Handle collection logic based on the project name
   if (project.name) {
     try {
       // Search for collection by title
-      const searchRes = await api.searchCollection({ title: project.name, type: 2 }) as any;
+      const searchRes = await api.searchCollection({ title: project.name, type: 3 }) as any;
 
       if (searchRes.code == 0) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
           // Create new collection
-          const createRes = await api.addCollection({ title: project.name, type: 2 }) as any;
+          const createRes = await api.addCollection({ title: project.name, type: 3 }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
             selectedCollection.value = project.name;
@@ -1034,7 +1209,7 @@ async function handlePublish(project: any, episode: number) {
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('chapter', { chapter: i })
+                label: t('submit.video.episode', { episode: i })
               });
             }
           }
@@ -1047,6 +1222,9 @@ async function handlePublish(project: any, episode: number) {
 
   // Store episode for publish
   chapterIdForPublish.value = episode;
+
+  uploadSuccess.value = true;
+  uploadProgress.value = 100;
 
   showViewModal.value = false;
 }
@@ -1262,10 +1440,13 @@ async function mockUploadCover(dataUrl: string) {
     const formData = new FormData();
     formData.append('file', file);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -1337,7 +1518,6 @@ function pickCover() {
 }
 
 function toggleSensitive(val: "yes" | "no") {
-  if (postId.value) return;
   if (form.value.content === val) return;
 
   const dontAsk = localStorage.getItem('sensitiveDontAsk');
@@ -1467,7 +1647,53 @@ async function getPostDetails() {
       // Set selected collection from book_title
       if (postData.book_title) {
         selectedCollection.value = postData.book_title;
+        selectedCollectionId.value = postData.book_id || '';
         isNoCollection.value = false;
+
+        // Set chapter index from postData
+        if (postData.chapter_index) {
+          const chapterIndex = postData.chapter_index;
+          selectedEpisodeNumber.value = chapterIndex.toString();
+
+          // If there's a book_id, request collection details to get complete episode list
+          if (postData.book_id) {
+            try {
+              const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
+              if (collectionRes.code === 0 && collectionRes.data) {
+                const allnum = collectionRes.data.allnums || '0';
+                const totalEpisodes = parseInt(allnum);
+
+                // Update episodes array with complete list
+                episodes.value = [];
+                for (let i = 1; i <= totalEpisodes; i++) {
+                  episodes.value.push({
+                    value: i.toString(),
+                    label: t('submit.video.episode', { episode: i })
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching collection details:', error);
+              // Fallback to local chapter index if API call fails
+              episodes.value = [];
+              for (let i = 1; i <= chapterIndex; i++) {
+                episodes.value.push({
+                  value: i.toString(),
+                  label: t('submit.video.episode', { episode: i })
+                });
+              }
+            }
+          } else {
+            // Update episodes array
+            episodes.value = [];
+            for (let i = 1; i <= chapterIndex; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: t('submit.video.episode', { episode: i })
+              });
+            }
+          }
+        }
       }
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
@@ -1995,10 +2221,19 @@ function handleClickOutside(event: MouseEvent) {
   if (showDropdown.value && !document.querySelector(".mention-dropdown")?.contains(target)) {
     showDropdown.value = false;
   }
-  if (showCollectionDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+
+  // Handle chapter dropdown
+  const chapterDropdown = document.querySelector(".chapter-dropdown");
+  if (showChapterDropdown.value && chapterDropdown && !chapterDropdown.contains(target)) {
+    showChapterDropdown.value = false;
+  }
+
+  // Handle collection and episode dropdowns
+  const collectionSelect = document.querySelector(".collection-select");
+  if (showCollectionDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showCollectionDropdown.value = false;
   }
-  if (showEpisodeDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+  if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
 }
@@ -2059,7 +2294,7 @@ async function onSubmit() {
     return;
   }
 
-  if (!isEditMode && !isVideoFromUrl && !videoFile.value) {
+  if (!isEditMode && !isVideoFromUrl && !videoFile.value && (!videoUrl.value || !uploadSuccess.value)) {
     toast(t("submit.video.toastUploadFirst"));
     return;
   }
@@ -2120,6 +2355,8 @@ async function onSubmit() {
       video_url: videoUrl.value,
       book_id: selectedCollection.value ? (selectedCollectionId.value || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
+      cover_color: '',
+      cover_title: '',
       ...(session_id ? { session_id } : {}),
       ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
       ...(isEditMode && { post_id: postId.value })
@@ -2127,7 +2364,10 @@ async function onSubmit() {
 
     const headers = new Headers();
 
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(token);
     headers.append("token", token);
+    headers.append("ts", ts);
+    headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
 
     const data = JSON.stringify(payload);
@@ -2139,8 +2379,8 @@ async function onSubmit() {
     };
 
     const url = postId.value
-      ? `${baseUrl}/post/modifyPost`
-      : `${baseUrl}/post/addPost`;
+      ? `${baseUrl}post/modifyPost`
+      : `${baseUrl}post/addPost`;
 
     const response = await fetch(url, requestOptions);
     const result = await response.text();
@@ -2200,14 +2440,14 @@ onMounted(async () => {
     if (title) {
       try {
         // Search for collection by title
-        const searchRes = await api.searchCollection({ title, type: 2 }) as any;
+        const searchRes = await api.searchCollection({ title, type: 3 }) as any;
 
         if (searchRes.code === 0) {
           const book_id = searchRes.data?.book_id || 0;
 
           if (book_id === 0) {
             // Create new collection
-            const createRes = await api.addCollection({ title, type: 2 }) as any;
+            const createRes = await api.addCollection({ title, type: 3 }) as any;
 
             if (createRes.code === 0 && createRes.data?.id) {
               selectedCollection.value = title;
@@ -2233,7 +2473,7 @@ onMounted(async () => {
               for (let i = 1; i <= episodeNumber; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('chapter', { chapter: i })
+                  label: t('submit.video.episode', { episode: i })
                 });
               }
             }

@@ -1,7 +1,12 @@
 <template>
   <div class="novel-detail">
     <div class="close-page-btn" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-      <span class="close-icon" v-if="isCollectionMode"></span>
+      <div class="back-icon-container" v-if="isCollectionMode">
+        <span class="close-icon"></span>
+        <div class="info-tooltip">
+          {{ t('detail.exitCollectionReadMode') }}
+        </div>
+      </div>
       <span class="back-icon" v-else></span>
     </div>
 
@@ -29,7 +34,7 @@
           </div>
           <div class="header-right">
             <div class="user-info" @click="navigateToUserHome">
-              <img class="avatar" :src="detail.author.avatar" alt="" />
+              <img class="avatar" :src="detail.author.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
               <span class="nickname">{{ detail.author.nickname }}</span>
             </div>
             <button
@@ -95,7 +100,7 @@
           </div>
           <div class="header-right">
             <div class="user-info" @click="navigateToUserHome">
-              <img class="avatar" :src="detail.author.avatar" alt="" />
+              <img class="avatar" :src="detail.author.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
               <span class="nickname">{{ detail.author.nickname }}</span>
             </div>
             <button
@@ -112,7 +117,10 @@
         </div>
 
         <div class="chapter-body" :class="isCollectionMode ? 'on' : ''">
-          {{ detail.content }}
+          <h2 class="chapter-content-title">{{ detail.title }}</h2>
+          <div v-for="(paragraph, index) in contentSections" :key="index" class="paragraph">
+            {{ paragraph }}
+          </div>
         </div>
 
         <!-- Subscription required提示 -->
@@ -138,8 +146,7 @@
         <div class="collection-info-bar" v-if="detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
           <div class="collection-info" @click="enterCollectionMode(1)">
             <div class="collection-main">
-              <span class="collection-label">{{ t('detail.collection') }}:</span>
-              <span class="collection-name">{{ detail.book_title }}</span>
+              {{ t('detail.collection') }}:{{ detail.book_title }}
             </div>
             <div class="collection-line"></div>
             <div class="update-info">
@@ -158,12 +165,7 @@
       </div>
 
       <!-- Navigation Arrows -->
-      <div class="nav-arrows"v-if="isCollectionMode">
-        <button class="nav-btn up" @click="navigateToChapter({ post_id: prevChapterId })" v-if="prevChapterId"></button>
-        <button class="nav-btn down" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId"></button>
-      </div>
-
-      <div class="nav-arrows" v-else>
+      <div class="nav-arrows" v-if="!isCollectionMode">
         <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
         <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
       </div>
@@ -228,6 +230,7 @@ import { baseUrl } from '@/util/config';
 // Import images
 import likeIcon from '@/assets/images/detail/like.png';
 import likeActiveIcon from '@/assets/images/detail/like_active.png';
+import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -268,8 +271,18 @@ const detail = ref({
 
 // Content sections
 const contentSections = computed(() => {
-  const content = detail.value.content_replace || detail.value.content || '';
+  let content = detail.value.content_replace || detail.value.content || '';
+  // Convert literal \n to actual newlines
+  content = content.replace(/\\n/g, '\n');
+  // Split by newline and filter out empty sections
   return content.split('\n').filter(section => section.trim() !== '');
+});
+
+// Processed content with proper line breaks
+const processedContent = computed(() => {
+  let content = detail.value.content_replace || detail.value.content || '';
+  // Convert literal \n to actual newlines
+  return content.replace(/\\n/g, '\n');
 });
 
 const novelContentRef = ref<HTMLElement | null>(null);
@@ -451,6 +464,11 @@ async function fetchDetail() {
     if (token) {
       headers['token'] = token;
     }
+
+    const authToken = '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['ts'] = ts;
+    headers['sign'] = sign;
 
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
@@ -726,11 +744,16 @@ async function submitComment() {
       }
     }
 
+    const authToken = token || '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
     const response = await fetch(`${baseUrl}comment/createComment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'token': token
+        'token': token,
+        ts,
+        sign
       },
       body: JSON.stringify(commentData)
     });
@@ -1042,10 +1065,13 @@ async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
 
+  const authToken = token || '';
+  const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
   try {
-    const res = await fetch(`${baseUrl}upload/image`, {
+    const res = await fetch(`${baseUrl}user/uploadImage`, {
       method: 'POST',
-      headers: { 'token': token },
+      headers: { 'token': token, ts, sign },
       body: formData
     });
     const data = await res.json();
@@ -1068,10 +1094,13 @@ async function uploadVideo(file: File) {
   const formData = new FormData();
   formData.append('file', file);
 
+  const authToken = token || '';
+  const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
   try {
     const res = await fetch(`${baseUrl}upload/video`, {
       method: 'POST',
-      headers: { 'token': token },
+      headers: { 'token': token, ts, sign },
       body: formData
     });
     const data = await res.json();

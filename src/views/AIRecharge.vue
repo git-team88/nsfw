@@ -21,20 +21,59 @@
 
           <div class="plan-grid">
             <div
-              v-for="plan in rechargePlans"
+              v-for="(plan, index) in rechargePlans"
               :key="plan.plan_id"
               class="plan-item"
-              :class="{ active: selectedPlan === plan.plan_id }"
               @click="selectPlan(plan.plan_id)"
             >
-              <span class="plan-title">{{ t(`aiRecharge.${plan.title}`) }}</span>
-              <div class="plan-price-container">
-                <span class="plan-price">{{ plan.price }}{{ t('aiRecharge.unit') }}</span>
-                <span class="plan-period">{{ plan.period ? t(`aiRecharge.${plan.period}`) : '' }}</span>
+              <div v-if="index == 0 && isUserNew && promotionTitle" class="zero-plan-badge">{{ promotionTitle }}</div>
+
+              <div class="plan-inner":class="{ active: selectedPlan == plan.plan_id }">
+                <span class="plan-title">{{ getPlanTitle(plan) }}</span>
+                <div class="plan-price-container">
+                  <span class="plan-price">{{ formatPrice(plan.price) }}{{ t('aiRecharge.unit') }}</span>
+                  <span class="plan-period"><span v-if="plan.billing_period">{{ getBillingPeriodText(plan.billing_period) }}</span></span>
+                </div>
+                <span class="plan-credits">{{ plan.credits }} {{ t('aiRecharge.compute') }}</span>
+                <span class="plan-valid">{{ getValidityText(plan.expiry_months) }}</span>
               </div>
-              <span class="plan-credits">{{ plan.credits }} {{ t('aiRecharge.compute') }}</span>
-              <span class="plan-valid">{{ t(`aiRecharge.${plan.valid}`) }}</span>
             </div>
+          </div>
+        </div>
+
+        <div v-if="isUserNew && promotionContent" class="zero-plan-rules">
+          <img src="@/assets/images/home/arrow.png" alt="" />
+          <!-- <div class="rules-title">{{ t('aiRecharge.zeroPlanRules') }}</div> -->
+          <div class="rules-content" v-html="promotionContent">
+          </div>
+        </div>
+
+        <div class="price-details">
+          <div class="price-row">
+            <span class="price-label">{{ t('aiRecharge.originalPrice') }}</span>
+            <span class="price-value">{{ formatPrice(originalPrice.toString()) }}{{ t('aiRecharge.yen') }}</span>
+          </div>
+          <div class="price-row coupon-row">
+            <div class="coupon-info-box">
+              <span class="price-label">{{ t('aiRecharge.coupon') }}</span>
+              <div class="coupon-info-icon">
+                <img src="@/assets/images/user/notice.png" alt="Info" />
+                <div class="coupon-tooltip">
+                  {{ t('aiRecharge.couponInfo') }}
+                </div>
+              </div>
+            </div>
+            <div class="coupon-value" v-if="couponCode">
+              <button class="cancel-coupon-btn" @click="cancelCoupon">{{ t('aiRecharge.cancelCoupon') }}</button>
+              <span class="discount-amount">-{{ formatPrice(discountAmount.toString()) }}{{ t('aiRecharge.yen') }}</span>
+            </div>
+            <div class="coupon-value" v-else>
+              <span class="price-value coupon-link" @click="goToCoupon">{{ t('aiRecharge.addCoupon') }}></span>
+            </div>
+          </div>
+          <div class="price-row total-row">
+            <span class="price-label">{{ t('aiRecharge.actualAmount') }}</span>
+            <span class="price-value total-value">{{ formatPrice(discountedPrice.toString()) }}{{ t('aiRecharge.yen') }}</span>
           </div>
         </div>
 
@@ -58,13 +97,20 @@
     </div>
 
     <UploadMask :visible="isLoading" :text="t('loading')" />
+
+    <CouponModal
+      :visible="showCouponModal"
+      @close="handleCouponClose"
+      @confirm="handleCouponConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="AIRecharge">
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref } from "vue";
+import CouponModal from "@/components/CouponModal.vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
@@ -75,23 +121,162 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-const rechargePlans = ref([
-  { plan_id: 1, title: 'monthlyAutoRenew', price: '1000', period: 'periodMonth', credits: "980", valid: 'valid6Months' },
-  { plan_id: 2, title: 'quarterlyAutoRenewal', price: '2000', period: 'period3Month', credits: "3,000", valid: 'valid6Months' },
-  { plan_id: 3, title: 'semiAnnualAutoRenewal', price: '4000', period: 'period6Month', credits: "6,300", valid: 'valid6Months' },
-  { plan_id: 4, title: 'annualAutoRenewal', price: '8000', period: 'periodYear', credits: "13,200", valid: 'valid12Months' },
-  { plan_id: 5, title: 'computePack', price: '1000', period: '', credits: "950", valid: 'valid6Months' },
-  { plan_id: 6, title: 'computePack', price: '2000', period: '', credits: "2,800", valid: 'valid6Months' },
-  { plan_id: 7, title: 'computePack', price: '4000', period: '', credits: "6,500", valid: 'valid6Months' },
-  { plan_id: 8, title: 'computePack', price: '8000', period: '', credits: "13,000", valid: 'valid6Months' }
-]);
+interface RechargePlan {
+  plan_id: number | string;
+  info: Array<{
+    language: string;
+    name: string;
+    promotion_title?: string;
+    promotion_content?: string;
+  }>;
+  price: string;
+  period: string;
+  credits: string;
+  expiry_months?: number;
+  billing_period?: string;
+}
 
-const selectedPlan = ref(1);
+const rechargePlans = ref<RechargePlan[]>([]);
+const selectedPlan = ref<number | string>(0);
 const agreeTerms = ref(true);
 const isLoading = ref(false);
+const showCouponModal = ref(false);
+const couponCode = ref('');
+const couponInfo = ref<{ code: string; type: string; discount_value: string; } | null>(null);
+const isUserNew = ref(false);
+const promotionTitle = ref('');
+const promotionContent = ref('');
 
-function selectPlan(planId: number) {
+const originalPrice = computed(() => {
+  const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
+  return plan ? parseFloat(plan.price) : 0;
+});
+
+const discountAmount = computed(() => {
+  const price = originalPrice.value;
+  if (!couponInfo.value) return 0;
+
+  const { type, discount_value } = couponInfo.value;
+  const discountValue = parseInt(discount_value);
+
+  if (type == '1') {
+    return discountValue;
+  } else if (type == '2') {
+    return Math.round(price * (1 - discountValue / 100));
+  }
+
+  return 0;
+});
+
+const discountedPrice = computed(() => {
+  const price = originalPrice.value;
+  return Math.max(0, price - discountAmount.value);
+});
+
+watch(locale, (newLang) => {
+  if (isUserNew.value && rechargePlans.value.length > 0) {
+    const firstPlan = rechargePlans.value[0];
+    if (firstPlan.info && Array.isArray(firstPlan.info)) {
+      const currentLang = newLang == 'zh' ? 'cn' : newLang;
+
+      const infoItem = firstPlan.info.find((item: any) => item.language == currentLang);
+      if (infoItem) {
+        promotionTitle.value = infoItem.promotion_title || '';
+        promotionContent.value = infoItem.promotion_content || '';
+      }
+    }
+  }
+});
+
+onMounted(async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+    return false;
+  }
+
+  await checkRechargeUser();
+  getList();
+});
+
+async function checkRechargeUser() {
+  try {
+    const response = await api.checkRechargeUser({});
+    const res = response.data;
+
+    // Handle both standard format {code: 0, data: {...}} and direct data format {is_user_new: true}
+    let userData = null;
+    if (res.code !== undefined) {
+      // Standard format
+      if (res.code == 0) {
+        userData = res.data;
+      }
+    } else {
+      // Direct data format
+      userData = res;
+    }
+
+    if (userData) {
+      isUserNew.value = userData.is_user_new || false;
+    }
+  } catch (error) {
+    console.error('Error checking recharge user:', error);
+  }
+}
+
+function getList() {
+  isLoading.value = true;
+  api.aIRechargePlan().then((res: any) => {
+    if (res.code == 0) {
+      if (res.data && Array.isArray(res.data)) {
+        // Map the data to ensure all required fields are present
+        rechargePlans.value = res.data.map((plan: any) => {
+          return {
+            plan_id: plan.plan_id || plan.id || Math.random(),
+            info: plan.info || [], // Store all language information
+            price: plan.price || '0',
+            period: plan.period || '',
+            credits: plan.credits || '0',
+            expiry_months: plan.expiry_months,
+            billing_period: plan.billing_period
+          };
+        });
+        // Select the first plan by default
+        if (rechargePlans.value.length > 0) {
+          selectedPlan.value = rechargePlans.value[0].plan_id;
+
+          // Get promotion info if user is new
+          if (isUserNew.value) {
+            const firstPlan = rechargePlans.value[0];
+            if (firstPlan.info && Array.isArray(firstPlan.info)) {
+              const currentLang = locale.value == 'zh' ? 'cn' : locale.value;
+              const infoItem = firstPlan.info.find((item: any) => item.language == currentLang);
+              if (infoItem) {
+                promotionTitle.value = infoItem.promotion_title || '';
+                promotionContent.value = infoItem.promotion_content || '';
+              }
+            }
+          }
+        }
+      }
+    } else {
+      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+    }
+  }).catch((error) => {
+    console.error('Error fetching recharge plans:', error);
+    toast(t('error'));
+  }).finally(() => {
+    isLoading.value = false;
+  });
+}
+
+function selectPlan(planId: number | string) {
   selectedPlan.value = planId;
+  // Clear coupon when switching plans
+  if (couponCode.value) {
+    couponCode.value = '';
+    couponInfo.value = null;
+  }
 }
 
 async function handleRecharge() {
@@ -103,14 +288,17 @@ async function handleRecharge() {
       return false;
     }
 
-    const response = await api.AIRecharge({
-      plan_id: selectedPlan.value
-    });
+    const params: any = {
+      plan_id: selectedPlan.value,
+      promo_code: couponCode.value
+    };
+
+    const response = await api.AIRecharge(params);
 
     const data = response as any;
-    if (data.code === 0 || data.code === 200) {
+    if (data.code == 0 || data.code == 200) {
       if (data.data) {
-        window.open(data.data?.url.url, '_blank');
+        window.location.href = data.data?.url.url;
       }
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
@@ -130,6 +318,57 @@ function goBack() {
   router.back();
 }
 
+// Get plan title based on current language
+function getPlanTitle(plan: any) {
+  if (plan.info && Array.isArray(plan.info)) {
+    const currentLang = locale.value || 'zh';
+    const infoItem = plan.info.find((item: any) => item.language === currentLang);
+    if (infoItem && infoItem.name) {
+      return infoItem.name;
+    } else if (plan.info.length > 0) {
+      // Fallback to first available language
+      return plan.info[0].name || t('aiRecharge.unknownPlan');
+    }
+  }
+  return t('aiRecharge.unknownPlan');
+}
+
+// Get billing period text based on current language
+function getBillingPeriodText(billingPeriod: String) {
+  switch (billingPeriod) {
+    case '1':
+      return t('aiRecharge.periodMonth');
+    case '3':
+      return t('aiRecharge.period3Month');
+    case '6':
+      return t('aiRecharge.period6Month');
+    case '12':
+      return t('aiRecharge.periodYear');
+    default:
+      return t('aiRecharge.periodMonth');
+  }
+}
+
+// Get validity text based on current language
+function getValidityText(expiryMonths: number | undefined) {
+  if (expiryMonths) {
+    return t('aiRecharge.validityPeriod', { months: expiryMonths });
+  }
+  return t('aiRecharge.permanentValid');
+}
+
+// Format price with thousands separator
+function formatPrice(price: string): string {
+  // Remove any non-digit characters except decimal point
+  const cleanPrice = price.replace(/[^0-9.]/g, '');
+  // Split into integer and decimal parts
+  const parts = cleanPrice.split('.');
+  // Add thousands separator to integer part
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // Join back together
+  return parts.join('.');
+}
+
 function openLink() {
   localStorage.setItem("isBack", "1");
   window.open("/payment-terms", "_blank");
@@ -138,6 +377,25 @@ function openLink() {
 function goToComputingPowerRules() {
   localStorage.setItem("isBack", "1");
   window.open("/computing-rules", "_blank");
+}
+
+function goToCoupon() {
+  showCouponModal.value = true;
+}
+
+function handleCouponClose() {
+  showCouponModal.value = false;
+}
+
+function handleCouponConfirm(info: any) {
+  couponCode.value = info.code;
+  couponInfo.value = info;
+  showCouponModal.value = false;
+}
+
+function cancelCoupon() {
+  couponCode.value = '';
+  couponInfo.value = null;
 }
 </script>
 
@@ -148,7 +406,7 @@ function goToComputingPowerRules() {
 }
 
 .container {
-  width: 85.6rem;
+  width: 65rem;
   margin: 14rem auto 2rem;
   position: relative;
 
@@ -186,7 +444,7 @@ function goToComputingPowerRules() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 2.4rem;
+    margin-bottom: 4.6rem;
     .section-title {
       font-size: 1.6rem;
       font-weight: 500;
@@ -217,37 +475,60 @@ function goToComputingPowerRules() {
   }
 
   .recharge-plan-section {
-    margin-bottom: 2.4rem;
+    margin-bottom: 2.2rem;
 
     .plan-grid {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: center;
       gap: 1.6rem;
       margin-bottom: 2.4rem;
 
       .plan-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 20rem;
-        height: 21.6rem;
-        border: 1px solid #F5F5F5;
-        border-radius: 1.2rem;
-        font-size: 1.4rem;
-        background: #F5F5F5;
-        color: #6A7282;
-        cursor: pointer;
-        padding: 1.6rem;
+        position: relative;
 
-        &:hover {
-          border-color: #fb64b6;
+        .plan-inner{
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 20rem;
+          height: 21.6rem;
+          border: 1px solid #F5F5F5;
+          border-radius: 1.2rem;
+          font-size: 1.4rem;
+          background: #F5F5F5;
+          color: #6A7282;
+          cursor: pointer;
+          padding: 1.6rem;
+          z-index: 5;
+
+          &:hover {
+            border-color: #fb64b6;
+          }
+
+          &.active {
+            border-color: #fb64b6;
+          }
+
         }
 
-        &.active {
-          border-color: #fb64b6;
+        .zero-plan-badge {
+          position: absolute;
+          top: -2.6rem;
+          left: 0;
+          width: 20rem;
+          height: 4rem;
+          border-radius: 1.2rem 1.2rem 0 0;
+          background: #FB64B6;
+          color: #ffffff;
+          font-size: 1.2rem;
+          padding-top: 0.6rem;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .plan-title {
@@ -264,7 +545,7 @@ function goToComputingPowerRules() {
 
         .plan-price {
           font-size: 2.2rem;
-          font-weight: 600;
+          font-weight: 500;
           color: #364153;
         }
 
@@ -292,10 +573,9 @@ function goToComputingPowerRules() {
 
   .agreements {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 1.2rem;
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.8rem;
 
     .check-item {
       display: flex;
@@ -327,7 +607,7 @@ function goToComputingPowerRules() {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24rem;
+    width: 100%;
     height: 4.8rem;
     margin: 0 auto;
     background: #fb64b6;
@@ -428,6 +708,159 @@ function goToComputingPowerRules() {
     }
   }
 
+  .zero-plan-rules {
+    position: relative;
+    border: 1px solid rgba(251,100,182,0.1);
+    background: rgba(251,100,182,0.06);
+    border-radius: 1.2rem;
+    padding: 1rem;
+
+    img{
+      position: absolute;
+      top: calc(-1.2rem - 1px);
+      left: 8.6rem;
+      width: 3.1rem;
+      height: 1.2rem;
+      z-index: 10;
+    }
+
+    .rules-title {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #6A7282;
+      margin-left: 1.8rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .rules-content {
+      font-size: 1.2rem;
+      color: #99A1AF;
+      line-height: 2.4rem;
+      white-space: pre-line;
+      position: relative;
+
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 1.8rem;
+        height: 1.4rem;
+      }
+
+      &::first-line {
+        font-size: 1.4rem;
+        color: #6A7282;
+      }
+    }
+  }
+
+  .price-details {
+    margin: 3rem 0 4rem;
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      &.coupon-row {
+        margin-top: 1.6rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #F5F5F5;
+
+        .coupon-info-box{
+          display: flex;
+          align-items: center;
+        }
+        .coupon-info-icon {
+          position: relative;
+          margin-left: 1rem;
+          cursor: pointer;
+
+          img {
+            width: 2rem;
+            height: 2rem;
+          }
+
+          .coupon-tooltip {
+            display: none;
+            position: absolute;
+            left: 2.2rem;
+            top: -1rem;
+            max-width: 28rem;
+            width: max-content;
+            padding: 1rem 1.6rem;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+            color: #6A7282;
+            font-size: 1.2rem;
+            border-radius: 0.8rem;
+            z-index: 100;
+          }
+
+          &:hover .coupon-tooltip {
+            display: block;
+          }
+        }
+
+        .coupon-value {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .coupon-link {
+          color: #6A7282;
+          cursor: pointer;
+          font-size: 1.4rem;
+        }
+
+        .discount-amount {
+          font-size: 1.4rem;
+          color: #364153;
+        }
+
+        .cancel-coupon-btn {
+          min-width: 10rem;
+          height: 3.6rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          color: #99A1AF;
+          border: 1px solid #F5F5F5;
+          background: none;
+          cursor: pointer;
+          padding: 0.6rem 1.2rem;
+          border-radius: 0.8rem;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: #F5F5F5;
+          }
+        }
+      }
+
+      &.total-row {
+        padding-top: 2rem;
+
+        .total-value {
+          font-size: 1.6rem;
+          font-weight: 500;
+          color: #101828;
+        }
+      }
+
+      .price-label {
+        font-size: 1.4rem;
+        color: #6A7282;
+      }
+
+      .price-value {
+        font-size: 1.4rem;
+        color: #364153;
+      }
+    }
+  }
+
   .usage-rules {
     background-color: #f9fafb;
     border-radius: 0.8rem;
@@ -452,7 +885,7 @@ function goToComputingPowerRules() {
         &:before {
           content: '•';
           color: #fb64b6;
-          font-weight: bold;
+          font-weight: 500;
           margin-right: 0.8rem;
         }
 

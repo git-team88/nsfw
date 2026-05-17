@@ -35,6 +35,51 @@
   }
 }
 
+.back-icon-container {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  .info-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 1.6rem;
+    padding: 1rem;
+    background: #FFFFFF;
+    color: #6A7282;
+    font-size: 1.2rem;
+    border-radius: 0.8rem;
+    white-space: nowrap;
+    z-index: 30;
+    box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    text-align: center;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -1rem;
+      left: 0.8rem;
+      width: 3.4rem;
+      height: 1.2rem;
+      background: url('@/assets/images/detail/intro.png') no-repeat center center;
+      background-size: 100% 100%;
+    }
+  }
+
+  &:hover .info-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .loading-spinner {
   width: 4rem;
   height: 4rem;
@@ -359,12 +404,19 @@
     transition: all 0.3s ease;
 
     .collection-info {
-      padding: 1.2rem;
+      display: flex;
+      align-items: center;
+      height: 4.8rem;
+      padding: 0 1.2rem;
       font-size: 1.4rem;
       color: #101828;
 
       .comic-title {
-        font-weight: bold;
+        font-weight: 500;
+        max-width: 56rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
@@ -375,7 +427,10 @@
     }
 
     .collection-status {
-      padding: 1.2rem;
+      display: flex;
+      align-items: center;
+      height: 4.8rem;
+      padding: 0 1.2rem;
       font-size: 1.4rem;
       border-radius: 0 1.2rem 1.2rem 0;
       color: #364153;
@@ -398,6 +453,7 @@
     position: fixed;
     bottom: 9rem;
     left: 2.4rem;
+    max-width: 80%;
     background-color:  rgba(255,255,255,0.5);
     color: #364153;
     padding: 1.2rem;
@@ -421,6 +477,7 @@
       }
 
       .episode-title {
+        max-width: calc(100vh - 70rem);
         font-size: 1.6rem;
         flex: 1;
         white-space: nowrap;
@@ -449,10 +506,12 @@
 
   &.on {
     position: fixed;
-    left: 53%;
-    right: auto;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    right: 63rem;
+  }
+
+  // When right panel is hidden in fullscreen mode
+  .isRightPanelHidden &.on {
+    right: 3rem;
   }
 
   .nav-btn {
@@ -1612,6 +1671,10 @@
 
 /* Image Stack - vertical scroll */
 .image-stack {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   height: 100%;
   overflow-y: auto;
@@ -1621,9 +1684,13 @@
     position: relative;
     width: 100%;
 
+    &:only-child {
+      width: auto;
+      max-width: 100%;
+    }
+
     .image-wrap {
       position: relative;
-      cursor: pointer;
 
       .stacked-image {
         width: 100%;

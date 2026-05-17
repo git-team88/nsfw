@@ -18,8 +18,8 @@
         <!-- Select from Background Colors -->
         <div v-if="activeTab == 'select'" class="tab-content select-mode">
           <div class="preview-container">
-            <div class="preview-box" :class="{ 'ai-generating': aiGenerating }">
-              <div class="preview-text" v-if="selectedBackground && !aiGenerating">
+            <div class="preview-box" :class="{ 'ai-generating': isLoading }">
+              <div class="preview-text" v-if="selectedBackground && !isLoading">
                 <div v-if="selectedBackground.isImage" class="preview-img-container">
                   <img
                     :src="selectedBackground.color"
@@ -46,7 +46,7 @@
                   </div>
                 </div>
               </div>
-              <div v-else-if="!aiGenerating" class="placeholder">
+              <div v-else-if="!isLoading" class="placeholder">
                 {{ t("submit.cover.selectBackground") }}
               </div>
               <div v-else class="ai-loading">
@@ -64,13 +64,16 @@
             <div class="backgrounds-strip" v-if="imageOptions.length > 0" :style="{ justifyContent: hasScrollbar ? 'flex-start' : 'center' }">
               <div
                 v-for="(img, index) in imageOptions"
-                :key="index"
+                :key="img.color || index"
                 class="background-cell"
-                :class="{ selected: selectedBackground && selectedBackground.color === img.color && selectedBackground.isImage }"
+                :class="{ selected: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) }"
                 @click="selectImage(img)"
-                :style="{ backgroundColor: '#F5F5F5' }"
+                :style="{ backgroundColor: '#F5F5F5', border: selectedBackground && (selectedBackground === img || (selectedBackground.color === img.color && selectedBackground.isImage)) ? '1px solid #fb64b6' : '1px solid transparent' }"
               >
-                <div class="bg-preview-img">
+                <div class="bg-preview-img" v-if="img.isLoading">
+                  <div class="loading-placeholder"></div>
+                </div>
+                <div class="bg-preview-img" v-else>
                   <img :src="img.color" class="bg-img" />
                 </div>
               </div>
@@ -157,6 +160,14 @@
 
   <UploadMask :visible="loading"></UploadMask>
 
+  <!-- AI Generation Alert Modal -->
+  <ExitConfirmModal
+    :visible="showAlert"
+    @cancel="cancelAlert"
+    @confirm="confirmAlert"
+  />
+
+
   <!-- AI Generate Cover Modal -->
   <AIGenerateCoverModal
     :visible="showAIGenerateModal"
@@ -173,19 +184,21 @@ import { useI18n } from "vue-i18n";
 import { baseUrl } from "@/util/config";
 import UploadMask from "./UploadMask.vue";
 import AIGenerateCoverModal from "./AIGenerateCoverModal.vue";
+import ExitConfirmModal from "./ExitConfirmModal.vue";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 
 const props = defineProps<{
   visible: boolean;
   title: string;
+  currentCover?: string;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
 const { t, locale } = useI18n();
 
 const activeTab = ref("select"); // select | upload
-const selectedBackground = ref<{ color: string; isImage?: boolean; backgroundColor?: string } | null>({ color: "#FCCEE8" }); // Default to pink background
+const selectedBackground = ref<{ color: string; isImage?: boolean; backgroundColor?: string; isLoading?: boolean } | null>({ color: "#FCCEE8" }); // Default to pink background
 const localImage = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadInput = ref<HTMLInputElement | null>(null);
@@ -197,13 +210,41 @@ const aiGenerating = ref(false); // Loading state for AI generation
 const coverCost = ref(''); // Cost for AI cover generation
 const isMounted = ref(true); // Track if component is mounted
 const hasScrollbar = ref(false); // Track if backgrounds-section-box has scrollbar
+
+// Computed loading state
+const isLoading = computed(() => aiGenerating.value || (selectedBackground.value?.isLoading || false));
 const showAlert = ref(false); // Track if AI generation alert should be shown
 const showAIGenerateModal = ref(false); // Track if AI generate modal should be shown
 
-// Watch for visible changes to fetch cover cost
+// Watch for visible changes to fetch cover cost and handle current cover
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     fetchCoverCost();
+    // Handle current cover if provided
+    if (props.currentCover) {
+      // Check if current cover is a base64 data URL (canvas-generated)
+      if (props.currentCover.startsWith('data:image/')) {
+        // For canvas-generated covers, select the corresponding background color
+        // The generateCoverFromTitle function uses #FCCEE8 as background
+        const canvasBgColor = "#FCCEE8";
+        const bgOption = backgroundColorOptions.value.find(bg => bg.color === canvasBgColor);
+        if (bgOption) {
+          selectedBackground.value = bgOption;
+        }
+      } else {
+        // For non-base64 covers, add to image options
+        // Check if current cover is already in imageOptions
+        const existingIndex = imageOptions.value.findIndex(img => img.color === props.currentCover);
+        if (existingIndex === -1) {
+          const currentCoverOption = { color: props.currentCover, isImage: true, backgroundColor: "#F5F5F5" };
+          imageOptions.value.unshift(currentCoverOption);
+          selectedBackground.value = currentCoverOption;
+        } else {
+          // If already exists, select it
+          selectedBackground.value = imageOptions.value[existingIndex];
+        }
+      }
+    }
   }
 });
 
@@ -243,7 +284,7 @@ const backgroundColorOptions = ref([
 ]);
 
 // Image options (AI generated or uploaded)
-const imageOptions = ref<{ color: string; isImage: boolean; backgroundColor?: string }[]>([]);
+const imageOptions = ref<{ color: string; isImage: boolean; backgroundColor?: string; isLoading?: boolean }[]>([]);
 
 function changeTab(tab: string) {
   if (localImage.value) {
@@ -283,6 +324,11 @@ async function handleGeneration(prompt: string) {
     // Clear selected background during generation
     selectedBackground.value = null;
 
+    // Add loading placeholder to image options
+    const loadingPlaceholder = { color: "", isImage: true, isLoading: true, backgroundColor: "#F5F5F5" };
+    imageOptions.value.unshift(loadingPlaceholder);
+    selectedBackground.value = loadingPlaceholder;
+
     // Call API to generate cover
     const response = await api.generateCover({
       prompt: prompt
@@ -291,13 +337,30 @@ async function handleGeneration(prompt: string) {
     if (response.data?.code == 0 || response.data?.code == 200) {
       let coverUrl = response.data?.cover_url;
       if (coverUrl) {
-        const newImage = { color: coverUrl, isImage: true, backgroundColor: "#F5F5F5" };
-        imageOptions.value.unshift(newImage);
-        selectedBackground.value = newImage;
+        // Replace loading placeholder with actual generated image
+        const index = imageOptions.value.findIndex(img => img.isLoading);
+        if (index !== -1) {
+          const newImage = { color: coverUrl, isImage: true, backgroundColor: "#F5F5F5" };
+          imageOptions.value[index] = newImage;
+          selectedBackground.value = newImage;
+        }
+      }
+    } else {
+      // Remove loading placeholder on error
+      const index = imageOptions.value.findIndex(img => img.isLoading);
+      if (index !== -1) {
+        imageOptions.value.splice(index, 1);
+        selectedBackground.value = null;
       }
     }
   } catch (error) {
     console.error('Error generating AI cover:', error);
+    // Remove loading placeholder on error
+    const index = imageOptions.value.findIndex(img => img.isLoading);
+    if (index !== -1) {
+      imageOptions.value.splice(index, 1);
+      selectedBackground.value = null;
+    }
   } finally {
     aiGenerating.value = false;
   }
@@ -311,14 +374,14 @@ function selectBackground(bg: { color: string; isImage?: boolean }) {
   imgScale.value = 1;
 }
 
-function selectImage(img: { color: string; isImage: boolean; backgroundColor?: string }) {
+function selectImage(img: { color: string; isImage: boolean; backgroundColor?: string; isLoading?: boolean }) {
   selectedBackground.value = img;
   // Reset image crop when selecting a new image
   imgOffsetY.value = 0;
   imgOffsetX.value = 0;
   imgScale.value = 1;
-  // Detect image orientation and set initial scale
-  if (img.color) {
+  // Detect image orientation and set initial scale (only if not loading)
+  if (img.color && !img.isLoading) {
     detectOrientation(img.color);
   }
 }
@@ -359,6 +422,24 @@ function close() {
     activeTab.value = 'select';
     localImage.value = null;
   }
+}
+
+function cancelAlert() {
+  showAlert.value = false;
+}
+
+function confirmAlert() {
+  showAlert.value = false;
+  // Remove loading placeholder if exists
+  const index = imageOptions.value.findIndex(img => img.isLoading);
+  if (index !== -1) {
+    imageOptions.value.splice(index, 1);
+  }
+  selectedBackground.value = null;
+  aiGenerating.value = false;
+  emit("update:visible", false);
+  activeTab.value = 'select';
+  localImage.value = null;
 }
 
 function reupload() {
@@ -876,6 +957,32 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  .loading-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+
+  .loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid #fb64b6;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   @keyframes loading-pulse {

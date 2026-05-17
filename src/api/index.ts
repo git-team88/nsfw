@@ -56,6 +56,13 @@ export default {
       data: data,
       method: "POST",
     }),
+  checkCode: (data: any) =>
+    axios.request({
+      url: "login/checkReferralCode",
+      data: data,
+      method: "POST",
+    }),
+
   bindEmail: (data: any) =>
     axios.request({
       url: "user/bindEmail",
@@ -83,6 +90,11 @@ export default {
       url: "user/fillInviteCode",
       data: data,
       method: "POST",
+    }),
+  banner: () =>
+    axios.request({
+      url: "index/getIndexBannerPublic",
+      method: "GET",
     }),
 
   userInfo: () =>
@@ -188,9 +200,9 @@ export default {
       method: "POST",
     }),
 
-  homePostList: (page: number, limit: number, tab: string, type: number) =>
+  homePostList: (page: number, limit: number, tab: string, type: number, language?: string) =>
     axios.request({
-      url: "index/getRecommendListPublic?page=" + page + "&limit=" + limit + "&tab=" + tab + '&type=' + type,
+      url: "index/getRecommendListPublic?page=" + page + "&limit=" + limit + "&tab=" + tab + '&type=' + type + (language ? '&language=' + language : ''),
       method: "GET",
     }),
   homeFollowList: (page: number, limit: number, type: number) =>
@@ -527,6 +539,22 @@ export default {
       data: data,
       method: "POST",
     }),
+  addKyc: (data: any) =>
+    axios.request({
+      url: "user/addKyc",
+      data: data,
+      method: "POST",
+    }),
+  kycDetail: () =>
+    axios.request({
+      url: "user/getLastkyc",
+      method: "GET",
+    }),
+  modifyKycEmail: () =>
+    axios.request({
+      url: "user/modifyKycEmail",
+      method: "GET",
+    }),
 
   getCode: () =>
     axios.request({
@@ -557,9 +585,22 @@ export default {
       responseType: "blob"
     }),
 
+  checkRechargeUser: (data: any) =>
+    axios.request({
+      url: "post/checkNewUser",
+      data: data,
+      method: "POST",
+    }),
+  checkPromoCode: (data: any) =>
+    axios.request({
+      url: "post/checkPromoCode",
+      data: data,
+      method: "POST",
+    }),
+
   getCollection: (type: number | string, page: number, limit: number, user_id: number | string ) =>
     axios.request({
-      url: "book/getBookList?type=" + type + '&page=' + page + '&limit=' + limit + '&user_id=' + user_id,
+      url: "book/getBookListPublic?type=" + type + '&page=' + page + '&limit=' + limit + '&user_id=' + user_id,
       method: "GET"
     }),
   addCollection: (data: any) =>
@@ -587,9 +628,9 @@ export default {
       method: "POST",
     }),
 
-  getProject: (publish_type: number, is_final: number, type: string, page: number, limit: number, order_type: string, has_chapter: number ) =>
+  getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number ) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&is_final=' + is_final + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&order_type=' + order_type + '&has_chapter=' + has_chapter,
+      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter,
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -685,7 +726,7 @@ export default {
     }),
   taskPolling: (task_id: string) =>
     axios.request({
-      url: `app/script_task_status?task_id=` + task_id,
+      url: `app/task_status?task_id=` + task_id,
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -733,9 +774,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  singleCollection: (book_id: string, page: number, limit: number) =>
+  singleCollection: (book_id: string | number, page: number, limit: number) =>
     axios.request({
-      url: `book/getBookChaptersList?book_id=${book_id}&page=${page}&limit=${limit}`,
+      url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}`,
       method: "GET"
     }),
   generateCover: (data: any) =>
@@ -744,5 +785,57 @@ export default {
       method: "POST",
       baseURL: aiUrl,
       data,
+    }),
+  taskGgenerateCover: (task_id: string) =>
+    axios.request({
+      url: "app/task_status?task_id=" + task_id,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  singleTaskList: (page: number, limit: number, type: string) =>
+    axios.request({
+      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}`,
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+  generateSinglePhoto: (data: any) =>
+    axios.request({
+      url: "ai/simple_image/generate_simple_image",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
+  generateSingleVideo: (data: any) =>
+    axios.request({
+      url: "ai/simple_video/generate_simple_video",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
+
+  uploadAduio: (data: any) =>
+    axios.request({
+      url: "user/getUploadUrl",
+      method: "POST",
+      data,
+    }),
+
+  photoCreate: (data: any) =>
+    axios.request({
+      url: "ai/photo/create",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
+
+  aIRechargePlan: () =>
+    axios.request({
+      url: "index/getAIRechargePlan",
+      method: "POST",
+    }),
+  getBanner: () =>
+    axios.request({
+      url: "index/getIndexBannerPublic",
+      method: "GET",
     }),
 };

@@ -470,68 +470,90 @@
     color: #101828;
   }
 
-  .chapter-select {
-    display: flex;
-    align-items: center;
-    padding: 0.8rem 1.2rem 0.8rem 2rem;
-    background: #F5F5F5;
-    border-radius: 0.8rem;
-    overflow: hidden;
-  }
+  .chapter-dropdown {
+    position: relative;
+    width: 36rem;
 
-  .chapter-input {
-    width: 19rem;
-    border: none;
-    background: transparent;
-    font-size: 1.4rem;
-    color: #364153;
-    outline: none;
-  }
+    .custom-select {
+      position: relative;
+      width: 36rem;
+      height: 5rem;
+      background: #F5F5F5;
+      border-radius: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem 0 2rem;
+      cursor: pointer;
 
-  .chapter-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
+      .select-value {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 1.4rem;
+        color: #364153;
+      }
 
-  .chapter-btn {
-    width: 1.6rem;
-    height: 1.6rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+      .select-arrow {
+        img {
+          width: 2.4rem;
+          height: 2.4rem;
+          transition: transform 0.2s ease;
+        }
+      }
 
-    &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
+      &.open {
+        border-radius: 0.8rem 0.8rem 0 0;
+
+        .select-arrow img {
+          transform: rotate(180deg);
+        }
+      }
     }
 
-    .arrow-icon {
-      width: 1.6rem;
-      height: 1.6rem;
-      display: block;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-    }
+    .custom-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      width: 36rem;
+      max-height: 35rem;
+      overflow-y: auto;
+      background: #ffffff;
+      margin-top: 1rem;
+      padding: 1.2rem 2rem;
+      border-radius: 0.8rem;
+      box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+      z-index: 100;
 
-    &.up .arrow-icon {
-      background-image: url('@/assets/images/publish/top.png');
-    }
+      .chapter-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.2rem;
+          font-size: 1.4rem;
+          color: #6A7282;
+          cursor: pointer;
 
-    &.up:hover .arrow-icon {
-      background-image: url('@/assets/images/publish/top_hover.png');
-    }
+          &:last-child{
+            margin-bottom: 0;
+          }
 
-    &.down .arrow-icon {
-      background-image: url('@/assets/images/publish/bottom.png');
-    }
+          &.selected {
+            color: #364153;
+            font-weight: 500;
+          }
 
-    &.down:hover .arrow-icon {
-      background-image: url('@/assets/images/publish/bottom_hover.png');
+          .chapter-number {
+            flex: 1;
+          }
+
+          .chapter-status {
+            color: #99A1AF;
+            font-size: 1.2rem;
+          }
+        }
     }
   }
 
@@ -564,6 +586,19 @@
           height: 100%;
           background: rgba(255,255,255,0.1);
           border-radius: inherit;
+        }
+      }
+
+      &.published {
+        background: rgba(251, 100, 182, 0.5);
+        color: #FFFFFF;
+        cursor: not-allowed;
+
+        &:hover {
+          position: relative;
+          &::after {
+            display: none;
+          }
         }
       }
     }
@@ -796,6 +831,8 @@
             border-radius: 0.8rem;
             box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
             z-index: 10;
+            max-height: 35rem;
+            overflow-y: auto;
             .collection-dropdown-item {
               margin-bottom: 1.2rem;
               font-size: 1.4rem;
@@ -837,7 +874,7 @@
               gap: 0.8rem;
               padding: 1.2rem;
               font-size: 1.4rem;
-              color: #6A7282;
+              color: #99A1AF;
 
               .loading-spinner {
                 width: 1.6rem;

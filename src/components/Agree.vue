@@ -32,7 +32,7 @@
   const isShowAgree = ref(false)
   const isFinishAgree = ref(false)
   const timer = ref(3)
-  let timerTicker: number | null = null
+  let timerTicker: ReturnType<typeof setInterval> | null = null
   const contentContainer = ref(null)
   const isReachedBottom = ref(false)
   const agreeText = t('agreeBtn')

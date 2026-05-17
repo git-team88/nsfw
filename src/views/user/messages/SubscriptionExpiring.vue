@@ -2,16 +2,16 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id">
       <div class="left-info">
-        <img class="avatar" :src="item.subscriberr.avatar" alt="" @click="goUserHome(item.subscriberr.user_id)" />
+        <img class="avatar" :src="item.subscriberr.avatar || defaultAvatar" alt="" @click="goUserHome(item.subscriberr.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
           <div class="username">{{ item.subscriberr.nickname }}</div>
           <div class="desc">{{ t("user.messages.expireText") }}</div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
       </div>
-      <button class="action-btn" @click="toSubscribe(item.subscriberr.user_id)">
+      <button class="action-btn" @click="toSubscribe(item.subscriberrr.user_id)">
         {{ t("user.messages.subscribeNow") }}
-        <img class="btn-icon" :src="rightIcon" alt="" />
+        <img class="btn-icon" :src="subscribeIcon" alt="" />
       </button>
     </div>
     <EmptyState v-if="!list.length" />
@@ -23,7 +23,9 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { formatTimestamp } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
-import rightIcon from "@/assets/images/user/subscribe_icon.png";
+import { toast } from "@/util/toast";
+import defaultAvatar from "@/assets/images/base/avatar.png";
+import subscribeIcon from "@/assets/images/user/subscribe_icon.png";
 
 const { t, locale } = useI18n();
 const router = useRouter();

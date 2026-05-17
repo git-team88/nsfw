@@ -295,6 +295,10 @@ function googleLogin() {
         }
 
         router.push("/");
+      } else if (res.code == 10110) {
+        if (headerRef.value) {
+          headerRef.value.goRegister();
+        }
       } else {
         toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
 

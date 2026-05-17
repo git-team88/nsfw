@@ -15,7 +15,8 @@
               :class="{ active: selectedChapter === chapter.chapter?.toString() }"
               @click="selectChapter(chapter.chapter?.toString())"
             >
-              {{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}
+              <span class="chapter-info">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+              <span v-if="chapter.is_publish === 1" class="chapter-status">{{ t('submit.image.published') }}</span>
             </div>
           </div>
         </div>
@@ -28,8 +29,13 @@
           </div>
 
           <div class="modal-footer">
-            <button class="publish-btn" @click="handlePublish">
-              {{ t('submit.image.projectView.publishEpisode') }}
+            <button 
+              class="publish-btn" 
+              :class="{ 'published': isChapterPublished }" 
+              @click="handlePublish"
+              :disabled="isChapterPublished"
+            >
+              {{ isChapterPublished ? t('submit.image.published') : t('submit.image.projectView.publishEpisode') }}
             </button>
           </div>
         </div>
@@ -68,7 +74,8 @@ const chapters = computed(() => {
   if (!props.project) return [];
 
   if (props.project.chapters && props.project.chapters.length > 0) {
-    return props.project.chapters.filter((chapter: any) => chapter.is_publish === 2);
+    // Show all chapters, not just unpublished ones
+    return props.project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
   }
 
   // Priority 2: Use project outline from result_async
@@ -94,6 +101,12 @@ const currentChapterTitle = computed(() => {
 // Current chapter content
 const currentChapterContent = computed(() => {
   return chapterContent.value || '';
+});
+
+// Check if selected chapter is published
+const isChapterPublished = computed(() => {
+  const chapter = chapters.value.find((c: any) => c.chapter?.toString() === selectedChapter.value);
+  return chapter?.is_publish === 1;
 });
 
 // Fetch chapter details
@@ -251,6 +264,9 @@ watch(() => props.project, (newProject) => {
     font-size: 1.4rem;
     color: #6A7282;
     cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
     &:hover {
       color: #364153;
@@ -258,6 +274,16 @@ watch(() => props.project, (newProject) => {
 
     &.active {
       color: #364153;
+    }
+
+    .chapter-info {
+      flex: 1;
+    }
+
+    .chapter-status {
+      color: #99A1AF;
+      font-size: 1.2rem;
+      margin-left: 1rem;
     }
   }
 }
@@ -322,6 +348,20 @@ watch(() => props.project, (newProject) => {
       height: 100%;
       background: rgba(255, 255, 255, 0.1);
       border-radius: inherit;
+    }
+  }
+
+  &.published {
+    background: rgba(251, 100, 182, 0.5);
+    color: #FFFFFF;
+    cursor: not-allowed;
+
+    &:hover {
+      position: relative;
+
+      &::after {
+        display: none;
+      }
     }
   }
 }

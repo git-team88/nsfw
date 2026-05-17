@@ -21,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="imageFiles.length == 0 && !postId">
+      <div class="upload-tabs" v-if="!showFullContent && !postId">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
         </div>
@@ -62,66 +62,71 @@
             </div>
           </div>
 
-          <!-- Project Grid -->
-          <div v-else class="project-grid">
-            <div
-              v-for="(project, index) in projects"
-              :key="project.id"
-              class="project-item"
-              :class="{ selected: selectedProjectId == project.id }"
-              @click="selectProject(project)"
-            >
-              <div class="project-image-container">
-                <img :src="project.cover" alt="" class="project-image" />
-                <div class="view-icon" @click.stop="openViewModal(project)">
-                  <img src="@/assets/images/publish/view.png" alt="View" />
+          <div v-else>
+            <!-- Project Grid -->
+            <div class="project-grid">
+              <div
+                v-for="(project, index) in projects"
+                :key="project.id"
+                class="project-item"
+                :class="{ selected: selectedProjectId == project.id }"
+                @click="selectProject(project)"
+              >
+                <div class="project-image-container">
+                  <img :src="project.result_async.generate_manhua_cover" alt="" class="project-image" />
+                  <div class="view-icon" @click.stop="openViewModal(project)">
+                    <img src="@/assets/images/publish/view.png" alt="View" />
+                  </div>
+                </div>
+                <div v-if="project.name" class="project-title">{{ project.name }}</div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <Pagination
+              v-if="projects.length > 0 && totalProjects > pageSize"
+              :total="totalProjects"
+              :page-size="pageSize"
+              v-model="currentPage"
+              theme="pink"
+            />
+
+            <!-- Chapter Selection -->
+            <div v-if="projects.length > 0" class="chapter-selection">
+              <label>{{ t('submit.image.selectChapter') }}</label>
+              <div class="chapter-dropdown">
+                <div class="custom-select" :class="{ 'open': showChapterDropdown }" @click="toggleChapterDropdown($event)">
+                  <span class="select-value">{{ getChapterLabel(selectedEpisode) }}</span>
+                  <div class="select-arrow">
+                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                  </div>
+                </div>
+                <div class="custom-dropdown" v-if="showChapterDropdown">
+                  <div
+                    class="chapter-dropdown-item"
+                    :class="{ 'selected': selectedEpisode == chapter.chapter }"
+                    v-for="chapter in selectedProject?.chapters || []"
+                    :key="chapter.chapter"
+                    @click="selectChapter(chapter)"
+                  >
+                    <span class="chapter-number">{{ t('chapter', { chapter: chapter.chapter }) }}</span>
+                    <span class="chapter-status" v-if="chapter.is_publish == 1">{{ t('novel.published') }}</span>
+                  </div>
                 </div>
               </div>
-              <div v-if="project.name" class="project-title">{{ project.name }}</div>
             </div>
-          </div>
 
-          <!-- Pagination -->
-          <Pagination
-            v-if="projects.length > 0 && totalProjects > pageSize"
-            :total="totalProjects"
-            :page-size="pageSize"
-            v-model="currentPage"
-            theme="pink"
-          />
-
-          <!-- Episode Selection -->
-          <div v-if="projects.length > 0" class="episode-selection">
-            <label>{{ t('submit.image.selectEpisode') }}</label>
-            <div class="episode-select">
-              <input
-                type="text"
-                class="episode-input"
-                :value="selectedEpisode"
-                readonly
-              />
-              <div class="episode-buttons">
-                <button
-                  class="episode-btn up"
-                  @click="increaseEpisode"
-                  :disabled="!selectedProject || selectedEpisode >= (selectedProject.step_status === 'SUCCESS' ? selectedProject.step_chapter_index : selectedProject.step_status === 'DOING' ? Math.max(1, selectedProject.step_chapter_index - 1) : (selectedProject.total_episodes || selectedProject.totalEpisodes || 1))"
+            <!-- Publish Button -->
+            <div v-if="projects.length > 0" class="publish-section">
+              <button
+                  class="publish-btn"
+                  :class="{ 'published': isChapterPublished }"
+                  @click="handlePublish"
+                  :disabled="isChapterPublished"
                 >
-                  <span class="arrow-icon"></span>
+                  {{ isChapterPublished ? t('novel.published') : t('submit.cover.confirm') }}
                 </button>
-                <button
-                  class="episode-btn down"
-                  @click="decreaseEpisode"
-                  :disabled="selectedEpisode <= 1"
-                >
-                  <span class="arrow-icon"></span>
-                </button>
-              </div>
             </div>
-          </div>
-
-          <!-- Publish Button -->
-          <div v-if="projects.length > 0" class="publish-section">
-            <button class="publish-btn" @click="handlePublish(selectedProject, selectedEpisode)">{{ t('submit.cover.confirm') }}</button>
           </div>
         </div>
 
@@ -166,7 +171,7 @@
         </div>
       </div>
 
-      <div class="content-wrapper" v-if="imageFiles.length > 0 || postId">
+      <div class="content-wrapper" v-if="showFullContent || postId">
         <div class="section">
           <div class="list-section">
             <div class="list-top">
@@ -406,13 +411,13 @@
                     <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
                     <span class="label">{{ item.label }}</span>
                   </div>
-                  <div class="item-right">
+                  <!-- <div class="item-right">
                     <span class="stats">
                       {{
                         dropdownType === "#" ? `${item.views} views` : `${item.followers} followers`
                       }}
                     </span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -478,15 +483,16 @@
     <!-- Cover Selection Modal -->
     <SetImageCoverModal
       v-model:visible="showCoverModal"
-      :images="imageFiles.map((f) => f._preview)"
-      :cover-image="coverPreview"
+      :images="imageFiles.map((f) => f._url || f._preview)"
+      :cover-image="projectCoverForModal || coverPreview"
+      :is-canvas-generated="isCanvasGeneratedCover"
       @confirm="onCoverConfirmed"
     />
 
     <!-- Project View Modal -->
     <ProjectCoimcViewModal
       :visible="showViewModal"
-      :project="selectedProject"
+      :project="previewProject"
       @close="closeViewModal"
       @publish="handlePublish"
     />
@@ -509,7 +515,7 @@
     <CreateCollectionModal
       :visible="showCreateCollectionModal"
       :existing-collections="collections.map(c => c.name)"
-      :type="1"
+      :type="2"
       @close="handleCloseCreateCollectionModal"
       @save="handleCreateCollection"
     />
@@ -608,7 +614,7 @@ const showCreateCollectionModal = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
-  { value: '1', label: '第一集' },
+  { value: '1', label: t('submit.image.episode', { episode: 1 }) },
 ]);
 
 // Collection pagination
@@ -619,6 +625,18 @@ const hasMoreCollections = ref(true);
 const isLoadingCollections = ref(false);
 
 const uid = localStorage.getItem("uid") || '';
+
+// Check if selected chapter is already published
+const isChapterPublished = computed(() => {
+  if (!selectedProject.value?.chapters || !selectedEpisode.value) return false;
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
+  return chapter?.is_publish == 1;
+});
+
+// Check if a project is selected
+const isProjectSelected = computed(() => {
+  return !!selectedProject.value && !!selectedEpisode.value;
+});
 
 function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
@@ -650,27 +668,30 @@ async function selectCollection(id: number) {
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id.toString(), 1, 1) as any;
+      const response = await api.singleCollection(id, 1, 100) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
-        const allnum = response.data.allnums || '0';
-        const defaultEpisode = parseInt(allnum) + 1;
+        const allnumsStr = response.data.allnums || '0';
+        const allnums = parseInt(allnumsStr) || 0;
+        const defaultEpisode = allnums + 1;
 
         selectedEpisodeNumber.value = defaultEpisode.toString();
 
         // Update episodes array based on collection chapters
         episodes.value = [];
-        // 先添加已有的章节
-        collection.chapters.forEach((chapter: any, index: number) => {
-          episodes.value.push({
-            value: (index + 1).toString(),
-            label: chapter.title || `第${index + 1}集`
+        // 先添加已有的集
+        if (response.data.data && response.data.data.length > 0) {
+          response.data.data.forEach((chapter: any, index: number) => {
+            episodes.value.push({
+              value: (index + 1).toString(),
+              label: t('submit.image.episode', { episode: index + 1 })
+            });
           });
-        });
+        }
         // 添加新的一集
         episodes.value.push({
           value: defaultEpisode.toString(),
-          label: `第${defaultEpisode}集`
+          label: t('submit.image.episode', { episode: defaultEpisode })
         });
       }
     } catch (error) {
@@ -682,17 +703,19 @@ async function selectCollection(id: number) {
 
       // Update episodes array based on collection chapters
       episodes.value = [];
-      // 先添加已有的章节
-      collection.chapters.forEach((chapter: any, index: number) => {
-        episodes.value.push({
-          value: (index + 1).toString(),
-          label: chapter.title || `第${index + 1}集`
+      // 先添加已有的集
+      if (collection.chapters && collection.chapters.length > 0) {
+        collection.chapters.forEach((chapter: any, index: number) => {
+          episodes.value.push({
+            value: (index + 1).toString(),
+            label: t('submit.image.episode', { episode: index + 1 })
+          });
         });
-      });
+      }
       // 添加新的一集
       episodes.value.push({
         value: defaultEpisode.toString(),
-        label: `第${defaultEpisode}集`
+        label: t('submit.image.episode', { episode: defaultEpisode })
       });
     }
   }
@@ -710,12 +733,14 @@ function clearCollection() {
 
 function selectEpisode(value: string) {
   selectedEpisodeNumber.value = value;
+  // Also update selectedEpisode to match the selected episode number
+  selectedEpisode.value = parseInt(value);
   showEpisodeDropdown.value = false;
 }
 
 function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : '第一集';
+  return episode ? episode.label : t('submit.image.episode', { episode: 1 });
 }
 
 // Fetch collections
@@ -771,8 +796,7 @@ async function handleCreateCollection(collection: { name: string }) {
   if (newCollection) {
     selectedCollectionId.value = newCollection.id;
   }
-  // 重置集数为第一集
-  selectedEpisodeNumber.value = '1';
+  // 保持当前章节号，不重置为第一集
   // 关闭弹窗
   showCreateCollectionModal.value = false;
   // 设置isNoCollection为false，因为用户选择了一个合集
@@ -783,9 +807,30 @@ function handleCloseCreateCollectionModal() {
   showCreateCollectionModal.value = false;
 }
 
+// Chapter dropdown functions
+function toggleChapterDropdown(event: Event) {
+  event.stopPropagation();
+  showChapterDropdown.value = !showChapterDropdown.value;
+}
+
+function getChapterLabel(chapterNumber: number | null) {
+  if (!chapterNumber || !selectedProject.value?.chapters) return '';
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === chapterNumber);
+  if (!chapter) return '';
+  return t('chapter', { chapter: chapterNumber });
+}
+
+function selectChapter(chapter: any) {
+  selectedEpisode.value = chapter.chapter;
+  selectedModalEpisode.value = chapter.chapter;
+  showChapterDropdown.value = false;
+}
+
 // Cover selection state
 const showCoverModal = ref(false);
 const selectedCoverIndex = ref<number | null>(null);
+const isCanvasGeneratedCover = ref(false);
+const projectCoverForModal = ref<string>('');
 
 // Sensitive content state
 const showSensitiveConfirm = ref(false);
@@ -801,6 +846,9 @@ const route = useRoute();
 const isEditMode = ref(route.query.edit === "1");
 const postId = ref(route.query.post_id as string);
 const chapterIdForPublish = ref<number | null>(null);
+
+// UI state
+const showFullContent = ref(false);
 
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);
@@ -838,11 +886,21 @@ const pageSize = ref(8);
 
 // Episode selection
 const totalEpisodes = ref(10);
-const selectedEpisode = ref(1);
+const selectedEpisode = ref<number | null>(null);
 
 // View modal
 const showViewModal = ref(false);
-const selectedModalEpisode = ref(1);
+const selectedModalEpisode = ref(null);
+
+// Project details cache
+const projectDetailsCache = ref<Record<string, any>>({});
+
+// Chapter dropdown
+const showChapterDropdown = ref(false);
+
+// Preview modal project (separate from selected project)
+const previewProject = ref<any>(null);
+const previewModalEpisode = ref<number | null>(null);
 
 interface DropdownItem {
   label: string;
@@ -1029,10 +1087,13 @@ function uploadImage(pf: PreviewFile) {
     const formData = new FormData();
     formData.append("file", pf);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -1054,6 +1115,9 @@ function uploadImage(pf: PreviewFile) {
             coverPreview.value = pf._url || pf._preview;
             selectedCoverIndex.value = 0;
           }
+
+          // Show full content after successful upload
+          showFullContent.value = true;
 
           isUpload.value = false;
         } else {
@@ -1094,10 +1158,14 @@ function onReuploadPicked(e: Event) {
   isUpload.value = true;
   const formData = new FormData();
   formData.append("file", file);
+
+  const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
   const parma = {
     method: "POST",
     headers: {
       token: token,
+      ...authHeaders,
     },
     body: formData,
   };
@@ -1195,6 +1263,8 @@ function selectCover(index: number) {
 }
 
 function onCoverConfirmed(coverUrl: string) {
+  // Reset canvas-generated flag since user confirmed a new cover selection
+  isCanvasGeneratedCover.value = false;
   isUpload.value = true;
 
   const token = localStorage.getItem("token");
@@ -1211,10 +1281,13 @@ function onCoverConfirmed(coverUrl: string) {
       const formData = new FormData();
       formData.append("file", file);
 
+      const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
       const parma = {
         method: "POST",
         headers: {
           token: token,
+          ...authHeaders,
         },
         body: formData,
       };
@@ -1841,10 +1914,19 @@ function handleClickOutside(event: MouseEvent) {
   if (showDropdown.value && !document.querySelector(".mention-dropdown")?.contains(target)) {
     showDropdown.value = false;
   }
-  if (showCollectionDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+
+  // Handle chapter dropdown
+  const chapterDropdown = document.querySelector(".chapter-dropdown");
+  if (showChapterDropdown.value && chapterDropdown && !chapterDropdown.contains(target)) {
+    showChapterDropdown.value = false;
+  }
+
+  // Handle collection and episode dropdowns
+  const collectionSelect = document.querySelector(".collection-select");
+  if (showCollectionDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showCollectionDropdown.value = false;
   }
-  if (showEpisodeDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+  if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
 }
@@ -1898,9 +1980,6 @@ function adjustTooltipPosition(event: MouseEvent) {
       tooltip.style.top = '50%';
       tooltip.style.transform = 'translateY(-50%)';
     }
-
-    // Arrow position remains fixed relative to info icon
-    // Only adjust tooltip position
   }
 }
 
@@ -1936,11 +2015,13 @@ async function onSubmit() {
     title: form.value.title.trim(),
     cover: coverPreview.value,
     content: form.value.description.trim(),
-    is_nsfw: form.value.content === "yes" ? 1 : 0,
-    access_rights: form.value.permission === "partial" ? 1 : form.value.permission === "private" ? 2 : 0,
+    is_nsfw: form.value.content == "yes" ? 1 : 0,
+    access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
     image_urls: imageFiles.value.filter(f => f._url).map((f) => f._url!),
     book_id: selectedCollectionId.value ? selectedCollectionId.value : 0,
     chapter_index: selectedCollectionId.value ? parseInt(selectedEpisodeNumber.value) : 0,
+    cover_color: '',
+    cover_title: '',
     ...(session_id ? { session_id } : {}),
     ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
     ...(isEditMode && { post_id: postId.value })
@@ -1949,7 +2030,10 @@ async function onSubmit() {
   try {
     const headers = new Headers();
 
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(token);
     headers.append("token", token);
+    headers.append("ts", ts);
+    headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
 
     const data = JSON.stringify(payload);
@@ -1961,8 +2045,8 @@ async function onSubmit() {
     };
 
     const url = postId.value
-      ? `${baseUrl}/post/modifyPost`
-      : `${baseUrl}/post/addPost`;
+      ? `${baseUrl}post/modifyPost`
+      : `${baseUrl}post/addPost`;
 
     const response = await fetch(url, requestOptions);
     const result = await response.text();
@@ -1972,7 +2056,7 @@ async function onSubmit() {
       toast(t("success"));
       router.push(`/publish/success?type=${1}`);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
     }
   } catch (error) {
     console.error("Publish error:", error);
@@ -2023,7 +2107,7 @@ function goToSubscriptionSettings() {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(2, 0, 'manhua', currentPage.value, pageSize.value, 'desc', 1) as any;
+    const response = await api.getProject(0, 'manhua', currentPage.value, 10, 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
@@ -2033,6 +2117,10 @@ async function fetchProjects() {
 
     if (response.data.data_count) {
       totalProjects.value = response.data.data_count;
+    }
+
+    if(projects.value && projects.value.length > 0) {
+      await selectProject(projects.value[0]);
     }
 
   } catch (error) {
@@ -2045,33 +2133,69 @@ async function fetchProjects() {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
-  // Set default episode to first one
-  selectedEpisode.value = 1;
-  selectedModalEpisode.value = 1;
+
+  // Check if project details are in cache
+  if (projectDetailsCache.value[project.session_id]) {
+    // Use cached project details
+    const cachedProject = projectDetailsCache.value[project.session_id];
+    Object.assign(project, cachedProject);
+
+    // Show all chapters
+    if (project.chapters && project.chapters.length > 0) {
+      // Sort chapters by chapter number
+      project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+      // If there are chapters, set default episode to the first one
+      if (project.chapters.length > 0) {
+        selectedEpisode.value = project.chapters[0].chapter;
+        selectedModalEpisode.value = project.chapters[0].chapter;
+      }
+    }
+
+    // Handle collection logic for history projects
+    if (project.name) {
+      await handleCollectionFromProjectName(project.name);
+    } else {
+      // Reset collection state for projects without names
+      selectedCollection.value = '';
+      selectedCollectionId.value = '';
+      isNoCollection.value = true;
+      episodes.value = [];
+    }
+    return;
+  }
 
   // Request project details
   try {
     const res = await api.detailProject(project.session_id) as any;
-    if (res.code === 200 && res.data) {
+    if (res.code == 200 && res.data) {
       // Update project with details
       Object.assign(project, res.data);
 
-      // Filter chapters to only include unpublished ones (is_publish = 2)
-      if (project.chapters && project.chapters.length > 0) {
-        const unpublishedChapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
+      // Cache project details
+      projectDetailsCache.value[project.session_id] = { ...project };
 
-        // If there are unpublished chapters, request details for the first one
-        if (unpublishedChapters.length > 0) {
-          const chapterId = unpublishedChapters[0].id;
-          const chapterRes = await api.detailChapter(project.session_id, chapterId) as any;
-          if (chapterRes.code === 200 && chapterRes.data) {
-            // Update chapter with details
-            const chapterIndex = unpublishedChapters.findIndex((c: any) => c.id === chapterId);
-            if (chapterIndex !== -1) {
-              Object.assign(unpublishedChapters[chapterIndex], chapterRes.data);
-            }
-          }
+      // Show all chapters
+      if (project.chapters && project.chapters.length > 0) {
+        // Sort chapters by chapter number
+        project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+        // If there are chapters, set default episode to the first one
+        if (project.chapters.length > 0) {
+          selectedEpisode.value = project.chapters[0].chapter;
+          selectedModalEpisode.value = project.chapters[0].chapter;
         }
+      }
+
+      // Handle collection logic for history projects
+      if (project.name) {
+        await handleCollectionFromProjectName(project.name);
+      } else {
+        // Reset collection state for projects without names
+        selectedCollection.value = '';
+        selectedCollectionId.value = '';
+        isNoCollection.value = true;
+        episodes.value = [];
       }
     }
   } catch (error) {
@@ -2079,10 +2203,60 @@ async function selectProject(project: any) {
   }
 }
 
+// Handle collection creation/selection from project name
+async function handleCollectionFromProjectName(projectName: string) {
+  try {
+    // Search for collection by title
+    const searchRes = await api.searchCollection({ title: projectName, type: 1 }) as any;
+
+    if (searchRes.code == 0) {
+      const book_id = searchRes.data?.book_id || 0;
+
+      if (book_id == 0) {
+        // Create new collection
+        const createRes = await api.addCollection({ title: projectName, type: 1 }) as any;
+
+        if (createRes.code === 0 && createRes.data?.id) {
+          selectedCollection.value = projectName;
+          selectedCollectionId.value = createRes.data.id;
+          isNoCollection.value = false;
+        }
+      } else {
+        // Get collection details to determine episode number
+        const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+        if (collectionRes.code === 0 && collectionRes.data) {
+          const allnums = collectionRes.data.allnums || '0';
+          const episodeNumber = parseInt(allnums) + 1;
+
+          selectedCollection.value = projectName;
+          selectedCollectionId.value = book_id;
+          isNoCollection.value = false;
+          selectedEpisodeNumber.value = episodeNumber.toString();
+
+          // Update episodes array to include up to the current episode number
+          episodes.value = [];
+          for (let i = 1; i <= episodeNumber; i++) {
+            episodes.value.push({
+              value: i.toString(),
+              label: t('submit.image.episode', { episode: i })
+            });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error handling collection from project name:', error);
+  }
+}
+
 function decreaseEpisode() {
   // Get unpublished chapters
   const unpublishedChapters = selectedProject.value?.chapters?.filter((chapter: any) => chapter.is_publish == 2) || [];
-  if (unpublishedChapters.length == 0) return;
+  if (unpublishedChapters.length == 0) {
+    toast(t('submit.image.noUnpublishedChapters'));
+    return;
+  }
 
   // Find current chapter index in unpublished chapters
   const currentIndex = unpublishedChapters.findIndex((chapter: any) => chapter.chapter == selectedEpisode.value);
@@ -2095,7 +2269,10 @@ function decreaseEpisode() {
 function increaseEpisode() {
   // Get unpublished chapters
   const unpublishedChapters = selectedProject.value?.chapters?.filter((chapter: any) => chapter.is_publish == 2) || [];
-  if (unpublishedChapters.length == 0) return;
+  if (unpublishedChapters.length == 0) {
+    toast(t('submit.image.noUnpublishedChapters'));
+    return;
+  }
 
   // Find current chapter index in unpublished chapters
   const currentIndex = unpublishedChapters.findIndex((chapter: any) => chapter.chapter == selectedEpisode.value);
@@ -2113,8 +2290,8 @@ function changePage(page: number) {
 
 // Modal methods
 async function openViewModal(project: any) {
-  selectedProject.value = project;
-  selectedModalEpisode.value = 1;
+  previewProject.value = project;
+  previewModalEpisode.value = null;
 
   // Request project details to get chapters array
   try {
@@ -2123,9 +2300,10 @@ async function openViewModal(project: any) {
       // Update project with details
       Object.assign(project, res.data);
 
-      // Filter chapters to only include unpublished ones (is_publish = 2)
+      // Sort chapters by chapter number
       if (project.chapters && project.chapters.length > 0) {
-        project.chapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
+        project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+        previewModalEpisode.value = project.chapters[0].chapter;
       }
     }
   } catch (error) {
@@ -2137,74 +2315,72 @@ async function openViewModal(project: any) {
 
 function closeViewModal() {
   showViewModal.value = false;
-  selectedProject.value = null;
+  previewProject.value = null;
 }
 
-async function handlePublish(project: any, episode: number) {
-  // 检查项目是否存在
+async function handlePublish(publishData?: any) {
+  // Check if publishData is provided (from modal) or if we're handling a direct click
+  let project: any, episode: any;
+
+  if (publishData && typeof publishData == 'object' && publishData.project) {
+    // From modal: use the provided data
+    project = publishData.project;
+    episode = publishData.episode;
+  } else {
+    // Direct click: use selectedProject and selectedEpisode
+    project = selectedProject.value;
+    episode = selectedEpisode.value;
+  }
+
   if (!project) {
-    toast(t('submit.image.selectNovelFirst'));
+    toast(t('submit.image.selectComicFirst'));
     return;
   }
 
-  // 检查 step_name 是否为 chapter
-  if (project.step_name === 'chapter') {
-    // 根据 step_status 和 step_chapter_index 计算最大集数
-    let maxEpisode = 1;
-    if (project.step_status === 'SUCCESS' && project.step_chapter_index) {
-      maxEpisode = project.step_chapter_index;
-    } else if (project.step_status === 'DOING' && project.step_chapter_index) {
-      maxEpisode = Math.max(1, project.step_chapter_index - 1);
-    } else {
-      maxEpisode = project.total_episodes || project.totalEpisodes || 1;
-    }
-
-    // 检查选中的集数是否有效
-    if (episode > maxEpisode) {
-      toast(t('submit.image.episodeOutOfRange'));
-      return;
-    }
+  if (!episode) {
+    toast(t('submit.image.selectEpisode'));
+    return;
   }
 
-  // 请求章节详情接口获取图片和标题
+  const episodeText = t('submit.image.episode', { episode });
+
+  // 请求集详情接口获取图片和标题
   let episodeImages: string[] = [];
   let chapterCover: string = '';
   let episodeTitle = '';
+  let episodeDescription = '';
 
   try {
     const chapterResponse = await api.detailChapter(project.session_id, episode) as any;
-    if (chapterResponse.code === 200 && chapterResponse.data) {
+    if (chapterResponse.code == 200 && chapterResponse.data) {
       const chapterData = chapterResponse.data;
-      // 从章节详情中获取图片
-      if (chapterData.final_images) {
-        episodeImages = chapterData.final_images;
-      } else if (chapterData.images) {
-        episodeImages = chapterData.images;
-      } else if (chapterData.result_async?.final_images) {
+      // 从集详情中获取图片
+      if (chapterData.result_async?.final_images) {
         episodeImages = chapterData.result_async.final_images;
-      } else if (chapterData.result_async?.images) {
-        episodeImages = chapterData.result_async.images;
       }
 
-      // 从章节详情中获取封面
-      if (chapterData.cover) {
-        chapterCover = chapterData.cover;
-      } else if (chapterData.result_async?.cover) {
-        chapterCover = chapterData.result_async.cover;
+      // 从集详情中获取封面
+      if (project.result_async?.generate_manhua_cover) {
+        chapterCover = project.result_async.generate_manhua_cover;
+        // Mark as canvas-generated so it won't be auto-selected in modal
+        isCanvasGeneratedCover.value = true;
       }
 
-      // 从章节详情中获取标题
+      // 从集详情中获取标题
       if (chapterData.title) {
         episodeTitle = chapterData.title;
-      } else if (chapterData.result_async?.title) {
-        episodeTitle = chapterData.result_async.title;
+      }
+
+      // Get description from chapter data
+      if (chapterData.chapter_description) {
+        episodeDescription = chapterData.chapter_description;
       }
     }
   } catch (error) {
     console.error('Error fetching chapter detail:', error);
   }
 
-  // 如果从章节详情中没有获取到标题，尝试从项目的大纲中获取
+  // 如果从集详情中没有获取到标题，尝试从项目的大纲中获取
   if (!episodeTitle && project.result_async?.generate_manhua_outline?.outline) {
     const outline = project.result_async.generate_manhua_outline.outline;
     const currentEpisode = outline.find((item: any) => item.chapter === episode);
@@ -2214,7 +2390,6 @@ async function handlePublish(project: any, episode: number) {
   }
 
   // 生成标题：第几集 集的标题 「漫画名称」
-  const episodeText = t('submit.image.episode', { episode });
   if (episodeTitle) {
     if (project.name) {
       form.value.title = `${episodeText} ${episodeTitle} 「${project.name}」`;
@@ -2232,8 +2407,8 @@ async function handlePublish(project: any, episode: number) {
   // Store episode for publish
   chapterIdForPublish.value = episode;
 
-  // 如果没有从章节详情中获取到图片，尝试从项目的 result_async 中获取
-  if (episodeImages.length === 0) {
+  // 如果没有从集详情中获取到图片，尝试从项目的 result_async 中获取
+  if (episodeImages.length == 0) {
     // 尝试从不同的数据源获取图片
     if (project.result_async?.final_images) {
       // 如果有 final_images，使用它
@@ -2241,13 +2416,6 @@ async function handlePublish(project: any, episode: number) {
     } else if (project.result_async?.images) {
       // 如果有 images，使用它
       episodeImages = project.result_async.images;
-    } else if (project.result_async?.generate_manhua_outline?.outline) {
-      // 如果有大纲，尝试从大纲中获取图片
-      const outline = project.result_async.generate_manhua_outline.outline;
-      const currentEpisode = outline.find((item: any) => item.chapter === episode);
-      if (currentEpisode?.images) {
-        episodeImages = currentEpisode.images;
-      }
     }
   }
 
@@ -2256,15 +2424,6 @@ async function handlePublish(project: any, episode: number) {
     if (project.result_async?.generate_manhua_cover) {
       chapterCover = project.result_async.generate_manhua_cover;
     }
-  }
-
-  // 如果没有找到图片，使用假数据作为备用
-  if (episodeImages.length === 0) {
-    episodeImages = [
-      `https://picsum.photos/800/500?random=${project.id}-${episode}-1`,
-      `https://picsum.photos/800/500?random=${project.id}-${episode}-2`,
-      `https://picsum.photos/800/500?random=${project.id}-${episode}-3`
-    ];
   }
 
   // 清空现有的图片数组
@@ -2293,19 +2452,18 @@ async function handlePublish(project: any, episode: number) {
   if (project.name) {
     try {
       // Search for collection by title
-      const searchRes = await api.searchCollection({ title: project.name, type: 2 }) as any;
+      const searchRes = await api.searchCollection({ title: project.name, type: 1 }) as any;
 
-      if (searchRes.code === 0) {
+      if (searchRes.code == 0) {
         const book_id = searchRes.data?.book_id || 0;
 
-        if (book_id === 0) {
+        if (book_id == 0) {
           // Create new collection
-          const createRes = await api.addCollection({ title: project.name, type: 2 }) as any;
+          const createRes = await api.addCollection({ title: project.name, type: 1 }) as any;
 
           if (createRes.code === 0 && createRes.data?.id) {
             selectedCollection.value = project.name;
             selectedCollectionId.value = createRes.data.id;
-            selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
           }
         } else {
@@ -2318,15 +2476,15 @@ async function handlePublish(project: any, episode: number) {
 
             selectedCollection.value = project.name;
             selectedCollectionId.value = book_id;
-            selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
+            selectedEpisodeNumber.value = episodeNumber.toString();
 
-            // Update episodes array
+            // Update episodes array to include up to the current episode number
             episodes.value = [];
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('chapter', { chapter: i })
+                label: t('submit.image.episode', { episode: i })
               });
             }
           }
@@ -2340,8 +2498,21 @@ async function handlePublish(project: any, episode: number) {
   // 切换到本地上传标签页，显示有图片的块
   uploadOption.value = 'local';
 
+  // 显示发布表单
+  showFullContent.value = true;
+
   // 关闭模态框
   showViewModal.value = false;
+
+  // Set description (moved here after showFullContent is true)
+  if (episodeDescription) {
+    form.value.description = episodeDescription;
+    nextTick(() => {
+      if (captionRef.value) {
+        captionRef.value.innerText = episodeDescription;
+      }
+    });
+  }
 }
 
 // Get post details for editing
@@ -2351,13 +2522,32 @@ async function getPostDetails() {
   try {
     const res = await api.modifyPostDetail(postId.value);
     const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
-    if (data.code === 0 || data.code === 200) {
+    if (data.code == 0 || data.code == 200) {
       const postData = data.data.post;
       form.value.title = postData.title || "";
       form.value.description = postData.content || "";
-      form.value.permission = postData.access_rights === 2 ? "partial" : postData.access_rights === 3 ? "private" : "public";
-      form.value.content = postData.is_nsfw === 1 ? "yes" : "no";
+      form.value.permission = postData.access_rights == '2' ? "partial" : postData.access_rights == '3' ? "private" : "public";
+      form.value.content = postData.is_nsfw == 1 ? "yes" : "no";
       coverPreview.value = postData.cover || "";
+
+      // If there's a session_id from post data, fetch project details to get the cover
+      const sessionIdFromPost = postData.session_id;
+      if (sessionIdFromPost) {
+        try {
+          const projectRes = await api.detailProject(sessionIdFromPost) as any;
+          if (projectRes.code == 200 && projectRes.data) {
+            const projectData = projectRes.data;
+            // Get the project cover
+            const projectCover = projectData.result_async?.generate_manhua_cover;
+            if (projectCover) {
+              // Store project cover for cover modal
+              projectCoverForModal.value = projectCover;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching project details:', error);
+        }
+      }
 
       // Update contenteditable div with description and handle #tags and @mentions
       if (captionRef.value) {
@@ -2463,6 +2653,51 @@ async function getPostDetails() {
         selectedCollection.value = postData.book_title;
         selectedCollectionId.value = postData.book_id || '';
         isNoCollection.value = false;
+
+        // Set chapter index from postData
+        if (postData.chapter_index) {
+          const chapterIndex = postData.chapter_index;
+          selectedEpisodeNumber.value = chapterIndex.toString();
+
+          // If there's a book_id, request collection details to get complete episode list
+          if (postData.book_id) {
+            try {
+              const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
+              if (collectionRes.code === 0 && collectionRes.data) {
+                const allnum = collectionRes.data.allnums || '0';
+                const totalEpisodes = parseInt(allnum);
+
+                // Update episodes array with complete list
+                episodes.value = [];
+                for (let i = 1; i <= totalEpisodes; i++) {
+                  episodes.value.push({
+                    value: i.toString(),
+                    label: t('submit.image.episode', { episode: i })
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching collection details:', error);
+              // Fallback to local chapter index if API call fails
+              episodes.value = [];
+              for (let i = 1; i <= chapterIndex; i++) {
+                episodes.value.push({
+                  value: i.toString(),
+                  label: t('submit.image.episode', { episode: i })
+                });
+              }
+            }
+          } else {
+            // Update episodes array
+            episodes.value = [];
+            for (let i = 1; i <= chapterIndex; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: t('submit.image.episode', { episode: i })
+              });
+            }
+          }
+        }
       }
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
@@ -2476,6 +2711,15 @@ async function getPostDetails() {
 // Watch currentPage change to fetch projects
 watch(currentPage, () => {
   fetchProjects();
+});
+
+// Watch route changes to update tabIndex
+watch(() => route.path, (newPath) => {
+  const tab = tabList.value.find(t => t.path === newPath);
+  if (tab) {
+    const index = tabList.value.indexOf(tab);
+    tabIndex.value = index;
+  }
 });
 
 // Lifecycle hooks
@@ -2494,53 +2738,160 @@ onMounted(async () => {
     const title = route.query.title as string;
 
     if (session_id && index) {
-      // Handle collection logic if title is provided
-      if (title) {
+      // Request chapter detail interface
+      try {
+        // Request project details to get the cover
         try {
-          // Search for collection by title
-          const searchRes = await api.searchCollection({ title, type: 2 }) as any;
-
-          if (searchRes.code == 0) {
-            const book_id = searchRes.data?.book_id || 0;
-
-            if (book_id == 0) {
-              // Create new collection
-              const createRes = await api.addCollection({ title, type: 2 }) as any;
-
-              if (createRes.code == 0 && createRes.data?.book_id) {
-                selectedCollection.value = title;
-                selectedCollectionId.value = createRes.data.book_id;
-                selectedEpisodeNumber.value = '1';
-                isNoCollection.value = false;
-              }
-            } else {
-              // Get collection details to determine episode number
-              const collectionRes = await api.singleCollection(book_id.toString(), 1, 1) as any;
-
-              if (collectionRes.code == 0 && collectionRes.data) {
-                // Get the total chapter count from the response
-                const allnum = collectionRes.data.allnum || '0';
-                const episodeNumber = parseInt(allnum) + 1;
-
-                selectedCollection.value = title;
-                selectedCollectionId.value = book_id;
-                selectedEpisodeNumber.value = episodeNumber.toString();
-                isNoCollection.value = false;
-
-                // Update episodes array
-                episodes.value = [];
-                for (let i = 1; i <= episodeNumber; i++) {
-                  episodes.value.push({
-                    value: i.toString(),
-                    label: t('chapter', { chapter: i })
-                  });
-                }
-              }
+          const projectRes = await api.detailProject(session_id) as any;
+          if (projectRes.code == 200 && projectRes.data) {
+            const projectData = projectRes.data;
+            // Get the project cover
+            const projectCover = projectData.result_async?.generate_manhua_cover;
+            if (projectCover) {
+              // Store project cover for cover modal
+              projectCoverForModal.value = projectCover;
             }
           }
         } catch (error) {
-          console.error('Error handling collection from route:', error);
+          console.error('Error fetching project details:', error);
         }
+
+        const chapterResponse = await api.detailChapter(session_id, parseInt(index)) as any;
+        if (chapterResponse.code === 200 && chapterResponse.data) {
+          const chapterData = chapterResponse.data;
+
+          // Extract images
+          let episodeImages: string[] = [];
+          if (chapterData.final_images) {
+            episodeImages = chapterData.final_images;
+          } else if (chapterData.images) {
+            episodeImages = chapterData.images;
+          } else if (chapterData.result_async?.final_images) {
+            episodeImages = chapterData.result_async.final_images;
+          } else if (chapterData.result_async?.images) {
+            episodeImages = chapterData.result_async.images;
+          }
+
+          // Extract cover
+          let chapterCover = '';
+          if (chapterData.cover) {
+            chapterCover = chapterData.cover;
+          } else if (chapterData.result_async?.cover) {
+            chapterCover = chapterData.result_async.cover;
+          }
+
+          // Extract title
+          let episodeTitle = '';
+          if (chapterData.title) {
+            episodeTitle = chapterData.title;
+          }
+
+          // Extract description
+          let episodeDescription = '';
+          if (chapterData.chapter_description) {
+            episodeDescription = chapterData.chapter_description;
+          }
+
+          // Generate title
+          const episodeText = t('submit.image.episode', { episode: index });
+          if (episodeTitle) {
+            if (title) {
+              form.value.title = `${episodeText} ${episodeTitle} 「${title}」`;
+            } else {
+              form.value.title = `${episodeText} ${episodeTitle}`;
+            }
+          } else {
+            if (title) {
+              form.value.title = `${episodeText} 「${title}」`;
+            } else {
+              form.value.title = episodeText;
+            }
+          }
+
+          // 将集数图片添加到图片数组中
+          imageFiles.value = [];
+          episodeImages.forEach((imageUrl, index) => {
+            const mockFile = {
+              _key: `${Date.now()}_${index}`,
+              _preview: imageUrl,
+              _url: imageUrl
+            } as PreviewFile;
+            imageFiles.value.push(mockFile);
+          });
+
+          // 设置封面
+          if (chapterCover) {
+            coverPreview.value = chapterCover;
+          } else if (imageFiles.value.length > 0) {
+            coverPreview.value = imageFiles.value[0]._url || imageFiles.value[0]._preview;
+          }
+
+          // Show publish form
+          showFullContent.value = true;
+
+          // Set description
+          if (episodeDescription) {
+            form.value.description = episodeDescription;
+            nextTick(() => {
+              if (captionRef.value) {
+                captionRef.value.innerText = episodeDescription;
+              }
+            });
+          }
+
+          // Handle collection logic if title is provided
+          if (title) {
+            try {
+              // Search for collection by title
+              const searchRes = await api.searchCollection({ title, type: 1 }) as any;
+
+              if (searchRes.code == 0) {
+                const book_id = searchRes.data?.book_id || 0;
+
+                if (book_id == 0) {
+                  // Create new collection
+                  const createRes = await api.addCollection({ title, type: 1 }) as any;
+
+                  if (createRes.code == 0 && createRes.data?.book_id) {
+                    selectedCollection.value = title;
+                    selectedCollectionId.value = createRes.data.book_id;
+                    selectedEpisodeNumber.value = '1';
+                    isNoCollection.value = false;
+                  }
+                } else {
+                  // Get collection details to determine episode number
+                  const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+
+                  if (collectionRes.code == 0 && collectionRes.data) {
+                    // Get the total chapter count from the response
+                    const allnum = collectionRes.data.allnums || '0';
+                    const episodeNumber = parseInt(allnum) + 1;
+
+                    selectedCollection.value = title;
+                    selectedCollectionId.value = book_id;
+                    selectedEpisodeNumber.value = episodeNumber.toString();
+                    isNoCollection.value = false;
+
+                    // Update episodes array
+                    episodes.value = [];
+                    for (let i = 1; i <= episodeNumber; i++) {
+                      episodes.value.push({
+                        value: i.toString(),
+                        label: t('submit.image.episode', { episode: i })
+                      });
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error handling collection from route:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error handling session_id and index:', error);
+        // If error, fall back to fetching projects
+        await fetchProjects();
       }
     } else {
       // Fetch projects for comic tab

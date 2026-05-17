@@ -9,15 +9,21 @@
 
       <div class="modal-body">
         <div class="form-group">
-          <label for="project-name">{{ t('myProjects.renameModal.workTitle') }}</label>
-          <input
-            type="text"
-            id="project-name"
-            v-model="newName"
-            class="input-field"
-            :placeholder="t('myProjects.renameModal.enterNewTitle')"
-            spellcheck="false"
-          />
+          <div class="label-with-counter">
+            <label for="project-name">{{ t('myProjects.renameModal.workTitle') }}</label>
+            <span class="char-counter">{{ newName.length }}/60</span>
+          </div>
+          <div class="input-container">
+            <input
+              type="text"
+              id="project-name"
+              v-model="newName"
+              class="input-field"
+              :placeholder="t('myProjects.renameModal.enterNewTitle')"
+              spellcheck="false"
+              maxlength="60"
+            />
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -125,35 +131,51 @@ function handleOverlayClick() {
   border-bottom: 1px solid #F5F5F5;
 
   .form-group {
-    display: flex;
-    flex-direction: column;
+      display: flex;
+      flex-direction: column;
 
-    label {
-      font-size: 1.4rem;
-      color: #4A5565;
-      margin-bottom: 1.2rem;
-    }
+      .label-with-counter {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.2rem;
 
-    .input-field {
-      width: 100%;
-      height: 5rem;
-      padding: 1.4rem 1rem;
-      border: 1px solid #F5F5F5;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      color: #101828;
-      outline: none;
-      background: #F5F5F5;
+        label {
+          font-size: 1.4rem;
+          color: #4A5565;
+          margin: 0;
+        }
 
-      &:focus {
-        border-color: #FB64B6;
+        .char-counter {
+          margin-left: 0.6rem;
+          font-size: 1.2rem;
+          color: #99A1AF;
+        }
       }
 
-      &::placeholder {
-        color: #99A1AF;
+      .input-container {
+        width: 100%;
+
+        .input-field {
+          width: 100%;
+          height: 5rem;
+          padding: 1.4rem 1rem;
+          border: 1px solid #F5F5F5;
+          border-radius: 0.8rem;
+          font-size: 1.4rem;
+          color: #364153;
+          outline: none;
+          background: #F5F5F5;
+
+          &:focus {
+            border-color: #FB64B6;
+          }
+
+          &::placeholder {
+            color: #99A1AF;
+          }
+        }
       }
     }
-  }
 }
 
 .modal-footer {

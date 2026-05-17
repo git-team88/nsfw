@@ -19,12 +19,57 @@
     span {
       width: 4.8rem;
       height: 4.8rem;
-      background: url("@/assets/images/detail/back.png") no-repeat;
+      background: url("@/assets/images/detail/exit.png") no-repeat;
       background-size: 100% 100%;
     }
     .close-icon {
-      background: url("@/assets/images/detail/exit.png") no-repeat !important;
+      background: url("@/assets/images/detail/back.png") no-repeat !important;
       background-size: 100% 100% !important;
+    }
+  }
+
+  .back-icon-container {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+
+    .info-tooltip {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 1.6rem;
+      padding: 1rem;
+      background: #FFFFFF;
+      color: #6A7282;
+      font-size: 1.2rem;
+      border-radius: 0.8rem;
+      white-space: nowrap;
+      z-index: 30;
+      box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.06);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      text-align: center;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: -1rem;
+        left: 0.8rem;
+        width: 3.4rem;
+        height: 1.2rem;
+        background: url('@/assets/images/detail/intro.png') no-repeat center center;
+        background-size: 100% 100%;
+      }
+    }
+
+    &:hover .info-tooltip {
+      opacity: 1;
+      visibility: visible;
     }
   }
 
@@ -98,10 +143,14 @@
           min-width: 0;
 
           .chapter-title {
-            font-size: 2rem;
+            width: 28rem;
+            font-size: 1.6rem;
             font-weight: 500;
-            color: #101828;
+            color: #6A7282;
             margin-bottom: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .chapter-meta {
@@ -139,7 +188,7 @@
             .nickname {
               font-size: 1.6rem;
               font-weight: 500;
-              color: #364153;
+              color: #6A7282;
             }
           }
 
@@ -244,10 +293,28 @@
       }
 
       .chapter-body {
-        padding: 2rem 3rem 0;
-        font-size: 1.6rem;
-        line-height: 2.8rem;
-        color: #6A7282;
+        padding: 3rem 6rem 0;
+        font-size: 2rem;
+        line-height: 4rem;
+        color: #101828;
+
+        .chapter-content-title {
+          font-size: 2.8rem;
+          font-weight: 600;
+          color: #101828;
+          text-align: center;
+          line-height: 5.6rem;
+          margin-bottom: 3rem;
+        }
+
+        .paragraph {
+          margin-bottom: 3rem;
+          white-space: pre-wrap;
+
+          &:last-child{
+            margin-bottom: 0;
+          }
+        }
       }
 
       .sensitive-body{
@@ -386,7 +453,8 @@
         bottom: 4rem;
         width: 108rem;
         max-width: 90%;
-        padding: 1.6rem 2rem;
+        padding: 1.6rem 3rem;
+        border-top: 1px solid #F5F5F5;
         border-radius: 0 0 1.2rem 1.2rem;
         transform: translateX(-50%);
         background: #FFFFFF;
@@ -399,18 +467,16 @@
           display: flex;
           align-items: center;
           gap: 2rem;
-          font-size: 1.8rem;
+          font-size: 1.6rem;
           cursor: pointer;
 
           .collection-main {
-            display: flex;
-            align-items: center;
+            max-width: 42rem;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             color: #364153;
-
-            .collection-name {
-              margin-left: 0.5rem;
-            }
           }
 
           .collection-line{
@@ -420,6 +486,7 @@
           }
 
           .update-info {
+            font-size: 1.4rem;
             color: #99A1AF;
           }
         }
@@ -430,7 +497,10 @@
           gap: 1.6rem;
 
           .collection-link {
-            font-size: 1.6rem;
+            max-width: 17rem;
+            font-size: 1.2rem;
+            text-align: right;
+            line-height: 1.8rem;
             color: #99A1AF;
             cursor: pointer;
           }
@@ -438,6 +508,7 @@
           .next-btn {
             min-width: 13.6rem;
             height: 4.8rem;
+            padding: 0 1.2rem;
             border: none;
             border-radius: 0.8rem;
             background-color: #FB64B6;

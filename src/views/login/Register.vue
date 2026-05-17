@@ -74,21 +74,6 @@
                 </button>
               </div>
               <div class="email-error" :class="{ 'success': codeError == t('register.spamTip') }" v-if="codeError">{{ codeError }}</div>
-
-              <div class="email-item-box" style="margin-top: 1.4rem;">
-                <div class="email-item-title">{{ t("inviteCode.title") }}</div>
-                <div class="email-item">
-                  <input
-                    id="inviteCode"
-                    class="email-ipt"
-                    type="text"
-                    v-model="inviteCode"
-                    :placeholder="t('inviteCode.enterCode')"
-                    spellcheck="false"
-                    autocomplete="false"
-                  />
-                </div>
-              </div>
             </div>
           </form>
 
@@ -134,9 +119,7 @@
     <InviteCodeModal
       :visible="showInviteCodeModal"
       :initial-code="inviteCode"
-      @close="showInviteCodeModal = false"
       @confirm="handleInviteCodeConfirm"
-      @skip="handleInviteCodeSkip"
     />
 
     <div class="load" v-if="isShowLoad">
@@ -204,16 +187,14 @@ declare global {
 onMounted(() => {
   checkGrecaptcha();
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const fromParam = urlParams.get("from");
-  if (fromParam) {
-    inviteCode.value = fromParam;
-  }
-
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("rType");
-  if (!token && type == "1") {
+  const savedInviteCode = localStorage.getItem("invite_code");
+
+  if (!token && type == "1" && savedInviteCode) {
     googleRegister();
+  } else {
+    showInviteCodeModal.value = true;
   }
 
   if (token) {
@@ -246,25 +227,21 @@ function initGoogle() {
   document.head.appendChild(script);
 }
 
+function handleInviteCodeConfirm(inviteCodeStr: string) {
+  inviteCode.value = inviteCodeStr;
+  showInviteCodeModal.value = false;
+}
+
 function showGoogle() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const fromParam = urlParams.get("from");
-  if (fromParam) {
-    localStorage.setItem('inviteCode', fromParam);
+  const savedInviteCode = localStorage.getItem("invite_code");
+  if (savedInviteCode) {
     redirectToGoogle();
-    return;
+  } else if (inviteCode.value) {
+    localStorage.setItem("invite_code", inviteCode.value);
+    redirectToGoogle();
+  } else {
+    showInviteCodeModal.value = true;
   }
-  showInviteCodeModal.value = true;
-}
-
-function handleInviteCodeConfirm(inviteCode: string) {
-  showInviteCodeModal.value = false;
-  redirectToGoogle();
-}
-
-function handleInviteCodeSkip() {
-  showInviteCodeModal.value = false;
-  redirectToGoogle();
 }
 
 function redirectToGoogle() {
@@ -354,8 +331,15 @@ function handleSubmit() {
                 formData.append("g-recaptcha-response", token);
                 formData.append("siteKey", siteKey);
 
+                const userToken = localStorage.getItem("token") || "";
+                const { ts, sign } = window.AntiCrawler.generateAuthParams(userToken);
+
                 fetch(baseUrl + "login/sendEmailVerifyCode", {
                   method: "post",
+                  headers: {
+                    "ts": ts,
+                    "sign": sign
+                  },
                   body: formData,
                 })
                   .then((response) => response.json())
@@ -445,7 +429,7 @@ function goEmailRegister() {
       email: email.value,
       password: password.value,
       code: code.value,
-      invite_code: inviteCode.value,
+      referral_code: inviteCode.value,
       "g-recaptcha-response": emailToken.value
   };
 
@@ -489,7 +473,7 @@ function googleRegister() {
 
   const googleData = {
     code: googleCode,
-    invite_code: invite_code
+    referral_code: invite_code
   };
 
   api

@@ -11,7 +11,7 @@
       <!-- User Info Card -->
       <div class="user-info-card">
         <div class="info-left">
-          <img class="avatar" :src="userInfo.avatar || defaultAvatar" alt="avatar" />
+          <img class="avatar" :src="userInfo.avatar || defaultAvatar" alt="avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         </div>
 
         <div class="info-right">
@@ -19,6 +19,9 @@
             <div class="text-info">
               <div class="name-row">
                 <span class="nickname">{{ userInfo.nickname }}</span>
+              </div>
+              <div class="kyc-row" v-if="userInfo.kyc_status == 1">
+                <span>{{ t("userHome.verified") }}</span>
               </div>
               <!-- <div class="id-row">{{ t("userHome.info.id") }}: {{ userInfo.id }}</div> -->
             </div>
@@ -91,7 +94,7 @@
             v-for="type in contentTypes"
             :key="type.id"
             class="type-item"
-            :class="{ active: activeContentType == type.id }"
+            :class="{ active: viewMode === 'posts' && activeContentType == type.id }"
             @click="setActiveContentType(type.id)"
           >
             {{ type.label }} ({{ type.count }})
@@ -126,20 +129,28 @@
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
           <div class="filter-bar">
-            <div class="tabs">
-              <div
-                v-for="tab in collectionTabs"
-                :key="tab.id"
-                class="tab-item"
-                :class="{ active: activeCollectionTab == tab.id }"
-                @click="setActiveCollectionTab(tab.id)"
-              >
-                <span v-if="tab.id == 0" class="tab-label">{{ tab.label }}</span>
-                <template v-else>
-                  <span class="tab-title">{{ tab.title }}</span>
-                  <span class="tab-count">({{ tab.count }})</span>
-                </template>
+            <div class="collection-tabs-container">
+              <button class="tab-prev-btn" @click="prevCollectionPage" v-if="totalCollectionPages > 1 && currentCollectionPage > 1">
+                <img src="@/assets/images/user/left.png" alt="上一页" />
+              </button>
+              <div class="tabs">
+                <div
+                  v-for="tab in currentPageCollectionTabs"
+                  :key="tab.id"
+                  class="tab-item"
+                  :class="{ active: activeCollectionTab == tab.id }"
+                  @click="setActiveCollectionTab(tab.id)"
+                >
+                  <span v-if="tab.id == 0" class="tab-label">{{ tab.label }}</span>
+                  <template v-else>
+                    <span class="tab-title">{{ tab.title }}</span>
+                    <span class="tab-count">({{ tab.count }})</span>
+                  </template>
+                </div>
               </div>
+              <button class="tab-next-btn" @click="nextCollectionPage" v-if="totalCollectionPages > 1 && currentCollectionPage < totalCollectionPages">
+                <img src="@/assets/images/user/right.png" alt="下一页" />
+              </button>
             </div>
 
             <div class="filters">
@@ -156,7 +167,7 @@
 
                 <div class="dropdown-menu bottom" v-if="showCollectionMenu">
                   <div class="menu-item" @click="editCollectionName">{{ t('userHome.collection.editName') }}</div>
-                  <div class="menu-item delete" v-if="currentCollection?.chapters?.length === 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
+                  <div class="menu-item delete" v-if="currentCollection?.chapters?.length == 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
                 </div>
               </div>
             </div>
@@ -235,7 +246,7 @@
 
         <!-- Follow/Fans List View -->
         <template v-else>
-          <div class="filter-bar">
+          <!-- <div class="filter-bar">
             <div class="tabs">
               <div
                 v-for="tab in [{ key: 'following', label: t('userHome.tabs.following') }, { key: 'fans', label: t('userHome.tabs.fans') }]"
@@ -247,7 +258,7 @@
                 {{ tab.label }}
               </div>
             </div>
-          </div>
+          </div> -->
 
           <div class="follow-container">
             <div class="privacy-hidden" v-if="isPrivacyHidden">
@@ -264,7 +275,7 @@
                 <div class="follow-list" v-if="followList.length > 0">
                   <div class="follow-card" v-for="user in followList" :key="user.id">
                     <div class="card-top">
-                      <img :src="user.avatar || defaultAvatar" class="user-avatar" @click="goUserHome(user.id)" />
+                      <img :src="user.avatar || defaultAvatar" class="user-avatar" @click="goUserHome(user.id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <div class="user-meta">
                         <div class="nickname">{{ user.nickname }}</div>
                         <div class="fans-count">
@@ -450,6 +461,7 @@ interface UserInfo {
   total_posts_1?: number;
   total_posts_2?: number;
   total_posts_3?: number;
+  kyc_status?: number | string;
 }
 
 // User Info
@@ -473,7 +485,7 @@ const userInfo = ref<UserInfo>({
   total_posts: 0,
   total_posts_1: 0,
   total_posts_2: 0,
-  total_posts_3: 0,
+  total_posts_3: 0
 });
 
 const reportTarget = ref<{ type: string; id: number | string } | null>(null);
@@ -524,6 +536,7 @@ function getSubscriptionPrice() {
 const moreMenuRef = ref<HTMLElement | null>(null);
 const collectionMenuRef = ref<HTMLElement | null>(null);
 
+
 const isSelf = computed(() => {
   const localUid = localStorage.getItem("uid");
   return localUid === userInfo.value.id;
@@ -542,6 +555,9 @@ const contentTypes = computed(() => [
 
 const activeContentType = ref(2);
 
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
+
 // Collection tabs
 interface CollectionTab {
   id: number;
@@ -554,9 +570,14 @@ const collectionTabs = ref<CollectionTab[]>([
   { id: 0, label: t('userHome.collection.all') }
 ]);
 
+
+
 const activeCollectionTab = ref(0);
 const sortBy = ref('oldest');
 const showCollectionMenu = ref(false);
+
+const currentCollectionPage = ref(1);
+const collectionPageSize = 6;
 
 // Edit collection modal
 const showEditCollectionModal = ref(false);
@@ -569,6 +590,16 @@ const collections = ref<any[]>([]);
 const currentCollection = computed(() => {
   if (activeCollectionTab.value === 0) return null;
   return collections.value.find(col => col.id === activeCollectionTab.value) || null;
+});
+
+const totalCollectionPages = computed(() => {
+  return Math.ceil(collectionTabs.value.length / collectionPageSize);
+});
+
+const currentPageCollectionTabs = computed(() => {
+  const start = (currentCollectionPage.value - 1) * collectionPageSize;
+  const end = start + collectionPageSize;
+  return collectionTabs.value.slice(start, end);
 });
 
 // Fetch collections based on content type
@@ -599,6 +630,9 @@ async function fetchCollections() {
           count: collection.chapters?.length || 0
         });
       });
+
+      // Reset pagination when collections change
+      currentCollectionPage.value = 1;
     }
   } catch (error) {
     console.error('Error fetching collections:', error);
@@ -666,7 +700,7 @@ async function fetchUserInfo() {
   }
 
   const localUid = localStorage.getItem('uid');
-  const isSelf = localUid === authorId;
+  const isSelf = localUid == authorId;
 
   loadingUserInfo.value = true;
   try {
@@ -702,6 +736,7 @@ async function fetchUserInfo() {
         total_posts_1: parseInt(data.data?.total_posts_1 || '0'),
         total_posts_2: parseInt(data.data?.total_posts_2 || '0'),
         total_posts_3: parseInt(data.data?.total_posts_3 || '0'),
+        kyc_status: data.data?.kyc_status || 0,
       };
 
     } else {
@@ -731,6 +766,22 @@ const pinnedPosts = computed(() => {
 
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
+
+  window.scrollTo(0, 0);
+
+  // Restore last content type if coming back from detail page
+  try {
+    const lastContentType = localStorage.getItem('userHomeContentType');
+    if (lastContentType !== null) {
+      const contentTypeNum = parseInt(lastContentType, 10);
+      if (!isNaN(contentTypeNum)) {
+        activeContentType.value = contentTypeNum;
+      }
+      localStorage.removeItem('userHomeContentType');
+    }
+  } catch (error) {
+    console.error('Error loading last content type:', error);
+  }
 
   // First fetch user info
   await fetchUserInfo();
@@ -905,6 +956,7 @@ function getEndDate() {
 
 // Set active content type
 function setActiveContentType(typeId: number) {
+  viewMode.value = "posts"; // Ensure we switch back to posts view
   activeContentType.value = typeId;
   activeCollectionTab.value = 0; // Reset to "All" tab
   fetchCollections();
@@ -917,6 +969,20 @@ function setActiveCollectionTab(tabId: number) {
   loadPosts(true);
 }
 
+function prevCollectionPage() {
+  if (currentCollectionPage.value > 1) {
+    currentCollectionPage.value--;
+  }
+}
+
+function nextCollectionPage() {
+  if (currentCollectionPage.value < totalCollectionPages.value) {
+    currentCollectionPage.value++;
+  }
+}
+
+
+
 // Delete collection
 async function deleteCollection() {
   showCollectionMenu.value = false;
@@ -928,16 +994,18 @@ async function deleteCollection() {
     const book_id = currentCollection.value.id;
 
     // Call delete collection API
-    await api.deleteCollection({ book_id });
+    const res = await api.deleteCollection({ book_id }) as any;
 
-    // Refresh collections
-    await fetchCollections();
+    if (res.code == 0) {
+      toast(t('succcess'));
+      // Refresh collections
+      await fetchCollections();
+    } else {
+      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+    }
 
     // Reset to all tab
     activeCollectionTab.value = 0;
-
-    // Show success message
-    toast(t('userHome.collection.deleted'));
   } catch (error) {
     console.error('Error deleting collection:', error);
     toast(t('fail'));
@@ -986,6 +1054,7 @@ function goToPosts(fromRouteOrEvent: boolean | MouseEvent = false) {
 
   viewMode.value = "posts";
   currentTab.value = "all";
+  activeContentType.value = 2; // Ensure novel tab (id=2) is selected
   loadPosts(true);
 
   if (!fromRoute) {
@@ -1184,6 +1253,15 @@ async function loadPosts(reset = false) {
     noMore.value = false;
   }
 
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current tab and filter at the time of the request
+  const currentContentType = activeContentType.value;
+  const currentCollectionTab = activeCollectionTab.value;
+  const currentSortBy = sortBy.value;
+  const currentSearchKeyword = searchKeyword.value;
+  const currentDateRange = dateRange.value;
+
   loading.value = true;
   let authorId = route.query.id;
 
@@ -1238,6 +1316,22 @@ async function loadPosts(reset = false) {
         sort,
         book_id
       );
+    }
+
+    // Check if this request is still the latest one
+    if (requestId !== currentRequestId.value) {
+      loading.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the tab or filter has changed while the request was in flight
+    if (currentContentType !== activeContentType.value ||
+        currentCollectionTab !== activeCollectionTab.value ||
+        currentSortBy !== sortBy.value ||
+        currentSearchKeyword !== searchKeyword.value ||
+        JSON.stringify(currentDateRange) !== JSON.stringify(dateRange.value)) {
+      loading.value = false;
+      return; // Skip processing this response as the tab or filter has changed
     }
 
     const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
@@ -1306,6 +1400,8 @@ async function loadPosts(reset = false) {
 }
 
 function goDetail(id: number) {
+  // Save current content type before navigating
+  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
   const queryParams: any = {
     id: id,
     type: 4,
@@ -1483,6 +1579,9 @@ async function unpinPost(post: Post) {
 function editPost(post: Post) {
   activeCardMenuId.value = null;
 
+  // Save current content type before navigating
+  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
+
   // Navigate to edit page based on post type
   if (post.type == 'video') {
     router.push({ path: '/publish/video', query: { post_id: post.id.toString() } });
@@ -1586,11 +1685,27 @@ async function deletePost(post: Post) {
         .name-row {
           display: flex;
           align-items: center;
-          margin-bottom: 0.4rem;
           .nickname {
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: 500;
             color: #101828;
+          }
+        }
+        .kyc-row {
+          display: flex;
+
+          span{
+            min-width: 5.6rem;
+            height: 2.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.8rem;
+            padding: 0 1rem;
+            border-radius: 0.6rem;
+            font-size: 1.2rem;
+            background: rgba(251,100,182,0.12);
+            color: #FB64B6;
           }
         }
         .id-row {
@@ -1772,8 +1887,8 @@ async function deletePost(post: Post) {
               cursor: pointer;
               text-align: center;
               &:hover {
-                font-weight: bold;
-                color: #101828;
+                font-weight: 500;
+                color: #364153;
               }
             }
           }
@@ -1890,33 +2005,78 @@ async function deletePost(post: Post) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2.4rem;
+  gap: 0.8rem;
 
-  .tabs {
+  .collection-tabs-container {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 1.6rem;
-    height: 100%;
-    .tab-item {
-      display: flex;
-      align-items: baseline;
-      flex-shrink: 0;
-      font-size: 1.4rem;
-      color: #6A7282;
-      cursor: pointer;
-      position: relative;
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
+    align-items: center;
+    gap: 0.8rem;
+    flex: 1;
 
-      &.active {
-        background: #F5F5F5;
+    .tab-prev-btn,
+    .tab-next-btn {
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+
+      img {
+        width: 2rem;
+        height: 2rem;
       }
 
-      .tab-title {
-        max-width: 16rem;
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.8rem;
+      height: 100%;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 14.8rem;
+        font-size: 1.4rem;
+        color: #6A7282;
+        cursor: pointer;
+        position: relative;
+        padding: 0.8rem 1.6rem;
+        border: 1px solid #F5F5F5;
+        border-radius: 0.6rem;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+
+        &.active {
+          background: #F5F5F5;
+        }
+
+        .tab-title {
+          flex: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .tab-count {
+          margin-left: 0.4rem;
+          font-size: 1.2rem;
+          color: #99A1AF;
+        }
       }
     }
   }
@@ -2102,8 +2262,8 @@ async function deletePost(post: Post) {
               cursor: pointer;
               text-align: center;
               &:hover {
-                font-weight: bold;
-                color: #101828;
+                font-weight: 500;
+                color: #364153;
               }
             }
           }
@@ -2206,7 +2366,7 @@ async function deletePost(post: Post) {
       margin-bottom: 1.2rem;
     }
     p {
-      font-weight: bold;
+      font-weight: 500;
       font-size: 1.6rem;
       color: #99A1AF;
     }
@@ -2252,7 +2412,7 @@ async function deletePost(post: Post) {
         flex: 1;
         .nickname {
           font-size: 1.4rem;
-          font-weight: 600;
+          font-weight: 500;
           color: #101828;
           margin-bottom: 0.6rem;
         }
@@ -2334,7 +2494,7 @@ async function deletePost(post: Post) {
         background: transparent;
         &.is-active {
           color: #fb64b6;
-          font-weight: bold;
+          font-weight: 500;
         }
         &:hover {
           color: #fb64b6;
@@ -2390,7 +2550,7 @@ async function deletePost(post: Post) {
 
       .title {
         font-size: 1.6rem;
-        font-weight: 600;
+        font-weight: 500;
         color: #364153;
       }
     }

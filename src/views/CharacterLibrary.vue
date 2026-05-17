@@ -123,6 +123,9 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const activeTab = ref('official');
 
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
+
 // Computed
 const filteredCharacters = computed(() => {
   return characters.value;
@@ -178,12 +181,31 @@ function handleCastCharacter(character: any) {
 }
 
 async function loadCharacters() {
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current tab and page at the time of the request
+  const currentTab = activeTab.value;
+  const currentPageValue = currentPage.value;
+
   isLoading.value = true;
   error.value = null;
   try {
     // Use type 2 for official characters, 1 for user characters
     const type = activeTab.value === 'official' ? 2 : 1;
     const response = await api.getCharacters(type, currentPage.value, itemsPerPage) as any;
+
+    // Check if this request is still the latest one
+    if (requestId !== currentRequestId.value) {
+      isLoading.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the tab or page has changed while the request was in flight
+    if (currentTab !== activeTab.value || currentPageValue !== currentPage.value) {
+      isLoading.value = false;
+      return; // Skip processing this response as the tab or page has changed
+    }
+
     if (response.code == 200 && response.data) {
       if (response.data.data_list) {
         characters.value = response.data.data_list.map((item: any) => ({
@@ -228,6 +250,8 @@ watch(currentPage, () => {
 
 // Lifecycle
 onMounted(() => {
+  window.scrollTo(0, 0);
+
   loadCharacters();
 });
 </script>

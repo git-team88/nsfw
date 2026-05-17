@@ -1,11 +1,11 @@
 <template>
   <div class="invite-code-modal" v-if="visible">
-    <div class="modal-overlay" @click="close"></div>
+    <div class="modal-overlay"></div>
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="close" />
+      <img class="logo" src="@/assets/images/register/logo.png" alt="MoeGen" />
 
       <div class="modal-header">
-        <h3>{{ t('inviteCode.title') }}</h3>
+      {{ t('inviteCode.title') }}
       </div>
 
       <div class="modal-body">
@@ -15,17 +15,16 @@
             v-model="inviteCode"
             type="text"
             class="invite-code-input"
-            maxlength="4"
             spellcheck="false"
-            :placeholder="t('inviteCode.enterCode')"
+            :placeholder="t('inviteCode.title')"
           />
+        </div>
+        <div class="error-container" v-if="errorMessage">
+          <p class="error-message">{{ errorMessage }}</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="confirm-btn" @click="confirm">{{ t('inviteCode.confirm') }}</button>
-        <div class="skip-link" @click="skip">{{ t('inviteCode.noCode') }}
-          <span>{{ t('inviteCode.skip') }}→</span>
-        </div>
+        <button class="confirm-btn" :disabled="!inviteCode" @click="confirm">{{ t('inviteCode.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -35,8 +34,9 @@
 import { toast } from '@/util/toast';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import api from '@/api';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
   visible: {
@@ -49,9 +49,10 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close', 'confirm', 'skip']);
+const emit = defineEmits(['confirm']);
 
 const inviteCode = ref('');
+const errorMessage = ref('');
 
 watch(() => props.initialCode, (newCode) => {
   if (newCode) {
@@ -59,27 +60,29 @@ watch(() => props.initialCode, (newCode) => {
   }
 }, { immediate: true });
 
-const close = () => {
-  inviteCode.value = props.initialCode;
+watch(() => props.visible, (newVisible) => {
+  if (newVisible) {
+    errorMessage.value = '';
+  }
+});
 
-  emit('close');
-};
-
-const confirm = () => {
+const confirm = async () => {
   if (!inviteCode.value) {
-    console.log(t('inviteCode.inviteError'))
-    toast(t('inviteCode.inviteError'));
-    return false;
+    errorMessage.value = t('inviteCode.inviteError');
+    return;
   }
 
-  if (inviteCode.value) {
-    localStorage.setItem('invite_code', inviteCode.value);
-  }
-  emit('confirm', inviteCode.value);
-};
+  try {
+    const data = await api.checkCode({ referral_code: inviteCode.value }) as any;
 
-const skip = () => {
-  emit('skip');
+    if (data.code == 0 || data.code == 200) {
+      emit('confirm', inviteCode.value);
+    } else {
+      errorMessage.value = locale.value == 'jp' ?  data.msg_jp : data.msg;
+    }
+  } catch (error) {
+    errorMessage.value = t('inviteCode.inviteError');
+  }
 };
 </script>
 
@@ -107,120 +110,119 @@ const skip = () => {
 
 .modal-content {
   position: relative;
-  background-color: #ffffff;
-  border-radius: 1.6rem;
-  width: 52rem;
-  z-index: 1001;
+  background-color: #FFFFFF;
+  border-radius: 1.2rem;
+  width: 44rem;
+  z-index: 510;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  padding: 2rem 3rem 3rem;
+  box-sizing: border-box;
 }
 
-.close-btn {
-  position: absolute;
-  top: 2rem;
-  right: 1.8rem;
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
+.logo {
+  width: 16.4rem;
+  height: 3.8rem;
 }
 
 .modal-body {
   width: 100%;
-  padding: 1.8rem 2.4rem;
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
 }
 
 .modal-header {
   width: 100%;
-  padding: 1.8rem 2rem;
-  border-bottom: 1px solid #F5F5F5;
-
-  h3 {
-    font-size: 1.6rem;
-    font-weight: 500;
-    color: #364153;
-    margin: 0;
-  }
+  margin-top: 2rem;
+  font-weight: bold;
+  font-size: 2rem;
+  color: #101828;
 }
 
 .modal-description {
-  font-size: 1.4rem;
-  color: #6A7282;
-  margin: 0 0 1.2rem;
+  font-size: 1.6rem;
+  color: #99A1AF;
 }
 
 .input-section {
   width: 100%;
+  margin-top: 3rem;
 }
 
 .invite-code-input {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 5rem;
-  padding: 1rem;
+  padding: 0 1.6rem;
   border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  font-weight: 500;
+  text-align: center;
   color: #101828;
   outline: none;
   background: #F5F5F5;
 }
 
 .invite-code-input:focus {
-  border-color: #fb64b6;
+  border-color: #FB64B6;
 }
 
 .invite-code-input::placeholder {
   color: #99A1AF;
+  font-weight: normal;
+}
+
+.error-container {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.error-message {
+  font-size: 1.4rem;
+  color: #FA2D47;
 }
 
 .modal-footer {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  padding: 1.8rem 0;
-  border-top: 1px solid #F5F5F5;;
+  padding-top: 2rem;
 }
 
 .confirm-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24rem;
-  height: 4.8rem;
-  margin: 0 auto;
-  background: #fb64b6;
+  width: 100%;
+  height: 5rem;
+  background: #FB64B6;
   border-radius: 0.8rem;
   color: #ffffff;
   font-size: 1.4rem;
-  border: none;
+  border: 1px solid #F5F5F5;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-  &:hover{
-    position: relative;
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
-    }
+.confirm-btn:hover:not(:disabled),
+.confirm-btn:active:not(:disabled) {
+  position: relative;
+
+  &::after{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
-.skip-link {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #99A1AF;
-  cursor: pointer;
-
-  span{
-    color: #6A7282;
-  }
+.confirm-btn:disabled {
+  background: rgba(251, 100, 182, 0.5);
+  cursor: not-allowed;
 }
 </style>

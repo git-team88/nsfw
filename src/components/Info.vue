@@ -147,10 +147,13 @@ function upload() {
       const formData = new FormData();
       formData.append("file", file);
 
+      const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
       const parma = {
         method: "POST",
         headers: {
           token: token,
+          ...authHeaders,
         },
         body: formData,
       };

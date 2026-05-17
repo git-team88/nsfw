@@ -10,6 +10,8 @@ import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import ProcessList from "./components/ProcessList.vue";
 
+import 'swiper/swiper-bundle.css';
+
 const app = createApp(App);
 app.use(i18n);
 app.use(router);

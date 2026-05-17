@@ -78,13 +78,13 @@
         <div class="user">
           <div class="head-avatar-box" v-if="isLogin">
             <div class="head-avatar" @click="showExit()">
-              <img :src="userInfo?.info?.avatar" alt="" />
+              <img :src="userInfo?.info?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
             </div>
 
             <div class="user-card" v-if="isShowExit">
               <div class="us-top-box">
                 <div class="uc-top" @click="toUserHome()">
-                  <img class="uc-avatar" :src="userInfo?.info?.avatar" alt="" />
+                  <img class="uc-avatar" :src="userInfo?.info?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                   <div class="uc-meta">
                     <div class="uc-name">{{ userInfo?.info?.nickname || "" }}</div>
                     <!-- <div class="uc-id">ID: {{ userInfo?.info?.id || "" }}</div> -->
@@ -138,12 +138,6 @@
     <UploadMask v-if="isShowLoad" :visible="isShowLoad" :text="t('loading')" />
 
     <Agree ref="agreeRef" @toRegister="toRegister"></Agree>
-    <AICreationsModal
-      v-if="isShowAICreationsModal"
-      :visible="isShowAICreationsModal"
-      :creations="aiCreations"
-      @close="closeAICreationsModal"
-    />
 
     <LogoutModal
       :visible="isShowLogoutModal"
@@ -155,9 +149,9 @@
 
 <script setup lang="ts" name="AppHeader">
 import Agree from "@/components/Agree.vue";
-import AICreationsModal from "@/components/AICreationsModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 import { onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
@@ -165,6 +159,7 @@ import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import router from "@/router";
+import { eventBus } from "@/utils/eventBus";
 
 const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated', 'balanceInfoLoaded']);
 const route = useRoute();
@@ -227,7 +222,7 @@ const menuItems = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
-  { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
+  // { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
   { key: "messages", label: "user.sidebar.messages", path: "/user-message" },
@@ -329,6 +324,11 @@ watch(locale, () => {
   ];
 });
 
+const handleLogout = () => {
+  isLogin.value = false;
+  userInfo.value = null;
+};
+
 onMounted(() => {
   const token = localStorage.getItem("token");
   navIndex.value = props.cur;
@@ -341,10 +341,14 @@ onMounted(() => {
   }
 
   document.addEventListener("click", handleClick);
+  window.addEventListener('userLogout', handleLogout);
+
+  eventBus.on('balanceUpdated', getBalance);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClick);
+  window.removeEventListener('userLogout', handleLogout);
 });
 
 const handleClick = (event: MouseEvent) => {
@@ -396,44 +400,7 @@ function goNav(item: { path: string; name?: string }, index: number) {
 }
 
 function goPath(type: { path: string; name: string }) {
-  router.replace(type.path);
-  // if (type.name == t('header.type1')) {
-  //   fetchAICreations();
-  // } else {
-  //   router.replace(type.path);
-  // }
-}
-
-async function fetchAICreations() {
-  isShowLoad.value = true;
-  try {
-    const res = await api.getProject(2, 1, 'story', 1, 10, 'desc', 1) as any;
-
-    if (res.code === 0 || res.code === 200) {
-      const data = res.data?.data_list || [];
-
-      aiCreations.value = data.map((item: any) => ({
-        id: item.id,
-        type: item.type === '1' ? 'video' : 'image',
-        title: item.title,
-        thumbnail: item.cover || item.image,
-        videoUrl: item.video_url,
-        createdAt: item.created_at
-      }));
-
-      if (aiCreations.value.length === 0) {
-        toast(t('header.aiTip'));
-      } else {
-        isShowAICreationsModal.value = true;
-      }
-    } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
-    }
-  } catch (error) {
-    toast(t('fail'));
-  } finally {
-    isShowLoad.value = false;
-  }
+  router.push(type.path);
 }
 
 function closeAICreationsModal() {
@@ -538,7 +505,7 @@ function getLoginUserInfo() {
     .then((res) => {
       const data = res as any;
       if (data.code === 0) {
-        userInfo.value = res.data;
+        userInfo.value = data.data;
 
         localStorage.setItem('uid', data.data.info.id)
       } else {

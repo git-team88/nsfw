@@ -195,13 +195,18 @@ const loadingFan = ref(false);
 const loadingOverall = ref(false);
 const loadingWork = ref(false);
 
+// Request identifiers to avoid race conditions
+const currentFanRequestId = ref(0);
+const currentOverallRequestId = ref(0);
+const currentWorkRequestId = ref(0);
+
 function formatSci(n: number | null) {
   if (n == null) return "";
   return Number(n).toLocaleString();
 }
 function formatChange(n: number) {
   const abs = formatSci(Math.abs(n));
-  return `${n >= 0 ? "+" : ""}${abs}`;
+  return `${n >= 0 ? "+" : "-"}${abs}`;
 }
 
 function getDefaultDateRange() {
@@ -243,9 +248,27 @@ const limit = 10;
 
 // Fetch fans data
 async function fetchFan(page: number) {
+  // Generate a unique request ID for this request
+  const requestId = ++currentFanRequestId.value;
+  // Store the current range at the time of the request
+  const currentRange1 = range1.value;
+
   loadingFan.value = true;
   try {
     const res = await api.userFansList(page, limit, range1.value.start, range1.value.end) as any;
+
+    // Check if this request is still the latest one
+    if (requestId !== currentFanRequestId.value) {
+      loadingFan.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the range has changed while the request was in flight
+    if (currentRange1.start !== range1.value.start || currentRange1.end !== range1.value.end) {
+      loadingFan.value = false;
+      return; // Skip processing this response as the range has changed
+    }
+
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data || [];
       totalFan.value = parseInt(res.data?.allnums || "0");
@@ -274,9 +297,27 @@ async function fetchFan(page: number) {
 
 // Fetch overall work data
 async function fetchOverall(page: number) {
+  // Generate a unique request ID for this request
+  const requestId = ++currentOverallRequestId.value;
+  // Store the current range at the time of the request
+  const currentRange1 = range1.value;
+
   loadingOverall.value = true;
   try {
     const res = await api.userWorkList(page, limit, range1.value.start, range1.value.end) as any;
+
+    // Check if this request is still the latest one
+    if (requestId !== currentOverallRequestId.value) {
+      loadingOverall.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the range has changed while the request was in flight
+    if (currentRange1.start !== range1.value.start || currentRange1.end !== range1.value.end) {
+      loadingOverall.value = false;
+      return; // Skip processing this response as the range has changed
+    }
+
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data || [];
       totalOverall.value = parseInt(res.data?.allnums || "0");
@@ -300,9 +341,27 @@ async function fetchOverall(page: number) {
 
 // Fetch individual work data
 async function fetchWork(page: number) {
+  // Generate a unique request ID for this request
+  const requestId = ++currentWorkRequestId.value;
+  // Store the current range at the time of the request
+  const currentRange2 = range2.value;
+
   loadingWork.value = true;
   try {
     const res = await api.userSingleWorkList(page, limit, range2.value.start, range2.value.end) as any;
+
+    // Check if this request is still the latest one
+    if (requestId !== currentWorkRequestId.value) {
+      loadingWork.value = false;
+      return; // Skip processing this response as it's outdated
+    }
+
+    // Check if the range has changed while the request was in flight
+    if (currentRange2.start !== range2.value.start || currentRange2.end !== range2.value.end) {
+      loadingWork.value = false;
+      return; // Skip processing this response as the range has changed
+    }
+
     if (res.code === 0 || res.code === 200) {
       const data = res.data?.data || [];
       totalWork.value = parseInt(res.data?.allnums || "0");

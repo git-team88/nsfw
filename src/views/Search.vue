@@ -95,7 +95,7 @@
                 <div class="content-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
                 <div class="content-meta">
                   <div class="author-info" @click.stop="goToUserHome(post.author.id)">
-                    <img :src="post.author.avatar" alt="" class="author-avatar" />
+                    <img :src="post.author.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                     <span class="author-name">{{ post.author.nickname }}</span>
                   </div>
                 </div>
@@ -113,7 +113,7 @@
             class="user-card"
           >
             <div class="card-top">
-              <img :src="user.avatar" alt="Avatar" class="user-avatar" @click="goToUserHome(user.id)" />
+              <img :src="user.avatar || defaultAvatar" alt="Avatar" class="user-avatar" @click="goToUserHome(user.id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
               <div class="user-meta" @click="goToUserHome(user.id)">
                 <div class="nickname">{{ user.nickname }}</div>
                 <div class="fans-count">
@@ -189,6 +189,7 @@ const checkLogin = () => {
 
 import likeActive from '@/assets/images/detail/like_active.png';
 import like from '@/assets/images/home/like.png';
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 // Types
 interface Post {
@@ -224,7 +225,7 @@ const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 2, label: t('home.contentType.novel') },
   { id: 1, label: t('home.contentType.comic') },
-  { id: 3, label: t('home.contentType.video') }
+  { id: 3, label: t('home.contentType.drama') }
 ]);
 
 // Refs for waterfall layout
@@ -248,6 +249,9 @@ const usersHasMore = ref(true);
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
 
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
+
 watch(() => locale.value, () => {
   tabs.value = [
     { value: 'posts', label: t('search.posts') },
@@ -258,7 +262,7 @@ watch(() => locale.value, () => {
     { id: 0, label: t('home.contentType.all') },
     { id: 2, label: t('home.contentType.novel') },
     { id: 1, label: t('home.contentType.comic') },
-    { id: 3, label: t('home.contentType.video') }
+    { id: 3, label: t('home.contentType.drama') }
   ]
 });
 
@@ -329,6 +333,13 @@ function setPostFilter(filter: number) {
 async function loadData(fromLoadMore = false) {
   if (isLoading.value || isLoadingMore.value) return;
 
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current tab and filter at the time of the request
+  const currentActiveTab = activeTab.value;
+  const currentPostFilter = postFilter.value;
+  const currentSearchKeyword = searchKeyword.value;
+
   if (fromLoadMore) {
     isLoadingMore.value = true;
   } else {
@@ -343,6 +354,20 @@ async function loadData(fromLoadMore = false) {
         page: postsPage.value,
         limit: postsLimit.value
       }) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+
+      // Check if this request is still the latest one
+      if (requestId !== currentRequestId.value) {
+        isLoading.value = false;
+        isLoadingMore.value = false;
+        return; // Skip processing this response as it's outdated
+      }
+
+      // Check if the tab or filter has changed while the request was in flight
+      if (currentActiveTab !== activeTab.value || currentPostFilter !== postFilter.value || currentSearchKeyword !== searchKeyword.value) {
+        isLoading.value = false;
+        isLoadingMore.value = false;
+        return; // Skip processing this response as the tab or filter has changed
+      }
 
       if (res.code == 0 || res.code == 200) {
         const newPosts = (res.data?.data || []).map((item: any) => {
@@ -429,6 +454,20 @@ async function loadData(fromLoadMore = false) {
         18
       ) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
 
+      // Check if this request is still the latest one
+      if (requestId !== currentRequestId.value) {
+        isLoading.value = false;
+        isLoadingMore.value = false;
+        return; // Skip processing this response as it's outdated
+      }
+
+      // Check if the tab has changed while the request was in flight
+      if (currentActiveTab !== activeTab.value || currentSearchKeyword !== searchKeyword.value) {
+        isLoading.value = false;
+        isLoadingMore.value = false;
+        return; // Skip processing this response as the tab has changed
+      }
+
       if (res.code === 0 || res.code === 200) {
         const userList = res.data?.data || [];
         if (usersPage.value === 1) {
@@ -478,6 +517,8 @@ const layoutWaterfall = () => {
 };
 
 function goToDetail(postId: number) {
+  // Save current post filter before navigating
+  localStorage.setItem('searchPostFilter', postFilter.value.toString());
   // if (type === 2) {
   //   router.push(`/novel-detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
   // } else {
@@ -587,7 +628,22 @@ function formatDuration(duration: number) {
 
 // Lifecycle
 onMounted(async () => {
+  window.scrollTo(0, 0);
   window.addEventListener("resize", layoutWaterfall);
+
+  // Restore last post filter if coming back from detail page
+  try {
+    const lastPostFilter = localStorage.getItem('searchPostFilter');
+    if (lastPostFilter !== null) {
+      const filterNum = parseInt(lastPostFilter, 10);
+      if (!isNaN(filterNum)) {
+        postFilter.value = filterNum;
+      }
+      localStorage.removeItem('searchPostFilter');
+    }
+  } catch (error) {
+    console.error('Error loading last post filter:', error);
+  }
 
   // Set up intersection observer for infinite scroll
   // 使用 nextTick 确保 DOM 已渲染
@@ -859,19 +915,19 @@ watch(postList, () => {
     padding: 1.2rem 0 0;
 
     .content-desc {
-          font-size: 1.4rem;
-          color: #101828;
-          line-height: 2rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+      margin-bottom: 1.2rem;
+      font-size: 1.4rem;
+      color: #101828;
+      line-height: 2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .content-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 1.2rem;
 
       .author-info {
         display: flex;
@@ -935,8 +991,8 @@ watch(postList, () => {
       flex: 1;
       .nickname {
         font-size: 1.4rem;
-        font-weight: 600;
-        color: #101828;
+        font-weight: 500;
+        color: #364153;
         margin-bottom: 0.6rem;
       }
       .fans-count {

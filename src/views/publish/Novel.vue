@@ -66,7 +66,7 @@
             <label class="project-label">{{ t('submit.image.novelName') }}</label>
             <div ref="projectDropdownRef" class="project-dropdown">
               <div class="custom-select" :class="{ 'open': showProjectDropdown }" @click="toggleProjectDropdown($event)">
-                <span class="select-value">{{ selectedProject?.name || t('submit.image.selectProject') }}</span>
+                <span class="select-value">{{ selectedProject?.name }}</span>
                 <div class="select-arrow">
                   <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                 </div>
@@ -82,35 +82,38 @@
             <!-- Chapter Selection -->
             <div class="chapter-selection">
               <label>{{ t('submit.image.selectChapter') }}</label>
-              <div class="chapter-select">
-                <input
-                  type="text"
-                  class="chapter-input"
-                  :value="selectedEpisode"
-                  readonly
-                />
-                <div class="chapter-buttons">
-                  <button
-                    class="chapter-btn up"
-                    @click="increaseEpisode"
-                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).length === 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).findIndex((chapter: any) => chapter.chapter == selectedEpisode) >= selectedProject.chapters.filter((chapter: any) => chapter.is_publish === 2).length - 1"
+              <div class="chapter-dropdown">
+                <div class="custom-select" :class="{ 'open': showChapterDropdown }" @click="toggleChapterDropdown($event)">
+                  <span class="select-value">{{ getChapterLabel(selectedEpisode) }}</span>
+                  <div class="select-arrow">
+                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                  </div>
+                </div>
+                <div class="custom-dropdown" v-if="showChapterDropdown">
+                  <div
+                    class="chapter-dropdown-item"
+                    :class="{ 'selected': selectedEpisode == chapter.chapter }"
+                    v-for="chapter in selectedProject?.chapters || []"
+                    :key="chapter.chapter"
+                    @click="selectChapter(chapter)"
                   >
-                    <span class="arrow-icon"></span>
-                  </button>
-                  <button
-                    class="chapter-btn down"
-                    @click="decreaseEpisode"
-                    :disabled="!selectedProject || !selectedProject.chapters || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).length == 0 || selectedProject.chapters.filter((chapter: any) => chapter.is_publish == 2).findIndex((chapter: any) => chapter.chapter == selectedEpisode) <= 0"
-                  >
-                    <span class="arrow-icon"></span>
-                  </button>
+                    <span class="chapter-number">{{ t('chapter', { chapter: chapter.chapter }) }}</span>
+                    <span class="chapter-status" v-if="chapter.is_publish == 1">{{ t('novel.published') }}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Publish Button -->
             <div class="publish-section">
-              <button class="publish-btn" @click="handlePublish">{{ t('submit.cover.confirm') }}</button>
+              <button
+                class="publish-btn"
+                :class="{ 'published': isChapterPublished }"
+                @click="handlePublish"
+                :disabled="isChapterPublished"
+              >
+                {{ isChapterPublished ? t('novel.published') : t('submit.cover.confirm') }}
+              </button>
             </div>
           </div>
         </div>
@@ -190,13 +193,13 @@
                   <img v-if="dropdownType == '@'" :src="item.avatar" class="avatar" alt="" />
                   <span class="label">{{ item.label }}</span>
                 </div>
-                <div class="item-right">
+                <!-- <div class="item-right">
                   <span class="stats">
                     {{
                       dropdownType === "#" ? `${item.views} views` : `${item.followers} followers`
                     }}
                   </span>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -355,7 +358,6 @@
             <div class="cover-row">
               <div class="cover-box">
                 <img v-if="coverPreview" :src="coverPreview" alt="" />
-                <img v-else src="@/assets/images/base/cover.png" alt="" />
               </div>
               <div class="reupload-box">
                 <button class="reupload" @click="openCoverModal">{{ t("submit.cover.set") }}</button>
@@ -420,19 +422,18 @@
   <SetArticleCoverModal
     v-model:visible="showCoverModal"
     :title="form.title"
+    :current-cover="coverPreview"
+    :project-cover="projectCover"
+    :has-title-generated-cover="hasTitleGeneratedCover"
+    :cover-color="coverColor"
+    :cover-title="coverTitle"
     @confirm="onCoverConfirmed"
-  />
-
-  <SensitiveConfirmModal
-    :visible="showSensitiveConfirm"
-    @cancel="cancelSensitive"
-    @confirm="confirmSensitive"
   />
 
   <!-- Project View Modal -->
   <ProjectNovelViewModal
     :visible="showViewModal"
-    :project="selectedProject"
+    :project="previewProject"
     @close="closeViewModal"
     @publish="handlePublish"
   />
@@ -550,7 +551,23 @@ const showCoverModal = ref(false);
 const chapterIdForPublish = ref<number | null>(null);
 const agreeToTerms = ref(false);
 
+// Check if cover is provided in the URL
+const hasUrlCover = ref(false);
+
+// Check if cover is generated by AI
+const hasAICover = ref(false);
+
+// Check if cover is from history selection
+const hasHistoryCover = ref(false);
+
+// Check if cover is generated from title
+const hasTitleGeneratedCover = ref(false);
+
+// Project cover for comparison
+const projectCover = ref('');
+
 const uploading = ref(false);
+
 const disableComments = ref(false);
 const editorHtml = ref("");
 const MAX_COUNT = 10000;
@@ -588,7 +605,7 @@ function selectDropdownItem(item: any) {
 
   // Update caption length
   if (captionRef.value) {
-    const text = captionRef.value.innerText || "";
+    const text = captionRef.value.textContent || "";
     captionLength.value = text.replace(/\n$/, "").length;
   }
 
@@ -635,14 +652,18 @@ const pageSize = ref(8);
 
 // Episode selection
 const totalEpisodes = ref(10);
-const selectedEpisode = ref(1);
+const selectedEpisode = ref(null);
 
 // View modal
 const showViewModal = ref(false);
-const selectedModalEpisode = ref(1);
+const selectedModalEpisode = ref(null);
+
+// Preview modal project (separate from selected project)
+const previewProject = ref<any>(null);
 
 // Project dropdown
 const showProjectDropdown = ref(false);
+const showChapterDropdown = ref(false);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string } | null>(null);
@@ -679,9 +700,29 @@ const canSubmit = computed(() => {
   return form.value.title.trim().length > 0 && form.value.description.trim().length > 0 && coverPreview.value;
 });
 
+// Watch route changes to update tabIndex
+watch(() => route.path, (newPath) => {
+  const tab = tabList.value.find(t => t.path === newPath);
+  if (tab) {
+    const index = tabList.value.indexOf(tab);
+    tabIndex.value = index;
+  }
+});
+
 // Cover settings
 const coverTitle = ref("");
 const coverColor = ref("#FCCEE8"); // Pink background
+
+// Load cover settings from local storage on initialization
+const loadCoverSettings = () => {
+  // Clear cover settings on every load
+  localStorage.removeItem('novelCoverSettings');
+  coverColor.value = "#FCCEE8";
+  coverTitle.value = "";
+};
+
+// Load cover settings on component mount
+loadCoverSettings();
 
 watch(locale, () => {
   tabList.value = [
@@ -704,19 +745,32 @@ watch(locale, () => {
 watch(uploadOption, (newOption) => {
   if (newOption === 'history') {
     fetchProjects();
+  } else if (newOption === 'local') {
+    // Reset selected project when switching to local upload mode
+    selectedProject.value = null;
+    selectedProjectId.value = '';
+    // Reset all cover flags
+    hasHistoryCover.value = false;
+    hasUrlCover.value = false;
+    hasAICover.value = false;
+    hasTitleGeneratedCover.value = false;
   }
+  // Reset history cover flag when switching options
+  hasHistoryCover.value = false;
 });
 
 // Handle title input and auto-generate cover
 function handleTitleInput() {
-  if (form.value.title.trim()) {
+  // Only generate cover if no existing cover from history, no cover from URL, and no AI-generated cover
+  if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
     generateCoverFromTitle();
   }
 }
 
 // Handle title blur and upload cover
 async function handleTitleBlur() {
-  if (form.value.title.trim()) {
+  // Only generate and upload cover if no existing cover from history, no cover from URL, and no AI-generated cover
+  if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
     generateCoverFromTitle();
 
     // Only upload cover if not in local upload tab
@@ -736,10 +790,13 @@ async function handleTitleBlur() {
         const formData = new FormData();
         formData.append("file", file);
 
+        const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
         const parma = {
           method: "POST",
           headers: {
             token: token,
+            ...authHeaders,
           },
           body: formData,
         };
@@ -768,70 +825,93 @@ async function handleTitleBlur() {
 async function goToNextStep() {
   // Update form.description from the contenteditable div
   if (captionRef.value) {
-    form.value.description = captionRef.value.innerText;
+    form.value.description = captionRef.value.textContent || "";
     captionLength.value = form.value.description.length;
   }
 
   if (form.value.title.trim() && form.value.description.trim()) {
-    generateCoverFromTitle();
+    // Only generate cover if no existing cover from history, no cover from URL, and no AI-generated cover
+    if (!selectedProject.value?.result_async?.generate_novel_cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
+      generateCoverFromTitle();
 
-    if (coverPreview.value) {
-      isUpload.value = true;
+      // Upload the generated cover
+      if (coverPreview.value) {
+        isUpload.value = true;
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        isUpload.value = false;
-        return false;
-      }
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const response = await fetch(coverPreview.value);
+            const blob = await response.blob();
+            const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+            const formData = new FormData();
+            formData.append("file", file);
 
-      try {
-        const response = await fetch(coverPreview.value);
-        const blob = await response.blob();
-        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-        const formData = new FormData();
-        formData.append("file", file);
+            const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
-        const parma = {
-          method: "POST",
-          headers: {
-            token: token,
-          },
-          body: formData,
-        };
+            const parma = {
+              method: "POST",
+              headers: {
+                token: token,
+                ...authHeaders,
+              },
+              body: formData,
+            };
 
-        const res = await fetch(baseUrl + "user/uploadImage", parma);
-        const data = await res.json();
-        if (data.code === 0 || data.code === 200) {
-          const url = (data?.data && (data.data.url || data.data)) || data?.url;
-          if (typeof url === "string") {
-            coverPreview.value = url;
-
-            showFullContent.value = true;
-
-            // Update the contenteditable div in the full content view
-            setTimeout(() => {
-              if (captionRef.value) {
-                captionRef.value.innerText = form.value.description;
-                captionLength.value = form.value.description.length;
+            const res = await fetch(baseUrl + "user/uploadImage", parma);
+            const data = await res.json();
+            if (data.code === 0 || data.code === 200) {
+              const url = (data?.data && (data.data.url || data.data)) || data?.url;
+              if (typeof url === "string") {
+                coverPreview.value = url;
               }
-            }, 0);
+            } else {
+              toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+            }
+          } catch (error) {
+            console.error("Cover upload error:", error);
+            toast(t('fail'));
+          } finally {
+            isUpload.value = false;
           }
-        } else {
-          toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
         }
-      } catch (error) {
-        console.error("Cover upload error:", error);
-        toast(t('fail'));
-      } finally {
-        isUpload.value = false;
       }
 
+      // Show full content after generating cover
+      showFullContent.value = true;
+
+      // Update the contenteditable div in the full content view
+      setTimeout(() => {
+        if (captionRef.value) {
+          captionRef.value.textContent = form.value.description;
+          captionLength.value = form.value.description.length;
+        }
+      }, 0);
+    } else {
+      console.log('goToNextStep - Skipping cover generation and upload');
+      // If there's an existing cover from history, URL, or AI, just show full content
+      showFullContent.value = true;
+
+      // Update the contenteditable div in the full content view
+      setTimeout(() => {
+        if (captionRef.value) {
+          captionRef.value.textContent = form.value.description;
+          captionLength.value = form.value.description.length;
+        }
+      }, 0);
     }
   }
 }
 
 const canGoToNextStep = computed(() => {
   return form.value.title.trim().length > 0 && captionLength.value > 0;
+});
+
+// Check if selected chapter is already published
+const isChapterPublished = computed(() => {
+  if (!selectedProject.value?.chapters) return false;
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
+  return chapter?.is_publish == 1;
 });
 
 // Cover generation
@@ -913,6 +993,7 @@ function generateCoverFromTitle() {
 
   const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
   coverPreview.value = dataUrl;
+  hasTitleGeneratedCover.value = true;
   return dataUrl;
 }
 
@@ -930,6 +1011,28 @@ async function getPostDetails() {
       form.value.permission = postData.access_rights == '2' ? "partial" : postData.access_rights == '3' ? "private" : "public";
       form.value.content = postData.is_nsfw === 1 ? "yes" : "no";
       coverPreview.value = postData.cover || "";
+      if (postData.cover) {
+        hasUrlCover.value = true;
+      }
+
+      // Update cover settings if cover_color and cover_title are available
+      if (postData.cover_color && postData.cover_title) {
+        coverColor.value = postData.cover_color;
+        coverTitle.value = postData.cover_title;
+        // Store cover settings in local storage
+        const coverSettings = {
+          color: postData.cover_color,
+          title: postData.cover_title
+        };
+        localStorage.setItem('novelCoverSettings', JSON.stringify(coverSettings));
+      }
+
+      // Get session_id from post data
+      const session_id = postData.session_id as string;
+      if (session_id) {
+        // Fetch project details to get the original cover
+        await fetchProjectDetails(session_id);
+      }
 
       // Update contenteditable div with description
       if (captionRef.value) {
@@ -969,7 +1072,9 @@ async function getPostDetails() {
 
           // Add text before the match
           if (nextMatchIndex > currentIndex) {
-            const textBefore = content.substring(currentIndex, nextMatchIndex);
+            let textBefore = content.substring(currentIndex, nextMatchIndex);
+            // Convert literal \n to actual newlines
+            textBefore = textBefore.replace(/\\n/g, '\n');
             const textNode = document.createTextNode(textBefore);
             captionRef.value?.appendChild(textNode);
           }
@@ -1007,7 +1112,9 @@ async function getPostDetails() {
 
         // Add remaining text
         if (currentIndex < content.length) {
-          const textAfter = content.substring(currentIndex);
+          let textAfter = content.substring(currentIndex);
+          // Convert literal \n to actual newlines
+          textAfter = textAfter.replace(/\\n/g, '\n');
           const textNode = document.createTextNode(textAfter);
           captionRef.value?.appendChild(textNode);
         }
@@ -1028,6 +1135,45 @@ async function getPostDetails() {
           name: postData.book_title
         };
         isNoCollection.value = false;
+
+        // Set chapter index from postData
+        if (postData.chapter_index) {
+          const chapterIndex = postData.chapter_index;
+          selectedEpisodeNumber.value = chapterIndex.toString();
+        }
+
+        // Request singleCollection to get complete episode list
+        if (postData.book_id) {
+          try {
+            const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
+            if (collectionRes.code == 0 && collectionRes.data) {
+              const allnums = collectionRes.data.allnums || '0';
+              const totalEpisodes = parseInt(allnums);
+
+              // Update episodes array with complete list
+              episodes.value = [];
+              for (let i = 1; i <= totalEpisodes; i++) {
+                episodes.value.push({
+                  value: i.toString(),
+                  label: t('chapter', { chapter: i })
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching collection details:', error);
+            // Fallback to local chapter index if API call fails
+            if (postData.chapter_index) {
+              const chapterIndex = postData.chapter_index;
+              episodes.value = [];
+              for (let i = 1; i <= chapterIndex; i++) {
+                episodes.value.push({
+                  value: i.toString(),
+                  label: t('chapter', { chapter: i })
+                });
+              }
+            }
+          }
+        }
       }
     } else {
       toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
@@ -1035,6 +1181,32 @@ async function getPostDetails() {
   } catch (error) {
     console.error("Get post details error:", error);
     toast(t('fail'));
+  }
+}
+
+// Fetch project details using session_id
+async function fetchProjectDetails(session_id: string) {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const res = await api.detailProject(session_id) as any;
+
+    if (res.code == 200 && res.data) {
+      const projectData = res.data;
+      // Compare current cover with project's generated cover
+      if (projectData && projectData.result_async && projectData.result_async.generate_novel_cover) {
+        // If covers are different, set projectCover to show in the list
+        if (projectData.result_async.generate_novel_cover != coverPreview.value) {
+          projectCover.value = projectData.result_async.generate_novel_cover;
+        } else {
+          // If covers are the same, clear projectCover to avoid duplicate
+          projectCover.value = '';
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Fetch project details error:", error);
   }
 }
 
@@ -1179,9 +1351,23 @@ async function onSubmit() {
   isUpload.value = true;
 
   try {
-    // Get session_id and index from route query or selectedProject
-    const session_id = route.query.session_id as string || (selectedProject.value?.session_id as string);
+    // Get session_id from selectedProject or route query
+    const session_id = selectedProject.value?.session_id || (route.query.session_id as string);
     const index = route.query.index as string;
+
+    // Get cover settings from local storage
+    let coverColor = "";
+    let coverTitle = "";
+    const coverSettingsStr = localStorage.getItem('novelCoverSettings');
+    if (coverSettingsStr) {
+      try {
+        const coverSettings = JSON.parse(coverSettingsStr);
+        coverColor = coverSettings.color || "";
+        coverTitle = coverSettings.title || "";
+      } catch (e) {
+        console.error('Error parsing cover settings:', e);
+      }
+    }
 
     const payload = {
       type: 2,
@@ -1189,9 +1375,11 @@ async function onSubmit() {
       cover: coverPreview.value,
       content: form.value.description.trim(),
       is_nsfw: form.value.content == "yes" ? 1 : 0,
-      access_rights: form.value.permission === "partial" ? 1 : form.value.permission === "private" ? 2 : 0,
+      access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
+      cover_color: coverColor,
+      cover_title: coverTitle,
       ...(session_id ? { session_id } : {}),
       ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
       ...(isEditMode && { post_id: postId.value })
@@ -1199,7 +1387,10 @@ async function onSubmit() {
 
     const headers = new Headers();
 
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(token);
     headers.append("token", token);
+    headers.append("ts", ts);
+    headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
 
     const data = JSON.stringify(payload);
@@ -1211,8 +1402,8 @@ async function onSubmit() {
     };
 
     const url = postId.value
-      ? `${baseUrl}/post/modifyPost`
-      : `${baseUrl}/post/addPost`;
+      ? `${baseUrl}post/modifyPost`
+      : `${baseUrl}post/addPost`;
 
     const response = await fetch(url, requestOptions);
     const result = await response.text();
@@ -1220,6 +1411,8 @@ async function onSubmit() {
 
     if (res.code == 0 || res.code == 200) {
       toast(t("success"));
+      // Clear cover settings from local storage after successful publish
+      localStorage.removeItem('novelCoverSettings');
       router.push(`/publish/success?type=${2}`);
     } else {
       console.log('Error code:', res.code);
@@ -1237,7 +1430,7 @@ async function onSubmit() {
 // Caption methods
 function handleCaptionInput(e: Event) {
   const target = e.target as HTMLDivElement;
-  const text = target.innerText || "";
+  const text = target.textContent || "";
   captionLength.value = text.replace(/\n$/, "").length;
 }
 
@@ -1251,14 +1444,14 @@ function handleCaptionKeydown(e: KeyboardEvent) {
 
 function updateCaptionStats() {
   if (captionRef.value) {
-    const text = captionRef.value.innerText || "";
+    const text = captionRef.value.textContent || "";
     captionLength.value = text.replace(/\n$/, "").length;
   }
 }
 
 function onCaptionBlur() {
   if (captionRef.value) {
-    form.value.description = captionRef.value.innerText;
+    form.value.description = captionRef.value.textContent || "";
   }
 }
 
@@ -1333,7 +1526,7 @@ async function handleDocumentUpload(e: Event) {
     if (captionRef.value) {
       // Limit to 50000 characters
       const limitedContent = textContent.substring(0, DESC_MAX);
-      captionRef.value.innerText = limitedContent;
+      captionRef.value.textContent = limitedContent;
       captionLength.value = limitedContent.length;
       form.value.description = limitedContent;
     }
@@ -1453,28 +1646,60 @@ function updateDropdownPosition() {
   }
 }
 
-
-
-
-
 // Cover modal methods
-function openCoverModal() {
+async function openCoverModal() {
+  // If coverColor and coverTitle have values, need to fetch project details to get project cover
+  if (coverColor.value && coverTitle.value && !projectCover.value) {
+    // Get session_id from selectedProject or route query
+    const session_id = selectedProject.value?.session_id || (route.query.session_id as string);
+    if (session_id) {
+      await fetchProjectDetails(session_id);
+    }
+  }
+
   showCoverModal.value = true;
 }
 
-function onCoverConfirmed(imgData: string) {
-  coverPreview.value = imgData;
+function onCoverConfirmed(coverData: { url: string; hasBackground: boolean; color: string; title: string }) {
+  coverPreview.value = coverData.url;
+
+  hasAICover.value = true;
+  hasTitleGeneratedCover.value = false;
+
+  // Store cover settings in local storage if it has background
+  if (coverData.hasBackground) {
+    const coverSettings = {
+      color: coverData.color,
+      title: coverData.title
+    };
+    localStorage.setItem('novelCoverSettings', JSON.stringify(coverSettings));
+    // Update coverColor and coverTitle variables
+    coverColor.value = coverData.color;
+    coverTitle.value = coverData.title;
+  } else {
+    // Remove cover settings from local storage if it doesn't have background
+    localStorage.removeItem('novelCoverSettings');
+    // Reset coverColor and coverTitle variables
+    coverColor.value = "#FCCEE8";
+    coverTitle.value = "";
+  }
 }
 
 // Sensitive content methods
 function toggleSensitive(val: "yes" | "no") {
   if (form.value.content === val) return;
 
-  if (dontAskSensitive.value) {
-    form.value.content = val;
+  const dontAsk = localStorage.getItem('sensitiveDontAsk');
+
+  if (val == 'yes') {
+    if (dontAsk == '1') {
+      form.value.content = val;
+    } else {
+      pendingSensitiveValue.value = val;
+      showSensitiveConfirm.value = true;
+    }
   } else {
-    pendingSensitiveValue.value = val;
-    showSensitiveConfirm.value = true;
+    form.value.content = val;
   }
 }
 
@@ -1485,9 +1710,7 @@ function cancelSensitive() {
 function confirmSensitive() {
   if (pendingSensitiveValue.value) {
     form.value.content = pendingSensitiveValue.value as "yes" | "no";
-    if (dontAskSensitive.value) {
-      localStorage.setItem("dont_ask_sensitive", "true");
-    }
+    localStorage.setItem("sensitiveDontAsk", "1");
   }
   showSensitiveConfirm.value = false;
 }
@@ -1527,7 +1750,7 @@ async function selectCollection(id: number) {
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id.toString(), 1, 1) as any;
+      const response = await api.singleCollection(id, 1, 1) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
         const allnum = response.data.allnums || '0';
@@ -1598,8 +1821,25 @@ function handleCloseCreateCollectionModal() {
 function toggleProjectDropdown(event: Event) {
   event.stopPropagation();
   showProjectDropdown.value = !showProjectDropdown.value;
-  showCollectionDropdown.value = false;
-  showEpisodeDropdown.value = false;
+  showChapterDropdown.value = false;
+}
+
+function toggleChapterDropdown(event: Event) {
+  event.stopPropagation();
+  showChapterDropdown.value = !showChapterDropdown.value;
+  showProjectDropdown.value = false;
+}
+
+function getChapterLabel(chapterNumber: number | null) {
+  if (!chapterNumber || !selectedProject.value?.chapters) return '';
+  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === chapterNumber);
+  if (!chapter) return '';
+  return t('chapter', { chapter: chapterNumber });
+}
+
+function selectChapter(chapter: any) {
+  selectedEpisode.value = chapter.chapter;
+  showChapterDropdown.value = false;
 }
 
 // Close dropdowns when clicking outside
@@ -1608,25 +1848,41 @@ function handleClickOutside(event: MouseEvent) {
   if (showProjectDropdown.value && projectDropdownRef.value && !projectDropdownRef.value.contains(target)) {
     showProjectDropdown.value = false;
   }
-  if (showCollectionDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+
+  // Handle chapter dropdown
+  const chapterDropdown = document.querySelector(".chapter-dropdown");
+  if (showChapterDropdown.value && chapterDropdown && !chapterDropdown.contains(target)) {
+    showChapterDropdown.value = false;
+  }
+
+  // Handle collection and episode dropdowns
+  const collectionSelect = document.querySelector(".collection-select");
+  if (showCollectionDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showCollectionDropdown.value = false;
   }
-  if (showEpisodeDropdown.value && !document.querySelector(".collection-select")?.contains(target)) {
+  if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
 }
+
+// Project details cache
+const projectDetailsCache = ref<Record<string, any>>({});
 
 // Project list methods
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(2, 0, 'novel', currentPage.value, pageSize.value, 'desc', 1) as any;
+    const response = await api.getProject(0, 'novel', currentPage.value, 10, 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
     }
 
     projects.value = response.data.data_list || [];
+
+    if(projects.value && projects.value.length > 0) {
+      await selectProject(projects.value[0]);
+    }
 
     if (response.data.data_count) {
       totalProjects.value = response.data.data_count;
@@ -1642,36 +1898,68 @@ async function fetchProjects() {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
-  // Set default episode to first one
-  selectedEpisode.value = 1;
-  selectedModalEpisode.value = 1;
   // Close dropdown
   showProjectDropdown.value = false;
+
+  // Check if project details are in cache
+  if (projectDetailsCache.value[project.session_id]) {
+    // Use cached project details
+    const cachedProject = projectDetailsCache.value[project.session_id];
+    Object.assign(project, cachedProject);
+
+    // Show all chapters
+    if (project.chapters && project.chapters.length > 0) {
+      // Sort chapters by chapter number
+      project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+      // Update episodes array based on all chapters
+      episodes.value = [];
+      project.chapters.forEach((chapter: any, index: number) => {
+        episodes.value.push({
+          value: chapter.chapter.toString(),
+          label: t('chapter', { chapter: chapter.chapter })
+        });
+      });
+
+      // If there are chapters, set default episode to the first one
+      if (project.chapters.length > 0) {
+        selectedEpisode.value = project.chapters[0].chapter;
+        selectedModalEpisode.value = project.chapters[0].chapter;
+        selectedEpisodeNumber.value = project.chapters[0].chapter.toString();
+      }
+    }
+    return;
+  }
 
   // Request project details
   try {
     const res = await api.detailProject(project.session_id) as any;
-    if (res.code === 200 && res.data) {
+    if (res.code == 200 && res.data) {
       // Update project with details
       Object.assign(project, res.data);
 
-      // Filter chapters to only include unpublished ones (is_publish = 2)
-      if (project.chapters && project.chapters.length > 0) {
-        const unpublishedChapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
+      // Cache project details
+      projectDetailsCache.value[project.session_id] = { ...project };
 
-        // Update episodes array based on unpublished chapters
+      // Show all chapters
+      if (project.chapters && project.chapters.length > 0) {
+        // Sort chapters by chapter number
+        project.chapters.sort((a: any, b: any) => a.chapter - b.chapter);
+
+        // Update episodes array based on all chapters
         episodes.value = [];
-        unpublishedChapters.forEach((chapter: any, index: number) => {
+        project.chapters.forEach((chapter: any, index: number) => {
           episodes.value.push({
             value: chapter.chapter.toString(),
             label: t('chapter', { chapter: chapter.chapter })
           });
         });
 
-        // If there are unpublished chapters, set default episode to the first one
-        if (unpublishedChapters.length > 0) {
-          selectedEpisode.value = unpublishedChapters[0].chapter;
-          selectedEpisodeNumber.value = unpublishedChapters[0].chapter.toString();
+        // If there are chapters, set default episode to the first one
+        if (project.chapters.length > 0) {
+          selectedEpisode.value = project.chapters[0].chapter;
+          selectedModalEpisode.value = project.chapters[0].chapter;
+          selectedEpisodeNumber.value = project.chapters[0].chapter.toString();
         }
       }
     }
@@ -1757,8 +2045,7 @@ function handleCollectionDropdownScroll(event: Event) {
 
 // Modal methods
 async function openViewModal(project: any) {
-  selectedProject.value = project;
-  selectedModalEpisode.value = 1;
+  previewProject.value = project;
 
   // Request project details to get chapters array
   try {
@@ -1766,11 +2053,6 @@ async function openViewModal(project: any) {
     if (res.code === 200 && res.data) {
       // Update project with details
       Object.assign(project, res.data);
-
-      // Filter chapters to only include unpublished ones (is_publish = 2)
-      if (project.chapters && project.chapters.length > 0) {
-        project.chapters = project.chapters.filter((chapter: any) => chapter.is_publish === 2);
-      }
     }
   } catch (error) {
     console.error('Error fetching project details:', error);
@@ -1781,7 +2063,7 @@ async function openViewModal(project: any) {
 
 function closeViewModal() {
   showViewModal.value = false;
-  selectedProject.value = null;
+  previewProject.value = null;
 }
 
 async function handlePublish(publishData?: any) {
@@ -1792,6 +2074,13 @@ async function handlePublish(publishData?: any) {
 
     if (!targetProject) {
       toast(t('submit.image.selectNovelFirst'));
+      return;
+    }
+
+    // Check if chapter is already published
+    const chapter = targetProject.chapters?.find((c: any) => c.chapter === targetEpisode);
+    if (chapter && chapter.is_publish === 1) {
+      toast(t('submit.image.episodeNotUnpublished'));
       return;
     }
 
@@ -1808,6 +2097,18 @@ async function handlePublish(publishData?: any) {
 
     if (!targetProject) {
       toast(t('submit.image.selectNovelFirst'));
+      return;
+    }
+
+    if (!targetEpisode) {
+      toast(t('submit.image.selectChapter'));
+      return;
+    }
+
+    // Check if chapter is already published
+    const chapter = targetProject.chapters?.find((c: any) => c.chapter === targetEpisode);
+    if (chapter && chapter.is_publish === 1) {
+      toast(t('submit.image.episodeNotUnpublished'));
       return;
     }
 
@@ -1844,8 +2145,14 @@ async function handlePublish(publishData?: any) {
     form.value.description = episodeContent;
   }
 
-  // Generate cover from title
-  generateCoverFromTitle();
+  // Use cover from project if available, otherwise generate from title
+  if (selectedProject.value?.result_async?.generate_novel_cover) {
+    coverPreview.value = selectedProject.value.result_async?.generate_novel_cover;
+    projectCover.value = selectedProject.value.result_async?.generate_novel_cover;
+    hasHistoryCover.value = true;
+  } else {
+    generateCoverFromTitle();
+  }
 
   // Handle collection logic based on the project name
   const projectName = publishData?.project?.name || selectedProject.value?.name;
@@ -1900,54 +2207,16 @@ async function handlePublish(publishData?: any) {
     }
   }
 
-  // Upload cover to server
-  if (coverPreview.value) {
-    isUpload.value = true;
-
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const response = await fetch(coverPreview.value);
-        const blob = await response.blob();
-        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const parma = {
-          method: "POST",
-          headers: {
-            token: token,
-          },
-          body: formData,
-        };
-
-        const res = await fetch(baseUrl + "user/uploadImage", parma);
-        const data = await res.json();
-        if (data.code === 0 || data.code === 200) {
-          const url = (data?.data && (data.data.url || data.data)) || data?.url;
-          if (typeof url === "string") {
-            coverPreview.value = url;
-          }
-        } else {
-          toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
-        }
-      } catch (error) {
-        console.error("Cover upload error:", error);
-        toast(t('fail'));
-      } finally {
-        isUpload.value = false;
-      }
-    }
-  }
-
   // Switch to full content view
   showFullContent.value = true;
 
   // Update the contenteditable div after switching to full content view
   setTimeout(() => {
     if (captionRef.value) {
-      captionRef.value.innerText = form.value.description;
-      captionLength.value = form.value.description.length;
+      // Convert literal \n to actual newlines
+      const processedContent = form.value.description.replace(/\\n/g, '\n');
+      captionRef.value.textContent = processedContent;
+      captionLength.value = processedContent.length;
     }
   }, 0);
 
@@ -2006,6 +2275,10 @@ async function handlePermissionChange(permission: string, index: number) {
 // Lifecycle
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
+
+  // Fetch subscription status first so it's ready when needed
+  checkSubscriptionStatus();
+
   // Get post details if postId exists
   if (postId.value) {
     showFullContent.value = true;
@@ -2022,6 +2295,13 @@ onMounted(async () => {
     if (session_id && index) {
       // Request chapter detail interface
       try {
+        // Request project details to get the cover
+        try {
+          await fetchProjectDetails(session_id);
+        } catch (error) {
+          console.error('Error fetching project details:', error);
+        }
+
         const res = await api.detailChapter(session_id, parseInt(index)) as any;
         if (res.code === 200 && res.data && res.data.content) {
           // Set form data
@@ -2043,6 +2323,7 @@ onMounted(async () => {
           if (cover) {
             // If cover is provided in the URL, just display it, no need to upload
             coverPreview.value = cover;
+            hasUrlCover.value = true;
           } else {
             // Generate cover from title and upload it
             await generateAndUploadCover();
@@ -2055,7 +2336,7 @@ onMounted(async () => {
 
             // Upload the generated cover to server
             const token = localStorage.getItem("token");
-            if (token && coverPreview.value) {
+            if (token) {
               isUpload.value = true;
               try {
                 // Check if coverPreview is a data URL (generated by canvas)
@@ -2067,19 +2348,22 @@ onMounted(async () => {
                   const formData = new FormData();
                   formData.append("file", file);
 
+                  const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
                   const parma = {
                     method: "POST",
                     headers: {
                       token: token,
+                      ...authHeaders,
                     },
                     body: formData,
                   };
 
                   const res = await fetch(baseUrl + "user/uploadImage", parma);
                   const data = await res.json();
-                  if (data.code === 0 || data.code === 200) {
+                  if (data.code == 0 || data.code == 200) {
                     const url = (data?.data && (data.data.url || data.data)) || data?.url;
-                    if (typeof url === "string") {
+                    if (typeof url == "string") {
                       coverPreview.value = url;
                     }
                   } else {
@@ -2101,8 +2385,10 @@ onMounted(async () => {
           // Update contenteditable div
           setTimeout(() => {
             if (captionRef.value) {
-              captionRef.value.innerText = form.value.description;
-              captionLength.value = form.value.description.length;
+              // Convert literal \n to actual newlines
+              const processedContent = form.value.description.replace(/\\n/g, '\n');
+              captionRef.value.textContent = processedContent;
+              captionLength.value = processedContent.length;
             }
           }, 0);
 
@@ -2157,6 +2443,9 @@ onMounted(async () => {
               console.error('Error handling collection from route:', error);
             }
           }
+
+          // Check subscription status for this user
+          await checkSubscriptionStatus();
         }
       } catch (error) {
         console.error('Error fetching chapter details:', error);
@@ -2173,6 +2462,8 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  // Clear cover settings from local storage when leaving the page
+  localStorage.removeItem('novelCoverSettings');
 });
 </script>
 

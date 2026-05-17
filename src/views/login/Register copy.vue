@@ -55,13 +55,6 @@
             <div class="email-item-box">
               <div class="email-item-title-box">
                 <div class="email-item-title"><span>*</span>{{ t("register.codeLabel") }}</div>
-
-                <!-- <div class="email-item-title-intro">
-                  <span>{{ t('register.sendTip') }}</span>
-                  <img src="@/assets/images/user/icon.png" alt="" @mouseenter="isHoverCode = true" @mouseleave="isHoverCode = false" />
-                </div>
-
-                <div class="email-code-intro" v-if="isHoverCode">{{ t("register.sendIntro") }}</div> -->
               </div>
 
               <div class="email-item">
@@ -81,6 +74,21 @@
                 </button>
               </div>
               <div class="email-error" :class="{ 'success': codeError == t('register.spamTip') }" v-if="codeError">{{ codeError }}</div>
+
+              <div class="email-item-box" style="margin-top: 1.4rem;">
+                <div class="email-item-title">{{ t("inviteCode.title") }}</div>
+                <div class="email-item">
+                  <input
+                    id="inviteCode"
+                    class="email-ipt"
+                    type="text"
+                    v-model="inviteCode"
+                    :placeholder="t('inviteCode.enterCode')"
+                    spellcheck="false"
+                    autocomplete="false"
+                  />
+                </div>
+              </div>
             </div>
           </form>
 
@@ -97,7 +105,7 @@
           </p>
 
           <div class="icon-box">
-            <div class="google-icon" @click="toGoogle()">
+            <div class="google-icon" @click="showGoogle()">
               <img src="@/assets/images/register/google.png" alt="" />
               <span>{{ t("register.google") }}</span>
             </div>
@@ -123,10 +131,12 @@
       </div>
     </div>
 
-    <BirthdayModal
-      :visible="showBirthday"
-      @confirm="handleBirthdayConfirm"
-      @close="showBirthday = false"
+    <InviteCodeModal
+      :visible="showInviteCodeModal"
+      :initial-code="inviteCode"
+      @close="showInviteCodeModal = false"
+      @confirm="handleInviteCodeConfirm"
+      @skip="handleInviteCodeSkip"
     />
 
     <div class="load" v-if="isShowLoad">
@@ -138,7 +148,7 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
-import BirthdayModal from "@/components/BirthdayModal.vue";
+import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
@@ -153,17 +163,18 @@ const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
 const emailToken = ref("");
-const isHoverCode = ref(false);
 const isSend = ref(false);
 const isShowPassword = ref(false);
 const password = ref("");
 const code = ref("");
+const inviteCode = ref("");
 const emailError = ref("");
 const passwordError = ref("");
 const codeError = ref("");
 
 const isShowLoad = ref(false);
 const showBirthday = ref(false);
+const showInviteCodeModal = ref(false);
 
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
@@ -182,8 +193,6 @@ const isEnd = computed(() => {
   }
 });
 
-const registerType = ref(1);
-
 declare let grecaptcha: any;
 
 declare global {
@@ -194,6 +203,12 @@ declare global {
 
 onMounted(() => {
   checkGrecaptcha();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  if (fromParam) {
+    inviteCode.value = fromParam;
+  }
 
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("rType");
@@ -231,12 +246,28 @@ function initGoogle() {
   document.head.appendChild(script);
 }
 
-function toGoogle() {
-  registerType.value = 2;
-  showBirthday.value = true;
+function showGoogle() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  if (fromParam) {
+    localStorage.setItem('inviteCode', fromParam);
+    redirectToGoogle();
+    return;
+  }
+  showInviteCodeModal.value = true;
 }
 
-function showGoogle() {
+function handleInviteCodeConfirm(inviteCode: string) {
+  showInviteCodeModal.value = false;
+  redirectToGoogle();
+}
+
+function handleInviteCodeSkip() {
+  showInviteCodeModal.value = false;
+  redirectToGoogle();
+}
+
+function redirectToGoogle() {
   isShowLoad.value = true;
   const client_id = "258005297451-ovuch80d9h3t7mesfu7sgrdb3rntcbeu.apps.googleusercontent.com";
   const redirect_uri = redirectUrl + "/register";
@@ -323,8 +354,15 @@ function handleSubmit() {
                 formData.append("g-recaptcha-response", token);
                 formData.append("siteKey", siteKey);
 
+                const userToken = localStorage.getItem("token") || "";
+                const { ts, sign } = window.AntiCrawler.generateAuthParams(userToken);
+
                 fetch(baseUrl + "login/sendEmailVerifyCode", {
                   method: "post",
+                  headers: {
+                    "ts": ts,
+                    "sign": sign
+                  },
                   body: formData,
                 })
                   .then((response) => response.json())
@@ -376,47 +414,6 @@ function timeCount() {
   }, 1000);
 }
 
-function handleBirthdayConfirm(date: { year: number; month: number; day: number }) {
-  if (registerType.value == 2) {
-    // Store birthday in localStorage
-    localStorage.setItem('birthday', JSON.stringify(date));
-    showGoogle();
-  } else {
-    const emailData = {
-      email: email.value,
-      password: password.value,
-      code: code.value,
-      "g-recaptcha-response": emailToken.value,
-      year: date.year,
-      month: date.month,
-      day: date.day,
-    };
-
-    api
-      .emailRegister(emailData)
-      .then((res: any) => {
-        if (res.code == 0) {
-          showBirthday.value = false;
-
-          if (headerRef.value) {
-            headerRef.value.getLoginUserInfo()
-          }
-
-          localStorage.setItem("token", res.data.token);
-          // localStorage.setItem("isFirstRegister", "1");
-          router.push("/");
-        } else {
-          showBirthday.value = false;
-          toast(locale.value == "jp" ? res.msg_jp : res.msg);
-        }
-      })
-      .catch((err: any) => {
-        showBirthday.value = false;
-        toast(t('fail'));
-      });
-  }
-}
-
 function goLink() {
   localStorage.setItem("isBack", "1");
 }
@@ -451,32 +448,55 @@ function goEmailRegister() {
     return false;
   }
 
-  showBirthday.value = true;
+  const emailData = {
+      email: email.value,
+      password: password.value,
+      code: code.value,
+      invite_code: inviteCode.value,
+      "g-recaptcha-response": emailToken.value
+  };
+
+    api
+      .emailRegister(emailData)
+      .then((res: any) => {
+        if (res.code == 0) {
+          showBirthday.value = false;
+
+          if (headerRef.value) {
+            headerRef.value.getLoginUserInfo()
+          }
+
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("isFirstRegister", "1");
+          router.push("/");
+        } else {
+          showBirthday.value = false;
+          toast(locale.value == "jp" ? res.msg_jp : res.msg);
+        }
+      })
+      .catch((err: any) => {
+        showBirthday.value = false;
+        toast(t('fail'));
+      });
 }
 
 function googleRegister() {
   const urlParams = new URLSearchParams(window.location.search);
-  const type = localStorage.getItem("rType");
-
   const googleCode = urlParams.get("code");
+  const invite_code = localStorage.getItem("inviteCode");
 
   if (!googleCode) {
     isShowLoad.value = false;
     localStorage.removeItem("rType");
+    localStorage.removeItem("inviteCode");
     return false;
   }
 
   isShowLoad.value = true;
 
-  // Read birthday from localStorage
-  const birthdayStr = localStorage.getItem('birthday');
-  const birthday = birthdayStr ? JSON.parse(birthdayStr) : { year: '', month: '', day: '' };
-
   const googleData = {
     code: googleCode,
-    year: birthday.year,
-    month: birthday.month,
-    day: birthday.day,
+    invite_code: invite_code
   };
 
   api
@@ -486,15 +506,15 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
-        localStorage.removeItem('birthday'); // Clean up birthday data
+        localStorage.removeItem('inviteCode');
 
-        // localStorage.setItem("isFirstRegister", "1");
+        localStorage.setItem("isFirstRegister", "1");
         router.push("/");
       } else {
         window.location.href = "/register";
         isShowLoad.value = false;
         localStorage.removeItem("rType");
-        localStorage.removeItem('birthday'); // Clean up birthday data
+        localStorage.removeItem('inviteCode');
         toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
       }
     })
@@ -502,7 +522,7 @@ function googleRegister() {
       window.location.href = "/register";
       isShowLoad.value = false;
       localStorage.removeItem("rType");
-      localStorage.removeItem('birthday'); // Clean up birthday data
+      localStorage.removeItem('inviteCode');
       console.log(err);
     });
 }
@@ -604,22 +624,9 @@ function googleRegister() {
           }
         }
 
-        .email-code-intro {
-          position: absolute;
-          right: 0;
-          top: 2.6rem;
-          padding: 0.6rem;
-          font-size: 1.4rem;
-          -webkit-border-radius: 0.4rem;
-          border-radius: 0.4rem;
-          border: 1px solid rgba(251,100,182,0.2);
-          background: rgba(255, 255, 255, 0.9);
-          color: #6a7282;
-          z-index: 10;
-        }
         .email-item-title {
           font-size: 1.4rem;
-          color: #4a5565;
+          color: #6A7282;
           span {
             color: #fa2d47;
           }
@@ -642,18 +649,13 @@ function googleRegister() {
               weight: normal;
               size: 1.4rem;
             }
-            border: 1px solid #fccee8;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5F5F5;
             color: #101828;
 
             &::placeholder {
-              font: {
-                weight: 300;
-                size: 1.2rem;
-              }
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             &:hover,
@@ -683,18 +685,13 @@ function googleRegister() {
             font: {
               size: 1.4rem;
             }
-            border: 1px solid #fccee8;
             -webkit-border-radius: 0.8rem;
             border-radius: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5F5F5;
             color: #101828;
 
             &::placeholder {
-              font: {
-                weight: 300;
-                size: 1.2rem;
-              }
-              color: #6a7282;
+              color: #99A1AF;
             }
 
             &:hover,
@@ -719,7 +716,7 @@ function googleRegister() {
             color: #fb64b6;
             cursor: pointer;
             &.on {
-              color: #6a7282;
+              color: #99A1AF;
               cursor: not-allowed;
             }
           }
@@ -750,15 +747,26 @@ function googleRegister() {
         }
         -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
-        background:
-          linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%), rgba(255, 255, 255, 0.2);
+        background: rgba(251,100,182,0.5);
         color: #ffffff;
-        opacity: 0.7;
         cursor: default;
 
         &.on {
-          opacity: 1;
+          background: #FB64B6;
           cursor: pointer;
+        }
+
+        &:hover {
+          position: relative;
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+          }
         }
       }
     }
@@ -767,7 +775,7 @@ function googleRegister() {
       margin: 2rem 0 0;
       font-size: 1.2rem;
       text-align: center;
-      color: #6a7282;
+      color: #99A1AF;
 
       :deep(a) {
         color: #fb64b6;
@@ -787,12 +795,12 @@ function googleRegister() {
         justify-content: space-between;
         margin: 0 0 1.4rem;
         font-size: 1.4rem;
-        color: #6a7282;
+        color: #6A7282;
 
         b {
           width: 21.2rem;
           height: 1px;
-          background: rgba(251, 100, 182, 0.2);
+          background: #F5F5F5;
         }
       }
       .icon-box {
@@ -807,13 +815,15 @@ function googleRegister() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid #fb64b6;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
+          background: #F5F5F5;
           cursor: pointer;
 
-          &:hover {
-            background: rgba(251, 100, 182, 0.06);
+          &:hover{
+            span{
+              color: #FB64B6;
+            }
           }
 
           .g_id_signin {
@@ -837,7 +847,7 @@ function googleRegister() {
 
         span {
           font-size: 1.4rem;
-          color: #fb64b6;
+          color: #6A7282;
         }
       }
     }

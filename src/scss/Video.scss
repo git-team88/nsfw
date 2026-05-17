@@ -301,6 +301,105 @@
       }
     }
 
+    /* Chapter Selection */
+    .chapter-selection {
+      margin-top: 2.4rem;
+
+      label {
+        display: block;
+        font-size: 1.4rem;
+        color: #6A7282;
+        margin-bottom: 0.8rem;
+      }
+
+      .chapter-dropdown {
+        position: relative;
+        width: 36rem;
+
+        .custom-select {
+          position: relative;
+          width: 36rem;
+          height: 5rem;
+          background: #F5F5F5;
+          border-radius: 0.8rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 1rem 0 2rem;
+          cursor: pointer;
+
+          .select-value {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.4rem;
+            color: #364153;
+          }
+
+          .select-arrow {
+            img {
+              width: 2.4rem;
+              height: 2.4rem;
+              transition: transform 0.2s ease;
+            }
+          }
+
+          &.open {
+            border-radius: 0.8rem 0.8rem 0 0;
+
+            .select-arrow img {
+              transform: rotate(180deg);
+            }
+          }
+        }
+
+        .custom-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          width: 36rem;
+          max-height: 35rem;
+          overflow-y: auto;
+          background: #ffffff;
+          margin-top: 1rem;
+          padding: 1.2rem 2rem;
+          border-radius: 0.8rem;
+          box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+          z-index: 100;
+
+          .chapter-dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+            color: #6A7282;
+            cursor: pointer;
+
+            &:last-child{
+              margin-bottom: 0;
+            }
+
+            &.selected {
+              color: #364153;
+              font-weight: 500;
+            }
+
+            .chapter-number {
+              flex: 1;
+            }
+
+            .chapter-status {
+              color: #99A1AF;
+              font-size: 1.2rem;
+            }
+          }
+        }
+      }
+    }
+
     .publish-section {
       display: flex;
       justify-content: center;
@@ -318,7 +417,29 @@
         cursor: pointer;
 
         &:hover {
-          background: #e55aa3;
+          position: relative;
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            border-radius: inherit;
+          }
+        }
+        &.published {
+          background: rgba(251, 100, 182, 0.5);
+          color: #FFFFFF;
+          cursor: not-allowed;
+
+          &:hover {
+            position: relative;
+            &::after {
+              display: none;
+            }
+          }
         }
       }
     }
@@ -614,16 +735,18 @@
         }
 
         .custom-dropdown {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          margin-top: 1.2rem;
-          padding: 1.2rem 2rem;
-          background: #FFFFFF;
-          border-radius: 0.8rem;
-          box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
-          z-index: 10;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 1.2rem;
+        padding: 1.2rem 2rem;
+        background: #FFFFFF;
+        border-radius: 0.8rem;
+        box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+        z-index: 10;
+        max-height: 35rem;
+        overflow-y: auto;
           .collection-dropdown-item {
             margin-bottom: 1.2rem;
             font-size: 1.4rem;
@@ -654,6 +777,37 @@
                 width: 1.4rem;
                 height: 1.4rem;
               }
+            }
+
+            .loading-indicator {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.8rem;
+              padding: 1.2rem;
+              font-size: 1.4rem;
+              color: #99A1AF;
+
+              .loading-spinner {
+                width: 1.6rem;
+                height: 1.6rem;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #fb64b6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+              }
+
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            }
+
+            .no-more-collections {
+              text-align: center;
+              padding: 1.2rem;
+              font-size: 1.4rem;
+              color: #99A1AF;
             }
           }
         }

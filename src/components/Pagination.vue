@@ -34,12 +34,23 @@ import leftIcon from '@/assets/images/base/left.png'
 import leftDisIcon from '@/assets/images/base/left_dis.png'
 import rightIcon from '@/assets/images/base/right.png'
 import rightDisIcon from '@/assets/images/base/right_dis.png'
-const page = computed(() => props.modelValue)
-const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
+const page = computed(() => {
+  const val = props.modelValue
+  if (typeof val !== 'number' || isNaN(val)) {
+    return 1
+  }
+  return val
+})
+const totalPages = computed(() => {
+  const total = typeof props.total === 'number' && !isNaN(props.total) ? props.total : 0
+  const size = typeof props.pageSize === 'number' && !isNaN(props.pageSize) && props.pageSize > 0 ? props.pageSize : 10
+  return Math.max(1, Math.ceil(total / size))
+})
 const theme = computed(() => props.theme ?? 'blue')
 const pages = computed<(number | '...')[]>(() => {
   const total = totalPages.value
-  const current = page.value
+  const current = Math.max(1, Math.min(page.value, total))
+  
   if (total <= 5) {
     return Array.from({ length: total }).map((_, i) => i + 1)
   }

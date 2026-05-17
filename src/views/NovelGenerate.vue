@@ -13,6 +13,11 @@
         <span>{{ t("header.title1") }}</span>
       </div>
 
+      <div class="nav-item last" @click="goProject()">
+        <img src="@/assets/images/novel/project.png" alt="Project" />
+        <span>{{ t("header.title3") }}</span>
+      </div>
+
       <!-- User Avatar -->
       <div class="user-avatar" @click="goUser()">
         <img :src="userInfo?.info?.avatar" alt="Avatar" />
@@ -42,7 +47,7 @@
       <div class="left-content">
         <div class="scrollable-content">
           <!-- Generation Status -->
-          <div v-if="taskStatus == 'DOING' && shouldShowEstimatedTime && !hasFailed && !outlineContent" class="generation-status">
+          <div v-if="shouldShowEstimatedTime && !hasFailed" class="generation-status">
             <span class="status-text">{{ t('novel.generatingStatus') }}</span>
             <button class="similar-content-btn" @click="goToSimilar()">{{ t('novel.similarContent') }}</button>
           </div>
@@ -118,7 +123,7 @@
             </div>
           </div>
 
-          <div v-else-if="outlineData && taskStatus === 'SUCCESS' && chapterCount > stepChapterIndex" class="text-wrapper-1">
+          <div v-else-if="outlineData && taskStatus == 'SUCCESS' && chapterCount > stepChapterIndex && !(isBatchChapter == 1 || isUserInitiatedGeneration)" class="text-wrapper-1">
             <span class="text_3">{{ t('novel.chaptersToGenerate', { count: chapterCount - stepChapterIndex }) }}</span>
             <span class="text_4" @click="confirmGenerateAllChapters">{{ t('novel.generateAllChapters') }}</span>
           </div>
@@ -127,7 +132,7 @@
           <div
             class="outline-preview"
             @click="handleOutlinePreviewClick"
-            :class="{ 'disabled': !outlineData || !outlineData.outline, 'active': !currentChapter }"
+            :class="{ 'disabled': !outlineData || !outlineData.outline, 'active': !currentChapter, 'end': taskStatus == 'SUCCESS' && chapterCount > 0 && stepChapterIndex >= chapterCount }"
             :disabled="!outlineData || !outlineData.outline"
           >
             <span class="preview-title">{{ t('novel.novelOutline') }}</span>
@@ -146,7 +151,7 @@
                 <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                 <span class="chapter-item-title">{{ chapter.title }}</span>
                 <span
-                  v-if="chapter.is_publish == 2"
+                  v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex)"
                   class="chapter-publish-btn unpublish"
                   @click.stop="handlePublishChapter(chapter)"
                 >{{ t('novel.publish') }}</span>
@@ -162,19 +167,19 @@
                   @click.stop="startEditChapterTitle(chapter.chapter, chapter.title)"
                 />
               </div>
-              <div v-else class="chapter-title-edit">
+              <div v-else class="chapter-title-edit" @click.stop>
                 <div class="chapter-edit-content">
                   <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                   <input
                     type="text"
                     v-model="editingChapterTitle"
                     class="chapter-title-input"
-                    @input="editingChapterTitle = editingChapterTitle.substring(0, 30)"
+                    @input="editingChapterTitle = editingChapterTitle.substring(0, 60)"
                     @blur="handleChapterTitleBlur"
-                    :maxlength="30"
+                    :maxlength="60"
                     :ref="el => chapterTitleInputs[chapter.chapter] = el"
                   />
-                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/30</span>
+                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/60</span>
                 </div>
                 <div class="chapter-edit-actions">
                   <img
@@ -405,7 +410,7 @@
         <div class="outline-title">
           <h2 v-if="!currentChapter">{{ t('novel.novelOutline') }}</h2>
           <h2 v-else>{{ t('novel.chapter', { chapter: currentChapter.chapter }) }} {{ currentChapter.title }}</h2>
-          <button v-if="!isLoading && outlineData && !hasFailed && !currentChapter && taskStatus !== 'DOING' && !(currentStepName == 'chapter' && stepChapterIndex >= 1)" class="regenerate-btn" @click="regenerateOutline">
+          <button v-if="!isLoading && (outlineData || outlineStreamDone) && !hasFailed && !currentChapter && taskStatus !== 'DOING' && !(currentStepName == 'chapter' && stepChapterIndex >= 1)" class="regenerate-btn" @click="regenerateOutline">
             {{ t('novel.regenerate') }}
           </button>
           <template v-else-if="currentChapter && !hasFailed">
@@ -509,22 +514,13 @@
             </div>
 
             <!-- 角色图鉴 -->
-            <div v-if="outlineData.characters" class="section characters">
+            <div v-if="outlineData.characters && outlineData.characters.length > 0" class="section characters">
               <h3 class="section-title">{{ t('novel.characterGallery') }}</h3>
-              <!-- 主角 -->
-              <div v-if="getMainCharacters().length > 0" class="character-group">
-                <h4 class="group-title">{{ t('novel.mainCharacter') }}</h4>
-                <div v-for="character in getMainCharacters()" :key="character.name" class="character-card">
-                  <div class="character-name">{{ character.name }}</div>
-                  <div class="character-desc">{{ character.description }}</div>
-                </div>
-              </div>
-              <!-- 配角 -->
-              <div v-if="getSupportingCharacters().length > 0" class="character-group">
-                <h4 class="group-title">{{ t('novel.supportingCharacter') }}</h4>
-                <div v-for="character in getSupportingCharacters()" :key="character.name" class="character-card">
-                  <div class="character-name">{{ character.name }}</div>
-                  <div class="character-desc">{{ character.description }}</div>
+              <div class="characters-list">
+                <div v-for="(character, index) in outlineData.characters" :key="index" class="character-item">
+                  <div class="character-type">{{ character.type }}</div>
+                  <div class="character-name">{{ t('novel.name') }}：{{ character.name }}</div>
+                  <p class="character-description">{{ character.description }}</p>
                 </div>
               </div>
             </div>
@@ -557,6 +553,7 @@
                 </div>
                 <div class="cover-image" v-else-if="coverImage">
                   <img :src="coverImage" alt="" />
+                  <img class="zoom-cover-btn" src="@/assets/images/novel/zoom.png" alt="Zoom" @click="zoomCoverImage(coverImage)" />
                 </div>
                 <div class="cover-placeholder" v-else-if="!coverTaskId">
                   <span>{{ t('novel.coverPlaceholder') }}</span>
@@ -579,6 +576,7 @@
                 </div>
                 <div class="cover-image" v-else-if="coverImage">
                   <img :src="coverImage" alt="" />
+                  <img class="zoom-cover-btn" src="@/assets/images/novel/zoom.png" alt="Zoom" @click="zoomCoverImage(coverImage)" />
                 </div>
                 <div class="cover-placeholder" v-else-if="!coverTaskId">
                   <span>{{ t('novel.coverPlaceholder') }}</span>
@@ -734,6 +732,7 @@ const languageOptions = computed(() => [
   { value: 'jp', label: t('novel.language.jp') }
 ]);
 const isBatchChapter = ref<number>(0);
+const isUserInitiatedGeneration = ref<boolean>(false);
 
 // Cover related state
 const isEditingCover = ref<boolean>(false);
@@ -772,6 +771,8 @@ const isChapterTyping = ref<boolean>(false);
 const isWaitingForData = ref<boolean>(false);
 const stepChapterIndex = ref<number>(0);
 const streamReaderController = ref<AbortController | null>(null);
+// Control whether to show typewriter effect for chapter generation
+const shouldShowTypewriter = ref<boolean>(false);
 
 const topic = ref<string>('');
 const lastGenerationType = ref<string>('outline');
@@ -802,6 +803,7 @@ const editingChapterId = ref<number | null>(null);
 const editingChapterTitle = ref<string>('');
 const originalChapterTitle = ref<string>('');
 const isSavingChapterTitle = ref<boolean>(false);
+const isHandlingChapterAction = ref<boolean>(false);
 const chapterTitleInputs = ref<{[key: number]: any}>({});
 const nextChapterPoints = ref<number>(0);
 const allChaptersPoints = ref<number>(0);
@@ -836,10 +838,65 @@ const startCoverPolling = (taskId: string) => {
         // Set status to success when cover generation is successful
         taskStatus.value = 'SUCCESS';
         hasFailed.value = false;
+        // Reset isGeneratingOutline to false to hide similar content row
+        isGeneratingOutline.value = false;
         // Reset currentChapter to show "待生成章节" section in left sidebar
         currentChapter.value = null;
         // Reset stepChapterIndex to 0 to show "待生成章节" section
         stepChapterIndex.value = 0;
+        // Reset currentStepName to outline to show generate buttons
+        currentStepName.value = 'outline';
+
+        // Ensure outlineData is available for showing "待生成章节" section
+        if (!outlineData.value && outlineStreamParser.value) {
+          try {
+            const json = outlineStreamParser.value.extractJson(outlineStreamParser.value.rawBuf || '');
+            if (json && json.base_info) {
+              outlineData.value = json;
+              if (json.base_info.total_chapters) {
+                chapterCount.value = json.base_info.total_chapters;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing outline data during cover polling:', e);
+          }
+        }
+
+        // Always fetch detailProject to ensure latest outline data and chapter titles
+        try {
+          const detailProjectRes = await api.detailProject(sessionId.value) as any;
+          if (detailProjectRes.code === 200) {
+            // Update project name if available
+            if (detailProjectRes.data?.name) {
+              projectName.value = detailProjectRes.data.name;
+            }
+
+            // Update outline data if available
+            if (detailProjectRes.data?.result_async) {
+              let result = detailProjectRes.data.result_async;
+              if (typeof result === 'string') {
+                result = JSON.parse(result);
+              }
+              if (result.generate_novel_outline) {
+                result = result.generate_novel_outline;
+              }
+              if (result.base_info) {
+                outlineData.value = result;
+                if (result.base_info.total_chapters) {
+                  chapterCount.value = result.base_info.total_chapters;
+                }
+              }
+            }
+
+            // Update chapters if available
+            if (detailProjectRes.data?.chapters) {
+              chapters.value = detailProjectRes.data.chapters;
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching detail project during cover polling:', e);
+        }
+
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
@@ -849,6 +906,8 @@ const startCoverPolling = (taskId: string) => {
         // Set status to fail when cover generation fails
         taskStatus.value = 'FAIL';
         hasFailed.value = true;
+        // Reset isGeneratingOutline to false when cover generation fails
+        isGeneratingOutline.value = false;
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
@@ -959,6 +1018,12 @@ const startOutlineStream = async () => {
         isGeneratingOutline.value = false;
         taskStatus.value = 'SUCCESS';
         hasFailed.value = false;
+        // Reset currentChapter to show "待生成章节" section in left sidebar
+        currentChapter.value = null;
+        // Reset stepChapterIndex to 0 to show "待生成章节" section
+        stepChapterIndex.value = 0;
+        // Reset currentStepName to outline to show generate buttons
+        currentStepName.value = 'outline';
       }
     },
     onError: (error) => {
@@ -975,18 +1040,16 @@ const startOutlineStream = async () => {
 };
 
 const shouldShowEstimatedTime = computed(() => {
-  if (!startTime.value) return false;
-  // Show estimated time if it's available, or after 30 seconds
-  if (estimatedTime.value != null) return true;
-  const elapsed = Date.now() - startTime.value;
-  return elapsed > 30000;
+  // Show estimated time when task is in progress, regardless of startTime
+  if (taskStatus.value === 'DOING' || isGeneratingOutline.value) return true;
+  return false;
 });
 
 const shouldShowActionButtons = computed(() => {
   if (taskStatus.value == 'DOING') return false;
   if (isLoading.value) return false;
   if (hasFailed.value) return false;
-  if (!outlineData.value && !currentChapter.value) return false;
+  if (!outlineData.value && !currentChapter.value && !outlineStreamDone.value) return false;
   return true;
 });
 
@@ -1023,6 +1086,9 @@ const shouldShowGenerateButtons = computed(() => {
 
   // Don't show buttons if step_name is chapter when viewing outline
   if (!currentChapter.value && currentStepName.value === 'chapter') return false;
+
+  // Don't show buttons during batch chapter generation
+  if (isBatchChapter.value == 1 || isUserInitiatedGeneration.value) return false;
 
   // For outline page, show buttons if outline is available
   if (!currentChapter.value) return true;
@@ -1380,6 +1446,10 @@ const startEditProjectName = () => {
   }
 
   originalProjectName.value = projectName.value;
+  // Ensure project name is not longer than 60 characters
+  if (projectName.value.length > 60) {
+    projectName.value = projectName.value.substring(0, 60);
+  }
   isEditingName.value = true;
   nextTick(() => {
     if (projectNameInputRef.value) {
@@ -1599,7 +1669,8 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
 
   editingChapterId.value = chapterId;
   originalChapterTitle.value = currentTitle;
-  editingChapterTitle.value = currentTitle;
+  // Ensure chapter title is not longer than 60 characters
+  editingChapterTitle.value = currentTitle.length > 60 ? currentTitle.substring(0, 60) : currentTitle;
   nextTick(() => {
     if (chapterTitleInputs.value[chapterId]) {
       chapterTitleInputs.value[chapterId]?.focus();
@@ -1609,6 +1680,7 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
 
 // Save edited chapter title
 const saveChapterTitle = async (chapterId: number) => {
+  isHandlingChapterAction.value = true;
   isSavingChapterTitle.value = true;
   try {
     // Call API to modify chapter title
@@ -1641,17 +1713,22 @@ const saveChapterTitle = async (chapterId: number) => {
     // Reset editing state regardless of API result
     editingChapterId.value = null;
     isSavingChapterTitle.value = false;
+    isHandlingChapterAction.value = false;
   }
 };
 
 const cancelChapterTitle = () => {
+  isHandlingChapterAction.value = true;
   editingChapterId.value = null;
   editingChapterTitle.value = originalChapterTitle.value;
+  setTimeout(() => {
+    isHandlingChapterAction.value = false;
+  }, 100);
 };
 
 const handleChapterTitleBlur = () => {
-  // Only cancel if not saving
-  if (!isSavingChapterTitle.value) {
+  // Only cancel if not saving and not handling an action
+  if (!isSavingChapterTitle.value && !isHandlingChapterAction.value) {
     cancelChapterTitle();
   }
 };
@@ -1778,6 +1855,52 @@ function goHome() {
   router.push("/");
 }
 
+function goProject() {
+   if (isEditingCover.value && showCoverResult.value) {
+    pendingCoverAction.value = 'home';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
+  hideEdit();
+
+  // Clean up stream reader before leaving
+  try {
+    if (streamReaderController.value) {
+      streamReaderController.value.abort();
+      streamReaderController.value = null;
+    }
+  } catch (e: any) {
+    streamReaderController.value = null;
+  }
+
+  // Clean up polling before leaving
+  try {
+    if (printerInterval.value) {
+      clearInterval(printerInterval.value);
+      printerInterval.value = null;
+    }
+  } catch (e: any) {
+    printerInterval.value = null;
+  }
+
+  try {
+    if (outlineStreamParser.value) {
+      outlineStreamParser.value.destroy();
+      outlineStreamParser.value = null;
+    }
+  } catch (e: any) {
+    outlineStreamParser.value = null;
+  }
+
+  router.push({
+    path: '/my-projects',
+    query: {
+      tab: 1
+    }
+  })
+}
+
 function goUser() {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -1820,6 +1943,11 @@ const callNovelNext = async (retryChapter?: number) => {
   }
 
   try {
+    // Set flag for user initiated generation
+    isUserInitiatedGeneration.value = true;
+    // Set shouldShowTypewriter to true for typewriter effect
+    shouldShowTypewriter.value = true;
+
     const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
 
     // Immediately set UI state: show chapter title + loading on right, show chapter in left sidebar
@@ -1913,6 +2041,9 @@ const callNovelNext = async (retryChapter?: number) => {
     isLoading.value = false;
     hasFailed.value = true;
     taskStatus.value = 'FAIL';
+  } finally {
+    // Reset flag after generation completes or fails
+    isUserInitiatedGeneration.value = false;
   }
 };
 
@@ -2055,6 +2186,21 @@ const goNextChapter = async () => {
 const goToChapter = async (chapterNum: number) => {
   hideEdit();
 
+  // Reset typewriter effect when navigating to a different chapter
+  if (isChapterTyping.value) {
+    isChapterTyping.value = false;
+  }
+
+  // Stop any existing polling or typewriter effect
+  if (printerInterval.value) {
+    clearInterval(printerInterval.value);
+    printerInterval.value = null;
+  }
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value);
+    pollingInterval.value = null;
+  }
+
   // Check if this is the currently generating chapter with DOING status
   // Or if this chapter is at/beyond stepChapterIndex (meaning generation was triggered for this chapter)
   const isCurrentlyGenerating = (chapterNum === stepChapterIndex.value && taskStatus.value === 'DOING') ||
@@ -2196,6 +2342,11 @@ const callNovelAllChapters = async () => {
   }
 
   try {
+    // Set flag for user initiated generation
+    isUserInitiatedGeneration.value = true;
+    // Set shouldShowTypewriter to true for typewriter effect
+    shouldShowTypewriter.value = true;
+
     // Determine the first chapter to generate and generate mode
     let fromChapter: number;
     let generateMode: string;
@@ -2291,6 +2442,9 @@ const callNovelAllChapters = async () => {
     isLoading.value = false;
     hasFailed.value = true;
     taskStatus.value = 'FAIL';
+  } finally {
+    // Reset flag after generation completes or fails
+    isUserInitiatedGeneration.value = false;
   }
 };
 
@@ -2320,6 +2474,10 @@ const handleRetry = async () => {
 
 // Execute retry action after confirmation
 const executeRetryAction = () => {
+  // Set shouldShowTypewriter to true for typewriter effect only for chapters
+  if (retryAction.value == 'chapter' || retryAction.value == 'all') {
+    shouldShowTypewriter.value = true;
+  }
   if (retryAction.value == 'outline') {
     callNovelOutline('retry');
   } else if (retryAction.value == 'chapter') {
@@ -2350,7 +2508,7 @@ const confirmGenerateAllChapters = async () => {
     const estimateRes = await
       api.novelEstimate({
         session_id: sessionId.value,
-        type: 'all_chapters',
+        step_name: 'all_chapters',
         from_chapter: fromChapter,
       }) as any;
 
@@ -3017,56 +3175,55 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
               content = taskData.content;
             }
 
-            // Filter chapter content
-            content = filterChapterContent(content);
+            // Update final state
+            taskStatus.value = 'SUCCESS';
+            generatingChapter.value = null;
+            hasFailed.value = false;
+            // Only update currentChapter if we're still viewing a chapter
+            // Don't update if we're viewing outline
+            if (currentChapter.value) {
+              currentChapter.value.content = content;
+            }
+            // Hide estimated time display after chapter generation completes
+            estimatedTime.value = null;
+            displayMinutes.value = 0;
 
-            // Start typewriter effect
-            let pendingText = content;
-            let pendingConsumed = 0;
+            // Directly show the full content instead of typewriter effect
+            isChapterTyping.value = false;
+            isWaitingForData.value = false;
+            displayedContent.value = content;
+            if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+            if (scrollElement) {
+              // scrollElement.removeEventListener('scroll', handleScroll);
+            }
 
-            // Start typewriter timer: 30ms per character
-            isChapterTyping.value = true;
-            const typewriterTimer = setInterval(() => {
-              if (pendingConsumed >= pendingText.length) {
-                // Typewriter done
-                clearInterval(typewriterTimer);
-                isChapterTyping.value = false;
-                isWaitingForData.value = false;
-                if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-                if (scrollElement) {
-                  // scrollElement.removeEventListener('scroll', handleScroll);
-                }
+            // Check if we need to generate next chapter in batch mode
+            if ((isBatchChapter.value == 1 || isUserInitiatedGeneration.value) && chapterIndex < chapterCount.value) {
+              // Wait 2 seconds before generating next chapter to show current content
+              setTimeout(async () => {
+                const nextChapterIndex = chapterIndex + 1;
+                const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter === nextChapterIndex);
 
-                // Update final state
-                taskStatus.value = 'SUCCESS';
-                generatingChapter.value = null;
+                // Update UI for next chapter
+                currentChapter.value = {
+                  chapter: nextChapterIndex,
+                  title: nextChapterData?.title || '',
+                  content: ''
+                };
+                displayedContent.value = '';
+                isLoading.value = true;
                 hasFailed.value = false;
-                // Only update currentChapter if we're still viewing a chapter
-                // Don't update if we're viewing outline
-                if (currentChapter.value) {
-                  currentChapter.value.content = pendingText;
-                }
-                // Hide estimated time display after chapter generation completes
-                estimatedTime.value = null;
-                displayMinutes.value = 0;
+                taskStatus.value = 'DOING';
+                stepChapterIndex.value = nextChapterIndex;
+                generatingChapter.value = nextChapterIndex;
 
-                return;
-              }
-
-              isWaitingForData.value = false;
-              pendingConsumed++;
-              displayedContent.value = pendingText.substring(0, pendingConsumed);
-
-              // Use nextTick to ensure DOM is updated before scrolling
-              nextTick(() => {
-                // Get the latest scroll element to ensure it's still valid
-                const latestScrollElement = chapterContentRef.value;
-                if (latestScrollElement) {
-                  // Force scroll to bottom
-                  latestScrollElement.scrollTop = latestScrollElement.scrollHeight;
-                }
-              });
-            }, 30);
+                // Start generating next chapter
+                await fetchChapterStream(nextChapterIndex);
+              }, 2000); // Wait 2 seconds before generating next chapter
+            } else {
+              // Reset flags when batch generation is complete
+              isUserInitiatedGeneration.value = false;
+            }
           } else if (taskData.status === 'FAIL') {
             // Clear polling interval
             if (pollingInterval.value) {
@@ -3122,21 +3279,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
   }
 };
 
-// Filter chapter content: remove # CH header and verification text
-const filterChapterContent = (content: string): string => {
-  let result = content;
-  const chapterStartMatch = result.match(/# CH\d+/);
-  if (chapterStartMatch && chapterStartMatch.index !== undefined) {
-    result = result.substring(chapterStartMatch.index + chapterStartMatch[0].length);
-    result = result.replace(/\\n/g, '\n');
-  }
-  const verifyMatch = result.indexOf('让我验证衔接一致性：');
-  if (verifyMatch > -1) {
-    result = result.substring(0, verifyMatch);
-  }
-  return result;
-};
-
 // Fetch novel outline with complete API flow
 const fetchNovelOutline = async () => {
   if (isFetchingNovelOutline.value) {
@@ -3179,6 +3321,13 @@ const fetchNovelOutline = async () => {
     // Save task_start_at if available
     if (detailProjectRes.data?.task_start_at) {
       taskStartAt.value = detailProjectRes.data.task_start_at;
+      // Convert task_start_at to startTime for shouldShowEstimatedTime
+      const startTimeDate = new Date(detailProjectRes.data.task_start_at);
+      if (!isNaN(startTimeDate.getTime())) {
+        startTime.value = startTimeDate.getTime();
+      } else {
+        startTime.value = Date.now();
+      }
     }
 
     // Check if detailProject has cover information
@@ -3610,6 +3759,7 @@ onMounted(async () => {
 
   document.addEventListener('click', handleClickOutside);
   window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 // Handle before unload event
@@ -3633,7 +3783,58 @@ onBeforeUnmount(() => {
   stopCoverPolling();
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
+
+// Handle visibility change - continue polling when tab becomes visible again
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    // When tab becomes visible again, refresh the content
+    if (isLoading.value && currentChapter.value) {
+      // Trigger a content refresh by re-fetching
+      const chapterIndex = currentChapter.value.chapter;
+      if (chapterIndex && sessionId.value) {
+        // Refresh content from server
+        refreshChapterContent(chapterIndex);
+      }
+    }
+  }
+}
+
+// Refresh chapter content from server
+async function refreshChapterContent(chapterIndex: number) {
+  try {
+    const pollingResponse = await api.taskPolling(sessionId.value) as any;
+    if (pollingResponse.code == 200 && pollingResponse.data) {
+      const taskData = pollingResponse.data;
+
+      if (taskData.status == 'SUCCESS') {
+        let content = '';
+        if (taskData.result && taskData.result.content) {
+          content = taskData.result.content;
+        } else if (taskData.content) {
+          content = taskData.content;
+        }
+
+        if (content) {
+          currentChapter.value.content = content;
+          displayedContent.value = content;
+          isLoading.value = false;
+          isWaitingForData.value = false;
+          isChapterTyping.value = false;
+          taskStatus.value = 'SUCCESS';
+
+          if (pollingInterval.value) {
+            clearInterval(pollingInterval.value);
+            pollingInterval.value = null;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error refreshing chapter content:', error);
+  }
+}
 
 class OutlineStreamParser {
   onText: (text: string) => void;
@@ -3648,6 +3849,7 @@ class OutlineStreamParser {
   pendingConsumed: number = 0;
   displayedText: string = '';
   typewriterTimer: ReturnType<typeof setInterval> | null = null;
+  visibilityChangeHandler: ((() => void) | null) = null;
 
   parseStage: number = 0;
   parsedTitle: boolean = false;
@@ -3675,6 +3877,20 @@ class OutlineStreamParser {
 
   async start(sessionId: string, token: string) {
     const url = `${aiUrl}app/stream_read/${sessionId}`;
+
+    // Add visibility change handler
+    this.visibilityChangeHandler = () => {
+      if (document.visibilityState === 'visible') {
+        // When tab becomes visible, immediately display all pending text
+        if (this.pendingConsumed < this.pendingText.length) {
+          this.pendingConsumed = this.pendingText.length;
+          this.displayedText = this.pendingText;
+          this.onText(this.displayedText);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
 
     this.typewriterTimer = setInterval(() => {
       if (this.pendingConsumed >= this.pendingText.length) return;
@@ -3723,9 +3939,16 @@ class OutlineStreamParser {
       this._onStreamDone();
     } catch (err: any) {
       if (err.name === 'AbortError') {
+        if (this.typewriterTimer) clearInterval(this.typewriterTimer);
+        if (this.visibilityChangeHandler) {
+          document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+        }
         return;
       }
       if (this.typewriterTimer) clearInterval(this.typewriterTimer);
+      if (this.visibilityChangeHandler) {
+        document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+      }
       this.onError(err.message || 'Stream error');
     }
   }
@@ -3878,6 +4101,9 @@ class OutlineStreamParser {
       if (this.pendingConsumed >= this.pendingText.length) {
         clearInterval(waitTimer);
         if (this.typewriterTimer) clearInterval(this.typewriterTimer);
+        if (this.visibilityChangeHandler) {
+          document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+        }
 
         let finalText = this.pendingText.trimEnd();
 

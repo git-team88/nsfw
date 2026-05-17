@@ -336,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps, defineEmits, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -953,11 +953,16 @@ async function submitComment() {
       }
     }
 
+    const authToken = token || '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+
     const response = await fetch(`${baseUrl}comment/createComment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'token': token
+        'token': token,
+        ts,
+        sign
       },
       body: JSON.stringify(commentData)
     });
@@ -1040,6 +1045,11 @@ async function updateCommentCount() {
     if (token) {
       headers['token'] = token;
     }
+
+    const authToken = '';
+    const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['ts'] = ts;
+    headers['sign'] = sign;
 
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
@@ -1726,10 +1736,13 @@ async function uploadImage(file: File) {
     const formData = new FormData();
     formData.append('file', file);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
@@ -2184,8 +2197,8 @@ function likeReply(id: string, liked: boolean) {
 
           .nickname {
             font-size: 1.6rem;
-            color: #101828;
-            font-weight: 600;
+            color: #364153;
+            font-weight: 500;
           }
         }
 
@@ -2194,8 +2207,8 @@ function likeReply(id: string, liked: boolean) {
 
           .post-title {
             font-size: 2rem;
-            color: #101828;
-            font-weight: 600;
+            color: #364153;
+            font-weight: 500;
             margin-bottom: 1.6rem;
           }
 

@@ -2,7 +2,7 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id">
       <div class="left-info">
-        <img class="avatar" :src="item.follower.avatar" alt="" @click="goUserHome(item.follower.user_id)" />
+        <img class="avatar" :src="item.follower.avatar || defaultAvatar" alt="" @click="goUserHome(item.follower.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
           <div class="username">{{ item.follower.nickname }}</div>
           <div class="desc">{{ t("user.messages.followText") }}</div>
@@ -19,6 +19,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import EmptyState from "@/components/EmptyState.vue";
 import { formatTimestamp } from "@/util/utils";
+import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
 const router = useRouter();

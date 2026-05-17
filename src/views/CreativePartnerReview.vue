@@ -325,7 +325,7 @@ function goHome() { router.push('/'); }
   &.future {
     .step-dot {
       background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.1);
     }
     .step-label { color: rgba(255, 255, 255, 0.3); }
   }

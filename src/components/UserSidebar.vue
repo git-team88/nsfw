@@ -43,7 +43,7 @@ const items = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
-  { key: "inviteRevenue", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
+  // { key: "inviteRevenue", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
   { key: "messages", label: "user.sidebar.messages", path: "/user-message" },

@@ -42,6 +42,7 @@ const userInfo = ref<Record<string, any>>({});
 const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4ea89113891e84ff21c06461a8a5d2da64d5.png'
 
 onMounted(async () => {
+  window.scrollTo(0, 0);
   try {
     const res = (await api.getProfile()) as unknown as { code: number; data: Record<string, any> };
     if (res.code === 200 || res.code === 0) {

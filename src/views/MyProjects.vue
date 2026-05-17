@@ -6,7 +6,7 @@
       <div class="projects-header">
         <h2>{{ t('myProjects.title') }}</h2>
 
-        <!-- Main Tabs: 漫剧, 漫画, 小说 -->
+        <!-- Main Tabs: 小说, 漫画, 漫剧, 图片, 视频 -->
         <div class="main-tabs">
           <div
             v-for="tab in mainTabs"
@@ -77,7 +77,23 @@
                     <img :src="project.result_async.final_video_output.video_cover_url" alt="" />
                   </div>
                 </div>
-                <!-- Use images from result_async.generate_character_images if no video cover -->
+                <!-- Use generate_manju_cover if available -->
+                <div v-else-if="project.result_async?.generate_manju_cover" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_manju_cover" alt="" />
+                  </div>
+                </div>
+                <!-- Use images from result_async.generate_character_main_views if no manju cover -->
+                <div v-else-if="project.result_async?.generate_character_main_views && project.result_async.generate_character_main_views.length > 0" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_character_main_views[0].main_image_url" alt="" />
+                  </div>
+                </div>
+                <!-- Use images from result_async.generate_character_images if no main views -->
                 <div v-else-if="project.result_async?.generate_character_images && project.result_async.generate_character_images.length > 0" class="character-images">
                   <div
                     class="character-image-item"
@@ -96,14 +112,31 @@
               </div>
 
               <div class="card-cover" v-if="activeMainTab == 'manhua'">
-                <div v-if="project.result_async?.generate_character_images && project.result_async.generate_character_images.length > 0" class="character-images">
+                <!-- Use generate_manhua_cover if available -->
+                <div v-if="project.result_async?.generate_manhua_cover" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_manhua_cover" alt="" />
+                  </div>
+                </div>
+                <!-- Use images from result_async.generate_character_main_views if no manhua cover -->
+                <div v-else-if="project.result_async?.generate_character_main_views && project.result_async.generate_character_main_views.length > 0" class="character-images">
+                  <div
+                    class="character-image-item"
+                  >
+                    <img :src="project.result_async.generate_character_main_views[0].main_image_url" alt="" />
+                  </div>
+                </div>
+                <!-- Use images from result_async.generate_character_images if no main views -->
+                <div v-else-if="project.result_async?.generate_character_images && project.result_async.generate_character_images.length > 0" class="character-images">
                   <div
                     class="character-image-item"
                   >
                     <img :src="project.result_async.generate_character_images[0].main_image_url" alt="" />
                   </div>
                 </div>
-
+                <!-- Fallback to original cover if no character images -->
                 <img v-else :src="project.cover || pic" alt="" class="cover-img" />
 
                 <div class="edit-btn" @click="openEditPage(project.session_id, 2)">{{ t('myProjects.buttons.edit') }}</div>
@@ -126,6 +159,39 @@
                 </div>
               </div>
 
+              <!-- Photo Tab - 图片类型 -->
+              <div v-else-if="activeMainTab == 'photo'">
+                <div class="card-cover photo-cover">
+                  <div v-if="project.images && project.images.length > 0" class="grid-images">
+                    <div
+                      class="grid-image-item"
+                      v-for="(img, index) in project.images.slice(0, 4)"
+                      :key="index"
+                    >
+                      <img :src="img" alt="" />
+                    </div>
+                    <!-- 如果只有1张图，填充空白 -->
+                    <div v-if="project.images.length === 1" class="grid-image-item"><img :src="pic" alt="" /></div>
+                    <div v-if="project.images.length <= 2" class="grid-image-item"><img :src="pic" alt="" /></div>
+                    <div v-if="project.images.length <= 3" class="grid-image-item"><img :src="pic" alt="" /></div>
+                  </div>
+                  <div v-else class="default-cover">
+                    <img :src="pic" alt="" class="cover-img" />
+                  </div>
+                  <!-- 悬浮编辑按钮 -->
+                  <div class="photo-edit-btn" @click="goToGenerate(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
+                </div>
+              </div>
+
+              <!-- Video Tab - 视频类型 -->
+              <div v-else-if="activeMainTab == 'video'">
+                <div class="card-cover video-cover">
+                  <img :src="project.result_async?.final_videos[0].video_cover_url || pic" alt="" class="cover-img" />
+
+                  <div class="video-edit-btn" @click="goToGenerate(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
+                </div>
+              </div>
+
               <!-- Project Info -->
               <div class="card-info">
                 <div class="card-desc" v-if="project.name">{{ project.name }}</div>
@@ -143,7 +209,8 @@
                       v-if="activeMenuProjectId === project.id"
                       :class="dropdownPos"
                     >
-                      <div class="menu-item" @click="openRenameModal(project.session_id, project.name)">{{ t('myProjects.menu.rename') }}</div>
+                      <!-- 重命名只对小说、漫画、漫剧显示 -->
+                      <div v-if="activeMainTab === 'novel' || activeMainTab === 'manhua' || activeMainTab === 'manju'" class="menu-item" @click="openRenameModal(project.session_id, project.name)">{{ t('myProjects.menu.rename') }}</div>
                       <div class="menu-item delete" @click="deleteProject(project.session_id)">{{ t('myProjects.menu.delete') }}</div>
                     </div>
                   </div>
@@ -180,6 +247,7 @@
 <script setup lang="ts" name="MyProjects">
 import { ref, onMounted, onBeforeUnmount, nextTick, type CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PreviewModal from '@/components/PreviewModal.vue';
@@ -192,6 +260,7 @@ import { toast } from '@/util/toast';
 import router from '@/router';
 
 const { t, locale } = useI18n();
+const route = useRoute();
 
 // State
 const activeMainTab = ref('novel');
@@ -205,6 +274,9 @@ const currentVideoUrl = ref('');
 const currentPage = ref(1);
 const itemsPerPage = ref(20);
 const myProjectsRef = ref<HTMLElement | null>(null);
+
+// Request identifier to avoid race conditions
+const currentRequestId = ref(0);
 
 // Menu and Rename State
 const activeMenuProjectId = ref<number | null>(null);
@@ -222,7 +294,9 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 const mainTabs = ref([
   { value: 'novel' },
   { value: 'manhua' },
-  { value: 'manju' }
+  { value: 'manju' },
+  { value: 'photo' },
+  { value: 'video' }
 ]);
 
 const statusTabs = ref([
@@ -268,8 +342,16 @@ function openEditPage(sessionId: string, type: number) {
   } else if (type == 2) {
     window.open(`/tools/comic/${sessionId}`, '_blank');
   } else {
-    window.open(`/tools/space/${sessionId}`, '_blank');
+    window.open(`/tools/video/${sessionId}`, '_blank');
   }
+}
+
+function goToGenerate(sessionId: string) {
+  // 使用localStorage临时存储sessionId
+  localStorage.setItem('targetSessionId', sessionId);
+  router.push({
+    name: 'Generate'
+  });
 }
 
 function playVideo(videoUrl: string) {
@@ -369,12 +451,18 @@ async function deleteProject(projectId: string) {
     });
 
     const data = response as unknown as { code: number; message: string; data?: any };
-    if (data.code === 200) {
+    if (data.code == 200) {
       // Temporarily remove scroll event listener to prevent duplicate requests
       if (myProjectsRef.value) {
         myProjectsRef.value.removeEventListener('scroll', handleScroll);
       }
 
+      // Reset current page before loading projects
+      currentPage.value = 1;
+      projects.value = [];
+      hasMore.value = true;
+
+      // Load projects with reset=true
       await loadProjects(true);
 
       // Scroll to top
@@ -405,90 +493,102 @@ async function loadProjects(reset = false) {
     loadingMore.value = true;
   }
 
+  // Generate a unique request ID for this request
+  const requestId = ++currentRequestId.value;
+  // Store the current tab combination at the time of the request
+  const currentTab = activeMainTab.value;
+  const currentStatus = activeStatusTab.value;
+
   try {
-    // Map tab values to API parameters
-    const statusMap: Record<string, number> = {
-      'unpublished': 0,
-      'released': 1
-    };
-
-    const params = new URLSearchParams({
-      is_publish: '0',
-      story_type: activeMainTab.value,
-      page: currentPage.value.toString(),
-      limit: itemsPerPage.value.toString()
-    });
-
-    // Add token to request headers
-    const token = localStorage.getItem('token');
-    const headers: HeadersInit = {};
-    if (token) {
-      headers['token'] = token;
+    let response;
+    if (activeMainTab.value == 'photo') {
+      response = await api.getProject(0, 'simple_image', currentPage.value, itemsPerPage.value, 0) as any;
+    } else if (activeMainTab.value === 'video') {
+      response = await api.getProject(0, 'simple_video', currentPage.value, itemsPerPage.value, 0) as any;
+    } else {
+      response = await api.getProject(0, activeMainTab.value, currentPage.value, itemsPerPage.value, 0) as any;
     }
 
-    const response = await fetch(`${aiUrl}app/project/list?${params.toString()}`, {
-      headers
-    });
+    // Check if this request is still the latest one
+    if (requestId != currentRequestId.value) {
+      return; // Skip processing this response as it's outdated
+    }
 
-    if (response.ok) {
-      const data = await response.json();
+    // Check if the tab has changed while the request was in flight
+    if (currentTab !== activeMainTab.value || currentStatus !== activeStatusTab.value) {
+      return; // Skip processing this response as the tab has changed
+    }
 
-      if (data.code === 200 || data.code === 0) {
-        const newProjects = data.data?.data_list || data.data_list || [];
+    if (response.code == 200 || response.code == 0) {
+      let newProjects = response.data?.data_list || response.data_list || [];
 
-        if (currentPage.value === 1) {
-          projects.value = newProjects;
-        } else {
-          projects.value = [...projects.value, ...newProjects];
+      // Process projects based on tab type
+      newProjects = newProjects.map((project: any) => {
+        const processedProject = { ...project };
+
+        if (activeMainTab.value == 'photo') {
+          // Extract images from result_async.final_images for photo projects
+          if (project.result_async?.final_images) {
+            processedProject.images = project.result_async.final_images;
+          } else {
+            processedProject.images = [];
+          }
+        } else if (activeMainTab.value == 'video') {
+          // Extract video info for video projects
+          if (project.result_async?.final_video_output) {
+            processedProject.videoUrl = project.result_async.final_video_output.video_url;
+            processedProject.cover = project.result_async.final_video_output.video_cover_url || project.cover;
+          }
         }
 
-        // Check if there are more pages based on data_count
-        const totalCount = data.data?.data_count || data.data_count || 0;
-        hasMore.value = projects.value.length < totalCount;
+        return processedProject;
+      });
 
-        // Wait for images to load before updating loading state
-        nextTick(() => {
-          let loadedCount = 0;
-          const total = newProjects.length;
-          if (total === 0) {
-            loadingMore.value = false;
-            loading.value = false;
-            return;
-          }
+      if (currentPage.value == 1) {
+        projects.value = newProjects;
+      } else {
+        projects.value = [...projects.value, ...newProjects];
+      }
 
-          newProjects.forEach((project: any) => {
-            // Load cover image
-            if (project.cover || project.cover_image) {
-              const img = new Image();
-              img.src = project.cover || project.cover_image;
-              img.onload = img.onerror = () => {
-                loadedCount++;
-                if (loadedCount === total) {
-                  loadingMore.value = false;
-                  loading.value = false;
-                }
-              };
-            } else {
+      // Check if there are more pages based on data_count
+      const totalCount = response.data?.data_count || response.data_count || 0;
+      hasMore.value = projects.value.length < totalCount;
+
+      // Wait for images to load before updating loading state
+      nextTick(() => {
+        let loadedCount = 0;
+        const total = newProjects.length;
+        if (total === 0) {
+          loadingMore.value = false;
+          loading.value = false;
+          return;
+        }
+
+        newProjects.forEach((project: any) => {
+          // Load cover image
+          if (project.cover || project.cover_image) {
+            const img = new Image();
+            img.src = project.cover || project.cover_image;
+            img.onload = img.onerror = () => {
               loadedCount++;
               if (loadedCount === total) {
                 loadingMore.value = false;
                 loading.value = false;
               }
+            };
+          } else {
+            loadedCount++;
+            if (loadedCount === total) {
+              loadingMore.value = false;
+              loading.value = false;
             }
-          });
+          }
         });
+      });
 
-        currentPage.value++;
-      } else {
-        console.error('API Error:', data.msg || 'Unknown error');
-        if (currentPage.value === 1) {
-          projects.value = [];
-        }
-        hasMore.value = false;
-        loadingMore.value = false;
-      }
+      currentPage.value++;
     } else {
-      console.error('Failed to load projects:', response.status);
+      console.error('API Error:', response.msg || 'Unknown error');
       if (currentPage.value === 1) {
         projects.value = [];
       }
@@ -517,10 +617,32 @@ async function loadMoreProjects() {
   await loadProjects(false);
 }
 
-
-
 // Lifecycle
 onMounted(async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+    return false;
+  }
+
+  window.scrollTo(0, 0);
+
+  // Check for tab parameter in route query
+  const tabParam = route.query.tab as string;
+  if (tabParam) {
+    // Map tab parameter to tab value
+    const tabMap: Record<string, string> = {
+      '1': 'novel',  // 小说
+      '2': 'manhua', // 漫画
+      '3': 'manju'   // 漫剧
+    };
+
+    const tabValue = tabMap[tabParam];
+    if (tabValue) {
+      activeMainTab.value = tabValue;
+    }
+  }
+
   // Load initial projects
   await loadProjects(true);
 
@@ -561,9 +683,12 @@ function handleScroll() {
 <style lang="scss" scoped>
 .my-projects {
   width: 100%;
+  min-height: 100vh;
   padding: 14rem 0 0;
   background: #FFFFFF;
   scroll-behavior: smooth;
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .container {
@@ -816,6 +941,103 @@ function handleScroll() {
       }
     }
 
+    // Photo Cover Grid Layout - 四分显示
+    .photo-cover {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F5F5F5;
+    }
+
+    .grid-images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      width: 100%;
+      height: 100%;
+    }
+
+    .grid-image-item {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F5F5F5;
+      overflow: hidden;
+
+      img {
+        max-width: 100%;
+        width: auto;
+        height: 100%;
+        object-fit: contain;
+      }
+    }
+
+    .no-image-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: #99A1AF;
+      font-size: 1.4rem;
+    }
+
+    .photo-edit-btn {
+      position: absolute;
+      bottom: 2.4rem;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateX(-50%);
+      background: #FB64B6;
+      color: #ffffff;
+      padding: 0 2rem;
+      min-width: 9.8rem;
+      height: 4rem;
+      border-radius: 0.8rem;
+      font-size: 1.4rem;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .photo-cover:hover {
+      .photo-edit-btn {
+        opacity: 1;
+      }
+    }
+
+    .video-edit-btn {
+      position: absolute;
+      bottom: 2.4rem;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateX(-50%);
+      background: #FB64B6;
+      color: #ffffff;
+      padding: 0 2rem;
+      min-width: 9.8rem;
+      height: 4rem;
+      border-radius: 0.8rem;
+      font-size: 1.4rem;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .video-cover:hover {
+      .video-edit-btn {
+        opacity: 1;
+      }
+    }
+
     &:hover {
       .publish-btn {
         opacity: 1;
@@ -879,8 +1101,8 @@ function handleScroll() {
               cursor: pointer;
               text-align: center;
               &:hover {
-                font-weight: bold;
-                color: #101828;
+                font-weight: 500;
+                color: #364153;
               }
             }
           }

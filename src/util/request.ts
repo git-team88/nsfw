@@ -2,16 +2,27 @@ import axios from 'axios'
 import qs from 'qs'
 import { baseUrl } from '../util/config'
 import router from '@/router'
+import '@/util/antiCrawler'
+
+declare global {
+  interface Window {
+    AntiCrawler: {
+      generateAuthParams: (token: string) => { ts: string; sign: string }
+    }
+  }
+}
 
 class Request {
   baseURL: string;
   timeout: number;
   constructor() {
     this.baseURL = baseUrl
-    this.timeout = 120000
+    this.timeout = 180000
   }
   setInterceptor = (instance: any) => {
-    instance.interceptors.request.use((config: { method: string; paramsSerializer: (params: any) => string; header: any; data: string; headers: { token?: any; "Content-Type"?: string; }; }) => {
+    instance.interceptors.request.use((config: {
+      url: string, method: string; paramsSerializer: (params: any) => string; header: any; data: string; headers: { token?: any; "Content-Type"?: string; };
+}) => {
       if (config.method == 'GET') {
         config.paramsSerializer = function (params) {
           return qs.stringify({
@@ -39,24 +50,34 @@ class Request {
         config.headers.token = token
       }
 
+      const url = config.url || '';
+      const usePublicToken = url.includes('Public');
+
+      let authToken: string;
+      if (usePublicToken) {
+        authToken = '';
+      } else {
+        authToken = token || '';
+      }
+
+      const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+      ;(config.headers as any).ts = ts
+      ;(config.headers as any).sign = sign
+
       return config
     }, (err: any) => Promise.reject(err))
 
     instance.interceptors.response.use((res: { data: { code: any; }; }) => {
       const code = res.data.code
-      if (code == 101 || code == 100) {
+      if (code == 101 || code == 100 || code == 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('uid')
+        localStorage.removeItem('userInfo')
+
+        const logoutEvent = new Event('userLogout');
+        window.dispatchEvent(logoutEvent);
 
         router.push("/");
-
-        // const currentPath = window.location.pathname;
-        // const keepPaths = ["/detail", "/user-home", "/search"];
-        // const shouldKeepPath = keepPaths.some(path => currentPath.includes(path));
-
-        // if (!shouldKeepPath) {
-        //   router.push("/");
-        // }
       }
       return res.data
     }, (err: any) => {

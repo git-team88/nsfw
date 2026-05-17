@@ -86,12 +86,16 @@
     </div>
   </div>
   <UploadMask :visible="isLoading" :text="t('loading')" />
+  <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
+  <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
 </template>
 
 <script setup lang="ts" name="UserSubscriptionEdit">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import KycRequiredModal from "@/components/KycRequiredModal.vue";
+import KycReviewingModal from "@/components/KycReviewingModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
@@ -112,6 +116,9 @@ const loading = ref(false);
 const plan = ref<any>(null);
 const isLoading = ref(false);
 const hasAccount = ref(false);
+
+const showKycRequiredModal = ref(false);
+const showKycReviewingModal = ref(false);
 
 onMounted(async () => {
   await fetchSubscription();
@@ -162,7 +169,7 @@ async function handleCreateAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.open(data.data?.url, '_blank');
+      window.location.href = data.data?.url;
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
     }
@@ -180,7 +187,7 @@ async function handleChangeAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.open(data.data?.url, '_blank');
+      window.location.href = data.data?.url;
     } else {
       toast(locale.value == 'jp' ? data.msg_jp : data.msg);
     }
@@ -192,34 +199,54 @@ async function handleChangeAccount() {
 }
 
 async function onSave() {
-  if (!hasAccount.value) {
-    await handleCreateAccount();
-
-    return false;
-  }
-
-  saving.value = true;
   try {
-    const params = {
-      plan_id: selectedId.value,
-      description: benefits.value
-    };
+    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    if (kycRes.code === 0 || kycRes.code === 200) {
+      const kycData = kycRes.data;
 
-    const res = await api.modifySubscription(params);
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
 
-    if (data.code === 200 || data.code === 0) {
-      toast(t('success'));
-
-      router.push("/user-subscription");
-    } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      if (isDataEmpty) {
+        showKycRequiredModal.value = true;
+        return;
+      } else {
+        const status = kycData.status;
+        if (status == 0 || status == '0' || status == 2 || status == '2') {
+          showKycReviewingModal.value = true;
+          return;
+        }
+      }
     }
-  } catch (error) {
-    console.error(error);
-    toast(t("fail"));
-  } finally {
-    saving.value = false;
+
+    if (!hasAccount.value) {
+      await handleCreateAccount();
+      return;
+    }
+
+    saving.value = true;
+    try {
+      const params = {
+        plan_id: selectedId.value,
+        description: benefits.value
+      };
+
+      const res = await api.modifySubscription(params);
+      const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+
+      if (data.code === 200 || data.code === 0) {
+        toast(t('success'));
+        router.push("/user-subscription");
+      } else {
+        toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      }
+    } catch (error) {
+      console.error(error);
+      toast(t("fail"));
+    } finally {
+      saving.value = false;
+    }
+  } catch (e) {
+    console.error(e);
   }
 }
 </script>

@@ -113,7 +113,10 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
   isUploading.value = true;
   const formData = new FormData();
   formData.append("file", file);
-  const parma = { method: "POST", headers: { token }, body: formData };
+
+  const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+  const parma = { method: "POST", headers: { token, ...authHeaders }, body: formData };
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())
     .then(
