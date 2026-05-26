@@ -1,50 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
-
-import PublishSuccess from "@/views/publish/Success.vue";
-import Search from "@/views/Search.vue";
-import Similar from "@/views/Similar.vue";
-import MyProjects from "@/views/MyProjects.vue";
-import CharacterLibrary from "@/views/CharacterLibrary.vue";
-
-import UserHome from "@/views/user/UserHome.vue";
-import SubscriptionPayment from "@/views/user/SubscriptionPayment.vue";
-import SubscriptionSuccess from "@/views/user/SubscriptionSuccess.vue";
-import SubscriptionFailed from "@/views/user/SubscriptionFailed.vue";
-import AIToolPaymentSuccess from "@/views/user/AIToolPaymentSuccess.vue";
-import AIToolPaymentFailed from "@/views/user/AIToolPaymentFailed.vue";
-import UserPersonalInfo from "@/views/user/Personal.vue";
-import UserPersonalEdit from "@/views/user/PersonalEdit.vue";
-import UserInteractive from "@/views/user/Interactive.vue";
-import InviteRevenue from "@/views/user/InviteRevenue.vue";
-import UserRevenue from "@/views/user/Revenue.vue";
-import UserMessages from "@/views/user/Messages.vue";
-import UserAccount from "@/views/user/Account.vue";
-import UserProfileSettings from "@/views/user/Profile.vue";
-import UserProfileEdit from "@/views/user/ProfileEdit.vue";
-import UserSubscription from "@/views/user/Subscription.vue";
-import UserSubscriptionEdit from "@/views/user/SubscriptionEdit.vue";
-import PaymentHistory from "@/views/user/PaymentHistory.vue";
-import CommunityConvention from "@/views/user/CommunityConvention.vue";
-import AccountSuccess from "@/views/user/AccountSuccess.vue";
-import AccountFailed from "@/views/user/AccountFailed.vue";
-
-import UserPrivacy from "@/views/user/Privacy.vue";
-
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
 import Terms from "@/views/login/Terms.vue";
 import Privacy from "@/views/login/Privacy.vue";
-import ResetPassword from "@/views/login/ResetPassword.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
+import ResetPassword from "@/views/login/ResetPassword.vue";
 import PaymentTerms from "@/views/PaymentTerms.vue";
-import AIRecharge from "@/views/AIRecharge.vue";
-import AIRechargeDetails from "@/views/AIRechargeDetails.vue";
-import ComputingPowerRules from "@/views/ComputingPowerRules.vue";
-
-import CreativePartner from "@/views/CreativePartner.vue";
-import CreativePartnerReview from "@/views/CreativePartnerReview.vue";
-import CreativePartnerPricing from "@/views/CreativePartnerPricing.vue";
 
 const routes = [
   {
@@ -85,17 +47,17 @@ const routes = [
   {
     path: "/ai-recharge",
     name: "AIRecharge",
-    component: AIRecharge,
+    component: () => import("@/views/AIRecharge.vue"),
   },
   {
     path: "/ai-points-details",
     name: "AIRechargeDetails",
-    component: AIRechargeDetails,
+    component: () => import("@/views/AIRechargeDetails.vue"),
   },
   {
     path: "/computing-rules",
     name: "ComputingPowerRules",
-    component: ComputingPowerRules,
+    component: () => import("@/views/ComputingPowerRules.vue"),
   },
   {
     path: "/reset-password",
@@ -120,7 +82,7 @@ const routes = [
   {
     path: "/publish/success",
     name: "PublishSuccess",
-    component: PublishSuccess,
+    component: () => import("@/views/publish/Success.vue"),
   },
   {
     path: "/detail",
@@ -135,22 +97,22 @@ const routes = [
   {
     path: "/search",
     name: "Search",
-    component: Search,
+    component: () => import("@/views/Search.vue"),
   },
   {
     path: "/similar",
     name: "Similar",
-    component: Similar,
+    component: () => import("@/views/Similar.vue"),
   },
   {
     path: "/my-projects",
     name: "MyProjects",
-    component: MyProjects,
+    component: () => import("@/views/MyProjects.vue"),
   },
   {
     path: "/character-library",
     name: "CharacterLibrary",
-    component: CharacterLibrary,
+    component: () => import("@/views/CharacterLibrary.vue"),
   },
   {
     path: "/generate",
@@ -165,67 +127,62 @@ const routes = [
   {
     path: "/user-home",
     name: "UserHome",
-    component: UserHome,
+    component: () => import("@/views/user/UserHome.vue"),
   },
   {
     path: "/subscription-payment",
     name: "SubscriptionPayment",
-    component: SubscriptionPayment,
+    component: () => import("@/views/user/SubscriptionPayment.vue"),
   },
   {
     path: "/subscription-success",
     name: "SubscriptionSuccess",
-    component: SubscriptionSuccess,
+    component: () => import("@/views/user/SubscriptionSuccess.vue"),
   },
   {
     path: "/subscription-fail",
     name: "SubscriptionFailed",
-    component: SubscriptionFailed,
+    component: () => import("@/views/user/SubscriptionFailed.vue"),
   },
   {
     path: "/aitool-payment-success",
     name: "AIToolPaymentSuccess",
-    component: AIToolPaymentSuccess,
+    component: () => import("@/views/user/AIToolPaymentSuccess.vue"),
   },
   {
     path: "/aitool-payment-fail",
     name: "AIToolPaymentFailed",
-    component: AIToolPaymentFailed,
+    component: () => import("@/views/user/AIToolPaymentFailed.vue"),
   },
   {
     path: "/user-personal",
     name: "UserPersonalInfo",
-    component: UserPersonalInfo,
+    component: () => import("@/views/user/Personal.vue"),
   },
   {
     path: "/user-personal-edit",
     name: "UserPersonalEdit",
-    component: UserPersonalEdit,
+    component: () => import("@/views/user/PersonalEdit.vue"),
   },
   {
     path: "/user-interactive",
     name: "UserInteractive",
-    component: UserInteractive,
+    component: () => import("@/views/user/Interactive.vue"),
   },
-  // {
-  //   path: "/user-invite",
-  //   name: "InviteRevenue",
-  //   component: InviteRevenue,
-  // },
   {
     path: "/user-revenue",
     name: "UserRevenue",
-    component: UserRevenue,
+    component: () => import("@/views/user/Revenue.vue"),
   },
   {
     path: "/community-convention",
     name: "CommunityConvention",
-    component: CommunityConvention,
+    component: () => import("@/views/user/CommunityConvention.vue"),
   },
   {
     path: "/user-subscription",
     name: "UserSubscription",
-    component: UserSubscription,
+    component: () => import("@/views/user/Subscription.vue"),
   },
   {
     path: "/user-kyc",
@@ -235,63 +192,48 @@ const routes = [
   {
     path: "/user-subscription-edit",
     name: "UserSubscriptionEdit",
-    component: UserSubscriptionEdit,
+    component: () => import("@/views/user/SubscriptionEdit.vue"),
   },
   {
     path: "/account-success",
     name: "AccountSuccess",
-    component: AccountSuccess,
+    component: () => import("@/views/user/AccountSuccess.vue"),
   },
   {
     path: "/account-fail",
     name: "AccountFailed",
-    component: AccountFailed,
+    component: () => import("@/views/user/AccountFailed.vue"),
   },
   {
     path: "/user-privacy",
     name: "UserPrivacy",
-    component: UserPrivacy,
+    component: () => import("@/views/user/Privacy.vue"),
   },
   {
     path: "/user-message",
     name: "UserMessages",
-    component: UserMessages,
+    component: () => import("@/views/user/Messages.vue"),
   },
   {
     path: "/user-account",
     name: "UserAccount",
-    component: UserAccount,
+    component: () => import("@/views/user/Account.vue"),
   },
   {
     path: "/user-profile",
     name: "UserProfileSettings",
-    component: UserProfileSettings,
+    component: () => import("@/views/user/Profile.vue"),
   },
   {
     path: "/user-profile-edit",
     name: "UserProfileEdit",
-    component: UserProfileEdit,
+    component: () => import("@/views/user/ProfileEdit.vue"),
   },
   {
     path: "/user-payment-history",
     name: "PaymentHistory",
-    component: PaymentHistory,
+    component: () => import("@/views/user/PaymentHistory.vue"),
   },
-  // {
-  //   path: "/creative-partner",
-  //   name: "CreativePartner",
-  //   component: CreativePartner,
-  // },
-  // {
-  //   path: "/creative-partner-review",
-  //   name: "CreativePartnerReview",
-  //   component: CreativePartnerReview,
-  // },
-  // {
-  //   path: "/creative-partner-pricing",
-  //   name: "CreativePartnerPricing",
-  //   component: CreativePartnerPricing,
-  // },
   {
     path: "/:pathMatch(.*)*",
     redirect: "/",
@@ -301,6 +243,40 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // 如果是导航到首页，滚动到顶部
+    if (to.name === 'Home') {
+      return { top: 0, behavior: 'auto' };
+    }
+    // 如果有保存的滚动位置，恢复它
+    if (savedPosition) {
+      return savedPosition;
+    }
+    // 默认滚动到顶部
+    return { top: 0, behavior: 'auto' };
+  },
+});
+
+// Subdomain routing logic
+router.beforeEach((to, from, next) => {
+  const host = window.location.hostname;
+  const subdomain = host.split('.')[0];
+
+  // Map subdomain to content type
+  const subdomainMap: Record<string, string> = {
+    'novel': 'novel',
+    'comic': 'comic',
+    'drama': 'drama',
+    'photo': 'photo',
+    'video': 'video'
+  };
+
+  // Store subdomain info in route meta
+  if (subdomainMap[subdomain]) {
+    to.meta.contentType = subdomainMap[subdomain];
+  }
+
+  next();
 });
 
 export default router;

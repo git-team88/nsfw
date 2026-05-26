@@ -35,6 +35,7 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import api from "@/api/index";
 import { useI18n } from "vue-i18n";
+import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
 
 const sidebarKey = ref("profile");
@@ -44,9 +45,11 @@ const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4e
 onMounted(async () => {
   window.scrollTo(0, 0);
   try {
-    const res = (await api.getProfile()) as unknown as { code: number; data: Record<string, any> };
-    if (res.code === 200 || res.code === 0) {
+    const res = (await api.getProfile()) as any;
+    if (res.code == 200 || res.code == 0) {
       userInfo.value = res.data || {};
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);

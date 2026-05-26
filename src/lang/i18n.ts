@@ -3,6 +3,7 @@ import { createI18n } from "vue-i18n";
 import en from "./en";
 import jp from "./jp";
 import zh from "./zh";
+import tc from "./tc";
 
 interface SocialMedia {
   title: string;
@@ -33,9 +34,10 @@ const messages: TranslationMessages = {
   en: { ...(en as any) },
   jp: { ...(jp as any) },
   zh: { ...(zh as any) },
+  tc: { ...(tc as any) },
 };
 
-const locale = (window.localStorage.getItem("lang") || "en").toLowerCase();
+const locale = (window.localStorage.getItem("lang") || "jp").toLowerCase();
 
 const i18n = createI18n({
   legacy: false,

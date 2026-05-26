@@ -372,7 +372,7 @@ function handleSubmit() {
                       timeCount();
                       codeError.value = t('register.spamTip');
                     } else {
-                      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+                      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
                       isSend.value = false;
                     }
                   })
@@ -391,7 +391,7 @@ function handleSubmit() {
           isSend.value = false;
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         isSend.value = false;
       }
     })
@@ -515,7 +515,7 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     })
     .catch((err: any) => {

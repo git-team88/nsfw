@@ -209,11 +209,7 @@ async function fetchData() {
       return; // Skip processing this response as the tab or page has changed
     }
 
-    const r = res as unknown as {
-      code: number;
-      msg?: string;
-      data?: { data: Record<string, unknown>[]; allnums: number };
-    };
+    const r = res as any;
     if (r.code === 0 || r.code === 200) {
       listData.value = r.data?.data || [];
       total.value = r.data?.allnums || 0;
@@ -231,11 +227,11 @@ async function fetchData() {
         console.error('Error updating message info:', error);
       }
     } else {
-      toast(r.msg || "Error");
+      toast(locale.value == 'en' ? r.msg : locale.value == 'zh' ? r.msg_cn : locale.value == 'tc' ? r.msg_tc : r.msg_jp);
     }
   } catch (e) {
     console.error(e);
-    toast("Failed to fetch data");
+    toast(t('fail'));
   } finally {
     loading.value = false;
   }

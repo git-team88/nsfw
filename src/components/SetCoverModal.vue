@@ -100,7 +100,6 @@
                 alt=""
                 class="preview-img"
                 ref="previewImgRef"
-                :style="imageStyle"
               />
               <div class="crop-frame"></div>
             </div>
@@ -173,19 +172,20 @@ const isLoadingFrames = ref(false);
 const estimatedFrameCount = ref(8);
 
 function getCropDimensions() {
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  // Crop frame is 15rem x 20rem = 3:4 aspect ratio
   return {
-    width: 1200,
-    height: 1600,
+    width: 15 * rootFontSize,
+    height: 20 * rootFontSize,
   };
 }
 
 const cropDimensions = computed(() => getCropDimensions());
 
-const imageStyle = computed(() => {
-  return {
-    transform: `translate(${imgOffsetX.value}px, ${imgOffsetY.value}px) scale(${imgScale.value})`,
-  };
-});
+const imageStyle = computed(() => ({
+  transform: `translate(${imgOffsetX.value}px, ${imgOffsetY.value}px) scale(${imgScale.value})`,
+  transformOrigin: 'center center',
+}));
 
 const timelineRef = ref<HTMLElement | null>(null);
 const dragPos = ref(0);
@@ -194,16 +194,17 @@ const isDragging = ref(false);
 // Watch for visible change to initialize
 watch(
   [() => props.visible, () => props.videoFile, () => props.videoUrl],
-  ([newVisible, newVideoFile, newVideoUrl], [oldVisible, oldVideoFile, oldVideoUrl]) => {
+  async ([newVisible, newVideoFile, newVideoUrl], [oldVisible, oldVideoFile, oldVideoUrl]) => {
     if (newVisible) {
       activeTab.value = "select"; // Default first tab
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
+      imgScale.value = 0.1; // Start with small scale to prevent large image flash
       localImage.value = null;
       // If coverUrl is provided, use it as selectedFrame initially
       if (props.coverUrl) {
         selectedFrame.value = props.coverUrl;
-        detectOrientation(props.coverUrl);
+        await detectOrientation(props.coverUrl);
       }
       // Regenerate frames if videoFile or videoUrl changed
       if ((newVideoFile || newVideoUrl) &&
@@ -360,7 +361,7 @@ function onCoverClick() {
   detectOrientation(selectedFrame.value);
 }
 
-function onFrameClick(index: number) {
+async function onFrameClick(index: number) {
   if (!timelineRef.value) return;
 
   const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -370,7 +371,7 @@ function onFrameClick(index: number) {
   dragPos.value = clickedPosition;
 
   selectedFrame.value = frames.value[index];
-  detectOrientation(selectedFrame.value);
+  await detectOrientation(selectedFrame.value);
 }
 
 function triggerUpload() {
@@ -427,20 +428,17 @@ function confirm() {
   const src = activeTab.value === "select" ? selectedFrame.value : localImage.value;
   if (!src) return;
 
+  isUploading.value = true;
+
   cropToCanvas(src).then((cropped) => {
-    // Show UploadMask
-    isUploading.value = true;
-    // Upload the cropped image
-    mockUpload(cropped).then((uploadedUrl) => {
-      // Hide UploadMask
-      isUploading.value = false;
-      emit("confirm", uploadedUrl);
-      close();
-    }).catch((error) => {
-      // Hide UploadMask on error
-      isUploading.value = false;
-      console.error("Upload error:", error);
-    });
+    return mockUpload(cropped);
+  }).then((uploadedUrl) => {
+    isUploading.value = false;
+    emit("confirm", uploadedUrl);
+    close();
+  }).catch((error) => {
+    isUploading.value = false;
+    console.error("Upload error:", error);
   });
 }
 
@@ -516,7 +514,6 @@ function applyImageOffset() {
   if (!imgEl) return;
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-
   const imgWidth = imgEl.naturalWidth * imgScale.value;
   const imgHeight = imgEl.naturalHeight * imgScale.value;
 
@@ -536,130 +533,84 @@ onMounted(() => {
 
 async function detectOrientation(dataUrl: string) {
   const img = new Image();
+  img.crossOrigin = 'anonymous';
   img.src = dataUrl;
   await new Promise((r) => (img.onload = r));
 
-  // Calculate based on crop frame aspect ratio (3:4)
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const previewContainerW = 47 * rootFontSize;
-  const previewContainerH = 22.4 * rootFontSize;
-  
-  // Crop frame is 15rem x 20rem = 3:4 aspect ratio
-  const cropFrameW = 15 * rootFontSize;
-  const cropFrameH = 20 * rootFontSize;
-  const cropRatio = cropFrameW / cropFrameH; // 3:4 = 0.75
-
+  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
   const naturalRatio = img.naturalWidth / img.naturalHeight;
+  const targetRatio = CROP_W / CROP_H;
 
-  // Calculate scale to fit image to crop frame aspect ratio
-  // Ensure the entire crop frame is filled with the image
-  if (naturalRatio > cropRatio) {
-    // Image is wider than 3:4, scale by height to fill crop frame
-    imgScale.value = cropFrameH / img.naturalHeight;
+  let scaleByWidth = CROP_W / img.naturalWidth;
+  let scaleByHeight = CROP_H / img.naturalHeight;
+
+  if (naturalRatio > targetRatio) {
+    // Landscape relative to crop frame - scale by height
+    imgScale.value = scaleByHeight;
   } else {
-    // Image is taller than 3:4, scale by width to fill crop frame
-    imgScale.value = cropFrameW / img.naturalWidth;
+    // Portrait relative to crop frame - scale by width
+    imgScale.value = scaleByWidth;
   }
 
-  // Ensure scale does not exceed 100% to maintain image clarity
-  // If image is smaller than crop frame, don't upscale
+  // Ensure image is not enlarged beyond original size
+  // If scaling ratio greater than 1 (original image smaller than crop frame), keep original size without upscaling
   if (imgScale.value > 1) {
     imgScale.value = 1;
   }
 
-  // Calculate offsets to center the image in preview container
-  const previewScaledWidth = img.naturalWidth * imgScale.value;
-  const previewScaledHeight = img.naturalHeight * imgScale.value;
+  // Center the image in the crop frame
+  const scaledWidth = img.naturalWidth * imgScale.value;
+  const scaledHeight = img.naturalHeight * imgScale.value;
 
-  imgOffsetX.value = (previewContainerW - previewScaledWidth) / 2;
-  imgOffsetY.value = (previewContainerH - previewScaledHeight) / 2;
-  
-  isPortrait.value = img.naturalHeight >= img.naturalWidth;
+  // Calculate offsets to center the image
+  imgOffsetX.value = (CROP_W - scaledWidth) / 2;
+  imgOffsetY.value = (CROP_H - scaledHeight) / 2;
+
+  // Apply the transformation immediately
+  applyImageOffset();
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    if (dataUrl.startsWith('http')) {
-      img.crossOrigin = "Anonymous";
-    }
-    img.onload = () => {
-      try {
-        const { width: TARGET_W, height: TARGET_H } = cropDimensions.value;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = dataUrl;
+  await new Promise((r) => (img.onload = r));
 
-        // Calculate the target aspect ratio (3:4)
-        const targetRatio = TARGET_W / TARGET_H; // 3:4 = 0.75
-        const naturalRatio = img.naturalWidth / img.naturalHeight;
+  const imgEl = previewImgRef.value!;
+  const imgRect = imgEl.getBoundingClientRect();
 
-        // Determine the optimal source rectangle from original image
-        let sx, sy, sw, sh;
+  const boxEl = imgEl.parentElement!;
+  const boxRect = boxEl.getBoundingClientRect();
 
-        if (naturalRatio >= targetRatio) {
-          // Image is wider than 3:4, use full height and calculate width
-          sh = img.naturalHeight;
-          sw = Math.round(sh * targetRatio);
-          // Center horizontally
-          sx = Math.round((img.naturalWidth - sw) / 2);
-          sy = 0;
-        } else {
-          // Image is taller than 3:4, use full width and calculate height
-          sw = img.naturalWidth;
-          sh = Math.round(sw / targetRatio);
-          // Center vertically
-          sx = 0;
-          sy = Math.round((img.naturalHeight - sh) / 2);
-        }
+  const previewCropW = boxRect.width * 0.319;
+  const previewCropH = boxRect.height * 0.893;
+  const cropLeft = boxRect.left + (boxRect.width - previewCropW) / 2;
+  const cropTop = boxRect.top + (boxRect.height - previewCropH) / 2;
 
-        // Apply user's drag offset
-        const scale = imgScale.value;
-        if (scale > 0 && scale <= 1) {
-          // Calculate how much user has moved the image
-          const maxOffsetX = (sw - img.naturalWidth * scale) / 2;
-          const maxOffsetY = (sh - img.naturalHeight * scale) / 2;
-          
-          // Convert preview offset to image coordinates
-          const offsetX = imgOffsetX.value / scale;
-          const offsetY = imgOffsetY.value / scale;
-          
-          // Apply offset with bounds
-          sx = Math.max(0, Math.min(sx + offsetX, img.naturalWidth - sw));
-          sy = Math.max(0, Math.min(sy + offsetY, img.naturalHeight - sh));
-        }
+  const displayScale = imgScale.value;
 
-        // Ensure values are integers
-        sx = Math.round(sx);
-        sy = Math.round(sy);
-        sw = Math.round(sw);
-        sh = Math.round(sh);
+  const sx = (cropLeft - imgRect.left) / displayScale;
+  const sy = (cropTop - imgRect.top) / displayScale;
+  const sw = previewCropW / displayScale;
+  const sh = previewCropH / displayScale;
 
-        // Use original cropped area size as output size to maintain image quality
-        const canvas = document.createElement("canvas");
-        canvas.width = sw;
-        canvas.height = sh;
+  const actualSx = Math.max(0, sx);
+  const actualSy = Math.max(0, sy);
+  const actualSw = Math.min(img.naturalWidth - actualSx, sw);
+  const actualSh = Math.min(img.naturalHeight - actualSy, sh);
 
-        const ctx = canvas.getContext("2d")!;
-        
-        // Disable image smoothing to preserve text sharpness
-        ctx.imageSmoothingEnabled = false;
+  // Output at original dimensions, no scaling up
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(actualSw);
+  canvas.height = Math.round(actualSh);
 
-        // Draw without resizing to maintain original quality
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
-        try {
-          resolve(canvas.toDataURL("image/png"));
-        } catch (e) {
-          console.warn('Canvas is tainted, returning original image');
-          resolve(dataUrl);
-        }
-      } catch (error) {
-        reject(error);
-      }
-    };
-    img.onerror = () => {
-      reject(new Error('Failed to load image'));
-    };
-    img.src = dataUrl;
-  });
+  ctx.drawImage(img, actualSx, actualSy, actualSw, actualSh, 0, 0, canvas.width, canvas.height);
+
+  return canvas.toDataURL("image/jpeg", 1.0);
 }
 </script>
 

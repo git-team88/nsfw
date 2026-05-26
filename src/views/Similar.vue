@@ -36,39 +36,42 @@
             @click="goToDetail(item.id, parseInt(item.type))"
           >
             <div class="content-image">
-              <img :src="item.cover" alt="" />
-              <!-- Type Icon -->
-              <div class="type-icon" v-if="item.type">
-                <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
-              </div>
-              <!-- Video Play Icon -->
-              <div v-if="item.type == '3'" class="play-icon">
-                <img src="@/assets/images/detail/play.png" alt="" />
-              </div>
-
-              <div class="content-bottom">
-                <!-- Like Count -->
-                <div class="content-stats" @click.stop="toggleLike(item)">
-                  <img :src="item.is_liked == 1 ? likeActive : like" alt="" />
+                <img :src="item.cover || defaultCover" alt="" />
+                <!-- Type Icon -->
+                <div class="type-icon" v-if="item.type">
+                  <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
+                  <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
+                  <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                </div>
+                <!-- Video Play Icon -->
+                <div v-if="item.type == '3'" class="play-icon">
+                  <img src="@/assets/images/detail/play.png" alt="" />
+                </div>
+                <!-- Like Count in Top Right -->
+                <div class="content-stats-top" @click.stop="toggleLike(item)">
                   <span>{{ formatNumber(item.like_count || 0) }}</span>
+                  <img :src="item.is_liked == 1 ? likeActive : like" alt="" />
                 </div>
-                <!-- Video Duration -->
-                <div class="video-duration" v-if="item.type == '3' && item.duration">
-                  {{ formatDuration(item.duration) }}
-                </div>
-              </div>
-            </div>
-            <div class="content-info">
-              <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
-              <div class="content-meta">
-                <div class="author-info" @click.stop="goToUserHome(item.author?.id || item.author_info?.id)">
-                  <img :src="item.author?.avatar || item.author_info?.avatar || ''" alt="" class="author-avatar" />
-                  <span class="author-name">{{ item.author?.nickname || item.author_info?.nickname }}</span>
+                <div class="content-bottom">
+                  <!-- Update Time and Chapter Count -->
+                  <div class="update-info">
+                    <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
+                    <span v-if="item.latest_post_updated && item.latest_post_chapter_index" class="chapter-divider">|</span>
+                    <span v-if="item.latest_post_chapter_index">
+                      {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div class="content-info">
+                <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
+                <div class="content-meta">
+                  <div class="author-info" @click.stop="goToUserHome(item.author?.id || item.author_info?.id)">
+                    <img :src="item.author?.avatar || item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                    <span class="author-name">{{ item.author?.nickname || item.author_info?.nickname }}</span>
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
 
@@ -102,6 +105,7 @@ import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { formatUpdateTime } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -117,8 +121,10 @@ const checkLogin = () => {
   return true;
 };
 
-import likeActive from '@/assets/images/detail/like_active.png';
+import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
+import defaultAvatar from "@/assets/images/base/avatar.png";
+import defaultCover from "@/assets/images/base/cover.png";
 
 // Types
 interface Content {
@@ -127,8 +133,9 @@ interface Content {
   title: string;
   description: string;
   cover: string;
-  time: string;
-  duration: number;
+  created_at: string;
+  latest_post_updated?: string;
+  latest_post_chapter_index?: number;
   author?: {
     avatar: string;
     nickname: string;
@@ -149,6 +156,8 @@ const contentList = ref<Content[] | null>(null);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const hasMore = ref(true);
+const userRegion = ref(false);
+const hasFetchedRegion = ref(false);
 
 // Type filters data
 const typeFilters = ref([
@@ -177,6 +186,13 @@ watch(() => locale.value, () => {
     { id: 1, label: t('home.contentType.comic') },
     { id: 3, label: t('home.contentType.drama') }
   ]
+
+  // Re-trigger load when language changes
+  if (contentList.value) {
+    currentPage.value = 1;
+    contentList.value = null;
+    loadData();
+  }
 });
 
 // Methods
@@ -203,12 +219,18 @@ async function loadData(fromLoadMore = false) {
     isLoading.value = true;
   }
 
+  // Ensure we have the latest country info before making the request
+  await getCountry();
+
   try {
-    const res = await api.getSimilar({
-      type: activeFilter.value,
-      page: currentPage.value,
-      limit: pageSize.value
-    }) as unknown as { code: number; msg: string; data?: any };
+    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+    const res = await api.homePostList(
+      currentPage.value,
+      pageSize.value,
+      activeFilter.value,
+      locale.value == 'zh' ? 'cn' : locale.value,
+      showNsfw
+    ) as any;
 
     // Check if this request is still the latest one
     if (requestId !== currentRequestId.value) {
@@ -225,28 +247,21 @@ async function loadData(fromLoadMore = false) {
     }
 
     if (res.code == 0 || res.code == 200) {
-      const newContent = (res.data?.data || []).map((item: any) => {
-        // Format timestamp to readable date
-        const formatTime = (timestamp: string) => {
-          const date = new Date(parseInt(timestamp) * 1000);
-          return date.getFullYear() + '.' +
-            String(date.getMonth() + 1).padStart(2, '0') + '.' +
-            String(date.getDate()).padStart(2, '0') + ' ' +
-            String(date.getHours()).padStart(2, '0') + ':' +
-            String(date.getMinutes()).padStart(2, '0');
-        };
+      const data = res.data?.data || res.data || [];
 
+      const newContent = res.map((item: any) => {
         return {
           id: item.id,
-          type: item.type,
+          type: item.type || 0,
           title: item.title || '',
-          description: item.content || '',
-          cover: item.cover || '',
-          time: formatTime(item.created_at),
-          duration: item.duration || 0,
+          description: item.description || '',
+          cover: item.post?.cover || '',
+          created_at: item.created_at,
+          latest_post_updated: item.latest_post_updated,
+          latest_post_chapter_index: item.latest_post_chapter_index,
           author: item.author,
           author_info: item.author_info,
-          like_count: parseInt(item.like_count || "0"),
+          like_count: parseInt(item.book?.like_count || item.like_count || "0"),
           is_liked: item.is_liked || 0,
         };
       });
@@ -294,6 +309,7 @@ async function loadData(fromLoadMore = false) {
         });
       });
     } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
       isLoading.value = false;
       isLoadingMore.value = false;
     }
@@ -323,7 +339,7 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(contentId: number, type: number) {
+function goToDetail(contentId: string | number, type: number) {
   if (type == 2) {
     router.replace(`/detail?id=${contentId}&type=6`);
   } else {
@@ -344,8 +360,8 @@ async function toggleLike(item: Content) {
   try {
     const contentId = item.id;
     // Find the item in the contentList
-    const itemIndex = contentList.value?.findIndex(p => p.id === contentId);
-    if (itemIndex === -1 || itemIndex === undefined) return;
+    const itemIndex = contentList.value?.findIndex(p => p.id == contentId);
+    if (itemIndex == -1 || itemIndex == undefined) return;
 
     const isCurrentlyLiked = item.is_liked === 1;
 
@@ -360,15 +376,14 @@ async function toggleLike(item: Content) {
     }
 
     // Check if API call was successful
-    if (res.code === 0 || res.code === 200) {
+    if (res.code == 0 || res.code == 200) {
       // Update the UI only after API success
       if (contentList.value) {
         contentList.value[itemIndex].is_liked = isCurrentlyLiked ? 0 : 1;
         contentList.value[itemIndex].like_count += isCurrentlyLiked ? -1 : 1;
       }
     } else {
-      // Show error message if API call failed
-      toast(t('common.fail'));
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error('Like/unlike error:', error);
@@ -377,11 +392,7 @@ async function toggleLike(item: Content) {
   }
 }
 
-function formatDuration(duration: number) {
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
+
 
 function formatNumber(num: number | string): string {
   const n = typeof num === 'string' ? parseInt(num) : num;
@@ -393,11 +404,37 @@ function formatNumber(num: number | string): string {
   return n.toString();
 }
 
+// Get user region
+function getCountry(): Promise<void> {
+  // Only fetch region once per page load
+  if (hasFetchedRegion.value) {
+    return Promise.resolve();
+  }
+
+  return api.getCode().then((res: any) => {
+    hasFetchedRegion.value = true;
+    if (res.code == 0) {
+      if (res.res.countryCode != 'CN') {
+        userRegion.value = true;
+      } else {
+        userRegion.value = false;
+      }
+    } else {
+      userRegion.value = false;
+    }
+  }).catch(err => {
+    console.log(err);
+    userRegion.value = false;
+    hasFetchedRegion.value = true;
+  })
+}
+
 // Lifecycle
 onMounted(async () => {
   window.scrollTo(0, 0);
 
   window.addEventListener("resize", layoutWaterfall);
+  getCountry();
 
   // Set up intersection observer for infinite scroll
   // 使用 nextTick 确保 DOM 已渲染
@@ -583,6 +620,42 @@ watch(contentList, () => {
       }
     }
 
+    .content-stats-top {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      display: flex;
+      align-items: center;
+      z-index: 1;
+      cursor: pointer;
+
+      span {
+        font-weight: 500;
+        font-size: 1.4rem;
+        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+        color: #FFFFFF;
+      }
+
+      img {
+        width: 3.3rem;
+        height: 3.1rem;
+      }
+    }
+
+    .update-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.9);
+      z-index: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      .chapter-divider {
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
     .video-duration {
       font-size: 1.4rem;
       color: rgba(255, 255, 255, 0.7);
@@ -597,9 +670,12 @@ watch(contentList, () => {
       font-size: 1.4rem;
       color: #101828;
       line-height: 2rem;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .content-meta {

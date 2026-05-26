@@ -66,7 +66,7 @@
               @click="goToDetail(post.id)"
             >
               <div class="content-image">
-                <img :src="post.cover" alt="" />
+                <img :src="post.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
                 <!-- Type Icon -->
                 <div class="type-icon" v-if="post.type">
                   <img v-if="post.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
@@ -77,26 +77,32 @@
                 <div v-if="post.type == '3'" class="play-icon">
                   <img src="@/assets/images/detail/play.png" alt="" />
                 </div>
-
+                <!-- Like Count in Top Right -->
+                <div class="content-stats-top" @click.stop="toggleLike(post)">
+                  <span>{{ formatNumber(post.like_count) }}</span>
+                  <img :src="post.isLiked ? likeActive : like" alt="" />
+                </div>
                 <div class="content-bottom">
-                  <!-- Like Count -->
-                  <div class="content-stats" @click.stop="toggleLike(post)">
-                    <img :src="post.isLiked ? likeActive : like" alt="" />
-                    <span>{{ formatNumber(post.like_count) }}</span>
+                  <!-- Update Time and Chapter Count -->
+                  <div class="update-info">
+                    <span v-if="post.latest_post_updated">{{ t(formatUpdateTime(post.latest_post_updated).key, formatUpdateTime(post.latest_post_updated).params || {}) }}</span>
+                    <span v-if="post.latest_post_updated && post.latest_post_chapter_index" class="chapter-divider">|</span>
+                    <span v-if="post.latest_post_chapter_index">
+                      {{ post.type == '2' ? t('home.chapterFormat', { chapter: post.latest_post_chapter_index }) : t('home.episodeFormat', { episode: post.latest_post_chapter_index }) }}
+                    </span>
                   </div>
                   <!-- Video Duration -->
-                  <div class="video-duration" v-if="post.type == '3' && post.duration">
+                  <!-- <div class="video-duration" v-if="post.type == '3' && post.duration">
                     {{ formatDuration(post.duration) }}
-                  </div>
+                  </div> -->
                 </div>
-
               </div>
               <div class="content-info">
                 <div class="content-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
                 <div class="content-meta">
-                  <div class="author-info" @click.stop="goToUserHome(post.author.id)">
-                    <img :src="post.author.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-                    <span class="author-name">{{ post.author.nickname }}</span>
+                  <div class="author-info" @click.stop="goToUserHome(post.author?.id)">
+                    <img :src="post.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                    <span class="author-name">{{ post.author?.nickname }}</span>
                   </div>
                 </div>
               </div>
@@ -170,6 +176,7 @@ import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { formatUpdateTime } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -187,9 +194,10 @@ const checkLogin = () => {
   return true;
 };
 
-import likeActive from '@/assets/images/detail/like_active.png';
+import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
+import defaultCover from "@/assets/images/base/cover.png";
 
 // Types
 interface Post {
@@ -198,8 +206,9 @@ interface Post {
   title: string;
   description: string;
   cover: string;
-  time: string;
-  duration: number;
+  created_at: string;
+  latest_post_updated?: string;
+  latest_post_chapter_index?: number;
   author: {
     avatar: string;
     nickname: string;
@@ -214,6 +223,8 @@ const inputKeyword = ref(route.query.keyword as string || '');
 const searchKeyword = ref(route.query.keyword as string || '');
 const activeTab = ref(route.query.type === 'user' ? 'users' : 'posts');
 const postFilter = ref(0);
+const userRegion = ref(false);
+const hasFetchedRegion = ref(false);
 
 // Tabs and filters data
 const tabs = ref([
@@ -264,6 +275,13 @@ watch(() => locale.value, () => {
     { id: 1, label: t('home.contentType.comic') },
     { id: 3, label: t('home.contentType.drama') }
   ]
+
+  // Re-trigger search when language changes
+  if (searchKeyword.value || postList.value) {
+    postsPage.value = 1;
+    postList.value = null;
+    performSearch();
+  }
 });
 
 // Methods
@@ -346,14 +364,20 @@ async function loadData(fromLoadMore = false) {
     isLoading.value = true;
   }
 
+  // Ensure we have region info (cached after first fetch)
+  await getCountry();
+
   try {
     if (activeTab.value == 'posts') {
+      const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
       const res = await api.searchPost({
         keyword: searchKeyword.value,
         type: postFilter.value,
         page: postsPage.value,
-        limit: postsLimit.value
-      }) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+        limit: postsLimit.value,
+        language: locale.value == 'zh' ? 'cn' : locale.value,
+        show_nsfw: showNsfw,
+      }) as any;
 
       // Check if this request is still the latest one
       if (requestId !== currentRequestId.value) {
@@ -371,32 +395,23 @@ async function loadData(fromLoadMore = false) {
 
       if (res.code == 0 || res.code == 200) {
         const newPosts = (res.data?.data || []).map((item: any) => {
-          // Format timestamp to readable date
-          const formatTime = (timestamp: string) => {
-            const date = new Date(parseInt(timestamp) * 1000);
-            return date.getFullYear() + '.' +
-              String(date.getMonth() + 1).padStart(2, '0') + '.' +
-              String(date.getDate()).padStart(2, '0') + ' ' +
-              String(date.getHours()).padStart(2, '0') + ':' +
-              String(date.getMinutes()).padStart(2, '0');
-          };
-
-          return {
-            id: item.id,
-            type: item.type,
-            title: item.title || '',
-            description: item.content || '',
-            cover: item.cover || '',
-            time: formatTime(item.created_at),
-            duration: item.duration || 0,
-            author: {
-              avatar: item.author?.avatar,
-              nickname: item.author?.nickname || '',
-              id: item.author?.id || 0
-            },
-            like_count: parseInt(item.like_count || "0"),
-            isLiked: item.is_liked == 1 || false,
-          };
+        return {
+          id: item.id,
+          type: item.type || 0,
+          title: item.title || '',
+          description: item.description || '',
+          cover: item.post?.cover || '',
+          created_at: item.created_at,
+          latest_post_updated: item.latest_post_updated,
+          latest_post_chapter_index: item.latest_post_chapter_index,
+          author: {
+            avatar: item.author?.avatar,
+            nickname: item.author?.nickname || '',
+            id: item.author?.id || 0
+          },
+          like_count: parseInt(item.like_count || "0"),
+          isLiked: item.is_liked == 1 || false,
+        };
         });
 
         // For initial search, replace the list instead of pushing
@@ -442,6 +457,9 @@ async function loadData(fromLoadMore = false) {
           });
         });
       } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+
+        postList.value = [];
         isLoading.value = false;
         isLoadingMore.value = false;
       }
@@ -452,7 +470,7 @@ async function loadData(fromLoadMore = false) {
         searchKeyword.value,
         usersPage.value,
         18
-      ) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      ) as any;
 
       // Check if this request is still the latest one
       if (requestId !== currentRequestId.value) {
@@ -486,13 +504,15 @@ async function loadData(fromLoadMore = false) {
         isLoading.value = false;
         isLoadingMore.value = false;
       } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+
         isLoading.value = false;
         isLoadingMore.value = false;
       }
     }
   } catch (error) {
     console.error('Search error:', error);
-    toast(t('search.searchFailed'));
+    toast(t('fail'));
     isLoading.value = false;
     isLoadingMore.value = false;
   }
@@ -516,7 +536,7 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(postId: number) {
+function goToDetail(postId: string | number) {
   // Save current post filter before navigating
   localStorage.setItem('searchPostFilter', postFilter.value.toString());
   // if (type === 2) {
@@ -561,8 +581,7 @@ async function toggleLike(post: Post) {
         postList.value[postIndex].like_count += isCurrentlyLiked ? -1 : 1;
       }
     } else {
-      // Show error message if API call failed
-      toast(t('common.fail'));
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error('Like/unlike error:', error);
@@ -600,8 +619,7 @@ async function toggleFollow(user: any) {
       // Show success message
       toast(isCurrentlyFollowing ? t('search.unfollow') : t('search.followed'));
     } else {
-      // Show error message if API call failed
-      toast(t('common.fail'));
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error('Follow/unfollow error:', error);
@@ -620,16 +638,38 @@ function formatNumber(num: number | string): string {
   return n.toString();
 }
 
-function formatDuration(duration: number) {
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+
+// Get user region
+function getCountry(): Promise<void> {
+  // Only fetch region once per page load
+  if (hasFetchedRegion.value) {
+    return Promise.resolve();
+  }
+
+  return api.getCode().then((res: any) => {
+    hasFetchedRegion.value = true;
+    if (res.code == 0) {
+      if (res.res.countryCode != 'CN') {
+        userRegion.value = true;
+      } else {
+        userRegion.value = false;
+      }
+    } else {
+      userRegion.value = false;
+    }
+  }).catch(err => {
+    console.log(err);
+    userRegion.value = false;
+    hasFetchedRegion.value = true;
+  })
 }
 
 // Lifecycle
 onMounted(async () => {
   window.scrollTo(0, 0);
   window.addEventListener("resize", layoutWaterfall);
+  getCountry();
 
   // Restore last post filter if coming back from detail page
   try {
@@ -905,6 +945,42 @@ watch(postList, () => {
       }
     }
 
+    .content-stats-top {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      display: flex;
+      align-items: center;
+      z-index: 1;
+      cursor: pointer;
+
+      span {
+        font-weight: 500;
+        font-size: 1.4rem;
+        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+        color: #FFFFFF;
+      }
+
+      img {
+        width: 3.3rem;
+        height: 3.1rem;
+      }
+    }
+
+    .update-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.9);
+      z-index: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      .chapter-divider {
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
     .video-duration {
       font-size: 1.4rem;
       color: rgba(255, 255, 255, 0.7);
@@ -919,9 +995,12 @@ watch(postList, () => {
       font-size: 1.4rem;
       color: #101828;
       line-height: 2rem;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .content-meta {

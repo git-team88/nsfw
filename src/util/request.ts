@@ -48,6 +48,8 @@ class Request {
       const token = localStorage.getItem('token')
       if (token) {
         config.headers.token = token
+      } else {
+        localStorage.removeItem('allowSensitiveContent')
       }
 
       const url = config.url || '';
@@ -73,6 +75,7 @@ class Request {
         localStorage.removeItem('token')
         localStorage.removeItem('uid')
         localStorage.removeItem('userInfo')
+        localStorage.removeItem('allowSensitiveContent')
 
         const logoutEvent = new Event('userLogout');
         window.dispatchEvent(logoutEvent);

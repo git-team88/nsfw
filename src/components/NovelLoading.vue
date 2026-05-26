@@ -35,7 +35,7 @@
                   <template v-if="stepPhases[index] === 'working'">
                     <span class="active-text">
                       {{ step.workingText }}
-                      <img v-if="!(isFrozenAtPenultimate && index === penultimateIndex)" :src="loadingIcon" class="loading-icon" />
+                      <img :src="loadingIcon" class="loading-icon" />
                     </span>
                   </template>
                   <template v-else>
@@ -306,7 +306,7 @@ const totalDurationMs = ref(300000);
 const processStepsRef = ref<HTMLElement | null>(null);
 let animationTimer: number | null = null;
 
-const penultimateIndex = computed(() => allSteps.value.length - 2);
+const penultimateIndex = computed(() => allSteps.value.length - 1);
 
 function isAnimating() {
   return props.taskStatus === 'DOING';
@@ -640,7 +640,7 @@ watch(() => props.taskStatus, (newStatus) => {
   }
 });
 
-watch(() => props.processType, () => {
+watch(() => props.processType, (newType, oldType) => {
   start();
 });
 
@@ -681,9 +681,6 @@ defineExpose({
     display: none;
   }
 
-  &.step-frozen .loading-icon {
-    animation: none;
-  }
 }
 
 .step-content {

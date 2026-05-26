@@ -30,7 +30,7 @@
             </div>
           </div>
 
-          <div class="sensitive-row" v-if="userRegion">
+          <!-- <div class="sensitive-row" v-if="userRegion">
             <div class="switch-box">
               <div class="label">
                 {{ t("user.personal.sensitive") }}
@@ -44,7 +44,7 @@
             </div>
 
             <div class="tip">{{ t("user.personal.sensitiveTip") }}</div>
-          </div>
+          </div> -->
 
           <div class="kyc-section">
             <div class="kyc-row" v-if="kycStatus !== null">
@@ -310,7 +310,7 @@ const zoomedCoverImage = ref('');
 // Get KYC detail
 async function getKycDetail() {
   try {
-    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
       const kycData = kycRes.data;
 
@@ -366,6 +366,8 @@ async function getKycDetail() {
           rejection_reason: kycData.rejection_reason || "",
         };
       }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -376,7 +378,7 @@ onMounted(async () => {
   getCountry();
 
   try {
-    const res = (await api.userInfo()) as unknown as { code: number; data: UserData, timestamp: number };
+    const res = (await api.userInfo()) as any;
     if (res.code == 0 || res.code == 200) {
       const data = res.data || {};
       userInfo.value = data;
@@ -407,6 +409,8 @@ onMounted(async () => {
           isAdult.value = age >= 18;
         }
       }
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -459,7 +463,7 @@ function onToggleSensitive() {
     .then((res: any) => {
       if (res.code !== 200 && res.code !== 0) {
         showSensitive.value = !showSensitive.value;
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       } else {
         toast(t('success'));
 

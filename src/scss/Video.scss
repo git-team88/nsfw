@@ -675,7 +675,8 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 1.2rem 5rem 1.2rem 1.6rem;
+          height: 5rem;
+          padding: 0 5rem 0 1.6rem;
           border: none;
           border-radius: 0.8rem;
           background: #F5F5F5;
@@ -735,18 +736,18 @@
         }
 
         .custom-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        margin-top: 1.2rem;
-        padding: 1.2rem 2rem;
-        background: #FFFFFF;
-        border-radius: 0.8rem;
-        box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
-        z-index: 10;
-        max-height: 35rem;
-        overflow-y: auto;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          margin-top: 1.2rem;
+          padding: 1.2rem 2rem;
+          background: #FFFFFF;
+          border-radius: 0.8rem;
+          box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+          z-index: 10;
+          max-height: 35rem;
+          overflow-y: auto;
           .collection-dropdown-item {
             margin-bottom: 1.2rem;
             font-size: 1.4rem;
@@ -778,37 +779,38 @@
                 height: 1.4rem;
               }
             }
+          }
 
-            .loading-indicator {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 0.8rem;
-              padding: 1.2rem;
-              font-size: 1.4rem;
-              color: #99A1AF;
+          .loading-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 1.2rem;
+            font-size: 1.4rem;
+            color: #99A1AF;
 
-              .loading-spinner {
-                width: 1.6rem;
-                height: 1.6rem;
-                border: 2px solid #f3f3f3;
-                border-top: 2px solid #fb64b6;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-              }
-
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
+            .loading-spinner {
+              width: 2rem;
+              height: 2rem;
+              border: 2px solid #F5F5F5;
+              border-top: 2px solid #6A7282;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
             }
 
-            .no-more-collections {
-              text-align: center;
-              padding: 1.2rem;
-              font-size: 1.4rem;
-              color: #99A1AF;
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
             }
+          }
+
+          .no-more-collections {
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.2rem;
+            color: #99A1AF;
           }
         }
       }
@@ -976,6 +978,7 @@
         font-weight: 500;
         font-size: 1.6rem;
         background: #fb64b6;
+        box-shadow: 0px 2px 15px -3px rgba(251,100,182,0.16);
         color: #ffffff;
         cursor: pointer;
 
@@ -993,7 +996,12 @@
           }
         }
 
-        &.dis{
+        &.dis {
+          background: rgba(251,100,182,0.5);
+          cursor: not-allowed;
+        }
+
+        &:disabled {
           background: rgba(251,100,182,0.5);
           cursor: not-allowed;
         }
@@ -1175,6 +1183,26 @@
           font-size: 1.2rem;
           color: #99a1af;
         }
+      }
+    }
+
+    .dropdown-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      padding: 3rem 1.2rem;
+      font-size: 1.2rem;
+      color: #99A1AF;
+
+      .loading-spinner {
+        width: 2.4rem;
+        height: 2.4rem;
+        border: 0.3rem solid #F5F5F5;
+        border-top: 0.3rem solid #FB66C4;
+        border-radius: 50%;
+        animation: spin 1s ease-in-out infinite;
       }
     }
   }

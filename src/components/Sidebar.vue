@@ -287,6 +287,9 @@
 
         <!-- Table of Contents tab -->
         <div class="toc-tab" v-if="activeTab === 'toc'">
+          <div class="collection-name" v-if="detail.book_title">
+            {{ detail.book_title }}
+          </div>
           <div class="toc-header">
             <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
           </div>
@@ -618,7 +621,7 @@ async function handleDeleteConfirmDirect(commentId: string | number, isReply: bo
         }
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -681,7 +684,7 @@ async function toggleCommentLike(c: any) {
       c.liked = !c.liked;
       c.likes = parseInt(c.likes) + (c.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -701,7 +704,7 @@ async function toggleReplyLike(r: any) {
       r.liked = !r.liked;
       r.likes = parseInt(r.likes) + (r.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -1024,7 +1027,7 @@ async function submitComment() {
         });
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     console.log(error);
@@ -1988,7 +1991,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
           chapter.likes = previousLikes + 1;
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
       // Unlike chapter
@@ -2001,7 +2004,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
           chapter.likes = Math.max(0, previousLikes - 1);
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }
   } catch (error) {
@@ -2897,9 +2900,18 @@ function likeReply(id: string, liked: boolean) {
       display: flex;
       flex-direction: column;
 
+      .collection-name {
+        margin-bottom: 2rem;
+        padding: 2.4rem 2.4rem 0;
+        font-size: 1.6rem;
+        font-weight: 500;
+        line-height: 3.2rem;
+        color: #364153;
+      }
+
       .toc-header {
-        padding: 2.4rem;
-        border-bottom: 0.1rem solid #eee;
+        padding: 0 2.4rem 2.4rem;
+        border-bottom: 0.1rem solid #F5F5F5;
         font-size: 1.4rem;
         color: #6A7282;
       }
@@ -2924,9 +2936,9 @@ function likeReply(id: string, liked: boolean) {
             .toc-info{
               display: flex;
               align-items: center;
-              flex: 1;
+              width: 100%;
               height: 100%;
-              border-bottom: 0.1rem solid #F5F5F5;
+              border-bottom: 1px solid #F5F5F5;
 
               &.on{
                 .chapter-title {
@@ -2937,15 +2949,17 @@ function likeReply(id: string, liked: boolean) {
 
             .chapter-title {
               flex: 1;
+              min-width: 0;
               font-size: 1.6rem;
               color: #364153;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              margin-right: 1.6rem;
+              margin-right: 1.2rem;
             }
 
             .subscribe-badge {
+              flex-shrink: 0;
               padding: 0.6rem 1.6rem;
               background-color: #F5F5F5;
               color: #6A7282;

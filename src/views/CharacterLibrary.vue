@@ -10,14 +10,7 @@
       <div class="tab-navigation">
         <span
           class="tab"
-          :class="{ active: activeTab === 'official' }"
-          @click="activeTab = 'official'"
-        >
-          {{ t('home.characterSelect.officialCharacters') }}
-        </span>
-        <span
-          class="tab"
-          :class="{ active: activeTab === 'my' }"
+          :class="{ active: activeTab == 'my' }"
           @click="activeTab = 'my'"
         >
           {{ t('home.characterSelect.myCharacters') }}
@@ -121,7 +114,7 @@ const selectedCharacter = ref<any>(null);
 const isHovering = ref(false);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const activeTab = ref('official');
+const activeTab = ref('my');
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
@@ -191,7 +184,7 @@ async function loadCharacters() {
   error.value = null;
   try {
     // Use type 2 for official characters, 1 for user characters
-    const type = activeTab.value === 'official' ? 2 : 1;
+    const type = activeTab.value == 'official' ? 2 : 1;
     const response = await api.getCharacters(type, currentPage.value, itemsPerPage) as any;
 
     // Check if this request is still the latest one
@@ -248,11 +241,35 @@ watch(currentPage, () => {
   loadCharacters();
 });
 
+function setSeoMeta() {
+  document.title = t('seo.characterLibrary.title');
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', t('seo.characterLibrary.keywords'));
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', t('seo.characterLibrary.description'));
+}
+
 // Lifecycle
 onMounted(() => {
   window.scrollTo(0, 0);
 
+  setSeoMeta();
+
   loadCharacters();
+});
+
+watch(() => locale.value, () => {
+  setSeoMeta();
 });
 </script>
 

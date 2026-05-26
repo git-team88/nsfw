@@ -12,7 +12,7 @@
         <h3>{{ t('home.unlimitedMode.title') }}</h3>
       </div>
       <div class="modal-content">
-        <p>{{ t('home.unlimitedMode.description') }}</p>
+        <p v-html="t('home.unlimitedMode.description')"></p>
       </div>
       <div class="modal-footer">
         <span class="modal-btn cancel" @click="handleClose">{{ t('home.unlimitedMode.cancel') }}</span>
@@ -76,7 +76,7 @@ const handleConfirm = () => {
   background: #FFFFFF;
   border-radius: 1.2rem;
   width: 50rem;
-  padding: 1.8rem 3.6rem;
+  padding: 2rem 3.6rem;
   overflow: hidden;
 
   .modal-close {
@@ -102,11 +102,12 @@ const handleConfirm = () => {
   }
 
   .modal-content {
-    margin: 2.4rem 0;
+    margin: 3.4rem 0;
+    text-align: center;
     p {
       font-size: 1.4rem;
       color: #364153;
-      line-height: 2rem;
+      line-height: 2.4rem;
       margin: 0;
     }
   }

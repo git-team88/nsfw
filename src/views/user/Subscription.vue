@@ -117,7 +117,7 @@ function handleUserInfoLoaded(userData: any) {
 
 async function fetchKycDetail() {
   try {
-    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
       const kycData = kycRes.data;
 
@@ -137,6 +137,8 @@ async function fetchKycDetail() {
           kycStatusChecked.value = true;
         }
       }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -147,14 +149,14 @@ async function fetchSubscription() {
   try {
     const res = await api.getSubscription();
 
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
       plan.value = data.data?.plan || null;
       price.value = data.data?.plan?.price || "0";
       description.value = data.data?.plan?.description || t("user.subscription.benefitsText")
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     toast(t("fail"));
@@ -163,7 +165,7 @@ async function fetchSubscription() {
 
 async function handleEditClick() {
   try {
-    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
       const kycData = kycRes.data;
 
@@ -183,6 +185,8 @@ async function handleEditClick() {
           }
         }
       }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -198,7 +202,7 @@ async function handleCreateAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));
@@ -216,7 +220,7 @@ async function handleChangeAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));

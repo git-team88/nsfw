@@ -131,7 +131,7 @@ function goSendEmail() {
               localStorage.removeItem("lEmail");
               router.push("/reset-send");
             } else {
-              toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
             }
           })
           .catch((error) => toast(t("fail")));

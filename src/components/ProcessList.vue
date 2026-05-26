@@ -117,7 +117,9 @@ const isDropdownOpen = ref(false);
 const categoryIndices = ref<{ [key: string]: number }>({
   novel: 0,
   manhua: 0,
-  manju: 0
+  manju: 0,
+  image: 0,
+  video: 0
 });
 const isLogin = ref(false);
 let pollingTimer: number | null = null;
@@ -153,6 +155,20 @@ const categories = computed(() => {
       itemLabel: t('process.manju'),
       items: processData.value.manju_list || [],
       currentIndex: categoryIndices.value.manju
+    },
+    {
+      type: 'image',
+      label: t('home.contentType.photo'),
+      itemLabel: t('home.img'),
+      items: processData.value.simple_image_list || [],
+      currentIndex: categoryIndices.value.image
+    },
+    {
+      type: 'video',
+      label: t('home.contentType.video'),
+      itemLabel: t('home.video'),
+      items: processData.value.simple_video_list || [],
+      currentIndex: categoryIndices.value.video
     }
   ];
 
@@ -163,14 +179,18 @@ const totalCount = computed(() => {
   if (!processData.value) return 0;
   return (processData.value.novel_list?.length || 0) +
          (processData.value.manhua_list?.length || 0) +
-         (processData.value.manju_list?.length || 0);
+         (processData.value.manju_list?.length || 0) +
+         (processData.value.simple_image_list?.length || 0) +
+         (processData.value.simple_video_list?.length || 0);
 });
 
 const doingCount = computed(() => {
   if (!processData.value) return 0;
   return (processData.value.novel_doing_count || 0) +
          (processData.value.manhua_doing_count || 0) +
-         (processData.value.manju_doing_count || 0);
+         (processData.value.manju_doing_count || 0) +
+         (processData.value.simple_image_doing_count || 0) +
+         (processData.value.simple_video_doing_count || 0);
 });
 
 const getQueueCount = (type: string) => {
@@ -181,6 +201,10 @@ const getQueueCount = (type: string) => {
     return processData.value.manhua_doing_count || 0;
   } else if (type == 'manju') {
     return processData.value.manju_doing_count || 0;
+  } else if (type == 'image') {
+    return processData.value.simple_image_doing_count || 0;
+  } else if (type == 'video') {
+    return processData.value.simple_video_doing_count || 0;
   }
   return 0;
 };
@@ -346,9 +370,9 @@ const getItemLabel = (type: string, item: any) => {
       if (type == 'novel') {
         return t('process.novel') + '-' + t('novel.chapter') + chapterIndex;
       } else if (type == 'manhua') {
-        return t('process.comic') + '-' + t('comic.episode') + chapterIndex;
+        return t('process.comic') + '-' + t('submit.image.episode', { episode: chapterIndex });
       } else if (type == 'manju') {
-        return t('process.manju') + '-' + t('comic.episode') + chapterIndex;
+        return t('process.manju') + '-' + t('submit.image.episode', { episode: chapterIndex });
       }
     } else {
       // Default chapter label
@@ -365,8 +389,36 @@ const getItemLabel = (type: string, item: any) => {
     return t('process.comic') + '-' + t('process.script');
   } else if (type == 'manju') {
     return t('process.manju');
+  } else if (type == 'image') {
+    // 处理图片类型，显示 topic 内容并替换标签
+    return formatTopicContent(item.topic);
+  } else if (type == 'video') {
+    // 处理视频类型，显示 topic 内容并替换标签
+    return formatTopicContent(item.topic);
   }
   return '';
+};
+
+// 格式化 topic 内容，将标签替换为可读文本
+const formatTopicContent = (topic: string): string => {
+  if (!topic) return '';
+
+  // 替换 <ref_x> 为 "图片X"
+  let result = topic.replace(/<ref_(\d+)>/g, (match, num) => {
+    return t('home.img') + num;
+  });
+
+  // 替换 <aud_x> 为 "音频X"
+  result = result.replace(/<aud_(\d+)>/g, (match, num) => {
+    return t('home.audio') + num;
+  });
+
+  // 替换 <vid_x> 为 "视频X"
+  result = result.replace(/<vid_(\d+)>/g, (match, num) => {
+    return t('home.video') + num;
+  });
+
+  return result;
 };
 
 const prevItem = (categoryIndex: number) => {
@@ -383,13 +435,25 @@ const nextItem = (categoryIndex: number) => {
   }
 };
 
-const navigateToItem = (item: any, type: string) => {
+const navigateToItem = async (item: any, type: string) => {
   if (type == 'novel') {
     router.push(`/novel/${item.session_id}`);
   } else if (type == 'manhua') {
-    window.open(`/tools/comic/${item.session_id}`, '_blank');
+    window.location.href = `/tools/comic/${item.session_id}`;
   } else if (type == 'manju') {
-    window.open(`/tools/video/${item.session_id}`, '_blank');
+    window.location.href = `/tools/video/${item.session_id}`;
+  } else if (type == 'image') {
+    // 先请求项目详情接口
+    await api.detailProject(item.session_id);
+    // 请求后直接跳转
+    localStorage.setItem('targetSessionId', item.session_id);
+    router.push({ name: 'Generate' });
+  } else if (type == 'video') {
+    // 先请求项目详情接口
+    await api.detailProject(item.session_id);
+    // 请求后直接跳转
+    localStorage.setItem('targetSessionId', item.session_id);
+    router.push({ name: 'Generate' });
   }
 };
 

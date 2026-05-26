@@ -76,7 +76,7 @@ function handleConfirm() {
 
     .modal-title {
       font-size: 1.6rem;
-      font-weight: 600;
+      font-weight: 500;
       color: #364153;
       margin-bottom: 1.6rem;
       text-align: center;

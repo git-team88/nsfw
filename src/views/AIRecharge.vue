@@ -260,7 +260,7 @@ function getList() {
         }
       }
     } else {
-      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   }).catch((error) => {
     console.error('Error fetching recharge plans:', error);
@@ -301,7 +301,7 @@ async function handleRecharge() {
         window.location.href = data.data?.url.url;
       }
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t('error'));

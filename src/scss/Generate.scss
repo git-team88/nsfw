@@ -253,15 +253,20 @@
       align-items: center;
       justify-content: center;
       width: 19.8rem;
-      height: 19.8rem;
       border-radius: 1.2rem;
       overflow: hidden;
       background: #F5F5F5;
       cursor: pointer;
 
-      &.skeleton {
-        background: #F5F5F5;
+      &.ratio-9-16 {
+        height: 35.2rem;
+      }
 
+      &.ratio-16-9 {
+        height: 11.1375rem;
+      }
+
+      &.skeleton {
         .skeleton-image {
           width: 100%;
           height: 100%;
@@ -274,9 +279,8 @@
       }
 
       .grid-image {
-        max-width: 100%;
-        width: auto;
-        height: 100%;
+        width: 100%;
+        height: auto;
         object-fit: contain;
         border-radius: 1.2rem;
       }
@@ -714,38 +718,49 @@
       gap: 0.8rem;
       min-width: 10rem;
       height: 3.2rem;
-      padding: 0 1.2rem;
       border-radius: 0.6rem 0.6rem 0 0;
       border: 1px solid #F5F5F5;
       border-bottom: none;
       background: #FFFFFF;
       cursor: pointer;
 
-      span {
-        font-size: 1.4rem;
-        color: #6A7282;
-      }
-
       &.active {
-        background: rgba(251,100,182,0.12);
         border: 1px solid rgba(251,100,182,0.12);
         border-bottom: none;
+
+        .type-text{
+          position: relative;
+          background: rgba(251,100,182,0.12);
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1.8rem;
+            height: 2px;
+            background: #FB64B6;
+            border-radius: 3px;
+          }
+        }
 
         span {
           color: #364153;
         }
+      }
 
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: 2px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 1.8rem;
-          height: 2px;
-          background: #FB64B6;
-          border-radius: 3px;
-        }
+      .type-text{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 0 1.2rem;
+      }
+      span {
+        font-size: 1.4rem;
+        color: #6A7282;
       }
     }
   }
@@ -1193,11 +1208,12 @@
         top: -3.4rem;
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        width: max-content;
-        max-width: 12rem;
+        display: block;
+        width: auto;
+        max-width: 14rem;
+        min-width: 4rem;
         height: 3rem;
+        line-height: 3rem;
         padding: 0 0.8rem;
         background: #FFFFFF;
         box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.06);
@@ -1224,6 +1240,7 @@
       position: relative;
       width: 100%;
       height: 10rem;
+      overflow-y: auto;
       font-family: inherit;
       font-size: 1.4rem;
       line-height: 2.8rem;
@@ -1552,6 +1569,35 @@
         }
       }
 
+      &.disabled {
+        cursor: not-allowed;
+        pointer-events: none;
+
+        b {
+          cursor: not-allowed;
+        }
+
+        .generate-novel-btn {
+          cursor: not-allowed;
+          background: rgba(251, 100, 182, 0.5);
+        }
+      }
+
+      .loading-icon {
+        width: 1.6rem;
+        height: 1.6rem;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       .generate-novel-btn {
         display: flex;
         align-items: center;
@@ -1861,6 +1907,7 @@
       .duration-slider {
         position: relative;
         padding-top: 3rem;
+        padding-bottom: 2.5rem;
 
         .slider-value {
           position: absolute;
@@ -1895,6 +1942,15 @@
             background: #DDDDDD;
             border-radius: 50%;
             z-index: 5;
+          }
+
+          .mark-label {
+            position: absolute;
+            top: calc(50% + 0.8rem);
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            color: #999999;
+            white-space: nowrap;
           }
         }
 
@@ -1954,21 +2010,10 @@
           margin-top: 0.6rem;
 
           span {
+            flex: 1;
             font-size: 1.2rem;
             color: #99A1AF;
-            margin-right: 5rem;
-
-            &:first-child{
-              margin-right: 2.8rem;
-            }
-
-            &:nth-of-type(2){
-              margin-right: 6.6rem;
-            }
-
-            &:last-child{
-              margin-right: 0;
-            }
+            text-align: center;
           }
         }
       }
@@ -2315,7 +2360,7 @@
 
 .record-failed {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   margin: 2.4rem 0;
 
@@ -2323,6 +2368,7 @@
     width: 2rem;
     height: 2rem;
     flex-shrink: 0;
+    margin-top: 1px;
   }
 
   .failed-text {

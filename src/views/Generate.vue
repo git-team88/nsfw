@@ -71,7 +71,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="photo-meta-row">
                   <div class="photo-meta">
-                    <span class="meta-item type-label">{{ t('recordList.photoGenerate') }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.photoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
                   </div>
@@ -84,18 +84,26 @@
                 <div class="photo-grid">
                   <template v-if="record.status == 'DOING' || record.status == 'PREPARE'">
                     <div
-                      v-for="i in 4"
+                      v-for="i in (record.user_selected?.story_mode === 'nsfw' ? 1 : 4)"
                       :key="i"
                       class="photo-item skeleton"
+                      :class="{
+                        'ratio-9-16': record.ratio === '9:16',
+                        'ratio-16-9': record.ratio === '16:9'
+                      }"
                     >
-                      <img src="@/assets/images/home/1_1.gif" alt="loading" class="skeleton-image" />
+                      <img :src="getLoadingGif(record.ratio)" alt="loading" class="skeleton-image" />
                     </div>
                   </template>
                   <template v-else>
                     <div
-                      v-for="(image, index) in (record.images || []).slice(0, 4)"
+                      v-for="(image, index) in (record.images || []).slice(0, record.user_selected?.story_mode === 'nsfw' ? 1 : 4)"
                       :key="index"
                       class="photo-item"
+                      :class="{
+                        'ratio-9-16': record.ratio === '9:16',
+                        'ratio-16-9': record.ratio === '16:9'
+                      }"
                     >
                       <img :src="image" alt="generated" class="grid-image" @click="openImageViewer(image)" />
                       <!-- 图片操作按钮 - 仅在任务成功后显示 -->
@@ -174,7 +182,7 @@
                         <img :src="item.cover || item.image || item.url" alt="preview" class="thumbnail-image" />
                         <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                       </div>
-                      <span class="thumbnail-title">{{ t('recordList.video') }}</span>
+                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
                     </div>
                   </div>
                 </template>
@@ -206,7 +214,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ record.duration }}s</span>
@@ -284,13 +292,17 @@
               :class="['type-btn', { active: bottomActiveTab == 'photo' }]"
               @click="switchBottomTab('photo')"
             >
-              <span>{{ t('home.contentType.photo') }}</span>
+              <div class="type-text">
+                <span>{{ t('home.contentType.photo') }}</span>
+              </div>
             </div>
             <div
               :class="['type-btn', { active: bottomActiveTab == 'video' }]"
               @click="switchBottomTab('video')"
             >
-              <span>{{ t('home.contentType.video') }}</span>
+              <div class="type-text">
+                <span>{{ t('home.contentType.video') }}</span>
+              </div>
             </div>
           </div>
 
@@ -337,7 +349,7 @@
               @focus="handlePhotoInputFocus"
               @blur="handlePhotoInputBlur"
               @paste="handlePhotoPaste"
-              :data-placeholder="t('home.input.placeholder')"
+              :data-placeholder="t('home.input.placeholderPhoto')"
             ></div>
 
             <!-- @ Dropdown for photo -->
@@ -358,7 +370,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && (currentPhotoMode = currentPhotoMode == 'normal' ? 'unlimited' : 'normal')">
+                <div v-if="userRegion" class="unlimited-switch" :class="isTeenager ? 'disabled' : ''" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <img
                     v-if="isTeenager"
                     src="@/assets/images/home/not_allow.png"
@@ -366,7 +378,7 @@
                     class="unlimited-icon"
                   />
                   <img
-                    v-else-if="currentPhotoMode == 'unlimited'"
+                    v-else-if="currentPhotoMode == 'unlimited' && !isTeenager"
                     src="@/assets/images/home/open.png"
                     alt="Unlimited on"
                     class="unlimited-icon"
@@ -430,8 +442,9 @@
                 <div class="cover-cost-display">
                   <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
                 </div>
-                <div class="generate-btn" @click="generatePhoto">
+                <div class="generate-btn" :class="{ disabled: isPhotoGenerating }" @click="generatePhoto">
                   <div class="generate-novel-btn">
+                    <img v-if="isPhotoGenerating" src="@/assets/images/base/load.png" alt="loading" class="loading-icon" />
                     <span>{{ estimatedPhotoPower }}</span>
                     <img src="@/assets/images/home/power.png" alt="Power" />
                   </div>
@@ -459,18 +472,18 @@
                 :key="ref.id"
                 class="uploaded-image-item"
               >
-                <span class="image-index">{{ uploadedVideoRefs.slice(0, index).filter(r => r.type === ref.type).length + 1 }}</span>
+                <span class="image-index">{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + 1 }}</span>
                 <div class="uploaded-item-wrapper">
                   <div v-if="ref.type == 'video'" class="video-thumbnail-wrapper" @click="playUploadedVideo(ref)">
-                    <img :src="ref.cover || ref.url" class="uploaded-image" />
+                    <img :src="ref.cover" class="uploaded-image" />
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                   </div>
-                  <img v-else-if="ref.type == 'image'" :src="ref.url" class="uploaded-image" />
+                  <img v-else-if="ref.type == 'image'" :src="ref.image" class="uploaded-image" />
                   <img v-else-if="ref.type == 'audio'" src="@/assets/images/home/audio.png" class="uploaded-image audio-icon" />
                 </div>
                 <span class="tooltip-name">{{ ref.name }}</span>
                 <span class="image-name">
-                  {{ ref.type === 'video' ? t('home.video') : ref.type === 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type === ref.type).length + 1 }}
+                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + 1 }}
                 </span>
                 <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeVideoRef(ref.id)" />
               </div>
@@ -483,7 +496,7 @@
                 :class="['input-textarea', { collapsed: isVideoInputCollapsed }]"
                 contenteditable="true"
                 spellcheck="false"
-                :data-placeholder="t('home.input.placeholder')"
+                :data-placeholder="t('home.input.placeholderVideo')"
                 @input="handleVideoInput"
                 @keydown="handleVideoKeydown"
                 @click="handleVideoInputClick"
@@ -501,7 +514,7 @@
                   @mousedown.prevent="selectVideoRefItem(item)"
                 >
                   <div class="dropdown-img">
-                    <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.url) : item.url" :alt="item.name" />
+                    <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                   </div>
                   <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
                   <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
@@ -602,7 +615,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && (currentVideoMode = currentVideoMode == 'normal' ? 'unlimited' : 'normal')">
+                <div v-if="userRegion" class="unlimited-switch" :class="isTeenager ? 'disabled' : ''" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <img
                     v-if="isTeenager"
                     src="@/assets/images/home/not_allow.png"
@@ -610,7 +623,7 @@
                     class="unlimited-icon"
                   />
                   <img
-                    v-else-if="currentVideoMode == 'unlimited'"
+                    v-else-if="currentVideoMode == 'unlimited' && !isTeenager"
                     src="@/assets/images/home/open.png"
                     alt="Unlimited on"
                     class="unlimited-icon"
@@ -689,34 +702,36 @@
                     <div class="settings-section">
                       <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
                       <div class="duration-slider">
+                        <div class="slider-track"></div>
+                        <div class="slider-marks">
+                          <template v-for="mark in sliderMarks" :key="mark.value">
+                            <div class="mark" :style="{ left: mark.position, transform: 'translateX(-50%)' }"></div>
+                            <div class="mark-label" :style="{ left: mark.position, transform: 'translateX(-50%)' }">
+                              {{ mark.value }}s
+                            </div>
+                          </template>
+                        </div>
                         <div class="slider-value" :style="{ left: getSliderValuePosition() }">
                           {{ selectedVideoDuration }}s
                         </div>
-                        <div class="slider-track"></div>
-                        <div class="slider-marks">
-                          <div class="mark" :style="{ left: '0%', transform: 'translateX(-50%)' }"></div>
-                          <div class="mark" :style="{ left: '23.08%', transform: 'translateX(-50%)' }"></div>
-                          <div class="mark" :style="{ left: '61.54%', transform: 'translateX(-50%)' }"></div>
-                          <div class="mark" :style="{ left: '100%', transform: 'translateX(-50%)' }"></div>
-                        </div>
                         <input
                           type="range"
-                          min="2"
+                          :min="currentVideoMode === 'unlimited' ? 2 : 4"
                           max="15"
                           step="1"
                           :value="selectedVideoDuration"
                           @input="onVideoDurationChange"
-                          @mousedown.stop
-                          @mouseup.stop
+                          @mousedown="saveLastValidDuration"
+                          @mouseup="validateDurationAndRestore"
                           @click.stop
                           class="slider-input"
                         />
-                        <div class="slider-labels">
-                          <span>2s</span>
+                        <!-- <div class="slider-labels">
+                          <span>{{ currentVideoMode === 'unlimited' ? '4s' : '2s' }}</span>
                           <span>5s</span>
                           <span>10s</span>
                           <span>15s</span>
-                        </div>
+                        </div> -->
                       </div>
                     </div>
                   </div>
@@ -727,8 +742,9 @@
                 <div class="cover-cost-display">
                   <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
                 </div>
-                <div class="generate-btn" @click="generateVideo">
+                <div class="generate-btn" :class="{ disabled: isVideoGenerating }" @click="generateVideo">
                   <div class="generate-novel-btn">
+                    <img v-if="isVideoGenerating" src="@/assets/images/base/load.png" alt="loading" class="loading-icon" />
                     <span>{{ estimatedVideoPower }}</span>
                     <img src="@/assets/images/home/power.png" alt="Power" />
                   </div>
@@ -826,14 +842,13 @@ const playingVideoUrl = ref('');
 const playingVideoRatio = ref('16:9');
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
-const isTeenager = computed(() => userInfo.value && userInfo.value.is_teenager == '1');
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
 const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
-
-const goRecharge = () => {
-  router.push('/ai-recharge');
-  showInsufficientBalanceModal.value = false;
-};
+const showUnlimitedModal = ref(false);
+const pendingModeType = ref('');
+const showUnderageModal = ref(false);
+const showUnderageNoBirthdayModal = ref(false);
 
 const typeOptions = ref([
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
@@ -907,7 +922,7 @@ const records = ref<any[]>([]);
 const displayRecords = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(100);
-const displayCount = ref(10);
+const displayCount = ref(20);
 const totalCount = ref(0);
 const pollingTasks = ref<Set<string>>(new Set());
 const pollingTimers = ref<Map<string, ReturnType<typeof setInterval>>>(new Map());
@@ -1003,7 +1018,14 @@ const handlePhotoInput = (event: Event) => {
     return node.nodeType === 3;
   });
 
-  const textBeforeCursor = actualText;
+  const selection = window.getSelection();
+  let cursorPosition = actualText.length;
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    cursorPosition = getPositionInText(target, range);
+  }
+
+  const textBeforeCursor = actualText.substring(0, cursorPosition);
   const atIndex = textBeforeCursor.lastIndexOf('@');
 
   if (atIndex !== -1 && atIndex === textBeforeCursor.length - 1 && uploadedPhotoImages.value.length > 0) {
@@ -1089,51 +1111,156 @@ const selectPhotoRefItem = (item: any) => {
   const target = photoEditableInputRef.value;
   const selection = window.getSelection();
 
-  if (!selection || selection.rangeCount === 0) return;
+  if (!selection || selection.rangeCount === 0) {
+    // 没有选中区域，直接在末尾添加
+    const itemTag = createPhotoItemTag(item);
+    target.appendChild(itemTag);
+    target.appendChild(document.createTextNode(' '));
+    target.focus();
+    showPhotoRefDropdown.value = false;
+    return;
+  }
 
   const range = selection.getRangeAt(0);
 
-  const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
-  const atIndex = textBeforeCursor.lastIndexOf('@');
+  // 查找光标位置前的 @ 符号
+  const atInfo = findAtSymbolBeforeCursor(target, selection);
 
-  if (atIndex !== -1) {
-    const newRange = document.createRange();
-    newRange.setStart(range.startContainer, atIndex);
-    newRange.setEnd(range.startContainer, range.startOffset);
-    newRange.deleteContents();
+  if (atInfo) {
+    const { node, offset } = atInfo;
 
-    // Get the item's index from the upload list
-    const itemIndex = uploadedPhotoImages.value.findIndex(img => img.id === item.id) + 1;
+    // 创建 range 删除 @ 符号
+    const atRange = document.createRange();
+    atRange.setStart(node, offset);
+    atRange.setEnd(node, offset + 1);
 
-    const itemTag = document.createElement('span');
-    itemTag.className = 'image-tag';
-    itemTag.contentEditable = 'false';
-    itemTag.dataset.itemId = item.id;
-    itemTag.dataset.src = item.url;
-    itemTag.dataset.type = 'image';
+    // 删除 @
+    atRange.deleteContents();
 
-    const typeLabel = t('home.img');
-    const itemName = `${typeLabel}${itemIndex}`;
-    itemTag.dataset.name = itemName;
+    // 创建 item tag
+    const itemTag = createPhotoItemTag(item);
 
-    const img = document.createElement('img');
-    img.src = item.url;
-    img.alt = item.name;
-    img.className = 'image-tag-img';
-    itemTag.appendChild(img);
+    // 插入 item tag
+    atRange.insertNode(itemTag);
 
-    const textNode = document.createTextNode(itemName);
-    itemTag.appendChild(textNode);
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    range.insertNode(itemTag);
-    range.insertNode(document.createTextNode(' '));
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
 
-    range.collapse(false);
     selection.removeAllRanges();
-    selection.addRange(range);
+    selection.addRange(cursorRange);
+
+    target.focus();
+  } else {
+    // 没有找到 @，直接在光标位置插入
+    const itemTag = createPhotoItemTag(item);
+    range.insertNode(itemTag);
+
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
+
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(cursorRange);
+
+    target.focus();
   }
 
   showPhotoRefDropdown.value = false;
+};
+
+const createPhotoItemTag = (item: any): HTMLElement => {
+  const itemIndex = uploadedPhotoImages.value.findIndex(img => img.id === item.id) + 1;
+
+  const itemTag = document.createElement('span');
+  itemTag.className = 'image-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = item.id;
+  itemTag.dataset.src = item.url;
+  itemTag.dataset.type = 'image';
+
+  const typeLabel = t('home.img');
+  const itemName = `${typeLabel}${itemIndex}`;
+  itemTag.dataset.name = itemName;
+
+  const img = document.createElement('img');
+  img.src = item.url;
+  img.alt = item.name;
+  img.className = 'image-tag-img';
+  itemTag.appendChild(img);
+
+  const textNode = document.createTextNode(itemName);
+  itemTag.appendChild(textNode);
+
+  return itemTag;
+};
+
+const findAtSymbolBeforeCursor = (element: HTMLElement, selection: Selection): { node: Node; offset: number } | null => {
+  const range = selection.getRangeAt(0);
+
+  // 获取光标位置
+  let cursorPos = 0;
+  const calcPosition = (node: Node, endNode: Node, endOffset: number): boolean => {
+    if (node === endNode) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        cursorPos += Math.min(endOffset, (node as Text).textContent?.length || 0);
+      }
+      return true;
+    }
+    if (node.nodeType === Node.TEXT_NODE) {
+      cursorPos += (node as Text).textContent?.length || 0;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).contentEditable === 'false') {
+        return false;
+      }
+      for (let i = 0; i < node.childNodes.length; i++) {
+        if (calcPosition(node.childNodes[i], endNode, endOffset)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+  calcPosition(element, range.startContainer, range.startOffset);
+
+  // 查找光标前的 @ 符号
+  let atNode: Node | null = null;
+  let atOffset = 0;
+  let currentPos = 0;
+
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = (node as Text).textContent || '';
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === '@' && currentPos + i <= cursorPos) {
+          atNode = node;
+          atOffset = i;
+        }
+      }
+      currentPos += text.length;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).contentEditable === 'false') {
+        return;
+      }
+      for (let i = 0; i < node.childNodes.length; i++) {
+        walkNodes(node.childNodes[i]);
+      }
+    }
+  };
+
+  walkNodes(element);
+
+  return atNode ? { node: atNode, offset: atOffset } : null;
 };
 
 const handlePhotoKeydown = (event: KeyboardEvent) => {
@@ -1352,7 +1479,7 @@ const checkInputCollapse = () => {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const docHeight = document.documentElement.scrollHeight;
   const windowHeight = window.innerHeight;
-  const isNearBottom = scrollTop + windowHeight >= docHeight - 100;
+  const isNearBottom = scrollTop + windowHeight >= docHeight - 10;
 
   const targetState = !isNearBottom;
 
@@ -1394,23 +1521,23 @@ const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
 const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
+const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
 const videoRefInput = ref<HTMLInputElement | null>(null);
 const videoEditableInputRef = ref<HTMLElement | null>(null);
 const uploadedVideoRefs = ref<any[]>([]);
 const videoMultimodalOptions = computed(() => {
-  if (currentVideoMode.value === 'unlimited') {
-    return [
-      { value: 'multimodal', label: t('home.videoMode.multimodal') },
-      { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') },
-      { value: 'videoExtend', label: t('home.videoMode.videoExtend') }
-    ];
-  }
-  return [
+  const options = [
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
+  // 视频续写类型只在无限制模式下显示
+  if (currentVideoMode.value === 'unlimited') {
+    options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
+  }
+  return options;
 });
 const videoQualityOptions = ref([
   { value: '720P', label: '720P' },
@@ -1420,12 +1547,23 @@ const videoRatioOptions = ref([
   { value: '9:16', label: '9:16' },
   { value: '16:9', label: '16:9' }
 ]);
-const videoDurationOptions = ref([
-  { value: '2', label: '2s' },
-  { value: '5', label: '5s' },
-  { value: '10', label: '10s' },
-  { value: '15', label: '15s' }
-]);
+const videoDurationOptions = computed(() => {
+  const minDuration = currentVideoMode.value === 'unlimited' ? 4 : 2;
+  if (minDuration === 4) {
+    return [
+      { value: '4', label: '4s' },
+      { value: '5', label: '5s' },
+      { value: '10', label: '10s' },
+      { value: '15', label: '15s' }
+    ];
+  }
+  return [
+    { value: '2', label: '2s' },
+    { value: '5', label: '5s' },
+    { value: '10', label: '10s' },
+    { value: '15', label: '15s' }
+  ];
+});
 
 // Input content
 const videoInput = ref('');
@@ -1436,6 +1574,8 @@ const bottomActiveTab = ref('photo');
 const resetPhotoSettings = () => {
   selectedPhotoQuality.value = '1K';
   selectedPhotoRatio.value = '9:16';
+  // Reset unlimited mode when switching tabs
+  currentPhotoMode.value = 'normal';
 };
 
 const resetVideoSettings = () => {
@@ -1449,6 +1589,8 @@ const resetVideoSettings = () => {
   endFrameImage.value = '';
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
+  // Reset unlimited mode when switching tabs
+  currentVideoMode.value = 'normal';
 };
 
 const switchBottomTab = (tab: string) => {
@@ -1513,7 +1655,8 @@ const handlePhotoFileChange = async (event: Event) => {
           const newImageItem = {
             id: Date.now() + i.toString(),
             name: file.name,
-            image: uploadedUrl
+            image: uploadedUrl,
+            type: 'image'
           };
           uploadedPhotoImages.value.push(newImageItem);
 
@@ -1699,6 +1842,46 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
+    // Check video and audio total duration limits (15 seconds each) for video multimodal mode
+    if (selectedVideoMultimodal.value == 'multimodal') {
+      let totalVideoDuration = 0;
+      let totalAudioDuration = 0;
+
+      // Add duration of existing uploaded videos
+      for (const item of uploadedVideoRefs.value) {
+        if (item.type === 'video' && item.duration) {
+          totalVideoDuration += item.duration;
+        } else if (item.type === 'audio' && item.duration) {
+          totalAudioDuration += item.duration;
+        }
+      }
+
+      // Add duration of new files
+      for (const file of files) {
+        if (file.type.startsWith('video/')) {
+          const duration = await getMediaDuration(file);
+          totalVideoDuration += duration;
+        } else if (file.type.startsWith('audio/')) {
+          const duration = await getMediaDuration(file);
+          totalAudioDuration += duration;
+        }
+      }
+
+      // Check video duration limit (15 seconds)
+      if (totalVideoDuration > 15) {
+        toast(t('home.error.videoDurationLimit'));
+        input.value = '';
+        return;
+      }
+
+      // Check audio duration limit (15 seconds)
+      if (totalAudioDuration > 15) {
+        toast(t('home.error.audioDurationLimit'));
+        input.value = '';
+        return;
+      }
+    }
+
     // Check file size limits for multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal') {
       for (const file of files) {
@@ -1747,10 +1930,23 @@ const handleVideoRefUpload = async (event: Event) => {
       }
     }
 
-    if (uploadedVideoRefs.value.length + files.length > 4) {
-      toast(t('home.error.maxItemsReached'));
-      input.value = '';
-      return;
+    if (selectedVideoMultimodal.value == 'multimodal') {
+      const existingImages = uploadedVideoRefs.value.filter(ref => ref.type === 'image').length;
+      const newImages = files.filter(f => !f.type.startsWith('video/') && !f.type.startsWith('audio/')).length;
+
+      const maxImages = currentVideoMode.value === 'unlimited' ? 3 : 9;
+
+      if (existingImages + newImages > maxImages) {
+        toast(t('home.error.maxPhotoReached', { max: maxImages }));
+        input.value = '';
+        return;
+      }
+    } else {
+      if (uploadedVideoRefs.value.length + files.length > 4) {
+        toast(t('home.error.maxItemsReached'));
+        input.value = '';
+        return;
+      }
     }
 
     isUploading.value = true;
@@ -1799,14 +1995,15 @@ const handleVideoRefUpload = async (event: Event) => {
           const newItem = {
             id: Date.now() + i.toString(),
             name: file.name,
-            url: uploadedUrl,
+            image: uploadedUrl,
             type: fileType,
             cover: coverUrl,
             duration: duration
           };
+          const newIndex = uploadedVideoRefs.value.length;
           uploadedVideoRefs.value.push(newItem);
 
-          insertVideoRefTag(newItem, uploadedVideoRefs.value.length);
+          insertVideoRefTag(newItem, newIndex);
         }
       }
     } catch (error) {
@@ -1834,40 +2031,43 @@ const insertVideoRefTag = (item: any, index: number) => {
     target.innerHTML = '';
   }
 
+  // Calculate type-specific index (e.g., image1, image2, video1, video2)
+  const typeCount = uploadedVideoRefs.value.slice(0, index).filter((i: any) => i.type === item.type).length + 1;
+
   const itemTag = document.createElement('span');
-  itemTag.className = 'image-tag';
+  itemTag.className = item.type === 'image' ? 'image-tag' : item.type === 'video' ? 'video-tag' : 'audio-tag';
   itemTag.contentEditable = 'false';
   itemTag.dataset.itemId = item.id;
-  itemTag.dataset.src = item.url;
+  itemTag.dataset.src = item.image;
   itemTag.dataset.type = item.type;
 
   const typeLabel = item.type == 'image' ? t('home.img') : item.type == 'video' ? t('home.video') : t('home.audio');
-  itemTag.dataset.name = `${typeLabel}${index}`;
+  itemTag.dataset.name = `${typeLabel}${typeCount}`;
 
   if (item.type == 'image') {
     const img = document.createElement('img');
-    img.src = item.url;
+    img.src = item.image;
     img.alt = item.name;
     img.className = 'image-tag-img';
     itemTag.appendChild(img);
   } else if (item.type == 'video') {
     const img = document.createElement('img');
-    img.src = item.cover || item.url;
+    img.src = item.cover || item.image;
     img.alt = item.name;
-    img.className = 'image-tag-img';
+    img.className = 'video-tag-img';
     img.style.maxWidth = '60px';
     img.style.maxHeight = '60px';
     img.style.objectFit = 'cover';
     itemTag.appendChild(img);
   } else if (item.type == 'audio') {
     const img = document.createElement('img');
-    img.src = '@/assets/images/home/audio.png';
+    img.src = audioIcon;
     img.alt = item.name;
-    img.className = 'image-tag-img';
+    img.className = 'audio-tag-img';
     itemTag.appendChild(img);
   }
 
-  const textNode = document.createTextNode(`${typeLabel}${index}`);
+  const textNode = document.createTextNode(`${typeLabel}${typeCount}`);
   itemTag.appendChild(textNode);
 
   const lastChild = target.lastChild;
@@ -2189,73 +2389,121 @@ const selectVideoRefItem = (item: any) => {
   const target = videoEditableInputRef.value;
   const selection = window.getSelection();
 
-  if (!selection || selection.rangeCount === 0) return;
+  if (!selection || selection.rangeCount === 0) {
+    // 没有选中区域，直接在末尾添加
+    const itemTag = createVideoItemTag(item);
+    target.appendChild(itemTag);
+    target.appendChild(document.createTextNode(' '));
+    target.focus();
+    showVideoRefDropdown.value = false;
+    return;
+  }
 
   const range = selection.getRangeAt(0);
 
-  const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
-  const atIndex = textBeforeCursor.lastIndexOf('@');
+  // 查找光标位置前的 @ 符号
+  const atInfo = findAtSymbolBeforeCursor(target, selection);
 
-  if (atIndex !== -1) {
-    const newRange = document.createRange();
-    newRange.setStart(range.startContainer, atIndex);
-    newRange.setEnd(range.startContainer, range.startOffset);
-    newRange.deleteContents();
+  if (atInfo) {
+    const { node, offset } = atInfo;
 
-    // Calculate index based on type (same logic as dropdown display)
-    let itemIndex = 0;
-    if (item.type === 'image') {
-      itemIndex = uploadedVideoImages.value.findIndex(img => img.id === item.id) + 1;
-    } else {
-      // For video and audio, calculate the count of same type before this item
-      const itemPos = uploadedVideoRefs.value.findIndex(v => v.id === item.id);
-      itemIndex = uploadedVideoRefs.value.slice(0, itemPos + 1).filter((i: any) => i.type === item.type).length;
-    }
+    // 创建 range 删除 @ 符号
+    const atRange = document.createRange();
+    atRange.setStart(node, offset);
+    atRange.setEnd(node, offset + 1);
 
-    const itemTag = document.createElement('span');
-    itemTag.className = item.type == 'image' ? 'image-tag' : item.type == 'video' ? 'video-tag' : 'audio-tag';
-    itemTag.contentEditable = 'false';
-    itemTag.dataset.itemId = item.id;
-    itemTag.dataset.src = item.url;
-    itemTag.dataset.type = item.type;
+    // 删除 @
+    atRange.deleteContents();
 
-    const typeLabel = item.type == 'image' ? t('home.img') : item.type == 'video' ? t('home.video') : t('home.audio');
-    const itemName = `${typeLabel}${itemIndex}`;
-    itemTag.dataset.name = itemName;
+    // 创建 item tag
+    const itemTag = createVideoItemTag(item);
 
-    if (item.type == 'image') {
-      const img = document.createElement('img');
-      img.src = item.url;
-      img.alt = item.name;
-      img.className = 'image-tag-img';
-      itemTag.appendChild(img);
-    } else if (item.type == 'video') {
-      const img = document.createElement('img');
-      img.src = item.cover || item.url;
-      img.alt = item.name;
-      img.className = 'image-tag-img';
-      img.style.objectFit = 'cover';
-      itemTag.appendChild(img);
-    } else if (item.type == 'audio') {
-      const img = document.createElement('img');
-      img.src = audioIcon;
-      img.alt = item.name;
-      img.className = 'audio-tag-img';
-      itemTag.appendChild(img);
-    }
+    // 插入 item tag
+    atRange.insertNode(itemTag);
 
-    const textNode = document.createTextNode(itemName);
-    itemTag.appendChild(textNode);
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    range.insertNode(itemTag);
-    range.insertNode(document.createTextNode(' '));
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
 
-    range.collapse(false);
     selection.removeAllRanges();
-    selection.addRange(range);
+    selection.addRange(cursorRange);
+
+    target.focus();
+  } else {
+    // 没有找到 @，直接在光标位置插入
+    const itemTag = createVideoItemTag(item);
+    range.insertNode(itemTag);
+
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
+
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(cursorRange);
+
+    target.focus();
   }
 
   showVideoRefDropdown.value = false;
+};
+
+const createVideoItemTag = (item: any): HTMLElement => {
+  // Calculate index based on type (same logic as dropdown display)
+  let itemIndex = 0;
+  if (item.type === 'image') {
+    const itemPos = uploadedVideoRefs.value.findIndex((v: any) => v.id === item.id);
+    itemIndex = uploadedVideoRefs.value.slice(0, itemPos + 1).filter((i: any) => i.type === 'image').length;
+  } else {
+    const itemPos = uploadedVideoRefs.value.findIndex((v: any) => v.id === item.id);
+    itemIndex = uploadedVideoRefs.value.slice(0, itemPos + 1).filter((i: any) => i.type === item.type).length;
+  }
+
+  const itemTag = document.createElement('span');
+  itemTag.className = item.type == 'image' ? 'image-tag' : item.type == 'video' ? 'video-tag' : 'audio-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = item.id;
+  itemTag.dataset.src = item.image;
+  itemTag.dataset.type = item.type;
+
+  const typeLabel = item.type == 'image' ? t('home.img') : item.type == 'video' ? t('home.video') : t('home.audio');
+  const itemName = `${typeLabel}${itemIndex}`;
+  itemTag.dataset.name = itemName;
+
+  if (item.type == 'image') {
+    const img = document.createElement('img');
+    img.src = item.image;
+    img.alt = item.name;
+    img.className = 'image-tag-img';
+    itemTag.appendChild(img);
+  } else if (item.type == 'video') {
+    const img = document.createElement('img');
+    img.src = item.cover || item.image;
+    img.alt = item.name;
+    img.className = 'image-tag-img';
+    img.style.objectFit = 'cover';
+    itemTag.appendChild(img);
+  } else if (item.type == 'audio') {
+    const img = document.createElement('img');
+    img.src = audioIcon;
+    img.alt = item.name;
+    img.className = 'audio-tag-img';
+    itemTag.appendChild(img);
+  }
+
+  const textNode = document.createTextNode(itemName);
+  itemTag.appendChild(textNode);
+
+  return itemTag;
 };
 
 const getVideoInputContent = () => {
@@ -2276,7 +2524,7 @@ const getVideoInputContent = () => {
     } else if (node.nodeType == Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
 
-      if (element.classList.contains('image-tag')) {
+      if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
         const src = element.dataset.src;
         const itemType = element.dataset.type;
         if (src && itemType) {
@@ -2317,9 +2565,10 @@ const removeVideoRef = (id: string) => {
     // Collect all tags to remove first
     const tagsToRemove: HTMLElement[] = [];
     tags.forEach(tag => {
-      const tagItemId = tag.dataset.itemId;
+      const tagElement = tag as HTMLElement;
+      const tagItemId = tagElement.dataset.itemId;
       if (tagItemId === id) {
-        tagsToRemove.push(tag as HTMLElement);
+        tagsToRemove.push(tagElement);
       }
     });
 
@@ -2338,7 +2587,8 @@ const removeVideoRef = (id: string) => {
 
     const videoCount = { video: 0, audio: 0, image: 0 };
     remainingTags.forEach(tag => {
-      const tagType = tag.dataset.type || 'image';
+      const tagElement = tag as HTMLElement;
+      const tagType = tagElement.dataset.type || 'image';
       videoCount[tagType as keyof typeof videoCount]++;
 
       const textNode = tag.querySelector('img')?.nextSibling;
@@ -2582,19 +2832,30 @@ const handleVideoUpload = async (event: Event) => {
   if (file) {
     // Video duration validation
     const duration = await getVideoDuration(file);
-    const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
-    const maxDuration = currentVideoMode.value === 'unlimited' ? 30 : 14;
 
-    if (duration < minDuration) {
-      toast(t('home.error.videoDurationTooShort', { min: minDuration }));
-      target.value = '';
-      return;
-    }
+    // 视频续写模式下，验证时长在2-5秒之间
+    if (selectedVideoMultimodal.value == 'videoExtend') {
+      if (duration < 2 || duration > 5) {
+        toast(t('home.error.videoExtendDurationLimit'));
+        target.value = '';
+        return;
+      }
+    } else {
+      // 其他模式下的时长验证
+      const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
+      const maxDuration = currentVideoMode.value === 'unlimited' ? 30 : 14;
 
-    if (duration > maxDuration) {
-      toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
-      target.value = '';
-      return;
+      if (duration < minDuration) {
+        toast(t('home.error.videoDurationTooShort', { min: minDuration }));
+        target.value = '';
+        return;
+      }
+
+      if (duration > maxDuration) {
+        toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
+        target.value = '';
+        return;
+      }
     }
 
     // Video file size validation
@@ -2624,7 +2885,20 @@ const handleVideoUpload = async (event: Event) => {
       if (uploadedUrl) {
         uploadedVideo.value = uploadedUrl;
 
+        // 视频续写模式下，保存上传视频时长并调整生成时长
         if (selectedVideoMultimodal.value === 'videoExtend') {
+          uploadedVideoDuration.value = duration;
+          lastValidVideoDuration.value = selectedVideoDuration.value;
+
+          // 如果当前设置的时长小于等于视频时长，自动调整
+          const currentDuration = parseInt(selectedVideoDuration.value);
+          if (currentDuration <= duration) {
+            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+            const newDuration = Math.max(duration + 1, minDuration);
+            selectedVideoDuration.value = Math.min(newDuration, 15).toString();
+            lastValidVideoDuration.value = selectedVideoDuration.value;
+          }
+
           uploadedVideoRefs.value.push({
             id: Date.now().toString(),
             name: file.name,
@@ -2635,8 +2909,7 @@ const handleVideoUpload = async (event: Event) => {
         }
       }
     } catch (error) {
-      console.error('Failed to upload video:', error);
-      toast((error as Error).message || '上传失败');
+      toast(t('fail'));
     } finally {
       isUploading.value = false;
     }
@@ -2646,6 +2919,7 @@ const handleVideoUpload = async (event: Event) => {
 const removeVideo = () => {
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
+  uploadedVideoDuration.value = 0;
   if (selectedVideoMultimodal.value === 'videoExtend') {
     uploadedVideoRefs.value = uploadedVideoRefs.value.filter((item: any) => item.type !== 'video');
   }
@@ -2654,16 +2928,48 @@ const removeVideo = () => {
   }
 };
 
+const sliderMarks = computed(() => {
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const max = 15;
+  const marks = [min, 5, 10, 15];
+  return marks.map(value => ({
+    value,
+    position: `${((value - min) / (max - min)) * 100}%`
+  }));
+});
+
 const getSliderValuePosition = () => {
   const value = parseInt(selectedVideoDuration.value);
-  const min = 2;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 15;
   return `${((value - min) / (max - min)) * 100}%`;
+};
+
+const saveLastValidDuration = () => {
+  lastValidVideoDuration.value = selectedVideoDuration.value;
 };
 
 const onVideoDurationChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   selectedVideoDuration.value = target.value;
+};
+
+const validateDurationAndRestore = () => {
+  // 只有在视频续写模式且有上传视频时才验证
+  if (selectedVideoMultimodal.value === 'videoExtend' && uploadedVideoDuration.value > 0) {
+    const newDuration = parseInt(selectedVideoDuration.value);
+    // 如果生成时长小于等于上传视频时长，恢复之前的值并提示
+    if (newDuration <= uploadedVideoDuration.value) {
+      selectedVideoDuration.value = lastValidVideoDuration.value;
+      toast(t('home.error.videoExtendDurationExceed'));
+    } else {
+      // 验证通过，更新lastValidVideoDuration
+      lastValidVideoDuration.value = selectedVideoDuration.value;
+    }
+  } else {
+    // 不在验证模式，更新lastValidVideoDuration
+    lastValidVideoDuration.value = selectedVideoDuration.value;
+  }
 };
 
 const isTaskProcessing = (status: string) => {
@@ -2754,7 +3060,6 @@ const pollTaskStatus = async (taskId: string) => {
 
         records.value[recordIndex] = { ...updatedRecord };
         displayRecords.value = [...records.value];
-        console.log('[pollTaskStatus] records after update:', records.value[recordIndex]);
 
         if (!isTaskProcessing(taskData.status)) {
           stopPolling(taskId);
@@ -2938,47 +3243,49 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '') => 
 
         if (isLoadMore && newRecords.length > 0) {
           records.value = [...newRecords, ...records.value];
+          // 滚动加载时，也更新displayRecords
+          displayRecords.value = records.value;
         } else {
           records.value = newRecords;
-        }
 
-        totalCount.value = response.data.data_total || response.data.total || 0;
+          totalCount.value = response.data.data_total || response.data.total || 0;
 
-        newRecords.forEach((record: any) => {
-          if (record.session_id && isTaskProcessing(record.step_status || record.status)) {
-            startPolling(record.session_id);
-          }
-        });
+          newRecords.forEach((record: any) => {
+            if (record.session_id && isTaskProcessing(record.step_status || record.status)) {
+              startPolling(record.session_id);
+            }
+          });
 
-        // 如果有目标sessionId，找到目标记录附近的数据
-        if (targetSessionId) {
-          const targetIndex = records.value.findIndex((r: any) => r.session_id == targetSessionId);
-          if (targetIndex !== -1) {
-            // 找到了，计算显示范围：目标前后各5条
-            const halfCount = Math.floor(displayCount.value / 2);
-            const startIndex = Math.max(0, targetIndex - halfCount);
-            const endIndex = Math.min(records.value.length, startIndex + displayCount.value);
-            displayRecords.value = records.value.slice(startIndex, endIndex);
+          // 如果有目标sessionId，找到目标记录附近的数据
+          if (targetSessionId) {
+            const targetIndex = records.value.findIndex((r: any) => r.session_id == targetSessionId);
+            if (targetIndex !== -1) {
+              // 找到了，计算显示范围：目标前后各5条
+              const halfCount = Math.floor(displayCount.value / 2);
+              const startIndex = Math.max(0, targetIndex - halfCount);
+              const endIndex = Math.min(records.value.length, startIndex + displayCount.value);
+              displayRecords.value = records.value.slice(startIndex, endIndex);
 
-            // 滚动到该记录
-            nextTick(() => {
-              scrollToRecord(targetSessionId);
-            });
+              // 滚动到该记录
+              nextTick(() => {
+                scrollToRecord(targetSessionId);
+              });
+            } else {
+              // 没找到目标记录，显示所有数据
+              displayRecords.value = records.value;
+            }
           } else {
-            // 没找到目标记录，显示所有数据
+            // 没有目标，显示所有数据
             displayRecords.value = records.value;
-          }
-        } else {
-          // 没有目标，显示所有数据
-          displayRecords.value = records.value;
 
-          if (!isLoadMore && displayRecords.value.length > 0) {
-            setTimeout(() => {
-              const lastRecord = document.querySelector('.record-item:last-child');
-              if (lastRecord) {
-                lastRecord.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }, 300);
+            if (!isLoadMore && displayRecords.value.length > 0) {
+              setTimeout(() => {
+                const lastRecord = document.querySelector('.record-item:last-child');
+                if (lastRecord) {
+                  lastRecord.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 300);
+            }
           }
         }
       }
@@ -3033,6 +3340,7 @@ const generatePhoto = async () => {
     const skeletonRecord = {
       id: Date.now(),
       session_id: sessionId,
+      status: 'DOING',
       step_status: 'PROCESSING',
       result_async: null,
       story_type: 'simple_image',
@@ -3061,7 +3369,7 @@ const generatePhoto = async () => {
         ratio: selectedPhotoRatio.value,
         language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
         story_type: 'simple_image',
-        story_mode: currentPhotoMode.value,
+        story_mode: currentPhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
         reference_images: uploadedPhotoImages.value.map(img => img.image),
         emotion: '',
@@ -3081,6 +3389,11 @@ const generatePhoto = async () => {
     };
 
     records.value.push(skeletonRecord);
+    displayRecords.value = records.value;
+
+    nextTick(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
 
     const photoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
@@ -3088,12 +3401,12 @@ const generatePhoto = async () => {
       resolution: selectedPhotoQuality.value
     };
 
-    const settingsParams = {
+    const settingsParams: Record<string, any> = {
       ratio: photoSettings.aspectRatio,
       language: photoSettings.language,
       story_type: "simple_image",
       simple_image_resolution: photoSettings.resolution,
-      story_mode: currentPhotoMode.value,
+      story_mode: currentPhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
       reference_images: uploadedPhotoImages.value.map(img => img.image),
       emotion: "",
@@ -3103,6 +3416,10 @@ const generatePhoto = async () => {
       },
       addition_characters: []
     };
+
+    if (currentPhotoMode.value == 'unlimited') {
+      settingsParams.image_count = 1;
+    }
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
       method: 'POST',
@@ -3149,11 +3466,16 @@ const generatePhoto = async () => {
 
       const index = records.value.findIndex(r => r.session_id == sessionId);
       if (index !== -1) {
-        records.value[index].createTime = response.time || new Date().toLocaleString('zh-CN');
+        records.value[index].createTime = response.time;
       }
 
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
+
+      // Scroll to bottom
+      nextTick(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
     } else {
       const index = records.value.findIndex(r => r.session_id == sessionId);
       if (index !== -1) {
@@ -3183,6 +3505,12 @@ const generateVideo = async () => {
   const videoContent = getVideoInputContent();
   if (!videoContent.trim()) {
     toast(t('home.error.emptyInput'));
+    return;
+  }
+
+  // 首尾帧模式验证：首帧必须上传，尾帧可以不上传
+  if (selectedVideoMultimodal.value === 'startEndFrames' && !startFrameImage.value) {
+    toast(t('home.error.startFrameRequired'));
     return;
   }
 
@@ -3221,15 +3549,17 @@ const generateVideo = async () => {
         referenceImages.push({ type: "last_frame", url: endFrameImage.value });
       }
     } else {
-      referenceImages = [
-        ...uploadedVideoRefs.value.map(ref => ref.url),
-      ];
+      referenceImages = uploadedVideoRefs.value
+        .filter(ref => ref.type === 'image')
+        .map(ref => ref.image);
       if (uploadedVideo.value) referenceImages.push(uploadedVideo.value);
     }
 
     const skeletonRecord = {
       id: Date.now(),
       session_id: sessionId,
+      type: 'video',
+      status: 'DOING',
       step_status: 'PROCESSING',
       result_async: null,
       story_type: 'simple_video',
@@ -3259,7 +3589,7 @@ const generateVideo = async () => {
         ratio: selectedVideoRatio.value,
         language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
         story_type: 'simple_video',
-        story_mode: currentVideoMode.value,
+        story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
         reference_images: referenceImages,
         emotion: '',
@@ -3274,7 +3604,7 @@ const generateVideo = async () => {
         per_chapter_scene_count: 6,
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
-        simple_video_generate_mode: selectedVideoMultimodal.value
+        simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : 'video_extension'
       }
     };
 
@@ -3296,17 +3626,17 @@ const generateVideo = async () => {
     } else {
       referenceVideos = uploadedVideoRefs.value
         .filter((ref: any) => ref.type === 'video')
-        .map((ref: any) => ref.url);
+        .map((ref: any) => ref.image);
     }
     const referenceAudios = uploadedVideoRefs.value
       .filter((ref: any) => ref.type === 'audio')
-      .map((ref: any) => ref.url);
+      .map((ref: any) => ref.image);
 
     const params = {
       ratio: videoSettings.aspectRatio,
       language: videoSettings.language,
       story_type: "simple_video",
-      story_mode: currentVideoMode.value,
+      story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
       reference_images: referenceImages,
       reference_videos: referenceVideos,
@@ -3352,15 +3682,15 @@ const generateVideo = async () => {
 
     const index = records.value.findIndex(r => r.session_id == sessionId);
     if (index !== -1) {
-      records.value[index].createTime = settingsData.time || new Date().toLocaleString('zh-CN');
+      records.value[index].createTime = settingsData.time;
     }
 
     const generateResponse = await api.generateSingleVideo({
       session_id: sessionId,
       topic: videoContent
-    });
+    }) as any;
 
-    if (generateResponse.data.code == 200 || generateResponse.data.code == 0) {
+    if (generateResponse.code == 200) {
       videoInput.value = '';
       if (videoEditableInputRef.value) {
         videoEditableInputRef.value.innerHTML = '';
@@ -3372,12 +3702,17 @@ const generateVideo = async () => {
 
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
+
+      // Scroll to bottom
+      nextTick(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
     } else {
       const idx = records.value.findIndex(r => r.session_id == sessionId);
       if (idx !== -1) {
         records.value.splice(idx, 1);
       }
-      toast(generateResponse.data.message || t('fail'));
+      toast(generateResponse.message || t('fail'));
     }
   } catch (error) {
     console.error('Error generating video:', error);
@@ -3406,6 +3741,7 @@ const selectType = (type: string) => {
   selectedType.value = type;
   showTypeDropdown.value = false;
   currentPage.value = 1;
+
   loadRecords();
 };
 
@@ -3420,18 +3756,23 @@ const scrollToRecord = (sessionId: string) => {
 };
 
 const getCountry = () => {
-  api.getCode().then((res: any) => {
-    if (res.code == 0) {
-      if (res.data.countryCode != 'CN') {
-        userRegion.value = true;
+  return new Promise<void>((resolve) => {
+    api.getCode().then((res: any) => {
+      if (res.code == 0) {
+        if (res.data.countryCode != 'CN') {
+          userRegion.value = true;
+        } else {
+          userRegion.value = false;
+        }
       } else {
         userRegion.value = false;
       }
-    } else {
+      resolve();
+    }).catch(err => {
+      console.log(err);
       userRegion.value = false;
-    }
-  }).catch(err => {
-    console.log(err);
+      resolve();
+    });
   });
 };
 
@@ -3446,6 +3787,15 @@ const getUserInfo = () => {
 };
 
 onMounted(() => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+    return false;
+  }
+
+  // 滚动到页面顶部
+  window.scrollTo({ top: 0, behavior: 'instant' });
+
   document.addEventListener('click', handleClickOutside);
   window.addEventListener('scroll', handleScroll);
   window.addEventListener('scroll', handleScrollForInput);
@@ -3453,20 +3803,6 @@ onMounted(() => {
   // 获取用户区域和用户信息
   getCountry();
   getUserInfo();
-
-  // Load mode settings from local storage
-  try {
-    const storedPhotoMode = localStorage.getItem('currentPhotoMode');
-    if (storedPhotoMode) {
-      currentPhotoMode.value = storedPhotoMode;
-    }
-    const storedVideoMode = localStorage.getItem('currentVideoMode');
-    if (storedVideoMode) {
-      currentVideoMode.value = storedVideoMode;
-    }
-  } catch (e) {
-    console.error('Error loading mode settings:', e);
-  }
 
   // 从localStorage获取sessionId（使用后立即清除，避免刷新后再次滚动）
   const targetSessionId = localStorage.getItem('targetSessionId') || '';
@@ -3538,9 +3874,7 @@ const playVideo = (record: any) => {
 };
 
 const playVideoItem = (item: any) => {
-  console.log('[playVideoItem] clicked:', item);
   if (item.type === 'video' && item.image) {
-    console.log('[playVideoItem] playing:', item.image);
     playingVideoUrl.value = item.image;
     showVideoModal.value = true;
   } else {
@@ -3573,8 +3907,8 @@ const shareVideo = (record: any) => {
 };
 
 const playUploadedVideo = (ref: any) => {
-  if (ref.type === 'video' && (ref.videoUrl || ref.url)) {
-    playingVideoUrl.value = ref.videoUrl || ref.url;
+  if (ref.type === 'video' && (ref.videoUrl || ref.image)) {
+    playingVideoUrl.value = ref.videoUrl || ref.image;
     showVideoModal.value = true;
   }
 };
@@ -3583,8 +3917,9 @@ const regenerateRecord = (record: any) => {
   if (record.type == 'photo') {
     bottomActiveTab.value = 'photo';
 
-    // 展开输入框
+    // 展开输入框并重置折叠状态
     isPhotoInputCollapsed.value = false;
+    lastCollapseState = null;
 
     const userSelected = record.user_selected || {};
     const others = userSelected.others || {};
@@ -3594,7 +3929,8 @@ const regenerateRecord = (record: any) => {
     uploadedPhotoImages.value = list.map((item: any, index: number) => ({
       id: item.id || Date.now() + index.toString(),
       name: item.name || `image${index + 1}`,
-      image: item.image || item.url || ''
+      image: item.image || item.url || '',
+      type: item.type || 'image'
     }));
 
     if (userSelected.ratio) {
@@ -3604,7 +3940,12 @@ const regenerateRecord = (record: any) => {
       selectedPhotoQuality.value = userSelected.simple_image_resolution;
     }
     if (userSelected.story_mode) {
-      currentPhotoMode.value = userSelected.story_mode;
+      // Map nsfw to unlimited mode, but check if user is teenager
+      const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
+      // If user is teenager, cannot use unlimited mode
+      currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+    } else {
+      currentPhotoMode.value = 'normal';
     }
 
     photoInputKey.value++;
@@ -3615,12 +3956,27 @@ const regenerateRecord = (record: any) => {
       }
     }, 100);
   } else if (record.type == 'video') {
+    const userSelected = record.user_selected || {};
+    const isVideoExtensionMode = userSelected.simple_video_generate_mode == 'video_extension';
+
+    // 检查是否使用了无限制模式且是视频续写类型
+    const storyMode = userSelected.story_mode;
+    const usedUnlimitedMode = (storyMode == 'nsfw' || storyMode == 'unlimited') && isVideoExtensionMode;
+
+    // 检查限制条件
+    const hasUnlimitedModeRestriction = !userRegion.value || !userInfo.value?.info?.birthday || isTeenager.value;
+
+    if (usedUnlimitedMode && hasUnlimitedModeRestriction) {
+      toast(t('home.error.unlimitedModeRestricted'));
+      return;
+    }
+
     bottomActiveTab.value = 'video';
 
-    // 展开输入框
+    // 展开输入框并重置折叠状态
     isVideoInputCollapsed.value = false;
+    lastCollapseState = null;
 
-    const userSelected = record.user_selected || {};
     const others = userSelected.others || {};
     const content = others.content || record.topic || record.description || '';
 
@@ -3629,9 +3985,9 @@ const regenerateRecord = (record: any) => {
     uploadedVideoRefs.value = list.map((item: any, index: number) => ({
       id: item.id || Date.now() + index.toString(),
       name: item.name || `file${index + 1}`,
-      url: item.url || item.image || '',
+      image: item.image || item.url || '',
       type: item.type || 'image',
-      cover: item.cover || item.image || ''
+      cover: item.cover || ''
     }));
 
     if (userSelected.ratio) {
@@ -3643,8 +3999,12 @@ const regenerateRecord = (record: any) => {
     if (userSelected.simple_video_duration) {
       selectedVideoDuration.value = userSelected.simple_video_duration.toString();
     }
+    // 回显时读取记录中的模式
     if (userSelected.story_mode) {
-      currentVideoMode.value = userSelected.story_mode;
+      const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
+      currentVideoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+    } else {
+      currentVideoMode.value = 'normal';
     }
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
@@ -3653,7 +4013,7 @@ const regenerateRecord = (record: any) => {
       startFrameImage.value = referenceImages[0]?.url || '';
       endFrameImage.value = referenceImages[1]?.url || '';
       videoInput.value = content;
-    } else if (userSelected.simple_video_generate_mode == 'video_extension') {
+    } else if (isVideoExtensionMode) {
       selectedVideoMultimodal.value = 'videoExtend';
       uploadedVideoRefs.value = [];
       uploadedVideo.value = '';
@@ -3699,6 +4059,17 @@ const deleteRecord = (record: any) => {
   showMoreOptions.value = false;
 };
 
+function goRecharge(){
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+
+  router.push('/ai-recharge');
+  showInsufficientBalanceModal.value = false;
+};
+
 const handleCloseDeleteModal = () => {
   showDeleteRecordModal.value = false;
   recordToDelete.value = null;
@@ -3715,6 +4086,8 @@ const handleConfirmDelete = async () => {
         records.value.splice(index, 1);
         totalCount.value--;
       }
+      // Update displayRecords to reflect the deletion
+      displayRecords.value = records.value;
       toast(t('success'));
     } else {
       toast(response.message || t('fail'));
@@ -3731,8 +4104,9 @@ const handleConfirmDelete = async () => {
 const editImage = (record: any, index: number) => {
   bottomActiveTab.value = 'photo';
 
-  // 展开输入框
+  // 展开输入框并重置折叠状态
   isPhotoInputCollapsed.value = false;
+  lastCollapseState = null;
 
   if (photoEditableInputRef.value) {
     photoEditableInputRef.value.innerHTML = '';
@@ -3745,7 +4119,8 @@ const editImage = (record: any, index: number) => {
     uploadedPhotoImages.value = [{
       id: Date.now().toString(),
       name: `image${index + 1}`,
-      image: images[index]
+      image: images[index],
+      type: 'image'
     }];
   } else {
     uploadedPhotoImages.value = [];
@@ -3760,7 +4135,8 @@ const editImage = (record: any, index: number) => {
       selectedPhotoQuality.value = record.user_selected.resolution || record.user_selected.simple_image_resolution;
     }
     if (record.user_selected.story_mode) {
-      currentPhotoMode.value = record.user_selected.story_mode;
+      const mode = record.user_selected.story_mode == 'nsfw' ? 'unlimited' : record.user_selected.story_mode;
+      currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
     }
   }
 
@@ -3859,6 +4235,146 @@ const getLoadingGif = (ratio: string) => {
   } else {
     return loadingGif11;
   }
+};
+
+const getPositionInText = (element: HTMLElement, range: Range): number => {
+  let position = 0;
+
+  const calculatePosition = (node: Node, endNode: Node, endOffset: number): boolean => {
+    if (node === endNode) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        let parent = node.parentElement;
+        let isInNonEditable = false;
+        while (parent) {
+          if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+            isInNonEditable = true;
+            break;
+          }
+          parent = parent.parentElement;
+        }
+        if (!isInNonEditable) {
+          position += Math.min(endOffset, node.textContent?.length || 0);
+        }
+      }
+      return true;
+    }
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        position += node.textContent?.length || 0;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+        return false;
+      }
+
+      for (let i = 0; i < node.childNodes.length; i++) {
+        if (calculatePosition(node.childNodes[i], endNode, endOffset)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  calculatePosition(element, range.startContainer, range.startOffset);
+  return position;
+};
+
+const checkAgeForUnlimitedMode = (modeType: string): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  const birthday = userInfo.value.info.birthday;
+
+  if (!birthday) {
+    pendingModeType.value = modeType;
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
+
+  if (isTeenager.value) {
+    pendingModeType.value = modeType;
+    showUnderageModal.value = true;
+    return true;
+  }
+
+  return false;
+};
+
+const handleGoToFillBirthday = () => {
+  showUnderageNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
+};
+
+const switchPhotoMode = (mode: string, index: number) => {
+  if (index == 2) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return false;
+    }
+
+    if (checkAgeForUnlimitedMode('photo')) {
+      return;
+    }
+
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentPhotoMode.value = 'unlimited';
+    } else {
+      showUnlimitedModal.value = true;
+    }
+  } else {
+    currentPhotoMode.value = 'normal';
+  }
+};
+
+const switchVideoMode = (mode: string, index: number) => {
+  if (index == 2) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return false;
+    }
+
+    if (checkAgeForUnlimitedMode('video')) {
+      return;
+    }
+
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentVideoMode.value = 'unlimited';
+    } else {
+      showUnlimitedModal.value = true;
+    }
+  } else {
+    currentVideoMode.value = 'normal';
+    // 如果当前选中的是视频续写模式，切换回多模态模式
+    if (selectedVideoMultimodal.value === 'videoExtend') {
+      selectedVideoMultimodal.value = 'multimodal';
+    }
+  }
+};
+
+const confirmUnlimitedMode = () => {
+  if (pendingModeType.value === 'video') {
+    currentVideoMode.value = 'unlimited';
+  } else if (pendingModeType.value === 'photo') {
+    currentPhotoMode.value = 'unlimited';
+  }
+  showUnlimitedModal.value = false;
 };
 </script>
 

@@ -262,9 +262,11 @@ onMounted(async () => {
 
 async function getUserInfo() {
   try {
-    const res = (await api.userInfo()) as unknown as { code: number; data: UserData };
+    const res = (await api.userInfo()) as any;
     if (res.code === 0 || res.code === 200) {
       userInfo.value = res.data || {};
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -379,7 +381,7 @@ function handleSubmit() {
               toast(t("success"));
               timeCount();
             } else {
-              toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
               isSend.value = false;
             }
           })
@@ -496,13 +498,13 @@ function confirmUnbind() {
 
   apiCall
     .then((res: unknown) => {
-      const r = res as { code: number; msg?: string };
+      const r = res as any;
       if (r.code === 0 || r.code === 200) {
         toast(t("user.account.unbindSuccess"));
         getUserInfo();
         closeUnbindModal();
       } else {
-        toast(r.msg || "Error");
+        toast(locale.value == 'en' ? r.msg : locale.value == 'zh' ? r.msg_cn : locale.value == 'tc' ? r.msg_tc : r.msg_jp);
       }
     })
     .catch((err: unknown) => {

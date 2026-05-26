@@ -1,20 +1,4 @@
 export default {
-  footer: {
-    nav: {
-      home: "ホーム",
-      myProjects: "マイプロジェクト",
-      characterLibrary: "キャラクターライブラリ",
-      myCommunity: "マイコミュニティ",
-      profile: "プロフィール"
-    },
-    policies: {
-      communityGuidelines: "コミュニティガイドライン",
-      termsOfService: "利用規約",
-      privacyPolicy: "プライバシーポリシー",
-      paidServices: "有料サービス"
-    },
-    copyright: "© 2026 acgworlds株式会社. 全著作権所有."
-  },
   grecaptcha: {
     notLoaded: "Google reCAPTCHA がまだ読み込まれていません",
     notAble: 'Google reCAPTCHA の実行メソッドが利用できません'
@@ -341,7 +325,7 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
     confirm: "確認",
     noCode: "招待コードはありませんか？",
     skip: 'スキップ',
-    inviteError: "招待コードが無効です/招待コードは既に使用されています"
+    inviteError: "招待コードが無効です"
   },
   similar: {
     title: "類似テーマコンテンツのおすすめ",
@@ -361,6 +345,7 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
   emptyState: {
     noProjects: "まだ作品を生成していません。先に",
     generate: "生成",
+    noMoreData: "データがもうありません"
   },
 
   privacy: `プライバシーポリシー<br />
@@ -1080,6 +1065,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       followerChange: "フォロワーの変化",
       totalFollowers: "フォロワー合計",
       noData: "データがありません",
+      downloadFailed: "ダウンロードに失敗しました",
       csvHeaders: {
         date: "日付",
         change: "フォロワーの変化",
@@ -1362,7 +1348,13 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     boostPack: "ブーストパック",
     generate: "生成",
     expired: "期限切れ",
-    invited: "新規ユーザー"
+    invited: "新規ユーザー",
+    other: "その他",
+    novelGenerate: "小説生成",
+    comicGenerate: "漫画生成",
+    videoGenerate: "ドラマ生成",
+    imageGenerate: "画像生成",
+    simpleVideoGenerate: "動画生成"
   },
   home: {
     hero: {
@@ -1370,10 +1362,10 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     },
     mode: {
       normal: "ノーマルモード",
-      unlimited: "アンリミテッドモード",
+      unlimited: "無制限モード",
       switched: {
-        normal: "ノーマルモードに切り替えました",
-        unlimited: "アンリミテッドモードに切り替えました"
+        normal: "通常モードに切り替えました",
+        unlimited: "無制限モードに切り替えました"
       }
     },
     video: "動画",
@@ -1383,21 +1375,62 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     },
     totalWords: "総単語数",
     unlimitedMode: {
-      title: "アンリミテッドモードを有効にしますか？",
-      description: "18歳以上のユーザーのみがアンリミテッドモードを有効にすることができます。有効にすると、創造的なテーマの範囲が制限なくなります。",
-      cancel: "キャンセル",
+      title: "無制限モードを有効にしますか？",
+      description: "18 歳以上のユーザーは無制限モードをオンにできます。<br />オンにすると、創作題材の範囲が制限されなくなります。",
       confirm: "確認"
+    },
+    underageNoBirthday: {
+      title: "誕生日を入力してください",
+      description: "18歳以上のユーザーのみ無制限モードを有効にできます",
+      cancel: "キャンセル",
+      goToFill: "入力する"
+    },
+    underage: {
+      description: "18歳以上のユーザーのみ無制限モードを有効にできます",
+      ok: "承知しました"
+    },
+    sensitiveContent: "センシティブコンテンツを許可",
+    sensitiveContentNoBirthday: {
+      title: "誕生日を入力してください",
+      description: "18歳以上のユーザーのみセンシティブコンテンツ表示を有効にできます",
+      cancel: "キャンセル",
+      goToFill: "入力する"
+    },
+    sensitiveContentUnderage: {
+      description: "18歳以上のユーザーのみセンシティブコンテンツ表示を有効にできます",
+      ok: "承知しました"
+    },
+    sensitiveContentConfirm: {
+      title: "センシティブを許可？",
+      description: "18歳以上のユーザーがスイッチをオンにすると<br />おすすめリストとユーザーコミュニティでセンシティブコンテンツを表示できるようになります。",
+      cancel: "キャンセル",
+      confirm: "確認",
+      dontAsk: "再度表示しない"
     },
     tab: {
       text: "テキスト",
       file: "ファイル",
       suggested: "おすすめ",
       following: "フォロー中",
-      subscriptions: "購読中"
+      subscriptions: "購読中",
+      content: "作品",
+      user: "ユーザー"
+    },
+    user: {
+      fans: "{count} ファン",
+      follow: "フォロー",
+      following: "フォロー中",
+      unfollow: "フォロー解除",
+      followSuccess: "フォロー成功",
+      unfollowSuccess: "フォロー解除成功"
     },
     input: {
       placeholder: "ジャンル・世界観・設定など、自由に入力してください。 例：前世のレシピでカレーを作ったら、異世界で宗教が生まれてしまった。",
-      placeholderComic: "ジャンル・世界観・設定など、自由に入力してください。 例：前世のレシピでカレーを作ったら、異世界で宗教が生まれてしまった。",
+      placeholderNovel: "ジャンル・世界観・設定など、自由に入力してください。 例：前世のレシピでカレーを作ったら、異世界で宗教が生まれてしまった。",
+      placeholderComic: "あなたの一言が、世界を描き出す。例：雨粒、花傘、そして恋……雨の日しか会えない二人の恋愛物語",
+      placeholderDrama: "あなたの一言から、漫劇が幕を開ける。例：午後、公園で日光浴をしていたところ、突然猫が私の腕の中に飛び込んできた。",
+      placeholderPhoto: "一言で、その光景を呼び覚ます。例：桜吹雪の中、振り返った彼女の髪が風にさらわれ、その瞳に涙が光る。",
+      placeholderVideo: "見たい物語を一行で入力。例：余命3ヶ月のロボットが孤独な少女と出会い、最後の景色を探す旅に出る。",
       placeholderAt: `{'@'}を入力して画像をクイック参照`
     },
     img: '画像',
@@ -1460,6 +1493,18 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       trending: "トレンド",
       latest: "最新"
     },
+    chapter: "第",
+    chapterSuffix: "章",
+    chapterFormat: "第{chapter}章",
+    episode: "第",
+    episodeSuffix: "話",
+    episodeFormat: "第{episode}話",
+    updateTime: {
+      hoursAgo: "{hours}時間前に更新",
+      daysAgo: "{days}日前に更新",
+      monthsAgo: "{months}ヶ月前に更新",
+      yearsAgo: "{years}年前に更新"
+    },
     search: {
       placeholder: "キーワードで検索"
     },
@@ -1482,7 +1527,11 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       maxAudioSize: "一つのオーディオのサイズは{max}MBを超えることはできません",
       maxVideoCount: "ビデオは最大3つまでアップロードできます",
       maxAudioCount: "オーディオは最大3つまでアップロードできます",
-      audioDurationTooShort: "オーディオの長さは{min}秒未満にすることはできません"
+      audioDurationTooShort: "オーディオの長さは{min}秒未満にすることはできません",
+      startFrameRequired: "開始フレームの画像をアップロードしてください",
+      videoExtendDurationLimit: "アップロードした動画は2-5秒の範囲である必要があります",
+      videoExtendDurationExceed: "生成時間は、拡張する動画の長さより長くする必要があります",
+      unlimitedModeRestricted: "年齢または地域の制限により、無制限モードでのコンテンツ生成はサポートされていません"
     },
     generate: {
       started: "動画生成が開始されました",
@@ -1704,7 +1753,8 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       retry: "再試行",
       exit: "退出",
       maxLength: "最大45文字",
-      exitWarning: "退出後、AIが生成したカバーは保存されません。また、消費した算力は返金されません。"
+      exitWarning: "退出後、AIが生成したカバーは保存されません。また、消費した算力は返金されません。",
+      selectImage: "画像を選択してください"
     },
     topic: "トピックを追加",
     mention: "人をタグ付け",
@@ -1814,13 +1864,17 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     writePlaceholder: `#トピック, {'@'}メンション`,
     addComment: "コメントを追加...",
     topicMention: `#トピック, {'@'}メンション`,
+    maxTopicsReached: "最大5つのトピックしか追加できません",
     uploadTip: 'コメントは最大1つの動画または4枚の画像をアップロードすることをサポートし、画像と動画を同時にアップロードすることはできません',
     post: "作品",
     reply: "返信",
     expandReplies: "返信を展開",
+    moreReplies: "件の返信",
     collapseReplies: "返信を折りたたむ",
+    loadMoreReplies: "さらに返信を読み込む",
     commentPosted: "コメントの投稿に成功しました",
     replyPosted: "返信の投稿に成功しました",
+    reportSuccess: "報告が成功しました",
     edit: "編集",
     delete: "削除",
     loading: "さらにコメントを読み込み中...",
@@ -1835,6 +1889,11 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
       onlyMe: "自分のみ",
       partial: "購読者のみ",
       private: "プライベート",
+    },
+    type: {
+      comic: "漫画",
+      novel: "小説",
+      drama: "ドラマ"
     },
     lock: {
       tip: "購読者は全文を表示できます",
@@ -1851,6 +1910,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     videoUrlInvalid: "動画のURLが無効です。もう一度お試しください。",
     videoPlayFailed: "動画の再生に失敗しました",
     videoUrlCopied: "動画のURLをコピーしました",
+    detail: "詳細",
     collection: "コレクション",
     lastUpdated: "最終更新",
     prevChapter: "前の章",
@@ -1873,10 +1933,13 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     subscribe: "購読",
     subscribeToView: "購読者のみ全文を表示可能",
     updatedToEpisode: "第 {count} 話まで更新",
+    readToEpisode: "第 {count} 話まで読了",
+    continueReading: "続きを読む",
     updatedChapters: "{count} 章更新済み",
     enterCollectionMode: "ここをクリックしてコレクションに入り、次の章を読む",
     viewCollection: "コレクションを表示",
     nextEpisode: '次のエピソード',
+    commentDeleted: "コメントが削除されました"
   },
   subscribe: {
     title: "購読",
@@ -2066,6 +2129,7 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
   loading: "読み込み中...",
   common: {
     noData: "利用可能なデータがありません",
+    queue: "キュー",
   },
   collection: {
     createCollection: "コレクションを作成",
@@ -2074,12 +2138,19 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     duplicateError: "新しいコレクション名は既存のコレクション名と同じにすることはできません",
     cancel: "キャンセル",
     save: "保存",
-    noCollection: "コレクションを使用しない",
-    newCollection: "新しいコレクション"
+    noCollection: "コレクションを選択してください",
+    newCollection: "新しいコレクション",
+    switchConfirm: {
+      title: "コレクション切り替えの確認",
+      message: "現在のプロジェクト作品を他のコレクションに公開すると、章の混乱を引き起こす可能性があります。切り替えてもよろしいですか？",
+      cancel: "キャンセル",
+      confirm: "確定"
+    }
   },
   fail: "失敗",
   chapter: "{chapter}話",
   novel: {
+    chapterColon: "章：",
     untitled: "無題",
     generate: "生成",
     generating: "生成中",
@@ -2401,5 +2472,73 @@ acgworlds{'@'}acgworlds{'.'}com までご連絡いただくことで、アカウ
     discountRibbon: "特別価格",
     savingsSuffix: "お得",
     packSuffix: "パック"
+  },
+  footer: {
+    nav: {
+      home: "ホーム",
+      myProjects: "マイプロジェクト",
+      characterLibrary: "キャラクターライブラリ",
+      myCommunity: "マイコミュニティ",
+      profile: "プロフィール"
+    },
+    policies: {
+      communityGuidelines: "コミュニティガイドライン",
+      termsOfService: "利用規約",
+      privacyPolicy: "プライバシーポリシー",
+      paidServices: "有料サービス"
+    },
+    copyright: "© 2026 acgworlds株式会社. 全著作権所有."
+  },
+  seo: {
+    home: {
+      title: "MoeGen - AI小説・漫画・アニメドラマ生成｜ことばと物語",
+      keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,MoeGen,萌創,AI同人創作",
+      description: "MoeGen 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。"
+    },
+    detail: {
+      title: "[[title]] - MoeGen 二次元 AI クリエイション",
+      keywords: "[[title]],AI[[type]],二次元[[type]]",
+      description: "[[title]] - [[description]]"
+    },
+    communityConvention: {
+      title: "コミュニティガイドライン - MoeGen クリエイター行動規範",
+      keywords: "コミュニティガイドライン,行動規範,クリエイタールール",
+      description: "MoeGenのコミュニティガイドラインを読んで、健全で創造的なコミュニティを共に作りましょう。"
+    },
+    terms: {
+      title: "利用規約 - MoeGen ユーザー契約",
+      keywords: "利用規約,ユーザー契約,法的事項",
+      description: "MoeGenの利用規約とユーザー契約を確認し、あなたの権利、義務、AIコンテンツの著作権を理解してください。"
+    },
+    privacy: {
+      title: "プライバシーポリシー - MoeGen 個人情報保護",
+      keywords: "プライバシーポリシー,個人情報保護,データ保護,Cookie",
+      description: "MoeGenはユーザーの個人情報と創作のプライバシーを尊重し保護します。"
+    },
+    login: {
+      title: "ログイン - MoeGen 萌｜AI 創作アカウント",
+      keywords: "MoeGenログイン,アカウントログイン,サインイン",
+      description: "MoeGenアカウントにログインして、AI小説・漫画・アニメドラマの創作を続けましょう。"
+    },
+    signup: {
+      title: "無料登録 - AI 創作の旅を始める｜MoeGen 萌創",
+      keywords: "MoeGen登録,無料AI創作,AI創作プラットフォーム",
+      description: "MoeGen萌創に無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
+    },
+    characterLibrary: {
+      title: "AIキャラクターライブラリー - 独自のキャラクターを作成｜MoeGen",
+      keywords: "AIキャラクター生成,キャラクターライブラリー,アニメキャラクター,漫画キャラクター",
+      description: "MoeGenのAIキャラクターライブラリーは、公式キャラクターとカスタムキャラクターを提供し、独自の二次元キャラクター作成を支援します。"
+    },
+    userHome: {
+      title: "マイ作品 - AI小説・漫画・アニメドラマを管理｜MoeGen",
+      keywords: "マイ作品,AI小説,漫画,アニメドラマ,作品管理,クリエイターダッシュボード",
+      description: "MoeGenでAI小説、漫画、アニメドラマを管理し、ファン、購読者、エンゲージメントデータを追跡します。"
+    },
+    novelGenerate: {
+      title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成｜MoeGen",
+      keywords: "AI小説生成,AI小説,長編小説,AI執筆,AI物語,小説作成AI,二次創作",
+      description: "MoeGenのAI小説ジェネレーターは、ロマンス、BL、学園もの、SF、ファンタジーなど多ジャンルに対応。30K文字の作品を簡単に作成。"
+    }
   }
 };

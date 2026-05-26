@@ -162,7 +162,12 @@
               <!-- Photo Tab - 图片类型 -->
               <div v-else-if="activeMainTab == 'photo'">
                 <div class="card-cover photo-cover">
-                  <div v-if="project.images && project.images.length > 0" class="grid-images">
+                  <!-- 无限制模式：显示1张填满 -->
+                  <div v-if="project.images && project.images.length > 0 && project.story_mode === 'nsfw'" class="single-image">
+                    <img :src="project.images[0]" alt="" class="single-image-img" />
+                  </div>
+                  <!-- 普通模式：显示4张 -->
+                  <div v-else-if="project.images && project.images.length > 0" class="grid-images">
                     <div
                       class="grid-image-item"
                       v-for="(img, index) in project.images.slice(0, 4)"
@@ -211,7 +216,7 @@
                     >
                       <!-- 重命名只对小说、漫画、漫剧显示 -->
                       <div v-if="activeMainTab === 'novel' || activeMainTab === 'manhua' || activeMainTab === 'manju'" class="menu-item" @click="openRenameModal(project.session_id, project.name)">{{ t('myProjects.menu.rename') }}</div>
-                      <div class="menu-item delete" @click="deleteProject(project.session_id)">{{ t('myProjects.menu.delete') }}</div>
+                      <div class="menu-item delete" @click="openDeleteModal(project)">{{ t('myProjects.menu.delete') }}</div>
                     </div>
                   </div>
                 </div>
@@ -240,6 +245,13 @@
         @close="closeRenameModal"
         @confirm="handleRenameConfirm"
       />
+
+      <!-- Delete Confirm Modal -->
+      <DeleteRecordModal
+        :visible="showDeleteRecordModal"
+        @close="handleCloseDeleteModal"
+        @confirm="handleConfirmDelete"
+      />
     </div>
   </div>
 </template>
@@ -252,6 +264,7 @@ import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PreviewModal from '@/components/PreviewModal.vue';
 import RenameModal from '@/components/RenameModal.vue';
+import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import ProcessList from '@/components/ProcessList.vue';
 import { aiUrl } from '@/util/config';
 import pic from '@/assets/images/base/cover.png'
@@ -272,6 +285,8 @@ const hasMore = ref(true);
 const showVideoModal = ref(false);
 const currentVideoUrl = ref('');
 const currentPage = ref(1);
+const showDeleteRecordModal = ref(false);
+const projectToDelete = ref<any>(null);
 const itemsPerPage = ref(20);
 const myProjectsRef = ref<HTMLElement | null>(null);
 
@@ -418,7 +433,7 @@ async function handleRenameConfirm(newName: string) {
       name: newName
     });
 
-    const data = response as unknown as { code: number; message: string; data?: any };
+    const data = response as any;
     if (data.code == 200) {
       // Temporarily remove scroll event listener to prevent duplicate requests
       if (myProjectsRef.value) {
@@ -444,13 +459,26 @@ async function handleRenameConfirm(newName: string) {
   }
 }
 
-async function deleteProject(projectId: string) {
+function openDeleteModal(project: any) {
+  projectToDelete.value = project;
+  showDeleteRecordModal.value = true;
+  activeMenuProjectId.value = null;
+}
+
+function handleCloseDeleteModal() {
+  showDeleteRecordModal.value = false;
+  projectToDelete.value = null;
+}
+
+async function handleConfirmDelete() {
+  if (!projectToDelete.value) return;
+
   try {
     const response = await api.deleteProject({
-      session_id: projectId
+      session_id: projectToDelete.value.session_id
     });
 
-    const data = response as unknown as { code: number; message: string; data?: any };
+    const data = response as any;
     if (data.code == 200) {
       // Temporarily remove scroll event listener to prevent duplicate requests
       if (myProjectsRef.value) {
@@ -480,6 +508,9 @@ async function deleteProject(projectId: string) {
     }
   } catch (error) {
     toast(t('fail'));
+  } finally {
+    showDeleteRecordModal.value = false;
+    projectToDelete.value = null;
   }
 }
 
@@ -533,6 +564,8 @@ async function loadProjects(reset = false) {
           } else {
             processedProject.images = [];
           }
+          // Save story_mode for display logic
+          processedProject.story_mode = project.user_selected?.story_mode;
         } else if (activeMainTab.value == 'video') {
           // Extract video info for video projects
           if (project.result_async?.final_video_output) {
@@ -967,11 +1000,25 @@ function handleScroll() {
       overflow: hidden;
 
       img {
-        max-width: 100%;
-        width: auto;
+        width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: cover;
       }
+    }
+
+    .single-image {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .single-image-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .no-image-placeholder {
@@ -1008,6 +1055,20 @@ function handleScroll() {
     .photo-cover:hover {
       .photo-edit-btn {
         opacity: 1;
+      }
+    }
+
+    .default-cover {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .cover-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
     }
 
@@ -1052,9 +1113,12 @@ function handleScroll() {
         color: #101828;
         margin-bottom: 1.2rem;
         line-height: 2rem;
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .card-footer {

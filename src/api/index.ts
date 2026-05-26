@@ -154,6 +154,12 @@ export default {
       data: data,
       method: "POST",
     }),
+
+  subscriptionList: () =>
+    axios.request({
+      url: "post/getBloggerChargePlanPublic",
+      method: "GET",
+    }),
   getSubscription: () =>
     axios.request({
       url: "post/getSubscriptionPlan",
@@ -200,19 +206,19 @@ export default {
       method: "POST",
     }),
 
-  homePostList: (page: number, limit: number, tab: string, type: number, language?: string) =>
+  homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
     axios.request({
-      url: "index/getRecommendListPublic?page=" + page + "&limit=" + limit + "&tab=" + tab + '&type=' + type + (language ? '&language=' + language : ''),
+      url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
-  homeFollowList: (page: number, limit: number, type: number) =>
+  homeFollowList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
-      url: "post/getMyFollowList?page=" + page + "&limit=" + limit + '&type=' + type,
+      url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
-  homeSubscriptionList: (page: number, limit: number, type: number) =>
+  homeSubscriptionList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
-      url: "post/getMySubscriptionList?page=" + page + "&limit=" + limit + '&type=' + type,
+      url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   searchTopic: (data: any) =>
@@ -232,15 +238,16 @@ export default {
       url: "post/searchUserListPublic?keyword=" + keyword + "&page=" + page + "&limit=" + limit,
       method: "GET",
     }),
+
   searchPost: (data: any) =>
     axios.request({
-      url: "post/searchPostsPublic",
+      url: "post/searchBookPublic",
       data: data,
       method: "POST",
     }),
   getSimilar: (data: any) =>
     axios.request({
-      url: "post/searchPostsPublic",
+      url: "post/searchBookPublic",
       data: data,
       method: "POST",
     }),
@@ -344,9 +351,9 @@ export default {
       url: "blogger/getBloggerInfoPublic?author_id=" + author_id,
       method: "GET",
     }),
-  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number) =>
+  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number, showNsfw?: number) =>
     axios.request({
-      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id,
+      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   authorFollowList: (page: number, limit: number, author_id: number | string) =>
@@ -357,6 +364,11 @@ export default {
   authorFansList: (page: number, limit: number, author_id: number | string) =>
     axios.request({
       url: "follow/getUserFansListPublic?page=" + page + "&limit=" + limit + "&author_id=" + author_id,
+      method: "GET",
+    }),
+  authorSubList: (page: number, limit: number) =>
+    axios.request({
+      url: "post/getMySubBloggerList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
   follow: (data: any) =>
@@ -386,14 +398,14 @@ export default {
       url: "post/getSubscribeList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
-  userPayList: (page: number, limit: number, start: string, end: string) =>
+  userPayList: (page: number, limit: number) =>
     axios.request({
-      url: "order/getOrderList?page=" + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      url: "order/getOrderList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
-  userAiPayList: (page: number, limit: number, start: string, end: string) =>
+  userAiPayList: (page: number, limit: number) =>
     axios.request({
-      url: "user/getAiOrderList?page=" + page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
+      url: "user/getAiOrderList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
   AIRecharge: (data: any) =>
@@ -441,6 +453,24 @@ export default {
     axios.request({
       url: "stat/getFansCountList?page="+ page + "&limit=" + limit + "&start_day=" + start + "&end_day=" + end,
       method: "GET",
+    }),
+  downloadUserWorkList: (startDate: string, endDate: string) =>
+    axios.request({
+      url: `stat/getDailyCountList?start_date=${startDate}&end_date=${endDate}&download=1`,
+      method: "GET",
+      responseType: 'text',
+    }),
+  downloadUuserSingleWorkList: (startDate: string, endDate: string) =>
+    axios.request({
+      url: `stat/getPostCountList?start_date=${startDate}&end_date=${endDate}&download=1`,
+      method: "GET",
+      responseType: 'text',
+    }),
+  downloadUserFansList: (startDate: string, endDate: string) =>
+    axios.request({
+      url: `stat/getFansCountList?start_date=${startDate}&end_date=${endDate}&download=1`,
+      method: "GET",
+      responseType: 'text',
     }),
 
   messageInfo: () =>
@@ -627,6 +657,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  recordHistory: (data: any) =>
+    axios.request({
+      url: "post/writeHistory",
+      data: data,
+      method: "POST",
+    }),
 
   getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number ) =>
     axios.request({
@@ -774,9 +810,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  singleCollection: (book_id: string | number, page: number, limit: number) =>
+  singleCollection: (book_id: string | number, page: number, limit: number, showNsfw?: number) =>
     axios.request({
-      url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}`,
+      url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}` + (showNsfw !== undefined ? `&show_nsfw=${showNsfw}` : ''),
       method: "GET"
     }),
   generateCover: (data: any) =>

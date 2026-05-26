@@ -20,7 +20,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!showFullContent && !postId">
+      <div class="upload-tabs" v-if="!showFullContent && !postId && !route.query.session_id">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
         </div>
@@ -214,7 +214,7 @@
       </div>
 
       <!-- Full Content View: After clicking Next Step or Edit Mode -->
-      <div class="content-wrapper" v-if="showFullContent || postId">
+      <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
         <div class="content-section">
           <div class="content-label-box">
             <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
@@ -289,7 +289,7 @@
         <div class="collection-section">
           <div class="form-item">
             <div class="form-label-inner">
-              <label class="form-label">{{ t("submit.collection") }}</label>
+              <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
               <div class="info-icon" @mouseover="adjustTooltipPosition">
                 <img src="@/assets/images/publish/intro.png" alt="Info" />
@@ -306,10 +306,7 @@
                 <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
                   <span class="select-value">{{ selectedCollection?.name || t('collection.noCollection') }}</span>
                   <div class="select-actions">
-                    <div class="select-clear" v-if="selectedCollection && isCollectionHovered" @click.stop="clearCollection">
-                      <img src="@/assets/images/publish/delete_icon.png" alt="Clear" />
-                    </div>
-                    <div class="select-arrow" v-if="!selectedCollection || !isCollectionHovered">
+                    <div class="select-arrow">
                       <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                     </div>
                   </div>
@@ -327,8 +324,8 @@
                     <div class="loading-spinner"></div>
                     <span>{{ t('loading') }}</span>
                   </div>
-                  <!-- No more collections message -->
-                  <div v-else-if="!hasMoreCollections && collections.length > 0" class="no-more-collections">
+                  <!-- No more collections message - only show when there's more than one page -->
+                  <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
                     {{ t('emptyState.noMoreData') }}
                   </div>
                 </div>
@@ -387,9 +384,9 @@
                 class="option"
                 v-for="a in contentOptions"
                 :key="a.key"
-                @click="toggleSensitive(a.key as 'yes' | 'no')"
+                @click="toggleSensitive(a.key)"
               >
-                <img :src="form.content === a.key ? selectActive : select" alt="" />
+                <img :src="form.content == a.key ? selectActive : select" alt="" />
                 <span>{{ t(a.labelKey) }}</span>
               </div>
             </div>
@@ -397,7 +394,7 @@
         </div>
 
         <div class="submit-row">
-          <button class="submit" :disabled="!canSubmit || uploading" @click="onSubmit">
+          <button class="submit" :disabled="uploading" @click="onSubmit">
             {{ t("submit.submit") }}
           </button>
         </div>
@@ -418,6 +415,12 @@
   <UploadMask :visible="isUpload"></UploadMask>
 
   <ConfirmLeaveModal :show="isShowConfirm" @cancel="confirmStay" @confirm="confirmLeave" />
+
+  <SensitiveConfirmModal
+    :visible="showSensitiveConfirm"
+    @cancel="cancelSensitive"
+    @confirm="confirmSensitive"
+  />
 
   <SetArticleCoverModal
     v-model:visible="showCoverModal"
@@ -460,6 +463,13 @@
     @close="handleCloseCreateCollectionModal"
     @save="handleCreateCollection"
   />
+
+  <!-- Switch Collection Confirm Modal -->
+  <SwitchCollectionModal
+    :visible="showSwitchCollectionModal"
+    @close="handleCloseSwitchCollectionModal"
+    @confirm="handleConfirmSwitchCollection"
+  />
 </template>
 
 <script setup lang="ts" name="PublishNovel">
@@ -473,6 +483,7 @@ import ProjectNovelViewModal from "@/components/ProjectNovelViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
+import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import api from "@/api/index";
 import mammoth from "mammoth";
 import * as pdfjsLib from "pdfjs-dist";
@@ -672,18 +683,28 @@ const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const isCollectionHovered = ref(false);
 const showCreateCollectionModal = ref(false);
+const showSwitchCollectionModal = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
   { value: '1', label: t('chapter', { chapter: 1 }) },
 ]);
 
+// Flag to check if switch collection warning has been shown
+const switchCollectionWarningShown = ref(false);
+
+// Store the target collection when confirmation is pending
+const pendingCollectionId = ref<number | null>(null);
+
+// Flag to check if current page is for editing existing work
+const isEditingWork = ref(false);
+
 // Collection dropdown ref
 const collectionDropdownRef = ref<HTMLDivElement | null>(null);
 
 // Collection pagination
 const currentCollectionPage = ref(1);
-const collectionPageSize = ref(50);
+const collectionPageSize = ref(20);
 const hasMoreCollections = ref(true);
 const isLoadingCollections = ref(false);
 
@@ -697,7 +718,7 @@ const showConventionModal = ref(false);
 const hasActiveSubscription = ref(false);
 
 const canSubmit = computed(() => {
-  return form.value.title.trim().length > 0 && form.value.description.trim().length > 0 && coverPreview.value;
+  return form.value.title.trim().length > 0 && form.value.description.trim().length > 0 && selectedCollection.value && coverPreview.value;
 });
 
 // Watch route changes to update tabIndex
@@ -754,6 +775,8 @@ watch(uploadOption, (newOption) => {
     hasUrlCover.value = false;
     hasAICover.value = false;
     hasTitleGeneratedCover.value = false;
+    // Reset form title when switching to local upload
+    form.value.title = '';
   }
   // Reset history cover flag when switching options
   hasHistoryCover.value = false;
@@ -809,7 +832,7 @@ async function handleTitleBlur() {
             coverPreview.value = url;
           }
         } else {
-          toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+          toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
         }
       } catch (error) {
         console.error("Cover upload error:", error);
@@ -866,7 +889,7 @@ async function goToNextStep() {
                 coverPreview.value = url;
               }
             } else {
-              toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+              toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
             }
           } catch (error) {
             console.error("Cover upload error:", error);
@@ -1003,7 +1026,7 @@ async function getPostDetails() {
 
   try {
     const res = await api.modifyPostDetail(postId.value );
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code == 0 || data.code == 200) {
       const postData = data.data.post;
       form.value.title = postData.title || "";
@@ -1145,7 +1168,7 @@ async function getPostDetails() {
         // Request singleCollection to get complete episode list
         if (postData.book_id) {
           try {
-            const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
+            const collectionRes = await api.singleCollection(postData.book_id, 1, 10) as any;
             if (collectionRes.code == 0 && collectionRes.data) {
               const allnums = collectionRes.data.allnums || '0';
               const totalEpisodes = parseInt(allnums);
@@ -1176,7 +1199,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error("Get post details error:", error);
@@ -1332,14 +1355,17 @@ async function onSubmit() {
     return;
   }
 
-  if (!canSubmit.value) {
-    if (!form.value.title.trim()) {
-      toast(t('submit.article.titleRequired'));
-    } else if (!form.value.description.trim()) {
-      toast(t('submit.article.contentRequired'));
-    } else if (!coverPreview.value) {
-      toast(t('submit.article.coverRequired'));
-    }
+  if (!form.value.title.trim()) {
+    toast(t('submit.article.titleRequired'));
+    return;
+  } else if (!form.value.description.trim()) {
+    toast(t('submit.article.contentRequired'));
+    return;
+  } else if (!selectedCollection.value) {
+    toast(t('collection.noCollection'));
+    return;
+  } else if (!coverPreview.value) {
+    toast(t('submit.article.coverRequired'));
     return;
   }
 
@@ -1410,14 +1436,12 @@ async function onSubmit() {
     const res = JSON.parse(result);
 
     if (res.code == 0 || res.code == 200) {
-      toast(t("success"));
-      // Clear cover settings from local storage after successful publish
       localStorage.removeItem('novelCoverSettings');
       router.push(`/publish/success?type=${2}`);
     } else {
       console.log('Error code:', res.code);
       console.log('Error message:', locale.value == 'jp' ? res.msg_jp : res.msg);
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     console.error("Publish error:", error);
@@ -1433,10 +1457,6 @@ function handleCaptionInput(e: Event) {
   const text = target.textContent || "";
   captionLength.value = text.replace(/\n$/, "").length;
 }
-
-
-
-
 
 function handleCaptionKeydown(e: KeyboardEvent) {
   // No special handling needed
@@ -1686,20 +1706,19 @@ function onCoverConfirmed(coverData: { url: string; hasBackground: boolean; colo
 }
 
 // Sensitive content methods
-function toggleSensitive(val: "yes" | "no") {
-  if (form.value.content === val) return;
+function toggleSensitive(val: string) {
+  if (form.value.content == val) return;
 
   const dontAsk = localStorage.getItem('sensitiveDontAsk');
 
   if (val == 'yes') {
     if (dontAsk == '1') {
-      form.value.content = val;
+      form.value.content = val as "yes" | "no";
     } else {
-      pendingSensitiveValue.value = val;
       showSensitiveConfirm.value = true;
     }
   } else {
-    form.value.content = val;
+    form.value.content = val as "yes" | "no";
   }
 }
 
@@ -1708,10 +1727,7 @@ function cancelSensitive() {
 }
 
 function confirmSensitive() {
-  if (pendingSensitiveValue.value) {
-    form.value.content = pendingSensitiveValue.value as "yes" | "no";
-    localStorage.setItem("sensitiveDontAsk", "1");
-  }
+  form.value.content = "yes";
   showSensitiveConfirm.value = false;
 }
 
@@ -1723,8 +1739,10 @@ function toggleCollectionDropdown(event: Event) {
 
   // Fetch collections when opening dropdown
   if (showCollectionDropdown.value) {
-    // Reset pagination and fetch first page
+    // Reset pagination and clear collections first
     hasMoreCollections.value = true;
+    collections.value = [];
+    currentCollectionPage.value = 1;
     fetchCollections(false);
   }
 }
@@ -1741,6 +1759,19 @@ function createNewCollection() {
 }
 
 async function selectCollection(id: number) {
+  // Check if we need to show warning before switching collection
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
+    // Store the target collection ID for confirmation
+    pendingCollectionId.value = id;
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+    return;
+  }
+
+  await doSelectCollection(id);
+}
+
+async function doSelectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
     selectedCollection.value = {
@@ -1750,13 +1781,12 @@ async function selectCollection(id: number) {
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id, 1, 1) as any;
+      const response = await api.singleCollection(id, 1, 10) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
         const allnum = response.data.allnums || '0';
         const defaultEpisode = parseInt(allnum) + 1;
 
-        console.log(defaultEpisode)
         selectedEpisodeNumber.value = defaultEpisode.toString();
 
         // Update episodes array based on collection chapters
@@ -1787,6 +1817,28 @@ async function selectCollection(id: number) {
   }
   showCollectionDropdown.value = false;
   isNoCollection.value = false;
+}
+
+function handleCloseSwitchCollectionModal() {
+  showSwitchCollectionModal.value = false;
+  pendingCollectionId.value = null;
+}
+
+async function handleConfirmSwitchCollection() {
+  // Mark warning as shown
+  switchCollectionWarningShown.value = true;
+
+  // Close modal first before updating collection
+  showSwitchCollectionModal.value = false;
+
+  // Wait for modal to close before updating collection
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  if (pendingCollectionId.value !== null) {
+    await doSelectCollection(pendingCollectionId.value);
+  }
+
+  pendingCollectionId.value = null;
 }
 
 function clearCollection() {
@@ -1900,6 +1952,9 @@ async function selectProject(project: any) {
   selectedProject.value = project;
   // Close dropdown
   showProjectDropdown.value = false;
+
+  // Mark as editing mode when selecting from history
+  isEditingWork.value = true;
 
   // Check if project details are in cache
   if (projectDetailsCache.value[project.session_id]) {
@@ -2021,7 +2076,7 @@ async function fetchCollections(loadMore = false) {
         currentCollectionPage.value = 1;
       }
 
-      hasMoreCollections.value = newCollections.length == response.data?.allnums;
+      hasMoreCollections.value = newCollections.length === collectionPageSize.value;
     }
   } catch (error) {
     console.error('Error fetching collections:', error);
@@ -2124,9 +2179,9 @@ async function handlePublish(publishData?: any) {
       }
     }
 
-    // Generate title: chapter number + chapter title + novel name in brackets
+    // Generate title: chapter number + chapter title
     const chapterText = t('chapter', { chapter: targetEpisode });
-    let generatedTitle = `${chapterText} ${chapterTitle}「${targetProject.name}」`;
+    let generatedTitle = `${chapterText} ${chapterTitle}`;
     // Truncate title to TITLE_MAX characters
     form.value.title = generatedTitle.substring(0, TITLE_MAX);
 
@@ -2250,11 +2305,13 @@ function confirmConvention() {
 async function checkSubscriptionStatus() {
   try {
     const response = await api.getSubscription();
-    const data = response as unknown as { code: number; msg: string; data?: any };
+    const data = response as any;
 
     if (data.code === 0) {
       const subscription = data.data;
       hasActiveSubscription.value = subscription && subscription.plan && parseFloat(subscription.plan.price) > 0;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     console.error("Subscription check error:", error);
@@ -2282,12 +2339,17 @@ onMounted(async () => {
   // Get post details if postId exists
   if (postId.value) {
     showFullContent.value = true;
+    isEditingWork.value = true;
     await getPostDetails();
     // After getting post details (which sets user_id), fetch collections
     await fetchCollections(false);
   } else {
     // Check if session_id and index are provided
     const session_id = route.query.session_id as string;
+
+    if (session_id) {
+      isEditingWork.value = true;
+    }
     const index = route.query.index as string;
     const cover = route.query.cover as string;
     const title = route.query.title as string;
@@ -2305,17 +2367,13 @@ onMounted(async () => {
         const res = await api.detailChapter(session_id, parseInt(index)) as any;
         if (res.code === 200 && res.data && res.data.content) {
           // Set form data
-          if (title && res.data.title) {
-            // Format: 章节号+章节名称+空格+「小说名」
+          if (res.data.title) {
+            // Format: 章节号+章节名称
             const chapterNumber = t('chapter', { chapter: index });
-            form.value.title = `${chapterNumber} ${res.data.title} 「${title}」`;
-          } else if (title) {
-            // If no chapter title, use: 章节号+「小说名」
-            const chapterNumber = t('chapter', { chapter: index });
-            form.value.title = `${chapterNumber} 「${title}」`;
+            form.value.title = `${chapterNumber} ${res.data.title}`;
           } else {
-            // Fallback: 章节号+章节名称 or 章节号
-            form.value.title = res.data.title ? `${t('chapter', { chapter: index })} ${res.data.title}` : `${t('chapter', { chapter: index })}`;
+            // Fallback: 章节号
+            form.value.title = `${t('chapter', { chapter: index })}`;
           }
           form.value.description = res.data.content;
 
@@ -2367,7 +2425,7 @@ onMounted(async () => {
                       coverPreview.value = url;
                     }
                   } else {
-                    toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+                    toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
                   }
                 }
               } catch (error) {

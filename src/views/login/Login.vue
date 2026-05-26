@@ -109,7 +109,7 @@
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { baseUrl, redirectUrl } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
@@ -142,7 +142,27 @@ declare global {
   }
 }
 
+function setSeoMeta() {
+  document.title = t('seo.login.title');
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', t('seo.login.keywords'));
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', t('seo.login.description'));
+}
+
 onMounted(() => {
+  setSeoMeta();
+
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("lType");
 
@@ -155,6 +175,10 @@ onMounted(() => {
   } else {
     initGoogle();
   }
+});
+
+watch(() => locale.value, () => {
+  setSeoMeta();
 });
 
 function goRegister() {
@@ -255,7 +279,7 @@ function goEmailLogin() {
 
         router.push("/");
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     })
     .catch((err: any) => {
@@ -300,7 +324,7 @@ function googleLogin() {
           headerRef.value.goRegister();
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
 
         localStorage.removeItem("lType");
       }

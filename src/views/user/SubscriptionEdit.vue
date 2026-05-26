@@ -38,9 +38,9 @@
                 <span class="info">{{ t("user.subscription.priceLimit") }}</span>
               </div>
               <div class="price-options">
-                <div class="price-option" @click="selectedId = 0">
+                <div class="price-option" @click="selectedId = '0'">
                   <div class="radio-circle">
-                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == 0" />
+                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == '0'" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
                   <span class="price-text">{{ t("user.subscription.cancel") }}</span>
@@ -48,11 +48,11 @@
                 <div
                   class="price-option"
                   v-for="option in priceOptions"
-                  :key="option.id"
-                  @click="selectedId = option.id"
+                  :key="option.plan_id"
+                  @click="selectedId = option.plan_id"
                 >
                   <div class="radio-circle">
-                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.id" />
+                    <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.plan_id" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
                   <span class="price-text">{{ option.price }} {{ t('aiRecharge.unit') }}</span>
@@ -104,12 +104,8 @@ import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
 
 const sidebarKey = ref("subscription");
-const priceOptions = [
-  { id: 45, price: "1000" },
-  { id: 46, price: "2000" },
-  { id: 47, price: "3000" }
-];
-const selectedId = ref(0);
+const priceOptions = ref<any[]>([]);
+const selectedId = ref('');
 const benefits = ref("");
 const saving = ref(false);
 const loading = ref(false);
@@ -121,18 +117,32 @@ const showKycRequiredModal = ref(false);
 const showKycReviewingModal = ref(false);
 
 onMounted(async () => {
+  await fetchSubscriptionList();
   await fetchSubscription();
 });
 
+async function fetchSubscriptionList() {
+  try {
+    const res = await api.subscriptionList() as any;
+
+    if (res.code == 200 || res.code == 0) {
+      priceOptions.value = res.data.plans || [];
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error('Error fetching subscription list:', error);
+  }
+}
+
 function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status === '1';
+  hasAccount.value = userData?.info?.blogger_status == '1';
 }
 
 async function fetchSubscription() {
   loading.value = true;
   try {
-    const res = await api.getSubscription();
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = await api.getSubscription() as any;
 
     if (data.code === 200 || data.code === 0) {
       plan.value = data.data?.plan;
@@ -140,15 +150,15 @@ async function fetchSubscription() {
       const planId = data.data?.plan?.plan_id;
 
       if (plan.value) {
-        const option = priceOptions.find(opt => opt.id == planId);
-        selectedId.value = option?.id || 1;
+        const option = priceOptions.value.find(opt => opt.plan_id == planId);
+        selectedId.value = option?.plan_id || '0';
       } else {
-        selectedId.value = 0;
+        selectedId.value = '0';
       }
 
       benefits.value = description || "";
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error(error);
@@ -171,7 +181,7 @@ async function handleCreateAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));
@@ -189,7 +199,7 @@ async function handleChangeAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));
@@ -200,7 +210,7 @@ async function handleChangeAccount() {
 
 async function onSave() {
   try {
-    const kycRes = (await api.kycDetail()) as unknown as { code: number; data: any };
+    const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
       const kycData = kycRes.data;
 
@@ -216,6 +226,8 @@ async function onSave() {
           return;
         }
       }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
 
     if (!hasAccount.value) {
@@ -231,13 +243,13 @@ async function onSave() {
       };
 
       const res = await api.modifySubscription(params);
-      const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      const data = res as any;
 
       if (data.code === 200 || data.code === 0) {
         toast(t('success'));
         router.push("/user-subscription");
       } else {
-        toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+        toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
       }
     } catch (error) {
       console.error(error);

@@ -524,13 +524,7 @@ function getSubscriptionPrice() {
   const plans = userInfo.value.subscription_plans;
   if (!plans) return '0';
 
-  if (Array.isArray(plans) && plans.length > 0) {
-    // If it's an array, return the first plan's price
-    return plans[0].price || '0';
-  } else {
-    // If it's an object, return its price
-    return (plans as SubscriptionPlan).price || '0';
-  }
+  return (plans as SubscriptionPlan).price || '0';
 }
 
 const moreMenuRef = ref<HTMLElement | null>(null);
@@ -557,6 +551,10 @@ const activeContentType = ref(2);
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
+
+// User region (true = not in China, false = in China)
+const userRegion = ref(false);
+const hasFetchedRegion = ref(false);
 
 // Collection tabs
 interface CollectionTab {
@@ -740,7 +738,7 @@ async function fetchUserInfo() {
       };
 
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error(error);
@@ -764,10 +762,56 @@ const pinnedPosts = computed(() => {
   return postList.value ? postList.value.filter((p) => p.isPinned) : [];
 });
 
+function setSeoMeta() {
+  document.title = t('seo.userHome.title');
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', t('seo.userHome.keywords'));
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', t('seo.userHome.description'));
+}
+
+// Get user region
+function getCountry(): Promise<void> {
+  // Only fetch region once per page load
+  if (hasFetchedRegion.value) {
+    return Promise.resolve();
+  }
+
+  return api.getCode().then((res: any) => {
+    hasFetchedRegion.value = true;
+    if (res.code == 0) {
+      if (res.data.countryCode != 'CN') {
+        userRegion.value = true;
+      } else {
+        userRegion.value = false;
+      }
+    } else {
+      userRegion.value = false;
+    }
+  }).catch(err => {
+    console.log(err);
+    userRegion.value = false;
+    hasFetchedRegion.value = true;
+  })
+}
+
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
   window.scrollTo(0, 0);
+
+  getCountry();
+  setSeoMeta();
 
   // Restore last content type if coming back from detail page
   try {
@@ -931,6 +975,8 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
 watch(() => locale.value, () => {
   // Re-fetch collections to update translations
   fetchCollections();
+  // Update SEO meta tags when language changes
+  setSeoMeta();
 });
 
 // Methods
@@ -1001,7 +1047,7 @@ async function deleteCollection() {
       // Refresh collections
       await fetchCollections();
     } else {
-      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
 
     // Reset to all tab
@@ -1090,7 +1136,7 @@ async function fetchFollowList(reset = false) {
       res = await api.authorFansList(followPage.value, 12, authorId);
     }
 
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code === 200 || data.code === 0) {
       const listData = data.data?.data || data.data?.list || [];
 
@@ -1119,7 +1165,7 @@ async function fetchFollowList(reset = false) {
     } else if (data.code === 33003) {
       isPrivacyHidden.value = true;
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error(error);
@@ -1142,7 +1188,7 @@ async function toggleListFollow(user: FollowUser) {
 
     if (user.isFollowed) {
       const res = await api.unfollow(data);
-      const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      const response = res as any;
       if (response.code === 200 || response.code === 0) {
         await fetchFollowList(true);
         userInfo.value.following = Math.max(0, userInfo.value.following - 1);
@@ -1150,10 +1196,12 @@ async function toggleListFollow(user: FollowUser) {
           headerRef.value.getUserInfo();
         }
         toast(t('success'));
+      } else {
+        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
       }
     } else {
       const res = await api.follow(data);
-      const response = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      const response = res as any;
       if (response.code === 200 || response.code === 0) {
         user.isFollowed = true;
         userInfo.value.following = userInfo.value.following + 1;
@@ -1161,6 +1209,8 @@ async function toggleListFollow(user: FollowUser) {
           headerRef.value.getUserInfo();
         }
         toast(t('success'));
+      } else {
+        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
       }
     }
   } catch (error) {
@@ -1187,7 +1237,7 @@ async function toggleFollow() {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
       }
     } else {
       const res = await api.follow(data) as any;
@@ -1199,7 +1249,7 @@ async function toggleFollow() {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
       }
     }
   } catch (error) {
@@ -1274,6 +1324,9 @@ async function loadPosts(reset = false) {
     return;
   }
 
+  // Ensure we have the latest country info before making the request
+  await getCountry();
+
   try {
     // Use activeContentType as API type
     const type = activeContentType.value;
@@ -1293,6 +1346,8 @@ async function loadPosts(reset = false) {
     const book_id = activeCollectionTab.value !== 0 ? activeCollectionTab.value : '';
 
     let res;
+
+    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
     if (isSelf.value) {
       res = await api.authorSelfHome(
         type,
@@ -1314,7 +1369,8 @@ async function loadPosts(reset = false) {
         start,
         end,
         sort,
-        book_id
+        book_id,
+        showNsfw
       );
     }
 
@@ -1334,7 +1390,7 @@ async function loadPosts(reset = false) {
       return; // Skip processing this response as the tab or filter has changed
     }
 
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code === 200 || data.code === 0) {
       const newPosts = (data.data?.data || []).map((item: any) => {
         // Format timestamp to readable date
@@ -1389,7 +1445,7 @@ async function loadPosts(reset = false) {
       }
       page.value++;
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
       loading.value = false;
     }
   } catch (error) {
@@ -2211,11 +2267,12 @@ async function deletePost(post: Post) {
         margin-bottom: 1.2rem;
         line-height: 2rem;
         display: -webkit-box;
-        -webkit-line-clamp: 1;
-        line-clamp: 1;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        word-break: break-all;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .card-footer {
@@ -2376,13 +2433,6 @@ async function deletePost(post: Post) {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2.4rem;
-
-    @media (max-width: 1024px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
-    }
   }
 
   .follow-card {

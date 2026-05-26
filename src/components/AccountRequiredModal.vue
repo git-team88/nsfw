@@ -53,7 +53,7 @@ async function handleCreate() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));

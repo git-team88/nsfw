@@ -213,10 +213,10 @@ export function getCountryName(country: Country, languageCode: string): string {
   switch (languageCode) {
     case 'zh':
       return country.nameZh;
-    case 'ja':
-      return country.nameJa;
     case 'en':
-    default:
       return country.nameEn;
+    case 'jp':
+    default:
+      return country.nameJa;
   }
 }

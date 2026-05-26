@@ -79,11 +79,13 @@ const showWithdrawModal = ref(false);
 async function fetchBalance() {
   try {
     const res = await api.balance();
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
 
     if (data.code == 200 || data.code == 0) {
       availableJpy.value = data.data.balance?.available_jpy || 0;
       pendingJpy.value = data.data.balance?.pending_jpy || 0;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));
@@ -117,7 +119,7 @@ async function openWithdrawRecord() {
       if (data.code === 200 || data.code === 0) {
         window.location.href = data.data?.url;
       } else {
-        toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
       }
     } catch (error) {
       toast(t("fail"));
@@ -138,7 +140,7 @@ async function handleCreateAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     toast(t("fail"));

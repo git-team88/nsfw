@@ -1,22 +1,4 @@
-import { descriptionItemProps } from "element-plus";
-
 export default {
-  footer: {
-    nav: {
-      home: "首页",
-      myProjects: "我的项目",
-      characterLibrary: "角色库",
-      myCommunity: "我的社区",
-      profile: "个人中心"
-    },
-    policies: {
-      communityGuidelines: "社区公约",
-      termsOfService: "服务条款",
-      privacyPolicy: "隐私政策",
-      paidServices: "付费服务"
-    },
-    copyright: "© 2026 acgworlds株式会社. 保留所有权利."
-  },
   grecaptcha: {
     notLoaded: "验证码未加载完成，请稍后再试",
     notAble: '验证码执行方法不可用'
@@ -343,7 +325,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     confirm: "确认",
     noCode: "没有邀请码？",
     skip: '跳过',
-    inviteError: "邀请码错误/邀请码已使用"
+    inviteError: "邀请码错误"
   },
   subscription: {
     prompt: "订阅功能开启后，才能设置订阅用户可见。请先前往【个人中心-订阅价格设置】设置收费功能，再开启此选项。",
@@ -353,6 +335,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
   emptyState: {
     noProjects: "您还没有生成好的作品，请先",
     generate: "去生成",
+    noMoreData: "没有更多数据了"
   },
   similar: {
     title: "相似主题内容推荐",
@@ -365,6 +348,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     article: "文章"
   },
   novel: {
+    chapterColon: "章节：",
     untitled: "未命名",
     generate: "生成",
     generating: "正在生成",
@@ -1322,6 +1306,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       followerChange: "粉丝变化",
       totalFollowers: "总粉丝数",
       noData: "暂无数据",
+      downloadFailed: "下载失败",
       csvHeaders: {
         date: "日期",
         change: "粉丝变化",
@@ -1543,10 +1528,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     mode: {
       normal: "普通模式",
-      unlimited: "无限模式",
+      unlimited: "无限制模式",
       switched: {
         normal: "已切换到普通模式",
-        unlimited: "已切换到无限模式"
+        unlimited: "已切换到无限制模式"
       }
     },
     video: "视频",
@@ -1556,21 +1541,63 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     totalWords: "总字数",
     unlimitedMode: {
-      title: "启用无限模式？",
-      description: "仅18岁以上用户可启用无限模式。启用后，创作主题范围将不受限制。",
+      title: "启用无限制模式？",
+      description: "18岁以上用户可开启无限制模式<br />开启后创作题材范围不受限制。",
       cancel: "取消",
       confirm: "确认"
+    },
+    underageNoBirthday: {
+      title: "请前往填写生日",
+      description: "满18岁的用户才能开启无限制模式",
+      cancel: "取消",
+      goToFill: "去填写"
+    },
+    underage: {
+      description: "满18岁的用户才能开启无限制模式",
+      ok: "我知道了"
+    },
+    sensitiveContent: "允许敏感内容",
+    sensitiveContentNoBirthday: {
+      title: "请前往填写生日",
+      description: "满18岁的用户才能开启敏感内容展示",
+      cancel: "取消",
+      goToFill: "去填写"
+    },
+    sensitiveContentUnderage: {
+      description: "满18岁的用户才能开启敏感内容展示",
+      ok: "我知道了"
+    },
+    sensitiveContentConfirm: {
+      title: "允许敏感？",
+      description: "18岁以上用户开启开关后<br />在推荐列表和用户社区中将能看到敏感内容。",
+      cancel: "取消",
+      confirm: "确定",
+      dontAsk: "不再提示"
     },
     tab: {
       text: "文本",
       file: "文件",
       suggested: "推荐",
       following: "我的关注",
-      subscriptions: "我的订阅"
+      subscriptions: "我的订阅",
+      content: "作品",
+      user: "用户"
+    },
+    user: {
+      fans: "{count} 粉丝",
+      follow: "关注",
+      following: "已关注",
+      unfollow: "取消关注",
+      followSuccess: "关注成功",
+      unfollowSuccess: "取消关注成功"
     },
     input: {
       placeholder: "随便写一句，创造出专属于你的故事。例：穿越回古代的外卖员，用跑腿经验改变了历史走向。",
-      placeholderComic: "随便写一句，创造出专属于你的故事。例：穿越回古代的外卖员，用跑腿经验改变了历史走向。",
+      placeholderNovel: "任意输入一句，得到整部精彩小说。例：我喜欢了他十年，他结婚那天，我喝醉了，醒来在他的床上。",
+      placeholderComic: "任意输入一句，得到整部好看漫画。例：推开门，看见我的未婚夫正跪在另一个男人脚边。",
+      placeholderDrama: "任意输入一句，得到整部专属漫剧。例：\"再叫一次哥哥。\"他咬着我的耳朵笑，\"叫对了就放你走。\"",
+      placeholderPhoto: "输入一句，画面诞生。例：清晨的古街，一只猫正坐在石灯笼上打盹。",
+      placeholderVideo: "输入一句，视界展开。例：细雨霏霏，他们共撑一伞，樱花树下缓缓行。",
       placeholderAt: `输入{'@'}快速调用参考内容`
     },
     img: '图片',
@@ -1633,6 +1660,18 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       trending: "热门",
       latest: "最新"
     },
+    chapter: "第",
+    chapterSuffix: "章",
+    chapterFormat: "第{chapter}章",
+    episode: "第",
+    episodeSuffix: "集",
+    episodeFormat: "第{episode}集",
+    updateTime: {
+      hoursAgo: "{hours}小时前更新",
+      daysAgo: "{days}天前更新",
+      monthsAgo: "{months}个月前更新",
+      yearsAgo: "{years}年前更新"
+    },
     search: {
       placeholder: "搜索作品或用户"
     },
@@ -1655,7 +1694,11 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       maxAudioSize: "单个音频大小不能超过{max}MB",
       maxVideoCount: "视频最多上传3个",
       maxAudioCount: "音频最多上传3个",
-      audioDurationTooShort: "音频时长不能少于{min}秒"
+      audioDurationTooShort: "音频时长不能少于{min}秒",
+      startFrameRequired: "请上传首帧图片",
+      videoExtendDurationLimit: "上传视频应在2-5s",
+      videoExtendDurationExceed: "生成时长设置应大于待续写视频长度",
+      unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容"
     },
     generate: {
       started: "视频生成已开始",
@@ -1874,7 +1917,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       retry: "重试",
       exit: "退出",
       maxLength: "最多输入45个字符",
-      exitWarning: "退出后，AI生成的封面将不做保存。且消耗的算力不退还。"
+      exitWarning: "退出后，AI生成的封面将不做保存。且消耗的算力不退还。",
+      selectImage: "请选择图片"
     },
     topic: "添加话题",
     mention: `提及`,
@@ -1988,6 +2032,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     addComment: "添加评论...",
     topicMention: `#话题，{'@'}提及`,
     maxTopicsReached: "最多只能添加5个话题",
+    uploadTip: '评论支持上传最多1个视频或4张图片，且不能同时上传图片和视频',
     post: "发布",
     reply: "回复",
     expandReplies: "展开",
@@ -1996,6 +2041,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     loadMoreReplies: "加载更多回复",
     commentPosted: "评论发布成功",
     replyPosted: "回复发布成功",
+    reportSuccess: "举报成功",
     edit: "编辑",
     delete: "删除",
     loading: "加载更多评论...",
@@ -2010,6 +2056,11 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       onlyMe: "仅自己",
       partial: "订阅者可见",
       private: "私有",
+    },
+    type: {
+      comic: "漫画",
+      novel: "小說",
+      drama: "漫劇"
     },
     lock: {
       tip: "订阅者可以查看全文",
@@ -2049,10 +2100,13 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     subscribe: "订阅",
     subscribeToView: "订阅用户可查看完整内容",
     updatedToEpisode: "更新至第 {count} 集",
+    readToEpisode: "看至第 {count} 集",
+    continueReading: "继续查看",
     updatedChapters: "已更新 {count} 章",
     enterCollectionMode: "点这里，进入合集并阅读下一章",
     viewCollection: "查看合集",
-    nextEpisode: '下一集'
+    nextEpisode: '下一集',
+    commentDeleted: "评论已被删除"
   },
   subscribe: {
     title: "订阅",
@@ -2308,7 +2362,13 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     boostPack: "加油包",
     generate: "生成",
     expired: "过期",
-    invited: "新用户"
+    invited: "新用户",
+    other: "其他",
+    novelGenerate: "小说生成",
+    comicGenerate: "漫画生成",
+    videoGenerate: "漫剧生成",
+    imageGenerate: "图片生成",
+    simpleVideoGenerate: "视频生成"
   },
   computingPowerRules: `算力使用规则<br />
     1. “算力”是什么？<br />
@@ -2339,6 +2399,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   loading: "加载中...",
   common: {
     noData: "暂无可用数据",
+    queue: "队列",
   },
   collection: {
     createCollection: "创建合集",
@@ -2347,8 +2408,14 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     duplicateError: "新建合集不能与已有合集名称重复",
     cancel: "取消",
     save: "保存",
-    noCollection: "不使用合集",
-    newCollection: "新建合集"
+    noCollection: "请选择合集",
+    newCollection: "新建合集",
+    switchConfirm: {
+      title: "切换合集确认",
+      message: "当前项目作品发布到其他合集中，可能会造成章节错乱，是否确认切换？",
+      cancel: "取消",
+      confirm: "确定"
+    }
   },
   fail: "失败",
   chapter: "第{chapter}章",
@@ -2451,5 +2518,73 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     discountRibbon: "专属价",
     savingsSuffix: "节省",
     packSuffix: "包"
+  },
+  footer: {
+    nav: {
+      home: "首页",
+      myProjects: "我的项目",
+      characterLibrary: "角色库",
+      myCommunity: "我的社区",
+      profile: "个人中心"
+    },
+    policies: {
+      communityGuidelines: "社区公约",
+      termsOfService: "服务条款",
+      privacyPolicy: "隐私政策",
+      paidServices: "付费服务"
+    },
+    copyright: "© 2026 acgworlds株式会社. 保留所有权利."
+  },
+  seo: {
+    home: {
+      title: "MoGen 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,MoeGen,萌創,AI同人創作",
+      keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,MoeGen,萌創,AI同人創作",
+      description: "MoeGen 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。"
+    },
+    detail: {
+      title: `[[title]] - MoeGen 二次元 AI 創作`,
+      keywords: `[[title]],AI[[type]],二次元[[type]]`,
+      description: `[[title]] - [[description]]`
+    },
+    communityConvention: {
+      title: "社區準則 - MoeGen 萌創創作公約",
+      keywords: "社區準則,創作規範,MoeGen公約,內容审核,内容平台,公約",
+      description: "MoeGen 社區準則旨在打造健康、友善、富有創造力的二次元創作環境，與所有用戶共同守護創作社區。"
+    },
+    terms: {
+      title: "服務條款 - MoeGen 萌創用戶協議",
+      keywords: "服務條款,用戶協議,使用協議,法律事項,服務協議,法律聲明",
+      description: "查看 MoeGen 萌創的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
+    },
+    privacy: {
+      title: "隱私政策 - MoeGen 萌創個人資料保護",
+      keywords: "隱私政策,個人資料保護,資料安全,Cookie政策,GDPR",
+      description: "MoeGen 萌創重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
+    },
+    login: {
+      title: "登入 - MoeGen 萌創｜AI 創作平台",
+      keywords: "MoeGen登入,帳號登入,AI創作登入,登入",
+      description: "登入你的 MoeGen 帳號，繼續創作你的 AI 小說、漫畫、漫劇創作之旅。"
+    },
+    signup: {
+      title: "免費註冊 - 開啟你的 AI 創作之旅｜MoeGen 萌創",
+      keywords: "MoeGen註冊,免費AI創作,AI創作平台,二次元創作,註冊",
+      description: "免費註冊 MoeGen 萌創，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
+    },
+    characterLibrary: {
+      title: "AI 角色庫 - 創建專屬漫畫角色｜MoeGen 萌創",
+      keywords: "AI角色生成,角色庫,二次元角色,漫畫角色,AI人物創作,角色設計",
+      description: "MoeGen AI 角色庫提供豐富的官方角色與自定義角色，助你輕鬆創建獨特的二次元漫畫角色。"
+    },
+    userHome: {
+      title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇｜MoeGen 萌創",
+      keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,MoeGen",
+      description: "在 MoeGen 萌創中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
+    },
+    novelGenerate: {
+      title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - MoeGen",
+      keywords: "AI小說生成,線上小說,AI小說,AI寫小說,AI故事,小說生成器,二次創作,小說AI",
+      description: "MoeGen AI 小說生成器，言情、BL、耽美、輕小說等多題材，自動生成 30K 字作品輕鬆。"
+    }
   }
 };

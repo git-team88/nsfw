@@ -16,7 +16,7 @@
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
         <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
-          <div class="media-container" :key="detail?.id">
+          <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Video content -->
               <div v-if="detail.type == '3'" class="video-wrapper">
@@ -235,7 +235,6 @@
             <!-- Collection Info Bar -->
             <div
               class="collection-info-bar"
-              :class="{ 'near-bottom': detail.type == '1' && isNearBottom }"
               v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode"
             >
 
@@ -247,16 +246,21 @@
                   {{ t('detail.collection') }}:{{ detail.book_title }}
                 </template>
               </div>
-              <div class="collection-line"></div>
-              <div class="collection-status" @click="enterNextOrCurrentChapter">
-                <template v-if="detail.type == '1' && isNearBottom && nextChapterId">
-                  {{ t('detail.nextEpisode') }}
-                </template>
-                <template v-else-if="detail.type == '1' && isNearBottom && !nextChapterId">
-                  {{ t('detail.viewCollection') }}
+              <div class="collection-line" @click="enterCurrentChapter"></div>
+              <div class="collection-status" @click="enterCurrentChapter">
+                <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+                  {{ t('detail.readToEpisode', { count: detail.latest_read_chapter_index }) }}
                 </template>
                 <template v-else>
                   {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
+                </template>
+              </div>
+              <div class="collection-action" @click="enterNextOrCurrentChapter" v-if="(detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0) || nextChapterId">
+                <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+                  {{ t('detail.continueReading') }}
+                </template>
+                <template v-else-if="nextChapterId">
+                  {{ t('detail.nextEpisode') }}
                 </template>
               </div>
             </div>
@@ -737,7 +741,10 @@
     </div>
 
     <div v-else-if="detail.type == '2'">
-      <NovelDetail></NovelDetail>
+      <NovelDetail
+        :content-type="contentType"
+        :show-nsfw="showNsfw"
+      ></NovelDetail>
     </div>
 
     <!-- Large Image Viewer -->
@@ -805,6 +812,7 @@ const router = useRouter();
 
 // --- State ---
 const id = ref<number>(Number(route.query.id));
+const contentType = ref<string>(route.query.contentType as string || "");
 const isPlaying = ref(true);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
@@ -985,6 +993,7 @@ interface DetailData {
   book_id: string;
   book_title: string;
   chapter_index: string | number;
+  latest_read_chapter_index: string | number;
 }
 
 const detail = ref<DetailData>({
@@ -1016,7 +1025,8 @@ const detail = ref<DetailData>({
   is_nsfw: '1',
   book_id: '',
   book_title: '',
-  chapter_index: ''
+  chapter_index: '',
+  latest_read_chapter_index: ''
 });
 
 // Tab state
@@ -1025,6 +1035,7 @@ const activeTab = ref('detail');
 // Collection Mode
 const isCollectionMode = ref(false);
 const currentCollectionIndex = ref(0);
+const pendingRecordHistory = ref(false);
 
 // Collections
 const collections = ref<any[]>([]);
@@ -1041,6 +1052,34 @@ const nextChapterId = ref('');
 // Current collection
 const currentCollection = computed(() => {
   return collections.value[currentCollectionIndex.value] || null;
+});
+
+// User region (true = not in China, false = in China)
+const userRegion = ref(false);
+
+// Get user region
+function getCountry(){
+  api.getCode().then((res: any) => {
+    if (res.code == 0) {
+      if (res.data.countryCode != 'CN') {
+        userRegion.value = true;
+      } else {
+        userRegion.value = false;
+      }
+    } else {
+      userRegion.value = false;
+    }
+  }).catch(err => {
+    console.log(err);
+    userRegion.value = false;
+  })
+}
+
+// Show nsfw parameter based on user region
+// userRegion.value = true means NOT in China, false means IN China
+// Pass show_nsfw only when NOT in China (userRegion.value = true)
+const showNsfw = computed(() => {
+  return userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
 });
 
 // Enter collection mode
@@ -1064,6 +1103,7 @@ async function enterCollectionMode() {
   isRightPanelHidden.value = false;
 
   await loadChapters();
+  pendingRecordHistory.value = true;
 
 }
 
@@ -1086,46 +1126,44 @@ async function enterCurrentChapter() {
     activeTab.value = 'collection';
     isRightPanelHidden.value = false;
     await loadChapters();
+    pendingRecordHistory.value = true;
   }
 }
 
 // Enter next chapter if available, otherwise enter current chapter
 async function enterNextOrCurrentChapter() {
-  // If showing "更新至第 X 集" (not next episode), enter collection mode first
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
     activeTab.value = 'collection';
     isRightPanelHidden.value = false;
     await loadChapters();
-  }
 
-  // Only navigate to next chapter if showing "下一集" (isNearBottom and nextChapterId exists)
-  if (isNearBottom.value && nextChapterId.value) {
-    // Only navigate if the next chapter ID is different from the route ID
-    if (nextChapterId.value !== route.query.id) {
-      // Enter next chapter if available
-      router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: nextChapterId.value
-        }
-      });
+    let targetChapterId = '';
+
+    if (Number(detail.value.latest_read_chapter_index) > 0) {
+      const targetChapter = collections.value.find(chapter =>
+        Number(chapter.chapter_index) === Number(detail.value.latest_read_chapter_index)
+      );
+      if (targetChapter) {
+        targetChapterId = targetChapter.post_id;
+      }
     }
-  } else if (!nextChapterId.value) {
-    // Only navigate if the current ID is different from the route ID
-    if (String(detail.value.id) !== route.query.id) {
-      // Enter current chapter if no next chapter
+
+    if (!targetChapterId) {
+      targetChapterId = String(detail.value.id);
+    }
+
+    if (targetChapterId && targetChapterId !== route.query.id) {
       router.replace({
         path: '/detail',
         query: {
           ...route.query,
-          id: detail.value.id
+          id: targetChapterId
         }
       });
+      pendingRecordHistory.value = true;
     }
   }
-  // If showing "更新至第 X 集", do not navigate - just enter collection mode
 }
 
 // Load chapters (collection episodes)
@@ -1135,9 +1173,14 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, 50, showNsfw.value) as any;
     if (response.code == 0) {
-      collections.value = response.data?.data || [];
+      const newCollections = response.data?.data || [];
+      // Add type field to each collection item for proper display
+      collections.value = newCollections.map((chapter: any) => ({
+        ...chapter,
+        type: String(detail.value.type)
+      }));
       chapterCount.value = response.data?.allnums || 0;
       // 加载章节列表后设置导航
       setChapterNavigation();
@@ -1166,6 +1209,7 @@ async function navigateToChapter(chapter: any) {
   isRightPanelHidden.value = false;
 
   await loadChapters();
+  pendingRecordHistory.value = true;
 }
 
 // Set chapter navigation
@@ -1222,6 +1266,29 @@ function exitCollectionMode() {
   }
 }
 
+// Record view history for collection episodes
+async function recordViewHistory() {
+  if (!isCollectionMode.value || chapterCount.value <= 1) {
+    return;
+  }
+
+  const bookId = detail.value.book_id;
+  const chapterIndex = currentCollectionIndex.value + 1;
+
+  if (!bookId) {
+    return;
+  }
+
+  try {
+    await api.recordHistory({
+      book_id: bookId,
+      chapter_index: chapterIndex
+    });
+  } catch (error) {
+    console.error('Error recording view history:', error);
+  }
+}
+
 // Check if a collection item is "active" (highlighted in the list)
 function isCollectionItemActive(index: number): boolean {
   const item = collections.value[index];
@@ -1232,13 +1299,16 @@ function isCollectionItemActive(index: number): boolean {
 
 // Check if a collection item is currently "playing"
 function isCollectionItemPlaying(index: number): boolean {
-  if (isCollectionMode.value) {
-    return currentCollectionIndex.value == index && isPlaying.value;
-  }
-  // In non-collection mode, the current post is "playing" if video is playing
   const item = collections.value[index];
+  if (!item) return false;
 
-  return item && item.post_id == detail.value.id && isPlaying.value;
+  // Current item is "playing" if its post_id matches the current detail id
+  // In collection mode, also check the currentCollectionIndex
+  if (isCollectionMode.value) {
+    return currentCollectionIndex.value == index && item.post_id == detail.value.id;
+  }
+  // In non-collection mode, just check if it's the current item
+  return item.post_id == detail.value.id;
 }
 
 // Toggle page fullscreen
@@ -1415,11 +1485,51 @@ function formatContent(content: string): string {
   return result;
 }
 
+function setSeoMeta(title: string, description: string, type: string) {
+  const typeMap: { [key: string]: string } = {
+    '1': t('detail.type.comic'),
+    '2': t('detail.type.novel'),
+    '3': t('detail.type.drama')
+  };
+
+  const typeLabel = typeMap[type] || '';
+
+  let pageTitle = t('seo.detail.title');
+  pageTitle = pageTitle.replace(/\[\[title\]\]/g, title);
+
+  let keywords = t('seo.detail.keywords');
+  keywords = keywords.replace(/\[\[title\]\]/g, title).replace(/\[\[type\]\]/g, typeLabel);
+
+  const trimmedDesc = description.replace(/<[^>]*>/g, '').replace(/[\n\r]+/g, '').substring(0, 80);
+  let pageDescription = t('seo.detail.description');
+  pageDescription = pageDescription.replace(/\[\[title\]\]/g, title).replace(/\[\[description\]\]/g, trimmedDesc);
+
+  document.title = pageTitle;
+
+  let metaKeywords = document.querySelector('meta[name="Keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', keywords);
+
+  let metaDescription = document.querySelector('meta[name="Description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', pageDescription);
+}
+
 // API Data Load
 async function fetchDetail(newId: number) {
   // Get query parameters at the beginning
   const type = route.query.type as string || "";
   const cid = route.query.cid as string || "";
+  const contentType = route.query.contentType as string || "";
+  const language = locale.value == 'zh' ? 'cn' : locale.value;
 
   try {
     id.value = newId;
@@ -1429,6 +1539,9 @@ async function fetchDetail(newId: number) {
     isLoadingComments.value = true;
     // Reset isNearBottom when fetching new detail
     isNearBottom.value = false;
+    // Reset collection state when fetching new detail
+    collections.value = [];
+    currentCollectionIndex.value = 0;
 
     var data = null;
 
@@ -1436,21 +1549,30 @@ async function fetchDetail(newId: number) {
       data = JSON.stringify({
         post_id: newId,
         fromIndexRecommend: {
-          "tab": "hot"
+          "tab": "hot",
+          "type": contentType,
+          "language": language,
+          "show_nsfw": showNsfw.value
         }
       })
     } else if (type == "2") {
       data = JSON.stringify({
         post_id: newId,
         fromIndexFollow: {
-          test: 1
+          test: 1,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": showNsfw.value
         }
       })
     } else if (type == "3") {
       data = JSON.stringify({
         post_id: newId,
         fromIndexSubscription: {
-          test: 1
+          test: 1,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": showNsfw.value
         }
       })
     } else if (type == "4") {
@@ -1465,7 +1587,10 @@ async function fetchDetail(newId: number) {
           blogger_id: bloggerId,
           keywords: searchKeyword,
           start_day: startDay,
-          end_day: endDay
+          end_day: endDay,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": showNsfw.value
         }
       })
     } else if (type == "5") {
@@ -1473,12 +1598,18 @@ async function fetchDetail(newId: number) {
       data = JSON.stringify({
         post_id: newId,
         fromSearch: {
-          keywords: searchKeyword
+          keywords: searchKeyword,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": showNsfw.value
         }
       })
     } else {
       data = JSON.stringify({
-        post_id: newId
+        post_id: newId,
+        "type": contentType,
+        "language": language,
+        "show_nsfw": showNsfw.value
       })
     }
 
@@ -1504,7 +1635,7 @@ async function fetchDetail(newId: number) {
     const res = await response.json();
 
     if (res.code == 0 || res.code == 200) {
-      const data = res.data.post;
+      const data = res.data.post || res.data;
 
       detail.value = {
         id: data.id || newId,
@@ -1512,7 +1643,7 @@ async function fetchDetail(newId: number) {
         isFollowed: data.is_followed == 1 || false,
         time: formatTimestamp(data.created_at) || "",
         title: data.title || "",
-        description: data.content_replace || data.content || data.description || "",
+        description: data.content_replace || data.content || "",
         type: data.type,
         videoUrl: data.video_url || "",
         cover: data.cover || "",
@@ -1531,12 +1662,23 @@ async function fetchDetail(newId: number) {
         is_nsfw: data.is_nsfw || '1',
         book_id: data.book_id || '',
         book_title: data.book_title || '',
-        chapter_index: data.chapter_index || ''
+        chapter_index: data.chapter_index || '',
+        latest_read_chapter_index: res.data.latest_read_chapter_index || ''
       } as DetailData;
+
+      setSeoMeta(
+        detail.value.title,
+        detail.value.description,
+        detail.value.type
+      );
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id !== '' && Number(detail.value.book_id) > 0) {
         await loadChapters();
+        if (pendingRecordHistory.value) {
+          pendingRecordHistory.value = false;
+          await recordViewHistory();
+        }
       }
 
       totalComments.value = res.data.comment_total || '';
@@ -1564,7 +1706,7 @@ async function fetchDetail(newId: number) {
         nextId.value = null;
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
 
       detail.value = {
         id: newId,
@@ -1595,7 +1737,8 @@ async function fetchDetail(newId: number) {
         is_nsfw: '1',
         book_id: "",
         book_title: "",
-        chapter_index: ""
+        chapter_index: "",
+        latest_read_chapter_index: ""
       };
       likes.value = 0;
       liked.value = false;
@@ -1635,7 +1778,8 @@ async function fetchDetail(newId: number) {
       is_nsfw: '1',
       book_id: "",
       book_title: "",
-      chapter_index: ""
+      chapter_index: "",
+      latest_read_chapter_index: ""
     };
     likes.value = 0;
     liked.value = false;
@@ -1836,7 +1980,7 @@ async function loadCollections(append: boolean = false) {
 
     // 有book_id且值大于0，使用真实API调用
     if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-      const response = await api.singleCollection(String(detail.value.book_id), page, pageSize) as any;
+      const response = await api.singleCollection(String(detail.value.book_id), page, pageSize, showNsfw.value) as any;
       if (response.code === 0) {
         const newCollections = response.data?.data || [];
 
@@ -1847,7 +1991,7 @@ async function loadCollections(append: boolean = false) {
           likes: chapter.like_count || 0,
           liked: chapter.is_liked == 1 || false,
           author: detail.value.author.nickname,
-          type: detail.value.type,
+          type: String(detail.value.type),
           duration: chapter.duration,
           isSubscribed: detail.value.isSubscribed,
           requiresSubscription: chapter.access_rights == '2' || false
@@ -1895,7 +2039,7 @@ async function searchByMention(mention: string) {
         // Navigate to user home page
         const url = router.push({ path: "/user-home", query: { id: userId } });
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
       toast(t('fail'));
@@ -2101,7 +2245,7 @@ async function handleDeleteConfirmDirect(commentId: string, isReply: boolean = f
         }
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -2170,7 +2314,7 @@ async function handleDeleteConfirm() {
         await loadCommentToReplyList(rid);
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -2777,6 +2921,7 @@ function goPrev() {
     }
   } else if (prevId.value) {
     // 在非合集模式下，直接切换页面
+    activeTab.value = 'detail';
     router.replace({
       path: '/detail',
       query: {
@@ -2799,6 +2944,7 @@ function goNext() {
     }
   } else if (nextId.value) {
     // 在非合集模式下，直接切换页面
+    activeTab.value = 'detail';
     router.replace({
       path: '/detail',
       query: {
@@ -2934,7 +3080,7 @@ async function toggleFollow() {
     if (res.code === 0 || res.code === 200) {
       detail.value.isFollowed = !detail.value.isFollowed;
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -2988,7 +3134,7 @@ async function toggleCommentLike(c: any) {
       c.liked = !c.liked;
       c.likes = parseInt(c.likes) + (c.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -3008,7 +3154,7 @@ async function toggleReplyLike(r: any) {
       r.liked = !r.liked;
       r.likes = parseInt(r.likes) + (r.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -3902,7 +4048,7 @@ async function submitComment() {
         });
       }
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -3934,7 +4080,7 @@ async function toggleLike() {
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
       // Unlike post
@@ -3949,7 +4095,7 @@ async function toggleLike() {
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }
   } catch (error) {
@@ -3976,7 +4122,7 @@ async function toggleCollectionLike(item: any) {
 
         likes.value = previousLikes + 1;
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
       // Unlike collection item
@@ -3985,7 +4131,7 @@ async function toggleCollectionLike(item: any) {
         item.liked = false;
         item.likes = Math.max(0, previousLikes - 1);
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }
   } catch (error) {
@@ -4112,9 +4258,10 @@ function handleFullscreenChange() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
+  getCountry();
   fetchDetail(id.value);
 
   nextTick(() => {
@@ -4154,9 +4301,10 @@ onBeforeUnmount(() => {
 
 watch(
   () => route.query.id,
-  (newId) => {
+  async (newId) => {
     if (newId) {
       id.value = Number(newId);
+      await getCountry();
       fetchDetail(Number(newId));
     }
   },

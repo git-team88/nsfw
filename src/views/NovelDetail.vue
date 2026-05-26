@@ -150,15 +150,22 @@
             </div>
             <div class="collection-line"></div>
             <div class="update-info">
-              {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
+              <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+                {{ t('detail.readToEpisode', { count: detail.latest_read_chapter_index }) }}
+              </template>
+              <template v-else>
+                {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
+              </template>
             </div>
           </div>
-          <div class="collection-actions" @click="enterCollectionMode(2)">
-            <div class="collection-link" v-if="nextChapterId">
-              {{ t('detail.enterCollectionMode') }}
-            </div>
+          <div class="collection-actions" @click="enterCollectionMode(2)" v-if="chapterCount > 1 && (detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0 || nextChapterId)">
             <button class="next-btn">
-              {{ !nextChapterId ? t('detail.viewCollection') : t('detail.nextChapter') }}
+              <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+                {{ t('detail.continueReading') }}
+              </template>
+              <template v-else>
+                {{ t('detail.nextChapter') }}
+              </template>
             </button>
           </div>
         </div>
@@ -236,6 +243,18 @@ const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
+// Props
+const props = defineProps({
+  contentType: {
+    type: String,
+    default: ''
+  },
+  showNsfw: {
+    type: Number,
+    default: undefined
+  }
+});
+
 // Loading state
 const isLoading = ref(false);
 const loadText = ref(t('detail.loading'));
@@ -266,7 +285,8 @@ const detail = ref({
   book_id: '',
   book_title: '',
   chapter_index: '',
-  comment_total: 0
+  comment_total: 0,
+  latest_read_chapter_index: ''
 });
 
 // Content sections
@@ -310,6 +330,8 @@ const commentText = ref('');
 const showSidebar = ref(false);
 const isCollectionMode = ref(false);
 const activeTab = ref('detail');
+const pendingRecordHistory = ref(false);
+const currentCollectionIndex = ref(0);
 const isLoadingComments = ref(false);
 const currentPage = ref(1);
 const loadingMoreComments = ref(false);
@@ -402,6 +424,11 @@ async function fetchDetail() {
   // Get query parameters
   const type = route.query.type as string || "";
 
+  // Use props values if available, otherwise fall back to route query
+  const contentType = props.contentType || (route.query.contentType as string || "");
+  // Use current locale as language
+  const language = locale.value == 'zh' ? 'cn' : locale.value;
+
   isLoading.value = true;
   loadText.value = t('loading');
 
@@ -412,21 +439,30 @@ async function fetchDetail() {
       requestData = JSON.stringify({
         post_id: id,
         fromIndexRecommend: {
-          "tab": "hot"
+          "tab": "hot",
+          "type": contentType,
+          "language": language,
+          "show_nsfw": props.showNsfw
         }
       });
     } else if (type == "2") {
       requestData = JSON.stringify({
         post_id: id,
         fromIndexFollow: {
-          test: 1
+          test: 1,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": props.showNsfw
         }
       });
     } else if (type == "3") {
       requestData = JSON.stringify({
         post_id: id,
         fromIndexSubscription: {
-          test: 1
+          test: 1,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": props.showNsfw
         }
       });
     } else if (type == "4") {
@@ -441,7 +477,10 @@ async function fetchDetail() {
           blogger_id: bloggerId,
           keywords: searchKeyword,
           start_day: startDay,
-          end_day: endDay
+          end_day: endDay,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": props.showNsfw
         }
       });
     } else if (type == "5") {
@@ -449,12 +488,18 @@ async function fetchDetail() {
       requestData = JSON.stringify({
         post_id: id,
         fromSearch: {
-          keywords: searchKeyword
+          keywords: searchKeyword,
+          "type": contentType,
+          "language": language,
+          "show_nsfw": props.showNsfw
         }
       });
     } else {
       requestData = JSON.stringify({
-        post_id: id
+        post_id: id,
+        "type": contentType,
+        "language": language,
+        "show_nsfw": props.showNsfw
       });
     }
 
@@ -502,7 +547,8 @@ async function fetchDetail() {
         book_id: data.book_id || "",
         book_title: data.book_title || '',
         chapter_index: data.chapter_index || '',
-        comment_total: res.data.comment_total || 0
+        comment_total: res.data.comment_total || 0,
+        latest_read_chapter_index: res.data.latest_read_chapter_index || ''
       };
 
       likes.value = detail.value.likes;
@@ -520,6 +566,12 @@ async function fetchDetail() {
 
       // Set chapter navigation
       setChapterNavigation();
+
+      // Record view history if needed
+      if (pendingRecordHistory.value) {
+        pendingRecordHistory.value = false;
+        await recordViewHistory();
+      }
 
       // Store navigation info
       if (res.data.posts) {
@@ -539,7 +591,7 @@ async function fetchDetail() {
         nextId.value = '';
       }
     } else {
-      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error('Error fetching novel detail:', error);
@@ -565,7 +617,7 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, 50, props.showNsfw) as any;
     if (response.code === 0) {
       chapters.value = response.data?.data || [];
       chapterCount.value = response.data?.allnums || response.data?.count || 0;
@@ -592,6 +644,9 @@ function setChapterNavigation() {
       return Number(chapter.chapter_index) === Number(detail.value.chapter_index);
     });
   }
+
+  // Update current collection index for history recording
+  currentCollectionIndex.value = currentIndex;
 
   // Reset navigation
   prevChapterId.value = '';
@@ -1153,6 +1208,7 @@ function navigateToChapter(chapter: any) {
 
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
+    pendingRecordHistory.value = true;
   }
 }
 
@@ -1243,30 +1299,51 @@ function navigateToUserHome() {
   }
 }
 
-function enterCollectionMode(type: number) {
-  if (type == 2) {
-    if (!nextChapterId.value) {
-      if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-        isCollectionMode.value = true;
+async function enterCollectionMode(type: number) {
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    isCollectionMode.value = true;
+
+    if (type == 2) {
+      let targetChapterId = '';
+
+      if (Number(detail.value.latest_read_chapter_index) > 0) {
+        if (chapters.value.length === 0) {
+          await loadChapters();
+        }
+        const targetChapter = chapters.value.find(chapter =>
+          Number(chapter.chapter_index) === Number(detail.value.latest_read_chapter_index)
+        );
+        if (targetChapter) {
+          targetChapterId = targetChapter.post_id;
+        }
       }
-    } else {
-      if (nextChapterId.value) {
+
+      if (!targetChapterId) {
+        targetChapterId = detail.value.id;
+      }
+
+      if (targetChapterId && targetChapterId !== route.query.id) {
         router.replace({
           path: '/detail',
           query: {
             ...route.query,
-            id: nextChapterId.value
+            id: targetChapterId
           }
         });
-
-        if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-          isCollectionMode.value = true;
+        pendingRecordHistory.value = true;
+      } else {
+        if (chapters.value.length === 0) {
+          await loadChapters();
+          setChapterNavigation();
         }
+        await recordViewHistory();
       }
-    }
-  } else {
-    if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-      isCollectionMode.value = true;
+    } else {
+      if (chapters.value.length === 0) {
+        await loadChapters();
+        setChapterNavigation();
+      }
+      await recordViewHistory();
     }
   }
 }
@@ -1281,6 +1358,29 @@ function exitCollectionMode() {
   //     // 不添加collectionMode参数，确保它不显示在URL上
   //   }
   // });
+}
+
+// Record view history for collection episodes
+async function recordViewHistory() {
+  if (!isCollectionMode.value || chapterCount.value <= 1) {
+    return false;
+  }
+
+  const bookId = detail.value.book_id;
+  const chapterIndex = currentCollectionIndex.value + 1;
+
+  if (!bookId) {
+    return false;
+  }
+
+  try {
+    await api.recordHistory({
+      book_id: bookId,
+      chapter_index: chapterIndex
+    });
+  } catch (error) {
+    console.error('NovelDetail - Error recording view history:', error);
+  }
 }
 
 // Comment related functions

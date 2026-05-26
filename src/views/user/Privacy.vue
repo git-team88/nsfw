@@ -65,13 +65,15 @@ interface SwitchInfo {
 
 onMounted(async () => {
   try {
-    const res = (await api.getPrivacy()) as unknown as { code: number; data: SwitchInfo };
-    if (res.code === 0 && res.data) {
+    const res = (await api.getPrivacy()) as any;
+    if (res.code == 0 && res.data) {
       info.value.is_subs_list_private = res.data.is_subs_list_private || '0';
       info.value.is_fans_list_private = res.data.is_fans_list_private || '0';
       info.value.is_anonymous_follow = res.data.is_anonymous_follow || '0';
       info.value.is_anonymous_subs = res.data.is_anonymous_subs || '0';
       info.value.is_anonymous_comment = res.data.is_anonymous_comment || '0';
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);

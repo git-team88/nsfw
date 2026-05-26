@@ -310,16 +310,16 @@ watch(locale, () => {
     //   path: "/ai",
     // },
     {
-      name: t("header.type2"),
-      path: "/publish/video",
+      name: t("header.type4"),
+      path: "/publish/novel",
     },
     {
       name: t("header.type3"),
       path: "/publish/comic",
     },
     {
-      name: t("header.type4"),
-      path: "/publish/novel",
+      name: t("header.type2"),
+      path: "/publish/video",
     },
   ];
 });
@@ -349,6 +349,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClick);
   window.removeEventListener('userLogout', handleLogout);
+  eventBus.off('balanceUpdated', getBalance);
 });
 
 const handleClick = (event: MouseEvent) => {
@@ -455,7 +456,7 @@ function getMessageInfo() {
         // Emit message info to parent components
         emit('messageInfoLoaded', newsCounts.value);
       } else {
-        toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
       }
     })
     .catch((err) => {
@@ -476,7 +477,7 @@ function getUserInfo() {
         postCount.value = data.data.product_count;
         emit('userInfoLoaded', data.data);
       } else {
-        toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
       }
     })
     .catch((err) => {
@@ -491,7 +492,7 @@ function getBalance() {
 
       emit('balanceInfoLoaded', res.data);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   })
   .catch((err) => {
@@ -509,7 +510,7 @@ function getLoginUserInfo() {
 
         localStorage.setItem('uid', data.data.info.id)
       } else {
-        toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
       }
     })
     .catch((err) => {
@@ -587,6 +588,7 @@ function confirmLogout() {
   localStorage.removeItem("token");
   localStorage.removeItem("connect");
   localStorage.removeItem("uid");
+  localStorage.removeItem("allowSensitiveContent");
 
   provider.value = null;
   isShowExit.value = false;

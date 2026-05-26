@@ -67,7 +67,7 @@
             </div>
           </div>
 
-          <div class="sensitive-row" v-if="userRegion">
+          <!-- <div class="sensitive-row" v-if="userRegion">
             <div class="switch-box">
               <div class="label" :class="{ disabled: !isAdult }">
                 {{ t("user.personal.sensitive") }}
@@ -81,7 +81,7 @@
             </div>
 
             <div class="tip">{{ t("user.personal.sensitiveTip") }}</div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -169,7 +169,7 @@ function onToggleSensitive() {
     .then((res: any) => {
       if (res.code !== 200 && res.code !== 0) {
         showSensitive.value = !showSensitive.value;
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       } else {
         toast('success');
 
@@ -188,7 +188,7 @@ onMounted(async () => {
   getCountry();
 
   try {
-    const res = (await api.userInfo()) as unknown as { code: number; data: UserData, timestamp: number };
+    const res = (await api.userInfo()) as any;
     if (res.code === 0 || res.code === 200) {
       const data = res.data || {};
       userInfo.value = data;
@@ -224,6 +224,8 @@ onMounted(async () => {
           isAdult.value = age >= 18;
         }
       }
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -280,7 +282,7 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())
     .then(
-      (res: { code: number; data?: { url?: string } | string; url?: string; msg: string; msg_jp: string }) => {
+      (res: any) => {
         if (res.code === 0 || res.code === 200) {
           const url = (typeof res.data === "string" ? res.data : res.data?.url) || res.url;
           if (typeof url === "string") {
@@ -288,7 +290,7 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
             toast(t('success'));
           }
         } else {
-          toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         }
       },
     )
@@ -351,9 +353,7 @@ function onSave() {
     });
   }
 
-  // Only allow birthday modification if initially there was no birthday
-  const hadBirthdayInitially = initialValues.value.birthday;
-  if (hasBirthdayChanged && currentBirthday && !hadBirthdayInitially) {
+  if (hasBirthdayChanged && currentBirthday) {
     operations.push(() => {
       return api.modifyBirth({
         year: dateValue.value.year,
@@ -366,8 +366,6 @@ function onSave() {
           }
         });
     });
-  } else if (hadBirthdayInitially && hasBirthdayChanged) {
-    toast(t('user.personal.birthdayCannotEdit'));
   }
 
   if (operations.length === 0) {

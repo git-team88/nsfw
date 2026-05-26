@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted, onMounted, computed } from "vue";
+import { ref, watch, onUnmounted, onMounted, computed, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import UploadMask from "./UploadMask.vue";
 import api from "@/api/index";
@@ -182,8 +182,9 @@ watch(
       activeTab.value = "select"; // Default first tab
       imgOffsetY.value = 0;
       imgOffsetX.value = 0;
+      imgScale.value = 0.1; // Start with small scale to prevent large image flash
       localImage.value = null;
-      
+
       // Check if cover is canvas-generated (not from uploaded images)
       if (props.isCanvasGenerated) {
         // For canvas-generated covers, don't select it, let user choose from images
@@ -193,12 +194,10 @@ watch(
         // For uploaded/URL covers, select the cover image
         selectedImage.value = props.coverImage;
         selectedIndex.value = -1;
-        detectOrientation(selectedImage.value);
       } else if (props.images.length > 0 && !selectedImage.value) {
         // Select first image from the list
         selectedImage.value = props.images[0];
         selectedIndex.value = 0;
-        detectOrientation(selectedImage.value);
       } else {
         // Reset selection
         selectedImage.value = '';
@@ -210,8 +209,14 @@ watch(
 
 watch(localImage, (newVal) => {
   if (newVal) {
-    detectOrientation(newVal);
+    detectOrientation();
   }
+});
+
+watch(selectedImage, () => {
+  nextTick(() => {
+    detectOrientation();
+  });
 });
 
 function changeTab(tab: string) {
@@ -224,14 +229,12 @@ function changeTab(tab: string) {
 function onImageClick(index: number) {
   selectedImage.value = props.images[index];
   selectedIndex.value = index;
-  detectOrientation(selectedImage.value);
 }
 
 function onCoverClick() {
   if (props.coverImage) {
     selectedImage.value = props.coverImage;
     selectedIndex.value = -1;
-    detectOrientation(selectedImage.value);
   }
 }
 
@@ -286,20 +289,17 @@ function confirm() {
   const src = activeTab.value === "select" ? selectedImage.value : localImage.value;
   if (!src) return;
 
+  isUploading.value = true;
+
   cropToCanvas(src).then((cropped) => {
-    // Show UploadMask
-    isUploading.value = true;
-    // Upload the cropped image
-    mockUpload(cropped).then((uploadedUrl) => {
-      // Hide UploadMask
-      isUploading.value = false;
-      emit("confirm", uploadedUrl);
-      close();
-    }).catch((error) => {
-      // Hide UploadMask on error
-      isUploading.value = false;
-      console.error("Upload error:", error);
-    });
+    return mockUpload(cropped);
+  }).then((uploadedUrl) => {
+    isUploading.value = false;
+    emit("confirm", uploadedUrl);
+    close();
+  }).catch((error) => {
+    isUploading.value = false;
+    console.error("Upload error:", error);
   });
 }
 
@@ -317,17 +317,20 @@ async function mockUpload(dataUrl: string): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
 
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
     const parma = {
       method: "POST",
       headers: {
         token: token,
+        ...authHeaders,
       },
       body: formData,
     };
 
-    const res = await fetch(baseUrl + "/user/uploadImage", parma);
+    const res = await fetch(baseUrl + "user/uploadImage", parma);
     const data = await res.json();
-    if (data.code === 0 || data.code === 200) {
+    if (data.code == 0 || data.code == 200) {
       return data.data.url || dataUrl;
     } else {
       // 如果上传失败，使用本地 dataUrl 作为 fallback
@@ -391,57 +394,109 @@ onMounted(() => {
   imgOffsetX.value = 0;
 });
 
-async function detectOrientation(dataUrl: string) {
-  const img = new Image();
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
-
-  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const naturalRatio = img.naturalWidth / img.naturalHeight;
-  const targetRatio = CROP_W / CROP_H;
-
-  if (naturalRatio > targetRatio) {
-    // Landscape relative to crop frame
-    imgScale.value = CROP_H / img.naturalHeight;
-  } else {
-    // Portrait relative to crop frame
-    imgScale.value = CROP_W / img.naturalWidth;
+async function fetchImageToBlobUrl(url: string): Promise<string> {
+  if (url.startsWith('data:')) {
+    return url;
   }
 
-  imgOffsetX.value = 0;
-  imgOffsetY.value = 0;
-  isPortrait.value = img.naturalHeight >= img.naturalWidth;
+  let fetchUrl = url;
+  const cloudfrontDomain = 'https://ddu2v98cehw9k.cloudfront.net';
+  const proxyDomain = `${baseUrl}/proxy_download`;
+
+  if (url.startsWith(cloudfrontDomain)) {
+    fetchUrl = proxyDomain + url.replace(cloudfrontDomain, '');
+  }
+
+  const response = await fetch(fetchUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.startsWith('image/')) {
+    throw new Error('Response is not an image');
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+async function detectOrientation() {
+  const imgEl = previewImgRef.value;
+  if (!imgEl) return;
+
+  await new Promise((resolve) => {
+    if (imgEl.complete) {
+      resolve(null);
+    } else {
+      imgEl.onload = resolve;
+    }
+  });
+
+  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
+
+  const scaleByWidth = CROP_W / imgEl.naturalWidth;
+  const scaleByHeight = CROP_H / imgEl.naturalHeight;
+
+  let scale = Math.max(scaleByWidth, scaleByHeight);
+
+  if (scale > 1) {
+    scale = 1;
+  }
+
+  imgScale.value = scale;
+
+  const scaledWidth = imgEl.naturalWidth * scale;
+  const scaledHeight = imgEl.naturalHeight * scale;
+
+  imgOffsetX.value = (CROP_W - scaledWidth) / 2;
+  imgOffsetY.value = (CROP_H - scaledHeight) / 2 + 24;
+
+  isPortrait.value = imgEl.naturalHeight >= imgEl.naturalWidth;
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {
+  const blobUrl = await fetchImageToBlobUrl(dataUrl);
   const img = new Image();
-  img.src = dataUrl;
+  img.src = blobUrl;
   await new Promise((r) => (img.onload = r));
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const imgEl = previewImgRef.value!;
-  const imgRect = imgEl.getBoundingClientRect();
+  const scale = imgScale.value;
 
-  // The crop frame is centered in the preview-crop-box
-  // Let's get the box rect
-  const boxEl = imgEl.parentElement!;
-  const boxRect = boxEl.getBoundingClientRect();
+  const scaledImgWidth = img.naturalWidth * scale;
+  const scaledImgHeight = img.naturalHeight * scale;
 
-  const cropLeft = boxRect.left + (boxRect.width - CROP_W) / 2;
-  const cropTop = boxRect.top + (boxRect.height - CROP_H) / 2;
+  const imgCenterX = scaledImgWidth / 2 + imgOffsetX.value;
+  const imgCenterY = scaledImgHeight / 2 + imgOffsetY.value;
 
-  const scale = (img.naturalWidth * imgScale.value) / img.naturalWidth;
-  const sx = (cropLeft - imgRect.left) / scale;
-  const sy = (cropTop - imgRect.top) / scale;
+  const cropLeft = imgCenterX - CROP_W / 2;
+  const cropTop = imgCenterY - CROP_H / 2;
+
+  const sx = cropLeft / scale;
+  const sy = cropTop / scale;
   const sw = CROP_W / scale;
   const sh = CROP_H / scale;
 
+  const actualSx = Math.max(0, sx);
+  const actualSy = Math.max(0, sy);
+  const actualSw = Math.min(img.naturalWidth - actualSx, sw);
+  const actualSh = Math.min(img.naturalHeight - actualSy, sh);
+
   const canvas = document.createElement("canvas");
-  canvas.width = CROP_W;
-  canvas.height = CROP_H;
+  canvas.width = Math.round(actualSw);
+  canvas.height = Math.round(actualSh);
   const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.9);
+
+  ctx.imageSmoothingEnabled = true;
+
+  ctx.drawImage(img, actualSx, actualSy, actualSw, actualSh, 0, 0, canvas.width, canvas.height);
+
+  if (blobUrl !== dataUrl) {
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  return canvas.toDataURL("image/jpeg", 1.0);
 }
 </script>
 

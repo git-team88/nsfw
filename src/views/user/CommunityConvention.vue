@@ -15,7 +15,7 @@
 <script setup lang="ts" name="CommunityConvention">
 import Header from "@/components/Header.vue";
 
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
@@ -28,6 +28,26 @@ const isWallet = ref(false);
 const isBind = ref(false);
 const isHide = ref(false);
 
+function setSeoMeta() {
+  document.title = t('seo.communityConvention.title');
+  
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', t('seo.communityConvention.keywords'));
+  
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', t('seo.communityConvention.description'));
+}
+
 onMounted(async () => {
   window.scrollTo(0, 0);
 
@@ -36,6 +56,12 @@ onMounted(async () => {
     isHide.value = true;
     localStorage.removeItem("isBack");
   }
+
+  setSeoMeta();
+});
+
+watch(() => locale.value, () => {
+  setSeoMeta();
 });
 
 function goBack() {

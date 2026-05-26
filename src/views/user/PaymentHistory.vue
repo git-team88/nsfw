@@ -39,9 +39,15 @@
             </div>
           </div>
 
-          <template v-if="!loading && !autoRenewLoading">
+          <template v-if="loading">
+            <div class="loading-state">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">{{ t('home.loading') }}</div>
+            </div>
+          </template>
+          <template v-else>
             <!-- Processing Tab Content -->
-            <div v-if="activeMainTab === 'processing'">
+            <div v-if="activeMainTab == 'processing'">
               <div class="list-area" v-if="activeSubTab === 'subscribe'">
                 <div class="sub-item" v-for="item in processingList" :key="item.id">
                   <div class="left">
@@ -60,12 +66,7 @@
                     </div>
 
                     <div class="operate-box">
-                      <div class="menu-auto" v-if="!item.autoRenew" @click="turnOnAutoRenewal(item, 1)">
-                        <b></b>
-                        {{ t("user.myFollowsSubs.autoRenewOn") }}
-                      </div>
-
-                      <div class="more-box" v-else>
+                      <div class="more-box" v-if="!item.autoRenew">
                         <img
                           class="more-icon"
                           src="@/assets/images/detail/menu.png"
@@ -77,6 +78,11 @@
                             {{ t("user.myFollowsSubs.autoRenewOff") }}
                           </div>
                         </div>
+                      </div>
+
+                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item.id, 1)">
+                        <b></b>
+                        {{ t("user.myFollowsSubs.autoRenewOn") }}
                       </div>
 
                     </div>
@@ -100,7 +106,7 @@
                     </div>
 
                     <div class="operate-box">
-                      <div class="more-box" v-if="item.subscription_info && item.subscription_info.cancel_at_period_end == 0">
+                      <div class="more-box" v-if="!item.autoRenew">
                         <img
                           class="more-icon"
                           src="@/assets/images/detail/menu.png"
@@ -113,7 +119,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item, 2)">
+                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(item.id, 2)">
                         <b></b>
                         {{ t("user.myFollowsSubs.autoRenewOn") }}
                       </div>
@@ -206,12 +212,10 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import EmptyState from "@/components/EmptyState.vue";
 import Pagination from "@/components/Pagination.vue";
-import DateRangePicker from "@/components/DateRangePicker.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
-import dayjs from "dayjs";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 import { formatTimestamp } from "@/util/utils";
@@ -224,16 +228,6 @@ const sidebarKey = ref("payment-history");
 const activeMainTab = ref<"processing" | "orderHistory">("processing");
 const activeSubTab = ref<"subscribe" | "recharge">("subscribe");
 const activeOrderHistoryTab = ref<"subscribe" | "recharge">("subscribe");
-
-const getCurrentDate = () => {
-  return dayjs().format("YYYY-MM-DD");
-};
-
-const getOneMonthBeforeCurrent = () => {
-  return dayjs().subtract(1, "month").format("YYYY-MM-DD");
-};
-
-const range = ref({ start: getOneMonthBeforeCurrent(), end: getCurrentDate() });
 
 const loading = ref(false);
 const listData = ref<any[]>([]);
@@ -298,14 +292,14 @@ async function fetchData() {
   try {
     let res;
     if (activeSubTab.value === "subscribe") {
-      res = await api.userPayList(page.value, pageSize.value, range.value.start, range.value.end) as any;
+      res = await api.userPayList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
         const data = res.data?.data || res.data || [];
         listData.value = data;
         total.value = res.data?.allnums || 0;
       }
     } else {
-      res = await api.userAiPayList(page.value, pageSize.value, range.value.start, range.value.end) as any;
+      res = await api.userAiPayList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
         const data = res.data?.data || res.data || [];
 
@@ -314,7 +308,7 @@ async function fetchData() {
       }
     }
     if (res && (res.code !== 0 && res.code !== 200)) {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -341,10 +335,10 @@ async function fetchProcessingData() {
           price: item.plan?.price || 0,
           startTime: item.start_at ? formatTimestamp(item.start_at) : item.created_at,
           endTime: item.expire_at ? formatTimestamp(item.expire_at) : '',
-          autoRenew: item.status == '1'
+          autoRenew: item.cancel_at_period_end == '1'
         }));
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else if (activeSubTab.value === 'recharge') {
       const res = await api.computeDetail(101, '', '', page.value, pageSize.value) as any;
@@ -353,15 +347,11 @@ async function fetchProcessingData() {
         // 这里可以根据实际API返回的数据结构进行处理
         processingList.value = data.map((item: any) => ({
           id: item.id,
-          name: item.name,
-          planName: item.plan_name || item.planName ,
-          computeValue: item.compute_value || item.computeValue,
-          validPeriod: item.valid_period || item.validPeriod,
           avatar: '',
           price: item.amount || item.price || 0,
-          startTime: item.issued_at ? formatDate(item.issued_at) : item.created_at,
-          endTime: item.expire_at ? formatDate(item.expire_at) : '',
-          autoRenew: item.auto_renew || item.autoRenew || false,
+          startTime: item.issued_at ? formatDate(item.issued_at) : item.subscription_info?.created_at,
+          endTime: item.subscription_info?.current_period_end ? formatDate(item.subscription_info.current_period_end) : '',
+          autoRenew: item.subscription_info && item.subscription_info?.cancel_at_period_end == '1',
           subscription_info: item.subscription_info || null,
           plan_info: {
             name: item.plan_info?.name || '',
@@ -370,9 +360,10 @@ async function fetchProcessingData() {
             plan_id: item.plan_info?.plan_id || 1
           }
         }));
+
         total.value = res.data?.data_count || 0;
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }
   } catch (error) {
@@ -407,7 +398,7 @@ function formatDate(date: string) {
   return date.replace('T', ' ');
 }
 
-watch([page, range], () => {
+watch(page, () => {
   if (activeMainTab.value === 'processing' && activeSubTab.value === 'recharge') {
     fetchProcessingData();
   } else {
@@ -434,7 +425,7 @@ async function confirmInvoice() {
         invoiceEmail.value = '';
         toast(t('success'));
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } catch (error) {
       toast(t('fail'));
@@ -458,7 +449,7 @@ async function viewInvoice(item: any) {
       const url = window.URL.createObjectURL(res);
       window.location.href = url;
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -485,7 +476,7 @@ async function downloadInvoice(item: any) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -534,7 +525,7 @@ async function turnOffAutoRenewal(itemId: string) {
     if (res.code === 0 || res.code === 200) {
       window.location.href = res.data?.url;
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -543,21 +534,16 @@ async function turnOffAutoRenewal(itemId: string) {
   }
 }
 
-async function turnOnAutoRenewal(item: any, type: number) {
-  showMoreMenu.value[item.id] = false;
+async function turnOnAutoRenewal(itemId: string, type: number) {
+  showMoreMenu.value[itemId] = false;
   autoRenewLoading.value = true;
+
   try {
-    var id = '';
-    if (type == 1) {
-      id = item.user_id
-    } else {
-      id = item.author_id
-    }
-    const res = await api.subscribe({ creator_id: id }) as any;
+    const res = await api.cancelSubscribe() as any;
     if (res.code == 0 || res.code == 200) {
       window.location.href = res.data?.url;
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -572,7 +558,7 @@ async function viewAllPaymentHistory() {
   if (res.code == 0 || res.code == 200) {
     window.location.href = res.data?.url;
   } else {
-    toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+    toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
   }
 }
 
@@ -591,17 +577,14 @@ onMounted(() => {
   const type = route.query.type as string;
   if (type == '1') {
     activeSubTab.value = 'subscribe';
+    page.value = 1;
     fetchProcessingData();
   } else if (type == '2') {
     activeSubTab.value = 'recharge';
-    fetchProcessingData();
-  } else if (type == '4') {
-    // 跳转到支付历史下的AI充值工具tab
-    activeMainTab.value = 'orderHistory';
-    activeSubTab.value = 'recharge';
     page.value = 1;
-    fetchData();
+    fetchProcessingData();
   } else {
+    page.value = 1;
     fetchProcessingData();
   }
   // 添加点击外部关闭菜单的事件监听器
@@ -1054,6 +1037,34 @@ onBeforeUnmount(() => {
   margin-top: 2.4rem;
   display: flex;
   justify-content: center;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 40rem;
+  gap: 1.2rem;
+
+  .loading-spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid #F5F5F5;
+    border-top: 0.4rem solid #6A7282;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    box-sizing: border-box;
+  }
+
+  .loading-text {
+    font-size: 1.6rem;
+    color: #6a7282;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .list-area {

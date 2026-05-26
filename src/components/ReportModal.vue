@@ -193,7 +193,7 @@ async function onFileChange(e: Event) {
         imageList.value.push(data.data.url);
       }
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
@@ -239,7 +239,7 @@ async function submit() {
       toast(t("report.success"));
       close();
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     console.error(error);

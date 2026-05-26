@@ -14,13 +14,6 @@
       <div class="tab-navigation">
         <span
           class="tab"
-          :class="{ active: activeTab === 'official' }"
-          @click="activeTab = 'official'"
-        >
-          {{ t('home.characterSelect.officialCharacters') }}
-        </span>
-        <span
-          class="tab"
           :class="{ active: activeTab === 'my' }"
           @click="activeTab = 'my'"
         >
@@ -120,7 +113,7 @@ const selectedCharacters = ref<Array<{
 const loading = ref(false);
 const loadingMore = ref(false);
 const characterGridRef = ref<HTMLElement | null>(null);
-const activeTab = ref('official');
+const activeTab = ref('my');
 const currentPage = ref(1);
 const hasMore = ref(true);
 

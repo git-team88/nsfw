@@ -470,13 +470,13 @@ const getPrefecturesForLocale = (lang: string) => {
     case 'zh': return zh.user.materialProvider.prefectures;
     case 'jp': return jp.user.materialProvider.prefectures;
     case 'en': return en.user.materialProvider.prefectures;
-    default: return en.user.materialProvider.prefectures;
+    default: return jp.user.materialProvider.prefectures;
   }
 };
 
 declare let grecaptcha: any;
 
-// Get localized countries list
+// Get localized countries list based on current locale
 const countryList = computed(() => {
   return getLocalizedCountries(locale.value);
 });
@@ -1273,6 +1273,12 @@ onUnmounted(revokeObjectUrls);
 
 // Add click outside listener
 onMounted(async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+    return false;
+  }
+
   document.addEventListener('click', handleClickOutside);
   checkGrecaptcha();
 

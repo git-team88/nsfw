@@ -78,7 +78,7 @@ const confirm = async () => {
     if (data.code == 0 || data.code == 200) {
       emit('confirm', inviteCode.value);
     } else {
-      errorMessage.value = locale.value == 'jp' ?  data.msg_jp : data.msg;
+      errorMessage.value = locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp;
     }
   } catch (error) {
     errorMessage.value = t('inviteCode.inviteError');

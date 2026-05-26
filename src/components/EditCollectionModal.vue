@@ -64,7 +64,7 @@ watch(() => props.collectionName, (newName) => {
 });
 
 const isValid = computed(() => {
-  return collectionName.value.trim() !== '' && errorMessage.value === '';
+  return collectionName.value.trim() !== '';
 });
 
 function handleInput() {

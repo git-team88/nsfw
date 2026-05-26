@@ -395,30 +395,26 @@
             <div
               v-if="showDropdown"
               class="mention-dropdown"
-              :style="{
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-              }"
+              :style="getDropdownStyle()"
             >
               <div class="dropdown-list">
-                <div
-                  v-for="item in dropdownItems"
-                  :key="item.value"
-                  class="dropdown-item"
-                  @click="selectDropdownItem(item)"
-                >
-                  <div class="item-left">
-                    <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
-                    <span class="label">{{ item.label }}</span>
-                  </div>
-                  <!-- <div class="item-right">
-                    <span class="stats">
-                      {{
-                        dropdownType === "#" ? `${item.views} views` : `${item.followers} followers`
-                      }}
-                    </span>
-                  </div> -->
+                <div v-if="isDropdownLoading" class="dropdown-loading">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('loading') }}</span>
                 </div>
+                <template v-else>
+                  <div
+                    v-for="item in dropdownItems"
+                    :key="item.value"
+                    class="dropdown-item"
+                    @click="selectDropdownItem(item)"
+                  >
+                    <div class="item-left">
+                      <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
+                      <span class="label">{{ item.label }}</span>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -914,8 +910,10 @@ interface DropdownItem {
 const showDropdown = ref(false);
 const dropdownType = ref<"#" | "@" | "">("");
 const dropdownItems = ref<DropdownItem[]>([]);
-const dropdownPosition = ref({ top: 0, left: 0 });
+const dropdownPosition = ref<{ top?: number; left?: number; right?: number; position?: 'above'; bottom?: number; align?: 'right' }>({ top: 0, left: 0 });
 const lastRange = ref<Range | null>(null);
+const isDropdownLoading = ref(false);
+const isOpeningDropdown = ref(false);
 
 const uploadTxt = ref("");
 
@@ -1121,7 +1119,7 @@ function uploadImage(pf: PreviewFile) {
 
           isUpload.value = false;
         } else {
-          toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
           isUpload.value = false;
         }
       })
@@ -1192,7 +1190,7 @@ function onReuploadPicked(e: Event) {
           coverPreview.value = pf._preview;
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         isUpload.value = false;
       }
     })
@@ -1205,7 +1203,7 @@ function onReuploadPicked(e: Event) {
 async function checkSubscriptionStatus() {
   try {
     const response = await api.getSubscription();
-    const data = response as unknown as { code: number; msg: string; data?: any };
+    const data = response as any;
 
     if (data.code === 0) {
       const subscription = data.data;
@@ -1303,7 +1301,7 @@ function onCoverConfirmed(coverUrl: string) {
         }
         isUpload.value = false;
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         coverPreview.value = coverUrl;
         isUpload.value = false;
       }
@@ -1383,18 +1381,38 @@ async function handleCaptionInput(e: Event) {
   if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
+
+  // 检查是否在 span 标签内（已选中的话题/提及标签）
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
   const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
 
+  // 只有光标在 # 或 @ 后面（包括正在输入中）才显示下拉框
   const match = textBefore.match(/([#@])([^#@\s]*)$/u);
   if (match) {
     const trigger = match[1] as "#" | "@";
     const query = match[2];
-
     dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
     showDropdown.value = true;
     lastRange.value = range.cloneRange();
     updateDropdownPosition();
     searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
   } else {
     showDropdown.value = false;
   }
@@ -1411,6 +1429,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 // Debounced search function
 const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
+  isDropdownLoading.value = true;
   try {
     if (type === "#") {
       const res = await api.searchTopic({ keyword: query });
@@ -1433,6 +1452,8 @@ const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
   } catch (error) {
     console.error("Search error:", error);
     dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
   }
 }, 300);
 
@@ -1442,6 +1463,7 @@ async function searchTags(type: "#" | "@", query: string) {
 
 // Direct search without debounce (for button clicks)
 async function searchTagsImmediate(type: "#" | "@", query: string) {
+  isDropdownLoading.value = true;
   try {
     if (type === "#") {
       const res = await api.searchTopic({ keyword: query });
@@ -1464,6 +1486,8 @@ async function searchTagsImmediate(type: "#" | "@", query: string) {
   } catch (error) {
     console.error("Search error:", error);
     dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
   }
 }
 
@@ -1472,17 +1496,37 @@ function handleCaptionClick() {
   if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
 
-  if (match) {
-    const trigger = match[1] as "#" | "@";
-    const query = match[2];
+  // 检查是否在 span 标签内（已选中的话题/提及标签）
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+
+  // 点击时，只有光标正好在 # 或 @ 后面才显示下拉框
+  if (textBefore.endsWith('#') || textBefore.endsWith('@')) {
+    const trigger = textBefore.endsWith('#') ? '#' : '@';
+    const query = '';
     dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
     showDropdown.value = true;
     lastRange.value = range.cloneRange();
     updateDropdownPosition();
     searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
   } else {
     showDropdown.value = false;
   }
@@ -1740,16 +1784,55 @@ function updateDropdownPosition() {
     absLeft = captionRect.left;
   }
 
-  dropdownPosition.value = {
-    top: absTop,
-    left: absLeft + 2, // Small offset to the right
-  };
-
-  // Adjust if overflow bottom
   const dropdownHeight = 250;
+  const dropdownWidth = 280;
+
+  // 处理底部溢出
   if (absTop + dropdownHeight > window.innerHeight) {
-    dropdownPosition.value.top = rect.top - dropdownHeight - 5;
+    const spaceAbove = rect.top;
+    if (spaceAbove >= dropdownHeight) {
+      dropdownPosition.value = {
+        top: 0,
+        position: 'above',
+        bottom: window.innerHeight - rect.top + 5,
+        left: absLeft + 2,
+      };
+    } else {
+      dropdownPosition.value = {
+        top: 50,
+        left: absLeft + 2,
+      };
+    }
+  } else {
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft + 2,
+    };
   }
+
+  // 处理右边溢出，使用 right 属性定位
+  if (absLeft + dropdownWidth > window.innerWidth) {
+    dropdownPosition.value.left = undefined;
+    dropdownPosition.value.right = 10;
+  }
+}
+
+function getDropdownStyle(): Record<string, string> {
+  const style: Record<string, string> = {};
+
+  if (dropdownPosition.value.position === 'above') {
+    style.bottom = `${dropdownPosition.value.bottom}px`;
+  } else {
+    style.top = `${dropdownPosition.value.top}px`;
+  }
+
+  if (dropdownPosition.value.right !== undefined) {
+    style.right = `${dropdownPosition.value.right}px`;
+  } else if (dropdownPosition.value.left !== undefined) {
+    style.left = `${dropdownPosition.value.left}px`;
+  }
+
+  return style;
 }
 
 function onActionBtnClick(symbol: "#" | "@") {
@@ -1803,22 +1886,21 @@ function onActionBtnClick(symbol: "#" | "@") {
       lastRange.value = currentRange.cloneRange();
 
       // Get the bounding rect of the cursor position
-      const rect = currentRange.getBoundingClientRect();
+      const cursorRect = currentRange.getBoundingClientRect();
 
-      // If rect is invalid (width and height are 0), try alternative method
-      let absTop = rect.top + window.scrollY;
-      let absLeft = rect.left + window.scrollX;
+      // Get caption rect for fallback positioning
+      const captionRect = captionRef.value?.getBoundingClientRect();
 
-      // For fixed positioning, we don't need to add scroll offset
-      absTop = rect.bottom + 5;
-      absLeft = rect.left;
+      // Calculate position based on cursor position (right after # or @)
+      let absTop = cursorRect.bottom + 5;
+      let absLeft = cursorRect.left;
 
-      // If position looks wrong (too small or at origin), use fallback
-      if ((absTop < 100 || absLeft < 10) && captionRef.value) {
-        const captionRect = captionRef.value.getBoundingClientRect();
-        absTop = captionRect.top + 26;
-        absLeft = captionRect.left;
-        console.log('Using fallback position from captionRef:', captionRect);
+      // If cursor position is invalid, use caption position as fallback
+      if (!captionRect || absTop < 50 || absLeft < 10 || absTop > window.innerHeight - 50) {
+        if (captionRect) {
+          absTop = captionRect.bottom + 8;
+          absLeft = captionRect.left + 10;
+        }
       }
 
       dropdownPosition.value = {
@@ -1828,8 +1910,22 @@ function onActionBtnClick(symbol: "#" | "@") {
 
       // Adjust if overflow bottom
       const dropdownHeight = 250;
+      const dropdownWidth = 280;
+
+      // Check if dropdown would overflow bottom - if so, position above
       if (absTop + dropdownHeight > window.innerHeight) {
-        dropdownPosition.value.top = rect.top - dropdownHeight - 5;
+        const spaceAbove = absTop - (captionRect?.top || 0);
+        if (spaceAbove >= dropdownHeight) {
+          dropdownPosition.value.top = absTop - dropdownHeight - 8;
+        } else {
+          // Not enough space above, position at top of viewport
+          dropdownPosition.value.top = 100;
+        }
+      }
+
+      // Check if dropdown would overflow right - if so, adjust left position
+      if (absLeft + dropdownWidth > window.innerWidth) {
+        dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 10);
       }
 
       // Show dropdown after position is set
@@ -1911,7 +2007,11 @@ function selectDropdownItem(item: { label: string; value: string }) {
 
 function handleClickOutside(event: MouseEvent) {
   const target = event.target as Node;
-  if (showDropdown.value && !document.querySelector(".mention-dropdown")?.contains(target)) {
+  if (isOpeningDropdown.value) return;
+
+  if (showDropdown.value &&
+      !document.querySelector(".mention-dropdown")?.contains(target) &&
+      !captionRef.value?.contains(target)) {
     showDropdown.value = false;
   }
 
@@ -2056,7 +2156,7 @@ async function onSubmit() {
       toast(t("success"));
       router.push(`/publish/success?type=${1}`);
     } else {
-      toast(locale.value == 'jp' ? res.msg_jp : res.msg);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error("Publish error:", error);
@@ -2521,7 +2621,7 @@ async function getPostDetails() {
 
   try {
     const res = await api.modifyPostDetail(postId.value);
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code == 0 || data.code == 200) {
       const postData = data.data.post;
       form.value.title = postData.title || "";
@@ -2700,7 +2800,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error("Get post details error:", error);

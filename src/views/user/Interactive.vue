@@ -36,7 +36,7 @@
             </div>
             <button
               class="download"
-              @click="downloadCsv(fanRows, ['dateLabel', 'change', 'total'])"
+              @click="downloadFanData"
             >
               <img class="dl-icon" :src="downloadIcon" alt="" />
               <span>{{ t("user.interactive.download") }}</span>
@@ -53,7 +53,7 @@
                 <div class="loading-spinner"></div>
                 <span>{{ t('home.loading') }}</span>
               </div>
-              <div v-else-if="pagedFan.length === 0" class="empty-row">
+              <div v-else-if="pagedFan.length == 0" class="empty-row">
                 <EmptyState />
               </div>
               <div v-else class="tr" v-for="row in pagedFan" :key="row.id">
@@ -67,7 +67,7 @@
               </div>
             </div>
           </div>
-          <Pagination v-if="totalFan > limit" v-model="pageFan" :total="totalFan" :pageSize="limit" theme="pink" />
+          <Pagination v-if="!loadingFan && totalFan > limit" v-model="pageFan" :total="totalFan" :pageSize="limit" theme="pink" />
         </div>
 
         <div class="block overall" v-if="tab === 'work'">
@@ -78,7 +78,7 @@
             </div>
             <button
               class="download"
-              @click="downloadCsv(overallRows, ['dateLabel', 'likes', 'comments'])"
+              @click="downloadOverallData"
             >
               <img class="dl-icon" :src="downloadIcon" alt="" />
               <span>{{ t("user.interactive.download") }}</span>
@@ -106,7 +106,7 @@
             </div>
           </div>
           <Pagination
-            v-if="totalOverall > limit"
+            v-if="!loadingOverall && totalOverall > limit"
             v-model="pageOverall"
             :total="totalOverall"
             :pageSize="limit"
@@ -122,7 +122,7 @@
             </div>
             <button
               class="download"
-              @click="downloadCsv(workRows, ['dateLabel', 'title', 'likes', 'comments'])"
+              @click="downloadSingleWorkData"
             >
               <img class="dl-icon" :src="downloadIcon" alt="" />
               <span>{{ t("user.interactive.download") }}</span>
@@ -154,7 +154,7 @@
               </div>
             </div>
           </div>
-          <Pagination v-if="totalWork > limit" v-model="pageWork" :total="totalWork" :pageSize="limit" theme="blue" />
+          <Pagination v-if="!loadingWork && totalWork > limit" v-model="pageWork" :total="totalWork" :pageSize="limit" theme="blue" />
         </div>
       </div>
     </div>
@@ -331,6 +331,8 @@ async function fetchOverall(page: number) {
       }));
 
       pagedOverall.value = overallRows.value;
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     console.error('Error fetching overall work data:', error);
@@ -377,6 +379,8 @@ async function fetchWork(page: number) {
       }));
 
       pagedWork.value = workRows.value
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     console.error('Error fetching individual work data:', error);
@@ -463,6 +467,117 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
   a.download = `${t('user.interactive.csvFileName')}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function generateFileName(): string {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000000);
+  return `${timestamp}_${random}.csv`;
+}
+
+async function downloadFanData() {
+  const startDate = range1.value.start;
+  const endDate = range1.value.end;
+
+  try {
+    const res = await api.downloadUserFansList(startDate, endDate) as any;
+    const fileName = generateFileName();
+
+    if (typeof res === 'string') {
+      const csvContent = res;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (res.code === 200) {
+      const csvContent = res.data;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
+    }
+  } catch (error) {
+    console.error('Download fan data error:', error);
+    toast(t('user.interactive.downloadFailed'));
+  }
+}
+
+async function downloadOverallData() {
+  const startDate = range1.value.start;
+  const endDate = range1.value.end;
+
+  try {
+    const res = await api.downloadUserWorkList(startDate, endDate) as any;
+    const fileName = generateFileName();
+
+    if (typeof res === 'string') {
+      const csvContent = res;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (res.code === 200) {
+      const csvContent = res.data;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
+    }
+  } catch (error) {
+    console.error('Download overall data error:', error);
+    toast(t('user.interactive.downloadFailed'));
+  }
+}
+
+async function downloadSingleWorkData() {
+  const startDate = range2.value.start;
+  const endDate = range2.value.end;
+
+  try {
+    const res = await api.downloadUuserSingleWorkList(startDate, endDate) as any;
+    const fileName = generateFileName();
+
+    if (typeof res === 'string') {
+      const csvContent = res;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (res.code === 200) {
+      const csvContent = res.data;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
+    }
+  } catch (error) {
+    console.error('Download single work data error:', error);
+    toast(t('user.interactive.downloadFailed'));
+  }
 }
 </script>
 
@@ -661,7 +776,7 @@ function downloadCsv(rows: Array<Record<string, unknown>>, cols: string[]) {
 .td {
   display: flex;
   align-items: center;
-  height: 5.2rem;
+  height: 5.4rem;
   padding: 0 2rem;
   font-size: 1.4rem;
 }
@@ -708,6 +823,18 @@ td {
     height: 4rem;
     border-radius: 0.4rem;
     object-fit: cover;
+  }
+
+  span {
+    flex: 1;
+    font-size: 1.4rem;
+    line-height: 2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 .empty-row{

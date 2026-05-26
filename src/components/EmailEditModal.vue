@@ -176,7 +176,7 @@ function sendEmailCode() {
               toast(t("success"));
               timeCount();
             } else {
-              toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
               isSendCode.value = false;
             }
           })
@@ -240,7 +240,7 @@ function saveEmail() {
         toast(t("success"));
         closeModal();
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
       }
     })
     .catch((error) => {

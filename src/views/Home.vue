@@ -53,7 +53,7 @@
               <div class="input-area">
                 <div class="input-inner">
                   <!-- Multimodal Mode - Show image upload button -->
-                  <template v-if="selectedVideoMultimodal === 'multimodal'">
+                  <template v-if="selectedVideoMultimodal == 'multimodal'">
                     <!-- Combined Characters and Images List -->
                     <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
                       <div
@@ -132,7 +132,7 @@
                   </template>
 
                   <!-- Start and End Frames Mode - Show start/end image upload -->
-                  <template v-else-if="selectedVideoMultimodal === 'startEndFrames'">
+                  <template v-else-if="selectedVideoMultimodal == 'startEndFrames'">
                     <div class="start-end-frames-input">
                       <div class="frames-upload-section">
                         <div class="frame-upload" :class="{ uploaded: startFrameImage }">
@@ -178,9 +178,10 @@
 
                       <textarea
                         class="frames-textarea"
-                        :placeholder="t('home.input.placeholder')"
+                        :placeholder="t('home.input.placeholderVideo')"
                         v-model="novelInput"
                         spellcheck="false"
+                        @click="handleFramesTextareaClick"
                       ></textarea>
                     </div>
                   </template>
@@ -212,7 +213,7 @@
 
                       <textarea
                         class="video-textarea"
-                        :placeholder="t('home.input.placeholder')"
+                        :placeholder="t('home.input.placeholderVideo')"
                         v-model="novelInput"
                         spellcheck="false"
                       ></textarea>
@@ -222,7 +223,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                      <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -230,7 +231,7 @@
                           class="unlimited-icon"
                         />
                         <img
-                          v-else-if="currentVideoMode == 'unlimited'"
+                          v-else-if="currentVideoMode == 'unlimited' && !isTeenager"
                           src="@/assets/images/home/open.png"
                           alt="Unlimited on"
                           class="unlimited-icon"
@@ -312,34 +313,30 @@
                           <div class="settings-section">
                             <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
                             <div class="duration-slider">
+                              <div class="slider-track"></div>
+                              <div class="slider-marks">
+                                <template v-for="mark in sliderMarks" :key="mark.value">
+                                  <div class="mark" :style="{ left: mark.position, transform: 'translateX(-50%)' }"></div>
+                                  <div class="mark-label" :style="{ left: mark.position, transform: 'translateX(-50%)' }">
+                                    {{ mark.value }}s
+                                  </div>
+                                </template>
+                              </div>
                               <div class="slider-value" :style="{ left: getSliderValuePosition() }">
                                 {{ selectedVideoDuration }}s
                               </div>
-                              <div class="slider-track"></div>
-                              <div class="slider-marks">
-                                <div class="mark" :style="{ left: '0%', transform: 'translateX(-50%)' }"></div>
-                                <div class="mark" :style="{ left: '23.08%', transform: 'translateX(-50%)' }"></div>
-                                <div class="mark" :style="{ left: '61.54%', transform: 'translateX(-50%)' }"></div>
-                                <div class="mark" :style="{ left: '100%', transform: 'translateX(-50%)' }"></div>
-                              </div>
                               <input
                                 type="range"
-                                min="2"
+                                :min="currentVideoMode == 'unlimited' ? 2 : 4"
                                 max="15"
                                 step="1"
                                 :value="selectedVideoDuration"
                                 @input="onVideoDurationChange"
-                                @mousedown.stop
-                                @mouseup.stop
+                                @mousedown="saveLastValidDuration"
+                                @mouseup="validateDurationAndRestore"
                                 @click.stop
                                 class="slider-input"
                               />
-                              <div class="slider-labels">
-                                <span>2s</span>
-                                <span>5s</span>
-                                <span>10s</span>
-                                <span>15s</span>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -430,7 +427,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic Video - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchDramaMode(currentDramaMode == 'normal' ? 'unlimited' : 'normal', currentDramaMode == 'normal' ? 2 : 1)">
+                      <!-- <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchDramaMode(currentDramaMode == 'normal' ? 'unlimited' : 'normal', currentDramaMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -450,7 +447,7 @@
                           class="unlimited-icon"
                         />
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div>
+                      </div> -->
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />
@@ -537,7 +534,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                      <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -545,7 +542,7 @@
                           class="unlimited-icon"
                         />
                         <img
-                          v-else-if="currentPhotoMode == 'unlimited'"
+                          v-else-if="currentPhotoMode == 'unlimited' && !isTeenager"
                           src="@/assets/images/home/open.png"
                           alt="Unlimited on"
                           class="unlimited-icon"
@@ -694,7 +691,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                      <!-- <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -714,7 +711,7 @@
                           class="unlimited-icon"
                         />
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div>
+                      </div> -->
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />
@@ -740,15 +737,15 @@
                 <div class="input-inner">
                   <textarea
                     class="novel-textarea"
-                    :placeholder="t('home.novel.placeholder')"
+                    :placeholder="t('home.input.placeholderNovel')"
                     v-model="novelInput"
                     spellcheck="false"
+                    @click="handleNovelTextareaClick"
                   ></textarea>
 
                   <div class="input-box">
                     <div class="input-options novel-input-options">
-                      <!-- Mode Switch - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
+                      <div v-if="userRegion" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -756,7 +753,7 @@
                           class="unlimited-icon"
                         />
                         <img
-                          v-else-if="currentNovelMode == 'unlimited'"
+                          v-else-if="currentNovelMode == 'unlimited' && !isTeenager"
                           src="@/assets/images/home/open.png"
                           alt="Unlimited on"
                           class="unlimited-icon"
@@ -830,8 +827,8 @@
       </div>
 
       <!-- Event Banner -->
-      <div class="event-banner">
-        <div v-if="banners.length > 0" class="swiper-outer banner-swiper">
+      <div class="event-banner" v-if="banners.length > 0">
+        <div class="swiper-outer banner-swiper">
           <div class="swiper-container">
             <div class="swiper-wrapper">
               <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
@@ -885,8 +882,46 @@
           </div>
         </div>
 
+        <div class="view-mode-filter-box" v-if="activeContentTab !== 'suggested'">
+          <!-- User/Content toggle - only show for following/subscriptions tabs -->
+          <div class="view-mode-filter">
+            <span
+              class="view-mode-btn"
+              :class="{ active: viewMode === 'user' }"
+              @click="viewMode = 'user'"
+            >
+              {{ t('home.tab.user') }}
+            </span>
+            <span
+              class="view-mode-btn"
+              :class="{ active: viewMode === 'content' }"
+              @click="viewMode = 'content'"
+            >
+              {{ t('home.tab.content') }}
+            </span>
+          </div>
+
+          <div class="sensitive-content-toggle" v-if="userRegion && activeContentTab != 'suggested' && viewMode == 'user'">
+            <span class="toggle-label">{{ t('home.sensitiveContent') }}</span>
+            <div class="unlimited-switch" @click="handleSensitiveContentToggle">
+              <img
+                v-if="allowSensitiveContent"
+                src="@/assets/images/home/open.png"
+                alt="Sensitive content on"
+                class="unlimited-icon"
+              />
+              <img
+                v-else
+                src="@/assets/images/home/close.png"
+                alt="Sensitive content off"
+                class="unlimited-icon"
+              />
+            </div>
+          </div>
+        </div>
+
         <div class="filter-container">
-          <div class="content-type-filter">
+          <div class="content-type-filter" v-if="activeContentTab === 'suggested' || viewMode === 'content'">
             <span
               v-for="type in contentTypes"
               :key="type.id"
@@ -896,6 +931,25 @@
             >
               {{ t('home.contentType.' + type.label) }}
             </span>
+          </div>
+
+          <!-- Sensitive Content Toggle -->
+          <div class="sensitive-content-toggle" v-if="userRegion && (activeContentTab == 'suggested' || viewMode == 'content')">
+            <span class="toggle-label">{{ t('home.sensitiveContent') }}</span>
+            <div class="unlimited-switch" @click="handleSensitiveContentToggle">
+              <img
+                v-if="allowSensitiveContent"
+                src="@/assets/images/home/open.png"
+                alt="Sensitive content on"
+                class="unlimited-icon"
+              />
+              <img
+                v-else
+                src="@/assets/images/home/close.png"
+                alt="Sensitive content off"
+                class="unlimited-icon"
+              />
+            </div>
           </div>
 
           <!-- <div class="sort-filter">
@@ -913,80 +967,143 @@
 
         <!-- Content Grid -->
         <div class="content-grid">
-          <!-- Empty State -->
-          <EmptyState v-if="!loading && allContent.length === 0" />
+          <!-- Content View - always show for suggested tab, or when viewMode is content -->
+          <template v-if="activeContentTab === 'suggested' || viewMode === 'content'">
+            <!-- Empty State -->
+            <EmptyState v-if="!loading && allContent.length === 0" />
 
-          <!-- Waterfall Layout -->
-          <div
-            v-else-if="allContent.length > 0"
-            class="waterfall"
-            ref="waterfallRef"
-            :key="`waterfall-${activeContentTab}`"
-          >
+            <!-- Waterfall Layout -->
             <div
-              v-for="(item, index) in displayContent"
-              :key="item.id"
-              class="content-item"
-              :ref="(el) => setContentCardRef(el, index)"
-              @click="navigateToDetail(item.id)"
+              v-else-if="allContent.length > 0"
+              class="waterfall"
+              ref="waterfallRef"
+              :key="`waterfall-${activeContentTab}`"
             >
-              <div class="content-image">
-                <img :src="item.cover" alt="" />
-                <!-- Type Icon -->
-                <div class="type-icon" v-if="item.type">
-                  <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                  <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                  <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
-                </div>
-                <!-- Video Play Icon -->
-                <div v-if="item.type == '3'" class="play-icon">
-                  <img src="@/assets/images/detail/play.png" alt="" />
-                </div>
+              <div
+                v-for="(item, index) in displayContent"
+                :key="item.id"
+                class="content-item"
+                :ref="(el) => setContentCardRef(el, index)"
+                @click="navigateToDetail(item.id)"
+              >
+                <div class="content-image">
+                  <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
 
-                <div class="content-bottom">
-                  <!-- Like Count -->
-                  <div class="content-stats" @click.stop="toggleLike(item)">
+                  <!-- Type Icon -->
+                  <div class="type-icon" v-if="item.type">
+                    <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
+                    <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
+                    <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                  </div>
+                  <!-- Video Play Icon -->
+                  <div v-if="item.type == '3'" class="play-icon">
+                    <img src="@/assets/images/detail/play.png" alt="" />
+                  </div>
+                  <!-- Like Count - moved to top right -->
+                  <div class="content-stats-top" @click.stop="toggleLike(item)">
+                    <span>{{ (item.book_id && parseInt(item.book_id) > 0) ? (item.book_like_count || 0) : (item.like_count || 0) }}</span>
                     <img :src="item.is_liked == 1 ? likeActive : like" alt="" />
-                    <span>{{ item.like_count || 0 }}</span>
                   </div>
-                  <!-- Video Duration -->
-                  <div class="video-duration" v-if="item.type == '3' && item.duration">
-                    {{ formatDuration(item.duration) }}
-                  </div>
-                </div>
 
-              </div>
-              <div class="content-info">
-                <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
-                <div class="content-meta">
-                  <div class="author-info" v-if="activeContentTab != 'suggested'">
-                    <img :src="item.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-                    <span class="author-name">{{ item.author?.nickname }}</span>
+                  <div class="content-bottom">
+                    <!-- Update Time and Chapter Count -->
+                    <div class="update-info">
+                      <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
+                      <span v-if="(item.latest_post_updated) && item.latest_post_chapter_index" class="chapter-divider">|</span>
+                      <span v-if="item.latest_post_chapter_index">
+                        {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
+                      </span>
+                    </div>
+                    <!-- Video Duration -->
+                    <!-- <div class="video-duration" v-if="item.type == '3' && item.duration">
+                      {{ formatDuration(item.duration) }}
+                    </div> -->
                   </div>
-                  <div class="author-info" v-else>
-                    <img :src="item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-                    <span class="author-name">{{ item.author_info?.nickname }}</span>
+
+                </div>
+                <div class="content-info">
+                  <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
+                  <div class="content-meta">
+                    <div class="author-info" v-if="activeContentTab != 'suggested'">
+                      <img :src="item.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                      <span class="author-name">{{ item.author?.nickname }}</span>
+                    </div>
+                    <div class="author-info" v-else>
+                      <img :src="item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                      <span class="author-name">{{ item.author_info?.nickname }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div v-if="loading" class="loading-state">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">{{ t('home.loading') }}</div>
-          </div>
+            <div v-if="loading" class="loading-state">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">{{ t('home.loading') }}</div>
+            </div>
 
-          <!-- Pagination -->
-          <div v-if="!loading && allContent.length > 0 && Math.ceil(totalPosts / pageSize) > 1" class="pagination-wrapper">
-            <PaginationComp
-              v-model="currentPage"
-              :total="totalPosts"
-              :page-size="pageSize"
-              theme="pink"
-              @update:modelValue="handlePageChange"
-            />
-          </div>
+            <!-- Pagination -->
+            <div v-if="!loading && allContent.length > 0 && Math.ceil(totalPosts / pageSize) > 1" class="pagination-wrapper">
+              <PaginationComp
+                v-model="currentPage"
+                :total="totalPosts"
+                :page-size="pageSize"
+                theme="pink"
+                @update:modelValue="handlePageChange"
+              />
+            </div>
+          </template>
+
+          <!-- User List View - only show for following/subscriptions tabs when viewMode is user -->
+          <template v-else-if="activeContentTab !== 'suggested' && viewMode === 'user'">
+            <!-- Empty State -->
+            <EmptyState v-if="!loading && followUserList.length === 0" />
+
+            <!-- User List -->
+            <div v-else-if="followUserList.length > 0" class="follow-list">
+              <div
+                v-for="user in followUserList"
+                :key="user.id"
+                class="follow-card"
+              >
+                <div class="card-top" @click="navigateToUserHome(user.id)">
+                  <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                  <div class="user-meta">
+                    <div class="nickname">{{ user.nickname }}</div>
+                    <div class="fans-count">
+                      {{ t('home.user.fans', { count: formatNumber(user.fans) }) }}
+                    </div>
+                  </div>
+                  <button
+                    v-if="user.id != uid"
+                    class="follow-btn"
+                    :class="{ followed: user.isFollowed }"
+                    @click.stop="toggleUserFollow(user)"
+                  >
+                    <span class="btn-text">{{ user.isFollowed ? t('home.user.following') : t('home.user.follow') }}</span>
+                    <span class="hover-text" v-if="user.isFollowed">{{ t('home.user.unfollow') }}</span>
+                  </button>
+                </div>
+                <div class="card-bio">{{ user.bio }}</div>
+              </div>
+            </div>
+
+            <div v-if="loading" class="loading-state">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">{{ t('home.loading') }}</div>
+            </div>
+
+            <!-- Pagination for User List -->
+            <div v-if="!loading && followUserList.length > 0 && Math.ceil(followUserTotal / pageSize) > 1" class="pagination-wrapper">
+              <PaginationComp
+                v-model="followUserPage"
+                :total="followUserTotal"
+                :page-size="pageSize"
+                theme="pink"
+                @update:modelValue="handleUserPageChange"
+              />
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -996,6 +1113,34 @@
       v-if="showUnlimitedModal"
       @close="showUnlimitedModal = false"
       @confirm="confirmUnlimitedMode"
+    />
+
+    <UnderageNoBirthdayModal
+      v-if="showUnderageNoBirthdayModal"
+      @close="showUnderageNoBirthdayModal = false"
+      @go-to-fill="handleGoToFillBirthday"
+    />
+
+    <UnderageModal
+      v-if="showUnderageModal"
+      @close="showUnderageModal = false"
+    />
+
+    <SensitiveContentNoBirthdayModal
+      v-if="showSensitiveContentNoBirthdayModal"
+      @close="showSensitiveContentNoBirthdayModal = false"
+      @go-to-fill="handleGoToFillBirthdayForSensitive"
+    />
+
+    <SensitiveContentUnderageModal
+      v-if="showSensitiveContentUnderageModal"
+      @close="showSensitiveContentUnderageModal = false"
+    />
+
+    <SensitiveContentConfirmModal
+      v-if="showSensitiveContentConfirmModal"
+      @close="showSensitiveContentConfirmModal = false"
+      @confirm="confirmSensitiveContent"
     />
 
     <CharacterSelectModal
@@ -1075,6 +1220,11 @@ import Swiper from 'swiper';
 import { Autoplay, Pagination } from 'swiper/modules';
 import Header from '@/components/Header.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
+import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
+import UnderageModal from '@/components/UnderageModal.vue';
+import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
+import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
+import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import CharacterSelectModal from '@/components/CharacterSelectModal.vue';
 import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
@@ -1090,10 +1240,12 @@ import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue'
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
+import { formatDuration, formatUpdateTime } from '@/util/utils';
 
-import likeActive from '@/assets/images/detail/like_active.png';
+import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
+import defaultCover from "@/assets/images/base/cover.png";
 import bannerImg from "@/assets/images/home/banner.png";
 import audioIcon from "@/assets/images/home/audio.png";
 
@@ -1107,6 +1259,8 @@ const sortOrder = ref('hot');
 const loading = ref(false);
 const activeContentType = ref(0);
 const isSearchFocused = ref(false);
+
+const uid = localStorage.getItem('uid');
 
 // Banner data
 const banners = ref<any[]>([]);
@@ -1162,10 +1316,11 @@ const getCurrentVideoMode = () => {
 };
 const getCurrentPlaceholder = () => {
   switch (contentType.value) {
-    case 'video': return t('home.input.placeholder');
+    case 'video': return t('home.input.placeholderVideo');
     case 'comic': return t('home.input.placeholderComic');
-    case 'drama': return t('home.input.placeholder');
-    case 'photo': return t('home.input.placeholder');
+    case 'drama': return t('home.input.placeholderDrama');
+    case 'photo': return t('home.input.placeholderPhoto');
+    case 'novel': return t('home.input.placeholderNovel');
     default: return t('home.input.placeholder');
   }
 };
@@ -1244,17 +1399,15 @@ const photoRatioOptions = ref([
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
 const videoMultimodalOptions = computed(() => {
-  if (currentVideoMode.value === 'unlimited') {
-    return [
-      { value: 'multimodal', label: t('home.videoMode.multimodal') },
-      { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') },
-      { value: 'videoExtend', label: t('home.videoMode.videoExtend') }
-    ];
-  }
-  return [
+  const options = [
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
+  // 视频续写类型只在无限制模式下显示
+  if (currentVideoMode.value === 'unlimited') {
+    options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
+  }
+  return options;
 });
 
 // Video mode state
@@ -1262,6 +1415,7 @@ const startFrameImage = ref<string | null>(null);
 const endFrameImage = ref<string | null>(null);
 const uploadedVideo = ref<string | null>(null);
 const uploadedVideoCover = ref<string | null>(null);
+const uploadedVideoDuration = ref<number>(0);
 const startFrameInput = ref<HTMLInputElement | null>(null);
 const endFrameInput = ref<HTMLInputElement | null>(null);
 const videoInput = ref<HTMLInputElement | null>(null);
@@ -1272,17 +1426,42 @@ function resetVideoInputs() {
   endFrameImage.value = null;
   uploadedVideo.value = null;
   uploadedVideoCover.value = null;
+  uploadedVideoDuration.value = 0;
   novelInput.value = '';
   inputKey.value++;
 }
 
 // Start/End Frames upload handlers
 function triggerStartFrameUpload() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   startFrameInput.value?.click();
 }
 
 function triggerEndFrameUpload() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   endFrameInput.value?.click();
+}
+
+function handleFramesTextareaClick() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+  }
+}
+
+function handleNovelTextareaClick() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+  }
 }
 
 async function handleStartFrameChange(e: Event) {
@@ -1363,17 +1542,9 @@ async function handleVideoUpload(e: Event) {
   if (file) {
     // Video duration validation
     const duration = await getVideoDuration(file);
-    const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
-    const maxDuration = currentVideoMode.value === 'unlimited' ? 30 : 14;
 
-    if (duration < minDuration) {
-      toast(t('home.error.videoDurationTooShort', { min: minDuration }));
-      target.value = '';
-      return;
-    }
-
-    if (duration > maxDuration) {
-      toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
+    if (duration < 2 || duration > 5) {
+      toast(t('home.error.videoExtendDurationLimit'));
       target.value = '';
       return;
     }
@@ -1396,6 +1567,20 @@ async function handleVideoUpload(e: Event) {
       const uploadedUrl = await uploadVideo(file);
       if (uploadedUrl) {
         uploadedVideo.value = uploadedUrl;
+        // 保存上传视频时长
+        uploadedVideoDuration.value = duration;
+        // 更新lastValidVideoDuration
+        lastValidVideoDuration.value = selectedVideoDuration.value;
+
+        // 如果当前设置的时长小于等于视频时长，自动调整为视频时长+1或最小可选时长
+        const currentDuration = parseInt(selectedVideoDuration.value);
+        if (currentDuration <= duration) {
+          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+          const newDuration = Math.max(duration + 1, minDuration);
+          // 确保不超过最大值15
+          selectedVideoDuration.value = Math.min(newDuration, 15).toString();
+          lastValidVideoDuration.value = selectedVideoDuration.value;
+        }
 
         if (selectedVideoMultimodal.value === 'videoExtend') {
           combinedItemsVideo.value.push({
@@ -1408,8 +1593,7 @@ async function handleVideoUpload(e: Event) {
         }
       }
     } catch (error) {
-      console.error('Failed to upload video:', error);
-      toast((error as Error).message || '上传失败');
+      toast(t('fail'));
     } finally {
       isUploading.value = false;
     }
@@ -1419,6 +1603,7 @@ async function handleVideoUpload(e: Event) {
 function removeVideo() {
   uploadedVideo.value = null;
   uploadedVideoCover.value = null;
+  uploadedVideoDuration.value = 0;
   if (selectedVideoMultimodal.value === 'videoExtend') {
     combinedItemsVideo.value = combinedItemsVideo.value.filter(item => item.type !== 'video');
   }
@@ -1428,6 +1613,7 @@ const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
 const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const videoQualityOptions = ref([
   { value: '1080P', label: '1080P' },
   { value: '720P', label: '720P' }
@@ -1436,20 +1622,63 @@ const videoRatioOptions = ref([
   { value: '9:16', label: '9:16' },
   { value: '16:9', label: '16:9' }
 ]);
-const videoDurationOptions = ref([
-  { value: '2', label: '2' },
-  { value: '5', label: '5' },
-  { value: '10', label: '10' },
-  { value: '15', label: '15' }
-]);
+const videoDurationOptions = computed(() => {
+  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  if (minDuration == 4) {
+    return [
+      { value: '4', label: '4' },
+      { value: '5', label: '5' },
+      { value: '10', label: '10' },
+      { value: '15', label: '15' }
+    ];
+  }
+  return [
+    { value: '2', label: '2' },
+    { value: '5', label: '5' },
+    { value: '10', label: '10' },
+    { value: '15', label: '15' }
+  ];
+});
+
+const saveLastValidDuration = () => {
+  lastValidVideoDuration.value = selectedVideoDuration.value;
+};
 
 const onVideoDurationChange = (e: Event) => {
   const target = e.target as HTMLInputElement;
   selectedVideoDuration.value = target.value;
 };
 
+const validateDurationAndRestore = () => {
+  // 只有在视频续写模式且有上传视频时才验证
+  if (selectedVideoMultimodal.value === 'videoExtend' && uploadedVideoDuration.value > 0) {
+    const newDuration = parseInt(selectedVideoDuration.value);
+    // 如果生成时长小于等于上传视频时长，恢复之前的值并提示
+    if (newDuration <= uploadedVideoDuration.value) {
+      selectedVideoDuration.value = lastValidVideoDuration.value;
+      toast('生成时长设置应大于待续写视频长度');
+    } else {
+      // 验证通过，更新lastValidVideoDuration
+      lastValidVideoDuration.value = selectedVideoDuration.value;
+    }
+  } else {
+    // 不在验证模式，更新lastValidVideoDuration
+    lastValidVideoDuration.value = selectedVideoDuration.value;
+  }
+};
+
+const sliderMarks = computed(() => {
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const max = 15;
+  const marks = [min, 5, 10, 15];
+  return marks.map(value => ({
+    value,
+    position: `${((value - min) / (max - min)) * 100}%`
+  }));
+});
+
 const getSliderValuePosition = () => {
-  const min = 2;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 15;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = (((value - min) / (max - min)) * 100);
@@ -1605,6 +1834,12 @@ const navigateToNovelGenerate = async () => {
 }
 
 function goRecharge() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+
   router.push('/ai-recharge');
   showInsufficientBalanceModal.value = false;
 };
@@ -1652,10 +1887,19 @@ const modeOptions = ref([
 ]);
 
 const userRegion = ref(false);
-const isTeenager = computed(() => userInfo.value && userInfo.value.is_teenager == '1');
+const hasFetchedRegion = ref(false);
+const isFetchingRegion = ref(false);
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
 
 // Modals
 const showUnlimitedModal = ref(false);
+const showUnderageNoBirthdayModal = ref(false);
+const showUnderageModal = ref(false);
+const pendingModeType = ref('video');
+const showSensitiveContentNoBirthdayModal = ref(false);
+const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentConfirmModal = ref(false);
+const allowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') === '1');
 const showCharacterModal = ref(false);
 const showStyleModal = ref(false);
 const showVideoSettingsModal = ref(false);
@@ -1804,14 +2048,22 @@ const characters = ref([]);
 // Content Tabs
 const contentTabs = ref([
   { id: 'suggested', label: 'home.tab.suggested' },
-  { id: 'following', label: 'home.tab.following' },
-  { id: 'subscriptions', label: 'home.tab.subscriptions' }
+  { id: 'subscriptions', label: 'home.tab.subscriptions' },
+  { id: 'following', label: 'home.tab.following' }
 ]);
 
 const tabCur = ref(0);
 
+// User/Content toggle for following/subscriptions tabs
+const viewMode = ref<'content' | 'user'>('user');
+
 // Content data
 const allContent = ref<any[]>([]);
+
+// User list data for following/subscriptions tabs
+const followUserList = ref<any[]>([]);
+const followUserPage = ref(1);
+const followUserTotal = ref(0);
 
 // Computed
 const displayContent = computed(() => {
@@ -1819,10 +2071,92 @@ const displayContent = computed(() => {
 });
 
 // Methods
-const formatDuration = (duration: number) => {
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+const checkAgeForSensitiveContent = (): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  const birthday = userInfo.value.info.birthday;
+
+  if (!birthday) {
+    showSensitiveContentNoBirthdayModal.value = true;
+    return true;
+  }
+
+  if (isTeenager.value) {
+    showSensitiveContentUnderageModal.value = true;
+    return true;
+  }
+
+  return false;
+};
+
+const handleSensitiveContentToggle = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  if (allowSensitiveContent.value) {
+    allowSensitiveContent.value = false;
+    localStorage.setItem('allowSensitiveContent', '0');
+    loadContent(1);
+    return;
+  }
+
+  if (checkAgeForSensitiveContent()) {
+    return;
+  }
+
+  const hasConfirmed = localStorage.getItem('sensitiveContentDontAsk') == '1';
+  if (hasConfirmed) {
+    allowSensitiveContent.value = true;
+    localStorage.setItem('allowSensitiveContent', '1');
+    loadContent(1);
+  } else {
+    showSensitiveContentConfirmModal.value = true;
+  }
+};
+
+const confirmSensitiveContent = () => {
+  allowSensitiveContent.value = true;
+  localStorage.setItem('allowSensitiveContent', '1');
+  showSensitiveContentConfirmModal.value = false;
+  loadContent(1);
+};
+
+const handleGoToFillBirthdayForSensitive = () => {
+  showSensitiveContentNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
+};
+
+const checkAgeForUnlimitedMode = (modeType: string): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  const birthday = userInfo.value.info.birthday;
+
+  if (!birthday) {
+    pendingModeType.value = modeType;
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
+
+  if (isTeenager.value) {
+    pendingModeType.value = modeType;
+    showUnderageModal.value = true;
+    return true;
+  }
+
+  return false;
+};
+
+const handleGoToFillBirthday = () => {
+  showUnderageNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
 };
 
 const switchVideoMode = (mode: string, index: number) => {
@@ -1833,10 +2167,13 @@ const switchVideoMode = (mode: string, index: number) => {
       return false;
     }
 
+    if (checkAgeForUnlimitedMode('video')) {
+      return;
+    }
+
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
-
       showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
@@ -1844,6 +2181,11 @@ const switchVideoMode = (mode: string, index: number) => {
   } else {
     currentVideoMode.value = 'normal';
     showVideoModeDropdown.value = false;
+    // 如果当前选中的是视频续写模式，切换回多模态模式
+    if (selectedVideoMultimodal.value === 'videoExtend') {
+      selectedVideoMultimodal.value = 'multimodal';
+      resetVideoInputs();
+    }
   }
 };
 
@@ -1853,6 +2195,10 @@ const switchNovelMode = (mode: string, index: number) => {
     if (!token) {
       router.push('/login');
       return false;
+    }
+
+    if (checkAgeForUnlimitedMode('novel')) {
+      return;
     }
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
@@ -1876,6 +2222,10 @@ const switchComicMode = (mode: string, index: number) => {
       return false;
     }
 
+    if (checkAgeForUnlimitedMode('comic')) {
+      return;
+    }
+
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentComicMode.value = 'unlimited';
@@ -1895,6 +2245,10 @@ const switchDramaMode = (mode: string, index: number) => {
       return false;
     }
 
+    if (checkAgeForUnlimitedMode('drama')) {
+      return;
+    }
+
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentDramaMode.value = 'unlimited';
@@ -1912,6 +2266,10 @@ const switchPhotoMode = (mode: string, index: number) => {
     if (!token) {
       router.push('/login');
       return false;
+    }
+
+    if (checkAgeForUnlimitedMode('photo')) {
+      return;
     }
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
@@ -2055,6 +2413,18 @@ const removeCharacter = (character: any) => {
 
 // Content type selection
 const selectContentType = (type: string) => {
+  // Update URL with content type path
+  const typePathMap: Record<string, string> = {
+    'novel': '/novel',
+    'comic': '/comic',
+    'drama': '/drama',
+    'photo': '/photo',
+    'video': '/video'
+  };
+
+  const path = typePathMap[type] || '/novel';
+  history.replaceState({}, '', path);
+
   // Reset all content and settings when switching content types
   // Clear video-related content
   selectedCharactersVideo.value = [];
@@ -2095,6 +2465,7 @@ const selectContentType = (type: string) => {
   currentComicMode.value = 'normal';
   currentDramaMode.value = 'normal';
   currentNovelMode.value = 'normal';
+  currentPhotoMode.value = 'normal';
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
 
   // Reset video settings to default
@@ -2155,6 +2526,23 @@ const selectWordCount = (value: string) => {
 const selectLanguage = (item: any) => {
   selectedLanguage.value = item.value;
   showLanguageDropdown.value = false;
+
+  // Update SEO meta tags when language changes
+  const title = t('seo.home.title');
+  const keywords = t('seo.home.keywords');
+  const description = t('seo.home.description');
+
+  document.title = title;
+
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (metaKeywords) {
+    metaKeywords.setAttribute('content', keywords);
+  }
+
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (metaDescription) {
+    metaDescription.setAttribute('content', description);
+  }
 };
 
 // Close dropdowns when clicking outside
@@ -2171,8 +2559,30 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-function getCountry() {
-  api.getCode().then((res: any) => {
+function getCountry(): Promise<void> {
+  // Return immediately if already fetched
+  if (hasFetchedRegion.value) {
+    return Promise.resolve();
+  }
+
+  // If already fetching, return a promise that resolves when fetching is done
+  if (isFetchingRegion.value) {
+    return new Promise<void>((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (hasFetchedRegion.value) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+    });
+  }
+
+  // Start fetching
+  isFetchingRegion.value = true;
+
+  return api.getCode().then((res: any) => {
+    hasFetchedRegion.value = true;
+    isFetchingRegion.value = false;
     if (res.code == 0) {
       if (res.data.countryCode != 'CN') {
         userRegion.value = true;
@@ -2184,24 +2594,16 @@ function getCountry() {
     }
   }).catch(err => {
     console.log(err);
+    userRegion.value = false;
+    hasFetchedRegion.value = true;
+    isFetchingRegion.value = false;
   })
 }
 
 // Update unlimited mode visibility based on country and user info
 function updateUnlimitedModeVisibility() {
-  api.getCode().then((res: any) => {
-    if (res.code == 0) {
-      if (res.data.countryCode != 'CN') {
-        // Not in China, show unlimited mode for all users (teenagers will see disabled icon)
-        userRegion.value = true;
-      } else {
-        // In China, never show unlimited mode
-        userRegion.value = false;
-      }
-    }
-  }).catch(err => {
-    console.log(err);
-  })
+  // Use the cached getCountry function to avoid duplicate API calls
+  getCountry();
 }
 
 const generateVideo = async () => {
@@ -2225,6 +2627,12 @@ const generateVideo = async () => {
 
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
+    return;
+  }
+
+  // 首尾帧模式验证：首帧必须上传，尾帧可以不上传
+  if (selectedVideoMultimodal.value === 'startEndFrames' && !startFrameImage.value) {
+    toast(t('home.error.startFrameRequired'));
     return;
   }
 
@@ -2863,10 +3271,17 @@ const switchContentTab = (tabId: string, index: number) => {
   activeContentTab.value = tabId;
   tabCur.value = index;
   currentPage.value = 1;
+  followUserPage.value = 1;
   activeContentType.value = 0; // Reset to 'all' tab in content-type-filter
   allContent.value = []; // Clear old data to show loading state
+  followUserList.value = []; // Clear user list
   contentCardRefs.value = []; // Clear card refs to reset layout
   loading.value = false; // Reset loading state to allow new request
+
+  // Reset viewMode to 'user' when switching to following/subscriptions tabs
+  if (tabId === 'following' || tabId === 'subscriptions') {
+    viewMode.value = 'user';
+  }
 
   // Clear selected characters and images for both video and comic modes
   selectedCharactersVideo.value = [];
@@ -2903,7 +3318,12 @@ const switchContentTab = (tabId: string, index: number) => {
 
   // Use nextTick to ensure DOM is updated before loading new content
   nextTick(() => {
-    loadContent(1);
+    if (tabId === 'following' || tabId === 'subscriptions') {
+      // For following/subscriptions tabs, load user list first since viewMode defaults to 'user'
+      fetchFollowUserList();
+    } else {
+      loadContent(1);
+    }
     // Reset flag after a short delay
     setTimeout(() => {
       justSwitchedTab.value = false;
@@ -3031,9 +3451,21 @@ const handleFileChange = async (event: Event) => {
 
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
-    // Check video/audio total duration limit (14 seconds) for video multimodal mode
+    // Check video/audio total duration limit (15 seconds) for video multimodal mode
     if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+      // Calculate total duration including existing uploaded videos/audios
       let totalDuration = 0;
+
+      // Add duration of existing uploaded videos
+      for (const item of combinedItemsVideo.value) {
+        if (item.type === 'video' && item.duration) {
+          totalDuration += item.duration;
+        } else if (item.type === 'audio' && item.duration) {
+          totalDuration += item.duration;
+        }
+      }
+
+      // Add duration of new files
       for (const file of Array.from(input.files)) {
         if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
           const duration = await getMediaDuration(file);
@@ -3041,7 +3473,7 @@ const handleFileChange = async (event: Event) => {
         }
       }
 
-      if (totalDuration > 14) {
+      if (totalDuration > 15) {
         toast(t('home.error.videoAudioDurationLimit'));
         input.value = '';
         return;
@@ -3070,10 +3502,15 @@ const handleFileChange = async (event: Event) => {
     }
 
     // Photo upload limits based on mode
-    const maxPhotos = currentMode === 'unlimited' ? 3 : 7;
+    let maxPhotos = currentMode === 'unlimited' ? 3 : 7;
     const maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
     const maxVideoSizeBytes = currentMode === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
+
+    // Video multimodal mode allows up to 9 images in normal mode
+    if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+      maxPhotos = currentMode === 'unlimited' ? 3 : 9;
+    }
 
     // Check total count limit
     const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length + input.files.length;
@@ -3157,6 +3594,7 @@ const handleFileChange = async (event: Event) => {
           }
 
           let coverUrl = '';
+          let mediaDuration = 0;
 
           // Capture and upload video cover if it's a video
           if (fileType === 'video') {
@@ -3167,6 +3605,11 @@ const handleFileChange = async (event: Event) => {
             } catch (error) {
               console.error('Failed to capture video cover:', error);
             }
+            // Get video duration
+            mediaDuration = await getMediaDuration(file);
+          } else if (fileType === 'audio') {
+            // Get audio duration (already checked earlier, but need to store it)
+            mediaDuration = await getMediaDuration(file);
           }
 
           // Upload using appropriate API
@@ -3182,7 +3625,15 @@ const handleFileChange = async (event: Event) => {
             image: coverUrl,           // 视频类型：image存封面
             videoUrl: uploadedUrl,     // 视频地址单独存
             type: fileType,
-            cover: coverUrl            // 保持cover字段兼容
+            cover: coverUrl,           // 保持cover字段兼容
+            duration: mediaDuration    // 保存视频时长
+          } : fileType === 'audio' ? {
+            id: Date.now() + index.toString(),
+            name: file.name,
+            image: uploadedUrl,
+            type: fileType,
+            cover: coverUrl,
+            duration: mediaDuration    // 保存音频时长
           } : {
             id: Date.now() + index.toString(),
             name: file.name,
@@ -3410,9 +3861,10 @@ const removeUploadedImage = (id: string) => {
     // Collect all tags to remove first
     const tagsToRemove: HTMLElement[] = [];
     tags.forEach(tag => {
-      const tagItemId = tag.dataset.itemId;
+      const tagElement = tag as HTMLElement;
+      const tagItemId = tagElement.dataset.itemId;
       if (tagItemId === id) {
-        tagsToRemove.push(tag as HTMLElement);
+        tagsToRemove.push(tagElement);
       }
     });
 
@@ -3999,96 +4451,104 @@ const selectAtItem = (item: any) => {
   // Append text to tag
   itemTag.appendChild(textNode);
 
-  // Find and remove @ symbol from the text content
-  const text = target.textContent || '';
-  const lastAtIndex = text.lastIndexOf('@');
-
-  if (lastAtIndex !== -1) {
-    // Get all nodes and find the @ position
-    let currentPos = 0;
-    let foundAtNode: Node | null = null;
-    let atNodeOffset = 0;
-
-    const findAtSymbol = (node: Node): boolean => {
-      if (node.nodeType === 3) { // TEXT_NODE
-        const nodeText = node.textContent || '';
-        const nodeLength = nodeText.length;
-
-        // Check if @ is in this node
-        if (currentPos <= lastAtIndex && lastAtIndex < currentPos + nodeLength) {
-          foundAtNode = node;
-          atNodeOffset = lastAtIndex - currentPos;
-          return true;
-        }
-        currentPos += nodeLength;
-      } else if (node.nodeType === 1) { // ELEMENT_NODE
-        for (let i = 0; i < node.childNodes.length; i++) {
-          if (findAtSymbol(node.childNodes[i])) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    findAtSymbol(target);
-
-    if (foundAtNode) {
-      try {
-        // Create a range to delete @ and insert image tag
-        const range = document.createRange();
-        range.setStart(foundAtNode, atNodeOffset);
-        range.setEnd(foundAtNode, atNodeOffset + 1);
-
-        // Delete the @ symbol
-        range.deleteContents();
-
-        // Insert the item tag
-        range.insertNode(itemTag);
-
-        // Add a space after the item tag for better readability
-        const spaceNode = document.createTextNode(' ');
-        if (itemTag.parentNode) {
-          itemTag.parentNode.insertBefore(spaceNode, itemTag.nextSibling);
-        }
-
-        // 确保itemTag已经在DOM中
-        if (spaceNode.parentNode) {
-          const tagRange = document.createRange();
-          tagRange.setStartAfter(spaceNode);
-          tagRange.collapse(true);
-
-          const selection = window.getSelection();
-          if (selection) {
-            selection.removeAllRanges();
-            selection.addRange(tagRange);
-          }
-        }
-
-        // Focus back to the input
-        target.focus();
-      } catch (error) {
-        console.log('[selectAtItem] 插入失败:', error);
-        // 失败时直接在末尾添加
-        target.appendChild(itemTag);
-        // Add a space after the item tag
-        target.appendChild(document.createTextNode(' '));
-        target.focus();
-      }
-    } else {
-      console.log('[selectAtItem] 未找到 @ 符号所在节点');
-      // 未找到时直接在末尾添加
-      target.appendChild(itemTag);
-      // Add a space after the item tag
-      target.appendChild(document.createTextNode(' '));
-      target.focus();
-    }
-  } else {
-    console.log('[selectAtItem] 文本中没有 @ 符号');
-    // 没有@符号时直接在末尾添加
+  // 查找光标位置前的 @ 符号
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
     target.appendChild(itemTag);
-    // Add a space after the item tag
     target.appendChild(document.createTextNode(' '));
+    target.focus();
+    showAtDropdown.value = false;
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  // 获取光标位置（排除非可编辑标签）
+  const cursorPos = getCursorPosition(target);
+
+  // 查找光标前最后一个 @ 符号
+  let atNode: Node | null = null;
+  let atOffset = 0;
+  let currentCharPos = 0;
+
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // 检查是否在非可编辑标签内
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+
+      if (!isInNonEditable) {
+        const text = node.textContent || '';
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '@' && currentCharPos + i <= cursorPos) {
+            atNode = node;
+            atOffset = i;
+          }
+        }
+        currentCharPos += text.length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 跳过非可编辑标签
+      if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+        return;
+      }
+
+      for (let i = 0; i < node.childNodes.length; i++) {
+        walkNodes(node.childNodes[i]);
+      }
+    }
+  };
+
+  walkNodes(target);
+
+  if (atNode) {
+    // 创建 range 删除 @ 符号
+    const atRange = document.createRange();
+    atRange.setStart(atNode, atOffset);
+    atRange.setEnd(atNode, atOffset + 1);
+
+    // 删除 @
+    atRange.deleteContents();
+
+    // 在删除位置插入 item tag
+    atRange.insertNode(itemTag);
+
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
+
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(cursorRange);
+
+    target.focus();
+  } else {
+    // 没有找到 @，直接在光标位置插入
+    range.insertNode(itemTag);
+
+    // 添加空格
+    const spaceNode = document.createTextNode(' ');
+    itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
+
+    // 设置光标位置在空格后面
+    const cursorRange = document.createRange();
+    cursorRange.setStartAfter(spaceNode);
+    cursorRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(cursorRange);
+
     target.focus();
   }
 
@@ -4217,7 +4677,14 @@ const setCursorPosition = (element: HTMLElement, position: number) => {
 };
 
 // Load content from API
+let isLoadingContent = false;
 const loadContent = async (page = 1) => {
+  // Prevent multiple concurrent requests
+  if (isLoadingContent) {
+    return;
+  }
+  isLoadingContent = true;
+
   // Generate a unique request ID for this request
   const requestId = ++currentRequestId.value;
   // Store the current tab combination at the time of the request
@@ -4226,30 +4693,39 @@ const loadContent = async (page = 1) => {
   const currentSortOrder = sortOrder.value;
 
   loading.value = true;
+  allContent.value = [];
+
+  // Ensure we have region info (cached after first fetch)
+  await getCountry();
+
   try {
     let res;
 
+    const showNsfw = userRegion.value ? (allowSensitiveContent.value ? 1 : 0) : undefined;
+
     switch (currentActiveTab) {
       case 'suggested':
-        res = await api.homePostList(page, pageSize.value, '', currentContentType, locale.value == 'zh' ? 'cn' : locale.value) as any;
+        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
         break;
       case 'following':
-        res = await api.homeFollowList(page, pageSize.value, currentContentType) as any;
+        res = await api.homeFollowList(page, pageSize.value, currentContentType, showNsfw) as any;
         break;
       case 'subscriptions':
-        res = await api.homeSubscriptionList(page, pageSize.value, currentContentType) as any;
+        res = await api.homeSubscriptionList(page, pageSize.value, currentContentType, showNsfw) as any;
         break;
       default:
-        res = await api.homePostList(page, pageSize.value, '', currentContentType, locale.value == 'zh' ? 'cn' : locale.value) as any;
+        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
     }
 
     // Check if this request is still the latest one
     if (requestId !== currentRequestId.value) {
+      isLoadingContent = false;
       return; // Skip processing this response as it's outdated
     }
 
     // Check if the tab or content type has changed while the request was in flight
     if (currentActiveTab !== activeContentTab.value || currentContentType !== activeContentType.value || currentSortOrder !== sortOrder.value) {
+      isLoadingContent = false;
       return; // Skip processing this response as the tab has changed
     }
 
@@ -4275,12 +4751,13 @@ const loadContent = async (page = 1) => {
         layoutWaterfall();
       });
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));
   } finally {
     loading.value = false;
+    isLoadingContent = false;
   }
 };
 
@@ -4296,13 +4773,90 @@ function layoutWaterfall() {
   });
 }
 
+const formatNumber = (num: number) => {
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1) + "K";
+  }
+  return num.toLocaleString();
+};
+
 const navigateToDetail = (id: string) => {
   const type = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
   // Save current tab and content type before navigating
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  router.push({ path: '/detail', query: { id: id , type: type } });
+  router.push({ path: '/detail', query: { id: id , type: type, contentType: activeContentType.value.toString() } });
 };
+
+const navigateToUserHome = (userId: number) => {
+  router.push({ path: '/user-home', query: { id: userId } });
+};
+
+const toggleUserFollow = async (user: any) => {
+  if (!checkLogin()) return;
+
+  try {
+    const data = { followed_id: user.id };
+    const res = user.isFollowed
+      ? await api.unfollow(data)
+      : await api.follow(data);
+
+    const response = res as any;
+    if (response.code === 200 || response.code === 0) {
+      user.isFollowed = !user.isFollowed;
+      toast(t(user.isFollowed ? 'home.user.followSuccess' : 'home.user.unfollowSuccess'));
+    } else {
+      toast(locale.value == 'jp' ? response.msg_jp : response.msg);
+    }
+  } catch (error) {
+    console.error('Error toggling follow:', error);
+    toast(t('fail'));
+  }
+};
+
+const handleUserPageChange = (page: number) => {
+  followUserPage.value = page;
+  fetchFollowUserList();
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+};
+
+const fetchFollowUserList = async () => {
+  loading.value = true;
+  const authorId = localStorage.getItem('uid') || '';
+  try {
+    let res;
+    if (activeContentTab.value === 'following') {
+      res = await api.authorFollowList(followUserPage.value, 36, authorId) as any;
+    } else {
+      res = await api.authorSubList(followUserPage.value, 36) as any;
+    }
+
+    if (res.code === 200 || res.code === 0) {
+      followUserList.value = (res.data?.data || res.data?.list || []).map((item: any) => {
+        // 订阅列表使用 blogger_info 结构
+        const bloggerInfo = item.blogger_info || item.user_info || item;
+        return {
+          id: item.blogger_id || item.user_id || bloggerInfo.id || item.id,
+          nickname: bloggerInfo.nickname,
+          avatar: bloggerInfo.avatar,
+          bio: item.intro || bloggerInfo.bio || bloggerInfo.signature || '',
+          fans: parseInt(item.fans_total) || parseInt(item.fans) || item.follower_count || 0,
+          isFollowed: item.is_followed == 1 || false
+        };
+      });
+      followUserTotal.value = parseInt(res.data?.allnums) || res.data?.count || res.data?.total || 0;
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error('Error fetching user list:', error);
+    toast(t('fail'));
+  } finally {
+    loading.value = false;
+  }
+}
 
 async function toggleLike(item: any) {
   // Check if user is logged in
@@ -4335,9 +4889,20 @@ async function toggleLike(item: any) {
       // Update the UI only after API success
       if (allContent.value) {
         allContent.value[postIndex].is_liked = isCurrentlyLiked ? 0 : 1;
-        allContent.value[postIndex].like_count = isCurrentlyLiked
-          ? (parseInt(allContent.value[postIndex].like_count || "0") - 1).toString()
-          : (parseInt(allContent.value[postIndex].like_count || "0") + 1).toString();
+
+        // 根据 book_id 判断更新哪个字段
+        const bookId = allContent.value[postIndex].book_id;
+        if (bookId && parseInt(bookId) > 0) {
+          // book_id > 0，更新 book_like_count
+          allContent.value[postIndex].book_like_count = isCurrentlyLiked
+            ? (parseInt(allContent.value[postIndex].book_like_count || "0") - 1).toString()
+            : (parseInt(allContent.value[postIndex].book_like_count || "0") + 1).toString();
+        } else {
+          // book_id = 0，更新 like_count
+          allContent.value[postIndex].like_count = isCurrentlyLiked
+            ? (parseInt(allContent.value[postIndex].like_count || "0") - 1).toString()
+            : (parseInt(allContent.value[postIndex].like_count || "0") + 1).toString();
+        }
       }
     }
   } catch (error) {
@@ -4361,7 +4926,44 @@ watch(sortOrder, () => {
   loadContent(1);
 });
 
-watch(() => locale.value, () => {
+watch(viewMode, (newMode) => {
+  if (newMode === 'user' && (activeContentTab.value === 'following' || activeContentTab.value === 'subscriptions')) {
+    followUserPage.value = 1;
+    followUserList.value = [];
+    fetchFollowUserList();
+  } else if (newMode === 'content') {
+    // When switching to content view, load content list
+    currentPage.value = 1;
+    allContent.value = [];
+    loadContent(1);
+  }
+});
+
+function setSeoMeta() {
+  const title = t('seo.home.title');
+  const keywords = t('seo.home.keywords');
+  const description = t('seo.home.description');
+
+  document.title = title;
+
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', keywords);
+
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', description);
+}
+
+watch(() => locale.value, (newLocale) => {
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -4370,26 +4972,41 @@ watch(() => locale.value, () => {
   currentPage.value = 1;
   allContent.value = [];
   loadContent(1);
+
+  // Sync novel language selector with navigation language
+  if (newLocale == 'zh') {
+    selectedLanguage.value = 'cn';
+  } else if (newLocale == 'jp') {
+    selectedLanguage.value = 'jp';
+  } else {
+    selectedLanguage.value = 'en';
+  }
+
+  // Update SEO meta tags when language changes
+  setSeoMeta();
 });
 
 onMounted(() => {
-  window.scrollTo(0, 0);
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
 
-  getCountry();
+  // Set contentType based on URL path
+  const path = window.location.pathname;
+  const contentTypeFromPath: Record<string, string> = {
+    '/novel': 'novel',
+    '/comic': 'comic',
+    '/drama': 'drama',
+    '/photo': 'photo',
+    '/video': 'video'
+  };
 
-  // Load video mode settings from local storage
-  try {
-    const storedVideoMode = localStorage.getItem('currentVideoMode');
-    if (storedVideoMode) {
-      currentVideoMode.value = storedVideoMode;
-    }
-    const storedComicMode = localStorage.getItem('currentComicMode');
-    if (storedComicMode) {
-      currentComicMode.value = storedComicMode;
-    }
-  } catch (error) {
-    console.error('Error loading video mode settings:', error);
+  if (contentTypeFromPath[path]) {
+    contentType.value = contentTypeFromPath[path];
   }
+
+  // Set SEO meta tags based on current language
+  setSeoMeta();
 
   // Restore last content tab and content type if coming back from detail page
   try {
@@ -4397,6 +5014,11 @@ onMounted(() => {
     if (homeContentTab && (homeContentTab == 'suggested' || homeContentTab == 'following' || homeContentTab == 'subscriptions')) {
       activeContentTab.value = homeContentTab;
       localStorage.removeItem('homeContentTab');
+
+      // If coming from following or subscriptions tab, force content view mode
+      if (homeContentTab == 'following' || homeContentTab == 'subscriptions') {
+        viewMode.value = 'content';
+      }
     }
 
     const homeContentType = localStorage.getItem('homeContentType');
@@ -4524,7 +5146,7 @@ const loadBanners = async () => {
       await nextTick();
       initBannerSwiper();
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     toast(t('fail'));
@@ -4622,7 +5244,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
           }
         })
         .catch((e: any) => {
@@ -4645,7 +5267,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
           }
         })
         .catch((e: any) => {
@@ -4670,7 +5292,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'jp' ?  res.msg_jp : res.msg);
+            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
           }
         })
         .catch((e: any) => {
@@ -4699,7 +5321,7 @@ function handleInviteCodeConfirm(code: string) {
       showInviteCodeModal.value = false;
       showUserInfoModal.value = true;
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   }).catch(() => {
     toast(t('fail'));
@@ -4720,7 +5342,11 @@ function handleUserInfoCancel() {
 
 function handlePageChange(page: number) {
   currentPage.value = page;
+  allContent.value = [];
   loadContent(page);
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
 }
 </script>
 

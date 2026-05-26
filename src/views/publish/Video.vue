@@ -21,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!uploadSuccess && !postId">
+      <div class="upload-tabs" v-if="!uploadSuccess && !postId && !route.query.session_id">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.video.videoLabel") }}</span>
         </div>
@@ -164,7 +164,7 @@
         </div>
       </div>
 
-      <div class="content-wrapper" v-if="uploadSuccess || postId">
+      <div class="content-wrapper" v-if="uploadSuccess || postId || route.query.session_id">
         <!-- Permission Range -->
         <div class="section">
 
@@ -256,7 +256,7 @@
         <div class="collection-section">
           <div class="form-item">
             <div class="form-label-inner">
-              <label class="form-label">{{ t("submit.collection") }}</label>
+              <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
               <div class="info-icon" @mouseover="adjustTooltipPosition">
                 <img src="@/assets/images/publish/intro.png" alt="Info" />
                 <div class="tooltip-arrow"></div>
@@ -272,10 +272,7 @@
                 <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
                   <span class="select-value">{{ selectedCollection || t('collection.noCollection') }}</span>
                   <div class="select-actions">
-                    <div class="select-clear" v-if="selectedCollection && isCollectionHovered" @click.stop="clearCollection">
-                      <img src="@/assets/images/publish/delete_icon.png" alt="Clear" />
-                    </div>
-                    <div class="select-arrow" v-if="!selectedCollection || !isCollectionHovered">
+                    <div class="select-arrow">
                       <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                     </div>
                   </div>
@@ -285,14 +282,14 @@
                     <span>{{ t('collection.newCollection') }}</span>
                     <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
                   </div>
-                  <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection == collection.name }">
+                  <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection == collection.title }">
                     {{ collection.title }}
                   </div>
                   <div v-if="isLoadingCollections" class="loading-indicator">
                     <div class="loading-spinner"></div>
                     <span>{{ t('loading') }}</span>
                   </div>
-                  <div v-else-if="!hasMoreCollections && collections.length > 0" class="no-more-collections">
+                  <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
                     {{ t('emptyState.noMoreData') }}
                   </div>
                 </div>
@@ -377,30 +374,26 @@
             <div
               v-if="showDropdown"
               class="mention-dropdown"
-              :style="{
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-              }"
+              :style="getDropdownStyle()"
             >
               <div class="dropdown-list">
-                <div
-                  v-for="item in dropdownItems"
-                  :key="item.value"
-                  class="dropdown-item"
-                  @click="selectDropdownItem(item)"
-                >
-                  <div class="item-left">
-                    <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
-                    <span class="label">{{ item.label }}</span>
-                  </div>
-                  <!-- <div class="item-right">
-                    <span class="stats">
-                      {{
-                        dropdownType === "#" ? `${item.views} views` : `${item.followers} followers`
-                      }}
-                    </span>
-                  </div> -->
+                <div v-if="isDropdownLoading" class="dropdown-loading">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('loading') }}</span>
                 </div>
+                <template v-else>
+                  <div
+                    v-for="item in dropdownItems"
+                    :key="item.value"
+                    class="dropdown-item"
+                    @click="selectDropdownItem(item)"
+                  >
+                    <div class="item-left">
+                      <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
+                      <span class="label">{{ item.label }}</span>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -436,7 +429,7 @@
 
         <!-- Submit -->
         <div class="submit-row">
-          <button class="submit" :class="!canSubmit ? 'dis' : ''" :disabled="!canSubmit" @click="onSubmit">
+          <button class="submit" @click="onSubmit">
             {{ t("submit.submit") }}
           </button>
         </div>
@@ -510,6 +503,13 @@
       @close="handleCloseCreateCollectionModal"
       @save="handleCreateCollection"
     />
+
+    <!-- Switch Collection Confirm Modal -->
+    <SwitchCollectionModal
+      :visible="showSwitchCollectionModal"
+      @close="handleCloseSwitchCollectionModal"
+      @confirm="handleConfirmSwitchCollection"
+    />
   </div>
 </template>
 
@@ -525,6 +525,7 @@ import ProjectVideoViewModal from "@/components/ProjectVideoViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
+import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import Pagination from "@/components/Pagination.vue";
 import api from "@/api/index";
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
@@ -602,8 +603,10 @@ interface DropdownItem {
 const showDropdown = ref(false);
 const dropdownType = ref<"#" | "@" | "">("");
 const dropdownItems = ref<DropdownItem[]>([]);
-const dropdownPosition = ref({ top: 0, left: 0 });
+const dropdownPosition = ref<{ top?: number; left?: number; right?: number; position?: 'above'; bottom?: number }>({ top: 0, left: 0 });
 const lastRange = ref<Range | null>(null);
+const isDropdownLoading = ref(false);
+const isOpeningDropdown = ref(false);
 
 const showSensitiveConfirm = ref(false);
 
@@ -701,6 +704,10 @@ const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const isCollectionHovered = ref(false);
 const showCreateCollectionModal = ref(false);
+const showSwitchCollectionModal = ref(false);
+const switchCollectionWarningShown = ref(false);
+const pendingCollectionId = ref<number | null>(null);
+const isEditingWork = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
@@ -723,7 +730,7 @@ const showSubscriptionModal = ref(false);
 // Computed
 const captionLength = ref(0);
 const canSubmit = computed(() => {
-  return uploadSuccess.value && coverPreview.value;
+  return uploadSuccess.value && selectedCollection.value && coverPreview.value;
 });
 
 // Watch route changes to update tabIndex
@@ -737,7 +744,7 @@ watch(() => route.path, (newPath) => {
 
 // Watch uploadOption changes to fetch projects when switching to history
 watch(uploadOption, (newOption) => {
-  if (newOption === 'history') {
+  if (newOption == 'history') {
     fetchProjects();
   }
 });
@@ -761,7 +768,10 @@ function toggleCollectionDropdown(event: Event) {
   showEpisodeDropdown.value = false;
 
   if (showCollectionDropdown.value) {
+    // Reset pagination and clear collections first
     hasMoreCollections.value = true;
+    collections.value = [];
+    currentCollectionPage.value = 1;
     fetchCollections(false);
   }
 }
@@ -778,14 +788,27 @@ function createNewCollection() {
 }
 
 async function selectCollection(id: number) {
+  // Check if we need to show warning before switching collection
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollectionId.value && selectedCollectionId.value !== id) {
+    // Store the target collection ID for confirmation
+    pendingCollectionId.value = id;
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+    return;
+  }
+
+  await doSelectCollection(id);
+}
+
+async function doSelectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
-    selectedCollection.value = collection.name;
+    selectedCollection.value = collection.title;
     selectedCollectionId.value = collection.id;
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id, 1, 100) as any;
+      const response = await api.singleCollection(id, 1, 10) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
         const allnum = response.data.allnums || '0';
@@ -854,6 +877,28 @@ function clearCollection() {
   isNoCollection.value = true;
 }
 
+function handleCloseSwitchCollectionModal() {
+  showSwitchCollectionModal.value = false;
+  pendingCollectionId.value = null;
+}
+
+async function handleConfirmSwitchCollection() {
+  // Mark warning as shown
+  switchCollectionWarningShown.value = true;
+
+  // Close modal first before updating collection
+  showSwitchCollectionModal.value = false;
+
+  // Wait for modal to close before updating collection
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  if (pendingCollectionId.value !== null) {
+    await doSelectCollection(pendingCollectionId.value);
+  }
+
+  pendingCollectionId.value = null;
+}
+
 function selectEpisode(value: string) {
   selectedEpisodeNumber.value = value;
   showEpisodeDropdown.value = false;
@@ -885,7 +930,7 @@ async function fetchCollections(loadMore = false) {
         currentCollectionPage.value = 1;
       }
 
-      hasMoreCollections.value = newCollections.length == response.data?.allnums;
+      hasMoreCollections.value = newCollections.length === collectionPageSize.value;
     }
   } catch (error) {
     console.error('Error fetching collections:', error);
@@ -973,6 +1018,9 @@ async function fetchProjects() {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
+
+  // Mark as editing mode when selecting from history
+  isEditingWork.value = true;
 
   if (project.result_async?.generate_manju_cover) {
     coverPreview.value = project.result_async.generate_manju_cover;
@@ -1132,9 +1180,9 @@ async function handlePublish() {
           episodeDescription = chapterData.chapter_description;
         }
 
-        // Set video URL from final_video_output.video_url field
-        if (resultAsync?.final_video_output?.video_url) {
-          videoUrl.value = resultAsync.final_video_output.video_url;
+        // Set video URL from final_video_output, prefer 1080p if available
+        if (resultAsync?.final_video_output) {
+          videoUrl.value = resultAsync.final_video_output.video_url_1080p || resultAsync.final_video_output.video_url;
           uploadSuccess.value = true;
           uploadProgress.value = 100;
         }
@@ -1160,16 +1208,11 @@ async function handlePublish() {
     form.value.title = `${project.name} ${episodeText}`;
   }
 
-  // Generate title: Episode X Title 「Project Name」
+  // Generate title: Episode X Title
   if (episodeTitle) {
-    if (project.name) {
-      form.value.title = `${episodeText} ${episodeTitle} 「${project.name}」`;
-    } else {
-      form.value.title = `${episodeText} ${episodeTitle}`;
-    }
+    form.value.title = `${episodeText} ${episodeTitle}`;
   } else {
-    // Fallback to project name and episode
-    form.value.title = `${project.name} ${episodeText}`;
+    form.value.title = episodeText;
   }
 
   // Handle collection logic based on the project name
@@ -1254,7 +1297,7 @@ function goToSubscriptionSettings() {
 async function checkSubscriptionStatus() {
   try {
     const response = await api.getSubscription();
-    const data = response as unknown as { code: number; msg: string; data?: any };
+    const data = response as any;
 
     if (data.code === 0) {
       const subscription = data.data;
@@ -1561,7 +1604,7 @@ async function getPostDetails() {
 
   try {
     const res = await api.modifyPostDetail(postId.value );
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code === 0 || data.code === 200) {
       const postData = data.data.post;
       form.value.title = postData.title || "";
@@ -1658,7 +1701,7 @@ async function getPostDetails() {
           // If there's a book_id, request collection details to get complete episode list
           if (postData.book_id) {
             try {
-              const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
+              const collectionRes = await api.singleCollection(postData.book_id, 1, 10) as any;
               if (collectionRes.code === 0 && collectionRes.data) {
                 const allnum = collectionRes.data.allnums || '0';
                 const totalEpisodes = parseInt(allnum);
@@ -1696,7 +1739,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     console.error("Get post details error:", error);
@@ -1759,18 +1802,38 @@ async function handleCaptionInput(e: Event) {
   if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
+
+  // 检查是否在 span 标签内（已选中的话题/提及标签）
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
   const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
 
+  // 只有光标在 # 或 @ 后面（包括正在输入中）才显示下拉框
   const match = textBefore.match(/([#@])([^#@\s]*)$/u);
   if (match) {
     const trigger = match[1] as "#" | "@";
     const query = match[2];
-
     dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
     showDropdown.value = true;
     lastRange.value = range.cloneRange();
     updateDropdownPosition();
     searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
   } else {
     showDropdown.value = false;
   }
@@ -1785,6 +1848,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
+  isDropdownLoading.value = true;
   try {
     if (type === "#") {
       const res = await api.searchTopic({ keyword: query });
@@ -1807,6 +1871,8 @@ const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
   } catch (error) {
     console.error("Search error:", error);
     dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
   }
 }, 300);
 
@@ -1815,6 +1881,7 @@ async function searchTags(type: "#" | "@", query: string) {
 }
 
 async function searchTagsImmediate(type: "#" | "@", query: string) {
+  isDropdownLoading.value = true;
   try {
     if (type === "#") {
       const res = await api.searchTopic({ keyword: query });
@@ -1837,6 +1904,8 @@ async function searchTagsImmediate(type: "#" | "@", query: string) {
   } catch (error) {
     console.error("Search error:", error);
     dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
   }
 }
 
@@ -1845,17 +1914,38 @@ function handleCaptionClick() {
   if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
 
-  if (match) {
-    const trigger = match[1] as "#" | "@";
-    const query = match[2];
+  // 检查是否在 span 标签内（已选中的话题/提及标签）
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+
+  // 只有光标紧跟在 # 或 @ 后面才显示下拉框
+  // 检查 textBefore 是否以 # 或 @ 结尾
+  if (textBefore.endsWith('#') || textBefore.endsWith('@')) {
+    const trigger = textBefore.endsWith('#') ? '#' : '@';
+    const query = '';
     dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
     showDropdown.value = true;
     lastRange.value = range.cloneRange();
     updateDropdownPosition();
     searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
   } else {
     showDropdown.value = false;
   }
@@ -2063,24 +2153,66 @@ function updateDropdownPosition() {
   const range = selection.getRangeAt(0).cloneRange();
   const rect = range.getBoundingClientRect();
 
+  // Check if rect is valid (not at origin or with zero dimensions)
   let absTop = rect.bottom + 5;
   let absLeft = rect.left;
 
+  // If rect is invalid (likely after space deletion), use fallback position
   if (rect.width === 0 && rect.height === 0 || absTop < 100 || absLeft < 10) {
     const captionRect = captionRef.value.getBoundingClientRect();
     absTop = captionRect.top + 26;
     absLeft = captionRect.left;
   }
 
-  dropdownPosition.value = {
-    top: absTop,
-    left: absLeft + 2,
-  };
-
   const dropdownHeight = 250;
+  const dropdownWidth = 280;
+
+  // 处理底部溢出
   if (absTop + dropdownHeight > window.innerHeight) {
-    dropdownPosition.value.top = rect.top - dropdownHeight - 5;
+    const spaceAbove = rect.top;
+    if (spaceAbove >= dropdownHeight) {
+      dropdownPosition.value = {
+        top: 0,
+        position: 'above',
+        bottom: window.innerHeight - rect.top + 5,
+        left: absLeft + 2,
+      };
+    } else {
+      dropdownPosition.value = {
+        top: 50,
+        left: absLeft + 2,
+      };
+    }
+  } else {
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft + 2,
+    };
   }
+
+  // 处理右边溢出，使用 right 属性定位
+  if (absLeft + dropdownWidth > window.innerWidth) {
+    dropdownPosition.value.left = undefined;
+    dropdownPosition.value.right = 10;
+  }
+}
+
+function getDropdownStyle(): Record<string, string> {
+  const style: Record<string, string> = {};
+
+  if (dropdownPosition.value.position === 'above') {
+    style.bottom = `${dropdownPosition.value.bottom}px`;
+  } else {
+    style.top = `${dropdownPosition.value.top}px`;
+  }
+
+  if (dropdownPosition.value.right !== undefined) {
+    style.right = `${dropdownPosition.value.right}px`;
+  } else if (dropdownPosition.value.left !== undefined) {
+    style.left = `${dropdownPosition.value.left}px`;
+  }
+
+  return style;
 }
 
 function onActionBtnClick(symbol: "#" | "@") {
@@ -2218,7 +2350,11 @@ function selectDropdownItem(item: { label: string; value: string }) {
 
 function handleClickOutside(event: MouseEvent) {
   const target = event.target as Node;
-  if (showDropdown.value && !document.querySelector(".mention-dropdown")?.contains(target)) {
+  if (isOpeningDropdown.value) return;
+
+  if (showDropdown.value &&
+      !document.querySelector(".mention-dropdown")?.contains(target) &&
+      !captionRef.value?.contains(target)) {
     showDropdown.value = false;
   }
 
@@ -2309,6 +2445,11 @@ async function onSubmit() {
     return;
   }
 
+  if (!selectedCollection.value) {
+    toast(t("collection.noCollection"));
+    return;
+  }
+
   if (!coverPreview.value) {
     toast(t("submit.video.toastSetCover"));
     return;
@@ -2389,7 +2530,7 @@ async function onSubmit() {
     if (res.code === 0 || res.code === 200) {
       router.push(`/publish/success`);
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t("fail"));
@@ -2425,6 +2566,8 @@ onMounted(async () => {
   }
 
   const urlParam = route.query.url as string;
+  const indexParam = route.query.index as string;
+
   if (urlParam && urlParam.trim()) {
     videoUrl.value = urlParam;
     uploadSuccess.value = true;
@@ -2481,6 +2624,89 @@ onMounted(async () => {
         }
       } catch (error) {
         console.error('Error handling collection from route:', error);
+      }
+    }
+
+    // Request chapter details if session_id and index are provided
+    if (sessionIdParam && indexParam) {
+      try {
+        const chapterRes = await api.detailChapter(sessionIdParam, parseInt(indexParam)) as any;
+        if (chapterRes.code == 200 && chapterRes.data) {
+          const chapterData = chapterRes.data;
+          if (chapterData.title) {
+            const episodeText = t('submit.video.episode', { episode: indexParam });
+            form.value.title = `${episodeText} ${chapterData.title}`;
+          }
+
+          if (chapterData.chapter_description) {
+            form.value.description = chapterData.chapter_description;
+            captionLength.value = chapterData.chapter_description.length;
+
+            // Render content to captionRef
+            await nextTick();
+            if (captionRef.value) {
+              const content = chapterData.chapter_description;
+              captionRef.value.innerHTML = '';
+
+              let currentIndex = 0;
+              let pos = 0;
+              const contentLength = content.length;
+
+              while (pos < contentLength) {
+                const tagIndex = content.indexOf('#', pos);
+                const mentionIndex = content.indexOf('@', pos);
+
+                let nextMatchIndex = -1;
+                let isTag = false;
+
+                if (tagIndex === -1 && mentionIndex === -1) {
+                  break;
+                } else if (tagIndex === -1) {
+                  nextMatchIndex = mentionIndex;
+                  isTag = false;
+                } else if (mentionIndex === -1) {
+                  nextMatchIndex = tagIndex;
+                  isTag = true;
+                } else {
+                  nextMatchIndex = Math.min(tagIndex, mentionIndex);
+                  isTag = nextMatchIndex === tagIndex;
+                }
+
+                if (nextMatchIndex > currentIndex) {
+                  const textBefore = content.substring(currentIndex, nextMatchIndex);
+                  const textNode = document.createTextNode(textBefore);
+                  captionRef.value?.appendChild(textNode);
+                }
+
+                let endIndex = nextMatchIndex + 1;
+                while (endIndex < contentLength) {
+                  const char = content[endIndex];
+                  if (char === '\u0020' || char === '\n' || char === '\t') {
+                    break;
+                  }
+                  endIndex++;
+                }
+
+                const matchText = content.substring(nextMatchIndex, endIndex);
+                const span = document.createElement('span');
+                span.className = isTag ? 'topic-tag' : 'mention-tag';
+                span.innerText = matchText;
+                captionRef.value?.appendChild(span);
+
+                currentIndex = endIndex;
+                pos = endIndex;
+              }
+
+              if (currentIndex < contentLength) {
+                const remainingText = content.substring(currentIndex);
+                const textNode = document.createTextNode(remainingText);
+                captionRef.value?.appendChild(textNode);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching chapter details:', error);
       }
     }
   } else if (postId.value) {

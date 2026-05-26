@@ -127,7 +127,7 @@ async function fetchAuthorInfo() {
 
   try {
     const res = await api.authorInfo(userId);
-    const data = res as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+    const data = res as any;
     if (data.code === 0 || data.code === 200) {
       userInfo.value = {
         id: data.data?.user?.id || "",
@@ -137,7 +137,7 @@ async function fetchAuthorInfo() {
 
       subscriptionPlans.value = data.data?.subscription_plans || [];
     } else {
-      toast(data.msg || t("error"));
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch (error) {
     console.error("Fetch author info error:", error);
@@ -169,11 +169,11 @@ async function handlePay() {
     }
 
     const res = await api.subscribe({ creator_id: userId });
-    const data = res as unknown as any;
+    const data = res as any;
     if (data.code === 0 || data.code === 200) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'jp' ?  data.msg_jp : data.msg)
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
     toast(t("error"));

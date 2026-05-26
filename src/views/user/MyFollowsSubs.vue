@@ -167,9 +167,9 @@ async function fetchData() {
   try {
     let res;
     if (activeTab.value === 0) {
-      res = await api.userSubscribeList(page.value, pageSize.value) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      res = await api.userSubscribeList(page.value, pageSize.value) as any;
     } else {
-      res = await api.userFollowList(page.value, pageSize.value) as unknown as { code: number; msg: string; msg_jp: string; data?: any };
+      res = await api.userFollowList(page.value, pageSize.value) as any;
     }
 
     if (res.code === 0 || res.code === 200) {
@@ -202,7 +202,7 @@ async function fetchData() {
         }
       });
     } else {
-      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
     toast(t('fail'));

@@ -50,7 +50,7 @@
               :key="subtab.value"
               class="subtab"
               :class="{ active: activeSubTab === subtab.value }"
-              @click="activeSubTab = subtab.value"
+              @click="switchSubTab(subtab.value)"
             >
               {{ subtab.label }}
             </span>
@@ -59,13 +59,20 @@
 
         <!-- Transaction List -->
         <div class="transaction-list">
-          <EmptyState v-if="filteredTransactions.length === 0" />
+          <!-- Loading State -->
+          <div v-if="loading" class="loading-state">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ t('home.loading') }}</div>
+          </div>
+          <!-- Empty State -->
+          <EmptyState v-else-if="filteredTransactions.length === 0" />
+          <!-- Transaction Items -->
           <div
             v-else
             v-for="(item, index) in filteredTransactions"
             :key="index"
             class="transaction-item"
-            :class="{ 'consumption': activeSubTab === 'subscribe', 'recharge': activeSubTab == 'boost-pack', 'invite': activeSubTab == 'invite' }"
+            :class="{ 'consumption': activeSubTab == 'subscribe' || activeSubTab == 'other', 'recharge': activeSubTab == 'boost-pack', 'invite': activeSubTab == 'invite' }"
           >
 
             <template v-if="activeSubTab == 'invite'">
@@ -74,7 +81,7 @@
                   <img src="@/assets/images/user/rise.png" alt="" />
                 </div>
                 <div class="column-content">
-                  <div class="reward-source">{{ getTypeName(item.type) }}</div>
+                  <div class="reward-source">{{ getTypeName(item) }}</div>
                   <div class="transaction-date">{{ formatDate(item.date) }}</div>
                 </div>
               </div>
@@ -102,7 +109,7 @@
                   <img src="@/assets/images/user/rise.png" alt="" v-else />
                 </div>
                 <div class="column-content">
-                  <div class="reward-source">{{ getTypeName(item.type) }}</div>
+                  <div class="reward-source">{{ getTypeName(item) }}</div>
                   <div class="transaction-date">{{ formatDate(item.date) }}</div>
                 </div>
               </div>
@@ -118,7 +125,7 @@
           </div>
         </div>
 
-        <div class="pagination-wrap" v-if="computedTotal > pageSize">
+        <div class="pagination-wrap" v-if="!loading && filteredTransactions.length > 0 && computedTotal > pageSize">
           <Pagination :total="computedTotal" :pageSize="pageSize" v-model="page" theme="pink" />
         </div>
       </div>
@@ -152,6 +159,9 @@ onMounted(() => {
   if (type === '3') {
     activeTab.value = 'recharge';
     activeSubTab.value = 'invite';
+  } else if (type === '4') {
+    // type=4 对应任意 subTab，保持默认即可
+    // 这里不需要做特别处理，保持默认的 subTab 选中状态
   }
 
   fetchTransactions();
@@ -182,13 +192,13 @@ watch(locale, () => {
 });
 
 const subTabs = computed(() => {
-  if (activeTab.value === 'recharge') {
+  if (activeTab.value == 'recharge') {
     return [
       { value: 'subscribe', label: t('aiRechargeDetails.subscribe') },
-      { value: 'boost-pack', label: t('aiRechargeDetails.boostPack') },
-      { value: 'invite', label: t('aiRechargeDetails.inviteRewards') }
+      { value: 'invite', label: t('aiRechargeDetails.inviteRewards') },
+      { value: 'other', label: t('aiRechargeDetails.other') }
     ];
-  } else if (activeTab.value === 'consumption') {
+  } else if (activeTab.value == 'consumption') {
     return [
       { value: 'generate', label: t('aiRechargeDetails.generate') },
       { value: 'expired', label: t('aiRechargeDetails.expired') }
@@ -207,6 +217,7 @@ interface Transaction {
 }
 
 const transactions = ref<Transaction[]>([]);
+const loading = ref(false);
 
 const filteredTransactions = computed(() => {
   return transactions.value;
@@ -231,14 +242,18 @@ watch(activeTab, (newTab) => {
   router.replace({ path: router.currentRoute.value.path });
 });
 
+watch(subTabs, () => {
+  // 当 subTabs 变化时，确保 activeSubTab 在有效范围内
+  const validValues = subTabs.value.map(tab => tab.value);
+  if (!validValues.includes(activeSubTab.value)) {
+    activeSubTab.value = validValues[0] || '';
+  }
+});
+
 watch(activeSubTab, (newSubTab) => {
   // 挂载时不重复调用fetchTransactions
   if (!isMounting.value) {
     fetchTransactions();
-    // 切换子tab时移除URL中的type参数
-    if (route.query.type) {
-      router.replace({ path: router.currentRoute.value.path });
-    }
   }
 });
 
@@ -251,24 +266,33 @@ watch(dateRange, () => {
 });
 
 function fetchTransactions() {
+  loading.value = true;
+  // 清空旧数据，避免显示旧数据
+  transactions.value = [];
+  totalFromApi.value = 0;
   let type = 0;
 
-  if (activeTab.value === 'recharge') {
-    if (activeSubTab.value === 'subscribe') {
+  if (activeTab.value == 'recharge') {
+    if (activeSubTab.value == 'subscribe') {
       type = 1;
-    } else if (activeSubTab.value === 'boost-pack') {
+    } else if (activeSubTab.value == 'boost-pack') {
       type = 2;
-    } else if (activeSubTab.value === 'invite') {
+    } else if (activeSubTab.value == 'invite') {
       type = 3;
+    } else if (activeSubTab.value == 'other') {
+      type = 4;
     }
-  } else if (activeTab.value === 'consumption') {
-    if (activeSubTab.value === 'expired') {
+  } else if (activeTab.value == 'consumption') {
+    if (activeSubTab.value == 'expired') {
       type = 100;
+    } else if (activeSubTab.value == 'other') {
+      type = 101;
     }
   }
 
-  if (activeTab.value === 'consumption' && activeSubTab.value === 'generate') {
+  if (activeTab.value == 'consumption' && activeSubTab.value == 'generate') {
     api.computeConsume(dateRange.value.start, dateRange.value.end, page.value, pageSize.value).then((res: any) => {
+      loading.value = false;
       if (res.code == 200) {
         if (res.data && Array.isArray(res.data.data_list)) {
           transactions.value = res.data.data_list.map((item: any) => {
@@ -284,7 +308,8 @@ function fetchTransactions() {
               type: 'consumption',
               name: name,
               date: item.issued_at || item.created_at || item.date || '',
-              amount: item.change_amount ? Math.abs(parseInt(item.change_amount)) : '0'
+              amount: item.change_amount ? Math.abs(parseInt(item.change_amount)) : '0',
+              reason: item.reason || '',
             };
           });
 
@@ -296,23 +321,27 @@ function fetchTransactions() {
       } else {
         transactions.value = [];
         totalFromApi.value = 0;
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }).catch((error) => {
+      loading.value = false;
       toast(t('fatl'))
     });
   } else {
     api.computeDetail(type, dateRange.value.start, dateRange.value.end, page.value, pageSize.value).then((res: any) => {
+      loading.value = false;
       if (res.code == 200) {
         if (res.data && Array.isArray(res.data.data_list)) {
           transactions.value = res.data.data_list.map((item: any) => {
             let name = '';
-            if (item.source_type === 'payment') {
+            if (item.source_type == 'payment') {
               name = 'Payment';
-            } else if (item.source_type === 'invite') {
+            } else if (item.source_type == 'invite') {
               name = 'Invite Reward';
-            } else if (item.source_type === 'expired') {
+            } else if (item.source_type == 'expired') {
               name = 'Expired';
+            } else if (item.source_type == 'register') {
+              name = t('header.register');
             } else {
               name = item.source_type || 'Unknown';
             }
@@ -333,15 +362,16 @@ function fetchTransactions() {
       } else {
         transactions.value = [];
         totalFromApi.value = 0;
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }).catch((error) => {
+      loading.value = false;
       toast(t('fatl'))
     });
   }
 }
 
-function getTypeName(type: string) {
+function getTypeName(item: any) {
   if (activeTab.value === 'recharge') {
     if (activeSubTab.value === 'subscribe') {
       return t('aiRechargeDetails.subscribe');
@@ -349,9 +379,25 @@ function getTypeName(type: string) {
       return t('aiRechargeDetails.boostPack');
     } else if (activeSubTab.value === 'invite') {
       return t('aiRechargeDetails.inviteRewards');
+    } else if (activeSubTab.value === 'other') {
+      return t('aiRechargeDetails.other');
     }
   } else if (activeTab.value === 'consumption') {
-    if (activeSubTab.value === 'generate') {
+    if (item.reason) {
+      const reason = item.reason.toLowerCase();
+      if (reason.includes('novel')) {
+        return t('aiRechargeDetails.novelGenerate');
+      } else if (reason.includes('manhua')) {
+        return t('aiRechargeDetails.comicGenerate');
+      } else if (reason.includes('manju')) {
+        return t('aiRechargeDetails.videoGenerate');
+      } else if (reason.includes('simple_image')) {
+        return t('aiRechargeDetails.imageGenerate');
+      } else if (reason.includes('simple_video')) {
+        return t('aiRechargeDetails.simpleVideoGenerate');
+      }
+      return item.reason;
+    } else if (activeSubTab.value === 'generate') {
       return t('aiRechargeDetails.generate');
     } else if (activeSubTab.value === 'expired') {
       return t('aiRechargeDetails.expired');
@@ -373,8 +419,17 @@ function goToRecharge() {
   router.push('/ai-recharge');
 }
 
+function switchSubTab(subTabValue: string) {
+  activeSubTab.value = subTabValue;
+  // 点击 subTabs 时，URL 中添加 type=4
+  router.replace({
+    path: router.currentRoute.value.path,
+    query: { type: '2' }
+  });
+}
+
 function goToPaymentHistory() {
-  router.push('/user-payment-history?type=4');
+  router.push('/user-payment-history?type=2');
 }
 </script>
 
@@ -586,6 +641,34 @@ function goToPaymentHistory() {
   // Transaction List
   .transaction-list {
     margin: 0 0 2.4rem;
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 40rem;
+
+      .loading-spinner {
+        width: 4rem;
+        height: 4rem;
+        border: 0.4rem solid #F5F5F5;
+        border-top: 0.4rem solid #6A7282;
+        border-radius: 50%;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 2rem;
+      }
+
+      .loading-text {
+        font-size: 1.4rem;
+        color: #99A1AF;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    }
 
     .transaction-item {
       display: flex;

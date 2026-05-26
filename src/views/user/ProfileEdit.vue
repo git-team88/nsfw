@@ -78,10 +78,12 @@ const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4e
 
 onMounted(async () => {
   try {
-    const res = (await api.getProfile()) as unknown as { code: number; data: Record<string, any> };
+    const res = (await api.getProfile()) as any;
     if ((res.code === 200 || res.code === 0) && res.data) {
       bio.value = res.data.page_desc || "";
       headerUrl.value = res.data.page_banner || defaultImg;
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (e) {
     console.error(e);
@@ -120,13 +122,13 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())
     .then(
-      (res: { code: number; data?: { url?: string } | string; url?: string; msg: string; msg_jp: string }) => {
+      (res: any) => {
         isUploading.value = false;
         if (res.code === 0 || res.code === 200) {
           const url = (typeof res.data === "string" ? res.data : res.data?.url) || res.url;
           if (typeof url === "string") cb(url);
         } else {
-          toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         }
       },
     )

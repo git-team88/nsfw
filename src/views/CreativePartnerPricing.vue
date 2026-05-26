@@ -195,7 +195,7 @@ async function handleRecharge() {
     if (data.code === 0 || data.code === 200) {
       if (data.data) window.open(data.data?.url.url, '_blank');
     } else {
-      toast(locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
   } catch {
     toast(t('error'));

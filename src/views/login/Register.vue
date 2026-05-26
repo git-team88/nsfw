@@ -133,7 +133,7 @@
 import Header from "@/components/Header.vue";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
@@ -184,7 +184,27 @@ declare global {
   }
 }
 
+function setSeoMeta() {
+  document.title = t('seo.signup.title');
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', t('seo.signup.keywords'));
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', t('seo.signup.description'));
+}
+
 onMounted(() => {
+  setSeoMeta();
+
   checkGrecaptcha();
 
   const token = localStorage.getItem("token");
@@ -202,6 +222,10 @@ onMounted(() => {
   } else {
     initGoogle();
   }
+});
+
+watch(() => locale.value, () => {
+  setSeoMeta();
 });
 
 onBeforeUnmount(() => {
@@ -349,7 +373,7 @@ function handleSubmit() {
                       timeCount();
                       codeError.value = t('register.spamTip');
                     } else {
-                      toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+                      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
                       isSend.value = false;
                     }
                   })
@@ -368,7 +392,7 @@ function handleSubmit() {
           isSend.value = false;
         }
       } else {
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
         isSend.value = false;
       }
     })
@@ -492,7 +516,7 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
-        toast(locale.value == 'jp' ?  res.msg_jp : res.msg)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     })
     .catch((err: any) => {

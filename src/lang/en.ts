@@ -1,20 +1,4 @@
 export default {
-  footer: {
-    nav: {
-      home: "Home",
-      myProjects: "My Projects",
-      characterLibrary: "Character Library",
-      myCommunity: "My Community",
-      profile: "Profile"
-    },
-    policies: {
-      communityGuidelines: "Community Guidelines",
-      termsOfService: "Terms of Service",
-      privacyPolicy: "Privacy Policy",
-      paidServices: "Paid Services"
-    },
-    copyright: "© 2026 acgworlds Co., Ltd. All rights reserved."
-  },
   grecaptcha: {
     notLoaded: "Grecaptcha not loaded yet completed",
     notAble: 'Grecaptcha execute method not available'
@@ -277,7 +261,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     confirm: "Confirm",
     noCode: "No invitation code? ",
     skip: 'Skip',
-    inviteError: "Invite code error/Invite code already used"
+    inviteError: "Invite code error"
   },
   similar: {
     title: "Similar Theme Content Recommendation",
@@ -298,6 +282,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
   emptyState: {
     noProjects: "You haven't generated any works yet, please go to",
     generate: "Generate",
+    noMoreData: "No more data"
   },
 
   novel: {
@@ -1215,6 +1200,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       followerChange: "Follower change",
       totalFollowers: "Total followers",
       noData: "No data available",
+      downloadFailed: "Download failed",
       csvHeaders: {
         date: "Date",
         change: "Follower Change",
@@ -1450,21 +1436,63 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     totalWords: "Total Words",
     unlimitedMode: {
-      title: "Enable Unlimited Mode?",
-      description: "Only users aged 18 and above can enable Unlimited Mode. Once enabled, the range of creative themes will be unrestricted.",
+      title: "Enable Unrestricted Mode?",
+      description: "Users aged 18 and above can enable unrestricted mode.<br />After enabling, the scope of creative themes will be unrestricted.",
       cancel: "Cancel",
       confirm: "Confirm"
+    },
+    underageNoBirthday: {
+      title: "Please fill in your birthday",
+      description: "Only users aged 18 and above can enable unrestricted mode",
+      cancel: "Cancel",
+      goToFill: "Go to fill"
+    },
+    underage: {
+      description: "Only users aged 18 and above can enable unrestricted mode",
+      ok: "I know"
+    },
+    sensitiveContent: "Allow sensitive content",
+    sensitiveContentNoBirthday: {
+      title: "Please fill in your birthday",
+      description: "Only users aged 18 and above can enable sensitive content display",
+      cancel: "Cancel",
+      goToFill: "Go to fill"
+    },
+    sensitiveContentUnderage: {
+      description: "Only users aged 18 and above can enable sensitive content display",
+      ok: "I know"
+    },
+    sensitiveContentConfirm: {
+      title: "Allow sensitive?",
+      description: "After users aged 18+ enable the switch<br />sensitive content will be visible in recommended lists and user communities.",
+      cancel: "Cancel",
+      confirm: "Confirm",
+      dontAsk: "Don't ask again"
     },
     tab: {
       text: "Text",
       file: "File",
       suggested: "Suggested",
       following: "My Follows",
-      subscriptions: "My Subscriptions"
+      subscriptions: "My Subscriptions",
+      content: "Post",
+      user: "User"
+    },
+    user: {
+      fans: "{count} Fans",
+      follow: "Follow",
+      following: "Following",
+      unfollow: "Unfollow",
+      followSuccess: "Followed successfully",
+      unfollowSuccess: "Unfollowed successfully"
     },
     input: {
       placeholder: "Just type one line. Your story begins. e.g. A delivery guy time-travels to ancient China and accidentally rewrites history.",
-      placeholderComic: "Just type one line. Your story begins. e.g. A delivery guy time-travels to ancient China and accidentally rewrites history.",
+      placeholderNovel: "One line in. A whole novel out. e.g. I inherited my grandmother's house, her cat, and apparently—her enemies.",
+      placeholderComic: "One line in. A whole comic out. e.g. The mirror showed me smiling back. I wasn't smiling.",
+      placeholderDrama: "One line in. A whole motion comic out. e.g. \"Run.\" My dog had never spoken before. I ran.",
+      placeholderPhoto: "One line in. A photo out. e.g. A cat napping on a stone lantern, in the quiet of a misty morning street.",
+      placeholderVideo: "One line in. A world unfolds. e.g. They share one umbrella under the cherry blossoms, rain falling soft between them.",
       placeholderAt: `Type {'@'} to quickly reference content`
     },
     img: 'Image',
@@ -1527,6 +1555,18 @@ If you have any questions, complaints, comments or suggestions regarding persona
       trending: "Trending",
       latest: "Latest"
     },
+    chapter: "Ch.",
+    chapterSuffix: "",
+    chapterFormat: "Ch.{chapter}",
+    episode: "Ep.",
+    episodeSuffix: "",
+    episodeFormat: "Ep.{episode}",
+    updateTime: {
+      hoursAgo: "Updated {hours} hours ago",
+      daysAgo: "Updated {days} days ago",
+      monthsAgo: "Updated {months} months ago",
+      yearsAgo: "Updated {years} years ago"
+    },
     search: {
       placeholder: "search by keywords"
     },
@@ -1549,7 +1589,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
       maxAudioSize: "Single audio size cannot exceed {max}MB",
       maxVideoCount: "Maximum 3 videos allowed",
       maxAudioCount: "Maximum 3 audios allowed",
-      audioDurationTooShort: "Audio duration cannot be less than {min} seconds"
+      audioDurationTooShort: "Audio duration cannot be less than {min} seconds",
+      startFrameRequired: "Please upload the start frame image",
+      videoExtendDurationLimit: "Uploaded video should be between 2-5s",
+      videoExtendDurationExceed: "Generation duration should be greater than the video length to be extended",
+      unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported"
     },
     generate: {
       started: "Video generation started",
@@ -1773,7 +1817,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       retry: "Retry",
       exit: "Exit",
       maxLength: "Maximum 45 characters",
-      exitWarning: "After exiting, the AI-generated cover will not be saved. And the computing power consumed will not be refunded."
+      exitWarning: "After exiting, the AI-generated cover will not be saved. And the computing power consumed will not be refunded.",
+      selectImage: "Please select an image"
     },
     topic: "Add topic",
     mention: "Tag people",
@@ -1893,6 +1938,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     loadMoreReplies: "Load more replies",
     commentPosted: "Comment posted successfully",
     replyPosted: "Reply posted successfully",
+    reportSuccess: "Report submitted successfully",
     edit: "Edit",
     delete: "Delete",
     loading: "Load more comments...",
@@ -1907,6 +1953,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
       onlyMe: "Only Me",
       partial: "Subscribers Only",
       private: "Private",
+    },
+    type: {
+      comic: "Comic",
+      novel: "Novel",
+      drama: "Drama"
     },
     lock: {
       tip: "Subscribers can view the full content",
@@ -1946,10 +1997,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     subscribe: "Subscribe",
     subscribeToView: "Subscribe to view full content",
     updatedToEpisode: "Updated to episode {count}",
+    readToEpisode: "Read to episode {count}",
+    continueReading: "Continue Reading",
     updatedChapters: "Updated {count} chapters",
     enterCollectionMode: "Click here to enter collection and read next chapter",
     viewCollection: "View Collection",
     nextEpisode: 'Next Episode',
+    commentDeleted: "Comment has been deleted"
   },
   aiRecharge: {
     title: "AI Recharge",
@@ -2018,7 +2072,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     boostPack: "Boost Pack",
     generate: "Generate",
     expired: "Expired",
-    invited: "New user"
+    invited: "New user",
+    other: "Other",
+    novelGenerate: "Novel Generation",
+    comicGenerate: "Comic Generation",
+    videoGenerate: "Drama Generation",
+    imageGenerate: "Image Generation",
+    simpleVideoGenerate: "Video Generation"
   },
   computingPowerRules: `Computing Power Usage Rules<br />
     1.What is "Computing Power"?<br />
@@ -2235,6 +2295,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
   loading: "Loading...",
   common: {
     noData: "No data available at the moment.",
+    queue: "Queue",
   },
   collection: {
     createCollection: "Create Collection",
@@ -2243,8 +2304,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     duplicateError: "New collection name cannot be the same as existing collections",
     cancel: "Cancel",
     save: "Save",
-    noCollection: "No Collection",
-    newCollection: "New Collection"
+    noCollection: "Please select a collection",
+    newCollection: "New Collection",
+    switchConfirm: {
+      title: "Switch Collection Confirmation",
+      message: "Publishing the current project to another collection may cause chapter confusion. Are you sure you want to switch?",
+      cancel: "Cancel",
+      confirm: "Confirm"
+    }
   },
   fail: "Fail",
   chapter: "Chapter {chapter}",
@@ -2348,4 +2415,72 @@ If you have any questions, complaints, comments or suggestions regarding persona
     savingsSuffix: "saved",
     packSuffix: "Pack"
   },
+  footer: {
+    nav: {
+      home: "Home",
+      myProjects: "My Projects",
+      characterLibrary: "Character Library",
+      myCommunity: "My Community",
+      profile: "Profile"
+    },
+    policies: {
+      communityGuidelines: "Community Guidelines",
+      termsOfService: "Terms of Service",
+      privacyPolicy: "Privacy Policy",
+      paidServices: "Paid Services"
+    },
+    copyright: "© 2026 acgworlds Co., Ltd. All rights reserved."
+  },
+  seo: {
+    home: {
+      title: "MoeGen - AI Novel, Comic & Anime Drama Generator | One Line, Infinite Stories",
+      keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, MoeGen, AI writing tool",
+      description: "MoeGen turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start."
+    },
+    detail: {
+      title: "[[title]] - MoeGen AI Anime Creation",
+      keywords: "[[title]],AI [[type]],anime [[type]]",
+      description: "[[title]] - [[description]]"
+    },
+    communityConvention: {
+      title: "Community Guidelines — MoeGen Creator Code of Conduct",
+      keywords: "community guidelines, creator rules, content policy, community policy",
+      description: "Read MoeGen's community guidelines to keep our AI creator community safe and inspiring."
+    },
+    terms: {
+      title: "Terms of Service — MoeGen User Agreement",
+      keywords: "terms of service, user agreement, user agreement, legal terms",
+      description: "Read MoeGen's Terms of Service to understand your rights, responsibilities, and AI content ownership."
+    },
+    privacy: {
+      title: "Privacy Policy — How MoeGen Protects Your Data",
+      keywords: "privacy policy, data protection, personal information, cookie policy",
+      description: "MoeGen respects your personal information and creative privacy."
+    },
+    login: {
+      title: "Log In — Continue Your AI Story | MoeGen",
+      keywords: "MoeGen login, account login, sign in, log in",
+      description: "Log in to your MoeGen account and continue creating AI-powered novels, comics, and anime dramas."
+    },
+    signup: {
+      title: "Sign Up Free — Start Your AI Story Today | MoeGen",
+      keywords: "MoeGen sign up, free AI creation, AI writing account, register",
+      description: "Sign up free and instantly get 30K creation words + full AI novel, comic & anime drama tools."
+    },
+    characterLibrary: {
+      title: "AI Character Library — Create Custom Manga Characters | MoeGen",
+      keywords: "AI character generator, character library, anime characters, manga characters, AI character creation",
+      description: "MoeGen AI Character Library offers official and custom characters to help you create unique 2D manga characters."
+    },
+    userHome: {
+      title: "My Works — Manage Your AI Novels, Comics & Anime Drama | MoeGen",
+      keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
+      description: "Manage your AI-generated novels, comics, and anime dramas on MoeGen. Track fans, subscriptions, and engagement data."
+    },
+    novelGenerate: {
+      title: "AI Novel Generator Online Free | Write 30K Stories in One Click - MoeGen",
+      keywords: "AI novel generator, long-form story generator, textai, AI story maker, AI novel AI, write novel AI, AI novel tool",
+      description: "Generate full 30K+ word novels from one line. Multiple genres: romance, BL, school romance, sci-fi, fantasy. Built for global writers."
+    }
+  }
 };
