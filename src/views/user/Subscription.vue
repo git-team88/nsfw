@@ -181,7 +181,8 @@ async function handleEditClick() {
           if (!hasAccount.value) {
             showAccountRequiredModal.value = true;
           } else {
-            router.push("/user-subscription-edit");
+            // Force navigation with full page refresh to ensure component update
+            window.location.href = '/user-subscription-edit';
           }
         }
       }
@@ -189,7 +190,7 @@ async function handleEditClick() {
       toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
   } catch (e) {
-    console.error(e);
+    console.error('Error in handleEditClick:', e);
   }
 }
 
@@ -260,12 +261,18 @@ async function handleChangeAccount() {
   color: #99A1AF;
 }
 .edit-link {
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.8rem;
+  height: 4rem;
+  background: #FB64B6;
   border: none;
-  color: #fb64b6;
+  border-radius: 0.8rem;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 1.4rem;
-  padding: 0;
+  padding: 0 1rem;
 }
 .tip {
   display: flex;

@@ -165,6 +165,12 @@ export default {
       url: "post/getSubscriptionPlan",
       method: "GET",
     }),
+  getOthersSubscription: (data: any) =>
+    axios.request({
+      url: "post/getBloggerSubscriptionPlan",
+      data: data,
+      method: "POST",
+    }),
   modifySubscription: (data: any) =>
     axios.request({
       url: "post/modifySubscriptionPlanNew",
@@ -346,14 +352,24 @@ export default {
       url: "my/getList?type=" + type+ "&page="+ + page + "&limit=" + limit  + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id,
       method: "GET",
     }),
-  authorInfo: (author_id: number | string) =>
+  authorSelfCollection: (type: number, page: number, limit: number) =>
     axios.request({
-      url: "blogger/getBloggerInfoPublic?author_id=" + author_id,
+      url: "my/getBookList?type=" + type+ "&page="+ + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  authorInfo: (author_id: number | string, showNsfw?: number) =>
+    axios.request({
+      url: "blogger/getBloggerInfoPublic?author_id=" + author_id + (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number, showNsfw?: number) =>
     axios.request({
       url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET",
+    }),
+  authorCollection: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number) =>
+    axios.request({
+      url: "blogger/getBookListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   authorFollowList: (page: number, limit: number, author_id: number | string) =>
@@ -386,6 +402,11 @@ export default {
   userSubscribeList: (page: number, limit: number) =>
     axios.request({
       url: "post/getSubscribeList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  userAiSubscribeList: (page: number, limit: number) =>
+    axios.request({
+      url: "post/getAISubscribeList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
   userFollowList: (page: number, limit: number) =>
@@ -424,6 +445,25 @@ export default {
   postUnpin: (data: any) =>
     axios.request({
       url: "post/unpin",
+      data: data,
+      method: "POST",
+    }),
+
+  postCollection: (data: any) =>
+    axios.request({
+      url: "book/setBookTop",
+      data: data,
+      method: "POST",
+    }),
+  postUnCollection: (data: any) =>
+    axios.request({
+      url: "book/cancelBookTop",
+      data: data,
+      method: "POST",
+    }),
+  finishCollection: (data: any) =>
+    axios.request({
+      url: "book/finishBook",
       data: data,
       method: "POST",
     }),
@@ -657,9 +697,31 @@ export default {
       data: data,
       method: "POST",
     }),
+  getCollectionDetail: (bookId: string | number, showNsfw?: number ) =>
+    axios.request({
+      url: "book/getBookDetailPublic?book_id=" + bookId + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET"
+    }),
+  getSelfCollectionDetail: (bookId: string | number ) =>
+    axios.request({
+      url: "book/getBookDetail?book_id=" + bookId,
+      method: "GET"
+    }),
   recordHistory: (data: any) =>
     axios.request({
       url: "post/writeHistory",
+      data: data,
+      method: "POST",
+    }),
+  blockUser: (data: any) =>
+    axios.request({
+      url: "user/blackUser",
+      data: data,
+      method: "POST",
+    }),
+  unblockUser: (data: any) =>
+    axios.request({
+      url: "user/unblackUser",
       data: data,
       method: "POST",
     }),
@@ -815,6 +877,12 @@ export default {
       url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}` + (showNsfw !== undefined ? `&show_nsfw=${showNsfw}` : ''),
       method: "GET"
     }),
+
+  singleCollectionIndex: (book_id: string | number) =>
+    axios.request({
+      url: `book/getBookChapters?book_id=${book_id}`,
+      method: "GET"
+    }),
   generateCover: (data: any) =>
     axios.request({
       url: "ai/novel/generate_novel_cover_by_prompt",
@@ -851,7 +919,7 @@ export default {
 
   uploadAduio: (data: any) =>
     axios.request({
-      url: "user/getUploadUrl",
+      url: "user/getCosUploadPreSignUrl",
       method: "POST",
       data,
     }),

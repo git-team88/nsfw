@@ -1,6 +1,6 @@
 <template>
   <div class="user-homepage">
-    <Header :cur="-1" ref="headerRef"></Header>
+    <Header :cur="3" ref="headerRef"></Header>
 
     <!-- Top Banner -->
     <div class="home-bg">
@@ -64,6 +64,19 @@
 
                 <div class="dropdown-menu" v-if="showMoreMenu">
                   <div class="menu-item" @click="reportUser">{{ t("userHome.report") }}</div>
+                  <div
+                    class="menu-item block-item"
+                    :class="{ blocked: userInfo.is_blacked == 1 }"
+                    @click="handleBlockClick"
+                    @mouseenter="handleBlockHover(true)"
+                    @mouseleave="handleBlockHover(false)"
+                  >
+                    {{ userInfo.is_blacked == 1 ? t("userHome.unblock") : t("userHome.block") }}
+                  </div>
+                  <div
+                    class="block-tip"
+                    v-if="userInfo.is_blacked != 1 && showBlockTip"
+                  >{{ t("userHome.blockTip") }}</div>
                 </div>
               </div>
             </div>
@@ -129,118 +142,99 @@
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
           <div class="filter-bar">
-            <div class="collection-tabs-container">
-              <button class="tab-prev-btn" @click="prevCollectionPage" v-if="totalCollectionPages > 1 && currentCollectionPage > 1">
-                <img src="@/assets/images/user/left.png" alt="上一页" />
-              </button>
-              <div class="tabs">
-                <div
-                  v-for="tab in currentPageCollectionTabs"
-                  :key="tab.id"
-                  class="tab-item"
-                  :class="{ active: activeCollectionTab == tab.id }"
-                  @click="setActiveCollectionTab(tab.id)"
-                >
-                  <span v-if="tab.id == 0" class="tab-label">{{ tab.label }}</span>
-                  <template v-else>
-                    <span class="tab-title">{{ tab.title }}</span>
-                    <span class="tab-count">({{ tab.count }})</span>
-                  </template>
-                </div>
-              </div>
-              <button class="tab-next-btn" @click="nextCollectionPage" v-if="totalCollectionPages > 1 && currentCollectionPage < totalCollectionPages">
-                <img src="@/assets/images/user/right.png" alt="下一页" />
+            <div class="collection-header">
+              <button
+                class="create-collection-btn"
+                v-if="isSelf"
+                @click="createCollection"
+              >
+                <img class="plus-icon" src="@/assets/images/user/upload.png" alt="" />
+                <span>{{ t("userHome.collection.create") }}</span>
               </button>
             </div>
 
-            <div class="filters">
+            <!-- <div class="filters">
               <div class="sort-box">
                 <img class="sort-btn" :src="sortBy == 'newest' ? ascIcon : descIcon" alt="" @click="toggleSort" />
               </div>
-
-              <div class="more-menu-wrap" ref="collectionMenuRef" v-if="isSelf && activeCollectionTab !== 0">
-                <img
-                  src="@/assets/images/detail/menu.png"
-                  alt=""
-                  @click="showCollectionMenu = !showCollectionMenu"
-                />
-
-                <div class="dropdown-menu bottom" v-if="showCollectionMenu">
-                  <div class="menu-item" @click="editCollectionName">{{ t('userHome.collection.editName') }}</div>
-                  <div class="menu-item delete" v-if="currentCollection?.chapters?.length == 0" @click="deleteCollection">{{ t('userHome.collection.delete') }}</div>
-                </div>
-              </div>
-            </div>
+            </div> -->
           </div>
 
-          <!-- Waterfall List -->
-          <div class="posts-container">
+          <!-- Collection Grid List -->
+          <div class="collections-container">
             <div
-                class="waterfall"
-                v-if="postList && postList.length > 0"
-                ref="waterfallRef"
-              >
-                <div
-                  class="post-card"
-                  v-for="post in postList"
-                  :key="post.id"
-                  ref="postCardRefs"
-                >
-                <div class="card-cover" @click="goDetail(post.id)">
-                  <img :src="post.cover" alt="" class="cover-img" />
-                  <div class="video-overlay" v-if="post.type === 'video'">
-                    <img src="@/assets/images/detail/play.png" alt="" />
-                  </div>
-                  <div class="pinned-tag" v-if="post.isPinned">
-                    {{ t("userHome.card.pinned") }}
-                  </div>
-                </div>
-                <div class="card-info">
-                  <div class="card-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
-                  <div class="card-footer">
-                    <span class="time">{{ post.time }}</span>
-                    <div
-                      class="more-btn-wrap"
-                      :ref="(el) => setCardMenuRef(el, post.id)"
-                      v-if="isSelf"
-                    >
-                      <img
-                        src="@/assets/images/detail/menu.png"
-                        @click.stop="toggleCardMenu(post.id, $event)"
-                      />
-                      <div
-                        class="dropdown-menu"
-                        v-if="activeCardMenuId === post.id"
-                        :class="dropdownPos"
-                      >
-                        <div class="menu-item" v-if="post.isPinned" @click="unpinPost(post)">
-                          {{ t("userHome.card.unpinned") }}
-                        </div>
-                        <div class="menu-item" v-else @click="pinPost(post)">
-                          {{ t("userHome.card.pin") }}
-                        </div>
-                        <div class="menu-item" @click="editPost(post)">
-                          {{ t("userHome.card.edit") }}
-                        </div>
-                        <div class="menu-item delete" @click="deletePost(post)">
-                          {{ t("userHome.card.delete") }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              class="blocked-message"
+              v-if="userInfo.is_blacked == 1"
+            >
+              <img class="blocked-icon" src="@/assets/images/user/block.png" alt="" />
+              <p>{{ t("userHome.blockedMessage") }}</p>
             </div>
 
-            <EmptyState v-if="(postList && postList.length == 0) && !loading" />
-
+            <!-- Loading state takes priority -->
             <div v-if="loading" class="loading-state">
               <div class="loading-spinner"></div>
               <div class="loading-text">{{ t("userHome.loading") }}</div>
             </div>
 
-            <!-- Infinite Scroll Sentinel -->
-            <div ref="loadingSentinel" style="height: 1px; margin-top: 20px;"></div>
+            <!-- Collection grid -->
+            <div
+              class="collections-grid"
+              v-else-if="collections && collections.length > 0 && userInfo.is_blacked != 1"
+            >
+              <div
+                class="collection-card"
+                v-for="collection in collections"
+                :key="collection.id"
+                ref="collectionCardRefs"
+              >
+                <div class="card-cover" @click="goCollectionDetail(collection.id)">
+                  <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
+                  <div class="pinned-tag" v-if="collection.is_top === '1'">
+                    {{ t("userHome.collection.pinned") }}
+                  </div>
+
+                  <div class="card-bottom">
+                    <div class="update-badge">
+                      {{ t("userHome.collection.updated", { count: collection.latest_post_chapter_index || 0 }) }}
+                    </div>
+                    <div
+                      class="more-btn-wrap"
+                      :ref="(el) => setCollectionMenuRef(el, collection.id)"
+                      v-if="isSelf"
+                    >
+                      <img
+                        src="@/assets/images/user/menu.png"
+                        @click.stop="toggleCollectionMenu(collection.id, $event)"
+                      />
+                      <div
+                        class="dropdown-menu"
+                        v-if="activeCollectionMenuId === collection.id"
+                        :class="dropdownPos"
+                      >
+                        <div class="menu-item" v-if="collection.is_top === '1'" @click.stop="unpinCollection(collection)">
+                          {{ t("userHome.collection.unpin") }}
+                        </div>
+                        <div class="menu-item" v-else @click.stop="pinCollection(collection)">
+                          {{ t("userHome.collection.pin") }}
+                        </div>
+                        <div class="menu-item" @click.stop="goCollectionSettings(collection.id)">
+                          {{ t("userHome.collection.settings") }}
+                        </div>
+                        <div class="menu-item" @click.stop="goChapterManage(collection.id)">
+                          {{ t("userHome.collection.chapterManage") }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-info">
+                  <div class="card-desc">{{ collection.title }}</div>
+                </div>
+              </div>
+            </div>
+
+            <EmptyState v-else-if="collectionsInitialized && collections.length == 0 && userInfo.is_blacked != 1" />
           </div>
         </template>
 
@@ -320,6 +314,8 @@
       </div>
     </div>
 
+
+
     <!-- Pin Limit Modal -->
     <div class="pin-modal-overlay" v-if="showPinLimitModal">
       <div class="pin-modal">
@@ -337,7 +333,7 @@
         <div class="pinned-list">
           <div
             class="pinned-item"
-            v-for="item in pinnedPosts"
+            v-for="item in pinnedCollections"
             :key="item.id"
             :class="{ selected: selectedReplaceId === item.id }"
             @click="selectedReplaceId = item.id"
@@ -365,11 +361,30 @@
       @submit="handleReportSubmit"
     />
 
+    <!-- Block Confirm Modal -->
+    <div class="block-confirm-modal" v-if="showBlockConfirmModal">
+      <div class="modal-overlay" @click="showBlockConfirmModal = false"></div>
+      <div class="modal-content">
+        <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="showBlockConfirmModal = false" />
+        <div class="modal-title">{{ t("userHome.blockConfirm") }}</div>
+        <div class="modal-message">
+          {{ t("userHome.blockTip") }}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-cancel" @click="showBlockConfirmModal = false">{{ t('home.styleSelect.cancel') }}</button>
+          <button class="btn btn-confirm" @click="confirmBlockUser">{{ t('home.styleSelect.confirm') }}</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit Collection Modal -->
     <EditCollectionModal
       :visible="showEditCollectionModal"
+      :is-edit="!!editingCollectionId"
       :collection-id="editingCollectionId"
       :collection-name="editingCollectionName"
+      :cover-url="editingCollectionCover"
+      :description="editingCollectionDescription"
       @close="showEditCollectionModal = false"
       @save="handleEditCollectionSave"
     />
@@ -387,8 +402,7 @@ import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import defaultHeaderImg from "@/assets/images/user/pic.jpg";
 import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
-import ascIcon from "@/assets/images/user/asc.png";
-import descIcon from "@/assets/images/user/desc.png";
+import defaultCover from "@/assets/images/base/cover.png";
 import {
   ref,
   computed,
@@ -400,6 +414,7 @@ import {
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
+import { processImageUrl } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
 
@@ -447,6 +462,7 @@ interface UserInfo {
   headerImage: string;
   is_follow: number;
   is_subscribe: number;
+  is_blacked: number;
   subscribe_price: string;
   description: string;
   following: number;
@@ -464,6 +480,37 @@ interface UserInfo {
   kyc_status?: number | string;
 }
 
+interface BooksGroupItem {
+  type: string;
+  num: string;
+}
+
+interface UserInfo {
+  id: string;
+  nickname: string;
+  avatar: string;
+  headerImage: string;
+  is_follow: number;
+  is_subscribe: number;
+  is_blacked: number;
+  subscribe_price: string;
+  description: string;
+  following: number;
+  fans: number;
+  likes: number;
+  posts: number;
+  subPrice: string;
+  subscription_plans: SubscriptionPlan[] | SubscriptionPlan | null;
+  novelCount?: number;
+  comicCount?: number;
+  total_posts?: number;
+  total_posts_1?: number;
+  total_posts_2?: number;
+  total_posts_3?: number;
+  kyc_status?: number | string;
+  books_group?: BooksGroupItem[];
+}
+
 // User Info
 const userInfo = ref<UserInfo>({
   id: "",
@@ -472,6 +519,7 @@ const userInfo = ref<UserInfo>({
   headerImage: "",
   is_follow: 0,
   is_subscribe: 0,
+  is_blacked: 0,
   subscribe_price: "",
   description: "",
   following: 0,
@@ -485,7 +533,8 @@ const userInfo = ref<UserInfo>({
   total_posts: 0,
   total_posts_1: 0,
   total_posts_2: 0,
-  total_posts_3: 0
+  total_posts_3: 0,
+  books_group: []
 });
 
 const reportTarget = ref<{ type: string; id: number | string } | null>(null);
@@ -508,6 +557,8 @@ const stats = ref({
 const isDescExpanded = ref(false);
 const showExpandBtn = computed(() => userInfo.value.description.length > 100); // Simple check
 const showMoreMenu = ref(false);
+const showBlockTip = ref(false);
+const showBlockConfirmModal = ref(false);
 
 const hasActiveSubscriptionPlans = computed(() => {
   const plans = userInfo.value.subscription_plans;
@@ -540,12 +591,21 @@ const currentTab = ref("all");
 const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
-// Content types
-const contentTypes = computed(() => [
-  { id: 2, label: t('userHome.contentType.novel'), count: userInfo.value.total_posts_2 || 0 },
-  { id: 1, label: t('userHome.contentType.comic'), count: userInfo.value.total_posts_1 || 0 },
-  { id: 3, label: t('userHome.contentType.video'), count: userInfo.value.total_posts_3 || 0 }
-]);
+// Content types - read count from books_group
+const contentTypes = computed(() => {
+  const booksGroup = userInfo.value.books_group || [];
+
+  const getCountByType = (type: string) => {
+    const item = booksGroup.find((item: BooksGroupItem) => item.type === type);
+    return item ? parseInt(item.num) || 0 : 0;
+  };
+
+  return [
+    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0 },
+    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0 },
+    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0 }
+  ];
+});
 
 const activeContentType = ref(2);
 
@@ -571,8 +631,12 @@ const collectionTabs = ref<CollectionTab[]>([
 
 
 const activeCollectionTab = ref(0);
-const sortBy = ref('oldest');
 const showCollectionMenu = ref(false);
+
+const postList = ref<Post[] | null>(null);
+const noMore = ref(false);
+const page = ref(1);
+const limit = ref(10);
 
 const currentCollectionPage = ref(1);
 const collectionPageSize = 6;
@@ -581,9 +645,21 @@ const collectionPageSize = 6;
 const showEditCollectionModal = ref(false);
 const editingCollectionId = ref('');
 const editingCollectionName = ref('');
+const editingCollectionCover = ref('');
+const editingCollectionDescription = ref('');
 
 // Collections data
 const collections = ref<any[]>([]);
+const collectionsInitialized = ref(false);
+
+// Pin related variables
+const showPinLimitModal = ref(false);
+const selectedReplaceId = ref<number | null>(null);
+const pendingPinCollection = ref<any>(null);
+
+const pinnedCollections = computed(() => {
+  return collections.value.filter((col) => col.is_top === '1');
+});
 
 const currentCollection = computed(() => {
   if (activeCollectionTab.value === 0) return null;
@@ -600,17 +676,34 @@ const currentPageCollectionTabs = computed(() => {
   return collectionTabs.value.slice(start, end);
 });
 
-// Fetch collections based on content type
+// Fetch collections - show all types
 async function fetchCollections() {
   try {
+    loading.value = true;
     let authorId = route.query.id;
     // Ensure authorId is a string
     if (Array.isArray(authorId)) {
       authorId = authorId[0];
     }
-    if (!authorId) return;
 
-    const response = await api.getCollection(activeContentType.value, 1, 50, authorId) as any;
+    const localUid = localStorage.getItem('uid');
+    const isCurrentUser = localUid == authorId;
+
+    let response;
+    // type: 1=comic, 2=novel, 3=video
+    const type = activeContentType.value;
+
+    if (isCurrentUser) {
+      // Fetch own collections
+      response = await api.authorSelfCollection(type, 1, 20) as any;
+    } else {
+      // Fetch other author's collections
+      if (!authorId) {
+        loading.value = false;
+        return;
+      }
+      response = await api.authorCollection(type, 1, 20, authorId) as any;
+    }
     if (response.code == 0) {
       const collectionData = response.data?.data || [];
       collections.value = collectionData;
@@ -632,27 +725,22 @@ async function fetchCollections() {
       // Reset pagination when collections change
       currentCollectionPage.value = 1;
     }
+    collectionsInitialized.value = true;
+    loading.value = false;
   } catch (error) {
     console.error('Error fetching collections:', error);
+    collectionsInitialized.value = true;
+    loading.value = false;
   }
 }
 
-const postList = ref<Post[] | null>(null);
 const loading = ref(false);
-const noMore = ref(false);
-const page = ref(1);
-const limit = ref(10);
-const loadingSentinel = ref<HTMLElement | null>(null);
 
-const postCardRefs = ref<HTMLElement[]>([]);
+const collectionCardRefs = ref<HTMLElement[]>([]);
 
-const activeCardMenuId = ref<string | number | null>(null);
-const cardMenuRefs = new Map<string | number, HTMLElement>();
+const activeCollectionMenuId = ref<string | number | null>(null);
+const collectionMenuRefs = new Map<string | number, HTMLElement>();
 const dropdownPos = ref("bottom");
-
-const showPinLimitModal = ref(false);
-const selectedReplaceId = ref<number | null>(null);
-const pendingPinPost = ref<Post | null>(null);
 
 const reportModalVisible = ref(false);
 const userReportOptions = computed(() => [
@@ -707,7 +795,9 @@ async function fetchUserInfo() {
       res = await api.authorSelfInfo();
     } else {
       if (!authorId) return;
-      res = await api.authorInfo(authorId);
+      const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
+      const showNsfw = userRegion.value && allowSensitive ? 1 : 0;
+      res = await api.authorInfo(authorId, showNsfw);
     }
 
     const data = res as any;
@@ -720,6 +810,7 @@ async function fetchUserInfo() {
         headerImage: data.data?.user_page?.page_banner || data.data?.page_banner || '',
         is_follow: data.data?.is_follow || 0,
         is_subscribe: data.data?.is_subscribe || 0,
+        is_blacked: data.data?.is_blacked || 0,
         subscribe_price: data.data?.subscribe_price || '',
         subscription_plans: data.data?.subscription_plans || null,
         description: data.data?.user_page?.page_desc || data.data?.page_desc || '',
@@ -735,6 +826,7 @@ async function fetchUserInfo() {
         total_posts_2: parseInt(data.data?.total_posts_2 || '0'),
         total_posts_3: parseInt(data.data?.total_posts_3 || '0'),
         kyc_status: data.data?.kyc_status || 0,
+        books_group: data.data?.books_group || [],
       };
 
     } else {
@@ -757,10 +849,6 @@ function showToast(msg: string, icon = successIcon) {
     toastShow.value = false;
   }, 3000);
 }
-
-const pinnedPosts = computed(() => {
-  return postList.value ? postList.value.filter((p) => p.isPinned) : [];
-});
 
 function setSeoMeta() {
   document.title = t('seo.userHome.title');
@@ -835,7 +923,7 @@ onMounted(async () => {
       const tab = parseInt(tabParam as string);
       switch (tab) {
         case 1:
-          goToPosts(true);
+          goToCollections(true);
           break;
         case 2:
           showFollowList('following', true);
@@ -845,44 +933,14 @@ onMounted(async () => {
           break;
       }
     } else {
-      goToPosts(true);
+      goToCollections(true);
     }
 
-  // Fetch collections
-  fetchCollections();
-
-  // Intersection Observer for infinite scroll
-  nextTick(() => {
-    if (loadingSentinel.value) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (
-            entries[0].isIntersecting &&
-            !loading.value &&
-            !noMore.value &&
-            viewMode.value === "posts"
-          ) {
-            loadPosts();
-          }
-        },
-        {
-          rootMargin: '100px', // 提前100px触发
-          threshold: 0.1
-        }
-      );
-      observer.observe(loadingSentinel.value);
-
-      (loadingSentinel.value as any)._observer = observer;
-    }
-  });
+  // Intersection Observer removed - collections only, no infinite scroll for posts
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
-
-  if (loadingSentinel.value && (loadingSentinel.value as any)._observer) {
-    (loadingSentinel.value as any)._observer.disconnect();
-  }
 });
 
 watch(viewMode, (newVal) => {
@@ -893,7 +951,7 @@ watch(viewMode, (newVal) => {
 
 watch(currentTab, () => {
   if (viewMode.value === 'posts') {
-    loadPosts(true);
+    // Collections only, no posts
   }
 });
 
@@ -911,6 +969,7 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
       nickname: "",
       avatar: "",
       headerImage: "",
+      is_blacked: 0,
       is_follow: 0,
       is_subscribe: 0,
       subscribe_price: "",
@@ -938,7 +997,7 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
       const tab = parseInt(tabParam as string);
       switch (tab) {
         case 1:
-          goToPosts(true);
+          goToCollections(true);
           break;
         case 2:
           showFollowList('following', true);
@@ -948,7 +1007,7 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
           break;
       }
     } else {
-      goToPosts(true);
+      goToCollections(true);
     }
   }
 
@@ -956,7 +1015,7 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
     const tab = parseInt(newType as string);
     switch (tab) {
       case 1:
-        goToPosts(true);
+        goToCollections(true);
         break;
       case 2:
         showFollowList('following', true);
@@ -1006,13 +1065,11 @@ function setActiveContentType(typeId: number) {
   activeContentType.value = typeId;
   activeCollectionTab.value = 0; // Reset to "All" tab
   fetchCollections();
-  loadPosts(true);
 }
 
 // Set active collection tab
 function setActiveCollectionTab(tabId: number) {
   activeCollectionTab.value = tabId;
-  loadPosts(true);
 }
 
 function prevCollectionPage() {
@@ -1058,12 +1115,6 @@ async function deleteCollection() {
   }
 }
 
-// Toggle sort order
-function toggleSort() {
-  sortBy.value = sortBy.value === 'newest' ? 'oldest' : 'newest';
-  loadPosts(true);
-}
-
 function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | MouseEvent = false) {
   // ✅ 判断是否从路由调用（fromRoute = true）还是从用户点击（MouseEvent）
   const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
@@ -1080,39 +1131,50 @@ function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | M
   isPrivacyHidden.value = false;
   fetchFollowList(true);
 
-  if (!fromRoute) {
-    const newQuery = { ...route.query };
-    delete newQuery.type;
+  // 移除URL上的type参数
+  const newQuery = { ...route.query };
+  delete newQuery.type;
 
-    if (!isAlreadyOnSameTab) {
-      router.replace({
-        path: "/user-home",
-        query: newQuery,
-      });
-    }
+  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+    router.replace({
+      path: "/user-home",
+      query: newQuery,
+    });
   }
 }
 
-function goToPosts(fromRouteOrEvent: boolean | MouseEvent = false) {
+function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
 
   const isAlreadyOnPosts = viewMode.value === "posts";
 
   viewMode.value = "posts";
   currentTab.value = "all";
-  activeContentType.value = 2; // Ensure novel tab (id=2) is selected
-  loadPosts(true);
 
-  if (!fromRoute) {
-    const newQuery = { ...route.query };
-    delete newQuery.type;
-
-    if (!isAlreadyOnPosts) {
-      router.replace({
-        path: "/user-home",
-        query: newQuery,
-      });
+  // 根据URL参数设置activeContentType，type=1表示漫画，type=2表示小说
+  const typeParam = route.query.type;
+  if (typeParam) {
+    const typeNum = parseInt(typeParam as string);
+    if (typeNum === 1 || typeNum === 2) {
+      activeContentType.value = typeNum;
+    } else {
+      activeContentType.value = 2;
     }
+  } else {
+    activeContentType.value = 2;
+  }
+
+  fetchCollections();
+
+  // 移除URL上的type参数
+  const newQuery = { ...route.query };
+  delete newQuery.type;
+
+  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+    router.replace({
+      path: "/user-home",
+      query: newQuery,
+    });
   }
 }
 
@@ -1284,16 +1346,74 @@ function reportUser() {
   reportModalVisible.value = true;
 }
 
+function handleBlockHover(show: boolean) {
+  if (userInfo.value.is_blacked != 1) {
+    showBlockTip.value = show;
+  }
+}
+
+function handleBlockClick() {
+  if (!checkLogin()) return;
+
+  if (userInfo.value.is_blacked == 1) {
+    confirmBlockUser();
+  } else {
+    showBlockConfirmModal.value = true;
+  }
+}
+
+async function confirmBlockUser() {
+  if (!checkLogin()) return;
+
+  showBlockConfirmModal.value = false;
+  showMoreMenu.value = false;
+
+  const isBlacked = userInfo.value.is_blacked == 1;
+
+  try {
+    let response;
+    if (isBlacked) {
+      response = await api.unblockUser({
+        user_id: userInfo.value.id
+      }) as any;
+    } else {
+      response = await api.blockUser({
+        user_id: userInfo.value.id,
+        reason: 'black'
+      }) as any;
+    }
+
+    if (response.code == 0) {
+      userInfo.value.is_blacked = isBlacked ? 0 : 1;
+
+      if (isBlacked) {
+        toast(t("userHome.unblockSuccess"));
+        await fetchCollections();
+        // loadPosts(true);
+      } else {
+        collections.value = [];
+        collectionTabs.value = [{ id: 0, label: t('userHome.collection.all') }];
+        activeCollectionTab.value = 0;
+      }
+    } else {
+      toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+    }
+  } catch (error) {
+    console.error('Failed to block/unblock user:', error);
+    toast(t('fail'));
+  }
+}
+
 async function handleReportSubmit(data: { target_type: string; target_id: number | string; reason: string; description: string; images: string[] }) {
 
 }
 
 function onDateChange() {
-  loadPosts(true);
+  // Collections only, no posts
 }
 
 function doSearch() {
-  loadPosts(true);
+  // Collections only, no posts
 }
 
 async function loadPosts(reset = false) {
@@ -1308,7 +1428,6 @@ async function loadPosts(reset = false) {
   // Store the current tab and filter at the time of the request
   const currentContentType = activeContentType.value;
   const currentCollectionTab = activeCollectionTab.value;
-  const currentSortBy = sortBy.value;
   const currentSearchKeyword = searchKeyword.value;
   const currentDateRange = dateRange.value;
 
@@ -1339,9 +1458,6 @@ async function loadPosts(reset = false) {
       end = dateRange.value.end;
     }
 
-    // Determine sort order
-    const sort = sortBy.value == 'newest' ? '1' : '0';
-
     // Determine book_id for collections
     const book_id = activeCollectionTab.value !== 0 ? activeCollectionTab.value : '';
 
@@ -1349,27 +1465,17 @@ async function loadPosts(reset = false) {
 
     const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
     if (isSelf.value) {
-      res = await api.authorSelfHome(
+      res = await api.authorSelfCollection(
         type,
         page.value,
         limit.value,
-        searchKeyword.value,
-        start,
-        end,
-        sort,
-        book_id
       );
     } else {
-      res = await api.authorHome(
-        type,  // ✅ 使用 activeContentType
+      res = await api.authorCollection(
+        type,
         page.value,
         limit.value,
         authorId,
-        searchKeyword.value,
-        start,
-        end,
-        sort,
-        book_id,
         showNsfw
       );
     }
@@ -1383,7 +1489,6 @@ async function loadPosts(reset = false) {
     // Check if the tab or filter has changed while the request was in flight
     if (currentContentType !== activeContentType.value ||
         currentCollectionTab !== activeCollectionTab.value ||
-        currentSortBy !== sortBy.value ||
         currentSearchKeyword !== searchKeyword.value ||
         JSON.stringify(currentDateRange) !== JSON.stringify(dateRange.value)) {
       loading.value = false;
@@ -1418,7 +1523,6 @@ async function loadPosts(reset = false) {
           postList.value = [];
         }
         postList.value.push(...newPosts);
-      sortPosts();
 
       // Set loading to false immediately after data is loaded
       loading.value = false;
@@ -1491,28 +1595,6 @@ function goDetail(id: number) {
   });
 }
 
-function setCardMenuRef(el: object | null, id: number) {
-  if (el) cardMenuRefs.set(id, el as HTMLElement);
-}
-
-function toggleCardMenu(id: number, event?: MouseEvent) {
-  if (activeCardMenuId.value === id) {
-    activeCardMenuId.value = null;
-  } else {
-    activeCardMenuId.value = id;
-    if (event) {
-      const clickY = event.clientY;
-      const screenHeight = window.innerHeight;
-      // If click is in the bottom 30% of the screen, show menu on top
-      if (clickY > screenHeight * 0.7) {
-        dropdownPos.value = "top";
-      } else {
-        dropdownPos.value = "bottom";
-      }
-    }
-  }
-}
-
 function handleClickOutside(e: MouseEvent) {
   const target = e.target as Node;
 
@@ -1526,11 +1608,11 @@ function handleClickOutside(e: MouseEvent) {
     showCollectionMenu.value = false;
   }
 
-  // Card menu
-  if (activeCardMenuId.value !== null) {
-    const el = cardMenuRefs.get(activeCardMenuId.value);
+  // Collection card menu
+  if (activeCollectionMenuId.value !== null) {
+    const el = collectionMenuRefs.get(activeCollectionMenuId.value);
     if (el && !el.contains(target)) {
-      activeCardMenuId.value = null;
+      activeCollectionMenuId.value = null;
     }
   }
 }
@@ -1543,6 +1625,8 @@ function editCollectionName() {
 
     editingCollectionId.value = currentCollection.value.id;
     editingCollectionName.value = currentCollection.value.title;
+    editingCollectionCover.value = currentCollection.value.cover || '';
+    editingCollectionDescription.value = currentCollection.value.description || '';
     showEditCollectionModal.value = true;
   }
 }
@@ -1568,102 +1652,99 @@ function handleEditCollectionSave(collection: { id: string | number; name: strin
   }
 }
 
-function sortPosts() {
-  if (postList.value) {
-    postList.value.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return 0;
-    });
+async function confirmReplacePin() {
+  if (!selectedReplaceId.value || !pendingPinCollection.value) return;
+
+  try {
+    const newCollection = pendingPinCollection.value;
+    const replaceId = selectedReplaceId.value;
+
+    await api.postCollection({ book_id: newCollection.id, alter_id: replaceId?.toString() || '' });
+
+    showPinLimitModal.value = false;
+    pendingPinCollection.value = null;
+    selectedReplaceId.value = null;
+
+    await fetchCollections();
+    showToast(t("userHome.collection.pinnedSuccess"));
+  } catch (error) {
+    console.error(error);
+    toast(t('fail'));
   }
 }
 
-async function pinPost(post: Post) {
-  activeCardMenuId.value = null;
+// Collection methods
+function createCollection() {
+  router.push(`/create-collection?type=${activeContentType.value}`);
+}
 
-  const pinnedCount = postList.value ? postList.value.filter((p) => p.isPinned).length : 0;
+function goCollectionDetail(collectionId: number) {
+  const authorId = route.query.id;
+  const authorIdStr = Array.isArray(authorId) ? authorId[0] : authorId;
+  router.push(`/collection/${collectionId}?uid=${authorIdStr}`);
+}
+
+function goCollectionSettings(collectionId: number) {
+  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
+  router.push(`/collection-settings/${collectionId}`);
+  activeCollectionMenuId.value = null;
+}
+
+function goChapterManage(collectionId: number) {
+  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
+  const authorId = route.query.id;
+  const authorIdStr = Array.isArray(authorId) ? authorId[0] : authorId;
+  router.push(`/collection/${collectionId}?uid=${authorIdStr}`);
+  activeCollectionMenuId.value = null;
+}
+
+function setCollectionMenuRef(el: any, id: string | number) {
+  if (el && 'tagName' in el) {
+    collectionMenuRefs.set(id, el as HTMLElement);
+  }
+}
+
+function toggleCollectionMenu(id: string | number, event: MouseEvent) {
+  event.stopPropagation();
+
+  if (activeCollectionMenuId.value == id) {
+    activeCollectionMenuId.value = null;
+  } else {
+    activeCollectionMenuId.value = id;
+    showCollectionMenu.value = false;
+  }
+}
+
+async function pinCollection(collection: any) {
+  activeCollectionMenuId.value = null;
+
+  const pinnedCount = pinnedCollections.value.length;
   if (pinnedCount >= 3) {
-    pendingPinPost.value = post;
+    pendingPinCollection.value = collection;
     selectedReplaceId.value = null;
     showPinLimitModal.value = true;
     return;
   }
 
   try {
-    await api.postPin({ post_id: post.id });
-
-    await loadPosts(true);
-    showToast(t("userHome.card.pinnedSuccess"));
-  } catch (error) {
-    console.error(error);
-    toast(t('fail'))
-  }
-}
-
-async function confirmReplacePin() {
-  if (!selectedReplaceId.value || !pendingPinPost.value) return;
-
-  try {
-    // Pin new with replacement
-    await api.postPin({ post_id: pendingPinPost.value.id, alter_id: selectedReplaceId.value?.toString() || '' });
-
-    showPinLimitModal.value = false;
-    pendingPinPost.value = null;
-    selectedReplaceId.value = null;
-
-    await loadPosts(true);
-    showToast(t("userHome.card.pinnedSuccess"));
-  } catch (error) {
-    console.error(error);
-    toast(t('fail'))
-  }
-}
-
-async function unpinPost(post: Post) {
-  try {
-    await api.postUnpin({ post_id: post.id });
-    activeCardMenuId.value = null;
-
-    await loadPosts(true);
-    showToast(t("userHome.card.unpinnedSuccess"));
-  } catch (error) {
-    console.error(error);
-    toast(t('fail'))
-  }
-}
-
-function editPost(post: Post) {
-  activeCardMenuId.value = null;
-
-  // Save current content type before navigating
-  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
-
-  // Navigate to edit page based on post type
-  if (post.type == 'video') {
-    router.push({ path: '/publish/video', query: { post_id: post.id.toString() } });
-  } else if (post.type == 'article') {
-    router.push({ path: '/publish/novel', query: { post_id: post.id.toString() } });
-  } else if (post.type == 'image') {
-    router.push({ path: '/publish/comic', query: { post_id: post.id.toString() } });
-  }
-}
-
-async function deletePost(post: Post) {
-  try {
-    await api.deletePost({ post_id: post.id });
-    if (postList.value) {
-      postList.value = postList.value.filter((p) => p.id !== post.id);
-    }
-    activeCardMenuId.value = null;
-
-    // Update collections list and user info after deleting post
+    await api.postCollection({ book_id: collection.id });
     await fetchCollections();
-    await fetchUserInfo();
-
-    showToast(t("userHome.card.deleteSuccess"));
+    showToast(t("userHome.collection.pinnedSuccess"));
   } catch (error) {
     console.error(error);
-    showToast(t('fail'));
+    toast(t('fail'));
+  }
+}
+
+async function unpinCollection(collection: any) {
+  activeCollectionMenuId.value = null;
+  try {
+    await api.postUnCollection({ book_id: collection.id });
+    await fetchCollections();
+    showToast(t("userHome.collection.unpinnedSuccess"));
+  } catch (error) {
+    console.error(error);
+    toast(t('fail'));
   }
 }
 </script>
@@ -2680,6 +2761,353 @@ async function deletePost(post: Post) {
           width: 100%;
           height: 100%;
           background: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+  }
+}
+
+/* Collections Styles */
+.collections-container {
+  min-height: 40rem;
+
+  .collections-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+  }
+
+  .collection-card {
+    width: 25.8rem;
+
+    .card-cover {
+      position: relative;
+      width: 100%;
+      height: 34.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      img.cover-img {
+        width: 100%;
+        display: block;
+        height: 34.4rem;
+        border-radius: 1.2rem;
+        object-fit: cover;
+      }
+
+      .video-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -42%);
+        img {
+          width: 8rem;
+          height: 8rem;
+        }
+      }
+
+      .pinned-tag {
+        position: absolute;
+        top: 0.8rem;
+        left: 0.8rem;
+        background: #FFFFFF;
+        color: #364153;
+        padding: 0.7rem 1rem;
+        border-radius: 0.6rem;
+        font-size: 1.2rem;
+      }
+
+      .card-bottom{
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 6.4rem;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding: 0 1.2rem 1.2rem;
+        border-radius: 0 0 1.2rem 1.2rem;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
+      }
+
+      .update-badge{
+        font-size: 1.2rem;
+        color: #FFFFFF;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      .more-btn-wrap {
+        img {
+          width: 1.8rem;
+          height: 1.8rem;
+          cursor: pointer;
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          right: 0;
+          border-radius: 0.8rem;
+          padding: 0.6rem 0;
+          z-index: 10;
+          min-width: 10rem;
+          background: #FFFFFF;
+          box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+
+          &.bottom {
+            top: 100%;
+            margin-top: 0.4rem;
+          }
+          &.top {
+            bottom: 100%;
+            margin-bottom: 0.4rem;
+          }
+
+          .menu-item {
+            padding: 0.6rem 0;
+            font-size: 1.4rem;
+            color: #6a7282;
+            cursor: pointer;
+            text-align: center;
+            &:hover {
+              font-weight: 500;
+              color: #364153;
+            }
+          }
+        }
+      }
+    }
+
+    .card-info {
+      padding: 1.2rem 0 0;
+
+      .card-desc {
+        font-size: 1.4rem;
+        color: #101828;
+        margin-bottom: 1.2rem;
+        line-height: 2rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+        overflow-wrap: anywhere;font-size: 1.4rem;
+        color: #101828;
+        margin-bottom: 1.2rem;
+        line-height: 2rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+    }
+
+    &:hover .card-footer .more-btn-wrap img {
+      opacity: 1;
+    }
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40rem;
+}
+
+.loading-spinner {
+  width: 4rem;
+  height: 4rem;
+  border: 0.4rem solid #F5F5F5;
+  border-top: 0.4rem solid #6A7282;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.6rem;
+}
+
+.loading-text {
+  font-size: 1.6rem;
+  color: #6A7282;
+}
+
+.block-tip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: -0.8rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.2);
+  box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
+  color: #FFFFFF;
+  border-radius: 0.8rem;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  white-space: nowrap;
+  z-index: 10;
+  text-align: center;
+  width: 22rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.blocked-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15rem 0;
+  text-align: center;
+
+  .blocked-icon {
+    width: 4.8rem;
+    height: 4.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  p {
+    font-size: 1.4rem;
+    color: #6A7282;
+    line-height: 1.6;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.collection-header {
+  display: flex;
+  align-items: center;
+
+  .create-collection-btn {
+    display: flex;
+    align-items: center;
+    height: 4rem;
+    gap: 0.6rem;
+    padding: 0 2rem;
+    background: #F5F5F5;
+    color: #6A7282;
+    border: none;
+    border-radius: 0.8rem;
+    font-size: 1.4rem;
+    cursor: pointer;
+
+    &:hover{
+      color: #FB64B6;
+    }
+
+    .plus-icon {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+}
+
+.block-confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50rem;
+    background-color: #ffffff;
+    border-radius: 1.2rem;
+    padding: 1.8rem 2.4rem 2.4rem;
+    text-align: center;
+
+    .close-btn {
+      position: absolute;
+      top: 2rem;
+      right: 1.2rem;
+      width: 2rem;
+      height: 2rem;
+      cursor: pointer;
+    }
+
+    .modal-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #101828;
+      margin-bottom: 1.6rem;
+    }
+
+    .modal-message {
+      font-size: 1.4rem;
+      color: #6A7282;
+      line-height: 1.6;
+      margin-bottom: 2.4rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 1.6rem;
+      justify-content: center;
+
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 13.6rem;
+        height: 4.4rem;
+        border-radius: 0.8rem;
+        font-size: 1.4rem;
+        cursor: pointer;
+        border: none;
+
+        &.btn-cancel {
+          background: #F5F5F5;
+          color: #6A7282;
+
+          &:hover {
+            color: #fb64b6;
+          }
+        }
+
+        &.btn-confirm {
+          border: none;
+          background: #fb64b6;
+          color: #ffffff;
+
+          &:hover {
+            position: relative;
+            &::after {
+              content: "";
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(255, 255, 255, 0.1);
+              z-index: 1;
+            }
+          }
         }
       }
     }

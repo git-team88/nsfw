@@ -61,7 +61,11 @@
                       </div>
                     </div>
                   </div>
-                  <p class="c-text" v-html="formatContent(comment.content_replace || comment.text || comment.content)"></p>
+                  <div class="c-text hidden" v-if="comment.is_blacked == 1">
+                    <img src="@/assets/images/home/intro.png" alt="" class="hidden-icon" />
+                    <span>{{ t("detail.commentHidden") }}</span>
+                  </div>
+                  <p class="c-text" v-else v-html="formatContent(comment.content_replace || comment.text || comment.content)"></p>
 
                   <div class="c-media" v-if="comment.images && comment.images.length > 0">
                     <div class="c-images">
@@ -132,7 +136,11 @@
                         </div>
                       </div>
                     </div>
-                    <p class="c-text" v-html="formatContent(reply.content_replace || reply.text || reply.content)"></p>
+                    <div class="c-text hidden" v-if="reply.is_blacked == 1">
+                      <img src="@/assets/images/home/intro.png" alt="" class="hidden-icon" />
+                      <span>{{ t("detail.commentHidden") }}</span>
+                    </div>
+                    <p class="c-text" v-else v-html="formatContent(reply.content_replace || reply.text || reply.content)"></p>
                     <div class="c-footer">
                       <span class="c-time">{{ reply.created_at }}</span>
                       <div class="c-actions">
@@ -292,6 +300,10 @@
           </div>
           <div class="toc-header">
             <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
+
+            <div class="view-collection-info" @click="goToCollectionDetail">
+              {{ t('detail.viewCollectionInfo') }}
+            </div>
           </div>
 
           <div class="toc-list" ref="tocListRef" @scroll="handleTocScroll">
@@ -1964,6 +1976,15 @@ function navigateToChapter(chapter: any) {
   emit('close');
 }
 
+// Go to collection detail page
+function goToCollectionDetail() {
+  if (props.detail.book_id && Number(props.detail.book_id) > 0) {
+    emit('close');
+
+    router.push(`/collection/${props.detail.book_id}?uid=${props.detail.author.id}`);
+  }
+}
+
 // Toggle like for chapter
 async function toggleChapterLike(chapter: any, event: MouseEvent) {
   // Prevent the click event from triggering navigateToChapter
@@ -2028,24 +2049,6 @@ function handleTocScroll() {
 function navigateToUserHome() {
   emit('navigate-to-user', props.detail.author.id);
   emit('close');
-}
-
-// Toggle follow
-function toggleFollow() {
-  if (!props.detail.author.id) return;
-
-  api.follow({ user_id: props.detail.author.id, action: props.detail.isFollowed ? 'unfollow' : 'follow' })
-    .then((response: any) => {
-      if (response.code === 0) {
-        // This will not update the parent component's state
-        // We should emit an event to update it
-        console.log('Follow status changed');
-      }
-    })
-    .catch((error: any) => {
-      console.error('Error toggling follow:', error);
-      toast(t('fail'));
-    });
 }
 
 // Load more replies
@@ -2416,6 +2419,21 @@ function likeReply(id: string, liked: boolean) {
           line-height: 2rem;
           margin-bottom: 0.6rem;
           word-break: break-all;
+
+          &.hidden {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1.4rem;
+            color: #99A1AF;
+
+            .hidden-icon {
+              width: 2rem;
+              height: 2rem;
+              object-fit: contain;
+              flex-shrink: 0;
+            }
+          }
         }
 
         /* Comment Media (Images and Videos) */
@@ -2910,10 +2928,18 @@ function likeReply(id: string, liked: boolean) {
       }
 
       .toc-header {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
         padding: 0 2.4rem 2.4rem;
         border-bottom: 0.1rem solid #F5F5F5;
         font-size: 1.4rem;
         color: #6A7282;
+
+        .view-collection-info{
+          color: #FB64B6;
+          cursor: pointer;
+        }
       }
 
       .toc-list {

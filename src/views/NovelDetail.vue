@@ -127,6 +127,7 @@
         <div class="subscription-required" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
           <div class="subscription-content">
             <span class="subscription-text">{{ t('detail.subscribeToView') }}</span>
+            <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
             <button class="subscribe-btn" @click="onSubscribe">
               {{ t('detail.subscribe') }}
             </button>
@@ -141,6 +142,11 @@
           <button class="nav-btn next" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId">
             {{ t('detail.nextChapter') }}
           </button>
+          <!-- Last chapter prompt in collection mode (right of buttons) -->
+          <div class="last-chapter-inline" v-if="!nextChapterId">
+            <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+            <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
+          </div>
         </div>
 
         <div class="collection-info-bar" v-if="detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
@@ -168,6 +174,12 @@
               </template>
             </button>
           </div>
+        </div>
+
+        <!-- Last chapter prompt for non-collection mode (bottom of page) -->
+        <div class="last-chapter-section" v-if="!nextChapterId && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
+          <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+          <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
         </div>
       </div>
 
@@ -567,6 +579,15 @@ async function fetchDetail() {
       // Set chapter navigation
       setChapterNavigation();
 
+      // Auto enter collection mode when:
+      // - type=4 (from collection detail page)
+      // - collected=1 (from chapter navigation)
+      // - already in collection mode (chapter navigation)
+      if (detail.value.book_id && Number(detail.value.book_id) > 0 && (route.query.type == '4' || route.query.collected == '1' || isCollectionMode.value)) {
+        isCollectionMode.value = true;
+        pendingRecordHistory.value = true;
+      }
+
       // Record view history if needed
       if (pendingRecordHistory.value) {
         pendingRecordHistory.value = false;
@@ -713,14 +734,31 @@ async function toggleLike() {
   }
 }
 
-function onSubscribe() {
+async function onSubscribe() {
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
     return;
   }
 
-  router.push(`/subscription-payment?uid=${detail.value.author.id}`);
+  try {
+    var data = {
+      'blogger_id': detail.value.author.id
+    }
+    const res = await api.getOthersSubscription(data) as any;
+    if (res.code == 0 || res.code == 200) {
+      const plan = res.data?.plan;
+      if (!plan) {
+        toast(t('detail.authorClosedSubscription'));
+        return;
+      }
+      router.push(`/subscription-payment?uid=${detail.value.author.id}`);
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
 }
 
 // Submit comment
@@ -1185,9 +1223,24 @@ async function toggleFollow() {
   if (!authorId) return;
 
   try {
-    const response = await api.follow({ user_id: authorId }) as any;
-    if (response.code === 0) {
-      detail.value.isFollowed = !detail.value.isFollowed;
+    const data = { followed_id: authorId };
+
+    if (detail.value.isFollowed) {
+      // 取消关注
+      const response = await api.unfollow(data) as any;
+      if (response.code === 0 || response.code === 200) {
+        detail.value.isFollowed = false;
+      } else {
+        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+      }
+    } else {
+      // 关注
+      const response = await api.follow(data) as any;
+      if (response.code == 0 || response.code == 200) {
+        detail.value.isFollowed = true;
+      } else {
+        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+      }
     }
   } catch (error) {
     console.error('Error toggling follow:', error);
@@ -1202,7 +1255,8 @@ function navigateToChapter(chapter: any) {
     path: '/detail',
     query: {
       ...route.query,
-      id: chapter.post_id
+      id: chapter.post_id,
+      collected: '1'
     }
   });
 
@@ -1327,7 +1381,8 @@ async function enterCollectionMode(type: number) {
           path: '/detail',
           query: {
             ...route.query,
-            id: targetChapterId
+            id: targetChapterId,
+            collected: '1' // Add collected=1 to trigger collection mode on page load
           }
         });
         pendingRecordHistory.value = true;
@@ -1544,11 +1599,29 @@ function goNext() {
 
 // Close page
 function closePage() {
-  if (window.history.length <= 1) {
+  const currentHost = window.location.hostname;
+  const referrer = document.referrer;
+  let isFromExternal = false;
+  let isReferrerEmpty = !referrer;
+
+  if (referrer) {
+    try {
+      const referrerHost = new URL(referrer).hostname;
+      isFromExternal = !!(referrerHost && referrerHost !== currentHost);
+    } catch (e) {
+      isFromExternal = true;
+    }
+  }
+
+  if (window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
     router.push('/');
   } else {
     router.back();
   }
+}
+
+function goToHomePage() {
+  router.push('/');
 }
 
 // Update post data from sidebar
@@ -1572,6 +1645,17 @@ watch(() => route.query.id, async (newId) => {
 });
 
 // Mounted
+// Disable F12 and right-click context menu
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+    e.preventDefault();
+  }
+}
+
+function handleContextMenu(e: MouseEvent) {
+  e.preventDefault();
+}
+
 onMounted(async () => {
   await fetchDetail();
 
@@ -1585,6 +1669,10 @@ onMounted(async () => {
 
   // Add click outside listener to close dropdown
   document.addEventListener('click', handleClickOutside);
+
+  // Add listeners for disabling F12 and context menu
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('contextmenu', handleContextMenu);
 });
 
 // Unmounted
@@ -1595,6 +1683,10 @@ onUnmounted(() => {
     commentsList.removeEventListener('scroll', handleCommentsScroll);
   }
   document.removeEventListener('click', handleClickOutside);
+
+  // Remove listeners for disabling F12 and context menu
+  document.removeEventListener('keydown', handleKeyDown);
+  document.removeEventListener('contextmenu', handleContextMenu);
 });
 
 // Handle click outside to close dropdown

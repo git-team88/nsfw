@@ -4,7 +4,18 @@
       <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
 
       <h3 class="modal-title">{{ t('novel.insufficientBalance') }}</h3>
-      <p class="modal-message">{{ t('novel.insufficientBalanceMessage') }}</p>
+      <p class="modal-message">
+        <!-- <template v-if="estimatedPower !== undefined && estimatedPower > 0 && availableBalance !== undefined && availableBalance >= 0 && frozenBalance !== undefined && frozenBalance >= 0">
+          {{ t('novel.insufficientBalanceDetail', {
+            estimated: estimatedPower,
+            available: availableBalance,
+            frozen: frozenBalance
+          }) }}
+        </template> -->
+        <!-- <template v-else> -->
+          {{ t('novel.insufficientBalanceMessage') }}
+        <!-- </template> -->
+      </p>
       <div class="modal-actions">
         <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
         <button class="modal-recharge-btn" @click="$emit('recharge')">{{ t('novel.goRecharge') }}</button>
@@ -20,6 +31,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
+  estimatedPower?: number;
 }>();
 
 const emit = defineEmits<{

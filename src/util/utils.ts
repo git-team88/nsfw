@@ -1,4 +1,36 @@
 import { baseUrl } from './config';
+import i18n from '../lang/i18n';
+import api from '../api';
+
+// 初始化语言设置
+export async function initLanguage() {
+  const savedLang = localStorage.getItem('lang');
+  if (savedLang) {
+    return savedLang;
+  }
+
+  try {
+    const res: any = await api.getCode();
+    if (res.code === 0 && res.data?.countryCode) {
+      const countryCode = res.data.countryCode;
+      let lang = 'en';
+
+      if (countryCode === 'CN' || countryCode === 'TW') {
+        lang = 'zh';
+      } else if (countryCode === 'JP') {
+        lang = 'jp';
+      }
+
+      localStorage.setItem('lang', lang);
+      i18n.global.locale.value = lang;
+      return lang;
+    }
+  } catch (error) {
+    console.error('Failed to get country code:', error);
+  }
+
+  return 'en';
+}
 
 export function formatQuantity(num: number) {
   if (typeof num != 'number' || !Number.isInteger(num)) {
@@ -92,7 +124,9 @@ export function formatUpdateTime(timeStr: string): TimeFormatResult {
 
   const months = Math.floor(days / 30);
 
-  if (hours < 24) {
+  if (hours < 1) {
+    return { key: 'home.updateTime.justNow' };
+  } else if (hours < 24) {
     return { key: 'home.updateTime.hoursAgo', params: { hours } };
   } else if (days <= 29) {
     return { key: 'home.updateTime.daysAgo', params: { days } };
@@ -101,4 +135,13 @@ export function formatUpdateTime(timeStr: string): TimeFormatResult {
   } else {
     return { key: 'home.updateTime.yearsAgo', params: { years: Math.floor(months / 12) } };
   }
+}
+
+export function processImageUrl(url: string | undefined, quality: number = 60): string {
+  if (!url) return '';
+  const formatParam = `imageMogr2/format/webp/quality/${quality}`;
+  if (url.includes('?')) {
+    return url + '&' + formatParam;
+  }
+  return url + '?' + formatParam;
 }

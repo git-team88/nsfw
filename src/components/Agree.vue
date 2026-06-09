@@ -4,9 +4,9 @@
     <div class="agree">
       <img class="close" src="@/assets/images/base/close.png" alt="" @click="closeAgree()" />
 
-      <div class="title">{{ t('agreeTitle') }}</div>
+      <div class="title">{{ t('closedBetaAgreementTitle') }}</div>
       <div class="content" ref="contentContainer" @scroll="handleScrollFunc">
-        <div v-html="t('agreement')"></div>
+        <div v-html="t('closedBetaAgreement')"></div>
       </div>
       <div class="tip">{{ t('agreeTip') }}</div>
       <div class="agree-btn" :class="isFinishAgree ? 'on' : ''" @click="goRegister()">
@@ -66,7 +66,7 @@
         btnText.value = agreeText
       }
 
-      if (timer.value <=0 && isReachedBottom.value) {
+      if (timer.value <= 0) {
         if (!isFinishAgree.value) {
           isFinishAgree.value = true
         }
@@ -127,7 +127,7 @@
       }
 
     if (!isAgree.value) {
-      toast('Please agree to the user agreement')
+      toast(t('pleaseAgreeAgreement'))
       return false
     }
 
@@ -204,7 +204,7 @@
         height: 34rem;
         margin: 2.4rem 0 1rem;
         font-size: 1.4rem;
-        overflow-y: scroll;
+        overflow-y: auto;
         line-height: 1.7;
         color: #6A7282;
 

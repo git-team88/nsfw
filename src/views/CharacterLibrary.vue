@@ -56,7 +56,7 @@
             <img class="power-icon" src="@/assets/images/project/coin.png" alt="" />
             <span class="power-value">{{ character.useCostPoints }}</span>
           </div>
-          <img class="character-img" :src="character.image" :alt="character.name" />
+          <img class="character-img" :src="processImageUrl(character.image)" :alt="character.name" />
           <span class="character-name">{{ character.name }}</span>
         </div>
       </div>
@@ -100,6 +100,7 @@ import addIcon from '@/assets/images/project/add.png';
 import addHoverIcon from '@/assets/images/project/add_hover.png';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { processImageUrl } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const router = useRouter();

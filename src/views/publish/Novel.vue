@@ -71,10 +71,14 @@
                   <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                 </div>
               </div>
-              <div class="custom-dropdown" v-if="showProjectDropdown">
+              <div class="custom-dropdown" v-if="showProjectDropdown" @scroll="handleProjectDropdownScroll">
                 <div class="project-dropdown-item" v-for="(project, index) in projects" :key="project.id">
                   <span class="project-name" @click="selectProject(project)">{{ project.name }}</span>
                   <span class="preview-btn" @click.stop="openViewModal(project)">{{ t('submit.image.preview') }}</span>
+                </div>
+                <div v-if="isLoadingMoreProjects" class="loading-indicator">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('loading') }}</span>
                 </div>
               </div>
             </div>
@@ -288,58 +292,72 @@
         <!-- Collection -->
         <div class="collection-section">
           <div class="form-item">
-            <div class="form-label-inner">
-              <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+            <div class="collection-row">
+              <div class="collection-group">
+                <div class="form-label-inner">
+                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.collectionInfo')"></div>
+                  <div class="info-icon" @mouseover="adjustTooltipPosition">
+                    <img src="@/assets/images/publish/intro.png" alt="Info" />
+                    <div class="tooltip-arrow"></div>
+                    <div class="tooltip">
+                      <div class="tooltip-content">
+                        <div v-html="t('submit.collectionInfo')"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
+                    <div class="select-content" v-if="selectedCollection">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="select-text">
+                        <span class="select-value">{{ selectedCollection.name }}</span>
+                        <span class="modify-link" @click.stop="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                    </div>
+                    <span class="select-value" v-else>{{ t('collection.noCollection') }}</span>
+                    <div class="select-actions">
+                      <div class="select-arrow">
+                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      </div>
+                    </div>
+                  </div>
+                  <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" :class="{ 'dropdown-top': collectionDropdownPosition === 'top' }" @scroll="handleCollectionDropdownScroll">
+                    <div class="collection-dropdown-item new-collection" @click="createNewCollection">
+                      <span>{{ t('collection.newCollection') }}</span>
+                      <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
+                    </div>
+                    <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
+                      <img v-if="collection.cover" :src="processImageUrl(collection.cover)" alt="" class="collection-item-cover" />
+                      <span class="collection-item-title">{{ collection.title }}</span>
+                    </div>
+                    <!-- Loading indicator -->
+                    <div v-if="isLoadingCollections" class="loading-indicator">
+                      <div class="loading-spinner"></div>
+                      <span>{{ t('loading') }}</span>
+                    </div>
+                    <!-- No more collections message - only show when there's more than one page -->
+                    <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
+                      {{ t('emptyState.noMoreData') }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="collection-row">
-              <div class="collection-select">
-                <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                  <span class="select-value">{{ selectedCollection?.name || t('collection.noCollection') }}</span>
-                  <div class="select-actions">
+              <div class="collection-group" v-if="!isNoCollection">
+                <label class="form-label">{{ t("collection.orderInCollection") }}</label>
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
                     <div class="select-arrow">
                       <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                     </div>
                   </div>
-                </div>
-                <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" @scroll="handleCollectionDropdownScroll">
-                  <div class="collection-dropdown-item new-collection" @click="createNewCollection">
-                    <span>{{ t('collection.newCollection') }}</span>
-                    <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
-                  </div>
-                  <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
-                    {{ collection.title }}
-                  </div>
-                  <!-- Loading indicator -->
-                  <div v-if="isLoadingCollections" class="loading-indicator">
-                    <div class="loading-spinner"></div>
-                    <span>{{ t('loading') }}</span>
-                  </div>
-                  <!-- No more collections message - only show when there's more than one page -->
-                  <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
-                    {{ t('emptyState.noMoreData') }}
-                  </div>
-                </div>
-              </div>
-              <div class="collection-select" v-if="!isNoCollection">
-                <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                  <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                  <div class="select-arrow">
-                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                  </div>
-                </div>
-                <div class="custom-dropdown" v-if="showEpisodeDropdown">
-                  <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                    {{ episode.label }}
+                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                      {{ episode.label }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -347,21 +365,21 @@
           </div>
         </div>
 
-        <!-- Cover Image -->
-        <div class="section">
+        <!-- Cover Image - hidden, using collection cover automatically -->
+        <!-- <div class="section">
           <div class="form-item">
             <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}
             </label>
             <div class="cover-row">
               <div class="cover-box">
-                <img v-if="coverPreview" :src="coverPreview" alt="" />
+                <img v-if="coverPreview || (selectedCollection && selectedCollection.cover)" :src="coverPreview || selectedCollection.cover" alt="" />
               </div>
               <div class="reupload-box">
                 <button class="reupload" @click="openCoverModal">{{ t("submit.cover.set") }}</button>
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- Sensitive Content -->
         <div class="section">
@@ -405,7 +423,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<a href="javascript:void(0)" @click="openCommunityConvention">{{ t("submit.terms") }}</a></span
+            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
           >
         </div>
       </div>
@@ -455,13 +473,17 @@
     @go-to-settings="goToSubscriptionSettings"
   />
 
-  <!-- Create Collection Modal -->
-  <CreateCollectionModal
-    :visible="showCreateCollectionModal"
-    :existing-collections="collections.map(c => c.name)"
+  <!-- Edit Collection Modal -->
+  <EditCollectionModal
+    :visible="showEditCollectionModal"
+    :is-edit="editingCollectionId !== null"
+    :collection-id="editingCollectionId || ''"
+    :collection-name="selectedCollection?.name || ''"
+    :cover-url="selectedCollection?.cover || ''"
+    :description="selectedCollection?.description || ''"
     :type="2"
-    @close="handleCloseCreateCollectionModal"
-    @save="handleCreateCollection"
+    @close="handleCloseEditCollectionModal"
+    @save="handleSaveCollection"
   />
 
   <!-- Switch Collection Confirm Modal -->
@@ -482,8 +504,8 @@ import Pagination from "@/components/Pagination.vue";
 import ProjectNovelViewModal from "@/components/ProjectNovelViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
-import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
+import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import api from "@/api/index";
 import mammoth from "mammoth";
 import * as pdfjsLib from "pdfjs-dist";
@@ -493,6 +515,7 @@ import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
+import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -655,6 +678,9 @@ const projects = ref<any[]>([]);
 const selectedProjectId = ref('');
 const selectedProject = ref<any>(null);
 const isLoadingProjects = ref(false);
+const isLoadingMoreProjects = ref(false);
+const hasMoreProjects = ref(true);
+const currentProjectPage = ref(1);
 
 // Pagination
 const currentPage = ref(1);
@@ -677,17 +703,20 @@ const showProjectDropdown = ref(false);
 const showChapterDropdown = ref(false);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string } | null>(null);
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const isCollectionHovered = ref(false);
-const showCreateCollectionModal = ref(false);
+const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
+const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showSwitchCollectionModal = ref(false);
+const showEditCollectionModal = ref(false);
+const editingCollectionId = ref<string | number | null>(null);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
-  { value: '1', label: t('chapter', { chapter: 1 }) },
+  { value: '1', label: '1' },
 ]);
 
 // Flag to check if switch collection warning has been shown
@@ -765,6 +794,8 @@ watch(locale, () => {
 // Watch for upload option changes
 watch(uploadOption, (newOption) => {
   if (newOption === 'history') {
+    hasMoreProjects.value = true;
+    currentProjectPage.value = 1;
     fetchProjects();
   } else if (newOption === 'local') {
     // Reset selected project when switching to local upload mode
@@ -1168,9 +1199,9 @@ async function getPostDetails() {
         // Request singleCollection to get complete episode list
         if (postData.book_id) {
           try {
-            const collectionRes = await api.singleCollection(postData.book_id, 1, 10) as any;
+            const collectionRes = await api.singleCollectionIndex(postData.book_id) as any;
             if (collectionRes.code == 0 && collectionRes.data) {
-              const allnums = collectionRes.data.allnums || '0';
+              const allnums = collectionRes.data.count || 0;
               const totalEpisodes = parseInt(allnums);
 
               // Update episodes array with complete list
@@ -1178,7 +1209,7 @@ async function getPostDetails() {
               for (let i = 1; i <= totalEpisodes; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('chapter', { chapter: i })
+                  label: i.toString()
                 });
               }
             }
@@ -1191,7 +1222,7 @@ async function getPostDetails() {
               for (let i = 1; i <= chapterIndex; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('chapter', { chapter: i })
+                  label: i.toString()
                 });
               }
             }
@@ -1364,7 +1395,10 @@ async function onSubmit() {
   } else if (!selectedCollection.value) {
     toast(t('collection.noCollection'));
     return;
-  } else if (!coverPreview.value) {
+  } else if (!selectedEpisodeNumber.value) {
+    toast(t('collection.enterEpisode'));
+    return;
+  } else if (!coverPreview.value && !(selectedCollection.value && selectedCollection.value.cover)) {
     toast(t('submit.article.coverRequired'));
     return;
   }
@@ -1398,7 +1432,7 @@ async function onSubmit() {
     const payload = {
       type: 2,
       title: form.value.title.trim(),
-      cover: coverPreview.value,
+      cover: coverPreview.value || (selectedCollection.value?.cover || ''),
       content: form.value.description.trim(),
       is_nsfw: form.value.content == "yes" ? 1 : 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
@@ -1734,28 +1768,183 @@ function confirmSensitive() {
 // Collection methods
 function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showCollectionDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 350; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          collectionDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          collectionDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        collectionDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      collectionDropdownPosition.value = 'bottom';
+    }
+  }
+
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
 
   // Fetch collections when opening dropdown
   if (showCollectionDropdown.value) {
-    // Reset pagination and clear collections first
-    hasMoreCollections.value = true;
-    collections.value = [];
-    currentCollectionPage.value = 1;
-    fetchCollections(false);
+    // Only fetch if we haven't loaded any collections yet
+    if (collections.value.length === 0) {
+      hasMoreCollections.value = true;
+      currentCollectionPage.value = 1;
+      fetchCollections(false);
+    }
   }
 }
 
 function toggleEpisodeDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showEpisodeDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 300; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          episodeDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          episodeDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        episodeDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      episodeDropdownPosition.value = 'bottom';
+    }
+  }
+
   showEpisodeDropdown.value = !showEpisodeDropdown.value;
   showCollectionDropdown.value = false;
 }
 
 function createNewCollection() {
+  if (collections.value.length > 0) {
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+  } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+  }
+}
+
+function handleEditCollection() {
   showCollectionDropdown.value = false;
-  showCreateCollectionModal.value = true;
+
+  if (selectedCollection.value) {
+    const currentCollection = selectedCollection.value;
+    editingCollectionId.value = currentCollection.id;
+
+    // Ensure cover and description are available - fetch from collections array if missing
+    const collection = collections.value.find(c => c.id === currentCollection.id);
+
+    if (collection) {
+      selectedCollection.value = {
+        ...currentCollection,
+        cover: collection.cover || currentCollection.cover,
+        description: collection.description || currentCollection.description
+      };
+    }
+  } else {
+    editingCollectionId.value = null;
+  }
+
+  showEditCollectionModal.value = true;
+}
+
+function handleEditCollectionFromDropdown() {
+  showCollectionDropdown.value = false;
+  if (selectedCollection.value) {
+    const currentCollection = selectedCollection.value;
+    editingCollectionId.value = currentCollection.id;
+
+    // Ensure cover and description are available - fetch from collections array if missing
+    const collection = collections.value.find(c => c.id === currentCollection.id);
+    if (collection) {
+      console.log('Collection from array:', JSON.parse(JSON.stringify(collection)));
+      selectedCollection.value = {
+        ...currentCollection,
+        cover: collection.cover || currentCollection.cover,
+        description: collection.description || currentCollection.description
+      };
+    }
+
+    showEditCollectionModal.value = true;
+  }
+}
+
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string }) {
+  showEditCollectionModal.value = false;
+
+  if (editingCollectionId.value === null) {
+    selectedCollection.value = {
+      id: collection.id,
+      name: collection.name,
+      cover: collection.cover
+    };
+    coverPreview.value = collection.cover || '';
+
+    await fetchCollections();
+
+    const chapterCount = 0;
+    const defaultEpisode = chapterCount + 1;
+    selectedEpisodeNumber.value = defaultEpisode.toString();
+    episodes.value = [];
+    for (let i = 1; i <= defaultEpisode; i++) {
+      episodes.value.push({
+        value: i.toString(),
+        label: i.toString()
+      });
+    }
+  } else {
+    if (selectedCollection.value && selectedCollection.value.id === collection.id) {
+      selectedCollection.value.name = collection.name;
+      if (collection.cover) {
+        selectedCollection.value.cover = collection.cover;
+        coverPreview.value = collection.cover;
+      }
+    }
+
+    const index = collections.value.findIndex(c => c.id === collection.id);
+    if (index !== -1) {
+      collections.value[index].title = collection.name;
+      if (collection.cover) {
+        collections.value[index].cover = collection.cover;
+      }
+    }
+  }
+}
+
+function handleCloseEditCollectionModal() {
+  showEditCollectionModal.value = false;
 }
 
 async function selectCollection(id: number) {
@@ -1776,15 +1965,20 @@ async function doSelectCollection(id: number) {
   if (collection) {
     selectedCollection.value = {
       id: collection.id,
-      name: collection.title
+      name: collection.title,
+      cover: collection.cover,
+      description: collection.description
     };
+
+    // Update cover preview to use collection cover
+    coverPreview.value = collection.cover || '';
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id, 1, 10) as any;
+      const response = await api.singleCollectionIndex(id) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
-        const allnum = response.data.allnums || '0';
+        const allnum = response.data.count || 0;
         const defaultEpisode = parseInt(allnum) + 1;
 
         selectedEpisodeNumber.value = defaultEpisode.toString();
@@ -1794,7 +1988,7 @@ async function doSelectCollection(id: number) {
         for (let i = 1; i <= defaultEpisode; i++) {
           episodes.value.push({
             value: i.toString(),
-            label: t('chapter', { chapter: i })
+            label: i.toString()
           });
         }
       }
@@ -1810,7 +2004,7 @@ async function doSelectCollection(id: number) {
       for (let i = 1; i <= defaultEpisode; i++) {
         episodes.value.push({
           value: i.toString(),
-          label: t('chapter', { chapter: i })
+          label: i.toString()
         });
       }
     }
@@ -1825,20 +2019,19 @@ function handleCloseSwitchCollectionModal() {
 }
 
 async function handleConfirmSwitchCollection() {
-  // Mark warning as shown
   switchCollectionWarningShown.value = true;
 
-  // Close modal first before updating collection
   showSwitchCollectionModal.value = false;
 
-  // Wait for modal to close before updating collection
   await new Promise(resolve => setTimeout(resolve, 100));
 
   if (pendingCollectionId.value !== null) {
     await doSelectCollection(pendingCollectionId.value);
+    pendingCollectionId.value = null;
+  } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
   }
-
-  pendingCollectionId.value = null;
 }
 
 function clearCollection() {
@@ -1855,18 +2048,7 @@ function selectEpisode(value: string) {
 
 function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : t('chapter', { chapter: 1 });
-}
-
-async function handleCreateCollection(collection: { id: string | number; name: string }) {
-  selectedCollection.value = collection;
-  selectedEpisodeNumber.value = '1';
-  showCreateCollectionModal.value = false;
-  isNoCollection.value = false;
-}
-
-function handleCloseCreateCollectionModal() {
-  showCreateCollectionModal.value = false;
+  return episode ? episode.label : '1';
 }
 
 // Project dropdown methods
@@ -1921,29 +2103,50 @@ function handleClickOutside(event: MouseEvent) {
 const projectDetailsCache = ref<Record<string, any>>({});
 
 // Project list methods
-async function fetchProjects() {
-  isLoadingProjects.value = true;
+async function fetchProjects(loadMore = false) {
+  if (loadMore) {
+    if (isLoadingMoreProjects.value || !hasMoreProjects.value) return;
+    isLoadingMoreProjects.value = true;
+  } else {
+    if (isLoadingProjects.value || !hasMoreProjects.value) return;
+    isLoadingProjects.value = true;
+  }
+
   try {
-    const response = await api.getProject(0, 'novel', currentPage.value, 10, 1) as any;
+    const page = loadMore ? currentProjectPage.value + 1 : 1;
+    const response = await api.getProject(0, 'novel', page, 20, 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
     }
 
-    projects.value = response.data.data_list || [];
+    const newProjects = response.data.data_list || [];
 
-    if(projects.value && projects.value.length > 0) {
-      await selectProject(projects.value[0]);
+    if (loadMore) {
+      projects.value = [...projects.value, ...newProjects];
+      currentProjectPage.value = page;
+    } else {
+      projects.value = newProjects;
+      currentProjectPage.value = 1;
+
+      if(projects.value && projects.value.length > 0) {
+        await selectProject(projects.value[0]);
+      }
     }
 
     if (response.data.data_count) {
       totalProjects.value = response.data.data_count;
     }
-    // Don't select first project by default - show default text instead
+
+    hasMoreProjects.value = newProjects.length == 20;
   } catch (error) {
     console.error('Error fetching projects:', error);
   } finally {
-    isLoadingProjects.value = false;
+    if (loadMore) {
+      isLoadingMoreProjects.value = false;
+    } else {
+      isLoadingProjects.value = false;
+    }
   }
 }
 
@@ -1972,7 +2175,7 @@ async function selectProject(project: any) {
       project.chapters.forEach((chapter: any, index: number) => {
         episodes.value.push({
           value: chapter.chapter.toString(),
-          label: t('chapter', { chapter: chapter.chapter })
+          label: chapter.chapter.toString()
         });
       });
 
@@ -2006,7 +2209,7 @@ async function selectProject(project: any) {
         project.chapters.forEach((chapter: any, index: number) => {
           episodes.value.push({
             value: chapter.chapter.toString(),
-            label: t('chapter', { chapter: chapter.chapter })
+            label: chapter.chapter.toString()
           });
         });
 
@@ -2098,6 +2301,19 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
+// Handle project dropdown scroll
+function handleProjectDropdownScroll(event: Event) {
+  const target = event.target as HTMLElement;
+  if (!target) return;
+
+  const { scrollTop, scrollHeight, clientHeight } = target;
+
+  // Load more when scrolled to within 100px of the bottom
+  if (scrollHeight - scrollTop - clientHeight < 100 && hasMoreProjects.value && !isLoadingMoreProjects.value) {
+    fetchProjects(true);
+  }
+}
+
 // Modal methods
 async function openViewModal(project: any) {
   previewProject.value = project;
@@ -2125,7 +2341,7 @@ async function handlePublish(publishData?: any) {
   // Check if publishData is provided (from modal) or if we're handling a direct click
   if (publishData && typeof publishData == 'object' && publishData.project) {
     // From modal: use the provided data
-    const { project: targetProject, episode: targetEpisode, title, content, chapterIndex } = publishData;
+    const { project: targetProject, episode: targetEpisode, title, content, chapterIndex, session_id, cover } = publishData;
 
     if (!targetProject) {
       toast(t('submit.image.selectNovelFirst'));
@@ -2145,6 +2361,16 @@ async function handlePublish(publishData?: any) {
     // Use the provided title and content
     form.value.title = title.substring(0, TITLE_MAX);
     form.value.description = content || `This is the content for episode ${targetEpisode} of ${targetProject.name}.`;
+
+    // Set cover from modal (使用合集封面)
+    if (cover) {
+      coverPreview.value = cover;
+    }
+
+    // Store session_id for publish (优先使用传入的session_id)
+    if (session_id) {
+      selectedProject.value = { ...targetProject, session_id };
+    }
   } else {
     // Direct click: use selectedProject and selectedEpisode
     const targetProject = selectedProject.value;
@@ -2220,28 +2446,40 @@ async function handlePublish(publishData?: any) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
-          // Create new collection
-          const createRes = await api.addCollection({ title: projectName, type: 2 }) as any;
+          // Create new collection with cover and description
+          const collectionCover = selectedProject.value?.result_async?.generate_novel_cover || '';
+          const collectionDescription = t('collection.defaultDescription');
+
+          const createRes = await api.addCollection({
+            title: projectName,
+            type: 2,
+            cover: collectionCover,
+            description: collectionDescription
+          }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
             selectedCollection.value = {
               id: createRes.data.book_id,
-              name: projectName
+              name: projectName,
+              cover: collectionCover,
+              description: collectionDescription
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
           }
         } else {
           // Get collection details to determine episode number
-          const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
           if (collectionRes.code == 0 && collectionRes.data) {
-            const allnums = collectionRes.data.allnums || '0';
+            const allnums = collectionRes.data.count || 0;
             const episodeNumber = parseInt(allnums) + 1;
 
             selectedCollection.value = {
               id: book_id,
-              name: projectName
+              name: projectName,
+              cover: searchRes.data?.book_info?.cover,
+              description: searchRes.data?.book_info?.description
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -2251,7 +2489,7 @@ async function handlePublish(publishData?: any) {
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('chapter', { chapter: i })
+                label: i.toString()
               });
             }
           }
@@ -2460,23 +2698,33 @@ onMounted(async () => {
                 const book_id = searchRes.data?.book_id || 0;
 
                 if (book_id == 0) {
-                  // Create new collection
-                  const createRes = await api.addCollection({ title, type: 2 }) as any;
+                  // Create new collection with cover and description
+                  const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
+                  const collectionDescription = t('collection.defaultDescription');
+
+                  const createRes = await api.addCollection({
+                    title,
+                    type: 2,
+                    cover: collectionCover,
+                    description: collectionDescription
+                  }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
                     selectedCollection.value = {
                       id: createRes.data.book_id,
-                      name: title
+                      name: title,
+                      cover: collectionCover,
+                      description: collectionDescription
                     };
                     selectedEpisodeNumber.value = '1';
                     isNoCollection.value = false;
                   }
                 } else {
                   // Get collection details to determine episode number
-                  const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+                  const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
                   if (collectionRes.code == 0 && collectionRes.data) {
-                    const allnums = collectionRes.data.allnums || '0';
+                    const allnums = collectionRes.data.count || 0;
                     const episodeNumber = parseInt(allnums) + 1;
 
                     selectedCollection.value = {
@@ -2491,7 +2739,7 @@ onMounted(async () => {
                     for (let i = 1; i <= episodeNumber; i++) {
                       episodes.value.push({
                         value: i.toString(),
-                        label: t('chapter', { chapter: i })
+                        label: i.toString()
                       });
                     }
                   }

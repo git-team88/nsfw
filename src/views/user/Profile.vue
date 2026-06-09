@@ -88,6 +88,13 @@ function goEdit() {
   font-weight: 500;
   font-size: 2rem;
   color: #99A1AF;
+  padding-left: 1.2rem;
+}
+
+.content{
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  background: #F9FAFB;
 }
 
 .section {
@@ -106,12 +113,18 @@ function goEdit() {
   color: #99A1AF;
 }
 .edit-link {
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.8rem;
+  height: 4rem;
+  background: #FB64B6;
   border: none;
-  color: #fb64b6;
+  border-radius: 0.8rem;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 1.4rem;
-  padding: 0;
+  padding: 0 1rem;
 }
 .bio {
   margin-top: 1.2rem;

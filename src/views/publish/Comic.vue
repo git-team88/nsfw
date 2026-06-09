@@ -21,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!showFullContent && !postId">
+      <div class="upload-tabs" v-if="!showFullContent && !postId && !route.query.session_id">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
         </div>
@@ -73,7 +73,7 @@
                 @click="selectProject(project)"
               >
                 <div class="project-image-container">
-                  <img :src="project.result_async.generate_manhua_cover" alt="" class="project-image" />
+                  <img :src="processImageUrl(project.result_async.generate_manhua_cover)" alt="" class="project-image" />
                   <div class="view-icon" @click.stop="openViewModal(project)">
                     <img src="@/assets/images/publish/view.png" alt="View" />
                   </div>
@@ -101,7 +101,7 @@
                     <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                   </div>
                 </div>
-                <div class="custom-dropdown" v-if="showChapterDropdown">
+                <div class="custom-dropdown" v-if="showChapterDropdown" :class="{ 'dropdown-top': chapterDropdownPosition === 'top' }">
                   <div
                     class="chapter-dropdown-item"
                     :class="{ 'selected': selectedEpisode == chapter.chapter }"
@@ -171,7 +171,7 @@
         </div>
       </div>
 
-      <div class="content-wrapper" v-if="showFullContent || postId">
+      <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
         <div class="section">
           <div class="list-section">
             <div class="list-top">
@@ -196,7 +196,7 @@
             <div class="image-list-box">
               <div class="image-list">
                 <div class="image-item" v-for="(f, idx) in imageFiles" :key="f._key">
-                  <img class="image" :src="f._url || f._preview" alt="" />
+                  <img class="image" :src="processImageUrl(f._url || f._preview)" alt="" />
 
                   <div class="image-btn">
                     <div class="reload">
@@ -274,56 +274,73 @@
         <!-- Collection -->
         <div class="collection-section">
           <div class="form-item">
-            <div class="form-label-inner">
-              <label class="form-label">{{ t("submit.collection") }}</label>
+            <div class="collection-row">
+              <div class="collection-group">
+                <div class="form-label-inner">
+                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.collectionInfo')"></div>
+                  <div class="info-icon" @mouseover="adjustTooltipPosition">
+                    <img src="@/assets/images/publish/intro.png" alt="Info" />
+                    <div class="tooltip-arrow"></div>
+                    <div class="tooltip">
+                      <div class="tooltip-content">
+                        <div v-html="t('submit.collectionInfo')"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
+                    <div class="select-content" v-if="selectedCollection">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="select-text">
+                        <span class="select-value">{{ selectedCollection.name }}</span>
+                        <span class="modify-link" @click.stop="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                    </div>
+                    <span class="select-value" v-else>{{ t('collection.noCollection') }}</span>
+                    <div class="select-actions">
+                      <div class="select-arrow">
+                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      </div>
+                    </div>
+                  </div>
+                  <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" :class="{ 'dropdown-top': collectionDropdownPosition === 'top' }" @scroll="handleCollectionDropdownScroll">
+                    <div class="collection-dropdown-item new-collection" @click="createNewCollection">
+                      <span>{{ t('collection.newCollection') }}</span>
+                      <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
+                    </div>
+                    <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
+                      <img v-if="collection.cover" :src="processImageUrl(collection.cover)" alt="" class="collection-item-cover" />
+                      <span class="collection-item-title">{{ collection.title }}</span>
+                    </div>
+                    <!-- Loading indicator -->
+                    <div v-if="isLoadingCollections" class="loading-indicator">
+                      <div class="loading-spinner"></div>
+                      <span>{{ t('loading') }}</span>
+                    </div>
+                    <!-- No more collections message - only show when there's more than one page -->
+                    <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
+                      {{ t('emptyState.noMoreData') }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="collection-row">
-              <div class="collection-select">
-                <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                  <span class="select-value">{{ selectedCollection || t('collection.noCollection') }}</span>
-                  <div class="select-actions">
-                    <div class="select-clear" v-if="selectedCollection && isCollectionHovered" @click.stop="clearCollection">
-                      <img src="@/assets/images/publish/delete_icon.png" alt="Clear" />
-                    </div>
-                    <div class="select-arrow" v-if="!selectedCollection || !isCollectionHovered">
+
+              <div class="collection-group" v-if="!isNoCollection">
+                <label class="form-label"><b>*</b>{{ t("collection.orderInCollection") }}</label>
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
+                    <div class="select-arrow">
                       <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                     </div>
                   </div>
-                </div>
-                <div class="custom-dropdown" ref="collectionDropdownRef" v-if="showCollectionDropdown" @scroll="handleCollectionDropdownScroll">
-                  <div class="collection-dropdown-item new-collection" @click="createNewCollection">
-                    <span>{{ t('collection.newCollection') }}</span>
-                    <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
-                  </div>
-                  <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection == collection.title }">
-                    {{ collection.title }}
-                  </div>
-                  <div v-if="isLoadingCollections" class="loading-indicator">
-                    <div class="loading-spinner"></div>
-                    <span>{{ t('loading') }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="collection-select" v-if="!isNoCollection">
-                <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                  <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                  <div class="select-arrow">
-                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                  </div>
-                </div>
-                <div class="custom-dropdown" v-if="showEpisodeDropdown">
-                  <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                    {{ episode.label }}
+                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                      {{ episode.label }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -332,7 +349,7 @@
         </div>
 
         <!-- Cover Image -->
-        <div class="section">
+        <!-- <div class="section">
           <div class="form-item">
             <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}
             </label>
@@ -346,7 +363,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- Caption -->
         <div class="content-section">
@@ -460,7 +477,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<a href="javascript:void(0)" @click="openCommunityConvention">{{ t("submit.terms") }}</a></span
+            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
           >
         </div>
       </div>
@@ -515,6 +532,26 @@
       @close="handleCloseCreateCollectionModal"
       @save="handleCreateCollection"
     />
+
+    <!-- Edit Collection Modal -->
+    <EditCollectionModal
+      :visible="showEditCollectionModal"
+      :is-edit="editingCollectionId !== null"
+      :collection-id="editingCollectionId || ''"
+      :collection-name="selectedCollection?.name || ''"
+      :cover-url="selectedCollection?.cover || ''"
+      :description="selectedCollection?.description || ''"
+      :type="1"
+      @close="handleCloseEditCollectionModal"
+      @save="handleEditCollectionSave"
+    />
+
+    <!-- Switch Collection Confirm Modal -->
+    <SwitchCollectionModal
+      :visible="showSwitchCollectionModal"
+      @close="handleCloseSwitchCollectionModal"
+      @confirm="handleConfirmSwitchCollection"
+    />
   </div>
 </template>
 
@@ -528,6 +565,8 @@ import ProjectCoimcViewModal from "@/components/ProjectCoimcViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
+import EditCollectionModal from "@/components/EditCollectionModal.vue";
+import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import Pagination from "@/components/Pagination.vue";
 
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
@@ -537,6 +576,7 @@ import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
+import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -600,23 +640,32 @@ const showConventionModal = ref(false);
 const showSubscriptionModal = ref(false);
 
 // Collection
-const selectedCollection = ref('');
-const selectedCollectionId = ref(''); // 新增：存储选中的合集ID
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string } | null>(null);
+const editingCollectionId = ref<string | number | null>(null);
+const showEditCollectionModal = ref(false);
+const isCollectionHovered = ref(false);
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
-const isCollectionHovered = ref(false);
+const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
+const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showCreateCollectionModal = ref(false);
+const showSwitchCollectionModal = ref(false);
+const switchCollectionWarningShown = ref(false);
+const pendingCollectionId = ref<number | null>(null);
+const isCreatingNewCollection = ref(false);
+const isEditingWork = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
+const selectedCollectionId = ref(''); // Keep for backward compatibility
 const episodes = ref([
-  { value: '1', label: t('submit.image.episode', { episode: 1 }) },
+  { value: '1', label: '1' },
 ]);
 
 // Collection pagination
 const collectionDropdownRef = ref<HTMLDivElement | null>(null);
 const currentCollectionPage = ref(1);
-const collectionPageSize = ref(10);
+const collectionPageSize = ref(20);
 const hasMoreCollections = ref(true);
 const isLoadingCollections = ref(false);
 
@@ -636,6 +685,35 @@ const isProjectSelected = computed(() => {
 
 function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showCollectionDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 350; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          collectionDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          collectionDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        collectionDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      collectionDropdownPosition.value = 'bottom';
+    }
+  }
+
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
 
@@ -647,28 +725,98 @@ function toggleCollectionDropdown(event: Event) {
 
 function toggleEpisodeDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showEpisodeDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 300; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, show above
+        episodeDropdownPosition.value = 'top';
+      } else {
+        // Enough space below, show normally
+        episodeDropdownPosition.value = 'bottom';
+      }
+    }
+  }
+
   showEpisodeDropdown.value = !showEpisodeDropdown.value;
   showCollectionDropdown.value = false;
 }
 
 function createNewCollection() {
+  if (collections.value.length > 0) {
+    pendingCollectionId.value = null;
+    isCreatingNewCollection.value = true;
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+  } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+  }
+}
+
+function handleEditCollection() {
   showCollectionDropdown.value = false;
-  showCreateCollectionModal.value = true;
+
+  if (selectedCollection.value) {
+    const currentCollection = selectedCollection.value;
+    editingCollectionId.value = currentCollection.id;
+
+    // Ensure cover and description are available - fetch from collections array if missing
+    const collection = collections.value.find(c => c.id === currentCollection.id);
+
+    if (collection) {
+      selectedCollection.value = {
+        ...selectedCollection.value,
+        cover: collection.cover || selectedCollection.value.cover,
+        description: collection.description || selectedCollection.value.description
+      };
+    }
+  } else {
+    editingCollectionId.value = null;
+  }
+
+  showEditCollectionModal.value = true;
+}
+
+function handleCloseEditCollectionModal() {
+  showEditCollectionModal.value = false;
 }
 
 async function selectCollection(id: number) {
+  // Check if we need to show warning before switching collection
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollectionId.value && selectedCollectionId.value !== id.toString()) {
+    // Store the target collection ID for confirmation
+    pendingCollectionId.value = id;
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+    return;
+  }
+
+  await doSelectCollection(id);
+}
+
+async function doSelectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
-    selectedCollection.value = collection.title; // 使用title而不是name
-    selectedCollectionId.value = collection.id; // 存储选中的合集ID
+    selectedCollection.value = {
+      id: collection.id,
+      name: collection.title,
+      cover: collection.cover,
+      description: collection.description
+    };
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id, 1, 100) as any;
+      const response = await api.singleCollectionIndex(id) as any;
       if (response.code == 0 && response.data) {
-        // Get the total chapter count from the response
-        const allnumsStr = response.data.allnums || '0';
-        const allnums = parseInt(allnumsStr) || 0;
+        const allnums = response.data.count || 0;
         const defaultEpisode = allnums + 1;
 
         selectedEpisodeNumber.value = defaultEpisode.toString();
@@ -676,18 +824,18 @@ async function selectCollection(id: number) {
         // Update episodes array based on collection chapters
         episodes.value = [];
         // 先添加已有的集
-        if (response.data.data && response.data.data.length > 0) {
-          response.data.data.forEach((chapter: any, index: number) => {
+        if (response.data.chapters && response.data.chapters.length > 0) {
+          response.data.chapters.forEach((chapter: any, index: number) => {
             episodes.value.push({
               value: (index + 1).toString(),
-              label: t('submit.image.episode', { episode: index + 1 })
+              label: (index + 1).toString()
             });
           });
         }
         // 添加新的一集
         episodes.value.push({
           value: defaultEpisode.toString(),
-          label: t('submit.image.episode', { episode: defaultEpisode })
+          label: defaultEpisode.toString()
         });
       }
     } catch (error) {
@@ -704,14 +852,14 @@ async function selectCollection(id: number) {
         collection.chapters.forEach((chapter: any, index: number) => {
           episodes.value.push({
             value: (index + 1).toString(),
-            label: t('submit.image.episode', { episode: index + 1 })
+            label: (index + 1).toString()
           });
         });
       }
       // 添加新的一集
       episodes.value.push({
         value: defaultEpisode.toString(),
-        label: t('submit.image.episode', { episode: defaultEpisode })
+        label: defaultEpisode.toString()
       });
     }
   }
@@ -720,11 +868,32 @@ async function selectCollection(id: number) {
 }
 
 function clearCollection() {
-  selectedCollection.value = '';
-  selectedCollectionId.value = ''; // 清空选中的合集ID
+  selectedCollection.value = null;
   showCollectionDropdown.value = false;
   showEpisodeDropdown.value = false;
   isNoCollection.value = true;
+}
+
+function handleCloseSwitchCollectionModal() {
+  showSwitchCollectionModal.value = false;
+  pendingCollectionId.value = null;
+  isCreatingNewCollection.value = false;
+}
+
+async function handleConfirmSwitchCollection() {
+  switchCollectionWarningShown.value = true;
+  showSwitchCollectionModal.value = false;
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  if (pendingCollectionId.value !== null) {
+    await doSelectCollection(pendingCollectionId.value);
+    pendingCollectionId.value = null;
+  } else if (isCreatingNewCollection.value) {
+    isCreatingNewCollection.value = false;
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+  }
 }
 
 function selectEpisode(value: string) {
@@ -736,7 +905,7 @@ function selectEpisode(value: string) {
 
 function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : t('submit.image.episode', { episode: 1 });
+  return episode ? episode.label : '1';
 }
 
 // Fetch collections
@@ -785,12 +954,15 @@ function handleCollectionDropdownScroll(event: Event) {
 async function handleCreateCollection(collection: { name: string }) {
   // 刷新合集列表
   await fetchCollections(false);
-  // 选择新创建的合集
-  selectedCollection.value = collection.name;
-  // 查找并设置新创建的合集ID
+  // 查找并设置新创建的合集
   const newCollection = collections.value.find(c => c.title === collection.name);
   if (newCollection) {
-    selectedCollectionId.value = newCollection.id;
+    selectedCollection.value = {
+      id: newCollection.id,
+      name: newCollection.title,
+      cover: newCollection.cover,
+      description: newCollection.description
+    };
   }
   // 保持当前章节号，不重置为第一集
   // 关闭弹窗
@@ -803,9 +975,48 @@ function handleCloseCreateCollectionModal() {
   showCreateCollectionModal.value = false;
 }
 
+function handleEditCollectionSave(updatedCollection: { id: string | number; name: string; cover?: string; description?: string }) {
+  if (selectedCollection.value) {
+    selectedCollection.value = {
+      ...selectedCollection.value,
+      ...updatedCollection
+    };
+  }
+  showEditCollectionModal.value = false;
+}
+
 // Chapter dropdown functions
 function toggleChapterDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showChapterDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 300; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          chapterDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          chapterDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        chapterDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      chapterDropdownPosition.value = 'bottom';
+    }
+  }
+
   showChapterDropdown.value = !showChapterDropdown.value;
 }
 
@@ -893,6 +1104,7 @@ const projectDetailsCache = ref<Record<string, any>>({});
 
 // Chapter dropdown
 const showChapterDropdown = ref(false);
+const chapterDropdownPosition = ref<'top' | 'bottom'>('bottom');
 
 // Preview modal project (separate from selected project)
 const previewProject = ref<any>(null);
@@ -1785,7 +1997,7 @@ function updateDropdownPosition() {
   }
 
   const dropdownHeight = 250;
-  const dropdownWidth = 280;
+  const dropdownWidth = 480;
 
   // 处理底部溢出
   if (absTop + dropdownHeight > window.innerHeight) {
@@ -1810,10 +2022,10 @@ function updateDropdownPosition() {
     };
   }
 
-  // 处理右边溢出，使用 right 属性定位
+  // 处理右边溢出，调整 left 位置
   if (absLeft + dropdownWidth > window.innerWidth) {
-    dropdownPosition.value.left = undefined;
-    dropdownPosition.value.right = 10;
+    dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 20);
+    dropdownPosition.value.right = undefined;
   }
 }
 
@@ -2098,6 +2310,14 @@ async function onSubmit() {
     toast(t("submit.image.setCover"));
     return;
   }
+  if (!selectedCollection.value) {
+    toast(t("collection.noCollection"));
+    return;
+  }
+  if (!selectedEpisodeNumber.value) {
+    toast(t("collection.enterEpisode"));
+    return;
+  }
   if (!agreeTerms.value) {
     showConventionModal.value = true;
     return;
@@ -2118,8 +2338,8 @@ async function onSubmit() {
     is_nsfw: form.value.content == "yes" ? 1 : 0,
     access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
     image_urls: imageFiles.value.filter(f => f._url).map((f) => f._url!),
-    book_id: selectedCollectionId.value ? selectedCollectionId.value : 0,
-    chapter_index: selectedCollectionId.value ? parseInt(selectedEpisodeNumber.value) : 0,
+    book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
+    chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
     cover_color: '',
     cover_title: '',
     ...(session_id ? { session_id } : {}),
@@ -2234,6 +2454,9 @@ async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
 
+  // Mark as editing mode when selecting from history
+  isEditingWork.value = true;
+
   // Check if project details are in cache
   if (projectDetailsCache.value[project.session_id]) {
     // Use cached project details
@@ -2257,8 +2480,7 @@ async function selectProject(project: any) {
       await handleCollectionFromProjectName(project.name);
     } else {
       // Reset collection state for projects without names
-      selectedCollection.value = '';
-      selectedCollectionId.value = '';
+      selectedCollection.value = null;
       isNoCollection.value = true;
       episodes.value = [];
     }
@@ -2292,8 +2514,7 @@ async function selectProject(project: any) {
         await handleCollectionFromProjectName(project.name);
       } else {
         // Reset collection state for projects without names
-        selectedCollection.value = '';
-        selectedCollectionId.value = '';
+        selectedCollection.value = null;
         isNoCollection.value = true;
         episodes.value = [];
       }
@@ -2317,20 +2538,26 @@ async function handleCollectionFromProjectName(projectName: string) {
         const createRes = await api.addCollection({ title: projectName, type: 1 }) as any;
 
         if (createRes.code === 0 && createRes.data?.id) {
-          selectedCollection.value = projectName;
-          selectedCollectionId.value = createRes.data.id;
+          selectedCollection.value = {
+            id: createRes.data.id,
+            name: projectName
+          };
           isNoCollection.value = false;
         }
       } else {
         // Get collection details to determine episode number
-        const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+        const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
-        if (collectionRes.code === 0 && collectionRes.data) {
-          const allnums = collectionRes.data.allnums || '0';
+        if (collectionRes.code == 0 && collectionRes.data) {
+          const allnums = collectionRes.data.count || 0;
           const episodeNumber = parseInt(allnums) + 1;
+          const collectionCover = collectionRes.data.cover || '';
 
-          selectedCollection.value = projectName;
-          selectedCollectionId.value = book_id;
+          selectedCollection.value = {
+            id: book_id,
+            name: projectName,
+            cover: collectionCover
+          };
           isNoCollection.value = false;
           selectedEpisodeNumber.value = episodeNumber.toString();
 
@@ -2339,7 +2566,7 @@ async function handleCollectionFromProjectName(projectName: string) {
           for (let i = 1; i <= episodeNumber; i++) {
             episodes.value.push({
               value: i.toString(),
-              label: t('submit.image.episode', { episode: i })
+              label: i.toString()
             });
           }
         }
@@ -2419,6 +2646,16 @@ function closeViewModal() {
 }
 
 async function handlePublish(publishData?: any) {
+  // Scroll to publish section when clicking publish button
+  nextTick(() => {
+    const publishSection = document.querySelector('.publish-section');
+    if (publishSection) {
+      publishSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  });
+
   // Check if publishData is provided (from modal) or if we're handling a direct click
   let project: any, episode: any;
 
@@ -2489,19 +2726,11 @@ async function handlePublish(publishData?: any) {
     }
   }
 
-  // 生成标题：第几集 集的标题 「漫画名称」
+  // 生成标题：第几集 集的标题 (不带书名)
   if (episodeTitle) {
-    if (project.name) {
-      form.value.title = `${episodeText} ${episodeTitle} 「${project.name}」`;
-    } else {
-      form.value.title = `${episodeText} ${episodeTitle}`;
-    }
+    form.value.title = `${episodeText} ${episodeTitle}`;
   } else {
-    if (project.name) {
-      form.value.title = `${project.name} ${episodeText}`;
-    } else {
-      form.value.title = episodeText;
-    }
+    form.value.title = episodeText;
   }
 
   // Store episode for publish
@@ -2562,20 +2791,26 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({ title: project.name, type: 1 }) as any;
 
           if (createRes.code === 0 && createRes.data?.id) {
-            selectedCollection.value = project.name;
-            selectedCollectionId.value = createRes.data.id;
+            selectedCollection.value = {
+              id: createRes.data.id,
+              name: project.name
+            };
             isNoCollection.value = false;
           }
         } else {
           // Get collection details to determine episode number
-          const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
           if (collectionRes.code === 0 && collectionRes.data) {
-            const allnums = collectionRes.data.allnums || '0';
+            const allnums = collectionRes.data.count || 0;
             const episodeNumber = parseInt(allnums) + 1;
+            const collectionCover = collectionRes.data.cover || '';
 
-            selectedCollection.value = project.name;
-            selectedCollectionId.value = book_id;
+            selectedCollection.value = {
+              id: book_id,
+              name: project.name,
+              cover: collectionCover
+            };
             isNoCollection.value = false;
             selectedEpisodeNumber.value = episodeNumber.toString();
 
@@ -2584,7 +2819,7 @@ async function handlePublish(publishData?: any) {
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('submit.image.episode', { episode: i })
+                label: i.toString()
               });
             }
           }
@@ -2750,8 +2985,11 @@ async function getPostDetails() {
 
       // Set selected collection from book_title
       if (postData.book_title) {
-        selectedCollection.value = postData.book_title;
-        selectedCollectionId.value = postData.book_id || '';
+        selectedCollection.value = {
+          id: postData.book_id || '',
+          name: postData.book_title,
+          cover: postData.cover || ''
+        };
         isNoCollection.value = false;
 
         // Set chapter index from postData
@@ -2762,9 +3000,9 @@ async function getPostDetails() {
           // If there's a book_id, request collection details to get complete episode list
           if (postData.book_id) {
             try {
-              const collectionRes = await api.singleCollection(postData.book_id, 1, 100) as any;
-              if (collectionRes.code === 0 && collectionRes.data) {
-                const allnum = collectionRes.data.allnums || '0';
+              const collectionRes = await api.singleCollectionIndex(postData.book_id) as any;
+              if (collectionRes.code == 0 && collectionRes.data) {
+                const allnum = collectionRes.data.count || 0;
                 const totalEpisodes = parseInt(allnum);
 
                 // Update episodes array with complete list
@@ -2772,7 +3010,7 @@ async function getPostDetails() {
                 for (let i = 1; i <= totalEpisodes; i++) {
                   episodes.value.push({
                     value: i.toString(),
-                    label: t('submit.image.episode', { episode: i })
+                    label: i.toString()
                   });
                 }
               }
@@ -2783,7 +3021,7 @@ async function getPostDetails() {
               for (let i = 1; i <= chapterIndex; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('submit.image.episode', { episode: i })
+                  label: i.toString()
                 });
               }
             }
@@ -2793,7 +3031,7 @@ async function getPostDetails() {
             for (let i = 1; i <= chapterIndex; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('submit.image.episode', { episode: i })
+                label: i.toString()
               });
             }
           }
@@ -2872,9 +3110,11 @@ onMounted(async () => {
             episodeImages = chapterData.result_async.images;
           }
 
-          // Extract cover
+          // Extract cover - prioritize URL parameter, then chapter data
           let chapterCover = '';
-          if (chapterData.cover) {
+          if (cover) {
+            chapterCover = cover;
+          } else if (chapterData.cover) {
             chapterCover = chapterData.cover;
           } else if (chapterData.result_async?.cover) {
             chapterCover = chapterData.result_async.cover;
@@ -2953,22 +3193,28 @@ onMounted(async () => {
                   const createRes = await api.addCollection({ title, type: 1 }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
-                    selectedCollection.value = title;
-                    selectedCollectionId.value = createRes.data.book_id;
+                    selectedCollection.value = {
+                      id: createRes.data.book_id,
+                      name: title
+                    };
                     selectedEpisodeNumber.value = '1';
                     isNoCollection.value = false;
                   }
                 } else {
                   // Get collection details to determine episode number
-                  const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+                  const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
                   if (collectionRes.code == 0 && collectionRes.data) {
                     // Get the total chapter count from the response
-                    const allnum = collectionRes.data.allnums || '0';
+                    const allnum = collectionRes.data.count || 0;
                     const episodeNumber = parseInt(allnum) + 1;
+                    const collectionCover = collectionRes.data.cover || '';
 
-                    selectedCollection.value = title;
-                    selectedCollectionId.value = book_id;
+                    selectedCollection.value = {
+                      id: book_id,
+                      name: title,
+                      cover: collectionCover
+                    };
                     selectedEpisodeNumber.value = episodeNumber.toString();
                     isNoCollection.value = false;
 
@@ -2977,7 +3223,7 @@ onMounted(async () => {
                     for (let i = 1; i <= episodeNumber; i++) {
                       episodes.value.push({
                         value: i.toString(),
-                        label: t('submit.image.episode', { episode: i })
+                        label: i.toString()
                       });
                     }
                   }

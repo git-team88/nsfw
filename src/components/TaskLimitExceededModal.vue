@@ -1,13 +1,13 @@
 <template>
   <div v-if="visible" class="task-limit-exceeded-modal">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="handleClose" />
 
       <h3 class="modal-title">{{ t('novel.taskLimitExceeded') }}</h3>
       <p class="modal-message">{{ t('novel.taskLimitExceededMessage') }}</p>
       <div class="modal-actions">
-        <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.iKnow') }}</button>
+        <button class="modal-cancel-btn" @click="handleClose">{{ t('novel.cancel') }}</button>
+        <button class="modal-confirm-btn" @click="handleClose">{{ t('novel.iKnow') }}</button>
       </div>
     </div>
   </div>
@@ -18,14 +18,17 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+defineProps<{
   visible: boolean;
 }>();
 
 const emit = defineEmits<{
-  cancel: [];
-  confirm: [];
+  close: [];
 }>();
+
+const handleClose = () => {
+  emit('close');
+};
 </script>
 
 <style lang="scss" scoped>

@@ -79,9 +79,9 @@ const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4e
 onMounted(async () => {
   try {
     const res = (await api.getProfile()) as any;
-    if ((res.code === 200 || res.code === 0) && res.data) {
-      bio.value = res.data.page_desc || "";
-      headerUrl.value = res.data.page_banner || defaultImg;
+    if ((res.code == 200 || res.code == 0)) {
+      bio.value = res.data?.page_desc || "";
+      headerUrl.value = res.data?.page_banner || defaultImg;
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
@@ -198,7 +198,7 @@ function onSave() {
 .content {
   padding: 1.2rem;
   border-radius: 1.2rem;
-  background: #F5F5F5;
+  background: #F9FAFB;
 }
 .section {
   margin-bottom: 2.4rem;

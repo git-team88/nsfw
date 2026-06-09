@@ -101,7 +101,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.plan_id || 1) }}</div>
+                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || 1) }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}</div>
                     </div>
 
@@ -341,27 +341,26 @@ async function fetchProcessingData() {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else if (activeSubTab.value === 'recharge') {
-      const res = await api.computeDetail(101, '', '', page.value, pageSize.value) as any;
+      const res = await api.userAiSubscribeList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
-        const data = res.data?.data_list || [];
+        const data = res.data?.data || [];
         // 这里可以根据实际API返回的数据结构进行处理
         processingList.value = data.map((item: any) => ({
           id: item.id,
           avatar: '',
-          price: item.amount || item.price || 0,
-          startTime: item.issued_at ? formatDate(item.issued_at) : item.subscription_info?.created_at,
-          endTime: item.subscription_info?.current_period_end ? formatDate(item.subscription_info.current_period_end) : '',
-          autoRenew: item.subscription_info && item.subscription_info?.cancel_at_period_end == '1',
-          subscription_info: item.subscription_info || null,
+          price: item.amount || 0,
+          startTime: item.created_at,
+          endTime: item.current_period_end ? formatDate(item.current_period_end) : '',
+          autoRenew: item.cancel_at_period_end == '1',
           plan_info: {
-            name: item.plan_info?.name || '',
-            description: item.plan_info?.description || '',
-            price: item.plan_info?.price || 0,
-            plan_id: item.plan_info?.plan_id || 1
+            name: item.plan?.name || '',
+            description: item.plan?.description || '',
+            price: item.plan?.price || 0,
+            plan_id: item.plan?.plan_id || 1
           }
         }));
 
-        total.value = res.data?.data_count || 0;
+        total.value = res.data?.allnums || 0;
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
@@ -382,11 +381,11 @@ function getTimeUnit(planId: number) {
   switch(planId) {
     case 1:
       return t('user.paymentHistory.month');
-    case 2:
-      return t('aiRecharge.period3Month');
     case 3:
+      return t('aiRecharge.period3Month');
+    case 6:
       return t('aiRecharge.period6Month');
-    case 4:
+    case 12:
       return t('aiRecharge.periodYear');
     default:
       return t('user.paymentHistory.month');

@@ -240,9 +240,14 @@ watch(() => props.project, () => {
 
 // 发布本集
 function handlePublish() {
+  // Get cover from project (合集封面)
+  const cover = props.project.cover || props.project.result_async?.generate_manhua_cover;
+  
   emit('publish', {
     project: props.project,
-    episode: selectedEpisode.value
+    episode: selectedEpisode.value,
+    session_id: props.project?.session_id,
+    cover: cover
   });
 }
 

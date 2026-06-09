@@ -43,11 +43,11 @@
 
           <div class="language-select" v-if="isShowLang">
             <span
-              :class="langText == lang.toLocaleLowerCase() ? 'on' : ''"
+              :class="langText == lang.value ? 'on' : ''"
               v-for="(lang, index) in langList"
               :key="index"
-              @click="changeLang(lang)"
-              >{{ lang }}</span
+              @click="changeLang(lang.value)"
+              >{{ lang.label }}</span
             >
           </div>
         </div>
@@ -230,7 +230,12 @@ const menuItems = [
   { key: "payment-history", label: "user.paymentHistory.title", path: "/user-payment-history" },
 ];
 
-const langList = ref(["EN", "JP", "ZH"]);
+const langList = computed(() => [
+  { value: 'jp', label: t('novel.language.jp') },
+  { value: 'en', label: t('novel.language.en') },
+  { value: 'tc', label: t('novel.language.tc') },
+  { value: 'zh', label: t('novel.language.zh') }
+]);
 const lang = localStorage.getItem("lang");
 const langText = ref(lang);
 const isShowLang = ref(false);
@@ -258,6 +263,10 @@ const navList = ref([
   {
     name: t("header.title4"),
     path: "/character-library",
+  },
+  {
+    name: t("header.title5"),
+    path: "/user-home",
   },
 ]);
 
@@ -301,6 +310,10 @@ watch(locale, () => {
     {
       name: t("header.title4"),
       path: "/character-library",
+    },
+    {
+      name: t("header.title5"),
+      path: "/user-home",
     },
   ];
 
@@ -396,6 +409,20 @@ function goNav(item: { path: string; name?: string }, index: number) {
     return false;
   }
 
+  if (item.path == "/user-home") {
+    if (!token) {
+      router.push("/login");
+      return false;
+    }
+    const userId = userInfo.value?.info?.id || localStorage.getItem("uid");
+    navIndex.value = index;
+    router.push({
+      path: "/user-home",
+      query: { id: userId }
+    });
+    return false;
+  }
+
   navIndex.value = index;
   router.push(item.path);
 }
@@ -424,9 +451,7 @@ function showLang() {
   isShowLang.value = !isShowLang.value;
 }
 
-function changeLang(item: string) {
-  const lang = item.toLocaleLowerCase();
-
+function changeLang(lang: string) {
   if (lang == langText.value) {
     return false;
   }
@@ -488,6 +513,7 @@ function getUserInfo() {
 function getBalance() {
   api.userBalance().then((res: any) => {
     if (res.code === 200) {
+      // Use total_balance if available, fallback to balance
       bean.value = res.data.balance;
 
       emit('balanceInfoLoaded', res.data);
@@ -744,8 +770,9 @@ defineExpose({
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          width: 8rem;
-          padding: 1.2rem 0;
+          min-width: 8rem;
+          width: max-content;
+          padding: 1.2rem;
           -webkit-border-radius: 0.8rem;
           border-radius: 0.8rem;
           transform: translateX(-50%);

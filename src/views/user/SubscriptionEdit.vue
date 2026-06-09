@@ -247,9 +247,12 @@ async function onSave() {
 
       if (data.code === 200 || data.code === 0) {
         toast(t('success'));
-        router.push("/user-subscription");
+        // Use window.location.href to ensure page refresh after save
+        setTimeout(() => {
+          window.location.href = '/user-subscription';
+        }, 500);
       } else {
-        toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
       }
     } catch (error) {
       console.error(error);

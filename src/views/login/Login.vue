@@ -85,17 +85,17 @@
         <div class="tip">
           <div class="tip-text" v-if="locale == 'jp'">
             <span v-html="t('register.loginTip')"></span>
-            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            <b>{{ t("register.terms") }}</b>
             {{ t("register.infix") }}
-            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+            <b>{{ t("register.privacy") }}</b>
             {{ t("register.tipEnd") }}
           </div>
 
           <div class="tip-text" v-else>
             <span v-html="t('register.loginTip')"></span>
-            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            <b>{{ t("register.terms") }}</b>
             {{ t("register.infix") }}
-            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+            <b>{{ t("register.privacy") }}</b>
           </div>
         </div>
       </div>
@@ -113,6 +113,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { baseUrl, redirectUrl } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
+import { initLanguage } from "@/util/utils";
 import api from "@/api/index";
 import router from "@/router";
 
@@ -160,7 +161,10 @@ function setSeoMeta() {
   metaDescription.setAttribute('content', t('seo.login.description'));
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   setSeoMeta();
 
   const token = localStorage.getItem("token");
@@ -509,12 +513,9 @@ function googleLogin() {
       text-align: center;
       color: #99A1AF;
 
-      :deep(a) {
+      b {
+        font-weight: normal;
         color: #fb64b6;
-
-        &:hover{
-          text-decoration: underline;
-        }
       }
     }
 

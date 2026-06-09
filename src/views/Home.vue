@@ -27,7 +27,7 @@
 
               <div class="main-right">
                 <!-- Help Button with Dropdown -->
-                <div class="help-btn-container" @mouseenter="showHelpDropdown = true" @mouseleave="showHelpDropdown = false">
+                <!-- <div class="help-btn-container" @mouseenter="showHelpDropdown = true" @mouseleave="showHelpDropdown = false">
                   <img src="@/assets/images/home/info.png" alt="" class="help-btn" />
                   <div class="help-dropdown">
                     <div class="help-dropdown-content">
@@ -39,7 +39,7 @@
                       </ul>
                     </div>
                   </div>
-                </div>
+                </div> -->
 
                 <div class="input-role">
                   <img src="@/assets/images/home/role.png" alt="" />
@@ -106,7 +106,6 @@
                       ref="fileInputRef"
                       type="file"
                       accept="image/*,video/mp4,video/quicktime,audio/mp3,audio/wav"
-                      multiple
                       class="file-input"
                       style="display: none;"
                       @change="handleFileChange"
@@ -345,13 +344,14 @@
                     </div>
 
                     <div class="generate-box">
-                      <div v-if="isLoggedIn" class="cover-cost-display">
+                      <!-- <div v-if="isLoggedIn" class="cover-cost-display">
                         <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                      </div>
-                      <div class="generate-btn" :class="currentVideoMode == 'unlimited' ? 'unlimit' : ''" @click="generateVideo">
+                      </div> -->
+                      <div class="generate-btn" :class="[currentVideoMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingVideo }]" @click="generateVideo">
                         <div class="generate-novel-btn">
                           <span>{{ estimatedVideoComputingPower }}</span>
-                          <img src="@/assets/images/home/power.png" alt="Power" />
+                          <div v-if="isGeneratingVideo" class="loading-spinner-small"></div>
+                          <img v-else src="@/assets/images/home/power.png" alt="Power" />
                         </div>
                       </div>
                     </div>
@@ -378,6 +378,7 @@
                         <span class="img-bg"></span>
                       </div>
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
@@ -402,7 +403,6 @@
                     ref="fileInputRef"
                     type="file"
                     accept="image/*"
-                    multiple
                     class="file-input"
                     style="display: none;"
                     @change="handleFileChange"
@@ -459,8 +459,11 @@
                       </div>
                     </div>
 
-                    <div class="generate-btn" :class="currentDramaMode == 'unlimited' ? 'unlimit' : ''" @click="generateDrama">
-                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    <div class="generate-btn" :class="[currentDramaMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingDrama }]" @click="generateDrama">
+                      <div class="generate-comic-btn">
+                        <span v-if="isGeneratingDrama" class="loading-spinner-small"></span>
+                        <img v-else src="@/assets/images/home/send.png" alt="Send" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -485,6 +488,7 @@
                         <span class="img-bg"></span>
                       </div>
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
@@ -509,7 +513,6 @@
                     ref="fileInputRef"
                     type="file"
                     accept="image/*"
-                    multiple
                     class="file-input"
                     style="display: none;"
                     @change="handleFileChange"
@@ -604,13 +607,14 @@
                     </div>
 
                     <div class="generate-box">
-                      <div v-if="isLoggedIn" class="cover-cost-display">
+                      <!-- <div v-if="isLoggedIn" class="cover-cost-display">
                         <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                      </div>
-                      <div class="generate-btn" :class="currentPhotoMode == 'unlimited' ? 'unlimit' : ''" @click="generatePhoto">
+                      </div> -->
+                      <div class="generate-btn" :class="[currentPhotoMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingPhoto }]" @click="generatePhoto">
                         <div class="generate-novel-btn">
                           <span>{{ estimatedPhotoComputingPower }}</span>
-                          <img src="@/assets/images/home/power.png" alt="Power" />
+                          <div v-if="isGeneratingPhoto" class="loading-spinner-small"></div>
+                          <img v-else src="@/assets/images/home/power.png" alt="Power" />
                         </div>
                       </div>
                     </div>
@@ -641,6 +645,7 @@
                       </div>
 
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
@@ -665,7 +670,6 @@
                     ref="fileInputRef"
                     type="file"
                     accept="image/*"
-                    multiple
                     class="file-input"
                     style="display: none;"
                     @change="handleFileChange"
@@ -723,8 +727,11 @@
                       </div>
                     </div>
 
-                    <div class="generate-btn" :class="currentComicMode == 'unlimited' ? 'unlimit' : ''" @click="generateComic">
-                      <img src="@/assets/images/home/send.png" alt="Send" />
+                    <div class="generate-btn" :class="[currentComicMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingComic }]" @click="generateComic">
+                      <div class="generate-comic-btn">
+                        <span v-if="isGeneratingComic" class="loading-spinner-small"></span>
+                        <img v-else src="@/assets/images/home/send.png" alt="Send" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -770,7 +777,7 @@
                      <!-- Word Count Selector -->
                       <div class="novel-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
                         <div class="selector-header">
-                          <span>{{ t('home.totalWords') }}: {{ selectedWordCount }}</span>
+                          <span>{{ t('home.totalWords') }}: {{ displayWordCount }}</span>
                           <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
                         </div>
                         <div class="dropdown" v-if="showWordCountDropdown">
@@ -781,7 +788,7 @@
                             :class="{ active: selectedWordCount == count.value }"
                             @click.stop="selectWordCount(count.value)"
                           >
-                            <span>{{ count.label }}</span>
+                            <span>{{ locale === 'jp' && count.jpLabel ? count.jpLabel : count.label }}</span>
                           </div>
                         </div>
                       </div>
@@ -807,13 +814,11 @@
                     </div>
 
                     <div class="generate-box">
-                      <div v-if="isLoggedIn" class="cover-cost-display">
-                        <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                      </div>
-                      <div class="generate-btn" @click="navigateToNovelGenerate">
+                      <div class="generate-btn" :class="{ loading: isGeneratingNovel }" @click="navigateToNovelGenerate">
                         <div class="generate-novel-btn">
                           <span>{{ estimatedComputingPower }}</span>
-                          <img src="@/assets/images/home/power.png" alt="Send" />
+                          <div v-if="isGeneratingNovel" class="loading-spinner-small"></div>
+                          <img v-else src="@/assets/images/home/power.png" alt="Send" />
                         </div>
                       </div>
                     </div>
@@ -1008,11 +1013,22 @@
                   <div class="content-bottom">
                     <!-- Update Time and Chapter Count -->
                     <div class="update-info">
-                      <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
-                      <span v-if="(item.latest_post_updated) && item.latest_post_chapter_index" class="chapter-divider">|</span>
-                      <span v-if="item.latest_post_chapter_index">
-                        {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
-                      </span>
+                      <!-- Completed status -->
+                      <template v-if="item.status == 2">
+                        <span>{{ t('home.statusFinished') }}</span>
+                        <span v-if="item.total_post_nums" class="chapter-divider">|</span>
+                        <span v-if="item.total_post_nums">
+                          {{ item.type == '2' ? t('home.totalChapterFormat', { chapter: item.total_post_nums }) : t('home.totalEpisodeFormat', { episode: item.total_post_nums }) }}
+                        </span>
+                      </template>
+                      <!-- Ongoing status -->
+                      <template v-else>
+                        <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
+                        <span v-if="(item.latest_post_updated) && item.latest_post_chapter_index" class="chapter-divider">|</span>
+                        <span v-if="item.latest_post_chapter_index">
+                          {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
+                        </span>
+                      </template>
                     </div>
                     <!-- Video Duration -->
                     <!-- <div class="video-duration" v-if="item.type == '3' && item.duration">
@@ -1024,11 +1040,11 @@
                 <div class="content-info">
                   <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
                   <div class="content-meta">
-                    <div class="author-info" v-if="activeContentTab != 'suggested'">
+                    <div class="author-info" v-if="activeContentTab != 'suggested'" @click.stop="navigateToUserHome(item.author?.id)">
                       <img :src="item.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <span class="author-name">{{ item.author?.nickname }}</span>
                     </div>
-                    <div class="author-info" v-else>
+                    <div class="author-info" v-else @click.stop="navigateToUserHome(item.author_info?.id)">
                       <img :src="item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <span class="author-name">{{ item.author_info?.nickname }}</span>
                     </div>
@@ -1181,13 +1197,6 @@
       @recharge="goRecharge"
     />
 
-    <!-- Computing Power Estimate Modal -->
-    <ComputingPowerEstimateModal
-      :visible="showComputingPowerEstimateModal"
-      @cancel="showComputingPowerEstimateModal = false"
-      @confirm="showComputingPowerEstimateModal = false"
-    />
-
     <!-- Task Limit Exceeded Modal -->
     <TaskLimitExceededModal
       :visible="showTaskLimitExceededModal"
@@ -1226,7 +1235,6 @@ import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirt
 import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import CharacterSelectModal from '@/components/CharacterSelectModal.vue';
-import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
@@ -1240,7 +1248,7 @@ import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue'
 import router from '@/router';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
-import { formatDuration, formatUpdateTime } from '@/util/utils';
+import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
 
 import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
@@ -1268,6 +1276,13 @@ let bannerSwiper = ref<Swiper | null>(null);
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
+
+// Loading states for generate buttons
+const isGeneratingVideo = ref(false);
+const isGeneratingComic = ref(false);
+const isGeneratingDrama = ref(false);
+const isGeneratingPhoto = ref(false);
+const isGeneratingNovel = ref(false);
 
 // Helper functions to get current state based on contentType
 const getSelectedCharacters = () => {
@@ -1419,6 +1434,8 @@ const uploadedVideoDuration = ref<number>(0);
 const startFrameInput = ref<HTMLInputElement | null>(null);
 const endFrameInput = ref<HTMLInputElement | null>(null);
 const videoInput = ref<HTMLInputElement | null>(null);
+
+
 
 // Reset video inputs when switching mode
 function resetVideoInputs() {
@@ -1723,7 +1740,6 @@ const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
   { value: 'novel', label: 'home.contentType.novel' },
   { value: 'comic', label: 'home.contentType.comic' },
-  { value: 'drama', label: 'home.contentType.drama' },
   { value: 'photo', label: 'home.contentType.photo' },
   { value: 'video', label: 'home.contentType.video' }
 ]);
@@ -1732,17 +1748,26 @@ const contentTypeOptions = ref([
 const selectedWordCount = ref('30K');
 const showWordCountDropdown = ref(false);
 const wordCountOptions = ref([
-  { value: '30K', label: '30K' },
-  { value: '100K', label: '100K' },
-  { value: '300K', label: '300K' },
+  { value: '30K', label: '30K', jpLabel: '30,000字' },
+  { value: '100K', label: '100K', jpLabel: '100,000字' },
+  { value: '300K', label: '300K', jpLabel: '300,000字' },
 ]);
+
+const displayWordCount = computed(() => {
+  const option = wordCountOptions.value.find(opt => opt.value === selectedWordCount.value);
+  if (locale.value === 'jp' && option?.jpLabel) {
+    return option.jpLabel;
+  }
+  return selectedWordCount.value;
+});
 
 const selectedLanguage = ref('');
 const showLanguageDropdown = ref(false);
 const languageOptions = computed(() => [
-  { value: 'cn', label: t('novel.language.zh') },
+  { value: 'jp', label: t('novel.language.jp') },
   { value: 'en', label: t('novel.language.en') },
-  { value: 'jp', label: t('novel.language.jp') }
+  { value: 'tc', label: t('novel.language.tc') },
+  { value: 'cn', label: t('novel.language.zh') }
 ]);
 
 const selectedLanguageText = computed(() => {
@@ -1758,14 +1783,19 @@ const novelInput = ref('');
 const showVideoModeDropdown = ref(false);
 
 const navigateToNovelGenerate = async () => {
+  if (isGeneratingNovel.value) return;
+  isGeneratingNovel.value = true;
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
+    isGeneratingNovel.value = false;
     return;
   }
 
   if (!novelInput.value.trim()) {
     toast(t('home.error.emptyInput'));
+    isGeneratingNovel.value = false;
     return;
   }
 
@@ -1779,15 +1809,17 @@ const navigateToNovelGenerate = async () => {
     const userBalance = balanceInfo.value.balance || 0;
     if (requiredBalance > userBalance) {
       showInsufficientBalanceModal.value = true;
+      isGeneratingNovel.value = false;
       return;
     }
   }
 
   try {
     // Check if user has reached the task limit
-    const totalProcessRes = await api.totalProcess(false) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+    const totalProcessRes = await api.totalProcess(true) as any;
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
       showTaskLimitExceededModal.value = true;
+      isGeneratingNovel.value = false;
       return;
     }
 
@@ -1830,6 +1862,8 @@ const navigateToNovelGenerate = async () => {
   } catch (error) {
     console.error('Error in navigateToNovelGenerate:', error);
     toast(t('fail'));
+  } finally {
+    isGeneratingNovel.value = false;
   }
 }
 
@@ -1846,7 +1880,7 @@ function goRecharge() {
 
 // Pagination variables
 const totalPosts = ref(0);
-const pageSize = ref(50);
+const pageSize = ref(48);
 const homePageRef = ref<HTMLElement | null>(null);
 const currentStyleName = ref(''); // Current selected style name
 
@@ -1930,31 +1964,18 @@ function handleBalanceInfoLoaded(info: any) {
 
 // Computed property to calculate estimated computing power for story/novel
 const estimatedComputingPower = computed(() => {
-  if (!balanceInfo.value || !balanceInfo.value.single_image_cost) {
+  if (!balanceInfo.value) {
     return 1;
   }
 
-  // Convert selected word count to number of words in thousands
-  let wordCountInThousands = 0;
-   if (selectedWordCount.value == '30K') {
-    wordCountInThousands = 3;
-  } else if (selectedWordCount.value == '100K') {
-    wordCountInThousands = 10;
-  } else if (selectedWordCount.value == '300K') {
-    wordCountInThousands = 30;
-  }
+  // Calculate estimated computing power using outline_cost + single_image_cost
+  const manhuaManjuOutlineBase = Number(balanceInfo.value.outline_cost) || 0;
+  const singleImageCost = Number(balanceInfo.value.single_image_cost) || 0;
 
-  // Calculate estimated computing power
-  const outlineRate = Number(balanceInfo.value.outline_rate);
-  if (isNaN(outlineRate) || outlineRate <= 0) {
-    return 1;
-  }
+  const total = manhuaManjuOutlineBase + singleImageCost;
 
-  const estimatedPower = wordCountInThousands * outlineRate;
-
-  // Round to nearest integer and ensure minimum value is 1
-  const roundedPower = Math.round(estimatedPower);
-  return Math.max(1, roundedPower);
+  // Ensure minimum value is 1
+  return Math.max(1, total);
 });
 
 // Computed property to calculate estimated computing power for photo
@@ -1970,7 +1991,7 @@ const estimatedPhotoComputingPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 10;
   }
 
-  return Math.max(1, cost * 4);
+  return Math.max(1, cost);
 });
 
 // Computed property to calculate estimated computing power for video
@@ -1983,9 +2004,17 @@ const estimatedVideoComputingPower = computed(() => {
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value === '720P') {
-    costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 5;
+    if (currentVideoMode.value === 'unlimited') {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw) || 8;
+    } else {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 12;
+    }
   } else if (selectedVideoQuality.value === '1080P') {
-    costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 6;
+    if (currentVideoMode.value === 'unlimited') {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw) || 11;
+    } else {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 18;
+    }
   }
 
   const totalCost = costPerSecond * duration;
@@ -2040,7 +2069,7 @@ const checkItemLimit = () => {
 
 // Content Pagination
 const currentPage = ref(1);
-const limit = ref(50);
+const limit = ref(48);
 
 // Mock Data
 const characters = ref([]);
@@ -2313,8 +2342,11 @@ const selectCharacter = (characters: any[]) => {
 
   // Append new characters instead of replacing
   characters.forEach(newChar => {
-    // Only add if not already in the list
-    if (!currentSelectedCharacters.value.some(c => c.id === newChar.id)) {
+    // Check if character is already selected
+    if (currentSelectedCharacters.value.some(c => c.id === newChar.id)) {
+      // Show toast if trying to add duplicate character
+      toast(t('home.characterSelect.alreadySelected'));
+    } else {
       currentSelectedCharacters.value.push(newChar);
       // Add to combined items array with type information
       currentCombinedItems.value.push({ ...newChar, type: 'character' });
@@ -2607,9 +2639,13 @@ function updateUnlimitedModeVisibility() {
 }
 
 const generateVideo = async () => {
+  if (isGeneratingVideo.value) return;
+  isGeneratingVideo.value = true;
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
+    isGeneratingVideo.value = false;
     return;
   }
 
@@ -2620,6 +2656,7 @@ const generateVideo = async () => {
   } else {
     if (!editableInputRef.value) {
       toast(t('home.error.emptyInput'));
+      isGeneratingVideo.value = false;
       return;
     }
     inputContent = editableInputRef.value.textContent || '';
@@ -2627,19 +2664,33 @@ const generateVideo = async () => {
 
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
+    isGeneratingVideo.value = false;
     return;
   }
 
   // 首尾帧模式验证：首帧必须上传，尾帧可以不上传
   if (selectedVideoMultimodal.value === 'startEndFrames' && !startFrameImage.value) {
     toast(t('home.error.startFrameRequired'));
+    isGeneratingVideo.value = false;
     return;
+  }
+
+  // Fetch latest balance before checking
+  try {
+    const balanceResponse = await api.userBalance() as any;
+    if (balanceResponse.code == 200) {
+      balanceInfo.value = balanceResponse.data;
+    } else {
+      toast(locale.value == 'en' ? balanceResponse.msg : locale.value == 'zh' ? balanceResponse.msg_cn : locale.value == 'tc' ? balanceResponse.msg_tc : balanceResponse.msg_jp);
+    }
+  } catch (error) {
+    console.log('Failed to fetch balance:', error);
   }
 
   try {
     // Default video settings
     const videoSettings = {
-      language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+      language: locale.value == 'zh' ? 'cn' : locale.value,
       aspectRatio: "9:16"
     };
 
@@ -2756,7 +2807,7 @@ const generateVideo = async () => {
 
     const params = {
       ratio: selectedVideoRatio.value,
-      language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+      language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "simple_video",
       story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
@@ -2818,24 +2869,32 @@ const generateVideo = async () => {
   } catch (error) {
     console.log(error);
     toast(t('fail'));
+  } finally {
+    isGeneratingVideo.value = false;
   }
 };
 
 const generateComic = async () => {
+  if (isGeneratingComic.value) return;
+  isGeneratingComic.value = true;
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
+    isGeneratingComic.value = false;
     return;
   }
 
   if (!editableInputRef.value) {
     toast(t('home.error.emptyInput'));
+    isGeneratingComic.value = false;
     return;
   }
 
   const inputContent = editableInputRef.value.textContent || '';
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
+    isGeneratingComic.value = false;
     return;
   }
 
@@ -2908,7 +2967,7 @@ const generateComic = async () => {
 
   const params = {
     ratio: "9:16",
-    language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+    language: locale.value == 'zh' ? 'cn' : locale.value,
     story_type: "manhua",
     story_mode: currentComicMode.value == 'unlimited' ? 'nsfw' : 'normal',
     story_style: "",
@@ -2960,24 +3019,32 @@ const generateComic = async () => {
   catch (error) {
     console.error('Error in generateComic:', error);
     toast(t('fail'));
+  } finally {
+    isGeneratingComic.value = false;
   }
 };
 
 const generateDrama = async () => {
+  if (isGeneratingDrama.value) return;
+  isGeneratingDrama.value = true;
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
+    isGeneratingDrama.value = false;
     return;
   }
 
   if (!editableInputRef.value) {
     toast(t('home.error.emptyInput'));
+    isGeneratingDrama.value = false;
     return;
   }
 
   const inputContent = editableInputRef.value.textContent || '';
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
+    isGeneratingDrama.value = false;
     return;
   }
 
@@ -3039,7 +3106,7 @@ const generateDrama = async () => {
 
     const params = {
       ratio: "9:16",
-      language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+      language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "manju",
       story_mode: currentDramaMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
@@ -3089,6 +3156,8 @@ const generateDrama = async () => {
   } catch (error) {
     console.error('Error in generateDrama:', error);
     toast(t('fail'));
+  } finally {
+    isGeneratingDrama.value = false;
   }
 };
 
@@ -3128,21 +3197,39 @@ const convertImageTagsToRef = (inputElement: HTMLElement | null, imageList: any[
 };
 
 const generatePhoto = async () => {
+  if (isGeneratingPhoto.value) return;
+  isGeneratingPhoto.value = true;
+
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
+    isGeneratingPhoto.value = false;
     return;
   }
 
   if (!editableInputRef.value) {
     toast(t('home.error.emptyInput'));
+    isGeneratingPhoto.value = false;
     return;
   }
 
   const inputContent = editableInputRef.value.textContent || '';
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
+    isGeneratingPhoto.value = false;
     return;
+  }
+
+  // Fetch latest balance before checking
+  try {
+    const balanceResponse = await api.userBalance() as any;
+    if (balanceResponse.code == 200) {
+      balanceInfo.value = balanceResponse.data;
+    } else {
+      toast(locale.value == 'en' ? balanceResponse.msg : locale.value == 'zh' ? balanceResponse.msg_cn : locale.value == 'tc' ? balanceResponse.msg_tc : balanceResponse.msg_jp);
+    }
+  } catch (error) {
+    console.log('Failed to fetch balance:', error);
   }
 
   // Check if user has sufficient balance
@@ -3164,7 +3251,7 @@ const generatePhoto = async () => {
 
     // Photo settings
     const photoSettings = {
-      language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+      language: locale.value == 'zh' ? 'cn' : locale.value,
       aspectRatio: selectedPhotoRatio.value,
       resolution: selectedPhotoQuality.value
     };
@@ -3236,6 +3323,8 @@ const generatePhoto = async () => {
   } catch (error) {
     console.error('Error in generatePhoto:', error);
     toast(t('fail'));
+  } finally {
+    isGeneratingPhoto.value = false;
   }
 };
 
@@ -3655,7 +3744,7 @@ const handleFileChange = async (event: Event) => {
             currentCombinedItems.value.push(newItem);
           } else {
             currentUploadedImages.value.push(newItem);
-            currentCombinedItems.value.push({ ...newItem, type: 'image' });
+            currentCombinedItems.value.push(newItem);
           }
 
           // Insert tag into input-textarea
@@ -3799,6 +3888,9 @@ async function uploadVideo(file: File): Promise<string> {
 
   const uploadRes = await fetch(presignedUrl, {
     method: 'PUT',
+    headers: {
+      'Content-Type': 'video/mp4',
+    },
     body: file,
   });
 
@@ -3807,7 +3899,7 @@ async function uploadVideo(file: File): Promise<string> {
   }
 
   const cleanUrl = presignedUrl.split('?')[0];
-  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://ddu2v98cehw9k.cloudfront.net');
+  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://static.moegen.ai');
 }
 
 // Upload audio to server using presigned URL
@@ -3832,6 +3924,9 @@ async function uploadAudio(file: File): Promise<string> {
   // Step 2: Upload file using PUT method
   const uploadRes = await fetch(presignedUrl, {
     method: 'PUT',
+    headers: {
+      'Content-Type': 'audio/mpeg',
+    },
     body: file,
   });
 
@@ -3841,7 +3936,7 @@ async function uploadAudio(file: File): Promise<string> {
 
   // Replace domain in URL
   const cleanUrl = presignedUrl.split('?')[0];
-  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://ddu2v98cehw9k.cloudfront.net');
+  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://static.moegen.ai');
 }
 
 // Remove uploaded image
@@ -4730,7 +4825,7 @@ const loadContent = async (page = 1) => {
     }
 
     if (res.code == 0 || res.code == 200) {
-      const data = res.data?.data || res.data || [];
+      let data = res.data?.data || res.data || [];
 
       data.forEach((item: any) => {
         if (activeContentTab.value == 'suggested') {
@@ -4739,6 +4834,10 @@ const loadContent = async (page = 1) => {
           item.is_liked = item.is_liked ? 1 : 0;
         }
       });
+
+      // Filter out blocked users
+      // 帖子列表的 is_blacked 直接在 item 上，订阅列表的 is_blacked 在 blogger_info 下
+      data = data.filter((item: any) => item.is_blacked != 1 && item.blogger_info?.is_blacked != 1);
 
       // Always replace content for pagination (not append)
       allContent.value = data;
@@ -4976,17 +5075,22 @@ watch(() => locale.value, (newLocale) => {
   // Sync novel language selector with navigation language
   if (newLocale == 'zh') {
     selectedLanguage.value = 'cn';
-  } else if (newLocale == 'jp') {
-    selectedLanguage.value = 'jp';
-  } else {
+  } else if (newLocale == 'en') {
     selectedLanguage.value = 'en';
+  } else if (newLocale == 'tc') {
+    selectedLanguage.value = 'tc';
+  } else {
+    selectedLanguage.value = 'jp';
   }
 
   // Update SEO meta tags when language changes
   setSeoMeta();
 });
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   nextTick(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
@@ -5038,10 +5142,12 @@ onMounted(() => {
     const systemLocale = locale.value;
     if (systemLocale == 'zh') {
       selectedLanguage.value = 'cn';
-    } else if (systemLocale == 'jp') {
-      selectedLanguage.value = 'jp';
-    } else {
+    } else if (systemLocale == 'en') {
       selectedLanguage.value = 'en';
+    } else if (systemLocale == 'tc') {
+      selectedLanguage.value = 'tc';
+    } else {
+      selectedLanguage.value = 'jp';
     }
   } catch (error) {
     console.error('Error loading novel settings:', error);

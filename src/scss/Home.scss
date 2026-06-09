@@ -1006,6 +1006,24 @@
         height: 4.4rem;
         cursor: pointer;
 
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          .generate-novel-btn{
+            cursor: not-allowed;
+          }
+        }
+
+        &.loading {
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          .generate-novel-btn{
+            cursor: not-allowed;
+          }
+        }
+
         b {
           width: 4.4rem;
           height: 4.4rem;
@@ -1031,6 +1049,30 @@
           }
         }
 
+        .generate-comic-btn{
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 4.4rem;
+          height: 4.4rem;
+          background: #FB64B6;
+          border-radius: 1rem;
+
+          img{
+            width: 2.4rem;
+            height: 2.4rem;
+          }
+
+          .loading-spinner-small {
+            width: 2.4rem;
+            height: 2.4rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #FFFFFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+        }
+
         .generate-novel-btn {
           display: flex;
           align-items: center;
@@ -1052,6 +1094,15 @@
           img {
             width: 1.6rem;
             height: 1.6rem;
+          }
+
+          .loading-spinner-small {
+            width: 1.6rem;
+            height: 1.6rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #FFFFFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
           }
         }
       }
@@ -2094,6 +2145,15 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.6rem;
+}
+
+.loading-spinner-inner {
+  width: 2rem;
+  height: 2rem;
+  border: 0.2rem solid #F5F5F5;
+  border-top: 0.2rem solid #FB64B6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .loading-text {

@@ -98,7 +98,7 @@
                     <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                   </div>
                 </div>
-                <div class="custom-dropdown" v-if="showChapterDropdown">
+                <div class="custom-dropdown" v-if="showChapterDropdown" :class="{ 'dropdown-top': chapterDropdownPosition === 'top' }">
                   <div
                     class="chapter-dropdown-item"
                     :class="{ 'selected': selectedEpisode == chapter.chapter }"
@@ -255,55 +255,73 @@
         <!-- Collection -->
         <div class="collection-section">
           <div class="form-item">
-            <div class="form-label-inner">
-              <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.collectionInfo')"></div>
+
+            <div class="collection-row">
+              <div class="collection-group">
+                <div class="form-label-inner">
+                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+                  <div class="info-icon" @mouseover="adjustTooltipPosition">
+                    <img src="@/assets/images/publish/intro.png" alt="Info" />
+                    <div class="tooltip-arrow"></div>
+                    <div class="tooltip">
+                      <div class="tooltip-content">
+                        <div v-html="t('submit.collectionInfo')"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
+                    <div class="select-content" v-if="selectedCollection">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="select-text">
+                        <span class="select-value">{{ selectedCollection.name }}</span>
+                        <span class="modify-link" @click.stop="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                    </div>
+                    <span class="select-value" v-else>{{ t('collection.noCollection') }}</span>
+                    <div class="select-actions">
+                      <div class="select-arrow">
+                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      </div>
+                    </div>
+                  </div>
+                  <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" :class="{ 'dropdown-top': collectionDropdownPosition === 'top' }" @scroll="handleCollectionDropdownScroll">
+                    <div class="collection-dropdown-item new-collection" @click="createNewCollection">
+                      <span>{{ t('collection.newCollection') }}</span>
+                      <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
+                    </div>
+                    <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
+                      <img v-if="collection.cover" :src="processImageUrl(collection.cover)" alt="" class="collection-item-cover" />
+                      <span class="collection-item-title">{{ collection.title }}</span>
+                    </div>
+                    <!-- Loading indicator -->
+                    <div v-if="isLoadingCollections" class="loading-indicator">
+                      <div class="loading-spinner"></div>
+                      <span>{{ t('loading') }}</span>
+                    </div>
+                    <!-- No more collections message - only show when there's more than one page -->
+                    <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
+                      {{ t('emptyState.noMoreData') }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="collection-row">
-              <div class="collection-select">
-                <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                  <span class="select-value">{{ selectedCollection || t('collection.noCollection') }}</span>
-                  <div class="select-actions">
+
+              <div class="collection-group" v-if="!isNoCollection">
+                <label class="form-label"><b>*</b>{{ t("collection.orderInCollection") }}</label>
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
                     <div class="select-arrow">
                       <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
                     </div>
                   </div>
-                </div>
-                <div class="custom-dropdown" ref="collectionDropdownRef" v-if="showCollectionDropdown" @scroll="handleCollectionDropdownScroll">
-                  <div class="collection-dropdown-item new-collection" @click="createNewCollection">
-                    <span>{{ t('collection.newCollection') }}</span>
-                    <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
-                  </div>
-                  <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection == collection.title }">
-                    {{ collection.title }}
-                  </div>
-                  <div v-if="isLoadingCollections" class="loading-indicator">
-                    <div class="loading-spinner"></div>
-                    <span>{{ t('loading') }}</span>
-                  </div>
-                  <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
-                    {{ t('emptyState.noMoreData') }}
-                  </div>
-                </div>
-              </div>
-              <div class="collection-select" v-if="!isNoCollection">
-                <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                  <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                  <div class="select-arrow">
-                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                  </div>
-                </div>
-                <div class="custom-dropdown" v-if="showEpisodeDropdown">
-                  <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                    {{ episode.label }}
+                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                      {{ episode.label }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -312,7 +330,7 @@
         </div>
 
         <!-- Cover Image -->
-        <div class="section">
+        <!-- <div class="section">
           <div class="form-item">
             <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}</label>
             <div class="cover-row">
@@ -325,7 +343,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- Caption -->
         <div class="caption-section">
@@ -439,7 +457,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<a href="javascript:void(0)" @click="openCommunityConvention">{{ t("submit.terms") }}</a></span
+            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
           >
         </div>
       </div>
@@ -504,6 +522,19 @@
       @save="handleCreateCollection"
     />
 
+    <!-- Edit Collection Modal -->
+    <EditCollectionModal
+      :visible="showEditCollectionModal"
+      :is-edit="editingCollectionId !== null"
+      :collection-id="editingCollectionId || ''"
+      :collection-name="selectedCollection?.name || ''"
+      :cover-url="selectedCollection?.cover || ''"
+      :description="selectedCollection?.description || ''"
+      :type="3"
+      @close="handleCloseEditCollectionModal"
+      @save="handleEditCollectionSave"
+    />
+
     <!-- Switch Collection Confirm Modal -->
     <SwitchCollectionModal
       :visible="showSwitchCollectionModal"
@@ -525,6 +556,7 @@ import ProjectVideoViewModal from "@/components/ProjectVideoViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
+import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import Pagination from "@/components/Pagination.vue";
 import api from "@/api/index";
@@ -533,6 +565,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import router from "@/router";
+import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -621,16 +654,11 @@ const hasActiveSubscription = ref(false);
 const isAdult = ref(false);
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-// Upload options
-const uploadOption = ref('history');
+// Upload options - only local upload
+const uploadOption = ref('local');
 
-// Upload options for v-for
+// Upload options for v-for - only local upload
 const uploadOptions = [
-  {
-    id: 'history',
-    value: 'history',
-    label: 'submit.video.uploadFromHistory'
-  },
   {
     id: 'local',
     value: 'local',
@@ -689,6 +717,7 @@ const selectedModalEpisode = ref(null);
 
 // Chapter dropdown
 const showChapterDropdown = ref(false);
+const chapterDropdownPosition = ref<'top' | 'bottom'>('bottom');
 
 // Project details cache
 const projectDetailsCache = ref<Record<string, any>>({});
@@ -697,21 +726,26 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref('');
-const selectedCollectionId = ref<number | ''>('');
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string } | null>(null);
+const editingCollectionId = ref<string | number | null>(null);
+const showEditCollectionModal = ref(false);
+const isCollectionHovered = ref(false);
+const selectedCollectionId = ref<number | ''>(''); // Keep for backward compatibility
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
-const isCollectionHovered = ref(false);
+const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
+const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showCreateCollectionModal = ref(false);
 const showSwitchCollectionModal = ref(false);
 const switchCollectionWarningShown = ref(false);
 const pendingCollectionId = ref<number | null>(null);
+const isCreatingNewCollection = ref(false);
 const isEditingWork = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
-  { value: '1', label: t('submit.video.episode', { episode: 1 }) },
+  { value: '1', label: '1' },
 ]);
 
 // Collection pagination
@@ -742,12 +776,7 @@ watch(() => route.path, (newPath) => {
   }
 });
 
-// Watch uploadOption changes to fetch projects when switching to history
-watch(uploadOption, (newOption) => {
-  if (newOption == 'history') {
-    fetchProjects();
-  }
-});
+
 
 // Check if selected chapter is already published
 const isChapterPublished = computed(() => {
@@ -764,6 +793,35 @@ const isProjectSelected = computed(() => {
 // Collection methods
 function toggleCollectionDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showCollectionDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 350; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          collectionDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          collectionDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        collectionDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      collectionDropdownPosition.value = 'bottom';
+    }
+  }
+
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
 
@@ -778,13 +836,68 @@ function toggleCollectionDropdown(event: Event) {
 
 function toggleEpisodeDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showEpisodeDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 300; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, show above
+        episodeDropdownPosition.value = 'top';
+      } else {
+        // Enough space below, show normally
+        episodeDropdownPosition.value = 'bottom';
+      }
+    }
+  }
+
   showEpisodeDropdown.value = !showEpisodeDropdown.value;
   showCollectionDropdown.value = false;
 }
 
 function createNewCollection() {
+  if (collections.value.length > 0) {
+    pendingCollectionId.value = null;
+    isCreatingNewCollection.value = true;
+    showSwitchCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+  } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+  }
+}
+
+function handleEditCollection() {
   showCollectionDropdown.value = false;
-  showCreateCollectionModal.value = true;
+
+  if (selectedCollection.value) {
+    const currentCollection = selectedCollection.value;
+    editingCollectionId.value = currentCollection.id;
+
+    // Ensure cover and description are available - fetch from collections array if missing
+    const collection = collections.value.find(c => c.id === currentCollection.id);
+
+    if (collection) {
+      selectedCollection.value = {
+        ...currentCollection,
+        cover: collection.cover || currentCollection.cover,
+        description: collection.description || currentCollection.description
+      };
+    }
+  } else {
+    editingCollectionId.value = null;
+  }
+
+  showEditCollectionModal.value = true;
+}
+
+function handleCloseEditCollectionModal() {
+  showEditCollectionModal.value = false;
 }
 
 async function selectCollection(id: number) {
@@ -803,15 +916,19 @@ async function selectCollection(id: number) {
 async function doSelectCollection(id: number) {
   const collection = collections.value.find(c => c.id === id);
   if (collection) {
-    selectedCollection.value = collection.title;
-    selectedCollectionId.value = collection.id;
+    selectedCollection.value = {
+      id: collection.id,
+      name: collection.title,
+      cover: collection.cover,
+      description: collection.description
+    };
 
     try {
       // Request collection details to get the current chapter count
-      const response = await api.singleCollection(id, 1, 10) as any;
+      const response = await api.singleCollectionIndex(id) as any;
       if (response.code == 0 && response.data) {
         // Get the total chapter count from the response
-        const allnum = response.data.allnums || '0';
+        const allnum = response.data.count || 0;
         const defaultEpisode = parseInt(allnum) + 1;
         selectedEpisodeNumber.value = defaultEpisode.toString();
 
@@ -822,7 +939,7 @@ async function doSelectCollection(id: number) {
           response.data.data.forEach((chapter: any, index: number) => {
             episodes.value.push({
               value: (index + 1).toString(),
-              label: t('submit.video.episode', { episode: index + 1 })
+              label: (index + 1).toString()
             });
           });
         } else if (collection.chapters && collection.chapters.length > 0) {
@@ -830,14 +947,14 @@ async function doSelectCollection(id: number) {
           collection.chapters.forEach((chapter: any, index: number) => {
             episodes.value.push({
               value: (index + 1).toString(),
-              label: t('submit.video.episode', { episode: index + 1 })
+              label: (index + 1).toString()
             });
           });
         }
         // 添加新的一集
         episodes.value.push({
           value: defaultEpisode.toString(),
-          label: t('submit.video.episode', { episode: defaultEpisode })
+          label: defaultEpisode.toString()
         });
       }
     } catch (error) {
@@ -854,14 +971,14 @@ async function doSelectCollection(id: number) {
         collection.chapters.forEach((chapter: any, index: number) => {
           episodes.value.push({
             value: (index + 1).toString(),
-            label: t('submit.video.episode', { episode: index + 1 })
+            label: (index + 1).toString()
           });
         });
       }
       // 添加新的一集
       episodes.value.push({
         value: defaultEpisode.toString(),
-        label: t('submit.video.episode', { episode: defaultEpisode })
+        label: defaultEpisode.toString()
       });
     }
   }
@@ -870,8 +987,7 @@ async function doSelectCollection(id: number) {
 }
 
 function clearCollection() {
-  selectedCollection.value = '';
-  selectedCollectionId.value = '';
+  selectedCollection.value = null;
   showCollectionDropdown.value = false;
   showEpisodeDropdown.value = false;
   isNoCollection.value = true;
@@ -880,6 +996,7 @@ function clearCollection() {
 function handleCloseSwitchCollectionModal() {
   showSwitchCollectionModal.value = false;
   pendingCollectionId.value = null;
+  isCreatingNewCollection.value = false;
 }
 
 async function handleConfirmSwitchCollection() {
@@ -894,9 +1011,12 @@ async function handleConfirmSwitchCollection() {
 
   if (pendingCollectionId.value !== null) {
     await doSelectCollection(pendingCollectionId.value);
+    pendingCollectionId.value = null;
+  } else if (isCreatingNewCollection.value) {
+    isCreatingNewCollection.value = false;
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
   }
-
-  pendingCollectionId.value = null;
 }
 
 function selectEpisode(value: string) {
@@ -906,7 +1026,7 @@ function selectEpisode(value: string) {
 
 function getEpisodeLabel(value: string) {
   const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : t('submit.video.episode', { episode: 1 });
+  return episode ? episode.label : '1';
 }
 
 // Fetch collections
@@ -954,12 +1074,15 @@ function handleCollectionDropdownScroll(event: Event) {
 async function handleCreateCollection(collection: { name: string }) {
   // Refresh collections list from API
   await fetchCollections(false);
-  // Select the newly created collection
-  selectedCollection.value = collection.name;
-  // Find and set the new collection ID
+  // Find and set the new collection
   const newCollection = collections.value.find(c => c.title === collection.name);
   if (newCollection) {
-    selectedCollectionId.value = newCollection.id;
+    selectedCollection.value = {
+      id: newCollection.id,
+      name: newCollection.title,
+      cover: newCollection.cover,
+      description: newCollection.description
+    };
   }
   // Keep current episode number, don't reset to 1
   showCreateCollectionModal.value = false;
@@ -970,9 +1093,48 @@ function handleCloseCreateCollectionModal() {
   showCreateCollectionModal.value = false;
 }
 
+function handleEditCollectionSave(updatedCollection: { id: string | number; name: string; cover?: string; description?: string }) {
+  if (selectedCollection.value) {
+    selectedCollection.value = {
+      ...selectedCollection.value,
+      ...updatedCollection
+    };
+  }
+  showEditCollectionModal.value = false;
+}
+
 // Chapter dropdown functions
 function toggleChapterDropdown(event: Event) {
   event.stopPropagation();
+
+  if (!showChapterDropdown.value) {
+    // Calculate dropdown position based on element position
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const dropdownHeight = 300; // Estimated dropdown height
+
+      // Check if there's enough space below
+      if (rect.bottom + dropdownHeight > windowHeight) {
+        // Not enough space below, check if there's enough space above
+        if (rect.top > dropdownHeight) {
+          // Show above
+          chapterDropdownPosition.value = 'top';
+        } else {
+          // Not enough space above either, show below but limit height
+          chapterDropdownPosition.value = 'bottom';
+        }
+      } else {
+        // Enough space below, show normally
+        chapterDropdownPosition.value = 'bottom';
+      }
+    } else {
+      // Default to bottom if target is not available
+      chapterDropdownPosition.value = 'bottom';
+    }
+  }
+
   showChapterDropdown.value = !showChapterDropdown.value;
 }
 
@@ -1089,9 +1251,7 @@ async function selectProject(project: any) {
   }
 }
 
-
-
-// Modal methods
+// Collection methods
 async function openViewModal(project: any) {
   previewProject.value = project;
 
@@ -1136,9 +1296,29 @@ function closeViewModal() {
   previewProject.value = null;
 }
 
-async function handlePublish() {
-  const project = selectedProject.value;
-  const episode = selectedEpisode.value;
+async function handlePublish(publishData?: any) {
+  // Scroll to publish section when clicking publish button
+  nextTick(() => {
+    const publishSection = document.querySelector('.publish-section');
+    if (publishSection) {
+      publishSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  });
+
+  // Check if publishData is provided (from modal) or if we're handling a direct click
+  let project: any, episode: any;
+
+  if (publishData && typeof publishData == 'object' && publishData.project) {
+    // From modal: use the provided data
+    project = publishData.project;
+    episode = publishData.episode;
+  } else {
+    // Direct click: use selectedProject and selectedEpisode
+    project = selectedProject.value;
+    episode = selectedEpisode.value;
+  }
 
   if (!project) {
     toast(t('submit.video.selectVideoFirst'));
@@ -1155,8 +1335,9 @@ async function handlePublish() {
 
   // Get chapter details to get video, cover, and title from chapter data
   try {
-    // Check if session_id exists
-    if (project.session_id) {
+    // Check if session_id exists (优先使用传入的session_id，否则从project中获取)
+    const sessionId = publishData?.session_id || project.session_id;
+    if (sessionId) {
       // Set cover from project cover, not chapter cover
       if (project.cover) {
         coverPreview.value = project.cover;
@@ -1164,7 +1345,7 @@ async function handlePublish() {
         coverPreview.value = project.result_async.generate_manju_cover;
       }
 
-      const chapterRes = await api.detailChapter(project.session_id, episode) as any;
+      const chapterRes = await api.detailChapter(sessionId, episode) as any;
       if (chapterRes.code == 200) {
         const chapterData = chapterRes.data;
         const resultAsync = chapterRes.data.result_async;
@@ -1197,18 +1378,12 @@ async function handlePublish() {
           });
         }
       }
-    } else {
-      // Set title using project name and episode if session_id is not available
-      form.value.title = `${project.name} ${episodeText}`;
     }
   } catch (error) {
     console.error('Error fetching chapter details for publish:', error);
-
-    // Set title using project name and episode if API call fails
-    form.value.title = `${project.name} ${episodeText}`;
   }
 
-  // Generate title: Episode X Title
+  // Generate title: Episode X Title (不带书名)
   if (episodeTitle) {
     form.value.title = `${episodeText} ${episodeTitle}`;
   } else {
@@ -1229,21 +1404,26 @@ async function handlePublish() {
           const createRes = await api.addCollection({ title: project.name, type: 3 }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
-            selectedCollection.value = project.name;
-            selectedCollectionId.value = createRes.data.book_id;
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: project.name
+            };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
           }
         } else {
           // Get collection details to determine episode number
-          const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
           if (collectionRes.code == 0 && collectionRes.data) {
-            const allnums = collectionRes.data.allnums || '0';
+            const allnums = collectionRes.data.count || 0;
             const episodeNumber = parseInt(allnums) + 1;
+            const collectionCover = collectionRes.data.cover || '';
 
-            selectedCollection.value = project.name;
-            selectedCollectionId.value = book_id;
+            selectedCollection.value = {
+              id: book_id,
+              name: project.name
+            };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
 
@@ -1252,7 +1432,7 @@ async function handlePublish() {
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('submit.video.episode', { episode: i })
+                label: i.toString()
               });
             }
           }
@@ -1689,8 +1869,11 @@ async function getPostDetails() {
 
       // Set selected collection from book_title
       if (postData.book_title) {
-        selectedCollection.value = postData.book_title;
-        selectedCollectionId.value = postData.book_id || '';
+        selectedCollection.value = {
+          id: postData.book_id || '',
+          name: postData.book_title,
+          cover: postData.cover || ''
+        };
         isNoCollection.value = false;
 
         // Set chapter index from postData
@@ -1701,9 +1884,9 @@ async function getPostDetails() {
           // If there's a book_id, request collection details to get complete episode list
           if (postData.book_id) {
             try {
-              const collectionRes = await api.singleCollection(postData.book_id, 1, 10) as any;
+              const collectionRes = await api.singleCollectionIndex(postData.book_id) as any;
               if (collectionRes.code === 0 && collectionRes.data) {
-                const allnum = collectionRes.data.allnums || '0';
+                const allnum = collectionRes.data.count || 0;
                 const totalEpisodes = parseInt(allnum);
 
                 // Update episodes array with complete list
@@ -1711,7 +1894,7 @@ async function getPostDetails() {
                 for (let i = 1; i <= totalEpisodes; i++) {
                   episodes.value.push({
                     value: i.toString(),
-                    label: t('submit.video.episode', { episode: i })
+                    label: i.toString()
                   });
                 }
               }
@@ -1722,7 +1905,7 @@ async function getPostDetails() {
               for (let i = 1; i <= chapterIndex; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('submit.video.episode', { episode: i })
+                  label: i.toString()
                 });
               }
             }
@@ -1732,7 +1915,7 @@ async function getPostDetails() {
             for (let i = 1; i <= chapterIndex; i++) {
               episodes.value.push({
                 value: i.toString(),
-                label: t('submit.video.episode', { episode: i })
+                label: i.toString()
               });
             }
           }
@@ -2449,6 +2632,10 @@ async function onSubmit() {
     toast(t("collection.noCollection"));
     return;
   }
+  if (!selectedEpisodeNumber.value) {
+    toast(t("collection.enterEpisode"));
+    return;
+  }
 
   if (!coverPreview.value) {
     toast(t("submit.video.toastSetCover"));
@@ -2494,7 +2681,7 @@ async function onSubmit() {
       is_nsfw: form.value.content == "yes" ? 1 : 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
-      book_id: selectedCollection.value ? (selectedCollectionId.value || 0) : 0,
+      book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
       cover_color: '',
       cover_title: '',
@@ -2593,20 +2780,20 @@ onMounted(async () => {
             const createRes = await api.addCollection({ title, type: 3 }) as any;
 
             if (createRes.code === 0 && createRes.data?.id) {
-              selectedCollection.value = title;
+              selectedCollection.value = { id: createRes.data.id, name: title };
               selectedCollectionId.value = createRes.data.id;
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
             }
           } else {
             // Get collection details to determine episode number
-            const collectionRes = await api.singleCollection(book_id, 1, 10) as any;
+            const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
             if (collectionRes.code === 0 && collectionRes.data) {
-              const allnums = collectionRes.data.allnums || '0';
+              const allnums = collectionRes.data.count || 0;
               const episodeNumber = parseInt(allnums) + 1;
 
-              selectedCollection.value = title;
+              selectedCollection.value = { id: book_id, name: title };
               selectedCollectionId.value = book_id;
               selectedEpisodeNumber.value = episodeNumber.toString();
               isNoCollection.value = false;
@@ -2616,7 +2803,7 @@ onMounted(async () => {
               for (let i = 1; i <= episodeNumber; i++) {
                 episodes.value.push({
                   value: i.toString(),
-                  label: t('submit.video.episode', { episode: i })
+                  label: i.toString()
                 });
               }
             }

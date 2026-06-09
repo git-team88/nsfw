@@ -70,9 +70,7 @@ declare global {
 }
 
 const emailCodeTxt = computed(() => {
-  if (!hasEverSentCode.value) return t("user.personal.sendCode");
-  if (isSendCode.value) return `${count.value}s`;
-  return t("register.resend");
+  return hasEverSentCode.value ? t("register.resend") : t("user.personal.sendCode");
 });
 
 const isFormValid = computed(() => {

@@ -388,7 +388,7 @@
                   <img v-if="kycForm.agreement_terms" src="@/assets/images/register/check_active.png" alt="" />
                   <img v-else src="@/assets/images/register/check.png" alt="" />
                 </div>
-                <span><b @click="openTermsOfService" class="link">{{ t("user.personal.agree3") }}</b>{{ t("user.personal.agree3Suffix") }}</span>
+                <span><span class="link-text">{{ t("user.personal.agree3") }}</span>{{ t("user.personal.agree3Suffix") }}</span>
               </div>
             </div>
           </div>
@@ -490,9 +490,7 @@ const emailToken = ref("");
 const isGrecaptchaReady = ref(false);
 
 const emailCodeTxt = computed(() => {
-  if (!hasEverSentCode.value) return t("user.personal.sendCode");
-  if (isSendCode.value) return `${count.value}s`;
-  return t("register.resend");
+  return hasEverSentCode.value ? t("register.resend") : t("user.personal.sendCode");
 });
 
 // Check if selected country is Japan
@@ -1041,6 +1039,8 @@ function checkGrecaptcha() {
 }
 
 function timeCount() {
+  hasEverSentCode.value = true;
+  count.value = 60;
   timer.value = setInterval(() => {
     if (count.value <= 1) {
       clearInterval(timer.value!);
@@ -1928,10 +1928,9 @@ function openTermsOfService() {
     }
   }
 
-  .link {
+  .link-text {
     font-weight: normal;
     color: #FB64B6;
-    cursor: pointer;
   }
 }
 

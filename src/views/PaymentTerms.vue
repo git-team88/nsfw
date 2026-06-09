@@ -17,16 +17,37 @@
 
 <script setup lang="ts" name="PaymentTerms">
 import Header from "@/components/Header.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
+import { initLanguage } from "@/util/utils";
 
 const { t } = useI18n();
 const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const isHide = ref(false);
 
+function setNoIndexMeta() {
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (!metaRobots) {
+    metaRobots = document.createElement('meta');
+    metaRobots.setAttribute('name', 'robots');
+    document.head.appendChild(metaRobots);
+  }
+  metaRobots.setAttribute('content', 'noindex, nofollow');
+}
+
+function removeNoIndexMeta() {
+  const metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots && metaRobots.getAttribute('content') === 'noindex, nofollow') {
+    metaRobots.parentNode?.removeChild(metaRobots);
+  }
+}
+
 onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   window.scrollTo(0, 0);
 
   const isBack = localStorage.getItem("isBack");
@@ -34,6 +55,12 @@ onMounted(async () => {
     isHide.value = true;
     localStorage.removeItem("isBack");
   }
+
+  setNoIndexMeta();
+});
+
+onBeforeUnmount(() => {
+  removeNoIndexMeta();
 });
 function goBack() {
   router.go(-1);
@@ -101,6 +128,11 @@ function goBack() {
         font-size: 1.6rem;
         margin: 2.8rem 0;
         color: #364153;
+      }
+
+      :deep(a) {
+        color: #364153;
+        text-decoration: underline;
       }
     }
   }

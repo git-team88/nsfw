@@ -20,7 +20,7 @@
 
       <!-- User Avatar -->
       <div class="user-avatar" @click="goUser()">
-        <img :src="userInfo?.info?.avatar" alt="Avatar" />
+        <img :src="userInfo?.info?.avatar || defaultAvatar" alt="Avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
       </div>
     </div>
 
@@ -72,7 +72,7 @@
               <div class="progress-info">
                 <span class="progress-label">{{ t('novel.generationProgress') }}</span>
                 <span class="progress-time">
-                  {{ (queueInfo || prepareQueueInfo) ? t('novel.queueInfo', { count: (queueInfo || prepareQueueInfo)?.count || 0, estimatedTime: (queueInfo || prepareQueueInfo)?.estimatedTime || 0 }) : t('novel.estimatedMinutes', { minutes: displayMinutes }) }}
+                  {{ (queueInfo || prepareQueueInfo) ? t('novel.queueInfo', { count: (queueInfo || prepareQueueInfo)?.count || 0, estimatedTime: Math.max((queueInfo || prepareQueueInfo)?.estimatedTime || 1, 1) }) : t('novel.estimatedMinutes', { minutes: Math.max(displayMinutes, 1) }) }}
                 </span>
               </div>
 
@@ -89,8 +89,9 @@
               <div class="progress-info">
                 <span class="progress-label">{{ t('novel.generationProgress') }}</span>
                 <span class="progress-time">
-                  {{ t('novel.estimatedMinutes', { minutes: displayMinutes }) }}
+                  {{ t('novel.estimatedMinutes', { minutes: Math.max(displayMinutes, 1) }) }}
                 </span>
+
               </div>
 
               <div class="progress-content">
@@ -106,7 +107,7 @@
               <div class="progress-info">
                 <span class="progress-label">{{ t('novel.generationProgress') }}</span>
                 <span class="progress-time">
-                  {{ t('novel.estimatedMinutes', { minutes: displayMinutes }) }}
+                  {{ t('novel.estimatedMinutes', { minutes: Math.max(displayMinutes, 1) }) }}
                 </span>
               </div>
 
@@ -250,10 +251,10 @@
               </div>
 
               <div class="regenerate-action-buttons">
-                <!-- <div class="regenerate-cost-display">
+                <div class="regenerate-cost-display">
                   <span class="regenerate-cost">{{ regenerateCost }}</span>
                   <img src="@/assets/images/novel/coin.png" alt="" />
-                </div> -->
+                </div>
                 <div class="send-btn" @click="sendRegenerateRequest">
                   <img src="@/assets/images/novel/send.png" alt="" />
                 </div>
@@ -286,6 +287,8 @@
                     >
                       <span class="image-index">{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
 
+                      <span class="image-name">{{ t('novel.image') }}{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+
                       <div class="image-box">
                         <img :src="item.image" :alt="item.name" class="uploaded-image" />
                         <span class="img-bg"></span>
@@ -314,7 +317,6 @@
                     ref="coverFileInputRef"
                     type="file"
                     accept="image/*"
-                    multiple
                     class="file-input"
                     style="display: none;"
                     @change="handleCoverFileChange"
@@ -331,8 +333,7 @@
                       <div class="dropdown-img">
                         <img :src="item.image" :alt="item.name" />
                       </div>
-                      <span v-if="item.type == 'character'">{{ item.name }}</span>
-                      <span v-else>{{ t('home.img') }}{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+                      <span>{{ t('home.img') }}{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
                     </div>
                   </div>
 
@@ -350,7 +351,7 @@
                       </div>
 
                       <div class="generate-btn" @click="generateNovelCover">
-                        <img src="@/assets/images/home/send.png" alt="Send" />
+                        <img src="@/assets/images/novel/send.png" alt="Send" />
                       </div>
                     </div>
                   </div>
@@ -362,7 +363,9 @@
            <!-- Generating Cover State -->
             <div v-else-if="isGeneratingCover" class="cover-generating-state">
               <span class="generating-text">{{ t('novel.generatingCover') }}</span>
-              <div class="loading-spinner"></div>
+              <div class="cover-skeleton-wrapper">
+                <div class="skeleton-line cover-skeleton"></div>
+              </div>
             </div>
 
             <!-- Cover Result State -->
@@ -426,7 +429,7 @@
 
         <div class="outline-content" ref="outlineContentRef">
           <NovelLoading
-            v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || ((taskStatus == 'DOING' || taskStatus == 'SUCCESS') && !isLoadingComplete && !hasFailed && currentChapter && currentChapter.chapter == stepChapterIndex)"
+            v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed && currentChapter && currentChapter.chapter == stepChapterIndex)"
             :process-type="loadingProcessType"
             :remaining-time="(chapterRemainingSeconds || (displayMinutes || 10) * 60)"
             :estimated-time="(originalEstimatedSeconds || 600) || 600"
@@ -484,7 +487,7 @@
             <p class="failed-message">
               {{ t('novel.error.generationFailedMessage') }}<br />
               {{ t('novel.error.contactSupport') }}<br />
-              {{ t('novel.error.supportEmail') }}
+              <span v-html="t('novel.error.supportEmail').replace(/\n/g, '<br />')"></span>
             </p>
             <p class="failed-tip">{{ t('novel.error.calcDeductRule') }}</p>
             <button class="retry-button" @click="handleRetry">
@@ -647,9 +650,9 @@
             {{ t('novel.allChaptersTitle') }} <span class="action-btn-cost">/{{ allChaptersCost }}{{ t('novel.computingPower') }}</span>
           </button>
 
-          <div class="info-icon-container">
+          <!-- <div class="info-icon-container">
             <img class="info-icon" src="@/assets/images/novel/intro.png" alt="Info" @click="showComputingPowerEstimateModal = true" />
-          </div>
+          </div> -->
         </div>
 
       </div>
@@ -684,6 +687,8 @@
     <!-- Insufficient Balance Modal -->
     <InsufficientBalanceModal
       :visible="showInsufficientBalanceModal"
+      :estimated-power="estimatedComputingPower"
+      :available-balance="userBalance"
       @cancel="showInsufficientBalanceModal = false"
       @recharge="goRecharge"
     />
@@ -697,11 +702,12 @@
       @confirm="() => { showGenerateAllChaptersModal = false; callNovelAllChapters(); }"
     />
 
-    <!-- Computing Power Estimate Modal -->
-    <ComputingPowerEstimateModal
-      :visible="showComputingPowerEstimateModal"
-      @cancel="showComputingPowerEstimateModal = false"
-      @confirm="showComputingPowerEstimateModal = false"
+    <!-- Freeze Computing Power Modal -->
+    <FreezeComputingPowerModal
+      :visible="showFreezeComputingPowerModal"
+      :estimated-power="freezeComputingPower"
+      @cancel="showFreezeComputingPowerModal = false"
+      @confirm="handleFreezeComputingPowerConfirm"
     />
 
     <!-- Task Limit Exceeded Modal -->
@@ -1094,16 +1100,17 @@ import UploadMask from '@/components/UploadMask.vue';
 import ConfirmComputingPowerModal from '@/components/ConfirmComputingPowerModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import GenerateAllChaptersModal from '@/components/GenerateAllChaptersModal.vue';
-import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
+import FreezeComputingPowerModal from '@/components/FreezeComputingPowerModal.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import NovelLoading from '@/components/NovelLoading.vue';
+import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const { t, locale } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
-// Get session id from route params
-const sessionId = computed(() => route.params.id as string);
+// Get session id from route params (ref instead of computed)
+const sessionId = ref<string>('');
 
 // State
 const userInfo = ref<any>(null);
@@ -1122,7 +1129,8 @@ const originalProjectName = ref<string>('');
 const isEditingName = ref<boolean>(false);
 const projectNameInputRef = ref<HTMLElement | null>(null);
 const userBalance = ref<number>(0);
-const taskStatus = ref<'DOING' | 'SUCCESS' | 'FAIL' | ''>('');
+const balanceInfo = ref<any>(null);
+const taskStatus = ref<'DOING' | 'SUCCESS' | 'FAIL' | 'PREPARE' | ''>('');
 const chapterCount = ref<number>(0);
 const hasFailed = ref<boolean>(false);
 const outlineData = ref<any>(null);
@@ -1130,13 +1138,15 @@ const backupOutlineData = ref<any>(null);
 const chapters = ref<any[]>([]);
 const showRegenerateInput = ref<boolean>(false);
 const regenerateContent = ref<string>('');
+const isSendingRegenerate = ref<boolean>(false);
 const selectedWordCount = ref<string>('30K');
 const selectedLanguage = ref<string>('en');
 const wordCountOptions = ['30K', '100K', '300K'];
 const languageOptions = computed(() => [
-  { value: 'cn', label: t('novel.language.zh') },
+  { value: 'jp', label: t('novel.language.jp') },
   { value: 'en', label: t('novel.language.en') },
-  { value: 'jp', label: t('novel.language.jp') }
+  { value: 'tc', label: t('novel.language.tc') },
+  { value: 'cn', label: t('novel.language.zh') }
 ]);
 const isBatchChapter = ref<number>(0);
 const isUserInitiatedGeneration = ref<boolean>(false);
@@ -1168,7 +1178,19 @@ const showCoverEditBtn = ref<boolean>(false);
 const showWordCountDropdown = ref(false);
 const showLanguageDropdown = ref(false);
 const currentChapter = ref<any>(null);
-const regenerateCost = computed(() => 20);
+const regenerateCost = computed(() => {
+  if (!balanceInfo.value) {
+    return 20;
+  }
+  // Calculate regenerate cost using outline_cost + single_image_cost (same as home.vue)
+  const manhuaManjuOutlineBase = Number(balanceInfo.value.outline_cost) || 0;
+  const singleImageCost = Number(balanceInfo.value.single_image_cost) || 0;
+
+  const total = manhuaManjuOutlineBase + singleImageCost;
+
+  // Ensure minimum value is 1, default to 20 if total is 0
+  return total > 0 ? Math.max(1, total) : 20;
+});
 const isEditingChapter = ref<boolean>(false);
 const editingChapterContent = ref<string>('');
 const originalChapterContent = ref<string>('');
@@ -1207,7 +1229,9 @@ const pendingChapterTitle = ref<string>(''); // Store chapter title for edit act
 const showConfirmComputingPowerModal = ref<boolean>(false);
 const showInsufficientBalanceModal = ref<boolean>(false);
 const showGenerateAllChaptersModal = ref<boolean>(false);
-const showComputingPowerEstimateModal = ref<boolean>(false);
+const showFreezeComputingPowerModal = ref<boolean>(false);
+const freezeComputingPower = ref<number>(0);
+const pendingGenerationAction = ref<string>(''); // 'outline', 'chapter', 'all', 'retry-outline', 'retry-chapter', 'retry-all'
 const showTaskLimitExceededModal = ref<boolean>(false);
 const estimatedComputingPower = ref<number>(0);
 const retryAction = ref<string>(''); // 'outline', 'chapter', 'all'
@@ -1242,7 +1266,7 @@ function stopLoadingAnimation() {
 const fetchTaskProgress = async () => {
   try {
     // Call totalProcess API to get novel_doing_count for task limit check
-    const progressRes = await api.totalProcess(false) as any;
+    const progressRes = await api.totalProcess(true) as any;
     if (progressRes.code == 200 && progressRes.data) {
       return progressRes.data;
     }
@@ -1339,6 +1363,9 @@ const startCoverPolling = (taskId: string) => {
           console.error('Error fetching detail project during cover polling:', e);
         }
 
+        // Fetch latest balance after generation completes
+        await fetchUserBalance();
+
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
@@ -1350,6 +1377,8 @@ const startCoverPolling = (taskId: string) => {
         hasFailed.value = true;
         // Reset isGeneratingOutline to false when cover generation fails
         isGeneratingOutline.value = false;
+        // Fetch latest balance after generation fails
+        await fetchUserBalance();
         if (coverPollTimer.value) {
           clearInterval(coverPollTimer.value);
           coverPollTimer.value = null;
@@ -1598,15 +1627,16 @@ watch(() => shouldShowGenerateButtons.value, (newValue) => {
 });
 
 // Auto-scroll to bottom when loading state changes
-watch(() => taskStatus.value, (newStatus) => {
-  if (newStatus == 'DOING' && !outlineStreamDone.value && !isChapterTyping.value) {
-    nextTick(() => {
-      if (outlineContentRef.value) {
-        outlineContentRef.value.scrollTop = outlineContentRef.value.scrollHeight;
-      }
-    });
-  }
-});
+// Only auto-scroll during chapter generation, not outline generation
+// watch(() => taskStatus.value, (newStatus) => {
+//   if (newStatus == 'DOING' && !outlineStreamDone.value && !isChapterTyping.value && !isGeneratingOutline.value) {
+//     nextTick(() => {
+//       if (outlineContentRef.value) {
+//         outlineContentRef.value.scrollTop = outlineContentRef.value.scrollHeight;
+//       }
+//     });
+//   }
+// });
 
 // Parse and handle structured outline data
 const handleStructuredData = async (result: any) => {
@@ -1739,6 +1769,13 @@ const allChaptersCost = computed(() => allChaptersPoints.value);
 const originalRegenerateContent = ref<string>('');
 
 const regenerateOutline = async () => {
+  // Check if cover is generating
+  if (isGeneratingCover.value) {
+    pendingCoverAction.value = 'regenerateOutline';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // Fetch latest user settings
@@ -1810,20 +1847,28 @@ const selectLanguage = (lang: string) => {
 
 // Send regenerate request
 const sendRegenerateRequest = async () => {
+  // Guard against double click
+  if (isSendingRegenerate.value) {
+    return;
+  }
+  isSendingRegenerate.value = true;
+
   // Hide dropdowns when sending regenerate request
   showWordCountDropdown.value = false;
   showLanguageDropdown.value = false;
 
   if (!regenerateContent.value?.trim()) {
     toast(t('novel.error.emptyRegenerateContent'));
+    isSendingRegenerate.value = false;
     return;
   }
 
   try {
     // Check if task limit is exceeded
-    const totalProcessRes = await api.totalProcess(false) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+    const totalProcessRes = await api.totalProcess(true) as any;
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
       showTaskLimitExceededModal.value = true;
+      isSendingRegenerate.value = false;
       return;
     }
 
@@ -1876,6 +1921,7 @@ const sendRegenerateRequest = async () => {
 
     if (userSelectedRes.code !== 200) {
       toast(userSelectedRes.message || t('fail'));
+      isSendingRegenerate.value = false;
       return;
     }
 
@@ -1930,22 +1976,24 @@ const sendRegenerateRequest = async () => {
     showRegenerateInput.value = false;
     regenerateContent.value = '';
 
-    // Call novelOutline API
-    outlineData.value = null;
-    isLoading.value = true;
-    hasFailed.value = false;
-    currentChapter.value = null;
-    callNovelOutline('renew');
+    // Await callNovelOutline to handle errors properly - data clearing and loading state are handled inside
+    try {
+      await callNovelOutline('renew');
+    } finally {
+      // Reset flag after call completes
+      isSendingRegenerate.value = false;
+    }
   } catch (error) {
     console.error('Error sending regenerate request:', error);
     toast(t('fail'));
+    isSendingRegenerate.value = false;
   }
 };
 
 // Start editing project name
 const startEditProjectName = () => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'editProjectName';
     showCoverActionConfirmModal.value = true;
     return;
@@ -1995,6 +2043,13 @@ const cancelEditProjectName = () => {
 
 // Start editing chapter
 const startEditChapter = () => {
+  // Check if cover is generating
+  if (isGeneratingCover.value) {
+    pendingCoverAction.value = 'editChapter';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   if (currentChapter.value?.content) {
     originalChapterContent.value = currentChapter.value.content;
     editingChapterContent.value = currentChapter.value.content;
@@ -2029,10 +2084,9 @@ const startEditChapter = () => {
 // This error indicates the session has expired and needs a page refresh
 const handleSessionTimeout = (code: number) => {
   if (code === 10407) {
-    toast(t('novel.error.sessionTimeout'));
     setTimeout(() => {
       window.location.reload();
-    }, 1500);
+    }, 500);
     return true;
   }
   return false;
@@ -2042,6 +2096,7 @@ const handleSessionTimeout = (code: number) => {
 const fetchEstimatedTime = async (queuePosition: number = 0) => {
   try {
     const res = await api.estimateTime(sessionId.value) as any;
+
     if (res.code == 200 && res.data) {
       // Get estimated time in seconds from API
       let apiEstimatedSeconds;
@@ -2087,17 +2142,20 @@ const fetchEstimatedTime = async (queuePosition: number = 0) => {
         const chapterElapsedSeconds = Math.max(0, elapsedSeconds - queueTimeSeconds);
         chapterRemaining = Math.max(0, (originalEstimatedSeconds.value || 600) - chapterElapsedSeconds);
       } else if (taskStartAt.value && res.data.current_timestamp) {
-        // Handle ISO format with T separator
-        const formattedTaskStartAt = taskStartAt.value.replace('T', ' ');
-        const startTimestamp = new Date(formattedTaskStartAt).getTime() / 1000;
-        const currentTimestamp = res.data.current_timestamp;
-        const elapsedSeconds = currentTimestamp - startTimestamp;
-        const remainingSeconds = Math.max(0, estimatedTime.value - elapsedSeconds);
-        initialMinutes = Math.ceil(remainingSeconds / 60);
-        // Calculate chapter-specific remaining time (subtract queue time)
-        const queueTimeSeconds = apiQueuePosition * 600;
-        const chapterElapsedSeconds = Math.max(0, elapsedSeconds - queueTimeSeconds);
-        chapterRemaining = Math.max(0, (originalEstimatedSeconds.value || 600) - chapterElapsedSeconds);
+        // Handle ISO format with T separator - directly use new Date() with ISO string
+        const startTimeDate = new Date(taskStartAt.value);
+
+        if (!isNaN(startTimeDate.getTime())) {
+          const startTimestamp = startTimeDate.getTime() / 1000;
+          const currentTimestamp = res.data.current_timestamp;
+          const elapsedSeconds = currentTimestamp - startTimestamp;
+          const remainingSeconds = Math.max(0, estimatedTime.value - elapsedSeconds);
+          initialMinutes = Math.ceil(remainingSeconds / 60);
+          // Calculate chapter-specific remaining time (subtract queue time)
+          const queueTimeSeconds = apiQueuePosition * 600;
+          const chapterElapsedSeconds = Math.max(0, elapsedSeconds - queueTimeSeconds);
+          chapterRemaining = Math.max(0, (originalEstimatedSeconds.value || 600) - chapterElapsedSeconds);
+        }
       } else if (startTime.value) {
         // Fallback: use startTime if taskStartAt is not available
         const elapsedSeconds = Math.floor((Date.now() - startTime.value) / 1000);
@@ -2118,7 +2176,12 @@ const fetchEstimatedTime = async (queuePosition: number = 0) => {
       }
 
       displayMinutes.value = initialMinutes;
-      chapterRemainingSeconds.value = chapterRemaining;
+      if (isGeneratingOutline.value) {
+        const startTimeSec = taskStartAt.value ? new Date(taskStartAt.value).getTime() / 1000 : (startTime.value || Date.now()) / 1000;
+        chapterRemainingSeconds.value = Math.max(60, estimatedTime.value - (res.data.current_timestamp - startTimeSec));
+      } else {
+        chapterRemainingSeconds.value = chapterRemaining;
+      }
 
       // Start countdown timer
       startCountdownTimer();
@@ -2179,6 +2242,12 @@ const cancelEditChapter = () => {
 // Save edited chapter
 const saveEditChapter = async () => {
   if (currentChapter.value) {
+    // Check if content is empty
+    if (!editingChapterContent.value?.trim()) {
+      toast(t('novel.error.emptyChapterContent'));
+      return;
+    }
+
     // Check if content has been modified
     if (editingChapterContent.value !== originalChapterContent.value) {
       try {
@@ -2208,8 +2277,8 @@ const saveEditChapter = async () => {
 
 // Start editing chapter title
 const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     // Store chapter information for later use
     pendingCoverAction.value = 'editChapterTitle';
     pendingChapterId.value = chapterId;
@@ -2231,6 +2300,15 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
 
 // Save edited chapter title
 const saveChapterTitle = async (chapterId: number) => {
+  // Check if title is empty
+  if (!editingChapterTitle.value?.trim()) {
+    toast(t('novel.error.emptyChapterTitle'));
+    editingChapterId.value = null;
+    isSavingChapterTitle.value = false;
+    isHandlingChapterAction.value = false;
+    return;
+  }
+
   isHandlingChapterAction.value = true;
   isSavingChapterTitle.value = true;
   try {
@@ -2365,8 +2443,8 @@ const printContent = (content: string) => {
 };
 
 function goHome() {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'home';
     showCoverActionConfirmModal.value = true;
     return;
@@ -2407,7 +2485,7 @@ function goHome() {
 }
 
 function goProject() {
-   if (isEditingCover.value && showCoverResult.value) {
+   if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'home';
     showCoverActionConfirmModal.value = true;
     return;
@@ -2464,9 +2542,29 @@ function goUser() {
 }
 
 function goToSimilar() {
+  // Check if cover is generating
+  if (isGeneratingCover.value) {
+    pendingCoverAction.value = 'similar';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
-  router.push("/similar");
+  // Get language from user selected settings (from result_async -> user_selected.language)
+  // selectedLanguage is already set from userSelectedSettings.value?.language
+  const lang = selectedLanguage.value;
+
+  // For NovelGenerate, the content type is novel (type=2)
+  const type = 2;
+
+  router.push({
+    path: "/similar",
+    query: {
+      type: type,
+      lang: lang
+    }
+  });
 }
 
 
@@ -2475,144 +2573,138 @@ function goToSimilar() {
 const callNovelNext = async (retryChapter?: number) => {
   hideEdit();
 
-  // Check if there's an unprocessed cover generation result
-  if (showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || showCoverResult.value) {
     pendingCoverAction.value = 'next';
     showCoverActionConfirmModal.value = true;
     return;
   }
 
   // Check if user has reached the task limit
-  const totalProcessRes = await api.totalProcess(false) as any;
-  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+  const totalProcessRes = await api.totalProcess(true) as any;
+  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
     showTaskLimitExceededModal.value = true;
-    return false;
+    return;
   }
 
-  try {
-    // Set flag for user initiated generation
-    isUserInitiatedGeneration.value = true;
-    // Set shouldShowTypewriter to true for typewriter effect
-    shouldShowTypewriter.value = true;
-    // Disable auto navigation for single chapter generation
-    shouldAutoNavigate.value = false;
+  const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
+  const generateMode = retryChapter !== undefined ? 'retry' : 'new';
 
-    const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
+  // Set flag for user initiated generation
+  isUserInitiatedGeneration.value = true;
+  // Set shouldShowTypewriter to true for typewriter effect
+  shouldShowTypewriter.value = true;
+  // Disable auto navigation for single chapter generation
+  shouldAutoNavigate.value = false;
 
-    // Immediately set UI state: show chapter title + loading on right, show chapter in left sidebar
-    const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == nextChapterIndex);
-    currentChapter.value = {
-      chapter: nextChapterIndex,
-      title: nextChapterData?.title || '',
-      content: ''
-    };
+  // Call API first, set loading state only after success
+  const novelNextRes = await api.novelNext({
+    session_id: sessionId.value,
+    chapter: nextChapterIndex,
+    generate_mode: generateMode
+  }) as any;
 
-    // Add new chapter to chapters array if not exists
-    const existingChapter = chapters.value.find((c: any) => c.chapter == nextChapterIndex);
-    if (!existingChapter) {
-      chapters.value.push({
-        id: `temp-${nextChapterIndex}`,
-        chapter: nextChapterIndex,
-        title: nextChapterData?.title || t('novel.untitled'),
-        is_publish: 2 // 未发布状态
-      });
-    }
-
-    displayedContent.value = '';
-    pendingDisplayContent.value = '';
-    isLoadingComplete.value = false;
-    isLoading.value = true;
-
-    // Start loading animation for chapter generation
-    startLoadingAnimation('chapter');
-    hasFailed.value = false;
-    taskStatus.value = 'DOING';
-    lastGenerationType.value = 'chapter';
-    isGeneratingOutline.value = false;
-    isChapterTyping.value = false;
-    generatingChapter.value = nextChapterIndex;
-    stepChapterIndex.value = nextChapterIndex;
-    currentStepName.value = 'chapter';
-
-    const generateMode = retryChapter !== undefined ? 'retry' : 'new';
-    const novelNextRes = await api.novelNext({
-      session_id: sessionId.value,
-      chapter: nextChapterIndex,
-      generate_mode: generateMode
-    }) as any;
-
-    if (novelNextRes.code !== 200) {
-      // Handle insufficient balance error
-      if (novelNextRes.code == 40011) {
-        showInsufficientBalanceModal.value = true;
-        isLoading.value = false;
-        hasFailed.value = true;
-        taskStatus.value = 'FAIL';
-        // Stop loading animation
-        stopLoadingAnimation();
-        return;
-      }
-      toast(t('novel.error.fetchFailed'));
-      isLoading.value = false;
-      hasFailed.value = true;
-      taskStatus.value = 'FAIL';
-      // Stop loading animation
-      stopLoadingAnimation();
+  if (novelNextRes.code !== 200) {
+    // Handle session timeout error - refresh page
+    if (handleSessionTimeout(novelNextRes.code)) {
       return;
     }
+    // Handle insufficient balance error
+    if (novelNextRes.code == 40011) {
+      showInsufficientBalanceModal.value = true;
+      return;
+    }
+    toast(t('fail'));
+    return;
+  }
 
-    // Get task_id from response
-    const taskId = novelNextRes.data?.task_id || '';
+  // API successful, now set UI state
+  const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == nextChapterIndex);
+  currentChapter.value = {
+    chapter: nextChapterIndex,
+    title: nextChapterData?.title || '',
+    content: ''
+  };
 
-    // Use the time from API response as start time if available
-    if (novelNextRes.time) {
-      const startTimeDate = new Date(novelNextRes.time);
-      if (!isNaN(startTimeDate.getTime())) {
-        startTime.value = startTimeDate.getTime();
-      } else {
-        startTime.value = Date.now();
-      }
+  // Add new chapter to chapters array if not exists
+  const existingChapter = chapters.value.find((c: any) => c.chapter == nextChapterIndex);
+  if (!existingChapter) {
+    chapters.value.push({
+      id: `temp-${nextChapterIndex}`,
+      chapter: nextChapterIndex,
+      title: nextChapterData?.title || t('novel.untitled'),
+      is_publish: 2 // 未发布状态
+    });
+  }
+
+  displayedContent.value = '';
+  pendingDisplayContent.value = '';
+  isLoadingComplete.value = false;
+  isLoading.value = true;
+
+  // Start loading animation for chapter generation
+  startLoadingAnimation('chapter');
+  hasFailed.value = false;
+  taskStatus.value = 'DOING';
+  lastGenerationType.value = 'chapter';
+  isGeneratingOutline.value = false;
+  isChapterTyping.value = false;
+  generatingChapter.value = nextChapterIndex;
+  stepChapterIndex.value = nextChapterIndex;
+  currentStepName.value = 'chapter';
+
+  // API successful, check if we need to show freeze computing power modal
+  const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+  if (hideFreezeModal !== '1') {
+    // Get frozen points from detail project
+    const detailRes = await api.detailProject(sessionId.value) as any;
+    if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
+      freezeComputingPower.value = detailRes.data.frozen_points;
+      pendingGenerationAction.value = retryChapter !== undefined ? 'retry-chapter' : 'chapter';
+      showFreezeComputingPowerModal.value = true;
+    }
+  }
+
+  // Get task_id from response
+  const taskId = novelNextRes.data?.task_id || '';
+
+  // Use the time from API response as start time if available
+  if (novelNextRes.time) {
+    const startTimeDate = new Date(novelNextRes.time);
+    if (!isNaN(startTimeDate.getTime())) {
+      startTime.value = startTimeDate.getTime();
     } else {
       startTime.value = Date.now();
     }
+  } else {
+    startTime.value = Date.now();
+  }
 
-    // Fetch task progress to get ongoing task count
-    try {
-      const taskProgress = await fetchTaskProgress();
-      if (taskProgress) {
-        ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
-      }
-    } catch (error) {
-      console.error('Error fetching task progress:', error);
+  // Fetch task progress to get ongoing task count
+  try {
+    const taskProgress = await fetchTaskProgress();
+    if (taskProgress) {
+      ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
     }
-
-    // Fetch estimated time
-    estimatedTime.value = null;
-    originalEstimatedSeconds.value = null;
-    displayMinutes.value = 0;
-    estimatedTimeFetched.value = false;
-    fetchEstimatedTime();
-
-    await fetchUserBalance();
-
-    // Use polling to fetch chapter content
-    await fetchChapterStream(nextChapterIndex, taskId);
-
-    // Update points estimate after chapter generation only if generation hasn't failed
-    if (!hasFailed.value) {
-      await fetchPointsEstimate();
-    }
-
   } catch (error) {
-    console.error('Error calling novelNext:', error);
-    toast(t('novel.error.fetchFailed'));
-    isLoading.value = false;
-    hasFailed.value = true;
-    taskStatus.value = 'FAIL';
-    // Stop loading animation
-    stopLoadingAnimation();
-  } finally {
-    // Don't reset isUserInitiatedGeneration here - it's reset in fetchChapterStream when generation completes
+    console.error('Error fetching task progress:', error);
+  }
+
+  // Fetch estimated time
+  estimatedTime.value = null;
+  originalEstimatedSeconds.value = null;
+  displayMinutes.value = 0;
+  estimatedTimeFetched.value = false;
+  fetchEstimatedTime();
+
+  await fetchUserBalance();
+
+  // Use polling to fetch chapter content
+  await fetchChapterStream(nextChapterIndex, taskId);
+
+  // Update points estimate after chapter generation only if generation hasn't failed
+  if (!hasFailed.value) {
+    await fetchPointsEstimate();
   }
 };
 
@@ -2625,8 +2717,8 @@ function hideEdit() {
 }
 
 const goPrevChapter = async () => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'prevChapter';
     showCoverActionConfirmModal.value = true;
     return;
@@ -2737,8 +2829,8 @@ const goPrevChapter = async () => {
 }
 
 const goNextChapter = async () => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'nextChapter';
     showCoverActionConfirmModal.value = true;
     return;
@@ -2951,167 +3043,163 @@ const goToChapter = async (chapterNum: number) => {
 
 // Call novelAllChapters API
 const callNovelAllChapters = async () => {
+  // Check if cover is generating
+  if (isGeneratingCover.value) {
+    pendingCoverAction.value = 'all';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
 
   // Check if user has reached the task limit
-  try {
-    const totalProcessRes = await api.totalProcess(false) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
-      showTaskLimitExceededModal.value = true;
-      return;
-    }
-  } catch (error) {
-    console.error('Error checking task limit:', error);
+  const totalProcessRes = await api.totalProcess(true) as any;
+  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
+    showTaskLimitExceededModal.value = true;
+    return;
   }
 
-  try {
-    // Set flag for batch chapter generation
-    isBatchChapter.value = 1;
-    // Set shouldShowTypewriter to false for direct content display
-    shouldShowTypewriter.value = false;
-    // Enable auto navigation for batch generation
-    shouldAutoNavigate.value = true;
+  // Determine the first chapter to generate and generate mode
+  let fromChapter: number;
+  let generateMode: string;
+  const previousTaskStatus = taskStatus.value;
 
-    // Determine the first chapter to generate and generate mode
-    let fromChapter: number;
-    let generateMode: string;
+  if (previousTaskStatus == 'FAIL') {
+    // If there's a failed chapter, retry from that chapter
+    fromChapter = stepChapterIndex.value;
+    generateMode = 'retry';
+  } else if (currentChapter.value?.chapter) {
+    // If current chapter generated successfully, start from next chapter
+    fromChapter = currentChapter.value.chapter + 1;
+    generateMode = 'new';
+  } else {
+    // No chapters generated yet, start from 1
+    fromChapter = 1;
+    generateMode = 'new';
+  }
 
-    if (taskStatus.value == 'FAIL') {
-      // If there's a failed chapter, retry from that chapter
-      fromChapter = stepChapterIndex.value;
-      generateMode = 'retry';
-    } else if (currentChapter.value?.chapter) {
-      // If current chapter generated successfully, start from next chapter
-      fromChapter = currentChapter.value.chapter + 1;
-      generateMode = 'new';
-    } else {
-      // No chapters generated yet, start from 1
-      fromChapter = 1;
-      generateMode = 'new';
-    }
+  const firstChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == fromChapter);
 
-    const firstChapterIndex = fromChapter;
-    const firstChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == firstChapterIndex);
+  // Call API first, set loading state only after success
+  const novelAllChaptersRes = await api.novelAll({
+    session_id: sessionId.value,
+    from_chapter: fromChapter,
+    generate_mode: generateMode
+  }) as any;
 
-    // Immediately set UI state
-    currentChapter.value = {
-      chapter: firstChapterIndex,
-      title: firstChapterData?.title || '',
-      content: ''
-    };
-    displayedContent.value = '';
-    pendingDisplayContent.value = '';
-    isLoading.value = true;
-    isLoadingComplete.value = false;
-    hasFailed.value = false;
-    taskStatus.value = 'DOING';
-    lastGenerationType.value = 'chapter';
-    isGeneratingOutline.value = false;
-    isChapterTyping.value = false;
-    generatingChapter.value = firstChapterIndex;
-    stepChapterIndex.value = firstChapterIndex;
-    currentStepName.value = 'chapter';
-    startLoadingAnimation('chapter');
-
-    // Add first chapter to chapters array if not exists
-    const existingChapter = chapters.value.find((c: any) => c.chapter === firstChapterIndex);
-    if (!existingChapter) {
-      chapters.value.push({
-        id: `temp-${firstChapterIndex}`,
-        chapter: firstChapterIndex,
-        title: firstChapterData?.title || t('novel.untitled'),
-        is_publish: 2
-      });
-    }
-
-    const novelAllRes = await api.novelAll({
-      session_id: sessionId.value,
-      generate_mode: generateMode,
-      from_chapter: fromChapter
-    }) as any;
-
-    if (novelAllRes.code !== 200) {
-      // Handle session timeout error - refresh page
-      if (handleSessionTimeout(novelAllRes.code)) {
-        isLoading.value = false;
-        hasFailed.value = true;
-        taskStatus.value = 'FAIL';
-        return;
-      }
-      // Handle insufficient balance error
-      if (novelAllRes.code == 40011) {
-        showInsufficientBalanceModal.value = true;
-        isLoading.value = false;
-        hasFailed.value = true;
-        taskStatus.value = 'FAIL';
-        return;
-      }
-      toast(novelAllRes.message || t('novel.error.fetchFailed'));
-      isLoading.value = false;
-      hasFailed.value = true;
-      taskStatus.value = 'FAIL';
+  if (novelAllChaptersRes.code !== 200) {
+    // Handle session timeout error - refresh page
+    if (handleSessionTimeout(novelAllChaptersRes.code)) {
       return;
     }
+    // Handle insufficient balance error
+    if (novelAllChaptersRes.code == 40011) {
+      showInsufficientBalanceModal.value = true;
+      return;
+    }
+    toast(novelAllChaptersRes.message || t('novel.error.fetchFailed'));
+    return;
+  }
 
-    // Use the time from API response as start time if available
-    if (novelAllRes.time) {
-      const startTimeDate = new Date(novelAllRes.time);
-      if (!isNaN(startTimeDate.getTime())) {
-        startTime.value = startTimeDate.getTime();
-      } else {
-        startTime.value = Date.now();
+  // API successful, now set UI state
+  // Set flag for batch chapter generation
+  isBatchChapter.value = 1;
+  // Set shouldShowTypewriter to false for direct content display
+  shouldShowTypewriter.value = false;
+  // Enable auto navigation for batch generation
+  shouldAutoNavigate.value = true;
+
+  currentChapter.value = {
+    chapter: fromChapter,
+    title: firstChapterData?.title || '',
+    content: ''
+  };
+  displayedContent.value = '';
+  pendingDisplayContent.value = '';
+  isLoading.value = true;
+  isLoadingComplete.value = false;
+  hasFailed.value = false;
+  taskStatus.value = 'DOING';
+  lastGenerationType.value = 'chapter';
+  isGeneratingOutline.value = false;
+  isChapterTyping.value = false;
+  generatingChapter.value = fromChapter;
+  stepChapterIndex.value = fromChapter;
+  currentStepName.value = 'chapter';
+  startLoadingAnimation('chapter');
+
+  // Add first chapter to chapters array if not exists
+  const existingChapter = chapters.value.find((c: any) => c.chapter === fromChapter);
+  if (!existingChapter) {
+    chapters.value.push({
+      id: `temp-${fromChapter}`,
+      chapter: fromChapter,
+      title: firstChapterData?.title || t('novel.untitled'),
+      is_publish: 2
+    });
+  }
+
+  // API successful, check if we need to show freeze computing power modal
+    const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+    if (hideFreezeModal !== '1') {
+      // Get frozen points from detail project
+      const detailRes = await api.detailProject(sessionId.value) as any;
+      if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
+        freezeComputingPower.value = detailRes.data.frozen_points;
+        pendingGenerationAction.value = previousTaskStatus == 'FAIL' ? 'retry-all' : 'all';
+        showFreezeComputingPowerModal.value = true;
       }
+    }
+
+  // Use the time from API response as start time if available
+  if (novelAllChaptersRes.time) {
+    const startTimeDate = new Date(novelAllChaptersRes.time);
+    if (!isNaN(startTimeDate.getTime())) {
+      startTime.value = startTimeDate.getTime();
     } else {
       startTime.value = Date.now();
     }
+  } else {
+    startTime.value = Date.now();
+  }
 
-    // Fetch task progress to get ongoing task count
-    try {
-      const taskProgress = await fetchTaskProgress();
-      if (taskProgress) {
-        ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
-      }
-    } catch (error) {
-      console.error('Error fetching task progress:', error);
+  // Fetch task progress to get ongoing task count
+  try {
+    const taskProgress = await fetchTaskProgress();
+    if (taskProgress) {
+      ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
     }
-
-    // Fetch estimated time
-    estimatedTime.value = null;
-    originalEstimatedSeconds.value = null;
-    displayMinutes.value = 0;
-    estimatedTimeFetched.value = false;
-    fetchEstimatedTime();
-
-    await fetchUserBalance();
-
-    // Use polling to fetch chapter content
-    await fetchChapterStream(firstChapterIndex);
-
-    // Update points estimate after chapter generation only if generation hasn't failed
-    if (!hasFailed.value) {
-      await fetchPointsEstimate();
-    }
-
   } catch (error) {
-    console.error('Error calling novelAll:', error);
-    toast(t('novel.error.fetchFailed'));
-    isLoading.value = false;
-    hasFailed.value = true;
-    taskStatus.value = 'FAIL';
-    // Reset batch flag on error
-    isBatchChapter.value = 0;
+    console.error('Error fetching task progress:', error);
+  }
+
+  // Fetch estimated time
+  estimatedTime.value = null;
+  originalEstimatedSeconds.value = null;
+  displayMinutes.value = 0;
+  estimatedTimeFetched.value = false;
+  fetchEstimatedTime();
+
+  await fetchUserBalance();
+
+  // Use polling to fetch chapter content
+  await fetchChapterStream(fromChapter);
+
+  // Update points estimate after chapter generation only if generation hasn't failed
+  if (!hasFailed.value) {
+    await fetchPointsEstimate();
   }
 };
 
 // Handle retry on failed generation
 const handleRetry = async () => {
   // Check if task limit is exceeded
-  const totalProcessRes = await api.totalProcess(false) as any;
+  const totalProcessRes = await api.totalProcess(true) as any;
   if (totalProcessRes.code == 200) {
-    if (lastGenerationType.value == 'outline' && totalProcessRes.data?.novel_doing_count >= 4) {
+    if (lastGenerationType.value == 'outline' && totalProcessRes.data?.novel_doing_count >= 2) {
       showTaskLimitExceededModal.value = true;
       return;
-    } else if (lastGenerationType.value == 'chapter' && totalProcessRes.data?.novel_doing_count >= 4) {
+    } else if (lastGenerationType.value == 'chapter' && totalProcessRes.data?.novel_doing_count >= 2) {
       showTaskLimitExceededModal.value = true;
       return;
     }
@@ -3132,8 +3220,11 @@ const handleRetry = async () => {
   }
 
   if (estimateRes && estimateRes.code == 200) {
-    estimatedComputingPower.value = estimateRes.data.total_points;
+    const estimatedPoints = estimateRes.data.total_points;
+    estimatedComputingPower.value = estimatedPoints;
     showConfirmComputingPowerModal.value = true;
+  } else if (estimateRes && estimateRes.code == 10404) {
+    toast(t('novel.error.cannotOperateOtherUserProject'));
   } else {
     toast(estimateRes.message);
   }
@@ -3154,14 +3245,27 @@ const executeRetryAction = () => {
   }
 };
 
+// Handle freeze computing power modal confirm
+const handleFreezeComputingPowerConfirm = () => {
+  showFreezeComputingPowerModal.value = false;
+  // 弹窗只做提示，不重新调用API，流程已经在API调用成功后继续进行了
+};
+
 // Function to confirm generate all chapters
 const confirmGenerateAllChapters = async () => {
+  // Check if cover is generating
+  if (isGeneratingCover.value) {
+    pendingCoverAction.value = 'generateAllChapters';
+    showCoverActionConfirmModal.value = true;
+    return;
+  }
+
   hideEdit();
   try {
     // Check if user has reached the task limit
     try {
-      const totalProcessRes = await api.totalProcess(false) as any;
-      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
+      const totalProcessRes = await api.totalProcess(true) as any;
+      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
         showTaskLimitExceededModal.value = true;
         return;
       }
@@ -3224,8 +3328,8 @@ const confirmGenerateAllChapters = async () => {
 };
 
 function goRechargeDetail() {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'recharge';
     showCoverActionConfirmModal.value = true;
     return;
@@ -3273,8 +3377,8 @@ const handleChapterInfoClick = async () => {
 
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'chapter';
     showCoverActionConfirmModal.value = true;
     return;
@@ -3484,14 +3588,15 @@ const handleChapterItemClick = async (chapterNum: number) => {
     };
   } finally {
     isLoading.value = false;
+    isLoadingComplete.value = true;
     // Don't change taskStatus here - it's a global state that should only be changed by polling responses
   }
 };
 
 // Handle publish chapter button click
 const handlePublishChapter = (chapter: any) => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     // Store chapter information for later use
     pendingCoverAction.value = 'publish';
     pendingChapter.value = chapter;
@@ -3499,8 +3604,8 @@ const handlePublishChapter = (chapter: any) => {
     return;
   }
 
-  // Get session_id from route params
-  const session_id = route.params.id as string;
+  // Get session_id from sessionId ref
+  const session_id = sessionId.value;
 
   // Get cover from coverImage
   const cover = coverImage.value || '';
@@ -3525,8 +3630,8 @@ const handlePublishChapter = (chapter: any) => {
 
 // Handle outline preview click
 const handleOutlinePreviewClick = async () => {
-  // Check if there's an unprocessed cover generation result
-  if (isEditingCover.value && showCoverResult.value) {
+  // Check if cover is generating or there's an unprocessed cover generation result
+  if (isGeneratingCover.value || (isEditingCover.value && showCoverResult.value)) {
     pendingCoverAction.value = 'outline';
     showCoverActionConfirmModal.value = true;
     return;
@@ -3709,6 +3814,10 @@ const fetchUserBalance = async () => {
     const res = await api.userBalance() as any;
     if (res.code == 200) {
       userBalance.value = res.data.balance || 0;
+      // Save full balance info for calculating regenerateCost
+      balanceInfo.value = res.data;
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
   } catch (error) {
     console.error('Error fetching user balance:', error);
@@ -3719,14 +3828,10 @@ const fetchUserBalance = async () => {
 const callNovelOutline = async (type: string, retryCount = 0) => {
   try {
     // Check if user has reached the task limit
-    try {
-      const totalProcessRes = await api.totalProcess(false) as any;
-      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 4) {
-        showTaskLimitExceededModal.value = true;
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking task limit:', error);
+    const totalProcessRes = await api.totalProcess(true) as any;
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
+      showTaskLimitExceededModal.value = true;
+      return;
     }
 
     // Only fetch user settings if topic is not already set (e.g. not called from sendRegenerateRequest)
@@ -3765,24 +3870,31 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
         return callNovelOutline(type, retryCount + 1);
       }
-      toast(t('novel.error.fetchFailed'));
+      toast(t('fail'));
       isLoading.value = false;
       return;
     }
 
+    // API successful, check if we need to show freeze computing power modal
+      const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+      if (hideFreezeModal !== '1') {
+        // Get frozen points from detail project
+        const detailRes = await api.detailProject(sessionId.value) as any;
+        if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
+          freezeComputingPower.value = detailRes.data.frozen_points;
+          pendingGenerationAction.value = type === 'retry' ? 'retry-outline' : 'outline';
+          showFreezeComputingPowerModal.value = true;
+        }
+      }
+
     // Set cover task_id to session_id
     coverTaskId.value = sessionId.value;
 
-    // Check if it's the first generation
-    const isFirstGenerate = localStorage.getItem('isFirstGenerate');
-    if (!isFirstGenerate) {
-      // Set isFirstGenerate to 1 in local storage
-      localStorage.setItem('isFirstGenerate', '1');
-      // Show computing power estimate modal
-      showComputingPowerEstimateModal.value = true;
-    }
 
-    // Reset state for new generation
+
+    // Reset state for new generation - clear data only after API success
+    outlineData.value = null;
+    currentChapter.value = null;
     estimatedTime.value = null;
     originalEstimatedSeconds.value = null;
     displayMinutes.value = 0;
@@ -3855,8 +3967,8 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       console.error('Error fetching detailProject:', error);
     }
 
-    // Start outline stream instead of polling
-    startOutlineStream();
+    // Start polling for task status
+    startPolling();
 
     // Fetch estimated time after successful novelOutline request
     fetchEstimatedTime();
@@ -3867,7 +3979,7 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
       return callNovelOutline(type, retryCount + 1);
     }
-    toast(t('novel.error.fetchFailed'));
+    toast(t('fail'));
     isLoading.value = false;
   }
 };
@@ -3930,41 +4042,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
 
     // Wait for DOM to mount chapter content view
     await nextTick();
-
-    let programmaticScroll = false;
-    let autoScroll = true;
-    let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
-
-    // Wait for DOM to update and get scroll element
-    await nextTick();
-    await nextTick();
-    let scrollElement = chapterContentRef.value;
-
-    // If scroll element not found, try to get it after a short delay
-    if (!scrollElement) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      scrollElement = chapterContentRef.value;
-    }
-
-    if (scrollElement) {
-      const handleScroll = () => {
-        if (programmaticScroll) return;
-        autoScroll = false;
-        if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-        scrollIdleTimer = setTimeout(() => {
-          autoScroll = true;
-        }, 3000);
-      };
-      scrollElement.addEventListener('scroll', handleScroll);
-      scrollElement.scrollTop = 0;
-    }
-
-    const doAutoScroll = () => {
-      if (scrollElement) {
-        // Force scroll to bottom
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    };
 
     // Start polling for task status
     // Clear any existing polling interval to prevent duplicate polling
@@ -4133,22 +4210,16 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
 
           // Check task status
           if (taskData.status == 'SUCCESS' || (taskData.step_status && taskData.step_status == 'SUCCESS')) {
-            // Get content from response or fetch from chapter detail
+            // Always fetch chapter detail from API after polling success
+            // The polling response does not contain chapter content
             let content = '';
-            if (taskData.result && taskData.result.content) {
-              content = taskData.result.content;
-            } else if (taskData.content) {
-              content = taskData.content;
-            } else if (isBatchChapter.value == 1 || isUserInitiatedGeneration.value) {
-              // For user initiated generation, fetch chapter detail directly
-              try {
-                const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
-                if (chapterRes.code == 200 && chapterRes.data) {
-                  content = chapterRes.data.content || '';
-                }
-              } catch (error) {
-                console.error('Error fetching chapter detail:', error);
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+              if (chapterRes.code == 200 && chapterRes.data) {
+                content = chapterRes.data.content || '';
               }
+            } catch (error) {
+              console.error('Error fetching chapter detail:', error);
             }
 
             // Update task status to SUCCESS but keep loading visible
@@ -4172,10 +4243,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
             // Directly show the full content instead of typewriter effect
             isChapterTyping.value = false;
             isWaitingForData.value = false;
-            if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
-            if (scrollElement) {
-              // scrollElement.removeEventListener('scroll', handleScroll);
-            }
 
             // Stop loading animation
             stopLoadingAnimation();
@@ -4372,11 +4439,11 @@ const fetchNovelOutline = async () => {
     if (detailProjectRes.data?.task_start_at) {
       taskStartAt.value = detailProjectRes.data.task_start_at;
       // Convert task_start_at to startTime for shouldShowEstimatedTime
+      // Directly use new Date() with ISO string, it can handle both formats
       const startTimeDate = new Date(detailProjectRes.data.task_start_at);
+
       if (!isNaN(startTimeDate.getTime())) {
         startTime.value = startTimeDate.getTime();
-      } else {
-        startTime.value = Date.now();
       }
     }
 
@@ -4442,18 +4509,38 @@ const fetchNovelOutline = async () => {
         const stepStatus = detailProjectRes.data?.step_status;
 
         if (stepStatus == 'DOING') {
-          // Outline is being generated - show loading state
+          // Set generation type flag so fetchEstimatedTime uses correct logic
+          lastGenerationType.value = 'outline';
+
+          // Fetch estimated time FIRST - before setting any flags that would
+          // cause NovelLoading to render with default/null time values
+          await fetchEstimatedTime();
+
+          // NOW set rendering flags - time values are ready
+          isGeneratingOutline.value = true;
           isLoading.value = true;
           hasFailed.value = false;
           taskStatus.value = 'DOING';
-          isGeneratingOutline.value = true;
-          lastGenerationType.value = 'outline';
-          // Set loading process type for outline generation
           startLoadingAnimation('outline');
-          fetchEstimatedTime();
 
-          // Start outline stream
-          startOutlineStream();
+          // Start polling for task status
+          startPolling();
+        } else if (stepStatus == 'PREPARE') {
+          // Outline is in preparation/queue - show preparing state
+          // Fetch estimated time FIRST before setting rendering flags
+          lastGenerationType.value = 'outline';
+          await fetchEstimatedTime();
+
+          isLoading.value = false;
+          hasFailed.value = false;
+          taskStatus.value = 'PREPARE';
+          isGeneratingOutline.value = true;
+          prepareQueueInfo.value = {
+            count: detailProjectRes.data?.in_queue_count || 1,
+            estimatedTime: detailProjectRes.data?.estimated_time || 30
+          };
+          // Start polling for task status
+          startPolling();
         } else if (stepStatus == 'FAIL') {
           // Outline generation failed - show failed state
           isLoading.value = false;
@@ -4552,8 +4639,30 @@ const fetchNovelOutline = async () => {
         }
 
         if (stepStatus == 'PREPARE' && chapterIndex) {
-          // Set up chapter state for preparation
           const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+
+          // Set generation type flag so fetchEstimatedTime uses correct logic
+          lastGenerationType.value = 'chapter';
+          currentStepName.value = 'chapter';
+          generatingChapter.value = chapterIndex;
+
+          // Ensure startTime is set from taskStartAt for accurate progress
+          if (taskStartAt.value && !startTime.value) {
+            const startTimeDate = new Date(taskStartAt.value);
+            if (!isNaN(startTimeDate.getTime())) {
+              startTime.value = startTimeDate.getTime();
+            }
+          }
+
+          // Fetch estimated time FIRST - before setting any flags that would
+          // cause NovelLoading to render with default/null time values
+          estimatedTime.value = null;
+          originalEstimatedSeconds.value = null;
+          displayMinutes.value = 0;
+          estimatedTimeFetched.value = false;
+          await fetchEstimatedTime();
+
+          // NOW set rendering flags - time values are ready
           currentChapter.value = {
             chapter: chapterIndex,
             title: chapterData?.title || '',
@@ -4563,15 +4672,7 @@ const fetchNovelOutline = async () => {
           isPreparing.value = true;
           hasFailed.value = false;
           taskStatus.value = '';
-          generatingChapter.value = chapterIndex;
-          currentStepName.value = 'chapter';
-          lastGenerationType.value = 'chapter';
-          // Set loading process type for chapter generation
           startLoadingAnimation('chapter');
-
-          // Fetch estimated time FIRST before showing loading component
-          // This ensures the loading animation starts from the correct position
-          await fetchEstimatedTime();
 
           // Start polling to check task status
           if (!pollingInterval.value) {
@@ -4625,6 +4726,10 @@ const fetchNovelOutline = async () => {
             isLoading.value = false;
             isLoadingComplete.value = true;
           }
+
+          // Fetch latest balance after chapter generation completes
+          await fetchUserBalance();
+
           isFetchingNovelOutline.value = false;
           return;
         }
@@ -4638,6 +4743,14 @@ const fetchNovelOutline = async () => {
           lastGenerationType.value = 'chapter';
           isGeneratingOutline.value = false;
           generatingChapter.value = chapterIndex;
+
+          // Ensure startTime is set from taskStartAt for accurate progress calculation on refresh
+          if (taskStartAt.value && !startTime.value) {
+            const startTimeDate = new Date(taskStartAt.value);
+            if (!isNaN(startTimeDate.getTime())) {
+              startTime.value = startTimeDate.getTime();
+            }
+          }
 
           // Fetch estimated time FIRST before setting taskStatus and currentChapter
           // This ensures the loading animation starts from the correct position
@@ -4684,6 +4797,9 @@ const fetchNovelOutline = async () => {
           lastGenerationType.value = 'chapter';
           // Set loading process type for chapter generation
           startLoadingAnimation('chapter');
+
+          // Fetch latest balance after chapter generation fails
+          await fetchUserBalance();
 
           // Fetch points estimate only if generation hasn't failed
           if (!hasFailed.value) {
@@ -4743,41 +4859,40 @@ const fetchNovelOutline = async () => {
         callNovelOutline('new');
       }
     } else {
-      // If result_async has value and step_name is outline, no need to poll
-      if (currentStepName.value == 'outline') {
+      // Only parse result_async and show content when step_status is SUCCESS
+      // For DOING/PREPARE states, keep showing loading state and continue polling
+      const stepStatusForResult = detailProjectRes.data?.step_status;
+
+      if (currentStepName.value == 'outline' && stepStatusForResult == 'SUCCESS') {
         isLoading.value = false;
-        // Only set hasFailed to false if stepStatus is not FAIL
-        const stepStatus = detailProjectRes.data?.step_status;
-        if (stepStatus !== 'FAIL') {
-          hasFailed.value = false;
-          // Try to parse result_async if it's available
-          if (detailProjectRes.data?.result_async) {
-            try {
-              let result = detailProjectRes.data.result_async;
-              // Check if result is string and parse it
-              if (typeof result == 'string') {
-                result = JSON.parse(result);
-              }
-              // Check if result has generate_novel_cover field
-              if (result.generate_novel_cover) {
-                coverImage.value = result.generate_novel_cover;
-                showCoverEditBtn.value = true;
-              }
-              // Check if result has generate_novel_outline field
-              if (result.generate_novel_outline) {
-                result = result.generate_novel_outline;
-              }
-              handleStructuredData(result);
-            } catch (error) {
-              console.error('Error parsing result_async:', error);
+        hasFailed.value = false;
+        // Try to parse result_async if it's available
+        if (detailProjectRes.data?.result_async) {
+          try {
+            let result = detailProjectRes.data.result_async;
+            // Check if result is string and parse it
+            if (typeof result == 'string') {
+              result = JSON.parse(result);
             }
+            // Check if result has generate_novel_cover field
+            if (result.generate_novel_cover) {
+              coverImage.value = result.generate_novel_cover;
+              showCoverEditBtn.value = true;
+            }
+            // Check if result has generate_novel_outline field
+            if (result.generate_novel_outline) {
+              result = result.generate_novel_outline;
+            }
+            handleStructuredData(result);
+          } catch (error) {
+            console.error('Error parsing result_async:', error);
           }
         }
-      } else {
-        // For non-outline step_names, start outline stream directly
+      } else if (currentStepName.value !== 'chapter') {
+        // For non-outline step_names, start polling directly
         if (currentStepName.value !== 'chapter') {
-          // Start outline stream instead of polling
-          startOutlineStream();
+          // Start polling for task status
+          startPolling();
         }
       }
     }
@@ -4812,8 +4927,10 @@ const handlePollingResponse = (pollingRes: any) => {
       count: pollingRes.data.queue_info.count || 0,
       estimatedTime: totalEstimatedTime
     };
-    // Update estimated time with queue position
-    fetchEstimatedTime(queuePosition);
+    // Only fetch estimated time if not already fetched to avoid resetting progress
+    if (!estimatedTimeFetched.value) {
+      fetchEstimatedTime(queuePosition);
+    }
   }
 
   if (status == 'SUCCESS') {
@@ -4829,8 +4946,12 @@ const handlePollingResponse = (pollingRes: any) => {
     prepareQueueInfo.value = null; // Clear queue info
     generatingChapter.value = null;
 
-    // If outline stream is done, process the result
-    if (outlineStreamDone.value) {
+    // Check if we're generating outline or chapter
+    if (isGeneratingOutline.value) {
+      // Outline generation completed - need to fetch detail project for full data
+      fetchDetailProjectForOutline();
+    } else if (outlineStreamDone.value) {
+      // Legacy: for streaming outline that's already done
       // Set hasStreamData to true to show outline content
       hasStreamData.value = true;
 
@@ -4847,8 +4968,8 @@ const handlePollingResponse = (pollingRes: any) => {
         startCoverPolling(coverTaskId.value);
       }
     } else {
-      const result = pollingRes.data?.result;
-      handleStructuredData(result);
+      // Chapter generation completed - need to fetch chapter detail
+      fetchChapterDetailForGeneration();
     }
   } else if (status == 'FAIL') {
     // Stop polling
@@ -4901,16 +5022,16 @@ const startPolling = () => {
     clearInterval(pollingInterval.value);
   }
 
-  // Start outline stream if generating outline
-  if (isGeneratingOutline.value && !outlineStreamParser.value) {
-    startOutlineStream();
-  }
-
   // Start polling every 3 seconds
   pollingInterval.value = window.setInterval(async () => {
     try {
+      // Always poll taskPolling API for task status
+      // This handles both outline generation and chapter generation
       const pollingRes = await api.taskPolling(sessionId.value) as any;
+
+      // Handle polling response
       handlePollingResponse(pollingRes);
+
     } catch (error) {
       console.error('Error during polling:', error);
       // Stop loading when polling fails
@@ -4938,6 +5059,145 @@ function handleClickOutside(event: MouseEvent) {
     }
   }
 }
+
+// Fetch detail project after outline generation completes
+const fetchDetailProjectForOutline = async () => {
+  try {
+    const detailProjectRes = await api.detailProject(sessionId.value) as any;
+
+    if (detailProjectRes.code == 200 && detailProjectRes.data) {
+      const taskData = detailProjectRes.data;
+
+      // Set task status to SUCCESS
+      taskStatus.value = 'SUCCESS';
+
+      // Set detail loaded flag - this is crucial for displaying content
+      isDetailLoaded.value = true;
+
+      // Initialize project name from detailProject response
+      if (detailProjectRes.data?.name) {
+        projectName.value = detailProjectRes.data.name;
+      }
+
+      // Initialize topic from detailProject response
+      if (detailProjectRes.data?.topic) {
+        topic.value = detailProjectRes.data.topic;
+      }
+
+      // Parse outline data from result_async
+      let resultAsync = null;
+      if (taskData.result_async) {
+        if (typeof taskData.result_async === 'string') {
+          try {
+            resultAsync = JSON.parse(taskData.result_async);
+          } catch (e) {
+            console.error('Error parsing result_async:', e);
+          }
+        } else {
+          resultAsync = taskData.result_async;
+        }
+      }
+
+      // Update outline data
+      if (resultAsync) {
+        // Check if resultAsync has generate_novel_outline field
+        let outlineResult = resultAsync;
+        if (resultAsync.generate_novel_outline) {
+          outlineResult = resultAsync.generate_novel_outline;
+        }
+
+        if (outlineResult && outlineResult.base_info) {
+          outlineData.value = outlineResult;
+
+          // Update project name
+          if (outlineResult.base_info.title) {
+            projectName.value = outlineResult.base_info.title;
+          }
+
+          // Update chapter count
+          if (outlineResult.base_info.total_chapters) {
+            chapterCount.value = outlineResult.base_info.total_chapters;
+          }
+
+          // Update chapters list if available
+          if (taskData.chapters) {
+            chapters.value = taskData.chapters;
+          }
+        }
+      }
+
+      // Update cover if available
+      if (taskData.result_async) {
+        try {
+          let coverData = taskData.result_async;
+          if (typeof coverData === 'string') {
+            coverData = JSON.parse(coverData);
+          }
+          if (coverData.generate_novel_cover) {
+            coverImage.value = coverData.generate_novel_cover;
+            showCoverEditBtn.value = true;
+          }
+        } catch (e) {
+          console.error('Error parsing cover data:', e);
+        }
+      }
+
+      // Update UI states
+      isGeneratingOutline.value = false;
+      hasStreamData.value = true;
+      isLoadingComplete.value = true;
+      isLoading.value = false;
+
+      // Reset currentChapter to show "待生成章节" section in left sidebar
+      currentChapter.value = null;
+      // Reset stepChapterIndex to 0 to show "待生成章节" section
+      stepChapterIndex.value = 0;
+      // Reset currentStepName to outline to show generate buttons
+      currentStepName.value = 'outline';
+
+      // Start polling for cover image
+      if (coverTaskId.value) {
+        startCoverPolling(coverTaskId.value);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching detail project for outline:', error);
+    // Fallback: show error state
+    isGeneratingOutline.value = false;
+    hasFailed.value = true;
+  }
+};
+
+// Fetch chapter detail after chapter generation completes
+const fetchChapterDetailForGeneration = async () => {
+  try {
+    // Get the chapter index from generatingChapter
+    const chapterIndex = generatingChapter.value;
+
+    if (chapterIndex !== null) {
+      // Fetch chapter detail from API
+      const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+
+      if (chapterRes.code == 200 && chapterRes.data) {
+        const content = chapterRes.data.content || '';
+
+        // Update the chapter content
+        if (currentChapter.value && currentChapter.value.chapter === chapterIndex) {
+          currentChapter.value.content = content;
+        }
+
+        // Update chapters array
+        const chapterIndexInArray = chapters.value.findIndex(ch => ch.chapter === chapterIndex);
+        if (chapterIndexInArray !== -1) {
+          chapters.value[chapterIndexInArray].content = content;
+          chapters.value[chapterIndexInArray].status = 1; // Mark as generated
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching chapter detail:', error);
+  }
+};
 
 function setSeoMeta() {
   document.title = t('seo.novelGenerate.title');
@@ -4968,6 +5228,11 @@ onMounted(async () => {
   }
 
   setSeoMeta();
+
+  const routeSessionId = route.params.id as string;
+  if (routeSessionId && routeSessionId !== 'undefined' && routeSessionId !== 'null') {
+    sessionId.value = routeSessionId;
+  }
 
   fetchUserInfo();
   fetchUserBalance();
@@ -5425,7 +5690,9 @@ class OutlineStreamParser {
 
 // Cover edit functions
 async function toggleCoverEdit() {
-  isEditingCover.value = true;
+  // Toggle the editing state
+  isEditingCover.value = !isEditingCover.value;
+
   if (isEditingCover.value) {
     // Reset cover input
     combinedCoverItems.value = [];
@@ -5454,33 +5721,104 @@ function cancelCoverAction() {
 function confirmCoverAction() {
   showCoverActionConfirmModal.value = false;
 
-  isGeneratingCover.value = false;
-  showCoverResult.value = false;
-  generatedCover.value = '';
-  isEditingCover.value = false;
-  showCoverEditBtn.value = true;
+  // Stop cover polling if it's running
+  stopCoverPolling();
+  if (coverPollingInterval.value) {
+    clearInterval(coverPollingInterval.value);
+    coverPollingInterval.value = null;
+  }
 
   // Handle the action based on pendingCoverAction
   if (pendingCoverAction.value == 'next') {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     callNovelNext();
   } else if (pendingCoverAction.value == 'all') {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     callNovelAllChapters();
   } else if (pendingCoverAction.value == 'home') {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     goHome();
   } else if (pendingCoverAction.value == 'outline') {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     handleOutlinePreviewClick();
   } else if (pendingCoverAction.value == 'recharge') {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     goRechargeDetail();
   } else if (pendingCoverAction.value == 'editProjectName') {
+    // Keep cover editing state, just perform the action
     startEditProjectName();
   } else if (pendingCoverAction.value == 'publish' && pendingChapter.value) {
+    // Reset cover state before navigating
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
     handlePublishChapter(pendingChapter.value);
   } else if (pendingCoverAction.value == 'editChapterTitle' && pendingChapterId.value !== null) {
+    // Keep cover editing state, just perform the action
     startEditChapterTitle(pendingChapterId.value, pendingChapterTitle.value);
   } else if (pendingCoverAction.value == 'prevChapter') {
+    // Keep cover editing state when navigating chapters
     goPrevChapter();
   } else if (pendingCoverAction.value == 'nextChapter') {
+    // Keep cover editing state when navigating chapters
     goNextChapter();
+  } else if (pendingCoverAction.value == 'chapter') {
+    // Keep cover editing state when clicking on chapter list
+    handleChapterItemClick(0);
+  } else if (pendingCoverAction.value == 'regenerateOutline') {
+    // Reset cover state before regenerating outline
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
+    regenerateOutline();
+  } else if (pendingCoverAction.value == 'editChapter') {
+    // Keep cover editing state, just perform the action
+    startEditChapter();
+  } else if (pendingCoverAction.value == 'generateAllChapters') {
+    // Reset cover state before generating all chapters
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
+    confirmGenerateAllChapters();
+  } else if (pendingCoverAction.value == 'similar') {
+    // Reset cover state before navigating to similar content
+    isGeneratingCover.value = false;
+    showCoverResult.value = false;
+    generatedCover.value = '';
+    isEditingCover.value = false;
+    showCoverEditBtn.value = true;
+    goToSimilar();
   }
 
   // Reset pending variables
@@ -5493,29 +5831,135 @@ function confirmCoverAction() {
 function handleCoverInput() {
   if (!coverInputRef.value) return;
 
-  const text = coverInputRef.value.innerText || coverInputRef.value.textContent || "";
+  const target = coverInputRef.value;
 
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount == 0) return;
-
-  const range = selection.getRangeAt(0);
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
-
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
-  if (match) {
-    const trigger = match[1] as "#" | "@";
-    const query = match[2];
-
-    if (trigger == "@") {
-      showCoverAtDropdown.value = true;
-      lastCoverRange.value = range.cloneRange();
-      updateCoverAtDropdownItems();
-    } else {
-      showCoverAtDropdown.value = false;
+  // 计算实际的文本内容，排除非可编辑标签中的文本（参考 Home.vue）
+  let actualText = '';
+  const textNodes = Array.from(target.childNodes).filter(node => {
+    if (node.nodeType === 3) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      return !isInNonEditable;
     }
+    return false;
+  });
+  textNodes.forEach(node => {
+    actualText += node.textContent || '';
+  });
+
+  const cursorPosition = getCoverCursorPosition(target);
+  const textBeforeCursor = actualText.substring(0, cursorPosition);
+  const atIndex = textBeforeCursor.lastIndexOf('@');
+
+  const hasItems = combinedCoverItems.value.length > 0;
+
+  if (atIndex !== -1 &&
+      atIndex === textBeforeCursor.length - 1 &&
+      hasItems) {
+
+    showCoverAtDropdown.value = true;
+    coverAtDropdownItems.value = combinedCoverItems.value;
+
+    // Calculate dropdown position based on @ symbol position（参考 Home.vue）
+    nextTick(() => {
+      try {
+        if (coverInputRef.value) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
+
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) {
+                if (node.parentElement?.hasAttribute('contenteditable') && node.parentElement.contentEditable === 'false') {
+                  return false;
+                }
+
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
+
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) {
+                if (node.nodeType === 1 && (node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+                  return false;
+                }
+
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+
+            findAtSymbol(coverInputRef.value);
+
+            if (foundAtNode) {
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = coverInputRef.value.parentElement;
+              const dropdown = document.querySelector('.cover-edit-section .at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.left = `${relativeLeft}px`;
+
+                const dropdownHeight = dropdown.offsetHeight || 200;
+                const availableBottomSpace = window.innerHeight - rect.bottom;
+
+                if (availableBottomSpace < dropdownHeight) {
+                  dropdown.style.top = `${relativeTop - dropdownHeight - rect.height - 5}px`;
+                  dropdown.style.bottom = 'auto';
+                } else {
+                  dropdown.style.top = `${relativeTop + 5}px`;
+                  dropdown.style.bottom = 'auto';
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error positioning dropdown:', error);
+      }
+    });
   } else {
     showCoverAtDropdown.value = false;
   }
+}
+
+// Get cursor position（参考 Home.vue 的 getCursorPosition）
+function getCoverCursorPosition(element: HTMLElement): number {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return 0;
+
+  const range = selection.getRangeAt(0);
+  const preRange = range.cloneRange();
+  preRange.selectNodeContents(element);
+  preRange.setEnd(range.endContainer, range.endOffset);
+
+  return preRange.toString().length;
 }
 
 function handleCoverKeydown(event: KeyboardEvent) {
@@ -5530,19 +5974,85 @@ function handleCoverKeydown(event: KeyboardEvent) {
 }
 
 function handleCoverInputClick() {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount == 0) return;
+  if (coverInputRef.value) {
+    const target = coverInputRef.value;
+    const text = target.textContent || '';
+    const cursorPosition = getCoverCursorPosition(target);
+    const textBeforeCursor = text.substring(0, cursorPosition);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
 
-  const range = selection.getRangeAt(0);
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+    const hasItems = combinedCoverItems.value.length > 0;
 
-  if (match && match[1] == "@") {
-    showCoverAtDropdown.value = true;
-    lastCoverRange.value = range.cloneRange();
-    updateCoverAtDropdownItems();
-  } else {
-    showCoverAtDropdown.value = false;
+    if (atIndex !== -1 &&
+        atIndex === textBeforeCursor.length - 1 &&
+        hasItems) {
+      showCoverAtDropdown.value = true;
+      coverAtDropdownItems.value = combinedCoverItems.value;
+
+      nextTick(() => {
+        try {
+          if (coverInputRef.value) {
+            let currentPos = 0;
+            let foundAtNode: Node | null = null;
+            let atNodeOffset = 0;
+
+            const findAtSymbol = (node: Node): boolean => {
+              if (node.nodeType === 3) {
+                const nodeText = node.textContent || '';
+                const nodeLength = nodeText.length;
+
+                if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+                  foundAtNode = node;
+                  atNodeOffset = atIndex - currentPos;
+                  return true;
+                }
+                currentPos += nodeLength;
+              } else if (node.nodeType === 1) {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                  if (findAtSymbol(node.childNodes[i])) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+
+            findAtSymbol(coverInputRef.value);
+
+            if (foundAtNode) {
+              const atRange = document.createRange();
+              atRange.setStart(foundAtNode as Node, atNodeOffset);
+              atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+              const rect = atRange.getBoundingClientRect();
+              const inputInner = coverInputRef.value.parentElement;
+              const dropdown = document.querySelector('.cover-edit-section .at-dropdown') as HTMLElement;
+
+              if (inputInner && dropdown) {
+                const inputInnerRect = inputInner.getBoundingClientRect();
+                const relativeTop = rect.bottom - inputInnerRect.top;
+                const relativeLeft = rect.left - inputInnerRect.left;
+
+                dropdown.style.left = `${relativeLeft}px`;
+
+                const dropdownHeight = dropdown.offsetHeight || 200;
+                const availableBottomSpace = window.innerHeight - rect.bottom;
+
+                if (availableBottomSpace < dropdownHeight) {
+                  dropdown.style.top = `${relativeTop - dropdownHeight - rect.height - 5}px`;
+                  dropdown.style.bottom = 'auto';
+                } else {
+                  dropdown.style.top = `${relativeTop + 5}px`;
+                  dropdown.style.bottom = 'auto';
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error positioning dropdown:', error);
+        }
+      });
+    }
   }
 }
 
@@ -5598,32 +6108,59 @@ async function handleCoverFileChange(event: Event) {
   const files = input.files;
   if (!files || files.length == 0) return;
 
+  const file = files[0];
+
+  // Determine limits based on mode
+  // Default to normal mode limits if mode is not available
+  const isUnlimitedMode = false; // This should be determined from project settings
+  const maxImages = isUnlimitedMode ? 3 : 7;
+  const maxSizeMB = 10;
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+  // Check maximum count limit
+  if (uploadedCoverImages.value.length >= maxImages) {
+    toast(t('novel.maxCoverImages', { max: maxImages }));
+    input.value = '';
+    return;
+  }
+
+  // Check file type
+  const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!validImageTypes.includes(file.type)) {
+    toast(t('novel.invalidCoverImageType'));
+    input.value = '';
+    return;
+  }
+
+  // Check file size limit
+  if (file.size > maxSizeBytes) {
+    toast(t('novel.maxCoverSize', { max: maxSizeMB }));
+    input.value = '';
+    return;
+  }
+
   isUploading.value = true;
 
   try {
-    const filesArray = Array.from(files);
-    const uploadPromises = filesArray.map(async (file, index) => {
-      try {
-        const uploadedUrl = await uploadCoverImage(file);
-        const imageId = Date.now() + index;
-        uploadedCoverImages.value.push({
-          id: imageId,
-          image: uploadedUrl,
-          file: file
-        });
-        combinedCoverItems.value.push({
-          id: imageId,
-          type: 'image',
-          image: uploadedUrl
-        });
-      } catch (error) {
-        console.error('Upload error for file', file.name, error);
-        toast(t('fail'));
-      }
+    const uploadedUrl = await uploadCoverImage(file);
+    const imageId = Date.now();
+    const newImage = {
+      id: imageId,
+      image: uploadedUrl,
+      file: file,
+      name: `img${uploadedCoverImages.value.length + 1}`
+    };
+    uploadedCoverImages.value.push(newImage);
+    combinedCoverItems.value.push({
+      id: imageId,
+      type: 'image',
+      image: uploadedUrl,
+      name: newImage.name
     });
-
-    await Promise.all(uploadPromises);
+    // Update dropdown items immediately after upload
+    updateCoverAtDropdownItems();
   } catch (error) {
+    console.error('Upload error for file', error);
     toast(t('fail'));
   } finally {
     isUploading.value = false;
@@ -5638,63 +6175,143 @@ function triggerCoverFileUpload() {
 }
 
 function removeUploadedCoverImage(imageId: number) {
+  // Remove from arrays
   uploadedCoverImages.value = uploadedCoverImages.value.filter(img => img.id !== imageId);
   combinedCoverItems.value = combinedCoverItems.value.filter(item => item.id !== imageId);
+
+  // Remove all corresponding tags from the input editor
+  if (coverInputRef.value) {
+    const tagElements = coverInputRef.value.querySelectorAll(`span.image-tag[data-item-id="${imageId}"]`);
+    tagElements.forEach((tagElement) => {
+      // Also remove the following space if exists
+      const nextSibling = tagElement.nextSibling;
+      if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE && nextSibling.textContent?.trim() === '') {
+        tagElement.parentElement?.removeChild(nextSibling);
+      }
+      tagElement.parentElement?.removeChild(tagElement);
+    });
+  }
 }
 
 function selectCoverAtItem(item: any) {
-  if (!lastCoverRange.value || !coverInputRef.value) return;
+  if (!coverInputRef.value) return;
 
-  const selection = window.getSelection();
-  if (!selection) return;
+  const target = coverInputRef.value;
 
-  const range = lastCoverRange.value;
-  const textNode = range.startContainer;
-  const offset = range.startOffset;
-  const textContent = textNode.textContent || "";
-  const textBefore = textContent.substring(0, offset);
-  const match = textBefore.match(/([#@])([^#@\s]*)$/);
-
-  if (match) {
-    const triggerIndex = match.index!;
-    // Set range to cover the trigger and the typed query
-    range.setStart(textNode, triggerIndex);
-    range.setEnd(textNode, offset);
-    range.deleteContents();
+  if (target.textContent?.trim() === '') {
+    target.innerHTML = '';
   }
 
-  // Insert the selected item
-  const span = document.createElement("span");
-  span.className = `tag ${item.type == 'character' ? 'character' : 'image'}`;
-  span.contentEditable = "false";
-  span.innerHTML = `@${item.name || `img${uploadedCoverImages.value.findIndex(img => img.id == item.id) + 1}`}`;
-  span.style.color = "#00d3f2";
+  // Create image tag - cover editing only supports images
+  const itemTag = document.createElement('span');
+  itemTag.className = 'image-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = String(item.id);
 
-  range.insertNode(span);
+  // Create image element
+  const img = document.createElement('img');
+  img.src = item.image;
+  img.alt = item.name;
+  img.className = 'image-tag-img';
+  itemTag.appendChild(img);
 
-  // Insert a space after the tag
-  const space = document.createTextNode(" ");
-  range.setStartAfter(span);
-  range.insertNode(space);
-  range.setStartAfter(space);
-  range.collapse(true);
+  // Create text node with label
+  const imageIndex = uploadedCoverImages.value.findIndex(imgItem => imgItem.id === item.id) + 1;
+  const labelText = `${t('home.img')}${imageIndex}`;
+  const textNode = document.createTextNode(labelText);
+  itemTag.appendChild(textNode);
 
-  selection.removeAllRanges();
-  selection.addRange(range);
+  // Find @ symbol before cursor
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    target.appendChild(itemTag);
+    target.appendChild(document.createTextNode(' '));
+    target.focus();
+    showCoverAtDropdown.value = false;
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+  const cursorPos = getCoverCursorPosition(target);
+
+  let atNode: Node | null = null;
+  let atOffset = 0;
+  let currentCharPos = 0;
+
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+
+      if (!isInNonEditable) {
+        const text = node.textContent || '';
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '@' && currentCharPos + i <= cursorPos) {
+            atNode = node;
+            atOffset = i;
+          }
+        }
+        currentCharPos += text.length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+        return;
+      }
+
+      for (let i = 0; i < node.childNodes.length; i++) {
+        walkNodes(node.childNodes[i]);
+      }
+    }
+  };
+
+  walkNodes(target);
+
+  // Replace @ symbol with tag
+  if (atNode) {
+    const atRange = document.createRange();
+    atRange.setStart(atNode, atOffset);
+    atRange.setEnd(range.endContainer, range.endOffset);
+    atRange.deleteContents();
+
+    atRange.insertNode(itemTag);
+
+    // Insert space after
+    const space = document.createTextNode(' ');
+    const newRange = document.createRange();
+    newRange.setStartAfter(itemTag);
+    newRange.insertNode(space);
+    newRange.setStartAfter(space);
+    newRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+  } else {
+    range.insertNode(itemTag);
+
+    const space = document.createTextNode(' ');
+    const newRange = document.createRange();
+    newRange.setStartAfter(itemTag);
+    newRange.insertNode(space);
+    newRange.setStartAfter(space);
+    newRange.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+  }
 
   showCoverAtDropdown.value = false;
   coverInputRef.value.focus();
 }
 
 function updateCoverAtDropdownItems() {
-  // Only include uploaded images
-  const images = uploadedCoverImages.value.map(img => ({
-    id: img.id,
-    type: 'image',
-    image: img.image
-  }));
-
-  coverAtDropdownItems.value = images;
+  coverAtDropdownItems.value = combinedCoverItems.value;
 }
 
 function checkLogin() {
@@ -5707,8 +6324,10 @@ function checkLogin() {
 }
 
 function checkCoverItemLimit() {
-  if (combinedCoverItems.value.length >= 5) {
-    toast(t('home.itemLimitReached'));
+  const isUnlimitedMode = false; // This should be determined from project settings
+  const maxImages = isUnlimitedMode ? 3 : 7;
+  if (combinedCoverItems.value.length >= maxImages) {
+    toast(t('novel.maxCoverImages', { max: maxImages }));
     return false;
   }
   return true;
@@ -5718,15 +6337,23 @@ function checkCoverItemLimit() {
 function processCoverPrompt() {
   if (!coverInputRef.value) return '';
 
-  // Get all span elements in the input
-  const spans = coverInputRef.value.querySelectorAll('span.uploaded-image-item');
+  // Get all span elements with class 'image-tag' (image tags)
+  const spans = coverInputRef.value.querySelectorAll('span.image-tag');
   let prompt = coverInputRef.value.innerText || coverInputRef.value.textContent || "";
 
-  // Replace each span with <ref_X> format
-  spans.forEach((span, index) => {
-    const imageIndex = index + 1;
-    prompt = prompt.replace(span.textContent || '', `<ref_${imageIndex}>`);
+  // Replace each span with <ref_X> format based on actual image order
+  spans.forEach((span) => {
+    const itemId = span.getAttribute('data-item-id');
+    if (itemId) {
+      const imageIndex = uploadedCoverImages.value.findIndex(img => img.id === parseInt(itemId));
+      if (imageIndex !== -1) {
+        prompt = prompt.replace(span.textContent || '', `<ref_${imageIndex + 1}>`);
+      }
+    }
   });
+
+  // Remove newline characters
+  prompt = prompt.replace(/\n/g, '');
 
   return prompt.trim();
 }
@@ -5771,7 +6398,7 @@ async function useCover() {
   } catch (error) {
     console.error('Error saving cover:', error);
     showCoverEditBtn.value = true;
-    toast(t('novel.coverGenerateFailed'));
+    toast(t('fail'));
   }
 }
 

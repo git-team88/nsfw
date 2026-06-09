@@ -84,7 +84,7 @@
                 <div class="photo-grid">
                   <template v-if="record.status == 'DOING' || record.status == 'PREPARE'">
                     <div
-                      v-for="i in (record.user_selected?.story_mode === 'nsfw' ? 1 : 4)"
+                      v-for="i in 1"
                       :key="i"
                       class="photo-item skeleton"
                       :class="{
@@ -97,7 +97,7 @@
                   </template>
                   <template v-else>
                     <div
-                      v-for="(image, index) in (record.images || []).slice(0, record.user_selected?.story_mode === 'nsfw' ? 1 : 4)"
+                      v-for="(image, index) in (record.images || []).slice(0, 1)"
                       :key="index"
                       class="photo-item"
                       :class="{
@@ -370,7 +370,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="userRegion" class="unlimited-switch" :class="isTeenager ? 'disabled' : ''" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <img
                     v-if="isTeenager"
                     src="@/assets/images/home/not_allow.png"
@@ -439,14 +439,11 @@
               </div>
 
               <div class="generate-box">
-                <div class="cover-cost-display">
-                  <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                </div>
-                <div class="generate-btn" :class="{ disabled: isPhotoGenerating }" @click="generatePhoto">
+                <div class="generate-btn" :class="{ loading: isPhotoGenerating }" @click="generatePhoto">
                   <div class="generate-novel-btn">
-                    <img v-if="isPhotoGenerating" src="@/assets/images/base/load.png" alt="loading" class="loading-icon" />
                     <span>{{ estimatedPhotoPower }}</span>
-                    <img src="@/assets/images/home/power.png" alt="Power" />
+                    <div v-if="isPhotoGenerating" class="loading-spinner-small"></div>
+                    <img v-else src="@/assets/images/home/power.png" alt="Power" />
                   </div>
                 </div>
               </div>
@@ -615,7 +612,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="userRegion" class="unlimited-switch" :class="isTeenager ? 'disabled' : ''" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <img
                     v-if="isTeenager"
                     src="@/assets/images/home/not_allow.png"
@@ -739,14 +736,14 @@
               </div>
 
               <div class="generate-box">
-                <div class="cover-cost-display">
+                <!-- <div class="cover-cost-display">
                   <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                </div>
-                <div class="generate-btn" :class="{ disabled: isVideoGenerating }" @click="generateVideo">
+                </div> -->
+                <div class="generate-btn" :class="{ loading: isVideoGenerating }" @click="generateVideo">
                   <div class="generate-novel-btn">
-                    <img v-if="isVideoGenerating" src="@/assets/images/base/load.png" alt="loading" class="loading-icon" />
                     <span>{{ estimatedVideoPower }}</span>
-                    <img src="@/assets/images/home/power.png" alt="Power" />
+                    <div v-if="isVideoGenerating" class="loading-spinner-small"></div>
+                    <img v-else src="@/assets/images/home/power.png" alt="Power" />
                   </div>
                 </div>
               </div>
@@ -756,13 +753,6 @@
 
       </div>
     </div>
-
-    <!-- Computing Power Estimate Modal -->
-    <ComputingPowerEstimateModal
-      :visible="showComputingPowerEstimateModal"
-      @cancel="showComputingPowerEstimateModal = false"
-      @confirm="showComputingPowerEstimateModal = false"
-    />
 
     <!-- Insufficient Balance Modal -->
     <InsufficientBalanceModal
@@ -796,6 +786,26 @@
         <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline></video>
       </div>
     </div>
+
+    <!-- Unlimited Mode Confirm Modal -->
+    <UnlimitedModeModal
+      v-if="showUnlimitedModal"
+      @close="showUnlimitedModal = false"
+      @confirm="confirmUnlimitedMode"
+    />
+
+    <!-- Underage Modal -->
+    <UnderageModal
+      v-if="showUnderageModal"
+      @close="showUnderageModal = false"
+    />
+
+    <!-- Underage No Birthday Modal -->
+    <UnderageNoBirthdayModal
+      v-if="showUnderageNoBirthdayModal"
+      @close="showUnderageNoBirthdayModal = false"
+      @confirm="handleGoToFillBirthday"
+    />
   </div>
 </template>
 
@@ -811,10 +821,12 @@ import arrowIcon from '@/assets/images/publish/arrow_icon.png';
 import router from "@/router";
 import api from "@/api/index";
 import { eventBus } from "@/utils/eventBus";
-import ComputingPowerEstimateModal from '@/components/ComputingPowerEstimateModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
+import UnderageModal from '@/components/UnderageModal.vue';
+import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
+import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import loadingGif916 from '@/assets/images/home/9_16.gif';
 import loadingGif169 from '@/assets/images/home/16_9.gif';
 import loadingGif11 from '@/assets/images/home/1_1.gif';
@@ -831,7 +843,6 @@ const showVideoMoreOptionsVisible = ref(false);
 const activeVideoRecord = ref<any>(null);
 const photoPopupPosition = ref<'top' | 'bottom'>('bottom');
 const videoPopupPosition = ref<'top' | 'bottom'>('bottom');
-const showComputingPowerEstimateModal = ref(false);
 const showInsufficientBalanceModal = ref(false);
 const showDeleteRecordModal = ref(false);
 const recordToDelete = ref<any>(null);
@@ -2715,7 +2726,7 @@ async function uploadVideo(file: File): Promise<string> {
 
   // Extract the clean URL without signature parameters and replace domain
   const cleanUrl = presignedUrl.split('?')[0];
-  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://ddu2v98cehw9k.cloudfront.net');
+  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://static.moegen.ai');
 }
 
 // Upload audio to server using presigned URL
@@ -2748,7 +2759,7 @@ async function uploadAudio(file: File): Promise<string> {
 
   // Extract the clean URL without signature parameters and replace domain
   const cleanUrl = presignedUrl.split('?')[0];
-  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://ddu2v98cehw9k.cloudfront.net');
+  return cleanUrl.replace(/^https?:\/\/[^/]+/, 'https://static.moegen.ai');
 }
 
 // Video mode images and videos
@@ -2987,17 +2998,17 @@ const isTaskSuccess = (status: string) => {
 // Computed property to calculate estimated computing power for photo
 const estimatedPhotoPower = computed(() => {
   if (!balanceInfo.value) {
-    return 20;
+    return 4;
   }
 
   let cost = 0;
   if (selectedPhotoQuality.value == '1K') {
-    cost = Number(balanceInfo.value.single_image_cost) || 5;
+    cost = Number(balanceInfo.value.single_image_cost) || 4;
   } else if (selectedPhotoQuality.value == '2K') {
-    cost = Number(balanceInfo.value.single_image_cost_2k) || 10;
+    cost = Number(balanceInfo.value.single_image_cost_2k) || 7;
   }
 
-  return Math.max(1, cost * 4);
+  return Math.max(1, cost);
 });
 
 // Computed property to calculate estimated computing power for video
@@ -3010,9 +3021,17 @@ const estimatedVideoPower = computed(() => {
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value == '720P') {
-    costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 5;
+    if (currentVideoMode.value === 'unlimited') {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw) || 8;
+    } else {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 12;
+    }
   } else if (selectedVideoQuality.value == '1080P') {
-    costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 6;
+    if (currentVideoMode.value === 'unlimited') {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw) || 11;
+    } else {
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 18;
+    }
   }
 
   const totalCost = costPerSecond * duration;
@@ -3472,9 +3491,12 @@ const generatePhoto = async () => {
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
 
-      // Scroll to bottom
+      // Scroll to bottom, considering the fixed bottom input area
       nextTick(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        const bottomInputArea = document.querySelector('.bottom-input-area') as HTMLElement | null;
+        const bottomOffset = bottomInputArea ? bottomInputArea.offsetHeight : 120;
+        const scrollPosition = Math.max(0, document.body.scrollHeight - window.innerHeight - bottomOffset + 20);
+        window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
       });
     } else {
       const index = records.value.findIndex(r => r.session_id == sessionId);
@@ -3703,9 +3725,12 @@ const generateVideo = async () => {
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
 
-      // Scroll to bottom
+      // Scroll to bottom, considering the fixed bottom input area
       nextTick(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        const bottomInputArea = document.querySelector('.bottom-input-area') as HTMLElement | null;
+        const bottomOffset = bottomInputArea ? bottomInputArea.offsetHeight : 120;
+        const scrollPosition = Math.max(0, document.body.scrollHeight - window.innerHeight - bottomOffset + 20);
+        window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
       });
     } else {
       const idx = records.value.findIndex(r => r.session_id == sessionId);
@@ -3728,6 +3753,36 @@ const generateVideo = async () => {
 
 const handleScroll = () => {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+  // If displayRecords is a subset of records, expand display range when scrolling
+  if (displayRecords.value.length < records.value.length && !isLoading.value) {
+    const halfCount = Math.floor(displayCount.value / 2);
+
+    // Find the first and last displayed record indices in the full records list
+    const firstDisplayed = records.value.findIndex(r => r.session_id === displayRecords.value[0]?.session_id);
+    const lastDisplayed = records.value.findIndex(r => r.session_id === displayRecords.value[displayRecords.value.length - 1]?.session_id);
+
+    // If scrolled to top, show more records from the beginning
+    if (scrollTop < 100 && firstDisplayed > 0) {
+      const newStartIndex = Math.max(0, firstDisplayed - halfCount);
+      const newEndIndex = Math.min(records.value.length, lastDisplayed + 1);
+      displayRecords.value = records.value.slice(newStartIndex, newEndIndex);
+      return;
+    }
+
+    // If scrolled to bottom, show more records from the end
+    const documentHeight = document.documentElement.scrollHeight;
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    if (scrollTop > documentHeight - windowHeight - 100 && lastDisplayed < records.value.length - 1) {
+      const newStartIndex = Math.max(0, firstDisplayed);
+      const newEndIndex = Math.min(records.value.length, lastDisplayed + halfCount + 1);
+      displayRecords.value = records.value.slice(newStartIndex, newEndIndex);
+      return;
+    }
+  }
+
+  // If we've shown all loaded records, load more from server
+  // Scroll to top to load newer data (since newest is at bottom, new data comes from top)
   if (scrollTop < 50 && !isLoading.value && records.value.length > 0) {
     const totalPages = Math.ceil(totalCount.value / pageSize.value);
     if (currentPage.value < totalPages) {
@@ -4334,6 +4389,7 @@ const switchPhotoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       currentPhotoMode.value = 'unlimited';
     } else {
+      pendingModeType.value = 'photo';
       showUnlimitedModal.value = true;
     }
   } else {
@@ -4357,6 +4413,7 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
     } else {
+      pendingModeType.value = 'video';
       showUnlimitedModal.value = true;
     }
   } else {

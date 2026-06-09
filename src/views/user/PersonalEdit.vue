@@ -437,7 +437,7 @@ function onSave() {
 .content {
   padding: 1.2rem;
   border-radius: 1.2rem;
-  background: #F5F5F5;
+  background: #F9FAFB;
 
   .label {
     margin-bottom: 1.6rem;

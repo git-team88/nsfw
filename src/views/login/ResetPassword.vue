@@ -47,6 +47,7 @@ import Header from "@/components/Header.vue";
 import router from "@/router";
 import { baseUrl, siteKey } from "@/util/config";
 import { toast } from "@/util/toast";
+import { initLanguage } from "@/util/utils";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
@@ -65,7 +66,10 @@ const isEnd = computed(() => {
 
 declare let grecaptcha: any;
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   const token = localStorage.getItem("token");
 
   if (token) {

@@ -5,14 +5,16 @@
         <img class="avatar" :src="item.poster.avatar || defaultAvatar" alt="" @click.stop="goUserHome(item.poster.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
           <div class="username">{{ item.poster.nickname }}</div>
-          <div class="desc">{{ t("user.messages.mentionsText") }}: <span class="content">{{ item.post.content }}</span></div>
+          <div class="desc">
+            {{ t("user.messages.mentionsText") }}: <span class="content">{{ item.post.content }}</span>
+          </div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
       </div>
       <div class="right-work-box">
         <div class="line"></div>
         <div class="right-work">
-          <img class="work-cover" :src="item.post.cover" alt="" />
+          <img class="work-cover" :src="processImageUrl(item.post.cover)" alt="" />
           <div class="work-title">{{ item.post.title }}</div>
         </div>
       </div>
@@ -24,7 +26,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, processImageUrl } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
 import { toast } from "@/util/toast";
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -39,16 +41,25 @@ function toDetail(post: any, comment: any) {
     return false;
   }
 
-  if (comment && comment.status != '1') {
+  // Only show deleted message if status explicitly indicates deleted (0)
+  // Don't treat missing status or other values as deleted
+  if (comment && comment.status == 0) {
     toast(t('mentions.commentDeleted'));
     return false;
   }
 
-  if (comment && !comment.parent_id) {
-    router.push(`/detail?id=${post.post_id}&cid=${comment.comment_id}`);
-  } else if (comment && comment.parent_id) {
-    router.push(`/detail?id=${post.post_id}&cid=${comment.parent_id}&rid=${comment.comment_id}`);
+  // Distinguish between content mention and comment mention
+  if (comment) {
+    // Comment mention - jump to the specific comment
+    if (!comment.parent_id) {
+      // Direct comment mention
+      router.push(`/detail?id=${post.post_id}&cid=${comment.comment_id}`);
+    } else {
+      // Reply comment mention - jump to parent comment with reply highlight
+      router.push(`/detail?id=${post.post_id}&cid=${comment.parent_id}&rid=${comment.comment_id}`);
+    }
   } else {
+    // Content mention - just jump to the post
     router.push(`/detail?id=${post.post_id}`);
   }
 }

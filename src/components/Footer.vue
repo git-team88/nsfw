@@ -11,10 +11,10 @@
 
     <!-- Policy Links -->
     <div class="footer-policies">
-      <router-link to="/community-convention" class="policy-item">{{ t('footer.policies.communityGuidelines') }}</router-link>
-      <router-link to="/terms" class="policy-item">{{ t('footer.policies.termsOfService') }}</router-link>
-      <router-link to="/privacy" class="policy-item">{{ t('footer.policies.privacyPolicy') }}</router-link>
-      <router-link to="/payment-terms" class="policy-item">{{ t('footer.policies.paidServices') }}</router-link>
+      <span class="policy-item">{{ t('footer.policies.communityGuidelines') }}</span>
+      <span class="policy-item">{{ t('footer.policies.termsOfService') }}</span>
+      <span class="policy-item">{{ t('footer.policies.privacyPolicy') }}</span>
+      <span class="policy-item">{{ t('footer.policies.paidServices') }}</span>
     </div>
 
     <!-- Copyright -->

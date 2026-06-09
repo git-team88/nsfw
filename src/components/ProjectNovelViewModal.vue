@@ -29,9 +29,9 @@
           </div>
 
           <div class="modal-footer">
-            <button 
-              class="publish-btn" 
-              :class="{ 'published': isChapterPublished }" 
+            <button
+              class="publish-btn"
+              :class="{ 'published': isChapterPublished }"
               @click="handlePublish"
               :disabled="isChapterPublished"
             >
@@ -163,16 +163,21 @@ function handlePublish() {
   const chapter = chapters.value.find((c: any) => c.chapter?.toString() === selectedChapter.value);
   if (!chapter || !props.project) return;
 
-  // Format title: 第X章 章节标题「小说名」
+  // Format title: 第X章 章节标题 (不带书名)
   const chapterText = t('chapter', { chapter: chapter.chapter });
-  const formattedTitle = `${chapterText} ${chapter.title}「${props.project.name}」`;
+  const formattedTitle = `${chapterText} ${chapter.title}`;
+
+  // Get cover from project (合集封面)
+  const cover = props.project.cover || props.project.result_async?.generate_novel_cover;
 
   emit('publish', {
     project: props.project,
     episode: chapter.chapter,
     title: formattedTitle,
     content: chapterContent.value,
-    chapterIndex: chapter.chapter
+    cover: cover,
+    chapterIndex: chapter.chapter,
+    session_id: props.project.session_id
   });
 }
 

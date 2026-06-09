@@ -18,7 +18,7 @@
       <div class="right-work-box">
         <div class="line"></div>
         <div class="right-work">
-          <img class="work-cover" :src="item.post.cover" alt="" />
+          <img class="work-cover" :src="processImageUrl(item.post.cover)" alt="" />
           <div class="work-title">{{ item.post.title }}</div>
         </div>
       </div>
@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, processImageUrl } from "@/util/utils";
 import EmptyState from "@/components/EmptyState.vue";
 import { toast } from "@/util/toast";
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -45,7 +45,9 @@ function toDetail(post: any, comment: any) {
     return false;
   }
 
-  if (comment && comment.status != '1') {
+  // Only show deleted message if status explicitly indicates deleted (0)
+  // Don't treat missing status or other values as deleted
+  if (comment && comment.status == 0) {
     toast(t('mentions.commentDeleted'));
     return false;
   }

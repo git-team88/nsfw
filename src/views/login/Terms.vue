@@ -15,9 +15,10 @@
 <script setup lang="ts" name="Terms">
 import Header from "@/components/Header.vue";
 
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { initLanguage } from "@/util/utils";
 
 const router = useRouter();
 const { t, locale } = useI18n();
@@ -30,7 +31,7 @@ const isHide = ref(false);
 
 function setSeoMeta() {
   document.title = t('seo.terms.title');
-  
+
   let metaKeywords = document.querySelector('meta[name="keywords"]');
   if (!metaKeywords) {
     metaKeywords = document.createElement('meta');
@@ -38,7 +39,7 @@ function setSeoMeta() {
     document.head.appendChild(metaKeywords);
   }
   metaKeywords.setAttribute('content', t('seo.terms.keywords'));
-  
+
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');
@@ -48,7 +49,27 @@ function setSeoMeta() {
   metaDescription.setAttribute('content', t('seo.terms.description'));
 }
 
+function setNoIndexMeta() {
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (!metaRobots) {
+    metaRobots = document.createElement('meta');
+    metaRobots.setAttribute('name', 'robots');
+    document.head.appendChild(metaRobots);
+  }
+  metaRobots.setAttribute('content', 'noindex, nofollow');
+}
+
+function removeNoIndexMeta() {
+  const metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots && metaRobots.getAttribute('content') === 'noindex, nofollow') {
+    metaRobots.parentNode?.removeChild(metaRobots);
+  }
+}
+
 onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   window.scrollTo(0, 0);
 
   const isBack = localStorage.getItem("isBack");
@@ -58,6 +79,11 @@ onMounted(async () => {
   }
 
   setSeoMeta();
+  setNoIndexMeta();
+});
+
+onBeforeUnmount(() => {
+  removeNoIndexMeta();
 });
 
 watch(() => locale.value, () => {
@@ -186,6 +212,10 @@ function goBack() {
         margin-top: 5rem;
         color: rgba(255, 255, 255, 0.3);
         font-size: 1.4rem;
+      }
+      :deep(a) {
+        color: #364153;
+        text-decoration: underline;
       }
     }
   }

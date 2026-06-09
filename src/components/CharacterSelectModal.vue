@@ -86,6 +86,27 @@ import { aiUrl } from '@/util/config';
 const { t } = useI18n();
 const router = useRouter();
 
+const props = defineProps<{
+  characters: Array<{
+    id: string;
+    name: string;
+    image: string;
+    description: string;
+    isOfficial: boolean;
+    useCostPoints?: number;
+    tri_image?: string;
+  }>;
+  selectedCharacters: Array<{
+    id: string;
+    name: string;
+    image: string;
+    description: string;
+    isOfficial: boolean;
+    useCostPoints?: number;
+    tri_image?: string;
+  }>;
+}>();
+
 const emit = defineEmits<{
   close: [];
   confirm: [characters: Array<{
@@ -110,6 +131,9 @@ const selectedCharacters = ref<Array<{
   useCostPoints?: number;
   tri_image?: string;
 }>>([]);
+
+// Don't sync selectedCharacters from parent - we don't want to show already selected characters
+
 const loading = ref(false);
 const loadingMore = ref(false);
 const characterGridRef = ref<HTMLElement | null>(null);
@@ -150,7 +174,7 @@ const toggleCharacterSelection = (character: {
       toast(t('home.characterSelect.limit'));
       return;
     }
-    selectedCharacters.value.push(character);
+    selectedCharacters.value = [character];
   } else {
     selectedCharacters.value.splice(index, 1);
   }

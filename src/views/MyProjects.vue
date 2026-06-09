@@ -74,7 +74,7 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.final_video_output.video_cover_url" alt="" />
+                    <img :src="processImageUrl(project.result_async.final_video_output.video_cover_url)" alt="" />
                   </div>
                 </div>
                 <!-- Use generate_manju_cover if available -->
@@ -82,7 +82,7 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_manju_cover" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_manju_cover)" alt="" />
                   </div>
                 </div>
                 <!-- Use images from result_async.generate_character_main_views if no manju cover -->
@@ -90,7 +90,7 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_character_main_views[0].main_image_url" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_character_main_views[0].main_image_url)" alt="" />
                   </div>
                 </div>
                 <!-- Use images from result_async.generate_character_images if no main views -->
@@ -98,11 +98,11 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_character_images[0].main_image_url" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_character_images[0].main_image_url)" alt="" />
                   </div>
                 </div>
                 <!-- Fallback to original cover if no character images -->
-                <img v-else :src="project.cover || pic" alt="" class="cover-img" />
+                <img v-else :src="project.cover ? processImageUrl(project.cover) : pic" alt="" class="cover-img" />
                 <!-- Video Play Overlay -->
                 <div class="video-overlay" v-if="project.result_async?.final_video_output?.video_url" @click="playVideo(project.result_async?.final_video_output?.video_url)">
                   <img src="@/assets/images/detail/play.png" alt="" />
@@ -117,7 +117,7 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_manhua_cover" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_manhua_cover)" alt="" />
                   </div>
                 </div>
                 <!-- Use images from result_async.generate_character_main_views if no manhua cover -->
@@ -125,7 +125,7 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_character_main_views[0].main_image_url" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_character_main_views[0].main_image_url)" alt="" />
                   </div>
                 </div>
                 <!-- Use images from result_async.generate_character_images if no main views -->
@@ -133,18 +133,18 @@
                   <div
                     class="character-image-item"
                   >
-                    <img :src="project.result_async.generate_character_images[0].main_image_url" alt="" />
+                    <img :src="processImageUrl(project.result_async.generate_character_images[0].main_image_url)" alt="" />
                   </div>
                 </div>
                 <!-- Fallback to original cover if no character images -->
-                <img v-else :src="project.cover || pic" alt="" class="cover-img" />
+                <img v-else :src="project.cover ? processImageUrl(project.cover) : pic" alt="" class="cover-img" />
 
                 <div class="edit-btn" @click="openEditPage(project.session_id, 2)">{{ t('myProjects.buttons.edit') }}</div>
               </div>
 
               <div v-else-if="activeMainTab == 'novel'">
                 <div v-if="project.result_async && project.result_async.generate_novel_cover" class="card-cover">
-                  <img :src="project.result_async.generate_novel_cover" alt="" class="cover-img" />
+                  <img :src="processImageUrl(project.result_async.generate_novel_cover)" alt="" class="cover-img" />
                   <div class="edit-btn" @click="openEditPage(project.session_id, 3)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
 
@@ -164,7 +164,7 @@
                 <div class="card-cover photo-cover">
                   <!-- 无限制模式：显示1张填满 -->
                   <div v-if="project.images && project.images.length > 0 && project.story_mode === 'nsfw'" class="single-image">
-                    <img :src="project.images[0]" alt="" class="single-image-img" />
+                    <img :src="processImageUrl(project.images[0])" alt="" class="single-image-img" />
                   </div>
                   <!-- 普通模式：显示4张 -->
                   <div v-else-if="project.images && project.images.length > 0" class="grid-images">
@@ -173,7 +173,7 @@
                       v-for="(img, index) in project.images.slice(0, 4)"
                       :key="index"
                     >
-                      <img :src="img" alt="" />
+                      <img :src="processImageUrl(img)" alt="" />
                     </div>
                     <!-- 如果只有1张图，填充空白 -->
                     <div v-if="project.images.length === 1" class="grid-image-item"><img :src="pic" alt="" /></div>
@@ -191,7 +191,7 @@
               <!-- Video Tab - 视频类型 -->
               <div v-else-if="activeMainTab == 'video'">
                 <div class="card-cover video-cover">
-                  <img :src="project.result_async?.final_videos[0].video_cover_url || pic" alt="" class="cover-img" />
+                  <img :src="project.result_async?.final_videos[0].video_cover_url ? processImageUrl(project.result_async.final_videos[0].video_cover_url) : pic" alt="" class="cover-img" />
 
                   <div class="video-edit-btn" @click="goToGenerate(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
@@ -271,6 +271,7 @@ import pic from '@/assets/images/base/cover.png'
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import router from '@/router';
+import { processImageUrl } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -309,7 +310,6 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 const mainTabs = ref([
   { value: 'novel' },
   { value: 'manhua' },
-  { value: 'manju' },
   { value: 'photo' },
   { value: 'video' }
 ]);

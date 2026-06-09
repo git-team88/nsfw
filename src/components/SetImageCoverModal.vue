@@ -400,7 +400,7 @@ async function fetchImageToBlobUrl(url: string): Promise<string> {
   }
 
   let fetchUrl = url;
-  const cloudfrontDomain = 'https://ddu2v98cehw9k.cloudfront.net';
+  const cloudfrontDomain = 'https://static.moegen.ai';
   const proxyDomain = `${baseUrl}/proxy_download`;
 
   if (url.startsWith(cloudfrontDomain)) {

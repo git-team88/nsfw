@@ -15,7 +15,7 @@
 
 <script setup lang="ts" name="ComputingPowerRules">
 import Header from "@/components/Header.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
@@ -23,6 +23,23 @@ const { t } = useI18n();
 const router = useRouter();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const isHide = ref(false);
+
+function setNoIndexMeta() {
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (!metaRobots) {
+    metaRobots = document.createElement('meta');
+    metaRobots.setAttribute('name', 'robots');
+    document.head.appendChild(metaRobots);
+  }
+  metaRobots.setAttribute('content', 'noindex, nofollow');
+}
+
+function removeNoIndexMeta() {
+  const metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots && metaRobots.getAttribute('content') === 'noindex, nofollow') {
+    metaRobots.parentNode?.removeChild(metaRobots);
+  }
+}
 
 onMounted(async () => {
   window.scrollTo(0, 0);
@@ -32,6 +49,12 @@ onMounted(async () => {
     isHide.value = true;
     localStorage.removeItem("isBack");
   }
+
+  setNoIndexMeta();
+});
+
+onBeforeUnmount(() => {
+  removeNoIndexMeta();
 });
 function goBack() {
   router.go(-1);

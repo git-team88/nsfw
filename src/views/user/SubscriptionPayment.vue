@@ -55,7 +55,7 @@
 
             <span>
               {{ t("subscribe.agree") }}
-              <a href="#" @click.prevent="openLink">{{ t("subscribe.paymentTerms") }}</a>
+              <span class="agreement-text">{{ t("subscribe.paymentTerms") }}</span>
             </span>
           </div>
         </div>
@@ -347,9 +347,8 @@ onMounted(() => {
         }
       }
 
-      a {
+      .agreement-text {
         color: #fb64b6;
-        text-decoration: none;
         margin-left: 0.4rem;
       }
     }

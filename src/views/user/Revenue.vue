@@ -26,7 +26,7 @@
             <div class="banner-left">
               <div class="banner-tip">
                 {{ t("user.revenue.withdrawTip") }}
-                <span class="pink" @click="openCommunityConvention">{{ t("user.revenue.communityRule") }}</span>
+                <span class="pink">{{ t("user.revenue.communityRule") }}</span>
                 {{ t("user.revenue.withdrawTipEnd") }}
               </div>
             </div>
@@ -157,10 +157,7 @@ function handleUserInfoLoaded(userData: any) {
   hasAccount.value = userData?.info?.blogger_status === '1';
 }
 
-function openCommunityConvention() {
-  localStorage.setItem("isBack", "1");
-  window.open("/community-convention", "_blank");
-}
+
 
 function formatSci(n: number | null) {
   if (n == null) return "";
@@ -228,7 +225,6 @@ function formatSci(n: number | null) {
       color: #6A7282;
       margin-bottom: 2.4rem;
       .pink {
-        cursor: pointer;
         color: #fb64b6;
       }
     }

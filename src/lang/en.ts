@@ -5,7 +5,15 @@ export default {
   },
   cancel: "Cancel",
   confirm: "Confirm",
-  agreeTitle: "User Agreement",
+  agreeTitle: "Terms of Use",
+  closedBetaAgreementTitle: "Closed Beta Agreement",
+  closedBetaAgreement: `MoeGen is currently in a closed beta testing period, and the official Terms of Service have not yet been published.<br />
+<br />
+By participating in this test, please follow the instructions and guidance provided by the relevant person in charge or through the recruitment platform, such as CrowdWorks.<br />
+<br />
+Any infringement of third-party rights, violation of laws or regulations, acts contrary to public order and morals, unauthorized use, or nuisance behavior is prohibited.<br />
+<br />
+Please confirm the above and proceed only if you agree to the participation conditions for this closed beta test.`,
   communityConvention: `Community Convention<br />
 I. General Provisions<br />
 Welcome everyone to actively publish works, interact, and communicate, providing the platform with high-quality artificial intelligence visual works full of creativity and imagination. The platform is committed to building a positive, open, harmonious, and creative content community. Therefore, the platform will work hand in hand with all users to create a good community environment and realize this beautiful vision.<br />
@@ -196,13 +204,13 @@ Please note that some products and services on this platform are generated based
 ● It is strictly prohibited to use the platform’s AI technology to infringe upon the legitimate rights and interests of othersDo not use AI technology to disseminate content that violates laws and regulations or infringes upon the legitimate rights and interests of other users or third parties. You shall not use AI technology to fabricate or spread rumors, maliciously slander others, infringe upon others’ privacy, intellectual property rights, or disseminate illegal information. Otherwise, you shall bear all consequences arising therefrom.<br />
 Please read this Agreement carefully, especially the bolded parts. If you have any questions about the content of this Agreement or the prompts on the page, please do not proceed to the next step. You may consult us through the official communication channels (see Article 16 for details) so that we can explain and clarify it for you. Your clicking on the page or directly starting to use the platform’s AI products and related services shall be deemed as your acceptance of this Agreement.<br />
 I. Introduction<br />
-1.1 This User Service Agreement (hereinafter referred to as “this Agreement”) is an agreement concluded between acgworlds Co., Ltd. and you (hereinafter also referred to as “User” or “you”) regarding your access, registration, login, and use of related products and services.<br />
+1.1 This User Service Agreement (hereinafter referred to as “this Agreement”) is an agreement concluded between Moegen Co., Ltd. and you (hereinafter also referred to as “User” or “you”) regarding your access, registration, login, and use of related products and services.<br />
 1.2 All other relevant agreements, activity rules, announcements, instructions, in-site notifications, etc. that we have issued, may subsequently issue, and revise from time to time (collectively referred to as “Platform Rules”) are integral parts of this Agreement and shall have the same legal effect as this Agreement.<br />
 1.3 Before you start using the services, please read and fully understand this Agreement carefully. If you have any questions about the content of this Agreement or the prompts on the page, please do not proceed to the next step. You may consult us through the official communication channels so that we can explain and clarify it for you. Your confirmation by clicking on the page or directly starting to use the products and related services shall indicate your acceptance of this Agreement.<br />
 1.4 If you are a minor under the age of 18 or lack full capacity for civil conduct due to other statutory circumstances, please read this Agreement and other relevant agreements under the guidance and accompaniment of your guardian, pay special attention to the provisions applicable to minors, and use the products and related services only with the consent of your guardian.<br />
 1.5 If you are the guardian of a minor under the age of 16, you shall read and agree to this Agreement on behalf of your ward before using the related services.<br />
 1.6 It is particularly noted that you shall not use the recharge and consumption-related services provided without the explicit consent of your guardian, and guardians shall earnestly perform their guardianship duties.<br />
-1.7 If you have any questions, comments or suggestions regarding the content of this Agreement, you may contact us through the user feedback entrance or by sending an email to acgworlds{'@'}acgworlds{'.'}com.<br /><br />
+1.7 If you have any questions, comments or suggestions regarding the content of this Agreement, you may contact us through the user feedback entrance or by sending an email to support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br /><br />
 
 II. Scope of Application of the Agreement<br />
 2.1 This Agreement applies to your access to and use of the functions and services provided by the product service website and client.<br />
@@ -256,15 +264,15 @@ VII. User Code of Conduct<br />
 7.1.9 Other acts in violation of laws and regulations, this Agreement, Platform Rules and infringement upon the legitimate rights and interests of others.<br />
 If we have reasonable grounds to believe that any of your acts violate or may violate the foregoing agreements, we may make independent judgments and take necessary measures to deal with them. In case of emergency, we may terminate the provision of services to you without prior notice and pursue relevant liabilities in accordance with the law and the Agreement.<br />`,
   inviteCode: {
-    title: "Enter Your Invite Code",
-    enterCode: "Please enter the invite code you received to join Moegen",
+    title: "Invite Code",
+    enterCode: "Enter Invite Code",
     confirm: "Confirm",
     noCode: "No invitation code? ",
     skip: 'Skip',
-    inviteError: "Invite code error"
+    inviteError: "Enter invite code or skip."
   },
   similar: {
-    title: "Similar Theme Content Recommendation",
+    title: "Similar Content Recommendations",
     loading: "Loading...",
     loadingMore: "Loading more...",
     loadFailed: "Failed to load",
@@ -290,14 +298,14 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     generate: "Generate",
     generating: "Generating...",
     completed: "Completed",
-    projectName: "Project Name",
+    projectName: "Title",
     waitingNote: "You can browse other content while waiting for generation",
     generationProgress: "Generation Progress",
     generationTerminated: "Generation Terminated",
     estimatedTime: "Estimated 30 minutes",
     queueInfo: "There are {count} tasks ahead, estimated {estimatedTime} minutes",
     waiting: "Waiting",
-    estimatedMinutes: "This section is estimated to take {minutes} minutes",
+    estimatedMinutes: "Estimated {minutes} minutes",
     novelOutline: "Novel Outline",
     newChapter: "New Chapter",
     generatingStatus: "Generating, go browse other content~~~",
@@ -313,8 +321,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     chaptersToGenerate: "Pending Chapters ({count})",
     generationFailed: "Generation Failed",
     basicInfo: "Basic Information",
-    totalChapters: "Total chapters: ",
-    chaptersLabel: " chapters",
+    totalChapters: "Total Chapters:",
+    chaptersLabel: "Chapters",
     wordsPerChapter: "Words per chapter: ",
     wordsLabel: " words",
     genreLabel: "Genre: ",
@@ -328,8 +336,9 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     chapterPlot: "Chapter Plot",
     chapter: "Chapter {chapter}",
     chapterColon: "Chapter: ",
+    image: "Image",
     regenerate: "Regenerate",
-    computingPower: "computing power",
+    computingPower: "Credits",
     totalWords: "Total Words",
     outlinePlaceholder: "Please enter creative description...",
     send: "Send",
@@ -338,6 +347,10 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     minutes: "minutes",
     hours: "hours",
     tenMinutes: "10 minutes",
+    maxCoverImages: "Maximum {max} cover images allowed",
+    maxCoverSize: "Cover image size cannot exceed {max}MB",
+    invalidCoverImageType: "Please upload an image with a valid format. Supported formats: jpg, jpeg, png, webp",
+    uploadFormat: "Supported formats: jpg, jpeg, png, webp, up to 10MB each",
     role: {
       novelExpert: "Novel Writing Expert",
       chapterExpert: "Chapter Writing Expert",
@@ -390,10 +403,13 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       generationFailedMessage: "Sorry, there was an exception during the current generation process",
       contactSupport: "If you still can't generate normally after clicking retry, please contact customer service and we will handle it for you as soon as possible",
       calcDeductRule: "Failed generation steps will not deduct computing power.",
-      supportEmail: `Customer service email: acgworlds{'@'}acgworlds{'.'}com`,
+      supportEmail: "Customer service email: support{'@'}moegen{'.'}co.jp",
       emptyProjectName: "Please enter project name",
       emptyRegenerateContent: "Please enter creative description",
-      estimateFailed: "Failed to estimate computing power, please try again later"
+      estimateFailed: "Failed to estimate computing power, please try again later",
+      emptyChapterContent: "Please enter chapter content",
+      emptyChapterTitle: "Please enter chapter title",
+      cannotOperateOtherUserProject: "You cannot operate other users' projects"
     },
     guide: {
       next: "Next",
@@ -404,7 +420,14 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     language: {
       zh: "Chinese",
       en: "English",
-      jp: "Japanese"
+      jp: "Japanese",
+      tc: "Traditional Chinese"
+    },
+    freezeComputingPower: {
+      title: "Freeze Computing Power Notice",
+      label: "Freeze computing power for this generation:",
+      rules: "1. The estimated computing power is for reference only. Actual consumption may vary slightly.<br />2. Actual computing power consumption will be deducted after the task is completed.<br />3. During task execution, the system will freeze 105% of the estimated computing power. When multiple tasks are running simultaneously, frozen computing power cannot be used for new tasks.<br />4. When generating all chapters in batch mode, computing power for each step will be frozen only when that step is executed. If computing power is insufficient, the task will be interrupted.<br />5. Frozen computing power will be automatically released after the current task is completed and settled.",
+      dontShowAgain: "Don't show again"
     },
     unpublished: "Unpublished",
     publish: "Publish",
@@ -428,7 +451,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     insufficientBalanceMessage: "If there are ongoing tasks, the system will temporarily freeze part of the computing power balance, which is temporarily unavailable; after the generation task ends and completes settlement, the freeze will be automatically lifted.",
     goRecharge: "Go to recharge",
     taskLimitExceeded: "The number of ongoing tasks has exceeded the limit",
-    taskLimitExceededMessage: "For novel, comic, and manhua generation tasks, a maximum of 4 tasks can be in progress simultaneously for each type. Please wait for the ongoing tasks to complete before initiating new tasks.",
+    taskLimitExceededMessage: "For novel, comic, and manhua generation tasks, a maximum of 2 tasks can be in progress simultaneously for each type. Please wait for the ongoing tasks to complete before initiating new tasks.",
     iKnow: "I know",
     computingPowerEstimate: "Computing Power Estimate Explanation",
     computingPowerEstimateNote: `1.This estimated computing power is for reference only, and there may be slight differences in actual consumption.<br />
@@ -627,16 +650,16 @@ To provide you with rich and diverse products and services and ensure the safe o
 We attach great importance to your management of personal information and do our utmost to protect your rights to access, copy, correct, supplement, delete, withdraw consent and authorization, cancel accounts, file complaints and reports, and set privacy functions, so that you can protect your privacy and information security.<br />
 Please understand that specific business functions and services require your information to be completed. When you withdraw consent or authorization, we will no longer be able to provide you with the corresponding functions and services or process your relevant personal information. However, your decision to withdraw consent or authorization will not affect our previous personal information processing based on your authorization.<br />
 7.1 Your Rights to Personal Information<br />
-If you or other eligible subjects have any claims, requests or questions regarding the exercise of personal information rights conferred by relevant laws and regulations, you may contact us via email at acgworlds{'@'}acgworlds{'.'}com. We will review the relevant issues as soon as possible.
+If you or other eligible subjects have any claims, requests or questions regarding the exercise of personal information rights conferred by relevant laws and regulations, you may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>. We will review the relevant issues as soon as possible.
 7.2 System Permission Management<br />
 You may directly access the settings function of your device system to manage permissions including location, contacts, microphone, camera, album, calendar, storage, phone status (permission names vary on different devices, subject to the system permission names of your device) to change the scope of authorization or withdraw your authorization.<br />
 7.3 Account Cancellation<br />
-You may contact us via email at acgworlds{'@'}acgworlds{'.'}com to apply for cancellation of your account.<br />
+You may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a> to apply for cancellation of your account.<br />
 We will process your application in a timely manner upon receipt and respond to your request within the time limit required by laws and regulations. Before you cancel your account, we will verify your personal identity, security status, device information, etc.<br />
 You acknowledge and understand that account cancellation is irreversible. After you cancel your account, we will delete or anonymize your relevant information unless otherwise stipulated by laws and regulations.<br />
 After account cancellation, you will no longer be able to log in to the Platform with such account or retrieve any content or information related to the account. You will still be responsible for your use of the Platform before account cancellation.<br />
 7.4 Feedback, Complaints and Reports<br />
-You may file complaints or reports in accordance with our publicized rules. If you have any comments, believe your personal information rights may have been infringed, or discover clues of infringement, you may submit clues on the Platform’s user feedback page or actively contact the Platform via email at acgworlds{'@'}acgworlds{'.'}com.<br />
+You may file complaints or reports in accordance with our publicized rules. If you have any comments, believe your personal information rights may have been infringed, or discover clues of infringement, you may submit clues on the Platform's user feedback page or actively contact the Platform via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br />
 7.5 Operation Termination Notice<br />
 If we cease operations, we will promptly stop collecting your personal information, notify you of the termination via individual delivery or announcement, and delete or anonymize your personal information related to the terminated products or services.<br />
 7.6 Rights of Deceased Users’ Accounts<br />
@@ -652,40 +675,42 @@ We attach great importance to the protection of minors’ personal information.<
 9.2 After this Privacy Policy is updated, we will publish the updated version on the Platform website or remind you of the updated content through announcements or other appropriate methods before the updated terms take effect, so that you can timely understand the latest version of this Privacy Policy.<br />
 9.3 We may also help you better manage your personal information through function updates. Please pay attention to relevant function instructions.<br />
 10. Contact Us<br />
-If you have any questions, complaints, comments or suggestions regarding personal information protection and AI generation services, you may contact us via email at acgworlds{'@'}acgworlds{'.'}com.`,
-  agreeTip: "Please read this agreement in its entirety",
+If you have any questions, complaints, comments or suggestions regarding personal information protection and AI generation services, you may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.`,
+  agreeTip: "Please read these Terms to the end.",
   agreeBtn: "Agree",
-  checkAgreeText: "I agree to the user agreement",
+  pleaseAgreeAgreement: "Please agree to the user agreement",
+  checkAgreeText: "I agree to the Terms of Service",
   termsContent: `<h3>User Agreement</h3>`,
   header: {
     title1: `Home`,
     title2: "Create",
     title3: "My Projects",
     title4: "Character Library",
+    title5: "My Community",
     recharge: "Recharge",
     register: "Sign up",
     contribution: "Public",
     type1: "AI Creations",
-    type2: "Video",
+    type2: "Drama",
     type3: "Coimc",
     type4: "Novel",
     aiTip: `You don't have any generated works yet. Please go generate them first.`,
-    login: "Log in",
-    logout: "Log Out",
+    login: "Sign in",
+    logout: "Sign out",
     noRegister: "Don't have an account? ",
-    goRegister: "Go to register",
-    logoutConfirm: "Are you sure you want to log out?",
+    goRegister: "Go to Register",
+    logoutConfirm: "Are you sure you want to sign out?",
     userCard: {
       subscribeLabel: "Subscribe",
-      followersLabel: "Followers",
+      followersLabel: "Follow",
       fansLabel: "Fans",
-      postLabel: "Post",
+      postLabel: "Work",
     },
     menu: {
       personalCenter: "Personal Center",
       personalHomepage: "Personal Homepage",
       myWorks: "My AI Works",
-      logout: "Logout",
+      logout: "Sign out",
     },
     reset: {
       title: "Reset Password",
@@ -777,8 +802,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       mynumberFront: "My Number Card (Front)",
       uploadClick: "Click to Upload",
       uploadPdf: "Click to Upload File",
-      uploadHint: "PDF / JPG / JPEG / PNG / HEIC / WEBP (Max 10MB)",
-      uploadHintImage: "JPG / JPEG / PNG / HEIC / WEBP (Max 10MB)",
+      uploadHint: "JPG / JPEG / PNG / WEBP (Max 10MB)",
+      uploadHintImage: "JPG / JPEG / PNG / WEBP (Max 10MB)",
       errorFileSize: "File size exceeded (Max {max})",
       errorFileType: "Unsupported file format (only {types})",
       errorListTitle: "Please confirm the following items",
@@ -1103,7 +1128,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     subscription: {
       title: "Subscription Plan Settings",
       edit: "Edit",
-      tip: "After setting up the subscription plan, a 20% service fee will be deducted. You will receive 80% of the actual price.",
+      tip: "A 5% platform fee (including the amount equivalent to consumption tax) will be deducted from fan club revenue based on the set price, so the amount actually received is, in principle, 95% of the set price.",
       priceLabel: "Monthly Price",
       priceLimit: "(Note:Price can only be changed once per day)",
       priceChangeLimit: "Price can only be changed once per day. You have already made changes today. Please try again tomorrow.",
@@ -1130,6 +1155,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       kycReviewingTitle: "Under Review",
       kycReviewingMessage: "Subscription settings cannot be made until verification is approved.<br>Please wait for review, which takes up to 7 business days.",
       viewKycInfo: "View Review Info",
+      accountRequiredMessage: "Please create a payment account before setting up subscription.",
     },
     myFollowsSubs: {
       title: "My Follows and Subscriptions",
@@ -1275,9 +1301,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     step2: "Step2",
     emailLabel: "Email Address",
     email: "Enter your email address",
-    passwordLabel: "Password (8-20 chars (letters, numbers, symbols, no spaces))",
+    passwordLabel: "Password: 8–20 characters (letters, numbers, and symbols only; spaces are not allowed)",
     password: 'Enter your passwords',
-    passwordError: 'Password:8-20 chars (letters, numbers, symbols, no spaces)',
+    passwordError: "Password: 8–20 characters (letters, numbers, and symbols only; spaces are not allowed)",
     codeLabel: "Verification Code",
     code: "Enter verification code",
     send: "Send A Code",
@@ -1289,7 +1315,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     next: "Next",
     or: "OR",
     google: "With Google",
-    hasRegister: "This account has already been registered, please log in directly",
+    hasRegister: "Please check the information you entered. If you already have an account, please try logging in.",
     tipInfo: `By registering for this service, <br />you agree to the `,
     terms: "Terms of Service",
     infix: "and",
@@ -1369,7 +1395,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     tabs: {
       novel: "Novel",
       manhua: "Comic",
-      manju: "Video",
+      manju: "Drama",
       photo: "Photo",
       video: "Video",
     },
@@ -1402,7 +1428,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   characterLibrary: {
     title: "Character Library",
-    createNew: "Create New",
+    createNew: "Create a new character",
     prevPage: "Previous",
     nextPage: "Next",
     of: "of",
@@ -1419,36 +1445,36 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   home: {
     hero: {
-      title: "One line. Infinite stories."
+      title: "One spark. Infinite stories."
     },
     mode: {
       normal: "Normal Mode",
-      unlimited: "Unlimited Mode",
+      unlimited: "NSFW",
       switched: {
         normal: "Switched to Normal Mode",
-        unlimited: "Switched to Unlimited Mode"
+        unlimited: "Switched to NSFW Mode"
       }
     },
     video: "Video",
     audio: "Audio",
     novel: {
-      placeholder: "Just type one line. Your story begins. e.g. A delivery guy time-travels to ancient China and accidentally rewrites history."
+      placeholder: "Please enter novel outline..."
     },
     totalWords: "Total Words",
     unlimitedMode: {
-      title: "Enable Unrestricted Mode?",
-      description: "Users aged 18 and above can enable unrestricted mode.<br />After enabling, the scope of creative themes will be unrestricted.",
+      title: "Enable NSFW Mode?",
+      description: "NSFW Mode is restricted to users aged 18+. Results may vary and are not guaranteed to match your expectations. Credits are non-refundable once generation begins. Please proceed at your own discretion.",
       cancel: "Cancel",
       confirm: "Confirm"
     },
     underageNoBirthday: {
       title: "Please fill in your birthday",
-      description: "Only users aged 18 and above can enable unrestricted mode",
+      description: "Only users aged 18 and above can enable NSFW mode",
       cancel: "Cancel",
       goToFill: "Go to fill"
     },
     underage: {
-      description: "Only users aged 18 and above can enable unrestricted mode",
+      description: "Only users aged 18 and above can enable NSFW mode",
       ok: "I know"
     },
     sensitiveContent: "Allow sensitive content",
@@ -1487,9 +1513,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       unfollowSuccess: "Unfollowed successfully"
     },
     input: {
-      placeholder: "Just type one line. Your story begins. e.g. A delivery guy time-travels to ancient China and accidentally rewrites history.",
+      placeholder: "Please enter your plot to generate a short video. e.g.: A transfer student arrives at a high school in another world and discovers all his classmates have various superpowers.",
       placeholderNovel: "One line in. A whole novel out. e.g. I inherited my grandmother's house, her cat, and apparently—her enemies.",
-      placeholderComic: "One line in. A whole comic out. e.g. The mirror showed me smiling back. I wasn't smiling.",
+      placeholderComic: "Please enter your creative description to generate a comic.",
       placeholderDrama: "One line in. A whole motion comic out. e.g. \"Run.\" My dog had never spoken before. I ran.",
       placeholderPhoto: "One line in. A photo out. e.g. A cat napping on a stone lantern, in the quiet of a misty morning street.",
       placeholderVideo: "One line in. A world unfolds. e.g. They share one umbrella under the cherry blossoms, rain falling soft between them.",
@@ -1525,7 +1551,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       limit: 'You can select a maximum of 7 characters',
       noCharacters: "No characters available",
       officialCharacters: "Official Characters",
-      myCharacters: "My Characters"
+      myCharacters: "My Characters",
+      alreadySelected: "Character already selected"
     },
     character: {
       selected: "Character selected",
@@ -1544,7 +1571,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     styleCategory: {
       all: "All",
       anime: "Anime",
-      realistic: "Realistic",
+      realistic: "Photorealistic",
       cartoon: "Cartoon",
       fantasy: "Fantasy"
     },
@@ -1561,14 +1588,18 @@ If you have any questions, complaints, comments or suggestions regarding persona
     episode: "Ep.",
     episodeSuffix: "",
     episodeFormat: "Ep.{episode}",
+    totalChapterFormat: "{chapter} chapters",
+    totalEpisodeFormat: "{episode} episodes",
+    statusFinished: "Completed",
     updateTime: {
       hoursAgo: "Updated {hours} hours ago",
       daysAgo: "Updated {days} days ago",
       monthsAgo: "Updated {months} months ago",
-      yearsAgo: "Updated {years} years ago"
+      yearsAgo: "Updated {years} years ago",
+      justNow: "Just updated"
     },
     search: {
-      placeholder: "search by keywords"
+      placeholder: "Search works or users"
     },
     content: {
       title: "AI Generated Content",
@@ -1610,7 +1641,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       video: "Video",
       photo: "Photo",
       image: "Image",
-      article: "Article"
+      article: "Text"
     },
     videoSettings: {
       title: "Video Settings",
@@ -1664,29 +1695,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
     deleteConfirm: "Confirm deletion of this batch of generated results?",
     deleteWarning: "Deleted history records cannot be recovered"
   },
-  aiCreations: {
-    title: "Select from Unpublished AI Works",
-    filter: {
-      all: "All",
-      video: "Video",
-      image: "Image"
-    },
-    sort: {
-      asc: "Time ascending",
-      desc: "Time descending"
-    },
-    selectionInfo: "You may select 1 video, or 1 to 10 images.",
-    clearAll: "Clear all",
-    cancel: "Cancel",
-    confirm: "Confirm",
-    selectTip: 'You can only select items of the same type. Please clear your current selection first.',
-    selectVideoTip: "Only video items can be selected",
-    selectVideoFirst: "Please select a video first"
-  },
   submit: {
     tabs: {
-      video: "Video",
-      image: "Coimc",
+      video: "Drama",
+      image: "Comic",
       article: "Novel",
     },
     titleLabel: "Add a caption",
@@ -1704,7 +1716,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     reupload: "Set Cover",
     descriptionLabel: "Description",
     descriptionPlaceholder: "Enter content here...",
-    fanOnly: "Fan-Only Content",
+    fanOnly: "Member-Only Content",
     permission: "Permission Range",
     permPublic: "Public",
     permPartial: "Subscribers Only",
@@ -1737,9 +1749,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       uploadCta: "Click to upload or drag and drop your video here",
       uploadBtn: "Upload Video",
       specFormat: "Video Format:",
-      formatInfo: "MP4, MOV",
+      formatInfo: "MP4, MOV, AVI",
       specSize: "File Size:",
-      sizeInfo1: "≤5GB",
+      sizeInfo1: "≤10GB",
       sizeInfo2: "Duration: ≤1 hours",
       specResolution: "Recommended Resolution:",
       resolutionInfo: "Recommended:1080P",
@@ -1879,8 +1891,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     success: {
       title: "Public successful!",
-      back: "Return to My Community",
-      post: "Post Another One",
+      back: "Back to Community",
+      post: "Post Another",
     },
     agree: "I agree to the ",
     terms: "Community Guidelines",
@@ -1890,14 +1902,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     sensitiveTip:
       "Once set to include sensitive content, your post won’t be shown to users who have blocked sensitive content.",
     sensitiveConfirmText:
-      "Notice: This platform prohibits pornographic and nude images and videos featuring real people. Explicit content in anime-style images and videos must be censored. Violators shall bear full legal liability. We reserve the right to remove your content and restrict your revenue withdrawal.",
+      "Notice: On this platform, images and videos that are live-action or appear photorealistic are subject to stricter review than anime- or illustration-style content. Realistic expressions with sexual or grotesque intent or implications may be prohibited from posting even if they are classified as NSFW (18+).\n\nIn addition, even for anime-style images and videos, if they include direct depictions of genitalia, body parts suggestive of genitalia, points of penetration, or other detailed expressions that we deem inappropriate, mosaic censoring, concealment, or other processing specified by us is required.\n\nIf a user violates the Terms or Guidelines, the user shall respond at their own responsibility and expense, and we may take necessary measures such as hiding or deleting the work, restricting functions, withholding payout of earnings, or other actions.",
     sensitiveDontAsk: "Don't ask me again",
     confirmTitle: "Confirm Action",
     collection: "Collection",
     permissionInfo: `<span>Subscriber Only:</span> Only paid subscribers can view the full content; non-subscribers can only view the first image for free. This mode requires the subscription payment feature to be enabled first.`,
     collectionInfo: `<span>Episode in Collection:</span> Used to specify the sorting order of the current work in the collection.`,
-    sensitiveContent: `<span>After setting as sensitive content, it will no longer be shown to users who block sensitive content.</span><br />
-    <span>Note:</span> The platform prohibits the posting of pornographic or nude images and videos featuring real people. Exposed scenes in anime-style images and videos must be censored. Violators shall bear full legal liability, and the platform reserves the right to remove the work and restrict the withdrawal of user earnings.`,
+    sensitiveContent: "<span>If set as containing sensitive content, it will no longer be shown to users who have turned off sensitive content display.</span><br />\n<span>Notice:</span> On this platform, images and videos that are live-action or appear photorealistic are subject to stricter review than anime- or illustration-style content. Realistic expressions with sexual or grotesque intent or implications may be prohibited from posting even if they are marked as sensitive content. Even for anime-style images and videos, if they include direct depictions of genitalia, body parts suggestive of genitalia, points of penetration, or other detailed expressions that we deem inappropriate, mosaic censoring, concealment, or other processing specified by us is required. If the Terms or Guidelines are violated, the user shall respond at their own responsibility and expense, and we may take necessary measures such as hiding or deleting the work, restricting functions, withholding payout of earnings, or taking other necessary actions.",
     sensitiveToggleTip: "Are you sure you want to change the sensitive content setting?",
     publishing: 'Publishing...'
   },
@@ -1961,10 +1972,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     lock: {
       tip: "Subscribers can view the full content",
+      unlockOtherWorks: "All other works linked to this user have been unlocked as well.",
+      lastChapterTip: "You've finished this chapter.\nYou can generate content you want to see.",
+      goGenerate: "Generate",
       subscribe: "Subscribe",
       sensitiveContent: "Sensitive content. Visible only to users 18+ with \"Show Sensitive Content\" enabled.",
       profileSettings: "Profile Settings",
     },
+    authorClosedSubscription: "This creator has disabled subscriptions",
     permissionText: {
       partial: "Subscribers Only",
       private: "Only Me",
@@ -2000,6 +2015,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     readToEpisode: "Read to episode {count}",
     continueReading: "Continue Reading",
     updatedChapters: "Updated {count} chapters",
+    viewCollectionInfo: "View Collection Info",
     enterCollectionMode: "Click here to enter collection and read next chapter",
     viewCollection: "View Collection",
     nextEpisode: 'Next Episode',
@@ -2011,15 +2027,15 @@ If you have any questions, complaints, comments or suggestions regarding persona
     viewDetails: "View Computing Power Details",
     agreeTerms: "I agree to the Terms of Service",
     subscribeNow: "Recharge Now",
-    usageRules: "Computing Power Usage Rules",
+    usageRules: "About Credits",
     rule1: "Video within 1 minute consumes xx computing power",
     rule2: "1 image generation consumes xx computing power",
-    computingPowerRules: "Computing Power Rules",
+    computingPowerRules: "About Credits",
     pointsDetails: "Points Details",
     valid6Months: "Valid for 6 months from issuance",
     valid12Months: "Valid for 12 months from issuance",
     credits: "Credits",
-    compute: "Compute",
+    compute: "Credits",
     monthlyAutoRenew: "Monthly Auto-Renew",
     quarterlyAutoRenewal: "Quarterly Auto-Renewal",
     semiAnnualAutoRenewal: "Semi-Annual Auto-Renewal",
@@ -2054,7 +2070,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     success: 'Coupon added successfully'
   },
   aiRechargeDetails: {
-    title: "Points Details",
+    title: "Charge Details",
     selectPeriod: "Select Period",
     date: "Date",
     type: "Type",
@@ -2072,40 +2088,43 @@ If you have any questions, complaints, comments or suggestions regarding persona
     boostPack: "Boost Pack",
     generate: "Generate",
     expired: "Expired",
-    invited: "New user",
+    invited: "New User",
     other: "Other",
     novelGenerate: "Novel Generation",
     comicGenerate: "Comic Generation",
     videoGenerate: "Drama Generation",
     imageGenerate: "Image Generation",
-    simpleVideoGenerate: "Video Generation"
+    simpleVideoGenerate: "Video Generation",
+    frozenPower: "Frozen Computing Power: ",
+    frozenPowerTitle: "Frozen Computing Power Explanation",
+    frozenPowerRules: "1. During task processing, the system will freeze 105% of the estimated computing power; when multiple new tasks are started simultaneously, the frozen computing power cannot be used.<br />2. When generating all chapters in batch mode, computing power for each step will be frozen only when that step is executed. If computing power is insufficient, the task will be interrupted.<br />3. Frozen computing power will be automatically unfrozen after the current task is completed and settled."
   },
-  computingPowerRules: `Computing Power Usage Rules<br />
-    1.What is "Computing Power"?<br />
-    "Computing Power" is a virtual item designed by us to meet users' needs for using more platform services and making relevant consumptions.<br />
-    "Computing Power" can only be obtained by registered users within the platform and redeemed for the right to use specified functions or value-added services.<br />
-    For the avoidance of doubt, the "Computing Power" service is a network technology and related service provided by the platform to users. It is not a network payment service. "Computing Power" is neither a token, virtual currency nor a prepayment voucher, and has no monetary or prepaid value.<br />
-    2.What are the categories, validity periods, acquisition and consumption methods of "Computing Power"?<br />
-    Obtained by registration: valid for 7 days from the date of acquisition.<br />
-    Obtained by recharge: valid for 6 months from the date of recharge.<br />
-    Consumption for generation:<br />
-    Using functions such as AI creation will consume Computing Power. The specific amount shall be subject to the display on the relevant interface at that time, and the corresponding Computing Power will be deducted when the generation action occurs.<br />
-    The estimated Computing Power is for reference only, and there may be slight differences in actual consumption.<br />
-    The actual Computing Power will be deducted uniformly after the task is completed.<br />
-    During the unfinished task period, the system will temporarily freeze part of the Computing Power balance. When multiple new tasks are started at the same time, the frozen Computing Power cannot be used.<br />
-    Frozen Computing Power will be automatically unfrozen after the current task is completed and settled.<br />
-    Note: Changes in product strategies may result in adjustments to the validity period and applicable consumption rules of Computing Power. The relevant rules shall take effect on the date of issuance. Users' rights to use paid services already paid for before such adjustments take effect will not be affected. For details, please pay attention to the in-system announcements, use the query channels, or contact platform customer service.<br />
-    3.What is the charging standard for purchasing Computing Power?<br />
+  computingPowerRules: `What is "Computing Power"?<br />
+    "Computing Power" is a virtual item designed by us to allow users to access more platform services through relevant consumption.<br />
+    "Computing Power" may only be obtained and used by registered users on the platform to redeem the right to use specified functions or value-added services.<br />
+    For the avoidance of doubt, the "Computing Power" service refers to the network technology and related services provided by the platform to users. It is not a network payment service. "Computing Power" is not a token, virtual currency, or prepaid voucher, and has no monetary or prepaid value.<br /><br />
+
+    What are the types, validity periods, acquisition methods, and consumption rules of "Computing Power"?<br />
+    Obtained upon registration: Valid for 7 days from the date of acquisition.<br />
+    Obtained via recharge: Valid for 1 year from the date of recharge.<br />
+    Consumed for generation: Using AI creation and other functions will consume Computing Power. The specific amount shall be subject to the display on the relevant interface. Corresponding Computing Power will be deducted when a generation request is submitted; if generation fails, the deducted Computing Power will be refunded.<br />
+    Note: Product strategy adjustments may change the validity period and applicable consumption rules of Computing Power. The revised rules shall take effect upon publication. Users' paid service rights purchased before the adjustment will not be affected. For details, please refer to the in-system announcements, usage query channels, or contact platform customer service.<br /><br />
+
+    What are the pricing standards for purchasing Computing Power?<br />
     Standard pricing: 1 USD = 100 Computing Power.<br />
-    Discounted pricing: We may launch occasional purchase promotions. Discounted prices are subject to the publicity on relevant product interfaces and activity rules.<br />
-    We may update and optimize various "Computing Power" services, functions, charging plans and user rights from time to time. The final "Computing Power" quota you receive shall be subject to the display on relevant product service promotions and payment pages.<br />
-    4.What is the Computing Power consumption sequence?<br />
-    According to the validity period of all your "Computing Power", the one with a shorter remaining validity period will be consumed prior to that with a longer remaining validity period.
-    5.What is "Computing Power" used for and how to use it?<br />
-    Currently, after recharging "Computing Power", users can use functions such as AI creation by consuming "Computing Power" on the platform and our cooperative platforms. Specific services are subject to the display on the relevant interface at that time.
-    6.How to check "Computing Power" balance and usage details?<br />
-    You can view Computing Power usage details through the following channel:<br />
-    Webpage: [Navigation Bar] - [Computing Power Details]`,
+    Promotional pricing: We may launch occasional purchase promotions. Promotional prices are subject to the display on the relevant product interface and event rules.<br />
+    We may update and optimize "Computing Power" services, functions, pricing plans, and user rights from time to time. The final amount of "Computing Power" you receive shall be subject to the display on the relevant product service promotions and payment pages.<br /><br />
+
+    What is the consumption order of Computing Power?<br />
+    Computing Power is consumed based on its remaining validity period: Computing Power with a shorter remaining validity period is used prior to that with a longer remaining validity period.<br />
+
+    What can Computing Power be used for and how to use it?<br />
+    Currently, after recharging Computing Power, users may consume it to use AI creation and other functions on the platform and our cooperative platforms. Specific services are subject to the display on the relevant interface.<br /><br />
+
+    How to check Computing Power balance and usage details?<br />
+    You may view your Computing Power usage details via:<br />
+    Web: [Navigation Bar] – [Computing Power Details]
+  `,
   subscribe: {
     title: "Subscribe",
     month: "Month",
@@ -2141,21 +2160,42 @@ If you have any questions, complaints, comments or suggestions regarding persona
     subscribe: "Subscribe",
     subscribed: 'Subscribed',
     subscribePrice: "Subscribe {price} JPY/mo",
+    alreadySubscribed: "Already subscribed",
+    subscribeSuccess: "Subscribed successfully",
     editProfile: "Edit Community",
     share: "Share",
     shareSuccess: "Community address copied",
     report: "Report",
+    block: "Block",
+    unblock: "Unblock",
+    blockTip: "Hide their posts and comments, and prevent them from seeing my posts",
+    blockConfirm: "Confirm Block",
+    blockSuccess: "Blocked successfully",
+    unblockSuccess: "Unblocked successfully",
+    blockedMessage: "You have blocked this user and cannot view their posts",
+    unblockTip: "Are you sure you want to unblock? You will be able to view this user's posts again",
     contentType: {
       novel: "Novel",
       comic: "Comic",
-      video: "Video"
+      video: "Drama"
     },
     collection: {
       all: "All",
       items: "items",
-      editName: "Edit collection name",
-      delete: "Delete collection",
-      updated: "Collection name updated"
+      editName: "Edit Collection Name",
+      delete: "Delete Collection",
+      nameUpdated: "Collection name updated",
+      create: "Create Collection",
+      pin: "Pin",
+      pinned: "Pinned",
+      updated: "Updated {count} episodes",
+      unpin: "Unpin",
+      settings: "Collection Settings",
+      chapterManage: "Chapter Management",
+      pinnedSuccess: "Pinned Successfully",
+      unpinnedSuccess: "Unpinned Successfully",
+      selectCover: "Select Cover",
+      uploadCover: "Upload Cover"
     },
     sort: {
       newest: "Newest",
@@ -2208,15 +2248,15 @@ If you have any questions, complaints, comments or suggestions regarding persona
   paymentTerms: {
     title: "Statement under the Specified Commercial Transactions Act",
     content: `<h2>1. Business Operator Information</h2>
-<p>Sales Business Operator: ACGWORLDS Co., Ltd.</p>
+<p>Sales Business Operator: Moegen Co., Ltd.</p>
 <p>Responsible Operator: Ichisei Aoki, Representative Director</p>
 <p>Address: 1st Floor, Green Hills Taimei, 6-20-11 Hongo, Bunkyo-ku, Tokyo 113-0033, Japan</p>
 <p>Telephone Number: +81-7484-0659</p>
-<p>Email Address: support{'@'}acgworlds{'.'}co{'.'}jp</p>
+<p>Email Address: support{'@'}moegen{'.'}ai</p>
 <p>Service URL: <a href="" target="_blank">(tentative)</a></p>
 
 <h2>2. Scope of Application of This Statement</h2>
-<p>This statement applies to the following services provided by our company (ACGWORLDS Co., Ltd.):</p>
+<p>This statement applies to the following services provided by our company (Moegen Co., Ltd.):</p>
 <p>・Paid features of AI tools (subscription)</p>
 <p>・Sale of Credits used for AI generation, etc.</p>
 <p>・Joining creator fan clubs (monthly subscription) (membership service provided by our company)</p>
@@ -2304,14 +2344,36 @@ If you have any questions, complaints, comments or suggestions regarding persona
     duplicateError: "New collection name cannot be the same as existing collections",
     cancel: "Cancel",
     save: "Save",
-    noCollection: "Please select a collection",
+    noCollection: "No Collection",
     newCollection: "New Collection",
+    modifyCollection: "Modify Collection Info",
+    description: "Description",
+    defaultDescription: "New work released! Welcome to read my works on Moegen. Hope you enjoy them! Your support is my motivation to write. I will strive to tell every story well!",
+    type: "Type",
+    typeComic: "Comic",
+    typeNovel: "Novel",
+    typeVideo: "Video",
+    cover: "Cover",
+    uploadCover: "Upload Cover",
+    setCover: "Set Cover",
+    changeCover: "Change Cover",
+    selectCover: "Select Cover",
+    descriptionPlaceholder: "Enter description",
+    createSuccess: "Created successfully",
+    modifySuccess: "Modified successfully",
+    coverUploadHint: "Cover upload feature is under development",
+    enterName: "Please enter collection name",
+    uploadCoverTip: "Please upload cover image",
+    enterDescription: "Please enter description",
     switchConfirm: {
       title: "Switch Collection Confirmation",
       message: "Publishing the current project to another collection may cause chapter confusion. Are you sure you want to switch?",
       cancel: "Cancel",
       confirm: "Confirm"
-    }
+    },
+    orderInCollection: "Order in Collection",
+    enterEpisode: "Please select episode",
+    emptyCover: "Please upload cover image"
   },
   fail: "Fail",
   chapter: "Chapter {chapter}",
@@ -2319,7 +2381,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     taskProgress: "Task Progress",
     novel: "Novel",
     comic: "Comic",
-    manju: "Manju",
+    manju: "Drama",
     outline: "Outline",
     chapter: "Chapter",
     cover: "Cover",
@@ -2420,16 +2482,16 @@ If you have any questions, complaints, comments or suggestions regarding persona
       home: "Home",
       myProjects: "My Projects",
       characterLibrary: "Character Library",
-      myCommunity: "My Community",
+      myCommunity: "My Club",
       profile: "Profile"
     },
     policies: {
-      communityGuidelines: "Community Guidelines",
+      communityGuidelines: "Fanclub Guidelines",
       termsOfService: "Terms of Service",
       privacyPolicy: "Privacy Policy",
       paidServices: "Paid Services"
     },
-    copyright: "© 2026 acgworlds Co., Ltd. All rights reserved."
+    copyright: "© 2026 MoeGen All Rights Reserved."
   },
   seo: {
     home: {
@@ -2481,6 +2543,85 @@ If you have any questions, complaints, comments or suggestions regarding persona
       title: "AI Novel Generator Online Free | Write 30K Stories in One Click - MoeGen",
       keywords: "AI novel generator, long-form story generator, textai, AI story maker, AI novel AI, write novel AI, AI novel tool",
       description: "Generate full 30K+ word novels from one line. Multiple genres: romance, BL, school romance, sci-fi, fantasy. Built for global writers."
+    }
+  },
+  collectionDetail: {
+    breadcrumb: {
+      home: "Home"
+    },
+    community: "'s Community",
+    lastUpdate: "Last Update",
+    latestChapter: "Latest Chapter",
+    lastRead: "Last Read",
+    chapterCount: "Total {count} Chapters",
+    description: "Description",
+    tableOfContents: "Table of Contents",
+    publish: "Publish",
+    chapter: "Chapter",
+    edit: "Edit",
+    delete: "Delete",
+    workCount: "Works",
+    followerCount: "Followers",
+    statusPublished: "Published",
+    statusDraft: "Draft",
+    statusSubscribed: "Subscribed",
+    statusPrivate: "Private"
+  },
+  collectionSettings: {
+    back: "Back",
+    title: "Basic Info",
+    delete: "Delete",
+    setFinish: "Mark as Completed",
+    edit: "Edit",
+    basicInfo: "Basic Info",
+    name: "Name",
+    collectionName: "Collection Name",
+    tags: "Tags",
+    description: "Description",
+    otherInfo: "Other Info",
+    status: "Status",
+    publishedChapters: "Published Chapters",
+    createdAt: "Created At",
+    statusOngoing: "Ongoing",
+    statusFinished: "Completed",
+    publishedEpisodes: "Published Episodes",
+    unitEpisode: "ep",
+    unitChapter: "ch",
+    sampleTitle: "Cultivation Journey Cultivation Journey Cultivation Journey",
+    sampleDescription: "Welcome to my works on MoeGen! I hope you enjoy reading them. Your support is my motivation to keep writing. Thank you for following my stories!",
+    finishSuccess: "Successfully marked as completed",
+    deleteSuccess: "Deleted successfully",
+    finishNotice: {
+      title: "Completion Notice",
+      description: "To ensure user experience, please confirm that your work has a complete and coherent plot without any unresolved endings before marking it as completed.",
+      note: "Note: After marking as completed, the following actions will no longer be available!",
+      item1: `1. You will not be able to publish new chapters/episodes, nor modify existing chapters/episodes<br />
+      2. You cannot change it back to ongoing`,
+      cancel: "Cancel",
+      next: "Next"
+    },
+    confirmFinish: {
+      title: "Confirm Completion",
+      description: "This action cannot be undone. After completion, you cannot update or modify content, nor change back to ongoing. Please confirm again?",
+      updatedChapter: "Updated {count} chapters",
+      updatedEpisode: "Updated {count} episodes",
+      cancel: "Cancel",
+      confirm: "Confirm"
+    },
+    deleteNotice: {
+      title: "Deletion Notice",
+      description: "Once deleted, the collection cannot be restored. Are you sure you want to delete?",
+      note: "Note: Deleting the collection will also delete all chapters/episodes and interaction data under this collection.",
+      cancel: "Cancel",
+      next: "Next"
+    },
+    confirmDelete: {
+      title: "Confirm Deletion",
+      description: "This action cannot be undone. Please confirm again that you want to delete this collection and all its contents?",
+      updatedChapter: "Updated {count} chapters",
+      updatedEpisode: "Updated {count} episodes",
+      cancel: "Cancel",
+      confirm: "Confirm"
     }
   }
 };

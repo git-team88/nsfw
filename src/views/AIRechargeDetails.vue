@@ -24,6 +24,23 @@
           </div>
         </div>
 
+        <!-- Frozen Computing Power -->
+        <div class="frozen-power-section">
+          <div class="frozen-power-info">
+            <span class="frozen-power-label">{{ t('aiRechargeDetails.frozenPower') }}</span>
+            <span class="frozen-power-amount">{{ frozenBalance }}</span>
+          </div>
+          <div class="tooltip-wrapper"
+               @mouseenter="showFreezeTooltip = true"
+               @mouseleave="showFreezeTooltip = false">
+            <img src="@/assets/images/base/intro.png" alt="" class="info-icon" />
+            <div class="tooltip-content" v-if="showFreezeTooltip">
+              <div class="tooltip-title">{{ t('aiRechargeDetails.frozenPowerTitle') }}</div>
+              <div class="tooltip-rules" v-html="t('aiRechargeDetails.frozenPowerRules')"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Tabs and Date Range -->
         <div class="filter-section">
           <div class="tabs">
@@ -151,7 +168,9 @@ const route = useRoute();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const balance = ref('0');
+const totalBalance = ref('0');
 const isMounting = ref(true);
+const showFreezeTooltip = ref(false);
 
 onMounted(() => {
   // 处理URL中的type参数
@@ -173,8 +192,15 @@ onMounted(() => {
 });
 
 function handleBalanceLoaded(data: any) {
-  balance.value = data?.balance.toString();
+  balance.value = (data?.balance || 0).toString();
+  totalBalance.value = (data?.total_balance || 0).toString();
 }
+
+const frozenBalance = computed(() => {
+  const total = parseInt(totalBalance.value) || 0;
+  const bal = parseInt(balance.value) || 0;
+  return (total - bal).toString();
+});
 
 const dateRange = ref({ start: '', end: '' });
 
@@ -479,7 +505,7 @@ function goToPaymentHistory() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 0 2.4rem;
+    margin: 0 0 3rem;
     padding: 2.4rem;
     background-color: #F5F5F5;
     border-radius: 1.2rem;
@@ -553,6 +579,78 @@ function goToPaymentHistory() {
 
         &:hover {
           color: #fb64b6;
+        }
+      }
+    }
+  }
+
+  // Frozen Computing Power Section
+  .frozen-power-section {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin: 0 0 3rem;
+
+    .frozen-power-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .frozen-power-label {
+      font-size: 1.6rem;
+      color: #101828;
+    }
+
+    .frozen-power-amount {
+      font-size: 1.6rem;
+      color: #FB64B6;
+    }
+
+    .tooltip-wrapper {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+
+      .info-icon {
+        width: 2rem;
+        height: 2rem;
+      }
+
+      .tooltip-content {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 1.2rem);
+        width: 36rem;
+        padding: 1.6rem;
+        transform: translateX(-50%);
+        background-color: #FFFFFF;
+        border-radius: 0.8rem;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 50%;
+          top: -1.2rem;
+          width: 3.2rem;
+          height: 1.2rem;
+          transform: translateX(-50%);
+          background: url('@/assets/images/base/icon.png') no-repeat center center;
+          background-size: contain;
+        }
+
+        .tooltip-title {
+          font-size: 1.2rem;
+          color: #364153;
+          margin-bottom: 0.4rem;
+        }
+
+        .tooltip-rules {
+          font-size: 1.2rem;
+          color: #364153;
+          line-height: 2rem;
         }
       }
     }

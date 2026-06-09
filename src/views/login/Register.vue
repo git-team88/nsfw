@@ -100,27 +100,21 @@
         <div class="tip">
           <div class="tip-text" v-if="locale == 'jp'">
             <span v-html="t('register.tipInfo')"></span>
-            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            <b>{{ t("register.terms") }}</b>
             {{ t("register.infix") }}
-            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+            <b>{{ t("register.privacy") }}</b>
             {{ t("register.tipEnd") }}
           </div>
 
           <div class="tip-text" v-else>
             <span v-html="t('register.tipInfo')"></span>
-            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
+            <b>{{ t("register.terms") }}</b>
             {{ t("register.infix") }}
-            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
+            <b>{{ t("register.privacy") }}</b>
           </div>
         </div>
       </div>
     </div>
-
-    <InviteCodeModal
-      :visible="showInviteCodeModal"
-      :initial-code="inviteCode"
-      @confirm="handleInviteCodeConfirm"
-    />
 
     <div class="load" v-if="isShowLoad">
       <img src="@/assets/images/base/load.png" alt="" />
@@ -131,12 +125,12 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
-import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
+import { initLanguage } from "@/util/utils";
 import api from "@/api/index";
 import router from "@/router";
 
@@ -150,14 +144,12 @@ const isSend = ref(false);
 const isShowPassword = ref(false);
 const password = ref("");
 const code = ref("");
-const inviteCode = ref("");
 const emailError = ref("");
 const passwordError = ref("");
 const codeError = ref("");
 
 const isShowLoad = ref(false);
 const showBirthday = ref(false);
-const showInviteCodeModal = ref(false);
 
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);
 const count = ref(60);
@@ -202,19 +194,19 @@ function setSeoMeta() {
   metaDescription.setAttribute('content', t('seo.signup.description'));
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   setSeoMeta();
 
   checkGrecaptcha();
 
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("rType");
-  const savedInviteCode = localStorage.getItem("invite_code");
 
-  if (!token && type == "1" && savedInviteCode) {
+  if (!token && type == "1") {
     googleRegister();
-  } else {
-    showInviteCodeModal.value = true;
   }
 
   if (token) {
@@ -251,21 +243,8 @@ function initGoogle() {
   document.head.appendChild(script);
 }
 
-function handleInviteCodeConfirm(inviteCodeStr: string) {
-  inviteCode.value = inviteCodeStr;
-  showInviteCodeModal.value = false;
-}
-
 function showGoogle() {
-  const savedInviteCode = localStorage.getItem("invite_code");
-  if (savedInviteCode) {
-    redirectToGoogle();
-  } else if (inviteCode.value) {
-    localStorage.setItem("invite_code", inviteCode.value);
-    redirectToGoogle();
-  } else {
-    showInviteCodeModal.value = true;
-  }
+  redirectToGoogle();
 }
 
 function redirectToGoogle() {
@@ -453,7 +432,6 @@ function goEmailRegister() {
       email: email.value,
       password: password.value,
       code: code.value,
-      referral_code: inviteCode.value,
       "g-recaptcha-response": emailToken.value
   };
 
@@ -484,20 +462,17 @@ function goEmailRegister() {
 function googleRegister() {
   const urlParams = new URLSearchParams(window.location.search);
   const googleCode = urlParams.get("code");
-  const invite_code = localStorage.getItem("inviteCode");
 
   if (!googleCode) {
     isShowLoad.value = false;
     localStorage.removeItem("rType");
-    localStorage.removeItem("inviteCode");
     return false;
   }
 
   isShowLoad.value = true;
 
   const googleData = {
-    code: googleCode,
-    referral_code: invite_code
+    code: googleCode
   };
 
   api
@@ -507,24 +482,20 @@ function googleRegister() {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
-        localStorage.removeItem('inviteCode');
 
         localStorage.setItem("isFirstRegister", "1");
         router.push("/");
       } else {
-        window.location.href = "/register";
         isShowLoad.value = false;
         localStorage.removeItem("rType");
-        localStorage.removeItem('inviteCode');
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
       }
     })
     .catch((err: any) => {
-      window.location.href = "/register";
       isShowLoad.value = false;
       localStorage.removeItem("rType");
-      localStorage.removeItem('inviteCode');
       console.log(err);
+      toast(t('fail'));
     });
 }
 </script>
@@ -778,12 +749,9 @@ function googleRegister() {
       text-align: center;
       color: #99A1AF;
 
-      :deep(a) {
+      b {
+        font-weight: normal;
         color: #fb64b6;
-
-        &:hover{
-          text-decoration: underline;
-        }
       }
     }
 

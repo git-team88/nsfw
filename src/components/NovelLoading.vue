@@ -116,7 +116,7 @@ const props = defineProps<{
   isStreaming?: boolean;
   hasStreamingContent?: boolean;
   hasStreamData?: boolean;
-  taskStatus?: 'DOING' | 'SUCCESS' | 'FAIL';
+  taskStatus?: 'DOING' | 'SUCCESS' | 'FAIL' | 'PREPARE';
 }>();
 
 const emit = defineEmits(['loadingComplete']);
@@ -640,9 +640,41 @@ watch(() => props.taskStatus, (newStatus) => {
   }
 });
 
+// Watch processType changes to restart the loading sequence
 watch(() => props.processType, (newType, oldType) => {
-  start();
+  if (newType !== oldType) {
+    start();
+  }
 });
+
+// Watch estimatedTime and remainingTime so that when they are populated
+// (e.g. after an API call), the progress bar is recalculated from the
+// correct position instead of starting from zero.
+watch(
+  () => [props.estimatedTime, props.remainingTime],
+  ([newEstimated, newRemaining], [oldEstimated, oldRemaining]) => {
+    // Only restart when the values change from null/undefined to real numbers
+    // or when the remaining time is substantially updated.
+    const hasValidNewValues =
+      (newEstimated != null && newEstimated > 0) ||
+      (newRemaining != null && newRemaining > 0);
+
+    if (!hasValidNewValues) return;
+
+    // Avoid no-op re-triggers when the component is already frozen/finished
+    if (isFrozenAtPenultimate.value) return;
+
+    // Only restart if we actually got meaningful new values vs. previous ones
+    const prevWasEmpty = oldEstimated == null && oldRemaining == null;
+    const valuesChanged =
+      newEstimated !== oldEstimated || newRemaining !== oldRemaining;
+
+    if (prevWasEmpty || valuesChanged) {
+      start();
+    }
+  },
+  { flush: 'post' }
+);
 
 onMounted(() => {
   start();

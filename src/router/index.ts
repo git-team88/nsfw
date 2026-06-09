@@ -2,11 +2,11 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
-import Terms from "@/views/login/Terms.vue";
-import Privacy from "@/views/login/Privacy.vue";
+// import Terms from "@/views/login/Terms.vue";
+// import Privacy from "@/views/login/Privacy.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
 import ResetPassword from "@/views/login/ResetPassword.vue";
-import PaymentTerms from "@/views/PaymentTerms.vue";
+// import PaymentTerms from "@/views/PaymentTerms.vue";
 
 const routes = [
   {
@@ -29,21 +29,21 @@ const routes = [
     name: "ResetSend",
     component: ResetSend,
   },
-  {
-    path: "/privacy",
-    name: "Privacy",
-    component: Privacy,
-  },
-  {
-    path: "/terms",
-    name: "Terms",
-    component: Terms,
-  },
-  {
-    path: "/payment-terms",
-    name: "PaymentTerms",
-    component: PaymentTerms,
-  },
+  // {
+  //   path: "/privacy",
+  //   name: "Privacy",
+  //   component: Privacy,
+  // },
+  // {
+  //   path: "/terms",
+  //   name: "Terms",
+  //   component: Terms,
+  // },
+  // {
+  //   path: "/payment-terms",
+  //   name: "PaymentTerms",
+  //   component: PaymentTerms,
+  // },
   {
     path: "/ai-recharge",
     name: "AIRecharge",
@@ -174,11 +174,11 @@ const routes = [
     name: "UserRevenue",
     component: () => import("@/views/user/Revenue.vue"),
   },
-  {
-    path: "/community-convention",
-    name: "CommunityConvention",
-    component: () => import("@/views/user/CommunityConvention.vue"),
-  },
+  // {
+  //   path: "/community-convention",
+  //   name: "CommunityConvention",
+  //   component: () => import("@/views/user/CommunityConvention.vue"),
+  // },
   {
     path: "/user-subscription",
     name: "UserSubscription",
@@ -233,6 +233,21 @@ const routes = [
     path: "/user-payment-history",
     name: "PaymentHistory",
     component: () => import("@/views/user/PaymentHistory.vue"),
+  },
+  {
+    path: "/collection/:id",
+    name: "CollectionDetail",
+    component: () => import("@/views/CollectionDetail.vue"),
+  },
+  {
+    path: "/collection-settings/:id",
+    name: "CollectionSettings",
+    component: () => import("@/views/CollectionSettings.vue"),
+  },
+  {
+    path: "/create-collection",
+    name: "CreateCollection",
+    component: () => import("@/views/CreateCollection.vue"),
   },
   {
     path: "/:pathMatch(.*)*",

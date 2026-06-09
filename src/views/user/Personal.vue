@@ -375,7 +375,7 @@ async function getKycDetail() {
 }
 
 onMounted(async () => {
-  getCountry();
+  // getCountry();
 
   try {
     const res = (await api.userInfo()) as any;
@@ -531,6 +531,7 @@ function closeCoverZoomModal() {
   align-items: center;
   justify-content: space-between;
   margin: 0 0 2.4rem;
+  padding-left: 1.2rem;
 }
 .panel-title {
   font-weight: 500;
@@ -541,6 +542,12 @@ function closeCoverZoomModal() {
   margin: 0 0 1.2rem 1.2rem;
   font-size: 1.6rem;
   color: #fb64b6;
+}
+
+.content{
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  background: #F9FAFB;
 }
 
 .section {
@@ -600,12 +607,18 @@ function closeCoverZoomModal() {
   color: #99A1AF;
 }
 .edit-link {
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.8rem;
+  height: 4rem;
+  background: #FB64B6;
   border: none;
-  color: #fb64b6;
+  border-radius: 0.8rem;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 1.4rem;
-  padding: 0;
+  padding: 0 1rem;
 }
 .text-val {
   font-size: 1.4rem;
@@ -641,19 +654,19 @@ function closeCoverZoomModal() {
 .kyc-row {
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1rem;
+  padding: 0 1.4rem;
 }
 
 .kyc-label {
-  font-weight: 500;
-  font-size: 2rem;
+  font-size: 1.4rem;
   color: #101828;
 }
 
 .kyc-status {
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.4rem;
 }
 
 .status-text {

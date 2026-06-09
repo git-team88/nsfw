@@ -4,6 +4,14 @@ export default {
     notAble: '验证码执行方法不可用'
   },
   agreeTitle: "用户协议",
+  closedBetaAgreementTitle: "封闭β测试协议",
+  closedBetaAgreement: `目前，MoeGen 处于封闭 β 测试期间，因此暂未刊登正式的使用条款。<br />
+<br />
+参加本次测试时，请遵守各负责人，或 CrowdWorks 等招募平台上所说明的内容与指示。<br />
+<br />
+禁止侵犯第三方权利、违反法律法规、违反公序良俗的行为，以及不正当使用、骚扰行为等。<br />
+<br />
+请确认以上内容，并在同意封闭 β 测试参加条件后，继续下一步。`,
   communityConvention: `社区公约<br />
 一、总则<br />
 欢迎大家积极发布作品、互动、交流，为平台提供充满创意和想象的优质人工智能视觉作品，平台致力于打造一个积极进取、开放和谐、充满创造力的内容社区。因此，平台将和各位用户携手，营造良好社区环境，实现这一美好愿景。<br />
@@ -196,13 +204,13 @@ export default {
 请您仔细阅读本协议内容，尤其是字体加粗部分。如您对本协议内容或页面提示信息有疑问，请勿进行下一步操作。您可通过官方沟通渠道（详见第十六条）进行咨询，以便我们为您解释和说明。您通过页面点击或直接开始使用平台AI产品及相关服务等方式即视为表示您已同意本协议。<br /><br />
 
 一、导言<br />
-1.1 《用户服务协议》(以下简称“本协议”)是acgworlds株式会社与您(以下亦称“用户”、“您”)之间就您访问、注册、登录、使用相关产品及服务所订立的协议。<br />
+1.1 《用户服务协议》(以下简称“本协议”)是Moegen与您(以下亦称“用户”、“您”)之间就您访问、注册、登录、使用相关产品及服务所订立的协议。<br />
 1.2 我们已经发布、后续可能发布的、不时修改的其他全部相关协议、活动规则、公告、说明、站内信通知等（合称“平台规则”）均属于本协议不可分割的组成部分，与本协议具有同等法律效力。<br />
 1.3 您在开始使用之前，请仔细阅读并充分理解本协议。如您对本协议内容或页面提示信息有疑问，请勿进行下一步操作。您可通过官方沟通渠道进行咨询，以便我们为您解释和说明。您通过页面点击或直接开始使用产品及相关服务等其他方式确认即表示您已同意本协议。<br />
 1.4 如您是未满18周岁的未成年人或其他法定情况等而不具有完全民事行为能力，请您在监护人的指导和陪同下阅读本协议及其他相关协议，并特别注意未成年人使用相关条款，且征得监护人的同意后使用产品及相关服务。<br />
 1.5 若您是未满16周岁的未成年人的监护人，在使用及相关服务前，应为您的被监护人阅读并同意本协议。<br />
 1.6 特别注意的是，在未征得监护人明示同意的情况下，请您不要使用提供的充值消费相关服务，也请监护人切实履行监护职责。<br />
-1.7 如对本协议内容有任何疑问、意见或建议，您可通过的用户反馈入口或发送邮件至acgworlds{'@'}acgworlds{'.'}com与我们联系。<br /><br />
+1.7 如对本协议内容有任何疑问、意见或建议，您可通过的用户反馈入口或发送邮件至support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系。<br /><br />
 
 二、协议的适用范围<br />
 2.1 本协议适用于您访问和使用产品服务网站、客户端所提供的功能与服务。<br />
@@ -349,6 +357,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
   },
   novel: {
     chapterColon: "章节：",
+    image: "图片",
     untitled: "未命名",
     generate: "生成",
     generating: "正在生成",
@@ -400,6 +409,10 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     minutes: "分钟",
     hours: "小时",
     tenMinutes: "10分钟",
+    maxCoverImages: "最多可上传{max}张封面图片",
+    maxCoverSize: "封面图片大小不能超过{max}MB",
+    invalidCoverImageType: "请上传正确格式的图片，支持格式：jpg, jpeg, png, webp",
+    uploadFormat: "支持格式：jpg, jpeg, png, webp，每张不超过10MB",
     role: {
       novelExpert: "小说创作专家",
       chapterExpert: "章节创作专家",
@@ -451,10 +464,13 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       generationFailedMessage: "很抱歉当前生成过程出现异常",
       contactSupport: "若点击重试依然不能正常生成，请联系客服，我们将在第一时间为您处理",
       calcDeductRule: "未生成成功的环节不会扣除算力",
-      supportEmail: `客服邮箱：acgworlds{'@'}acgworlds{'.'}com`,
+      supportEmail: `客服邮箱：support{'@'}moegen{'.'}ai\nDiscord社群：<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>`,
       emptyProjectName: "请输入项目名称",
       emptyRegenerateContent: "请输入创意描述",
-      estimateFailed: "算力预估失败，请稍后重试"
+      estimateFailed: "算力预估失败，请稍后重试",
+      emptyChapterContent: "请输入章节内容",
+      emptyChapterTitle: "请输入章节标题",
+      cannotOperateOtherUserProject: "您不能操作其他用户的项目"
     },
     guide: {
       next: "下一步",
@@ -463,9 +479,16 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     },
     retry: "点击重试",
     language: {
-      zh: "中文",
+      zh: "中文简体",
       en: "英文",
-      jp: "日文"
+      jp: "日文",
+      tc: "中文繁体"
+    },
+    freezeComputingPower: {
+      title: "冻结算力说明",
+      label: "本次生成冻结算力：",
+      rules: "1. 本次预估算力仅供参考，实际消耗可能存在细微差异。<br />2. 实际消耗算力将在任务完成后统一扣除。<br />3. 任务未完成期间，系统会根据预估的105%冻结算力；同时开启多个新任务时，冻结中的算力不可使用。<br />4. 当批量生成全部时，执行到相应步骤时才开始冻结该步骤的算力，算力不足则任务中断。<br />5. 冻结算力将在当前任务完成并结算后自动解除冻结。",
+      dontShowAgain: "不再提示"
     },
     unpublished: "未发布",
     publish: "发布",
@@ -489,7 +512,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     insufficientBalanceMessage: "若已有在进行的任务，系统将临时冻结部分算力余额，暂不可使用；生成任务结束并完成结算后，冻结自动解除。",
     goRecharge: "去充值",
     taskLimitExceeded: "进行中的任务已超过数量限制",
-    taskLimitExceededMessage: "小说、漫画、漫剧生成任务，每类最多可同时进行4个。请等待进行中的任务完成后，再发起新任务。",
+    taskLimitExceededMessage: "小说、漫画、漫剧生成任务，每类最多可同时进行2个。请等待进行中的任务完成后，再发起新任务。",
     iKnow: "我知道了",
     computingPowerEstimate: "算力预估说明",
     computingPowerEstimateNote: `1.本次预估算力仅供参考，实际消耗可能存在细微差异。<br />
@@ -545,7 +568,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
   },
   privacy: `隐私政策<br />
   欢迎使用产品及相关服务！ 请您仔细阅读、理解并遵守《隐私政策》。<br />
-指acgworlds株式会社（以下简称“我们”或“公司”）合法拥有并运营的、标注名称为的官方网站、APP。在平台中，我们向您提供AI内容生成（文生成、图生成、音视频生成）、发布到社区等服务。<br />
+指Moegen（以下简称“我们”或“公司”）合法拥有并运营的、标注名称为的官方网站、APP。在平台中，我们向您提供AI内容生成（文生成、图生成、音视频生成）、发布到社区等服务。<br />
 我们作为的运营者，深知个人信息对您的重要性，您的信任对我们非常重要，我们将按照法律法规的规定并参照行业最佳实践保护您的个人信息及隐私安全。我们制定本隐私政策并特别提示：希望您在使用产品及相关服务（以下统称“本服务”）前仔细阅读并理解本隐私政策，以便做出适当的选择。<br />
 本隐私政策将帮助您了解：<br />
 我们会遵循隐私政策收集、使用您的信息，不会仅因您同意本隐私政策而采用强制捆绑的方式一揽子收集个人信息。<br />
@@ -729,16 +752,16 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
 我们非常重视您对个人信息的管理，并尽全力保护您对于您个人信息的查阅、复制、更正、补充、删除、撤回同意授权、注销账号、投诉举报以及设置隐私功能等权利，以使您有能力保障您的隐私和信息安全。<br />
 请您理解，特定的业务功能和服务将需要您的信息才能得以完成，当您撤回同意或授权后，我们无法继续为您提供撤回同意或授权所对应的功能和服务，也不再处理您相应的个人信息。但您撤回同意或授权的决定，不会影响我们此前基于您的授权而开展的个人信息处理。<br />
 7.1 您的个人信息权利<br />
-如果您或其他有权主体对相关法律法规赋予的个人信息权利的行使，有任何主张、要求或者疑问，您可以通过发送邮件至acgworlds{'@'}acgworlds{'.'}com与我们联系，我们将尽快审核所涉问题。<br />
+如果您或其他有权主体对相关法律法规赋予的个人信息权利的行使，有任何主张、要求或者疑问，您可以通过发送邮件至support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系，我们将尽快审核所涉问题。<br />
 7.2 系统权限管理<br />
 您可以直接进入设备系统的设置功能对位置、通讯录、麦克风、相机、相册、日历、储存、电话状态等权限 (不同设备的系统权服的名称有所不同，以您所使用设备的系统权限名称为准）进行管理，以改变授权范围或撤回您的授权。<br />
 7.3 注销账号<br />
-您可以通过邮箱acgworlds{'@'}acgworlds{'.'}com与我们联系申请注销您本人的账号。<br />
+您可以通过邮箱support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系申请注销您本人的账号。<br />
 我们将会在收到您的申请后及时进行处理，并在法律法规要求的时限内回复您的请求。在您注销账号前，我们将验证您的个人身份、安全状态、设备信息等。<br />
 您知悉并理解，注销账号是不可逆的行为，当您注销账号后，我们将删除有关您的相关信息或进行匿名化处理，但法律法规另有规定的除外。<br />
 账号注销后，您将无法使用该账号登录平台，也无法找回账号相关的任何内容或信息。账号注销后，您仍应对您在注销账号前使用平台的行为承担相应责任。<br />
 7.4 意见反馈和投诉举报<br />
-您可以按照我们公示的制度进行投诉或举报。如果您有任何意见或您认为您的个人信息权利可能受到侵害，或者发现侵害个人信息权利的线索，您可以在平台用户反馈页面提交线索，或主动通过邮箱联系本平台，邮箱地址为acgworlds{'@'}acgworlds{'.'}com。<br />
+您可以按照我们公示的制度进行投诉或举报。如果您有任何意见或您认为您的个人信息权利可能受到侵害，或者发现侵害个人信息权利的线索，您可以在平台用户反馈页面提交线索，或主动通过邮箱联系本平台，邮箱地址为support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>。<br />
 7.5 停止运营并向您告知<br />
 如我们停止运营，我们将及时停止收集您个人信息的活动，将停止运营的通知以逐一送达或公告的形式通知您，并对我们所持有的与已关停的产品或服务相关的您的个人信息进行删除或匿名化处理。<br />
 7.6 逝者账号权益<br />
@@ -757,9 +780,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
 9.3 我们也可能通过功能更新，帮助您更好地管理您的个人信息，请您留意相关的功能说明。<br />
 
 10. 联系我们<br />
-如您对个人信息保护相关事宜及AI生成服务有任何疑问、投诉、意见或建议，您可以通过邮箱acgworlds{'@'}acgworlds{'.'}com联系我们。`,
+如您对个人信息保护相关事宜及AI生成服务有任何疑问、投诉、意见或建议，您可以通过邮箱support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>联系我们。`,
   agreeTip: "请完整阅读本协议",
   agreeBtn: "同意",
+  pleaseAgreeAgreement: "请同意用户协议",
   checkAgreeText: "我同意用户协议",
   termsContent: `<h3>用户协议</h3>`,
   header: {
@@ -767,6 +791,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     title2: "创作",
     title3: "我的项目",
     title4: "角色库",
+    title5: "我的社区",
     recharge: "充值",
     register: "注册",
     contribution: "发布",
@@ -882,8 +907,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       mynumberFront: "个人编号卡（正面）",
       uploadClick: "点击上传",
       uploadPdf: "点击上传文件",
-      uploadHint: "PDF / JPG / JPEG / PNG / HEIC / WEBP（最大10MB）",
-      uploadHintImage: "JPG / JPEG / PNG / HEIC / WEBP（最大10MB）",
+      uploadHint: "JPG / JPEG / PNG / WEBP（最大10MB）",
+      uploadHintImage: "JPG / JPEG / PNG / WEBP（最大10MB）",
       errorFileSize: "文件大小超限（最大 {max}）",
       errorFileType: "不支持的文件格式（仅支持 {types}）",
       errorListTitle: "请确认以下项目",
@@ -1236,6 +1261,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       kycReviewingTitle: "审核中",
       kycReviewingMessage: "审核通过之前，不能进行订阅设置。<br>请等待审核，最长不超过7个工作日。",
       viewKycInfo: "查看审核信息",
+      accountRequiredMessage: "订阅设置之前，请先创建收款账户",
     },
     myFollowsSubs: {
       title: "我的关注与订阅",
@@ -1528,10 +1554,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     mode: {
       normal: "普通模式",
-      unlimited: "无限制模式",
+      unlimited: "NSFW",
       switched: {
         normal: "已切换到普通模式",
-        unlimited: "已切换到无限制模式"
+        unlimited: "已切换到NSFW模式"
       }
     },
     video: "视频",
@@ -1541,19 +1567,19 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     totalWords: "总字数",
     unlimitedMode: {
-      title: "启用无限制模式？",
-      description: "18岁以上用户可开启无限制模式<br />开启后创作题材范围不受限制。",
+      title: "启用NSFW模式？",
+      description: "NSFW模式仅限18岁以上用户使用。<br />受模型限制，生成结果可能与预期存在差异。<br />生成开始后算力即被消耗，已使用的算力不支持返还。<br />请谨慎开启。",
       cancel: "取消",
       confirm: "确认"
     },
     underageNoBirthday: {
       title: "请前往填写生日",
-      description: "满18岁的用户才能开启无限制模式",
+      description: "满18岁的用户才能开启NSFW模式",
       cancel: "取消",
       goToFill: "去填写"
     },
     underage: {
-      description: "满18岁的用户才能开启无限制模式",
+      description: "满18岁的用户才能开启NSFW模式",
       ok: "我知道了"
     },
     sensitiveContent: "允许敏感内容",
@@ -1630,7 +1656,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       limit: '角色最多选择7个',
       noCharacters: "暂无角色",
       officialCharacters: "官方角色",
-      myCharacters: "我的角色"
+      myCharacters: "我的角色",
+      alreadySelected: "角色已选中"
     },
     character: {
       selected: "角色已选择",
@@ -1666,11 +1693,15 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     episode: "第",
     episodeSuffix: "集",
     episodeFormat: "第{episode}集",
+    totalChapterFormat: "共{chapter}章",
+    totalEpisodeFormat: "共{episode}集",
+    statusFinished: "已完结",
     updateTime: {
       hoursAgo: "{hours}小时前更新",
       daysAgo: "{days}天前更新",
       monthsAgo: "{months}个月前更新",
-      yearsAgo: "{years}年前更新"
+      yearsAgo: "{years}年前更新",
+      justNow: "刚刚更新"
     },
     search: {
       placeholder: "搜索作品或用户"
@@ -1767,25 +1798,6 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     generateFailed: "生成失败。您上传的信息不符合平台规则，请修改后重试",
     deleteConfirm: "确认删除该批次生成结果？",
     deleteWarning: "删除的历史记录将无法找回"
-  },
-  aiCreations: {
-    title: "从未发布的AI作品中选择",
-    filter: {
-      all: "全部",
-      video: "视频",
-      image: "图片"
-    },
-    sort: {
-      asc: "时间升序",
-      desc: "时间降序"
-    },
-    selectionInfo: "您可以选择1个视频，或1-10张图片。",
-    clearAll: "清空全部",
-    cancel: "取消",
-    confirm: "确认",
-    selectTip: "只能选择同一类型的项目，请先清空当前选择。",
-    selectVideoTip: "只能选择视频类型的项目",
-    selectVideoFirst: "请先选择一个视频"
   },
   submit: {
     tabs: {
@@ -2064,10 +2076,14 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     lock: {
       tip: "订阅者可以查看全文",
+      unlockOtherWorks: "同时解锁了本用户下的其他全部作品",
+      lastChapterTip: "当前章节已读完\n您可以直接生成想看的内容",
+      goGenerate: "去生成",
       subscribe: "订阅",
       sensitiveContent: "敏感内容。仅对18岁以上且已启用\"显示敏感内容\"的用户可见。",
       profileSettings: "个人设置",
     },
+    authorClosedSubscription: "该用户已关闭订阅功能",
     permissionText: {
       partial: "订阅者可见",
       private: "仅自己可见",
@@ -2103,6 +2119,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     readToEpisode: "看至第 {count} 集",
     continueReading: "继续查看",
     updatedChapters: "已更新 {count} 章",
+    viewCollectionInfo: "查看合集信息",
     enterCollectionMode: "点这里，进入合集并阅读下一章",
     viewCollection: "查看合集",
     nextEpisode: '下一集',
@@ -2143,10 +2160,20 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     subscribe: "订阅",
     subscribed: '已订阅',
     subscribePrice: "订阅 {price} 日元/月",
+    alreadySubscribed: "已订阅",
+    subscribeSuccess: "订阅成功",
     editProfile: "编辑社区",
     share: "分享",
     shareSuccess: "已复制社区地址",
     report: "举报",
+    block: "拉黑",
+    unblock: "解除拉黑",
+    blockTip: "不看他/她的作品和评论，也不允许他/她看到我的作品",
+    blockConfirm: "确认拉黑",
+    blockSuccess: "拉黑成功",
+    unblockSuccess: "解除拉黑成功",
+    blockedMessage: "您已经拉黑对方，无法查看其作品",
+    unblockTip: "确定要解除拉黑吗？解除后将恢复查看该用户的作品",
     contentType: {
       novel: "小说",
       comic: "漫画",
@@ -2157,7 +2184,19 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       items: "个作品",
       editName: "编辑合集名称",
       delete: "删除合集",
-      updated: "合集名称已更新"
+      nameUpdated: "合集名称已更新",
+      create: "新建合集",
+      pin: "置顶",
+      pinned: "置顶",
+      updated: "更新{count}集",
+      unpin: "取消置顶",
+      settings: "合集设置",
+      chapterManage: "章节管理",
+      pinnedSuccess: "置顶成功",
+      unpinnedSuccess: "取消置顶成功",
+      selectCover: "选择封面",
+      uploadCover: "上传封面",
+      noCover: "暂无封面"
     },
     sort: {
       newest: "最新",
@@ -2210,15 +2249,15 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   paymentTerms: {
     title: "基于《特定商交易法》的说明",
     content: `<h2>1. 经营者信息</h2>
-<p>销售经营者：ACGWORLDS株式会社</p>
+<p>销售经营者：Moegen</p>
 <p>运营负责人：代表董事　青木　一世</p>
 <p>地址：〒113-0033 东京都文京区本郷6-20-11 Green Hills 泰明 1号室</p>
 <p>电话号码：+81-7484-0659</p>
-<p>邮箱地址：support{'@'}acgworlds{'.'}co{'.'}jp</p>
+<p>邮箱地址：support{'@'}moegen{'.'}ai</p>
 <p>服务URL：<a href="" target="_blank">（暂定）</a></p>
 
 <h2>2. 本说明适用范围</h2>
-<p>本说明适用于本公司（ACGWORLDS株式会社）提供的以下服务：</p>
+<p>本说明适用于本公司（Moegen）提供的以下服务：</p>
 <p>・AI工具的付费功能（订阅）</p>
 <p>・用于AI生成等的点数（Credit）销售</p>
 <p>・加入创作者粉丝俱乐部（月度订阅）（由本公司提供的会员服务）</p>
@@ -2368,7 +2407,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     comicGenerate: "漫画生成",
     videoGenerate: "漫剧生成",
     imageGenerate: "图片生成",
-    simpleVideoGenerate: "视频生成"
+    simpleVideoGenerate: "视频生成",
+    frozenPower: "当前冻结算力：",
+    frozenPowerTitle: "冻结算力说明",
+    frozenPowerRules: "1. 任务未完成期间，系统会根据预估的105%冻结算力；同时开启多个新任务时，冻结中的算力不可使用。<br />2. 当批量生成全部时，执行到相应步骤时才开始冻结该步骤的算力，算力不足则任务中断。<br />3. 冻结算力将在当前任务完成并结算后自动解除冻结。"
   },
   computingPowerRules: `算力使用规则<br />
     1. “算力”是什么？<br />
@@ -2410,12 +2452,34 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     save: "保存",
     noCollection: "请选择合集",
     newCollection: "新建合集",
+    modifyCollection: "修改合集信息",
+    description: "简介",
+    defaultDescription: "新作品出炉，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力讲好每个故事！",
+    type: "类型",
+    typeComic: "漫画",
+    typeNovel: "小说",
+    typeVideo: "漫剧",
+    cover: "封面图",
+    uploadCover: "上传封面",
+    setCover: "设置封面",
+    changeCover: "更换封面",
+    selectCover: "选择封面",
+    descriptionPlaceholder: "请输入简介",
+    createSuccess: "创建成功",
+    modifySuccess: "修改成功",
+    coverUploadHint: "封面上传功能开发中",
+    enterName: "请输入合集名称",
+    uploadCoverTip: "请上传封面图片",
+    enterDescription: "请输入简介",
     switchConfirm: {
       title: "切换合集确认",
       message: "当前项目作品发布到其他合集中，可能会造成章节错乱，是否确认切换？",
       cancel: "取消",
       confirm: "确定"
-    }
+    },
+    orderInCollection: "合集中顺序",
+    enterEpisode: "请选择集数",
+    emptyCover: "请上传封面图片"
   },
   fail: "失败",
   chapter: "第{chapter}章",
@@ -2533,11 +2597,11 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       privacyPolicy: "隐私政策",
       paidServices: "付费服务"
     },
-    copyright: "© 2026 acgworlds株式会社. 保留所有权利."
+    copyright: "© 2026 MoeGen 保留所有权利."
   },
   seo: {
     home: {
-      title: "MoGen 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,MoeGen,萌創,AI同人創作",
+      title: "MoeGen 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,MoeGen,萌創,AI同人創作",
       keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,MoeGen,萌創,AI同人創作",
       description: "MoeGen 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。"
     },
@@ -2585,6 +2649,85 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - MoeGen",
       keywords: "AI小說生成,線上小說,AI小說,AI寫小說,AI故事,小說生成器,二次創作,小說AI",
       description: "MoeGen AI 小說生成器，言情、BL、耽美、輕小說等多題材，自動生成 30K 字作品輕鬆。"
+    }
+  },
+  collectionDetail: {
+    breadcrumb: {
+      home: "首页"
+    },
+    community: "的社区",
+    lastUpdate: "最近更新",
+    latestChapter: "最近更新章节",
+    lastRead: "上次看到",
+    chapterCount: "共 {count} 章",
+    description: "简介",
+    tableOfContents: "目录",
+    publish: "发布",
+    chapter: "第",
+    edit: "修改",
+    delete: "删除",
+    workCount: "作品总数",
+    followerCount: "粉丝总数",
+    statusPublished: "已发布",
+    statusDraft: "草稿",
+    statusSubscribed: "订阅",
+    statusPrivate: "仅自己可见"
+  },
+  collectionSettings: {
+    back: "返回",
+    title: "基本信息",
+    delete: "删除",
+    setFinish: "设为完结",
+    edit: "修改",
+    basicInfo: "基本信息",
+    name: "名称",
+    collectionName: "合集名称",
+    tags: "标签",
+    description: "简介",
+    otherInfo: "其他信息",
+    status: "状态",
+    publishedChapters: "已发布章节",
+    createdAt: "创建时间",
+    statusOngoing: "连载中",
+    statusFinished: "已完结",
+    publishedEpisodes: "已发布集数",
+    unitEpisode: "集",
+    unitChapter: "章",
+    sampleTitle: "练气一万年练气一万年练气一万年练气一万年练气一万年练气一万年练气一万年",
+    sampleDescription: "新作出击界，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力写好每个故事！新作出击界，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力写好每个故事！新作出击界，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力写好每个故事！",
+    finishSuccess: "已成功设为完结",
+    deleteSuccess: "删除成功",
+    finishNotice: {
+      title: "完结须知",
+      description: "为了保证用户体验，请确认你的作品情节完整连贯，无烂尾现象，再设置为完结。",
+      note: "注意：设置为完结后将无法进行以下操作！",
+      item: `1. 完结后将不能发表新的章节/分集，且不能修改历史章节/分集<br />
+      2. 完结后不能改为连载`,
+      cancel: "取消",
+      next: "下一步"
+    },
+    confirmFinish: {
+      title: "确认完结",
+      description: "确认将该合集完结吗？完结后可再次开启连载",
+      updatedChapter: "已更新{count}章",
+      updatedEpisode: "已更新{count}集",
+      cancel: "取消",
+      confirm: "确定"
+    },
+    deleteNotice: {
+      title: "删除须知",
+      description: "合集一旦删除将无法回复，是否删除作品？",
+      note: "注意：删除合集后，合集下的章节/分集以及互动数据也会一起删除。",
+      cancel: "取消",
+      next: "下一步"
+    },
+    confirmDelete: {
+      title: "确认删除",
+      description: "删除操作无法撤销，请再次确认是否删除该合集及合集下内容？",
+      updatedChapter: "已更新{count}章",
+      updatedEpisode: "已更新{count}集",
+      cancel: "取消",
+      confirm: "确定"
     }
   }
 };

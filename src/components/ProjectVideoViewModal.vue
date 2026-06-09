@@ -290,7 +290,15 @@ function handleOverlayClick() {
 
 // Handle publish
 function handlePublish() {
-  emit('publish', props.project, parseInt(selectedEpisode.value));
+  // Get cover from project (合集封面)
+  const cover = props.project.cover || props.project.result_async?.generate_manju_cover;
+  
+  emit('publish', {
+    project: props.project,
+    episode: parseInt(selectedEpisode.value),
+    session_id: props.project?.session_id,
+    cover: cover
+  });
 }
 
 // Play video

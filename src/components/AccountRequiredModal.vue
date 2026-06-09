@@ -8,7 +8,7 @@
         @click="handleClose"
       />
       <div class="modal-content">
-        <p class="modal-message">订阅设置之前，请先创建收款账户</p>
+        <p class="modal-message">{{ t('user.subscription.accountRequiredMessage') }}</p>
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" @click="handleClose">

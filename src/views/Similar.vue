@@ -55,11 +55,20 @@
                 <div class="content-bottom">
                   <!-- Update Time and Chapter Count -->
                   <div class="update-info">
-                    <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
-                    <span v-if="item.latest_post_updated && item.latest_post_chapter_index" class="chapter-divider">|</span>
-                    <span v-if="item.latest_post_chapter_index">
-                      {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
-                    </span>
+                    <template v-if="item.status == 2">
+                      <span>{{ t('home.statusFinished') }}</span>
+                      <span v-if="item.total_post_nums || item.latest_post_chapter_index" class="chapter-divider">|</span>
+                      <span v-if="item.total_post_nums || item.latest_post_chapter_index">
+                        {{ item.type == '2' ? t('home.totalChapterFormat', { chapter: item.total_post_nums || item.latest_post_chapter_index }) : t('home.totalEpisodeFormat', { episode: item.total_post_nums || item.latest_post_chapter_index }) }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span v-if="item.latest_post_updated">{{ t(formatUpdateTime(item.latest_post_updated).key, formatUpdateTime(item.latest_post_updated).params || {}) }}</span>
+                      <span v-if="item.latest_post_updated && item.latest_post_chapter_index" class="chapter-divider">|</span>
+                      <span v-if="item.latest_post_chapter_index">
+                        {{ item.type == '2' ? t('home.chapterFormat', { chapter: item.latest_post_chapter_index }) : t('home.episodeFormat', { episode: item.latest_post_chapter_index }) }}
+                      </span>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -105,7 +114,7 @@ import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
-import { formatUpdateTime } from '@/util/utils';
+import { formatUpdateTime, initLanguage } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -136,6 +145,8 @@ interface Content {
   created_at: string;
   latest_post_updated?: string;
   latest_post_chapter_index?: number;
+  status?: number;
+  total_post_nums?: number;
   author?: {
     avatar: string;
     nickname: string;
@@ -223,12 +234,16 @@ async function loadData(fromLoadMore = false) {
   await getCountry();
 
   try {
+    // Get language from URL parameter, fallback to system locale
+    const urlLang = route.query.lang as string;
+    const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
+
     const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
     const res = await api.homePostList(
       currentPage.value,
       pageSize.value,
       activeFilter.value,
-      locale.value == 'zh' ? 'cn' : locale.value,
+      requestLang,
       showNsfw
     ) as any;
 
@@ -249,16 +264,18 @@ async function loadData(fromLoadMore = false) {
     if (res.code == 0 || res.code == 200) {
       const data = res.data?.data || res.data || [];
 
-      const newContent = res.map((item: any) => {
+      const newContent = data.map((item: any) => {
         return {
           id: item.id,
           type: item.type || 0,
           title: item.title || '',
           description: item.description || '',
-          cover: item.post?.cover || '',
+          cover: item.cover || '',
           created_at: item.created_at,
           latest_post_updated: item.latest_post_updated,
           latest_post_chapter_index: item.latest_post_chapter_index,
+          status: item.status,
+          total_post_nums: item.total_post_nums,
           author: item.author,
           author_info: item.author_info,
           like_count: parseInt(item.book?.like_count || item.like_count || "0"),
@@ -431,6 +448,9 @@ function getCountry(): Promise<void> {
 
 // Lifecycle
 onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   window.scrollTo(0, 0);
 
   window.addEventListener("resize", layoutWaterfall);
@@ -462,6 +482,30 @@ onMounted(async () => {
       (loadingSentinel.value as any)._observer = observer;
     }
   });
+
+  // Check URL for type parameter and set active filter
+  const typeParam = route.query.type;
+  if (typeParam) {
+    const type = parseInt(typeParam as string);
+    // Map URL type to filter ID
+    // URL type: 1=comic, 2=novel, 3=drama
+    // Filter ID: 0=all, 1=comic, 2=novel, 3=drama
+    let filterId = 0;
+    switch (type) {
+      case 1:
+        filterId = 1; // Comic
+        break;
+      case 2:
+        filterId = 2; // Novel
+        break;
+      case 3:
+        filterId = 3; // Drama
+        break;
+      default:
+        filterId = 0; // All
+    }
+    activeFilter.value = filterId;
+  }
 
   // Always load data on mount
   await loadData();

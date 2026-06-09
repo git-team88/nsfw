@@ -22,7 +22,7 @@
               <div v-if="detail.type == '3'" class="video-wrapper">
                 <div v-if="!isVideoLocked">
                   <div class="video-poster" v-if="isVideoEnded && currentCollection.cover">
-                    <img :src="currentCollection.cover" alt="Cover" />
+                    <img :src="currentCollection.cover" alt="Cover" draggable="false" />
                   </div>
 
                   <div class="video-loading" v-if="isVideoLoading">
@@ -75,6 +75,7 @@
                       <!-- Paid content lock -->
                       <template v-if="isPaidContentLocked">
                         <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
                         <span class="lock-btn" @click="onSubscribe">
                           {{ t("detail.lock.subscribe") }}
                         </span>
@@ -100,8 +101,9 @@
                       :key="index"
                       @click="toggleComicZoom(index)"
                       :style="{ cursor: (isComicFullscreen[index] || false) ? 'zoom-out' : 'zoom-in' }"
+                      @mousedown.prevent
                     >
-                      <img :src="img.image_url" alt="" class="comic-image" />
+                      <img :src="processImageUrl(img.image_url)" alt="" class="comic-image" draggable="false" @load="onImageLoaded(detail.images.length)" />
                     </div>
 
                   <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
@@ -112,6 +114,11 @@
                       </span>
                     </div>
                   </div>
+
+                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type !== '1')">
+                    <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+                    <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
+                  </div>
                 </div>
               </div>
             </template>
@@ -120,7 +127,7 @@
               <div class="video-wrapper">
                 <div v-if="!isVideoLocked">
                   <div class="video-poster" v-if="isVideoEnded && detail.cover">
-                    <img :src="detail.cover" alt="Cover" />
+                    <img :src="detail.cover" alt="Cover" draggable="false" />
                   </div>
 
                   <div class="video-loading" v-if="isVideoLoading">
@@ -173,6 +180,7 @@
                       <!-- Paid content lock -->
                       <template v-if="isPaidContentLocked">
                         <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
                         <span class="lock-btn" @click="onSubscribe">
                           {{ t("detail.lock.subscribe") }}
                         </span>
@@ -201,6 +209,7 @@
                     <div class="locked-view">
                       <div class="lock-tip">
                         <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
                         <span class="subs-btn" @click="onSubscribe">
                           {{ t("detail.lock.subscribe") }}
                         </span>
@@ -211,23 +220,32 @@
                     <div
                       class="image-wrap"
                       @click="handleImageClick(index)"
+                      @mousedown.prevent
                     >
                       <img
                         class="stacked-image"
-                        :src="img.image_url || ''"
+                        :src="processImageUrl(img.image_url) || ''"
                         alt=""
+                        draggable="false"
+                        @load="onImageLoaded(detail.images.length)"
                       />
                     </div>
 
                     <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
                       <div class="lock-tip">
                         <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
                         <span class="subs-btn" @click="onSubscribe">
                           {{ t("detail.lock.subscribe") }}
                         </span>
                       </div>
                     </div>
                   </template>
+                </div>
+
+                <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type != '1')">
+                  <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+                  <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
                 </div>
               </div>
             </template>
@@ -255,13 +273,11 @@
                   {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
                 </template>
               </div>
-              <div class="collection-action" @click="enterNextOrCurrentChapter" v-if="(detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0) || nextChapterId">
-                <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
-                  {{ t('detail.continueReading') }}
-                </template>
-                <template v-else-if="nextChapterId">
-                  {{ t('detail.nextEpisode') }}
-                </template>
+              <div class="collection-action" @click="enterNextOrCurrentChapter" v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+                {{ t('detail.continueReading') }}
+              </div>
+              <div class="collection-action" @click="goToNextChapter" v-if="!detail.latest_read_chapter_index || Number(detail.latest_read_chapter_index) == 0" v-show="nextChapterId">
+                {{ t('detail.nextEpisode') }}
               </div>
             </div>
 
@@ -332,6 +348,21 @@
                 {{ t('detail.collection') }}
               </div>
             </div>
+
+          </div>
+
+          <!-- Collection Info Bar (only shows in collection tab) -->
+          <div class="collection-info-section" v-if="activeTab == 'collection' && detail.book_id !== '' && Number(detail.book_id) > 0">
+            <div class="collection-info-row">
+              <div class="collection-title">{{ detail.book_title }}</div>
+            </div>
+            <div class="collection-chapters-count">
+              <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
+
+              <div class="collection-link" @click="goToCollectionDetail">
+                {{ t('detail.viewCollectionInfo') }}
+              </div>
+            </div>
           </div>
 
           <div class="scroll-content" ref="scrollContentRef" @scroll="handleScroll" v-if="activeTab == 'detail'">
@@ -397,7 +428,11 @@
                             </div>
                           </div>
                         </div>
-                        <p class="c-text" v-html="formatContent(c.content_replace || c.text || c.content)"></p>
+                        <div class="c-text hidden" v-if="c.is_blacked == 1">
+                          <img src="@/assets/images/home/intro.png" alt="" class="hidden-icon" />
+                          <span>{{ t("detail.commentHidden") }}</span>
+                        </div>
+                        <p class="c-text" v-else v-html="formatContent(c.content_replace || c.text || c.content)"></p>
 
                         <div class="c-media" v-if="c.images && c.images.length > 0">
                           <div class="c-images">
@@ -648,11 +683,11 @@
                         <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
                         <span class="label">{{ dropdownType + item.label }}</span>
                       </div>
-                      <div class="item-right">
+                      <!-- <div class="item-right">
                         <span class="stats">
                           {{ dropdownType === '#' ? `${item.views} views` : `${item.followers} followers` }}
                         </span>
-                      </div>
+                      </div> -->
                     </div>
                   </div>
                 </div>
@@ -663,7 +698,6 @@
                 ref="imageInputRef"
                 type="file"
                 accept="image/*"
-                multiple
                 class="hidden-file-input"
                 @change="handleFileUpload"
               />
@@ -798,7 +832,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, initLanguage, processImageUrl } from "@/util/utils";
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
@@ -1048,6 +1082,11 @@ const loadingMoreCollections = ref(false);
 const chapterCount = ref(0);
 const prevChapterId = ref('');
 const nextChapterId = ref('');
+const isChapterNavigationLoaded = ref(false);
+
+// Track if images are loaded to prevent layout shift
+const isImagesLoaded = ref(false);
+const loadedImageCount = ref(0);
 
 // Current collection
 const currentCollection = computed(() => {
@@ -1130,6 +1169,38 @@ async function enterCurrentChapter() {
   }
 }
 
+// Go to next chapter directly (used by "下一集" button)
+async function goToNextChapter() {
+  if (nextChapterId.value) {
+    isCollectionMode.value = true;
+    activeTab.value = 'collection';
+    isRightPanelHidden.value = false;
+    await loadChapters();
+
+    // Record view history before navigating to next chapter
+    // This is done before navigation to avoid losing state due to component reinitialization
+    if (detail.value.book_id && Number(detail.value.book_id) > 0 && chapterCount.value > 1) {
+      await recordViewHistory();
+    }
+
+    router.replace({
+      path: '/detail',
+      query: {
+        ...route.query,
+        id: nextChapterId.value,
+        collected: '1' // Add collected=1 to trigger collection mode on page load
+      }
+    });
+  }
+}
+
+// Go to collection detail page
+function goToCollectionDetail() {
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author?.id}`);
+  }
+}
+
 // Enter next chapter if available, otherwise enter current chapter
 async function enterNextOrCurrentChapter() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
@@ -1140,6 +1211,7 @@ async function enterNextOrCurrentChapter() {
 
     let targetChapterId = '';
 
+    // Case 1: User has reading history - continue from last read position
     if (Number(detail.value.latest_read_chapter_index) > 0) {
       const targetChapter = collections.value.find(chapter =>
         Number(chapter.chapter_index) === Number(detail.value.latest_read_chapter_index)
@@ -1149,6 +1221,12 @@ async function enterNextOrCurrentChapter() {
       }
     }
 
+    // Case 2: No reading history but has next chapter - go to next chapter
+    if (!targetChapterId && nextChapterId.value) {
+      targetChapterId = nextChapterId.value;
+    }
+
+    // Case 3: Fallback to current chapter
     if (!targetChapterId) {
       targetChapterId = String(detail.value.id);
     }
@@ -1158,7 +1236,8 @@ async function enterNextOrCurrentChapter() {
         path: '/detail',
         query: {
           ...route.query,
-          id: targetChapterId
+          id: targetChapterId,
+          collected: '1' // Add collected=1 to trigger collection mode on page load
         }
       });
       pendingRecordHistory.value = true;
@@ -1197,7 +1276,8 @@ async function navigateToChapter(chapter: any) {
     path: '/detail',
     query: {
       ...route.query,
-      id: chapter.post_id
+      id: chapter.post_id,
+      collected: '1' // Add collected=1 to trigger collection mode on page load
     }
   });
 
@@ -1247,7 +1327,20 @@ async function setChapterNavigation() {
   // activeTab.value = 'collection';
   isRightPanelHidden.value = false;
 
+  // Mark chapter navigation as loaded to enable last-chapter-section display
+  isChapterNavigationLoaded.value = true;
+
   // await loadChapters();
+}
+
+// Handle image load completion to prevent layout shift
+// Show last-chapter-section only after ALL images are loaded
+function onImageLoaded(totalImages: number) {
+  loadedImageCount.value++;
+  // Show last-chapter-section only after ALL images are loaded
+  if (loadedImageCount.value >= totalImages) {
+    isImagesLoaded.value = true;
+  }
 }
 
 // Exit collection mode
@@ -1264,6 +1357,17 @@ function exitCollectionMode() {
   if (comicScrollRef.value) {
     comicScrollRef.value.scrollTop = 0;
   }
+
+  // Reset navigation and image loading states so last-chapter-section
+  // doesn't appear immediately on exit - wait for proper re-evaluation
+  prevChapterId.value = '';
+  nextChapterId.value = '';
+  isChapterNavigationLoaded.value = false;
+  isImagesLoaded.value = false;
+  loadedImageCount.value = 0;
+
+  // Re-calculate chapter navigation for non-collection mode
+  setChapterNavigation();
 }
 
 // Record view history for collection episodes
@@ -1542,6 +1646,10 @@ async function fetchDetail(newId: number) {
     // Reset collection state when fetching new detail
     collections.value = [];
     currentCollectionIndex.value = 0;
+    // Reset image loading state when fetching new detail
+    isImagesLoaded.value = false;
+    loadedImageCount.value = 0;
+    isChapterNavigationLoaded.value = false;
 
     var data = null;
 
@@ -1673,11 +1781,18 @@ async function fetchDetail(newId: number) {
       );
 
       // Load chapters if it's part of a collection
-      if (detail.value.book_id !== '' && Number(detail.value.book_id) > 0) {
+      if (detail.value.book_id != '' && Number(detail.value.book_id) > 0) {
         await loadChapters();
         if (pendingRecordHistory.value) {
           pendingRecordHistory.value = false;
           await recordViewHistory();
+        }
+
+        // Auto enter collection mode when coming from collection navigation
+        if (route.query.collected == '1' || route.query.type == '4') {
+          isCollectionMode.value = true;
+          activeTab.value = 'collection';
+          isRightPanelHidden.value = false;
         }
       }
 
@@ -2719,11 +2834,29 @@ function zoomOut() {
 }
 
 function closePage() {
-  if (window.history.length <= 1) {
+  const currentHost = window.location.hostname;
+  const referrer = document.referrer;
+  let isFromExternal = false;
+  let isReferrerEmpty = !referrer;
+
+  if (referrer) {
+    try {
+      const referrerHost = new URL(referrer).hostname;
+      isFromExternal = !!(referrerHost && referrerHost !== currentHost);
+    } catch (e) {
+      isFromExternal = true;
+    }
+  }
+
+  if (window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
     router.push('/');
   } else {
     router.back();
   }
+}
+
+function goToHomePage() {
+  router.push('/');
 }
 
 function navigateToProfileSettings() {
@@ -2898,14 +3031,31 @@ function handleImageClick(index: number) {
   restoreRightPanel();
 }
 
-function onSubscribe() {
+async function onSubscribe() {
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
     return;
   }
 
-  router.push(`/subscription-payment?uid=${detail.value.author.id}`);
+  try {
+    var data = {
+      'blogger_id': detail.value.author.id
+    }
+    const res = await api.getOthersSubscription(data) as any;
+    if (res.code == 0 || res.code == 200) {
+      const plan = res.data?.plan;
+      if (!plan) {
+        toast(t('detail.authorClosedSubscription'));
+        return;
+      }
+      router.push(`/subscription-payment?uid=${detail.value.author.id}`);
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
 }
 
 // Navigation
@@ -4258,8 +4408,24 @@ function handleFullscreenChange() {
   }
 }
 
+// Disable F12 and right-click context menu
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+    e.preventDefault();
+  }
+}
+
+function handleContextMenu(e: MouseEvent) {
+  e.preventDefault();
+}
+
 onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   document.addEventListener("click", handleClickOutside);
+  document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("contextmenu", handleContextMenu);
 
   getCountry();
   fetchDetail(id.value);
@@ -4288,6 +4454,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  document.removeEventListener("keydown", handleKeyDown);
+  document.removeEventListener("contextmenu", handleContextMenu);
 
   // Remove scroll listener
   const scrollContent = document.querySelector('.scroll-content');

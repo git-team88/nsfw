@@ -85,11 +85,20 @@
                 <div class="content-bottom">
                   <!-- Update Time and Chapter Count -->
                   <div class="update-info">
-                    <span v-if="post.latest_post_updated">{{ t(formatUpdateTime(post.latest_post_updated).key, formatUpdateTime(post.latest_post_updated).params || {}) }}</span>
-                    <span v-if="post.latest_post_updated && post.latest_post_chapter_index" class="chapter-divider">|</span>
-                    <span v-if="post.latest_post_chapter_index">
-                      {{ post.type == '2' ? t('home.chapterFormat', { chapter: post.latest_post_chapter_index }) : t('home.episodeFormat', { episode: post.latest_post_chapter_index }) }}
-                    </span>
+                    <template v-if="post.status == 2">
+                      <span>{{ t('home.statusFinished') }}</span>
+                      <span v-if="post.total_post_nums || post.latest_post_chapter_index" class="chapter-divider">|</span>
+                      <span v-if="post.total_post_nums || post.latest_post_chapter_index">
+                        {{ post.type == '2' ? t('home.totalChapterFormat', { chapter: post.total_post_nums || post.latest_post_chapter_index }) : t('home.totalEpisodeFormat', { episode: post.total_post_nums || post.latest_post_chapter_index }) }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span v-if="post.latest_post_updated">{{ t(formatUpdateTime(post.latest_post_updated).key, formatUpdateTime(post.latest_post_updated).params || {}) }}</span>
+                      <span v-if="post.latest_post_updated && post.latest_post_chapter_index" class="chapter-divider">|</span>
+                      <span v-if="post.latest_post_chapter_index">
+                        {{ post.type == '2' ? t('home.chapterFormat', { chapter: post.latest_post_chapter_index }) : t('home.episodeFormat', { episode: post.latest_post_chapter_index }) }}
+                      </span>
+                    </template>
                   </div>
                   <!-- Video Duration -->
                   <!-- <div class="video-duration" v-if="post.type == '3' && post.duration">
@@ -176,7 +185,7 @@ import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
-import { formatUpdateTime } from '@/util/utils';
+import { formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -209,6 +218,8 @@ interface Post {
   created_at: string;
   latest_post_updated?: string;
   latest_post_chapter_index?: number;
+  status?: number;
+  total_post_nums?: number;
   author: {
     avatar: string;
     nickname: string;
@@ -248,7 +259,7 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 // Posts
 const postList = ref<Post[] | null>(null);
 const postsPage = ref(1);
-const postsLimit = ref(10);
+const postsLimit = ref(48);
 const postsHasMore = ref(true);
 
 // Users
@@ -400,10 +411,12 @@ async function loadData(fromLoadMore = false) {
           type: item.type || 0,
           title: item.title || '',
           description: item.description || '',
-          cover: item.post?.cover || '',
+          cover: item.cover || '',
           created_at: item.created_at,
           latest_post_updated: item.latest_post_updated,
           latest_post_chapter_index: item.latest_post_chapter_index,
+          status: item.status,
+          total_post_nums: item.total_post_nums,
           author: {
             avatar: item.author?.avatar,
             nickname: item.author?.nickname || '',
@@ -667,6 +680,9 @@ function getCountry(): Promise<void> {
 
 // Lifecycle
 onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   window.scrollTo(0, 0);
   window.addEventListener("resize", layoutWaterfall);
   getCountry();

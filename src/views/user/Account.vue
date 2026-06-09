@@ -130,7 +130,7 @@
                 @blur="handleCodeVerify"
               />
 
-              <button class="email-txt" :class="isSend ? 'on' : ''" type="submit">
+              <button class="email-txt" :class="isSend ? 'on' : ''" type="submit" :disabled="isSend">
                 {{ emailTxt }}
               </button>
             </div>
@@ -178,7 +178,7 @@
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
@@ -385,7 +385,10 @@ function handleSubmit() {
               isSend.value = false;
             }
           })
-          .catch((error) => console.error("Fail:", error));
+          .catch((error) => {
+            console.error("Fail:", error);
+            isSend.value = false;
+          });
       } else {
         toast(t("fail"));
         isSend.value = false;
@@ -398,19 +401,26 @@ function handleSubmit() {
 }
 
 function timeCount() {
+  hasEverSent.value = true;
+  count.value = 60;
   timer.value = setInterval(() => {
     if (count.value <= 1) {
       clearInterval(timer.value!);
       timer.value = null;
       isSend.value = false;
       count.value = 60;
-      // emailTxt 现在是 computed，会自动更新，所以不需要手动赋值
     } else {
       count.value -= 1;
-      // emailTxt 现在是 computed，会自动更新为 count.value
     }
   }, 1000);
 }
+
+onUnmounted(() => {
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = null;
+  }
+});
 
 function confirmEmailBind() {
   api.bindEmail({ email: email.value, password: password.value, code: code.value, "g-recaptcha-response": emailToken.value }).then((res: any) => {
@@ -541,13 +551,17 @@ function confirmUnbind() {
   margin: 0 0 2.4rem 0;
 }
 .panel-title {
+  padding-left: 1.2rem;
   font-weight: 500;
   font-size: 2rem;
   color: #99A1AF;
 }
 
 .item {
-  margin-bottom: 2.4rem;
+  margin-bottom: 1.2rem;
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  background: #F9FAFB;
 }
 .item:last-child {
   margin-bottom: 0;
@@ -568,18 +582,22 @@ function confirmUnbind() {
   align-items: center;
 }
 .action-btn {
-  font-size: 1.4rem;
-  color: #fb64b6;
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.8rem;
+  height: 4rem;
+  background: #FB64B6;
   border: none;
+  border-radius: 0.8rem;
+  color: #FFFFFF;
   cursor: pointer;
-  padding: 0;
+  font-size: 1.4rem;
+  padding: 0 1rem;
 }
-.action-btn:hover {
-  text-decoration: underline;
-}
+
 .action-btn.on {
-  color: #00d3f2;
+  background: #00d3f2;
 }
 .unbind-btn {
   font-size: 1.4rem;

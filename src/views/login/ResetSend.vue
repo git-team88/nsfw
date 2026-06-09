@@ -36,12 +36,16 @@ import Header from "@/components/Header.vue";
 import router from "@/router";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { initLanguage } from "@/util/utils";
 
 const { t, locale } = useI18n();
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化语言设置
+  await initLanguage();
+
   const token = localStorage.getItem("token");
 
   if (token) {

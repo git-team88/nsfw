@@ -3,7 +3,7 @@
     <div class="process-header" @click="toggleDropdown">
       <div class="process-title">
           <img class="status-icon" src="@/assets/images/process/wait.png" alt="status" />
-          <span>{{ t('process.taskProgress') }}{{ totalCount >= 1 ? ` (${doingCount}/${totalCount})` : '' }}</span>
+          <span>{{ t('process.taskProgress') }}{{ totalCount >= 1 ? ` (${completedCount}/${totalCount})` : '' }}</span>
         </div>
       <img class="dropdown-arrow" :src="arrowIcon" :class="{ 'rotated': isDropdownOpen }" alt="arrow" />
     </div>
@@ -177,20 +177,12 @@ const categories = computed(() => {
 
 const totalCount = computed(() => {
   if (!processData.value) return 0;
-  return (processData.value.novel_list?.length || 0) +
-         (processData.value.manhua_list?.length || 0) +
-         (processData.value.manju_list?.length || 0) +
-         (processData.value.simple_image_list?.length || 0) +
-         (processData.value.simple_video_list?.length || 0);
+  return processData.value.total_count || 0;
 });
 
-const doingCount = computed(() => {
+const completedCount = computed(() => {
   if (!processData.value) return 0;
-  return (processData.value.novel_doing_count || 0) +
-         (processData.value.manhua_doing_count || 0) +
-         (processData.value.manju_doing_count || 0) +
-         (processData.value.simple_image_doing_count || 0) +
-         (processData.value.simple_video_doing_count || 0);
+  return processData.value.success_count || 0;
 });
 
 const getQueueCount = (type: string) => {
@@ -323,7 +315,45 @@ const fetchProcessData = async () => {
         });
       }
 
-      processData.value = res.data;
+      // Filter out empty/invalid tasks from the lists
+      const filteredData = res.data || {};
+
+      // Filter novel_list
+      if (Array.isArray(filteredData.novel_list)) {
+        filteredData.novel_list = filteredData.novel_list.filter((task: any) =>
+          task && task.session_id && task.step_status
+        );
+      }
+
+      // Filter manhua_list
+      if (Array.isArray(filteredData.manhua_list)) {
+        filteredData.manhua_list = filteredData.manhua_list.filter((task: any) =>
+          task && task.session_id && task.step_status
+        );
+      }
+
+      // Filter manju_list
+      if (Array.isArray(filteredData.manju_list)) {
+        filteredData.manju_list = filteredData.manju_list.filter((task: any) =>
+          task && task.session_id && task.step_status
+        );
+      }
+
+      // Filter simple_image_list
+      if (Array.isArray(filteredData.simple_image_list)) {
+        filteredData.simple_image_list = filteredData.simple_image_list.filter((task: any) =>
+          task && task.session_id && task.step_status
+        );
+      }
+
+      // Filter simple_video_list
+      if (Array.isArray(filteredData.simple_video_list)) {
+        filteredData.simple_video_list = filteredData.simple_video_list.filter((task: any) =>
+          task && task.session_id && task.step_status
+        );
+      }
+
+      processData.value = filteredData;
     }
   } catch (error) {
     console.error('Error fetching process data:', error);
