@@ -621,29 +621,32 @@ const dropdownType = ref('');
 function selectDropdownItem(item: any) {
   if (!captionRef.value) return;
 
+  const currentText = captionRef.value.textContent || "";
+  const currentLength = currentText.replace(/\n$/, "").length;
+  if (currentLength >= DESC_MAX) return;
+
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
   range.deleteContents();
 
-  // Create text node with the selected item
-  const textNode = document.createTextNode(item.value);
+  const remaining = DESC_MAX - currentLength;
+  const insertText = item.value.substring(0, remaining);
+
+  const textNode = document.createTextNode(insertText);
   range.insertNode(textNode);
 
-  // Move cursor after the inserted text
   range.setStartAfter(textNode);
   range.collapse(true);
   selection.removeAllRanges();
   selection.addRange(range);
 
-  // Update caption length
   if (captionRef.value) {
     const text = captionRef.value.textContent || "";
     captionLength.value = text.replace(/\n$/, "").length;
   }
 
-  // Hide dropdown
   showDropdown.value = false;
 }
 
@@ -1063,7 +1066,7 @@ async function getPostDetails() {
       form.value.title = postData.title || "";
       form.value.description = postData.content || "";
       form.value.permission = postData.access_rights == '2' ? "partial" : postData.access_rights == '3' ? "private" : "public";
-      form.value.content = postData.is_nsfw === 1 ? "yes" : "no";
+      form.value.content = postData.is_nsfw == '1' ? "yes" : "no";
       coverPreview.value = postData.cover || "";
       if (postData.cover) {
         hasUrlCover.value = true;
@@ -1186,7 +1189,9 @@ async function getPostDetails() {
       if (postData.book_title) {
         selectedCollection.value = {
           id: postData.book_id || 0,
-          name: postData.book_title
+          name: postData.book_title,
+          cover: data.data?.book_info?.cover,
+          description: data.data?.book_info?.description,
         };
         isNoCollection.value = false;
 
@@ -1473,8 +1478,6 @@ async function onSubmit() {
       localStorage.removeItem('novelCoverSettings');
       router.push(`/publish/success?type=${2}`);
     } else {
-      console.log('Error code:', res.code);
-      console.log('Error message:', locale.value == 'jp' ? res.msg_jp : res.msg);
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
     }
   } catch (error) {
@@ -1489,7 +1492,19 @@ async function onSubmit() {
 function handleCaptionInput(e: Event) {
   const target = e.target as HTMLDivElement;
   const text = target.textContent || "";
-  captionLength.value = text.replace(/\n$/, "").length;
+  if (text.length > DESC_MAX) {
+    const truncated = text.substring(0, DESC_MAX);
+    target.textContent = truncated;
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(target);
+    range.collapse(false);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    captionLength.value = DESC_MAX;
+  } else {
+    captionLength.value = text.replace(/\n$/, "").length;
+  }
 }
 
 function handleCaptionKeydown(e: KeyboardEvent) {
@@ -1509,28 +1524,37 @@ function onCaptionBlur() {
   }
 }
 
-function handlePaste(e: ClipboardEvent) {
-  e.preventDefault();
+  function handlePaste(e: ClipboardEvent) {
+    e.preventDefault();
 
-  const text = e.clipboardData?.getData('text/plain') || '';
+    const pasteText = e.clipboardData?.getData('text/plain') || '';
+    if (!pasteText) return;
 
-  const selection = window.getSelection();
-  if (!selection) return;
+    const currentText = captionRef.value?.textContent || "";
+    const currentLength = currentText.replace(/\n$/, "").length;
+    const remaining = DESC_MAX - currentLength;
 
-  const range = selection.getRangeAt(0);
-  range.deleteContents();
+    if (remaining <= 0) return;
 
-  const textNode = document.createTextNode(text);
-  range.insertNode(textNode);
+    const text = pasteText.substring(0, remaining);
 
-  range.setStartAfter(textNode);
-  range.collapse(true);
+    const selection = window.getSelection();
+    if (!selection) return;
 
-  selection.removeAllRanges();
-  selection.addRange(range);
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
 
-  updateCaptionStats();
-}
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+
+    range.setStartAfter(textNode);
+    range.collapse(true);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    updateCaptionStats();
+  }
 
 // Document upload functions
 function triggerDocumentUpload() {
@@ -1622,7 +1646,10 @@ async function readPDFFile(file: File): Promise<string> {
       if (result && result instanceof ArrayBuffer) {
         try {
           // Set the worker source for PDF.js
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+            "pdfjs-dist/build/pdf.worker.min.mjs",
+            import.meta.url
+          ).toString();
 
           // Load the PDF document
           const pdf = await pdfjsLib.getDocument({ data: result }).promise;
@@ -1800,14 +1827,12 @@ function toggleCollectionDropdown(event: Event) {
   showCollectionDropdown.value = !showCollectionDropdown.value;
   showEpisodeDropdown.value = false;
 
-  // Fetch collections when opening dropdown
+  // Fetch collections when opening dropdown - always refresh for latest data
   if (showCollectionDropdown.value) {
-    // Only fetch if we haven't loaded any collections yet
-    if (collections.value.length === 0) {
-      hasMoreCollections.value = true;
-      currentCollectionPage.value = 1;
-      fetchCollections(false);
-    }
+    hasMoreCollections.value = true;
+    currentCollectionPage.value = 1;
+    collections.value = [];
+    fetchCollections(false);
   }
 }
 
@@ -1847,7 +1872,7 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (collections.value.length > 0) {
+  if (selectedCollection.value) {
     showSwitchCollectionModal.value = true;
     showCollectionDropdown.value = false;
   } else {
@@ -1908,7 +1933,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
     selectedCollection.value = {
       id: collection.id,
       name: collection.name,
-      cover: collection.cover
+      cover: collection.cover,
+      description: collection.description
     };
     coverPreview.value = collection.cover || '';
 
@@ -2729,7 +2755,9 @@ onMounted(async () => {
 
                     selectedCollection.value = {
                       id: book_id,
-                      name: title
+                      name: title,
+                      cover: searchRes.data?.book_info?.cover,
+                      description: searchRes.data?.book_info?.description
                     };
                     selectedEpisodeNumber.value = episodeNumber.toString();
                     isNoCollection.value = false;

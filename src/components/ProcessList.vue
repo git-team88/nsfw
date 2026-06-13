@@ -398,7 +398,7 @@ const getItemLabel = (type: string, item: any) => {
       // SUCCESS status: show chapter/episode number
       const chapterIndex = item.step_chapter_index;
       if (type == 'novel') {
-        return t('process.novel') + '-' + t('novel.chapter') + chapterIndex;
+        return t('process.novel') + '-' + t('novel.chapter', { chapter: chapterIndex });
       } else if (type == 'manhua') {
         return t('process.comic') + '-' + t('submit.image.episode', { episode: chapterIndex });
       } else if (type == 'manju') {
@@ -466,6 +466,7 @@ const nextItem = (categoryIndex: number) => {
 };
 
 const navigateToItem = async (item: any, type: string) => {
+  api.readSingleProject({ session_id: item.session_id });
   if (type == 'novel') {
     router.push(`/novel/${item.session_id}`);
   } else if (type == 'manhua') {
@@ -473,15 +474,11 @@ const navigateToItem = async (item: any, type: string) => {
   } else if (type == 'manju') {
     window.location.href = `/tools/video/${item.session_id}`;
   } else if (type == 'image') {
-    // 先请求项目详情接口
     await api.detailProject(item.session_id);
-    // 请求后直接跳转
     localStorage.setItem('targetSessionId', item.session_id);
     router.push({ name: 'Generate' });
   } else if (type == 'video') {
-    // 先请求项目详情接口
     await api.detailProject(item.session_id);
-    // 请求后直接跳转
     localStorage.setItem('targetSessionId', item.session_id);
     router.push({ name: 'Generate' });
   }

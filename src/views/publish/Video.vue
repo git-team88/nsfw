@@ -155,7 +155,7 @@
             <input
               ref="videoInputRef"
               type="file"
-              accept="video/mp4,video/MOV"
+              accept="video/mp4,video/quicktime"
               class="hidden-file"
               title=""
               @change="onVideoPicked"
@@ -206,7 +206,7 @@
                     <input
                       ref="reuploadInputRef"
                       type="file"
-                      accept="video/mp4,video/MOV"
+              accept="video/mp4,video/quicktime"
                       class="reupload-file"
                       title=""
                       @change="onVideoPicked"
@@ -345,22 +345,32 @@
           </div>
         </div> -->
 
-        <!-- Caption -->
-        <div class="caption-section">
+        <!-- Title & Description -->
+        <div class="content-section">
           <div class="form-item">
-            <div class="caption-container">
-              <div class="input-wrap">
+            <div class="caption-container" :class="{ 'title-error': titleError }">
+              <div class="label-row">
+                <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
+                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
+              </div>
+
+              <div class="title-input-wrap">
                 <input
                   v-model="form.title"
                   class="title-input"
                   type="text"
                   :maxlength="TITLE_MAX"
                   :placeholder="t('submit.titlePlaceholder')"
+                  @input="onTitleInput"
                 />
-                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
               </div>
-              <div class="caption-line"></div>
-              <div class="textarea-wrap">
+
+              <div class="label-row">
+                <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
+                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+              </div>
+
+              <div class="desc-input-wrap">
                 <div
                   ref="captionRef"
                   class="description-content"
@@ -372,19 +382,17 @@
                   @blur="onCaptionBlur"
                   @paste="handlePaste"
                 ></div>
-              </div>
 
-              <div class="caption-actions-box">
-                <div class="caption-actions">
-                  <button class="action-btn" @click="onActionBtnClick('#')">
-                    #{{ t("submit.topic") }}
-                  </button>
-                  <button class="action-btn" @click="onActionBtnClick('@')">
-                    @{{ t("submit.mention") }}
-                  </button>
+                <div class="caption-actions-box">
+                  <div class="caption-actions">
+                    <button class="action-btn" @click="onActionBtnClick('#')">
+                      #{{ t("submit.topic") }}
+                    </button>
+                    <button class="action-btn" @click="onActionBtnClick('@')">
+                      @{{ t("submit.mention") }}
+                    </button>
+                  </div>
                 </div>
-
-                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
               </div>
             </div>
 
@@ -648,6 +656,7 @@ const toastMsg = ref("");
 const toastIcon = ref("");
 const toastTheme = ref("pink");
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
+const titleError = ref(false);
 
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);
@@ -861,7 +870,7 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (collections.value.length > 0) {
+  if (selectedCollection.value) {
     pendingCollectionId.value = null;
     isCreatingNewCollection.value = true;
     showSwitchCollectionModal.value = true;
@@ -1094,13 +1103,16 @@ function handleCloseCreateCollectionModal() {
 }
 
 function handleEditCollectionSave(updatedCollection: { id: string | number; name: string; cover?: string; description?: string }) {
-  if (selectedCollection.value) {
-    selectedCollection.value = {
-      ...selectedCollection.value,
-      ...updatedCollection
-    };
-  }
+  selectedCollection.value = {
+    id: updatedCollection.id,
+    name: updatedCollection.name,
+    cover: updatedCollection.cover || '',
+    description: updatedCollection.description || ''
+  };
   showEditCollectionModal.value = false;
+  isNoCollection.value = false;
+  selectedEpisodeNumber.value = '1';
+  episodes.value = [{ value: '1', label: '1' }];
 }
 
 // Chapter dropdown functions
@@ -1400,13 +1412,20 @@ async function handlePublish(publishData?: any) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
-          // Create new collection
-          const createRes = await api.addCollection({ title: project.name, type: 3 }) as any;
+          // Create new collection with cover and default description
+          const createRes = await api.addCollection({
+            title: project.name,
+            type: 3,
+            cover: project.video_cover_url || '',
+            description: t('collectionSettings.sampleDescription')
+          }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
             selectedCollection.value = {
               id: createRes.data.book_id,
-              name: project.name
+              name: project.name,
+              cover: project.video_cover_url || '',
+              description: ''
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -1542,16 +1561,31 @@ async function startFakeUpload(file: File) {
   try {
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
-    await new Promise((resolve) => {
+    const metadataOk = await new Promise<boolean>((resolve) => {
       video.onloadedmetadata = () => {
         videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
         videoDuration.value = Math.round(video.duration);
         const fileName = file.name;
         const extension = fileName.split('.').pop()?.toLowerCase() || '';
         videoType.value = extension;
-        resolve(true);
+        if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
       };
+      video.onerror = () => resolve(false);
+      setTimeout(() => resolve(false), 15000);
     });
+
+    if (!metadataOk) {
+      URL.revokeObjectURL(video.src);
+      isUpload.value = false;
+      toast(t('submit.video.corruptedError'));
+      return false;
+    }
+
+    URL.revokeObjectURL(video.src);
 
     const videoIdResponse = await api.getVideoId({ filename: file.name }) as any;
     if (!videoIdResponse || videoIdResponse.code !== 0) {
@@ -1698,14 +1732,35 @@ function reuploadVideo() {
   reuploadInputRef.value?.click();
 }
 
+const ALLOWED_EXTENSIONS = ['mp4', 'mov'];
+
+function validateVideoFormat(file: File): boolean {
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_EXTENSIONS.includes(extension)) {
+    toast(t('submit.video.formatError'));
+    return false;
+  }
+  return true;
+}
+
 async function onVideoPicked(e: Event) {
   const input = e.target as HTMLInputElement;
-  const file = input.files?.[0];
+  const files = input.files;
+  if (files && files.length > 1) {
+    toast(t('submit.video.multiSelectError'));
+    input.value = "";
+    return;
+  }
+  const file = files?.[0];
   if (file) {
-    // Check file size (5GB limit)
-    const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5GB
+    if (!validateVideoFormat(file)) {
+      input.value = "";
+      return;
+    }
+    const MAX_SIZE = 5 * 1024 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       toast(t('submit.video.sizeError'));
+      input.value = "";
       return;
     }
     await startFakeUpload(file);
@@ -1714,10 +1769,15 @@ async function onVideoPicked(e: Event) {
 }
 
 async function onDropFile(e: DragEvent) {
-  const file = e.dataTransfer?.files?.[0];
+  const files = e.dataTransfer?.files;
+  if (files && files.length > 1) {
+    toast(t('submit.video.multiSelectError'));
+    return;
+  }
+  const file = files?.[0];
   if (file) {
-    // Check file size (5GB limit)
-    const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5GB
+    if (!validateVideoFormat(file)) return;
+    const MAX_SIZE = 5 * 1024 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       toast(t('submit.video.sizeError'));
       return;
@@ -1769,6 +1829,12 @@ function cancelSensitive() {
   showSensitiveConfirm.value = false;
 }
 
+function onTitleInput() {
+  if (titleError.value && form.value.title.trim()) {
+    titleError.value = false;
+  }
+}
+
 function confirmSensitive() {
   form.value.content = "yes";
   showSensitiveConfirm.value = false;
@@ -1790,7 +1856,7 @@ async function getPostDetails() {
       form.value.title = postData.title || "";
       form.value.description = postData.content || "";
       form.value.permission = postData.access_rights == '2' ? "partial" : postData.access_rights == '3' ? "private" : "public";
-      form.value.content = postData.is_nsfw === '1' ? "yes" : "no";
+      form.value.content = postData.is_nsfw == '1' ? "yes" : "no";
       coverPreview.value = postData.cover || "";
 
       if (postData.video_url) {
@@ -2334,14 +2400,25 @@ function updateDropdownPosition() {
   if (!selection || selection.rangeCount === 0 || !captionRef.value) return;
 
   const range = selection.getRangeAt(0).cloneRange();
-  const rect = range.getBoundingClientRect();
 
-  // Check if rect is valid (not at origin or with zero dimensions)
+  let rect: DOMRect;
+  if (range.collapsed) {
+    const marker = document.createElement('span');
+    marker.textContent = '\u200B';
+    range.insertNode(marker);
+    rect = marker.getBoundingClientRect();
+    marker.parentNode?.removeChild(marker);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    rect = range.getBoundingClientRect();
+  }
+
   let absTop = rect.bottom + 5;
   let absLeft = rect.left;
 
-  // If rect is invalid (likely after space deletion), use fallback position
-  if (rect.width === 0 && rect.height === 0 || absTop < 100 || absLeft < 10) {
+  if ((rect.width === 0 && rect.height === 0) || absTop < 100 || absLeft < 10) {
     const captionRect = captionRef.value.getBoundingClientRect();
     absTop = captionRect.top + 26;
     absLeft = captionRect.left;
@@ -2424,47 +2501,46 @@ function onActionBtnClick(symbol: "#" | "@") {
   selection.removeAllRanges();
   selection.addRange(range);
 
+  const insertedNode = textNode;
+
   dropdownType.value = symbol;
 
   nextTick(async () => {
     await searchTagsImmediate(symbol, "");
 
-    setTimeout(() => {
-      const currentSelection = window.getSelection();
-      if (!currentSelection || currentSelection.rangeCount === 0) {
-        return;
-      }
+    const currentSelection = window.getSelection();
+    if (!currentSelection || currentSelection.rangeCount === 0) return;
 
-      const currentRange = currentSelection.getRangeAt(0);
-      lastRange.value = currentRange.cloneRange();
+    const currentRange = currentSelection.getRangeAt(0);
+    lastRange.value = currentRange.cloneRange();
 
-      const rect = currentRange.getBoundingClientRect();
+    const symbolRange = document.createRange();
+    symbolRange.selectNodeContents(insertedNode);
+    const rect = symbolRange.getBoundingClientRect();
 
-      let absTop = rect.top + window.scrollY;
-      let absLeft = rect.left + window.scrollX;
+    const captionRect = captionRef.value?.getBoundingClientRect();
 
-      absTop = rect.bottom + 5;
-      absLeft = rect.left;
+    let absTop = rect.bottom + 5;
+    let absLeft = rect.left;
 
-      if ((absTop < 100 || absLeft < 10) && captionRef.value) {
-        const captionRect = captionRef.value.getBoundingClientRect();
+    if ((rect.width === 0 && rect.height === 0) || !captionRect || absTop < 100 || absLeft < 10) {
+      if (captionRect) {
         absTop = captionRect.top + 26;
         absLeft = captionRect.left;
       }
+    }
 
-      dropdownPosition.value = {
-        top: absTop,
-        left: absLeft,
-      };
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft,
+    };
 
-      const dropdownHeight = 250;
-      if (absTop + dropdownHeight > window.innerHeight) {
-        dropdownPosition.value.top = rect.top - dropdownHeight - 5;
-      }
+    const dropdownHeight = 250;
+    if (absTop + dropdownHeight > window.innerHeight) {
+      dropdownPosition.value.top = rect.top - dropdownHeight - 5;
+    }
 
-      showDropdown.value = true;
-    }, 100);
-
+    showDropdown.value = true;
     captionRef.value?.focus();
   });
 }
@@ -2602,6 +2678,12 @@ async function onSubmit() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');
+    return;
+  }
+
+  if (!form.value.title.trim()) {
+    toast(t("submit.titleRequired"));
+    titleError.value = true;
     return;
   }
 
@@ -2776,11 +2858,21 @@ onMounted(async () => {
           const book_id = searchRes.data?.book_id || 0;
 
           if (book_id === 0) {
-            // Create new collection
-            const createRes = await api.addCollection({ title, type: 3 }) as any;
+            // Create new collection with cover and default description
+            const createRes = await api.addCollection({
+              title,
+              type: 3,
+              cover: coverPreview.value || '',
+              description: t('collectionSettings.sampleDescription')
+            }) as any;
 
             if (createRes.code === 0 && createRes.data?.id) {
-              selectedCollection.value = { id: createRes.data.id, name: title };
+              selectedCollection.value = {
+                id: createRes.data.id,
+                name: title,
+                cover: coverPreview.value || '',
+                description: ''
+              };
               selectedCollectionId.value = createRes.data.id;
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;

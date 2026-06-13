@@ -235,6 +235,12 @@
             </div>
 
             <EmptyState v-else-if="collectionsInitialized && collections.length == 0 && userInfo.is_blacked != 1" />
+
+            <!-- Load more indicator -->
+            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && hasMoreCollections">
+              <div v-if="collectionsLoading" class="loading-spinner small"></div>
+              <span v-else>{{ t("userHome.loadMore") }}</span>
+            </div>
           </div>
         </template>
 
@@ -414,9 +420,10 @@ import {
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, initLanguage } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
+import { eventBus } from "@/utils/eventBus";
 
 // Check if user is logged in
 function checkLogin() {
@@ -651,6 +658,9 @@ const editingCollectionDescription = ref('');
 // Collections data
 const collections = ref<any[]>([]);
 const collectionsInitialized = ref(false);
+const hasMoreCollections = ref(true);
+const currentCollectionsPage = ref(1);
+const collectionsLoading = ref(false);
 
 // Pin related variables
 const showPinLimitModal = ref(false);
@@ -677,9 +687,19 @@ const currentPageCollectionTabs = computed(() => {
 });
 
 // Fetch collections - show all types
-async function fetchCollections() {
+async function fetchCollections(reset = false) {
+  if (collectionsLoading.value && !reset) return;
+
   try {
-    loading.value = true;
+    if (reset) {
+      collections.value = [];
+      currentCollectionsPage.value = 1;
+      hasMoreCollections.value = true;
+      loading.value = true;
+      collectionsInitialized.value = false;
+    }
+    collectionsLoading.value = true;
+
     let authorId = route.query.id;
     // Ensure authorId is a string
     if (Array.isArray(authorId)) {
@@ -692,44 +712,61 @@ async function fetchCollections() {
     let response;
     // type: 1=comic, 2=novel, 3=video
     const type = activeContentType.value;
+    const currentPage = currentCollectionsPage.value;
 
     if (isCurrentUser) {
       // Fetch own collections
-      response = await api.authorSelfCollection(type, 1, 20) as any;
+      response = await api.authorSelfCollection(type, currentPage, 20) as any;
     } else {
       // Fetch other author's collections
       if (!authorId) {
-        loading.value = false;
+        collectionsLoading.value = false;
         return;
       }
-      response = await api.authorCollection(type, 1, 20, authorId) as any;
+      response = await api.authorCollection(type, currentPage, 20, authorId) as any;
     }
     if (response.code == 0) {
       const collectionData = response.data?.data || [];
-      collections.value = collectionData;
 
-      // Update collection tabs
-      collectionTabs.value = [
-        { id: 0, label: t('userHome.collection.all') }
-      ];
+      if (reset) {
+        collections.value = collectionData;
+      } else {
+        collections.value.push(...collectionData);
+      }
 
-      // Add collection tabs after "all"
-      collectionData.forEach((collection: any) => {
-        collectionTabs.value.push({
-          id: collection.id,
-          title: collection.title,
-          count: collection.chapters?.length || 0
+      // Update collection tabs - only on first load or reset
+      if (reset || currentPage === 1) {
+        collectionTabs.value = [
+          { id: 0, label: t('userHome.collection.all') }
+        ];
+
+        // Add collection tabs after "all"
+        collections.value.forEach((collection: any) => {
+          collectionTabs.value.push({
+            id: collection.id,
+            title: collection.title,
+            count: collection.chapters?.length || 0
+          });
         });
-      });
 
-      // Reset pagination when collections change
-      currentCollectionPage.value = 1;
+        // Reset pagination when collections change
+        currentCollectionPage.value = 1;
+      }
+
+      // Check if there are more pages
+      if (collectionData.length < 20) {
+        hasMoreCollections.value = false;
+      } else {
+        currentCollectionsPage.value++;
+      }
     }
     collectionsInitialized.value = true;
+    collectionsLoading.value = false;
     loading.value = false;
   } catch (error) {
     console.error('Error fetching collections:', error);
     collectionsInitialized.value = true;
+    collectionsLoading.value = false;
     loading.value = false;
   }
 }
@@ -840,6 +877,14 @@ async function fetchUserInfo() {
   }
 }
 
+function onUserLoggedOut() {
+  userInfo.value.is_follow = 0;
+  userInfo.value.is_subscribe = 0;
+  if (!isSelf.value) {
+    fetchUserInfo();
+  }
+}
+
 function showToast(msg: string, icon = successIcon) {
   toastMsg.value = msg;
   toastIcon.value = icon;
@@ -896,8 +941,11 @@ function getCountry(): Promise<void> {
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
+  eventBus.on('userLoggedOut', onUserLoggedOut);
+
   window.scrollTo(0, 0);
 
+  await initLanguage();
   getCountry();
   setSeoMeta();
 
@@ -936,11 +984,39 @@ onMounted(async () => {
       goToCollections(true);
     }
 
-  // Intersection Observer removed - collections only, no infinite scroll for posts
+  });
+
+// Set up infinite scroll for collections
+const loadMoreRef = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMoreCollections.value && !collectionsLoading.value && collectionsInitialized.value) {
+        fetchCollections();
+      }
+    },
+    {
+      rootMargin: '100px',
+      threshold: 0.1
+    }
+  );
+});
+
+watch(loadMoreRef, (el) => {
+  if (observer && el) {
+    observer.observe(el);
+  }
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  eventBus.off('userLoggedOut', onUserLoggedOut);
+  if (observer) {
+    observer.disconnect();
+  }
 });
 
 watch(viewMode, (newVal) => {
@@ -1064,7 +1140,7 @@ function setActiveContentType(typeId: number) {
   viewMode.value = "posts"; // Ensure we switch back to posts view
   activeContentType.value = typeId;
   activeCollectionTab.value = 0; // Reset to "All" tab
-  fetchCollections();
+  fetchCollections(true);
 }
 
 // Set active collection tab

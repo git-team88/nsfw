@@ -8,21 +8,21 @@
         @click="handleClose"
       />
       <div class="modal-content">
-        <p class="modal-message">{{ t('user.subscription.accountRequiredMessage') }}</p>
+        <p class="modal-message">{{ t('user.subscription.accountFailedMessage') }}</p>
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" @click="handleClose">
           {{ t('user.interactive.cancel') }}
         </button>
-        <button class="btn-create" @click="handleCreate">
-          {{ t('user.subscription.createAccount') }}
+        <button class="btn-create" @click="handleModify">
+          {{ t('user.subscription.goModify') }}
         </button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts" name="AccountRequiredModal">
+<script setup lang="ts" name="AccountFailedModal">
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -33,15 +33,15 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'create'): void;
+  (e: 'modify'): void;
 }>();
 
 function handleClose() {
   emit('close');
 }
 
-function handleCreate() {
-  emit('create');
+function handleModify() {
+  emit('modify');
 }
 </script>
 

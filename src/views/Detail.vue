@@ -839,6 +839,7 @@ import api from "@/api/index";
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
 import defaultAvatar from "@/assets/images/base/avatar.png";
+import { trackShare } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -1142,7 +1143,9 @@ async function enterCollectionMode() {
   isRightPanelHidden.value = false;
 
   await loadChapters();
-  pendingRecordHistory.value = true;
+  if (localStorage.getItem('token')) {
+    pendingRecordHistory.value = true;
+  }
 
 }
 
@@ -1165,7 +1168,9 @@ async function enterCurrentChapter() {
     activeTab.value = 'collection';
     isRightPanelHidden.value = false;
     await loadChapters();
-    pendingRecordHistory.value = true;
+    if (localStorage.getItem('token')) {
+      pendingRecordHistory.value = true;
+    }
   }
 }
 
@@ -1240,7 +1245,9 @@ async function enterNextOrCurrentChapter() {
           collected: '1' // Add collected=1 to trigger collection mode on page load
         }
       });
-      pendingRecordHistory.value = true;
+      if (localStorage.getItem('token')) {
+        pendingRecordHistory.value = true;
+      }
     }
   }
 }
@@ -1289,7 +1296,9 @@ async function navigateToChapter(chapter: any) {
   isRightPanelHidden.value = false;
 
   await loadChapters();
-  pendingRecordHistory.value = true;
+  if (localStorage.getItem('token')) {
+    pendingRecordHistory.value = true;
+  }
 }
 
 // Set chapter navigation
@@ -1372,6 +1381,11 @@ function exitCollectionMode() {
 
 // Record view history for collection episodes
 async function recordViewHistory() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return;
+  }
+
   if (!isCollectionMode.value || chapterCount.value <= 1) {
     return;
   }
@@ -1789,7 +1803,7 @@ async function fetchDetail(newId: number) {
         }
 
         // Auto enter collection mode when coming from collection navigation
-        if (route.query.collected == '1' || route.query.type == '4') {
+        if (route.query.collected == '1' || (route.query.type == '4' && detail.value.author.id && detail.value.author.id === uid)) {
           isCollectionMode.value = true;
           activeTab.value = 'collection';
           isRightPanelHidden.value = false;
@@ -4290,9 +4304,15 @@ async function toggleCollectionLike(item: any) {
 }
 
 async function share() {
+  const id = route.query.id as string;
+  if (!id) return;
+
+  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+
   try {
-    await navigator.clipboard.writeText(window.location.href);
-    toast(t('detail.videoUrlCopied'));
+    await navigator.clipboard.writeText(shareUrl);
+    toast(t('userHome.shareSuccess'));
+    trackShare({ method: "copy_link", itemId: id });
   } catch (e) {
     console.log(e);
   }

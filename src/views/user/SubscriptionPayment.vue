@@ -61,7 +61,7 @@
         </div>
 
         <!-- Pay Button -->
-        <button class="pay-btn" :disabled="!paymentAgree || isLoading" @click="handlePay">
+        <button class="pay-btn" :disabled="isLoading" @click="handlePay">
           {{ t("subscribe.pay") }}
         </button>
 
@@ -111,6 +111,15 @@ const autoRenewAgree = ref(true);
 const paymentAgree = ref(true);
 const isLoading = ref(false);
 
+function checkLogin() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+  return true;
+}
+
 // Get author info from API
 async function fetchAuthorInfo() {
   const uid = route.query.uid;
@@ -151,7 +160,12 @@ function openLink() {
 }
 
 async function handlePay() {
-  if (!paymentAgree.value) return;
+  if (!checkLogin()) return;
+
+  if (!paymentAgree.value) {
+    toast(t("subscribe.agreeFirst"));
+    return;
+  }
 
   try {
     isLoading.value = true;
@@ -184,6 +198,7 @@ async function handlePay() {
 
 // Lifecycle hook
 onMounted(() => {
+  if (!checkLogin()) return;
   fetchAuthorInfo();
 });
 </script>

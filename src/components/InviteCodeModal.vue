@@ -2,10 +2,10 @@
   <div class="invite-code-modal" v-if="visible">
     <div class="modal-overlay"></div>
     <div class="modal-content">
-      <img class="logo" src="@/assets/images/register/logo.png" alt="MoeGen" />
+      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="close" />
 
       <div class="modal-header">
-      {{ t('inviteCode.title') }}
+        <h3>{{ t('inviteCode.title') }}</h3>
       </div>
 
       <div class="modal-body">
@@ -15,16 +15,15 @@
             v-model="inviteCode"
             type="text"
             class="invite-code-input"
+            maxlength="4"
             spellcheck="false"
-            :placeholder="t('inviteCode.title')"
+            :placeholder="t('inviteCode.enterCode')"
           />
-        </div>
-        <div class="error-container" v-if="errorMessage">
-          <p class="error-message">{{ errorMessage }}</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="confirm-btn" :disabled="!inviteCode" @click="confirm">{{ t('inviteCode.confirm') }}</button>
+        <button class="confirm-btn" @click="confirm">{{ t('inviteCode.confirm') }}</button>
+        <div class="skip-link" @click="skip">{{ t('inviteCode.noCode') }}→</div>
       </div>
     </div>
   </div>
@@ -34,9 +33,8 @@
 import { toast } from '@/util/toast';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import api from '@/api';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const props = defineProps({
   visible: {
@@ -49,10 +47,9 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['confirm']);
+const emit = defineEmits(['close', 'confirm', 'skip']);
 
 const inviteCode = ref('');
-const errorMessage = ref('');
 
 watch(() => props.initialCode, (newCode) => {
   if (newCode) {
@@ -60,29 +57,26 @@ watch(() => props.initialCode, (newCode) => {
   }
 }, { immediate: true });
 
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    errorMessage.value = '';
-  }
-});
+const close = () => {
+  inviteCode.value = props.initialCode;
 
-const confirm = async () => {
+  emit('close');
+};
+
+const confirm = () => {
   if (!inviteCode.value) {
-    errorMessage.value = t('inviteCode.inviteError');
-    return;
+    toast(t('inviteCode.enterCode'));
+    return false;
   }
 
-  try {
-    const data = await api.checkCode({ referral_code: inviteCode.value }) as any;
-
-    if (data.code == 0 || data.code == 200) {
-      emit('confirm', inviteCode.value);
-    } else {
-      errorMessage.value = locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp;
-    }
-  } catch (error) {
-    errorMessage.value = t('inviteCode.inviteError');
+  if (inviteCode.value) {
+    localStorage.setItem('invite_code', inviteCode.value);
   }
+  emit('confirm', inviteCode.value);
+};
+
+const skip = () => {
+  emit('skip');
 };
 </script>
 
@@ -110,119 +104,118 @@ const confirm = async () => {
 
 .modal-content {
   position: relative;
-  background-color: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 44rem;
-  z-index: 510;
+  background-color: #ffffff;
+  border-radius: 1.6rem;
+  width: 52rem;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
-  padding: 2rem 3rem 3rem;
-  box-sizing: border-box;
+  align-items: center;
 }
 
-.logo {
-  width: 16.4rem;
-  height: 3.8rem;
+.close-btn {
+  position: absolute;
+  top: 2rem;
+  right: 1.8rem;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
 }
 
 .modal-body {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
+  padding: 1.8rem 2.4rem;
 }
 
 .modal-header {
   width: 100%;
-  margin-top: 2rem;
-  font-weight: bold;
-  font-size: 2rem;
-  color: #101828;
+  padding: 1.8rem 2rem;
+  border-bottom: 1px solid #F5F5F5;
+
+  h3 {
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: #364153;
+    margin: 0;
+  }
 }
 
 .modal-description {
-  font-size: 1.6rem;
-  color: #99A1AF;
+  font-size: 1.4rem;
+  color: #6A7282;
+  margin: 0 0 1.2rem;
 }
 
 .input-section {
   width: 100%;
-  margin-top: 3rem;
 }
 
 .invite-code-input {
   display: flex;
   align-items: center;
-  justify-content: center;
   width: 100%;
   height: 5rem;
-  padding: 0 1.6rem;
+  padding: 1rem;
   border: 1px solid #F5F5F5;
   border-radius: 0.8rem;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 500;
-  text-align: center;
-  color: #101828;
+  color: #364153;
   outline: none;
   background: #F5F5F5;
 }
 
 .invite-code-input:focus {
-  border-color: #FB64B6;
+  border-color: #fb64b6;
 }
 
 .invite-code-input::placeholder {
   color: #99A1AF;
-  font-weight: normal;
-}
-
-.error-container {
-  width: 100%;
-  margin-top: 1rem;
-}
-
-.error-message {
-  font-size: 1.4rem;
-  color: #FA2D47;
 }
 
 .modal-footer {
   width: 100%;
-  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 1.8rem 0;
+  border-top: 1px solid #F5F5F5;
 }
 
 .confirm-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 5rem;
-  background: #FB64B6;
+  width: 24rem;
+  height: 4.8rem;
+  margin: 0 auto;
+  background: #fb64b6;
   border-radius: 0.8rem;
   color: #ffffff;
   font-size: 1.4rem;
-  border: 1px solid #F5F5F5;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
+  font-weight: 500;
 
-.confirm-btn:hover:not(:disabled),
-.confirm-btn:active:not(:disabled) {
-  position: relative;
+  &:hover{
+    position: relative;
 
-  &::after{
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
+    &::after{
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 
-.confirm-btn:disabled {
-  background: rgba(251, 100, 182, 0.5);
-  cursor: not-allowed;
+.skip-link {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #6A7282;
+  cursor: pointer;
 }
 </style>

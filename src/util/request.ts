@@ -80,7 +80,7 @@ class Request {
         const logoutEvent = new Event('userLogout');
         window.dispatchEvent(logoutEvent);
 
-        router.push("/");
+        router.push("/login");
       }
       return res.data
     }, (err: any) => {

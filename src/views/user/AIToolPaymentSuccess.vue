@@ -31,10 +31,20 @@
 import Header from "@/components/Header.vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { trackPurchase } from "@/utils/analytics";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
+
+const sessionId = (route.query.session_id || route.query.order_id || "") as string;
+if (sessionId) {
+  trackPurchase({
+    paymentType: "topup",
+    value: Number(route.query.amount || 0),
+    currency: (route.query.currency || "JPY") as string,
+  });
+}
 
 function backToHome() {
   router.replace('/');

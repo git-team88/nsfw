@@ -5,16 +5,13 @@
 
       <h3 class="modal-title">{{ t('novel.insufficientBalance') }}</h3>
       <p class="modal-message">
-        <!-- <template v-if="estimatedPower !== undefined && estimatedPower > 0 && availableBalance !== undefined && availableBalance >= 0 && frozenBalance !== undefined && frozenBalance >= 0">
-          {{ t('novel.insufficientBalanceDetail', {
-            estimated: estimatedPower,
-            available: availableBalance,
-            frozen: frozenBalance
-          }) }}
-        </template> -->
-        <!-- <template v-else> -->
+        <template v-if="(estimatedFrozenPower ?? 0) > 0">
+          <span class="detail-line">{{ t('novel.insufficientBalanceDetailLine1', { estimated: estimatedFrozenPower }) }}</span>
+          <span class="detail-line">{{ t('novel.insufficientBalanceDetailLine2', { available: availableBalance ?? 0, frozen: systemFrozenBalance ?? 0 }) }}</span>
+        </template>
+        <template v-else>
           {{ t('novel.insufficientBalanceMessage') }}
-        <!-- </template> -->
+        </template>
       </p>
       <div class="modal-actions">
         <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
@@ -31,7 +28,9 @@ const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
-  estimatedPower?: number;
+  estimatedFrozenPower?: number;
+  availableBalance?: number;
+  systemFrozenBalance?: number;
 }>();
 
 const emit = defineEmits<{
@@ -86,6 +85,10 @@ const emit = defineEmits<{
       margin-bottom: 3.4rem;
       text-align: center;
       line-height: 1.6;
+
+      .detail-line {
+        display: block;
+      }
     }
 
     .modal-actions {

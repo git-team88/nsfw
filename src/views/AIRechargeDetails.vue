@@ -49,7 +49,7 @@
               :key="tab.value"
               class="tab"
               :class="{ active: activeTab === tab.value }"
-              @click="activeTab = tab.value"
+              @click="switchTab(tab.value)"
             >
               {{ tab.label }}
             </span>
@@ -66,10 +66,10 @@
               v-for="subtab in subTabs"
               :key="subtab.value"
               class="subtab"
-              :class="{ active: activeSubTab === subtab.value }"
+              :class="{ active: activeSubTab == subtab.value }"
               @click="switchSubTab(subtab.value)"
             >
-              {{ subtab.label }}
+              <span>{{ subtab.label }}</span>
             </span>
           </div>
         </div>
@@ -255,33 +255,32 @@ const total = ref(0);
 const totalFromApi = ref(0);
 
 const computedTotal = computed(() => {
-  return totalFromApi.value > 0 ? totalFromApi.value : filteredTransactions.value.length;
-});
-
-watch(activeTab, (newTab) => {
-  if (newTab === 'recharge') {
-    activeSubTab.value = 'subscribe';
-  } else if (newTab === 'consumption') {
-    activeSubTab.value = 'generate';
-  }
-  // 切换tab时移除URL中的type参数
-  router.replace({ path: router.currentRoute.value.path });
+  const total = Number(totalFromApi.value) || 0;
+  return total > 0 ? total : filteredTransactions.value.length;
 });
 
 watch(subTabs, () => {
-  // 当 subTabs 变化时，确保 activeSubTab 在有效范围内
   const validValues = subTabs.value.map(tab => tab.value);
   if (!validValues.includes(activeSubTab.value)) {
     activeSubTab.value = validValues[0] || '';
   }
 });
 
-watch(activeSubTab, (newSubTab) => {
-  // 挂载时不重复调用fetchTransactions
-  if (!isMounting.value) {
-    fetchTransactions();
+function switchTab(tab: string) {
+  if (loading.value) return;
+  activeTab.value = tab;
+  if (tab === 'recharge') {
+    activeSubTab.value = 'subscribe';
+  } else if (tab === 'consumption') {
+    activeSubTab.value = 'generate';
   }
-});
+  router.replace({
+    path: router.currentRoute.value.path,
+    query: {}  // 显式清空 query 参数
+  });
+  page.value = 1;
+  fetchTransactions();
+}
 
 watch(page, () => {
   fetchTransactions();
@@ -293,9 +292,6 @@ watch(dateRange, () => {
 
 function fetchTransactions() {
   loading.value = true;
-  // 清空旧数据，避免显示旧数据
-  transactions.value = [];
-  totalFromApi.value = 0;
   let type = 0;
 
   if (activeTab.value == 'recharge') {
@@ -353,34 +349,26 @@ function fetchTransactions() {
       loading.value = false;
       toast(t('fatl'))
     });
-  } else {
-    api.computeDetail(type, dateRange.value.start, dateRange.value.end, page.value, pageSize.value).then((res: any) => {
+  } else if (activeTab.value == 'consumption' && activeSubTab.value == 'expired') {
+    api.computeExpired(dateRange.value.start, dateRange.value.end, page.value, pageSize.value).then((res: any) => {
       loading.value = false;
-      if (res.code == 200) {
-        if (res.data && Array.isArray(res.data.data_list)) {
-          transactions.value = res.data.data_list.map((item: any) => {
+
+      if (res.code == 0) {
+        if (res.data && Array.isArray(res.data.data)) {
+          transactions.value = res.data.data.map((item: any) => {
             let name = '';
-            if (item.source_type == 'payment') {
-              name = 'Payment';
-            } else if (item.source_type == 'invite') {
-              name = 'Invite Reward';
-            } else if (item.source_type == 'expired') {
+            if (item.source_type == 'expired') {
               name = 'Expired';
-            } else if (item.source_type == 'register') {
-              name = t('header.register');
-            } else {
-              name = item.source_type || 'Unknown';
             }
 
             return {
-              type: activeTab.value === 'recharge' ? 'recharge' : 'consumption',
+              type: 'consumption',
               name: name,
-              date: item.issued_at || item.created_at || item.date || '',
-              amount: activeSubTab.value === 'expired' ? (item.remaining_amount || '0') : (item.change_amount ? Math.abs(parseInt(item.change_amount)) : (item.amount || item.credit || '0')),
-              from_user_info: item.from_user_info || null
+              date: item.issued_at || '',
+              amount: item.remaining_amount || '0'
             };
           });
-          totalFromApi.value = res.data.data_count || res.data.data_list.length;
+          totalFromApi.value = res.data.allnums;
         } else {
           transactions.value = [];
           totalFromApi.value = 0;
@@ -391,8 +379,50 @@ function fetchTransactions() {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     }).catch((error) => {
+      console.log(error)
       loading.value = false;
-      toast(t('fatl'))
+      toast(t('fail'))
+    });
+  } else {
+    api.computeDetail(type, dateRange.value.start, dateRange.value.end, page.value, pageSize.value).then((res: any) => {
+      loading.value = false;
+
+      if (res.code == 0) {
+        if (res.data && Array.isArray(res.data.data)) {
+          transactions.value = res.data.data.map((item: any) => {
+            let name = '';
+            if (item.source_type == 'payment') {
+              name = 'Payment';
+            } else if (item.source_type == 'invite') {
+              name = 'Invite Reward';
+            } else if (item.source_type == 'reg') {
+              name = t('header.register');
+            } else {
+              name = item.source_type || 'Unknown';
+            }
+
+            return {
+              type: activeTab.value === 'recharge' ? 'recharge' : 'consumption',
+              name: name,
+              date: item.issued_at || '',
+              amount: item.amount || '0',
+              from_user_info: item.from_user || null
+            };
+          });
+          totalFromApi.value = res.data.allnums;
+        } else {
+          transactions.value = [];
+          totalFromApi.value = 0;
+        }
+      } else {
+        transactions.value = [];
+        totalFromApi.value = 0;
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      }
+    }).catch((error) => {
+      console.log(error)
+      loading.value = false;
+      toast(t('fail'))
     });
   }
 }
@@ -446,12 +476,10 @@ function goToRecharge() {
 }
 
 function switchSubTab(subTabValue: string) {
+  if (loading.value) return;
   activeSubTab.value = subTabValue;
-  // 点击 subTabs 时，URL 中添加 type=4
-  router.replace({
-    path: router.currentRoute.value.path,
-    query: { type: '2' }
-  });
+  page.value = 1;
+  fetchTransactions();
 }
 
 function goToPaymentHistory() {
@@ -765,6 +793,16 @@ function goToPaymentHistory() {
 
       @keyframes spin {
         to { transform: rotate(360deg); }
+      }
+
+      .loading-spinner-small {
+        width: 1.6rem;
+        height: 1.6rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #FFFFFF;
+        border-radius: 50%;
+        animation: spin 1s ease-in-out infinite;
+        display: inline-block;
       }
     }
 

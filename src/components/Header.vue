@@ -222,7 +222,7 @@ const menuItems = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
-  // { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
+  { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
   { key: "messages", label: "user.sidebar.messages", path: "/user-message" },
@@ -620,6 +620,8 @@ function confirmLogout() {
   isShowExit.value = false;
   isLogin.value = false;
   isShowLogoutModal.value = false;
+
+  eventBus.emit('userLoggedOut');
 
   const currentPath = window.location.pathname;
   const keepPaths = ["/detail", "/user-home", "character-library", "search"];

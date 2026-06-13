@@ -19,16 +19,22 @@
                   {{ t("user.subscription.accountTitle") }}
                 </div>
                 <div class="account-content">
-                  <div v-if="hasAccount" class="account-status">
+                  <div v-if="accountStatus == 'success'" class="account-status">
                     <img src="@/assets/images/user/success.png" alt="" />
                     {{ t("user.subscription.accountCreated") }}
+                  </div>
+                  <div v-else-if="accountStatus == 'failed'" class="account-status">
+                    <img src="@/assets/images/user/fail.png" alt="" />
+                    {{ t("user.subscription.accountFailed") }}
                   </div>
                   <span v-else>{{ t("user.subscription.accountContent") }}</span>
                 </div>
               </div>
             </div>
-            <button class="create-account-btn" v-if="!hasAccount" @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
-            <span class="change-account-btn" v-else @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+
+            <span class="change-account-btn" v-if="accountStatus == 'success'" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+            <span class="change-account-btn" v-else-if="accountStatus == 'failed'" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
+            <button class="create-account-btn" v-else @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
           </div>
 
           <div class="sections-wrap">
@@ -85,9 +91,16 @@
       </div>
     </div>
   </div>
+
   <UploadMask :visible="isLoading" :text="t('loading')" />
+
   <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
+
   <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
+
+  <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" @create="handleAccountRequiredCreate" />
+
+  <AccountFailedModal :visible="showAccountFailedModal" @close="showAccountFailedModal = false" @modify="handleAccountFailedModify" />
 </template>
 
 <script setup lang="ts" name="UserSubscriptionEdit">
@@ -96,12 +109,23 @@ import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import KycRequiredModal from "@/components/KycRequiredModal.vue";
 import KycReviewingModal from "@/components/KycReviewingModal.vue";
-import { ref, onMounted } from "vue";
+import AccountRequiredModal from "@/components/AccountRequiredModal.vue";
+import AccountFailedModal from "@/components/AccountFailedModal.vue";
+import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
+
+function checkLogin() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+  return true;
+}
 
 const sidebarKey = ref("subscription");
 const priceOptions = ref<any[]>([]);
@@ -111,10 +135,12 @@ const saving = ref(false);
 const loading = ref(false);
 const plan = ref<any>(null);
 const isLoading = ref(false);
-const hasAccount = ref(false);
+const accountStatus = ref<'success' | 'failed' | 'none'>('none');
 
 const showKycRequiredModal = ref(false);
 const showKycReviewingModal = ref(false);
+const showAccountRequiredModal = ref(false);
+const showAccountFailedModal = ref(false);
 
 onMounted(async () => {
   await fetchSubscriptionList();
@@ -136,7 +162,15 @@ async function fetchSubscriptionList() {
 }
 
 function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status == '1';
+  const bloggerStatus = userData?.info?.blogger_status;
+  const hasStripeAccount = userData?.info?.has_stripe_account;
+  if (bloggerStatus == '1' || bloggerStatus == 1) {
+    accountStatus.value = 'success';
+  } else if ((bloggerStatus == '0' || bloggerStatus == 0) && (hasStripeAccount == '1' || hasStripeAccount == 1)) {
+    accountStatus.value = 'failed';
+  } else {
+    accountStatus.value = 'none';
+  }
 }
 
 async function fetchSubscription() {
@@ -173,6 +207,7 @@ function onCancel() {
 }
 
 async function handleCreateAccount() {
+  if (!checkLogin()) return;
   try {
     isLoading.value = true;
     const res = await api.createAccount();
@@ -191,9 +226,10 @@ async function handleCreateAccount() {
 }
 
 async function handleChangeAccount() {
+  if (!checkLogin()) return;
   try {
     isLoading.value = true;
-    const res = await api.benefit();
+    const res = await api.updateAccount();
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
@@ -208,7 +244,27 @@ async function handleChangeAccount() {
   }
 }
 
+async function handleViewAccount() {
+  if (!checkLogin()) return;
+  try {
+    isLoading.value = true;
+    const res = await api.updateAccount();
+    const data = res as any;
+
+    if (data.code == 200 || data.code == 0) {
+      window.location.href = data.data?.url;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 async function onSave() {
+  if (!checkLogin()) return;
   try {
     const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
@@ -230,8 +286,13 @@ async function onSave() {
       toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
     }
 
-    if (!hasAccount.value) {
-      await handleCreateAccount();
+    if (accountStatus.value === 'failed') {
+      showAccountFailedModal.value = true;
+      return;
+    }
+
+    if (accountStatus.value === 'none') {
+      showAccountRequiredModal.value = true;
       return;
     }
 
@@ -263,6 +324,16 @@ async function onSave() {
   } catch (e) {
     console.error(e);
   }
+}
+
+async function handleAccountRequiredCreate() {
+  showAccountRequiredModal.value = false;
+  await handleCreateAccount();
+}
+
+async function handleAccountFailedModify() {
+  showAccountFailedModal.value = false;
+  await handleChangeAccount();
 }
 </script>
 
@@ -418,6 +489,7 @@ async function onSave() {
 }
 .price-options {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   margin-top: 1.6rem;
   gap: 3.2rem;

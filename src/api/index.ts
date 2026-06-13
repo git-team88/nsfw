@@ -167,7 +167,7 @@ export default {
     }),
   getOthersSubscription: (data: any) =>
     axios.request({
-      url: "post/getBloggerSubscriptionPlan",
+      url: "post/getBloggerSubscriptionPlanPublic",
       data: data,
       method: "POST",
     }),
@@ -194,6 +194,11 @@ export default {
       url: "post/getStripeCustomerPortalUrl",
       method: "POST",
     }),
+  updateAccount: () =>
+    axios.request({
+      url: "post/getUpdateStripeUrl",
+      method: "POST",
+    }),
 
   benefit: () =>
     axios.request({
@@ -214,9 +219,14 @@ export default {
 
   homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
     axios.request({
-      url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  // homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
+  //   axios.request({
+  //     url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+  //     method: "GET",
+  //   }),
   homeFollowList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
       url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
@@ -732,6 +742,13 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
+  readSingleProject: (data: any) =>
+    axios.request({
+      url: `app/project/set_readed`,
+      data: data,
+      method: "POST",
+      baseURL: aiUrl,
+    }),
   getCharacters: (type: number, page: number, limit: number) =>
     axios.request({
       url: `app/config/characters?type=${type}&page=${page}&limit=${limit}`,
@@ -746,10 +763,15 @@ export default {
     }),
   computeDetail: (type: number, start: string, end: string, page: number, limit: number) =>
     axios.request({
-      url: `app/credit/ledger?type=${type}&date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
+      url: `user/getPowerLedgerList?type=${type}&date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
       method: "GET",
-      baseURL: aiUrl,
     }),
+  computeExpired: (start: string, end: string, page: number, limit: number) =>
+    axios.request({
+      url: `user/getPowerExpiredList?date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,
+      method: "GET",
+    }),
+
   computeConsume: (start: string, end: string, page: number, limit: number) =>
     axios.request({
       url: `app/credit/usage?date_start=${start}&date_end=${end}&page=${page}&limit=${limit}`,

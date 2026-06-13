@@ -116,6 +116,7 @@ import { toast } from "@/util/toast";
 import { initLanguage } from "@/util/utils";
 import api from "@/api/index";
 import router from "@/router";
+import { trackLogin } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
 
@@ -276,6 +277,7 @@ function goEmailLogin() {
     .then((res: any) => {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
+        trackLogin("email");
 
         if (headerRef.value) {
           headerRef.value.getLoginUserInfo()
@@ -313,10 +315,11 @@ function googleLogin() {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("lType");
+        trackLogin("google");
 
-        if (res.data && res.data.is_first == 1) {
-          localStorage.setItem("isFirstLogin", "1");
-        }
+        // if (res.data && res.data.is_first == 1) {
+        //   localStorage.setItem("isFirstLogin", "1");
+        // }
 
         if (headerRef.value) {
           headerRef.value.getLoginUserInfo()

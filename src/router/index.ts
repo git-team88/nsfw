@@ -170,6 +170,11 @@ const routes = [
     component: () => import("@/views/user/Interactive.vue"),
   },
   {
+    path: "/user-invite",
+    name: "InviteRevenue",
+    component: () => import("@/views/user/InviteRevenue.vue"),
+  },
+  {
     path: "/user-revenue",
     name: "UserRevenue",
     component: () => import("@/views/user/Revenue.vue"),

@@ -1,12 +1,12 @@
 <template>
-  <div v-if="visible" class="confirm-computing-power-modal">
+  <div v-if="visible" class="cover-generate-confirm-modal">
     <div class="modal-content">
       <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
 
-      <p class="modal-message" v-html="t('novel.confirmComputingPowerPrefix', { power: `<span class='computing-power-value'>${computingPower}</span>` }) + ((frozenPower ?? 0) > 0 ? `<span class='modal-frozen'>${t('novel.confirmComputingPowerFrozen', { frozen: `<span class='computing-power-value'>${frozenPower}</span>` })}</span>` : '') + t('novel.confirmComputingPowerSuffix')"></p>
+      <p class="modal-warning" v-html="t('novel.coverGenerateConfirmWarning')"></p>
       <div class="modal-actions">
         <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.confirmGenerate') }}</button>
+        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.coverGenerateConfirmBtn') }}</button>
       </div>
     </div>
   </div>
@@ -19,8 +19,6 @@ const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
-  computingPower: number;
-  frozenPower?: number;
 }>();
 
 const emit = defineEmits<{
@@ -30,7 +28,7 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
-.confirm-computing-power-modal {
+.cover-generate-confirm-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -50,7 +48,7 @@ const emit = defineEmits<{
     width: 50rem;
     background-color: #ffffff;
     border-radius: 1.2rem;
-    padding: 4.4rem 2.4rem 2.4rem;
+    padding: 4.4rem 4rem 2.4rem;
 
     .close-btn {
       position: absolute;
@@ -61,21 +59,12 @@ const emit = defineEmits<{
       cursor: pointer;
     }
 
-    .modal-message {
-      font-size: 1.4rem;
-      color: #364153;
+    .modal-warning {
+      font-size: 1.2rem;
+      color: #6A7282;
       margin-bottom: 2.4rem;
       text-align: center;
-      line-height: 2rem;
-
-      :deep(.computing-power-value) {
-        margin: 0 0.4rem;
-        color: #FB64B6;
-      }
-
-      :deep(.modal-frozen) {
-        color: #6A7282;
-      }
+      line-height: 1.8rem;
     }
 
     .modal-actions {

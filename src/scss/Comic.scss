@@ -321,6 +321,98 @@
 
   .content-section{
     margin-bottom: 1.2rem;
+    padding: 2rem 1.8rem;
+    border-radius: 0.8rem;
+    background: #FFFFFF;
+  }
+
+  .caption-container {
+    border-radius: 0.8rem;
+    background: #FFFFFF;
+    overflow: hidden;
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .char-count {
+        font-size: 1.2rem;
+        color: #99a1af;
+      }
+    }
+
+    .title-input-wrap {
+      height: 5rem;
+      margin: 1.2rem 0 1.8rem;
+      padding: 0 1.8rem;
+      border-radius: 0.8rem;
+      background: #F5F5F5;
+      border: 1px solid #F5F5F5;
+      display: flex;
+      align-items: center;
+      transition: border-color 0.2s ease;
+    }
+
+    &.title-error {
+      .title-input-wrap {
+        border-color: #FB64B6;
+      }
+    }
+
+    .desc-input-wrap {
+      padding: 1rem;
+      margin-top: 1.2rem;
+      border-radius: 0.8rem;
+      background: #F5F5F5;
+    }
+
+    .textarea-wrap {
+      position: relative;
+      padding: 1.4rem 1rem 0 1.8rem;
+    }
+
+    .title-input,
+    .description-content {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 1.4rem;
+      color: #364153;
+      &::placeholder {
+        color: #99a1af;
+      }
+    }
+
+    .title-input {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .description-content {
+      height: 11rem;
+      word-break: normal;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      &:focus {
+        outline: none;
+      }
+      &[contenteditable="true"]:empty:before {
+        content: attr(placeholder);
+        color: #99a1af;
+        pointer-events: none;
+        display: block;
+      }
+
+      :deep(.tag) {
+        color: #00d3f2;
+        margin-right: 0.4rem;
+        user-select: none;
+      }
+    }
   }
 
   .perm-box {
@@ -379,91 +471,11 @@
     }
   }
 
-  .caption-container {
-    margin-top: 1.2rem;
-    border-radius: 0.8rem;
-    background: #FFFFFF;
-    overflow: hidden;
-
-    .input-wrap {
-      position: relative;
-      padding: 1.4rem 6rem 1.4rem 1.8rem;
-
-      .char-count {
-        position: absolute;
-        top: 1.6rem;
-        right: 1.4rem;
-        font-size: 1.2rem;
-        color: #99a1af;
-      }
-    }
-
-    .caption-line {
-      width: calc(100% - 3.6rem);
-      height: 1px;
-      margin: 0 1.8rem;
-      background: #F5F5F5;
-    }
-
-    .textarea-wrap {
-      position: relative;
-      padding: 1.4rem 1rem 0 1.8rem;
-    }
-
-    .title-input,
-    .description-content {
-      width: 100%;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-size: 1.4rem;
-      color: #364153;
-      &::placeholder {
-        color: #99a1af;
-      }
-    }
-
-    .title-input {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
-    }
-
-    .description-content {
-      height: 9rem;
-      word-break: normal;
-      white-space: pre-wrap;
-      overflow-y: auto;
-      &:focus {
-        outline: none;
-      }
-      &[contenteditable="true"]:empty:before {
-        content: attr(placeholder);
-        color: #99a1af;
-        pointer-events: none;
-        display: block;
-      }
-
-      :deep(.tag) {
-        color: #00d3f2;
-        margin-right: 0.4rem;
-        user-select: none;
-      }
-    }
-  }
-
   .caption-actions-box {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
-    padding: 1.2rem 1.2rem 1.2rem 1.8rem;
-    background: rgba(255, 255, 255, 0.9);
-
-    .char-count {
-      font-size: 1.2rem;
-      color: #99a1af;
-    }
+    padding: 1rem 0 0;
+    background: transparent;
   }
 
   .caption-actions {
@@ -474,8 +486,8 @@
       padding: 0.7rem 1.6rem;
       border-radius: 0.6rem;
       border: none;
-      background: #f5f5f5;
-      color: #4a5565;
+      background: #FFFFFF;
+      color: #4A5565;
       font-size: 1.2rem;
       cursor: pointer;
     }
@@ -695,7 +707,7 @@
             select {
               width: 100%;
               padding: 1.2rem 1.6rem;
-              border: 1px solid #E5E7EB;
+              border: 1px solid #F5F5F5;
               border-radius: 0.8rem;
               background: #FFFFFF;
               font-size: 1.4rem;

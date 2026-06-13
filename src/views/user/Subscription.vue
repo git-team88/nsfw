@@ -19,16 +19,21 @@
                   {{ t("user.subscription.accountTitle") }}
                 </div>
                 <div class="account-content">
-                  <div v-if="hasAccount" class="account-status">
+                  <div v-if="accountStatus == 'success'" class="account-status">
                     <img src="@/assets/images/user/success.png" alt="" />
                     {{ t("user.subscription.accountCreated") }}
+                  </div>
+                  <div v-else-if="accountStatus == 'failed'" class="account-status">
+                    <img src="@/assets/images/user/fail.png" alt="" />
+                    {{ t("user.subscription.accountFailed") }}
                   </div>
                   <span v-else>{{ t("user.subscription.accountContent") }}</span>
                 </div>
               </div>
             </div>
 
-            <span class="change-account-btn" v-if="hasAccount" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+            <span class="change-account-btn" v-if="accountStatus == 'success'" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+            <span class="modify-account-btn" v-else-if="accountStatus == 'failed'" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
             <button class="create-account-btn" v-else @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
 
           </div>
@@ -76,7 +81,9 @@
 
   <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
 
-  <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" />
+  <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" @create="handleAccountRequiredCreate" />
+
+  <AccountFailedModal :visible="showAccountFailedModal" @close="showAccountFailedModal = false" @modify="handleAccountFailedModify" />
 </template>
 
 <script setup lang="ts" name="UserSubscription">
@@ -86,12 +93,22 @@ import UploadMask from "@/components/UploadMask.vue";
 import KycRequiredModal from "@/components/KycRequiredModal.vue";
 import KycReviewingModal from "@/components/KycReviewingModal.vue";
 import AccountRequiredModal from "@/components/AccountRequiredModal.vue";
-import { ref, onMounted } from "vue";
+import AccountFailedModal from "@/components/AccountFailedModal.vue";
+import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
+
+function checkLogin() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return false;
+  }
+  return true;
+}
 
 const sidebarKey = ref("subscription");
 const price = ref("");
@@ -99,20 +116,29 @@ const description = ref("");
 const plan = ref<any>(null);
 const loading = ref(false);
 const isLoading = ref(false);
-const hasAccount = ref(false);
+const accountStatus = ref<'success' | 'failed' | 'none'>('none');
 
 // KYC 相关状态
 const showKycRequiredModal = ref(false);
 const showKycReviewingModal = ref(false);
 const kycStatusChecked = ref(false);
 const showAccountRequiredModal = ref(false);
+const showAccountFailedModal = ref(false);
 
 onMounted(async () => {
   await fetchSubscription();
 });
 
 function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status == '1';
+  const bloggerStatus = userData?.info?.blogger_status;
+  const hasStripeAccount = userData?.info?.has_stripe_account;
+  if (bloggerStatus == '1') {
+    accountStatus.value = 'success';
+  } else if ((bloggerStatus == '0') && (hasStripeAccount == '1')) {
+    accountStatus.value = 'failed';
+  } else {
+    accountStatus.value = 'none';
+  }
 }
 
 async function fetchKycDetail() {
@@ -164,6 +190,7 @@ async function fetchSubscription() {
 }
 
 async function handleEditClick() {
+  if (!checkLogin()) return;
   try {
     const kycRes = (await api.kycDetail()) as any;
     if (kycRes.code === 0 || kycRes.code === 200) {
@@ -178,7 +205,9 @@ async function handleEditClick() {
         if (status == '0' || status == '2') {
           showKycReviewingModal.value = true;
         } else {
-          if (!hasAccount.value) {
+          if (accountStatus.value === 'failed') {
+            showAccountFailedModal.value = true;
+          } else if (accountStatus.value === 'none') {
             showAccountRequiredModal.value = true;
           } else {
             // Force navigation with full page refresh to ensure component update
@@ -195,6 +224,7 @@ async function handleEditClick() {
 }
 
 async function handleCreateAccount() {
+  if (!checkLogin()) return;
   try {
     isLoading.value = true;
     const res = await api.createAccount();
@@ -213,9 +243,10 @@ async function handleCreateAccount() {
 }
 
 async function handleChangeAccount() {
+  if (!checkLogin()) return;
   try {
     isLoading.value = true;
-    const res = await api.benefit();
+    const res = await api.updateAccount();
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
@@ -228,6 +259,35 @@ async function handleChangeAccount() {
   } finally {
     isLoading.value = false;
   }
+}
+
+async function handleViewAccount() {
+  if (!checkLogin()) return;
+  try {
+    isLoading.value = true;
+    const res = await api.updateAccount();
+    const data = res as any;
+
+    if (data.code === 200 || data.code === 0) {
+      window.location.href = data.data?.url;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function handleAccountRequiredCreate() {
+  showAccountRequiredModal.value = false;
+  await handleCreateAccount();
+}
+
+async function handleAccountFailedModify() {
+  showAccountFailedModal.value = false;
+  await handleChangeAccount();
 }
 </script>
 
@@ -354,6 +414,12 @@ async function handleChangeAccount() {
 
 .change-account-btn {
   color: #99A1AF;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modify-account-btn{
+  color: #FB64B6;
   font-size: 1.4rem;
   cursor: pointer;
 }

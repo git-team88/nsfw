@@ -1,36 +1,42 @@
 <template>
-  <div v-if="visible" class="confirm-computing-power-modal">
+  <div v-if="visible" class="delete-notice-modal">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('close')" />
 
-      <p class="modal-message" v-html="t('novel.confirmComputingPowerPrefix', { power: `<span class='computing-power-value'>${computingPower}</span>` }) + ((frozenPower ?? 0) > 0 ? `<span class='modal-frozen'>${t('novel.confirmComputingPowerFrozen', { frozen: `<span class='computing-power-value'>${frozenPower}</span>` })}</span>` : '') + t('novel.confirmComputingPowerSuffix')"></p>
+      <h3 class="modal-title">{{ t('collectionSettings.deleteNotice.title') }}</h3>
+
+      <div class="modal-message" v-html="t('collectionSettings.deleteNotice.description')"></div>
+
+      <div class="modal-notice">
+        <p class="notice-label">{{ t('collectionSettings.deleteNotice.note') }}</p>
+      </div>
+
       <div class="modal-actions">
-        <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-confirm-btn" @click="$emit('confirm')">{{ t('novel.confirmGenerate') }}</button>
+        <button class="modal-cancel-btn" @click="$emit('close')">{{ t('collectionSettings.deleteNotice.cancel') }}</button>
+        <button class="modal-confirm-btn" @click="$emit('next')">{{ t('collectionSettings.deleteNotice.next') }}</button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="DeleteNoticeModal">
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+defineProps<{
   visible: boolean;
-  computingPower: number;
-  frozenPower?: number;
 }>();
 
-const emit = defineEmits<{
-  cancel: [];
-  confirm: [];
-}>();
+defineEmits(['close', 'next']);
+
+function handleOverlayClick() {
+  // Don't close on overlay click for important actions
+}
 </script>
 
 <style lang="scss" scoped>
-.confirm-computing-power-modal {
+.delete-notice-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -50,31 +56,39 @@ const emit = defineEmits<{
     width: 50rem;
     background-color: #ffffff;
     border-radius: 1.2rem;
-    padding: 4.4rem 2.4rem 2.4rem;
+    padding: 1.8rem 3rem 2.4rem;
 
     .close-btn {
       position: absolute;
-      top: 1.2rem;
+      top: 2rem;
       right: 1.2rem;
       width: 2rem;
       height: 2rem;
       cursor: pointer;
     }
 
-    .modal-message {
-      font-size: 1.4rem;
+    .modal-title {
+      font-size: 1.6rem;
+      font-weight: 500;
       color: #364153;
       margin-bottom: 2.4rem;
       text-align: center;
+    }
+
+    .modal-message {
+      font-size: 1.4rem;
+      color: #364153;
+      margin-bottom: 1rem;
       line-height: 2rem;
+    }
 
-      :deep(.computing-power-value) {
-        margin: 0 0.4rem;
-        color: #FB64B6;
-      }
+    .modal-notice {
+      margin-bottom: 2.4rem;
 
-      :deep(.modal-frozen) {
+      .notice-label {
+        font-size: 1.4rem;
         color: #6A7282;
+        margin: 0;
       }
     }
 
@@ -87,7 +101,6 @@ const emit = defineEmits<{
         min-width: 13.6rem;
         height: 4.8rem;
         border: none;
-        -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
         font-size: 1.4rem;
         cursor: pointer;
@@ -95,7 +108,7 @@ const emit = defineEmits<{
         color: #6A7282;
 
         &:hover {
-          color: #fb64b6;
+          color: #FB64B6;
         }
       }
 
@@ -103,16 +116,15 @@ const emit = defineEmits<{
         min-width: 13.6rem;
         height: 4.8rem;
         border: none;
-        -webkit-border-radius: 0.8rem;
         border-radius: 0.8rem;
         font-size: 1.4rem;
         cursor: pointer;
-        border: none;
-        background: #fb64b6;
+        background: #FB64B6;
         color: #ffffff;
+        position: relative;
+        overflow: hidden;
 
         &:hover {
-          position: relative;
           &::after {
             content: "";
             position: absolute;
@@ -121,7 +133,6 @@ const emit = defineEmits<{
             width: 100%;
             height: 100%;
             background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
           }
         }
       }

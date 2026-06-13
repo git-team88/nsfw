@@ -250,6 +250,7 @@ import { baseUrl } from '@/util/config';
 import likeIcon from '@/assets/images/detail/like.png';
 import likeActiveIcon from '@/assets/images/detail/like_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
+import { trackShare } from '@/utils/analytics';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -580,12 +581,14 @@ async function fetchDetail() {
       setChapterNavigation();
 
       // Auto enter collection mode when:
-      // - type=4 (from collection detail page)
+      // - type=4 (from collection detail page, only for owner)
       // - collected=1 (from chapter navigation)
       // - already in collection mode (chapter navigation)
-      if (detail.value.book_id && Number(detail.value.book_id) > 0 && (route.query.type == '4' || route.query.collected == '1' || isCollectionMode.value)) {
+      if (detail.value.book_id && Number(detail.value.book_id) > 0 && ((route.query.type == '4' && detail.value.author.id && detail.value.author.id === uid) || route.query.collected == '1' || isCollectionMode.value)) {
         isCollectionMode.value = true;
-        pendingRecordHistory.value = true;
+        if (localStorage.getItem('token')) {
+          pendingRecordHistory.value = true;
+        }
       }
 
       // Record view history if needed
@@ -1262,7 +1265,9 @@ function navigateToChapter(chapter: any) {
 
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
-    pendingRecordHistory.value = true;
+    if (localStorage.getItem('token')) {
+      pendingRecordHistory.value = true;
+    }
   }
 }
 
@@ -1302,9 +1307,20 @@ function toggleToc() {
 }
 
 // Share content
-function shareContent() {
-  // Implement share functionality
-  console.log('Share content');
+async function shareContent() {
+  const id = route.query.id as string;
+  if (!id) return;
+
+  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    toast(t('userHome.shareSuccess'));
+    trackShare({ method: "copy_link", itemId: id });
+  } catch (error) {
+    console.error('Failed to copy:', error);
+    toast(t('fail'));
+  }
 }
 
 // Back to top
@@ -1385,20 +1401,26 @@ async function enterCollectionMode(type: number) {
             collected: '1' // Add collected=1 to trigger collection mode on page load
           }
         });
-        pendingRecordHistory.value = true;
+        if (localStorage.getItem('token')) {
+          pendingRecordHistory.value = true;
+        }
       } else {
+        if (localStorage.getItem('token')) {
+          if (chapters.value.length === 0) {
+            await loadChapters();
+            setChapterNavigation();
+          }
+          await recordViewHistory();
+        }
+      }
+    } else {
+      if (localStorage.getItem('token')) {
         if (chapters.value.length === 0) {
           await loadChapters();
           setChapterNavigation();
         }
         await recordViewHistory();
       }
-    } else {
-      if (chapters.value.length === 0) {
-        await loadChapters();
-        setChapterNavigation();
-      }
-      await recordViewHistory();
     }
   }
 }
@@ -1417,6 +1439,11 @@ function exitCollectionMode() {
 
 // Record view history for collection episodes
 async function recordViewHistory() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return false;
+  }
+
   if (!isCollectionMode.value || chapterCount.value <= 1) {
     return false;
   }

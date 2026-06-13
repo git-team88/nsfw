@@ -15,10 +15,12 @@ export async function initLanguage() {
       const countryCode = res.data.countryCode;
       let lang = 'en';
 
-      if (countryCode === 'CN' || countryCode === 'TW') {
+      if (countryCode === 'CN') {
         lang = 'zh';
       } else if (countryCode === 'JP') {
         lang = 'jp';
+      } else if (countryCode === 'TW' || countryCode === 'HK') {
+        lang = 'tc';
       }
 
       localStorage.setItem('lang', lang);

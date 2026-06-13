@@ -70,7 +70,7 @@ const sidebarKey = ref("revenue");
 const availableJpy = ref<number | null>(null);
 const pendingJpy = ref<number | null>(null);
 
-const hasAccount = ref(false);
+const accountStatus = ref('');
 const isLoading = ref(false);
 
 // Withdraw modal state
@@ -110,7 +110,7 @@ function confirmWithdraw() {
 }
 
 async function openWithdrawRecord() {
-  if (hasAccount.value) {
+  if (accountStatus.value == 'success') {
     try {
       isLoading.value = true;
       const res = await api.benefit();
@@ -126,6 +126,8 @@ async function openWithdrawRecord() {
     } finally {
       isLoading.value = false;
     }
+  } else if (accountStatus.value == 'failed') {
+    handleViewAccount()
   } else {
     handleCreateAccount()
   }
@@ -149,15 +151,39 @@ async function handleCreateAccount() {
   }
 }
 
+async function handleViewAccount() {
+  try {
+    isLoading.value = true;
+    const res = await api.updateAccount();
+    const data = res as any;
+
+    if (data.code === 200 || data.code === 0) {
+      window.location.href = data.data?.url;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 onMounted(() => {
   fetchBalance();
 });
 
 function handleUserInfoLoaded(userData: any) {
-  hasAccount.value = userData?.info?.blogger_status === '1';
+  const bloggerStatus = userData?.info?.blogger_status;
+  const hasStripeAccount = userData?.info?.has_stripe_account;
+  if (bloggerStatus == '1') {
+    accountStatus.value = 'success';
+  } else if ((bloggerStatus == '0') && (hasStripeAccount == '1')) {
+    accountStatus.value = 'failed';
+  } else {
+    accountStatus.value = 'none';
+  }
 }
-
-
 
 function formatSci(n: number | null) {
   if (n == null) return "";

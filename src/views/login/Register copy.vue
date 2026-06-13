@@ -69,7 +69,7 @@
                   @blur="handleCodeVerify"
                 />
 
-                <button class="email-txt" :class="isSend || !isGrecaptchaReady ? 'on' : ''" type="submit" :disabled="!isGrecaptchaReady">
+                <button class="email-txt" :class="isSend ? 'on' : ''" type="submit">
                   {{ emailTxt }}
                 </button>
               </div>
@@ -115,31 +115,29 @@
         <div class="tip">
           <div class="tip-text" v-if="locale == 'jp'">
             <span v-html="t('register.tipInfo')"></span>
-            <b>{{ t("register.terms") }}</b>
+            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
-            <b>{{ t("register.privacy") }}</b>
+            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
             {{ t("register.tipEnd") }}
           </div>
 
           <div class="tip-text" v-else>
             <span v-html="t('register.tipInfo')"></span>
-            <b>{{ t("register.terms") }}</b>
+            <a href="/terms" target="_blank" @click="goLink">{{ t("register.terms") }}</a>
             {{ t("register.infix") }}
-            <b>{{ t("register.privacy") }}</b>
+            <a href="/privacy" target="_blank" @click="goLink">{{ t("register.privacy") }}</a>
           </div>
         </div>
       </div>
     </div>
 
-    <Teleport to="body">
-      <InviteCodeModal
-        :visible="showInviteCodeModal"
-        :initial-code="inviteCode"
-        @close="showInviteCodeModal = false"
-        @confirm="handleInviteCodeConfirm"
-        @skip="handleInviteCodeSkip"
-      />
-    </Teleport>
+    <InviteCodeModal
+      :visible="showInviteCodeModal"
+      :initial-code="inviteCode"
+      @close="showInviteCodeModal = false"
+      @confirm="handleInviteCodeConfirm"
+      @skip="handleInviteCodeSkip"
+    />
 
     <div class="load" v-if="isShowLoad">
       <img src="@/assets/images/base/load.png" alt="" />
@@ -152,14 +150,12 @@
 import Header from "@/components/Header.vue";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-import { initLanguage } from "@/util/utils";
 import api from "@/api/index";
 import router from "@/router";
-import { trackSignUp } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
 
@@ -186,7 +182,6 @@ const isGrecaptchaReady = ref(false);
 const hasEverSent = ref(false);
 
 const emailTxt = computed(() => {
-  if (!isGrecaptchaReady.value) return t("grecaptcha.loading");
   return hasEverSent.value ? t("register.resend") : t("register.send");
 });
 
@@ -206,30 +201,7 @@ declare global {
   }
 }
 
-function setSeoMeta() {
-  document.title = t('seo.signup.title');
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', t('seo.signup.keywords'));
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', t('seo.signup.description'));
-}
-
-onMounted(async () => {
-  // 初始化语言设置
-  await initLanguage();
-
-  setSeoMeta();
-
+onMounted(() => {
   checkGrecaptcha();
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -240,7 +212,6 @@ onMounted(async () => {
 
   const token = localStorage.getItem("token");
   const type = localStorage.getItem("rType");
-
   if (!token && type == "1") {
     googleRegister();
   }
@@ -250,10 +221,6 @@ onMounted(async () => {
   } else {
     initGoogle();
   }
-});
-
-watch(() => locale.value, () => {
-  setSeoMeta();
 });
 
 onBeforeUnmount(() => {
@@ -280,18 +247,23 @@ function initGoogle() {
 }
 
 function showGoogle() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  if (fromParam) {
+    localStorage.setItem('inviteCode', fromParam);
+    redirectToGoogle();
+    return;
+  }
   showInviteCodeModal.value = true;
 }
 
-function handleInviteCodeConfirm(code: string) {
+function handleInviteCodeConfirm(inviteCode: string) {
   showInviteCodeModal.value = false;
-  localStorage.setItem('inviteCode', code);
   redirectToGoogle();
 }
 
 function handleInviteCodeSkip() {
   showInviteCodeModal.value = false;
-  localStorage.removeItem('inviteCode');
   redirectToGoogle();
 }
 
@@ -489,7 +461,6 @@ function goEmailRegister() {
       .then((res: any) => {
         if (res.code == 0) {
           showBirthday.value = false;
-          trackSignUp("email");
 
           if (headerRef.value) {
             headerRef.value.getLoginUserInfo()
@@ -536,23 +507,23 @@ function googleRegister() {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
-        trackSignUp("google");
 
         localStorage.setItem("isFirstRegister", "1");
         router.push("/");
       } else {
+        window.location.href = "/register";
         isShowLoad.value = false;
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     })
     .catch((err: any) => {
+      window.location.href = "/register";
       isShowLoad.value = false;
       localStorage.removeItem("rType");
       localStorage.removeItem('inviteCode');
       console.log(err);
-      toast(t('fail'));
     });
 }
 </script>
@@ -806,9 +777,12 @@ function googleRegister() {
       text-align: center;
       color: #99A1AF;
 
-      b {
-        font-weight: normal;
+      :deep(a) {
         color: #fb64b6;
+
+        &:hover{
+          text-decoration: underline;
+        }
       }
     }
 

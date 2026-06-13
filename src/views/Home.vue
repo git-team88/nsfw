@@ -1193,7 +1193,10 @@
     <!-- Insufficient Balance Modal -->
     <InsufficientBalanceModal
       :visible="showInsufficientBalanceModal"
-      @cancel="showInsufficientBalanceModal = false"
+      :estimated-frozen-power="insufficientBalanceEstimatedFrozen"
+      :available-balance="insufficientBalanceAvailable"
+      :system-frozen-balance="insufficientBalanceFrozen"
+      @cancel="closeInsufficientBalanceModal"
       @recharge="goRecharge"
     />
 
@@ -1493,7 +1496,7 @@ async function handleStartFrameChange(e: Event) {
       }
     } catch (error) {
       console.error('Failed to upload start frame:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error).message);
     } finally {
       isUploading.value = false;
     }
@@ -1512,7 +1515,7 @@ async function handleEndFrameChange(e: Event) {
       }
     } catch (error) {
       console.error('Failed to upload end frame:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error).message);
     } finally {
       isUploading.value = false;
     }
@@ -1808,6 +1811,9 @@ const navigateToNovelGenerate = async () => {
 
     const userBalance = balanceInfo.value.balance || 0;
     if (requiredBalance > userBalance) {
+      insufficientBalanceEstimatedFrozen.value = Math.round(coverCost * overFreezeRate);
+      insufficientBalanceAvailable.value = userBalance;
+      insufficientBalanceFrozen.value = Math.max(0, (balanceInfo.value.total_balance || 0) - userBalance);
       showInsufficientBalanceModal.value = true;
       isGeneratingNovel.value = false;
       return;
@@ -1876,6 +1882,11 @@ function goRecharge() {
 
   router.push('/ai-recharge');
   showInsufficientBalanceModal.value = false;
+};
+
+const closeInsufficientBalanceModal = () => {
+  showInsufficientBalanceModal.value = false;
+  insufficientBalanceEstimatedFrozen.value = 0;
 };
 
 // Pagination variables
@@ -1948,6 +1959,9 @@ const balanceInfo = ref<any>(null);
 // Task limit modal
 const showTaskLimitExceededModal = ref(false);
 const showInsufficientBalanceModal = ref(false);
+const insufficientBalanceEstimatedFrozen = ref(0);
+const insufficientBalanceAvailable = ref(0);
+const insufficientBalanceFrozen = ref(0);
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -3241,6 +3255,9 @@ const generatePhoto = async () => {
     const userBalance = balanceInfo.value.balance || 0;
 
     if (requiredBalance > userBalance) {
+      insufficientBalanceEstimatedFrozen.value = Math.round(coverCost * overFreezeRate);
+      insufficientBalanceAvailable.value = userBalance;
+      insufficientBalanceFrozen.value = Math.max(0, (balanceInfo.value.total_balance || 0) - userBalance);
       showInsufficientBalanceModal.value = true;
       return;
     }
@@ -3427,6 +3444,31 @@ const triggerFileUpload = () => {
   }
 };
 
+// Check if image file is corrupted
+const isImageCorrupted = (file: File): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      // Check if image dimensions are valid (0x0 usually indicates corruption)
+      if (img.width === 0 || img.height === 0) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+
+    img.src = url;
+  });
+};
+
 const getMediaDuration = (file: File): Promise<number> => {
   return new Promise((resolve) => {
     if (file.type.startsWith('video/')) {
@@ -3592,7 +3634,14 @@ const handleFileChange = async (event: Event) => {
 
     // Photo upload limits based on mode
     let maxPhotos = currentMode === 'unlimited' ? 3 : 7;
-    const maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 30;
+
+    // Comic and Drama modes have 10MB image size limit
+    if (contentType.value === 'comic' || contentType.value === 'drama') {
+      maxFileSizeBytes = 10 * 1024 * 1024;
+      maxFileSizeMB = 10;
+    }
     const maxVideoSizeBytes = currentMode === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
@@ -3609,13 +3658,30 @@ const handleFileChange = async (event: Event) => {
       return;
     }
 
-    // Check individual file size for images
+    // Check individual file size and format for images
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     for (const file of Array.from(input.files)) {
       if (!file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+        // Check image format
+        if (!validImageTypes.includes(file.type)) {
+          toast(t('home.error.invalidPhotoFormat'));
+          input.value = '';
+          return;
+        }
+        // Check image file size
         if (file.size > maxFileSizeBytes) {
           toast(t('home.error.maxPhotoSize', { max: currentMode === 'unlimited' ? 20 : 30 }));
           input.value = '';
           return;
+        }
+        // Check if image is corrupted (only for comic and drama tabs)
+        if (contentType.value === 'comic' || contentType.value === 'drama') {
+          const isCorrupted = await isImageCorrupted(file);
+          if (isCorrupted) {
+            toast(t('home.error.corruptedImage'));
+            input.value = '';
+            return;
+          }
         }
       }
     }
@@ -5301,10 +5367,10 @@ async function checkFirstRegister() {
   const isFirstLogin = localStorage.getItem('isFirstLogin');
   const isFirstRegister = localStorage.getItem('isFirstRegister');
 
-  if (isFirstLogin == '1') {
-    showInviteCodeModal.value = true;
-    localStorage.removeItem("isFirstLogin");
-  }
+  // if (isFirstLogin == '1') {
+  //   showInviteCodeModal.value = true;
+  //   localStorage.removeItem("isFirstLogin");
+  // }
 
   if (isFirstRegister == '1') {
     showUserInfoModal.value = true;

@@ -313,11 +313,13 @@ function isAnimating() {
 }
 
 function scrollToLatestStep() {
-  const parentContainer = document.querySelector('.outline-content');
-  if (parentContainer) {
-    (parentContainer as HTMLElement).scrollTop = (parentContainer as HTMLElement).scrollHeight;
-  } else if (processStepsRef.value) {
-    processStepsRef.value.scrollTop = processStepsRef.value.scrollHeight;
+  if (processStepsRef.value && processStepsRef.value.offsetParent !== null) {
+    const parentContainer = document.querySelector('.outline-content');
+    if (parentContainer) {
+      (parentContainer as HTMLElement).scrollTop = (parentContainer as HTMLElement).scrollHeight;
+    } else {
+      processStepsRef.value.scrollTop = processStepsRef.value.scrollHeight;
+    }
   }
 }
 

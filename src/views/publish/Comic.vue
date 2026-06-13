@@ -139,7 +139,7 @@
           >
             <div class="upload-info">
               <p>{{ t("submit.image.uploadCta") }}</p>
-              <button class="btn" @click="pickImages" :disabled="imageFiles.length >= 10">
+              <button class="btn" @click="pickImages" :disabled="imageFiles.length >= 12">
                 {{ t("submit.image.uploadBtn") }}
               </button>
             </div>
@@ -162,9 +162,10 @@
             <input
               ref="imageInputRef"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               title=""
               class="hidden-file"
+              @click.stop
               @change="onImagesPicked"
             />
           </div>
@@ -172,6 +173,13 @@
       </div>
 
       <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
+        <input
+          ref="reuploadInputRef"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          style="display: none;"
+          @change="onReuploadPicked"
+        />
         <div class="section">
           <div class="list-section">
             <div class="list-top">
@@ -179,14 +187,15 @@
                 <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
               </div>
 
-              <div class="add-more-row" @click="pickImages" v-if="imageFiles.length <= 12">
+              <div class="add-more-row" @click="pickImages" v-if="imageFiles.length < 12">
                 <span class="add-btn">{{ t("submit.image.add") }}</span>
                 <input
                   ref="imageAddRef"
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
                   title=""
                   class="add-file"
+                  @click.stop
                   @change="onImagesPicked"
                 />
               </div>
@@ -203,15 +212,7 @@
                       <img
                         src="@/assets/images/publish/reload.png"
                         alt=""
-                        @click="reloadImage(idx)"
-                      />
-                      <input
-                        ref="reuploadInputRef"
-                        type="file"
-                        accept="image/*"
-                        title=""
-                        class="reupload-input"
-                        @change="onReuploadPicked"
+                        @click.stop="reloadImage(idx)"
                       />
                     </div>
 
@@ -221,8 +222,8 @@
                       @click="removeImage(idx)"
                       v-if="imageFiles.length > 1"
                     />
-                  </div>
-                </div>
+                   </div>
+                 </div>
                 <!-- Show placeholder in edit mode when no images -->
                 <div v-if="postId && imageFiles.length === 0" class="image-item">
                   <img src="@/assets/images/base/cover.png" alt="" class="image" />
@@ -365,22 +366,32 @@
           </div>
         </div> -->
 
-        <!-- Caption -->
+        <!-- Title & Description -->
         <div class="content-section">
           <div class="form-item">
-            <div class="caption-container">
-              <div class="input-wrap">
+            <div class="caption-container" :class="{ 'title-error': titleError }">
+              <div class="label-row">
+                <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
+                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
+              </div>
+
+              <div class="title-input-wrap">
                 <input
                   v-model="form.title"
                   class="title-input"
                   type="text"
                   :maxlength="TITLE_MAX"
                   :placeholder="t('submit.titlePlaceholder')"
+                  @input="onTitleInput"
                 />
-                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
               </div>
-              <div class="caption-line"></div>
-              <div class="textarea-wrap">
+
+              <div class="label-row">
+                <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
+                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+              </div>
+
+              <div class="desc-input-wrap">
                 <div
                   ref="captionRef"
                   class="description-content"
@@ -392,19 +403,17 @@
                   @blur="onCaptionBlur"
                   @paste="handlePaste"
                 ></div>
-              </div>
 
-              <div class="caption-actions-box">
-                <div class="caption-actions">
-                  <button class="action-btn" @click="onActionBtnClick('#')">
-                    #{{ t("submit.topic") }}
-                  </button>
-                  <button class="action-btn" @click="onActionBtnClick('@')">
-                    @{{ t("submit.mention") }}
-                  </button>
+                <div class="caption-actions-box">
+                  <div class="caption-actions">
+                    <button class="action-btn" @click="onActionBtnClick('#')">
+                      #{{ t("submit.topic") }}
+                    </button>
+                    <button class="action-btn" @click="onActionBtnClick('@')">
+                      @{{ t("submit.mention") }}
+                    </button>
+                  </div>
                 </div>
-
-                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
               </div>
             </div>
 
@@ -627,6 +636,7 @@ const coverInputRef = ref<HTMLInputElement | null>(null);
 const coverPreview = ref("");
 
 const imageInputRef = ref<HTMLInputElement | null>(null);
+const imageAddRef = ref<HTMLInputElement | null>(null);
 const reuploadInputRef = ref<HTMLInputElement | null>(null);
 const reuploadIndex = ref<number | null>(null);
 type PreviewFile = File & { _key: string; _preview: string; _url?: string };
@@ -635,6 +645,7 @@ const uploading = ref(false);
 
 const agreeTerms = ref(true);
 const showConventionModal = ref(false);
+const titleError = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
@@ -718,7 +729,10 @@ function toggleCollectionDropdown(event: Event) {
   showEpisodeDropdown.value = false;
 
   if (showCollectionDropdown.value) {
+    // Reset pagination and clear collections first
     hasMoreCollections.value = true;
+    collections.value = [];
+    currentCollectionPage.value = 1;
     fetchCollections(false);
   }
 }
@@ -750,7 +764,7 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (collections.value.length > 0) {
+  if (selectedCollection.value) {
     pendingCollectionId.value = null;
     isCreatingNewCollection.value = true;
     showSwitchCollectionModal.value = true;
@@ -1227,7 +1241,15 @@ function openCommunityConvention() {
 }
 
 function pickImages() {
-  imageInputRef.value?.click();
+  if (imageFiles.value.length >= 12) {
+    toast(t("submit.image.uploadTip"));
+    return;
+  }
+  if (imageAddRef.value) {
+    imageAddRef.value.click();
+  } else {
+    imageInputRef.value?.click();
+  }
 }
 
 function onImagesPicked(e: Event) {
@@ -1244,6 +1266,26 @@ function onImagesPicked(e: Event) {
   appendFiles(files);
 }
 
+function isImageCorrupted(file: File): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      if (img.width === 0 || img.height === 0) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+    img.src = url;
+  });
+}
+
 function onDragOver() {}
 
 function onDropImages(e: DragEvent) {
@@ -1252,23 +1294,38 @@ function onDropImages(e: DragEvent) {
     return false;
   }
 
-  const files = Array.from(e.dataTransfer?.files ?? []).slice(0, 1);
+  const files = Array.from(e.dataTransfer?.files ?? []);
 
-  appendFiles(files);
+  if (files.length > 1) {
+    toast(t("submit.image.multiSelectError"));
+    return;
+  }
+
+  appendFiles(files.slice(0, 1));
 }
 
-function appendFiles(files: File[]) {
-  const maxCount = 10;
+async function appendFiles(files: File[]) {
+  const maxCount = 12;
   const maxSize = 10 * 1024 * 1024;
+  const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
   for (const f of files) {
-    if (imageFiles.value.length >= maxCount) break;
-    if (!f.type.startsWith("image/")) {
-      toast(t("submit.image.uploadFormatError"));
+    if (imageFiles.value.length >= maxCount) {
+      toast(t("submit.image.uploadTip"));
+      break;
+    }
+    if (!validImageTypes.includes(f.type)) {
+      toast(t("home.error.invalidPhotoFormat"));
       continue;
     }
     if (f.size > maxSize) {
-      toast(t("submit.image.uploadTip"));
+      toast(t("home.error.maxPhotoSize", { max: 10 }));
+      continue;
+    }
+
+    const corrupted = await isImageCorrupted(f);
+    if (corrupted) {
+      toast(t("home.error.corruptedImage"));
       continue;
     }
 
@@ -1287,8 +1344,9 @@ function uploadImage(pf: PreviewFile) {
   }
 
   if (pf) {
-    if (!pf.type.startsWith("image/")) {
-      toast(t("submit.image.uploadFormatError"));
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validImageTypes.includes(pf.type)) {
+      toast(t("home.error.invalidPhotoFormat"));
       return false;
     }
 
@@ -1347,7 +1405,7 @@ function reloadImage(idx: number) {
   reuploadInputRef.value?.click();
 }
 
-function onReuploadPicked(e: Event) {
+async function onReuploadPicked(e: Event) {
   const token = localStorage.getItem("token");
   if (!token) {
     return false;
@@ -1356,13 +1414,21 @@ function onReuploadPicked(e: Event) {
   const file = input.files && input.files[0];
   input.value = "";
   if (reuploadIndex.value === null || !file) return;
-  if (!file.type.startsWith("image/")) {
-    toast(t("submit.image.uploadFormatError"));
+
+  const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!validImageTypes.includes(file.type)) {
+    toast(t("home.error.invalidPhotoFormat"));
     return false;
   }
   const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
-    toast(t("submit.image.uploadTip"));
+    toast(t("home.error.maxPhotoSize", { max: 10 }));
+    return false;
+  }
+
+  const corrupted = await isImageCorrupted(file);
+  if (corrupted) {
+    toast(t("home.error.corruptedImage"));
     return false;
   }
   isUpload.value = true;
@@ -1459,6 +1525,12 @@ function removeImage(idx: number) {
   if (coverPreview.value && idx === selectedCoverIndex.value) {
     coverPreview.value = imageFiles.value.length > 0 ? imageFiles.value[0]._preview : "";
     selectedCoverIndex.value = imageFiles.value.length > 0 ? 0 : null;
+  }
+}
+
+function onTitleInput() {
+  if (titleError.value && form.value.title.trim()) {
+    titleError.value = false;
   }
 }
 
@@ -1983,14 +2055,25 @@ function updateDropdownPosition() {
   if (!selection || selection.rangeCount === 0 || !captionRef.value) return;
 
   const range = selection.getRangeAt(0).cloneRange();
-  const rect = range.getBoundingClientRect();
 
-  // Check if rect is valid (not at origin or with zero dimensions)
+  let rect: DOMRect;
+  if (range.collapsed) {
+    const marker = document.createElement('span');
+    marker.textContent = '\u200B';
+    range.insertNode(marker);
+    rect = marker.getBoundingClientRect();
+    marker.parentNode?.removeChild(marker);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    rect = range.getBoundingClientRect();
+  }
+
   let absTop = rect.bottom + 5;
   let absLeft = rect.left;
 
-  // If rect is invalid (likely after space deletion), use fallback position
-  if (rect.width === 0 && rect.height === 0 || absTop < 100 || absLeft < 10) {
+  if ((rect.width === 0 && rect.height === 0) || absTop < 100 || absLeft < 10) {
     const captionRect = captionRef.value.getBoundingClientRect();
     absTop = captionRect.top + 26;
     absLeft = captionRect.left;
@@ -2076,75 +2159,57 @@ function onActionBtnClick(symbol: "#" | "@") {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  // Force show dropdown immediately after button click
+  const insertedNode = textNode;
+
   dropdownType.value = symbol;
 
-  // Use nextTick to ensure DOM is updated
   nextTick(async () => {
-    // Search immediately without debounce
     await searchTagsImmediate(symbol, "");
 
-    // Use setTimeout to ensure layout is calculated
-    setTimeout(() => {
-      // Get the current selection and range
-      const currentSelection = window.getSelection();
-      if (!currentSelection || currentSelection.rangeCount === 0) {
-        console.log('No selection found');
-        return;
+    const currentSelection = window.getSelection();
+    if (!currentSelection || currentSelection.rangeCount === 0) return;
+
+    const currentRange = currentSelection.getRangeAt(0);
+    lastRange.value = currentRange.cloneRange();
+
+    const symbolRange = document.createRange();
+    symbolRange.selectNodeContents(insertedNode);
+    const rect = symbolRange.getBoundingClientRect();
+
+    const captionRect = captionRef.value?.getBoundingClientRect();
+
+    let absTop = rect.bottom + 5;
+    let absLeft = rect.left;
+
+    if ((rect.width === 0 && rect.height === 0) || !captionRect || absTop < 50 || absLeft < 10 || absTop > window.innerHeight - 50) {
+      if (captionRect) {
+        absTop = captionRect.top + 26;
+        absLeft = captionRect.left;
       }
+    }
 
-      // Get the current range (cursor position after the symbol)
-      const currentRange = currentSelection.getRangeAt(0);
-      lastRange.value = currentRange.cloneRange();
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft,
+    };
 
-      // Get the bounding rect of the cursor position
-      const cursorRect = currentRange.getBoundingClientRect();
+    const dropdownHeight = 250;
+    const dropdownWidth = 280;
 
-      // Get caption rect for fallback positioning
-      const captionRect = captionRef.value?.getBoundingClientRect();
-
-      // Calculate position based on cursor position (right after # or @)
-      let absTop = cursorRect.bottom + 5;
-      let absLeft = cursorRect.left;
-
-      // If cursor position is invalid, use caption position as fallback
-      if (!captionRect || absTop < 50 || absLeft < 10 || absTop > window.innerHeight - 50) {
-        if (captionRect) {
-          absTop = captionRect.bottom + 8;
-          absLeft = captionRect.left + 10;
-        }
+    if (absTop + dropdownHeight > window.innerHeight) {
+      const spaceAbove = absTop - (captionRect?.top || 0);
+      if (spaceAbove >= dropdownHeight) {
+        dropdownPosition.value.top = absTop - dropdownHeight - 8;
+      } else {
+        dropdownPosition.value.top = 100;
       }
+    }
 
-      dropdownPosition.value = {
-        top: absTop,
-        left: absLeft,
-      };
+    if (absLeft + dropdownWidth > window.innerWidth) {
+      dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 10);
+    }
 
-      // Adjust if overflow bottom
-      const dropdownHeight = 250;
-      const dropdownWidth = 280;
-
-      // Check if dropdown would overflow bottom - if so, position above
-      if (absTop + dropdownHeight > window.innerHeight) {
-        const spaceAbove = absTop - (captionRect?.top || 0);
-        if (spaceAbove >= dropdownHeight) {
-          dropdownPosition.value.top = absTop - dropdownHeight - 8;
-        } else {
-          // Not enough space above, position at top of viewport
-          dropdownPosition.value.top = 100;
-        }
-      }
-
-      // Check if dropdown would overflow right - if so, adjust left position
-      if (absLeft + dropdownWidth > window.innerWidth) {
-        dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 10);
-      }
-
-      // Show dropdown after position is set
-      showDropdown.value = true;
-    }, 100); // Increased to 100ms for more reliable positioning
-
-    // Keep the input focused
+    showDropdown.value = true;
     captionRef.value?.focus();
   });
 }
@@ -2302,6 +2367,12 @@ async function onSubmit() {
     return;
   }
 
+  if (!form.value.title.trim()) {
+    toast(t("submit.titleRequired"));
+    titleError.value = true;
+    return;
+  }
+
   if (!imageFiles.value.length) {
     toast(t("submit.image.uploadFirst"));
     return;
@@ -2427,7 +2498,7 @@ function goToSubscriptionSettings() {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(0, 'manhua', currentPage.value, 10, 1) as any;
+    const response = await api.getProject(0, 'manhua', currentPage.value, 12, 1) as any;
     if (response.code !== 200) {
       toast(t('fail'));
       return;
@@ -2475,15 +2546,10 @@ async function selectProject(project: any) {
       }
     }
 
-    // Handle collection logic for history projects
-    if (project.name) {
-      await handleCollectionFromProjectName(project.name);
-    } else {
-      // Reset collection state for projects without names
-      selectedCollection.value = null;
-      isNoCollection.value = true;
-      episodes.value = [];
-    }
+    // Reset collection state - no auto collection lookup
+    selectedCollection.value = null;
+    isNoCollection.value = true;
+    episodes.value = [];
     return;
   }
 
@@ -2509,15 +2575,10 @@ async function selectProject(project: any) {
         }
       }
 
-      // Handle collection logic for history projects
-      if (project.name) {
-        await handleCollectionFromProjectName(project.name);
-      } else {
-        // Reset collection state for projects without names
-        selectedCollection.value = null;
-        isNoCollection.value = true;
-        episodes.value = [];
-      }
+      // Reset collection state - no auto collection lookup
+      selectedCollection.value = null;
+      isNoCollection.value = true;
+      episodes.value = [];
     }
   } catch (error) {
     console.error('Error fetching project details:', error);
@@ -2534,13 +2595,20 @@ async function handleCollectionFromProjectName(projectName: string) {
       const book_id = searchRes.data?.book_id || 0;
 
       if (book_id == 0) {
-        // Create new collection
-        const createRes = await api.addCollection({ title: projectName, type: 1 }) as any;
+        // Create new collection with cover and default description
+        const createRes = await api.addCollection({
+          title: projectName,
+          type: 1,
+          cover: coverPreview.value || '',
+          description: t('collectionSettings.sampleDescription')
+        }) as any;
 
         if (createRes.code === 0 && createRes.data?.id) {
           selectedCollection.value = {
             id: createRes.data.id,
-            name: projectName
+            name: projectName,
+            cover: coverPreview.value || '',
+            description: ''
           };
           isNoCollection.value = false;
         }
@@ -2551,12 +2619,13 @@ async function handleCollectionFromProjectName(projectName: string) {
         if (collectionRes.code == 0 && collectionRes.data) {
           const allnums = collectionRes.data.count || 0;
           const episodeNumber = parseInt(allnums) + 1;
-          const collectionCover = collectionRes.data.cover || '';
+          const collectionCover = searchRes.data?.book_info?.cover || '';
 
           selectedCollection.value = {
             id: book_id,
             name: projectName,
-            cover: collectionCover
+            cover: collectionCover,
+            description: searchRes.data?.book_info?.description || ''
           };
           isNoCollection.value = false;
           selectedEpisodeNumber.value = episodeNumber.toString();
@@ -2787,13 +2856,20 @@ async function handlePublish(publishData?: any) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
-          // Create new collection
-          const createRes = await api.addCollection({ title: project.name, type: 1 }) as any;
+          // Create new collection with cover and default description
+          const createRes = await api.addCollection({
+            title: project.name,
+            type: 1,
+            cover: project.result_async.generate_manhua_cover || '',
+            description: t('collectionSettings.sampleDescription')
+          }) as any;
 
-          if (createRes.code === 0 && createRes.data?.id) {
+          if (createRes.code == 0) {
             selectedCollection.value = {
-              id: createRes.data.id,
-              name: project.name
+              id: createRes.data.book_id,
+              name: project.name,
+              cover: project.result_async.generate_manhua_cover || '',
+              description: t('collectionSettings.sampleDescription')
             };
             isNoCollection.value = false;
           }
@@ -2804,12 +2880,13 @@ async function handlePublish(publishData?: any) {
           if (collectionRes.code === 0 && collectionRes.data) {
             const allnums = collectionRes.data.count || 0;
             const episodeNumber = parseInt(allnums) + 1;
-            const collectionCover = collectionRes.data.cover || '';
+            const collectionCover = searchRes.data?.book_info?.cover || '';
 
             selectedCollection.value = {
               id: book_id,
               name: project.name,
-              cover: collectionCover
+              cover: collectionCover,
+              description: searchRes.data?.book_info?.description || ''
             };
             isNoCollection.value = false;
             selectedEpisodeNumber.value = episodeNumber.toString();
@@ -2862,7 +2939,7 @@ async function getPostDetails() {
       form.value.title = postData.title || "";
       form.value.description = postData.content || "";
       form.value.permission = postData.access_rights == '2' ? "partial" : postData.access_rights == '3' ? "private" : "public";
-      form.value.content = postData.is_nsfw == 1 ? "yes" : "no";
+      form.value.content = postData.is_nsfw == '1' ? "yes" : "no";
       coverPreview.value = postData.cover || "";
 
       // If there's a session_id from post data, fetch project details to get the cover
@@ -2986,9 +3063,10 @@ async function getPostDetails() {
       // Set selected collection from book_title
       if (postData.book_title) {
         selectedCollection.value = {
-          id: postData.book_id || '',
+          id: postData.book_id || 0,
           name: postData.book_title,
-          cover: postData.cover || ''
+          cover: data.data?.book_info?.cover,
+          description: data.data?.book_info?.description,
         };
         isNoCollection.value = false;
 
@@ -3190,12 +3268,19 @@ onMounted(async () => {
 
                 if (book_id == 0) {
                   // Create new collection
-                  const createRes = await api.addCollection({ title, type: 1 }) as any;
+                  const createRes = await api.addCollection({
+                    title,
+                    type: 1,
+                    cover: coverPreview.value || '',
+                    description: t('collectionSettings.sampleDescription')
+                  }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
                     selectedCollection.value = {
                       id: createRes.data.book_id,
-                      name: title
+                      name: title,
+                      cover: coverPreview.value || '',
+                      description: t('collectionSettings.sampleDescription')
                     };
                     selectedEpisodeNumber.value = '1';
                     isNoCollection.value = false;
@@ -3208,12 +3293,13 @@ onMounted(async () => {
                     // Get the total chapter count from the response
                     const allnum = collectionRes.data.count || 0;
                     const episodeNumber = parseInt(allnum) + 1;
-                    const collectionCover = collectionRes.data.cover || '';
+                    const collectionCover = searchRes.data?.book_info?.cover || '';
 
                     selectedCollection.value = {
                       id: book_id,
                       name: title,
-                      cover: collectionCover
+                      cover: collectionCover,
+                      description: searchRes.data?.book_info?.description || ''
                     };
                     selectedEpisodeNumber.value = episodeNumber.toString();
                     isNoCollection.value = false;
