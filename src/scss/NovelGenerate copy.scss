@@ -35,16 +35,15 @@
       padding: 0 1rem;
       cursor: pointer;
 
-      &.last {
+      &.last{
         margin-top: 3.6rem;
       }
-
       img {
         width: 3.2rem;
         height: 3.2rem;
       }
 
-      span {
+      span{
         margin-top: 0.4rem;
         font: {
           weight: 500;
@@ -1533,7 +1532,7 @@
   .cover-container {
     position: relative;
     display: flex;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 1.2rem;
     margin-top: 1rem;
 
@@ -1576,42 +1575,6 @@
       }
     }
 
-    .cover-renew-failed {
-      width: 30rem;
-      height: 40rem;
-      border-radius: 0.6rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #F5F5F5;
-      gap: 1.2rem;
-
-      .cover-renew-failed-icon {
-        width: 4rem;
-        height: 4rem;
-      }
-
-      .cover-renew-failed-text {
-        font-size: 1.4rem;
-        color: #6A7282;
-      }
-    }
-
-    .cover-renew-retry-btn {
-      margin-top: 1rem;
-      padding: 0.6rem 2rem;
-      background: #fb64b6;
-      color: #ffffff;
-      border-radius: 0.6rem;
-      font-size: 1.2rem;
-      cursor: pointer;
-
-      &:hover {
-        opacity: 0.9;
-      }
-    }
-
     .cover-placeholder {
       width: 30rem;
       height: 40rem;
@@ -1624,18 +1587,11 @@
       color: #99A1AF;
     }
 
-    .cover-renew{
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      img {
-        width: 3.6rem;
-        height: 3.6rem;
-        cursor: pointer;
-      }
+    .edit-cover-btn {
+      width: 3rem;
+      height: 3rem;
+      cursor: pointer;
     }
-
   }
 }
 

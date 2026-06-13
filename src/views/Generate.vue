@@ -775,7 +775,7 @@
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
       <div class="cover-zoom-content" @click.stop>
         <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeCoverZoomModal" />
-        <img :src="zoomedCoverImage" alt="" class="zoomed-cover-image" />
+        <img :src="zoomedCoverImage + '?imageMogr2/format/webp/quality/60'" alt="" class="zoomed-cover-image" />
       </div>
     </div>
 

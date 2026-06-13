@@ -1696,6 +1696,7 @@
     width: 7rem;
     height: 0.4rem;
     -webkit-appearance: none;
+    appearance: none;
     background: rgba(255, 255, 255, 0.3);
     border-radius: 0.2rem;
     outline: none;
@@ -2089,6 +2090,7 @@
   &.collapsed {
     display: -webkit-box;
     -webkit-line-clamp: 10;
+    line-clamp: 10;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

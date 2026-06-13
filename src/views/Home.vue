@@ -92,6 +92,8 @@
                       class="input-textarea"
                       contenteditable="true"
                       spellcheck="false"
+                      autocorrect="off"
+                      autocapitalize="none"
                       @input="handleInput"
                       @keydown="handleKeydown"
                       @click="handleInputClick"
@@ -4524,6 +4526,9 @@ const handlePaste = (event: ClipboardEvent) => {
   // Update input empty state
   const inputContent = editableInputRef.value.textContent || '';
   isInputEmpty.value = inputContent.trim() === '';
+
+  // Scroll to bottom after paste
+  editableInputRef.value.scrollTop = editableInputRef.value.scrollHeight;
 };
 
 // Select @ dropdown item

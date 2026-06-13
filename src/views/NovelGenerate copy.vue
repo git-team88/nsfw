@@ -6541,7 +6541,13 @@ function handleCoverInputBlur() {
 }
 
 function handleCoverPaste(event: ClipboardEvent) {
-  // Handle paste event if needed
+  event.preventDefault();
+  const text = event.clipboardData?.getData('text/plain') || '';
+  document.execCommand('insertText', false, text);
+  nextTick(() => {
+    const el = coverInputRef.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
 }
 
 function handleCoverInputFocus() {
