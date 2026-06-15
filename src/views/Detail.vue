@@ -32,8 +32,8 @@
                   <video
                     ref="videoRef"
                     class="video-player"
-                    :src="currentCollection.videoUrl || detail.videoUrl"
-                    :poster="currentCollection.cover"
+                    :src="currentCollection?.videoUrl || detail.videoUrl"
+                    :poster="currentCollection?.cover"
                     preload="auto"
                     playsinline
                     autoplay
@@ -343,7 +343,7 @@
                 class="tab-item"
                 :class="{ active: activeTab == 'collection' }"
                 @click="activeTab = 'collection'; loadCollections()"
-                v-if="collections.length > 0"
+                v-if="detail.book_id && Number(detail.book_id) > 0"
               >
                 {{ t('detail.collection') }}
               </div>
@@ -456,7 +456,7 @@
                                 class="c-video-player"
                                 :poster="getVideoPoster(c.video_url.trim())"
                                 controls
-                                controlslist="nodownload noremoteplayback noplaybackrate"
+                    controlslist="nodownload noremoteplayback noplaybackrate nofullscreen"
                                 disablePictureInPicture
                                 @click="toggleCommentVideoPlay"
                                 @play="onCommentVideoPlay"
@@ -538,7 +538,7 @@
                               :src="r.video_url.trim()"
                               class="c-video-player"
                               controls
-                              controlslist="nodownload noremoteplayback noplaybackrate"
+                    controlslist="nodownload noremoteplayback noplaybackrate nofullscreen"
                               @click="toggleCommentVideoPlay"
                               @play="onCommentVideoPlay"
                             ></video>

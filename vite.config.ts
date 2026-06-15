@@ -83,7 +83,7 @@ export default defineConfig({
           vendor: ['vue', 'vue-router', 'vue-i18n', 'pinia'],
           ui: ['element-plus', 'ant-design-vue'],
           utils: ['axios', 'dayjs', 'bignumber.js', 'uuid'],
-          doc: ['mammoth']
+          doc: ['mammoth', 'cfb']
         }
       }
     },

@@ -440,6 +440,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     coverGenerated: "Cover generated successfully",
     coverGenerateFailed: "Failed to generate cover",
     coverRenewFailed: "Generation failed, no deduction this time",
+    usePrevCover: "Use previous version",
     coverRenewLoadingTip: "Cover is being modified, please wait until it's done",
     coverHistoryTitle: "Generation History",
     coverHistoryEmpty: "No cover history",
@@ -470,7 +471,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     confirmComputingPower: "Confirm Estimated Computing Power",
     confirmComputingPowerPrefix: "This generation consumes an estimated {power} computing power, ",
     confirmComputingPowerSuffix: "do you confirm generation?",
-    confirmComputingPowerFrozen: "This step will freeze {frozen} computing power",
+    confirmComputingPowerFrozen: "This step will freeze {frozen} computing power, ",
     coverGenerateConfirmWarning: `After generation starts, if it is determined as \"generation failed\" by our system, the consumed computing power will be automatically refunded.<br /><br />
     If you manually cancel the generation, or the generation has completed normally but the output does not meet your expectations, it is not eligible for refund.`,
     coverGenerateConfirmBtn: "Start Generation",

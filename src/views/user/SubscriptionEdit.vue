@@ -131,6 +131,10 @@ const sidebarKey = ref("subscription");
 const priceOptions = ref<any[]>([]);
 const selectedId = ref('');
 const benefits = ref("");
+const originalSelectedId = ref('');
+const originalBenefits = ref("");
+const initialBenefits = ref("");
+const initialSelectedId = ref('');
 const saving = ref(false);
 const loading = ref(false);
 const plan = ref<any>(null);
@@ -191,6 +195,10 @@ async function fetchSubscription() {
       }
 
       benefits.value = description || "";
+      originalSelectedId.value = selectedId.value;
+      originalBenefits.value = benefits.value;
+      initialBenefits.value = benefits.value;
+      initialSelectedId.value = selectedId.value;
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
@@ -298,12 +306,19 @@ async function onSave() {
 
     saving.value = true;
     try {
-      const params = {
-        plan_id: selectedId.value,
-        description: benefits.value
-      };
+      const onlyDescChanged = selectedId.value === originalSelectedId.value && benefits.value !== originalBenefits.value;
 
-      const res = await api.modifySubscription(params);
+      let res;
+      if (onlyDescChanged) {
+        res = await api.modifySubscriptionDesc({ description: benefits.value });
+      } else {
+        const params = {
+          plan_id: selectedId.value,
+          description: benefits.value
+        };
+        res = await api.modifySubscription(params);
+      }
+
       const data = res as any;
 
       if (data.code === 200 || data.code === 0) {

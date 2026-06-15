@@ -17,6 +17,7 @@
     "ant-design-vue": "^4.0.0-rc.6",
     "axios": "^1.8.1",
     "bignumber.js": "^9.3.0",
+    "cfb": "^1.2.2",
     "country-state-data": "^1.1.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.19",

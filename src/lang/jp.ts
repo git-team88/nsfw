@@ -2377,6 +2377,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     coverGenerated: "表紙の生成に成功しました",
     coverGenerateFailed: "表紙の生成に失敗しました",
     coverRenewFailed: "生成に失敗しました、今回の課金はありません",
+    usePrevCover: "前のバージョンを使用",
     coverRenewLoadingTip: "表紙を変更中です。生成が終わってから操作してください",
     coverHistoryTitle: "生成履歴",
     coverHistoryEmpty: "履歴がありません",
@@ -2407,7 +2408,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     confirmComputingPower: "見積もり計クレジットを確認する",
     confirmComputingPowerPrefix: "この生成には推定{power}の計クレジットが消費されます、",
     confirmComputingPowerSuffix: "生成を確認しますか？",
-    confirmComputingPowerFrozen: "現在のステップの生成で{frozen}計クレジットが凍結されます",
+    confirmComputingPowerFrozen: "現在のステップの生成で{frozen}計クレジットが凍結されます、",
     coverGenerateConfirmWarning: `生成開始後、当社システムにより生成失敗と判定された場合、消費されたMPは自動的に返還されます。<br /><br />
     お客様の操作によるキャンセル、または出力が完了した生成結果がお客様のご期待に添えない場合につきましては、MP返還の対象外となります。`,
     coverGenerateConfirmBtn: "生成を開始する",

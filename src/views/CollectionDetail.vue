@@ -645,6 +645,7 @@ onBeforeUnmount(() => {
 
   .breadcrumb-item {
     cursor: pointer;
+    flex-shrink: 0;
 
     &:hover {
       color: #FB64B6;
@@ -653,12 +654,18 @@ onBeforeUnmount(() => {
     &.active {
       color: #364153;
       cursor: default;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
   .breadcrumb-arrow {
     margin: 0 1rem;
     color: #ddd;
+    flex-shrink: 0;
   }
 }
 
@@ -709,6 +716,11 @@ onBeforeUnmount(() => {
       color: #101828;
       margin-bottom: 1.6rem;
       line-height: 3.6rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tags-list {

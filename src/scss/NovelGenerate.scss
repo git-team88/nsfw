@@ -618,6 +618,27 @@
             height: 2.8rem;
           }
 
+          &.loading {
+            pointer-events: none;
+            opacity: 0.5;
+          }
+
+          .btn-spinner {
+            display: inline-block;
+            width: 1.4rem;
+            height: 1.4rem;
+            border: 1.5px solid #FB64B6;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: btn-spin 0.6s linear infinite;
+            flex-shrink: 0;
+          }
+
+          .btn-spinner-small {
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
           &:hover {
             opacity: 0.9;
           }
@@ -1585,16 +1606,22 @@
       align-items: center;
       justify-content: center;
       background-color: #F5F5F5;
-      gap: 1.2rem;
+      gap: 1rem;
 
       .cover-renew-failed-icon {
-        width: 4rem;
-        height: 4rem;
+        width: 6.4rem;
+        height: 6.4rem;
       }
 
       .cover-renew-failed-text {
         font-size: 1.4rem;
         color: #6A7282;
+      }
+
+      .use-prev-cover-btn {
+        font-size: 1.4rem;
+        color: #FB64B6;
+        cursor: pointer;
       }
     }
 

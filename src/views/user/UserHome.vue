@@ -2031,6 +2031,17 @@ async function unpinCollection(collection: any) {
               position: relative;
               background: #F5F5F5;
               color: #6A7282;
+              cursor: not-allowed;
+
+              &:hover {
+                &::after {
+                  display: none;
+                }
+              }
+            }
+
+            &:disabled {
+              cursor: not-allowed;
             }
           }
           &.share {

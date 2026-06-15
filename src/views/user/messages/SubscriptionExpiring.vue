@@ -2,14 +2,14 @@
   <div class="list-wrap">
     <div class="msg-item" v-for="item in list" :key="item.id">
       <div class="left-info">
-        <img class="avatar" :src="item.subscriberr.avatar || defaultAvatar" alt="" @click="goUserHome(item.subscriberr.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+        <img class="avatar" :src="item.author_info?.avatar || defaultAvatar" alt="" @click="goUserHome(item.author_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
-          <div class="username">{{ item.subscriberr.nickname }}</div>
+          <div class="username">{{ item.author_info?.nickname }}</div>
           <div class="desc">{{ t("user.messages.expireText") }}</div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
       </div>
-      <button class="action-btn" @click="toSubscribe(item.subscriberrr.user_id)">
+      <button class="action-btn" @click="toSubscribe(item.author_id)" v-if="item.status == 'expired'">
         {{ t("user.messages.subscribeNow") }}
         <img class="btn-icon" :src="subscribeIcon" alt="" />
       </button>

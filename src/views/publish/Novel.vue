@@ -508,6 +508,7 @@ import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import api from "@/api/index";
 import mammoth from "mammoth";
+import { extractDocText } from "@/util/docParser";
 import * as pdfjsLib from "pdfjs-dist";
 
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
@@ -1596,8 +1597,7 @@ async function handleDocumentUpload(e: Event) {
       // Read PDF file content
       textContent = await readPDFFile(file);
     } else if (fileExtension === '.doc' || fileExtension === '.docx') {
-      // Read Word document content
-      textContent = await readWordFile(file);
+      textContent = await readWordFile(file, fileExtension);
     }
 
     // Update the caption with the document content
@@ -1680,30 +1680,23 @@ async function readPDFFile(file: File): Promise<string> {
 }
 
 // Helper function to read Word files
-async function readWordFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const result = e.target?.result;
-      if (result && result instanceof ArrayBuffer) {
-        try {
-          // Use mammoth to extract text from Word document
-          const arrayBuffer = result;
-          const result_mammoth = await mammoth.extractRawText({ arrayBuffer });
-          resolve(result_mammoth.value);
-        } catch (error) {
-          console.error('Word parsing error:', error);
-          reject(new Error('Failed to parse Word file'));
-        }
-      } else {
-        reject(new Error('Failed to read Word file'));
-      }
-    };
-    reader.onerror = () => {
-      reject(new Error('Failed to read Word file'));
-    };
-    reader.readAsArrayBuffer(file);
-  });
+async function readWordFile(file: File, fileExtension: string): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  if (fileExtension === '.doc') {
+    try {
+      return extractDocText(arrayBuffer);
+    } catch (error) {
+      console.error('Word .doc parsing error:', error);
+      throw new Error('Failed to parse .doc file');
+    }
+  }
+  try {
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  } catch (error) {
+    console.error('Word .docx parsing error:', error);
+    throw new Error('Failed to parse .docx file');
+  }
 }
 
 function updateDropdownPosition() {

@@ -18,8 +18,10 @@
               <!-- <div class="id">ID: {{ userInfo.id }}</div> -->
             </div>
           </div>
-          <div class="price-tag"><span>{{ subscriptionPlans.price }} {{t('aiRecharge.unit')}}</span>/{{ t("subscribe.month") }}</div>
+          <div class="price-tag"><span>{{ subscriptionPrice }} {{t('aiRecharge.unit')}}</span>/{{ t("subscribe.month") }}</div>
         </div>
+
+        <p v-if="subscriptionDescription" class="plan-desc">{{ subscriptionDescription }}</p>
 
         <p class="desc">{{ t("subscribe.desc") }}</p>
 
@@ -81,7 +83,7 @@
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import defaultAvatar from "@/assets/images/base/avatar.png";
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
@@ -98,7 +100,14 @@ const userInfo = ref({
   avatar: ""
 });
 
-const subscriptionPlans = ref({
+interface SubscriptionPlan {
+  price: string;
+  id?: number;
+  name?: string;
+  description?: string;
+}
+
+const subscriptionPlans = ref<SubscriptionPlan | SubscriptionPlan[]>({
   price: ''
 });
 
@@ -110,6 +119,24 @@ const selectedMethod = ref("A");
 const autoRenewAgree = ref(true);
 const paymentAgree = ref(true);
 const isLoading = ref(false);
+
+const subscriptionDescription = computed(() => {
+  const plans = subscriptionPlans.value;
+  if (Array.isArray(plans)) {
+    return plans.length > 0 ? plans[0].description || '' : '';
+  } else {
+    return plans.description || '';
+  }
+});
+
+const subscriptionPrice = computed(() => {
+  const plans = subscriptionPlans.value;
+  if (Array.isArray(plans)) {
+    return plans.length > 0 ? plans[0].price : '';
+  } else {
+    return plans.price || '';
+  }
+});
 
 function checkLogin() {
   const token = localStorage.getItem('token');
@@ -289,6 +316,13 @@ onMounted(() => {
         color: #fb64b6;
       }
     }
+  }
+
+  .plan-desc {
+    font-size: 1.2rem;
+    color: #6A7282;
+    line-height: 2rem;
+    margin-bottom: 1.2rem;
   }
 
   .desc {

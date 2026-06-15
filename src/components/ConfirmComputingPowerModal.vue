@@ -50,7 +50,7 @@ const emit = defineEmits<{
     width: 50rem;
     background-color: #ffffff;
     border-radius: 1.2rem;
-    padding: 4.4rem 2.4rem 2.4rem;
+    padding: 4.4rem 3rem 2.4rem;
 
     .close-btn {
       position: absolute;

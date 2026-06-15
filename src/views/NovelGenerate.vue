@@ -69,7 +69,7 @@
               </div>
             </div>
 
-            <div class="progress-item" v-else-if="queueInfo || prepareQueueInfo">
+            <div class="progress-item" v-else-if="(queueInfo || prepareQueueInfo) && taskStatus != 'DOING'">
               <div class="progress-info">
                 <span class="progress-label">{{ t('novel.generationProgress') }}</span>
                 <span class="progress-time" v-if="((queueInfo || prepareQueueInfo)?.count ?? 0) > 0">
@@ -102,7 +102,7 @@
                 <span class="progress-label">{{ t('novel.newChapter') }}</span>
                 <div class="progress-status">
                   <img class="status-dot on" src="@/assets/images/novel/load.png" alt="Loading" />
-                  <span class="status-text">{{ queueInfo || prepareQueueInfo ? t('novel.waiting') : t('novel.generating') }}</span>
+                  <span class="status-text">{{ isPreparing ? t('novel.waiting') : t('novel.generating') }}</span>
                 </div>
               </div>
             </div>
@@ -119,7 +119,7 @@
                 <span class="progress-label">{{ currentStepName == 'outline' ? t('novel.novelOutline') : t('novel.newChapter') }}</span>
                 <div class="progress-status">
                   <img class="status-dot on" src="@/assets/images/novel/load.png" alt="Loading" />
-                  <span class="status-text">{{ queueInfo || prepareQueueInfo ? t('novel.waiting') : t('novel.generating') }}</span>
+                  <span class="status-text">{{ isPreparing ? t('novel.waiting') : t('novel.generating') }}</span>
                 </div>
               </div>
             </div>
@@ -221,7 +221,7 @@
                 <!-- Word Count Selector -->
                 <div class="novel-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
                   <div class="selector-header">
-                    <span>{{ t('novel.totalWords') }} : {{ selectedWordCount }}</span>
+                     <span>{{ t('novel.totalWords') }} : {{ selectedWordCountDisplay }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
                   </div>
                   <div class="dropdown" v-if="showWordCountDropdown">
@@ -262,8 +262,9 @@
                   <span class="regenerate-cost">{{ regenerateCost }}</span>
                   <img src="@/assets/images/novel/coin.png" alt="" />
                 </div>
-                <div class="send-btn" @click="sendRegenerateRequest">
-                  <img src="@/assets/images/novel/send.png" alt="" />
+                <div class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
+                  <img v-if="!isSendingRegenerate" src="@/assets/images/novel/send.png" alt="" />
+                  <span v-else class="btn-spinner btn-spinner-small"></span>
                 </div>
               </div>
             </div>
@@ -589,8 +590,9 @@
                   <div class="skeleton-line cover-skeleton"></div>
                 </div>
                 <div v-else-if="coverRenewFailed" class="cover-renew-failed">
-                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/fail_icon.png" alt="" />
+                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
                   <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
+                  <span class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</span>
                 </div>
                 <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
                   <div class="skeleton-line cover-skeleton"></div>
@@ -604,7 +606,7 @@
                 </div>
 
                 <div class="cover-renew">
-                  <img v-if="coverImage" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
+                  <img v-if="coverImage && !coverRenewLoading && !isPreparing" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
                   <img v-if="showCoverEditBtn && coverImage && !coverRenewLoading && !isPreparing && (taskStatus !== 'DOING' || !generatingChapter)" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
                   <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="toggleCoverEdit" />
                 </div>
@@ -625,8 +627,9 @@
                   <div class="skeleton-line cover-skeleton"></div>
                 </div>
                 <div v-else-if="coverRenewFailed" class="cover-renew-failed">
-                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/fail_icon.png" alt="" />
+                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
                   <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
+                  <span class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</span>
                 </div>
                 <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
                   <div class="skeleton-line cover-skeleton"></div>
@@ -639,9 +642,8 @@
                   <span>{{ t('novel.coverPlaceholder') }}</span>
                 </div>
                 <div class="cover-renew">
-                  <img v-if="coverImage" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
+                  <img v-if="coverImage && !coverRenewLoading && !isPreparing" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
                   <img v-if="showCoverEditBtn && coverImage && !coverRenewLoading && !isPreparing && (taskStatus !== 'DOING' || !generatingChapter)" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
-                  <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="toggleCoverEdit" />
                 </div>
               </div>
             </div>
@@ -1183,6 +1185,16 @@ const isSendingRegenerate = ref<boolean>(false);
 const selectedWordCount = ref<string>('30K');
 const selectedLanguage = ref<string>('en');
 const wordCountOptions = ['30K', '100K', '300K'];
+const wordCountDisplayMap: Record<string, Record<string, string>> = {
+  jp: { '30K': '30,000字', '100K': '100,000字', '300K': '300,000字' },
+};
+const selectedWordCountDisplay = computed(() => {
+  const langMap = wordCountDisplayMap[locale.value];
+  if (langMap && langMap[selectedWordCount.value]) {
+    return langMap[selectedWordCount.value];
+  }
+  return selectedWordCount.value;
+});
 const languageOptions = computed(() => [
   { value: 'jp', label: t('novel.language.jp') },
   { value: 'en', label: t('novel.language.en') },
@@ -1296,7 +1308,7 @@ const isHandlingChapterAction = ref<boolean>(false);
 const chapterTitleInputs = ref<{[key: number]: any}>({});
 const nextChapterPoints = ref<number>(0);
 const allChaptersPoints = ref<number>(0);
-const coverCost = ref<number>(0);
+const coverCost = ref<number>(1);
 const isFetchingNovelOutline = ref<boolean>(false);
 
 // Loading component state
@@ -1661,7 +1673,10 @@ const shouldShowGenerateButtons = computed(() => {
   if (isPreparing.value) return false;
 
   // Don't show buttons if step_name is chapter when viewing outline
-  if (!currentChapter.value && currentStepName.value == 'chapter') return false;
+  if (!currentChapter.value) {
+    if (currentStepName.value == 'chapter' || currentStepName.value == 'renew_novel_cover') return false;
+    if (stepChapterIndex.value >= chapterCount.value && chapterCount.value > 0) return false;
+  }
 
   // Don't show buttons during batch chapter generation
   if (isBatchChapter.value == 1) return false;
@@ -1828,7 +1843,6 @@ const allChaptersCost = computed(() => allChaptersPoints.value);
 const originalRegenerateContent = ref<string>('');
 
 const regenerateOutline = async () => {
-  // Check if cover is generating
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
     return;
@@ -1930,11 +1944,10 @@ const sendRegenerateRequest = async () => {
       return;
     }
 
-    // Convert selectedWordCount to total_words
     let totalWords;
     switch (selectedWordCount.value) {
       case '30K':
-        totalWords = 10;
+        totalWords = 3;
         break;
       case '100K':
         totalWords = 10;
@@ -2050,7 +2063,6 @@ const sendRegenerateRequest = async () => {
 
 // Start editing project name
 const startEditProjectName = () => {
-  // Check if cover is generating or there's an unprocessed cover generation result
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
     return;
@@ -2114,7 +2126,6 @@ const handleProjectNameBlur = () => {
 
 // Start editing chapter
 const startEditChapter = () => {
-  // Check if cover is generating
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
     return;
@@ -2361,7 +2372,6 @@ const saveEditChapter = async () => {
 
 // Start editing chapter title
 const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
-  // Check if cover is generating or there's an unprocessed cover generation result
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
     return;
@@ -2529,10 +2539,7 @@ const printContent = (content: string) => {
 };
 
 function goHome() {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
 
@@ -2569,10 +2576,7 @@ function goHome() {
 }
 
 function goProject() {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
 
@@ -2614,10 +2618,7 @@ function goProject() {
 }
 
 function goUser() {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   const token = localStorage.getItem("token");
   if (!token) {
@@ -2630,10 +2631,7 @@ function goUser() {
 }
 
 function goToSimilar() {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
 
@@ -2659,11 +2657,11 @@ function goToSimilar() {
 const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = false) => {
   hideEdit();
 
-  // Check if cover is generating or there's an unprocessed cover generation result
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+
 
   if (!skipBalanceCheck) isNextLoading.value = true;
   try {
@@ -2832,10 +2830,7 @@ function hideEdit() {
 }
 
 const goPrevChapter = async () => {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
   // Stop auto navigation when user navigates manually
@@ -2947,10 +2942,7 @@ const goPrevChapter = async () => {
 }
 
 const goNextChapter = async () => {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
   // Stop auto navigation when user navigates manually
@@ -3505,10 +3497,7 @@ const confirmGenerateAllChapters = async () => {
 };
 
 function goRechargeDetail() {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   const token = localStorage.getItem('token');
   if (!token) {
@@ -3557,10 +3546,7 @@ const handleChapterInfoClick = async () => {
 
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
   // Only stop auto navigation when user clicks a chapter that's not currently generating
@@ -3772,10 +3758,7 @@ const handleChapterItemClick = async (chapterNum: number) => {
 // Handle publish chapter button click
 const handlePublishChapter = (chapter: any) => {
   // Check if cover is generating or there's an unprocessed cover generation result
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   // Get session_id from sessionId ref
   const session_id = sessionId.value;
@@ -3803,10 +3786,7 @@ const handlePublishChapter = (chapter: any) => {
 
 // Handle outline preview click
 const handleOutlinePreviewClick = async () => {
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
+
 
   hideEdit();
   // Stop auto navigation when user clicks on outline
@@ -6842,15 +6822,71 @@ async function openCoverHistory() {
     coverHistoryList.value = [];
   }
   showCoverHistoryModal.value = true;
+  isEditingCover.value = false;
 }
 
 function closeCoverHistoryModal() {
   showCoverHistoryModal.value = false;
 }
 
-function selectHistoryCover(coverUrl: string) {
-  coverImage.value = coverUrl;
-  showCoverHistoryModal.value = false;
+async function selectHistoryCover(coverUrl: string) {
+  try {
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${aiUrl}ai/novel/replace_novel_cover`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        cover_url: coverUrl
+      })
+    });
+    const res = await response.json();
+    if (res.code == 200) {
+      coverImage.value = coverUrl;
+      showCoverHistoryModal.value = false;
+    } else {
+      toast(res.message);
+    }
+  } catch (e) {
+    console.error('Error replacing cover:', e);
+    toast(t('fail'));
+  }
+}
+
+async function usePreviousCover() {
+  try {
+    const detailRes = await api.detailProject(sessionId.value) as any;
+    let prevCover = '';
+
+    if (detailRes.code == 200 && detailRes.data?.history_data) {
+      let historyData = detailRes.data.history_data;
+      if (typeof historyData == 'string') {
+        try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
+      }
+      if (historyData?.renew_novel_cover && Array.isArray(historyData.renew_novel_cover) && historyData.renew_novel_cover.length > 0) {
+        prevCover = historyData.renew_novel_cover[historyData.renew_novel_cover.length - 1];
+      }
+    }
+
+    if (!prevCover && detailRes.code == 200 && detailRes.data?.result_async) {
+      let result = detailRes.data.result_async;
+      if (typeof result == 'string') {
+        try { result = JSON.parse(result); } catch (e) { result = null; }
+      }
+      prevCover = result?.generate_novel_cover || '';
+    }
+
+    if (prevCover) {
+      coverImage.value = prevCover;
+      coverRenewFailed.value = false;
+      showCoverEditBtn.value = true;
+    }
+  } catch (e) {
+    console.error('Error fetching previous cover:', e);
+  }
 }
 
 async function generateNovelCover() {
