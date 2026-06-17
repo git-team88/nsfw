@@ -273,9 +273,9 @@
 
               <div v-else>
                 <div class="follow-list" v-if="followList.length > 0">
-                  <div class="follow-card" v-for="user in followList" :key="user.id">
+                  <div class="follow-card" v-for="user in followList" :key="user.id" @click="goUserHome(user.id)">
                     <div class="card-top">
-                      <img :src="user.avatar || defaultAvatar" class="user-avatar" @click="goUserHome(user.id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                      <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <div class="user-meta">
                         <div class="nickname">{{ user.nickname }}</div>
                         <div class="fans-count">
@@ -286,7 +286,7 @@
                         v-if="String(user.id) !== uid"
                         class="follow-btn"
                         :class="{ followed: user.isFollowed }"
-                        @click="toggleListFollow(user)"
+                        @click.stop="toggleListFollow(user)"
                       >
                         <span class="btn-text">{{
                           user.isFollowed
@@ -966,7 +966,7 @@ onMounted(async () => {
   // First fetch user info
   await fetchUserInfo();
 
-    const tabParam = route.query.type;
+    const tabParam = route.query.tab;
     if (tabParam) {
       const tab = parseInt(tabParam as string);
       switch (tab) {
@@ -1032,11 +1032,12 @@ watch(currentTab, () => {
 });
 
 let lastId = ref(route.query.id);
-let lastType = ref(route.query.type);
+let lastTab = ref(route.query.tab);
 
-watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId, oldType]) => {
+watch(() => [route.query.id, route.query.tab], async ([newId, newTab], [oldId, oldTab]) => {
+
   const idChanged = newId !== oldId;
-  const typeChanged = newType !== oldType;
+  const tabChanged = newTab !== oldTab;
 
   if (idChanged) {
     // Reset states
@@ -1068,10 +1069,10 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
     // Fetch new user info and data
     await fetchUserInfo();
 
-    const tabParam = newType;
+    const tabParam = newTab;
     if (tabParam) {
-      const tab = parseInt(tabParam as string);
-      switch (tab) {
+      const tabVal = parseInt(tabParam as string);
+      switch (tabVal) {
         case 1:
           goToCollections(true);
           break;
@@ -1087,9 +1088,9 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
     }
   }
 
-  else if (typeChanged && newType) {
-    const tab = parseInt(newType as string);
-    switch (tab) {
+  else if (tabChanged && newTab) {
+    const tabVal = parseInt(newTab as string);
+    switch (tabVal) {
       case 1:
         goToCollections(true);
         break;
@@ -1103,7 +1104,7 @@ watch(() => [route.query.id, route.query.type], async ([newId, newType], [oldId,
   }
 
   lastId.value = newId;
-  lastType.value = newType;
+  lastTab.value = newTab;
 });
 
 // Watch for language changes
@@ -1137,10 +1138,20 @@ function getEndDate() {
 
 // Set active content type
 function setActiveContentType(typeId: number) {
-  viewMode.value = "posts"; // Ensure we switch back to posts view
+  viewMode.value = "posts";
   activeContentType.value = typeId;
-  activeCollectionTab.value = 0; // Reset to "All" tab
+  activeCollectionTab.value = 0;
   fetchCollections(true);
+
+  const newQuery = { ...route.query };
+  delete newQuery.tab;
+
+  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+    router.replace({
+      path: "/user-home",
+      query: newQuery,
+    });
+  }
 }
 
 // Set active collection tab
@@ -1192,65 +1203,47 @@ async function deleteCollection() {
 }
 
 function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | MouseEvent = false) {
-  // ✅ 判断是否从路由调用（fromRoute = true）还是从用户点击（MouseEvent）
   const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
-
-  // ✅ 如果已经在同一个 tab，也要重新加载数据（刷新）
-  const isAlreadyOnSameTab = viewMode.value === "follow" && followTab.value === tab;
 
   viewMode.value = "follow";
   followTab.value = tab;
 
-  // Reset follow list and page when switching tabs or refreshing
   followList.value = [];
   followPage.value = 1;
   isPrivacyHidden.value = false;
   fetchFollowList(true);
 
-  // 移除URL上的type参数
-  const newQuery = { ...route.query };
-  delete newQuery.type;
+  if (!fromRoute) {
+    const newQuery = { ...route.query };
+    delete newQuery.tab;
 
-  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
-    router.replace({
-      path: "/user-home",
-      query: newQuery,
-    });
+    if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+      router.replace({
+        path: "/user-home",
+        query: newQuery,
+      });
+    }
   }
 }
 
 function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   const fromRoute = typeof fromRouteOrEvent === 'boolean' ? fromRouteOrEvent : false;
 
-  const isAlreadyOnPosts = viewMode.value === "posts";
-
   viewMode.value = "posts";
   currentTab.value = "all";
 
-  // 根据URL参数设置activeContentType，type=1表示漫画，type=2表示小说
-  const typeParam = route.query.type;
-  if (typeParam) {
-    const typeNum = parseInt(typeParam as string);
-    if (typeNum === 1 || typeNum === 2) {
-      activeContentType.value = typeNum;
-    } else {
-      activeContentType.value = 2;
-    }
-  } else {
-    activeContentType.value = 2;
-  }
-
   fetchCollections();
 
-  // 移除URL上的type参数
-  const newQuery = { ...route.query };
-  delete newQuery.type;
+  if (!fromRoute) {
+    const newQuery = { ...route.query };
+    delete newQuery.tab;
 
-  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
-    router.replace({
-      path: "/user-home",
-      query: newQuery,
-    });
+    if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+      router.replace({
+        path: "/user-home",
+        query: newQuery,
+      });
+    }
   }
 }
 

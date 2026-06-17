@@ -75,7 +75,7 @@ async function handleConfirm() {
       const couponInfo = res.data?.info || {};
       emit('confirm', couponInfo);
     } else {
-      errorMessage.value = locale.value == 'jp' ? res.msg_jp : res.msg;
+      errorMessage.value = locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp;
     }
   } catch (error) {
     console.error('Error checking promo code:', error);
@@ -93,7 +93,7 @@ async function handleConfirm() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;

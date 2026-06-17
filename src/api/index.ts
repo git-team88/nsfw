@@ -223,16 +223,16 @@ export default {
       method: "POST",
     }),
 
-  // homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
-  //   axios.request({
-  //     url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
-  //     method: "GET",
-  //   }),
   homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
     axios.request({
-      url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  // homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
+  //   axios.request({
+  //     url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+  //     method: "GET",
+  //   }),
   homeFollowList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
       url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),

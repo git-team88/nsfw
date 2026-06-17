@@ -1083,8 +1083,9 @@
                 v-for="user in followUserList"
                 :key="user.id"
                 class="follow-card"
+                @click="navigateToUserHome(user.id)"
               >
-                <div class="card-top" @click="navigateToUserHome(user.id)">
+                <div class="card-top">
                   <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                   <div class="user-meta">
                     <div class="nickname">{{ user.nickname }}</div>
@@ -2528,6 +2529,9 @@ const selectContentType = (type: string) => {
   // Switch content type
   contentType.value = type;
 
+  // Update SEO meta tags when switching content type
+  setSeoMeta(type);
+
   // Clear input area
   nextTick(() => {
     if (editableInputRef.value) {
@@ -2576,21 +2580,10 @@ const selectLanguage = (item: any) => {
   showLanguageDropdown.value = false;
 
   // Update SEO meta tags when language changes
-  const title = t('seo.home.title');
-  const keywords = t('seo.home.keywords');
-  const description = t('seo.home.description');
-
-  document.title = title;
-
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (metaKeywords) {
-    metaKeywords.setAttribute('content', keywords);
-  }
-
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (metaDescription) {
-    metaDescription.setAttribute('content', description);
-  }
+  nextTick(() => {
+    const seoTypeMap: Record<string, string> = { 'novel': 'novel', 'comic': 'comic', 'drama': 'drama' };
+    setSeoMeta(seoTypeMap[contentType.value]);
+  });
 };
 
 // Close dropdowns when clicking outside
@@ -5109,10 +5102,30 @@ watch(viewMode, (newMode) => {
   }
 });
 
-function setSeoMeta() {
-  const title = t('seo.home.title');
-  const keywords = t('seo.home.keywords');
-  const description = t('seo.home.description');
+function setSeoMeta(type?: string) {
+  let title: string, keywords: string, description: string;
+
+  if (type) {
+    const seoKeyMap: Record<string, string> = {
+      'novel': 'seo.home.novel',
+      'comic': 'seo.home.comic',
+      'drama': 'seo.home.drama'
+    };
+    const seoKey = seoKeyMap[type];
+    if (seoKey) {
+      title = t(`${seoKey}.title`);
+      keywords = t(`${seoKey}.keywords`);
+      description = t(`${seoKey}.description`);
+    } else {
+      title = t('seo.home.title');
+      keywords = t('seo.home.keywords');
+      description = t('seo.home.description');
+    }
+  } else {
+    title = t('seo.home.title');
+    keywords = t('seo.home.keywords');
+    description = t('seo.home.description');
+  }
 
   document.title = title;
 
@@ -5180,8 +5193,8 @@ onMounted(async () => {
     contentType.value = contentTypeFromPath[path];
   }
 
-  // Set SEO meta tags based on current language
-  setSeoMeta();
+  // Set SEO meta tags based on current content type
+  setSeoMeta(contentTypeFromPath[path] || undefined);
 
   // Restore last content tab and content type if coming back from detail page
   try {

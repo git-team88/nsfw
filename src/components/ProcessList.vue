@@ -1,6 +1,6 @@
 <template>
   <div v-if="isLogin && totalCount > 0" class="process-container">
-    <div class="process-header" @click="toggleDropdown">
+    <div class="process-header" :class="{ 'has-success': completedCount > 0 }" @click="toggleDropdown">
       <div class="process-title">
           <img class="status-icon" src="@/assets/images/process/wait.png" alt="status" />
           <span>{{ t('process.taskProgress') }}{{ totalCount >= 1 ? ` (${completedCount}/${totalCount})` : '' }}</span>
@@ -387,6 +387,24 @@ const getItemLabel = (type: string, item: any) => {
   } else if (item.step_name == 'cover') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.cover');
     if (type == 'manju') return t('process.manju') + '-' + t('process.cover');
+  } else if (item.step_name == 'renew_novel_cover') {
+    if (type == 'novel') return t('process.novel') + '-' + t('process.coverChange');
+  } else if (item.step_name == 'renew_manhua_cover') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.coverChange');
+  } else if (item.step_name == 'edit_single_scene') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.sceneEdit');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.storyboardEdit');
+  } else if (item.step_name == 'edit_single_character') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.characterEdit');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.characterEdit');
+  } else if (item.step_name == 'renew_manju_cover') {
+    if (type == 'manju') return t('process.manju') + '-' + t('process.coverChange');
+  } else if (item.step_name == 'merge_videos') {
+    if (type == 'manju') return t('process.manju') + '-' + t('process.mergeVideos');
+  } else if (item.step_name == 'refresh_manhua_scene') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.sceneRefresh');
+  } else if (item.step_name == 'refresh_manju_scene') {
+    if (type == 'manju') return t('process.manju') + '-' + t('process.storyboardRefresh');
   } else if (item.step_name == 'chapter') {
     // Handle chapter step differently based on status and type
     if (item.step_status == 'DOING' && item.is_batch_chapter != 1) {
@@ -575,6 +593,20 @@ onUnmounted(() => {
     border-radius: 1.2rem;
     box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
     z-index: 101;
+
+    &.has-success {
+      &::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        right: 1px;
+        bottom: 1px;
+        background: rgba(251,100,182,0.2);
+        border-radius: 1.1rem;
+        pointer-events: none;
+      }
+    }
 
     .process-title {
       display: flex;

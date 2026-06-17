@@ -5,7 +5,7 @@
         <img class="avatar" :src="item.author_info?.avatar || defaultAvatar" alt="" @click="goUserHome(item.author_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
           <div class="username">{{ item.author_info?.nickname }}</div>
-          <div class="desc">{{ t("user.messages.expireText") }}</div>
+          <div class="desc">{{ item.status == 'expired' ? t("user.messages.expiredText") : t("user.messages.expireText") }}</div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
       </div>

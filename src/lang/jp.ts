@@ -827,6 +827,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       tab6: "自分へのメンション",
       subscribeNow: "今すぐサブスク登録",
       expireText: "あなたのサブスクの有効期限がまもなく終了します",
+      expiredText: "あなたのサブスクの有効期限が終了しました",
       subscribedText: "あなたのコンテンツをサブスク登録しました",
       likedText: "あなたの作品にいいねしました",
       commentedText: "あなたの作品にコメントしました：",
@@ -965,7 +966,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     },
     privacy: {
       title: "プライバシー設定",
-      subscribe: "サブスク一覧は自分のみ閲覧可",
+      subscribe: "フォロー一覧は自分のみ閲覧可",
       followers: "フォロワー一覧は自分のみ閲覧可",
       anonymous_follow: "匿名フォロー",
       anonymous_subscribe: "匿名サブスク",
@@ -1246,7 +1247,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       novel: "小説",
       manhua: "マンガ",
       manju: "動画",
-      photo: "写真",
+      photo: "画像",
       video: "アニメドラマ",
     },
     status: {
@@ -1362,11 +1363,11 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     expired: "期限切れ",
     invited: "新規ユーザー",
     other: "その他",
-    novelGenerate: "小説生成",
-    comicGenerate: "漫画生成",
-    videoGenerate: "ドラマ生成",
-    imageGenerate: "画像生成",
-    simpleVideoGenerate: "動画生成",
+    novelGenerate: "小説作成",
+    comicGenerate: "マンガ作成",
+    videoGenerate: "ドラマ作成",
+    imageGenerate: "画像作成",
+    simpleVideoGenerate: "動画作成",
     frozenPower: "現在の保留クレジット：",
     frozenPowerTitle: "保留クレジットの説明",
     frozenPowerRules: "1. タスクが完了していない間、システムは推定値の105%のクレジットを保留します。複数の新しいタスクを同時に開始した場合、保留中のクレジットは使用できません。<br />2. 複数章をまとめて生成する場合、各ステップが実行された時点でそのステップのクレジットが保留されます。クレジットが不足している場合、タスクは中断されます。<br />3. 保留されたクレジットは、現在のタスクが完了して決済された後に自動的に解除されます。"
@@ -1570,7 +1571,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       comic: "マンガ",
       novel: "小説",
       video: "アニメドラマ",
-      photo: "写真",
+      photo: "画像",
       image: "画像",
       article: "テキスト"
     },
@@ -1608,7 +1609,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   recordList: {
     title: "生成",
     all: "すべて",
-    photo: "写真",
+    photo: "画像",
     video: "動画",
     audio: "音声",
     resolution: "解像度",
@@ -1618,7 +1619,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     download: "ダウンロード",
     share: "共有",
     empty: "追加履歴はありません",
-    photoGenerate: "写真生成",
+    photoGenerate: "画像生成",
     videoGenerate: "動画生成",
     delete: "削除",
     image: "画像",
@@ -1802,7 +1803,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       resolutionInfo: "推奨比率：4:3",
       remove: "削除",
       preview: "プレビュー",
-      photo: "写真",
+      photo: "画像",
       previewTail: "（アップロードした画像の枚数を超えることはできません）",
       add: "続けて追加",
       uploadFromHistory: "生成履歴から選択",
@@ -2096,6 +2097,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       id: "ID",
     },
     loading: "読み込み中...",
+    loadMore: "もっと見る",
   },
   paymentTerms: {
     title: "特定商取引法に基づく表記",
@@ -2378,6 +2380,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     coverGenerateFailed: "表紙の生成に失敗しました",
     coverRenewFailed: "生成に失敗しました、今回の課金はありません",
     usePrevCover: "前のバージョンを使用",
+    coverRenewFailedTip: "表紙の変更に失敗しました。前のバージョンを使用をクリックしてから操作を続けてください",
     coverRenewLoadingTip: "表紙を変更中です。生成が終わってから操作してください",
     coverHistoryTitle: "生成履歴",
     coverHistoryEmpty: "履歴がありません",
@@ -2465,6 +2468,13 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     outline: "あらすじ",
     chapter: "章",
     cover: "表紙",
+    coverChange: "表紙変更",
+    sceneEdit: "話数画像変更",
+    storyboardEdit: "絵コンテ変更",
+    characterEdit: "キャラクター変更",
+    mergeVideos: "絵コンテ合成",
+    sceneRefresh: "話数画像再生成",
+    storyboardRefresh: "絵コンテ再生成",
     character: "キャラクター設定",
     script: "脚本",
     clearCompleted: "完了分をクリア",
@@ -2601,7 +2611,22 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     home: {
       title: "MoeGen - AI小説・漫画・アニメドラマ生成｜ことばと物語",
       keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,MoeGen,萌創,AI同人創作",
-      description: "MoeGen 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。"
+      description: "MoeGen 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
+      novel: {
+        title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - MoeGen",
+        keywords: "AI小説生成器,AI小説執筆,AI Web小説,無料AI小説,長編小説生成,Web小説AI,小説プロットAI,二次元小説AI",
+        description: "MoeGen AI小説ジェネレーター、ひと言のアイデアから30K文字の長編Web小説を自動生成。玄幻・恋愛・BL・異世界など多ジャンル対応。台湾・香港・日本のクリエイターに選ばれる。"
+      },
+      comic: {
+        title: "AI 漫画ジェネレーター｜テキストから漫画・コマ割り自動生成 - MoeGen",
+        keywords: "AI漫画,AI漫画生成,AI manga,テキストから漫画,自動コマ割り,キャラ一貫性,二次元AI絵",
+        description: "MoeGen AI 漫画ジェネレーターは、テキストを漫画に自動変換。コマ割り・キャラクター一貫性を AI が担保、少年漫画・少女漫画・チビキャラ対応。"
+      },
+      drama: {
+        title: "AI アニメドラマ生成｜ひとことで二次元アニメショート - MoeGen",
+        keywords: "AIアニメドラマ,AIアニメ短編,アニメ脚本AI,アニメ自動生成,ショートアニメAI,AI 声優",
+        description: "MoeGen の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
+      }
     },
     detail: {
       title: "[[title]] - MoeGen 二次元 AI クリエイション",

@@ -66,14 +66,15 @@ interface SwitchInfo {
 onMounted(async () => {
   try {
     const res = (await api.getPrivacy()) as any;
-    if (res.code == 0 && res.data) {
-      info.value.is_subs_list_private = res.data.is_subs_list_private || '0';
-      info.value.is_fans_list_private = res.data.is_fans_list_private || '0';
-      info.value.is_anonymous_follow = res.data.is_anonymous_follow || '0';
-      info.value.is_anonymous_subs = res.data.is_anonymous_subs || '0';
-      info.value.is_anonymous_comment = res.data.is_anonymous_comment || '0';
+    if (res.code == 0) {
+      info.value.is_subs_list_private = res.data?.is_subs_list_private || '0';
+      info.value.is_fans_list_private = res.data?.is_fans_list_private || '0';
+      info.value.is_anonymous_follow = res.data?.is_anonymous_follow || '0';
+      info.value.is_anonymous_subs = res.data?.is_anonymous_subs || '0';
+      info.value.is_anonymous_comment = res.data?.is_anonymous_comment || '0';
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      const msg = locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp;
+      toast(msg || t('fail'));
     }
   } catch (e) {
     console.error(e);
@@ -101,12 +102,12 @@ function toggle(key: string) {
         info.value[key] = newValue;
         toast(t('success'));
       } else {
-        toast(r.msg);
+        toast(r.msg || t('fail'));
       }
     })
     .catch((e: unknown) => {
       saving.value = false;
-      toast(String(e));
+      toast(e instanceof Error ? e.message : t('fail'));
     });
 }
 </script>

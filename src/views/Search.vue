@@ -126,10 +126,11 @@
             v-for="user in users"
             :key="user.id"
             class="user-card"
+            @click="goToUserHome(user.id)"
           >
             <div class="card-top">
-              <img :src="user.avatar || defaultAvatar" alt="Avatar" class="user-avatar" @click="goToUserHome(user.id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-              <div class="user-meta" @click="goToUserHome(user.id)">
+              <img :src="user.avatar || defaultAvatar" alt="Avatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+              <div class="user-meta">
                 <div class="nickname">{{ user.nickname }}</div>
                 <div class="fans-count">
                   {{ formatNumber(user.follower_count) }} {{ t('userHome.fans') }}

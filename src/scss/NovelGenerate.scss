@@ -1533,15 +1533,11 @@
    cursor: pointer;
  }
 
- .chapter-publish-btn.unpublish {
-   display: none;
- }
+  .chapter-publish-btn.unpublish {
+    display: inline;
+  }
 
- .chapter-item:hover .chapter-publish-btn.unpublish {
-   display: inline;
- }
-
- .chapter-publish-btn.published {
+  .chapter-publish-btn.published {
   display: inline;
   color: #99A1AF;
   cursor: default;

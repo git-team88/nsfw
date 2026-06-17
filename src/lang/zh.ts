@@ -502,6 +502,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     coverGenerateFailed: "封面生成失败",
     coverRenewFailed: "生成失败，本次不扣费",
     usePrevCover: "使用上一版",
+    coverRenewFailedTip: "封面修改失败，请点击使用上一版后再继续操作",
     coverRenewLoadingTip: "正在修改封面，请生成结束后再操作",
     coverHistoryTitle: "历史生成",
     coverHistoryEmpty: "暂无历史封面",
@@ -1100,6 +1101,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       tab6: "提及我的",
       subscribeNow: "立即订阅",
       expireText: "您的订阅即将到期",
+      expiredText: "您的订阅已到期",
       subscribedText: "订阅了您的内容",
       likedText: "喜欢了您的作品",
       commentedText: "评论了您的作品：",
@@ -1238,7 +1240,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     privacy: {
       title: "隐私设置",
-      subscribe: "订阅列表仅自己可见",
+      subscribe: "关注列表仅自己可见",
       followers: "粉丝列表仅自己可见",
       anonymous_follow: "匿名关注",
       anonymous_subscribe: "匿名订阅",
@@ -2275,6 +2277,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       id: "ID",
     },
     loading: "加载中...",
+    loadMore: "加载更多",
   },
   paymentTerms: {
     title: "基于《特定商交易法》的说明",
@@ -2521,6 +2524,13 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     outline: "大纲",
     chapter: "章节",
     cover: "封面图",
+    coverChange: "封面修改",
+    sceneEdit: "分集图片修改",
+    storyboardEdit: "分镜修改",
+    characterEdit: "角色修改",
+    mergeVideos: "分镜合成",
+    sceneRefresh: "分集图片重新生成",
+    storyboardRefresh: "分镜重新生成",
     character: "角色",
     script: "剧本",
     clearCompleted: "清除已完成",
@@ -2633,7 +2643,22 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     home: {
       title: "MoeGen 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,MoeGen,萌創,AI同人創作",
       keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,MoeGen,萌創,AI同人創作",
-      description: "MoeGen 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。"
+      description: "MoeGen 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
+      novel: {
+        title: "AI 小说生成器线上免费｜一句话写出 30K 长篇网文 - MoeGen",
+        keywords: "AI小说生成器,AI写小说,AI网文,免费AI小说,长篇小说生成,网文写作AI,小说大纲AI,二次元小说AI",
+        description: "MoeGen AI 小说生成器，输入一句创意即可自动生成 30K 字长篇网文，支持玄幻、言情、BL、异世界等多题材，台港日创作者首选。"
+      },
+      comic: {
+        title: "AI 漫画生成器线上免费｜文字一键生成二次元漫画 - MoeGen",
+        keywords: "AI漫画生成器,一键生成漫画,AI漫画分镜,二次元AI绘画,日漫风AI,条漫生成,角色一致性",
+        description: "MoeGen AI 漫画生成器，文字一键转漫画，自动分镜、角色一致性保证，支持日漫、条漫、Q版等多种二次元画风。"
+      },
+      drama: {
+        title: "AI 漫剧生成器｜一句话生成二次元动画短剧 - MoeGen",
+        keywords: "AI漫剧生成,AI动画短剧,二次元动画AI,AI动漫剧本,AI短剧,动画剧生成,Anime Drama AI",
+        description: "MoeGen AI 漫剧生成器，将小说 / 创意一句话转换为二次元动画短剧，自动生成分镜、对白、配音与动态画面，动画创作者的 AI 神器。"
+      }
     },
     detail: {
       title: `[[title]] - MoeGen 二次元 AI 創作`,

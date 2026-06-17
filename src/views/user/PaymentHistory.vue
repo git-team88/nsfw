@@ -101,7 +101,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || 1) }}</div>
+                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}</div>
                     </div>
 
@@ -356,6 +356,7 @@ async function fetchProcessingData() {
             name: item.plan?.name || '',
             description: item.plan?.description || '',
             price: item.plan?.price || 0,
+            billing_period: item.plan?.billing_period || '',
             plan_id: item.plan?.plan_id || 1
           }
         }));
@@ -377,18 +378,18 @@ function goUserHome(userId: string) {
 }
 
 // Get time unit based on plan_id
-function getTimeUnit(planId: number) {
-  switch(planId) {
-    case 1:
-      return t('user.paymentHistory.month');
-    case 3:
+function getTimeUnit(billingPeriod: string) {
+  switch(billingPeriod) {
+    case '1':
+      return t('aiRecharge.periodMonth');
+    case '3':
       return t('aiRecharge.period3Month');
-    case 6:
+    case '6':
       return t('aiRecharge.period6Month');
-    case 12:
+    case '12':
       return t('aiRecharge.periodYear');
     default:
-      return t('user.paymentHistory.month');
+      return t('aiRecharge.periodMonth');
   }
 }
 

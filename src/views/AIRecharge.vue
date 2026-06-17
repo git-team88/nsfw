@@ -85,12 +85,12 @@
             </div>
             <span>
               {{ t("subscribe.agree") }}
-              <a href="#" @click.prevent="openLink">{{ t("subscribe.paymentTerms") }}</a>
+              <a>{{ t("subscribe.paymentTerms") }}</a>
             </span>
           </div>
         </div>
 
-        <button class="pay-btn" :disabled="!agreeTerms || isLoading" :class="{ loading: isLoading }" @click="handleRecharge">
+        <button class="pay-btn" :disabled="isLoading" :class="{ loading: isLoading }" @click="handleRecharge">
           <span>{{ t('aiRecharge.subscribeNow') }}</span>
         </button>
       </div>
@@ -280,8 +280,10 @@ function selectPlan(planId: number | string) {
 }
 
 async function handleRecharge() {
-  if (!agreeTerms.value) return;
-
+  if (!agreeTerms.value) {
+    toast(t('subscribe.agreeFirst'));
+    return;
+  }
   isLoading.value = true;
   try {
     if (!selectedPlan.value) {
@@ -599,6 +601,7 @@ function cancelCoupon() {
         color: #fb64b6;
         text-decoration: none;
         margin-left: 0.4rem;
+        cursor: default;
       }
     }
   }

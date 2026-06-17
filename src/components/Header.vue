@@ -591,7 +591,7 @@ function toUserHomeTab(tab: number) {
     path: "/user-home",
     query: {
       id: userId,
-      type: tab
+      tab: tab
     },
   });
 }

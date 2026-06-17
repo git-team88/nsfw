@@ -13,7 +13,10 @@
           :class="{ active: coverUrl == selectedCover }"
           @click="selectedCover = coverUrl"
         >
-          <img :src="coverUrl + '?imageMogr2/format/webp/quality/60'" alt="" />
+          <div v-if="!loadedImages[index]" class="cover-history-spinner">
+            <div class="spinner"></div>
+          </div>
+          <img :src="coverUrl + '?imageMogr2/format/webp/quality/60'" alt="" @load="onImageLoad(index)" @error="onImageLoad(index)" />
         </div>
       </div>
       <div v-if="coverList.length == 0" class="cover-history-empty">
@@ -44,12 +47,22 @@ const emit = defineEmits<{
 }>();
 
 const selectedCover = ref<string>('');
+const loadedImages = ref<Record<number, boolean>>({});
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     selectedCover.value = props.currentCover;
+    loadedImages.value = {};
   }
 });
+
+watch(() => props.coverList, () => {
+  loadedImages.value = {};
+});
+
+const onImageLoad = (index: number) => {
+  loadedImages.value[index] = true;
+};
 
 const handleConfirm = () => {
   if (selectedCover.value) {
@@ -114,14 +127,35 @@ const handleConfirm = () => {
       .cover-history-item {
         width: 21rem;
         height: 28rem;
-        border-radius: 0.6rem;
+        border-radius: 0.8rem;
         overflow: hidden;
         cursor: pointer;
         position: relative;
-        border: 0.3rem solid transparent;
+        border: 0.2rem solid transparent;
 
         &.active {
           border-color: #FB64B6;
+        }
+
+        .cover-history-spinner {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #F5F5F5;
+
+          .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 0.3rem solid #E0E0E0;
+            border-top-color: #FB64B6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
         }
 
         img {
@@ -174,5 +208,12 @@ const handleConfirm = () => {
       }
     }
   }
+}
+</style>
+
+<style lang="scss">
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

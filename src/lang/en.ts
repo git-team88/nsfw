@@ -441,6 +441,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     coverGenerateFailed: "Failed to generate cover",
     coverRenewFailed: "Generation failed, no deduction this time",
     usePrevCover: "Use previous version",
+    coverRenewFailedTip: "Cover modification failed. Please click Use previous version to continue",
     coverRenewLoadingTip: "Cover is being modified, please wait until it's done",
     coverHistoryTitle: "Generation History",
     coverHistoryEmpty: "No cover history",
@@ -996,6 +997,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       tab6: "Mentions",
       subscribeNow: "Subscribe Now",
       expireText: "Your subscription is about to expire",
+      expiredText: "Your subscription has expired",
       subscribedText: "subscribed to your content",
       likedText: "Liked your work",
       commentedText: "Commented on yours:",
@@ -1133,7 +1135,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     privacy: {
       title: "Privacy Settings",
-      subscribe: "Subscription List Visible Only to Me",
+      subscribe: "Follow List Visible Only to Me",
       followers: "Followers List Visible Only to Me",
       anonymous_follow: "Anonymous Follow",
       anonymous_subscribe: "Anonymous Subscription",
@@ -1846,7 +1848,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       aiGeneratePlaceholder: "Please enter requirements for generating cover",
       aiGenerateStart: "Start Generating",
       minCharacters: "Please enter at least 10 characters",
-      cover: "Cover",
+    cover: "Cover",
+    coverChange: "Cover Change",
       selectBackground: "Please select a background",
       generationFailed: "Cover generation failed, no computing power deducted for this generation",
       generationTimeout: "Cover generation timed out, please retry",
@@ -2275,6 +2278,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       id: "ID",
     },
     loading: "Loading...",
+    loadMore: "Load More",
   },
   paymentTerms: {
     title: "Statement under the Specified Commercial Transactions Act",
@@ -2416,6 +2420,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     outline: "Outline",
     chapter: "Chapter",
     cover: "Cover",
+    coverChange: "Cover Change",
+    sceneEdit: "Scene Edit",
+    storyboardEdit: "Storyboard Edit",
+    characterEdit: "Character Edit",
+    mergeVideos: "Storyboard Merge",
+    sceneRefresh: "Scene Regenerate",
+    storyboardRefresh: "Storyboard Regenerate",
     character: "Character",
     script: "Script",
     clearCompleted: "Clear Completed",
@@ -2528,7 +2539,22 @@ If you have any questions, complaints, comments or suggestions regarding persona
     home: {
       title: "MoeGen - AI Novel, Comic & Anime Drama Generator | One Line, Infinite Stories",
       keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, MoeGen, AI writing tool",
-      description: "MoeGen turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start."
+      description: "MoeGen turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start.",
+      novel: {
+        title: "AI Novel Generator Online Free | Write 30K Long-Form Web Novels in One Line - MoeGen",
+        keywords: "AI novel generator,AI write novels,AI web novels,free AI novel,long-form novel generator,web novel AI,novel outline AI,anime novel AI",
+        description: "MoeGen AI Novel Generator — input one creative line to auto-generate a 30K-word long-form web novel. Supports xianxia, romance, BL, isekai & more. Top choice for TW/HK/JP creators."
+      },
+      comic: {
+        title: "AI Comic Generator | Text to Manga, Webtoon & Panels - MoeGen",
+        keywords: "AI comic generator, text to comic, AI manga generator, webtoon AI, AI comic panels, character consistency",
+        description: "Turn text into comics & manga with MoeGen. Auto-paneling, consistent characters, multi-style: manga, webtoon, chibi."
+      },
+      drama: {
+        title: "AI Anime Drama Generator | One Line to Animated Short - MoeGen",
+        keywords: "AI anime drama, AI animated short, anime script AI, AI short anime, vertical anime AI",
+        description: "Turn one line into a 1-3 min anime drama short. Auto storyboard, dialogue, voice, BGM. Built for anime creators."
+      }
     },
     detail: {
       title: "[[title]] - MoeGen AI Anime Creation",
