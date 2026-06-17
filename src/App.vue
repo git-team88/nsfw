@@ -1,5 +1,5 @@
 <template>
-  <RouterView :key="route.fullPath"></RouterView>
+  <RouterView :key="route.path"></RouterView>
 </template>
 
 <script setup lang="ts">

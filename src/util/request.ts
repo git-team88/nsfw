@@ -3,6 +3,8 @@ import qs from 'qs'
 import { baseUrl } from '../util/config'
 import router from '@/router'
 import '@/util/antiCrawler'
+import { toast } from '@/util/toast'
+import i18n from '@/lang/i18n'
 
 declare global {
   interface Window {
@@ -80,20 +82,31 @@ class Request {
         const logoutEvent = new Event('userLogout');
         window.dispatchEvent(logoutEvent);
 
-        router.push("/login");
+        toast(i18n.global.t('submit.sessionExpired'))
+        router.push("/");
       }
       return res.data
     }, (err: any) => {
       if (err.message?.includes('timeout')) {
         return Promise.reject(err)
       }
+      if (err.response?.status == 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('uid')
+        localStorage.removeItem('userInfo')
+        localStorage.removeItem('allowSensitiveContent')
+
+        const logoutEvent = new Event('userLogout');
+        window.dispatchEvent(logoutEvent);
+
+        toast(i18n.global.t('submit.sessionExpired'))
+        router.push("/");
+        return Promise.reject(err.response.data?.msg || err)
+      }
       let msg: string
       switch (err.response?.status) {
         case 400:
           msg = `${err.response.config.url}`
-          break
-        case 401:
-          msg = err.response.data.msg
           break
         case 422:
           msg = err.response.data.data[0].msg

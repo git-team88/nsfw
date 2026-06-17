@@ -1840,6 +1840,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     uploadSuccess: "上传成功",
     uploadFailed: "上传失败，请重试",
     loginRequired: "请先登录",
+    sessionExpired: "您的账号登录已失效，请重新登录",
     coverLabel: "封面图片",
     coverInfo: "图片格式(PNG/JPG/Webp)、图片大小(≤ 10MB)、图片尺寸(4:3)",
     reupload: "设置封面",

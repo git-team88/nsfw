@@ -1663,6 +1663,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     uploadSuccess: "アップロードが成功しました",
     uploadFailed: "アップロードに失敗しました。もう一度お試しください",
     loginRequired: "ログインしてください",
+    sessionExpired: "ログインセッションが期限切れです。再度ログインしてください",
     coverLabel: "カバー画像",
     coverInfo: "画像形式（PNG/JPG/Webp）、画像サイズ（10MB以下）、画像比率（4:3）",
     reupload: "カバー画像を設定",

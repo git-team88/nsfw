@@ -1737,6 +1737,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     uploadSuccess: "Upload successful",
     uploadFailed: "Upload failed, please try again",
     loginRequired: "Please log in first",
+    sessionExpired: "Your session has expired. Please log in again",
     coverLabel: "Cover Image",
     coverInfo: "Image Format(PNG/JPG/Webp),Image Size(≤ 10MB),Image dimension(4:3)",
     reupload: "Set Cover",

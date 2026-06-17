@@ -310,6 +310,7 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 const mainTabs = ref([
   { value: 'novel' },
   { value: 'manhua' },
+  { value: 'manju' },
   { value: 'photo' },
   { value: 'video' }
 ]);
@@ -355,9 +356,11 @@ function openEditPage(sessionId: string, type: number) {
   if (type == 3) {
     router.push(`/novel/${sessionId}`);
   } else if (type == 2) {
-    window.open(`/tools/comic/${sessionId}`, '_blank');
+    window.location.href = `/tools/comic/${sessionId}`;
+    // window.open(`/tools/comic/${sessionId}`, '_blank');
   } else {
-    window.open(`/tools/video/${sessionId}`, '_blank');
+    window.location.href = `/tools/video/${sessionId}`;
+    // window.open(`/tools/video/${sessionId}`, '_blank');
   }
 }
 

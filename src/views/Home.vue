@@ -1083,9 +1083,8 @@
                 v-for="user in followUserList"
                 :key="user.id"
                 class="follow-card"
-                @click="navigateToUserHome(user.id)"
               >
-                <div class="card-top">
+                <div class="card-top" @click="navigateToUserHome(user.id)">
                   <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                   <div class="user-meta">
                     <div class="nickname">{{ user.nickname }}</div>
@@ -1746,6 +1745,7 @@ const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
   { value: 'novel', label: 'home.contentType.novel' },
   { value: 'comic', label: 'home.contentType.comic' },
+  { value: 'drama', label: 'home.contentType.drama' },
   { value: 'photo', label: 'home.contentType.photo' },
   { value: 'video', label: 'home.contentType.video' }
 ]);

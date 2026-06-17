@@ -1834,6 +1834,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     uploadSuccess: "上傳成功",
     uploadFailed: "上傳失敗，請重試",
     loginRequired: "請先登錄",
+    sessionExpired: "您的帳號登入已失效，請重新登入",
     coverLabel: "封面圖片",
     coverInfo: "圖片格式(PNG/JPG/Webp)、圖片大小(≤ 10MB)、圖片尺寸(4:3)",
     reupload: "設置封面",

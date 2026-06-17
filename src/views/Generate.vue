@@ -108,7 +108,7 @@
                       <img :src="image" alt="generated" class="grid-image" @click="openImageViewer(image)" />
                       <!-- 图片操作按钮 - 仅在任务成功后显示 -->
                       <div v-if="isTaskSuccess(record.step_status || record.status)" class="photo-item-overlay">
-                        <div class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
+                        <div v-if="record.user_selected?.story_mode != 'nsfw'" class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
                           <img src="@/assets/images/home/download.png" alt="download" />
                         </div>
 
@@ -241,7 +241,7 @@
                   <div class="play-overlay">
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon" />
                   </div>
-                  <div class="download-btn" @click.stop="downloadVideo(record)">
+                  <div v-if="record.user_selected?.story_mode != 'nsfw'" class="download-btn" @click.stop="downloadVideo(record)">
                     <img src="@/assets/images/home/download.png" alt="download" />
                   </div>
                 </div>
@@ -783,7 +783,7 @@
     <div v-if="showVideoModal" class="video-modal">
       <div class="video-modal-content" :class="{ 'portrait': playingVideoRatio == '9:16' }">
         <img class="close-video-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeVideoModal" />
-        <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline></video>
+        <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline :controlsList="playingVideoIsUnlimited ? 'nodownload' : undefined"></video>
       </div>
     </div>
 
@@ -851,6 +851,7 @@ const zoomedCoverImage = ref('');
 const showVideoModal = ref(false);
 const playingVideoUrl = ref('');
 const playingVideoRatio = ref('16:9');
+const playingVideoIsUnlimited = ref(false);
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
@@ -3925,6 +3926,7 @@ const playVideo = (record: any) => {
   }
   playingVideoUrl.value = videoUrl;
   playingVideoRatio.value = record.ratio || '16:9';
+  playingVideoIsUnlimited.value = record.user_selected?.story_mode == 'nsfw';
   showVideoModal.value = true;
 };
 

@@ -30,6 +30,7 @@ import { useI18n } from "vue-i18n";
 import { ref } from "vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import router from "@/router";
+import eventBus from "@/util/eventBus";
 
 const { t, locale } = useI18n();
 const props = defineProps<{ modelValue: string }>();
@@ -63,8 +64,11 @@ function confirmLogout() {
   localStorage.removeItem("token");
   localStorage.removeItem("connect");
   localStorage.removeItem("uid");
+  localStorage.removeItem("allowSensitiveContent");
 
   isShowLogoutModal.value = false;
+
+  eventBus.emit('userLoggedOut');
 
   const currentPath = window.location.pathname;
   const keepPaths = ["/detail", "/user-home", "character-library", "search"];
@@ -72,8 +76,6 @@ function confirmLogout() {
 
   if (!shouldKeepPath) {
     router.push("/");
-  } else {
-    window.location.reload();
   }
 }
 
