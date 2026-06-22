@@ -29,6 +29,9 @@
         <div class="section">
           <div class="cover-section">
             <img :src="collection.cover || defaultCover" alt="" class="cover-image" />
+            <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
+              <span class="r18-text">R18</span>
+            </div>
           </div>
 
           <div class="detail-section">
@@ -36,6 +39,7 @@
               <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
               <span class="info-value">{{ collection.title }}</span>
             </div>
+
             <div class="info-item">
               <span class="info-label">{{ t('collectionSettings.description') }}：</span>
               <span class="info-value description">{{ collection.description }}</span>
@@ -54,7 +58,7 @@
             </div>
             <div class="info-card">
               <span class="info-label">{{ getPublishedLabel() }}：</span>
-              <span class="info-value">{{ collection.latest_post_chapter_index }}{{ getPublishedUnit() }}</span>
+              <span class="info-value">{{ collection.chapter_count }}{{ getPublishedUnit() }}</span>
             </div>
             <div class="info-card">
               <span class="info-label">{{ t('collectionSettings.createdAt') }}：</span>
@@ -127,14 +131,15 @@ const collection = ref({
   type: '2',
   publishedChapters: 0,
   createdAt: '',
-  latest_post_chapter_index: '',
-  user_id: ''
+  chapter_count: '',
+  user_id: '',
+  is_nsfw: '0'
 });
 
 const collectionInfo = computed(() => ({
   cover: collection.value.cover || defaultCover,
   title: collection.value.title,
-  chapterCount: parseInt(collection.value.latest_post_chapter_index) || collection.value.publishedChapters || 0,
+  chapterCount: parseInt(collection.value.chapter_count) || collection.value.publishedChapters || 0,
   type: collection.value.type
 }));
 
@@ -161,8 +166,9 @@ onMounted(async () => {
           type: bookInfo.type || '2',
           publishedChapters: data.chatpers?.length || 0,
           createdAt: bookInfo.created_at || '',
-          latest_post_chapter_index: bookInfo.latest_post_chapter_index || '',
+          chapter_count: bookInfo.chapter_count || '',
           user_id: bookInfo.user_id || '',
+          is_nsfw: bookInfo.is_nsfw || '0',
         };
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
@@ -409,12 +415,34 @@ async function confirmDelete() {
 }
 
 .cover-section {
+  position: relative;
   margin-bottom: 2rem;
   .cover-image {
     width: 18rem;
     height: 24rem;
     object-fit: cover;
     border-radius: 1.2rem;
+  }
+
+  .r18-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10rem;
+    height: 10rem;
+    background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
+    border-radius: 0 1.2rem 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 0.6rem;
+
+    .r18-text {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: #FFFFFF;
+      text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+    }
   }
 }
 
@@ -458,6 +486,18 @@ async function confirmDelete() {
         font-size: 1.2rem;
       }
     }
+  }
+
+  .r18-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 3rem;
+    background: rgba(251, 100, 182, 0.2);
+    border-radius: 0.4rem;
+    color: #FB64B6;
+    font-size: 1.4rem;
   }
 }
 

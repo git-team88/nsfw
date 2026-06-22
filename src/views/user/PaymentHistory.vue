@@ -95,8 +95,8 @@
                 <div class="sub-item" v-for="item in processingList" :key="item.id">
                   <div class="left">
                     <div class="plan-info">
-                      <div class="plan-name">{{ item.plan_info?.name }}</div>
-                      <div class="compute-info">{{ item.plan_info?.description }}</div>
+                      <div class="plan-name">{{ getLocalizedPlanDesc(item.plan_desc).name || item.plan_info?.name }}</div>
+                      <div class="compute-info">{{ getLocalizedPlanDesc(item.plan_desc).description || item.plan_info?.description }}</div>
                     </div>
                   </div>
                   <div class="right">
@@ -222,6 +222,20 @@ import { formatTimestamp } from "@/util/utils";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
+
+function getPlanDescLang() {
+  if (locale.value === 'zh') return 'cn';
+  return locale.value;
+}
+
+function getLocalizedPlanDesc(planDesc: any[]) {
+  if (!planDesc || !planDesc.length) return { name: '', description: '' };
+  const lang = getPlanDescLang();
+  const matched = planDesc.find((d: any) => d.language == lang);
+  const fallback = planDesc.find((d: any) => d.language == 'en') || planDesc[0];
+  const desc = matched || fallback;
+  return { name: desc.name || '', description: desc.description || '' };
+}
 const router = useRouter();
 const route = useRoute();
 const sidebarKey = ref("payment-history");
@@ -352,6 +366,7 @@ async function fetchProcessingData() {
           startTime: item.created_at,
           endTime: item.current_period_end ? formatDate(item.current_period_end) : '',
           autoRenew: item.cancel_at_period_end == '1',
+          plan_desc: item.plan_desc || [],
           plan_info: {
             name: item.plan?.name || '',
             description: item.plan?.description || '',
@@ -573,7 +588,6 @@ function handleClickOutside(e: MouseEvent) {
 }
 
 onMounted(() => {
-  // 处理URL中的type参数
   const type = route.query.type as string;
   if (type == '1') {
     activeSubTab.value = 'subscribe';
@@ -587,7 +601,6 @@ onMounted(() => {
     page.value = 1;
     fetchProcessingData();
   }
-  // 添加点击外部关闭菜单的事件监听器
   document.addEventListener("click", handleClickOutside);
 });
 

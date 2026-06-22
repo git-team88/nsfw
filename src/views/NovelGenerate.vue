@@ -430,7 +430,7 @@
           <div v-if="isOutlineLoading" class="loading-state">
             <div class="loading-spinner"></div>
           </div>
-          <div v-else-if="isLoading && !isGeneratingOutline && !(taskStatus == 'DOING' && currentChapter && currentChapter.chapter == stepChapterIndex)" class="loading-state">
+          <div v-else-if="isLoading && !isGeneratingOutline && !(taskStatus == 'DOING' && currentChapter)" class="loading-state">
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ t('home.loading') }}</div>
           </div>
@@ -439,6 +439,24 @@
           <div v-else-if="isGeneratingOutline && !outlineStreamText && !outlineStreamDone && !hasFailed && !isLoading && taskStatus != 'DOING'" class="loading-state">
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ t('home.loading') }}</div>
+          </div>
+
+          <!-- Outline Preparation State Display -->
+          <div v-else-if="isPreparing && !currentChapter && lastGenerationType == 'outline'" class="preparation-state">
+            <div class="preparation-content">
+              <div class="preparation-image">
+                <img src="@/assets/images/role/load_role.png" alt="" />
+              </div>
+
+              <div class="preparation-middle">
+                <div class="preparation-line"></div>
+              </div>
+
+              <div class="preparation-text">
+                <span class="preparation-title">{{ t('novel.preparationTitle') }}</span>
+                <div class="preparation-subtitle" v-if="ongoingTaskCount > 0" v-html="t('novel.preparationSubtitle', { count: ongoingTaskCount })"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Preparation State Display -->
@@ -608,9 +626,9 @@
                 </div>
 
                 <div class="cover-renew">
-                  <img v-if="coverImage && !coverRenewLoading && !isPreparing" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
-                  <img v-if="showCoverEditBtn && coverImage && !coverRenewLoading && !isPreparing && (taskStatus !== 'DOING' || !generatingChapter)" src="@/assets/images/novel/cover_edit.png" alt="Edit" @click="toggleCoverEdit" />
-                  <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="toggleCoverEdit" />
+                  <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
+                  <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/cover_edit.png" alt="Edit" @click="handleCoverEditClick" />
+                  <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="handleCoverEditClick" />
                 </div>
 
               </div>
@@ -644,8 +662,8 @@
                   <span>{{ t('novel.coverPlaceholder') }}</span>
                 </div>
                 <div class="cover-renew">
-                  <img v-if="coverImage && !coverRenewLoading && !isPreparing" src="@/assets/images/novel/history.png" @click="openCoverHistory" />
-                  <img v-if="showCoverEditBtn && coverImage && !coverRenewLoading && !isPreparing && (taskStatus !== 'DOING' || !generatingChapter)" src="@/assets/images/novel/edit.png" alt="Edit" @click="toggleCoverEdit" />
+                  <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
+                  <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/edit.png" alt="Edit" @click="handleCoverEditClick" />
                 </div>
               </div>
             </div>
@@ -1292,6 +1310,37 @@ const freezeComputingPower = ref<number>(0);
 const pendingGenerationAction = ref<string>(''); // 'outline', 'chapter', 'all', 'retry-outline', 'retry-chapter', 'retry-all'
 const showTaskLimitExceededModal = ref<boolean>(false);
 
+const isTaskLimitExceeded = async () => {
+  const totalProcessRes = await api.totalProcess(true) as any;
+
+  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 10) {
+    showTaskLimitExceededModal.value = true;
+    return true;
+  }
+  return false;
+};
+
+const projectOwnerId = ref<number | string | null>(null);
+
+const checkProjectOwnership = () => {
+  const currentUserId = userInfo.value?.info?.id;
+  if (!currentUserId || !projectOwnerId.value) return false;
+  if (String(currentUserId) !== String(projectOwnerId.value)) {
+    toast(t('novel.error.cannotOperateOtherUserProject'));
+    return true;
+  }
+  return false;
+};
+
+const checkProjectOwnershipByEstimate = async () => {
+  const estimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
+  if (estimateRes.code == 10404) {
+    toast(t('novel.error.cannotOperateOtherUserProject'));
+    return true;
+  }
+  return false;
+};
+
 const isCoverSendClicked = ref<boolean>(false);
 const coverAbortController = ref<AbortController | null>(null);
 const estimatedComputingPower = ref<number>(0);
@@ -1406,6 +1455,9 @@ const startCoverPolling = (taskId: string) => {
         try {
           const detailProjectRes = await api.detailProject(sessionId.value) as any;
           if (detailProjectRes.code == 200) {
+            if (detailProjectRes.data?.user_id) {
+              projectOwnerId.value = detailProjectRes.data.user_id;
+            }
             // Update project name if available
             if (detailProjectRes.data?.name) {
               projectName.value = detailProjectRes.data.name;
@@ -1809,6 +1861,9 @@ const fetchPointsEstimate = async (includeCover = false) => {
       }) as any;
       if (nextChapterEstimateRes.code == 200 && nextChapterEstimateRes.data?.total_points) {
         nextChapterPoints.value = nextChapterEstimateRes.data.total_points;
+      } else if (nextChapterEstimateRes.code == 10404) {
+        toast(t('novel.error.cannotOperateOtherUserProject'));
+        return;
       }
 
       // Estimate for all chapters
@@ -1838,7 +1893,7 @@ const fetchPointsEstimate = async (includeCover = false) => {
 };
 
 // Compute costs
-const nextChapterCost = computed(() => nextChapterPoints.value);
+const nextChapterCost = computed(() => Math.max(nextChapterPoints.value, 1));
 const allChaptersCost = computed(() => allChaptersPoints.value);
 
 // Store original content when opening regenerate input
@@ -1853,6 +1908,7 @@ const regenerateOutline = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (await checkProjectOwnershipByEstimate()) return;
 
   hideEdit();
 
@@ -1943,9 +1999,7 @@ const sendRegenerateRequest = async () => {
 
   try {
     // Check if task limit is exceeded
-    const totalProcessRes = await api.totalProcess(true) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-      showTaskLimitExceededModal.value = true;
+    if (await isTaskLimitExceeded()) {
       isSendingRegenerate.value = false;
       return;
     }
@@ -2068,7 +2122,7 @@ const sendRegenerateRequest = async () => {
 };
 
 // Start editing project name
-const startEditProjectName = () => {
+const startEditProjectName = async () => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2077,6 +2131,7 @@ const startEditProjectName = () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   originalProjectName.value = projectName.value;
   // Ensure project name is not longer than 60 characters
@@ -2135,7 +2190,7 @@ const handleProjectNameBlur = () => {
 };
 
 // Start editing chapter
-const startEditChapter = () => {
+const startEditChapter = async () => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2144,6 +2199,7 @@ const startEditChapter = () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   if (currentChapter.value?.content) {
     originalChapterContent.value = currentChapter.value.content;
@@ -2393,7 +2449,7 @@ const saveEditChapter = async () => {
 };
 
 // Start editing chapter title
-const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
+const startEditChapterTitle = async (chapterId: number, currentTitle: string) => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2402,6 +2458,7 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   editingChapterId.value = chapterId;
   originalChapterTitle.value = currentTitle;
@@ -2565,8 +2622,6 @@ const printContent = (content: string) => {
 };
 
 function goHome() {
-
-
   hideEdit();
 
   // Clean up stream reader before leaving
@@ -2697,11 +2752,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   try {
 
   // Check if user has reached the task limit
-  const totalProcessRes = await api.totalProcess(true) as any;
-  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-    showTaskLimitExceededModal.value = true;
-    return;
-  }
+  if (await isTaskLimitExceeded()) return;
 
   const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
 
@@ -2723,6 +2774,9 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
         showInsufficientBalanceModal.value = true;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      return;
     }
   }
 
@@ -2818,16 +2872,6 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     }
   } else {
     startTime.value = Date.now();
-  }
-
-  // Fetch task progress to get ongoing task count
-  try {
-    const taskProgress = await fetchTaskProgress();
-    if (taskProgress) {
-      ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
-    }
-  } catch (error) {
-    console.error('Error fetching task progress:', error);
   }
 
   // Fetch estimated time
@@ -2953,6 +2997,9 @@ const goPrevChapter = async () => {
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
       if (detailProjectRes.code == 200) {
+        if (detailProjectRes.data?.user_id) {
+          projectOwnerId.value = detailProjectRes.data.user_id;
+        }
         const resultAsync = detailProjectRes.data?.result_async;
         if (resultAsync) {
           isEditingChapter.value = false;
@@ -3211,11 +3258,7 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
   try {
 
   // Check if user has reached the task limit
-  const totalProcessRes = await api.totalProcess(true) as any;
-  if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-    showTaskLimitExceededModal.value = true;
-    return;
-  }
+  if (await isTaskLimitExceeded()) return;
 
   // Determine the first chapter to generate and generate mode
   let fromChapter: number;
@@ -3250,6 +3293,9 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
         showInsufficientBalanceModal.value = true;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      return;
     }
   }
 
@@ -3340,16 +3386,6 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     startTime.value = Date.now();
   }
 
-  // Fetch task progress to get ongoing task count
-  try {
-    const taskProgress = await fetchTaskProgress();
-    if (taskProgress) {
-      ongoingTaskCount.value = taskProgress.novel_doing_count || 0;
-    }
-  } catch (error) {
-    console.error('Error fetching task progress:', error);
-  }
-
   // Fetch estimated time
   estimatedTime.value = null;
   originalEstimatedSeconds.value = null;
@@ -3382,16 +3418,7 @@ const handleRetry = async () => {
     return;
   }
   // Check if task limit is exceeded
-  const totalProcessRes = await api.totalProcess(true) as any;
-  if (totalProcessRes.code == 200) {
-    if (lastGenerationType.value == 'outline' && totalProcessRes.data?.novel_doing_count >= 2) {
-      showTaskLimitExceededModal.value = true;
-      return;
-    } else if (lastGenerationType.value == 'chapter' && totalProcessRes.data?.novel_doing_count >= 2) {
-      showTaskLimitExceededModal.value = true;
-      return;
-    }
-  }
+  if (await isTaskLimitExceeded()) return;
 
   let estimateRes;
   if (lastGenerationType.value == 'outline') {
@@ -3423,6 +3450,7 @@ const handleRetry = async () => {
     showConfirmComputingPowerModal.value = true;
   } else if (estimateRes && estimateRes.code == 10404) {
     toast(t('novel.error.cannotOperateOtherUserProject'));
+    return;
   } else {
     toast(estimateRes.message);
   }
@@ -3464,15 +3492,7 @@ const confirmGenerateAllChapters = async () => {
   isConfirmAllLoading.value = true;
   try {
     // Check if user has reached the task limit
-    try {
-      const totalProcessRes = await api.totalProcess(true) as any;
-      if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-        showTaskLimitExceededModal.value = true;
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking task limit:', error);
-    }
+    if (await isTaskLimitExceeded()) return;
 
     // Calculate from_chapter based on current stepChapterIndex
     const fromChapter = stepChapterIndex.value == 0 ? 1 : stepChapterIndex.value + 1;
@@ -3497,6 +3517,9 @@ const confirmGenerateAllChapters = async () => {
         showInsufficientBalanceModal.value = true;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      return;
     }
 
     const timeRes = await api.estimateTime(sessionId.value) as any;
@@ -3802,11 +3825,9 @@ const handleChapterItemClick = async (chapterNum: number) => {
 };
 
 // Handle publish chapter button click
-const handlePublishChapter = (chapter: any) => {
-  // Check if cover is generating or there's an unprocessed cover generation result
+const handlePublishChapter = async (chapter: any) => {
+  if (checkProjectOwnership()) return;
 
-
-  // Get session_id from sessionId ref
   const session_id = sessionId.value;
 
   // Get cover from coverImage
@@ -3876,6 +3897,9 @@ const handleOutlinePreviewClick = async () => {
 
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
     if (detailProjectRes.code == 200) {
+      if (detailProjectRes.data?.user_id) {
+        projectOwnerId.value = detailProjectRes.data.user_id;
+      }
       const resultAsync = detailProjectRes.data?.result_async;
       const stepName = detailProjectRes.data?.step_name;
       const stepStatus = detailProjectRes.data?.step_status;
@@ -3889,17 +3913,32 @@ const handleOutlinePreviewClick = async () => {
       if (stepStatus == 'PREPARE' && stepName == 'outline') {
         isPreparing.value = true;
         hasFailed.value = false;
-        taskStatus.value = '';
+        taskStatus.value = 'PREPARE';
         isLoading.value = false;
         isGeneratingOutline.value = false;
         isOutlineLoading.value = false;
 
-        // Fetch estimated time for outline preparation
-        // Don't call fetchTaskProgress() as it requests app/progress/display which is not needed
-        fetchEstimatedTime();
-        // Start polling to check task status
-        if (!pollingInterval.value) {
-          startPolling();
+        const initialQueuePosition = detailProjectRes.data?.queue_position ?? 0;
+        if (initialQueuePosition > 0) {
+          fetchEstimatedTime();
+          prepareQueueInfo.value = {
+             count: initialQueuePosition,
+            estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60) + initialQueuePosition * 20
+          };
+          displayMinutes.value = prepareQueueInfo.value.estimatedTime;
+          startCountdownTimer();
+        } else {
+          prepareQueueInfo.value = {
+             count: 0,
+            estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60)
+          };
+          displayMinutes.value = prepareQueueInfo.value.estimatedTime;
+          startCountdownTimer();
+        }
+
+        // Use detailPolling to wait for PREPARE→DOING transition
+        if (!detailPollingInterval.value) {
+          startDetailPolling();
         }
       } else {
         if (resultAsync) {
@@ -4032,11 +4071,7 @@ const fetchUserBalance = async () => {
 const callNovelOutline = async (type: string, retryCount = 0) => {
   try {
     // Check if user has reached the task limit
-    const totalProcessRes = await api.totalProcess(true) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-      showTaskLimitExceededModal.value = true;
-      return;
-    }
+    if (await isTaskLimitExceeded()) return;
 
     // Only fetch user settings if topic is not already set (e.g. not called from sendRegenerateRequest)
     if (!topic.value) {
@@ -4129,25 +4164,21 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
           count: novelEstimateRes.data.queue_position ?? novelEstimateRes.data.in_queue_count ?? 0,
           estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60) + (novelEstimateRes.data.queue_position ?? 0) * 20
         };
+      } else if (novelEstimateRes.code == 10404) {
+        toast(t('novel.error.cannotOperateOtherUserProject'));
+        return;
       }
     } catch (error) {
       console.error('Error fetching novel estimate:', error);
-    }
-
-    // Fetch task progress to get ongoing task count
-    try {
-      const taskProgress = await fetchTaskProgress();
-      if (taskProgress) {
-        ongoingTaskCount.value = taskProgress.count || 0;
-      }
-    } catch (error) {
-      console.error('Error fetching task progress:', error);
     }
 
     // Fetch detailProject to get task status and task_start_at
     try {
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
       if (detailProjectRes.code == 200 && detailProjectRes.data) {
+        if (detailProjectRes.data.user_id) {
+          projectOwnerId.value = detailProjectRes.data.user_id;
+        }
         taskStatus.value = detailProjectRes.data.status || 'DOING';
         if (detailProjectRes.data.task_start_at) {
           taskStartAt.value = detailProjectRes.data.task_start_at;
@@ -4548,6 +4579,8 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 }) as any;
                 if (estRes.code == 200 && estRes.data?.total_points) {
                   estimatedComputingPower.value = estRes.data.total_points;
+                } else if (estRes.code == 10404) {
+                  toast(t('novel.error.cannotOperateOtherUserProject'));
                 }
                 await fetchUserBalance();
               } catch (e) {
@@ -4666,6 +4699,21 @@ const fetchNovelOutline = async () => {
 
     // Set detail loaded flag
     isDetailLoaded.value = true;
+
+    if (detailProjectRes.data?.user_id) {
+      projectOwnerId.value = detailProjectRes.data.user_id;
+    }
+
+    // Initialize cover history list from history_data
+    if (detailProjectRes.data?.history_data) {
+      let historyData = detailProjectRes.data.history_data;
+      if (typeof historyData == 'string') {
+        try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
+      }
+      if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
+        coverHistoryList.value = historyData.novel_cover;
+      }
+    }
 
     // Initialize project name from detailProject response
     if (detailProjectRes.data?.name) {
@@ -4871,7 +4919,29 @@ const fetchNovelOutline = async () => {
           coverRenewLoading.value = false;
           coverRenewFailed.value = true;
           showCoverEditBtn.value = false;
+          hasFailed.value = false;
           taskStatus.value = 'SUCCESS';
+          currentChapter.value = null;
+
+          if (!outlineData.value && resultAsync) {
+            try {
+              let result = resultAsync;
+              if (typeof result == 'string') {
+                try { result = JSON.parse(result); } catch (e) { result = null; }
+              }
+              if (result?.generate_novel_outline) {
+                outlineData.value = result.generate_novel_outline;
+                if (result.generate_novel_outline.base_info?.total_chapters) {
+                  chapterCount.value = result.generate_novel_outline.base_info.total_chapters;
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing outline data for cover renew FAIL:', e);
+            }
+          }
+
+          isLoading.value = false;
+          isLoadingComplete.value = true;
         }
 
         isFetchingNovelOutline.value = false;
@@ -4901,23 +4971,33 @@ const fetchNovelOutline = async () => {
           // Start polling for task status
           startPolling();
         } else if (stepStatus == 'PREPARE') {
-          // Outline is in preparation/queue - show preparing state
-          // Fetch estimated time FIRST before setting rendering flags
+          // Outline is in preparation/queue - show queue info, not loading progress
           lastGenerationType.value = 'outline';
-          await fetchEstimatedTime();
 
+          const initialQueuePosition = detailProjectRes.data?.queue_position ?? 0;
           isLoading.value = false;
           hasFailed.value = false;
           taskStatus.value = 'PREPARE';
-          isGeneratingOutline.value = true;
-          prepareQueueInfo.value = {
-             count: detailProjectRes.data?.queue_position ?? 0,
-            estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60) + (detailProjectRes.data?.queue_position ?? 0) * 20
-          };
+          isPreparing.value = true;
+          isGeneratingOutline.value = false;
+
+          if (initialQueuePosition > 0) {
+            await fetchEstimatedTime();
+            prepareQueueInfo.value = {
+               count: initialQueuePosition,
+              estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60) + initialQueuePosition * 20
+            };
+          } else {
+            prepareQueueInfo.value = {
+               count: 0,
+              estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60)
+            };
+          }
+
           displayMinutes.value = prepareQueueInfo.value.estimatedTime;
           startCountdownTimer();
-          // Start polling for task status
-          startPolling();
+          // Use detailPolling to wait for PREPARE→DOING transition
+          startDetailPolling();
         } else if (stepStatus == 'FAIL') {
           // Outline generation failed - show failed state
           isLoading.value = false;
@@ -5048,7 +5128,7 @@ const fetchNovelOutline = async () => {
           displayedContent.value = '';
           isPreparing.value = true;
           hasFailed.value = false;
-          taskStatus.value = '';
+          taskStatus.value = 'PREPARE';
           startLoadingAnimation('chapter');
 
           // Start polling detailProject API for PREPARE state
@@ -5377,12 +5457,14 @@ const handlePollingResponse = (pollingRes: any) => {
       fetchChapterStream(generatingChapter.value);
     }
   } else if (status == 'PREPARE') {
-    // Keep polling for PREPARE status to update queue position and estimated time
-    // Don't stop polling, just continue
-    if (isPreparing.value) {
-      // Re-fetch estimated time when in preparation state
-      fetchEstimatedTime();
+    // Switch to detailPolling to wait for PREPARE→DOING transition
+    isPreparing.value = true;
+    isGeneratingOutline.value = false;
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
     }
+    startDetailPolling();
   } else if (status != 'DOING') {
     // Stop polling if status is not DOING, SUCCESS, FAIL, or PREPARE
     if (pollingInterval.value) {
@@ -5448,6 +5530,10 @@ const startDetailPolling = () => {
       const detailRes = await api.detailProject(sessionId.value) as any;
       if (detailRes.code != 200 || !detailRes.data) return;
 
+      if (detailRes.data.user_id) {
+        projectOwnerId.value = detailRes.data.user_id;
+      }
+
       const stepStatus = detailRes.data.step_status;
       const stepName = detailRes.data.step_name;
       const chapterIndex = detailRes.data.step_chapter_index;
@@ -5485,6 +5571,8 @@ const startDetailPolling = () => {
           coverRenewLoading.value = false;
           coverRenewFailed.value = true;
           showCoverEditBtn.value = false;
+          hasFailed.value = false;
+          taskStatus.value = 'SUCCESS';
           await fetchUserBalance();
           stopDetailPolling();
           return;
@@ -5512,19 +5600,32 @@ const startDetailPolling = () => {
       if (stepStatus == 'PREPARE') {
         // Still in PREPARE, update queue info and estimated time
         isPreparing.value = true;
+        isGeneratingOutline.value = false;
         const newQueuePosition = detailRes.data?.queue_position ?? 0;
-        const newEstimatedTime = Math.ceil((originalEstimatedSeconds.value || 600) / 60) + newQueuePosition * 20;
         const queuePositionChanged = newQueuePosition !== (prepareQueueInfo.value?.count ?? -1);
-        prepareQueueInfo.value = {
-           count: newQueuePosition,
-          estimatedTime: newEstimatedTime
-        };
-        if (queuePositionChanged) {
-          displayMinutes.value = newEstimatedTime;
-          startCountdownTimer();
-        }
-        if (!estimatedTimeFetched.value) {
-          fetchEstimatedTime();
+
+        if (newQueuePosition > 0) {
+          const newEstimatedTime = Math.ceil((originalEstimatedSeconds.value || 600) / 60) + newQueuePosition * 20;
+          prepareQueueInfo.value = {
+             count: newQueuePosition,
+            estimatedTime: newEstimatedTime
+          };
+          if (queuePositionChanged) {
+            displayMinutes.value = newEstimatedTime;
+            startCountdownTimer();
+          }
+          if (!estimatedTimeFetched.value) {
+            fetchEstimatedTime();
+          }
+        } else {
+          prepareQueueInfo.value = {
+             count: 0,
+            estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60)
+          };
+          if (queuePositionChanged) {
+            displayMinutes.value = prepareQueueInfo.value.estimatedTime;
+            startCountdownTimer();
+          }
         }
       } else if (stepStatus == 'DOING') {
         // PREPARE -> DOING transition
@@ -5532,7 +5633,20 @@ const startDetailPolling = () => {
         isPreparing.value = false;
         prepareQueueInfo.value = null;
 
-        if (chapterIndex) {
+        if (stepName == 'outline') {
+          // Outline PREPARE -> DOING: start outline generation flow
+          lastGenerationType.value = 'outline';
+          isGeneratingOutline.value = true;
+          hasFailed.value = false;
+          taskStatus.value = 'DOING';
+          startLoadingAnimation('outline');
+          estimatedTime.value = null;
+          originalEstimatedSeconds.value = null;
+          displayMinutes.value = 0;
+          estimatedTimeFetched.value = false;
+          fetchEstimatedTime();
+          startPolling();
+        } else if (chapterIndex) {
           generatingChapter.value = chapterIndex;
           stepChapterIndex.value = chapterIndex;
 
@@ -5587,11 +5701,17 @@ const startDetailPolling = () => {
         taskStatus.value = 'FAIL';
         isLoading.value = false;
         isPreparing.value = false;
+        isGeneratingOutline.value = false;
         prepareQueueInfo.value = null;
         generatingChapter.value = null;
-        lastGenerationType.value = 'chapter';
 
-        if (chapterIndex) {
+        if (stepName == 'outline') {
+          lastGenerationType.value = 'outline';
+        } else {
+          lastGenerationType.value = 'chapter';
+        }
+
+        if (chapterIndex && stepName != 'outline') {
           const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
           currentChapter.value = {
             chapter: chapterIndex,
@@ -5652,6 +5772,10 @@ const fetchDetailProjectForOutline = async () => {
 
     if (detailProjectRes.code == 200 && detailProjectRes.data) {
       const taskData = detailProjectRes.data;
+
+      if (taskData.user_id) {
+        projectOwnerId.value = taskData.user_id;
+      }
 
       // Set task status to SUCCESS
       taskStatus.value = 'SUCCESS';
@@ -5853,11 +5977,7 @@ onBeforeUnmount(() => {
 });
 
 onBeforeRouteLeave((_to, _from, next) => {
-  if (coverRenewLoading.value) {
-    next(false);
-  } else {
-    next();
-  }
+  next();
 });
 
 // Handle visibility change - continue polling when tab becomes visible again
@@ -6276,6 +6396,26 @@ class OutlineStreamParser {
 }
 
 // Cover edit functions
+async function handleCoverEditClick() {
+  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
+    const chapterNum = generatingChapter.value || stepChapterIndex.value;
+    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+    return;
+  }
+  if (await checkProjectOwnershipByEstimate()) return;
+  await toggleCoverEdit();
+}
+
+async function handleCoverHistoryClick() {
+  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
+    const chapterNum = generatingChapter.value || stepChapterIndex.value;
+    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+    return;
+  }
+  if (checkProjectOwnership()) return;
+  openCoverHistory();
+}
+
 async function toggleCoverEdit() {
   if (coverRenewFailed.value) {
     coverRenewFailed.value = false;
@@ -6622,6 +6762,28 @@ async function handleCoverFileChange(event: Event) {
 
   isUploading.value = true;
 
+  // Check if image is corrupted
+  const imageCorrupted = await new Promise<boolean>((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img.width === 0 || img.height === 0);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+    img.src = url;
+  });
+
+  if (imageCorrupted) {
+    toast(t('home.error.corruptedImage'));
+    input.value = '';
+    isUploading.value = false;
+    return;
+  }
+
   try {
     const uploadedUrl = await uploadCoverImage(file);
     const imageId = Date.now();
@@ -6858,8 +7020,8 @@ async function openCoverHistory() {
       if (typeof historyData == 'string') {
         try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
       }
-      if (historyData?.renew_novel_cover && Array.isArray(historyData.renew_novel_cover)) {
-        coverHistoryList.value = historyData.renew_novel_cover;
+      if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
+        coverHistoryList.value = historyData.novel_cover;
       } else {
         coverHistoryList.value = [];
       }
@@ -6915,8 +7077,8 @@ async function usePreviousCover() {
       if (typeof historyData == 'string') {
         try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
       }
-      if (historyData?.renew_novel_cover && Array.isArray(historyData.renew_novel_cover) && historyData.renew_novel_cover.length > 0) {
-        prevCover = historyData.renew_novel_cover[historyData.renew_novel_cover.length - 1];
+      if (historyData?.novel_cover && Array.isArray(historyData.novel_cover) && historyData.novel_cover.length > 0) {
+        prevCover = historyData.novel_cover[historyData.novel_cover.length - 1];
       }
     }
 
@@ -6976,19 +7138,38 @@ const startCoverRenewPolling = (taskId: string) => {
     try {
       const res = await api.taskPolling(taskId) as any;
       if (res.code == 200 && res.data?.status == 'SUCCESS') {
-        const newCoverUrl = res.data.result?.cover_url || res.data.result?.generate_novel_cover || res.data.result?.renew_novel_cover || res.data.result?.refresh_novel_cover || '';
+        const newCoverUrl = res.data.result?.cover_url || res.data.result?.generate_novel_cover || res.data.result?.renew_novel_cover || '';
         if (newCoverUrl) {
           coverImage.value = newCoverUrl;
         }
         coverRenewLoading.value = false;
         coverRenewFailed.value = false;
         showCoverEditBtn.value = true;
+
+        // Update cover history list after successful renewal
+        try {
+          const detailRes = await api.detailProject(sessionId.value) as any;
+          if (detailRes.code == 200 && detailRes.data?.history_data) {
+            let historyData = detailRes.data.history_data;
+            if (typeof historyData == 'string') {
+              try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
+            }
+            if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
+              coverHistoryList.value = historyData.novel_cover;
+            }
+          }
+        } catch (e) {
+          console.error('Error updating cover history:', e);
+        }
+
         await fetchUserBalance();
         stopCoverRenewPolling();
       } else if (res.data?.status == 'FAIL') {
         coverRenewLoading.value = false;
         coverRenewFailed.value = true;
         showCoverEditBtn.value = false;
+        hasFailed.value = false;
+        taskStatus.value = 'SUCCESS';
         await fetchUserBalance();
         stopCoverRenewPolling();
       }
@@ -6997,6 +7178,8 @@ const startCoverRenewPolling = (taskId: string) => {
       coverRenewLoading.value = false;
       coverRenewFailed.value = true;
       showCoverEditBtn.value = false;
+      hasFailed.value = false;
+      taskStatus.value = 'SUCCESS';
       stopCoverRenewPolling();
     }
   };
@@ -7025,11 +7208,7 @@ async function doGenerateNovelCover() {
   }
 
   try {
-    const totalProcessRes = await api.totalProcess(true) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
-      showTaskLimitExceededModal.value = true;
-      return;
-    }
+    if (await isTaskLimitExceeded()) return;
 
     const newReferenceImages = uploadedCoverImages.value.map(img => img.image);
 

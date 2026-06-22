@@ -306,44 +306,53 @@
                       </div>
                     </div>
                   </div>
+
+                  <div class="switch-collection-btn" @click="openCollectionListModal">
+                    <span>{{ t('collection.switchCollection') }}</span>
+                    <img src="@/assets/images/publish/switch.png" alt="" />
+                  </div>
                 </div>
 
-                <div class="collection-select">
-                  <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                    <div class="select-content" v-if="selectedCollection">
-                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                      <div class="select-text">
-                        <span class="select-value">{{ selectedCollection.name }}</span>
-                        <span class="modify-link" @click.stop="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                <div class="collection-display">
+                  <div class="collection-info" v-if="selectedCollection">
+                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                    <div class="collection-text">
+                      <div class="collection-top">
+                        <span class="collection-name">{{ selectedCollection.name }}</span>
+                        <span class="collection-desc">{{ selectedCollection.description || t('collection.defaultDescription') }}</span>
                       </div>
-                    </div>
-                    <span class="select-value" v-else>{{ t('collection.noCollection') }}</span>
-                    <div class="select-actions">
-                      <div class="select-arrow">
-                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+
+                      <div class="content-sensitive">
+                        <div class="sensitive-left">
+                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                          <div class="info-icon" @mouseover="adjustTooltipPosition">
+                            <img src="@/assets/images/publish/info.png" alt="Info" />
+                            <div class="tooltip-arrow"></div>
+                            <div class="tooltip">
+                              <div class="tooltip-content">
+                                <div v-html="t('submit.sensitiveContent')"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <img
+                            class="sensitive-switch"
+                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                            alt=""
+                            @click="toggleCollectionSensitive"
+                          />
+                        </div>
+                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                     </div>
                   </div>
-                  <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" :class="{ 'dropdown-top': collectionDropdownPosition === 'top' }" @scroll="handleCollectionDropdownScroll">
-                    <div class="collection-dropdown-item new-collection" @click="createNewCollection">
-                      <span>{{ t('collection.newCollection') }}</span>
-                      <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
-                    </div>
-                    <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
-                      <img v-if="collection.cover" :src="processImageUrl(collection.cover)" alt="" class="collection-item-cover" />
-                      <span class="collection-item-title">{{ collection.title }}</span>
-                    </div>
-                    <!-- Loading indicator -->
-                    <div v-if="isLoadingCollections" class="loading-indicator">
-                      <div class="loading-spinner"></div>
-                      <span>{{ t('loading') }}</span>
-                    </div>
-                    <!-- No more collections message - only show when there's more than one page -->
-                    <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
-                      {{ t('emptyState.noMoreData') }}
-                    </div>
+                  <div class="collection-info" v-else>
+                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                   </div>
                 </div>
+
+
               </div>
               <div class="collection-group" v-if="!isNoCollection">
                 <label class="form-label">{{ t("collection.orderInCollection") }}</label>
@@ -380,36 +389,6 @@
             </div>
           </div>
         </div> -->
-
-        <!-- Sensitive Content -->
-        <div class="section">
-          <div class="form-item">
-            <div class="form-label-inner">
-              <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
-
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.sensitiveContent')"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="sensitive-options">
-              <div
-                class="option"
-                v-for="a in contentOptions"
-                :key="a.key"
-                @click="toggleSensitive(a.key)"
-              >
-                <img :src="form.content == a.key ? selectActive : select" alt="" />
-                <span>{{ t(a.labelKey) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div class="submit-row">
           <button class="submit" :disabled="uploading" @click="onSubmit">
@@ -478,9 +457,6 @@
     :visible="showEditCollectionModal"
     :is-edit="editingCollectionId !== null"
     :collection-id="editingCollectionId || ''"
-    :collection-name="selectedCollection?.name || ''"
-    :cover-url="selectedCollection?.cover || ''"
-    :description="selectedCollection?.description || ''"
     :type="2"
     @close="handleCloseEditCollectionModal"
     @save="handleSaveCollection"
@@ -491,6 +467,17 @@
     :visible="showSwitchCollectionModal"
     @close="handleCloseSwitchCollectionModal"
     @confirm="handleConfirmSwitchCollection"
+  />
+
+  <!-- Collection List Modal -->
+  <CollectionListModal
+    :visible="showCollectionListModal"
+    :selected-collection-id="selectedCollection?.id"
+    :uid="uid"
+    :type="2"
+    @close="handleCloseCollectionListModal"
+    @select="handleSelectCollectionFromModal"
+    @create="handleCreateCollectionFromModal"
   />
 </template>
 
@@ -506,6 +493,7 @@ import CommunityConventionModal from "@/components/CommunityConventionModal.vue"
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
+import CollectionListModal from "@/components/CollectionListModal.vue";
 import api from "@/api/index";
 import mammoth from "mammoth";
 import { extractDocText } from "@/util/docParser";
@@ -520,6 +508,8 @@ import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
+import requireSwitchOn from "@/assets/images/home/open.png";
+import requireSwitchOff from "@/assets/images/publish/close.png";
 import router from "@/router";
 import { useRoute } from "vue-router";
 
@@ -658,6 +648,7 @@ const projectDropdownRef = ref<HTMLDivElement | null>(null);
 const showSensitiveConfirm = ref(false);
 const dontAskSensitive = ref(localStorage.getItem("dont_ask_sensitive") === "true");
 const pendingSensitiveValue = ref<"yes" | "no" | "">("");
+const pendingCollectionIdForSensitive = ref<number | null>(null);
 
 // UI state
 const showFullContent = ref(false);
@@ -707,7 +698,7 @@ const showProjectDropdown = ref(false);
 const showChapterDropdown = ref(false);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
@@ -716,6 +707,7 @@ const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showSwitchCollectionModal = ref(false);
 const showEditCollectionModal = ref(false);
+const showCollectionListModal = ref(false);
 const editingCollectionId = ref<string | number | null>(null);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
@@ -731,6 +723,9 @@ const pendingCollectionId = ref<number | null>(null);
 
 // Flag to check if current page is for editing existing work
 const isEditingWork = ref(false);
+
+// Store collection data for pending switch
+const pendingCollectionData = ref<any>(null);
 
 // Collection dropdown ref
 const collectionDropdownRef = ref<HTMLDivElement | null>(null);
@@ -1193,6 +1188,7 @@ async function getPostDetails() {
           name: postData.book_title,
           cover: data.data?.book_info?.cover,
           description: data.data?.book_info?.description,
+          is_nsfw: data.data?.book_info?.is_nsfw ?? 0
         };
         isNoCollection.value = false;
 
@@ -1440,7 +1436,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: coverPreview.value || (selectedCollection.value?.cover || ''),
       content: form.value.description.trim(),
-      is_nsfw: form.value.content == "yes" ? 1 : 0,
+      is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
@@ -1778,11 +1774,68 @@ function toggleSensitive(val: string) {
 
 function cancelSensitive() {
   showSensitiveConfirm.value = false;
+  pendingSensitiveFromSwitch.value = false;
+  if (pendingCollectionIdForSensitive.value !== null) {
+    doSelectCollection(pendingCollectionIdForSensitive.value, true);
+    pendingCollectionIdForSensitive.value = null;
+    showCollectionListModal.value = false;
+  }
 }
 
-function confirmSensitive() {
+async function confirmSensitive() {
   form.value.content = "yes";
   showSensitiveConfirm.value = false;
+  if (pendingSensitiveFromSwitch.value) {
+    pendingSensitiveFromSwitch.value = false;
+    await doToggleCollectionSensitive();
+  } else if (pendingCollectionIdForSensitive.value !== null) {
+    doSelectCollection(pendingCollectionIdForSensitive.value);
+    pendingCollectionIdForSensitive.value = null;
+    showCollectionListModal.value = false;
+  }
+}
+
+const pendingSensitiveFromSwitch = ref(false);
+
+async function toggleCollectionSensitive() {
+  if (!selectedCollection.value) return;
+
+  const newNsfw = selectedCollection.value.is_nsfw == 1 ? 0 : 1;
+
+  if (newNsfw == 1) {
+    const dontAsk = localStorage.getItem('sensitiveDontAsk');
+    if (dontAsk == '1') {
+      await doToggleCollectionSensitive();
+    } else {
+      pendingSensitiveFromSwitch.value = true;
+      showSensitiveConfirm.value = true;
+    }
+  } else {
+    await doToggleCollectionSensitive();
+  }
+}
+
+async function doToggleCollectionSensitive() {
+  if (!selectedCollection.value) return;
+
+  const newNsfw = selectedCollection.value.is_nsfw == 1 ? 0 : 1;
+
+  try {
+    const res = await api.modifyCollection({
+      book_id: selectedCollection.value.id,
+      is_nsfw: newNsfw,
+    }) as any;
+
+    if (res.code == 0 || res.code == 200) {
+      selectedCollection.value.is_nsfw = newNsfw;
+      form.value.content = newNsfw == 1 ? 'yes' : 'no';
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error('Toggle sensitive error:', error);
+    toast(t('fail'));
+  }
 }
 
 // Collection methods
@@ -1865,10 +1918,43 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (selectedCollection.value) {
+  if (selectedCollection.value && !switchCollectionWarningShown.value) {
     showSwitchCollectionModal.value = true;
     showCollectionDropdown.value = false;
   } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+    showCollectionDropdown.value = false;
+  }
+}
+
+function openCollectionListModal() {
+  showCollectionListModal.value = true;
+}
+
+function handleCloseCollectionListModal() {
+  showCollectionListModal.value = false;
+}
+
+async function handleSelectCollectionFromModal(collection: any) {
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
+    pendingCollectionId.value = collection.id;
+    pendingCollectionData.value = collection;
+    showSwitchCollectionModal.value = true;
+    return;
+  }
+
+  await doSelectCollection(collection.id, false, collection);
+  if (!showSensitiveConfirm.value) {
+    showCollectionListModal.value = false;
+  }
+}
+
+function handleCreateCollectionFromModal() {
+  if (selectedCollection.value && !switchCollectionWarningShown.value) {
+    showSwitchCollectionModal.value = true;
+  } else {
+    showCollectionListModal.value = false;
     editingCollectionId.value = null;
     showEditCollectionModal.value = true;
   }
@@ -1919,7 +2005,7 @@ function handleEditCollectionFromDropdown() {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
   showEditCollectionModal.value = false;
 
   if (editingCollectionId.value === null) {
@@ -1927,8 +2013,14 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       id: collection.id,
       name: collection.name,
       cover: collection.cover,
-      description: collection.description
+      description: collection.description,
+      is_nsfw: collection.is_nsfw ?? 0
     };
+
+    if (collection.is_nsfw == 1) {
+      form.value.content = 'yes';
+    }
+
     coverPreview.value = collection.cover || '';
 
     await fetchCollections();
@@ -1950,6 +2042,12 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         selectedCollection.value.cover = collection.cover;
         coverPreview.value = collection.cover;
       }
+      selectedCollection.value.is_nsfw = collection.is_nsfw ?? 0;
+      if (collection.is_nsfw == 1) {
+        form.value.content = 'yes';
+      } else if (collection.is_nsfw == 0 && form.value.content !== 'no') {
+        form.value.content = 'no';
+      }
     }
 
     const index = collections.value.findIndex(c => c.id === collection.id);
@@ -1958,6 +2056,7 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       if (collection.cover) {
         collections.value[index].cover = collection.cover;
       }
+      collections.value[index].is_nsfw = collection.is_nsfw ?? 0;
     }
   }
 }
@@ -1979,14 +2078,26 @@ async function selectCollection(id: number) {
   await doSelectCollection(id);
 }
 
-async function doSelectCollection(id: number) {
-  const collection = collections.value.find(c => c.id === id);
+async function doSelectCollection(id: number, skipSensitiveCheck = false, collectionData?: any) {
+  const collection = collectionData || collections.value.find(c => c.id === id);
   if (collection) {
+    if (!skipSensitiveCheck && collection.is_nsfw == 1 && form.value.content == 'no') {
+      const dontAsk = localStorage.getItem('sensitiveDontAsk');
+      if (dontAsk == '1') {
+        form.value.content = 'yes';
+      } else {
+        pendingCollectionIdForSensitive.value = id;
+        showSensitiveConfirm.value = true;
+        return;
+      }
+    }
+
     selectedCollection.value = {
       id: collection.id,
       name: collection.title,
       cover: collection.cover,
-      description: collection.description
+      description: collection.description,
+      is_nsfw: collection.is_nsfw ?? 0
     };
 
     // Update cover preview to use collection cover
@@ -2035,6 +2146,7 @@ async function doSelectCollection(id: number) {
 function handleCloseSwitchCollectionModal() {
   showSwitchCollectionModal.value = false;
   pendingCollectionId.value = null;
+  pendingCollectionData.value = null;
 }
 
 async function handleConfirmSwitchCollection() {
@@ -2045,11 +2157,16 @@ async function handleConfirmSwitchCollection() {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   if (pendingCollectionId.value !== null) {
-    await doSelectCollection(pendingCollectionId.value);
+    await doSelectCollection(pendingCollectionId.value, false, pendingCollectionData.value);
+    if (!showSensitiveConfirm.value) {
+      showCollectionListModal.value = false;
+    }
     pendingCollectionId.value = null;
+    pendingCollectionData.value = null;
   } else {
     editingCollectionId.value = null;
     showEditCollectionModal.value = true;
+    showCollectionListModal.value = false;
   }
 }
 
@@ -2110,9 +2227,6 @@ function handleClickOutside(event: MouseEvent) {
 
   // Handle collection and episode dropdowns
   const collectionSelect = document.querySelector(".collection-select");
-  if (showCollectionDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
-    showCollectionDropdown.value = false;
-  }
   if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
@@ -2468,12 +2582,15 @@ async function handlePublish(publishData?: any) {
           // Create new collection with cover and description
           const collectionCover = selectedProject.value?.result_async?.generate_novel_cover || '';
           const collectionDescription = t('collection.defaultDescription');
+          const projectStoryMode = publishData?.project?.user_selected?.story_mode || publishData?.project?.story_mode || selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+          const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
 
           const createRes = await api.addCollection({
             title: projectName,
             type: 2,
             cover: collectionCover,
-            description: collectionDescription
+            description: collectionDescription,
+            is_nsfw: collectionIsNsfw
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
@@ -2481,7 +2598,8 @@ async function handlePublish(publishData?: any) {
               id: createRes.data.book_id,
               name: projectName,
               cover: collectionCover,
-              description: collectionDescription
+              description: collectionDescription,
+              is_nsfw: collectionIsNsfw
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -2498,7 +2616,8 @@ async function handlePublish(publishData?: any) {
               id: book_id,
               name: projectName,
               cover: searchRes.data?.book_info?.cover,
-              description: searchRes.data?.book_info?.description
+              description: searchRes.data?.book_info?.description,
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -2516,6 +2635,15 @@ async function handlePublish(publishData?: any) {
       }
     } catch (error) {
       console.error('Error handling collection from title:', error);
+    }
+  }
+
+  // Auto-enable sensitive content if project is in unlimited/NSFW mode
+  const projectData = publishData?.project || selectedProject.value;
+  if (projectData) {
+    const storyMode = projectData.user_selected?.story_mode || projectData.story_mode;
+    if (storyMode === 'nsfw') {
+      form.value.content = 'yes';
     }
   }
 
@@ -2720,12 +2848,15 @@ onMounted(async () => {
                   // Create new collection with cover and description
                   const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
                   const collectionDescription = t('collection.defaultDescription');
+                  const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+                  const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
 
                   const createRes = await api.addCollection({
                     title,
                     type: 2,
                     cover: collectionCover,
-                    description: collectionDescription
+                    description: collectionDescription,
+                    is_nsfw: collectionIsNsfw
                   }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
@@ -2733,7 +2864,8 @@ onMounted(async () => {
                       id: createRes.data.book_id,
                       name: title,
                       cover: collectionCover,
-                      description: collectionDescription
+                      description: collectionDescription,
+                      is_nsfw: collectionIsNsfw
                     };
                     selectedEpisodeNumber.value = '1';
                     isNoCollection.value = false;
@@ -2750,7 +2882,8 @@ onMounted(async () => {
                       id: book_id,
                       name: title,
                       cover: searchRes.data?.book_info?.cover,
-                      description: searchRes.data?.book_info?.description
+                      description: searchRes.data?.book_info?.description,
+                      is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
                     };
                     selectedEpisodeNumber.value = episodeNumber.toString();
                     isNoCollection.value = false;

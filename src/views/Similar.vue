@@ -37,6 +37,9 @@
           >
             <div class="content-image">
                 <img :src="item.cover || defaultCover" alt="" />
+                <div class="r18-overlay" v-if="item.is_nsfw == 1">
+                  <span class="r18-text">R18</span>
+                </div>
                 <!-- Type Icon -->
                 <div class="type-icon" v-if="item.type">
                   <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
@@ -46,11 +49,6 @@
                 <!-- Video Play Icon -->
                 <div v-if="item.type == '3'" class="play-icon">
                   <img src="@/assets/images/detail/play.png" alt="" />
-                </div>
-                <!-- Like Count in Top Right -->
-                <div class="content-stats-top" @click.stop="toggleLike(item)">
-                  <span>{{ formatNumber(item.like_count || 0) }}</span>
-                  <img :src="item.is_liked == 1 ? likeActive : like" alt="" />
                 </div>
                 <div class="content-bottom">
                   <!-- Update Time and Chapter Count -->
@@ -78,6 +76,10 @@
                   <div class="author-info" @click.stop="goToUserHome(item.author?.id || item.author_info?.id)">
                     <img :src="item.author?.avatar || item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                     <span class="author-name">{{ item.author?.nickname || item.author_info?.nickname }}</span>
+                  </div>
+                  <div class="content-stats-top">
+                    <span>{{ formatNumber(item.book_like_count || 0) }}</span>
+                    <img :src="like" alt="" />
                   </div>
                 </div>
               </div>
@@ -158,7 +160,9 @@ interface Content {
     id: number;
   };
   like_count: number;
+  book_like_count: number;
   is_liked: number;
+  is_nsfw?: number | string;
 }
 
 // State
@@ -279,6 +283,7 @@ async function loadData(fromLoadMore = false) {
           author: item.author,
           author_info: item.author_info,
           like_count: parseInt(item.book?.like_count || item.like_count || "0"),
+          book_like_count: parseInt(item.book_like_count || "0"),
           is_liked: item.is_liked || 0,
         };
       });
@@ -431,7 +436,7 @@ function getCountry(): Promise<void> {
   return api.getCode().then((res: any) => {
     hasFetchedRegion.value = true;
     if (res.code == 0) {
-      if (res.res.countryCode != 'CN') {
+      if (res.data.countryCode != 'CN') {
         userRegion.value = true;
       } else {
         userRegion.value = false;
@@ -605,6 +610,27 @@ watch(contentList, () => {
       object-fit: cover;
     }
 
+    .r18-overlay {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10rem;
+      height: 10rem;
+      background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50.19%);
+      border-radius: 0 0.8rem 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 0.6rem;
+
+      .r18-text {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #FFFFFF;
+        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+      }
+    }
+
     /* Type Icon */
     .type-icon {
       position: absolute;
@@ -664,28 +690,6 @@ watch(contentList, () => {
       }
     }
 
-    .content-stats-top {
-      position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      display: flex;
-      align-items: center;
-      z-index: 1;
-      cursor: pointer;
-
-      span {
-        font-weight: 500;
-        font-size: 1.4rem;
-        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
-        color: #FFFFFF;
-      }
-
-      img {
-        width: 3.3rem;
-        height: 3.1rem;
-      }
-    }
-
     .update-info {
       display: flex;
       align-items: center;
@@ -714,12 +718,9 @@ watch(contentList, () => {
       font-size: 1.4rem;
       color: #101828;
       line-height: 2rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
       overflow: hidden;
-      word-break: break-word;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .content-meta {
@@ -731,10 +732,13 @@ watch(contentList, () => {
         display: flex;
         align-items: center;
         gap: 0.6rem;
+        min-width: 0;
+        flex: 1;
 
         .author-avatar {
           width: 3rem;
           height: 3rem;
+          flex-shrink: 0;
           border-radius: 0.4rem;
           object-fit: cover;
         }
@@ -742,10 +746,30 @@ watch(contentList, () => {
         .author-name {
           font-size: 1.2rem;
           color: #99A1AF;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
         }
       }
 
+      .content-stats-top {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+        margin-left: 0.8rem;
 
+        span {
+          font-weight: 500;
+          font-size: 1.2rem;
+          color: #99A1AF;
+        }
+
+        img {
+          width: 1.6rem;
+          height: 1.6rem;
+        }
+      }
     }
   }
 }

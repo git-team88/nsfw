@@ -996,6 +996,10 @@
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
 
+                  <div class="r18-overlay" v-if="item.is_nsfw == 1">
+                    <span class="r18-text">R18</span>
+                  </div>
+
                   <!-- Type Icon -->
                   <div class="type-icon" v-if="item.type">
                     <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
@@ -1005,11 +1009,6 @@
                   <!-- Video Play Icon -->
                   <div v-if="item.type == '3'" class="play-icon">
                     <img src="@/assets/images/detail/play.png" alt="" />
-                  </div>
-                  <!-- Like Count - moved to top right -->
-                  <div class="content-stats-top" @click.stop="toggleLike(item)">
-                    <span>{{ (item.book_id && parseInt(item.book_id) > 0) ? (item.book_like_count || 0) : (item.like_count || 0) }}</span>
-                    <img :src="item.is_liked == 1 ? likeActive : like" alt="" />
                   </div>
 
                   <div class="content-bottom">
@@ -1049,6 +1048,10 @@
                     <div class="author-info" v-else @click.stop="navigateToUserHome(item.author_info?.id)">
                       <img :src="item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <span class="author-name">{{ item.author_info?.nickname }}</span>
+                    </div>
+                    <div class="content-stats-top">
+                      <span>{{ formatNumber(parseInt(item.book_like_count || "0")) }}</span>
+                      <img :src="like" alt="" />
                     </div>
                   </div>
                 </div>
@@ -1826,7 +1829,7 @@ const navigateToNovelGenerate = async () => {
   try {
     // Check if user has reached the task limit
     const totalProcessRes = await api.totalProcess(true) as any;
-    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 2) {
+    if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 10) {
       showTaskLimitExceededModal.value = true;
       isGeneratingNovel.value = false;
       return;
@@ -2022,15 +2025,15 @@ const estimatedVideoComputingPower = computed(() => {
 
   if (selectedVideoQuality.value === '720P') {
     if (currentVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw) || 8;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 12;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
     }
   } else if (selectedVideoQuality.value === '1080P') {
     if (currentVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw) || 11;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 18;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second);
     }
   }
 

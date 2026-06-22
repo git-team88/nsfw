@@ -187,9 +187,9 @@
                   </span>
                   <div class="video-meta-box">
                     {{ t("submit.video.format") }}:{{ videoType || 'mp4' }}
-                    <span class="video-meta" v-if="(uploadSuccess || uploadError || isUpload) && !postId && !route.query.url">
+                    <span class="video-meta" v-if="(uploadSuccess || uploadError || isUpload) && !postId && !route.query.url && !route.query.session_id && !selectedProject">
                       {{ t("submit.video.size") }}:
-                      >{{ videoSize }}MB {{ t("submit.video.duration") }}:{{ videoDuration }}s
+                      {{ videoSize }}MB {{ t("submit.video.duration") }}:{{ videoDuration }}s
                     </span>
                   </div>
                 </div>
@@ -255,7 +255,6 @@
         <!-- Collection -->
         <div class="collection-section">
           <div class="form-item">
-
             <div class="collection-row">
               <div class="collection-group">
                 <div class="form-label-inner">
@@ -269,42 +268,49 @@
                       </div>
                     </div>
                   </div>
+
+                  <div class="switch-collection-btn" @click="openCollectionListModal">
+                    <span>{{ t('collection.switchCollection') }}</span>
+                    <img src="@/assets/images/publish/switch.png" alt="" />
+                  </div>
                 </div>
 
-                <div class="collection-select">
-                  <div class="custom-select" :class="{ 'open': showCollectionDropdown }" @click="toggleCollectionDropdown($event)" @mouseenter="isCollectionHovered = true" @mouseleave="isCollectionHovered = false">
-                    <div class="select-content" v-if="selectedCollection">
-                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                      <div class="select-text">
-                        <span class="select-value">{{ selectedCollection.name }}</span>
-                        <span class="modify-link" @click.stop="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                <div class="collection-display">
+                  <div class="collection-info" v-if="selectedCollection">
+                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                    <div class="collection-text">
+                      <div class="collection-top">
+                        <span class="collection-name">{{ selectedCollection.name }}</span>
+                        <span class="collection-desc">{{ selectedCollection.description || t('collection.defaultDescription') }}</span>
                       </div>
-                    </div>
-                    <span class="select-value" v-else>{{ t('collection.noCollection') }}</span>
-                    <div class="select-actions">
-                      <div class="select-arrow">
-                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+
+                      <div class="content-sensitive">
+                        <div class="sensitive-left">
+                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                          <div class="info-icon" @mouseover="adjustTooltipPosition">
+                            <img src="@/assets/images/publish/info.png" alt="Info" />
+                            <div class="tooltip-arrow"></div>
+                            <div class="tooltip">
+                              <div class="tooltip-content">
+                                <div v-html="t('submit.sensitiveContent')"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <img
+                            class="sensitive-switch"
+                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                            alt=""
+                            @click="toggleCollectionSensitive"
+                          />
+                        </div>
+                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                     </div>
                   </div>
-                  <div ref="collectionDropdownRef" class="custom-dropdown" v-if="showCollectionDropdown" :class="{ 'dropdown-top': collectionDropdownPosition === 'top' }" @scroll="handleCollectionDropdownScroll">
-                    <div class="collection-dropdown-item new-collection" @click="createNewCollection">
-                      <span>{{ t('collection.newCollection') }}</span>
-                      <img src="@/assets/images/publish/plus_icon.png" alt="Plus" />
-                    </div>
-                    <div class="collection-dropdown-item" v-for="(collection, index) in collections" :key="collection.id" @click="selectCollection(collection.id)" :class="{ 'selected': selectedCollection && selectedCollection.id == collection.id }">
-                      <img v-if="collection.cover" :src="processImageUrl(collection.cover)" alt="" class="collection-item-cover" />
-                      <span class="collection-item-title">{{ collection.title }}</span>
-                    </div>
-                    <!-- Loading indicator -->
-                    <div v-if="isLoadingCollections" class="loading-indicator">
-                      <div class="loading-spinner"></div>
-                      <span>{{ t('loading') }}</span>
-                    </div>
-                    <!-- No more collections message - only show when there's more than one page -->
-                    <div v-else-if="!hasMoreCollections && currentCollectionPage > 1" class="no-more-collections">
-                      {{ t('emptyState.noMoreData') }}
-                    </div>
+                  <div class="collection-info" v-else>
+                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                   </div>
                 </div>
               </div>
@@ -425,34 +431,6 @@
           </div>
         </div>
 
-        <!-- Sensitive Content -->
-        <div class="section">
-          <div class="form-item">
-            <div class="form-label-inner">
-              <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.sensitiveContent')"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="sensitive-options">
-              <div class="option" @click="toggleSensitive('yes')">
-                <img :src="form.content === 'yes' ? selectActive : select" alt="" />
-                <span>{{ t("submit.yes") }}</span>
-              </div>
-              <div class="option" @click="toggleSensitive('no')">
-                <img :src="form.content === 'no' ? selectActive : select" alt="" />
-                <span>{{ t("submit.no") }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Submit -->
         <div class="submit-row">
           <button class="submit" @click="onSubmit">
@@ -521,26 +499,14 @@
       @go-to-settings="goToSubscriptionSettings"
     />
 
-    <!-- Create Collection Modal -->
-    <CreateCollectionModal
-      :visible="showCreateCollectionModal"
-      :existing-collections="collections.map(c => c.name)"
-      :type="3"
-      @close="handleCloseCreateCollectionModal"
-      @save="handleCreateCollection"
-    />
-
     <!-- Edit Collection Modal -->
     <EditCollectionModal
       :visible="showEditCollectionModal"
       :is-edit="editingCollectionId !== null"
       :collection-id="editingCollectionId || ''"
-      :collection-name="selectedCollection?.name || ''"
-      :cover-url="selectedCollection?.cover || ''"
-      :description="selectedCollection?.description || ''"
       :type="3"
       @close="handleCloseEditCollectionModal"
-      @save="handleEditCollectionSave"
+      @save="handleSaveCollection"
     />
 
     <!-- Switch Collection Confirm Modal -->
@@ -548,6 +514,17 @@
       :visible="showSwitchCollectionModal"
       @close="handleCloseSwitchCollectionModal"
       @confirm="handleConfirmSwitchCollection"
+    />
+
+    <!-- Collection List Modal -->
+    <CollectionListModal
+      :visible="showCollectionListModal"
+      :selected-collection-id="selectedCollection?.id"
+      :uid="uid"
+      :type="3"
+      @close="handleCloseCollectionListModal"
+      @select="handleSelectCollectionFromModal"
+      @create="handleCreateCollectionFromModal"
     />
   </div>
 </template>
@@ -563,7 +540,7 @@ import PreviewModal from "@/components/PreviewModal.vue";
 import ProjectVideoViewModal from "@/components/ProjectVideoViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
-import CreateCollectionModal from "@/components/CreateCollectionModal.vue";
+import CollectionListModal from "@/components/CollectionListModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -577,6 +554,8 @@ import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
+import requireSwitchOn from "@/assets/images/home/open.png";
+import requireSwitchOff from "@/assets/images/publish/close.png";
 import { baseUrl } from "@/util/config";
 
 const isEditing = computed(() => !!postId.value);
@@ -650,6 +629,7 @@ const isDropdownLoading = ref(false);
 const isOpeningDropdown = ref(false);
 
 const showSensitiveConfirm = ref(false);
+const pendingCollectionIdForSensitive = ref<number | null>(null);
 
 const toastShow = ref(false);
 const toastMsg = ref("");
@@ -663,17 +643,30 @@ const hasActiveSubscription = ref(false);
 const isAdult = ref(false);
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-// Upload options - only local upload
-const uploadOption = ref('local');
+const uploadOption = ref('history');
 
-// Upload options for v-for - only local upload
 const uploadOptions = [
+  {
+    id: 'history',
+    value: 'history',
+    label: 'submit.image.uploadFromHistory'
+  },
   {
     id: 'local',
     value: 'local',
     label: 'submit.video.localUpload'
   }
 ];
+
+watch(uploadOption, (newOption) => {
+  if (newOption === 'history') {
+    fetchProjects();
+  } else if (newOption === 'local') {
+    selectedProject.value = null;
+    selectedProjectId.value = '';
+    coverPreview.value = '';
+  }
+});
 
 // Tab list
 const tabList = [
@@ -735,7 +728,7 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
 const editingCollectionId = ref<string | number | null>(null);
 const showEditCollectionModal = ref(false);
 const isCollectionHovered = ref(false);
@@ -745,11 +738,11 @@ const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
 const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
-const showCreateCollectionModal = ref(false);
+const showCollectionListModal = ref(false);
 const showSwitchCollectionModal = ref(false);
 const switchCollectionWarningShown = ref(false);
 const pendingCollectionId = ref<number | null>(null);
-const isCreatingNewCollection = ref(false);
+const pendingCollectionData = ref<any>(null);
 const isEditingWork = ref(false);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
@@ -870,12 +863,42 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (selectedCollection.value) {
-    pendingCollectionId.value = null;
-    isCreatingNewCollection.value = true;
+  if (selectedCollection.value && !switchCollectionWarningShown.value) {
     showSwitchCollectionModal.value = true;
     showCollectionDropdown.value = false;
   } else {
+    editingCollectionId.value = null;
+    showEditCollectionModal.value = true;
+  }
+}
+
+function openCollectionListModal() {
+  showCollectionListModal.value = true;
+}
+
+function handleCloseCollectionListModal() {
+  showCollectionListModal.value = false;
+}
+
+async function handleSelectCollectionFromModal(collection: any) {
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
+    pendingCollectionId.value = collection.id;
+    pendingCollectionData.value = collection;
+    showSwitchCollectionModal.value = true;
+    return;
+  }
+
+  await doSelectCollection(collection.id, false, collection);
+  if (!showSensitiveConfirm.value) {
+    showCollectionListModal.value = false;
+  }
+}
+
+function handleCreateCollectionFromModal() {
+  if (selectedCollection.value && !switchCollectionWarningShown.value) {
+    showSwitchCollectionModal.value = true;
+  } else {
+    showCollectionListModal.value = false;
     editingCollectionId.value = null;
     showEditCollectionModal.value = true;
   }
@@ -910,9 +933,7 @@ function handleCloseEditCollectionModal() {
 }
 
 async function selectCollection(id: number) {
-  // Check if we need to show warning before switching collection
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollectionId.value && selectedCollectionId.value !== id) {
-    // Store the target collection ID for confirmation
+  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
     pendingCollectionId.value = id;
     showSwitchCollectionModal.value = true;
     showCollectionDropdown.value = false;
@@ -922,15 +943,29 @@ async function selectCollection(id: number) {
   await doSelectCollection(id);
 }
 
-async function doSelectCollection(id: number) {
-  const collection = collections.value.find(c => c.id === id);
+async function doSelectCollection(id: number, skipSensitiveCheck = false, collectionData?: any) {
+  const collection = collectionData || collections.value.find(c => c.id === id);
   if (collection) {
+    if (!skipSensitiveCheck && collection.is_nsfw == 1 && form.value.content == 'no') {
+      const dontAsk = localStorage.getItem('sensitiveDontAsk');
+      if (dontAsk == '1') {
+        form.value.content = 'yes';
+      } else {
+        pendingCollectionIdForSensitive.value = id;
+        showSensitiveConfirm.value = true;
+        return;
+      }
+    }
+
     selectedCollection.value = {
       id: collection.id,
       name: collection.title,
       cover: collection.cover,
-      description: collection.description
+      description: collection.description,
+      is_nsfw: collection.is_nsfw ?? 0
     };
+
+    coverPreview.value = collection.cover || '';
 
     try {
       // Request collection details to get the current chapter count
@@ -1005,26 +1040,26 @@ function clearCollection() {
 function handleCloseSwitchCollectionModal() {
   showSwitchCollectionModal.value = false;
   pendingCollectionId.value = null;
-  isCreatingNewCollection.value = false;
+  pendingCollectionData.value = null;
 }
 
 async function handleConfirmSwitchCollection() {
-  // Mark warning as shown
   switchCollectionWarningShown.value = true;
-
-  // Close modal first before updating collection
   showSwitchCollectionModal.value = false;
 
-  // Wait for modal to close before updating collection
   await new Promise(resolve => setTimeout(resolve, 100));
 
   if (pendingCollectionId.value !== null) {
-    await doSelectCollection(pendingCollectionId.value);
+    await doSelectCollection(pendingCollectionId.value, false, pendingCollectionData.value);
+    if (!showSensitiveConfirm.value) {
+      showCollectionListModal.value = false;
+    }
     pendingCollectionId.value = null;
-  } else if (isCreatingNewCollection.value) {
-    isCreatingNewCollection.value = false;
+    pendingCollectionData.value = null;
+  } else {
     editingCollectionId.value = null;
     showEditCollectionModal.value = true;
+    showCollectionListModal.value = false;
   }
 }
 
@@ -1080,39 +1115,60 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleCreateCollection(collection: { name: string }) {
-  // Refresh collections list from API
-  await fetchCollections(false);
-  // Find and set the new collection
-  const newCollection = collections.value.find(c => c.title === collection.name);
-  if (newCollection) {
-    selectedCollection.value = {
-      id: newCollection.id,
-      name: newCollection.title,
-      cover: newCollection.cover,
-      description: newCollection.description
-    };
-  }
-  // Keep current episode number, don't reset to 1
-  showCreateCollectionModal.value = false;
-  isNoCollection.value = false;
-}
-
-function handleCloseCreateCollectionModal() {
-  showCreateCollectionModal.value = false;
-}
-
-function handleEditCollectionSave(updatedCollection: { id: string | number; name: string; cover?: string; description?: string }) {
-  selectedCollection.value = {
-    id: updatedCollection.id,
-    name: updatedCollection.name,
-    cover: updatedCollection.cover || '',
-    description: updatedCollection.description || ''
-  };
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
   showEditCollectionModal.value = false;
-  isNoCollection.value = false;
-  selectedEpisodeNumber.value = '1';
-  episodes.value = [{ value: '1', label: '1' }];
+
+  if (editingCollectionId.value === null) {
+    selectedCollection.value = {
+      id: collection.id,
+      name: collection.name,
+      cover: collection.cover,
+      description: collection.description,
+      is_nsfw: collection.is_nsfw ?? 0
+    };
+
+    if (collection.is_nsfw == 1) {
+      form.value.content = 'yes';
+    }
+
+    coverPreview.value = collection.cover || '';
+
+    await fetchCollections();
+
+    const chapterCount = 0;
+    const defaultEpisode = chapterCount + 1;
+    selectedEpisodeNumber.value = defaultEpisode.toString();
+    episodes.value = [];
+    for (let i = 1; i <= defaultEpisode; i++) {
+      episodes.value.push({
+        value: i.toString(),
+        label: i.toString()
+      });
+    }
+  } else {
+    if (selectedCollection.value && selectedCollection.value.id === collection.id) {
+      selectedCollection.value.name = collection.name;
+      if (collection.cover) {
+        selectedCollection.value.cover = collection.cover;
+        coverPreview.value = collection.cover;
+      }
+      selectedCollection.value.is_nsfw = collection.is_nsfw ?? 0;
+      if (collection.is_nsfw == 1) {
+        form.value.content = 'yes';
+      } else if (collection.is_nsfw == 0 && form.value.content !== 'no') {
+        form.value.content = 'no';
+      }
+    }
+
+    const index = collections.value.findIndex(c => c.id === collection.id);
+    if (index !== -1) {
+      collections.value[index].title = collection.name;
+      if (collection.cover) {
+        collections.value[index].cover = collection.cover;
+      }
+      collections.value[index].is_nsfw = collection.is_nsfw ?? 0;
+    }
+  }
 }
 
 // Chapter dropdown functions
@@ -1260,6 +1316,49 @@ async function selectProject(project: any) {
     }
   } catch (error) {
     console.error('Error fetching project details:', error);
+  }
+}
+
+const pendingSensitiveFromSwitch = ref(false);
+
+async function toggleCollectionSensitive() {
+  if (!selectedCollection.value) return;
+
+  const newNsfw = selectedCollection.value.is_nsfw == 1 ? 0 : 1;
+
+  if (newNsfw == 1) {
+    const dontAsk = localStorage.getItem('sensitiveDontAsk');
+    if (dontAsk == '1') {
+      await doToggleCollectionSensitive();
+    } else {
+      pendingSensitiveFromSwitch.value = true;
+      showSensitiveConfirm.value = true;
+    }
+  } else {
+    await doToggleCollectionSensitive();
+  }
+}
+
+async function doToggleCollectionSensitive() {
+  if (!selectedCollection.value) return;
+
+  const newNsfw = selectedCollection.value.is_nsfw == 1 ? 0 : 1;
+
+  try {
+    const res = await api.modifyCollection({
+      book_id: selectedCollection.value.id,
+      is_nsfw: newNsfw,
+    }) as any;
+
+    if (res.code == 0 || res.code == 200) {
+      selectedCollection.value.is_nsfw = newNsfw;
+      form.value.content = newNsfw == 1 ? 'yes' : 'no';
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error('Toggle sensitive error:', error);
+    toast(t('fail'));
   }
 }
 
@@ -1417,7 +1516,8 @@ async function handlePublish(publishData?: any) {
             title: project.name,
             type: 3,
             cover: project.video_cover_url || '',
-            description: t('collectionSettings.sampleDescription')
+            description: t('collectionSettings.sampleDescription'),
+            is_nsfw: 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
@@ -1800,7 +1900,7 @@ function pickCover() {
   showCoverModal.value = true;
 }
 
-function toggleSensitive(val: "yes" | "no") {
+function toggleSensitive(val: string) {
   if (form.value.content === val) return;
 
   const dontAsk = localStorage.getItem('sensitiveDontAsk');
@@ -1827,6 +1927,12 @@ async function handlePermissionChange(permission: string, index: number) {
 
 function cancelSensitive() {
   showSensitiveConfirm.value = false;
+  pendingSensitiveFromSwitch.value = false;
+  if (pendingCollectionIdForSensitive.value !== null) {
+    doSelectCollection(pendingCollectionIdForSensitive.value, true);
+    pendingCollectionIdForSensitive.value = null;
+    showCollectionListModal.value = false;
+  }
 }
 
 function onTitleInput() {
@@ -1835,9 +1941,17 @@ function onTitleInput() {
   }
 }
 
-function confirmSensitive() {
+async function confirmSensitive() {
   form.value.content = "yes";
   showSensitiveConfirm.value = false;
+  if (pendingSensitiveFromSwitch.value) {
+    pendingSensitiveFromSwitch.value = false;
+    await doToggleCollectionSensitive();
+  } else if (pendingCollectionIdForSensitive.value !== null) {
+    doSelectCollection(pendingCollectionIdForSensitive.value);
+    pendingCollectionIdForSensitive.value = null;
+    showCollectionListModal.value = false;
+  }
 }
 
 function onCoverConfirmed(imgData: string) {
@@ -2005,27 +2119,46 @@ function handlePaste(e: ClipboardEvent) {
   if (!selection) return;
 
   const range = selection.getRangeAt(0);
-  range.deleteContents();
 
   const currentText = captionRef.value?.innerText || '';
   const currentLength = currentText.length;
   const remainingLength = DESC_MAX - currentLength;
   const pasteText = remainingLength > 0 ? text.substring(0, remainingLength) : '';
 
+  range.deleteContents();
+
   const textNode = document.createTextNode(pasteText);
   range.insertNode(textNode);
 
-  range.setStartAfter(textNode);
-  range.collapse(true);
-
+  const newRange = document.createRange();
+  newRange.setStartAfter(textNode);
+  newRange.collapse(true);
   selection.removeAllRanges();
-  selection.addRange(range);
+  selection.addRange(newRange);
+
+  // Restore tag span styles
+  captionRef.value?.querySelectorAll('.tag').forEach((span: Element) => {
+    const el = span as HTMLElement;
+    el.style.color = '#00d3f2';
+    el.contentEditable = 'false';
+  });
 
   updateCaptionStats();
+  requestAnimationFrame(() => scrollCaptionToCursor());
 }
 
 async function handleCaptionInput(e: Event) {
   const target = e.target as HTMLDivElement;
+
+  // Restore tag span styling that may have been lost during input
+  if (captionRef.value) {
+    captionRef.value.querySelectorAll('.tag').forEach((span: Element) => {
+      const el = span as HTMLElement;
+      el.style.color = '#00d3f2';
+      el.contentEditable = 'false';
+    });
+  }
+
   const text = target.innerText || "";
   const trimmedText = text.replace(/\n$/, "");
   const currentLength = trimmedText.length;
@@ -2086,6 +2219,8 @@ async function handleCaptionInput(e: Event) {
   } else {
     showDropdown.value = false;
   }
+
+  requestAnimationFrame(() => scrollCaptionToCursor());
 }
 
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
@@ -2206,6 +2341,48 @@ function handleCaptionKeydown(e: KeyboardEvent) {
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+
+    // Protect existing tag spans: if cursor is right after a contentEditable=false span,
+    // prevent default and manually insert the space to avoid browser destroying the span
+    if (range.collapsed) {
+      const node = range.startContainer;
+      if (node.nodeType === Node.TEXT_NODE && range.startOffset === 0) {
+        const prevSibling = node.previousSibling;
+        if (prevSibling?.nodeName === 'SPAN') {
+          const span = prevSibling as HTMLElement;
+          if (span.classList.contains('tag')) {
+            e.preventDefault();
+            node.textContent = '\u0020' + (node.textContent || '');
+            const newRange = document.createRange();
+            newRange.setStart(node, 1);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            updateCaptionStats();
+            return;
+          }
+        }
+      }
+      if (node === captionRef.value && range.startOffset > 0) {
+        const child = node.childNodes[range.startOffset - 1];
+        if (child?.nodeName === 'SPAN') {
+          const span = child as HTMLElement;
+          if (span.classList.contains('tag')) {
+            e.preventDefault();
+            const space = document.createTextNode('\u0020');
+            node.insertBefore(space, node.childNodes[range.startOffset] || null);
+            const newRange = document.createRange();
+            newRange.setStart(space, 1);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            updateCaptionStats();
+            return;
+          }
+        }
+      }
+    }
+
     const textNode = range.startContainer;
 
     if (textNode.nodeType === Node.TEXT_NODE) {
@@ -2379,6 +2556,26 @@ function handleCaptionKeydown(e: KeyboardEvent) {
         }
       }
     }
+  }
+}
+
+function scrollCaptionToCursor() {
+  if (!captionRef.value) return;
+
+  const el = captionRef.value;
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+  const tmp = document.createElement('span');
+  tmp.textContent = '\u200b';
+  range.insertNode(tmp);
+  const top = tmp.offsetTop;
+  const lineHeight = parseInt(getComputedStyle(el).lineHeight) || 20;
+  tmp.parentNode?.removeChild(tmp);
+  el.normalize();
+  if (top + lineHeight > el.scrollTop + el.clientHeight) {
+    el.scrollTop = top + lineHeight - el.clientHeight;
   }
 }
 
@@ -2760,7 +2957,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: coverPreview.value,
       content: processedContent,
-      is_nsfw: form.value.content == "yes" ? 1 : 0,
+      is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
@@ -2863,7 +3060,8 @@ onMounted(async () => {
               title,
               type: 3,
               cover: coverPreview.value || '',
-              description: t('collectionSettings.sampleDescription')
+              description: t('collectionSettings.sampleDescription'),
+              is_nsfw: 0
             }) as any;
 
             if (createRes.code === 0 && createRes.data?.id) {

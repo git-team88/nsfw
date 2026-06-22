@@ -1801,7 +1801,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       specSize: "画像サイズ：",
       sizeInfo: "10MB以下",
       specResolution: "画像比率：",
-      resolutionInfo: "推奨比率：4:3",
+      resolutionInfo: "推奨比率：9:16または16:9",
       remove: "削除",
       preview: "プレビュー",
       photo: "画像",
@@ -1824,6 +1824,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       projectView: {
         detail: "詳細",
         publishEpisode: "この章を公開",
+        publishChapter: "この章を公開",
         published: "公開済み",
         episodeSummary: "この話のあらすじ",
         publishedIndicator: "公開済みを示す",
@@ -1932,8 +1933,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       lastChapterTip: "この章を読み終わりました\n見たいコンテンツを直接生成できます",
       goGenerate: "生成する",
       subscribe: "サブスクリプション",
-      sensitiveContent: "センシティブな内容です。18歳以上で「センシティブな内容を表示」が有効になっているユーザーのみ閲覧できます。",
-      profileSettings: "個人設定",
+      sensitiveContent: "作品にセンシティブな情報が含まれています。閲覧を有効にしますか？",
+      profileSettings: "センシティブコンテンツの閲覧を有効にする",
     },
     authorClosedSubscription: "このクリエイターはメンバーシップ機能を無効にしました",
     permissionText: {
@@ -2043,6 +2044,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       pin: "ピン留め",
       pinned: "ピン留め",
       updated: "{count}話更新",
+      updatedChapter: "{count}章更新",
+      updatedEpisode: "{count}話更新",
       unpin: "ピン留めを解除",
       settings: "コレクション設定",
       chapterManage: "章管理",
@@ -2228,7 +2231,10 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     },
     orderInCollection: "コレクション内の順序",
     enterEpisode: "エピソードを選択してください",
-    emptyCover: "表紙画像をアップロードしてください"
+    emptyCover: "表紙画像をアップロードしてください",
+    selectSensitive: "センシティブな内容の選択してください",
+    switchCollection: "コレクション切替",
+    selectCollection: "コレクション切り替え"
   },
   fail: "失敗しました",
   chapter: "第{chapter}章",
@@ -2287,7 +2293,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     minutes: "分",
     hours: "時間",
     tenMinutes: "10分",
-    maxCoverImages: "表紙画像は最大{max}枚まで",
+    maxCoverImages: "アップロードできる画像は{max}枚までです",
     maxCoverSize: "画像サイズが制限を超えています。最大10MBまでサポートしています",
     invalidCoverImageType: "サポートされていない画像形式です。JPG、PNG、またはWEBP形式の画像をアップロードしてください",
     uploadFormat: "サポートフォーマット：jpg, jpeg, png, webp、1枚あたり最大10MB",
@@ -2383,6 +2389,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     usePrevCover: "前のバージョンを使用",
     coverRenewFailedTip: "表紙の変更に失敗しました。前のバージョンを使用をクリックしてから操作を続けてください",
     coverRenewLoadingTip: "表紙を変更中です。生成が終わってから操作してください",
+    generatingChapterTip: "第{chapter}章を生成中です。生成が終わってから操作してください",
     coverHistoryTitle: "生成履歴",
     coverHistoryEmpty: "履歴がありません",
     generatingCover: "表紙画像を再生成中...",
@@ -2695,7 +2702,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     statusPublished: "公開済み",
     statusDraft: "下書き",
     statusSubscribed: "メンバーシップ",
-    statusPrivate: "非公開"
+    statusPrivate: "非公開",
+    privateChapterHint: "{count}{unit}の非公開チャプターを除く"
   },
   collectionSettings: {
     back: "戻る",

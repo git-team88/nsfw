@@ -231,6 +231,23 @@
     :targetType="reportTarget"
     @submit="handleReportSubmit"
   />
+
+  <!-- Sensitive Content Modals -->
+  <SensitiveContentNoBirthdayModal
+    v-if="showSensitiveContentNoBirthdayModal"
+    @close="showSensitiveContentNoBirthdayModal = false"
+    @goToFill="handleGoToFillBirthday"
+  />
+  <SensitiveContentUnderageModal
+    v-if="showSensitiveContentUnderageModal"
+    @close="showSensitiveContentUnderageModal = false"
+  />
+  <SensitiveContentConfirmModal
+    v-if="showSensitiveContentConfirmModal"
+    :hideDontAsk="true"
+    @close="showSensitiveContentConfirmModal = false"
+    @confirm="confirmSensitiveContent"
+  />
 </template>
 
 <script setup lang="ts">
@@ -242,6 +259,9 @@ import UploadMask from '@/components/UploadMask.vue';
 import ReportModal from '@/components/ReportModal.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Sidebar from '@/components/Sidebar.vue';
+import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
+import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
+import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import { toast } from '@/util/toast';
 import { formatTimestamp } from '@/util/utils';
 import { baseUrl } from '@/util/config';
@@ -380,6 +400,11 @@ const lastRange = ref<Range | null>(null);
 // Likes
 const likes = ref(0);
 const liked = ref(false);
+
+// Sensitive content modals
+const showSensitiveContentNoBirthdayModal = ref(false);
+const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentConfirmModal = ref(false);
 
 // User info
 const isUnderage = ref(false);
@@ -1330,7 +1355,43 @@ function backToTop() {
 
 // Navigate to profile settings
 function navigateToProfileSettings() {
-  router.push('/user/profile');
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  const userInfoStr = localStorage.getItem('userInfo');
+  if (!userInfoStr) {
+    showSensitiveContentNoBirthdayModal.value = true;
+    return;
+  }
+
+  const parsedUserInfo = JSON.parse(userInfoStr);
+  const birthday = parsedUserInfo.info?.birthday;
+
+  if (!birthday) {
+    showSensitiveContentNoBirthdayModal.value = true;
+    return;
+  }
+
+  if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
+    showSensitiveContentUnderageModal.value = true;
+    return;
+  }
+
+  showSensitiveContentConfirmModal.value = true;
+}
+
+function confirmSensitiveContent() {
+  showSensitiveContentConfirmModal.value = false;
+  localStorage.setItem('allowSensitiveContent', '1');
+  fetchDetail();
+}
+
+function handleGoToFillBirthday() {
+  showSensitiveContentNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
 }
 
 // Open report modal

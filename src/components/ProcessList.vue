@@ -391,12 +391,14 @@ const getItemLabel = (type: string, item: any) => {
     if (type == 'novel') return t('process.novel') + '-' + t('process.coverChange');
   } else if (item.step_name == 'renew_manhua_cover') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.coverChange');
-  } else if (item.step_name == 'edit_single_scene') {
-    if (type == 'manhua') return t('process.comic') + '-' + t('process.sceneEdit');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.storyboardEdit');
-  } else if (item.step_name == 'edit_single_character') {
-    if (type == 'manhua') return t('process.comic') + '-' + t('process.characterEdit');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.characterEdit');
+  } else if (item.step_name == 'renew_manhua_scene') {
+    return t('process.comic') + '-' + t('process.sceneEdit');
+  } else if (item.step_name == 'renew_manju_scene') {
+    return t('process.manju') + '-' + t('process.storyboardEdit');
+  } else if (item.step_name == 'renew_manhua_character') {
+    return t('process.comic') + '-' + t('process.characterEdit');
+  } else if (item.step_name == 'renew_manju_character') {
+    return t('process.manju') + '-' + t('process.characterEdit');
   } else if (item.step_name == 'renew_manju_cover') {
     if (type == 'manju') return t('process.manju') + '-' + t('process.coverChange');
   } else if (item.step_name == 'merge_videos') {
@@ -408,7 +410,6 @@ const getItemLabel = (type: string, item: any) => {
   } else if (item.step_name == 'chapter') {
     // Handle chapter step differently based on status and type
     if (item.step_status == 'DOING' && item.is_batch_chapter != 1) {
-      // Non-batch generation, DOING status: show "新章节" (New Chapter)
       if (type == 'novel') return t('process.novel') + '-' + t('novel.newChapter');
       if (type == 'manhua') return t('process.comic') + '-' + t('novel.newChapter');
       if (type == 'manju') return t('process.manju') + '-' + t('novel.newChapter');

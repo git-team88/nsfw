@@ -7,7 +7,7 @@
       </div>
       <div class="cover-history-list">
         <div
-          v-for="(coverUrl, index) in coverList"
+          v-for="(coverUrl, index) in reversedCoverList"
           :key="index"
           class="cover-history-item"
           :class="{ active: coverUrl == selectedCover }"
@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -48,6 +48,8 @@ const emit = defineEmits<{
 
 const selectedCover = ref<string>('');
 const loadedImages = ref<Record<number, boolean>>({});
+
+const reversedCoverList = computed(() => [...props.coverList].reverse());
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
@@ -88,7 +90,7 @@ const handleConfirm = () => {
     position: relative;
     background: #FFFFFF;
     border-radius: 1.2rem;
-    width: 70.2rem;
+    width: 72rem;
     padding: 1.8rem 0;
     display: flex;
     flex-direction: column;
@@ -121,7 +123,7 @@ const handleConfirm = () => {
       gap: 1.2rem;
       justify-content: center;
       max-height: 48rem;
-      padding: 2rem 2.4rem;
+      padding: 2rem 1rem 2rem 2.4rem;
       overflow-y: auto;
 
       .cover-history-item {

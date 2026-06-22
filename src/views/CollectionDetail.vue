@@ -1,6 +1,6 @@
 <template>
   <div class="collection-detail">
-    <Header :cur="-1"></Header>
+    <Header :cur="-1" @user-info-loaded="handleUserInfoLoaded"></Header>
 
     <div class="content-container">
       <!-- Loading State -->
@@ -24,14 +24,19 @@
             <div class="author-left">
               <div class="cover-image">
                 <img :src="collection.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
+                <div class="r18-overlay" v-if="collection.is_nsfw == 1">
+                  <span class="r18-text">R18</span>
+                </div>
               </div>
               <div class="author-info">
-                <h1 class="title">{{ collection.title }}</h1>
+                <div class="title-row">
+                  <h1 class="title">{{ collection.title }}</h1>
+                </div>
 
                 <div class="update-read-section">
-                  <div class="update-chapter">
+                  <div class="update-chapter" v-if="Number(collection.latestChapterIndex) > 0">
                     <span class="label">{{ t('collectionDetail.lastUpdate') }}：</span>
-                    <span v-if="collection.latestChapterIndex" class="chapter-value">
+                    <span class="chapter-value">
                       {{ t('home.chapterFormat', { chapter: collection.latestChapterIndex }) }}
                     </span>
                   </div>
@@ -107,6 +112,9 @@
           <div class="section-chapter">
             <div class="section-header">
               <h2 class="section-title">{{ t('collectionDetail.tableOfContents') }}</h2>
+
+              <!-- <span v-if="collection.chapter_count_private" class="private-hint">（{{ t('collectionDetail.privateChapterHint', { count: collection.chapter_count_private, unit: getChapterLabel(collection.type) }) }}）</span> -->
+
               <!-- <button
                 v-if="isOwn"
                 class="publish-btn"
@@ -158,12 +166,33 @@
         </div>
       </template>
     </div>
+
+    <SensitiveContentNoBirthdayModal
+      v-if="showSensitiveContentNoBirthdayModal"
+      @close="showSensitiveContentNoBirthdayModal = false"
+      @go-to-fill="handleGoToFillBirthday"
+    />
+
+    <SensitiveContentUnderageModal
+      v-if="showSensitiveContentUnderageModal"
+      @close="showSensitiveContentUnderageModal = false"
+    />
+
+    <SensitiveContentConfirmModal
+      v-if="showSensitiveContentConfirmModal"
+      :hide-dont-ask="true"
+      @close="showSensitiveContentConfirmModal = false"
+      @confirm="confirmSensitiveContent"
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="CollectionDetail">
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
+import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
+import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
+import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
@@ -198,6 +227,8 @@ interface Collection {
   type: string;
   status: string;
   chapters: Chapter[];
+  is_nsfw: number | string;
+  chapter_count_private: number | string;
 }
 
 interface AuthorInfo {
@@ -224,6 +255,12 @@ const authorInfo = ref<AuthorInfo>({
 });
 const loading = ref(false);
 const userRegion = ref(false);
+const userInfo = ref<any>(null);
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
+const showSensitiveContentNoBirthdayModal = ref(false);
+const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentConfirmModal = ref(false);
+const pendingChapter = ref<Chapter | null>(null);
 
 function checkLogin() {
   const token = localStorage.getItem('token');
@@ -234,18 +271,15 @@ function checkLogin() {
   return true;
 }
 
-function getCountry() {
-  api.getCode().then((res: any) => {
-    if (res.code === 0) {
-      if (res.data.countryCode != 'CN') {
-        userRegion.value = true;
-      } else {
-        userRegion.value = false;
-      }
+async function getCountry() {
+  try {
+    const res = await api.getCode() as any;
+    if (res.code == 0) {
+      userRegion.value = res.data.countryCode != 'CN';
     }
-  }).catch(() => {
+  } catch {
     userRegion.value = false;
-  });
+  }
 }
 
 function getChapterLabel(type: string): string {
@@ -293,14 +327,15 @@ async function fetchCollectionDetail() {
     const isSelf = String(localUid) === String(urlUid);
 
     let response;
+    const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
+    const showNsfw = userRegion.value && allowSensitive ? 1 : 0;
+
     if (isSelf) {
       response = await api.getSelfCollectionDetail(id) as any;
     } else {
-      const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-      const showNsfw = userRegion.value && allowSensitive ? 1 : undefined;
       response = await api.getCollectionDetail(id, showNsfw) as any;
     }
-    if (response.code === 0) {
+    if (response.code == 0) {
       const data = response.data;
       // Prioritize author_id from URL, then from response
       const resolvedAuthorId = authorIdFromUrl
@@ -324,9 +359,11 @@ async function fetchCollectionDetail() {
         description: bookInfo.description || '',
         isOwn: isSelf,
         authorId: resolvedAuthorId || (bookInfo.user_id || ''),
-        latestChapterIndex: bookInfo.latest_post_chapter_index || '',
+        latestChapterIndex: bookInfo.chapter_count || '',
         type: bookInfo.type || '',
         status: bookInfo.status || '',
+        is_nsfw: bookInfo.is_nsfw || 0,
+        chapter_count_private: bookInfo.chapter_count_private || 0,
         chapters: chaptersData.map((chapter: any) => ({
           id: chapter.post_id || chapter.id,
           title: chapter.title || '',
@@ -336,7 +373,7 @@ async function fetchCollectionDetail() {
       };
 
       if (resolvedAuthorId) {
-        await fetchAuthorInfo(resolvedAuthorId);
+        await fetchAuthorInfo(resolvedAuthorId, showNsfw);
       }
     } else {
       toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
@@ -348,7 +385,7 @@ async function fetchCollectionDetail() {
   }
 }
 
-async function fetchAuthorInfo(authorId: string | number) {
+async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
   try {
     const localUid = localStorage.getItem('uid');
     const isSelf = String(localUid) === String(authorId);
@@ -357,7 +394,7 @@ async function fetchAuthorInfo(authorId: string | number) {
     if (isSelf) {
       res = await api.authorSelfInfo();
     } else {
-      res = await api.authorInfo(authorId);
+      res = await api.authorInfo(authorId, showNsfw);
     }
 
     const data = res as any;
@@ -401,9 +438,56 @@ function goPublish() {
   console.log('Go to publish');
 }
 
+function handleUserInfoLoaded(info: any) {
+  userInfo.value = info;
+}
+
+function handleGoToFillBirthday() {
+  showSensitiveContentNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
+}
+
 function goChapter(chapter: Chapter) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+}
+
+  if (isOwn.value) {
+    navigateToChapter(chapter);
+    return;
+  }
+
+  if (userInfo.value) {
+    const birthday = userInfo.value.info?.birthday;
+    if (!birthday) {
+      pendingChapter.value = chapter;
+      showSensitiveContentNoBirthdayModal.value = true;
+      return;
+    }
+    if (isTeenager.value) {
+      pendingChapter.value = chapter;
+      showSensitiveContentUnderageModal.value = true;
+      return;
+    }
+  }
+
+  pendingChapter.value = chapter;
+  showSensitiveContentConfirmModal.value = true;
+}
+
+function navigateToChapter(chapter: Chapter) {
   const uid = authorInfo.value.id;
   router.push(`/detail?id=${chapter.id}&type=4&uid=${uid}`);
+}
+
+function confirmSensitiveContent() {
+  showSensitiveContentConfirmModal.value = false;
+  if (pendingChapter.value) {
+    navigateToChapter(pendingChapter.value);
+    pendingChapter.value = null;
+  }
 }
 
 async function toggleFollow() {
@@ -508,11 +592,11 @@ async function refreshChapters() {
     const isSelf = String(localUid) === String(urlUid);
 
     let response;
+    const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
+    const showNsfw = userRegion.value && allowSensitive ? 1 : undefined;
     if (isSelf) {
       response = await api.getSelfCollectionDetail(id) as any;
     } else {
-      const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-      const showNsfw = userRegion.value && allowSensitive ? 1 : undefined;
       response = await api.getCollectionDetail(id, showNsfw) as any;
     }
 
@@ -527,7 +611,7 @@ async function refreshChapters() {
           subtitle: chapter.subtitle,
           status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
         }));
-        collection.value.latestChapterIndex = bookInfo.latest_post_chapter_index || '';
+        collection.value.latestChapterIndex = bookInfo.chapter_count || '';
         collection.value.lastUpdate = bookInfo.updated_at || bookInfo.latest_post_updated || '';
       }
 
@@ -535,7 +619,7 @@ async function refreshChapters() {
         ? (Array.isArray(authorIdFromUrl) ? authorIdFromUrl[0] : authorIdFromUrl)
         : (data.author?.id || data.author_id || '');
       if (resolvedAuthorId) {
-        await fetchAuthorInfo(resolvedAuthorId);
+        await fetchAuthorInfo(resolvedAuthorId, showNsfw);
       }
     }
   } catch (error) {
@@ -691,6 +775,7 @@ onBeforeUnmount(() => {
   }
 
   .cover-image {
+    position: relative;
     width: 21.2rem;
     height: 28.4rem;
     border-radius: 1.2rem;
@@ -701,6 +786,27 @@ onBeforeUnmount(() => {
       height: 100%;
       object-fit: cover;
     }
+
+    .r18-overlay {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10rem;
+      height: 10rem;
+      background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
+      border-radius: 0 1.2rem 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 0.6rem;
+
+      .r18-text {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #FFFFFF;
+        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+      }
+    }
   }
 
   .author-info {
@@ -710,11 +816,16 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     min-width: 0;
 
+    .title-row {
+      display: flex;
+      flex-direction: column;
+    }
+
     .title {
       font-size: 2.4rem;
       font-weight: 600;
       color: #101828;
-      margin-bottom: 1.6rem;
+      margin-bottom: 0;
       line-height: 3.6rem;
       display: -webkit-box;
       -webkit-line-clamp: 3;
@@ -1012,10 +1123,15 @@ onBeforeUnmount(() => {
   margin-bottom: 1.2rem;
 }
 
+.private-hint {
+  font-size: 1.4rem;
+  color: #99A1AF;
+}
+
 .publish-btn {
   padding: 0.8rem 2rem;
   background: #FF47A9;
-  color: #fff;
+  color: #FFFFFF;
   border: none;
   border-radius: 0.6rem;
   font-size: 1.4rem;

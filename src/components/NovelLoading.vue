@@ -453,6 +453,26 @@ function resumeWorkingFrom(stepIndex: number, startProgress: number, totalStepMs
   }, INTERVAL_MS);
 }
 
+function fastForwardAndFreezeAt99() {
+  const penultIdx = penultimateIndex.value;
+  while (stepPhases.value.length < penultIdx) {
+    const idx = stepPhases.value.length;
+    const s = allSteps.value[idx];
+    stepPhases.value.push(s.joinedMember ? 'joined' : 'completed');
+  }
+
+  if (stepPhases.value.length > penultIdx) {
+    stepPhases.value[penultIdx] = 'working';
+  } else {
+    stepPhases.value.push('working');
+  }
+
+  currentStepIndex.value = penultIdx;
+  currentStepProgress.value = 0.99;
+  isFrozenAtPenultimate.value = true;
+  notify();
+}
+
 function startWorking() {
   const index = currentStepIndex.value;
   const durationMs = getStepDurationMs(index);
@@ -622,7 +642,11 @@ function start() {
   const elapsedSeconds = estimatedSeconds - remainingSeconds;
   const elapsedMs = Math.max(0, elapsedSeconds * 1000);
 
-  if (elapsedMs <= 0) {
+  const progressRatio = elapsedMs / totalDurationMs.value;
+
+  if (isAnimating() && (progressRatio >= 0.95 || remainingSeconds <= 60)) {
+    fastForwardAndFreezeAt99();
+  } else if (elapsedMs <= 0) {
     currentStepIndex.value = 0;
     stepPhases.value.push('working');
     notify();

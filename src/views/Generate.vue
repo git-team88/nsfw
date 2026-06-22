@@ -3023,15 +3023,15 @@ const estimatedVideoPower = computed(() => {
 
   if (selectedVideoQuality.value == '720P') {
     if (currentVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw) || 8;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 12;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
     }
   } else if (selectedVideoQuality.value == '1080P') {
     if (currentVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw) || 11;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 18;
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second);
     }
   }
 

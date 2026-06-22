@@ -347,7 +347,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     minutes: "minutes",
     hours: "hours",
     tenMinutes: "10 minutes",
-    maxCoverImages: "Maximum {max} cover images allowed",
+    maxCoverImages: "Maximum {max} images allowed",
     maxCoverSize: "Image size exceeds limit, maximum supported is 10MB",
     invalidCoverImageType: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
     uploadFormat: "Supported formats: jpg, jpeg, png, webp, up to 10MB each",
@@ -443,6 +443,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     usePrevCover: "Use previous version",
     coverRenewFailedTip: "Cover modification failed. Please click Use previous version to continue",
     coverRenewLoadingTip: "Cover is being modified, please wait until it's done",
+    generatingChapterTip: "Currently generating chapter {chapter}, please wait until it's done before operating",
     coverHistoryTitle: "Generation History",
     coverHistoryEmpty: "No cover history",
     generatingCover: "Regenerating cover image...",
@@ -1877,7 +1878,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       specSize: "Image Size:",
       sizeInfo: "≤ 10MB",
       specResolution: "image dimension:",
-      resolutionInfo: "Recommended ratio: 4:3",
+      resolutionInfo: "Recommended ratio: 9:16 or 16:9",
       remove: "Remove",
       preview: "Preview",
       photo: "photos",
@@ -1900,6 +1901,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       projectView: {
         detail: "Detail",
         publishEpisode: "Publish This Episode",
+        publishChapter: "Publish This Chapter",
         published: "Published",
         episodeSummary: "Episode Summary",
         publishedIndicator: "Indicates published",
@@ -2008,8 +2010,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       lastChapterTip: "You've finished this chapter.\nYou can generate content you want to see.",
       goGenerate: "Generate",
       subscribe: "Subscribe",
-      sensitiveContent: "Sensitive content. Visible only to users 18+ with \"Show Sensitive Content\" enabled.",
-      profileSettings: "Profile Settings",
+      sensitiveContent: "This work contains sensitive content. Would you like to enable reading?",
+      profileSettings: "Enable Sensitive Content Reading",
     },
     authorClosedSubscription: "This creator has disabled subscriptions",
     permissionText: {
@@ -2224,6 +2226,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       pin: "Pin",
       pinned: "Pinned",
       updated: "Updated {count} episodes",
+      updatedChapter: "Updated {count} chapters",
+      updatedEpisode: "Updated {count} episodes",
       unpin: "Unpin",
       settings: "Collection Settings",
       chapterManage: "Chapter Management",
@@ -2409,7 +2413,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     orderInCollection: "Order in Collection",
     enterEpisode: "Please select episode",
-    emptyCover: "Please upload cover image"
+    emptyCover: "Please upload cover image",
+    selectSensitive: "Please select sensitive content option",
+    switchCollection: "Switch Collection",
+    selectCollection: "Switch Collection"
   },
   fail: "Fail",
   chapter: "Chapter {chapter}",
@@ -2623,7 +2630,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusPublished: "Published",
     statusDraft: "Draft",
     statusSubscribed: "Subscribed",
-    statusPrivate: "Private"
+    statusPrivate: "Private",
+    privateChapterHint: "Excluding {count} {unit} visible only to you"
   },
   collectionSettings: {
     back: "Back",

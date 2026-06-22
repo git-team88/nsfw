@@ -816,6 +816,23 @@
       @close="handleDeleteCancel"
       @confirm="handleDeleteConfirm"
     />
+
+    <!-- Sensitive Content Modals -->
+    <SensitiveContentNoBirthdayModal
+      v-if="showSensitiveContentNoBirthdayModal"
+      @close="showSensitiveContentNoBirthdayModal = false"
+      @goToFill="handleGoToFillBirthday"
+    />
+    <SensitiveContentUnderageModal
+      v-if="showSensitiveContentUnderageModal"
+      @close="showSensitiveContentUnderageModal = false"
+    />
+    <SensitiveContentConfirmModal
+      v-if="showSensitiveContentConfirmModal"
+      :hideDontAsk="true"
+      @close="showSensitiveContentConfirmModal = false"
+      @confirm="confirmSensitiveContent"
+    />
   </div>
 </template>
 
@@ -827,6 +844,9 @@ import PreviewModal from "@/components/PreviewModal.vue";
 import ImageViewer from "@/components/ImageViewer.vue";
 import PreviewBig from "@/components/PreviewBig.vue";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
+import SensitiveContentNoBirthdayModal from "@/components/SensitiveContentNoBirthdayModal.vue";
+import SensitiveContentUnderageModal from "@/components/SensitiveContentUnderageModal.vue";
+import SensitiveContentConfirmModal from "@/components/SensitiveContentConfirmModal.vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
@@ -893,6 +913,11 @@ const hoveredImageIndex = ref(-1);
 // Header & Report
 const headerMoreVisible = ref(false);
 const headerMoreRef = ref<HTMLElement | null>(null);
+
+// Sensitive content modals
+const showSensitiveContentNoBirthdayModal = ref(false);
+const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentConfirmModal = ref(false);
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
 
@@ -2880,7 +2905,37 @@ function navigateToProfileSettings() {
     return;
   }
 
-  router.push('/user-personal');
+  const userInfoStr = localStorage.getItem('userInfo');
+  if (!userInfoStr) {
+    showSensitiveContentNoBirthdayModal.value = true;
+    return;
+  }
+
+  const parsedUserInfo = JSON.parse(userInfoStr);
+  const birthday = parsedUserInfo.info?.birthday;
+
+  if (!birthday) {
+    showSensitiveContentNoBirthdayModal.value = true;
+    return;
+  }
+
+  if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
+    showSensitiveContentUnderageModal.value = true;
+    return;
+  }
+
+  showSensitiveContentConfirmModal.value = true;
+}
+
+function confirmSensitiveContent() {
+  showSensitiveContentConfirmModal.value = false;
+  localStorage.setItem('allowSensitiveContent', '1');
+  fetchDetail(id.value);
+}
+
+function handleGoToFillBirthday() {
+  showSensitiveContentNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
 }
 
 function prevImage() {

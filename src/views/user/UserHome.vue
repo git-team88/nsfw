@@ -188,14 +188,17 @@
                 ref="collectionCardRefs"
               >
                 <div class="card-cover" @click="goCollectionDetail(collection.id)">
-                  <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
-                  <div class="pinned-tag" v-if="collection.is_top === '1'">
-                    {{ t("userHome.collection.pinned") }}
-                  </div>
+                   <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
+                   <div class="r18-overlay" v-if="collection.is_nsfw == 1">
+                     <span class="r18-text">R18</span>
+                   </div>
+                   <div class="pinned-tag" v-if="collection.is_top === '1'">
+                     {{ t("userHome.collection.pinned") }}
+                   </div>
 
                   <div class="card-bottom">
-                    <div class="update-badge">
-                      {{ t("userHome.collection.updated", { count: collection.latest_post_chapter_index || 0 }) }}
+                    <div class="update-badge" v-if="collection.chapter_count > 0">
+                      {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
                     <div
                       class="more-btn-wrap"
@@ -1689,7 +1692,6 @@ function handleClickOutside(e: MouseEvent) {
 // Edit collection name
 function editCollectionName() {
   if (currentCollection.value) {
-    // Close dropdown menu
     showCollectionMenu.value = false;
 
     editingCollectionId.value = currentCollection.value.id;
@@ -2887,6 +2889,27 @@ async function unpinCollection(collection: any) {
         }
       }
 
+      .r18-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 10rem;
+        height: 10rem;
+        background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
+        border-radius: 0 1.2rem 0 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        padding: 0.6rem;
+
+        .r18-text {
+          font-size: 1.6rem;
+          font-weight: 500;
+          color: #FFFFFF;
+          text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+        }
+      }
+
       .pinned-tag {
         position: absolute;
         top: 0.8rem;
@@ -2905,7 +2928,6 @@ async function unpinCollection(collection: any) {
         height: 6.4rem;
         display: flex;
         align-items: flex-end;
-        justify-content: space-between;
         padding: 0 1.2rem 1.2rem;
         border-radius: 0 0 1.2rem 1.2rem;
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
@@ -2918,6 +2940,8 @@ async function unpinCollection(collection: any) {
       }
 
       .more-btn-wrap {
+        margin-left: auto;
+
         img {
           width: 1.8rem;
           height: 1.8rem;

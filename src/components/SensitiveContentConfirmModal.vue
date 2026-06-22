@@ -19,7 +19,7 @@
         <span class="modal-btn confirm" @click="handleConfirm">{{ t('home.sensitiveContentConfirm.confirm') }}</span>
       </div>
 
-      <div class="modal-check">
+      <div class="modal-check" v-if="!hideDontAsk">
         <div @click="isCheck = !isCheck">
           <img src="@/assets/images/register/check_active.png" alt="" v-if="isCheck" />
           <img src="@/assets/images/register/check.png" alt="" v-else />
@@ -35,6 +35,10 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+
+const props = defineProps<{
+  hideDontAsk?: boolean;
+}>();
 
 const isCheck = ref(false);
 

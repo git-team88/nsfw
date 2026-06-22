@@ -35,7 +35,7 @@
               @click="handlePublish"
               :disabled="isChapterPublished"
             >
-              {{ isChapterPublished ? t('submit.image.published') : t('submit.image.projectView.publishEpisode') }}
+              {{ isChapterPublished ? t('submit.image.published') : t('submit.image.projectView.publishChapter') }}
             </button>
           </div>
         </div>
