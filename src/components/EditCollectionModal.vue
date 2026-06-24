@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" v-if="visible" @click.self="handleCancel">
+  <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ isEdit ? t('userHome.collection.editName') : t('collection.createCollection') }}</h3>
@@ -39,6 +39,7 @@
             class="form-input"
             :placeholder="t('collection.placeholder')"
             maxlength="60"
+            spellcheck="false"
           />
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
@@ -80,6 +81,7 @@
             class="form-textarea"
             :placeholder="t('collection.descriptionPlaceholder')"
             maxlength="500"
+            spellcheck="false"
           ></textarea>
         </div>
 
@@ -91,9 +93,10 @@
             @click="handleSave"
             :disabled="isLoading"
           >
-            {{ isLoading ? t('loading') : t('collection.save') }}
+            {{ t('collection.save') }}
           </button>
         </div>
+        <p v-if="isEdit" class="edit-sync-tip">{{ t('collection.editSyncTip') }}</p>
       </div>
     </div>
 
@@ -142,7 +145,7 @@ const emit = defineEmits<{
 
 const collectionName = ref(props.collectionName || '');
 const coverUrl = ref(props.coverUrl || '');
-const description = ref(props.description || t('collection.defaultDescription'));
+const description = ref(props.isEdit ? (props.description || '') : (props.description || t('collection.defaultDescription')));
 const isNsfw = ref(props.isNsfw == 1 ? 1 : 0);
 const isNsfwSelected = ref(true);
 const errorMessage = ref('');
@@ -152,12 +155,13 @@ const showSensitiveConfirm = ref(false);
 
 const initialCollectionName = ref(props.collectionName || '');
 const initialCoverUrl = ref(props.coverUrl || '');
-const initialDescription = ref(props.description || t('collection.defaultDescription'));
+const initialDescription = ref(props.isEdit ? (props.description || '') : (props.description || t('collection.defaultDescription')));
 const initialIsNsfw = ref(props.isNsfw == 1 ? 1 : 0);
 
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     errorMessage.value = '';
+    isLoading.value = false;
     if (!props.isEdit) {
       collectionName.value = props.collectionName || '';
       coverUrl.value = props.coverUrl || '';
@@ -177,7 +181,7 @@ watch(() => props.visible, async (newVal) => {
           const bookInfo = data.book_info || data;
           collectionName.value = bookInfo.title || '';
           coverUrl.value = bookInfo.cover || '';
-          description.value = bookInfo.description || t('collection.defaultDescription');
+          description.value = bookInfo.description || '';
           isNsfw.value = bookInfo.is_nsfw == 1 ? 1 : 0;
           isNsfwSelected.value = true;
           initialCollectionName.value = collectionName.value;
@@ -196,8 +200,11 @@ watch(() => props.visible, async (newVal) => {
         isLoading.value = false;
       }
     }
+  } else {
+    isLoading.value = false;
+    errorMessage.value = '';
   }
-});
+}, { immediate: true });
 
 function toggleSensitive(val: 'yes' | 'no') {
   const targetNsfw = val === 'yes' ? 1 : 0;
@@ -347,7 +354,18 @@ async function handleSave() {
 }
 
 function handleCancel() {
+  isLoading.value = false;
   emit('close');
+}
+
+function handleModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+      e.preventDefault();
+    }
+    e.stopPropagation();
+  }
 }
 </script>
 
@@ -652,8 +670,17 @@ function handleCancel() {
 .action-buttons {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2.4rem;
   margin-top: 3rem;
+}
+
+.edit-sync-tip {
+  color: #FA2D47;
+  font-size: 1.4rem;
+  margin-top: 1rem;
+  margin-bottom: 0;
+  text-align: center;
 }
 
 .btn {

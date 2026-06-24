@@ -302,7 +302,7 @@
                     <div class="collection-text">
                       <div class="collection-top">
                         <span class="collection-name">{{ selectedCollection.name }}</span>
-                        <span class="collection-desc">{{ selectedCollection.description || t('collection.defaultDescription') }}</span>
+                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
                       <div class="content-sensitive">
@@ -513,6 +513,7 @@
 
     <!-- Edit Collection Modal -->
     <EditCollectionModal
+      v-if="showEditCollectionModal"
       :visible="showEditCollectionModal"
       :is-edit="editingCollectionId !== null"
       :collection-id="editingCollectionId || ''"
@@ -1060,6 +1061,10 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         value: i.toString(),
         label: i.toString()
       });
+    }
+
+    if (isCreateFromCollectionList.value) {
+      showCollectionListModal.value = false;
     }
   } else {
     if (selectedCollection.value && selectedCollection.value.id === collection.id) {

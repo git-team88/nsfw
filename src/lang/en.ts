@@ -1937,7 +1937,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     confirmBtn: "Confirm",
     sensitiveConfirmTitle: "Confirm to include sensitive content?",
     sensitiveTip:
-      "Once set to include sensitive content, your post won’t be shown to users who have blocked sensitive content.",
+      "Once set as containing sensitive content, it will no longer be shown to users who have blocked sensitive content. This action will affect the display of all chapters in the collection.",
     sensitiveConfirmText:
       "Notice: On this platform, images and videos that are live-action or appear photorealistic are subject to stricter review than anime- or illustration-style content. Realistic expressions with sexual or grotesque intent or implications may be prohibited from posting even if they are classified as NSFW (18+).\n\nIn addition, even for anime-style images and videos, if they include direct depictions of genitalia, body parts suggestive of genitalia, points of penetration, or other detailed expressions that we deem inappropriate, mosaic censoring, concealment, or other processing specified by us is required.\n\nIf a user violates the Terms or Guidelines, the user shall respond at their own responsibility and expense, and we may take necessary measures such as hiding or deleting the work, restricting functions, withholding payout of earnings, or other actions.",
     sensitiveDontAsk: "Don't ask me again",
@@ -1945,7 +1945,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     collection: "Collection",
     permissionInfo: `<span>Subscriber Only:</span> Only paid subscribers can view the full content; non-subscribers can only view the first image for free. This mode requires the subscription payment feature to be enabled first.`,
     collectionInfo: `<span>Episode in Collection:</span> Used to specify the sorting order of the current work in the collection.`,
-    sensitiveContent: "<span>If set as containing sensitive content, it will no longer be shown to users who have turned off sensitive content display.</span><br />\n<span>Notice:</span> On this platform, images and videos that are live-action or appear photorealistic are subject to stricter review than anime- or illustration-style content. Realistic expressions with sexual or grotesque intent or implications may be prohibited from posting even if they are marked as sensitive content. Even for anime-style images and videos, if they include direct depictions of genitalia, body parts suggestive of genitalia, points of penetration, or other detailed expressions that we deem inappropriate, mosaic censoring, concealment, or other processing specified by us is required. If the Terms or Guidelines are violated, the user shall respond at their own responsibility and expense, and we may take necessary measures such as hiding or deleting the work, restricting functions, withholding payout of earnings, or taking other necessary actions.",
+    sensitiveContent: "<span>If set as containing sensitive content, it will no longer be shown to users who have turned off sensitive content display. This operation will affect the display of all chapters in the collection.</span><br />\n<span>Notice:</span> On this platform, images and videos that are live-action or appear photorealistic are subject to stricter review than anime- or illustration-style content. Realistic expressions with sexual or grotesque intent or implications may be prohibited from posting even if they are marked as sensitive content. Even for anime-style images and videos, if they include direct depictions of genitalia, body parts suggestive of genitalia, points of penetration, or other detailed expressions that we deem inappropriate, mosaic censoring, concealment, or other processing specified by us is required. If the Terms or Guidelines are violated, the user shall respond at their own responsibility and expense, and we may take necessary measures such as hiding or deleting the work, restricting functions, withholding payout of earnings, or taking other necessary actions.",
     sensitiveToggleTip: "Are you sure you want to change the sensitive content setting?",
     publishing: 'Publishing...'
   },
@@ -2404,6 +2404,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     descriptionPlaceholder: "Enter description",
     createSuccess: "Created successfully",
     modifySuccess: "Modified successfully",
+    editSyncTip: "After saving, the published collection information will be updated synchronously",
     coverUploadHint: "Cover upload feature is under development",
     enterName: "Please enter collection name",
     uploadCoverTip: "Please upload cover image",

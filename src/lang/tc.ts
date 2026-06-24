@@ -2031,7 +2031,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     confirmBtn: "確認",
     sensitiveConfirmTitle: "確認包含敏感內容？",
     sensitiveTip:
-      "一旦設置為包含敏感內容，您的視頻將不會顯示給屏蔽敏感內容的用戶。",
+      "設置為包含敏感內容後，將不再展示給屏蔽敏感的用戶。此操作將影響合集中所有章節的展示。",
     sensitiveConfirmText:
       "注意：本平台禁止發布真人出鏡的色情和裸露的圖片和視頻，動漫風格圖片和視頻涉及暴露的畫面需要打碼，如果違反規則用戶將承擔全部法律責任，平台有權下架作品，限制用戶收益提現。",
     sensitiveDontAsk: "不再詢問我",
@@ -2039,7 +2039,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     collection: "合集",
     permissionInfo: `<span>訂閱用戶限定：</span>僅付費訂閱的用戶可以看全部，未訂閱用戶只能免費看第一張圖。啟用該模式需要先啟用訂閱收費功能。`,
     collectionInfo: `<span>合集中的集數：</span>用於指定當前作品在合集中的排序。`,
-    sensitiveContent: `<span>設置為包含敏感內容後，將不再展示給屏蔽敏感的用戶。</span><br />
+    sensitiveContent: `<span>設置為包含敏感內容後，將不再展示給屏蔽敏感的用戶。此操作將影響合集中所有章節的展示。</span><br />
     <span>注意：</span>本平台禁止發布真人出鏡的色情和裸露的圖片和視頻，動漫風格圖片和視頻涉及暴露的畫面需要打碼，如果違反規則用戶將承擔全部法律責任，平台有權下架作品，限制用戶收益提現。`,
     sensitiveToggleTip: "確定要更改敏感內容設置嗎？",
     publishing: '發布中...'
@@ -2500,6 +2500,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     descriptionPlaceholder: "請輸入簡介",
     createSuccess: "創建成功",
     modifySuccess: "修改成功",
+    editSyncTip: "保存後，線上已發佈的合集信息同步更新",
     coverUploadHint: "封面上傳功能開發中",
     enterName: "請輸入合集名稱",
     uploadCoverTip: "請上傳封面圖片",

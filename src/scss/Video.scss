@@ -665,7 +665,7 @@
           display: flex;
           align-items: center;
           gap: 1rem;
-          min-height: 5rem;
+          min-height: 16rem;
           padding: 1rem;
           border-radius: 0.8rem;
           background: #F9FAFB;
@@ -684,6 +684,7 @@
           gap: 0.4rem;
           flex: 1;
           min-width: 0;
+          min-height: 16rem;
         }
         .collection-top {
           display: flex;

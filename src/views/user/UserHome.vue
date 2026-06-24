@@ -388,6 +388,7 @@
 
     <!-- Edit Collection Modal -->
     <EditCollectionModal
+      v-if="showEditCollectionModal"
       :visible="showEditCollectionModal"
       :is-edit="!!editingCollectionId"
       :collection-id="editingCollectionId"
