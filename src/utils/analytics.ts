@@ -43,6 +43,34 @@ export function trackShare(params: {
   });
 }
 
+export function trackClickContentCover(category: "Novel" | "Comic" | "Drama") {
+  gtag("event", "click_content_cover", { category });
+}
+
+export function trackClickPromptBox() {
+  gtag("event", "click_prompt_box");
+}
+
+export function trackContentPublished(contentId: string) {
+  gtag("event", "content_published", { content_id: contentId });
+}
+
+export function trackClickPublishButton(entrance: 1 | 2 | 3) {
+  gtag("event", "click_publish_button", { entrance });
+}
+
+export function trackClickGenerateButton() {
+  gtag("event", "click_generate_button");
+}
+
+export function setUserId(userId: string) {
+  gtag("config", GA_ID, { user_id: userId });
+}
+
+export function clearUserId() {
+  gtag("config", GA_ID, { user_id: null });
+}
+
 export function initGA() {
   if (typeof window === "undefined") return;
 

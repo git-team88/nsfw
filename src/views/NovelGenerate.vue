@@ -216,7 +216,7 @@
           </div>
 
           <div class="regenerate-content">
-            <textarea v-model="regenerateContent" class="regenerate-textarea" :placeholder="t('novel.outlinePlaceholder')"></textarea>
+            <textarea v-model="regenerateContent" class="regenerate-textarea" :placeholder="t('novel.outlinePlaceholder')" @input="handleRegenerateInput"></textarea>
 
             <div class="regenerate-footer">
               <div class="regenerate-settings">
@@ -591,7 +591,6 @@
                 :key="chapter.chapter"
                 class="chapter-card"
                 :class="{ 'current-chapter': chapter.chapter == stepChapterIndex && taskStatus == 'DOING' }"
-                @click="goToChapter(chapter.chapter)"
               >
                 <div class="chapter-title-box">
                   <span class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
@@ -1147,7 +1146,8 @@ class OutlineStreamParser {
 import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
-import { toast } from '@/util/toast';
+import { toast, limitToast } from '@/util/toast';
+import { trackClickPublishButton } from '@/utils/analytics';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
 
@@ -1223,7 +1223,8 @@ const languageOptions = computed(() => [
 ]);
 const isBatchChapter = ref<number>(0);
 const isUserInitiatedGeneration = ref<boolean>(false);
-const shouldAutoNavigate = ref<boolean>(true); // Flag to control auto navigation during batch generation
+const shouldAutoNavigate = ref<boolean>(true);
+const isRetryingChapter = ref<boolean>(false);
 
 // Preparation status state
 const isPreparing = ref<boolean>(false);
@@ -1242,6 +1243,7 @@ const coverAtDropdownItems = ref<any[]>([]);
 const lastCoverRange = ref<Range | null>(null);
 
 const isCoverComposing = ref<boolean>(false);
+const previousCoverInputHtml = ref<string>('');
 const coverInputKey = ref<number>(0);
 
 const coverGenerationTaskId = ref<string>('');
@@ -2436,12 +2438,11 @@ const saveEditChapter = async () => {
           currentChapter.value.content = editingChapterContent.value;
           displayedContent.value = editingChapterContent.value;
         } else {
-          console.error('Error modifying chapter content:', modifyRes.message);
-          toast(t('novel.error.fetchFailed'));
+          toast(modifyRes.message || t('fail'));
         }
       } catch (error) {
         console.error('Error modifying chapter content:', error);
-        toast(t('novel.error.fetchFailed'));
+        toast(t('fail'));
       }
     }
   }
@@ -2511,12 +2512,11 @@ const saveChapterTitle = async (chapterId: number) => {
         currentChapter.value.title = editingChapterTitle.value;
       }
     } else {
-      console.error('Error modifying chapter title:', modifyRes.message);
-      toast(t('novel.error.fetchFailed'));
+      toast(modifyRes.message || t('fail'));
     }
   } catch (error) {
     console.error('Error modifying chapter title:', error);
-    toast(t('novel.error.fetchFailed'));
+    toast(t('fail'));
   } finally {
     // Reset editing state regardless of API result
     editingChapterId.value = null;
@@ -2737,6 +2737,7 @@ function goToSimilar() {
 // Call novelNext API
 const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = false) => {
   hideEdit();
+  stopDetailPolling();
 
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
@@ -2751,8 +2752,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   if (!skipBalanceCheck) isNextLoading.value = true;
   try {
 
-  // Check if user has reached the task limit
-  if (await isTaskLimitExceeded()) return;
+  if (await isTaskLimitExceeded()) { isRetryingChapter.value = false; return; }
 
   const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
 
@@ -2772,22 +2772,22 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
       if (userBalance.value < requiredPower) {
         estimatedFrozenPower.value = Math.round(estimatedPoints * (balanceInfo.value?.over_freeze_rate || 1));
         showInsufficientBalanceModal.value = true;
+        isRetryingChapter.value = false;
         return;
       }
     } else if (estimateRes.code == 10404) {
       toast(t('novel.error.cannotOperateOtherUserProject'));
+      isRetryingChapter.value = false;
       return;
     }
   }
 
   const generateMode = retryChapter !== undefined ? 'retry' : 'new';
 
-  // Set flag for user initiated generation
   isUserInitiatedGeneration.value = true;
-  // Set shouldShowTypewriter to true for typewriter effect
   shouldShowTypewriter.value = true;
-  // Disable auto navigation for single chapter generation
   shouldAutoNavigate.value = false;
+  isRetryingChapter.value = retryChapter !== undefined;
 
   // Call API first, set loading state only after success
   const novelNextRes = await api.novelNext({
@@ -2797,6 +2797,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   }) as any;
 
   if (novelNextRes.code !== 200) {
+    isRetryingChapter.value = false;
     // Handle session timeout error - refresh page
     if (handleSessionTimeout(novelNextRes.code)) {
       return;
@@ -2808,8 +2809,32 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
       showInsufficientBalanceModal.value = true;
       return;
     }
-    toast(t('fail'));
+    toast(novelNextRes.message || t('fail'));
     return;
+  }
+
+  // API successful - check if the current page state is stale (e.g., another tab progressed further)
+  try {
+    const detailCheckRes = await api.detailProject(sessionId.value) as any;
+    if (detailCheckRes.code == 200 && detailCheckRes.data) {
+      const serverStepIndex = detailCheckRes.data.step_chapter_index || 0;
+      const serverChapters = detailCheckRes.data.chapters || [];
+      const latestServerChapter = serverChapters.length > 0
+        ? Math.max(...serverChapters.map((c: any) => c.chapter))
+        : serverStepIndex;
+
+      if (latestServerChapter > nextChapterIndex) {
+        toast(t('novel.error.staleOperation'));
+        isNextLoading.value = false;
+        isRetryingChapter.value = false;
+        setTimeout(() => {
+          fetchNovelOutline();
+        }, 2000);
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Error checking stale state:', e);
   }
 
   // API successful, now set UI state
@@ -3120,8 +3145,7 @@ const goToChapter = async (chapterNum: number) => {
       // Fetch chapter stream
       await fetchChapterStream(chapterNum);
     } catch (error) {
-      console.error('Error fetching chapter stream:', error);
-      toast(t('novel.error.fetchFailed'));
+      toast(t('fail'));
       isLoading.value = false;
       hasFailed.value = true;
       taskStatus.value = 'FAIL';
@@ -3243,6 +3267,8 @@ const goToChapter = async (chapterNum: number) => {
 
 // Call novelAllChapters API
 const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
+  stopDetailPolling();
+
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -3320,7 +3346,7 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
       showInsufficientBalanceModal.value = true;
       return;
     }
-    toast(novelAllChaptersRes.message || t('novel.error.fetchFailed'));
+    toast(novelAllChaptersRes.message || t('fail'));
     return;
   }
 
@@ -3826,6 +3852,7 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
 // Handle publish chapter button click
 const handlePublishChapter = async (chapter: any) => {
+  trackClickPublishButton(1);
   if (checkProjectOwnership()) return;
 
   const session_id = sessionId.value;
@@ -4111,7 +4138,7 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
         return callNovelOutline(type, retryCount + 1);
       }
-      toast(t('fail'));
+      toast(novelOutlineRes.message || t('fail'));
       isLoading.value = false;
       return;
     }
@@ -4320,8 +4347,8 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
         if (pollingResponse.code == 200 && pollingResponse.data) {
           const taskData = pollingResponse.data;
 
-          // Update stepChapterIndex if available
-          if (taskData.step_chapter_index) {
+          // Update stepChapterIndex if available (skip during retry to prevent server state from advancing past the retry chapter)
+          if (taskData.step_chapter_index && !isRetryingChapter.value) {
             stepChapterIndex.value = taskData.step_chapter_index;
           }
 
@@ -4545,14 +4572,83 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 clearInterval(pollingInterval.value);
                 pollingInterval.value = null;
               }
-              // Reset flags when generation is complete
               isUserInitiatedGeneration.value = false;
+
+              // Find the latest chapter from chapters array for stepChapterIndex
+              const latestChapterNum = chapters.value.length > 0
+                ? Math.max(...chapters.value.map((c: any) => c.chapter))
+                : chapterIndex;
+              stepChapterIndex.value = latestChapterNum;
+              isRetryingChapter.value = false;
             }
           } else if (taskData.status == 'FAIL' || (taskData.step_status && taskData.step_status == 'FAIL')) {
             // Clear polling interval
             if (pollingInterval.value) {
               clearInterval(pollingInterval.value);
               pollingInterval.value = null;
+            }
+
+            // Check if chapters has the failed chapter and if there's a newer completed chapter
+            const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
+            const latestChapterNum = chapters.value.length > 0
+              ? Math.max(...chapters.value.map((c: any) => c.chapter))
+              : chapterIndex;
+
+            if (failedChapterInList && latestChapterNum > chapterIndex) {
+              // The failed chapter exists but there are newer completed chapters - show the latest one
+              stepChapterIndex.value = latestChapterNum;
+              try {
+                const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+                if (chapterRes.code == 200 && chapterRes.data?.content) {
+                  let content = chapterRes.data.content || '';
+                  content = content.replace(/\\n/g, '\n');
+                  const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+                  currentChapter.value = {
+                    chapter: latestChapterNum,
+                    title: chapterData?.title || chapterRes.data.title || '',
+                    content
+                  };
+                  displayedContent.value = content;
+                  taskStatus.value = 'SUCCESS';
+                  hasFailed.value = false;
+                  generatingChapter.value = null;
+                  isLoading.value = false;
+                  isLoadingComplete.value = true;
+                  isChapterTyping.value = false;
+                  isWaitingForData.value = false;
+                  isRetryingChapter.value = false;
+                  stopCoverPolling();
+                  stopLoadingAnimation();
+                  return;
+                }
+              } catch (e) {
+                console.error('Error fetching latest chapter on polling FAIL:', e);
+              }
+            }
+
+            if (stepChapterIndex.value && currentChapter.value && currentChapter.value.chapter == stepChapterIndex.value) {
+              try {
+                const chapterRes = await api.detailChapter(sessionId.value, stepChapterIndex.value) as any;
+                if (chapterRes.code == 200 && chapterRes.data?.content) {
+                  let content = chapterRes.data.content || '';
+                  content = content.replace(/\\n/g, '\n');
+                  currentChapter.value.content = content;
+                  displayedContent.value = content;
+                  taskStatus.value = 'SUCCESS';
+                  hasFailed.value = false;
+                  generatingChapter.value = null;
+                  isLoading.value = false;
+                  isLoadingComplete.value = true;
+                  isChapterTyping.value = false;
+                  isWaitingForData.value = false;
+                  isRetryingChapter.value = false;
+                  stopCoverPolling();
+                  stopLoadingAnimation();
+                  return;
+                }
+              } catch (e) {
+                console.error('Error checking chapter content on polling FAIL:', e);
+              }
             }
 
             // Update state for failure
@@ -4562,6 +4658,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
             isLoading.value = false;
             isChapterTyping.value = false;
             isWaitingForData.value = false;
+            isRetryingChapter.value = false;
 
             // Fetch estimate and balance if insufficient balance
             if (taskData.status_message && taskData.status_message.includes('user credit is not enough')) {
@@ -4691,7 +4788,7 @@ const fetchNovelOutline = async () => {
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
     if (detailProjectRes.code !== 200) {
-      toast(t('novel.error.fetchFailed'));
+      toast(detailProjectRes.message || t('novel.error.fetchFailed'));
       isLoading.value = false;
       isFetchingNovelOutline.value = false;
       return;
@@ -4888,26 +4985,60 @@ const fetchNovelOutline = async () => {
                 isLoadingComplete.value = true;
               }
             } else {
-              const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
-              chapters.value.push({
-                id: `temp-${chapterIndex}`,
-                chapter: chapterIndex,
-                title: outlineChapterData?.title || t('novel.untitled'),
-                is_publish: 2
-              });
-              currentChapter.value = {
-                chapter: chapterIndex,
-                title: outlineChapterData?.title || '',
-                content: ''
-              };
-              displayedContent.value = '';
-              hasFailed.value = true;
-              taskStatus.value = 'FAIL';
-              generatingChapter.value = chapterIndex;
-              currentStepName.value = 'chapter';
-              lastGenerationType.value = 'chapter';
-              isLoading.value = false;
-              isLoadingComplete.value = true;
+              let chapterHasContent = false;
+              try {
+                const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+                if (chapterRes.code == 200 && chapterRes.data?.content) {
+                  chapterHasContent = true;
+                  let content = chapterRes.data.content || '';
+                  content = content.replace(/\\n/g, '\n');
+                  const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                  chapters.value.push({
+                    id: `temp-${chapterIndex}`,
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || t('novel.untitled'),
+                    is_publish: 2
+                  });
+                  currentChapter.value = {
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || '',
+                    content
+                  };
+                  displayedContent.value = content;
+                  taskStatus.value = 'SUCCESS';
+                  hasFailed.value = false;
+                  generatingChapter.value = null;
+                  currentStepName.value = 'chapter';
+                  lastGenerationType.value = 'chapter';
+                  isLoading.value = false;
+                  isLoadingComplete.value = true;
+                }
+              } catch (e) {
+                console.error('Error checking chapter content on FAIL:', e);
+              }
+
+              if (!chapterHasContent) {
+                const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                chapters.value.push({
+                  id: `temp-${chapterIndex}`,
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || t('novel.untitled'),
+                  is_publish: 2
+                });
+                currentChapter.value = {
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || '',
+                  content: ''
+                };
+                displayedContent.value = '';
+                hasFailed.value = true;
+                taskStatus.value = 'FAIL';
+                generatingChapter.value = chapterIndex;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+              }
             }
           } else {
             currentChapter.value = null;
@@ -5138,22 +5269,25 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'SUCCESS' && chapterIndex) {
-          // Set up chapter state before fetching content to avoid showing outline skeleton
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          // Find the latest chapter from chapters array instead of relying on step_chapter_index
+          const latestChapterNum = chapters.value.length > 0
+            ? Math.max(...chapters.value.map((c: any) => c.chapter))
+            : chapterIndex;
+          stepChapterIndex.value = latestChapterNum;
+
+          const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
           currentChapter.value = {
-            chapter: chapterIndex,
+            chapter: latestChapterNum,
             title: chapterData?.title || '',
             content: ''
           };
-          // Set loading process type for chapter generation
           startLoadingAnimation('chapter');
 
-          // Chapter generation completed - fetch and display the chapter content
           try {
-            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
             if (chapterRes.code == 200 && chapterRes.data) {
               currentChapter.value = {
-                chapter: chapterIndex,
+                chapter: latestChapterNum,
                 title: chapterData?.title || chapterRes.data.title || '',
                 content: chapterRes.data.content || ''
               };
@@ -5162,13 +5296,11 @@ const fetchNovelOutline = async () => {
               isPreparing.value = false;
               prepareQueueInfo.value = null;
 
-              // Process content: handle escape characters and filter
               let content = chapterRes.data.content || '';
               content = content.replace(/\\n/g, '\n');
 
               displayedContent.value = content;
 
-              // Scroll to top
               nextTick(() => {
                 if (chapterContentRef.value) {
                   chapterContentRef.value.scrollTop = 0;
@@ -5182,7 +5314,6 @@ const fetchNovelOutline = async () => {
             isLoadingComplete.value = true;
           }
 
-          // Fetch latest balance after chapter generation completes
           await fetchUserBalance();
 
           isFetchingNovelOutline.value = false;
@@ -5235,32 +5366,116 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'FAIL' && chapterIndex) {
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
-          currentChapter.value = {
-            chapter: chapterIndex,
-            title: chapterData?.title || '',
-            content: ''
-          };
-          displayedContent.value = '';
-          hasFailed.value = true;
-          taskStatus.value = 'FAIL';
-          isPreparing.value = false;
-          prepareQueueInfo.value = null;
-          generatingChapter.value = chapterIndex;
-          currentStepName.value = 'chapter';
-          lastGenerationType.value = 'chapter';
-          showCoverEditBtn.value = true;
-          // Set loading process type for chapter generation
-          startLoadingAnimation('chapter');
+          // Check if chapters has the failed chapter and if there's a newer completed chapter
+          const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          const latestChapterNum = chapters.value.length > 0
+            ? Math.max(...chapters.value.map((c: any) => c.chapter))
+            : chapterIndex;
 
-          // Fetch latest balance after chapter generation fails
-          await fetchUserBalance();
-
-          // Fetch points estimate only if generation hasn't failed
-          if (!hasFailed.value) {
-            await fetchPointsEstimate();
+          if (failedChapterInList && latestChapterNum > chapterIndex) {
+            // The failed chapter exists but there are newer completed chapters - show the latest one
+            stepChapterIndex.value = latestChapterNum;
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+              if (chapterRes.code == 200 && chapterRes.data?.content) {
+                let content = chapterRes.data.content || '';
+                content = content.replace(/\\n/g, '\n');
+                const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+                currentChapter.value = {
+                  chapter: latestChapterNum,
+                  title: chapterData?.title || chapterRes.data.title || '',
+                  content
+                };
+                displayedContent.value = content;
+                taskStatus.value = 'SUCCESS';
+                hasFailed.value = false;
+                isPreparing.value = false;
+                prepareQueueInfo.value = null;
+                generatingChapter.value = null;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                showCoverEditBtn.value = true;
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+                isFetchingNovelOutline.value = false;
+                nextTick(() => {
+                  if (chapterContentRef.value) {
+                    chapterContentRef.value.scrollTop = 0;
+                  }
+                });
+                await fetchUserBalance();
+                return;
+              }
+            } catch (e) {
+              console.error('Error fetching latest chapter on FAIL:', e);
+            }
           }
-          isLoading.value = false;
+
+          // No newer completed chapter - proceed with existing FAIL handling
+          let chapterHasContent = false;
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            if (chapterRes.code == 200 && chapterRes.data?.content) {
+              chapterHasContent = true;
+              const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+              let content = chapterRes.data.content || '';
+              content = content.replace(/\\n/g, '\n');
+              currentChapter.value = {
+                chapter: chapterIndex,
+                title: chapterData?.title || chapterRes.data.title || '',
+                content
+              };
+              displayedContent.value = content;
+              taskStatus.value = 'SUCCESS';
+              hasFailed.value = false;
+              isPreparing.value = false;
+              prepareQueueInfo.value = null;
+              generatingChapter.value = null;
+              currentStepName.value = 'chapter';
+              lastGenerationType.value = 'chapter';
+              showCoverEditBtn.value = true;
+              isLoading.value = false;
+              isLoadingComplete.value = true;
+              isFetchingNovelOutline.value = false;
+              nextTick(() => {
+                if (chapterContentRef.value) {
+                  chapterContentRef.value.scrollTop = 0;
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error checking chapter content on FAIL:', e);
+          }
+
+          if (!chapterHasContent) {
+            const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+            currentChapter.value = {
+              chapter: chapterIndex,
+              title: chapterData?.title || '',
+              content: ''
+            };
+            displayedContent.value = '';
+            hasFailed.value = true;
+            taskStatus.value = 'FAIL';
+            isPreparing.value = false;
+            prepareQueueInfo.value = null;
+            generatingChapter.value = chapterIndex;
+            currentStepName.value = 'chapter';
+            lastGenerationType.value = 'chapter';
+            showCoverEditBtn.value = true;
+            startLoadingAnimation('chapter');
+
+            await fetchUserBalance();
+
+            if (!hasFailed.value) {
+              await fetchPointsEstimate();
+            }
+            isLoading.value = false;
+            isFetchingNovelOutline.value = false;
+            return;
+          }
+
+          await fetchUserBalance();
           isFetchingNovelOutline.value = false;
           return;
         } else if (chapterIndex) {
@@ -5581,7 +5796,7 @@ const startDetailPolling = () => {
         }
       }
 
-      if (chapterIndex) {
+      if (chapterIndex && !isRetryingChapter.value) {
         stepChapterIndex.value = chapterIndex;
       }
 
@@ -5697,21 +5912,64 @@ const startDetailPolling = () => {
         }
       } else if (stepStatus == 'FAIL') {
         stopDetailPolling();
-        hasFailed.value = true;
-        taskStatus.value = 'FAIL';
-        isLoading.value = false;
         isPreparing.value = false;
         isGeneratingOutline.value = false;
         prepareQueueInfo.value = null;
         generatingChapter.value = null;
+        isRetryingChapter.value = false;
 
         if (stepName == 'outline') {
           lastGenerationType.value = 'outline';
-        } else {
-          lastGenerationType.value = 'chapter';
+          hasFailed.value = true;
+          taskStatus.value = 'FAIL';
+          isLoading.value = false;
+          stopLoadingAnimation();
+          await fetchUserBalance();
+          return;
         }
 
-        if (chapterIndex && stepName != 'outline') {
+        lastGenerationType.value = 'chapter';
+
+        // Check if chapters has the failed chapter and if there's a newer completed chapter
+        const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
+        const latestChapterNum = chapters.value.length > 0
+          ? Math.max(...chapters.value.map((c: any) => c.chapter))
+          : (chapterIndex || 0);
+
+        if (failedChapterInList && latestChapterNum > chapterIndex && latestChapterNum > 0) {
+          // The failed chapter exists but there are newer completed chapters - show the latest one
+          stepChapterIndex.value = latestChapterNum;
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+            if (chapterRes.code == 200 && chapterRes.data?.content) {
+              let content = chapterRes.data.content || '';
+              content = content.replace(/\\n/g, '\n');
+              const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+              currentChapter.value = {
+                chapter: latestChapterNum,
+                title: chapterData?.title || chapterRes.data.title || '',
+                content
+              };
+              displayedContent.value = content;
+              taskStatus.value = 'SUCCESS';
+              hasFailed.value = false;
+              isLoading.value = false;
+              isLoadingComplete.value = true;
+              await fetchUserBalance();
+              stopLoadingAnimation();
+              return;
+            }
+          } catch (e) {
+            console.error('Error fetching latest chapter on FAIL:', e);
+          }
+        }
+
+        // No newer completed chapter - show the failed chapter
+        hasFailed.value = true;
+        taskStatus.value = 'FAIL';
+        isLoading.value = false;
+
+        if (chapterIndex) {
           const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
           currentChapter.value = {
             chapter: chapterIndex,
@@ -5731,16 +5989,23 @@ const startDetailPolling = () => {
         isPreparing.value = false;
         prepareQueueInfo.value = null;
         generatingChapter.value = null;
+        isRetryingChapter.value = false;
 
-        if (chapterIndex) {
+        // Find the latest chapter from chapters array instead of relying on step_chapter_index
+        const latestChapterNum = chapters.value.length > 0
+          ? Math.max(...chapters.value.map((c: any) => c.chapter))
+          : (chapterIndex || 0);
+
+        if (latestChapterNum > 0) {
+          stepChapterIndex.value = latestChapterNum;
           try {
-            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
             if (chapterRes.code == 200 && chapterRes.data) {
               let content = chapterRes.data.content || '';
               content = content.replace(/\\n/g, '\n');
-              const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+              const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
               currentChapter.value = {
-                chapter: chapterIndex,
+                chapter: latestChapterNum,
                 title: chapterData?.title || chapterRes.data.title || '',
                 content
               };
@@ -6443,10 +6708,58 @@ async function toggleCoverEdit() {
 
 
 
+function getCoverInputCharCount(element: HTMLElement): number {
+  let charCount = 0;
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        charCount += (node.textContent || '').length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+        charCount += 7;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          walkNodes(node.childNodes[i]);
+        }
+      }
+    }
+  };
+  walkNodes(element);
+  return charCount;
+}
+
+function handleRegenerateInput() {
+  const maxLimit = 20000;
+  if (regenerateContent.value.length > maxLimit) {
+    regenerateContent.value = regenerateContent.value.substring(0, maxLimit);
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+  }
+}
+
 function handleCoverInput() {
   if (!coverInputRef.value) return;
 
   const target = coverInputRef.value;
+
+  const maxLimit = 5000;
+  const currentCharCount = getCoverInputCharCount(target);
+  if (currentCharCount > maxLimit) {
+    target.innerHTML = previousCoverInputHtml.value;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+  previousCoverInputHtml.value = target.innerHTML;
 
   // 计算实际的文本内容，排除非可编辑标签中的文本（参考 Home.vue）
   let actualText = '';
@@ -6586,6 +6899,16 @@ function handleCoverKeydown(event: KeyboardEvent) {
     event.preventDefault();
     generateNovelCover();
   }
+
+  const maxLimit = 5000;
+  if (coverInputRef.value) {
+    const currentCharCount = getCoverInputCharCount(coverInputRef.value);
+    if (currentCharCount >= maxLimit && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+      return;
+    }
+  }
 }
 
 function handleCoverInputClick() {
@@ -6679,16 +7002,32 @@ function handleCoverInputBlur() {
 
 function handleCoverPaste(event: ClipboardEvent) {
   event.preventDefault();
+
+  if (!coverInputRef.value) return;
+
+  const maxLimit = 5000;
+  const currentCharCount = getCoverInputCharCount(coverInputRef.value);
   const text = event.clipboardData?.getData('text/plain') || '';
+
+  if (currentCharCount + text.length > maxLimit) {
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
   document.execCommand('insertText', false, text);
   nextTick(() => {
     const el = coverInputRef.value;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+      previousCoverInputHtml.value = el.innerHTML;
+    }
   });
 }
 
 function handleCoverInputFocus() {
-  // Handle focus event if needed
+  if (coverInputRef.value) {
+    previousCoverInputHtml.value = coverInputRef.value.innerHTML;
+  }
 }
 
 // Upload image to server
@@ -6840,6 +7179,7 @@ function selectCoverAtItem(item: any) {
   if (!coverInputRef.value) return;
 
   const target = coverInputRef.value;
+  const savedHtml = target.innerHTML;
 
   if (target.textContent?.trim() === '') {
     target.innerHTML = '';
@@ -6951,6 +7291,15 @@ function selectCoverAtItem(item: any) {
 
   showCoverAtDropdown.value = false;
   coverInputRef.value.focus();
+
+  const maxLimit = 5000;
+  if (getCoverInputCharCount(coverInputRef.value) > maxLimit) {
+    coverInputRef.value.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
+  previousCoverInputHtml.value = coverInputRef.value.innerHTML;
 }
 
 function updateCoverAtDropdownItems() {
@@ -7041,6 +7390,7 @@ function closeCoverHistoryModal() {
 }
 
 async function selectHistoryCover(coverUrl: string) {
+  if (checkProjectOwnership()) return;
   try {
     const token = localStorage.getItem('token') || '';
     const response = await fetch(`${aiUrl}ai/novel/replace_novel_cover`, {

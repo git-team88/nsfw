@@ -570,6 +570,7 @@
                   :placeholder="t('home.input.placeholder')"
                   v-model="videoInput"
                   spellcheck="false"
+                  @input="handleVideoTextareaInput"
                 ></textarea>
               </div>
             </template>
@@ -604,6 +605,7 @@
                   :placeholder="t('home.input.placeholder')"
                   v-model="videoInput"
                   spellcheck="false"
+                  @input="handleVideoTextareaInput"
                   @focus="handleVideoInputFocus"
                   @blur="handleVideoInputBlur"
                 ></textarea>
@@ -813,7 +815,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { toast } from '@/util/toast';
+import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
 import Header from '@/components/Header.vue';
@@ -962,6 +964,47 @@ const showPhotoRefDropdown = ref(false);
 const photoRefDropdownItems = ref<any[]>([]);
 const isVideoInputFocused = ref(false);
 const isUploading = ref(false);
+const previousPhotoInputHtml = ref('');
+const previousVideoInputHtml = ref('');
+
+const getInputCharCount = (element: HTMLElement): number => {
+  let charCount = 0;
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        charCount += (node.textContent || '').length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+        charCount += 7;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          walkNodes(node.childNodes[i]);
+        }
+      }
+    }
+  };
+  walkNodes(element);
+  return charCount;
+};
+
+const getPhotoMaxInputLimit = (): number => {
+  return 5000;
+};
+
+const getVideoMaxInputLimit = (): number => {
+  return currentVideoMode.value === 'normal' ? 500 : 5000;
+};
 
 const getPhotoInputContent = () => {
   if (!photoEditableInputRef.value) return '';
@@ -1010,6 +1053,15 @@ const handlePhotoInput = (event: Event) => {
   if (!photoEditableInputRef.value) return;
 
   const target = photoEditableInputRef.value;
+
+  const maxLimit = getPhotoMaxInputLimit();
+  const currentCharCount = getInputCharCount(target);
+  if (currentCharCount > maxLimit) {
+    target.innerHTML = previousPhotoInputHtml.value;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+  previousPhotoInputHtml.value = target.innerHTML;
 
   let actualText = '';
   const textNodes = Array.from(target.childNodes).filter(node => {
@@ -1121,6 +1173,7 @@ const selectPhotoRefItem = (item: any) => {
   if (!photoEditableInputRef.value) return;
 
   const target = photoEditableInputRef.value;
+  const savedHtml = target.innerHTML;
   const selection = window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
@@ -1189,6 +1242,15 @@ const selectPhotoRefItem = (item: any) => {
   }
 
   showPhotoRefDropdown.value = false;
+
+  const maxLimit = getPhotoMaxInputLimit();
+  if (getInputCharCount(target) > maxLimit) {
+    target.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
+  previousPhotoInputHtml.value = target.innerHTML;
 };
 
 const createPhotoItemTag = (item: any): HTMLElement => {
@@ -1280,6 +1342,16 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
     event.preventDefault();
     generatePhoto();
     return;
+  }
+
+  const maxLimit = getPhotoMaxInputLimit();
+  if (photoEditableInputRef.value) {
+    const currentCharCount = getInputCharCount(photoEditableInputRef.value);
+    if (currentCharCount >= maxLimit && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+      return;
+    }
   }
 
   if (!photoEditableInputRef.value) return;
@@ -1383,6 +1455,9 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
 const handlePhotoInputFocus = () => {
   isPhotoInputFocused.value = true;
   isPhotoInputCollapsed.value = false;
+  if (photoEditableInputRef.value) {
+    previousPhotoInputHtml.value = photoEditableInputRef.value.innerHTML;
+  }
 };
 
 const handlePhotoInputBlur = () => {
@@ -1393,6 +1468,9 @@ const handlePhotoInputBlur = () => {
 const handleVideoInputFocus = () => {
   isVideoInputFocused.value = true;
   isVideoInputCollapsed.value = false;
+  if (videoEditableInputRef.value) {
+    previousVideoInputHtml.value = videoEditableInputRef.value.innerHTML;
+  }
 };
 
 const handleVideoInputBlur = () => {
@@ -1405,8 +1483,14 @@ const handlePhotoPaste = (event: ClipboardEvent) => {
 
   if (!photoEditableInputRef.value) return;
 
-  // Get plain text from clipboard
+  const maxLimit = getPhotoMaxInputLimit();
+  const currentCharCount = getInputCharCount(photoEditableInputRef.value);
   const text = event.clipboardData?.getData('text/plain') || '';
+
+  if (currentCharCount + text.length > maxLimit) {
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
 
   // Insert plain text at cursor position
   const selection = window.getSelection();
@@ -1426,6 +1510,7 @@ const handlePhotoPaste = (event: ClipboardEvent) => {
     // If no selection, append to end
     photoEditableInputRef.value.textContent += text;
   }
+  previousPhotoInputHtml.value = photoEditableInputRef.value.innerHTML;
 };
 
 const handleVideoPaste = (event: ClipboardEvent) => {
@@ -1433,8 +1518,14 @@ const handleVideoPaste = (event: ClipboardEvent) => {
 
   if (!videoEditableInputRef.value) return;
 
-  // Get plain text from clipboard
+  const maxLimit = getVideoMaxInputLimit();
+  const currentCharCount = getInputCharCount(videoEditableInputRef.value);
   const text = event.clipboardData?.getData('text/plain') || '';
+
+  if (currentCharCount + text.length > maxLimit) {
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
 
   // Insert plain text at cursor position
   const selection = window.getSelection();
@@ -1454,6 +1545,7 @@ const handleVideoPaste = (event: ClipboardEvent) => {
     // If no selection, append to end
     videoEditableInputRef.value.textContent += text;
   }
+  previousVideoInputHtml.value = videoEditableInputRef.value.innerHTML;
 };
 
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -1579,6 +1671,14 @@ const videoDurationOptions = computed(() => {
 
 // Input content
 const videoInput = ref('');
+
+const handleVideoTextareaInput = () => {
+  const maxLimit = getVideoMaxInputLimit();
+  if (videoInput.value.length > maxLimit) {
+    videoInput.value = videoInput.value.substring(0, maxLimit);
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+  }
+};
 
 // Bottom generator active tab
 const bottomActiveTab = ref('photo');
@@ -2101,6 +2201,15 @@ const handleVideoInput = () => {
 
   const target = videoEditableInputRef.value;
 
+  const maxLimit = getVideoMaxInputLimit();
+  const currentCharCount = getInputCharCount(target);
+  if (currentCharCount > maxLimit) {
+    target.innerHTML = previousVideoInputHtml.value;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+  previousVideoInputHtml.value = target.innerHTML;
+
   let actualText = '';
   const textNodes = Array.from(target.childNodes).filter(node => {
     if (node.nodeType === 3) {
@@ -2295,6 +2404,14 @@ const getVideoCursorPosition = (element: HTMLElement): number => {
 const handleVideoKeydown = (event: KeyboardEvent) => {
   if (!videoEditableInputRef.value) return;
 
+  const maxLimit = getVideoMaxInputLimit();
+  const currentCharCount = getInputCharCount(videoEditableInputRef.value);
+  if (currentCharCount >= maxLimit && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault();
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
   const target = videoEditableInputRef.value;
   const selection = window.getSelection();
 
@@ -2399,6 +2516,7 @@ const selectVideoRefItem = (item: any) => {
   if (!videoEditableInputRef.value) return;
 
   const target = videoEditableInputRef.value;
+  const savedHtml = target.innerHTML;
   const selection = window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
@@ -2467,6 +2585,15 @@ const selectVideoRefItem = (item: any) => {
   }
 
   showVideoRefDropdown.value = false;
+
+  const maxLimit = getVideoMaxInputLimit();
+  if (getInputCharCount(target) > maxLimit) {
+    target.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
+  previousVideoInputHtml.value = target.innerHTML;
 };
 
 const createVideoItemTag = (item: any): HTMLElement => {

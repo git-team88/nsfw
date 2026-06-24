@@ -75,6 +75,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { trackClickPublishButton } from '@/utils/analytics';
 
 const { t } = useI18n();
 
@@ -240,6 +241,7 @@ watch(() => props.project, () => {
 
 // 发布本集
 function handlePublish() {
+  trackClickPublishButton(3);
   // Get cover from project (合集封面)
   const cover = props.project.cover || props.project.result_async?.generate_manhua_cover;
   

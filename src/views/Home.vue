@@ -182,6 +182,7 @@
                         :placeholder="t('home.input.placeholderVideo')"
                         v-model="novelInput"
                         spellcheck="false"
+                        @input="handleTextareaInput"
                         @click="handleFramesTextareaClick"
                       ></textarea>
                     </div>
@@ -217,6 +218,7 @@
                         :placeholder="t('home.input.placeholderVideo')"
                         v-model="novelInput"
                         spellcheck="false"
+                        @input="handleTextareaInput"
                       ></textarea>
                     </div>
                   </template>
@@ -749,6 +751,7 @@
                     :placeholder="t('home.input.placeholderNovel')"
                     v-model="novelInput"
                     spellcheck="false"
+                    @input="handleTextareaInput"
                     @click="handleNovelTextareaClick"
                   ></textarea>
 
@@ -991,7 +994,7 @@
                 :key="item.id"
                 class="content-item"
                 :ref="(el) => setContentCardRef(el, index)"
-                @click="navigateToDetail(item.id)"
+                @click="navigateToDetail(item.id, item.type)"
               >
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
@@ -1231,7 +1234,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from '@/util/toast';
+import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import Swiper from 'swiper';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -1255,6 +1258,7 @@ import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import router from '@/router';
 import api from '@/api/index';
+import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
 import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
 
@@ -1476,6 +1480,7 @@ function triggerEndFrameUpload() {
 }
 
 function handleFramesTextareaClick() {
+  trackClickPromptBox();
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
@@ -1483,6 +1488,7 @@ function handleFramesTextareaClick() {
 }
 
 function handleNovelTextareaClick() {
+  trackClickPromptBox();
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
@@ -1718,6 +1724,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const justSwitchedTab = ref(false);
 const inputKey = ref(0);
+const previousInputHtml = ref('');
 
 // Computed properties for template
 const selectedCharacters = computed(() => getSelectedCharacters().value);
@@ -1792,6 +1799,7 @@ const novelInput = ref('');
 const showVideoModeDropdown = ref(false);
 
 const navigateToNovelGenerate = async () => {
+  trackClickGenerateButton();
   if (isGeneratingNovel.value) return;
   isGeneratingNovel.value = true;
 
@@ -1864,6 +1872,7 @@ const navigateToNovelGenerate = async () => {
     if (response.ok) {
       const data = await response.json();
       if (data.code == 200 || data.code == 0) {
+        trackContentPublished(sessionId);
         router.push(`/novel/${sessionId}`);
       } else {
         toast(data.message);
@@ -2519,6 +2528,7 @@ const selectContentType = (type: string) => {
   currentNovelMode.value = 'normal';
   currentPhotoMode.value = 'normal';
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
+  previousInputHtml.value = '';
 
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
@@ -2651,6 +2661,7 @@ function updateUnlimitedModeVisibility() {
 }
 
 const generateVideo = async () => {
+  trackClickGenerateButton();
   if (isGeneratingVideo.value) return;
   isGeneratingVideo.value = true;
 
@@ -2861,6 +2872,7 @@ const generateVideo = async () => {
     }) as any;
 
     if (response.code == 200) {
+      trackContentPublished(sessionId);
       router.push('/generate');
 
       if (editableInputRef.value) {
@@ -2887,6 +2899,7 @@ const generateVideo = async () => {
 };
 
 const generateComic = async () => {
+  trackClickGenerateButton();
   if (isGeneratingComic.value) return;
   isGeneratingComic.value = true;
 
@@ -2913,130 +2926,134 @@ const generateComic = async () => {
   try {
     const sessionId = uuidv4();
 
-  // 生成角色和图片的索引映射
-  const characterMap: Record<string, number> = {};
-  const imageMap: Record<string, number> = {};
+    // 生成角色和图片的索引映射
+    const characterMap: Record<string, number> = {};
+    const imageMap: Record<string, number> = {};
 
-  // 角色索引基于角色列表的顺序
-  selectedCharactersComic.value.forEach((character, index) => {
-    characterMap[character.id] = index + 1;
-  });
+    // 角色索引基于角色列表的顺序
+    selectedCharactersComic.value.forEach((character, index) => {
+      characterMap[character.id] = index + 1;
+    });
 
-  // 图片索引基于图片列表的顺序
-  uploadedImagesComic.value.forEach((image, index) => {
-    imageMap[image.id] = index + 1;
-  });
+    // 图片索引基于图片列表的顺序
+    uploadedImagesComic.value.forEach((image, index) => {
+      imageMap[image.id] = index + 1;
+    });
 
-  // 先创建一个干净的文本内容，不包含标签
-  let processedContent = '';
-  if (editableInputRef.value) {
-    // 遍历所有子节点，构建干净的文本内容
-    const processNode = (node: Node) => {
-      if (node.nodeType === 3) { // 文本节点
-        processedContent += node.textContent || '';
-      } else if (node.nodeType === 1) { // 元素节点
-        const element = node as Element;
-        if (element.classList.contains('character-tag-input')) {
-            // 处理角色标签
-            const img = element.querySelector('img');
-            if (img) {
-              const character = selectedCharactersComic.value.find(c =>
-                c.image == img.src || img.src.includes(c.image)
-              );
-              if (character) {
-                const charIndex = characterMap[character.id] || 1;
-                processedContent += `<chr_${charIndex}>`;
+    // 先创建一个干净的文本内容，不包含标签
+    let processedContent = '';
+    if (editableInputRef.value) {
+      // 遍历所有子节点，构建干净的文本内容
+      const processNode = (node: Node) => {
+        if (node.nodeType === 3) { // 文本节点
+          processedContent += node.textContent || '';
+        } else if (node.nodeType === 1) { // 元素节点
+          const element = node as Element;
+          if (element.classList.contains('character-tag-input')) {
+              // 处理角色标签
+              const img = element.querySelector('img');
+              if (img) {
+                const character = selectedCharactersComic.value.find(c =>
+                  c.image == img.src || img.src.includes(c.image)
+                );
+                if (character) {
+                  const charIndex = characterMap[character.id] || 1;
+                  processedContent += `<chr_${charIndex}>`;
+                }
               }
-            }
-          } else if (element.classList.contains('image-tag')) {
-            // 处理图片标签
-            const imgElement = element.querySelector('img');
-            if (imgElement) {
-              const image = uploadedImagesComic.value.find(img =>
-                img.image === imgElement.src || imgElement.src.includes(img.image)
-              );
-              if (image) {
-                const imgIndex = imageMap[image.id] || 1;
-                processedContent += `<ref_${imgIndex}>`;
+            } else if (element.classList.contains('image-tag')) {
+              // 处理图片标签
+              const imgElement = element.querySelector('img');
+              if (imgElement) {
+                const image = uploadedImagesComic.value.find(img =>
+                  img.image === imgElement.src || imgElement.src.includes(img.image)
+                );
+                if (image) {
+                  const imgIndex = imageMap[image.id] || 1;
+                  processedContent += `<ref_${imgIndex}>`;
+                }
               }
+          } else {
+            // 处理其他元素节点
+            for (let i = 0; i < element.childNodes.length; i++) {
+              processNode(element.childNodes[i]);
             }
-        } else {
-          // 处理其他元素节点
-          for (let i = 0; i < element.childNodes.length; i++) {
-            processNode(element.childNodes[i]);
           }
         }
-      }
-    };
+      };
 
-    // 处理输入框的所有子节点
-    for (let i = 0; i < editableInputRef.value.childNodes.length; i++) {
-      processNode(editableInputRef.value.childNodes[i]);
-    }
-  } else {
-    processedContent = inputContent.trim();
-  }
-
-  const params = {
-    ratio: "9:16",
-    language: locale.value == 'zh' ? 'cn' : locale.value,
-    story_type: "manhua",
-    story_mode: currentComicMode.value == 'unlimited' ? 'nsfw' : 'normal',
-    story_style: "",
-    reference_images: uploadedImagesComic.value.map(img => img.image),
-    emotion: "",
-    others: {
-      content: processedContent,
-      list: combinedItemsComic.value
-    },
-    addition_characters: selectedCharactersComic.value.map(character => ({
-      id: character.id,
-      name: character.name,
-      desc: character.description,
-      main_image_url: character.image,
-      tri_view_url: character.tri_image
-    }))
-  };
-
-  const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'token': token
-    },
-    body: JSON.stringify(params)
-  });
-
-  if (response.ok) {
-    const data = await response.json();
-    if (data.code == 200 || data.code == 0) {
-      // window.open(`/tools/comic/${sessionId}`, '_blank');
-      window.location.href = `/tools/comic/${sessionId}`;
-
-      if (editableInputRef.value) {
-        editableInputRef.value.textContent = '';
-        isInputEmptyComic.value = true;
-        isInputEmpty.value = true;
-        selectedCharactersComic.value = [];
-        uploadedImagesComic.value = [];
-        combinedItemsComic.value = [];
-        inputContentComic.value = '';
-        inputHtmlComic.value = '';
+      // 处理输入框的所有子节点
+      for (let i = 0; i < editableInputRef.value.childNodes.length; i++) {
+        processNode(editableInputRef.value.childNodes[i]);
       }
     } else {
-      toast(data.message)
+      processedContent = inputContent.trim();
     }
-  }
+
+    const params = {
+      ratio: "9:16",
+      language: locale.value == 'zh' ? 'cn' : locale.value,
+      story_type: "manhua",
+      story_mode: currentComicMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      story_style: "",
+      reference_images: uploadedImagesComic.value.map(img => img.image),
+      emotion: "",
+      others: {
+        content: processedContent,
+        list: combinedItemsComic.value
+      },
+      addition_characters: selectedCharactersComic.value.map(character => ({
+        id: character.id,
+        name: character.name,
+        desc: character.description,
+        main_image_url: character.image,
+        tri_view_url: character.tri_image
+      }))
+    };
+
+    const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify(params)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.code == 200 || data.code == 0) {
+        trackContentPublished(sessionId);
+        // window.open(`/tools/comic/${sessionId}`, '_blank');
+        window.location.href = `/tools/comic/${sessionId}`;
+
+        if (editableInputRef.value) {
+          editableInputRef.value.textContent = '';
+          isInputEmptyComic.value = true;
+          isInputEmpty.value = true;
+          selectedCharactersComic.value = [];
+          uploadedImagesComic.value = [];
+          combinedItemsComic.value = [];
+          inputContentComic.value = '';
+          inputHtmlComic.value = '';
+        }
+      } else {
+        toast(data.message)
+      }
+    } else {
+      toast(t('fail'));
+    }
+    isGeneratingComic.value = false;
   }
   catch (error) {
     console.error('Error in generateComic:', error);
     toast(t('fail'));
-  } finally {
     isGeneratingComic.value = false;
   }
 };
 
 const generateDrama = async () => {
+  trackClickGenerateButton();
   if (isGeneratingDrama.value) return;
   isGeneratingDrama.value = true;
 
@@ -3149,6 +3166,7 @@ const generateDrama = async () => {
     if (response.ok) {
       const data = await response.json();
       if (data.code == 200 || data.code == 0) {
+        trackContentPublished(sessionId);
         window.location.href = `/tools/video/${sessionId}`;
 
         if (editableInputRef.value) {
@@ -3164,11 +3182,13 @@ const generateDrama = async () => {
       } else {
         toast(data.message);
       }
+    } else {
+      toast(t('fail'));
     }
+    isGeneratingDrama.value = false;
   } catch (error) {
     console.error('Error in generateDrama:', error);
     toast(t('fail'));
-  } finally {
     isGeneratingDrama.value = false;
   }
 };
@@ -3209,6 +3229,7 @@ const convertImageTagsToRef = (inputElement: HTMLElement | null, imageList: any[
 };
 
 const generatePhoto = async () => {
+  trackClickGenerateButton();
   if (isGeneratingPhoto.value) return;
   isGeneratingPhoto.value = true;
 
@@ -3321,6 +3342,7 @@ const generatePhoto = async () => {
     const response = await api.generateSinglePhoto(params) as any;
 
     if (response.code == 200) {
+      trackContentPublished(sessionId);
       router.push('/generate');
 
       if (editableInputRef.value) {
@@ -4155,9 +4177,65 @@ const removeUploadedImage = (id: string) => {
   });
 };
 
+const getInputCharCount = (element: HTMLElement): number => {
+  let charCount = 0;
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        charCount += (node.textContent || '').length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+        charCount += 7;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          walkNodes(node.childNodes[i]);
+        }
+      }
+    }
+  };
+  walkNodes(element);
+  return charCount;
+};
+
+const getMaxInputLimit = (): number => {
+  switch (contentType.value) {
+    case 'comic':
+    case 'drama':
+    case 'novel':
+      return 20000;
+    case 'photo':
+      return 5000;
+    case 'video':
+      return currentVideoMode.value === 'normal' ? 500 : 5000;
+    default:
+      return 5000;
+  }
+};
+
 // Handle input for @ dropdown
 const handleInput = (event: Event) => {
   const target = event.target as HTMLElement;
+
+  const maxLimit = getMaxInputLimit();
+  const currentCharCount = getInputCharCount(target);
+  if (currentCharCount > maxLimit) {
+    target.innerHTML = previousInputHtml.value;
+    isInputEmpty.value = previousInputHtml.value.trim() === '' || (target.textContent || '').trim() === '';
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+  previousInputHtml.value = target.innerHTML;
 
   // 计算实际的文本内容，排除非可编辑标签中的文本
   let actualText = '';
@@ -4285,7 +4363,19 @@ const handleInput = (event: Event) => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     showAtDropdown.value = false;
-  } else if (event.key === 'Backspace') {
+  }
+
+  const maxLimit = getMaxInputLimit();
+  if (editableInputRef.value) {
+    const currentCharCount = getInputCharCount(editableInputRef.value);
+    if (currentCharCount >= maxLimit && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+      return;
+    }
+  }
+
+  if (event.key === 'Backspace') {
     if (editableInputRef.value) {
       const target = editableInputRef.value;
       const selection = window.getSelection();
@@ -4379,6 +4469,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 // Handle input click
 const handleInputClick = () => {
+  trackClickPromptBox();
   // Only handle @ dropdown logic, don't update isInputEmpty
   if (editableInputRef.value) {
     const target = editableInputRef.value;
@@ -4473,6 +4564,9 @@ const handleInputClick = () => {
 const handleInputFocus = () => {
   checkLogin();
   isInputFocused.value = true;
+  if (editableInputRef.value) {
+    previousInputHtml.value = editableInputRef.value.innerHTML;
+  }
 };
 
 // Handle input blur
@@ -4497,8 +4591,14 @@ const handlePaste = (event: ClipboardEvent) => {
 
   if (!editableInputRef.value) return;
 
-  // Get plain text from clipboard
+  const maxLimit = getMaxInputLimit();
+  const currentCharCount = getInputCharCount(editableInputRef.value);
   const text = event.clipboardData?.getData('text/plain') || '';
+
+  if (currentCharCount + text.length > maxLimit) {
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
 
   // Insert plain text at cursor position
   const selection = window.getSelection();
@@ -4522,9 +4622,16 @@ const handlePaste = (event: ClipboardEvent) => {
   // Update input empty state
   const inputContent = editableInputRef.value.textContent || '';
   isInputEmpty.value = inputContent.trim() === '';
-
-  // Scroll to bottom after paste
+  previousInputHtml.value = editableInputRef.value.innerHTML;
   editableInputRef.value.scrollTop = editableInputRef.value.scrollHeight;
+};
+
+const handleTextareaInput = () => {
+  const maxLimit = getMaxInputLimit();
+  if (novelInput.value.length > maxLimit) {
+    novelInput.value = novelInput.value.substring(0, maxLimit);
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+  }
 };
 
 // Select @ dropdown item
@@ -4534,6 +4641,7 @@ const selectAtItem = (item: any) => {
   }
 
   const target = editableInputRef.value;
+  const savedHtml = target.innerHTML;
 
   // Clear any existing content if input is empty
   if (target.textContent?.trim() === '') {
@@ -4717,6 +4825,17 @@ const selectAtItem = (item: any) => {
   // Update input empty state after inserting image tag
   const inputContent = target.textContent || '';
   isInputEmpty.value = inputContent.trim() === '';
+
+  const maxLimit = getMaxInputLimit();
+  if (getInputCharCount(target) > maxLimit) {
+    target.innerHTML = savedHtml;
+    isInputEmpty.value = savedHtml.trim() === '' || (target.textContent || '').trim() === '';
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    showAtDropdown.value = false;
+    return;
+  }
+
+  previousInputHtml.value = target.innerHTML;
 
   showAtDropdown.value = false;
 };
@@ -4946,12 +5065,19 @@ const formatNumber = (num: number) => {
   return num.toLocaleString();
 };
 
-const navigateToDetail = (id: string) => {
-  const type = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
-  // Save current tab and content type before navigating
+const navigateToDetail = (id: string, type?: string) => {
+  const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama"> = {
+    '1': 'Comic',
+    '2': 'Novel',
+    '3': 'Drama'
+  };
+  if (type && typeCategoryMap[type]) {
+    trackClickContentCover(typeCategoryMap[type]);
+  }
+  const tabType = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  router.push({ path: '/detail', query: { id: id , type: type, contentType: activeContentType.value.toString() } });
+  router.push({ path: '/detail', query: { id: id , type: tabType, contentType: activeContentType.value.toString() } });
 };
 
 const navigateToUserHome = (userId: number) => {

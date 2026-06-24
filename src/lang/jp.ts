@@ -540,7 +540,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     register: "新規登録",
     contribution: "投稿",
     type1: "AI生成",
-    type2: "動画",
+    type2: "アニメドラマ",
     type3: "マンガ",
     type4: "小説",
     aiTip: "まだ生成済みの作品がありません。先に生成してください",
@@ -1246,9 +1246,9 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     tabs: {
       novel: "小説",
       manhua: "マンガ",
-      manju: "動画",
+      manju: "アニメドラマ",
       photo: "画像",
-      video: "アニメドラマ",
+      video: "動画",
     },
     status: {
       unpublished: "未公開",
@@ -1557,7 +1557,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       startFrameRequired: "開始フレームの画像をアップロードしてください",
       videoExtendDurationLimit: "アップロードした動画は2-5秒の範囲である必要があります",
       videoExtendDurationExceed: "生成時間は、拡張する動画の長さより長くする必要があります",
-      unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません"
+      unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
+      maxInputLimit: "最大入力制限{max}文字に達しました"
     },
     generate: {
       started: "動画の生成を開始しました",
@@ -1567,10 +1568,10 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     loadMore: "もっと見る",
     contentType: {
       all: "すべて",
-      drama: "動画",
+      drama: "アニメドラマ",
       comic: "マンガ",
       novel: "小説",
-      video: "アニメドラマ",
+      video: "動画",
       photo: "画像",
       image: "画像",
       article: "テキスト"
@@ -1648,7 +1649,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   },
   submit: {
     tabs: {
-      video: "動画",
+      video: "アニメドラマ",
       image: "マンガ",
       article: "小説",
     },
@@ -2037,7 +2038,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     collection: {
       all: "すべて",
       items: "件の作品",
-      editName: "コレクション名を編集",
+      editName: "コレクションを編集",
       delete: "コレクションを削除",
       nameUpdated: "コレクション名が更新されました",
       create: "コレクションを作成",
@@ -2355,7 +2356,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       estimateFailed: "コンピューティングパワーの見積もりに失敗しました。後でもう一度お試しください",
       emptyChapterContent: "章の内容を入力してください",
       emptyChapterTitle: "章のタイトルを入力してください",
-      cannotOperateOtherUserProject: "他のユーザーのプロジェクトを操作することはできません"
+      cannotOperateOtherUserProject: "他のユーザーのプロジェクトを操作することはできません",
+      staleOperation: "プロジェクトの進捗が更新されました。ページを更新しています。後で再度お試しください"
     },
     guide: {
       next: "次へ",
@@ -2703,7 +2705,6 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     statusDraft: "下書き",
     statusSubscribed: "メンバーシップ",
     statusPrivate: "非公開",
-    privateChapterHint: "{count}{unit}の非公開チャプターを除く"
   },
   collectionSettings: {
     back: "戻る",
@@ -2724,6 +2725,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     statusFinished: "完結",
     publishedEpisodes: "公開済みエピソード",
     unitEpisode: "話",
+    privateChapterHint: "（うち{count}章は自分のみ閲覧可能）",
     unitChapter: "章",
     sampleTitle: "練気一万年",
     sampleDescription: "新作出撃界、皆さん、Moegenで私の作品を読んでください。気に入っていただけることを願っています。皆さんのフォローは私の執筆の原動力です。一つ一つの物語を大切に書いていきます！",

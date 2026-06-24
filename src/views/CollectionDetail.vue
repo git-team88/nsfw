@@ -66,7 +66,7 @@
                 <div class="stats">
                   <div class="stat-item">
                     <span class="stat-label">{{ t('collectionDetail.workCount') }}</span>
-                    <span class="stat-value">{{ formatNumber(authorInfo.totalPosts) }}</span>
+                    <span class="stat-value">{{ formatNumber(totalWorks) }}</span>
                   </div>
 
                   <div class="stat-line"></div>
@@ -112,8 +112,6 @@
           <div class="section-chapter">
             <div class="section-header">
               <h2 class="section-title">{{ t('collectionDetail.tableOfContents') }}</h2>
-
-              <!-- <span v-if="collection.chapter_count_private" class="private-hint">（{{ t('collectionDetail.privateChapterHint', { count: collection.chapter_count_private, unit: getChapterLabel(collection.type) }) }}）</span> -->
 
               <!-- <button
                 v-if="isOwn"
@@ -231,6 +229,11 @@ interface Collection {
   chapter_count_private: number | string;
 }
 
+interface BooksGroupItem {
+  type: string;
+  num: string;
+}
+
 interface AuthorInfo {
   id: string | number;
   nickname: string;
@@ -240,6 +243,7 @@ interface AuthorInfo {
   isFollow: number;
   isSubscribe: number;
   subscribePrice: string;
+  books_group: BooksGroupItem[];
 }
 
 const collection = ref<Collection | null>(null);
@@ -251,7 +255,8 @@ const authorInfo = ref<AuthorInfo>({
   followerCount: 0,
   isFollow: 0,
   isSubscribe: 0,
-  subscribePrice: '$12/月'
+  subscribePrice: '$12/月',
+  books_group: []
 });
 const loading = ref(false);
 const userRegion = ref(false);
@@ -301,6 +306,11 @@ const isOwn = ref(false);
 
 const tagColors = ['tag-pink', 'tag-yellow', 'tag-green'];
 
+const totalWorks = computed(() => {
+  const booksGroup = authorInfo.value.books_group || [];
+  return booksGroup.reduce((sum, item) => sum + (parseInt(item.num) || 0), 0);
+});
+
 function getTagClass(index: number): string {
   return tagColors[index % tagColors.length];
 }
@@ -333,7 +343,7 @@ async function fetchCollectionDetail() {
     if (isSelf) {
       response = await api.getSelfCollectionDetail(id) as any;
     } else {
-      response = await api.getCollectionDetail(id, showNsfw) as any;
+      response = await api.getCollectionDetail(id) as any;
     }
     if (response.code == 0) {
       const data = response.data;
@@ -407,7 +417,8 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         followerCount: parseInt(data.data?.user?.follower_count || data.data?.follower_count || '0'),
         isFollow: data.data?.is_follow || 0,
         isSubscribe: data.data?.is_subscribe || 0,
-        subscribePrice: data.data?.subscribe_price || ''
+        subscribePrice: data.data?.subscribe_price || '',
+        books_group: data.data?.books_group || []
       };
 
       // 如果是看别人的合集且订阅价格为空，请求订阅计划接口
@@ -452,29 +463,39 @@ function goChapter(chapter: Chapter) {
   if (!token) {
     router.push('/login');
     return;
-}
+  }
 
   if (isOwn.value) {
     navigateToChapter(chapter);
     return;
   }
 
-  if (userInfo.value) {
-    const birthday = userInfo.value.info?.birthday;
-    if (!birthday) {
-      pendingChapter.value = chapter;
-      showSensitiveContentNoBirthdayModal.value = true;
+  if (collection.value?.is_nsfw == 1) {
+    if (userInfo.value) {
+      const birthday = userInfo.value.info?.birthday;
+      if (!birthday) {
+        pendingChapter.value = chapter;
+        showSensitiveContentNoBirthdayModal.value = true;
+        return;
+      }
+      if (isTeenager.value) {
+        pendingChapter.value = chapter;
+        showSensitiveContentUnderageModal.value = true;
+        return;
+      }
+    }
+
+    if (localStorage.getItem('allowSensitiveContent') === '1') {
+      navigateToChapter(chapter);
       return;
     }
-    if (isTeenager.value) {
-      pendingChapter.value = chapter;
-      showSensitiveContentUnderageModal.value = true;
-      return;
-    }
+
+    pendingChapter.value = chapter;
+    showSensitiveContentConfirmModal.value = true;
+    return;
   }
 
-  pendingChapter.value = chapter;
-  showSensitiveContentConfirmModal.value = true;
+  navigateToChapter(chapter);
 }
 
 function navigateToChapter(chapter: Chapter) {
@@ -484,6 +505,7 @@ function navigateToChapter(chapter: Chapter) {
 
 function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
+  localStorage.setItem('allowSensitiveContent', '1');
   if (pendingChapter.value) {
     navigateToChapter(pendingChapter.value);
     pendingChapter.value = null;
@@ -597,7 +619,7 @@ async function refreshChapters() {
     if (isSelf) {
       response = await api.getSelfCollectionDetail(id) as any;
     } else {
-      response = await api.getCollectionDetail(id, showNsfw) as any;
+      response = await api.getCollectionDetail(id) as any;
     }
 
     if (response.code === 0) {

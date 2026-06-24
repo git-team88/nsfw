@@ -160,6 +160,7 @@ import { toast } from "@/util/toast";
 import api from "@/api/index";
 import router from "@/router";
 import { eventBus } from "@/utils/eventBus";
+import { setUserId, clearUserId } from "@/utils/analytics";
 
 const emit = defineEmits(['userInfoLoaded', 'messageInfoLoaded', 'messageInfoUpdated', 'balanceInfoLoaded']);
 const route = useRoute();
@@ -499,8 +500,9 @@ function getUserInfo() {
         subscribeCount.value = data.data.sub_count;
         followersCount.value = data.data.follow_count;
         fansCount.value = data.data.fans_count;
-        postCount.value = data.data.product_count;
+        postCount.value = data.data.book_count;
         emit('userInfoLoaded', data.data);
+        setUserId(String(data.data.info.id));
       } else {
         toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
       }
@@ -534,7 +536,8 @@ function getLoginUserInfo() {
       if (data.code === 0) {
         userInfo.value = data.data;
 
-        localStorage.setItem('uid', data.data.info.id)
+        localStorage.setItem('uid', data.data.info.id);
+        setUserId(String(data.data.info.id));
       } else {
         toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
       }
@@ -616,6 +619,7 @@ function confirmLogout() {
   localStorage.removeItem("uid");
   localStorage.removeItem("allowSensitiveContent");
 
+  clearUserId();
   provider.value = null;
   isShowExit.value = false;
   isLogin.value = false;

@@ -49,6 +49,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { trackClickPublishButton } from '@/utils/analytics';
 const { t } = useI18n();
 
 const props = defineProps({
@@ -160,6 +161,7 @@ function handleOverlayClick() {
 
 // Handle publish
 function handlePublish() {
+  trackClickPublishButton(3);
   const chapter = chapters.value.find((c: any) => c.chapter?.toString() === selectedChapter.value);
   if (!chapter || !props.project) return;
 

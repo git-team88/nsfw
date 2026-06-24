@@ -13,7 +13,7 @@
     <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
     <!-- Underage content warning -->
-    <div class="main-container" v-if="isUnderage && isSensitiveContent">
+    <div class="main-container" v-if="!isLoading && isSensitiveContent && (isUnderage || !isAllowSensitiveContent)">
       <div class="novel-content">
         <div class="chapter-header">
           <div class="header-left">
@@ -79,7 +79,7 @@
       </div>
     </div>
 
-    <div class="main-container" v-else>
+    <div class="main-container" v-else-if="!isLoading">
       <div class="novel-content" :class="detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode ? 'on' : ''" ref="novelContentRef">
         <div class="chapter-header">
           <div class="header-left">
@@ -206,20 +206,20 @@
           <img src="@/assets/images/detail/share.png" alt="Share" />
         </div>
       </div>
-
-      <!-- Comments and table of contents sidebar -->
-      <Sidebar
-        :visible="showSidebar"
-        :detail="detail"
-        :uid="uid"
-        :active-tab="activeTab"
-        @close="toggleComments"
-        @navigate-to-user="navigateToUserHome"
-        @navigate-to-chapter="navigateToChapter"
-        @open-report-modal="openReportModal"
-        @update-post-data="updatePostData"
-      />
     </div>
+
+    <!-- Comments and table of contents sidebar -->
+    <Sidebar
+      :visible="showSidebar"
+      :detail="detail"
+      :uid="uid"
+      :active-tab="activeTab"
+      @close="toggleComments"
+      @navigate-to-user="navigateToUserHome"
+      @navigate-to-chapter="navigateToChapter"
+      @open-report-modal="openReportModal"
+      @update-post-data="updatePostData"
+    />
   </div>
 
   <!-- Report Modal -->
@@ -313,7 +313,8 @@ const detail = ref({
   likes: 0,
   liked: false,
   is_teenager: 1,
-  is_nsfw: '1',
+  is_nsfw: '0',
+  book_is_nsfw: 0,
   isLast: false,
   book_id: '',
   book_title: '',
@@ -405,10 +406,17 @@ const liked = ref(false);
 const showSensitiveContentNoBirthdayModal = ref(false);
 const showSensitiveContentUnderageModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
+const pendingChapter = ref<any>(null);
 
 // User info
 const isUnderage = ref(false);
-const isSensitiveContent = computed(() => detail.value.is_nsfw === '1');
+const isSensitiveContent = computed(() => {
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    return detail.value.book_is_nsfw == 1;
+  }
+  return detail.value.is_nsfw === '1';
+});
+const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') === '1');
 const uid = localStorage.getItem('uid') || '';
 
 // Report modal
@@ -564,6 +572,21 @@ async function fetchDetail() {
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post;
 
+      let bookIsNsfw = 0;
+      if (data.book_id && Number(data.book_id) > 0) {
+        try {
+          const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
+          if (bookRes.code === 0) {
+            const bookData = bookRes.data?.book_info || bookRes.data;
+            if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
+              bookIsNsfw = 1;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
       detail.value = {
         id: data.id || id,
         author: res.data.author,
@@ -580,7 +603,8 @@ async function fetchDetail() {
         likes: Number(data.like_count || data.likes || 0),
         liked: data.is_liked == 1 || data.is_liked === true,
         is_teenager: data.is_teenager,
-        is_nsfw: data.is_nsfw || '1',
+        is_nsfw: data.is_nsfw || '0',
+        book_is_nsfw: bookIsNsfw,
         isLast: data.is_last || false,
         book_id: data.book_id || "",
         book_title: data.book_title || '',
@@ -666,11 +690,10 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50, props.showNsfw) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
     if (response.code === 0) {
       chapters.value = response.data?.data || [];
       chapterCount.value = response.data?.allnums || response.data?.count || 0;
-      // 加载章节列表后设置导航
       setChapterNavigation();
     }
   } catch (error) {
@@ -1279,6 +1302,42 @@ async function toggleFollow() {
 // Navigate to chapter
 function navigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
+
+  if (isSensitiveContent.value) {
+    if (detail.value.author.id && detail.value.author.id === uid) {
+      // author bypass
+    } else {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          const parsedUserInfo = JSON.parse(userInfoStr);
+          const birthday = parsedUserInfo.info?.birthday;
+          if (!birthday) {
+            pendingChapter.value = chapter;
+            showSensitiveContentNoBirthdayModal.value = true;
+            return;
+          }
+          if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
+            pendingChapter.value = chapter;
+            showSensitiveContentUnderageModal.value = true;
+            return;
+          }
+        }
+        if (localStorage.getItem('allowSensitiveContent') !== '1') {
+          pendingChapter.value = chapter;
+          showSensitiveContentConfirmModal.value = true;
+          return;
+        }
+      }
+    }
+  }
+
+  doNavigateToChapter(chapter);
+}
+
+function doNavigateToChapter(chapter: any) {
+  if (!chapter || !chapter.post_id) return;
   router.replace({
     path: '/detail',
     query: {
@@ -1354,39 +1413,49 @@ function backToTop() {
 }
 
 // Navigate to profile settings
-function navigateToProfileSettings() {
+async function navigateToProfileSettings() {
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
     return;
   }
 
-  const userInfoStr = localStorage.getItem('userInfo');
-  if (!userInfoStr) {
-    showSensitiveContentNoBirthdayModal.value = true;
-    return;
+  try {
+    const res = await api.userInfo() as any;
+    if (res.code == 0 || res.code == 200) {
+      const data = res.data;
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      const birthday = data.info?.birthday;
+
+      if (!birthday) {
+        showSensitiveContentNoBirthdayModal.value = true;
+        return;
+      }
+
+      if (data.is_teenager === 1 || data.is_teenager === '1') {
+        showSensitiveContentUnderageModal.value = true;
+        return;
+      }
+
+      showSensitiveContentConfirmModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error fetching user info:', error);
   }
-
-  const parsedUserInfo = JSON.parse(userInfoStr);
-  const birthday = parsedUserInfo.info?.birthday;
-
-  if (!birthday) {
-    showSensitiveContentNoBirthdayModal.value = true;
-    return;
-  }
-
-  if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
-    showSensitiveContentUnderageModal.value = true;
-    return;
-  }
-
-  showSensitiveContentConfirmModal.value = true;
 }
 
 function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
-  fetchDetail();
+  isAllowSensitiveContent.value = true;
+  if (pendingChapter.value) {
+    const chapter = pendingChapter.value;
+    pendingChapter.value = null;
+    doNavigateToChapter(chapter);
+    fetchDetail();
+  } else {
+    fetchDetail();
+  }
 }
 
 function handleGoToFillBirthday() {

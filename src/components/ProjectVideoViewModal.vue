@@ -87,6 +87,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
+import { trackClickPublishButton } from '@/utils/analytics';
 const { t } = useI18n();
 
 const props = defineProps({
@@ -290,6 +291,7 @@ function handleOverlayClick() {
 
 // Handle publish
 function handlePublish() {
+  trackClickPublishButton(3);
   // Get cover from project (合集封面)
   const cover = props.project.cover || props.project.result_async?.generate_manju_cover;
   

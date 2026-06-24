@@ -20,7 +20,7 @@
             class="collection-card"
             v-for="collection in collections"
             :key="collection.id"
-            :class="{ 'selected': selectedCollectionId && selectedCollectionId == collection.id }"
+            :class="{ 'selected': localSelectedId && localSelectedId == collection.id }"
             @click="handleSelectCollection(collection)"
           >
             <div class="card-cover">
@@ -48,7 +48,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-cancel" @click="handleClose">{{ t('collection.cancel') }}</button>
-        <button class="btn btn-confirm" :disabled="!selectedCollectionId" @click="handleConfirm">{{ t('collection.switchConfirm.confirm') }}</button>
+        <button class="btn btn-confirm" :disabled="!localSelectedId" @click="handleConfirm">{{ t('collection.switchConfirm.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -64,7 +64,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
-  selectedCollectionId?: string | number | null;
+  modelValue?: string | number | null;
   uid: string;
   type?: number;
 }>();
@@ -74,6 +74,7 @@ const emit = defineEmits<{
   (e: 'select', collection: any): void;
   (e: 'create'): void;
   (e: 'confirm', collection: any): void;
+  (e: 'update:modelValue', value: string | number | null): void;
 }>();
 
 const collections = ref<any[]>([]);
@@ -81,6 +82,8 @@ const isLoading = ref(false);
 const hasMore = ref(true);
 const currentPage = ref(1);
 const pageSize = ref(20);
+const localSelectedId = ref<string | number | null>(null);
+const initialSelectedId = ref<string | number | null>(null);
 
 async function fetchCollections(loadMore = false) {
   if (isLoading.value || (!loadMore && !hasMore.value)) return;
@@ -123,11 +126,13 @@ function handleScroll(event: Event) {
 }
 
 function handleSelectCollection(collection: any) {
+  localSelectedId.value = collection.id;
+  emit('update:modelValue', collection.id);
   emit('select', collection);
 }
 
 function handleConfirm() {
-  const selected = collections.value.find(c => c.id == props.selectedCollectionId);
+  const selected = collections.value.find(c => c.id == localSelectedId.value);
   if (selected) {
     emit('confirm', selected);
   }
@@ -146,6 +151,8 @@ watch(() => props.visible, (newVal) => {
     hasMore.value = true;
     currentPage.value = 1;
     collections.value = [];
+    localSelectedId.value = props.modelValue || null;
+    initialSelectedId.value = props.modelValue || null;
     fetchCollections(false);
   }
 });

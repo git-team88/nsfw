@@ -470,7 +470,8 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
       estimateFailed: "算力預估失敗，請稍後重試",
       emptyChapterContent: "請輸入章節內容",
       emptyChapterTitle: "請輸入章節標題",
-      cannotOperateOtherUserProject: "您不能操作其他使用者的專案"
+      cannotOperateOtherUserProject: "您不能操作其他使用者的專案",
+      staleOperation: "專案進度已更新，即將為您刷新頁面，請稍後重試"
     },
     guide: {
       next: "下一步",
@@ -1748,7 +1749,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       startFrameRequired: "請上傳首幀圖片",
       videoExtendDurationLimit: "上傳視頻應在2-5s",
       videoExtendDurationExceed: "生成時長設置應大於待續寫視頻長度",
-      unlimitedModeRestricted: "由於年齡或地區限制，不支持使用無限制模式生成內容"
+      unlimitedModeRestricted: "由於年齡或地區限制，不支持使用無限制模式生成內容",
+      maxInputLimit: "已達最大輸入限制{max}字"
     },
     generate: {
       started: "視頻生成已開始",
@@ -1913,6 +1915,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       formatError: "不支持的視頻格式，僅支持MP4、MOV",
       multiSelectError: "僅支持選擇一個視頻文件",
       corruptedError: "視頻文件損壞或無法播放，請更換視頻",
+      durationLimit: "視頻時長不能超過1小時，請更換視頻",
       projectView: {
         detail: "詳情",
         publishEpisode: "發布本集",
@@ -2210,7 +2213,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     collection: {
       all: "全部",
       items: "個作品",
-      editName: "編輯合集名稱",
+      editName: "編輯合集",
       delete: "刪除合集",
       nameUpdated: "合集名稱已更新",
       create: "新建合集",
@@ -2719,7 +2722,6 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     statusDraft: "草稿",
     statusSubscribed: "訂閱",
     statusPrivate: "僅自己可見",
-    privateChapterHint: "不包含{count}{unit}僅自己可見章節"
   },
   collectionSettings: {
     back: "返回",
@@ -2740,6 +2742,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     statusFinished: "已完結",
     publishedEpisodes: "已發布集數",
     unitEpisode: "集",
+    privateChapterHint: "（其中{count}章僅自己可見）",
     unitChapter: "章",
     sampleTitle: "練氣一萬年練氣一萬年練氣一萬年練氣一萬年練氣一萬年練氣一萬年練氣一萬年",
     sampleDescription: "新作出擊界，歡迎大家來Moegen閱讀我的作品，希望大家能夠喜歡，你們的關注是我寫作的動力，我會努力寫好每個故事！",

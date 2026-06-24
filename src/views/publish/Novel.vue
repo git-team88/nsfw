@@ -348,7 +348,7 @@
                     </div>
                   </div>
                   <div class="collection-info" v-else>
-                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
+                    <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
                   </div>
                 </div>
 
@@ -457,6 +457,9 @@
     :visible="showEditCollectionModal"
     :is-edit="editingCollectionId !== null"
     :collection-id="editingCollectionId || ''"
+    :collection-name="isCreateFromCollectionList && projectInfoForNewCollection ? projectInfoForNewCollection.title : ''"
+    :cover-url="isCreateFromCollectionList && projectInfoForNewCollection ? projectInfoForNewCollection.cover : ''"
+    :is-nsfw="0"
     :type="2"
     @close="handleCloseEditCollectionModal"
     @save="handleSaveCollection"
@@ -471,12 +474,13 @@
 
   <!-- Collection List Modal -->
   <CollectionListModal
+    v-model="collectionListSelectedId"
     :visible="showCollectionListModal"
-    :selected-collection-id="selectedCollection?.id"
     :uid="uid"
     :type="2"
     @close="handleCloseCollectionListModal"
-    @select="handleSelectCollectionFromModal"
+    @select="handleSelectCollectionCard"
+    @confirm="handleSelectCollectionFromModal"
     @create="handleCreateCollectionFromModal"
   />
 </template>
@@ -503,6 +507,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue"
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 import { toast } from "@/util/toast";
+import { trackClickPublishButton } from "@/utils/analytics";
 import { baseUrl } from "@/util/config";
 import { processImageUrl } from "@/util/utils";
 
@@ -708,7 +713,10 @@ const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showSwitchCollectionModal = ref(false);
 const showEditCollectionModal = ref(false);
 const showCollectionListModal = ref(false);
+const collectionListSelectedId = ref<string | number | null>(null);
 const editingCollectionId = ref<string | number | null>(null);
+const isCreateFromCollectionList = ref(false);
+const projectInfoForNewCollection = ref<{ title: string; cover: string } | null>(null);
 const isNoCollection = ref(true);
 const collections = ref<any[]>([]);
 const episodes = ref([
@@ -746,7 +754,7 @@ const showConventionModal = ref(false);
 const hasActiveSubscription = ref(false);
 
 const canSubmit = computed(() => {
-  return form.value.title.trim().length > 0 && form.value.description.trim().length > 0 && selectedCollection.value && coverPreview.value;
+  return form.value.title.trim().length > 0 && form.value.description.trim().length > 0 && selectedCollection.value;
 });
 
 // Watch route changes to update tabIndex
@@ -814,7 +822,7 @@ watch(uploadOption, (newOption) => {
 
 // Handle title input and auto-generate cover
 function handleTitleInput() {
-  // Only generate cover if no existing cover from history, no cover from URL, and no AI-generated cover
+  if (uploadOption.value === 'local') return;
   if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
     generateCoverFromTitle();
   }
@@ -822,12 +830,12 @@ function handleTitleInput() {
 
 // Handle title blur and upload cover
 async function handleTitleBlur() {
-  // Only generate and upload cover if no existing cover from history, no cover from URL, and no AI-generated cover
+  if (uploadOption.value === 'local') return;
+
   if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
     generateCoverFromTitle();
 
-    // Only upload cover if not in local upload tab
-    if (coverPreview.value && uploadOption.value !== 'local') {
+    if (coverPreview.value) {
       isUpload.value = true;
 
       const token = localStorage.getItem("token");
@@ -876,6 +884,21 @@ async function handleTitleBlur() {
 }
 
 async function goToNextStep() {
+  if (uploadOption.value === 'local') {
+    if (captionRef.value) {
+      form.value.description = captionRef.value.textContent || "";
+      captionLength.value = form.value.description.length;
+    }
+    showFullContent.value = true;
+    setTimeout(() => {
+      if (captionRef.value) {
+        captionRef.value.textContent = form.value.description;
+        captionLength.value = form.value.description.length;
+      }
+    }, 0);
+    return;
+  }
+
   // Update form.description from the contenteditable div
   if (captionRef.value) {
     form.value.description = captionRef.value.textContent || "";
@@ -1400,9 +1423,6 @@ async function onSubmit() {
   } else if (!selectedEpisodeNumber.value) {
     toast(t('collection.enterEpisode'));
     return;
-  } else if (!coverPreview.value && !(selectedCollection.value && selectedCollection.value.cover)) {
-    toast(t('submit.article.coverRequired'));
-    return;
   }
 
   if (!agreeTerms.value) {
@@ -1918,17 +1938,14 @@ function toggleEpisodeDropdown(event: Event) {
 }
 
 function createNewCollection() {
-  if (selectedCollection.value && !switchCollectionWarningShown.value) {
-    showSwitchCollectionModal.value = true;
-    showCollectionDropdown.value = false;
-  } else {
-    editingCollectionId.value = null;
-    showEditCollectionModal.value = true;
-    showCollectionDropdown.value = false;
-  }
+  editingCollectionId.value = null;
+  isCreateFromCollectionList.value = false;
+  showEditCollectionModal.value = true;
+  showCollectionDropdown.value = false;
 }
 
 function openCollectionListModal() {
+  collectionListSelectedId.value = selectedCollection.value?.id || null;
   showCollectionListModal.value = true;
 }
 
@@ -1936,28 +1953,24 @@ function handleCloseCollectionListModal() {
   showCollectionListModal.value = false;
 }
 
-async function handleSelectCollectionFromModal(collection: any) {
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
+function handleSelectCollectionCard(collection: any) {
+  if (!route.query.session_id && !selectedProject.value?.session_id && !postId.value) return;
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
     pendingCollectionId.value = collection.id;
     pendingCollectionData.value = collection;
     showSwitchCollectionModal.value = true;
-    return;
-  }
-
-  await doSelectCollection(collection.id, false, collection);
-  if (!showSensitiveConfirm.value) {
-    showCollectionListModal.value = false;
   }
 }
 
+async function handleSelectCollectionFromModal(collection: any) {
+  showCollectionListModal.value = false;
+  await doSelectCollection(collection.id, true, collection);
+}
+
 function handleCreateCollectionFromModal() {
-  if (selectedCollection.value && !switchCollectionWarningShown.value) {
-    showSwitchCollectionModal.value = true;
-  } else {
-    showCollectionListModal.value = false;
-    editingCollectionId.value = null;
-    showEditCollectionModal.value = true;
-  }
+  editingCollectionId.value = null;
+  isCreateFromCollectionList.value = true;
+  showEditCollectionModal.value = true;
 }
 
 function handleEditCollection() {
@@ -1981,6 +1994,7 @@ function handleEditCollection() {
     editingCollectionId.value = null;
   }
 
+  isCreateFromCollectionList.value = false;
   showEditCollectionModal.value = true;
 }
 
@@ -2001,12 +2015,14 @@ function handleEditCollectionFromDropdown() {
       };
     }
 
+    isCreateFromCollectionList.value = false;
     showEditCollectionModal.value = true;
   }
 }
 
 async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
   showEditCollectionModal.value = false;
+  projectInfoForNewCollection.value = null;
 
   if (editingCollectionId.value === null) {
     selectedCollection.value = {
@@ -2038,6 +2054,7 @@ async function handleSaveCollection(collection: { id: string | number; name: str
   } else {
     if (selectedCollection.value && selectedCollection.value.id === collection.id) {
       selectedCollection.value.name = collection.name;
+      selectedCollection.value.description = collection.description;
       if (collection.cover) {
         selectedCollection.value.cover = collection.cover;
         coverPreview.value = collection.cover;
@@ -2053,6 +2070,7 @@ async function handleSaveCollection(collection: { id: string | number; name: str
     const index = collections.value.findIndex(c => c.id === collection.id);
     if (index !== -1) {
       collections.value[index].title = collection.name;
+      collections.value[index].description = collection.description;
       if (collection.cover) {
         collections.value[index].cover = collection.cover;
       }
@@ -2063,11 +2081,16 @@ async function handleSaveCollection(collection: { id: string | number; name: str
 
 function handleCloseEditCollectionModal() {
   showEditCollectionModal.value = false;
+  projectInfoForNewCollection.value = null;
 }
 
 async function selectCollection(id: number) {
+  if (!route.query.session_id && !selectedProject.value?.session_id && !postId.value) {
+    await doSelectCollection(id);
+    return;
+  }
   // Check if we need to show warning before switching collection
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
     // Store the target collection ID for confirmation
     pendingCollectionId.value = id;
     showSwitchCollectionModal.value = true;
@@ -2145,28 +2168,24 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
 
 function handleCloseSwitchCollectionModal() {
   showSwitchCollectionModal.value = false;
+  collectionListSelectedId.value = selectedCollection.value?.id || null;
   pendingCollectionId.value = null;
   pendingCollectionData.value = null;
 }
 
 async function handleConfirmSwitchCollection() {
   switchCollectionWarningShown.value = true;
-
   showSwitchCollectionModal.value = false;
-
-  await new Promise(resolve => setTimeout(resolve, 100));
+  showCollectionListModal.value = false;
 
   if (pendingCollectionId.value !== null) {
-    await doSelectCollection(pendingCollectionId.value, false, pendingCollectionData.value);
-    if (!showSensitiveConfirm.value) {
-      showCollectionListModal.value = false;
-    }
+    await doSelectCollection(pendingCollectionId.value, true, pendingCollectionData.value);
     pendingCollectionId.value = null;
     pendingCollectionData.value = null;
   } else {
     editingCollectionId.value = null;
+    isCreateFromCollectionList.value = true;
     showEditCollectionModal.value = true;
-    showCollectionListModal.value = false;
   }
 }
 
@@ -2471,6 +2490,7 @@ function closeViewModal() {
 }
 
 async function handlePublish(publishData?: any) {
+  if (!publishData) trackClickPublishButton(2);
   // Check if publishData is provided (from modal) or if we're handling a direct click
   if (publishData && typeof publishData == 'object' && publishData.project) {
     // From modal: use the provided data
@@ -2594,6 +2614,7 @@ async function handlePublish(publishData?: any) {
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
+            projectInfoForNewCollection.value = { title: projectName, cover: collectionCover };
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: projectName,
@@ -2860,6 +2881,7 @@ onMounted(async () => {
                   }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
+                    projectInfoForNewCollection.value = { title, cover: collectionCover };
                     selectedCollection.value = {
                       id: createRes.data.book_id,
                       name: title,

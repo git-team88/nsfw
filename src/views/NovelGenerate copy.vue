@@ -2406,12 +2406,11 @@ const saveEditChapter = async () => {
           currentChapter.value.content = editingChapterContent.value;
           displayedContent.value = editingChapterContent.value;
         } else {
-          console.error('Error modifying chapter content:', modifyRes.message);
-          toast(t('novel.error.fetchFailed'));
+          toast(modifyRes.message || t('fail'));
         }
       } catch (error) {
         console.error('Error modifying chapter content:', error);
-        toast(t('novel.error.fetchFailed'));
+        toast(t('fail'));
       }
     }
   }
@@ -2480,12 +2479,10 @@ const saveChapterTitle = async (chapterId: number) => {
         currentChapter.value.title = editingChapterTitle.value;
       }
     } else {
-      console.error('Error modifying chapter title:', modifyRes.message);
-      toast(t('novel.error.fetchFailed'));
+      toast(modifyRes.message || t('fail'));
     }
   } catch (error) {
-    console.error('Error modifying chapter title:', error);
-    toast(t('novel.error.fetchFailed'));
+    toast(t('fail'));
   } finally {
     // Reset editing state regardless of API result
     editingChapterId.value = null;
@@ -3083,8 +3080,7 @@ const goToChapter = async (chapterNum: number) => {
       // Fetch chapter stream
       await fetchChapterStream(chapterNum);
     } catch (error) {
-      console.error('Error fetching chapter stream:', error);
-      toast(t('novel.error.fetchFailed'));
+      toast(t('fail'));
       isLoading.value = false;
       hasFailed.value = true;
       taskStatus.value = 'FAIL';
@@ -3280,7 +3276,7 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
       showInsufficientBalanceModal.value = true;
       return;
     }
-    toast(novelAllChaptersRes.message || t('novel.error.fetchFailed'));
+    toast(novelAllChaptersRes.message || t('fail'));
     return;
   }
 

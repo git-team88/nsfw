@@ -409,7 +409,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       estimateFailed: "Failed to estimate computing power, please try again later",
       emptyChapterContent: "Please enter chapter content",
       emptyChapterTitle: "Please enter chapter title",
-      cannotOperateOtherUserProject: "You cannot operate other users' projects"
+      cannotOperateOtherUserProject: "You cannot operate other users' projects",
+      staleOperation: "Project progress has been updated, refreshing the page for you, please try again later"
     },
     guide: {
       next: "Next",
@@ -1650,7 +1651,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       startFrameRequired: "Please upload the start frame image",
       videoExtendDurationLimit: "Uploaded video should be between 2-5s",
       videoExtendDurationExceed: "Generation duration should be greater than the video length to be extended",
-      unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported"
+      unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported",
+      maxInputLimit: "Maximum input limit of {max} characters reached"
     },
     generate: {
       started: "Video generation started",
@@ -1816,6 +1818,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       formatError: "Unsupported video format. Only MP4, MOV are supported",
       multiSelectError: "Please select only one video file",
       corruptedError: "The video file is corrupted or unplayable, please try another",
+      durationLimit: "Video duration cannot exceed 1 hour, please try another",
       published: "公開済み",
       projectView: {
         detail: "Details",
@@ -2219,7 +2222,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     collection: {
       all: "All",
       items: "items",
-      editName: "Edit Collection Name",
+      editName: "Edit Collection",
       delete: "Delete Collection",
       nameUpdated: "Collection name updated",
       create: "Create Collection",
@@ -2631,7 +2634,6 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusDraft: "Draft",
     statusSubscribed: "Subscribed",
     statusPrivate: "Private",
-    privateChapterHint: "Excluding {count} {unit} visible only to you"
   },
   collectionSettings: {
     back: "Back",
@@ -2652,6 +2654,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusFinished: "Completed",
     publishedEpisodes: "Published Episodes",
     unitEpisode: "ep",
+    privateChapterHint: "({count} ch only visible to you)",
     unitChapter: "ch",
     sampleTitle: "Cultivation Journey Cultivation Journey Cultivation Journey",
     sampleDescription: "New release! Welcome to read my works on Moegen. I hope you enjoy them. Your follows are my motivation for writing, and I will strive to write every story well!",

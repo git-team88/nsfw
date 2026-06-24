@@ -263,13 +263,7 @@ export default {
 
   searchPost: (data: any) =>
     axios.request({
-      url: "post/searchBookPublic",
-      data: data,
-      method: "POST",
-    }),
-  getSimilar: (data: any) =>
-    axios.request({
-      url: "post/searchBookPublic",
+      url: "post/searchBookKeywordsPublic",
       data: data,
       method: "POST",
     }),
@@ -701,6 +695,19 @@ export default {
       data: data,
       method: "POST",
     }),
+  searchFullCollection: (data: any) =>
+    axios.request({
+      url: "book/searchBookFullname",
+      data: data,
+      method: "POST",
+    }),
+  searchSessionld: (data: any) =>
+    axios.request({
+      url: "book/searchBookBySessionld",
+      data: data,
+      method: "POST",
+    }),
+
   modifyCollection: (data: any) =>
     axios.request({
       url: "book/updateBookName",
@@ -713,9 +720,9 @@ export default {
       data: data,
       method: "POST",
     }),
-  getCollectionDetail: (bookId: string | number, showNsfw?: number ) =>
+  getCollectionDetail: (bookId: string | number) =>
     axios.request({
-      url: "book/getBookDetailPublic?book_id=" + bookId + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "book/getBookDetailPublic?book_id=" + bookId,
       method: "GET"
     }),
   getSelfCollectionDetail: (bookId: string | number ) =>
@@ -900,9 +907,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  singleCollection: (book_id: string | number, page: number, limit: number, showNsfw?: number) =>
+  singleCollection: (book_id: string | number, page: number, limit: number) =>
     axios.request({
-      url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}` + (showNsfw !== undefined ? `&show_nsfw=${showNsfw}` : ''),
+      url: `book/getBookChaptersListPublic?book_id=${book_id}&page=${page}&limit=${limit}`,
       method: "GET"
     }),
 

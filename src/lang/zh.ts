@@ -470,7 +470,8 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       estimateFailed: "算力预估失败，请稍后重试",
       emptyChapterContent: "请输入章节内容",
       emptyChapterTitle: "请输入章节标题",
-      cannotOperateOtherUserProject: "您不能操作其他用户的项目"
+      cannotOperateOtherUserProject: "您不能操作其他用户的项目",
+      staleOperation: "项目进度已更新，即将为您刷新页面，请稍后重试"
     },
     guide: {
       next: "下一步",
@@ -1754,7 +1755,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       startFrameRequired: "请上传首帧图片",
       videoExtendDurationLimit: "上传视频应在2-5s",
       videoExtendDurationExceed: "生成时长设置应大于待续写视频长度",
-      unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容"
+      unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容",
+      maxInputLimit: "已达最大输入限制{max}字"
     },
     generate: {
       started: "视频生成已开始",
@@ -1919,6 +1921,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       formatError: "不支持的视频格式，仅支持MP4、MOV",
       multiSelectError: "仅支持选择一个视频文件",
       corruptedError: "视频文件损坏或无法播放，请更换视频",
+      durationLimit: "视频时长不能超过1小时，请更换视频",
 
       projectView: {
         detail: "详情",
@@ -2217,7 +2220,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     collection: {
       all: "全部",
       items: "个作品",
-      editName: "编辑合集名称",
+      editName: "编辑合集",
       delete: "删除合集",
       nameUpdated: "合集名称已更新",
       create: "新建合集",
@@ -2735,7 +2738,6 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     statusDraft: "草稿",
     statusSubscribed: "订阅",
     statusPrivate: "仅自己可见",
-    privateChapterHint: "不包含{count}{unit}仅自己可见章节"
   },
   collectionSettings: {
     back: "返回",
@@ -2756,6 +2758,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     statusFinished: "已完结",
     publishedEpisodes: "已发布集数",
     unitEpisode: "集",
+    privateChapterHint: "（其中{count}章仅自己可见）",
     unitChapter: "章",
     sampleTitle: "练气一万年练气一万年练气一万年练气一万年练气一万年练气一万年练气一万年",
     sampleDescription: "新作出击界，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力写好每个故事！",

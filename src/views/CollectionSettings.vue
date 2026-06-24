@@ -28,9 +28,11 @@
         <!-- Basic Info Section -->
         <div class="section">
           <div class="cover-section">
-            <img :src="collection.cover || defaultCover" alt="" class="cover-image" />
-            <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
-              <span class="r18-text">R18</span>
+            <div class="cover-info">
+              <img :src="collection.cover || defaultCover" alt="" class="cover-image" />
+              <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
+                <span class="r18-text">R18</span>
+              </div>
             </div>
           </div>
 
@@ -58,7 +60,7 @@
             </div>
             <div class="info-card">
               <span class="info-label">{{ getPublishedLabel() }}：</span>
-              <span class="info-value">{{ collection.chapter_count }}{{ getPublishedUnit() }}</span>
+              <span class="info-value">{{ collection.chapter_count }}{{ getPublishedUnit() }}<b v-if="collection.chapter_count_private > 0" class="private-hint">{{ t('collectionSettings.privateChapterHint', { count: collection.chapter_count_private }) }}</b></span>
             </div>
             <div class="info-card">
               <span class="info-label">{{ t('collectionSettings.createdAt') }}：</span>
@@ -132,6 +134,7 @@ const collection = ref({
   publishedChapters: 0,
   createdAt: '',
   chapter_count: '',
+  chapter_count_private: 0,
   user_id: '',
   is_nsfw: '0'
 });
@@ -167,6 +170,7 @@ onMounted(async () => {
           publishedChapters: data.chatpers?.length || 0,
           createdAt: bookInfo.created_at || '',
           chapter_count: bookInfo.chapter_count || '',
+          chapter_count_private: bookInfo.chapter_count_private || 0,
           user_id: bookInfo.user_id || '',
           is_nsfw: bookInfo.is_nsfw || '0',
         };
@@ -415,8 +419,13 @@ async function confirmDelete() {
 }
 
 .cover-section {
-  position: relative;
   margin-bottom: 2rem;
+
+  .cover-info{
+    position: relative;
+    width: 18rem;
+    height: 24rem;
+  }
   .cover-image {
     width: 18rem;
     height: 24rem;
@@ -522,6 +531,11 @@ async function confirmDelete() {
     font-size: 1.6rem;
     font-weight: 500;
     color: #364153;
+
+    .private-hint {
+      font-weight: normal;
+      color: #99A1AF;
+    }
   }
 }
 </style>

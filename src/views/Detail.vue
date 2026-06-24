@@ -918,6 +918,8 @@ const headerMoreRef = ref<HTMLElement | null>(null);
 const showSensitiveContentNoBirthdayModal = ref(false);
 const showSensitiveContentUnderageModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
+const pendingChapter = ref<any>(null);
+const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') === '1');
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
 
@@ -1050,6 +1052,7 @@ interface DetailData {
   liked: boolean;
   is_teenager: number;
   is_nsfw: string;
+  book_is_nsfw: number;
   book_id: string;
   book_title: string;
   chapter_index: string | number;
@@ -1082,7 +1085,8 @@ const detail = ref<DetailData>({
   likes: 0,
   liked: false,
   is_teenager: 1,
-  is_nsfw: '1',
+  is_nsfw: '0',
+  book_is_nsfw: 0,
   book_id: '',
   book_title: '',
   chapter_index: '',
@@ -1144,7 +1148,7 @@ function getCountry(){
 // userRegion.value = true means NOT in China, false means IN China
 // Pass show_nsfw only when NOT in China (userRegion.value = true)
 const showNsfw = computed(() => {
-  return userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+  return userRegion.value ? (isAllowSensitiveContent.value ? 1 : 0) : undefined;
 });
 
 // Enter collection mode
@@ -1284,16 +1288,14 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50, showNsfw.value) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
     if (response.code == 0) {
       const newCollections = response.data?.data || [];
-      // Add type field to each collection item for proper display
       collections.value = newCollections.map((chapter: any) => ({
         ...chapter,
         type: String(detail.value.type)
       }));
       chapterCount.value = response.data?.allnums || 0;
-      // 加载章节列表后设置导航
       setChapterNavigation();
     }
   } catch (error) {
@@ -1303,6 +1305,42 @@ async function loadChapters() {
 
 // Navigate to chapter
 async function navigateToChapter(chapter: any) {
+  if (!chapter || !chapter.post_id) return;
+
+  if (isSensitiveContent.value) {
+    if (detail.value.author.id && detail.value.author.id === uid) {
+      // author bypass
+    } else {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          const parsedUserInfo = JSON.parse(userInfoStr);
+          const birthday = parsedUserInfo.info?.birthday;
+          if (!birthday) {
+            pendingChapter.value = chapter;
+            showSensitiveContentNoBirthdayModal.value = true;
+            return;
+          }
+          if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
+            pendingChapter.value = chapter;
+            showSensitiveContentUnderageModal.value = true;
+            return;
+          }
+        }
+        if (!isAllowSensitiveContent.value) {
+          pendingChapter.value = chapter;
+          showSensitiveContentConfirmModal.value = true;
+          return;
+        }
+      }
+    }
+  }
+
+  await doNavigateToChapter(chapter);
+}
+
+async function doNavigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
   router.replace({
     path: '/detail',
@@ -1784,6 +1822,21 @@ async function fetchDetail(newId: number) {
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post || res.data;
 
+      let bookIsNsfw = 0;
+      if (data.book_id && Number(data.book_id) > 0) {
+        try {
+          const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
+          if (bookRes.code === 0) {
+            const bookData = bookRes.data?.book_info || bookRes.data;
+            if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
+              bookIsNsfw = 1;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
       detail.value = {
         id: data.id || newId,
         author: res.data.author,
@@ -1806,7 +1859,8 @@ async function fetchDetail(newId: number) {
         likes: Number(data.like_count || data.likes || 0),
         liked: data.is_liked == 1 || data.is_liked === true,
         is_teenager: data.is_teenager,
-        is_nsfw: data.is_nsfw || '1',
+        is_nsfw: data.is_nsfw || '0',
+        book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
         book_title: data.book_title || '',
         chapter_index: data.chapter_index || '',
@@ -1888,21 +1942,16 @@ async function fetchDetail(newId: number) {
         likes: 0,
         liked: false,
         is_teenager: 1,
-        is_nsfw: '1',
+        is_nsfw: '0',
+        book_is_nsfw: 0,
         book_id: "",
         book_title: "",
         chapter_index: "",
         latest_read_chapter_index: ""
       };
-      likes.value = 0;
-      liked.value = false;
-      comments.value = [];
-      totalComments.value = '';
+      return;
     }
-
   } catch (error) {
-    toast(t('fail'));
-
     detail.value = {
       id: newId,
       author: {
@@ -1929,7 +1978,8 @@ async function fetchDetail(newId: number) {
       likes: 0,
       liked: false,
       is_teenager: 1,
-      is_nsfw: '1',
+      is_nsfw: '0',
+      book_is_nsfw: 0,
       book_id: "",
       book_title: "",
       chapter_index: "",
@@ -2134,7 +2184,7 @@ async function loadCollections(append: boolean = false) {
 
     // 有book_id且值大于0，使用真实API调用
     if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-      const response = await api.singleCollection(String(detail.value.book_id), page, pageSize, showNsfw.value) as any;
+      const response = await api.singleCollection(String(detail.value.book_id), page, pageSize) as any;
       if (response.code === 0) {
         const newCollections = response.data?.data || [];
 
@@ -2656,7 +2706,14 @@ const isPaidContentLocked = computed(() => {
   return true;
 });
 
+const isSensitiveContent = computed(() => {
+  return (detail.value.book_id && Number(detail.value.book_id) > 0)
+    ? detail.value.book_is_nsfw == 1
+    : detail.value.is_nsfw == '1';
+});
+
 const isSensitiveContentLocked = computed(() => {
+  if (isLoading.value) return false;
   if (isPaidContentLocked.value) return false;
 
   // If it's the author's own work, don't lock
@@ -2664,19 +2721,10 @@ const isSensitiveContentLocked = computed(() => {
 
   // Check if user is teenager or content is sensitive
   const isTeenager = detail.value.is_teenager == 1;
-  const isSensitive = detail.value.is_nsfw == '1';
 
-  if (isTeenager && !isSensitive) {
-    return false;
-  } else if (isTeenager && isSensitive) {
-    return true;
-  } else if (!isTeenager && !isSensitive) {
-    return false;
-  } else if (!isTeenager && isSensitive) {
-    return false;
-  } else {
-    return true;
-  }
+  if (!isSensitiveContent.value) return false;
+  if (isTeenager) return true;
+  return !isAllowSensitiveContent.value;
 });
 
 const isVideoLocked = computed(() => {
@@ -2898,39 +2946,49 @@ function goToHomePage() {
   router.push('/');
 }
 
-function navigateToProfileSettings() {
+async function navigateToProfileSettings() {
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/login');
     return;
   }
 
-  const userInfoStr = localStorage.getItem('userInfo');
-  if (!userInfoStr) {
-    showSensitiveContentNoBirthdayModal.value = true;
-    return;
+  try {
+    const res = await api.userInfo() as any;
+    if (res.code == 0 || res.code == 200) {
+      const data = res.data;
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      const birthday = data.info?.birthday;
+
+      if (!birthday) {
+        showSensitiveContentNoBirthdayModal.value = true;
+        return;
+      }
+
+      if (data.is_teenager === 1 || data.is_teenager === '1') {
+        showSensitiveContentUnderageModal.value = true;
+        return;
+      }
+
+      showSensitiveContentConfirmModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error fetching user info:', error);
   }
-
-  const parsedUserInfo = JSON.parse(userInfoStr);
-  const birthday = parsedUserInfo.info?.birthday;
-
-  if (!birthday) {
-    showSensitiveContentNoBirthdayModal.value = true;
-    return;
-  }
-
-  if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
-    showSensitiveContentUnderageModal.value = true;
-    return;
-  }
-
-  showSensitiveContentConfirmModal.value = true;
 }
 
 function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
-  fetchDetail(id.value);
+  isAllowSensitiveContent.value = true;
+  if (pendingChapter.value) {
+    const chapter = pendingChapter.value;
+    pendingChapter.value = null;
+    doNavigateToChapter(chapter);
+    fetchDetail(id.value);
+  } else {
+    fetchDetail(id.value);
+  }
 }
 
 function handleGoToFillBirthday() {

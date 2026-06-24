@@ -132,7 +132,7 @@ const props = defineProps<{
   coverUrl?: string;
   description?: string;
   type?: number;
-  isNsfw?: number;
+  isNsfw?: string | number;
 }>();
 
 const emit = defineEmits<{
@@ -143,7 +143,7 @@ const emit = defineEmits<{
 const collectionName = ref(props.collectionName || '');
 const coverUrl = ref(props.coverUrl || '');
 const description = ref(props.description || t('collection.defaultDescription'));
-const isNsfw = ref(props.isNsfw === 1 ? 1 : 0);
+const isNsfw = ref(props.isNsfw == 1 ? 1 : 0);
 const isNsfwSelected = ref(true);
 const errorMessage = ref('');
 const isLoading = ref(false);
@@ -153,16 +153,16 @@ const showSensitiveConfirm = ref(false);
 const initialCollectionName = ref(props.collectionName || '');
 const initialCoverUrl = ref(props.coverUrl || '');
 const initialDescription = ref(props.description || t('collection.defaultDescription'));
-const initialIsNsfw = ref(props.isNsfw === 1 ? 1 : 0);
+const initialIsNsfw = ref(props.isNsfw == 1 ? 1 : 0);
 
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     errorMessage.value = '';
     if (!props.isEdit) {
-      collectionName.value = '';
-      coverUrl.value = '';
-      description.value = t('collection.defaultDescription');
-      isNsfw.value = 0;
+      collectionName.value = props.collectionName || '';
+      coverUrl.value = props.coverUrl || '';
+      description.value = props.description || t('collection.defaultDescription');
+      isNsfw.value = props.isNsfw == 1 ? 1 : 0;
       isNsfwSelected.value = true;
       initialCollectionName.value = collectionName.value;
       initialCoverUrl.value = coverUrl.value;
@@ -362,7 +362,7 @@ function handleCancel() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1200;
 }
 
 .modal-content {
