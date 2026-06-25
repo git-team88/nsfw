@@ -1763,6 +1763,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       completed: "视频生成已完成"
     },
     loading: "加载中...",
+    noMore: "没有更多内容了",
     loadMore: "加载更多",
     contentType: {
       all: "全部",
@@ -2524,7 +2525,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     emptyCover: "请上传封面图片",
     selectSensitive: "请选择是否含敏感内容",
     switchCollection: "切换合集",
-    selectCollection: "切换合集"
+    selectCollection: "切换合集",
+    selectCollectionTip: "请选择合集"
   },
   fail: "失败",
   chapter: "第{chapter}章",

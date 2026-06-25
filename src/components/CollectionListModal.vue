@@ -42,13 +42,13 @@
           {{ t('emptyState.noMoreData') }}
         </div>
         <div v-if="!isLoading && collections.length === 0" class="empty-state">
-          {{ t('emptyState.noProjects') }}
+          {{ t('common.noData') }}
         </div>
       </div>
 
       <div class="modal-footer">
         <button class="btn btn-cancel" @click="handleClose">{{ t('collection.cancel') }}</button>
-        <button class="btn btn-confirm" :disabled="!localSelectedId" @click="handleConfirm">{{ t('collection.switchConfirm.confirm') }}</button>
+        <button class="btn btn-confirm" @click="handleConfirm">{{ t('collection.switchConfirm.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -59,6 +59,7 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { processImageUrl } from '@/util/utils';
+import { toast } from '@/util/toast';
 
 const { t } = useI18n();
 
@@ -126,12 +127,14 @@ function handleScroll(event: Event) {
 }
 
 function handleSelectCollection(collection: any) {
-  localSelectedId.value = collection.id;
-  emit('update:modelValue', collection.id);
   emit('select', collection);
 }
 
 function handleConfirm() {
+  if (!localSelectedId.value) {
+    toast(t('collection.selectCollectionTip'));
+    return;
+  }
   const selected = collections.value.find(c => c.id == localSelectedId.value);
   if (selected) {
     emit('confirm', selected);
@@ -155,6 +158,10 @@ watch(() => props.visible, (newVal) => {
     initialSelectedId.value = props.modelValue || null;
     fetchCollections(false);
   }
+});
+
+watch(() => props.modelValue, (newVal) => {
+  localSelectedId.value = newVal || null;
 });
 </script>
 
@@ -387,7 +394,7 @@ watch(() => props.visible, (newVal) => {
       background: #FB64B6;
       color: #fff;
 
-      &:hover:not(:disabled) {
+      &:hover {
         position: relative;
 
         &::before {
@@ -399,11 +406,6 @@ watch(() => props.visible, (newVal) => {
           height: 100%;
           background: rgba(255, 255, 255, 0.1);
         }
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
       }
     }
   }

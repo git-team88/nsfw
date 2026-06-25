@@ -701,9 +701,9 @@ export default {
       data: data,
       method: "POST",
     }),
-  searchSessionld: (data: any) =>
+  searchSessionId: (data: any) =>
     axios.request({
-      url: "book/searchBookBySessionld",
+      url: "book/searchBookBySessionId",
       data: data,
       method: "POST",
     }),

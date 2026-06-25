@@ -8,7 +8,7 @@
   position: relative;
   width: 108rem;
   margin: 0 auto;
-  padding: 14rem 0 2rem;
+  padding: 14rem 0 3.5rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -2217,6 +2217,13 @@
   margin-bottom: 3rem;
   display: flex;
   justify-content: center;
+}
+
+.no-more-text {
+  text-align: center;
+  padding: 2rem 0;
+  color: #999;
+  font-size: 1.4rem;
 }
 
 @keyframes spin {

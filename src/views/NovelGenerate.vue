@@ -4588,69 +4588,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
               pollingInterval.value = null;
             }
 
-            // Check if chapters has the failed chapter and if there's a newer completed chapter
-            const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
-            const latestChapterNum = chapters.value.length > 0
-              ? Math.max(...chapters.value.map((c: any) => c.chapter))
-              : chapterIndex;
-
-            if (failedChapterInList && latestChapterNum > chapterIndex) {
-              // The failed chapter exists but there are newer completed chapters - show the latest one
-              stepChapterIndex.value = latestChapterNum;
-              try {
-                const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
-                if (chapterRes.code == 200 && chapterRes.data?.content) {
-                  let content = chapterRes.data.content || '';
-                  content = content.replace(/\\n/g, '\n');
-                  const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
-                  currentChapter.value = {
-                    chapter: latestChapterNum,
-                    title: chapterData?.title || chapterRes.data.title || '',
-                    content
-                  };
-                  displayedContent.value = content;
-                  taskStatus.value = 'SUCCESS';
-                  hasFailed.value = false;
-                  generatingChapter.value = null;
-                  isLoading.value = false;
-                  isLoadingComplete.value = true;
-                  isChapterTyping.value = false;
-                  isWaitingForData.value = false;
-                  isRetryingChapter.value = false;
-                  stopCoverPolling();
-                  stopLoadingAnimation();
-                  return;
-                }
-              } catch (e) {
-                console.error('Error fetching latest chapter on polling FAIL:', e);
-              }
-            }
-
-            if (stepChapterIndex.value && currentChapter.value && currentChapter.value.chapter == stepChapterIndex.value) {
-              try {
-                const chapterRes = await api.detailChapter(sessionId.value, stepChapterIndex.value) as any;
-                if (chapterRes.code == 200 && chapterRes.data?.content) {
-                  let content = chapterRes.data.content || '';
-                  content = content.replace(/\\n/g, '\n');
-                  currentChapter.value.content = content;
-                  displayedContent.value = content;
-                  taskStatus.value = 'SUCCESS';
-                  hasFailed.value = false;
-                  generatingChapter.value = null;
-                  isLoading.value = false;
-                  isLoadingComplete.value = true;
-                  isChapterTyping.value = false;
-                  isWaitingForData.value = false;
-                  isRetryingChapter.value = false;
-                  stopCoverPolling();
-                  stopLoadingAnimation();
-                  return;
-                }
-              } catch (e) {
-                console.error('Error checking chapter content on polling FAIL:', e);
-              }
-            }
-
             // Update state for failure
             hasFailed.value = true;
             statusMessage.value = taskData.status_message || '';
@@ -5930,41 +5867,7 @@ const startDetailPolling = () => {
 
         lastGenerationType.value = 'chapter';
 
-        // Check if chapters has the failed chapter and if there's a newer completed chapter
-        const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
-        const latestChapterNum = chapters.value.length > 0
-          ? Math.max(...chapters.value.map((c: any) => c.chapter))
-          : (chapterIndex || 0);
-
-        if (failedChapterInList && latestChapterNum > chapterIndex && latestChapterNum > 0) {
-          // The failed chapter exists but there are newer completed chapters - show the latest one
-          stepChapterIndex.value = latestChapterNum;
-          try {
-            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
-            if (chapterRes.code == 200 && chapterRes.data?.content) {
-              let content = chapterRes.data.content || '';
-              content = content.replace(/\\n/g, '\n');
-              const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
-              currentChapter.value = {
-                chapter: latestChapterNum,
-                title: chapterData?.title || chapterRes.data.title || '',
-                content
-              };
-              displayedContent.value = content;
-              taskStatus.value = 'SUCCESS';
-              hasFailed.value = false;
-              isLoading.value = false;
-              isLoadingComplete.value = true;
-              await fetchUserBalance();
-              stopLoadingAnimation();
-              return;
-            }
-          } catch (e) {
-            console.error('Error fetching latest chapter on FAIL:', e);
-          }
-        }
-
-        // No newer completed chapter - show the failed chapter
+        // Show the failed chapter
         hasFailed.value = true;
         taskStatus.value = 'FAIL';
         isLoading.value = false;

@@ -13,7 +13,7 @@
     <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
     <!-- Underage content warning -->
-    <div class="main-container" v-if="!isLoading && isSensitiveContent && (isUnderage || !isAllowSensitiveContent)">
+    <div class="main-container" v-if="!isLoading && isSensitiveContent && (isUnderage || !isAllowSensitiveContent) && detail.author.id !== uid">
       <div class="novel-content">
         <div class="chapter-header">
           <div class="header-left">

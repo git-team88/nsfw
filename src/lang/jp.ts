@@ -1565,6 +1565,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       completed: "動画の生成が完了しました"
     },
     loading: "読み込み中...",
+    noMore: "コンテンツはもうありません",
     loadMore: "もっと見る",
     contentType: {
       all: "すべて",
@@ -2236,7 +2237,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     emptyCover: "表紙画像をアップロードしてください",
     selectSensitive: "センシティブな内容の選択してください",
     switchCollection: "コレクション切替",
-    selectCollection: "コレクション切り替え"
+    selectCollection: "コレクション切り替え",
+    selectCollectionTip: "コレクションを選択してください"
   },
   fail: "失敗しました",
   chapter: "第{chapter}章",

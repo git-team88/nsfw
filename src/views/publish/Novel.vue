@@ -458,8 +458,8 @@
     :visible="showEditCollectionModal"
     :is-edit="editingCollectionId !== null"
     :collection-id="editingCollectionId || ''"
-    :collection-name="isCreateFromCollectionList && projectInfoForNewCollection ? projectInfoForNewCollection.title : ''"
-    :cover-url="isCreateFromCollectionList && projectInfoForNewCollection ? projectInfoForNewCollection.cover : ''"
+    :collection-name="isCreateFromCollectionList ? projectNameForNewCollection : ''"
+    :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
     :is-nsfw="0"
     :type="2"
     @close="handleCloseEditCollectionModal"
@@ -717,8 +717,9 @@ const showCollectionListModal = ref(false);
 const collectionListSelectedId = ref<string | number | null>(null);
 const editingCollectionId = ref<string | number | null>(null);
 const isCreateFromCollectionList = ref(false);
-const projectInfoForNewCollection = ref<{ title: string; cover: string } | null>(null);
 const isNoCollection = ref(true);
+const projectNameForNewCollection = ref('');
+const projectCoverForNewCollection = ref('');
 const collections = ref<any[]>([]);
 const episodes = ref([
   { value: '1', label: '1' },
@@ -1955,11 +1956,12 @@ function handleCloseCollectionListModal() {
 }
 
 function handleSelectCollectionCard(collection: any) {
-  if (!route.query.session_id && !selectedProject.value?.session_id && !postId.value) return;
   if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
     pendingCollectionId.value = collection.id;
     pendingCollectionData.value = collection;
     showSwitchCollectionModal.value = true;
+  } else {
+    collectionListSelectedId.value = collection.id;
   }
 }
 
@@ -1969,6 +1971,12 @@ async function handleSelectCollectionFromModal(collection: any) {
 }
 
 function handleCreateCollectionFromModal() {
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value) {
+    pendingCollectionId.value = null;
+    pendingCollectionData.value = null;
+    showSwitchCollectionModal.value = true;
+    return;
+  }
   editingCollectionId.value = null;
   isCreateFromCollectionList.value = true;
   showEditCollectionModal.value = true;
@@ -2023,7 +2031,6 @@ function handleEditCollectionFromDropdown() {
 
 async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
   showEditCollectionModal.value = false;
-  projectInfoForNewCollection.value = null;
 
   if (editingCollectionId.value === null) {
     selectedCollection.value = {
@@ -2086,7 +2093,6 @@ async function handleSaveCollection(collection: { id: string | number; name: str
 
 function handleCloseEditCollectionModal() {
   showEditCollectionModal.value = false;
-  projectInfoForNewCollection.value = null;
 }
 
 async function selectCollection(id: number) {
@@ -2181,13 +2187,13 @@ function handleCloseSwitchCollectionModal() {
 async function handleConfirmSwitchCollection() {
   switchCollectionWarningShown.value = true;
   showSwitchCollectionModal.value = false;
-  showCollectionListModal.value = false;
 
   if (pendingCollectionId.value !== null) {
-    await doSelectCollection(pendingCollectionId.value, true, pendingCollectionData.value);
+    collectionListSelectedId.value = pendingCollectionId.value;
     pendingCollectionId.value = null;
     pendingCollectionData.value = null;
   } else {
+    showCollectionListModal.value = false;
     editingCollectionId.value = null;
     isCreateFromCollectionList.value = true;
     showEditCollectionModal.value = true;
@@ -2595,16 +2601,23 @@ async function handlePublish(publishData?: any) {
 
   // Handle collection logic based on the project name
   const projectName = publishData?.project?.name || selectedProject.value?.name;
+  const currentSessionId = publishData?.session_id || selectedProject.value?.session_id;
+  projectNameForNewCollection.value = projectName || '';
+  projectCoverForNewCollection.value = coverPreview.value || selectedProject.value?.result_async?.generate_novel_cover || '';
   if (projectName) {
     try {
-      // Search for collection by title
-      const searchRes = await api.searchCollection({ title: projectName, type: 2 }) as any;
+      let searchRes: any = null;
+      if (currentSessionId) {
+        searchRes = await api.searchSessionId({ session_id: currentSessionId, type: 2 }) as any;
+      }
+      if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+        searchRes = await api.searchFullCollection({ title: projectName, type: 2 }) as any;
+      }
 
       if (searchRes.code == 0) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
-          // Create new collection with cover and description
           const collectionCover = selectedProject.value?.result_async?.generate_novel_cover || '';
           const collectionDescription = t('collection.defaultDescription');
           const projectStoryMode = publishData?.project?.user_selected?.story_mode || publishData?.project?.story_mode || selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
@@ -2619,7 +2632,7 @@ async function handlePublish(publishData?: any) {
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
-            projectInfoForNewCollection.value = { title: projectName, cover: collectionCover };
+          
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: projectName,
@@ -2631,7 +2644,6 @@ async function handlePublish(publishData?: any) {
             isNoCollection.value = false;
           }
         } else {
-          // Get collection details to determine episode number
           const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
           if (collectionRes.code == 0 && collectionRes.data) {
@@ -2640,7 +2652,7 @@ async function handlePublish(publishData?: any) {
 
             selectedCollection.value = {
               id: book_id,
-              name: projectName,
+              name: searchRes.data?.book_info?.title || projectName,
               cover: searchRes.data?.book_info?.cover,
               description: searchRes.data?.book_info?.description,
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
@@ -2648,7 +2660,6 @@ async function handlePublish(publishData?: any) {
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
 
-            // Update episodes array
             episodes.value = [];
             for (let i = 1; i <= episodeNumber; i++) {
               episodes.value.push({
@@ -2863,15 +2874,21 @@ onMounted(async () => {
 
           // Handle collection logic if title is provided
           if (title) {
+            projectNameForNewCollection.value = title;
+            projectCoverForNewCollection.value = coverPreview.value || '';
             try {
-              // Search for collection by title
-              const searchRes = await api.searchCollection({ title, type: 2 }) as any;
+              let searchRes: any = null;
+              if (session_id) {
+                searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+              }
+              if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+                searchRes = await api.searchFullCollection({ title, type: 2 }) as any;
+              }
 
               if (searchRes.code == 0) {
                 const book_id = searchRes.data?.book_id || 0;
 
                 if (book_id == 0) {
-                  // Create new collection with cover and description
                   const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
                   const collectionDescription = t('collection.defaultDescription');
                   const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
@@ -2886,7 +2903,7 @@ onMounted(async () => {
                   }) as any;
 
                   if (createRes.code == 0 && createRes.data?.book_id) {
-                    projectInfoForNewCollection.value = { title, cover: collectionCover };
+
                     selectedCollection.value = {
                       id: createRes.data.book_id,
                       name: title,
@@ -2898,7 +2915,6 @@ onMounted(async () => {
                     isNoCollection.value = false;
                   }
                 } else {
-                  // Get collection details to determine episode number
                   const collectionRes = await api.singleCollectionIndex(book_id) as any;
 
                   if (collectionRes.code == 0 && collectionRes.data) {
@@ -2907,7 +2923,7 @@ onMounted(async () => {
 
                     selectedCollection.value = {
                       id: book_id,
-                      name: title,
+                      name: searchRes.data?.book_info?.title || title,
                       cover: searchRes.data?.book_info?.cover,
                       description: searchRes.data?.book_info?.description,
                       is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
@@ -2915,7 +2931,6 @@ onMounted(async () => {
                     selectedEpisodeNumber.value = episodeNumber.toString();
                     isNoCollection.value = false;
 
-                    // Update episodes array
                     episodes.value = [];
                     for (let i = 1; i <= episodeNumber; i++) {
                       episodes.value.push({

@@ -1659,6 +1659,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       completed: "Video generation completed"
     },
     loading: "Loading...",
+    noMore: "No more content",
     loadMore: "Load More",
     retry: "Retry",
     contentType: {
@@ -2420,7 +2421,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     emptyCover: "Please upload cover image",
     selectSensitive: "Please select sensitive content option",
     switchCollection: "Switch Collection",
-    selectCollection: "Switch Collection"
+    selectCollection: "Switch Collection",
+    selectCollectionTip: "Please select a collection"
   },
   fail: "Fail",
   chapter: "Chapter {chapter}",

@@ -1,13 +1,19 @@
 <template>
-  <div class="footer">
+  <footer class="footer">
+    <!-- Navigation Links -->
+    <div class="footer-nav">
+      <router-link to="/" class="nav-item">{{ t('footer.nav.home') }}</router-link>
+      <a href="#" class="nav-item" @click.prevent="navigateTo('/my-projects')">{{ t('footer.nav.myProjects') }}</a>
+      <a href="#" class="nav-item" @click.prevent="navigateTo('/character-library')">{{ t('footer.nav.characterLibrary') }}</a>
+      <a href="#" class="nav-item" @click.prevent="navigateTo('/user-home')">{{ t('footer.nav.myCommunity') }}</a>
+      <a href="#" class="nav-item" @click.prevent="navigateTo('/user-personal')">{{ t('footer.nav.profile') }}</a>
+    </div>
+
     <!-- Policy Links -->
     <div class="footer-policies">
       <span class="policy-item">{{ t('footer.policies.communityGuidelines') }}</span>
-      <b></b>
       <span class="policy-item">{{ t('footer.policies.termsOfService') }}</span>
-      <b></b>
       <span class="policy-item">{{ t('footer.policies.privacyPolicy') }}</span>
-      <b></b>
       <span class="policy-item">{{ t('footer.policies.paidServices') }}</span>
     </div>
 
@@ -15,7 +21,7 @@
     <div class="footer-copyright">
       {{ t('footer.copyright') }}
     </div>
-  </div>
+  </footer>
 </template>
 
 <script setup lang="ts">
@@ -50,36 +56,45 @@ const navigateTo = (path: string) => {
 
 <style scoped>
 .footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  height: 3.4rem;
-  padding: 0 4rem;
+  padding: 0 2.4rem 2.4rem;
+  margin-top: 3rem;
   border-top: 1px solid #F5F5F5;
-  background: rgba(255, 255, 255, 0.96);
-  z-index: 30;
+  background: rgba(255,255,255,0.8);
+}
+
+.footer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3.8rem;
+  width: 100%;
+  height: 7rem;
+  margin-bottom: 2.4rem;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.nav-item {
+  color: #6A7282;
+  text-decoration: none;
+  font-size: 1.4rem;
 }
 
 .footer-policies {
   display: flex;
   align-items: center;
-  gap: 3.6rem;
-
-  b{
-    width: 0.3rem;
-    height: 0.3rem;
-    border-radius: 100%;
-    background: #99A1AF;
-  }
+  justify-content: center;
+  gap: 7.5rem;
+  width: 100%;
+  margin-bottom: 2.4rem;
+  align-items: center;
 }
 
 .policy-item {
   color: #99A1AF;
+  text-decoration: none;
   font-size: 1.2rem;
 }
 

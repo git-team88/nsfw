@@ -230,7 +230,7 @@ interface Post {
   }
   like_count: number;
   isLiked: boolean;
-  is_nsfw?: number | string;
+  is_nsfw: number | string;
 }
 
 // State
@@ -428,6 +428,7 @@ async function loadData(fromLoadMore = false) {
           },
           like_count: parseInt(item.book_like_count || "0"),
           isLiked: item.is_liked == 1 || false,
+          is_nsfw: item.is_nsfw,
         };
         });
 

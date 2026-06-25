@@ -1066,16 +1066,11 @@
               <div class="loading-text">{{ t('home.loading') }}</div>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="!loading && allContent.length > 0 && Math.ceil(totalPosts / pageSize) > 1" class="pagination-wrapper">
-              <PaginationComp
-                v-model="currentPage"
-                :total="totalPosts"
-                :page-size="pageSize"
-                theme="pink"
-                @update:modelValue="handlePageChange"
-              />
+            <div v-if="loadingMoreContent" class="loading-state">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">{{ t('home.loading') }}</div>
             </div>
+            <div v-if="!hasMoreContent && allContent.length > 0" class="no-more-text">{{ t('home.noMore') }}</div>
           </template>
 
           <!-- User List View - only show for following/subscriptions tabs when viewMode is user -->
@@ -1117,16 +1112,11 @@
               <div class="loading-text">{{ t('home.loading') }}</div>
             </div>
 
-            <!-- Pagination for User List -->
-            <div v-if="!loading && followUserList.length > 0 && Math.ceil(followUserTotal / pageSize) > 1" class="pagination-wrapper">
-              <PaginationComp
-                v-model="followUserPage"
-                :total="followUserTotal"
-                :page-size="pageSize"
-                theme="pink"
-                @update:modelValue="handleUserPageChange"
-              />
+            <div v-if="loadingMoreUsers" class="loading-state">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">{{ t('home.loading') }}</div>
             </div>
+            <div v-if="!hasMoreUsers && followUserList.length > 0" class="no-more-text">{{ t('home.noMore') }}</div>
           </template>
         </div>
       </div>
@@ -1251,7 +1241,6 @@ import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
 import InviteCodeModal from '@/components/InviteCodeModal.vue';
 import GuideModal from '@/components/GuideModal.vue';
-import PaginationComp from '@/components/Pagination.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
@@ -2099,6 +2088,10 @@ const checkItemLimit = () => {
 // Content Pagination
 const currentPage = ref(1);
 const limit = ref(48);
+const hasMoreContent = ref(true);
+const hasMoreUsers = ref(true);
+const loadingMoreContent = ref(false);
+const loadingMoreUsers = ref(false);
 
 // Mock Data
 const characters = ref([]);
@@ -3398,6 +3391,8 @@ const switchContentTab = (tabId: string, index: number) => {
   tabCur.value = index;
   currentPage.value = 1;
   followUserPage.value = 1;
+  hasMoreContent.value = true;
+  hasMoreUsers.value = true;
   activeContentType.value = 0; // Reset to 'all' tab in content-type-filter
   allContent.value = []; // Clear old data to show loading state
   followUserList.value = []; // Clear user list
@@ -4973,8 +4968,12 @@ const loadContent = async (page = 1) => {
   const currentContentType = activeContentType.value;
   const currentSortOrder = sortOrder.value;
 
-  loading.value = true;
-  allContent.value = [];
+  if (page === 1) {
+    loading.value = true;
+    allContent.value = [];
+  } else {
+    loadingMoreContent.value = true;
+  }
 
   // Ensure we have region info (cached after first fetch)
   await getCountry();
@@ -5022,15 +5021,19 @@ const loadContent = async (page = 1) => {
       });
 
       // Filter out blocked users
-      // 帖子列表的 is_blacked 直接在 item 上，订阅列表的 is_blacked 在 blogger_info 下
       data = data.filter((item: any) => item.is_blacked != 1 && item.blogger_info?.is_blacked != 1);
 
-      // Always replace content for pagination (not append)
-      allContent.value = data;
+      if (page === 1) {
+        allContent.value = data;
+      } else {
+        allContent.value = [...allContent.value, ...data];
+      }
 
-      // Update total count for pagination
+      // Update total count
       const totalNum = res.data?.allnums;
       totalPosts.value = typeof totalNum === 'number' && !isNaN(totalNum) ? totalNum : (typeof totalNum === 'string' && !isNaN(Number(totalNum)) ? Number(totalNum) : 0);
+
+      hasMoreContent.value = allContent.value.length < totalPosts.value;
 
       nextTick(() => {
         layoutWaterfall();
@@ -5042,6 +5045,7 @@ const loadContent = async (page = 1) => {
     toast(t('fail'));
   } finally {
     loading.value = false;
+    loadingMoreContent.value = false;
     isLoadingContent = false;
   }
 };
@@ -5109,13 +5113,14 @@ const toggleUserFollow = async (user: any) => {
 const handleUserPageChange = (page: number) => {
   followUserPage.value = page;
   fetchFollowUserList();
-  nextTick(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  });
 };
 
-const fetchFollowUserList = async () => {
-  loading.value = true;
+const fetchFollowUserList = async (append = false) => {
+  if (append) {
+    loadingMoreUsers.value = true;
+  } else {
+    loading.value = true;
+  }
   const authorId = localStorage.getItem('uid') || '';
   try {
     let res;
@@ -5126,8 +5131,7 @@ const fetchFollowUserList = async () => {
     }
 
     if (res.code === 200 || res.code === 0) {
-      followUserList.value = (res.data?.data || res.data?.list || []).map((item: any) => {
-        // 订阅列表使用 blogger_info 结构
+      const newUsers = (res.data?.data || res.data?.list || []).map((item: any) => {
         const bloggerInfo = item.blogger_info || item.user_info || item;
         return {
           id: item.blogger_id || item.user_id || bloggerInfo.id || item.id,
@@ -5138,15 +5142,25 @@ const fetchFollowUserList = async () => {
           isFollowed: item.is_followed == 1 || false
         };
       });
+
+      if (append) {
+        followUserList.value = [...followUserList.value, ...newUsers];
+      } else {
+        followUserList.value = newUsers;
+       }
+
       followUserTotal.value = parseInt(res.data?.allnums) || res.data?.count || res.data?.total || 0;
+
+      hasMoreUsers.value = followUserList.value.length < followUserTotal.value;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : locale.value == 'jp' ? res.msg_jp : res.msg);
     }
   } catch (error) {
     console.error('Error fetching user list:', error);
     toast(t('fail'));
   } finally {
     loading.value = false;
+    loadingMoreUsers.value = false;
   }
 }
 
@@ -5208,12 +5222,14 @@ const handleSearch = () => {
 
 watch(activeContentType, () => {
   currentPage.value = 1;
+  hasMoreContent.value = true;
   allContent.value = [];
   loadContent(1);
 });
 
 watch(sortOrder, () => {
   currentPage.value = 1;
+  hasMoreContent.value = true;
   allContent.value = [];
   loadContent(1);
 });
@@ -5221,11 +5237,12 @@ watch(sortOrder, () => {
 watch(viewMode, (newMode) => {
   if (newMode === 'user' && (activeContentTab.value === 'following' || activeContentTab.value === 'subscriptions')) {
     followUserPage.value = 1;
+    hasMoreUsers.value = true;
     followUserList.value = [];
     fetchFollowUserList();
   } else if (newMode === 'content') {
-    // When switching to content view, load content list
     currentPage.value = 1;
+    hasMoreContent.value = true;
     allContent.value = [];
     loadContent(1);
   }
@@ -5301,6 +5318,8 @@ watch(() => locale.value, (newLocale) => {
 });
 
 onMounted(async () => {
+  window.addEventListener('scroll', handleScrollToBottom);
+
   // 初始化语言设置
   await initLanguage();
 
@@ -5494,6 +5513,7 @@ const initBannerSwiper = () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('scroll', handleScrollToBottom);
 });
 
 // Handle window resize
@@ -5661,12 +5681,28 @@ function handleUserInfoCancel() {
 
 function handlePageChange(page: number) {
   currentPage.value = page;
-  allContent.value = [];
   loadContent(page);
-  nextTick(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  });
 }
+
+const handleScrollToBottom = () => {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const windowHeight = window.innerHeight;
+  const documentHeight = document.documentElement.scrollHeight;
+
+  if (scrollTop + windowHeight >= documentHeight - 200) {
+    if (activeContentTab.value === 'suggested' || viewMode.value === 'content') {
+      if (hasMoreContent.value && !isLoadingContent && !loading.value && !loadingMoreContent.value) {
+        currentPage.value++;
+        loadContent(currentPage.value);
+      }
+    } else if (activeContentTab.value !== 'suggested' && viewMode.value === 'user') {
+      if (hasMoreUsers.value && !loading.value && !loadingMoreUsers.value) {
+        followUserPage.value++;
+        fetchFollowUserList(true);
+      }
+    }
+  }
+};
 </script>
 
 <style lang="scss" scoped>
