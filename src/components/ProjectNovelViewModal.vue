@@ -160,10 +160,25 @@ function handleOverlayClick() {
 }
 
 // Handle publish
-function handlePublish() {
+async function handlePublish() {
   trackClickPublishButton(3);
   const chapter = chapters.value.find((c: any) => c.chapter?.toString() === selectedChapter.value);
   if (!chapter || !props.project) return;
+
+  // Check if chapter is already published via API
+  const sessionId = props.project.session_id;
+  if (sessionId && chapter.chapter) {
+    try {
+      const chapterRes = await api.detailChapter(sessionId, chapter.chapter) as any;
+      if (chapterRes.code === 200 && chapterRes.data && chapterRes.data.is_publish === 1) {
+        toast(t('submit.image.episodeNotUnpublished'));
+        setTimeout(() => { location.reload(); }, 1000);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking chapter publish status:', error);
+    }
+  }
 
   // Format title: 第X章 章节标题 (不带书名)
   const chapterText = t('chapter', { chapter: chapter.chapter });

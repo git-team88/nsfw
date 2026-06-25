@@ -56,7 +56,7 @@ export function trackContentPublished(contentId: string) {
 }
 
 export function trackClickPublishButton(entrance: 1 | 2 | 3) {
-  gtag("event", "click_publish_button", { entrance });
+  gtag("event", "click_publish_button", { entrance: entrance });
 }
 
 export function trackClickGenerateButton() {

@@ -3040,6 +3040,17 @@ async function handlePublish(publishData?: any) {
   try {
     const chapterResponse = await api.detailChapter(project.session_id, episode) as any;
     if (chapterResponse.code == 200 && chapterResponse.data) {
+      if (chapterResponse.code != 200) {
+        toast(chapterResponse.message || t('fail'));
+        return;
+      }
+
+      if (chapterResponse.data.is_publish == 1) {
+        toast(t('submit.image.episodeAlreadyPublished'));
+        setTimeout(() => { location.reload(); }, 1000);
+        return;
+      }
+
       const chapterData = chapterResponse.data;
       // 从集详情中获取图片
       if (chapterData.result_async?.final_images) {

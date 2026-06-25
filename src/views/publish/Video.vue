@@ -1485,6 +1485,17 @@ async function handlePublish(publishData?: any) {
 
       const chapterRes = await api.detailChapter(currentSessionId, episode) as any;
       if (chapterRes.code == 200) {
+        if (chapterRes.code != 200) {
+          toast(chapterRes.message || t('fail'));
+          return;
+        }
+
+        if (chapterRes.data && chapterRes.data.is_publish == 1) {
+          toast(t('submit.video.episodeAlreadyPublished'));
+          setTimeout(() => { location.reload(); }, 1000);
+          return;
+        }
+
         const chapterData = chapterRes.data;
         const resultAsync = chapterRes.data.result_async;
 

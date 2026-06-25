@@ -1739,6 +1739,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       noVideoContent: "動画コンテンツがありません",
       selectProject: "動画作品のプロジェクト名",
       selectVideoFirst: "動画を先に選択してください",
+      episodeAlreadyPublished: "このエピソードは公開済みです。最新のエピソードの状態が自動的に更新されます。しばらくお待ちください",
       formatError: "サポートされていない動画形式です。MP4、MOVのみ対応しています",
       multiSelectError: "動画ファイルは1つのみ選択してください",
       corruptedError: "動画ファイルが破損しているか再生できません。別のファイルをお試しください",
@@ -1821,7 +1822,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       noChapterContent: "章の内容がありません",
       noUnpublishedChapters: "未公開のエピソードがありません",
       noChapters: "章がありません",
-      episodeNotUnpublished: "このエピソードはすでに公開されています",
+      episodeNotUnpublished: "この章は公開済みです。最新の章の状態が自動的に更新されます。しばらくお待ちください",
+      episodeAlreadyPublished: "このエピソードは公開済みです。最新のエピソードの状態が自動的に更新されます。しばらくお待ちください",
       published: "公開済み",
       projectView: {
         detail: "詳細",
@@ -2360,7 +2362,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       emptyChapterContent: "章の内容を入力してください",
       emptyChapterTitle: "章のタイトルを入力してください",
       cannotOperateOtherUserProject: "他のユーザーのプロジェクトを操作することはできません",
-      staleOperation: "プロジェクトの進捗が更新されました。ページを更新しています。後で再度お試しください"
+      staleOperation: "プロジェクトの進捗が更新されました。最新の状態を自動的に更新します。しばらくお待ちください"
     },
     guide: {
       next: "次へ",
@@ -2383,6 +2385,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     unpublished: "未公開",
     publish: "公開",
     published: "公開済み",
+    chapterAlreadyPublished: "この章は公開済みです。最新の章の状態が自動的に更新されます。しばらくお待ちください",
     novelCover: "小説の表紙",
     coverPlaceholder: "まだ表紙がありません",
     editCover: "表紙を変更",

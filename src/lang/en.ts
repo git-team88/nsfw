@@ -410,7 +410,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       emptyChapterContent: "Please enter chapter content",
       emptyChapterTitle: "Please enter chapter title",
       cannotOperateOtherUserProject: "You cannot operate other users' projects",
-      staleOperation: "Project progress has been updated, refreshing the page for you, please try again later"
+      staleOperation: "Project progress has been updated, refreshing the latest status, please wait..."
     },
     guide: {
       next: "Next",
@@ -433,6 +433,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     unpublished: "Unpublished",
     publish: "Publish",
     published: "Published",
+    chapterAlreadyPublished: "This chapter has been published. Refreshing latest chapter status, please wait...",
     novelCover: "Novel Cover",
     coverPlaceholder: "No cover yet",
     editCover: "Edit Cover",
@@ -1815,6 +1816,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       noVideoContent: "No video content available",
       selectProject: "Novel project name",
       selectVideoFirst: "Please select a video first",
+      episodeAlreadyPublished: "This episode has been published, the latest episode status will be refreshed automatically, please wait",
       sizeError: "Video file size cannot exceed 5GB",
       formatError: "Unsupported video format. Only MP4, MOV are supported",
       multiSelectError: "Please select only one video file",
@@ -1900,7 +1902,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       noChapterContent: "No chapter content available",
       noUnpublishedChapters: "No unpublished episodes available",
       noChapters: "No chapters available",
-      episodeNotUnpublished: "This episode has already been published",
+      episodeNotUnpublished: "This chapter has been published, the latest chapter status will be refreshed automatically, please wait",
+      episodeAlreadyPublished: "This episode has been published, the latest episode status will be refreshed automatically, please wait",
       published: "Published",
       projectView: {
         detail: "Detail",

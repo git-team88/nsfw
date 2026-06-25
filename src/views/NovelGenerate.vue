@@ -2236,10 +2236,11 @@ const startEditChapter = async () => {
 // Handle session timeout error (code=10407)
 // This error indicates the session has expired and needs a page refresh
 const handleSessionTimeout = (code: number) => {
-  if (code === 10407) {
+  if (code == 10407) {
+    toast(t('novel.error.staleOperation'));
     setTimeout(() => {
       window.location.reload();
-    }, 500);
+    }, 1000);
     return true;
   }
   return false;
@@ -2796,6 +2797,29 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     generate_mode: generateMode
   }) as any;
 
+  if (novelNextRes.code == 40015) {
+    const retryRes = await api.novelNext({
+      session_id: sessionId.value,
+      chapter: nextChapterIndex,
+      generate_mode: 'retry'
+    }) as any;
+    if (retryRes.code !== 200) {
+      isRetryingChapter.value = false;
+      if (handleSessionTimeout(retryRes.code)) {
+        return;
+      }
+      if (retryRes.code == 40011) {
+        await fetchUserBalance();
+        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showInsufficientBalanceModal.value = true;
+        return;
+      }
+      toast(retryRes.message || t('fail'));
+      return;
+    }
+    Object.assign(novelNextRes, retryRes);
+  }
+
   if (novelNextRes.code !== 200) {
     isRetryingChapter.value = false;
     // Handle session timeout error - refresh page
@@ -2811,30 +2835,6 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     }
     toast(novelNextRes.message || t('fail'));
     return;
-  }
-
-  // API successful - check if the current page state is stale (e.g., another tab progressed further)
-  try {
-    const detailCheckRes = await api.detailProject(sessionId.value) as any;
-    if (detailCheckRes.code == 200 && detailCheckRes.data) {
-      const serverStepIndex = detailCheckRes.data.step_chapter_index || 0;
-      const serverChapters = detailCheckRes.data.chapters || [];
-      const latestServerChapter = serverChapters.length > 0
-        ? Math.max(...serverChapters.map((c: any) => c.chapter))
-        : serverStepIndex;
-
-      if (latestServerChapter > nextChapterIndex) {
-        toast(t('novel.error.staleOperation'));
-        isNextLoading.value = false;
-        isRetryingChapter.value = false;
-        setTimeout(() => {
-          fetchNovelOutline();
-        }, 2000);
-        return;
-      }
-    }
-  } catch (e) {
-    console.error('Error checking stale state:', e);
   }
 
   // API successful, now set UI state
@@ -3333,6 +3333,28 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     from_chapter: fromChapter,
     generate_mode: generateMode
   }) as any;
+
+  if (novelAllChaptersRes.code == 40015) {
+    const retryRes = await api.novelAll({
+      session_id: sessionId.value,
+      from_chapter: fromChapter,
+      generate_mode: 'retry'
+    }) as any;
+    if (retryRes.code !== 200) {
+      if (handleSessionTimeout(retryRes.code)) {
+        return;
+      }
+      if (retryRes.code == 40011) {
+        await fetchUserBalance();
+        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showInsufficientBalanceModal.value = true;
+        return;
+      }
+      toast(retryRes.message || t('fail'));
+      return;
+    }
+    Object.assign(novelAllChaptersRes, retryRes);
+  }
 
   if (novelAllChaptersRes.code !== 200) {
     // Handle session timeout error - refresh page
@@ -3856,17 +3878,31 @@ const handlePublishChapter = async (chapter: any) => {
   if (checkProjectOwnership()) return;
 
   const session_id = sessionId.value;
-
-  // Get cover from coverImage
-  const cover = coverImage.value || '';
-
-  // Get chapter index
   const index = chapter.chapter;
 
-  // Get project name
+  try {
+    const res = await api.detailChapter(session_id, index) as any;
+
+    if (res.code != 200) {
+      toast(res.message || t('fail'));
+      return;
+    }
+
+    if (res.code == 200 && res.data?.is_publish == 1) {
+      toast(t('novel.chapterAlreadyPublished'));
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      return;
+    }
+  } catch (e) {
+    toast(t('fail'));
+    return;
+  }
+
+  const cover = coverImage.value || '';
   const title = projectName.value || '';
 
-  // Navigate to novel publish page with params
   router.push({
     path: '/publish/novel',
     query: {
@@ -4118,6 +4154,31 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       topic: topic.value,
       generate_mode: type
     }) as any;
+
+    if (novelOutlineRes.code == 40015) {
+      const retryRes = await api.novelOutline({
+        session_id: sessionId.value,
+        topic: topic.value,
+        generate_mode: 'retry'
+      }) as any;
+      if (retryRes.code !== 200) {
+        if (handleSessionTimeout(retryRes.code)) {
+          isLoading.value = false;
+          return;
+        }
+        if (retryRes.code == 40011) {
+          await fetchUserBalance();
+          estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+          showInsufficientBalanceModal.value = true;
+          isLoading.value = false;
+          return;
+        }
+        toast(retryRes.message || t('fail'));
+        isLoading.value = false;
+        return;
+      }
+      Object.assign(novelOutlineRes, retryRes);
+    }
 
     if (novelOutlineRes.code !== 200) {
       // Handle session timeout error - refresh page
@@ -7509,6 +7570,14 @@ async function doGenerateNovelCover() {
         showInsufficientBalanceModal.value = true;
         coverRenewLoading.value = false;
         showCoverEditBtn.value = true;
+        return;
+      }
+      if (res.code == 10407) {
+        toast(t('novel.error.staleOperation'));
+        coverRenewLoading.value = false;
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
         return;
       }
       coverRenewLoading.value = false;

@@ -471,7 +471,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       emptyChapterContent: "请输入章节内容",
       emptyChapterTitle: "请输入章节标题",
       cannotOperateOtherUserProject: "您不能操作其他用户的项目",
-      staleOperation: "项目进度已更新，即将为您刷新页面，请稍后重试"
+      staleOperation: "项目进度已更新，即将自动刷新最新状态，请稍后操作"
     },
     guide: {
       next: "下一步",
@@ -494,6 +494,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     unpublished: "未发布",
     publish: "发布",
     published: "已发布",
+    chapterAlreadyPublished: "该章节已发布，即将自动刷新最新章节状态，请稍后操作",
     novelCover: "小说封面",
     coverPlaceholder: "暂无封面",
     editCover: "修改封面",
@@ -1918,6 +1919,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       noVideoContent: "暂无视频内容",
       selectProject: "视频作品项目名称",
       selectVideoFirst: "请先选择一部漫剧",
+      episodeAlreadyPublished: "该集数已发布，即将自动刷新最新集数状态，请稍后操作",
       sizeError: "视频文件大小不能超过5GB",
       formatError: "不支持的视频格式，仅支持MP4、MOV",
       multiSelectError: "仅支持选择一个视频文件",
@@ -2001,6 +2003,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       selectComicFirst: "请先选择一部漫画",
       noChapterContent: "暂无章节内容",
       noUnpublishedChapters: "当前没有可发布的集数",
+      episodeNotUnpublished: "该章节已发布，即将自动刷新最新章节状态，请稍后操作",
+      episodeAlreadyPublished: "该集数已发布，即将自动刷新最新集数状态，请稍后操作",
       published: "已发布",
       projectView: {
         detail: "详情",

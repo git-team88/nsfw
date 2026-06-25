@@ -240,8 +240,23 @@ watch(() => props.project, () => {
 }, { immediate: true });
 
 // 发布本集
-function handlePublish() {
+async function handlePublish() {
   trackClickPublishButton(3);
+
+  // Check if episode is already published via API
+  if (props.project?.session_id && selectedEpisode.value) {
+    try {
+      const chapterRes = await api.detailChapter(props.project.session_id, selectedEpisode.value) as any;
+      if (chapterRes.code === 200 && chapterRes.data && chapterRes.data.is_publish === 1) {
+        toast(t('submit.image.episodeAlreadyPublished'));
+        setTimeout(() => { location.reload(); }, 1000);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking episode publish status:', error);
+    }
+  }
+
   // Get cover from project (合集封面)
   const cover = props.project.cover || props.project.result_async?.generate_manhua_cover;
   

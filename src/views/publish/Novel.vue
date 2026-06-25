@@ -2512,13 +2512,6 @@ async function handlePublish(publishData?: any) {
       return;
     }
 
-    // Check if chapter is already published
-    const chapter = targetProject.chapters?.find((c: any) => c.chapter === targetEpisode);
-    if (chapter && chapter.is_publish === 1) {
-      toast(t('submit.image.episodeNotUnpublished'));
-      return;
-    }
-
     // Store chapterId for publish
     chapterIdForPublish.value = chapterIndex;
 
@@ -2550,11 +2543,24 @@ async function handlePublish(publishData?: any) {
       return;
     }
 
-    // Check if chapter is already published
-    const chapter = targetProject.chapters?.find((c: any) => c.chapter === targetEpisode);
-    if (chapter && chapter.is_publish === 1) {
-      toast(t('submit.image.episodeNotUnpublished'));
-      return;
+    // Fetch episode content from API and check publish status
+    let episodeContent = `This is the content for episode ${targetEpisode} of ${targetProject.name}.`;
+    if (targetProject.session_id) {
+      try {
+        const res = await api.detailChapter(targetProject.session_id, targetEpisode) as any;
+        if (res.code === 200 && res.data) {
+          if (res.data.is_publish === 1) {
+            toast(t('submit.image.episodeNotUnpublished'));
+            setTimeout(() => { location.reload(); }, 1000);
+            return;
+          }
+          if (res.data.content) {
+            episodeContent = res.data.content;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching chapter content:', error);
+      }
     }
 
     // Store chapterId for publish
@@ -2575,18 +2581,6 @@ async function handlePublish(publishData?: any) {
     // Truncate title to TITLE_MAX characters
     form.value.title = generatedTitle.substring(0, TITLE_MAX);
 
-    // Fetch episode content from API
-    let episodeContent = `This is the content for episode ${targetEpisode} of ${targetProject.name}.`;
-    if (targetProject.session_id) {
-      try {
-        const res = await api.detailChapter(targetProject.session_id, targetEpisode) as any;
-        if (res.code === 200 && res.data && res.data.content) {
-          episodeContent = res.data.content;
-        }
-      } catch (error) {
-        console.error('Error fetching chapter content:', error);
-      }
-    }
     form.value.description = episodeContent;
   }
 
@@ -2632,7 +2626,7 @@ async function handlePublish(publishData?: any) {
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
-          
+
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: projectName,

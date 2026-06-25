@@ -360,12 +360,30 @@ const fetchProcessData = async () => {
   }
 };
 
-const startPolling = () => {
+const hasUnfinishedTasks = () => {
+  if (!processData.value) return false;
+  const allLists = [
+    ...(processData.value.novel_list || []),
+    ...(processData.value.manhua_list || []),
+    ...(processData.value.manju_list || []),
+    ...(processData.value.simple_image_list || []),
+    ...(processData.value.simple_video_list || [])
+  ];
+  if (allLists.length === 0) return false;
+  return allLists.some(item => item.step_status !== 'SUCCESS' && item.step_status !== 'FAIL');
+};
+
+const startPolling = async () => {
   if (isLogin.value) {
-    // 立即执行一次
-    fetchProcessData();
-    // 设置10秒轮询
-    pollingTimer = window.setInterval(fetchProcessData, 20000);
+    await fetchProcessData();
+    if (hasUnfinishedTasks()) {
+      pollingTimer = window.setInterval(async () => {
+        await fetchProcessData();
+        if (!hasUnfinishedTasks()) {
+          stopPolling();
+        }
+      }, 20000);
+    }
   }
 };
 

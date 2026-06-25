@@ -471,7 +471,7 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
       emptyChapterContent: "請輸入章節內容",
       emptyChapterTitle: "請輸入章節標題",
       cannotOperateOtherUserProject: "您不能操作其他使用者的專案",
-      staleOperation: "專案進度已更新，即將為您刷新頁面，請稍後重試"
+      staleOperation: "專案進度已更新，即將自動刷新最新狀態，請稍後操作"
     },
     guide: {
       next: "下一步",
@@ -494,6 +494,7 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     unpublished: "未發布",
     publish: "發布",
     published: "已發布",
+    chapterAlreadyPublished: "該章節已發布，即將自動刷新最新章節狀態，請稍後操作",
     novelCover: "小說封面",
     coverPlaceholder: "暫無封面",
     editCover: "修改封面",
