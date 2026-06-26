@@ -489,7 +489,7 @@ function goEmailRegister() {
       .then((res: any) => {
         if (res.code == 0) {
           showBirthday.value = false;
-          trackSignUp("email");
+          trackSignUp();
 
           if (headerRef.value) {
             headerRef.value.getLoginUserInfo()
@@ -536,7 +536,7 @@ function googleRegister() {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
-        trackSignUp("google");
+        trackSignUp();
 
         localStorage.setItem("isFirstRegister", "1");
         router.push("/");

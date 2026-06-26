@@ -509,6 +509,8 @@
       :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
       :is-nsfw="0"
       :type="3"
+      :session-id="selectedProject?.session_id || route.query.session_id || sessionId || ''"
+      :story-summary="selectedProject?.result_async?.generate_novel_outline?.story_summary?.summary || ''"
       @close="handleCloseEditCollectionModal"
       @save="handleSaveCollection"
     />

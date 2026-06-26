@@ -60,11 +60,11 @@
           </div>
           <div class="sensitive-options">
             <div class="option" @click="toggleSensitive('yes')">
-              <img :src="isNsfw === 1 ? selectActive : select" alt="" />
+              <img :src="isNsfw == 1 ? selectActive : select" alt="" />
               <span>{{ t("submit.yes") }}</span>
             </div>
             <div class="option" @click="toggleSensitive('no')">
-              <img :src="isNsfw === 0 ? selectActive : select" alt="" />
+              <img :src="isNsfw == 0 ? selectActive : select" alt="" />
               <span>{{ t("submit.no") }}</span>
             </div>
           </div>
@@ -74,13 +74,13 @@
         <div class="form-group">
           <label class="form-label">
             <span>{{ t('collectionSettings.description') }}</span>
-            <span class="char-counter">({{ description.length }}/500)</span>
+            <span class="char-counter">({{ description.length }}/1000)</span>
           </label>
           <textarea
             v-model="description"
             class="form-textarea"
             :placeholder="t('collection.descriptionPlaceholder')"
-            maxlength="500"
+            maxlength="1000"
           ></textarea>
         </div>
 
@@ -150,11 +150,11 @@ const originalCover = ref('');
 const originalIsNsfw = ref(0);
 
 function toggleSensitive(val: 'yes' | 'no') {
-  const targetNsfw = val === 'yes' ? 1 : 0;
+  const targetNsfw = val == 'yes' ? 1 : 0;
   isNsfwSelected.value = true;
-  if (isNsfw.value === targetNsfw) return;
+  if (isNsfw.value == targetNsfw) return;
 
-  if (val === 'yes') {
+  if (val == 'yes') {
     const dontAsk = localStorage.getItem('sensitiveDontAsk');
     if (dontAsk == '1') {
       isNsfw.value = 1;

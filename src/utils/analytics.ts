@@ -13,12 +13,12 @@ function gtag(...args: unknown[]) {
   }
 }
 
-export function trackLogin(method: string) {
-  gtag("event", "login", { method });
+export function trackLogin() {
+  gtag("event", "login");
 }
 
-export function trackSignUp(method: string) {
-  gtag("event", "sign_up", { method });
+export function trackSignUp() {
+  gtag("event", "sign_up");
 }
 
 export function trackPurchase(params: {
@@ -69,33 +69,6 @@ export function setUserId(userId: string) {
 
 export function clearUserId() {
   gtag("config", GA_ID, { user_id: null });
-}
-
-export function initGA() {
-  if (typeof window === "undefined") return;
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function (...args: unknown[]) {
-    window.dataLayer.push(args);
-  };
-
-  window.gtag("consent", "default", {
-    ad_storage: "granted",
-    ad_user_data: "granted",
-    ad_personalization: "granted",
-    analytics_storage: "granted",
-    functionality_storage: "granted",
-    personalization_storage: "granted",
-    security_storage: "granted",
-  });
-
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-  document.head.appendChild(script);
-
-  window.gtag("js", new Date());
-  window.gtag("config", GA_ID);
 }
 
 export function updateConsent(granted: boolean) {

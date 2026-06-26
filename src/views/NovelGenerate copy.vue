@@ -216,7 +216,7 @@
           </div>
 
           <div class="regenerate-content">
-            <textarea v-model="regenerateContent" class="regenerate-textarea" :placeholder="t('novel.outlinePlaceholder')"></textarea>
+            <textarea v-model="regenerateContent" class="regenerate-textarea" :placeholder="t('novel.outlinePlaceholder')" @input="handleRegenerateInput"></textarea>
 
             <div class="regenerate-footer">
               <div class="regenerate-settings">
@@ -430,7 +430,7 @@
           <div v-if="isOutlineLoading" class="loading-state">
             <div class="loading-spinner"></div>
           </div>
-          <div v-else-if="isLoading && !isGeneratingOutline && !(taskStatus == 'DOING' && currentChapter && currentChapter.chapter == stepChapterIndex)" class="loading-state">
+          <div v-else-if="isLoading && !isGeneratingOutline && !(taskStatus == 'DOING' && currentChapter)" class="loading-state">
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ t('home.loading') }}</div>
           </div>
@@ -591,7 +591,6 @@
                 :key="chapter.chapter"
                 class="chapter-card"
                 :class="{ 'current-chapter': chapter.chapter == stepChapterIndex && taskStatus == 'DOING' }"
-                @click="goToChapter(chapter.chapter)"
               >
                 <div class="chapter-title-box">
                   <span class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
@@ -1147,7 +1146,8 @@ class OutlineStreamParser {
 import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
-import { toast } from '@/util/toast';
+import { toast, limitToast } from '@/util/toast';
+import { trackClickPublishButton } from '@/utils/analytics';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
 
@@ -1223,7 +1223,8 @@ const languageOptions = computed(() => [
 ]);
 const isBatchChapter = ref<number>(0);
 const isUserInitiatedGeneration = ref<boolean>(false);
-const shouldAutoNavigate = ref<boolean>(true); // Flag to control auto navigation during batch generation
+const shouldAutoNavigate = ref<boolean>(true);
+const isRetryingChapter = ref<boolean>(false);
 
 // Preparation status state
 const isPreparing = ref<boolean>(false);
@@ -1242,6 +1243,7 @@ const coverAtDropdownItems = ref<any[]>([]);
 const lastCoverRange = ref<Range | null>(null);
 
 const isCoverComposing = ref<boolean>(false);
+const previousCoverInputHtml = ref<string>('');
 const coverInputKey = ref<number>(0);
 
 const coverGenerationTaskId = ref<string>('');
@@ -1315,6 +1317,27 @@ const isTaskLimitExceeded = async () => {
 
   if (totalProcessRes.code == 200 && totalProcessRes.data?.novel_doing_count >= 10) {
     showTaskLimitExceededModal.value = true;
+    return true;
+  }
+  return false;
+};
+
+const projectOwnerId = ref<number | string | null>(null);
+
+const checkProjectOwnership = () => {
+  const currentUserId = userInfo.value?.info?.id;
+  if (!currentUserId || !projectOwnerId.value) return false;
+  if (String(currentUserId) !== String(projectOwnerId.value)) {
+    toast(t('novel.error.cannotOperateOtherUserProject'));
+    return true;
+  }
+  return false;
+};
+
+const checkProjectOwnershipByEstimate = async () => {
+  const estimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
+  if (estimateRes.code == 10404) {
+    toast(t('novel.error.cannotOperateOtherUserProject'));
     return true;
   }
   return false;
@@ -1434,6 +1457,9 @@ const startCoverPolling = (taskId: string) => {
         try {
           const detailProjectRes = await api.detailProject(sessionId.value) as any;
           if (detailProjectRes.code == 200) {
+            if (detailProjectRes.data?.user_id) {
+              projectOwnerId.value = detailProjectRes.data.user_id;
+            }
             // Update project name if available
             if (detailProjectRes.data?.name) {
               projectName.value = detailProjectRes.data.name;
@@ -1837,6 +1863,9 @@ const fetchPointsEstimate = async (includeCover = false) => {
       }) as any;
       if (nextChapterEstimateRes.code == 200 && nextChapterEstimateRes.data?.total_points) {
         nextChapterPoints.value = nextChapterEstimateRes.data.total_points;
+      } else if (nextChapterEstimateRes.code == 10404) {
+        toast(t('novel.error.cannotOperateOtherUserProject'));
+        return;
       }
 
       // Estimate for all chapters
@@ -1866,7 +1895,7 @@ const fetchPointsEstimate = async (includeCover = false) => {
 };
 
 // Compute costs
-const nextChapterCost = computed(() => nextChapterPoints.value);
+const nextChapterCost = computed(() => Math.max(nextChapterPoints.value, 1));
 const allChaptersCost = computed(() => allChaptersPoints.value);
 
 // Store original content when opening regenerate input
@@ -1881,6 +1910,7 @@ const regenerateOutline = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (await checkProjectOwnershipByEstimate()) return;
 
   hideEdit();
 
@@ -2094,7 +2124,7 @@ const sendRegenerateRequest = async () => {
 };
 
 // Start editing project name
-const startEditProjectName = () => {
+const startEditProjectName = async () => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2103,6 +2133,7 @@ const startEditProjectName = () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   originalProjectName.value = projectName.value;
   // Ensure project name is not longer than 60 characters
@@ -2161,7 +2192,7 @@ const handleProjectNameBlur = () => {
 };
 
 // Start editing chapter
-const startEditChapter = () => {
+const startEditChapter = async () => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2170,6 +2201,7 @@ const startEditChapter = () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   if (currentChapter.value?.content) {
     originalChapterContent.value = currentChapter.value.content;
@@ -2204,10 +2236,11 @@ const startEditChapter = () => {
 // Handle session timeout error (code=10407)
 // This error indicates the session has expired and needs a page refresh
 const handleSessionTimeout = (code: number) => {
-  if (code === 10407) {
+  if (code == 10407) {
+    toast(t('novel.error.staleOperation'));
     setTimeout(() => {
       window.location.reload();
-    }, 500);
+    }, 1000);
     return true;
   }
   return false;
@@ -2418,7 +2451,7 @@ const saveEditChapter = async () => {
 };
 
 // Start editing chapter title
-const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
+const startEditChapterTitle = async (chapterId: number, currentTitle: string) => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2427,6 +2460,7 @@ const startEditChapterTitle = (chapterId: number, currentTitle: string) => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (checkProjectOwnership()) return;
 
   editingChapterId.value = chapterId;
   originalChapterTitle.value = currentTitle;
@@ -2482,6 +2516,7 @@ const saveChapterTitle = async (chapterId: number) => {
       toast(modifyRes.message || t('fail'));
     }
   } catch (error) {
+    console.error('Error modifying chapter title:', error);
     toast(t('fail'));
   } finally {
     // Reset editing state regardless of API result
@@ -2703,6 +2738,7 @@ function goToSimilar() {
 // Call novelNext API
 const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = false) => {
   hideEdit();
+  stopDetailPolling();
 
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
@@ -2717,8 +2753,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   if (!skipBalanceCheck) isNextLoading.value = true;
   try {
 
-  // Check if user has reached the task limit
-  if (await isTaskLimitExceeded()) return;
+  if (await isTaskLimitExceeded()) { isRetryingChapter.value = false; return; }
 
   const nextChapterIndex = retryChapter !== undefined ? retryChapter : (currentChapter.value ? currentChapter.value.chapter + 1 : 1);
 
@@ -2738,19 +2773,22 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
       if (userBalance.value < requiredPower) {
         estimatedFrozenPower.value = Math.round(estimatedPoints * (balanceInfo.value?.over_freeze_rate || 1));
         showInsufficientBalanceModal.value = true;
+        isRetryingChapter.value = false;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      isRetryingChapter.value = false;
+      return;
     }
   }
 
   const generateMode = retryChapter !== undefined ? 'retry' : 'new';
 
-  // Set flag for user initiated generation
   isUserInitiatedGeneration.value = true;
-  // Set shouldShowTypewriter to true for typewriter effect
   shouldShowTypewriter.value = true;
-  // Disable auto navigation for single chapter generation
   shouldAutoNavigate.value = false;
+  isRetryingChapter.value = retryChapter !== undefined;
 
   // Call API first, set loading state only after success
   const novelNextRes = await api.novelNext({
@@ -2759,7 +2797,31 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     generate_mode: generateMode
   }) as any;
 
+  if (novelNextRes.code == 40015) {
+    const retryRes = await api.novelNext({
+      session_id: sessionId.value,
+      chapter: nextChapterIndex,
+      generate_mode: 'retry'
+    }) as any;
+    if (retryRes.code !== 200) {
+      isRetryingChapter.value = false;
+      if (handleSessionTimeout(retryRes.code)) {
+        return;
+      }
+      if (retryRes.code == 40011) {
+        await fetchUserBalance();
+        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showInsufficientBalanceModal.value = true;
+        return;
+      }
+      toast(retryRes.message || t('fail'));
+      return;
+    }
+    Object.assign(novelNextRes, retryRes);
+  }
+
   if (novelNextRes.code !== 200) {
+    isRetryingChapter.value = false;
     // Handle session timeout error - refresh page
     if (handleSessionTimeout(novelNextRes.code)) {
       return;
@@ -2771,7 +2833,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
       showInsufficientBalanceModal.value = true;
       return;
     }
-    toast(t('fail'));
+    toast(novelNextRes.message || t('fail'));
     return;
   }
 
@@ -2960,6 +3022,9 @@ const goPrevChapter = async () => {
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
       if (detailProjectRes.code == 200) {
+        if (detailProjectRes.data?.user_id) {
+          projectOwnerId.value = detailProjectRes.data.user_id;
+        }
         const resultAsync = detailProjectRes.data?.result_async;
         if (resultAsync) {
           isEditingChapter.value = false;
@@ -3202,6 +3267,8 @@ const goToChapter = async (chapterNum: number) => {
 
 // Call novelAllChapters API
 const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
+  stopDetailPolling();
+
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -3252,6 +3319,9 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
         showInsufficientBalanceModal.value = true;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      return;
     }
   }
 
@@ -3263,6 +3333,28 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     from_chapter: fromChapter,
     generate_mode: generateMode
   }) as any;
+
+  if (novelAllChaptersRes.code == 40015) {
+    const retryRes = await api.novelAll({
+      session_id: sessionId.value,
+      from_chapter: fromChapter,
+      generate_mode: 'retry'
+    }) as any;
+    if (retryRes.code !== 200) {
+      if (handleSessionTimeout(retryRes.code)) {
+        return;
+      }
+      if (retryRes.code == 40011) {
+        await fetchUserBalance();
+        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showInsufficientBalanceModal.value = true;
+        return;
+      }
+      toast(retryRes.message || t('fail'));
+      return;
+    }
+    Object.assign(novelAllChaptersRes, retryRes);
+  }
 
   if (novelAllChaptersRes.code !== 200) {
     // Handle session timeout error - refresh page
@@ -3406,6 +3498,7 @@ const handleRetry = async () => {
     showConfirmComputingPowerModal.value = true;
   } else if (estimateRes && estimateRes.code == 10404) {
     toast(t('novel.error.cannotOperateOtherUserProject'));
+    return;
   } else {
     toast(estimateRes.message);
   }
@@ -3472,6 +3565,9 @@ const confirmGenerateAllChapters = async () => {
         showInsufficientBalanceModal.value = true;
         return;
       }
+    } else if (estimateRes.code == 10404) {
+      toast(t('novel.error.cannotOperateOtherUserProject'));
+      return;
     }
 
     const timeRes = await api.estimateTime(sessionId.value) as any;
@@ -3777,23 +3873,36 @@ const handleChapterItemClick = async (chapterNum: number) => {
 };
 
 // Handle publish chapter button click
-const handlePublishChapter = (chapter: any) => {
-  // Check if cover is generating or there's an unprocessed cover generation result
+const handlePublishChapter = async (chapter: any) => {
+  trackClickPublishButton(1);
+  if (checkProjectOwnership()) return;
 
-
-  // Get session_id from sessionId ref
   const session_id = sessionId.value;
-
-  // Get cover from coverImage
-  const cover = coverImage.value || '';
-
-  // Get chapter index
   const index = chapter.chapter;
 
-  // Get project name
+  try {
+    const res = await api.detailChapter(session_id, index) as any;
+
+    if (res.code != 200) {
+      toast(res.message || t('fail'));
+      return;
+    }
+
+    if (res.code == 200 && res.data?.is_publish == 1) {
+      toast(t('novel.chapterAlreadyPublished'));
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      return;
+    }
+  } catch (e) {
+    toast(t('fail'));
+    return;
+  }
+
+  const cover = coverImage.value || '';
   const title = projectName.value || '';
 
-  // Navigate to novel publish page with params
   router.push({
     path: '/publish/novel',
     query: {
@@ -3851,6 +3960,9 @@ const handleOutlinePreviewClick = async () => {
 
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
     if (detailProjectRes.code == 200) {
+      if (detailProjectRes.data?.user_id) {
+        projectOwnerId.value = detailProjectRes.data.user_id;
+      }
       const resultAsync = detailProjectRes.data?.result_async;
       const stepName = detailProjectRes.data?.step_name;
       const stepStatus = detailProjectRes.data?.step_status;
@@ -4043,6 +4155,31 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       generate_mode: type
     }) as any;
 
+    if (novelOutlineRes.code == 40015) {
+      const retryRes = await api.novelOutline({
+        session_id: sessionId.value,
+        topic: topic.value,
+        generate_mode: 'retry'
+      }) as any;
+      if (retryRes.code !== 200) {
+        if (handleSessionTimeout(retryRes.code)) {
+          isLoading.value = false;
+          return;
+        }
+        if (retryRes.code == 40011) {
+          await fetchUserBalance();
+          estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+          showInsufficientBalanceModal.value = true;
+          isLoading.value = false;
+          return;
+        }
+        toast(retryRes.message || t('fail'));
+        isLoading.value = false;
+        return;
+      }
+      Object.assign(novelOutlineRes, retryRes);
+    }
+
     if (novelOutlineRes.code !== 200) {
       // Handle session timeout error - refresh page
       if (handleSessionTimeout(novelOutlineRes.code)) {
@@ -4062,7 +4199,7 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
         return callNovelOutline(type, retryCount + 1);
       }
-      toast(t('fail'));
+      toast(novelOutlineRes.message || t('fail'));
       isLoading.value = false;
       return;
     }
@@ -4115,6 +4252,9 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
           count: novelEstimateRes.data.queue_position ?? novelEstimateRes.data.in_queue_count ?? 0,
           estimatedTime: Math.ceil((originalEstimatedSeconds.value || 600) / 60) + (novelEstimateRes.data.queue_position ?? 0) * 20
         };
+      } else if (novelEstimateRes.code == 10404) {
+        toast(t('novel.error.cannotOperateOtherUserProject'));
+        return;
       }
     } catch (error) {
       console.error('Error fetching novel estimate:', error);
@@ -4124,6 +4264,9 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
     try {
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
       if (detailProjectRes.code == 200 && detailProjectRes.data) {
+        if (detailProjectRes.data.user_id) {
+          projectOwnerId.value = detailProjectRes.data.user_id;
+        }
         taskStatus.value = detailProjectRes.data.status || 'DOING';
         if (detailProjectRes.data.task_start_at) {
           taskStartAt.value = detailProjectRes.data.task_start_at;
@@ -4265,8 +4408,8 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
         if (pollingResponse.code == 200 && pollingResponse.data) {
           const taskData = pollingResponse.data;
 
-          // Update stepChapterIndex if available
-          if (taskData.step_chapter_index) {
+          // Update stepChapterIndex if available (skip during retry to prevent server state from advancing past the retry chapter)
+          if (taskData.step_chapter_index && !isRetryingChapter.value) {
             stepChapterIndex.value = taskData.step_chapter_index;
           }
 
@@ -4490,8 +4633,14 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 clearInterval(pollingInterval.value);
                 pollingInterval.value = null;
               }
-              // Reset flags when generation is complete
               isUserInitiatedGeneration.value = false;
+
+              // Find the latest chapter from chapters array for stepChapterIndex
+              const latestChapterNum = chapters.value.length > 0
+                ? Math.max(...chapters.value.map((c: any) => c.chapter))
+                : chapterIndex;
+              stepChapterIndex.value = latestChapterNum;
+              isRetryingChapter.value = false;
             }
           } else if (taskData.status == 'FAIL' || (taskData.step_status && taskData.step_status == 'FAIL')) {
             // Clear polling interval
@@ -4507,6 +4656,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
             isLoading.value = false;
             isChapterTyping.value = false;
             isWaitingForData.value = false;
+            isRetryingChapter.value = false;
 
             // Fetch estimate and balance if insufficient balance
             if (taskData.status_message && taskData.status_message.includes('user credit is not enough')) {
@@ -4524,6 +4674,8 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 }) as any;
                 if (estRes.code == 200 && estRes.data?.total_points) {
                   estimatedComputingPower.value = estRes.data.total_points;
+                } else if (estRes.code == 10404) {
+                  toast(t('novel.error.cannotOperateOtherUserProject'));
                 }
                 await fetchUserBalance();
               } catch (e) {
@@ -4634,7 +4786,7 @@ const fetchNovelOutline = async () => {
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
     if (detailProjectRes.code !== 200) {
-      toast(t('novel.error.fetchFailed'));
+      toast(detailProjectRes.message || t('novel.error.fetchFailed'));
       isLoading.value = false;
       isFetchingNovelOutline.value = false;
       return;
@@ -4642,6 +4794,10 @@ const fetchNovelOutline = async () => {
 
     // Set detail loaded flag
     isDetailLoaded.value = true;
+
+    if (detailProjectRes.data?.user_id) {
+      projectOwnerId.value = detailProjectRes.data.user_id;
+    }
 
     // Initialize cover history list from history_data
     if (detailProjectRes.data?.history_data) {
@@ -4827,26 +4983,60 @@ const fetchNovelOutline = async () => {
                 isLoadingComplete.value = true;
               }
             } else {
-              const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
-              chapters.value.push({
-                id: `temp-${chapterIndex}`,
-                chapter: chapterIndex,
-                title: outlineChapterData?.title || t('novel.untitled'),
-                is_publish: 2
-              });
-              currentChapter.value = {
-                chapter: chapterIndex,
-                title: outlineChapterData?.title || '',
-                content: ''
-              };
-              displayedContent.value = '';
-              hasFailed.value = true;
-              taskStatus.value = 'FAIL';
-              generatingChapter.value = chapterIndex;
-              currentStepName.value = 'chapter';
-              lastGenerationType.value = 'chapter';
-              isLoading.value = false;
-              isLoadingComplete.value = true;
+              let chapterHasContent = false;
+              try {
+                const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+                if (chapterRes.code == 200 && chapterRes.data?.content) {
+                  chapterHasContent = true;
+                  let content = chapterRes.data.content || '';
+                  content = content.replace(/\\n/g, '\n');
+                  const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                  chapters.value.push({
+                    id: `temp-${chapterIndex}`,
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || t('novel.untitled'),
+                    is_publish: 2
+                  });
+                  currentChapter.value = {
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || '',
+                    content
+                  };
+                  displayedContent.value = content;
+                  taskStatus.value = 'SUCCESS';
+                  hasFailed.value = false;
+                  generatingChapter.value = null;
+                  currentStepName.value = 'chapter';
+                  lastGenerationType.value = 'chapter';
+                  isLoading.value = false;
+                  isLoadingComplete.value = true;
+                }
+              } catch (e) {
+                console.error('Error checking chapter content on FAIL:', e);
+              }
+
+              if (!chapterHasContent) {
+                const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                chapters.value.push({
+                  id: `temp-${chapterIndex}`,
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || t('novel.untitled'),
+                  is_publish: 2
+                });
+                currentChapter.value = {
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || '',
+                  content: ''
+                };
+                displayedContent.value = '';
+                hasFailed.value = true;
+                taskStatus.value = 'FAIL';
+                generatingChapter.value = chapterIndex;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+              }
             }
           } else {
             currentChapter.value = null;
@@ -5077,22 +5267,25 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'SUCCESS' && chapterIndex) {
-          // Set up chapter state before fetching content to avoid showing outline skeleton
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          // Find the latest chapter from chapters array instead of relying on step_chapter_index
+          const latestChapterNum = chapters.value.length > 0
+            ? Math.max(...chapters.value.map((c: any) => c.chapter))
+            : chapterIndex;
+          stepChapterIndex.value = latestChapterNum;
+
+          const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
           currentChapter.value = {
-            chapter: chapterIndex,
+            chapter: latestChapterNum,
             title: chapterData?.title || '',
             content: ''
           };
-          // Set loading process type for chapter generation
           startLoadingAnimation('chapter');
 
-          // Chapter generation completed - fetch and display the chapter content
           try {
-            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
             if (chapterRes.code == 200 && chapterRes.data) {
               currentChapter.value = {
-                chapter: chapterIndex,
+                chapter: latestChapterNum,
                 title: chapterData?.title || chapterRes.data.title || '',
                 content: chapterRes.data.content || ''
               };
@@ -5101,13 +5294,11 @@ const fetchNovelOutline = async () => {
               isPreparing.value = false;
               prepareQueueInfo.value = null;
 
-              // Process content: handle escape characters and filter
               let content = chapterRes.data.content || '';
               content = content.replace(/\\n/g, '\n');
 
               displayedContent.value = content;
 
-              // Scroll to top
               nextTick(() => {
                 if (chapterContentRef.value) {
                   chapterContentRef.value.scrollTop = 0;
@@ -5121,7 +5312,6 @@ const fetchNovelOutline = async () => {
             isLoadingComplete.value = true;
           }
 
-          // Fetch latest balance after chapter generation completes
           await fetchUserBalance();
 
           isFetchingNovelOutline.value = false;
@@ -5174,32 +5364,116 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'FAIL' && chapterIndex) {
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
-          currentChapter.value = {
-            chapter: chapterIndex,
-            title: chapterData?.title || '',
-            content: ''
-          };
-          displayedContent.value = '';
-          hasFailed.value = true;
-          taskStatus.value = 'FAIL';
-          isPreparing.value = false;
-          prepareQueueInfo.value = null;
-          generatingChapter.value = chapterIndex;
-          currentStepName.value = 'chapter';
-          lastGenerationType.value = 'chapter';
-          showCoverEditBtn.value = true;
-          // Set loading process type for chapter generation
-          startLoadingAnimation('chapter');
+          // Check if chapters has the failed chapter and if there's a newer completed chapter
+          const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          const latestChapterNum = chapters.value.length > 0
+            ? Math.max(...chapters.value.map((c: any) => c.chapter))
+            : chapterIndex;
 
-          // Fetch latest balance after chapter generation fails
-          await fetchUserBalance();
-
-          // Fetch points estimate only if generation hasn't failed
-          if (!hasFailed.value) {
-            await fetchPointsEstimate();
+          if (failedChapterInList && latestChapterNum > chapterIndex) {
+            // The failed chapter exists but there are newer completed chapters - show the latest one
+            stepChapterIndex.value = latestChapterNum;
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+              if (chapterRes.code == 200 && chapterRes.data?.content) {
+                let content = chapterRes.data.content || '';
+                content = content.replace(/\\n/g, '\n');
+                const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+                currentChapter.value = {
+                  chapter: latestChapterNum,
+                  title: chapterData?.title || chapterRes.data.title || '',
+                  content
+                };
+                displayedContent.value = content;
+                taskStatus.value = 'SUCCESS';
+                hasFailed.value = false;
+                isPreparing.value = false;
+                prepareQueueInfo.value = null;
+                generatingChapter.value = null;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                showCoverEditBtn.value = true;
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+                isFetchingNovelOutline.value = false;
+                nextTick(() => {
+                  if (chapterContentRef.value) {
+                    chapterContentRef.value.scrollTop = 0;
+                  }
+                });
+                await fetchUserBalance();
+                return;
+              }
+            } catch (e) {
+              console.error('Error fetching latest chapter on FAIL:', e);
+            }
           }
-          isLoading.value = false;
+
+          // No newer completed chapter - proceed with existing FAIL handling
+          let chapterHasContent = false;
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            if (chapterRes.code == 200 && chapterRes.data?.content) {
+              chapterHasContent = true;
+              const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+              let content = chapterRes.data.content || '';
+              content = content.replace(/\\n/g, '\n');
+              currentChapter.value = {
+                chapter: chapterIndex,
+                title: chapterData?.title || chapterRes.data.title || '',
+                content
+              };
+              displayedContent.value = content;
+              taskStatus.value = 'SUCCESS';
+              hasFailed.value = false;
+              isPreparing.value = false;
+              prepareQueueInfo.value = null;
+              generatingChapter.value = null;
+              currentStepName.value = 'chapter';
+              lastGenerationType.value = 'chapter';
+              showCoverEditBtn.value = true;
+              isLoading.value = false;
+              isLoadingComplete.value = true;
+              isFetchingNovelOutline.value = false;
+              nextTick(() => {
+                if (chapterContentRef.value) {
+                  chapterContentRef.value.scrollTop = 0;
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error checking chapter content on FAIL:', e);
+          }
+
+          if (!chapterHasContent) {
+            const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+            currentChapter.value = {
+              chapter: chapterIndex,
+              title: chapterData?.title || '',
+              content: ''
+            };
+            displayedContent.value = '';
+            hasFailed.value = true;
+            taskStatus.value = 'FAIL';
+            isPreparing.value = false;
+            prepareQueueInfo.value = null;
+            generatingChapter.value = chapterIndex;
+            currentStepName.value = 'chapter';
+            lastGenerationType.value = 'chapter';
+            showCoverEditBtn.value = true;
+            startLoadingAnimation('chapter');
+
+            await fetchUserBalance();
+
+            if (!hasFailed.value) {
+              await fetchPointsEstimate();
+            }
+            isLoading.value = false;
+            isFetchingNovelOutline.value = false;
+            return;
+          }
+
+          await fetchUserBalance();
           isFetchingNovelOutline.value = false;
           return;
         } else if (chapterIndex) {
@@ -5469,6 +5743,10 @@ const startDetailPolling = () => {
       const detailRes = await api.detailProject(sessionId.value) as any;
       if (detailRes.code != 200 || !detailRes.data) return;
 
+      if (detailRes.data.user_id) {
+        projectOwnerId.value = detailRes.data.user_id;
+      }
+
       const stepStatus = detailRes.data.step_status;
       const stepName = detailRes.data.step_name;
       const chapterIndex = detailRes.data.step_chapter_index;
@@ -5516,7 +5794,7 @@ const startDetailPolling = () => {
         }
       }
 
-      if (chapterIndex) {
+      if (chapterIndex && !isRetryingChapter.value) {
         stepChapterIndex.value = chapterIndex;
       }
 
@@ -5632,21 +5910,30 @@ const startDetailPolling = () => {
         }
       } else if (stepStatus == 'FAIL') {
         stopDetailPolling();
-        hasFailed.value = true;
-        taskStatus.value = 'FAIL';
-        isLoading.value = false;
         isPreparing.value = false;
         isGeneratingOutline.value = false;
         prepareQueueInfo.value = null;
         generatingChapter.value = null;
+        isRetryingChapter.value = false;
 
         if (stepName == 'outline') {
           lastGenerationType.value = 'outline';
-        } else {
-          lastGenerationType.value = 'chapter';
+          hasFailed.value = true;
+          taskStatus.value = 'FAIL';
+          isLoading.value = false;
+          stopLoadingAnimation();
+          await fetchUserBalance();
+          return;
         }
 
-        if (chapterIndex && stepName != 'outline') {
+        lastGenerationType.value = 'chapter';
+
+        // Show the failed chapter
+        hasFailed.value = true;
+        taskStatus.value = 'FAIL';
+        isLoading.value = false;
+
+        if (chapterIndex) {
           const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
           currentChapter.value = {
             chapter: chapterIndex,
@@ -5666,16 +5953,23 @@ const startDetailPolling = () => {
         isPreparing.value = false;
         prepareQueueInfo.value = null;
         generatingChapter.value = null;
+        isRetryingChapter.value = false;
 
-        if (chapterIndex) {
+        // Find the latest chapter from chapters array instead of relying on step_chapter_index
+        const latestChapterNum = chapters.value.length > 0
+          ? Math.max(...chapters.value.map((c: any) => c.chapter))
+          : (chapterIndex || 0);
+
+        if (latestChapterNum > 0) {
+          stepChapterIndex.value = latestChapterNum;
           try {
-            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
             if (chapterRes.code == 200 && chapterRes.data) {
               let content = chapterRes.data.content || '';
               content = content.replace(/\\n/g, '\n');
-              const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+              const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
               currentChapter.value = {
-                chapter: chapterIndex,
+                chapter: latestChapterNum,
                 title: chapterData?.title || chapterRes.data.title || '',
                 content
               };
@@ -5707,6 +6001,10 @@ const fetchDetailProjectForOutline = async () => {
 
     if (detailProjectRes.code == 200 && detailProjectRes.data) {
       const taskData = detailProjectRes.data;
+
+      if (taskData.user_id) {
+        projectOwnerId.value = taskData.user_id;
+      }
 
       // Set task status to SUCCESS
       taskStatus.value = 'SUCCESS';
@@ -6327,21 +6625,23 @@ class OutlineStreamParser {
 }
 
 // Cover edit functions
-function handleCoverEditClick() {
+async function handleCoverEditClick() {
   if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
     const chapterNum = generatingChapter.value || stepChapterIndex.value;
     toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
     return;
   }
-  toggleCoverEdit();
+  if (await checkProjectOwnershipByEstimate()) return;
+  await toggleCoverEdit();
 }
 
-function handleCoverHistoryClick() {
+async function handleCoverHistoryClick() {
   if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
     const chapterNum = generatingChapter.value || stepChapterIndex.value;
     toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
     return;
   }
+  if (checkProjectOwnership()) return;
   openCoverHistory();
 }
 
@@ -6372,10 +6672,58 @@ async function toggleCoverEdit() {
 
 
 
+function getCoverInputCharCount(element: HTMLElement): number {
+  let charCount = 0;
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        charCount += (node.textContent || '').length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+        charCount += 7;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          walkNodes(node.childNodes[i]);
+        }
+      }
+    }
+  };
+  walkNodes(element);
+  return charCount;
+}
+
+function handleRegenerateInput() {
+  const maxLimit = 20000;
+  if (regenerateContent.value.length > maxLimit) {
+    regenerateContent.value = regenerateContent.value.substring(0, maxLimit);
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+  }
+}
+
 function handleCoverInput() {
   if (!coverInputRef.value) return;
 
   const target = coverInputRef.value;
+
+  const maxLimit = 5000;
+  const currentCharCount = getCoverInputCharCount(target);
+  if (currentCharCount > maxLimit) {
+    target.innerHTML = previousCoverInputHtml.value;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+  previousCoverInputHtml.value = target.innerHTML;
 
   // 计算实际的文本内容，排除非可编辑标签中的文本（参考 Home.vue）
   let actualText = '';
@@ -6515,6 +6863,16 @@ function handleCoverKeydown(event: KeyboardEvent) {
     event.preventDefault();
     generateNovelCover();
   }
+
+  const maxLimit = 5000;
+  if (coverInputRef.value) {
+    const currentCharCount = getCoverInputCharCount(coverInputRef.value);
+    if (currentCharCount >= maxLimit && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+      return;
+    }
+  }
 }
 
 function handleCoverInputClick() {
@@ -6608,16 +6966,32 @@ function handleCoverInputBlur() {
 
 function handleCoverPaste(event: ClipboardEvent) {
   event.preventDefault();
+
+  if (!coverInputRef.value) return;
+
+  const maxLimit = 5000;
+  const currentCharCount = getCoverInputCharCount(coverInputRef.value);
   const text = event.clipboardData?.getData('text/plain') || '';
+
+  if (currentCharCount + text.length > maxLimit) {
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
   document.execCommand('insertText', false, text);
   nextTick(() => {
     const el = coverInputRef.value;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+      previousCoverInputHtml.value = el.innerHTML;
+    }
   });
 }
 
 function handleCoverInputFocus() {
-  // Handle focus event if needed
+  if (coverInputRef.value) {
+    previousCoverInputHtml.value = coverInputRef.value.innerHTML;
+  }
 }
 
 // Upload image to server
@@ -6769,6 +7143,7 @@ function selectCoverAtItem(item: any) {
   if (!coverInputRef.value) return;
 
   const target = coverInputRef.value;
+  const savedHtml = target.innerHTML;
 
   if (target.textContent?.trim() === '') {
     target.innerHTML = '';
@@ -6880,6 +7255,15 @@ function selectCoverAtItem(item: any) {
 
   showCoverAtDropdown.value = false;
   coverInputRef.value.focus();
+
+  const maxLimit = 5000;
+  if (getCoverInputCharCount(coverInputRef.value) > maxLimit) {
+    coverInputRef.value.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
+  previousCoverInputHtml.value = coverInputRef.value.innerHTML;
 }
 
 function updateCoverAtDropdownItems() {
@@ -6970,6 +7354,7 @@ function closeCoverHistoryModal() {
 }
 
 async function selectHistoryCover(coverUrl: string) {
+  if (checkProjectOwnership()) return;
   try {
     const token = localStorage.getItem('token') || '';
     const response = await fetch(`${aiUrl}ai/novel/replace_novel_cover`, {
@@ -7185,6 +7570,14 @@ async function doGenerateNovelCover() {
         showInsufficientBalanceModal.value = true;
         coverRenewLoading.value = false;
         showCoverEditBtn.value = true;
+        return;
+      }
+      if (res.code == 10407) {
+        toast(t('novel.error.staleOperation'));
+        coverRenewLoading.value = false;
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
         return;
       }
       coverRenewLoading.value = false;

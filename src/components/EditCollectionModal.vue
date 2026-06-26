@@ -74,13 +74,13 @@
         <div class="form-group">
           <label class="form-label">
             <span>{{ t('collectionSettings.description') }}</span>
-            <span class="char-counter">({{ description.length }}/500)</span>
+            <span class="char-counter">({{ description.length }}/1000)</span>
           </label>
           <textarea
             v-model="description"
             class="form-textarea"
             :placeholder="t('collection.descriptionPlaceholder')"
-            maxlength="500"
+            maxlength="1000"
             spellcheck="false"
           ></textarea>
         </div>
@@ -136,6 +136,8 @@ const props = defineProps<{
   description?: string;
   type?: number;
   isNsfw?: string | number;
+  sessionId?: string;
+  storySummary?: string;
 }>();
 
 const emit = defineEmits<{
@@ -165,9 +167,31 @@ watch(() => props.visible, async (newVal) => {
     if (!props.isEdit) {
       collectionName.value = props.collectionName || '';
       coverUrl.value = props.coverUrl || '';
-      description.value = props.description || t('collection.defaultDescription');
       isNsfw.value = props.isNsfw == 1 ? 1 : 0;
       isNsfwSelected.value = true;
+
+      if (props.storySummary) {
+        description.value = props.storySummary.slice(0, 1000);
+      } else if (props.sessionId) {
+        isLoading.value = true;
+        description.value = '';
+        try {
+          const projectRes = await api.detailProject(props.sessionId) as any;
+          if (projectRes.code == 200 && projectRes.data?.result_async?.generate_novel_outline?.story_summary?.summary) {
+            description.value = projectRes.data.result_async.generate_novel_outline.story_summary.summary.slice(0, 1000);
+          } else {
+            description.value = props.description || t('collection.defaultDescription');
+          }
+        } catch (e) {
+          console.error('Failed to fetch story summary:', e);
+          description.value = props.description || t('collection.defaultDescription');
+        } finally {
+          isLoading.value = false;
+        }
+      } else {
+        description.value = props.description || t('collection.defaultDescription');
+      }
+
       initialCollectionName.value = collectionName.value;
       initialCoverUrl.value = coverUrl.value;
       initialDescription.value = description.value;

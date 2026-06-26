@@ -521,6 +521,8 @@
       :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
       :is-nsfw="0"
       :type="1"
+      :session-id="selectedProject?.session_id || route.query.session_id || ''"
+      :story-summary="selectedProject?.result_async?.generate_novel_outline?.story_summary?.summary || ''"
       @close="handleCloseEditCollectionModal"
       @save="handleSaveCollection"
     />

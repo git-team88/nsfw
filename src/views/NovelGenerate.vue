@@ -1343,6 +1343,46 @@ const checkProjectOwnershipByEstimate = async () => {
   return false;
 };
 
+const checkServerStateSync = async (expectedStepName?: string, expectedStepStatus?: string, expectedStepChapterIndex?: number): Promise<boolean> => {
+  try {
+    const res = await api.detailProject(sessionId.value) as any;
+    if (res.code !== 200) return false;
+
+    const serverStepName = res.data?.step_name;
+    const serverStepStatus = res.data?.step_status;
+    const serverStepChapterIndex = res.data?.step_chapter_index;
+
+    currentStepName.value = serverStepName || currentStepName.value;
+    if (serverStepStatus) taskStatus.value = serverStepStatus;
+    if (serverStepChapterIndex !== undefined && serverStepChapterIndex !== null) {
+      stepChapterIndex.value = serverStepChapterIndex;
+    }
+    if (res.data?.chapters) {
+      chapters.value = res.data.chapters;
+    }
+
+    if (expectedStepName !== undefined || expectedStepStatus !== undefined) {
+      if ((expectedStepName !== undefined && serverStepName !== expectedStepName) ||
+          (expectedStepStatus !== undefined && serverStepStatus !== expectedStepStatus)) {
+        toast(t('novel.error.staleOperation'));
+        setTimeout(() => { window.location.reload(); }, 1000);
+        return false;
+      }
+    }
+
+    if (expectedStepChapterIndex !== undefined && serverStepChapterIndex !== undefined && serverStepChapterIndex !== null && serverStepChapterIndex !== expectedStepChapterIndex) {
+      toast(t('novel.error.staleOperation'));
+      setTimeout(() => { window.location.reload(); }, 1000);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking server state sync:', error);
+    return false;
+  }
+};
+
 const isCoverSendClicked = ref<boolean>(false);
 const coverAbortController = ref<AbortController | null>(null);
 const estimatedComputingPower = ref<number>(0);
@@ -1911,6 +1951,7 @@ const regenerateOutline = async () => {
     return;
   }
   if (await checkProjectOwnershipByEstimate()) return;
+  // if (!await checkServerStateSync('SUCCESS')) return;
 
   hideEdit();
 
@@ -2000,6 +2041,10 @@ const sendRegenerateRequest = async () => {
   }
 
   try {
+    // if (!await checkServerStateSync('SUCCESS')) {
+    //   isSendingRegenerate.value = false;
+    //   return;
+    // }
     // Check if task limit is exceeded
     if (await isTaskLimitExceeded()) {
       isSendingRegenerate.value = false;
@@ -2202,6 +2247,9 @@ const startEditChapter = async () => {
     return;
   }
   if (checkProjectOwnership()) return;
+
+  if (!currentChapter.value?.chapter) return;
+  // if (!await checkServerStateSync(undefined, undefined, currentChapter.value.chapter)) return;
 
   if (currentChapter.value?.content) {
     originalChapterContent.value = currentChapter.value.content;
@@ -2749,6 +2797,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     return;
   }
 
+  // if (!await checkServerStateSync('SUCCESS')) return;
 
   if (!skipBalanceCheck) isNextLoading.value = true;
   try {
@@ -3277,6 +3326,8 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+
+  // if (!await checkServerStateSync('SUCCESS')) return;
 
   hideEdit();
 
@@ -7522,6 +7573,7 @@ async function doGenerateNovelCover() {
   }
 
   try {
+    // if (!await checkServerStateSync('SUCCESS')) return;
     if (await isTaskLimitExceeded()) return;
 
     const newReferenceImages = uploadedCoverImages.value.map(img => img.image);

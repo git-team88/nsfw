@@ -277,7 +277,7 @@ function goEmailLogin() {
     .then((res: any) => {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
-        trackLogin("email");
+        trackLogin();
 
         if (headerRef.value) {
           headerRef.value.getLoginUserInfo()
@@ -315,7 +315,7 @@ function googleLogin() {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("lType");
-        trackLogin("google");
+        trackLogin();
 
         // if (res.data && res.data.is_first == 1) {
         //   localStorage.setItem("isFirstLogin", "1");
