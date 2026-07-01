@@ -201,7 +201,7 @@
               <div class="card-info">
                 <div class="card-desc" v-if="project.name">{{ project.name }}</div>
                 <div class="card-footer">
-                  <span class="time">{{ project.created_at || project.updated_at || '' }}</span>
+                  <span class="time">{{ formatTimestamp(project.created_at || project.updated_at || '') }}</span>
                   <!-- Three-dot Menu -->
                   <div class="more-btn-wrap" :ref="(el) => setMenuRef(el, project.id)">
                     <img
@@ -271,7 +271,7 @@ import pic from '@/assets/images/base/cover.png'
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import router from '@/router';
-import { processImageUrl } from '@/util/utils';
+import { formatTimestamp, processImageUrl } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();

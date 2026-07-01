@@ -424,7 +424,7 @@ import {
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
-import { processImageUrl, initLanguage } from "@/util/utils";
+import { processImageUrl, initLanguage, formatTimestamp } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
 import { eventBus } from "@/utils/eventBus";
@@ -970,6 +970,14 @@ onMounted(async () => {
   // First fetch user info
   await fetchUserInfo();
 
+    const typeParam = route.query.type;
+    if (typeParam) {
+      const typeNum = parseInt(typeParam as string);
+      if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+        activeContentType.value = typeNum;
+      }
+    }
+
     const tabParam = route.query.tab;
     if (tabParam) {
       const tab = parseInt(tabParam as string);
@@ -1037,11 +1045,13 @@ watch(currentTab, () => {
 
 let lastId = ref(route.query.id);
 let lastTab = ref(route.query.tab);
+let lastType = ref(route.query.type);
 
-watch(() => [route.query.id, route.query.tab], async ([newId, newTab], [oldId, oldTab]) => {
+watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, newTab, newType], [oldId, oldTab, oldType]) => {
 
   const idChanged = newId !== oldId;
   const tabChanged = newTab !== oldTab;
+  const typeChanged = newType !== oldType;
 
   if (idChanged) {
     // Reset states
@@ -1073,6 +1083,14 @@ watch(() => [route.query.id, route.query.tab], async ([newId, newTab], [oldId, o
     // Fetch new user info and data
     await fetchUserInfo();
 
+    const typeParam = newType;
+    if (typeParam) {
+      const typeNum = parseInt(typeParam as string);
+      if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+        activeContentType.value = typeNum;
+      }
+    }
+
     const tabParam = newTab;
     if (tabParam) {
       const tabVal = parseInt(tabParam as string);
@@ -1089,6 +1107,13 @@ watch(() => [route.query.id, route.query.tab], async ([newId, newTab], [oldId, o
       }
     } else {
       goToCollections(true);
+    }
+  }
+
+  else if (typeChanged && newType) {
+    const typeNum = parseInt(newType as string);
+    if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+      setActiveContentType(typeNum);
     }
   }
 
@@ -1109,6 +1134,7 @@ watch(() => [route.query.id, route.query.tab], async ([newId, newTab], [oldId, o
 
   lastId.value = newId;
   lastTab.value = newTab;
+  lastType.value = newType;
 });
 
 // Watch for language changes
@@ -1149,6 +1175,7 @@ function setActiveContentType(typeId: number) {
 
   const newQuery = { ...route.query };
   delete newQuery.tab;
+  delete newQuery.type;
 
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
     router.replace({
@@ -1570,24 +1597,14 @@ async function loadPosts(reset = false) {
 
     const data = res as any;
     if (data.code === 200 || data.code === 0) {
-      const newPosts = (data.data?.data || []).map((item: any) => {
-        // Format timestamp to readable date
-        const formatTime = (timestamp: string) => {
-          const date = new Date(parseInt(timestamp) * 1000);
-          return date.getFullYear() + '.' +
-            String(date.getMonth() + 1).padStart(2, '0') + '.' +
-            String(date.getDate()).padStart(2, '0') + ' ' +
-            String(date.getHours()).padStart(2, '0') + ':' +
-            String(date.getMinutes()).padStart(2, '0');
-        };
-
-        return {
-          id: item.id,
-          type: item.type === '1' ? 'image' : item.type === '2' ? 'article' : 'video',
-          title: item.title || '',
-          description: item.content || '',
-          cover: item.cover || '',
-          time: formatTime(item.created_at),
+        const newPosts = (data.data?.data || []).map((item: any) => {
+          return {
+            id: item.id,
+            type: item.type === '1' ? 'image' : item.type === '2' ? 'article' : 'video',
+            title: item.title || '',
+            description: item.content || '',
+            cover: item.cover || '',
+            time: formatTimestamp(item.created_at),
           isPinned: item.is_top === '1' || false,
         };
       });

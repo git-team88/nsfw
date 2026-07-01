@@ -570,6 +570,13 @@ const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
 
+function getI18nMsg(res: any) {
+  const lang = locale.value;
+  const msgMap: Record<string, string> = { zh: 'msg_cn', jp: 'msg_jp', tc: 'msg_tc' };
+  const key = msgMap[lang];
+  return (key && res?.[key]) || res?.msg || t('fail');
+}
+
 // State
 const isUpload = ref(false);
 const uploadSuccess = ref(false);
@@ -1743,10 +1750,10 @@ async function startFakeUpload(file: File) {
 
     URL.revokeObjectURL(video.src);
 
-    const videoIdResponse = await api.getVideoId({ filename: file.name }) as any;
-    if (!videoIdResponse || videoIdResponse.code !== 0) {
+    const videoIdResponse = await api.getVideoId({ filename: file.name, filesize: file.size }) as any;
+    if (!videoIdResponse || videoIdResponse.code != 0) {
       isUpload.value = false;
-      toast(t('fail'));
+      toast(getI18nMsg(videoIdResponse));
       return false;
     }
 
@@ -1762,37 +1769,41 @@ async function startFakeUpload(file: File) {
       const end = Math.min(i * CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
 
-      const videoUrlResponse = await api.getVideoUrl({ uploadId, fileKey, partNumber: i }) as any;
-      if (!videoUrlResponse || videoUrlResponse.code !== 0) {
+      const formData = new FormData();
+      formData.append('uploadId', uploadId);
+      formData.append('key', fileKey);
+      formData.append('partNumber', String(i));
+      formData.append('file', chunk);
+
+      const authToken = localStorage.getItem("token") ?? "";
+      const authHeaders = window.AntiCrawler.generateAuthParams(authToken);
+      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
+        method: "POST",
+        headers: {
+          token: authToken || undefined,
+          ...authHeaders,
+        } as Record<string, string>,
+        body: formData,
+      });
+      const videoUrlData = await videoUrlResponse.json();
+      if (!videoUrlData || videoUrlData.code !== 0) {
         isUpload.value = false;
-        toast(t('fail'));
+        toast(getI18nMsg(videoUrlData));
         return false;
       }
 
       uploadProgress.value = 60;
-      const presignedUrl = videoUrlResponse.data.url;
 
-      const uploadRes = await fetch(presignedUrl, {
-        method: 'PUT',
-        body: chunk
-      });
-
-      if (!uploadRes.ok) {
-        isUpload.value = false;
-        toast(t('fail'));
-        return false;
-      }
-
-      const etag = uploadRes.headers.get('etag')?.replace(/"/g, '') || '';
+      const etag = videoUrlData.data?.etag || '';
       uploadedParts.push({ PartNumber: i, ETag: etag });
 
       uploadProgress.value = Math.round((i / totalParts) * 100);
     }
 
-    const videoMergeResponse = await api.getVideoMerge({ uploadId, fileKey, parts: uploadedParts }) as any;
+    const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
     if (!videoMergeResponse || videoMergeResponse.code !== 0) {
       isUpload.value = false;
-      toast(t('fail'));
+      toast(getI18nMsg(videoMergeResponse));
       return false;
     }
 
@@ -1800,10 +1811,7 @@ async function startFakeUpload(file: File) {
 
     uploadSuccess.value = true;
     isUpload.value = false;
-
-    await captureFirstFrame(file);
-  } catch (error) {
-    console.error("Video upload error:", error);
+  } catch (error: any) {
     isUpload.value = false;
     toast(t('fail'));
   }

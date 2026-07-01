@@ -446,7 +446,7 @@ async function loadData(fromLoadMore = false) {
 
         const totalPosts = Number(res.data?.allnums) || 0;
         const loadedPosts = postList.value ? postList.value.length : 0;
-        postsHasMore.value = loadedPosts < totalPosts;
+        postsHasMore.value = totalPosts > postsLimit.value && loadedPosts < totalPosts;
 
         postsPage.value++;
 

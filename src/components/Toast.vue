@@ -44,6 +44,7 @@
     background: rgba(0, 0, 0, .4);
     color: #ffffff;
     z-index: 2000;
+    max-width: 50rem;
     text-align: center;
     word-break: break-word;
   }

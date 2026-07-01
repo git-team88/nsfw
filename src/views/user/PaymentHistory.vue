@@ -61,7 +61,7 @@
                     <div class="price-info">
                       <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}{{ t('user.paymentHistory.month') }}</div>
                       <div class="date">
-                        {{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}
+                        {{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}
                       </div>
                     </div>
 
@@ -102,7 +102,7 @@
                   <div class="right">
                     <div class="price-info">
                       <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
-                      <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatDate(item.startTime) }}-{{ formatDate(item.endTime) }}</div>
+                      <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
                     </div>
 
                     <div class="operate-box">
@@ -139,7 +139,7 @@
               <div class="table">
                 <div class="tbody" v-if="listData.length">
                   <div class="tr" v-for="item in listData" :key="item.id">
-                    <div class="td time">{{ formatDate(item.issued_at || item.pay_time) }}</div>
+                    <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
                     <div class="td amount">{{ item.amount || item.price }}{{ t('aiRecharge.unit') }}</div>
@@ -347,8 +347,8 @@ async function fetchProcessingData() {
           name: item.author?.nickname || '',
           avatar: item.author?.avatar || '',
           price: item.plan?.price || 0,
-          startTime: item.start_at ? formatTimestamp(item.start_at) : item.created_at,
-          endTime: item.expire_at ? formatTimestamp(item.expire_at) : '',
+          startTime: item.start_at || item.created_at || '',
+          endTime: item.expire_at || '',
           autoRenew: item.cancel_at_period_end == '1'
         }));
       } else {
@@ -363,8 +363,8 @@ async function fetchProcessingData() {
           id: item.id,
           avatar: '',
           price: item.amount || 0,
-          startTime: item.created_at,
-          endTime: item.current_period_end ? formatDate(item.current_period_end) : '',
+          startTime: item.created_at || '',
+          endTime: item.current_period_end || '',
           autoRenew: item.cancel_at_period_end == '1',
           plan_desc: item.plan_desc || [],
           plan_info: {
@@ -406,11 +406,6 @@ function getTimeUnit(billingPeriod: string) {
     default:
       return t('aiRecharge.periodMonth');
   }
-}
-
-function formatDate(date: string) {
-  if (!date) return '';
-  return date.replace('T', ' ');
 }
 
 watch(page, () => {

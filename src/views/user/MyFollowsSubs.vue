@@ -195,7 +195,7 @@ async function fetchData() {
             name: item.author?.nickname || '',
             avatar: item.author?.avatar || '',
             price: item.plan?.price || 0,
-            startTime: item.created_at || '',
+            startTime: formatTimestamp(item.created_at) || '',
             endTime: formatTimestamp(item.expire_at) || '',
             autoRenew: item.auto_renew || false,
           };

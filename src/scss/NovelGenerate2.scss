@@ -622,27 +622,27 @@
             pointer-events: none;
             opacity: 0.5;
           }
+
+          .btn-spinner {
+            display: inline-block;
+            width: 1.4rem;
+            height: 1.4rem;
+            border: 1.5px solid #FB64B6;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: btn-spin 0.6s linear infinite;
+            flex-shrink: 0;
+          }
+
+          .btn-spinner-small {
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          &:hover {
+            opacity: 0.9;
+          }
         }
-      }
-    }
-
-    .btn-spinner-wrapper {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 2.8rem;
-      height: 2.8rem;
-      background: rgba(251, 100, 182, 0.6);
-      border-radius: 0.4rem;
-      cursor: not-allowed;
-
-      .btn-spinner {
-        width: 1.6rem;
-        height: 1.6rem;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #FFFFFF;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
       }
     }
   }
@@ -899,344 +899,73 @@
           color: #6A7282;
         }
 
-        .chapter-title-edit-row {
+        .regenerate-btn {
           display: flex;
           align-items: center;
-          gap: 0.8rem;
-          flex: 1;
-
-          .chapter-title-edit-label {
-            font-size: 1.6rem;
-            font-weight: 500;
-            color: #6A7282;
-            flex-shrink: 0;
-          }
-
-          .chapter-title-edit-input {
-            flex: 1;
-            height: 4rem;
-            background: #F5F5F5;
-            border: 0.1rem solid transparent;
-            border-radius: 0.8rem;
-            padding: 0 1.2rem;
-            font-size: 1.6rem;
-            color: #364153;
-            outline: none;
-            font-family: inherit;
-            box-sizing: border-box;
-
-            &::placeholder {
-              color: #99A1AF;
-            }
-
-            &:focus {
-              border-color: #FB64B6;
-            }
-          }
-
-          .chapter-title-edit-counter {
-            font-size: 1.2rem;
-            color: #99A1AF;
-            flex-shrink: 0;
-          }
-        }
-
-        .outline-actions {
-          display: flex;
-          align-items: center;
-          gap: 2rem;
-
-          .regenerate-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none;
-            color: #99A1AF;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-
-            &:hover {
-              color: #6A7282;
-            }
-          }
-
-          .manual-edit-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none;
-            color: #99A1AF;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-
-            &:hover {
-              color: #6A7282;
-            }
-          }
-
-          .ai-edit-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none;
-            color: #FB64B6;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-          }
-
-          .outline-edit-tooltip-icon {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            overflow: visible;
-            z-index: 30;
-
-            img {
-              width: 2rem;
-              height: 2rem;
-            }
-
-            .outline-edit-tooltip-arrow {
-              position: absolute;
-              top: 100%;
-              right: 0;
-              margin-top: 0.4rem;
-              width: 1.2rem;
-              height: 1.2rem;
-              background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
-              background-size: contain;
-              flex-shrink: 0;
-              transform: rotate(90deg);
-              opacity: 0;
-              visibility: hidden;
-              transition: all 0.2s ease;
-            }
-
-            .outline-edit-tooltip {
-              position: absolute;
-              top: 100%;
-              right: -1.6rem;
-              margin-top: 1.6rem;
-              padding: 1rem 1.2rem;
-              width: 24rem;
-              background: #FFFFFF;
-              font-size: 1.2rem;
-              line-height: 1.6rem;
-              border-radius: 0.8rem;
-              white-space: normal;
-              box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-              z-index: 100;
-              opacity: 0;
-              visibility: hidden;
-              transition: all 0.2s ease;
-              color: #99A1AF;
-
-              :deep(span) {
-                color: #364153;
-              }
-            }
-
-            &:hover .outline-edit-tooltip {
-              opacity: 1;
-              visibility: visible;
-            }
-
-            &:hover .outline-edit-tooltip-arrow {
-              opacity: 1;
-              visibility: visible;
-            }
-          }
-        }
-
-        .outline-history-btn {
+          justify-content: center;
           background: none;
-          border: none;
           color: #99A1AF;
+          border: none;
           font-size: 1.4rem;
           cursor: pointer;
-
-          &:hover {
-            color: #6A7282;
-          }
         }
-      }
 
-      .regenerate-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: none;
-        color: #99A1AF;
-        border: none;
-        font-size: 1.4rem;
-        cursor: pointer;
-      }
+        .edit-chapter-actions {
+          display: flex;
+          gap: 1.2rem;
 
-       .chapter-actions {
-         display: flex;
-         align-items: center;
-         gap: 2rem;
-
-          .chapter-history-btn {
+          .cancel-edit-chapter-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: none;
-            border: none;
             color: #99A1AF;
+            border: none;
             font-size: 1.4rem;
             cursor: pointer;
           }
 
-         .manual-edit-btn {
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           background: none;
-           color: #99A1AF;
-           border: none;
-           font-size: 1.4rem;
-           cursor: pointer;
-         }
-
-         .ai-edit-btn {
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           background: none;
-           color: #FB64B6;
-           border: none;
-           font-size: 1.4rem;
-           cursor: pointer;
-         }
-       }
-
-       .edit-chapter-actions {
-        display: flex;
-        gap: 1.2rem;
-
-        .cancel-edit-chapter-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #F5F5F5;
-          color: #364153;
-          border: none;
-          border-radius: 2rem;
-          padding: 0.8rem 2.4rem;
-          font-size: 1.4rem;
-          cursor: pointer;
-          font-family: inherit;
-        }
-
-        .save-edit-chapter-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #FB64B6, #F3596D);
-          border: none;
-          border-radius: 2rem;
-          padding: 0.8rem 2.4rem;
-          font-size: 1.4rem;
-          cursor: pointer;
-          color: #fff;
-          font-family: inherit;
-        }
-      }
-    }
-
-    .outline-content {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 0 1.8rem 1.8rem;
-      /* Skeleton Loader - 闪屏效果 */
-      .skeleton-loader {
-        padding: 1rem 0;
-
-        .skeleton-line {
-          background: linear-gradient(90deg, #F5F5F5 25%, #E5E7EB 50%, #F5F5F5 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 0.4rem;
-          margin-bottom: 1.6rem;
-          width: 100%;
-
-          &.title {
-            height: 2.4rem;
-          }
-
-          &.content {
-            height: 8.8rem;
+          .save-edit-chapter-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #FB64B6;
           }
         }
       }
 
-      /* Loading spinner */
-      .loading-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        margin-top: 12rem;
-
-        .loading-spinner {
-          width: 4rem;
-          height: 4rem;
-          border: 0.4rem solid #F5F5F5;
-          border-top: 0.4rem solid #6A7282;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 2.4rem;
-        }
-
-        .loading-text {
-          font-size: 1.4rem;
-          color: #6A7282;
-        }
-      }
-
-      /* Outline typing content - typewriter effect for outline */
-      .outline-typing-content {
-        height: 100%;
-        padding: 2.4rem 0 0;
+      .outline-content {
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
+        padding: 0 1.8rem 1.8rem;
+        /* Skeleton Loader - 闪屏效果 */
+        .skeleton-loader {
+          padding: 1rem 0;
 
-        .typing-text {
-          font-size: 1.4rem;
-          line-height: 1.8;
-          color: #6A7282;
-          white-space: pre-wrap;
-          word-break: break-word;
+          .skeleton-line {
+            background: linear-gradient(90deg, #F5F5F5 25%, #E5E7EB 50%, #F5F5F5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.4rem;
+            margin-bottom: 1.6rem;
+            width: 100%;
 
-          .typing-cursor {
-            display: inline-block;
-            width: 3px;
-            height: 1.4rem;
-            background-color: #FB64B6;
-            vertical-align: text-bottom;
-            margin-left: 1px;
-            border-radius: 1px;
-            animation: none;
+            &.title {
+              height: 2.4rem;
+            }
 
-            &.blink {
-              animation: cursorBlink 1s step-end infinite;
+            &.content {
+              height: 8.8rem;
             }
           }
         }
-      }
 
-      @keyframes cursorBlink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-      }
-
-      .chapter-content {
-        height: 100%;
-        padding: 4rem 0 0;
-        overflow-y: auto;
-
+        /* Loading spinner */
         .loading-state {
           display: flex;
           flex-direction: column;
@@ -1260,42 +989,23 @@
           }
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
+        /* Outline typing content - typewriter effect for outline */
+        .outline-typing-content {
+          height: 100%;
+          padding: 2.4rem 0 0;
+          overflow-y: auto;
 
-        .chapter-title-display {
-          font-size: 1.8rem;
-          font-weight: 500;
-          color: #364153;
-          margin-bottom: 4rem;
-        }
-
-        .chapter-text {
-          height: auto;
-          min-height: 100%;
-
-          .chapter-display-title {
-            font-weight: 400;
-            font-size: 2.8rem;
-            color: #101828;
-            text-align: center;
-            margin-bottom: 2rem;
-          }
-
-          .paragraph {
-            padding-bottom: 2.8rem;
-            font-size: 1.6rem;
-            line-height: 3.2rem;
-            color: #364153;
+          .typing-text {
+            font-size: 1.4rem;
+            line-height: 1.8;
+            color: #6A7282;
             white-space: pre-wrap;
             word-break: break-word;
 
             .typing-cursor {
               display: inline-block;
               width: 3px;
-              height: 1.6rem;
+              height: 1.4rem;
               background-color: #FB64B6;
               vertical-align: text-bottom;
               margin-left: 1px;
@@ -1309,758 +1019,430 @@
           }
         }
 
-        .chapter-textarea{
-          height: 100%;
-          display: flex;
-          flex-direction: column;
+        @keyframes cursorBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
 
-          .chapter-display-title {
-            font-weight: 400;
-            font-size: 2.8rem;
-            color: #101828;
-            text-align: center;
-            margin-bottom: 2.4rem;
+        .chapter-content {
+          height: 100%;
+          padding: 4rem 0 0;
+          overflow-y: auto;
+
+          .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12rem;
+
+            .loading-spinner {
+              width: 4rem;
+              height: 4rem;
+              border: 0.4rem solid #F5F5F5;
+              border-top: 0.4rem solid #6A7282;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin-bottom: 2.4rem;
+            }
+
+            .loading-text {
+              font-size: 1.4rem;
+              color: #6A7282;
+            }
           }
 
-          .chapter-edit-wrapper {
-            flex: 1;
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          .chapter-title-display {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #364153;
+            margin-bottom: 4rem;
+          }
+
+          .chapter-text {
+            height: auto;
+            min-height: 100%;
+
+            .chapter-display-title {
+              font-weight: 400;
+              font-size: 2.8rem;
+              color: #101828;
+              text-align: center;
+              margin-bottom: 2rem;
+            }
+
+            .paragraph {
+              padding-bottom: 2.8rem;
+              font-size: 1.6rem;
+              line-height: 3.2rem;
+              color: #364153;
+              white-space: pre-wrap;
+              word-break: break-word;
+
+              .typing-cursor {
+                display: inline-block;
+                width: 3px;
+                height: 1.6rem;
+                background-color: #FB64B6;
+                vertical-align: text-bottom;
+                margin-left: 1px;
+                border-radius: 1px;
+                animation: none;
+
+                &.blink {
+                  animation: cursorBlink 1s step-end infinite;
+                }
+              }
+            }
+          }
+
+          .chapter-textarea{
+            height: 100%;
             display: flex;
             flex-direction: column;
 
-          }
-
-          .chapter-edit-textarea {
-            width: 100%;
-            flex: 1;
-            border: none;
-            border-radius: 0.8rem;
-            background: #F5F5F5;
-            padding: 1rem;
-            font-size: 1.4rem;
-            color: #364153;
-            outline: none;
-            resize: none;
-            font-family: inherit;
-            line-height: 3.2rem;
-            overflow-y: auto;
-
-            &:focus {
-              outline: none;
-            }
-          }
-
-          .chapter-edit-counter {
-            font-size: 1.2rem;
-            color: #99A1AF;
-            text-align: right;
-            padding: 0.8rem 0;
-            margin-top: 1.6rem;
-          }
-        }
-      }
-
-      .manual-outline-edit-content {
-        .outline-edit-error {
-          border-color: #FB64B6 !important;
-        }
-
-        .outline-edit-field-error {
-          font-size: 1.2rem;
-          color: #DC2626;
-          margin-top: 0.4rem;
-          line-height: 1.5;
-        }
-
-        .section {
-          margin-bottom: 2.4rem;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .section-title {
-            font-size: 1.6rem;
-            font-weight: 500;
-            color: #364153;
-            margin-bottom: 1.6rem;
-            display: flex;
-            align-items: center;
-
-            .section-title-counter {
-              font-size: 1.4rem;
-              color: #99A1AF;
+            .chapter-display-title {
               font-weight: 400;
+              font-size: 2.8rem;
+              color: #101828;
+              text-align: center;
+              margin-bottom: 2.4rem;
             }
 
-            .outline-edit-add-btn {
-              font-weight: 400;
-              font-size: 1.4rem;
-              color: #FB64B6;
-              cursor: pointer;
-            }
-           }
-        }
-
-        .basic-info {
-          margin-top: 1.8rem;
-
-          .info-item {
-            display: flex;
-            margin-bottom: 1.2rem;
-
-            &:last-child {
-              margin-bottom: 0;
+            .chapter-edit-wrapper {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
             }
 
-            .info-label {
+            .chapter-edit-textarea {
+              width: 100%;
+              flex: 1;
+              border: none;
+              border-radius: 0;
               font-size: 1.4rem;
               color: #364153;
-            }
-
-            .info-value {
-              font-size: 1.4rem;
-              color: #6A7282;
-              flex: 1;
-            }
-          }
-        }
-
-         .story-summary {
-           .outline-edit-textarea {
-             width: 100%;
-             height: 13.2rem;
-             font-size: 1.4rem;
-             line-height: 2.2rem;
-             color: #6A7282;
-             text-align: justify;
-             background: #F5F5F5;
-             border: 0.1rem solid transparent;
-             border-radius: 0.8rem;
-             box-sizing: border-box;
+              outline: none;
+              resize: none;
+              font-family: inherit;
+              line-height: 3.2rem;
+              overflow-y: auto;
 
               &:focus {
-                border-color: #FB64B6;
-              }
-            }
-          }
-
-        .characters {
-          .section-title {
-            justify-content: space-between;
-          }
-
-          .characters-list {
-            margin-bottom: 2.4rem;
-
-            .character-item {
-              margin-bottom: 1.8rem;
-              font-size: 1.4rem;
-              line-height: 2.2rem;
-              color: #364153;
-
-              &:last-child {
-                margin-bottom: 0;
-              }
-
-              .character-type {
-                font-size: 1.4rem;
-                color: #99A1AF;
-                margin-bottom: 0.8rem;
-              }
-
-              .character-name-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 0.4rem;
-
-                .character-name-left {
-                  display: flex;
-                  align-items: center;
-
-                  .character-name-label {
-                    font-size: 1.4rem;
-                    color: #6A7282;
-                    flex-shrink: 0;
-                  }
-
-                  .character-name-counter {
-                    color: #99A1AF;
-                  }
-                }
-
-                .delete-character-btn {
-                  color: #99A1AF;
-                  cursor: pointer;
-                }
-              }
-
-              .character-name-input-row {
-                display: flex;
-                align-items: center;
-                margin-bottom: 1.2rem;
-
-                .outline-edit-input {
-                   width: 100%;
-                   height: 5rem;
-                   background: #F5F5F5;
-                   border: 0.1rem solid transparent;
-                   border-radius: 0.8rem;
-                   padding: 1rem 1.2rem;
-                   font-size: 1.4rem;
-                   color: #364153;
-                   outline: none;
-                   font-family: inherit;
-                   box-sizing: border-box;
-
-                   &::placeholder {
-                     color: #99A1AF;
-                   }
-
-                   &:focus {
-                     border-color: #FB64B6;
-                   }
-                 }
-               }
-
-               .character-desc-label-row {
-                display: flex;
-                align-items: center;
-                margin-bottom: 1.2rem;
-
-                .character-desc-label {
-                  font-size: 1.4rem;
-                  color: #6A7282;
-                }
-
-                .character-desc-counter {
-                  color: #99A1AF;
-                }
-              }
-
-              .character-desc-textarea {
-                 width: 100%;
-                 height: 13.2rem;
-                 font-size: 1.4rem;
-                 line-height: 2.2rem;
-                 color: #364153;
-                 text-align: justify;
-                 background: #F5F5F5;
-                 border: 0.1rem solid transparent;
-                 border-radius: 0.8rem;
-                 padding: 1rem 1.2rem;
-                 resize: none;
-                 outline: none;
-                 font-family: inherit;
-                 margin-top: 0.4rem;
-                 box-sizing: border-box;
-
-                 &::placeholder {
-                   color: #99A1AF;
-                 }
-
-                 &:focus {
-                   border-color: #FB64B6;
-                 }
-               }
-            }
-          }
-        }
-
-        .chapters {
-          .chapter-card {
-            margin-top: 1.2rem;
-            font-size: 1.4rem;
-            line-height: 3rem;
-            color: #364153;
-
-            &:nth-of-type(1) {
-              margin-top: 0;
-            }
-
-            .chapter-title-label-row {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: 0.4rem;
-
-              .chapter-title-left {
-                display: flex;
-                align-items: center;
-
-                .chapter-title-label {
-                  font-size: 1.4rem;
-                  color: #6A7282;
-                  flex-shrink: 0;
-                }
-
-                .chapter-title-counter {
-                  color: #99A1AF;
-                }
-              }
-
-              .chapter-title-actions {
-                display: flex;
-                align-items: center;
-                gap: 0.8rem;
-                flex-shrink: 0;
-
-                .delete-chapter-btn {
-                  color: #99A1AF;
-                  cursor: pointer;
-                }
-
-                .insert-chapter-btn {
-                  color: #FB64B6;
-                  cursor: pointer;
-                }
+                outline: none;
               }
             }
 
-            .chapter-title-input-row {
-              display: flex;
-              align-items: center;
-              margin-bottom: 0.8rem;
-
-              .outline-edit-input {
-                 width: 100%;
-                 height: 5rem;
-                 background: #F5F5F5;
-                 border: 0.1rem solid transparent;
-                 border-radius: 0.8rem;
-                 padding: 1rem 1.2rem;
-                 font-size: 1.4rem;
-                 color: #364153;
-                 outline: none;
-                 font-family: inherit;
-                 box-sizing: border-box;
-
-                 &::placeholder {
-                   color: #99A1AF;
-                 }
-
-                 &:focus {
-                   border-color: #FB64B6;
-                 }
-               }
-             }
-
-
-
-             .chapter-desc-label-row {
-              display: flex;
-              align-items: center;
-              margin-bottom: 0.4rem;
-
-              .chapter-desc-label {
-                font-size: 1.4rem;
-                color: #6A7282;
-              }
-
-              .chapter-desc-counter {
-                color: #99A1AF;
-              }
-            }
-
-             .chapter-desc-textarea {
-               width: 100%;
-               height: 13.2rem;
-               font-size: 1.4rem;
-               line-height: 2.2rem;
-               color: #6A7282;
-               background: #F5F5F5;
-               border: 0.1rem solid transparent;
-               border-radius: 0.8rem;
-               padding: 1rem 1.2rem;
-               resize: none;
-               outline: none;
-               font-family: inherit;
-               box-sizing: border-box;
-
-               &::placeholder {
-                 color: #99A1AF;
-               }
-
-               &:focus {
-                 border-color: #FB64B6;
-               }
-             }
-          }
-        }
-
-         .outline-edit-textarea {
-            width: 100%;
-            background: #F5F5F5;
-            border: 0.1rem solid transparent;
-            border-radius: 0.8rem;
-            padding: 1rem 1.2rem;
-            resize: none;
-            outline: none;
-            font-family: inherit;
-            box-sizing: border-box;
-
-            &::placeholder {
+            .chapter-edit-counter {
+              font-size: 1.2rem;
               color: #99A1AF;
+              text-align: right;
+              padding: 0.8rem 0;
+              margin-top: 1.6rem;
             }
-
-            &:focus {
-              border-color: #FB64B6;
-            }
-          }
-
-        .outline-edit-counter {
-          font-size: 1.2rem;
-          color: #99A1AF;
-          text-align: right;
-          margin-top: 0.4rem;
-        }
-      }
-
-      .structured-content {
-        .section {
-          margin-bottom: 3.2rem;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .section-title {
-            font-size: 1.6rem;
-            font-weight: 500;
-            color: #364153;
-            margin-bottom: 1.6rem;
           }
         }
 
-        .basic-info {
-          margin-top: 1.8rem;
-          .info-item {
-            display: flex;
-            margin-bottom: 1.2rem;
+        .structured-content {
+          .section {
+            margin-bottom: 3.2rem;
 
             &:last-child {
               margin-bottom: 0;
             }
 
-            .info-label {
-              font-size: 1.4rem;
+            .section-title {
+              font-size: 1.6rem;
+              font-weight: 500;
               color: #364153;
-            }
-
-            .info-value {
-              font-size: 1.4rem;
-              color: #6A7282;
-              flex: 1;
+              margin-bottom: 1.6rem;
             }
           }
-        }
 
-        .story-summary {
-          .summary-text {
-            font-size: 1.4rem;
-            line-height: 2.2rem;
-            color: #6A7282;
-            text-align: justify;
-          }
-        }
-
-        .characters {
-          .characters-list {
-            margin-bottom: 2.4rem;
-
-            .character-item {
-              margin-bottom: 1.8rem;
-              font-size: 1.4rem;
-              line-height: 2.2rem;
-              color: #364153;
+          .basic-info {
+            margin-top: 1.8rem;
+            .info-item {
+              display: flex;
+              margin-bottom: 1.2rem;
 
               &:last-child {
                 margin-bottom: 0;
               }
 
-              .character-type {
-                font-size: 1.4rem;
-                color: #99A1AF;
-                margin-bottom: 0.8rem;
-              }
-
-              .character-name {
+              .info-label {
                 font-size: 1.4rem;
                 color: #364153;
               }
 
-              .character-description {
+              .info-value {
+                font-size: 1.4rem;
+                color: #6A7282;
+                flex: 1;
+              }
+            }
+          }
+
+          .story-summary {
+            .summary-text {
+              font-size: 1.4rem;
+              line-height: 2.2rem;
+              color: #6A7282;
+              text-align: justify;
+            }
+          }
+
+          .characters {
+            .characters-list {
+              margin-bottom: 2.4rem;
+
+              .character-item {
+                margin-bottom: 1.8rem;
                 font-size: 1.4rem;
                 line-height: 2.2rem;
                 color: #364153;
-                text-align: justify;
+
+                &:last-child {
+                  margin-bottom: 0;
+                }
+
+                .character-type {
+                  font-size: 1.4rem;
+                  color: #99A1AF;
+                  margin-bottom: 0.8rem;
+                }
+
+                .character-name {
+                  font-size: 1.4rem;
+                  color: #364153;
+                }
+
+                .character-description {
+                  font-size: 1.4rem;
+                  line-height: 2.2rem;
+                  color: #364153;
+                  text-align: justify;
+                }
+              }
+            }
+          }
+
+          .chapters {
+            .chapter-card {
+              margin-top: 1.2rem;
+              font-size: 1.4rem;
+              line-height: 3rem;
+              color: #364153;
+
+              &:nth-of-type(1){
+                margin-top: 0;
+              }
+
+              .chapter-title-box{
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+              }
+              .chapter-title {
+                color: #6A7282;
+              }
+
+              .chapter-desc {
+                color: #6A7282;
               }
             }
           }
         }
 
-        .chapters {
-          .chapter-card {
-            margin-top: 1.2rem;
-            font-size: 1.4rem;
-            line-height: 3rem;
-            color: #364153;
-
-            &:nth-of-type(1){
-              margin-top: 0;
-            }
-
-            .chapter-title-box{
-              display: flex;
-              align-items: center;
-              gap: 0.4rem;
-            }
-
-            .chapter-title {
-              color: #6A7282;
-            }
-
-            .chapter-desc {
-              color: #6A7282;
+        .content-text {
+          &.failed {
+            .paragraph {
+              color: #EF4444;
             }
           }
-        }
-      }
-
-      .content-text {
-        &.failed {
           .paragraph {
-            color: #EF4444;
+            padding-bottom: 2.8rem;
+            font-size: 1.4rem;
+            line-height: 2.2rem;
+            color: #364153;
+            white-space: pre-wrap;
+            word-break: break-word;
           }
         }
-        .paragraph {
-          padding-bottom: 2.8rem;
-          font-size: 1.4rem;
-          line-height: 2.2rem;
-          color: #364153;
-          white-space: pre-wrap;
-          word-break: break-word;
+
+        .outline-stream-content {
+          padding: 2.4rem 0;
+
+          .stream-text {
+            font-size: 1.4rem;
+            line-height: 2.2rem;
+            color: #364153;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 0;
+            font-family: inherit;
+
+            .typing-cursor {
+              display: inline-block;
+              width: 3px;
+              height: 1.4rem;
+              background-color: #FB64B6;
+              vertical-align: text-bottom;
+              margin-left: 1px;
+              border-radius: 1px;
+              animation: cursorBlink 1s step-end infinite;
+            }
+          }
         }
-      }
 
-      .outline-stream-content {
-        padding: 2.4rem 0;
+        .empty-state {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
 
-        .stream-text {
-          font-size: 1.4rem;
-          line-height: 2.2rem;
-          color: #364153;
-          white-space: pre-wrap;
-          word-break: break-word;
-          margin: 0;
-          font-family: inherit;
-
-          .typing-cursor {
-            display: inline-block;
-            width: 3px;
-            height: 1.4rem;
-            background-color: #FB64B6;
-            vertical-align: text-bottom;
-            margin-left: 1px;
-            border-radius: 1px;
-            animation: cursorBlink 1s step-end infinite;
+          span {
+            font-size: 1.4rem;
+            color: #99A1AF;
           }
         }
       }
+    }
 
-      .empty-state {
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.6rem;
+      align-items: center;
+
+      .left{
+        display: flex;
+        align-items: center;
+        gap: 2.4rem;
+      }
+
+      .right{
+        display: flex;
+        align-items: center;
+      }
+
+      .prev-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 100%;
-
-        span {
-          font-size: 1.4rem;
-          color: #99A1AF;
-        }
-      }
-    }
-  }
-
-  .action-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1.6rem;
-    align-items: center;
-
-    .left{
-      display: flex;
-      align-items: center;
-      gap: 2.4rem;
-    }
-
-    .right{
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-
-      .outline-edit-warning {
-        font-size: 1.2rem;
-        text-align: right;
-        color: #99A1AF;
-        margin-right: 1.2rem;
-      }
-
-      .cancel-edit-chapter-btn {
-        min-width: 13.6rem;
+        width: 4.8rem;
         height: 4.8rem;
-        border: none;
+        padding: 0;
         border-radius: 0.8rem;
-        font-size: 1.4rem;
-        cursor: pointer;
         background: #FFFFFF;
         color: #6A7282;
-        font-family: inherit;
+        cursor: pointer;
+        border: none;
 
-        &:hover {
-          color: #fb64b6;
+        img {
+          width: 2.8rem;
+          height: 2.8rem;
         }
       }
 
-      .save-edit-chapter-btn {
+      .next-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.8rem;
+        height: 4.8rem;
+        padding: 0;
+        border-radius: 0.8rem;
+        background: #FFFFFF;
+        color: #6A7282;
+        cursor: pointer;
+        border: none;
+
+        img {
+          width: 2.8rem;
+          height: 2.8rem;
+        }
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         min-width: 13.6rem;
         height: 4.8rem;
-        border: none;
+        padding: 0 1.2rem;
         border-radius: 0.8rem;
         font-size: 1.4rem;
+        background: #FFFFFF;
+        color: #6A7282;
         cursor: pointer;
-        background: #fb64b6;
-        color: #ffffff;
-        font-family: inherit;
 
         &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
+          color: #FB64B6;
+        }
+
+        &.primary {
+          margin-left: 2.4rem;
+          background: #FB64B6;
+          border-color: #FB64B6;
+          color: #FFFFFF;
+
+          &:hover {
+            position: relative;
+
+            &::after{
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(255, 255, 255, 0.1);
+              z-index: 5;
+            }
           }
         }
-      }
-    }
 
-    .prev-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 4.8rem;
-      height: 4.8rem;
-      padding: 0;
-      border-radius: 0.8rem;
-      background: #FFFFFF;
-      color: #6A7282;
-      cursor: pointer;
-      border: none;
+        .action-btn-cost {
+          font-size: 1.2rem;
+        }
 
-      img {
-        width: 2.8rem;
-        height: 2.8rem;
-      }
-    }
+        &.loading {
+          pointer-events: none;
+          opacity: 0.5;
+          gap: 0.6rem;
+        }
 
-    .next-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 4.8rem;
-      height: 4.8rem;
-      padding: 0;
-      border-radius: 0.8rem;
-      background: #FFFFFF;
-      color: #6A7282;
-      cursor: pointer;
-      border: none;
-
-      img {
-        width: 2.8rem;
-        height: 2.8rem;
-      }
-    }
-
-    .action-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 13.6rem;
-      height: 4.8rem;
-      padding: 0 1.2rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      background: #FFFFFF;
-      color: #6A7282;
-      cursor: pointer;
-
-      &:hover {
-        color: #FB64B6;
-      }
-
-      &.primary {
-        margin-left: 2.4rem;
-        background: #FB64B6;
-        border-color: #FB64B6;
-        color: #FFFFFF;
-
-        &:hover {
-          position: relative;
-
-          &::after{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 5;
-          }
+        .btn-spinner {
+          display: inline-block;
+          width: 1.4rem;
+          height: 1.4rem;
+          border: 1.5px solid currentColor;
+          border-right-color: transparent;
+          border-radius: 50%;
+          animation: btn-spin 0.6s linear infinite;
+          flex-shrink: 0;
         }
       }
 
-      .action-btn-cost {
-        font-size: 1.2rem;
-      }
+      .info-icon-container {
+        display: flex;
+        align-items: center;
+        margin-left: 1.2rem;
 
-      &.loading {
-        pointer-events: none;
-        opacity: 0.5;
-        gap: 0.6rem;
+        .info-icon {
+          width: 2rem;
+          height: 2rem;
+          cursor: pointer;
+        }
       }
-
-      .btn-spinner {
-        display: inline-block;
-        width: 1.4rem;
-        height: 1.4rem;
-        border: 1.5px solid currentColor;
-        border-right-color: transparent;
-        border-radius: 50%;
-        animation: btn-spin 0.6s linear infinite;
-        flex-shrink: 0;
-      }
-    }
-
-    .info-icon-container {
-      display: flex;
-      align-items: center;
-      margin-left: 1.2rem;
-
-      .info-icon {
-        width: 2rem;
-        height: 2rem;
-        cursor: pointer;
-      }
-    }
     }
   }
+}
 
 /* Preparation state styles */
 .preparation-state {
@@ -2622,103 +2004,6 @@
               width: 100%;
               height: 100%;
             }
-          }
-        }
-      }
-    }
-  }
-}
-
-.outline-edit-section {
-  position: fixed;
-  bottom: 0;
-  left: 6.8rem;
-  width: 37.2rem;
-  background-color: #FFFFFF;
-  border-top: 1px solid #F5F5F5;
-  padding: 1.2rem;
-  z-index: 1000;
-
-  .outline-edit-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.6rem;
-
-    .outline-edit-title {
-      font-size: 1.2rem;
-      color: #364153;
-    }
-
-    .cancel-outline-edit-btn {
-      background: none;
-      border: none;
-      color: #99A1AF;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-  }
-
-  .outline-edit-content {
-    border: 1px solid #FB64B6;
-    border-radius: 1.2rem;
-    padding: 1rem;
-    box-shadow: 0px 0px 18px 0px rgba(251,100,182,0.18);
-
-    .outline-edit-input-area {
-      .outline-edit-textarea {
-        width: 100%;
-        height: 6.2rem;
-        font-size: 1.4rem;
-        color: #364153;
-        resize: none;
-        outline: none;
-        font-family: inherit;
-
-        &::placeholder {
-          color: #99A1AF;
-        }
-      }
-
-      .outline-edit-footer {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 0.8rem;
-        margin-top: 1rem;
-
-        .outline-edit-send-btn {
-          width: 2.8rem;
-          height: 2.8rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-
-          img {
-            width: 100%;
-            height: 100%;
-          }
-
-          &.loading {
-            pointer-events: none;
-            opacity: 0.5;
-          }
-        }
-
-        .outline-edit-cost-display {
-          display: flex;
-          align-items: center;
-          gap: 0.2rem;
-
-          .outline-edit-cost {
-            font-size: 1.4rem;
-            color: #99A1AF;
-          }
-
-          img {
-            width: 1.4rem;
-            height: 1.4rem;
           }
         }
       }

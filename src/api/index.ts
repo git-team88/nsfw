@@ -49,6 +49,11 @@ export default {
       url: "login/googleLogin",
       data: data,
       method: "POST",
+      extraHeaders: {
+        platform: "web",
+        version: "",
+        "device-id": "",
+      },
     }),
   googleRegister: (data: any) =>
     axios.request({
@@ -270,7 +275,7 @@ export default {
 
   getVideoId: (data: any) =>
     axios.request({
-      url: "user/getUploadId",
+      url: "user/getCosUploadId",
       data: data,
       method: "POST",
       header: {
@@ -279,21 +284,15 @@ export default {
     }),
   getVideoUrl: (data: any) =>
     axios.request({
-      url: "user/getPartUrl",
+      url: "user/uploadCosPart",
       data: data,
       method: "POST",
-      header: {
-        "Content-Type": "application/json",
-      },
     }),
   getVideoMerge: (data: any) =>
     axios.request({
-      url: "user/completeMultipartUpload",
+      url: "user/completeCosMultipartUpload",
       data: data,
       method: "POST",
-      header: {
-        "Content-Type": "application/json",
-      },
     }),
   publishImage: (data: any) =>
     axios.request({
@@ -976,5 +975,14 @@ export default {
     axios.request({
       url: "index/getIndexBannerPublic",
       method: "GET",
+    }),
+  getRelativeByTopicPublic: (data: any) =>
+    axios.request({
+      url: "index/getRelativeByTopicPublic",
+      data: data,
+      method: "POST",
+      header: {
+        "Content-Type": "application/json",
+      },
     }),
 };

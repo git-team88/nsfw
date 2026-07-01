@@ -160,7 +160,7 @@ const outlineSteps: LoadingStep[] = [
     joinedMemberKey: 'plotArchitect',
     inviter: t('novel.role.novelExpert'),
     inviterKey: 'novelExpert',
-    weight: 0.15,
+    weight: 1,
   },
   {
     expert: t('novel.role.plotArchitect'),
@@ -171,7 +171,7 @@ const outlineSteps: LoadingStep[] = [
     joinedMemberKey: 'worldDesigner',
     inviter: t('novel.role.novelExpert'),
     inviterKey: 'novelExpert',
-    weight: 7,
+    weight: 3,
   },
   {
     expert: t('novel.role.worldDesigner'),
@@ -182,14 +182,14 @@ const outlineSteps: LoadingStep[] = [
     joinedMemberKey: 'characterDesigner',
     inviter: t('novel.role.novelExpert'),
     inviterKey: 'novelExpert',
-    weight: 8,
+    weight: 4,
   },
   {
     expert: t('novel.role.characterDesigner'),
     expertKey: 'characterDesigner',
     workingText: t('novel.outline_active_10'),
     completedText: t('novel.outline_completed_10'),
-    weight: 7,
+    weight: 5,
   },
   {
     expert: t('novel.role.plotArchitect'),
@@ -200,7 +200,7 @@ const outlineSteps: LoadingStep[] = [
     joinedMemberKey: 'allMembers',
     inviter: t('novel.role.novelExpert'),
     inviterKey: 'novelExpert',
-    weight: 7,
+    weight: 6,
   },
   {
     expert: t('novel.role.allMembers'),
@@ -218,14 +218,14 @@ const outlineSteps: LoadingStep[] = [
     expertKey: 'coverDesigner',
     workingText: t('novel.outline_active_17'),
     completedText: t('novel.outline_completed_17'),
-    weight: 8,
+    weight: 6,
   },
   {
     expert: t('novel.role.novelExpert'),
     expertKey: 'novelExpert',
     workingText: t('novel.outline_active_19'),
     completedText: t('novel.outline_completed_19'),
-    weight: 7,
+    weight: 3,
   },
 ];
 
@@ -239,7 +239,7 @@ const chapterSteps: LoadingStep[] = [
     joinedMemberKey: 'chapterWriter',
     inviter: t('novel.role.chapterExpert'),
     inviterKey: 'chapterExpert',
-    weight: 0.15,
+    weight: 1,
   },
   {
     expert: t('novel.role.chapterWriter'),
@@ -250,14 +250,14 @@ const chapterSteps: LoadingStep[] = [
     joinedMemberKey: 'detailWriter',
     inviter: t('novel.role.chapterExpert'),
     inviterKey: 'chapterExpert',
-    weight: 7,
+    weight: 3,
   },
   {
     expert: t('novel.role.detailWriter'),
     expertKey: 'detailWriter',
     workingText: t('novel.chapter_active_7'),
     completedText: t('novel.chapter_completed_7'),
-    weight: 8,
+    weight: 4,
   },
   {
     expert: t('novel.role.chapterWriter'),
@@ -268,28 +268,28 @@ const chapterSteps: LoadingStep[] = [
     joinedMemberKey: 'logicChecker',
     inviter: t('novel.role.chapterExpert'),
     inviterKey: 'chapterExpert',
-    weight: 7,
+    weight: 5,
   },
   {
     expert: t('novel.role.logicChecker'),
     expertKey: 'logicChecker',
     workingText: t('novel.chapter_active_12'),
     completedText: t('novel.chapter_completed_12'),
-    weight: 7,
+    weight: 5,
   },
   {
     expert: t('novel.role.detailWriter'),
     expertKey: 'detailWriter',
     workingText: t('novel.chapter_active_14'),
     completedText: t('novel.chapter_completed_14'),
-    weight: 7,
+    weight: 4,
   },
   {
     expert: t('novel.role.chapterExpert'),
     expertKey: 'chapterExpert',
     workingText: t('novel.chapter_active_16'),
     completedText: t('novel.chapter_completed_16'),
-    weight: 6,
+    weight: 2,
   },
 ];
 

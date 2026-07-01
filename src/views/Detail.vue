@@ -472,7 +472,7 @@
                         </div>
 
                         <div class="c-footer">
-                          <span class="c-time">{{ c.created_at }}</span>
+                          <span class="c-time">{{ formatTimestamp(c.created_at) }}</span>
                           <div class="c-actions">
                             <div
                               class="action-btn like-btn"
@@ -546,7 +546,7 @@
                         </div>
 
                         <div class="c-footer">
-                          <span class="c-time">{{ r.created_at }}</span>
+                          <span class="c-time">{{ formatTimestamp(r.created_at) }}</span>
                           <div class="c-actions">
                             <div
                               class="action-btn like-btn"
@@ -862,6 +862,14 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import { trackShare } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
+
+function getI18nMsg(res: any) {
+  const lang = locale.value;
+  const msgMap: Record<string, string> = { zh: 'msg_cn', jp: 'msg_jp', tc: 'msg_tc' };
+  const key = msgMap[lang];
+  return (key && res?.[key]) || res?.msg || t('fail');
+}
+
 const route = useRoute();
 const router = useRouter();
 
@@ -3836,9 +3844,9 @@ async function uploadVideo(file: File) {
       };
     });
 
-    const videoIdResponse = await api.getVideoId({ filename: file.name }) as any;
+    const videoIdResponse = await api.getVideoId({ filename: file.name, filesize: file.size }) as any;
     if (!videoIdResponse || videoIdResponse.code !== 0) {
-      toast(t('fail'));
+      toast(getI18nMsg(videoIdResponse));
       return false;
     }
 
@@ -3853,30 +3861,35 @@ async function uploadVideo(file: File) {
       const end = Math.min(i * CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
 
-      const videoUrlResponse = await api.getVideoUrl({ uploadId, fileKey, partNumber: i }) as any;
-      if (!videoUrlResponse || videoUrlResponse.code !== 0) {
-        throw new Error('Failed to get upload URL');
-      }
+      const formData = new FormData();
+      formData.append('uploadId', uploadId);
+      formData.append('key', fileKey);
+      formData.append('partNumber', String(i));
+      formData.append('file', chunk);
 
-      const presignedUrl = videoUrlResponse.data.url;
-
-      const uploadRes = await fetch(presignedUrl, {
-        method: 'PUT',
-        body: chunk
+      const authToken = localStorage.getItem("token") ?? "";
+      const authHeaders = window.AntiCrawler.generateAuthParams(authToken);
+      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
+        method: "POST",
+        headers: {
+          token: authToken || undefined,
+          ...authHeaders,
+        } as Record<string, string>,
+        body: formData,
       });
-
-      if (!uploadRes.ok) {
-        toast(t('fail'));
+      const videoUrlData = await videoUrlResponse.json();
+      if (!videoUrlData || videoUrlData.code !== 0) {
+        toast(getI18nMsg(videoUrlData));
         return false;
       }
 
-      const etag = uploadRes.headers.get('etag')?.replace(/"/g, '') || '';
+      const etag = videoUrlData.data?.etag || '';
       uploadedParts.push({ PartNumber: i, ETag: etag });
     }
 
-    const videoMergeResponse = await api.getVideoMerge({ uploadId, fileKey, parts: uploadedParts }) as any;
+    const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
     if (!videoMergeResponse || videoMergeResponse.code !== 0) {
-      toast(t('fail'));
+      toast(getI18nMsg(videoMergeResponse));
       return false;
     }
 
@@ -3886,8 +3899,8 @@ async function uploadVideo(file: File) {
       type: 'video',
       url: videoUrl.value,
       file});
-  } catch (error) {
-    toast(t('fail'));
+  } catch (error: any) {
+    toast(getI18nMsg(error?.response?.data || error));
   } finally {
     isLoading.value = false;
   }
@@ -3961,6 +3974,7 @@ function previewFileItem(file: any, index: number) {
 
     // 显示视频预览模态框
     showPreviewModal.value = true;
+    curVideoUrl.value = file.url;
   }
 }
 

@@ -1,6 +1,35 @@
 import { baseUrl } from './config';
 import i18n from '../lang/i18n';
 import api from '../api';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TIMEZONE = 'Asia/Shanghai';
+
+export function parseToUnixTimestamp(value: number | string): number {
+  if (!value) return 0;
+
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  const str = String(value).trim();
+
+  if (/^\d+$/.test(str)) {
+    return Number(str);
+  }
+
+  const hasTz = /[Zz]$|[+-]\d{2}:\d{2}$/.test(str);
+  if (hasTz) {
+    return dayjs(str).unix();
+  }
+
+  return dayjs.tz(str, SERVER_TIMEZONE).unix();
+}
 
 // 初始化语言设置
 export async function initLanguage() {
@@ -74,24 +103,11 @@ export function filterAddress(address: string) {
 }
 
 export function formatTimestamp(timestamp: number | string): string {
-  let date;
+  const unix = parseToUnixTimestamp(timestamp);
+  if (!unix) return '';
 
-  if (typeof timestamp == 'number') {
-    date = new Date(timestamp * 1000);
-  } else if (typeof timestamp == 'string') {
-    const numTimestamp = parseInt(timestamp);
-    if (!isNaN(numTimestamp)) {
-      date = new Date(numTimestamp * 1000);
-    } else {
-      date = new Date(timestamp);
-    }
-  } else {
-    return '';
-  }
-
-  if (isNaN(date.getTime())) {
-    return '';
-  }
+  const date = new Date(unix * 1000);
+  if (isNaN(date.getTime())) return '';
 
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -101,6 +117,20 @@ export function formatTimestamp(timestamp: number | string): string {
   const seconds = String(date.getSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+export function formatDateOnly(timestamp: number | string): string {
+  const unix = parseToUnixTimestamp(timestamp);
+  if (!unix) return '';
+
+  const date = new Date(unix * 1000);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }
 
 export function formatDuration(duration: number): string {
@@ -117,7 +147,10 @@ export interface TimeFormatResult {
 export function formatUpdateTime(timeStr: string): TimeFormatResult {
   if (!timeStr) return { key: '' };
 
-  const date = new Date(timeStr);
+  const unix = parseToUnixTimestamp(timeStr);
+  if (!unix) return { key: '' };
+
+  const date = new Date(unix * 1000);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
 

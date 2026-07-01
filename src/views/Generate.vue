@@ -75,7 +75,7 @@
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
                   </div>
-                  <span class="photo-time">{{ record.createTime }}</span>
+                  <span class="photo-time">{{ formatTimestamp(record.createTime) }}</span>
                 </div>
               </div>
 
@@ -219,7 +219,7 @@
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ record.duration }}s</span>
                   </div>
-                  <span class="video-time">{{ record.createTime }}</span>
+                  <span class="video-time">{{ formatTimestamp(record.createTime) }}</span>
                 </div>
               </div>
 
@@ -818,6 +818,7 @@ import { useRoute } from 'vue-router';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
+import { formatTimestamp } from '@/util/utils';
 import Header from '@/components/Header.vue';
 import arrowIcon from '@/assets/images/publish/arrow_icon.png';
 import router from "@/router";
@@ -3495,19 +3496,19 @@ const generatePhoto = async () => {
       history_data: null,
       name: '',
       is_step_readed: 1,
-      created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      createTime: new Date().toLocaleString('zh-CN'),
+      created_at: new Date().toISOString(),
+      createTime: new Date().toISOString(),
       topic: getPhotoInputContent().trim(),
       description: getPhotoInputContent().trim(),
       step_name: 'simple_image',
       is_publish: 2,
       is_batch_chapter: 2,
-      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      updated_at: new Date().toISOString(),
       is_final: 1,
       step_chapter_index: 0,
       deleted_at: null,
       frozen_points: 0,
-      task_start_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      task_start_at: new Date().toISOString(),
       user_id: 0,
       total_chapters: 1,
       resolution: selectedPhotoQuality.value,
@@ -3717,19 +3718,19 @@ const generateVideo = async () => {
       history_data: null,
       name: '',
       is_step_readed: 1,
-      created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      createTime: new Date().toLocaleString('zh-CN'),
+      created_at: new Date().toISOString(),
+      createTime: new Date().toISOString(),
       topic: videoContent,
       description: videoContent,
       step_name: 'simple_video',
       is_publish: 2,
       is_batch_chapter: 2,
-      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      updated_at: new Date().toISOString(),
       is_final: 1,
       step_chapter_index: 0,
       deleted_at: null,
       frozen_points: 0,
-      task_start_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      task_start_at: new Date().toISOString(),
       user_id: 0,
       total_chapters: 1,
       resolution: selectedVideoQuality.value,

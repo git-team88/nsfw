@@ -64,7 +64,7 @@
             </div>
             <div class="info-card">
               <span class="info-label">{{ t('collectionSettings.createdAt') }}：</span>
-              <span class="info-value">{{ collection.createdAt }}</span>
+              <span class="info-value">{{ formatTimestamp(collection.createdAt) }}</span>
             </div>
           </div>
         </div>
@@ -106,6 +106,7 @@ import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
+import { formatTimestamp } from '@/util/utils';
 import api from '@/api/index';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';

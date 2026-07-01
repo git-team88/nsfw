@@ -172,6 +172,7 @@ import { ref, watch, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import api from "@/api";
 import { toast } from "@/util/toast";
+import { formatTimestamp, formatDateOnly } from "@/util/utils";
 
 const { t, locale } = useI18n();
 
@@ -280,7 +281,7 @@ async function fetchFan(page: number) {
         const weekday = date.toLocaleDateString('en-US', options);
         return {
           id: parseInt(item.id || "0"),
-          dateLabel: `${item.stat_date}`,
+          dateLabel: formatDateOnly(item.stat_date),
           change: parseInt(item.follower_delta || "0"),
           total: parseInt(item.follower_total || "0"),
         };
@@ -325,7 +326,7 @@ async function fetchOverall(page: number) {
       // Transform data
       overallRows.value = data.map((item: any, index: number) => ({
         id: index + 1,
-        dateLabel: item.created_date,
+        dateLabel: formatDateOnly(item.created_date),
         likes: parseInt(item.like_counts || "0"),
         comments: parseInt(item.comment_count || "0"),
       }));
@@ -371,7 +372,7 @@ async function fetchWork(page: number) {
       // Transform data
       workRows.value = data.map((item: any) => ({
         id: parseInt(item.id || "0"),
-        dateLabel: item.created_date,
+        dateLabel: formatDateOnly(item.created_date),
         title: item.title || "",
         cover: item.cover || "",
         likes: parseInt(item.like_counts || "0"),

@@ -169,7 +169,7 @@ interface Content {
 const activeFilter = ref(0);
 const contentList = ref<Content[] | null>(null);
 const currentPage = ref(1);
-const pageSize = ref(20);
+const pageSize = ref(48);
 const hasMore = ref(true);
 const userRegion = ref(false);
 const hasFetchedRegion = ref(false);
@@ -242,14 +242,17 @@ async function loadData(fromLoadMore = false) {
     const urlLang = route.query.lang as string;
     const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
 
-    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
-    const res = await api.homePostList(
-      currentPage.value,
-      pageSize.value,
-      activeFilter.value,
-      requestLang,
-      showNsfw
-    ) as any;
+    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0;
+    const urlSessionId = route.query.session_id as string;
+    const urlCat = route.query.type ? parseInt(route.query.type as string) : 0;
+    const res = await api.getRelativeByTopicPublic({
+      session_id: urlSessionId || '',
+      cat: urlCat,
+      lang: requestLang,
+      show_nsfw: showNsfw,
+      page: currentPage.value,
+      page_size: pageSize.value,
+    }) as any;
 
     // Check if this request is still the latest one
     if (requestId !== currentRequestId.value) {
@@ -302,7 +305,7 @@ async function loadData(fromLoadMore = false) {
 
       const totalContent = Number(res.data?.allnums) || 0;
       const loadedContent = contentList.value ? contentList.value.length : 0;
-      hasMore.value = loadedContent < totalContent;
+      hasMore.value = totalContent > pageSize.value && loadedContent < totalContent;
 
       currentPage.value++;
 

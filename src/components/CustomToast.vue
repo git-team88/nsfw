@@ -68,8 +68,7 @@ const props = defineProps<{
 
   .toast-content {
     position: relative;
-    min-width: 24rem;
-    height: 4.8rem;
+    max-width: 25rem;
     background: #ffffff;
     border: 1px solid transparent;
     border-radius: 0.4rem;
@@ -87,7 +86,7 @@ const props = defineProps<{
 
     .toast-msg {
       font-size: 1.6rem;
-      white-space: nowrap;
+      word-break: break-word;
     }
   }
 }

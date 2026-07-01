@@ -4,23 +4,23 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <!-- Logo -->
-      <div class="logo" @click="checkOutlineEditBeforeAction(goHome)">
+      <div class="logo" @click="goHome()">
         <img src="@/assets/images/novel/logo.png" alt="Logo" />
       </div>
 
       <!-- Navigation -->
-      <div class="nav-item" @click="checkOutlineEditBeforeAction(goHome)">
+      <div class="nav-item" @click="goHome()">
         <img src="@/assets/images/novel/home.png" alt="Home" />
         <span>{{ t("header.title1") }}</span>
       </div>
 
-      <div class="nav-item last" @click="checkOutlineEditBeforeAction(goProject)">
+      <div class="nav-item last" @click="goProject()">
         <img src="@/assets/images/novel/project.png" alt="Project" />
         <span>{{ t("header.title3") }}</span>
       </div>
 
       <!-- User Avatar -->
-      <div class="user-avatar" @click="checkOutlineEditBeforeAction(goUser)">
+      <div class="user-avatar" @click="goUser()">
         <img :src="userInfo?.info?.avatar || defaultAvatar" alt="Avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
       </div>
     </div>
@@ -37,11 +37,11 @@
               <span class="project-name-counter">{{ projectName.length }}/60</span>
             </div>
               <div class="edit-actions">
-              <img class="save-icon" src="@/assets/images/novel/check.png" alt="Save" @mousedown.prevent="checkOutlineEditBeforeAction(saveProjectName)" />
-              <img class="cancel-icon" src="@/assets/images/novel/cancel.png" alt="Cancel" @mousedown.prevent="checkOutlineEditBeforeAction(cancelEditProjectName)" />
+              <img class="save-icon" src="@/assets/images/novel/check.png" alt="Save" @mousedown.prevent="saveProjectName" />
+              <img class="cancel-icon" src="@/assets/images/novel/cancel.png" alt="Cancel" @mousedown.prevent="cancelEditProjectName" />
             </div>
           </div>
-          <img v-if="!isEditingName" class="edit-icon" src="@/assets/images/novel/edit.png" alt="Edit" @click="checkOutlineEditBeforeAction(startEditProjectName)" />
+          <img v-if="!isEditingName" class="edit-icon" src="@/assets/images/novel/edit.png" alt="Edit" @click="startEditProjectName" />
         </div>
       </div>
 
@@ -50,7 +50,7 @@
           <!-- Generation Status -->
           <div v-if="shouldShowEstimatedTime" class="generation-status">
             <span class="status-text">{{ t('novel.generatingStatus') }}</span>
-            <button class="similar-content-btn" @click="checkOutlineEditBeforeAction(goToSimilar)">{{ t('novel.similarContent') }}</button>
+            <button class="similar-content-btn" @click="goToSimilar()">{{ t('novel.similarContent') }}</button>
           </div>
 
           <!-- Generation Status / Progress / Chapters -->
@@ -137,7 +137,7 @@
           <div
             v-if="isDetailLoaded"
             class="outline-preview"
-            @click="checkOutlineEditBeforeAction(handleOutlinePreviewClick)"
+            @click="handleOutlinePreviewClick"
             :class="{ 'disabled': !outlineData || !outlineData.outline, 'active': !currentChapter, 'end': taskStatus == 'SUCCESS' && chapterCount > 0 && stepChapterIndex >= chapterCount }"
             :disabled="!outlineData || !outlineData.outline"
           >
@@ -151,23 +151,23 @@
               :key="chapter.id"
               class="chapter-item"
               :class="{ 'on': currentChapter && currentChapter.chapter == chapter.chapter, 'published': chapter.is_publish == 1 }"
-              @click="checkOutlineEditBeforeAction(() => handleChapterItemClick(chapter.chapter))"
+              @click="handleChapterItemClick(chapter.chapter)"
             >
               <div v-if="!editingChapterId || editingChapterId !== chapter.chapter" class="chapter-item-content">
                 <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                 <span class="chapter-item-title">{{ chapter.title }}</span>
 
                 <img
-                  v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex) && !(isPreparing && chapter.chapter == stepChapterIndex)"
+                  v-if="chapter.is_publish == 2"
                   class="edit-chapter-btn"
                   src="@/assets/images/novel/edit.png"
                   alt="Edit"
-                  @click.stop="checkOutlineEditBeforeAction(() => startEditChapterTitle(chapter.chapter, chapter.title))"
+                  @click.stop="startEditChapterTitle(chapter.chapter, chapter.title)"
                 />
                 <span
                   v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex)"
                   class="chapter-publish-btn unpublish"
-                  @click.stop="checkOutlineEditBeforeAction(() => handlePublishChapter(chapter))"
+                  @click.stop="handlePublishChapter(chapter)"
                 >{{ t('novel.publish') }}</span>
                 <span
                   v-else-if="chapter.is_publish == 1"
@@ -266,7 +266,7 @@
                 </div>
                 <div class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
                   <img v-if="!isSendingRegenerate" src="@/assets/images/novel/send.png" alt="" />
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
+                  <span v-else class="btn-spinner btn-spinner-small"></span>
                 </div>
               </div>
             </div>
@@ -369,61 +369,8 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Outline AI Edit Section - Fixed at bottom -->
-        <div v-if="isAiEditingOutline" class="outline-edit-section" ref="outlineEditSectionRef">
-          <div class="outline-edit-header">
-            <span class="outline-edit-title">{{ t('novel.editOutline') }}:</span>
-            <button class="cancel-outline-edit-btn" @click="cancelAiEditOutline">{{ t('novel.cancel') }}</button>
-          </div>
-
-          <div class="outline-edit-content">
-            <div class="outline-edit-input-area">
-              <textarea v-model="aiEditOutlineInput" class="outline-edit-textarea" :placeholder="t('novel.outlineEditPlaceholder')" @input="handleOutlineEditInput"></textarea>
-
-              <div class="outline-edit-footer">
-                <div class="outline-edit-cost-display">
-                  <span class="outline-edit-cost">{{ outlineEditCost }}</span>
-                  <img src="@/assets/images/novel/coin.png" alt="" />
-                </div>
-
-                <div class="outline-edit-send-btn" :class="{ loading: isSendingOutlineEdit }" @click="sendAiEditOutlineRequest">
-                  <img v-if="!isSendingOutlineEdit" src="@/assets/images/novel/send.png" alt="" />
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chapter AI Edit Section -->
-        <div v-if="isAiEditingChapter" class="outline-edit-section" ref="chapterEditSectionRef">
-          <div class="outline-edit-header">
-            <span class="outline-edit-title">{{ t('novel.editChapterTitle', { chapter: currentChapter?.chapter }) }}:</span>
-            <button class="cancel-outline-edit-btn" @click="cancelAiEditChapter">{{ t('novel.cancel') }}</button>
-          </div>
-
-          <div class="outline-edit-content">
-            <div class="outline-edit-input-area">
-              <textarea v-model="aiEditChapterInput" class="outline-edit-textarea" :placeholder="t('novel.chapterEditPlaceholder')" @input="handleAiEditChapterInput"></textarea>
-
-              <div class="outline-edit-footer">
-                <div class="outline-edit-cost-display">
-                  <span class="outline-edit-cost">{{ chapterEditCost }}</span>
-                  <img src="@/assets/images/novel/coin.png" alt="" />
-                </div>
-
-                <div class="outline-edit-send-btn" :class="{ loading: isSendingChapterEdit }" @click="sendAiEditChapterRequest">
-                  <img v-if="!isSendingChapterEdit" src="@/assets/images/novel/send.png" alt="" />
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
+         </div>
       </div>
     </div>
 
@@ -431,49 +378,35 @@
     <div class="right-area">
       <!-- Top Bar with Credit -->
       <div class="right-top-bar">
-         <div class="header-bean" @click="checkOutlineEditBeforeAction(goRechargeDetail)">
-           <img src="../assets/images/header/bean_icon.png" alt="" />
-            <span>{{ userBalance.toLocaleString() }}</span>
-         </div>
+        <div class="header-bean" @click="goRechargeDetail">
+          <img src="../assets/images/header/bean_icon.png" alt="" />
+          <span>{{ userBalance }}</span>
+        </div>
 
-         <span class="header-line"></span>
+        <span class="header-line"></span>
 
-         <span class="header-recharge" @click="checkOutlineEditBeforeAction(goRecharge)">{{ t("header.recharge") }}</span>
+        <span class="header-recharge" @click="goRecharge">{{ t("header.recharge") }}</span>
       </div>
 
       <!-- Novel Outline -->
       <div class="novel-outline">
         <div class="outline-title">
           <h2 v-if="isDetailLoaded && !currentChapter">{{ t('novel.novelOutline') }}</h2>
-          <div v-else-if="isDetailLoaded && currentChapter && isEditingChapter" class="chapter-title-edit-row">
-            <span class="chapter-title-edit-label">{{ t('novel.chapter', { chapter: currentChapter.chapter }) }}</span>
-            <input v-model="editingChapterTitle" class="chapter-title-edit-input" :maxlength="60" :placeholder="t('novel.chapterTitlePlaceholder')" />
-            <span class="chapter-title-edit-counter">{{ editingChapterTitle.length }}/60</span>
-          </div>
-          <h2 v-else-if="isDetailLoaded && currentChapter && isLoading">{{ t('novel.chapter', { chapter: currentChapter.chapter }) }}</h2>
           <h2 v-else-if="isDetailLoaded && currentChapter">{{ t('novel.chapter', { chapter: currentChapter.chapter }) }} {{ currentChapter.title }}</h2>
-           <div v-if="!isLoading && (outlineData || outlineStreamDone) && !hasFailed && !currentChapter && taskStatus !== 'DOING' && stepChapterIndex < 1 && !isPreparing && !isManualEditingOutline" class="outline-actions">
-             <button v-if="outlineHistoryList.length >= 2" class="outline-history-btn" @click="handleOutlineHistoryClick">{{ t('novel.outlineHistoryTitle') }}</button>
-             <button class="regenerate-btn" @click="regenerateOutline">
-               {{ t('novel.regenerate') }}
-             </button>
-             <button class="manual-edit-btn" @click="startManualEditOutline">
-               {{ t('novel.manualEdit') }}
-             </button>
-             <button class="ai-edit-btn" @click="startAiEditOutline">
-               {{ t('novel.aiEdit') }}
-             </button>
-            <div class="outline-edit-tooltip-icon">
-              <img src="@/assets/images/home/intro.png" alt="Info" />
-              <div class="outline-edit-tooltip-arrow"></div>
-              <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
-            </div>
-          </div>
+          <button v-if="!isLoading && (outlineData || outlineStreamDone) && !hasFailed && !currentChapter && taskStatus !== 'DOING' && stepChapterIndex < 1 && !isPreparing" class="regenerate-btn" @click="regenerateOutline">
+            {{ t('novel.regenerate') }}
+          </button>
           <template v-else-if="currentChapter && !hasFailed">
-            <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
-              <button v-if="chapterHistoryList.length >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
-              <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
-              <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
+            <button v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && currentChapter.chapter == stepChapterIndex && !isPreparing" class="regenerate-btn" @click="startEditChapter">
+              {{ t('novel.edit') }}
+            </button>
+            <div v-else-if="isEditingChapter" class="edit-chapter-actions">
+              <button class="cancel-edit-chapter-btn" @click="cancelEditChapter">
+                {{ t('novel.cancel') }}
+              </button>
+              <button class="save-edit-chapter-btn" @click="saveEditChapter">
+                {{ t('novel.complete') }}
+              </button>
             </div>
           </template>
         </div>
@@ -609,98 +542,6 @@
             </div>
           </div>
 
-          <!-- Manual Outline Edit -->
-          <div v-else-if="isManualEditingOutline && editingOutlineData && !currentChapter" class="manual-outline-edit-content">
-            <!-- 基本信息 -->
-            <div v-if="editingOutlineData.base_info" class="section basic-info">
-              <h3 class="section-title">{{ t('novel.basicInfo') }}</h3>
-              <div class="info-item">
-                <span class="info-label">{{ t('novel.totalChapters') }}</span>
-                <span class="info-value">{{ editingOutlineData.base_info.total_chapters }}{{ t('novel.chaptersLabel') }}</span>
-              </div>
-              <div class="info-item" v-if="editingOutlineData.base_info.words_per_chapter && editingOutlineData.base_info.words_per_chapter.length == 2">
-                <span class="info-label">{{ t('novel.wordsPerChapter') }}</span>
-                <span class="info-value">{{ editingOutlineData.base_info.words_per_chapter[0] }}-{{ editingOutlineData.base_info.words_per_chapter[1] }}{{ t('novel.wordsLabel') }}</span>
-              </div>
-              <div class="info-item" v-if="editingOutlineData.base_info.genre">
-                <span class="info-label">{{ t('novel.genreLabel') }}</span>
-                <span class="info-value">{{ editingOutlineData.base_info.genre }}</span>
-              </div>
-              <div class="info-item" v-if="editingOutlineData.base_info.writing_style">
-                <span class="info-label">{{ t('novel.writingStyle') }}</span>
-                <span class="info-value">{{ editingOutlineData.base_info.writing_style }}</span>
-              </div>
-            </div>
-
-            <!-- 故事概要 -->
-            <div v-if="editingOutlineData.story_summary" class="section story-summary">
-              <h3 class="section-title">{{ t('novel.storySummaryLabel') }}<span class="section-title-counter">（{{ editingOutlineData.story_summary.summary.length }}/5000）</span></h3>
-              <textarea v-model="editingOutlineData.story_summary.summary" class="outline-edit-textarea" :class="{ 'outline-edit-error': outlineEditErrorKeys.has('story-summary') }" :maxlength="5000" @input="outlineEditErrorKeys.delete('story-summary'); markOutlineEditDirty()"></textarea>
-              <div v-if="outlineEditErrorKeys.has('story-summary')" class="outline-edit-field-error">{{ t('novel.storySummaryRequired') }}</div>
-            </div>
-
-            <!-- 角色图鉴 -->
-            <div v-if="editingOutlineData.characters && editingOutlineData.characters.length > 0" class="section characters">
-              <h3 class="section-title">
-                {{ t('novel.characterGallery') }}
-                <span class="outline-edit-add-btn" @click="addOutlineCharacter">{{ t('novel.addCharacter') }}</span>
-              </h3>
-              <div class="characters-list">
-                <div v-for="(character, index) in editingOutlineData.characters" :key="index" class="character-item">
-                     <div class="character-name-row">
-                     <div class="character-name-left">
-                       <span class="character-name-label">{{ t('novel.characterNameLabel') }}</span>
-                       <span class="character-name-counter">（{{ character.name.length }}/20）</span>
-                     </div>
-                     <span v-if="editingOutlineData.characters.length > 1" class="delete-character-btn" @click="removeOutlineCharacter(index)">{{ t('novel.deleteCharacter') }}</span>
-                   </div>
-                  <div class="character-name-input-row">
-                    <input v-model="character.name" class="outline-edit-input" :class="{ 'outline-edit-error': outlineEditErrorKeys.has(`character-name-${index}`) }" :maxlength="20" :placeholder="t('novel.characterNamePlaceholder')" @input="outlineEditErrorKeys.delete(`character-name-${index}`); markOutlineEditDirty()" />
-                   </div>
-                   <div v-if="outlineEditErrorKeys.has(`character-name-${index}`)" class="outline-edit-field-error">{{ t('novel.characterNameRequired') }}</div>
-                  <div class="character-desc-label-row">
-                    <span class="character-desc-label">{{ t('novel.characterDescLabel') }}</span>
-                    <span class="character-desc-counter">（{{ character.description.length }}/3000）</span>
-                  </div>
-                  <textarea v-model="character.description" class="outline-edit-textarea character-desc-textarea" :class="{ 'outline-edit-error': outlineEditErrorKeys.has(`character-desc-${index}`) }" :maxlength="3000" :placeholder="t('novel.characterDescPlaceholder')" @input="outlineEditErrorKeys.delete(`character-desc-${index}`); markOutlineEditDirty()"></textarea>
-                  <div v-if="outlineEditErrorKeys.has(`character-desc-${index}`)" class="outline-edit-field-error">{{ t('novel.characterDescRequired') }}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 分章情节 -->
-            <div v-if="editingOutlineData.outline" class="section chapters">
-              <h3 class="section-title">{{ t('novel.chapterPlot') }}</h3>
-              <div
-                v-for="(chapter, index) in editingOutlineData.outline"
-                :key="chapter.chapter"
-                class="chapter-card"
-              >
-                    <div class="chapter-title-label-row">
-                     <div class="chapter-title-left">
-                       <span class="chapter-title-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
-                       <span class="chapter-title-counter">（{{ chapter.title.length }}/60）</span>
-                     </div>
-                    <div class="chapter-title-actions">
-                      <span v-if="editingOutlineData.outline.length > 1" class="delete-chapter-btn" @click="removeOutlineChapter(index)">{{ t('novel.deleteChapter') }}</span>
-                      <span class="insert-chapter-btn" @click="insertChapterBefore(index)">{{ t('novel.insertChapterBefore') }}</span>
-                      <span class="insert-chapter-btn" @click="insertChapterAfter(index)">{{ t('novel.insertChapterAfter') }}</span>
-                    </div>
-                  </div>
-                  <div class="chapter-title-input-row">
-                    <input v-model="chapter.title" class="outline-edit-input" :class="{ 'outline-edit-error': outlineEditErrorKeys.has(`chapter-title-${index}`) }" :maxlength="60" :placeholder="t('novel.chapterTitlePlaceholder')" @input="outlineEditErrorKeys.delete(`chapter-title-${index}`); markOutlineEditDirty()" />
-                   </div>
-                   <div v-if="outlineEditErrorKeys.has(`chapter-title-${index}`)" class="outline-edit-field-error">{{ t('novel.chapterTitleRequired') }}</div>
-                <div class="chapter-desc-label-row">
-                  <span class="chapter-desc-label">{{ t('novel.chapterDescLabel') }}</span>
-                  <span class="chapter-desc-counter">（{{ chapter.description.length }}/3000）</span>
-                </div>
-                  <textarea v-model="chapter.description" class="outline-edit-textarea chapter-desc-textarea" :class="{ 'outline-edit-error': outlineEditErrorKeys.has(`chapter-desc-${index}`) }" :maxlength="3000" :placeholder="t('novel.chapterDescPlaceholder')" @input="outlineEditErrorKeys.delete(`chapter-desc-${index}`); markOutlineEditDirty()"></textarea>
-                  <div v-if="outlineEditErrorKeys.has(`chapter-desc-${index}`)" class="outline-edit-field-error">{{ t('novel.chapterDescRequired') }}</div>
-              </div>
-            </div>
-          </div>
-
           <!-- Structured Content -->
           <div v-else-if="outlineData && !currentChapter" class="structured-content">
             <!-- 基本信息 -->
@@ -735,7 +576,8 @@
               <h3 class="section-title">{{ t('novel.characterGallery') }}</h3>
               <div class="characters-list">
                 <div v-for="(character, index) in outlineData.characters" :key="index" class="character-item">
-                   <div class="character-name">{{ t('novel.name') }}：{{ character.name }}</div>
+                  <div class="character-type">{{ character.type }}</div>
+                  <div class="character-name">{{ t('novel.name') }}：{{ character.name }}</div>
                   <p class="character-description">{{ character.description }}</p>
                 </div>
               </div>
@@ -783,8 +625,8 @@
                 </div>
 
                 <div class="cover-renew">
-                   <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
-                   <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/cover_edit.png" alt="Edit" @click="handleCoverEditClick" />
+                  <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
+                  <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/cover_edit.png" alt="Edit" @click="handleCoverEditClick" />
                   <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="handleCoverEditClick" />
                 </div>
 
@@ -819,8 +661,8 @@
                   <span>{{ t('novel.coverPlaceholder') }}</span>
                 </div>
                 <div class="cover-renew">
-                   <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
-                   <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/edit.png" alt="Edit" @click="handleCoverEditClick" />
+                  <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
+                  <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/edit.png" alt="Edit" @click="handleCoverEditClick" />
                 </div>
               </div>
             </div>
@@ -845,30 +687,19 @@
           </button>
         </div>
 
-        <div class="right" v-if="shouldShowGenerateButtons && !(isManualEditingOutline && !currentChapter)">
-          <span v-if="!currentChapter && chapters.length === 0" class="outline-edit-warning" v-html="t('novel.outlineEditWarning')"></span>
-          <button class="action-btn" :class="{ loading: isNextLoading }" :disabled="isNextLoading" @click="checkOutlineEditBeforeAction(() => callNovelNext())">
+        <div class="right" v-if="shouldShowGenerateButtons">
+          <button class="action-btn" :class="{ loading: isNextLoading }" :disabled="isNextLoading" @click="() => callNovelNext()">
             {{ t('novel.nextChapterTitle') }} <span class="action-btn-cost">/{{ nextChapterCost }}{{ t('novel.computingPower') }}</span>
             <span v-if="isNextLoading" class="btn-spinner"></span>
           </button>
-        </div>
+          <!-- <button class="action-btn primary" :class="{ loading: isAllChaptersLoading }" :disabled="isAllChaptersLoading" @click="() => callNovelAllChapters()">
+            {{ t('novel.allChaptersTitle') }} <span class="action-btn-cost">/{{ allChaptersCost }}{{ t('novel.computingPower') }}</span>
+            <span v-if="isAllChaptersLoading" class="btn-spinner"></span>
+          </button> -->
 
-        <div class="right" v-if="isManualEditingOutline && !currentChapter">
-          <button class="cancel-edit-chapter-btn" @click="cancelManualEditOutline">
-            {{ t('novel.cancel') }}
-          </button>
-          <button class="save-edit-chapter-btn" @click="saveManualEditOutline">
-            {{ t('novel.save') }}
-          </button>
-        </div>
-
-        <div class="right" v-if="isEditingChapter && currentChapter">
-          <button class="cancel-edit-chapter-btn" @click="cancelEditChapter">
-            {{ t('novel.cancel') }}
-          </button>
-          <button class="save-edit-chapter-btn" @click="saveEditChapter">
-            {{ t('novel.save') }}
-          </button>
+          <!-- <div class="info-icon-container">
+            <img class="info-icon" src="@/assets/images/novel/intro.png" alt="Info" @click="showComputingPowerEstimateModal = true" />
+          </div> -->
         </div>
 
       </div>
@@ -893,24 +724,6 @@
       :current-cover="coverImage"
       @cancel="closeCoverHistoryModal"
       @select="selectHistoryCover"
-    />
-
-    <!-- Chapter History Modal -->
-    <ChapterHistoryModal
-      :visible="showChapterHistoryModal"
-      :chapter-list="chapterHistoryList"
-      :current-chapter="currentChapter"
-      @cancel="showChapterHistoryModal = false"
-      @select="selectHistoryChapter"
-    />
-
-    <!-- Outline History Modal -->
-    <OutlineHistoryModal
-      :visible="showOutlineHistoryModal"
-      :outline-list="outlineHistoryList"
-      :current-outline="outlineData"
-      @cancel="closeOutlineHistoryModal"
-      @select="selectHistoryOutline"
     />
 
     <!-- Confirm Computing Power Modal -->
@@ -953,12 +766,6 @@
     <TaskLimitExceededModal
       :visible="showTaskLimitExceededModal"
       @close="showTaskLimitExceededModal = false"
-    />
-    <!-- Outline Edit Confirm Exit Modal -->
-    <ExitConfirmModal
-      :visible="showOutlineEditConfirmModal"
-      @cancel="cancelOutlineEditExit"
-      @confirm="confirmOutlineEditExit"
     />
 
 
@@ -1343,7 +1150,6 @@ import { toast, limitToast } from '@/util/toast';
 import { trackClickPublishButton } from '@/utils/analytics';
 import api from '@/api/index';
 import { aiUrl, baseUrl } from '@/util/config';
-import { parseToUnixTimestamp } from '@/util/utils';
 
 import UploadMask from '@/components/UploadMask.vue';
 import ConfirmComputingPowerModal from '@/components/ConfirmComputingPowerModal.vue';
@@ -1352,10 +1158,7 @@ import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue'
 import GenerateAllChaptersModal from '@/components/GenerateAllChaptersModal.vue';
 import FreezeComputingPowerModal from '@/components/FreezeComputingPowerModal.vue';
 import CoverHistoryModal from '@/components/CoverHistoryModal.vue';
-import OutlineHistoryModal from '@/components/OutlineHistoryModal.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
-import ExitConfirmModal from '@/components/ExitConfirmModal.vue';
-import ChapterHistoryModal from '@/components/ChapterHistoryModal.vue';
 import NovelLoading from '@/components/NovelLoading.vue';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
@@ -1531,8 +1334,8 @@ const checkProjectOwnership = () => {
   return false;
 };
 
-const checkProjectOwnershipByEstimate = async (stepName?: string) => {
-  const estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: stepName || undefined }) as any;
+const checkProjectOwnershipByEstimate = async () => {
+  const estimateRes = await api.novelEstimate({ session_id: sessionId.value }) as any;
   if (estimateRes.code == 10404) {
     toast(t('novel.error.cannotOperateOtherUserProject'));
     return true;
@@ -1601,79 +1404,6 @@ const allChaptersPoints = ref<number>(0);
 const coverCost = ref<number>(1);
 const isFetchingNovelOutline = ref<boolean>(false);
 
-const isAiEditingOutline = ref<boolean>(false);
-const aiEditOutlineInput = ref<string>('');
-const isSendingOutlineEdit = ref<boolean>(false);
-const outlineEditCost = ref<number>(1);
-const outlineEditSectionRef = ref<HTMLElement | null>(null);
-
-const isManualEditingOutline = ref<boolean>(false);
-const manualEditingOutlineContent = ref<string>('');
-const manualOutlineEditTextareaRef = ref<HTMLTextAreaElement | null>(null);
-const outlineEditErrorKeys = ref<Set<string>>(new Set());
-
-const editingOutlineData = ref<any>(null);
-const outlineEditOriginalData = ref<any>(null);
-const showOutlineEditConfirmModal = ref<boolean>(false);
-const outlineEditPendingAction = ref<(() => void) | null>(null);
-const outlineEditDirty = ref<boolean>(false);
-
-const markOutlineEditDirty = () => {
-  outlineEditDirty.value = true;
-};
-
-const isOutlineEditDirty = computed(() => {
-  return outlineEditDirty.value;
-});
-
-const isAnyEditing = computed(() => {
-  return isManualEditingOutline.value || isEditingChapter.value;
-});
-
-const isChapterEditDirty = computed(() => {
-  if (!isEditingChapter.value || !currentChapter.value) return false;
-  return editingChapterContent.value !== originalChapterContent.value || editingChapterTitle.value !== (currentChapter.value?.title || '');
-});
-
-const isAnyEditDirty = computed(() => {
-  return isOutlineEditDirty.value || isChapterEditDirty.value;
-});
-
-const checkOutlineEditBeforeAction = (action: () => void) => {
-  if (!isAnyEditing.value) {
-    action();
-    return;
-  }
-  if (isAnyEditDirty.value) {
-    outlineEditPendingAction.value = action;
-    showOutlineEditConfirmModal.value = true;
-    return;
-  }
-  isManualEditingOutline.value = false;
-  editingOutlineData.value = null;
-  outlineEditOriginalData.value = null;
-  isEditingChapter.value = false;
-  action();
-};
-
-const confirmOutlineEditExit = () => {
-  showOutlineEditConfirmModal.value = false;
-  outlineEditDirty.value = false;
-  isManualEditingOutline.value = false;
-  editingOutlineData.value = null;
-  outlineEditOriginalData.value = null;
-  isEditingChapter.value = false;
-  if (outlineEditPendingAction.value) {
-    outlineEditPendingAction.value();
-    outlineEditPendingAction.value = null;
-  }
-};
-
-const cancelOutlineEditExit = () => {
-  showOutlineEditConfirmModal.value = false;
-  outlineEditPendingAction.value = null;
-};
-
 // Loading component state
 const loadingProcessType = ref<'outline' | 'chapter'>('outline');
 const loadingKey = ref(0);
@@ -1719,33 +1449,6 @@ const showCoverZoomModal = ref<boolean>(false);
 const zoomedCoverImage = ref<string>('');
 const showCoverHistoryModal = ref<boolean>(false);
 const coverHistoryList = ref<string[]>([]);
-
-const showOutlineHistoryModal = ref<boolean>(false);
-const outlineHistoryList = ref<any[]>([]);
-const chapterHistoryList = ref<any[]>([]);
-
-const updateChapterHistoryFromDetail = (chapterRes: any) => {
-  if (chapterRes.data?.history_data) {
-    let historyData = chapterRes.data.history_data;
-    if (typeof historyData == 'string') {
-      try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
-    }
-    if (historyData?.novel_chapter && Array.isArray(historyData.novel_chapter)) {
-      chapterHistoryList.value = historyData.novel_chapter;
-    } else {
-      chapterHistoryList.value = [];
-    }
-  } else {
-    chapterHistoryList.value = [];
-  }
-};
-const showChapterHistoryModal = ref<boolean>(false);
-
-const isAiEditingChapter = ref<boolean>(false);
-const aiEditChapterInput = ref<string>('');
-const isSendingChapterEdit = ref<boolean>(false);
-const chapterEditCost = ref<number>(1);
-const chapterEditSectionRef = ref<HTMLElement | null>(null);
 
 // Start polling for cover image
 const startCoverPolling = (taskId: string) => {
@@ -2053,9 +1756,6 @@ const showNextArrow = computed(() => {
 const shouldShowGenerateButtons = computed(() => {
   if (!shouldShowActionButtons.value) return false;
 
-  // Don't show buttons while editing a chapter
-  if (isEditingChapter.value) return false;
-
   // Don't show buttons when task is in progress
   if (taskStatus.value == 'DOING') return false;
 
@@ -2250,7 +1950,7 @@ const regenerateOutline = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
-  if (await checkProjectOwnershipByEstimate('outline')) return;
+  if (await checkProjectOwnershipByEstimate()) return;
   // if (!await checkServerStateSync('SUCCESS')) return;
 
   hideEdit();
@@ -2470,7 +2170,6 @@ const sendRegenerateRequest = async () => {
 
 // Start editing project name
 const startEditProjectName = async () => {
-  hideEdit();
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2538,26 +2237,24 @@ const handleProjectNameBlur = () => {
 };
 
 // Start editing chapter
- const startEditChapter = async () => {
-   if (coverRenewFailed.value) {
-     toast(t('novel.coverRenewFailedTip'));
-     return;
-   }
-   if (coverRenewLoading.value) {
-     toast(t('novel.coverRenewLoadingTip'));
-     return;
-   }
-   if (checkProjectOwnership()) return;
+const startEditChapter = async () => {
+  if (coverRenewFailed.value) {
+    toast(t('novel.coverRenewFailedTip'));
+    return;
+  }
+  if (coverRenewLoading.value) {
+    toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (checkProjectOwnership()) return;
 
-   if (!currentChapter.value?.chapter) return;
+  if (!currentChapter.value?.chapter) return;
+  // if (!await checkServerStateSync(undefined, undefined, currentChapter.value.chapter)) return;
 
-   isAiEditingChapter.value = false;
-
-   if (currentChapter.value?.content) {
-     originalChapterContent.value = currentChapter.value.content;
-     editingChapterContent.value = currentChapter.value.content;
-     editingChapterTitle.value = currentChapter.value.title || '';
-     isEditingChapter.value = true;
+  if (currentChapter.value?.content) {
+    originalChapterContent.value = currentChapter.value.content;
+    editingChapterContent.value = currentChapter.value.content;
+    isEditingChapter.value = true;
 
     nextTick(() => {
       if (chapterEditTextareaRef.value) {
@@ -2656,9 +2353,11 @@ const fetchEstimatedTime = async (queuePosition: number = 0) => {
         const chapterElapsedSeconds = Math.max(0, elapsedSeconds - queueTimeSeconds);
         chapterRemaining = Math.max(0, (originalEstimatedSeconds.value || 600) - chapterElapsedSeconds);
       } else if (taskStartAt.value && res.data.current_timestamp) {
-        const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
+        // Handle ISO format with T separator - directly use new Date() with ISO string
+        const startTimeDate = new Date(taskStartAt.value);
 
-        if (startTimestamp) {
+        if (!isNaN(startTimeDate.getTime())) {
+          const startTimestamp = startTimeDate.getTime() / 1000;
           const currentTimestamp = res.data.current_timestamp;
           const elapsedSeconds = currentTimestamp - startTimestamp;
           const remainingSeconds = Math.max(0, estimatedTime.value - elapsedSeconds);
@@ -2688,7 +2387,7 @@ const fetchEstimatedTime = async (queuePosition: number = 0) => {
 
       displayMinutes.value = initialMinutes;
       if (isGeneratingOutline.value) {
-        const startTimeSec = taskStartAt.value ? parseToUnixTimestamp(taskStartAt.value) : (startTime.value || Date.now()) / 1000;
+        const startTimeSec = taskStartAt.value ? new Date(taskStartAt.value).getTime() / 1000 : (startTime.value || Date.now()) / 1000;
         chapterRemainingSeconds.value = Math.max(60, estimatedTime.value - (res.data.current_timestamp - startTimeSec));
       } else {
         chapterRemainingSeconds.value = chapterRemaining;
@@ -2757,77 +2456,50 @@ const cancelEditChapter = () => {
 };
 
 // Save edited chapter
-  const saveEditChapter = async () => {
-    if (coverRenewFailed.value) {
-      toast(t('novel.coverRenewFailedTip'));
+const saveEditChapter = async () => {
+  if (coverRenewFailed.value) {
+    toast(t('novel.coverRenewFailedTip'));
+    return;
+  }
+  if (coverRenewLoading.value) {
+    toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (currentChapter.value) {
+    // Check if content is empty
+    if (!editingChapterContent.value?.trim()) {
+      toast(t('novel.error.emptyChapterContent'));
       return;
     }
-    if (coverRenewLoading.value) {
-      toast(t('novel.coverRenewLoadingTip'));
-      return;
-    }
-    if (currentChapter.value) {
-      if (editingChapterContent.value == originalChapterContent.value && editingChapterTitle.value == currentChapter.value.title) {
-        isEditingChapter.value = false;
-        return;
-      }
 
-      if (!editingChapterContent.value?.trim()) {
-        toast(t('novel.error.emptyChapterContent'));
-        return;
-      }
-
-      if (!editingChapterTitle.value?.trim()) {
-        toast(t('novel.chapterTitleRequired'));
-        return;
-      }
-
+    // Check if content has been modified
+    if (editingChapterContent.value !== originalChapterContent.value) {
       try {
-        const token = localStorage.getItem('token');
-
-        const updateData = {
+        // Call API to modify chapter content
+        const modifyRes = await api.modifyChapterContent({
+          session_id: sessionId.value,
           chapter: currentChapter.value.chapter,
-          title: editingChapterTitle.value,
           content: editingChapterContent.value
-        };
+        }) as any;
 
-        const response = await fetch(`${aiUrl}app/project/update_chapter/${sessionId.value}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'token': token || ''
-          },
-          body: JSON.stringify(updateData)
-        });
-
-        const res = await response.json();
-
-        if (res.code !== 200) {
-          toast(res.message || t('fail'));
-          return;
+        if (modifyRes.code == 200) {
+          // Update local data
+          currentChapter.value.content = editingChapterContent.value;
+          displayedContent.value = editingChapterContent.value;
+        } else {
+          toast(modifyRes.message || t('fail'));
         }
-
-        currentChapter.value.title = editingChapterTitle.value;
-        currentChapter.value.content = editingChapterContent.value;
-        displayedContent.value = editingChapterContent.value;
-
-        const existingChapter = chapters.value.find((c: any) => c.chapter === currentChapter.value?.chapter);
-        if (existingChapter) {
-          existingChapter.title = editingChapterTitle.value;
-        }
-
-        updateChapterHistoryFromDetail(res);
       } catch (error) {
-        console.error('Error updating chapter:', error);
+        console.error('Error modifying chapter content:', error);
         toast(t('fail'));
       }
     }
-    isEditingChapter.value = false;
-  };
+  }
+  isEditingChapter.value = false;
+};
 
 // Start editing chapter title
 const startEditChapterTitle = async (chapterId: number, currentTitle: string) => {
-  hideEdit();
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -2851,6 +2523,7 @@ const startEditChapterTitle = async (chapterId: number, currentTitle: string) =>
 
 // Save edited chapter title
 const saveChapterTitle = async (chapterId: number) => {
+  // Check if title is empty
   if (!editingChapterTitle.value?.trim()) {
     toast(t('novel.error.emptyChapterTitle'));
     return;
@@ -2859,39 +2532,15 @@ const saveChapterTitle = async (chapterId: number) => {
   isHandlingChapterAction.value = true;
   isSavingChapterTitle.value = true;
   try {
-    let chapterContent = '';
-    if (currentChapter.value && currentChapter.value.chapter == chapterId) {
-      chapterContent = currentChapter.value.content || '';
-    } else {
-      try {
-        const chapterRes = await api.detailChapter(sessionId.value, chapterId) as any;
-        if (chapterRes.code == 200 && chapterRes.data) {
-          chapterContent = chapterRes.data.content || '';
-        }
-      } catch (e) {
-        console.error('Error fetching chapter content for title update:', e);
-      }
-    }
-
-    const token = localStorage.getItem('token');
-    const updateData = {
+    // Call API to modify chapter title
+    const modifyRes = await api.modifyChapterTitle({
+      session_id: sessionId.value,
       chapter: chapterId,
-      title: editingChapterTitle.value,
-      content: chapterContent
-    };
+      title: editingChapterTitle.value
+    }) as any;
 
-    const response = await fetch(`${aiUrl}app/project/update_chapter/${sessionId.value}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'token': token || ''
-      },
-      body: JSON.stringify(updateData)
-    });
-
-    const res = await response.json();
-
-    if (res.code == 200) {
+    if (modifyRes.code == 200) {
+      // Update local data in outlineData
       if (outlineData.value && outlineData.value.outline) {
         const chapter = outlineData.value.outline.find((c: any) => c.chapter == chapterId);
         if (chapter) {
@@ -2899,6 +2548,7 @@ const saveChapterTitle = async (chapterId: number) => {
         }
       }
 
+      // Update local data in chapters list
       if (chapters.value.length > 0) {
         const chapter = chapters.value.find((c: any) => c.chapter == chapterId);
         if (chapter) {
@@ -2906,16 +2556,18 @@ const saveChapterTitle = async (chapterId: number) => {
         }
       }
 
+      // Also update currentChapter if it's the same chapter
       if (currentChapter.value && currentChapter.value.chapter == chapterId) {
-        currentChapter.value = { ...currentChapter.value, title: editingChapterTitle.value };
+        currentChapter.value.title = editingChapterTitle.value;
       }
     } else {
-      toast(res.message || t('fail'));
+      toast(modifyRes.message || t('fail'));
     }
   } catch (error) {
-    console.error('Error updating chapter title:', error);
+    console.error('Error modifying chapter title:', error);
     toast(t('fail'));
   } finally {
+    // Reset editing state regardless of API result
     editingChapterId.value = null;
     isSavingChapterTitle.value = false;
     isHandlingChapterAction.value = false;
@@ -3287,9 +2939,9 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
 
   // Use the time from API response as start time if available
   if (novelNextRes.time) {
-    const startTimestamp = parseToUnixTimestamp(novelNextRes.time);
-    if (startTimestamp) {
-      startTime.value = startTimestamp * 1000;
+    const startTimeDate = new Date(novelNextRes.time);
+    if (!isNaN(startTimeDate.getTime())) {
+      startTime.value = startTimeDate.getTime();
     } else {
       startTime.value = Date.now();
     }
@@ -3319,360 +2971,17 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
 };
 
 function hideEdit() {
+  // Hide all editing states
   isEditingName.value = false;
   isEditingChapter.value = false;
   editingChapterId.value = null;
   isEditingCover.value = false;
-  isAiEditingOutline.value = false;
-  isAiEditingChapter.value = false;
-  isManualEditingOutline.value = false;
-  editingOutlineData.value = null;
-  showRegenerateInput.value = false;
-}
-
-const startManualEditOutline = async () => {
-  if (coverRenewFailed.value) {
-    toast(t('novel.coverRenewFailedTip'));
-    return;
-  }
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
-  if (await checkProjectOwnershipByEstimate('outline')) return;
-  hideEdit();
-  isManualEditingOutline.value = true;
-  editingOutlineData.value = JSON.parse(JSON.stringify(outlineData.value));
-  outlineEditOriginalData.value = JSON.parse(JSON.stringify(outlineData.value));
-  outlineEditDirty.value = false;
-  outlineEditErrorKeys.value = new Set();
-  nextTick(() => {
-    if (outlineContentRef.value) {
-      outlineContentRef.value.scrollTop = 0;
-    }
-  });
-};
-
-const cancelManualEditOutline = () => {
-  isManualEditingOutline.value = false;
-  editingOutlineData.value = null;
-  nextTick(() => {
-    if (outlineContentRef.value) {
-      outlineContentRef.value.scrollTop = 0;
-    }
-  });
-};
-
-const addOutlineCharacter = () => {
-  if (!editingOutlineData.value) return;
-  if (editingOutlineData.value.characters.length >= 10) {
-    toast(t('novel.maxCharactersLimit'));
-    return;
-  }
-  editingOutlineData.value.characters.push({
-    name: '',
-    description: ''
-  });
-  outlineEditDirty.value = true;
-};
-const removeOutlineCharacter = (index: number) => {
-  if (!editingOutlineData.value) return;
-  editingOutlineData.value.characters.splice(index, 1);
-  outlineEditDirty.value = true;
-};
-
-const removeOutlineChapter = (index: number) => {
-  if (!editingOutlineData.value) return;
-  editingOutlineData.value.outline.splice(index, 1);
-  updateOutlineChapterNumbers();
-  outlineEditDirty.value = true;
-};
-
-const insertChapterBefore = (index: number) => {
-  if (!editingOutlineData.value) return;
-  const outline = editingOutlineData.value.outline;
-  if (outline.length >= 100) {
-    toast(t('novel.maxChaptersLimit'));
-    return;
-  }
-  outline.splice(index, 0, {
-    chapter: 0,
-    title: '',
-    description: ''
-  });
-  updateOutlineChapterNumbers();
-  outlineEditDirty.value = true;
-};
-
-const insertChapterAfter = (index: number) => {
-  if (!editingOutlineData.value) return;
-  const outline = editingOutlineData.value.outline;
-  if (outline.length >= 100) {
-    toast(t('novel.maxChaptersLimit'));
-    return;
-  }
-  outline.splice(index + 1, 0, {
-    chapter: 0,
-    title: '',
-    description: ''
-  });
-  updateOutlineChapterNumbers();
-  outlineEditDirty.value = true;
-};
-
-const updateOutlineChapterNumbers = () => {
-  if (!editingOutlineData.value) return;
-  const outline = editingOutlineData.value.outline;
-  for (let i = 0; i < outline.length; i++) {
-    outline[i].chapter = i + 1;
-  }
-  editingOutlineData.value.base_info.total_chapters = outline.length;
-};
-
-const scrollToOutlineError = () => {
-  nextTick(() => {
-    const el = document.querySelector('.outline-edit-error');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      (el as HTMLElement).focus();
-    }
-  });
-};
-
-const saveManualEditOutline = async () => {
-  if (!editingOutlineData.value) return;
-
-  const errors = new Set<string>();
-
-  if (editingOutlineData.value.story_summary && !editingOutlineData.value.story_summary.summary.trim()) {
-    errors.add('story-summary');
-  }
-
-  if (editingOutlineData.value.characters) {
-    for (let i = 0; i < editingOutlineData.value.characters.length; i++) {
-      const c = editingOutlineData.value.characters[i];
-      if (!c.name.trim()) {
-        errors.add(`character-name-${i}`);
-      }
-      if (!c.description.trim()) {
-        errors.add(`character-desc-${i}`);
-      }
-    }
-  }
-
-  if (editingOutlineData.value.outline) {
-    for (let i = 0; i < editingOutlineData.value.outline.length; i++) {
-      const ch = editingOutlineData.value.outline[i];
-      if (!ch.title.trim()) {
-        errors.add(`chapter-title-${i}`);
-      }
-      if (!ch.description.trim()) {
-        errors.add(`chapter-desc-${i}`);
-      }
-    }
-  }
-
-  if (errors.size > 0) {
-    outlineEditErrorKeys.value = errors;
-    toast(t('novel.outlineRequiredFieldsTip'));
-    scrollToOutlineError();
-    return;
-  }
-
-  outlineEditErrorKeys.value = new Set();
-
-  if (JSON.stringify(editingOutlineData.value) === JSON.stringify(outlineData.value)) {
-    isManualEditingOutline.value = false;
-    editingOutlineData.value = null;
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem('token');
-
-    const updateData = {
-      base_info: editingOutlineData.value.base_info,
-      cover_prompt: editingOutlineData.value.cover_prompt || outlineData.value?.cover_prompt || '',
-      story_summary: editingOutlineData.value.story_summary,
-      characters: editingOutlineData.value.characters.map((c: any) => ({
-        name: c.name,
-        description: c.description
-      })),
-      outline: editingOutlineData.value.outline,
-      generate_mode: editingOutlineData.value.generate_mode || outlineData.value?.generate_mode || 'edit',
-      cost_tokens: editingOutlineData.value.cost_tokens || outlineData.value?.cost_tokens || 0
-    };
-
-    const response = await fetch(`${aiUrl}app/project/update_outline/${sessionId.value}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'token': token || ''
-      },
-      body: JSON.stringify(updateData)
-    });
-
-    const res = await response.json();
-
-    if (res.code !== 200) {
-      toast(res.message || t('fail'));
-      return;
-    }
-
-    outlineData.value = JSON.parse(JSON.stringify(editingOutlineData.value));
-    isManualEditingOutline.value = false;
-    editingOutlineData.value = null;
-
-    try {
-      const detailRes = await api.detailProject(sessionId.value) as any;
-      if (detailRes.code == 200 && detailRes.data?.history_data) {
-        let historyData = detailRes.data.history_data;
-        if (typeof historyData == 'string') {
-          try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
-        }
-        if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-          outlineHistoryList.value = historyData.outline_novel;
-          const latestOutline = historyData.outline_novel[historyData.outline_novel.length - 1];
-          if (latestOutline) {
-            outlineData.value = latestOutline;
-          }
-        } else {
-          outlineHistoryList.value = [];
-        }
-      }
-    } catch (e) {
-      console.error('Error fetching history after manual edit:', e);
-    }
-  } catch (error) {
-    console.error('Error saving manual outline edit:', error);
-    toast(t('fail'));
-  }
-};
-
-const startAiEditOutline = async () => {
-  if (coverRenewFailed.value) {
-    toast(t('novel.coverRenewFailedTip'));
-    return;
-  }
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
-  const outlineEstimateRes = await api.novelEstimate({
-    session_id: sessionId.value,
-    step_name: 'outline'
-  }) as any;
-  if (outlineEstimateRes.code == 10404) {
-    toast(t('novel.error.cannotOperateOtherUserProject'));
-    return;
-  }
-  hideEdit();
-  isAiEditingOutline.value = true;
-  aiEditOutlineInput.value = '';
-  if (outlineEstimateRes.code == 200 && outlineEstimateRes.data?.total_points) {
-    outlineEditCost.value = outlineEstimateRes.data.total_points;
-  } else {
-    outlineEditCost.value = regenerateCost.value;
-  }
-  nextTick(() => {
-    const textarea = outlineEditSectionRef.value?.querySelector('.outline-edit-textarea');
-    if (textarea) (textarea as HTMLTextAreaElement).focus();
-  });
-};
-
-const cancelAiEditOutline = () => {
-  isAiEditingOutline.value = false;
-  aiEditOutlineInput.value = '';
-};
-
-const handleOutlineEditInput = () => {
-  const maxLimit = 20000;
-  if (aiEditOutlineInput.value.length > maxLimit) {
-    aiEditOutlineInput.value = aiEditOutlineInput.value.substring(0, maxLimit);
-  }
-};
-
-const sendAiEditOutlineRequest = async () => {
-  if (isSendingOutlineEdit.value) return;
-  isSendingOutlineEdit.value = true;
-
-  if (!aiEditOutlineInput.value?.trim()) {
-    toast(t('novel.error.emptyRegenerateContent'));
-    isSendingOutlineEdit.value = false;
-    return;
-  }
-
-  try {
-    if (await isTaskLimitExceeded()) {
-      isSendingOutlineEdit.value = false;
-      return;
-    }
-
-    const editContent = aiEditOutlineInput.value.trim();
-
-    try {
-      await callNovelOutline('edit');
-
-      isAiEditingOutline.value = false;
-      aiEditOutlineInput.value = '';
-      topic.value = editContent;
-    } finally {
-      isSendingOutlineEdit.value = false;
-    }
-  } catch (error) {
-    console.error('Error sending outline edit request:', error);
-    toast(t('fail'));
-    isSendingOutlineEdit.value = false;
-  }
-};
-
-function formatOutlineToText(data: any): string {
-  if (!data) return '';
-  const bi = data.base_info || {};
-  const ss = data.story_summary || {};
-  const chars = data.characters || [];
-  const outline = data.outline || [];
-
-  let text = '';
-  if (bi.title) text += `${t('novel.novelOutline')}\n\n`;
-  text += `${t('novel.basicInfo')}\n`;
-  text += `${t('novel.totalChapters')}${bi.total_chapters || 0} ${t('novel.chaptersLabel')}\n`;
-  if (bi.words_per_chapter && bi.words_per_chapter.length == 2) {
-    text += `${t('novel.wordsPerChapter')}${bi.words_per_chapter[0]}-${bi.words_per_chapter[1]}${t('novel.wordsLabel')}\n`;
-  }
-  if (bi.genre) text += `${t('novel.genreLabel')}${bi.genre}\n`;
-  if (bi.writing_style) text += `${t('novel.writingStyle')}：${bi.writing_style}\n`;
-  text += '\n';
-
-  if (ss.summary) {
-    text += `${t('novel.storySummary')}\n${ss.summary}\n\n`;
-  }
-
-  if (chars.length > 0) {
-    text += `${t('novel.characterGallery')}\n`;
-    for (const c of chars) {
-      if (c.type) text += `${c.type}\n`;
-      text += `${t('novel.name')}：${c.name || ''}\n`;
-      text += `${t('novel.description')}：${c.description || ''}\n\n`;
-    }
-  }
-
-  if (outline.length > 0) {
-    text += `${t('novel.chapterPlot')}\n`;
-    for (const ch of outline) {
-      text += `${t('novel.chapter', { chapter: ch.chapter })} ${ch.title || ''}\n`;
-      text += `${ch.description || ''}\n\n`;
-    }
-  }
-
-  return text.trimEnd();
 }
 
 const goPrevChapter = async () => {
 
 
   hideEdit();
-  chapterHistoryList.value = [];
   // Stop auto navigation when user navigates manually
   shouldAutoNavigate.value = false;
 
@@ -3725,7 +3034,6 @@ const goPrevChapter = async () => {
           content: filteredContent
         };
         displayedContent.value = filteredContent;
-        updateChapterHistoryFromDetail(res);
         // 滚动到内容开始处
         nextTick(() => {
           if (chapterContentRef.value) {
@@ -3789,7 +3097,6 @@ const goNextChapter = async () => {
 
 
   hideEdit();
-  chapterHistoryList.value = [];
   // Stop auto navigation when user navigates manually
   shouldAutoNavigate.value = false;
 
@@ -3806,7 +3113,6 @@ const goNextChapter = async () => {
 // Go to specific chapter
 const goToChapter = async (chapterNum: number) => {
   hideEdit();
-  chapterHistoryList.value = [];
 
   // Reset typewriter effect when navigating to a different chapter
   if (isChapterTyping.value) {
@@ -3956,16 +3262,6 @@ const goToChapter = async (chapterNum: number) => {
       displayedContent.value = filteredContent;
       isLoading.value = false;
       hasFailed.value = false;
-
-      try {
-        const chapterRes = await api.detailChapter(sessionId.value, chapterNum) as any;
-        if (chapterRes.code == 200) {
-          updateChapterHistoryFromDetail(chapterRes);
-        }
-      } catch (e) {
-        console.error('Error fetching chapter history in goToChapter:', e);
-      }
-
       nextTick(() => {
         if (chapterContentRef.value) {
           chapterContentRef.value.scrollTop = 0;
@@ -4006,7 +3302,6 @@ const goToChapter = async (chapterNum: number) => {
       };
       displayedContent.value = filteredContent;
       hasFailed.value = false;
-      updateChapterHistoryFromDetail(res);
       nextTick(() => {
         if (chapterContentRef.value) {
           chapterContentRef.value.scrollTop = 0;
@@ -4181,9 +3476,9 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
 
   // Use the time from API response as start time if available
   if (novelAllChaptersRes.time) {
-    const startTimestamp = parseToUnixTimestamp(novelAllChaptersRes.time);
-    if (startTimestamp) {
-      startTime.value = startTimestamp * 1000;
+    const startTimeDate = new Date(novelAllChaptersRes.time);
+    if (!isNaN(startTimeDate.getTime())) {
+      startTime.value = startTimeDate.getTime();
     } else {
       startTime.value = Date.now();
     }
@@ -4421,14 +3716,8 @@ const handleChapterInfoClick = async () => {
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
 
-  nextTick(() => {
-    if (outlineContentRef.value) {
-      outlineContentRef.value.scrollTop = 0;
-    }
-  });
 
   hideEdit();
-  chapterHistoryList.value = [];
   // Only stop auto navigation when user clicks a chapter that's not currently generating
   if (chapterNum !== generatingChapter.value) {
     shouldAutoNavigate.value = false;
@@ -4498,10 +3787,11 @@ const handleChapterItemClick = async (chapterNum: number) => {
   isGeneratingOutline.value = false;
   outlineContent.value = '';
   displayedContent.value = '';
-  const existingChapter = chapters.value.find((c: any) => c.chapter == chapterNum);
+  // Set currentChapter to basic info before loading to show chapter title and skeleton
+  const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterNum);
   currentChapter.value = {
     chapter: chapterNum,
-    title: existingChapter?.title || '',
+    title: chapterData?.title || '',
     content: ''
   };
   isLoading.value = true;
@@ -4567,19 +3857,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
           content: filteredContent
         };
 
-        if (result.title) {
-          const existingChapter = chapters.value.find((c: any) => c.chapter == chapterNum);
-          if (existingChapter) {
-            existingChapter.title = result.title;
-          }
-          if (outlineData.value && outlineData.value.outline) {
-            const outlineChapter = outlineData.value.outline.find((c: any) => c.chapter == chapterNum);
-            if (outlineChapter) {
-              outlineChapter.title = result.title;
-            }
-          }
-        }
-
         // Scroll to top
         nextTick(() => {
           if (chapterContentRef.value) {
@@ -4599,8 +3876,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
             chapterContentRef.value.scrollTop = 0;
           }
         });
-
-        updateChapterHistoryFromDetail(res);
       } else {
         // No result data
         console.error('No chapter data returned from API');
@@ -4724,12 +3999,6 @@ const handleOutlinePreviewClick = async () => {
   isLoadingComplete.value = false;
   isWaitingForData.value = false;
   isChapterTyping.value = false;
-
-  nextTick(() => {
-    if (outlineContentRef.value) {
-      outlineContentRef.value.scrollTop = 0;
-    }
-  });
 
   // Stop printer interval to prevent auto-scrolling
   if (printerInterval.value) {
@@ -4988,19 +4257,21 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
     }
 
     // API successful, check if we need to show freeze computing power modal
-    const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
-    if (hideFreezeModal !== '1') {
-      // Get frozen points from detail project
-      const detailRes = await api.detailProject(sessionId.value) as any;
-      if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
-        freezeComputingPower.value = detailRes.data.frozen_points;
-        pendingGenerationAction.value = type === 'retry' ? 'retry-outline' : 'outline';
-        showFreezeComputingPowerModal.value = true;
+      const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+      if (hideFreezeModal !== '1') {
+        // Get frozen points from detail project
+        const detailRes = await api.detailProject(sessionId.value) as any;
+        if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
+          freezeComputingPower.value = detailRes.data.frozen_points;
+          pendingGenerationAction.value = type === 'retry' ? 'retry-outline' : 'outline';
+          showFreezeComputingPowerModal.value = true;
+        }
       }
-    }
 
     // Set cover task_id to session_id
     coverTaskId.value = sessionId.value;
+
+
 
     // Reset state for new generation - clear data only after API success
     outlineData.value = null;
@@ -5327,10 +4598,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
               const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
               if (chapterRes.code == 200 && chapterRes.data) {
                 content = chapterRes.data.content || '';
-        const detailRes = await api.detailChapter(sessionId.value, currentChapter.value?.chapter) as any;
-        if (detailRes.code == 200) {
-          updateChapterHistoryFromDetail(detailRes);
-        }
               }
             } catch (error) {
               console.error('Error fetching chapter detail:', error);
@@ -5436,8 +4703,6 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
 
             // Update state for failure
             hasFailed.value = true;
-            isGeneratingOutline.value = false;
-            isPreparing.value = false;
             statusMessage.value = taskData.status_message || '';
             taskStatus.value = 'FAIL';
             isLoading.value = false;
@@ -5595,9 +4860,6 @@ const fetchNovelOutline = async () => {
       if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
         coverHistoryList.value = historyData.novel_cover;
       }
-      if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-        outlineHistoryList.value = historyData.outline_novel;
-      }
     }
 
     // Initialize project name from detailProject response
@@ -5613,10 +4875,12 @@ const fetchNovelOutline = async () => {
     // Save task_start_at if available
     if (detailProjectRes.data?.task_start_at) {
       taskStartAt.value = detailProjectRes.data.task_start_at;
-      const startTimestamp = parseToUnixTimestamp(detailProjectRes.data.task_start_at);
+      // Convert task_start_at to startTime for shouldShowEstimatedTime
+      // Directly use new Date() with ISO string, it can handle both formats
+      const startTimeDate = new Date(detailProjectRes.data.task_start_at);
 
-      if (startTimestamp) {
-        startTime.value = startTimestamp * 1000;
+      if (!isNaN(startTimeDate.getTime())) {
+        startTime.value = startTimeDate.getTime();
       }
     }
 
@@ -5744,25 +5008,22 @@ const fetchNovelOutline = async () => {
           const chapterIndex = detailProjectRes.data?.step_chapter_index;
           if (chapterIndex && chapterIndex >= 1) {
             stepChapterIndex.value = chapterIndex;
-            const latestChapterNum = chapters.value.length > 0
-              ? Math.max(...chapters.value.map((c: any) => c.chapter))
-              : 0;
-            if (latestChapterNum > chapterIndex) {
-              const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+            const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+            if (chapterData) {
               currentChapter.value = {
-                chapter: latestChapterNum,
-                title: chapterData?.title || '',
-                content: ''
+                chapter: chapterIndex,
+                title: chapterData.title || '',
+                content: chapterData.content || ''
               };
-              displayedContent.value = '';
+              displayedContent.value = chapterData.content || '';
               try {
-                const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+                const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
                 if (chapterRes.code == 200 && chapterRes.data) {
                   let content = chapterRes.data.content || '';
                   content = content.replace(/\\n/g, '\n');
                   currentChapter.value = {
-                    chapter: latestChapterNum,
-                    title: chapterData?.title || chapterRes.data.title || '',
+                    chapter: chapterIndex,
+                    title: chapterData.title || chapterRes.data.title || '',
                     content
                   };
                   displayedContent.value = content;
@@ -5774,9 +5035,66 @@ const fetchNovelOutline = async () => {
                 isLoadingComplete.value = true;
               }
             } else {
-              isLoading.value = false;
-              isLoadingComplete.value = true;
+              let chapterHasContent = false;
+              try {
+                const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+                if (chapterRes.code == 200 && chapterRes.data?.content) {
+                  chapterHasContent = true;
+                  let content = chapterRes.data.content || '';
+                  content = content.replace(/\\n/g, '\n');
+                  const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                  chapters.value.push({
+                    id: `temp-${chapterIndex}`,
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || t('novel.untitled'),
+                    is_publish: 2
+                  });
+                  currentChapter.value = {
+                    chapter: chapterIndex,
+                    title: outlineChapterData?.title || chapterRes.data.title || '',
+                    content
+                  };
+                  displayedContent.value = content;
+                  taskStatus.value = 'SUCCESS';
+                  hasFailed.value = false;
+                  generatingChapter.value = null;
+                  currentStepName.value = 'chapter';
+                  lastGenerationType.value = 'chapter';
+                  isLoading.value = false;
+                  isLoadingComplete.value = true;
+                }
+              } catch (e) {
+                console.error('Error checking chapter content on FAIL:', e);
+              }
+
+              if (!chapterHasContent) {
+                const outlineChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
+                chapters.value.push({
+                  id: `temp-${chapterIndex}`,
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || t('novel.untitled'),
+                  is_publish: 2
+                });
+                currentChapter.value = {
+                  chapter: chapterIndex,
+                  title: outlineChapterData?.title || '',
+                  content: ''
+                };
+                displayedContent.value = '';
+                hasFailed.value = true;
+                taskStatus.value = 'FAIL';
+                generatingChapter.value = chapterIndex;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+              }
             }
+          } else {
+            currentChapter.value = null;
+            isLoading.value = false;
+            isLoadingComplete.value = true;
+            currentStepName.value = 'outline';
           }
         } else if (stepStatus == 'FAIL') {
           coverRenewLoading.value = false;
@@ -5968,9 +5286,9 @@ const fetchNovelOutline = async () => {
 
           // Ensure startTime is set from taskStartAt for accurate progress
           if (taskStartAt.value && !startTime.value) {
-            const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
-            if (startTimestamp) {
-              startTime.value = startTimestamp * 1000;
+            const startTimeDate = new Date(taskStartAt.value);
+            if (!isNaN(startTimeDate.getTime())) {
+              startTime.value = startTimeDate.getTime();
             }
           }
 
@@ -6033,8 +5351,6 @@ const fetchNovelOutline = async () => {
 
               displayedContent.value = content;
 
-              updateChapterHistoryFromDetail(chapterRes);
-
               nextTick(() => {
                 if (chapterContentRef.value) {
                   chapterContentRef.value.scrollTop = 0;
@@ -6066,9 +5382,9 @@ const fetchNovelOutline = async () => {
 
           // Ensure startTime is set from taskStartAt for accurate progress calculation on refresh
           if (taskStartAt.value && !startTime.value) {
-            const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
-            if (startTimestamp) {
-              startTime.value = startTimestamp * 1000;
+            const startTimeDate = new Date(taskStartAt.value);
+            if (!isNaN(startTimeDate.getTime())) {
+              startTime.value = startTimeDate.getTime();
             }
           }
 
@@ -6100,25 +5416,116 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'FAIL' && chapterIndex) {
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
-          currentChapter.value = {
-            chapter: chapterIndex,
-            title: chapterData?.title || '',
-            content: ''
-          };
-          displayedContent.value = '';
-          hasFailed.value = true;
-          taskStatus.value = 'FAIL';
-          isPreparing.value = false;
-          prepareQueueInfo.value = null;
-          generatingChapter.value = chapterIndex;
-          currentStepName.value = 'chapter';
-          lastGenerationType.value = 'chapter';
-          showCoverEditBtn.value = true;
-          startLoadingAnimation('chapter');
+          // Check if chapters has the failed chapter and if there's a newer completed chapter
+          const failedChapterInList = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          const latestChapterNum = chapters.value.length > 0
+            ? Math.max(...chapters.value.map((c: any) => c.chapter))
+            : chapterIndex;
+
+          if (failedChapterInList && latestChapterNum > chapterIndex) {
+            // The failed chapter exists but there are newer completed chapters - show the latest one
+            stepChapterIndex.value = latestChapterNum;
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, latestChapterNum) as any;
+              if (chapterRes.code == 200 && chapterRes.data?.content) {
+                let content = chapterRes.data.content || '';
+                content = content.replace(/\\n/g, '\n');
+                const chapterData = chapters.value.find((c: any) => c.chapter == latestChapterNum);
+                currentChapter.value = {
+                  chapter: latestChapterNum,
+                  title: chapterData?.title || chapterRes.data.title || '',
+                  content
+                };
+                displayedContent.value = content;
+                taskStatus.value = 'SUCCESS';
+                hasFailed.value = false;
+                isPreparing.value = false;
+                prepareQueueInfo.value = null;
+                generatingChapter.value = null;
+                currentStepName.value = 'chapter';
+                lastGenerationType.value = 'chapter';
+                showCoverEditBtn.value = true;
+                isLoading.value = false;
+                isLoadingComplete.value = true;
+                isFetchingNovelOutline.value = false;
+                nextTick(() => {
+                  if (chapterContentRef.value) {
+                    chapterContentRef.value.scrollTop = 0;
+                  }
+                });
+                await fetchUserBalance();
+                return;
+              }
+            } catch (e) {
+              console.error('Error fetching latest chapter on FAIL:', e);
+            }
+          }
+
+          // No newer completed chapter - proceed with existing FAIL handling
+          let chapterHasContent = false;
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+            if (chapterRes.code == 200 && chapterRes.data?.content) {
+              chapterHasContent = true;
+              const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+              let content = chapterRes.data.content || '';
+              content = content.replace(/\\n/g, '\n');
+              currentChapter.value = {
+                chapter: chapterIndex,
+                title: chapterData?.title || chapterRes.data.title || '',
+                content
+              };
+              displayedContent.value = content;
+              taskStatus.value = 'SUCCESS';
+              hasFailed.value = false;
+              isPreparing.value = false;
+              prepareQueueInfo.value = null;
+              generatingChapter.value = null;
+              currentStepName.value = 'chapter';
+              lastGenerationType.value = 'chapter';
+              showCoverEditBtn.value = true;
+              isLoading.value = false;
+              isLoadingComplete.value = true;
+              isFetchingNovelOutline.value = false;
+              nextTick(() => {
+                if (chapterContentRef.value) {
+                  chapterContentRef.value.scrollTop = 0;
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error checking chapter content on FAIL:', e);
+          }
+
+          if (!chapterHasContent) {
+            const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+            currentChapter.value = {
+              chapter: chapterIndex,
+              title: chapterData?.title || '',
+              content: ''
+            };
+            displayedContent.value = '';
+            hasFailed.value = true;
+            taskStatus.value = 'FAIL';
+            isPreparing.value = false;
+            prepareQueueInfo.value = null;
+            generatingChapter.value = chapterIndex;
+            currentStepName.value = 'chapter';
+            lastGenerationType.value = 'chapter';
+            showCoverEditBtn.value = true;
+            startLoadingAnimation('chapter');
+
+            await fetchUserBalance();
+
+            if (!hasFailed.value) {
+              await fetchPointsEstimate();
+            }
+            isLoading.value = false;
+            isFetchingNovelOutline.value = false;
+            return;
+          }
 
           await fetchUserBalance();
-          isLoading.value = false;
           isFetchingNovelOutline.value = false;
           return;
         } else if (chapterIndex) {
@@ -6143,8 +5550,6 @@ const fetchNovelOutline = async () => {
 
               currentChapter.value.content = content;
               displayedContent.value = content;
-
-              updateChapterHistoryFromDetail(chapterRes);
             }
           } catch (error) {
             console.error('Error fetching chapter data:', error);
@@ -6203,7 +5608,7 @@ const fetchNovelOutline = async () => {
             console.error('Error parsing result_async:', error);
           }
         }
-      } else if (currentStepName.value !== 'chapter' && stepStatusForResult !== 'FAIL') {
+      } else if (currentStepName.value !== 'chapter') {
         // For non-outline step_names, start polling directly
         if (currentStepName.value !== 'chapter') {
           // Start polling for task status
@@ -6261,11 +5666,9 @@ const handlePollingResponse = (pollingRes: any) => {
 
     isLoading.value = false;
     hasFailed.value = false;
-    isPreparing.value = false;
-    prepareQueueInfo.value = null;
+    isPreparing.value = false; // Reset preparation state
+    prepareQueueInfo.value = null; // Clear queue info
     generatingChapter.value = null;
-    isLoadingComplete.value = true;
-    stopLoadingAnimation();
 
     // Check if we're generating outline or chapter
     if (isGeneratingOutline.value) {
@@ -6306,7 +5709,6 @@ const handlePollingResponse = (pollingRes: any) => {
 
     isLoading.value = false;
     hasFailed.value = true;
-    isGeneratingOutline.value = false;
     isPreparing.value = false; // Reset preparation state
     prepareQueueInfo.value = null; // Clear queue info
     generatingChapter.value = null;
@@ -6730,19 +6132,6 @@ const fetchDetailProjectForOutline = async () => {
         }
       }
 
-      // Update outline history list from history_data
-      if (detailProjectRes.data?.history_data) {
-        let historyData = detailProjectRes.data.history_data;
-        if (typeof historyData == 'string') {
-          try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
-        }
-        if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-          outlineHistoryList.value = historyData.outline_novel;
-        } else {
-          outlineHistoryList.value = [];
-        }
-      }
-
       // Update UI states
       isGeneratingOutline.value = false;
       hasStreamData.value = true;
@@ -6756,8 +6145,8 @@ const fetchDetailProjectForOutline = async () => {
       // Reset currentStepName to outline to show generate buttons
       currentStepName.value = 'outline';
 
-      // Start polling for cover image only if not already available
-      if (coverTaskId.value && !coverImage.value) {
+      // Start polling for cover image
+      if (coverTaskId.value) {
         startCoverPolling(coverTaskId.value);
       }
     }
@@ -6772,25 +6161,27 @@ const fetchDetailProjectForOutline = async () => {
 // Fetch chapter detail after chapter generation completes
 const fetchChapterDetailForGeneration = async () => {
   try {
+    // Get the chapter index from generatingChapter
     const chapterIndex = generatingChapter.value;
 
     if (chapterIndex !== null) {
+      // Fetch chapter detail from API
       const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
 
       if (chapterRes.code == 200 && chapterRes.data) {
         const content = chapterRes.data.content || '';
 
+        // Update the chapter content
         if (currentChapter.value && currentChapter.value.chapter === chapterIndex) {
           currentChapter.value.content = content;
         }
 
+        // Update chapters array
         const chapterIndexInArray = chapters.value.findIndex(ch => ch.chapter === chapterIndex);
         if (chapterIndexInArray !== -1) {
           chapters.value[chapterIndexInArray].content = content;
-          chapters.value[chapterIndexInArray].status = 1;
+          chapters.value[chapterIndexInArray].status = 1; // Mark as generated
         }
-
-        updateChapterHistoryFromDetail(chapterRes);
       }
     }
   } catch (error) {
@@ -7305,334 +6696,6 @@ async function handleCoverHistoryClick() {
   if (checkProjectOwnership()) return;
   openCoverHistory();
 }
-
-async function handleOutlineHistoryClick() {
-  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
-    const chapterNum = generatingChapter.value || stepChapterIndex.value;
-    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
-    return;
-  }
-  if (checkProjectOwnership()) return;
-  openOutlineHistory();
-}
-
-async function openOutlineHistory() {
-  outlineHistoryList.value = [];
-  showOutlineHistoryModal.value = true;
-  try {
-    const detailRes = await api.detailProject(sessionId.value) as any;
-    if (detailRes.code == 200 && detailRes.data?.history_data) {
-      let historyData = detailRes.data.history_data;
-      if (typeof historyData == 'string') {
-        try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
-      }
-      if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-        outlineHistoryList.value = historyData.outline_novel;
-      } else {
-        outlineHistoryList.value = [];
-      }
-    } else {
-      outlineHistoryList.value = [];
-    }
-  } catch (error) {
-    console.error('Error fetching outline history:', error);
-    outlineHistoryList.value = [];
-  }
-}
-
-function closeOutlineHistoryModal() {
-  showOutlineHistoryModal.value = false;
-}
-
-async function selectHistoryOutline(outlineObj: any) {
-  if (checkProjectOwnership()) return;
-
-  try {
-    const token = localStorage.getItem('token');
-
-    const updateData = {
-      base_info: outlineObj.base_info,
-      cover_prompt: outlineObj.cover_prompt || outlineData.value?.cover_prompt || '',
-      story_summary: outlineObj.story_summary,
-      characters: (outlineObj.characters || []).map((c: any) => ({
-        name: c.name,
-        description: c.description
-      })),
-      outline: outlineObj.outline,
-      generate_mode: outlineObj.generate_mode || outlineData.value?.generate_mode || 'edit',
-      cost_tokens: outlineObj.cost_tokens || outlineData.value?.cost_tokens || 0
-    };
-
-    const response = await fetch(`${aiUrl}app/project/update_outline/${sessionId.value}?is_save_history=false`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'token': token || ''
-      },
-      body: JSON.stringify(updateData)
-    });
-
-    const res = await response.json();
-
-    if (res.code !== 200) {
-      toast(res.message || t('fail'));
-      return;
-    }
-
-    outlineData.value = outlineObj;
-    showOutlineHistoryModal.value = false;
-  } catch (error) {
-    console.error('Error updating outline from history:', error);
-    toast(t('fail'));
-  }
-}
-
-async function handleChapterHistoryClick() {
-  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
-    const chapterNum = generatingChapter.value || stepChapterIndex.value;
-    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
-    return;
-  }
-  if (checkProjectOwnership()) return;
-
-  chapterHistoryList.value = [];
-  showChapterHistoryModal.value = true;
-
-  try {
-    const chapterRes = await api.detailChapter(sessionId.value, currentChapter.value?.chapter) as any;
-    if (chapterRes.code == 200) {
-      updateChapterHistoryFromDetail(chapterRes);
-    }
-  } catch (error) {
-    console.error('Error fetching chapter history:', error);
-    chapterHistoryList.value = [];
-  }
-}
-
-async function selectHistoryChapter(chapterObj: any) {
-  if (checkProjectOwnership()) return;
-  if (currentChapter.value) {
-    try {
-      const token = localStorage.getItem('token');
-
-      const updateData = {
-        chapter: currentChapter.value.chapter,
-        title: chapterObj.title || currentChapter.value.title,
-        content: chapterObj.content || ''
-      };
-
-      const response = await fetch(`${aiUrl}app/project/update_chapter/${sessionId.value}?is_save_history=false`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': token || ''
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      const res = await response.json();
-
-      if (res.code !== 200) {
-        toast(res.message || t('fail'));
-        return;
-      }
-
-      currentChapter.value.content = chapterObj.content || '';
-      currentChapter.value.title = chapterObj.title || currentChapter.value.title;
-      displayedContent.value = chapterObj.content || '';
-    } catch (error) {
-      console.error('Error updating chapter from history:', error);
-      toast(t('fail'));
-      return;
-    }
-  }
-  showChapterHistoryModal.value = false;
-}
-
-const startAiEditChapter = async () => {
-  if (coverRenewFailed.value) {
-    toast(t('novel.coverRenewFailedTip'));
-    return;
-  }
-  if (coverRenewLoading.value) {
-    toast(t('novel.coverRenewLoadingTip'));
-    return;
-  }
-  const chapterEstimateRes = await api.novelEstimate({
-    session_id: sessionId.value,
-    step_name: 'chapter'
-  }) as any;
-  if (chapterEstimateRes.code == 10404) {
-    toast(t('novel.error.cannotOperateOtherUserProject'));
-    return;
-  }
-  hideEdit();
-  isAiEditingChapter.value = true;
-  aiEditChapterInput.value = '';
-  if (chapterEstimateRes.code == 200 && chapterEstimateRes.data?.total_points) {
-    chapterEditCost.value = chapterEstimateRes.data.total_points;
-  } else {
-    chapterEditCost.value = regenerateCost.value;
-  }
-  nextTick(() => {
-    const textarea = chapterEditSectionRef.value?.querySelector('.outline-edit-textarea');
-    if (textarea) (textarea as HTMLTextAreaElement).focus();
-  });
-};
-
-const cancelAiEditChapter = () => {
-  isAiEditingChapter.value = false;
-  aiEditChapterInput.value = '';
-};
-
-const handleAiEditChapterInput = () => {
-  const maxLimit = 20000;
-  if (aiEditChapterInput.value.length > maxLimit) {
-    aiEditChapterInput.value = aiEditChapterInput.value.substring(0, maxLimit);
-  }
-};
-
-const sendAiEditChapterRequest = async () => {
-  if (isSendingChapterEdit.value) return;
-  isSendingChapterEdit.value = true;
-
-  if (!aiEditChapterInput.value?.trim()) {
-    toast(t('novel.error.emptyRegenerateContent'));
-    isSendingChapterEdit.value = false;
-    return;
-  }
-
-  try {
-    if (await isTaskLimitExceeded()) {
-      isSendingChapterEdit.value = false;
-      return;
-    }
-
-    const editChapterIndex = currentChapter.value?.chapter;
-
-    const estimateRes = await api.novelEstimate({
-      session_id: sessionId.value,
-      step_name: 'chapter',
-      from_chapter: editChapterIndex
-    }) as any;
-
-    if (estimateRes.code == 10404) {
-      toast(t('novel.error.cannotOperateOtherUserProject'));
-      isSendingChapterEdit.value = false;
-      return;
-    }
-
-    if (estimateRes.code == 200 && estimateRes.data?.total_points) {
-      const estimatedPoints = estimateRes.data.total_points;
-      estimatedComputingPower.value = estimatedPoints;
-      await fetchUserBalance();
-      const requiredPower = Math.round(estimatedPoints * 1.05);
-      if (userBalance.value < requiredPower) {
-        estimatedFrozenPower.value = Math.round(estimatedPoints * (balanceInfo.value?.over_freeze_rate || 1));
-        showInsufficientBalanceModal.value = true;
-        isSendingChapterEdit.value = false;
-        return;
-      }
-    }
-
-    const editPrompt = aiEditChapterInput.value.trim();
-
-    stopDetailPolling();
-
-    isUserInitiatedGeneration.value = true;
-    shouldShowTypewriter.value = true;
-    shouldAutoNavigate.value = false;
-    isRetryingChapter.value = false;
-
-    const novelNextParams: any = {
-      session_id: sessionId.value,
-      chapter: editChapterIndex,
-      generate_mode: 'edit',
-      prompt: editPrompt
-    };
-
-    const novelNextRes = await api.novelNext(novelNextParams) as any;
-
-    if (novelNextRes.code !== 200) {
-      if (handleSessionTimeout(novelNextRes.code)) {
-        return;
-      }
-      if (novelNextRes.code == 40011) {
-        await fetchUserBalance();
-        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
-        showInsufficientBalanceModal.value = true;
-        return;
-      }
-      toast(novelNextRes.message || t('fail'));
-      isSendingChapterEdit.value = false;
-      return;
-    }
-
-    isAiEditingChapter.value = false;
-    aiEditChapterInput.value = '';
-
-    hideEdit();
-
-    const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == editChapterIndex);
-
-    displayedContent.value = '';
-    pendingDisplayContent.value = '';
-    isLoadingComplete.value = false;
-    isLoading.value = true;
-
-    startLoadingAnimation('chapter');
-    hasFailed.value = false;
-    taskStatus.value = 'DOING';
-    lastGenerationType.value = 'chapter';
-    isGeneratingOutline.value = false;
-    isChapterTyping.value = false;
-    generatingChapter.value = editChapterIndex;
-    stepChapterIndex.value = editChapterIndex;
-    currentStepName.value = 'chapter';
-
-    const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
-    if (hideFreezeModal !== '1') {
-      const detailRes = await api.detailProject(sessionId.value) as any;
-      if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
-        freezeComputingPower.value = detailRes.data.frozen_points;
-        pendingGenerationAction.value = 'edit-chapter';
-        showFreezeComputingPowerModal.value = true;
-      }
-    }
-
-    const taskId = novelNextRes.data?.task_id || '';
-
-    if (novelNextRes.time) {
-      const startTimestamp = parseToUnixTimestamp(novelNextRes.time);
-      if (startTimestamp) {
-        startTime.value = startTimestamp * 1000;
-      } else {
-        startTime.value = Date.now();
-      }
-    } else {
-      startTime.value = Date.now();
-    }
-
-    estimatedTime.value = null;
-    originalEstimatedSeconds.value = null;
-    displayMinutes.value = 0;
-    estimatedTimeFetched.value = false;
-    fetchEstimatedTime();
-
-    await fetchUserBalance();
-
-    await fetchChapterStream(editChapterIndex, taskId);
-
-    if (!hasFailed.value) {
-      await fetchPointsEstimate();
-    }
-  } catch (error) {
-    console.error('Error sending AI edit chapter request:', error);
-    toast(t('fail'));
-  } finally {
-    isSendingChapterEdit.value = false;
-  }
-};
 
 async function toggleCoverEdit() {
   if (coverRenewFailed.value) {
@@ -8327,14 +7390,8 @@ async function openCoverHistory() {
       } else {
         coverHistoryList.value = [];
       }
-      if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-        outlineHistoryList.value = historyData.outline_novel;
-      } else {
-        outlineHistoryList.value = [];
-      }
     } else {
       coverHistoryList.value = [];
-      outlineHistoryList.value = [];
     }
   } catch (error) {
     console.error('Error fetching cover history:', error);
@@ -8463,12 +7520,9 @@ const startCoverRenewPolling = (taskId: string) => {
             if (typeof historyData == 'string') {
               try { historyData = JSON.parse(historyData); } catch (e) { historyData = null; }
             }
-      if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
-        coverHistoryList.value = historyData.novel_cover;
-      }
-      if (historyData?.outline_novel && Array.isArray(historyData.outline_novel)) {
-        outlineHistoryList.value = historyData.outline_novel;
-      }
+            if (historyData?.novel_cover && Array.isArray(historyData.novel_cover)) {
+              coverHistoryList.value = historyData.novel_cover;
+            }
           }
         } catch (e) {
           console.error('Error updating cover history:', e);

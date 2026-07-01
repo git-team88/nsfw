@@ -46,7 +46,7 @@
                   </div>
                   <div class="update-info">
                     <span class="status">{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.statusOngoing') }}</span>
-                    <span class="time">{{ collection.lastUpdate }}</span>
+                    <span class="time">{{ formatTimestamp(collection.lastUpdate) }}</span>
                   </div>
 
                 </div>
@@ -56,10 +56,10 @@
             <!-- Author Info (always show) -->
             <div class="author-right">
               <div class="avatar-top">
-                <div class="avatar-container">
+                <div class="avatar-container" @click="goHome">
                   <img :src="authorInfo.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                 </div>
-                <div class="author-name">{{ authorInfo.nickname }}</div>
+                <div class="author-name" @click="goHome">{{ authorInfo.nickname }}</div>
               </div>
 
               <div class="avatar-bottom">
@@ -195,6 +195,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { formatTimestamp } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
 import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
@@ -955,6 +956,7 @@ onBeforeUnmount(() => {
       border-radius: 50%;
       overflow: hidden;
       margin-bottom: 1rem;
+      cursor: pointer;
 
       img {
         width: 100%;
@@ -967,6 +969,7 @@ onBeforeUnmount(() => {
       font-size: 1.6rem;
       font-weight: 500;
       color: #364153;
+      cursor: pointer;
     }
 
     .avatar-bottom{

@@ -96,7 +96,7 @@
                   </div>
 
                   <div class="c-footer">
-                    <span class="c-time">{{ comment.created_at }}</span>
+                    <span class="c-time">{{ formatTimestamp(comment.created_at) }}</span>
                     <div class="c-actions">
                       <div
                         class="action-btn like-btn"
@@ -142,7 +142,7 @@
                     </div>
                     <p class="c-text" v-else v-html="formatContent(reply.content_replace || reply.text || reply.content)"></p>
                     <div class="c-footer">
-                      <span class="c-time">{{ reply.created_at }}</span>
+                      <span class="c-time">{{ formatTimestamp(reply.created_at) }}</span>
                       <div class="c-actions">
                         <div
                           class="action-btn like-btn"
@@ -347,6 +347,14 @@
         </div>
       </div>
     </div>
+
+    <PreviewModal
+      :visible="showPreviewModal"
+      :videoUrl="curVideoUrl"
+      @close="closePreviewModal"
+    />
+
+    <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
   </div>
 </template>
 
@@ -356,8 +364,11 @@ import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { baseUrl } from '@/util/config';
+import { formatTimestamp } from '@/util/utils';
 import { useRoute, useRouter } from "vue-router";
 import EmptyState from '@/components/EmptyState.vue';
+import UploadMask from '@/components/UploadMask.vue';
+import PreviewModal from '@/components/PreviewModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -389,7 +400,13 @@ const emit = defineEmits(['close', 'navigate-to-user', 'navigate-to-chapter', 'o
 
 const { t, locale } = useI18n();
 
-// Comments
+function getI18nMsg(res: any) {
+  const lang = locale.value;
+  const msgMap: Record<string, string> = { zh: 'msg_cn', jp: 'msg_jp', tc: 'msg_tc' };
+  const key = msgMap[lang];
+  return (key && res?.[key]) || res?.msg || t('fail');
+}
+
 const comments = ref<any[]>([]);
 const totalComments = ref(props.detail?.comment_total?.toString() || '0');
 const commentText = ref('');
@@ -1681,9 +1698,9 @@ async function uploadVideo(file: File) {
       };
     });
 
-    const videoIdResponse = await api.getVideoId({ filename: file.name }) as any;
+    const videoIdResponse = await api.getVideoId({ filename: file.name, filesize: file.size }) as any;
     if (!videoIdResponse || videoIdResponse.code !== 0) {
-      toast(t('fail'));
+      toast(getI18nMsg(videoIdResponse));
       return false;
     }
 
@@ -1698,30 +1715,35 @@ async function uploadVideo(file: File) {
       const end = Math.min(i * CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
 
-      const videoUrlResponse = await api.getVideoUrl({ uploadId, fileKey, partNumber: i }) as any;
-      if (!videoUrlResponse || videoUrlResponse.code !== 0) {
-        throw new Error('Failed to get upload URL');
-      }
+      const formData = new FormData();
+      formData.append('uploadId', uploadId);
+      formData.append('key', fileKey);
+      formData.append('partNumber', String(i));
+      formData.append('file', chunk);
 
-      const presignedUrl = videoUrlResponse.data.url;
-
-      const uploadRes = await fetch(presignedUrl, {
-        method: 'PUT',
-        body: chunk
+      const authToken = localStorage.getItem("token") ?? "";
+      const authHeaders = window.AntiCrawler.generateAuthParams(authToken);
+      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
+        method: "POST",
+        headers: {
+          token: authToken || undefined,
+          ...authHeaders,
+        } as Record<string, string>,
+        body: formData,
       });
-
-      if (!uploadRes.ok) {
-        toast(t('fail'));
+      const videoUrlData = await videoUrlResponse.json();
+      if (!videoUrlData || videoUrlData.code !== 0) {
+        toast(getI18nMsg(videoUrlData));
         return false;
       }
 
-      const etag = uploadRes.headers.get('etag')?.replace(/"/g, '') || '';
+      const etag = videoUrlData.data?.etag || '';
       uploadedParts.push({ PartNumber: i, ETag: etag });
     }
 
-    const videoMergeResponse = await api.getVideoMerge({ uploadId, fileKey, parts: uploadedParts }) as any;
+    const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
     if (!videoMergeResponse || videoMergeResponse.code !== 0) {
-      toast(t('fail'));
+      toast(getI18nMsg(videoMergeResponse));
       return false;
     }
 
@@ -1731,8 +1753,8 @@ async function uploadVideo(file: File) {
       type: 'video',
       url: videoUrl.value,
       file});
-  } catch (error) {
-    toast(t('fail'));
+  } catch (error: any) {
+    toast(getI18nMsg(error?.response?.data || error));
   } finally {
     isLoading.value = false;
   }
@@ -1823,6 +1845,7 @@ function previewFileItem(file: any, index: number) {
 
     // 显示视频预览模态框
     showPreviewModal.value = true;
+    curVideoUrl.value = file.url;
   }
 }
 
@@ -2836,13 +2859,20 @@ function likeReply(id: string, liked: boolean) {
                 align-items: center;
                 justify-content: center;
 
+                video{
+                  width: auto;
+                  max-width: 100%;
+                  height: 100%;
+                  object-fit: contain;
+                }
+
                 .video-icon {
                   position: absolute;
                   left: 50%;
                   top: 50%;
-                  transform: translateX(-50%) translateY(-42%);
-                  width: 4rem;
-                  height: 4rem;
+                  transform: translateX(-50%) translateY(-30%);
+                  width: 6rem;
+                  height: 6rem;
                   cursor: pointer;
                 }
               }

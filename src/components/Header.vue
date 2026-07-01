@@ -231,12 +231,12 @@ const menuItems = [
   { key: "payment-history", label: "user.paymentHistory.title", path: "/user-payment-history" },
 ];
 
-const langList = computed(() => [
-  { value: 'jp', label: t('novel.language.jp') },
-  { value: 'en', label: t('novel.language.en') },
-  { value: 'tc', label: t('novel.language.tc') },
-  { value: 'zh', label: t('novel.language.zh') }
-]);
+const langList = [
+  { value: 'jp', label: '日本語' },
+  { value: 'en', label: 'English' },
+  { value: 'tc', label: '中文繁體' },
+  { value: 'zh', label: '中文简体' }
+];
 const lang = localStorage.getItem("lang");
 const langText = ref(lang);
 const isShowLang = ref(false);

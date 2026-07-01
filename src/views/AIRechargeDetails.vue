@@ -99,10 +99,10 @@
                 </div>
                 <div class="column-content">
                   <div class="reward-source">{{ getTypeName(item) }}</div>
-                  <div class="transaction-date">{{ formatDate(item.date) }}</div>
-                </div>
-              </div>
-              <div class="transaction-column source-column">
+<div class="transaction-date">{{ formatTimestamp(item.date) }}</div>
+                 </div>
+               </div>
+               <div class="transaction-column source-column">
                 <div class="column-content">
                   <div class="user-info">
                     <img :src="item.from_user_info?.avatar" alt="" class="user-avatar-small" />
@@ -127,9 +127,9 @@
                 </div>
                 <div class="column-content">
                   <div class="reward-source">{{ getTypeName(item) }}</div>
-                  <div class="transaction-date">{{ formatDate(item.date) }}</div>
-                </div>
-              </div>
+<div class="transaction-date">{{ formatTimestamp(item.date) }}</div>
+                 </div>
+               </div>
 
               <div class="transaction-column recharge-right-column">
                 <div class="column-content">
@@ -161,6 +161,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
+import { formatTimestamp } from "@/util/utils";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -462,10 +463,6 @@ function getTypeName(item: any) {
   return '';
 }
 
-function formatDate(date: string) {
-  if (!date) return '';
-  return date.replace('T', ' ');
-}
 
 function goBack() {
   router.back();

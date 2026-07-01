@@ -1,0 +1,475 @@
+<template>
+  <div v-if="visible" class="outline-history-modal">
+    <div class="outline-history-content">
+      <div class="outline-history-left">
+        <h3 class="outline-history-title">{{ t('novel.outlineHistoryTitle') }}</h3>
+        <div v-if="outlineList.length > 0" class="outline-history-list">
+          <div
+            v-for="(outlineItem, index) in reversedOutlineList"
+            :key="index"
+            class="outline-history-item"
+            :class="{ active: isSameOutline(outlineItem, selectedOutline) }"
+            @click="selectOutline(outlineItem)"
+          >
+            <span class="outline-item-text">{{ getOutlineSummary(outlineItem) }}</span>
+          </div>
+        </div>
+        <div v-else class="outline-history-empty">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <div class="outline-history-right">
+        <div class="close-btn-wrapper">
+          <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+        </div>
+
+        <div v-if="outlineList.length == 0" class="outline-preview-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">{{ t('home.loading') }}</div>
+        </div>
+
+        <div v-else-if="selectedOutline" class="outline-preview-content" ref="previewContentRef">
+          <div v-if="selectedOutline.base_info" class="section basic-info">
+            <h3 class="section-title">{{ t('novel.basicInfo') }}</h3>
+            <div class="info-item">
+              <span class="info-label">{{ t('novel.totalChapters') }}</span>
+              <span class="info-value">{{ selectedOutline.base_info.total_chapters }}{{ t('novel.chaptersLabel') }}</span>
+            </div>
+            <div class="info-item" v-if="selectedOutline.base_info.words_per_chapter && selectedOutline.base_info.words_per_chapter.length == 2">
+              <span class="info-label">{{ t('novel.wordsPerChapter') }}</span>
+              <span class="info-value">{{ selectedOutline.base_info.words_per_chapter[0] }}-{{ selectedOutline.base_info.words_per_chapter[1] }}{{ t('novel.wordsLabel') }}</span>
+            </div>
+            <div class="info-item" v-if="selectedOutline.base_info.genre">
+              <span class="info-label">{{ t('novel.genreLabel') }}</span>
+              <span class="info-value">{{ selectedOutline.base_info.genre }}</span>
+            </div>
+            <div class="info-item" v-if="selectedOutline.base_info.writing_style">
+              <span class="info-label">{{ t('novel.writingStyle') }}</span>
+              <span class="info-value">{{ selectedOutline.base_info.writing_style }}</span>
+            </div>
+          </div>
+
+          <div v-if="selectedOutline.story_summary" class="section story-summary">
+            <h3 class="section-title">{{ t('novel.storySummary') }}</h3>
+            <p class="summary-text">{{ selectedOutline.story_summary.summary }}</p>
+          </div>
+
+          <div v-if="selectedOutline.characters && selectedOutline.characters.length > 0" class="section characters">
+            <h3 class="section-title">{{ t('novel.characterGallery') }}</h3>
+            <div class="characters-list">
+              <div v-for="(character, index) in selectedOutline.characters" :key="index" class="character-item">
+                <div class="character-name">{{ t('novel.name') }}：{{ character.name }}</div>
+                <p class="character-description">{{ character.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedOutline.outline" class="section chapters">
+            <h3 class="section-title">{{ t('novel.chapterPlot') }}</h3>
+            <div
+              v-for="chapter in selectedOutline.outline"
+              :key="chapter.chapter"
+              class="chapter-card"
+            >
+              <div class="chapter-title-box">
+                <span class="chapter-number">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
+                <span class="chapter-title">{{ chapter.title }}</span>
+              </div>
+              <div class="chapter-desc">{{ chapter.description }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="outline-preview-empty">
+          <span>{{ t('novel.outlineHistoryEmpty') }}</span>
+        </div>
+
+        <div class="outline-history-footer" v-if="outlineList.length > 0">
+          <button class="cancel-btn" @click="$emit('cancel')">{{ t('novel.outlineHistoryCancel') }}</button>
+          <button class="use-btn" @click="handleUse">{{ t('novel.outlineHistoryUse') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, computed, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
+const props = defineProps<{
+  visible: boolean;
+  outlineList: any[];
+  currentOutline: any;
+}>();
+
+const emit = defineEmits<{
+  cancel: [];
+  select: [outlineObj: any];
+}>();
+
+const selectedOutline = ref<any>(null);
+
+const previewContentRef = ref<HTMLElement | null>(null);
+
+function selectOutline(outlineItem: any) {
+  selectedOutline.value = outlineItem;
+  nextTick(() => {
+    if (previewContentRef.value) {
+      previewContentRef.value.scrollTop = 0;
+    }
+  });
+}
+
+const reversedOutlineList = computed(() => [...props.outlineList].reverse());
+
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    selectedOutline.value = null;
+  }
+});
+
+watch(() => props.outlineList, (newList) => {
+  if (props.visible && newList.length > 0 && !selectedOutline.value) {
+    selectedOutline.value = newList.find((item: any) => isSameOutline(item, props.currentOutline)) || newList[0];
+  }
+});
+
+function isSameOutline(a: any, b: any): boolean {
+  if (!a || !b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function getOutlineSummary(outlineItem: any): string {
+  if (!outlineItem) return '';
+  if (outlineItem.story_summary?.summary) {
+    const firstSentence = outlineItem.story_summary.summary.split(/[。！？\.!?]/)[0] || outlineItem.story_summary.summary;
+    return firstSentence;
+  }
+  if (outlineItem.base_info?.title) return outlineItem.base_info.title;
+  if (outlineItem.outline && outlineItem.outline.length > 0) {
+    return outlineItem.outline[0].title || '';
+  }
+  return 'Outline';
+}
+
+function handleUse() {
+  if (selectedOutline.value) {
+    emit('select', selectedOutline.value);
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.outline-history-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .outline-history-content {
+    position: relative;
+    background: #FFFFFF;
+    border-radius: 1.2rem;
+    width: 98rem;
+    height: 64rem;
+    display: flex;
+    overflow: hidden;
+
+    .outline-history-left {
+      width: 28rem;
+      height: 64rem;
+      background: #F5F5F5;
+      padding: 2rem 0.5rem 2rem 2rem;
+      flex-shrink: 0;
+
+      .outline-history-title {
+        font-weight: 500;
+        font-size: 1.6rem;
+        color: #364153;
+        text-align: left;
+        margin: 0 0 1.6rem 0;
+      }
+
+      .outline-history-list {
+        max-height: 56rem;
+        overflow-y: auto;
+
+        .outline-history-item {
+          cursor: pointer;
+          margin-bottom: 1.6rem;
+          display: flex;
+
+          .outline-item-text {
+            font-size: 1.4rem;
+            color: #6A7282;
+            min-width: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          &.active {
+            .outline-item-text {
+              color: #FB64B6;
+            }
+          }
+        }
+      }
+
+      .outline-history-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 20rem;
+
+        .loading-spinner {
+          width: 2.4rem;
+          height: 2.4rem;
+          border: 0.3rem solid #E0E0E0;
+          border-top: 0.3rem solid #6A7282;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+
+    .outline-history-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+
+      .close-btn-wrapper {
+        width: 100%;
+        height: 6rem;
+        padding: 0 2rem 0 0;
+        background: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        z-index: 10;
+        cursor: pointer;
+
+        .close-btn {
+          width: 2rem;
+          height: 2rem;
+        }
+      }
+
+      .outline-preview-loading {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+
+        .loading-spinner {
+          width: 2.4rem;
+          height: 2.4rem;
+          border: 0.3rem solid #F5F5F5;
+          border-top: 0.3rem solid #6A7282;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+          font-size: 1.4rem;
+          color: #6A7282;
+        }
+      }
+
+      .outline-preview-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 2rem 2.4rem;
+
+        .section {
+          margin-bottom: 3.2rem;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .section-title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #364153;
+            margin-bottom: 1.6rem;
+          }
+        }
+
+        .basic-info {
+          margin-top: 1.8rem;
+          .info-item {
+            display: flex;
+            margin-bottom: 1.2rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .info-label {
+              font-size: 1.4rem;
+              color: #364153;
+            }
+
+            .info-value {
+              font-size: 1.4rem;
+              color: #6A7282;
+              flex: 1;
+            }
+          }
+        }
+
+        .story-summary {
+          .summary-text {
+            font-size: 1.4rem;
+            line-height: 2.2rem;
+            color: #6A7282;
+            text-align: justify;
+          }
+        }
+
+        .characters {
+          .characters-list {
+            margin-bottom: 2.4rem;
+
+            .character-item {
+              margin-bottom: 1.8rem;
+              font-size: 1.4rem;
+              line-height: 2.2rem;
+              color: #364153;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+
+              .character-type {
+                font-size: 1.4rem;
+                color: #99A1AF;
+                margin-bottom: 0.8rem;
+              }
+
+              .character-name {
+                font-size: 1.4rem;
+                color: #364153;
+              }
+
+              .character-description {
+                font-size: 1.4rem;
+                line-height: 2.2rem;
+                color: #364153;
+                text-align: justify;
+              }
+            }
+          }
+        }
+
+        .chapters {
+          .chapter-card {
+            margin-top: 1.2rem;
+            font-size: 1.4rem;
+            line-height: 3rem;
+            color: #364153;
+
+            &:nth-of-type(1) {
+              margin-top: 0;
+            }
+
+            .chapter-title-box {
+              display: flex;
+              align-items: center;
+              gap: 0.4rem;
+
+              .chapter-number {
+                font-size: 1.4rem;
+              }
+
+              .chapter-title {
+                font-size: 1.4rem;
+                color: #6A7282;
+              }
+            }
+
+            .chapter-desc {
+              font-size: 1.4rem;
+              color: #6A7282;
+            }
+          }
+        }
+      }
+
+      .outline-preview-empty {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #99A1AF;
+      }
+
+      .outline-history-footer {
+        flex-shrink: 0;
+        padding: 2rem 3.5rem;
+        display: flex;
+        gap: 3rem;
+        border-top: 1px solid #F5F5F5;
+
+        .cancel-btn {
+          flex: 1;
+          height: 4.8rem;
+          border: none;
+          border-radius: 0.8rem;
+          font-size: 1.4rem;
+          cursor: pointer;
+          background: #F5F5F5;
+          color: #6A7282;
+        }
+
+        .use-btn {
+          flex: 1;
+          height: 4.8rem;
+          border: none;
+          border-radius: 0.8rem;
+          font-size: 1.4rem;
+          cursor: pointer;
+          background: #FB64B6;
+          color: #ffffff;
+
+          &:hover {
+            position: relative;
+
+            &::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(255, 255, 255, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+</style>

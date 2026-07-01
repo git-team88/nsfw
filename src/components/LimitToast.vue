@@ -35,8 +35,7 @@ defineExpose({ show })
   z-index: 2000;
 
   .limit-toast-content {
-    min-width: 30rem;
-    height: 4.8rem;
+    max-width: 25rem;
     background: #ffffff;
     border-radius: 0.4rem;
     padding: 1.2rem 1.6rem;
@@ -61,7 +60,7 @@ defineExpose({ show })
       position: relative;
       font-size: 1.6rem;
       color: #fa2d47;
-      white-space: nowrap;
+      word-break: break-word;
     }
   }
 }

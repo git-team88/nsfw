@@ -101,6 +101,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
+import { parseToUnixTimestamp } from '@/util/utils';
 import prevIcon from '@/assets/images/process/prev.png';
 import nextIcon from '@/assets/images/process/next.png';
 import arrowIcon from '@/assets/images/process/arrow.png';
@@ -260,7 +261,7 @@ const getProgress = (item: any) => {
   let progress = 0;
 
   if (item.task_start_at && processData.value.current_timestamp) {
-    const startTimestamp = new Date(item.task_start_at).getTime() / 1000;
+    const startTimestamp = parseToUnixTimestamp(item.task_start_at);
     const currentTimestamp = processData.value.current_timestamp;
     const elapsedSeconds = currentTimestamp - startTimestamp;
 
