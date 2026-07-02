@@ -50,7 +50,6 @@
           <!-- Generation Status -->
           <div v-if="shouldShowEstimatedTime" class="generation-status">
             <span class="status-text">{{ t('novel.generatingStatus') }}</span>
-            <button class="similar-content-btn" @click="checkOutlineEditBeforeAction(goToSimilar)">{{ t('novel.similarContent') }}</button>
           </div>
 
           <!-- Generation Status / Progress / Chapters -->
@@ -474,11 +473,16 @@
               <button v-if="chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
+              <div class="outline-edit-tooltip-icon">
+                <img src="@/assets/images/home/intro.png" alt="Info" />
+                <div class="outline-edit-tooltip-arrow"></div>
+                <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
+              </div>
             </div>
           </template>
         </div>
 
-        <div class="outline-content" ref="outlineContentRef">
+        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime }" ref="outlineContentRef">
           <NovelLoading
             v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed)"
             v-show="isGeneratingOutline || (currentChapter && currentChapter.chapter == stepChapterIndex)"
@@ -834,6 +838,38 @@
         </div>
       </div>
 
+      <!-- Similar Content Section -->
+      <div v-if="shouldShowEstimatedTime" class="similar-section">
+        <div class="similar-inner">
+          <div class="similar-header">
+            <div class="similar-header-left">
+              <span class="similar-title">{{ t('novel.similarRecommend') }}</span>
+              <button class="similar-refresh-btn" :disabled="similarLoading" @click="refreshSimilar">{{ t('novel.similarRefresh') }} <span v-if="similarLoading" class="btn-spinner btn-spinner-small"></span></button>
+            </div>
+            <span class="similar-hint">{{ t('novel.similarExitHint') }}</span>
+          </div>
+          <div class="similar-list" :class="{ 'similar-loading': similarLoading }">
+            <div v-if="similarLoading" class="similar-list-loading">
+              <div class="loading-spinner"></div>
+            </div>
+            <div v-for="item in similarList" :key="item.id" class="similar-item" @click="goToSimilarDetail(item)">
+              <div class="similar-item-cover">
+                <img :src="item.cover || ''" alt="" />
+                <div class="similar-item-type">
+                  <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
+                  <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
+                  <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                </div>
+                <div class="similar-item-r18" v-if="item.is_nsfw == '1'">
+                  <span class="r18-text">R18</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="similarList.length === 0 && !similarLoading" class="similar-empty">{{ t('novel.similarEmpty') }}</div>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="action-buttons">
         <div class="left">
@@ -854,20 +890,22 @@
         </div>
 
         <div class="right" v-if="isManualEditingOutline && !currentChapter">
-          <button class="cancel-edit-chapter-btn" @click="cancelManualEditOutline">
+          <button class="cancel-edit-chapter-btn" :disabled="isSavingManualOutline" @click="cancelManualEditOutline">
             {{ t('novel.cancel') }}
           </button>
-          <button class="save-edit-chapter-btn" @click="saveManualEditOutline">
+          <button class="save-edit-chapter-btn" :disabled="isSavingManualOutline" @click="saveManualEditOutline">
             {{ t('novel.save') }}
+            <span v-if="isSavingManualOutline" class="btn-spinner"></span>
           </button>
         </div>
 
         <div class="right" v-if="isEditingChapter && currentChapter">
-          <button class="cancel-edit-chapter-btn" @click="cancelEditChapter">
+          <button class="cancel-edit-chapter-btn" :disabled="isSavingChapter" @click="cancelEditChapter">
             {{ t('novel.cancel') }}
           </button>
-          <button class="save-edit-chapter-btn" @click="saveEditChapter">
+          <button class="save-edit-chapter-btn" :disabled="isSavingChapter" @click="saveEditChapter">
             {{ t('novel.save') }}
+            <span v-if="isSavingChapter" class="btn-spinner"></span>
           </button>
         </div>
 
@@ -1380,6 +1418,11 @@ const chapterEditTextareaRef = ref<HTMLTextAreaElement | null>(null);
 const printerInterval = ref<number | null>(null);
 const pollingInterval = ref<number | null>(null);
 const detailPollingInterval = ref<number | null>(null);
+
+const similarList = ref<any[]>([]);
+const similarPage = ref<number>(1);
+const similarTotalPages = ref<number>(1);
+const similarLoading = ref<boolean>(false);
 const projectName = ref<string>('');
 const originalProjectName = ref<string>('');
 const isEditingName = ref<boolean>(false);
@@ -1467,6 +1510,7 @@ const regenerateCost = computed(() => {
   return total > 0 ? Math.max(1, total) : 20;
 });
 const isEditingChapter = ref<boolean>(false);
+const isSavingChapter = ref<boolean>(false);
 const coverRenewLoading = ref<boolean>(false);
 const coverRenewFailed = ref<boolean>(false);
 const coverRenewTaskId = ref<string>('');
@@ -1605,6 +1649,7 @@ const outlineEditCost = ref<number>(1);
 const outlineEditSectionRef = ref<HTMLElement | null>(null);
 
 const isManualEditingOutline = ref<boolean>(false);
+const isSavingManualOutline = ref<boolean>(false);
 const manualEditingOutlineContent = ref<string>('');
 const manualOutlineEditTextareaRef = ref<HTMLTextAreaElement | null>(null);
 const outlineEditErrorKeys = ref<Set<string>>(new Set());
@@ -2814,8 +2859,9 @@ const cancelEditChapter = () => {
         return;
       }
 
-      try {
-        const token = localStorage.getItem('token');
+  try {
+    isSavingChapter.value = true;
+    const token = localStorage.getItem('token');
 
         const updateData = {
           chapter: currentChapter.value.chapter,
@@ -2860,6 +2906,8 @@ const cancelEditChapter = () => {
       } catch (error) {
         console.error('Error updating chapter:', error);
         toast(t('fail'));
+      } finally {
+        isSavingChapter.value = false;
       }
     }
     isEditingChapter.value = false;
@@ -3170,6 +3218,50 @@ function goToSimilar() {
     }
   });
 }
+
+const fetchSimilarList = async (page: number = 1) => {
+  if (similarLoading.value) return;
+  similarLoading.value = true;
+  try {
+    const lang = selectedLanguage.value;
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    const res = await api.getRelativeByTopicPublic({
+      session_id: sessionId.value || '',
+      cat: 2,
+      lang: lang,
+      show_nsfw: showNsfw,
+      page: page,
+      page_size: 7,
+    }) as any;
+    if ((res.code == 200 || res.code == 0) && res.data?.data) {
+      similarList.value = res.data.data;
+      const total = res.data.allnums || 0;
+      similarTotalPages.value = Math.max(1, Math.ceil(total / 7));
+      similarPage.value = page;
+    }
+  } catch (e) {
+    console.error('Error fetching similar list:', e);
+  } finally {
+    similarLoading.value = false;
+  }
+};
+
+const refreshSimilar = () => {
+  similarList.value = [];
+  const nextPage = similarPage.value >= similarTotalPages.value ? 1 : similarPage.value + 1;
+  fetchSimilarList(nextPage);
+};
+
+const goToSimilarDetail = (item: any) => {
+  router.push({
+    path: "/similar",
+    query: {
+      type: item.type || 2,
+      lang: selectedLanguage.value,
+      session_id: sessionId.value
+    }
+  });
+};
 
 
 
@@ -3588,6 +3680,8 @@ const saveManualEditOutline = async () => {
   } catch (error) {
     console.error('Error saving manual outline edit:', error);
     toast(t('fail'));
+  } finally {
+    isSavingManualOutline.value = false;
   }
 };
 
@@ -6932,6 +7026,16 @@ onMounted(async () => {
 
 watch(() => locale.value, () => {
   setSeoMeta();
+});
+
+watch(() => shouldShowEstimatedTime.value, (newVal) => {
+  if (newVal) {
+    fetchSimilarList(1);
+  } else {
+    similarList.value = [];
+    similarPage.value = 1;
+    similarTotalPages.value = 1;
+  }
 });
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {

@@ -5,12 +5,12 @@
 <script setup lang="ts">
 import { watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const { locale } = useI18n();
 const route = useRoute();
+const router = useRouter();
 
-// Language to font class mapping
 const languageFontMap: Record<string, string> = {
   'en': 'en',
   'jp': 'ja',
@@ -18,21 +18,56 @@ const languageFontMap: Record<string, string> = {
   'tc': 'tc'
 };
 
+const htmlLangMap: Record<string, string> = {
+  'jp': 'ja',
+  'en': 'en',
+  'zh': 'zh-CN',
+  'tc': 'zh-TW'
+};
+
+const hreflangConfig = [
+  { hreflang: 'ja', langPrefix: 'ja', i18nKey: 'jp' },
+  { hreflang: 'zh-CN', langPrefix: 'zh-cn', i18nKey: 'zh' },
+  { hreflang: 'zh-TW', langPrefix: 'zh-tw', i18nKey: 'tc' },
+  { hreflang: 'en', langPrefix: 'en', i18nKey: 'en' },
+  { hreflang: 'x-default', langPrefix: 'ja', i18nKey: 'jp' },
+];
+
+const SITE_ORIGIN = 'https://www.moegen.ai';
+
 function updateBodyFontClass() {
   const lang = locale.value;
   const fontClass = languageFontMap[lang] || 'ja';
 
-  // Remove all language font classes
   document.body.classList.remove('en', 'ja', 'cn', 'tc');
-
-  // Add current language font class
   document.body.classList.add(fontClass);
+}
+
+function updateHtmlLang() {
+  document.documentElement.lang = htmlLangMap[locale.value] || 'ja';
+}
+
+function updateHreflang() {
+  document.querySelectorAll('link[data-hreflang]').forEach(el => el.remove());
+
+  const currentPath = route.path.replace(/^\/(ja|zh-tw|zh-cn|en)(\/)?/, '/');
+
+  hreflangConfig.forEach(({ hreflang, langPrefix }) => {
+    if (hreflang === 'x-default') return;
+    const link = document.createElement('link');
+    link.rel = 'alternate';
+    link.hreflang = hreflang;
+    link.href = `${SITE_ORIGIN}/${langPrefix}${currentPath}`;
+    link.setAttribute('data-hreflang', hreflang);
+    document.head.appendChild(link);
+  });
 }
 
 onMounted(() => {
   updateBodyFontClass();
+  updateHtmlLang();
+  updateHreflang();
 
-  // Listen for storage changes (when language is changed in another tab/window)
   window.addEventListener('storage', (e) => {
     if (e.key == 'lang') {
       const newLang = e.newValue || 'jp';
@@ -40,17 +75,18 @@ onMounted(() => {
         locale.value = newLang;
       }
       updateBodyFontClass();
+      updateHtmlLang();
     }
   });
 
-  // Watch for route changes to re-apply font class
   watch(() => route.path, () => {
     updateBodyFontClass();
+    updateHreflang();
   });
 });
 
-// Watch for locale changes
 watch(locale, () => {
   updateBodyFontClass();
+  updateHtmlLang();
 });
 </script>

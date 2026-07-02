@@ -39,6 +39,8 @@ const messages: TranslationMessages = {
 
 const locale = (window.localStorage.getItem("lang") || "jp").toLowerCase();
 
+document.documentElement.lang = ({ jp: 'ja', en: 'en', zh: 'zh-CN', tc: 'zh-TW' }[locale] || 'ja');
+
 const i18n = createI18n({
   legacy: false,
   globalInjection: true,

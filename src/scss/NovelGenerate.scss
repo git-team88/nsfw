@@ -1076,41 +1076,105 @@
         cursor: pointer;
       }
 
-       .chapter-actions {
-         display: flex;
-         align-items: center;
-         gap: 2rem;
+        .chapter-actions {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
 
-          .chapter-history-btn {
+           .chapter-history-btn {
+             background: none;
+             border: none;
+             color: #99A1AF;
+             font-size: 1.4rem;
+             cursor: pointer;
+           }
+
+          .manual-edit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: none;
-            border: none;
             color: #99A1AF;
+            border: none;
             font-size: 1.4rem;
             cursor: pointer;
           }
 
-         .manual-edit-btn {
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           background: none;
-           color: #99A1AF;
-           border: none;
-           font-size: 1.4rem;
-           cursor: pointer;
-         }
+          .ai-edit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            color: #FB64B6;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+          }
 
-         .ai-edit-btn {
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           background: none;
-           color: #FB64B6;
-           border: none;
-           font-size: 1.4rem;
-           cursor: pointer;
-         }
-       }
+          .outline-edit-tooltip-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            overflow: visible;
+            z-index: 30;
+
+            img {
+              width: 2rem;
+              height: 2rem;
+            }
+
+            .outline-edit-tooltip-arrow {
+              position: absolute;
+              top: 100%;
+              right: 0;
+              margin-top: 0.4rem;
+              width: 1.2rem;
+              height: 1.2rem;
+              background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
+              background-size: contain;
+              flex-shrink: 0;
+              transform: rotate(90deg);
+              opacity: 0;
+              visibility: hidden;
+              transition: all 0.2s ease;
+            }
+
+            .outline-edit-tooltip {
+              position: absolute;
+              top: 100%;
+              right: -1.6rem;
+              margin-top: 1.6rem;
+              padding: 1rem 1.2rem;
+              width: 24rem;
+              background: #FFFFFF;
+              font-size: 1.2rem;
+              line-height: 1.6rem;
+              border-radius: 0.8rem;
+              white-space: normal;
+              box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+              z-index: 100;
+              opacity: 0;
+              visibility: hidden;
+              transition: all 0.2s ease;
+              color: #99A1AF;
+
+              :deep(span) {
+                color: #364153;
+              }
+            }
+
+            &:hover .outline-edit-tooltip {
+              opacity: 1;
+              visibility: visible;
+            }
+
+            &:hover .outline-edit-tooltip-arrow {
+              opacity: 1;
+              visibility: visible;
+            }
+          }
+        }
 
        .edit-chapter-actions {
         display: flex;
@@ -1151,6 +1215,10 @@
       min-height: 0;
       overflow-y: auto;
       padding: 0 1.8rem 1.8rem;
+
+      &.outline-content-generating {
+        padding-bottom: 25rem;
+      }
       /* Skeleton Loader - 闪屏效果 */
       .skeleton-loader {
         padding: 1rem 0;
@@ -1882,6 +1950,152 @@
     }
   }
 
+  .similar-section {
+    position: fixed;
+    bottom: 0;
+    left: 44rem;
+    right: 0;
+    background: #FFFFFF;
+    border-top: 1px solid #F5F5F5;
+    border-left: 1px solid #F5F5F5;
+    padding: 1.6rem 0;
+    z-index: 100;
+
+    .similar-inner {
+      max-width: 100rem;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .similar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.6rem;
+
+      .similar-header-left {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+
+        .similar-title {
+          font-size: 1.4rem;
+          font-weight: 500;
+          color: #364153;
+        }
+
+        .similar-refresh-btn {
+          background: none;
+          border: none;
+          color: #FB64B6;
+          font-size: 1.4rem;
+          cursor: pointer;
+        }
+      }
+
+      .similar-hint {
+        font-size: 1.4rem;
+        color: #99A1AF;
+      }
+    }
+
+    .similar-list {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      min-height: 16rem;
+
+      .similar-list-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: 1;
+
+        .loading-spinner {
+          width: 2.4rem;
+          height: 2.4rem;
+          border: 0.3rem solid #E0E0E0;
+          border-top: 0.3rem solid #6A7282;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+      }
+
+      .similar-item {
+        flex-shrink: 0;
+        width: 12rem;
+        cursor: pointer;
+
+        .similar-item-cover {
+          position: relative;
+          width: 12rem;
+          height: 16rem;
+          border-radius: 1.2rem;
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .similar-item-type {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10rem;
+            height: 10rem;
+            background: linear-gradient(135deg, rgba(251, 100, 182, 0.5) 0%, rgba(251, 100, 182, 0.3) 30%, rgba(251, 100, 182, 0) 50%);
+            border-radius: 1.2rem;
+            display: flex;
+            padding: 0.2rem;
+
+            img {
+              width: 3rem;
+              height: 3rem;
+            }
+          }
+
+          .similar-item-r18 {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10rem;
+            height: 10rem;
+            background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50.19%);
+            border-radius: 0 0.8rem 0 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 0.6rem;
+
+            .r18-text {
+              font-size: 1.6rem;
+              font-weight: 500;
+              color: #FFFFFF;
+              text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+            }
+          }
+        }
+      }
+    }
+
+    .similar-empty {
+      text-align: center;
+      padding: 2rem 0;
+      font-size: 1.4rem;
+      color: #99A1AF;
+    }
+  }
+
   .action-buttons {
     display: flex;
     justify-content: space-between;
@@ -1932,6 +2146,15 @@
         background: #fb64b6;
         color: #ffffff;
         font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
 
         &:hover {
           position: relative;
@@ -1945,6 +2168,24 @@
             background: rgba(255, 255, 255, 0.1);
             z-index: 1;
           }
+        }
+
+        .btn-spinner {
+          display: inline-block;
+          width: 1.4rem;
+          height: 1.4rem;
+          border: 1.5px solid #ffffff;
+          border-right-color: transparent;
+          border-radius: 50%;
+          animation: btn-spin 0.6s linear infinite;
+          flex-shrink: 0;
+        }
+      }
+
+      .cancel-edit-chapter-btn {
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       }
     }
