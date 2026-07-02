@@ -128,19 +128,45 @@ const reversedOutlineList = computed(() => [...props.outlineList].reverse());
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
+    const currentMatch = props.outlineList.find((item: any) => isSameOutline(item, props.currentOutline));
+    selectedOutline.value = currentMatch || (props.outlineList.length > 0 ? props.outlineList[0] : null);
+  } else {
     selectedOutline.value = null;
   }
 });
 
 watch(() => props.outlineList, (newList) => {
-  if (props.visible && newList.length > 0 && !selectedOutline.value) {
-    selectedOutline.value = newList.find((item: any) => isSameOutline(item, props.currentOutline)) || newList[0];
+  if (props.visible && newList.length > 0) {
+    const currentMatch = newList.find((item: any) => isSameOutline(item, props.currentOutline));
+    selectedOutline.value = currentMatch || newList[0];
   }
 });
 
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+  } else {
+    const keysA = Object.keys(a).sort();
+    const keysB = Object.keys(b).sort();
+    if (keysA.length !== keysB.length) return false;
+    for (let i = 0; i < keysA.length; i++) {
+      if (keysA[i] !== keysB[i]) return false;
+      if (!deepEqual(a[keysA[i]], b[keysB[i]])) return false;
+    }
+  }
+  return true;
+}
+
 function isSameOutline(a: any, b: any): boolean {
   if (!a || !b) return false;
-  return JSON.stringify(a) === JSON.stringify(b);
+  return deepEqual(a, b);
 }
 
 function getOutlineSummary(outlineItem: any): string {

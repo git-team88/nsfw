@@ -78,7 +78,7 @@
                     <span class="author-name">{{ item.author?.nickname || item.author_info?.nickname }}</span>
                   </div>
                   <div class="content-stats-top">
-                    <span>{{ formatNumber(item.book_like_count || 0) }}</span>
+                    <span>{{ formatNumber(item.all_like || 0) }}</span>
                     <img :src="like" alt="" />
                   </div>
                 </div>
@@ -159,8 +159,7 @@ interface Content {
     nickname: string;
     id: number;
   };
-  like_count: number;
-  book_like_count: number;
+  all_like: number;
   is_liked: number;
   is_nsfw?: number | string;
 }
@@ -285,8 +284,7 @@ async function loadData(fromLoadMore = false) {
           total_post_nums: item.total_post_nums,
           author: item.author,
           author_info: item.author_info,
-          like_count: parseInt(item.book?.like_count || item.like_count || "0"),
-          book_like_count: parseInt(item.book_like_count || "0"),
+          all_like: parseInt(item.all_like || "0"),
           is_liked: item.is_liked || 0,
         };
       });
@@ -405,7 +403,7 @@ async function toggleLike(item: Content) {
       // Update the UI only after API success
       if (contentList.value) {
         contentList.value[itemIndex].is_liked = isCurrentlyLiked ? 0 : 1;
-        contentList.value[itemIndex].like_count += isCurrentlyLiked ? -1 : 1;
+        contentList.value[itemIndex].all_like += isCurrentlyLiked ? -1 : 1;
       }
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);

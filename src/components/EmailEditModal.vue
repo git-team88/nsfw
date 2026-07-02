@@ -164,6 +164,7 @@ function sendEmailCode() {
           headers: {
             "token": userToken,
             "ts": ts,
+            "Platform": "web",
             "sign": sign
           },
           body: formData,
@@ -227,6 +228,7 @@ function saveEmail() {
     headers: {
       "token": userToken,
       "ts": ts,
+      "Platform": "web",
       "sign": sign
     },
     body: formData,

@@ -79,12 +79,15 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     const currentMatch = props.chapterList.find((item: any) => isCurrentChapter(item));
     selectedChapter.value = currentMatch || (props.chapterList.length > 0 ? props.chapterList[0] : null);
+  } else {
+    selectedChapter.value = null;
   }
 });
 
 watch(() => props.chapterList, (newList) => {
-  if (props.visible && newList.length > 0 && !selectedChapter.value) {
-    selectedChapter.value = newList.find((item: any) => isCurrentChapter(item)) || newList[0];
+  if (props.visible && newList.length > 0) {
+    const currentMatch = newList.find((item: any) => isCurrentChapter(item));
+    selectedChapter.value = currentMatch || newList[0];
   }
 });
 

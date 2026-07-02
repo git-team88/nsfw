@@ -218,6 +218,7 @@ const loadCharacters = async (isLoadMore = false) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       }
     });

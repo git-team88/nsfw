@@ -64,6 +64,8 @@ class Request {
         authToken = token || '';
       }
 
+      ;(config.headers as any).Platform = 'web'
+
       const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
       ;(config.headers as any).ts = ts
       ;(config.headers as any).sign = sign

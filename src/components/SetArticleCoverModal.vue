@@ -864,6 +864,7 @@ async function confirm() {
             method: "POST",
             headers: {
               token: token,
+              'Platform': 'web',
               ...authHeaders,
             },
             body: formData,
@@ -908,6 +909,7 @@ async function confirm() {
             method: "POST",
             headers: {
               token: token,
+              'Platform': 'web',
               ...authHeaders,
             },
             body: formData,

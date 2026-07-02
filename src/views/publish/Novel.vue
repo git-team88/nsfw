@@ -861,6 +861,7 @@ async function handleTitleBlur() {
           method: "POST",
           headers: {
             token: token,
+            'Platform': 'web',
             ...authHeaders,
           },
           body: formData,
@@ -933,6 +934,7 @@ async function goToNextStep() {
               method: "POST",
               headers: {
                 token: token,
+                'Platform': 'web',
                 ...authHeaders,
               },
               body: formData,
@@ -1478,6 +1480,7 @@ async function onSubmit() {
     headers.append("ts", ts);
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
+    headers.append("Platform", "web");
 
     const data = JSON.stringify(payload);
 
@@ -2830,6 +2833,7 @@ onMounted(async () => {
                     method: "POST",
                     headers: {
                       token: token,
+                      'Platform': 'web',
                       ...authHeaders,
                     },
                     body: formData,

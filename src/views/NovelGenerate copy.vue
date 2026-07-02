@@ -845,6 +845,7 @@ class OutlineStreamParser {
         headers: {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
+          'Platform': 'web',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -2045,6 +2046,7 @@ const sendRegenerateRequest = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token || ''
       },
       body: JSON.stringify(requestData)
@@ -6330,6 +6332,7 @@ class OutlineStreamParser {
         headers: {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
+          'Platform': 'web',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -7012,6 +7015,7 @@ async function uploadCoverImage(file: File): Promise<string> {
     method: "POST",
     headers: {
       token: token,
+      'Platform': 'web',
       ...authHeaders,
     },
     body: formData,
@@ -7361,6 +7365,7 @@ async function selectHistoryCover(coverUrl: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify({
@@ -7410,6 +7415,7 @@ async function usePreviousCover() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Platform': 'web',
           'token': token
         },
         body: JSON.stringify({
@@ -7537,6 +7543,7 @@ async function doGenerateNovelCover() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify({

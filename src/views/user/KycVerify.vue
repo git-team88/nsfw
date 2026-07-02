@@ -872,6 +872,7 @@ async function uploadImageToServer(file: File, fieldKey: string): Promise<string
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,
@@ -1088,7 +1089,8 @@ function sendEmailCode() {
           headers: {
             "token": userToken,
             "ts": ts,
-            "sign": sign
+            "sign": sign,
+            "Platform": "web"
           },
           body: formData,
         })

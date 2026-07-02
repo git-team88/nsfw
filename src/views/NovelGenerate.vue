@@ -471,7 +471,7 @@
           </div>
           <template v-else-if="currentChapter && !hasFailed">
             <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
-              <button v-if="chapterHistoryList.length >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
+              <button v-if="chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
             </div>
@@ -1038,6 +1038,7 @@ class OutlineStreamParser {
         headers: {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
+          'Platform': 'web',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -1496,10 +1497,6 @@ const userSelectedSettings = ref<any>(null);
 const taskStartAt = ref<string>('');
 const countdownTimer = ref<number | null>(null);
 
-// Cover action confirmation modal
-
-
-
 // Confirm computing power modal
 const showConfirmComputingPowerModal = ref<boolean>(false);
 const showInsufficientBalanceModal = ref<boolean>(false);
@@ -1616,6 +1613,28 @@ const editingOutlineData = ref<any>(null);
 const outlineEditOriginalData = ref<any>(null);
 const showOutlineEditConfirmModal = ref<boolean>(false);
 const outlineEditPendingAction = ref<(() => void) | null>(null);
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+  } else {
+    const keysA = Object.keys(a).sort();
+    const keysB = Object.keys(b).sort();
+    if (keysA.length !== keysB.length) return false;
+    for (let i = 0; i < keysA.length; i++) {
+      if (keysA[i] !== keysB[i]) return false;
+      if (!deepEqual(a[keysA[i]], b[keysB[i]])) return false;
+    }
+  }
+  return true;
+}
+
 const outlineEditDirty = ref<boolean>(false);
 
 const markOutlineEditDirty = () => {
@@ -1723,6 +1742,7 @@ const coverHistoryList = ref<string[]>([]);
 const showOutlineHistoryModal = ref<boolean>(false);
 const outlineHistoryList = ref<any[]>([]);
 const chapterHistoryList = ref<any[]>([]);
+const chapterHistoryCount = ref<number>(0);
 
 const updateChapterHistoryFromDetail = (chapterRes: any) => {
   if (chapterRes.data?.history_data) {
@@ -1732,11 +1752,14 @@ const updateChapterHistoryFromDetail = (chapterRes: any) => {
     }
     if (historyData?.novel_chapter && Array.isArray(historyData.novel_chapter)) {
       chapterHistoryList.value = historyData.novel_chapter;
+      chapterHistoryCount.value = historyData.novel_chapter.length;
     } else {
       chapterHistoryList.value = [];
+      chapterHistoryCount.value = 0;
     }
   } else {
     chapterHistoryList.value = [];
+    chapterHistoryCount.value = 0;
   }
 };
 const showChapterHistoryModal = ref<boolean>(false);
@@ -1751,7 +1774,6 @@ const chapterEditSectionRef = ref<HTMLElement | null>(null);
 const startCoverPolling = (taskId: string) => {
   coverTaskId.value = taskId;
   coverLoading.value = true;
-  // Set isGeneratingOutline to false immediately to show structured outline content
   isGeneratingOutline.value = false;
   taskStatus.value = 'DOING';
   hasFailed.value = false;
@@ -1759,6 +1781,15 @@ const startCoverPolling = (taskId: string) => {
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
+
+      if (handleSessionTimeout(res.code) || res.code == 401) {
+        if (coverPollTimer.value) {
+          clearInterval(coverPollTimer.value);
+          coverPollTimer.value = null;
+        }
+        return;
+      }
+
       if (res.code == 200 && res.data?.status == 'SUCCESS') {
         coverImage.value = res.data.result?.generate_novel_cover || '';
         coverLoading.value = false;
@@ -2390,6 +2421,7 @@ const sendRegenerateRequest = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token || ''
       },
       body: JSON.stringify(requestData)
@@ -2795,6 +2827,7 @@ const cancelEditChapter = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Platform': 'web',
             'token': token || ''
           },
           body: JSON.stringify(updateData)
@@ -2816,7 +2849,14 @@ const cancelEditChapter = () => {
           existingChapter.title = editingChapterTitle.value;
         }
 
-        updateChapterHistoryFromDetail(res);
+        try {
+          const chapterRes = await api.detailChapter(sessionId.value, currentChapter.value?.chapter) as any;
+          if (chapterRes.code == 200) {
+            updateChapterHistoryFromDetail(chapterRes);
+          }
+        } catch (e) {
+          console.error('Error fetching chapter detail after edit:', e);
+        }
       } catch (error) {
         console.error('Error updating chapter:', error);
         toast(t('fail'));
@@ -2884,6 +2924,7 @@ const saveChapterTitle = async (chapterId: number) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -3481,7 +3522,7 @@ const saveManualEditOutline = async () => {
 
   outlineEditErrorKeys.value = new Set();
 
-  if (JSON.stringify(editingOutlineData.value) === JSON.stringify(outlineData.value)) {
+  if (deepEqual(editingOutlineData.value, outlineData.value)) {
     isManualEditingOutline.value = false;
     editingOutlineData.value = null;
     return;
@@ -3507,6 +3548,7 @@ const saveManualEditOutline = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -3672,7 +3714,8 @@ const goPrevChapter = async () => {
 
 
   hideEdit();
-  chapterHistoryList.value = [];
+  chapterHistoryCount.value = 0;
+
   // Stop auto navigation when user navigates manually
   shouldAutoNavigate.value = false;
 
@@ -3740,6 +3783,8 @@ const goPrevChapter = async () => {
     }
   } else {
     // Go to novel outline
+    currentChapter.value = null;
+    chapterHistoryCount.value = 0;
     try {
       isLoading.value = true;
 
@@ -3789,7 +3834,8 @@ const goNextChapter = async () => {
 
 
   hideEdit();
-  chapterHistoryList.value = [];
+  chapterHistoryCount.value = 0;
+
   // Stop auto navigation when user navigates manually
   shouldAutoNavigate.value = false;
 
@@ -3806,7 +3852,7 @@ const goNextChapter = async () => {
 // Go to specific chapter
 const goToChapter = async (chapterNum: number) => {
   hideEdit();
-  chapterHistoryList.value = [];
+  chapterHistoryCount.value = 0;
 
   // Reset typewriter effect when navigating to a different chapter
   if (isChapterTyping.value) {
@@ -3977,6 +4023,12 @@ const goToChapter = async (chapterNum: number) => {
     // Don't have content locally, need to fetch from API
     displayedContent.value = '';
     isLoading.value = true;
+    const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterNum);
+    currentChapter.value = {
+      chapter: chapterNum,
+      title: chapterData?.title || '',
+      content: ''
+    };
 
     const res = await api.detailChapter(sessionId.value, chapterNum) as any;
     if (res.code == 200 && res.data) {
@@ -4428,7 +4480,8 @@ const handleChapterItemClick = async (chapterNum: number) => {
   });
 
   hideEdit();
-  chapterHistoryList.value = [];
+  chapterHistoryCount.value = 0;
+
   // Only stop auto navigation when user clicks a chapter that's not currently generating
   if (chapterNum !== generatingChapter.value) {
     shouldAutoNavigate.value = false;
@@ -5179,6 +5232,15 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
 
         // Check for session timeout error
         if (handleSessionTimeout(pollingResponse.code)) {
+          if (pollingInterval.value) {
+            clearInterval(pollingInterval.value);
+            pollingInterval.value = null;
+          }
+          return;
+        }
+
+        // Check for unauthorized error
+        if (pollingResponse.code == 401) {
           if (pollingInterval.value) {
             clearInterval(pollingInterval.value);
             pollingInterval.value = null;
@@ -6221,6 +6283,22 @@ const fetchNovelOutline = async () => {
 
 // Handle polling response
 const handlePollingResponse = (pollingRes: any) => {
+  if (handleSessionTimeout(pollingRes.code)) {
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
+    }
+    return;
+  }
+
+  if (pollingRes.code == 401) {
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
+    }
+    return;
+  }
+
   if (pollingRes.code != 200) {
     return;
   }
@@ -6391,6 +6469,15 @@ const startDetailPolling = () => {
   detailPollingInterval.value = window.setInterval(async () => {
     try {
       const detailRes = await api.detailProject(sessionId.value) as any;
+
+      if (handleSessionTimeout(detailRes.code) || detailRes.code == 401) {
+        if (detailPollingInterval.value) {
+          clearInterval(detailPollingInterval.value);
+          detailPollingInterval.value = null;
+        }
+        return;
+      }
+
       if (detailRes.code != 200 || !detailRes.data) return;
 
       if (detailRes.data.user_id) {
@@ -6991,6 +7078,7 @@ class OutlineStreamParser {
         headers: {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
+          'Platform': 'web',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -7367,6 +7455,7 @@ async function selectHistoryOutline(outlineObj: any) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -7406,6 +7495,7 @@ async function handleChapterHistoryClick() {
   } catch (error) {
     console.error('Error fetching chapter history:', error);
     chapterHistoryList.value = [];
+    chapterHistoryCount.value = 0;
   }
 }
 
@@ -7425,6 +7515,7 @@ async function selectHistoryChapter(chapterObj: any) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Platform': 'web',
           'token': token || ''
         },
         body: JSON.stringify(updateData)
@@ -8001,6 +8092,7 @@ async function uploadCoverImage(file: File): Promise<string> {
     method: "POST",
     headers: {
       token: token,
+      'Platform': 'web',
       ...authHeaders,
     },
     body: formData,
@@ -8356,6 +8448,7 @@ async function selectHistoryCover(coverUrl: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify({
@@ -8405,6 +8498,7 @@ async function usePreviousCover() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Platform': 'web',
           'token': token
         },
         body: JSON.stringify({
@@ -8536,6 +8630,7 @@ async function doGenerateNovelCover() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify({

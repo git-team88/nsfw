@@ -1816,6 +1816,7 @@ async function fetchDetail(newId: number) {
 
     const authToken = '';
     const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['Platform'] = 'web';
     headers['ts'] = ts;
     headers['sign'] = sign;
 
@@ -2480,6 +2481,7 @@ async function updateCommentCount() {
 
     const authToken = '';
     const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
+    headers['Platform'] = 'web';
     headers['ts'] = ts;
     headers['sign'] = sign;
 
@@ -3873,6 +3875,7 @@ async function uploadVideo(file: File) {
         method: "POST",
         headers: {
           token: authToken || undefined,
+          'Platform': 'web',
           ...authHeaders,
         } as Record<string, string>,
         body: formData,
@@ -3925,6 +3928,7 @@ async function uploadImage(file: File) {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,
@@ -4280,6 +4284,7 @@ async function submitComment() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token,
         ts,
         sign

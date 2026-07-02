@@ -153,6 +153,7 @@ function upload() {
         method: "POST",
         headers: {
           token: token,
+          'Platform': 'web',
           ...authHeaders,
         },
         body: formData,

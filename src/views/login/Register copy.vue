@@ -361,7 +361,8 @@ function handleSubmit() {
                   method: "post",
                   headers: {
                     "ts": ts,
-                    "sign": sign
+                    "sign": sign,
+                    "Platform": "web"
                   },
                   body: formData,
                 })

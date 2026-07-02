@@ -1466,6 +1466,7 @@ function uploadImage(pf: PreviewFile) {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,
@@ -1546,6 +1547,7 @@ async function onReuploadPicked(e: Event) {
     method: "POST",
     headers: {
       token: token,
+      'Platform': 'web',
       ...authHeaders,
     },
     body: formData,
@@ -1688,6 +1690,7 @@ function onCoverConfirmed(coverUrl: string) {
         method: "POST",
         headers: {
           token: token,
+          'Platform': 'web',
           ...authHeaders,
         },
         body: formData,
@@ -2696,6 +2699,7 @@ async function onSubmit() {
     headers.append("ts", ts);
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
+    headers.append("Platform", "web");
 
     const data = JSON.stringify(payload);
 

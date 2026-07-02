@@ -180,6 +180,7 @@ async function onFileChange(e: Event) {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,
@@ -227,6 +228,7 @@ async function submit() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         ...(token && { token }),
         ts,
         sign

@@ -1781,6 +1781,7 @@ async function startFakeUpload(file: File) {
         method: "POST",
         headers: {
           token: authToken || undefined,
+          'Platform': 'web',
           ...authHeaders,
         } as Record<string, string>,
         body: formData,
@@ -1867,6 +1868,7 @@ async function mockUploadCover(dataUrl: string) {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,
@@ -3089,6 +3091,7 @@ async function onSubmit() {
     headers.append("ts", ts);
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
+    headers.append("Platform", "web");
 
     const data = JSON.stringify(payload);
 

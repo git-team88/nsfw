@@ -992,6 +992,7 @@ async function submitComment() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token,
         ts,
         sign
@@ -1082,6 +1083,7 @@ async function updateCommentCount() {
     const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
     headers['ts'] = ts;
     headers['sign'] = sign;
+    headers['Platform'] = 'web';
 
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
@@ -1727,6 +1729,7 @@ async function uploadVideo(file: File) {
         method: "POST",
         headers: {
           token: authToken || undefined,
+          'Platform': 'web',
           ...authHeaders,
         } as Record<string, string>,
         body: formData,
@@ -1779,6 +1782,7 @@ async function uploadImage(file: File) {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,

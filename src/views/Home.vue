@@ -1053,7 +1053,7 @@
                       <span class="author-name">{{ item.author_info?.nickname }}</span>
                     </div>
                     <div class="content-stats-top">
-                      <span>{{ formatNumber(parseInt(item.book_like_count || "0")) }}</span>
+                      <span>{{ formatNumber(parseInt(item.all_like || "0")) }}</span>
                       <img :src="like" alt="" />
                     </div>
                   </div>
@@ -1853,6 +1853,7 @@ const navigateToNovelGenerate = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(params)
@@ -2844,6 +2845,7 @@ const generateVideo = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(params)
@@ -3008,6 +3010,7 @@ const generateComic = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(params)
@@ -3151,6 +3154,7 @@ const generateDrama = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(params)
@@ -3309,6 +3313,7 @@ const generatePhoto = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(settingsParams)
@@ -3938,6 +3943,7 @@ async function uploadImage(file: File, mode: string): Promise<string> {
     method: "POST",
     headers: {
       token: token,
+      'Platform': 'web',
       ...authHeaders,
     },
     body: formData,
@@ -5196,19 +5202,9 @@ async function toggleLike(item: any) {
       if (allContent.value) {
         allContent.value[postIndex].is_liked = isCurrentlyLiked ? 0 : 1;
 
-        // 根据 book_id 判断更新哪个字段
-        const bookId = allContent.value[postIndex].book_id;
-        if (bookId && parseInt(bookId) > 0) {
-          // book_id > 0，更新 book_like_count
-          allContent.value[postIndex].book_like_count = isCurrentlyLiked
-            ? (parseInt(allContent.value[postIndex].book_like_count || "0") - 1).toString()
-            : (parseInt(allContent.value[postIndex].book_like_count || "0") + 1).toString();
-        } else {
-          // book_id = 0，更新 like_count
-          allContent.value[postIndex].like_count = isCurrentlyLiked
-            ? (parseInt(allContent.value[postIndex].like_count || "0") - 1).toString()
-            : (parseInt(allContent.value[postIndex].like_count || "0") + 1).toString();
-        }
+        allContent.value[postIndex].all_like = isCurrentlyLiked
+          ? (parseInt(allContent.value[postIndex].all_like || "0") - 1).toString()
+          : (parseInt(allContent.value[postIndex].all_like || "0") + 1).toString();
       }
     }
   } catch (error) {

@@ -462,6 +462,7 @@ async function mockUpload(dataUrl: string): Promise<string> {
       method: "POST",
       headers: {
         token: token,
+        'Platform': 'web',
         ...authHeaders,
       },
       body: formData,

@@ -49,11 +49,7 @@ export default {
       url: "login/googleLogin",
       data: data,
       method: "POST",
-      extraHeaders: {
-        platform: "web",
-        version: "",
-        "device-id": "",
-      },
+
     }),
   googleRegister: (data: any) =>
     axios.request({

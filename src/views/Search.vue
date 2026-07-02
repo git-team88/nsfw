@@ -112,7 +112,7 @@
                     <span class="author-name">{{ post.author?.nickname }}</span>
                   </div>
                   <div class="content-stats-top">
-                    <span>{{ formatNumber(post.like_count) }}</span>
+                    <span>{{ formatNumber(post.all_like) }}</span>
                     <img :src="like" alt="" />
                   </div>
                 </div>
@@ -228,7 +228,7 @@ interface Post {
     nickname: string;
     id: number;
   }
-  like_count: number;
+  all_like: number;
   isLiked: boolean;
   is_nsfw: number | string;
 }
@@ -426,7 +426,7 @@ async function loadData(fromLoadMore = false) {
             nickname: item.author?.nickname || '',
             id: item.author?.id || 0
           },
-          like_count: parseInt(item.book_like_count || "0"),
+          all_like: parseInt(item.all_like || "0"),
           isLiked: item.is_liked == 1 || false,
           is_nsfw: item.is_nsfw,
         };
@@ -596,7 +596,7 @@ async function toggleLike(post: Post) {
       // Update the UI only after API success
       if (postList.value) {
         postList.value[postIndex].isLiked = !isCurrentlyLiked;
-        postList.value[postIndex].like_count += isCurrentlyLiked ? -1 : 1;
+        postList.value[postIndex].all_like += isCurrentlyLiked ? -1 : 1;
       }
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);

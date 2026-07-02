@@ -2811,6 +2811,7 @@ async function uploadImage(file: File, mode: string): Promise<string> {
     method: "POST",
     headers: {
       token: token,
+      'Platform': 'web',
       ...authHeaders,
     },
     body: formData,
@@ -3573,6 +3574,7 @@ const generatePhoto = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(settingsParams)
@@ -3812,6 +3814,7 @@ const generateVideo = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Platform': 'web',
         'token': token
       },
       body: JSON.stringify(params)
