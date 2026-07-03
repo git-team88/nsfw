@@ -452,7 +452,7 @@
           <h2 v-else-if="isDetailLoaded && currentChapter && isLoading">{{ t('novel.chapter', { chapter: currentChapter.chapter }) }}</h2>
           <h2 v-else-if="isDetailLoaded && currentChapter">{{ t('novel.chapter', { chapter: currentChapter.chapter }) }} {{ currentChapter.title }}</h2>
            <div v-if="!isLoading && (outlineData || outlineStreamDone) && !hasFailed && !currentChapter && taskStatus !== 'DOING' && stepChapterIndex < 1 && !isPreparing && !isManualEditingOutline" class="outline-actions">
-             <button v-if="outlineHistoryList.length >= 2" class="outline-history-btn" @click="handleOutlineHistoryClick">{{ t('novel.outlineHistoryTitle') }}</button>
+             <button v-if="hasFailed ? outlineHistoryList.length >= 1 : outlineHistoryList.length >= 2" class="outline-history-btn" @click="handleOutlineHistoryClick">{{ t('novel.outlineHistoryTitle') }}</button>
              <button class="regenerate-btn" @click="regenerateOutline">
                {{ t('novel.regenerate') }}
              </button>
@@ -468,9 +468,10 @@
               <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
             </div>
           </div>
-          <template v-else-if="currentChapter && !hasFailed">
+          <template v-else-if="currentChapter">
             <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
-              <button v-if="chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
+              <button v-if="hasFailed ? chapterHistoryCount >= 1 : chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
+              <template v-if="!hasFailed">
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
               <div class="outline-edit-tooltip-icon">
@@ -478,13 +479,14 @@
                 <div class="outline-edit-tooltip-arrow"></div>
                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
               </div>
+              </template>
             </div>
           </template>
         </div>
 
         <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime }" ref="outlineContentRef">
           <NovelLoading
-            v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed)"
+            v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed && currentStepName != 'renew_novel_cover' && currentStepName != 'refresh_novel_cover')"
             v-show="isGeneratingOutline || (currentChapter && currentChapter.chapter == stepChapterIndex)"
             :key="loadingKey"
             :process-type="loadingProcessType"
@@ -866,7 +868,7 @@
               </div>
             </div>
           </div>
-          <div v-if="similarList.length === 0 && !similarLoading" class="similar-empty">{{ t('novel.similarEmpty') }}</div>
+          <div v-if="similarList.length == 0 && !similarLoading" class="similar-empty">{{ t('novel.similarEmpty') }}</div>
         </div>
       </div>
 
@@ -938,6 +940,7 @@
       :visible="showChapterHistoryModal"
       :chapter-list="chapterHistoryList"
       :current-chapter="currentChapter"
+      :is-using="isUsingChapterHistory"
       @cancel="showChapterHistoryModal = false"
       @select="selectHistoryChapter"
     />
@@ -947,6 +950,7 @@
       :visible="showOutlineHistoryModal"
       :outline-list="outlineHistoryList"
       :current-outline="outlineData"
+      :is-using="isUsingOutlineHistory"
       @cancel="closeOutlineHistoryModal"
       @select="selectHistoryOutline"
     />
@@ -1785,9 +1789,11 @@ const showCoverHistoryModal = ref<boolean>(false);
 const coverHistoryList = ref<string[]>([]);
 
 const showOutlineHistoryModal = ref<boolean>(false);
+const isUsingOutlineHistory = ref<boolean>(false);
 const outlineHistoryList = ref<any[]>([]);
 const chapterHistoryList = ref<any[]>([]);
 const chapterHistoryCount = ref<number>(0);
+const isUsingChapterHistory = ref<boolean>(false);
 
 const updateChapterHistoryFromDetail = (chapterRes: any) => {
   if (chapterRes.data?.history_data) {
@@ -2146,7 +2152,7 @@ const shouldShowGenerateButtons = computed(() => {
 
   // Don't show buttons if step_name is chapter when viewing outline
   if (!currentChapter.value) {
-    if (currentStepName.value == 'chapter' || currentStepName.value == 'renew_novel_cover') return false;
+    if (currentStepName.value == 'chapter' || ((currentStepName.value == 'renew_novel_cover' || currentStepName.value == 'refresh_novel_cover') && coverRenewLoading.value)) return false;
     if (stepChapterIndex.value >= chapterCount.value && chapterCount.value > 0) return false;
   }
 
@@ -3253,14 +3259,7 @@ const refreshSimilar = () => {
 };
 
 const goToSimilarDetail = (item: any) => {
-  router.push({
-    path: "/similar",
-    query: {
-      type: item.type || 2,
-      lang: selectedLanguage.value,
-      session_id: sessionId.value
-    }
-  });
+  router.push(`/detail?id=${item.id}`);
 };
 
 
@@ -5925,15 +5924,14 @@ const fetchNovelOutline = async () => {
                 }
               } catch (e) {
                 console.error('Error fetching chapter data on cover renew success:', e);
-              } finally {
-                isLoading.value = false;
-                isLoadingComplete.value = true;
               }
-            } else {
-              isLoading.value = false;
-              isLoadingComplete.value = true;
             }
+          } else {
+            currentChapter.value = null;
           }
+
+          isLoading.value = false;
+          isLoadingComplete.value = true;
         } else if (stepStatus == 'FAIL') {
           coverRenewLoading.value = false;
           coverRenewFailed.value = true;
@@ -6273,6 +6271,18 @@ const fetchNovelOutline = async () => {
           showCoverEditBtn.value = true;
           startLoadingAnimation('chapter');
 
+          const existingChapter = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          if (existingChapter) {
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+              if (chapterRes.code == 200 && chapterRes.data) {
+                updateChapterHistoryFromDetail(chapterRes);
+              }
+            } catch (e) {
+              console.error('Error fetching chapter detail on FAIL:', e);
+            }
+          }
+
           await fetchUserBalance();
           isLoading.value = false;
           isFetchingNovelOutline.value = false;
@@ -6376,7 +6386,7 @@ const fetchNovelOutline = async () => {
 };
 
 // Handle polling response
-const handlePollingResponse = (pollingRes: any) => {
+const handlePollingResponse = async (pollingRes: any) => {
   if (handleSessionTimeout(pollingRes.code)) {
     if (pollingInterval.value) {
       clearInterval(pollingInterval.value);
@@ -6483,6 +6493,21 @@ const handlePollingResponse = (pollingRes: any) => {
     prepareQueueInfo.value = null; // Clear queue info
     generatingChapter.value = null;
     outlineContent.value = pollingRes.data?.error_msg || pollingRes.data?.result || t('novel.error.generationFailed');
+
+    if (currentChapter.value && currentStepName.value == 'chapter') {
+      const chapterIndex = currentChapter.value.chapter;
+      const existingChapter = chapters.value.find((c: any) => c.chapter == chapterIndex);
+      if (existingChapter) {
+        try {
+          const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
+          if (chapterRes.code == 200 && chapterRes.data) {
+            updateChapterHistoryFromDetail(chapterRes);
+          }
+        } catch (e) {
+          console.error('Error fetching chapter detail on polling FAIL:', e);
+        }
+      }
+    }
   } else if (status == 'DOING') {
     // DOING state: continue polling, no need to update estimated time
     // If the currently viewed chapter is the one being generated, start fetching content
@@ -6593,11 +6618,12 @@ const startDetailPolling = () => {
           showCoverEditBtn.value = false;
         }
 
+        const resultAsync = detailRes.data.result_async;
+
         if (stepStatus == 'SUCCESS') {
           coverRenewLoading.value = false;
           coverRenewFailed.value = false;
           showCoverEditBtn.value = true;
-          const resultAsync = detailRes.data.result_async;
           if (resultAsync) {
             let result = resultAsync;
             if (typeof result == 'string') {
@@ -6617,6 +6643,9 @@ const startDetailPolling = () => {
           showCoverEditBtn.value = false;
           hasFailed.value = false;
           taskStatus.value = 'SUCCESS';
+          currentChapter.value = null;
+          isLoading.value = false;
+          isLoadingComplete.value = true;
           await fetchUserBalance();
           stopDetailPolling();
           return;
@@ -7538,7 +7567,9 @@ function closeOutlineHistoryModal() {
 
 async function selectHistoryOutline(outlineObj: any) {
   if (checkProjectOwnership()) return;
+  if (isUsingOutlineHistory.value) return;
 
+  isUsingOutlineHistory.value = true;
   try {
     const token = localStorage.getItem('token');
 
@@ -7573,10 +7604,14 @@ async function selectHistoryOutline(outlineObj: any) {
     }
 
     outlineData.value = outlineObj;
+    hasFailed.value = false;
+    taskStatus.value = 'SUCCESS';
     showOutlineHistoryModal.value = false;
   } catch (error) {
     console.error('Error updating outline from history:', error);
     toast(t('fail'));
+  } finally {
+    isUsingOutlineHistory.value = false;
   }
 }
 
@@ -7605,7 +7640,9 @@ async function handleChapterHistoryClick() {
 
 async function selectHistoryChapter(chapterObj: any) {
   if (checkProjectOwnership()) return;
+  if (isUsingChapterHistory.value) return;
   if (currentChapter.value) {
+    isUsingChapterHistory.value = true;
     try {
       const token = localStorage.getItem('token');
 
@@ -7639,6 +7676,8 @@ async function selectHistoryChapter(chapterObj: any) {
       console.error('Error updating chapter from history:', error);
       toast(t('fail'));
       return;
+    } finally {
+      isUsingChapterHistory.value = false;
     }
   }
   showChapterHistoryModal.value = false;
@@ -8644,6 +8683,12 @@ const startCoverRenewPolling = (taskId: string) => {
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
+
+      if (handleSessionTimeout(res.code) || res.code == 401) {
+        stopCoverRenewPolling();
+        return;
+      }
+
       if (res.code == 200 && res.data?.status == 'SUCCESS') {
         const newCoverUrl = res.data.result?.cover_url || res.data.result?.generate_novel_cover || res.data.result?.renew_novel_cover || '';
         if (newCoverUrl) {

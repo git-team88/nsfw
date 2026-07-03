@@ -87,7 +87,7 @@
 
         <div class="outline-history-footer" v-if="outlineList.length > 0">
           <button class="cancel-btn" @click="$emit('cancel')">{{ t('novel.outlineHistoryCancel') }}</button>
-          <button class="use-btn" @click="handleUse">{{ t('novel.outlineHistoryUse') }}</button>
+          <button class="use-btn" @click="handleUse" :disabled="props.isUsing">{{ t('novel.outlineHistoryUse') }}<div v-if="props.isUsing" class="btn-loading-spinner"></div></button>
         </div>
       </div>
     </div>
@@ -104,6 +104,7 @@ const props = defineProps<{
   visible: boolean;
   outlineList: any[];
   currentOutline: any;
+  isUsing?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -474,8 +475,26 @@ function handleUse() {
           cursor: pointer;
           background: #FB64B6;
           color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
 
-          &:hover {
+          &:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+          }
+
+          .btn-loading-spinner {
+            width: 1.8rem;
+            height: 1.8rem;
+            border: 0.2rem solid rgba(255, 255, 255, 0.3);
+            border-top: 0.2rem solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+
+          &:hover:not(:disabled) {
             position: relative;
 
             &::after {
