@@ -172,6 +172,7 @@
 
     <DeleteChapterConfirmModal
       v-if="showDeleteChapterModal"
+      :visible="showDeleteChapterModal"
       @close="showDeleteChapterModal = false"
       @confirm="deleteChapter(currentChapter)"
     />

@@ -19,7 +19,7 @@
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Video content -->
-              <div v-if="detail.type == '3'" class="video-wrapper">
+              <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
                 <div v-if="!isVideoLocked">
                   <div class="video-poster" v-if="isVideoEnded && currentCollection.cover">
                     <img :src="currentCollection.cover" alt="Cover" draggable="false" />
@@ -38,10 +38,8 @@
                     playsinline
                     autoplay
                     muted
-                    controls
-                    controlslist="nodownload noremoteplayback noplaybackrate"
-                    disablePictureInPicture
-                    v-show="!isVideoLoading"
+                    :class="{ 'video-hidden': isVideoLoading }"
+                    @click="togglePlay"
                     @play="isPlaying = true; isVideoEnded = false"
                     @pause="isPlaying = false"
                     @timeupdate="onTimeUpdate"
@@ -54,14 +52,37 @@
                     @ended="onVideoEnded"
                   ></video>
 
-                  <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
-                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  <div class="custom-video-controls" v-show="isVideoHovered || !isPlaying || isDraggingProgress">
+                    <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
+                      <div class="progress-track">
+                        <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
+                        <div class="progress-filled" :style="{ width: progressPercent() + '%' }"></div>
+                      </div>
+                    </div>
+                    <div class="controls-row">
+                      <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                      <div class="controls-right">
+                        <div class="volume-control">
+                          <div class="volume-slider">
+                            <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
+                              <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                            </div>
+                          </div>
+                          <div class="volume-btn" @click.stop="toggleMute">
+                            <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
+                            <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                          </div>
+                        </div>
+                        <div class="ctrl-fullscreen-btn" @click.stop="togglePageFullscreen">
+                          <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                          <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <!-- Custom Fullscreen Toggle Button -->
-                  <div class="fullscreen-btn" @click.stop="togglePageFullscreen">
-                    <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
-                    <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                  <div class="play-overlay" v-show="!isPlaying" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
                   </div>
 
                 </div>
@@ -124,7 +145,7 @@
             </template>
 
             <template v-else-if="detail.type == '3'">
-              <div class="video-wrapper">
+              <div class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
                 <div v-if="!isVideoLocked">
                   <div class="video-poster" v-if="isVideoEnded && detail.cover">
                     <img :src="detail.cover" alt="Cover" draggable="false" />
@@ -143,10 +164,8 @@
                     playsinline
                     autoplay
                     muted
-                    controls
-                    controlslist="nodownload noremoteplayback noplaybackrate nofullscreen"
-                    disablePictureInPicture
-                    v-show="!isVideoLoading"
+                    :class="{ 'video-hidden': isVideoLoading }"
+                    @click="togglePlay"
                     @play="isPlaying = true; isVideoEnded = false"
                     @pause="isPlaying = false"
                     @timeupdate="onTimeUpdate"
@@ -159,14 +178,37 @@
                     @ended="onVideoEnded"
                   ></video>
 
-                  <div class="play-overlay" v-show="!isPlaying && !isVideoBuffering" @click="togglePlay">
-                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  <div class="custom-video-controls" v-show="isVideoHovered || !isPlaying || isDraggingProgress">
+                    <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
+                      <div class="progress-track">
+                        <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
+                        <div class="progress-filled" :style="{ width: progressPercent() + '%' }"></div>
+                      </div>
+                    </div>
+                    <div class="controls-row">
+                      <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                      <div class="controls-right">
+                        <div class="volume-control">
+                          <div class="volume-slider">
+                            <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
+                              <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                            </div>
+                          </div>
+                          <div class="volume-btn" @click.stop="toggleMute">
+                            <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
+                            <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                          </div>
+                        </div>
+                        <div class="ctrl-fullscreen-btn" @click.stop="togglePageFullscreen">
+                          <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                          <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <!-- Custom Fullscreen Toggle Button -->
-                  <div class="fullscreen-btn" @click.stop="togglePageFullscreen">
-                    <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
-                    <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                  <div class="play-overlay" v-show="!isPlaying" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
                   </div>
 
                 </div>
@@ -906,6 +948,33 @@ const isNearBottom = ref(false);
 // Video State
 const currentTime = ref(0);
 const duration = ref(0);
+const isDraggingProgress = ref(false);
+const progressBarRef = ref<HTMLElement | null>(null);
+const bufferedPercent = ref(0);
+const isDraggingVolume = ref(false);
+const volumeTrackRef = ref<HTMLElement | null>(null);
+const isVideoHovered = ref(false);
+const showVolumeSlider = ref(false);
+const volumeSliderTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+function scheduleVolumeSliderClose() {
+  if (volumeSliderTimer.value) {
+    clearTimeout(volumeSliderTimer.value);
+  }
+  volumeSliderTimer.value = setTimeout(() => {
+    showVolumeSlider.value = false;
+  }, 3000);
+}
+
+function onVideoMouseLeave() {
+  if (isDraggingProgress.value || isDraggingVolume.value) return;
+  isVideoHovered.value = false;
+}
+
+function progressPercent() {
+  if (!duration.value) return 0;
+  return (currentTime.value / duration.value) * 100;
+}
 
 // 从localStorage中读取音量设置，如果没有则使用默认值0
 const savedVolume = localStorage.getItem('videoVolume');
@@ -2761,6 +2830,15 @@ function onTimeUpdate(e: Event) {
   const v = e.target as HTMLVideoElement;
   currentTime.value = v.currentTime;
   duration.value = v.duration || 0;
+
+  if (isVideoLoading.value && v.currentTime > 0) {
+    isVideoLoading.value = false;
+    isVideoBuffering.value = false;
+  }
+
+  if (v.buffered.length > 0) {
+    bufferedPercent.value = (v.buffered.end(v.buffered.length - 1) / (duration.value || 1)) * 100;
+  }
 }
 
 function onLoadedMetadata(e: Event) {
@@ -2769,6 +2847,7 @@ function onLoadedMetadata(e: Event) {
   v.volume = volume.value;
   v.muted = volume.value === 0;
   isPlaying.value = true;
+  v.play().catch(() => {});
 }
 
 function onCanPlay() {
@@ -2788,7 +2867,7 @@ function onVideoWaiting() {
 
 function onVideoPlaying() {
   isVideoBuffering.value = false;
-  // 暂停所有其他视频的播放
+  isVideoLoading.value = false;
   pauseAllOtherVideos();
   // 关闭视频预览模态框
   if (showPreviewModal.value) {
@@ -2833,23 +2912,21 @@ function onVideoError(e: Event) {
 
 function onVolumeChange(e: Event) {
   const v = e.target as HTMLVideoElement;
+  if (isDraggingVolume.value) return;
 
   if (!v.muted && v.volume === 1) {
     v.volume = 0.6;
     volume.value = 0.6;
-    localStorage.setItem('videoVolume', volume.value.toString());
   } else if (!v.muted && v.volume === 0) {
     v.volume = 0.6;
     volume.value = 0.6;
-    localStorage.setItem('videoVolume', volume.value.toString());
   } else if (!v.muted) {
     volume.value = v.volume;
-    localStorage.setItem('videoVolume', volume.value.toString());
   }
+  localStorage.setItem('videoVolume', volume.value.toString());
 }
 
 function onVideoEnded() {
-  // 视频播放结束时，设置isPlaying为false，isVideoEnded为true，显示封面和播放按钮
   isPlaying.value = false;
   isVideoEnded.value = true;
   if (videoRef.value) {
@@ -2899,6 +2976,41 @@ function seekVideo(e: MouseEvent) {
   videoRef.value.currentTime = percent * duration.value;
 }
 
+function onProgressClick(e: MouseEvent) {
+  if (!videoRef.value || !duration.value) return;
+  const bar = e.currentTarget as HTMLElement;
+  const rect = bar.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const percent = Math.max(0, Math.min(1, x / rect.width));
+  videoRef.value.currentTime = percent * duration.value;
+}
+
+function onProgressDragStart(e: MouseEvent) {
+  e.preventDefault();
+  isDraggingProgress.value = true;
+  onProgressClick(e);
+
+  const onMove = (moveEvent: MouseEvent) => {
+    if (!isDraggingProgress.value || !videoRef.value || !duration.value) return;
+    const bar = progressBarRef.value;
+    if (!bar) return;
+    const rect = bar.getBoundingClientRect();
+    const x = moveEvent.clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, x / rect.width));
+    videoRef.value.currentTime = percent * duration.value;
+    currentTime.value = percent * duration.value;
+  };
+
+  const onUp = () => {
+    isDraggingProgress.value = false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
 function toggleMute() {
   if (!videoRef.value) return;
   if (volume.value > 0) {
@@ -2907,7 +3019,54 @@ function toggleMute() {
     volume.value = 0.6;
   }
   videoRef.value.volume = volume.value;
+  videoRef.value.muted = volume.value === 0;
   localStorage.setItem('videoVolume', volume.value.toString());
+}
+
+function toggleVolumeSlider() {
+  if (showVolumeSlider.value) {
+    showVolumeSlider.value = false;
+    if (volumeSliderTimer.value) {
+      clearTimeout(volumeSliderTimer.value);
+      volumeSliderTimer.value = null;
+    }
+  } else {
+    showVolumeSlider.value = true;
+    scheduleVolumeSliderClose();
+  }
+}
+
+function onVolumeDragStart(e: MouseEvent) {
+  e.preventDefault();
+  isDraggingVolume.value = true;
+  updateVolumeFromEvent(e);
+
+  const onMove = (moveEvent: MouseEvent) => {
+    if (!isDraggingVolume.value) return;
+    updateVolumeFromEvent(moveEvent);
+  };
+
+  const onUp = () => {
+    isDraggingVolume.value = false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    scheduleVolumeSliderClose();
+  };
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function updateVolumeFromEvent(e: MouseEvent) {
+  const track = volumeTrackRef.value;
+  if (!track || !videoRef.value) return;
+  const rect = track.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const percent = Math.max(0, Math.min(1, 1 - y / rect.height));
+  volume.value = percent;
+  videoRef.value.volume = percent;
+  videoRef.value.muted = percent === 0;
+  localStorage.setItem('videoVolume', percent.toString());
 }
 
 function updateVolume() {

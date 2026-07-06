@@ -2812,7 +2812,7 @@ const startCountdownTimer = () => {
   }
 
   countdownTimer.value = window.setInterval(() => {
-    if (taskStartAt.value) {
+    if (taskStartAt.value && !isLoadingNewChapter.value) {
       const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
       if (startTimestamp) {
         const totalSeconds = (originalEstimatedSeconds.value || 600) + (ongoingTaskCount.value || 0) * 20 * 60;
@@ -2821,6 +2821,13 @@ const startCountdownTimer = () => {
         displayMinutes.value = remainingMinutes;
         return;
       }
+    }
+    if (startTime.value) {
+      const totalSeconds = (originalEstimatedSeconds.value || 600) + (ongoingTaskCount.value || 0) * 20 * 60;
+      const elapsedSeconds = Math.floor((Date.now() - startTime.value) / 1000);
+      const remainingMinutes = Math.max(1, Math.ceil((totalSeconds - elapsedSeconds) / 60));
+      displayMinutes.value = remainingMinutes;
+      return;
     }
     if (displayMinutes.value > 1) {
       displayMinutes.value--;
@@ -4676,7 +4683,8 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
   // Check if this chapter is being generated or in preparation or failed
   if (chapterNum == stepChapterIndex.value && (taskStatus.value == 'DOING' || isPreparing.value || taskStatus.value == 'FAIL')) {
-    startLoadingAnimation('chapter');
+    loadingProcessType.value = 'chapter';
+    loadingKey.value++;
     // Use polling to fetch chapter content if in DOING state
     if (taskStatus.value == 'DOING') {
       await fetchChapterStream(chapterNum);
@@ -4689,7 +4697,8 @@ const handleChapterItemClick = async (chapterNum: number) => {
   if (currentStepName.value == 'chapter' && taskStatus.value == 'DOING') {
     // For the chapter being generated, use polling
     if (chapterNum == stepChapterIndex.value) {
-      startLoadingAnimation('chapter');
+      loadingProcessType.value = 'chapter';
+      loadingKey.value++;
       await fetchChapterStream(chapterNum);
       return;
     }

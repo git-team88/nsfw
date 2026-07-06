@@ -314,7 +314,33 @@ function isAnimating() {
   return props.taskStatus === 'DOING';
 }
 
+let userScrolling = false;
+let scrollTimer: number | null = null;
+
+function setupScrollListener() {
+  const parentContainer = document.querySelector('.outline-content');
+  if (parentContainer) {
+    parentContainer.addEventListener('scroll', onUserScroll);
+  }
+}
+
+function removeScrollListener() {
+  const parentContainer = document.querySelector('.outline-content');
+  if (parentContainer) {
+    parentContainer.removeEventListener('scroll', onUserScroll);
+  }
+}
+
+function onUserScroll() {
+  userScrolling = true;
+  if (scrollTimer) clearTimeout(scrollTimer);
+  scrollTimer = window.setTimeout(() => {
+    userScrolling = false;
+  }, 3000);
+}
+
 function scrollToLatestStep() {
+  if (userScrolling) return;
   if (processStepsRef.value && processStepsRef.value.offsetParent !== null) {
     const parentContainer = document.querySelector('.outline-content');
     if (parentContainer) {
@@ -717,6 +743,7 @@ watch(
 );
 
 onMounted(() => {
+  setupScrollListener();
   if (props.estimatedTime != null || props.remainingTime != null) {
     if (props.animationStartTime && props.animationStartTime > 0 && !props.startFromBeginning) {
       const estimatedSeconds = props.estimatedTime || (props.processType === 'outline' ? 120 : 60);
@@ -733,6 +760,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimer();
+  removeScrollListener();
+  if (scrollTimer) clearTimeout(scrollTimer);
 });
 
 defineExpose({

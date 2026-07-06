@@ -1579,7 +1579,8 @@ async function handlePublish(publishData?: any) {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.video_cover_url || '',
-              description: ''
+              description: t('collectionSettings.sampleDescription'),
+              is_nsfw: 0
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -3187,15 +3188,15 @@ onMounted(async () => {
               is_nsfw: 0
             }) as any;
 
-            if (createRes.code === 0 && createRes.data?.id) {
-
+            if (createRes.code === 0 && createRes.data?.book_id) {
               selectedCollection.value = {
-                id: createRes.data.id,
+                id: createRes.data.book_id,
                 name: title,
                 cover: coverPreview.value || '',
-                description: ''
+                description: t('collectionSettings.sampleDescription'),
+                is_nsfw: 0
               };
-              selectedCollectionId.value = createRes.data.id;
+              selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
             }

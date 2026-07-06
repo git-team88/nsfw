@@ -2882,13 +2882,14 @@ async function handleCollectionFromProjectName(projectName: string, sessionId?: 
           is_nsfw: 0
         }) as any;
 
-        if (createRes.code === 0 && createRes.data?.id) {
+        if (createRes.code === 0 && createRes.data?.book_id) {
 
           selectedCollection.value = {
-            id: createRes.data.id,
+            id: createRes.data.book_id,
             name: projectName,
             cover: coverPreview.value || '',
-            description: ''
+            description: t('collectionSettings.sampleDescription'),
+            is_nsfw: 0
           };
           isNoCollection.value = false;
         }
@@ -3170,12 +3171,12 @@ async function handlePublish(publishData?: any) {
           }) as any;
 
           if (createRes.code == 0) {
-
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.result_async.generate_manhua_cover || '',
-              description: t('collectionSettings.sampleDescription')
+              description: t('collectionSettings.sampleDescription'),
+              is_nsfw: 0
             };
             isNoCollection.value = false;
           }
@@ -3590,7 +3591,8 @@ onMounted(async () => {
                       id: createRes.data.book_id,
                       name: title,
                       cover: coverPreview.value || '',
-                      description: t('collectionSettings.sampleDescription')
+                      description: t('collectionSettings.sampleDescription'),
+                      is_nsfw: 0
                     };
                     selectedEpisodeNumber.value = '1';
                     isNoCollection.value = false;
