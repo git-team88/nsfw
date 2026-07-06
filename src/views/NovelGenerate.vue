@@ -48,9 +48,10 @@
       <div class="left-content">
         <div class="scrollable-content">
           <!-- Generation Status -->
-          <div v-if="shouldShowEstimatedTime" class="generation-status">
+          <!-- <div v-if="shouldShowEstimatedTime" class="generation-status">
             <span class="status-text">{{ t('novel.generatingStatus') }}</span>
-          </div>
+            <button class="similar-content-btn" @click="goToSimilar()">{{ t('novel.similarContent') }}</button>
+          </div> -->
 
           <!-- Generation Status / Progress / Chapters -->
           <div v-if="taskStatus == 'DOING' || taskStatus == 'FAIL' || isPreparing" class="progress-section">
@@ -484,19 +485,22 @@
           </template>
         </div>
 
-        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime }" ref="outlineContentRef">
+        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter)) }" ref="outlineContentRef">
           <NovelLoading
             v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed && currentStepName != 'renew_novel_cover' && currentStepName != 'refresh_novel_cover')"
             v-show="isGeneratingOutline || (currentChapter && currentChapter.chapter == stepChapterIndex)"
             :key="loadingKey"
             :process-type="loadingProcessType"
-            :remaining-time="(chapterRemainingSeconds || (displayMinutes || 10) * 60)"
-            :estimated-time="(originalEstimatedSeconds || 600) || 600"
+            :remaining-time="rawChapterRemainingSeconds || (estimatedTimeFetched ? (displayMinutes || 10) * 60 : undefined)"
+            :estimated-time="originalEstimatedSeconds || undefined"
             :is-streaming="isStreaming"
             :has-streaming-content="hasStreamingContent"
             :has-stream-data="hasStreamData"
             :task-status="taskStatus || undefined"
+            :start-from-beginning="isLoadingNewChapter"
+            :animation-start-time="animationStartTime"
             @loading-complete="handleLoadingComplete"
+            @update:animation-start-time="animationStartTime = $event"
           />
 
           <!-- Loading spinner instead of skeleton -->
@@ -841,7 +845,7 @@
       </div>
 
       <!-- Similar Content Section -->
-      <div v-if="shouldShowEstimatedTime" class="similar-section">
+      <div v-if="shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter))" class="similar-section">
         <div class="similar-inner">
           <div class="similar-header">
             <div class="similar-header-left">
@@ -1525,6 +1529,7 @@ const estimatedTime = ref<number | null>(null);
 const modalEstimatedTime = ref<string>('');
 const originalEstimatedSeconds = ref<number | null>(null);
 const chapterRemainingSeconds = ref<number | null>(null); // Remaining time for current chapter only (without queue time)
+const rawChapterRemainingSeconds = ref<number | null>(null); // Unclamped version for loading component
 const displayMinutes = ref<number>(0);
 const startTime = ref<number | null>(null);
 const estimatedTimeFetched = ref<boolean>(false);
@@ -1745,17 +1750,20 @@ const cancelOutlineEditExit = () => {
 // Loading component state
 const loadingProcessType = ref<'outline' | 'chapter'>('outline');
 const loadingKey = ref(0);
+const isLoadingNewChapter = ref(false);
+const animationStartTime = ref<number>(0);
 const isOutlineLoading = ref<boolean>(false);
 
 // Start loading animation
-function startLoadingAnimation(processType: 'outline' | 'chapter') {
+function startLoadingAnimation(processType: 'outline' | 'chapter', fromBeginning: boolean = false) {
   loadingProcessType.value = processType;
   loadingKey.value++;
+  isLoadingNewChapter.value = fromBeginning;
 }
 
 // Stop loading animation
 function stopLoadingAnimation() {
-  // No need to do anything here since the component handles its own animation
+  isLoadingNewChapter.value = false;
 }
 
 // Fetch task progress
@@ -1996,9 +2004,7 @@ const startOutlineStream = async () => {
   isLoading.value = true; // Ensure loading is shown while waiting for data
 
   // Start loading animation for outline generation
-  startLoadingAnimation('outline');
-
-  // Set streaming state
+  startLoadingAnimation('outline', true);
   isStreaming.value = true;
   hasStreamingContent.value = false;
   hasStreamData.value = false;
@@ -2772,9 +2778,15 @@ const fetchEstimatedTime = async (queuePosition: number = 0) => {
       displayMinutes.value = initialMinutes;
       if (isGeneratingOutline.value) {
         const startTimeSec = taskStartAt.value ? parseToUnixTimestamp(taskStartAt.value) : (startTime.value || Date.now()) / 1000;
-        chapterRemainingSeconds.value = Math.max(60, estimatedTime.value - (res.data.current_timestamp - startTimeSec));
+        const totalElapsedSeconds = res.data.current_timestamp - startTimeSec;
+        const queueTimeSeconds = apiQueuePosition * 20 * 60;
+        const outlineElapsedSeconds = Math.max(0, totalElapsedSeconds - queueTimeSeconds);
+        const outlineRemaining = (originalEstimatedSeconds.value || 600) - outlineElapsedSeconds;
+        chapterRemainingSeconds.value = Math.max(60, outlineRemaining);
+        rawChapterRemainingSeconds.value = outlineRemaining;
       } else {
         chapterRemainingSeconds.value = chapterRemaining;
+        rawChapterRemainingSeconds.value = chapterRemaining;
       }
 
       // Start countdown timer
@@ -2800,6 +2812,16 @@ const startCountdownTimer = () => {
   }
 
   countdownTimer.value = window.setInterval(() => {
+    if (taskStartAt.value) {
+      const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
+      if (startTimestamp) {
+        const totalSeconds = (originalEstimatedSeconds.value || 600) + (ongoingTaskCount.value || 0) * 20 * 60;
+        const elapsedSeconds = Math.floor(Date.now() / 1000) - startTimestamp;
+        const remainingMinutes = Math.max(1, Math.ceil((totalSeconds - elapsedSeconds) / 60));
+        displayMinutes.value = remainingMinutes;
+        return;
+      }
+    }
     if (displayMinutes.value > 1) {
       displayMinutes.value--;
     } else {
@@ -2809,7 +2831,7 @@ const startCountdownTimer = () => {
         countdownTimer.value = null;
       }
     }
-  }, 60000);
+  }, 1000);
 };
 
 // Auto resize textarea to fit content
@@ -3392,7 +3414,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   isLoading.value = true;
 
   // Start loading animation for chapter generation
-  startLoadingAnimation('chapter');
+  startLoadingAnimation('chapter', true);
   hasFailed.value = false;
   taskStatus.value = 'DOING';
   lastGenerationType.value = 'chapter';
@@ -4299,7 +4321,7 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
   generatingChapter.value = fromChapter;
   stepChapterIndex.value = fromChapter;
   currentStepName.value = 'chapter';
-  startLoadingAnimation('chapter');
+  startLoadingAnimation('chapter', true);
 
   // Add first chapter to chapters array if not exists
   const existingChapter = chapters.value.find((c: any) => c.chapter === fromChapter);
@@ -5973,13 +5995,17 @@ const fetchNovelOutline = async () => {
         if (stepStatus == 'DOING') {
           // Set generation type flag so fetchEstimatedTime uses correct logic
           lastGenerationType.value = 'outline';
+          isGeneratingOutline.value = true;
 
+          estimatedTime.value = null;
+          originalEstimatedSeconds.value = null;
+          displayMinutes.value = 0;
+          estimatedTimeFetched.value = false;
           // Fetch estimated time FIRST - before setting any flags that would
           // cause NovelLoading to render with default/null time values
           await fetchEstimatedTime();
 
           // NOW set rendering flags - time values are ready
-          isGeneratingOutline.value = true;
           isLoading.value = true;
           hasFailed.value = false;
           taskStatus.value = 'DOING';
@@ -6711,13 +6737,15 @@ const startDetailPolling = () => {
           lastGenerationType.value = 'outline';
           isGeneratingOutline.value = true;
           hasFailed.value = false;
-          taskStatus.value = 'DOING';
-          startLoadingAnimation('outline');
+
           estimatedTime.value = null;
           originalEstimatedSeconds.value = null;
           displayMinutes.value = 0;
           estimatedTimeFetched.value = false;
-          fetchEstimatedTime();
+          await fetchEstimatedTime();
+
+          taskStatus.value = 'DOING';
+          startLoadingAnimation('outline');
           startPolling();
         } else if (chapterIndex) {
           generatingChapter.value = chapterIndex;
@@ -6745,27 +6773,27 @@ const startDetailPolling = () => {
             };
             displayedContent.value = '';
           }
-        }
 
-        taskStatus.value = 'DOING';
-        hasFailed.value = false;
-        startLoadingAnimation('chapter');
+          hasFailed.value = false;
 
-        // Fetch estimated time
-        estimatedTime.value = null;
-        originalEstimatedSeconds.value = null;
-        displayMinutes.value = 0;
-        estimatedTimeFetched.value = false;
-        fetchEstimatedTime();
+          estimatedTime.value = null;
+          originalEstimatedSeconds.value = null;
+          displayMinutes.value = 0;
+          estimatedTimeFetched.value = false;
+          await fetchEstimatedTime();
 
-        if (isBatchChapter.value == 1) {
-          // Batch mode: continue polling detailProject API via fetchChapterStream
-          fetchChapterStream(chapterIndex);
-        } else {
-          // Single chapter mode: switch to taskPolling via startPolling + fetchChapterStream
-          startPolling();
-          if (generatingChapter.value !== null) {
-            fetchChapterStream(generatingChapter.value);
+          taskStatus.value = 'DOING';
+          startLoadingAnimation('chapter');
+
+          if (isBatchChapter.value == 1) {
+            // Batch mode: continue polling detailProject API via fetchChapterStream
+            fetchChapterStream(chapterIndex);
+          } else {
+            // Single chapter mode: switch to taskPolling via startPolling + fetchChapterStream
+            startPolling();
+            if (generatingChapter.value !== null) {
+              fetchChapterStream(generatingChapter.value);
+            }
           }
         }
       } else if (stepStatus == 'FAIL') {
@@ -7814,7 +7842,7 @@ const sendAiEditChapterRequest = async () => {
     isLoadingComplete.value = false;
     isLoading.value = true;
 
-    startLoadingAnimation('chapter');
+    startLoadingAnimation('chapter', true);
     hasFailed.value = false;
     taskStatus.value = 'DOING';
     lastGenerationType.value = 'chapter';

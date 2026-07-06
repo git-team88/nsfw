@@ -2690,6 +2690,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusDraft: "Draft",
     statusSubscribed: "Subscribed",
     statusPrivate: "Private",
+    deleteChapterConfirm: {
+      title: "Confirm Delete",
+      description: "This action cannot be undone. Please confirm again whether to delete this chapter?",
+      note: "Note: After deleting this chapter, the chapter and its interaction data will also be deleted.",
+      cancel: "Cancel",
+      confirm: "Confirm"
+    },
   },
   collectionSettings: {
     back: "Back",

@@ -2776,6 +2776,13 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     statusDraft: "草稿",
     statusSubscribed: "訂閱",
     statusPrivate: "僅自己可見",
+    deleteChapterConfirm: {
+      title: "確認刪除",
+      description: "刪除操作無法撤銷，請再次確認是否刪除本章節？",
+      note: "注意：刪除本章節後，本章節以及互動數據也會一起刪除。",
+      cancel: "取消",
+      confirm: "確定"
+    },
   },
   collectionSettings: {
     back: "返回",

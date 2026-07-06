@@ -200,32 +200,24 @@
                     <div class="update-badge" v-if="collection.chapter_count > 0">
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
-                    <div
-                      class="more-btn-wrap"
-                      :ref="(el) => setCollectionMenuRef(el, collection.id)"
-                      v-if="isSelf"
-                    >
-                      <img
-                        src="@/assets/images/user/menu.png"
-                        @click.stop="toggleCollectionMenu(collection.id, $event)"
-                      />
+                    <div class="card-actions" v-if="isSelf">
                       <div
-                        class="dropdown-menu"
-                        v-if="activeCollectionMenuId === collection.id"
-                        :class="dropdownPos"
+                        class="card-action-btn"
+                        @click.stop="collection.is_top === '1' ? unpinCollection(collection) : pinCollection(collection)"
                       >
-                        <div class="menu-item" v-if="collection.is_top === '1'" @click.stop="unpinCollection(collection)">
-                          {{ t("userHome.collection.unpin") }}
-                        </div>
-                        <div class="menu-item" v-else @click.stop="pinCollection(collection)">
-                          {{ t("userHome.collection.pin") }}
-                        </div>
-                        <div class="menu-item" @click.stop="goCollectionSettings(collection.id)">
-                          {{ t("userHome.collection.settings") }}
-                        </div>
-                        <div class="menu-item" @click.stop="goChapterManage(collection.id)">
-                          {{ t("userHome.collection.chapterManage") }}
-                        </div>
+                        <img src="@/assets/images/user/top.png" alt="" />
+                      </div>
+                      <div
+                        class="card-action-btn"
+                        @click.stop="goCollectionSettings(collection.id)"
+                      >
+                        <img src="@/assets/images/user/set.png" alt="" />
+                      </div>
+                      <div
+                        class="card-action-btn"
+                        @click.stop="goChapterManage(collection.id)"
+                      >
+                        <img src="@/assets/images/user/chapter.png" alt="" />
                       </div>
                     </div>
                   </div>
@@ -2957,44 +2949,26 @@ async function unpinCollection(collection: any) {
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       }
 
-      .more-btn-wrap {
+      .card-actions {
         margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
 
-        img {
-          width: 1.8rem;
-          height: 1.8rem;
+        .card-action-btn {
+          width: 2.8rem;
+          height: 2.8rem;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-        }
 
-        .dropdown-menu {
-          position: absolute;
-          right: 0;
-          border-radius: 0.8rem;
-          padding: 0.6rem 0;
-          z-index: 10;
-          min-width: 10rem;
-          background: #FFFFFF;
-          box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
-
-          &.bottom {
-            top: 100%;
-            margin-top: 0.4rem;
-          }
-          &.top {
-            bottom: 100%;
-            margin-bottom: 0.4rem;
-          }
-
-          .menu-item {
-            padding: 0.6rem 0;
-            font-size: 1.4rem;
-            color: #6a7282;
-            cursor: pointer;
-            text-align: center;
-            &:hover {
-              font-weight: 500;
-              color: #364153;
-            }
+          img {
+            width: 1.4rem;
+            height: 1.4rem;
           }
         }
       }

@@ -2761,6 +2761,13 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     statusDraft: "下書き",
     statusSubscribed: "メンバーシップ",
     statusPrivate: "非公開",
+    deleteChapterConfirm: {
+      title: "削除の確認",
+      description: "削除操作は取り消せません。この章を削除してよろしいですか？",
+      note: "注意：この章を削除すると、章およびインタラクションデータも一緒に削除されます。",
+      cancel: "キャンセル",
+      confirm: "確認"
+    },
   },
   collectionSettings: {
     back: "戻る",

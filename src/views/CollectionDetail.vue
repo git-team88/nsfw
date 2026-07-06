@@ -135,27 +135,14 @@
                   >{{ getStatusText(chapter.status) }}</span>
                   <span class="chapter-title">{{ chapter.title }}</span>
                 </div>
-                <div class="chapter-right">
-                  <img
-                    v-if="isOwn && collection.status != '2'"
-                    class="chapter-menu"
-                    src="@/assets/images/detail/menu.png"
-                    @click.stop="showChapterMenu(chapter, $event)"
-                  />
-                  <div
-                    v-if="showMenu && currentChapter?.id === chapter.id"
-                    class="chapter-menu-dropdown"
-                    :class="{ 'dropdown-top': menuPosition.useBottom, 'dropdown-bottom': !menuPosition.useBottom }"
-                    @click.stop
-                  >
-                    <div
-                      class="dropdown-item"
-                      @click="editChapter(currentChapter)"
-                    >{{ t('collectionDetail.edit') }}</div>
-                    <div
-                      class="dropdown-item"
-                      @click="deleteChapter(currentChapter)"
-                    >{{ t('collectionDetail.delete') }}</div>
+                <div class="chapter-right" v-if="isOwn && collection.status != '2'">
+                  <div class="chapter-action" @click.stop="editChapter(chapter)">
+                    <img class="action-icon" src="@/assets/images/user/edit.png" alt="" />
+                    <span class="action-text">{{ t('collectionDetail.edit') }}</span>
+                  </div>
+                  <div class="chapter-action" @click.stop="confirmDeleteChapter(chapter)">
+                    <img class="action-icon" src="@/assets/images/user/delete.png" alt="" />
+                    <span class="action-text action-text-danger">{{ t('collectionDetail.delete') }}</span>
                   </div>
                 </div>
               </div>
@@ -182,15 +169,22 @@
       @close="showSensitiveContentConfirmModal = false"
       @confirm="confirmSensitiveContent"
     />
+
+    <DeleteChapterConfirmModal
+      v-if="showDeleteChapterModal"
+      @close="showDeleteChapterModal = false"
+      @confirm="deleteChapter(currentChapter)"
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="CollectionDetail">
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
 import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
 import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
+import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
@@ -300,10 +294,9 @@ function getChapterLabel(type: string): string {
   }
 }
 
-const showMenu = ref(false);
 const currentChapter = ref<Chapter | null>(null);
-const menuPosition = reactive({ useBottom: false });
 const isOwn = ref(false);
+const showDeleteChapterModal = ref(false);
 
 const tagColors = ['tag-pink', 'tag-yellow', 'tag-green'];
 
@@ -561,33 +554,6 @@ function toggleSubscribe() {
   }
 }
 
-function showChapterMenu(chapter: Chapter, event: MouseEvent) {
-  event.stopPropagation();
-
-  if (showMenu.value) {
-    showMenu.value = false;
-    document.removeEventListener('click', closeMenu);
-    return;
-  }
-
-  currentChapter.value = chapter;
-  const target = event.target as HTMLElement;
-  const rect = target.getBoundingClientRect();
-
-  const dropdownHeight = 80;
-  const useBottom = rect.bottom + dropdownHeight > window.innerHeight;
-
-  menuPosition.useBottom = useBottom;
-  showMenu.value = true;
-
-  document.addEventListener('click', closeMenu);
-}
-
-function closeMenu() {
-  showMenu.value = false;
-  document.removeEventListener('click', closeMenu);
-}
-
 function editChapter(chapter: Chapter | null) {
   if (chapter && collection.value) {
     const type = collection.value.type;
@@ -599,7 +565,6 @@ function editChapter(chapter: Chapter | null) {
     }
     router.push({ path, query: { post_id: chapter.id.toString() } });
   }
-  closeMenu();
 }
 
 async function refreshChapters() {
@@ -665,7 +630,12 @@ async function deleteChapter(chapter: Chapter | null) {
       toast(t('fail'));
     }
   }
-  closeMenu();
+  showDeleteChapterModal.value = false;
+}
+
+function confirmDeleteChapter(chapter: Chapter) {
+  currentChapter.value = chapter;
+  showDeleteChapterModal.value = true;
 }
 
 function formatNumber(num: number): string {
@@ -1223,50 +1193,38 @@ onBeforeUnmount(() => {
   }
 
   .chapter-right {
-    position: relative;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.4rem;
     flex-shrink: 0;
     padding-left: 1rem;
-    width: 4rem;
 
-    .chapter-menu {
-      width: 1.8rem;
-      height: 1.8rem;
+    .chapter-action {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.6rem 1rem;
+      border-radius: 0.6rem;
       cursor: pointer;
-    }
-  }
-}
 
-.chapter-menu-dropdown {
-  position: absolute;
-  right: 0;
-  background: #FFFFFF;
-  border-radius: 0.8rem;
-  box-shadow: 0 0.4rem 2rem rgba(0, 0, 0, 0.15);
-  padding: 0.6rem 1.2rem;
-  min-width: 10rem;
-  z-index: 10;
-  white-space: nowrap;
+      &:hover{
+        background-color: #F5F5F5;
+      }
 
-  &.dropdown-bottom {
-    top: 100%;
-  }
+      .action-icon {
+        width: 1.6rem;
+        height: 1.6rem;
+      }
 
-  &.dropdown-top {
-    bottom: 100%;
-  }
+      .action-text {
+        font-size: 1.4rem;
+        color: #364153;
+        white-space: nowrap;
+      }
 
-  .dropdown-item {
-    padding: 0.6rem 0;
-    font-size: 1.4rem;
-    text-align: center;
-    color: #6A7282;
-    cursor: pointer;
-
-    &:hover {
-      color: #364153;
+      .action-text-danger {
+        color: #99A1AF;
+      }
     }
   }
 }

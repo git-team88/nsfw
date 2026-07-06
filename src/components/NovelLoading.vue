@@ -117,9 +117,11 @@ const props = defineProps<{
   hasStreamingContent?: boolean;
   hasStreamData?: boolean;
   taskStatus?: 'DOING' | 'SUCCESS' | 'FAIL' | 'PREPARE';
+  startFromBeginning?: boolean;
+  animationStartTime?: number;
 }>();
 
-const emit = defineEmits(['loadingComplete']);
+const emit = defineEmits(['loadingComplete', 'update:animationStartTime']);
 
 const { t } = useI18n();
 
@@ -627,6 +629,8 @@ function clearTimer() {
   }
 }
 
+const hasStarted = ref(false);
+
 function start() {
   currentStepIndex.value = -1;
   currentStepProgress.value = 0;
@@ -639,8 +643,20 @@ function start() {
 
   totalDurationMs.value = estimatedSeconds * 1000;
 
+  if (props.startFromBeginning) {
+    emit('update:animationStartTime', Date.now());
+    currentStepIndex.value = 0;
+    stepPhases.value.push('working');
+    notify();
+    startWorking();
+    hasStarted.value = true;
+    return;
+  }
+
   const elapsedSeconds = estimatedSeconds - remainingSeconds;
   const elapsedMs = Math.max(0, elapsedSeconds * 1000);
+
+  emit('update:animationStartTime', Date.now() - elapsedMs);
 
   const progressRatio = elapsedMs / totalDurationMs.value;
 
@@ -654,6 +670,7 @@ function start() {
   } else {
     fastForwardAndResume(elapsedMs);
   }
+  hasStarted.value = true;
 }
 
 watch(() => props.taskStatus, (newStatus) => {
@@ -666,44 +683,52 @@ watch(() => props.taskStatus, (newStatus) => {
   }
 });
 
-// Watch processType changes to restart the loading sequence
 watch(() => props.processType, (newType, oldType) => {
   if (newType !== oldType) {
+    hasStarted.value = false;
     start();
   }
 });
 
-// Watch estimatedTime and remainingTime so that when they are populated
-// (e.g. after an API call), the progress bar is recalculated from the
-// correct position instead of starting from zero.
 watch(
   () => [props.estimatedTime, props.remainingTime],
   ([newEstimated, newRemaining], [oldEstimated, oldRemaining]) => {
-    // Only restart when the values change from null/undefined to real numbers
-    // or when the remaining time is substantially updated.
     const hasValidNewValues =
       (newEstimated != null && newEstimated > 0) ||
       (newRemaining != null && newRemaining > 0);
 
     if (!hasValidNewValues) return;
 
-    // Avoid no-op re-triggers when the component is already frozen/finished
     if (isFrozenAtPenultimate.value) return;
 
-    // Only restart if we actually got meaningful new values vs. previous ones
-    const prevWasEmpty = oldEstimated == null && oldRemaining == null;
-    const valuesChanged =
-      newEstimated !== oldEstimated || newRemaining !== oldRemaining;
-
-    if (prevWasEmpty || valuesChanged) {
-      start();
+    if (hasStarted.value) {
+      const prevHadEstimated = oldEstimated != null && oldEstimated !== undefined;
+      const prevHadRemaining = oldRemaining != null && oldRemaining !== undefined;
+      const estimatedChanged = newEstimated !== oldEstimated && prevHadEstimated;
+      const remainingChanged = newRemaining !== oldRemaining && prevHadRemaining;
+      const newEstimatedArrived = !prevHadEstimated && (newEstimated != null && newEstimated !== undefined);
+      const newRemainingArrived = !prevHadRemaining && (newRemaining != null && newRemaining !== undefined);
+      if (!estimatedChanged && !remainingChanged && !newEstimatedArrived && !newRemainingArrived) return;
     }
+
+    start();
   },
   { flush: 'post' }
 );
 
 onMounted(() => {
-  start();
+  if (props.estimatedTime != null || props.remainingTime != null) {
+    if (props.animationStartTime && props.animationStartTime > 0 && !props.startFromBeginning) {
+      const estimatedSeconds = props.estimatedTime || (props.processType === 'outline' ? 120 : 60);
+      const elapsedMs = Math.min(Date.now() - props.animationStartTime, estimatedSeconds * 1000);
+      if (elapsedMs > 0) {
+        fastForwardAndResume(elapsedMs);
+        hasStarted.value = true;
+        return;
+      }
+    }
+    start();
+  }
 });
 
 onUnmounted(() => {
