@@ -981,4 +981,10 @@ export default {
         "Content-Type": "application/json",
       },
     }),
+  getSubtitlesPublic: (data: any) =>
+    axios.request({
+      url: "post/getSubtitlesPublic",
+      data: data,
+      method: "POST",
+    }),
 };

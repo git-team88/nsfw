@@ -1950,6 +1950,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     videoUrlInvalid: "動画URLが無効です。もう一度お試しください。",
     videoPlayFailed: "動画を再生できませんでした",
     videoUrlCopied: "動画URLをコピーしました",
+    subtitle: "字幕",
+    subtitleNone: "なし",
     detail: "詳細",
     collection: "コレクション",
     lastUpdated: "最終更新",

@@ -237,10 +237,6 @@
       position: relative;
       z-index: 2;
 
-      &.video-hidden {
-        opacity: 0;
-      }
-
       &::-webkit-media-controls {
         display: none !important;
       }
@@ -254,11 +250,30 @@
       }
     }
 
-     .custom-video-controls {
+    .subtitle-overlay {
       position: absolute;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 14rem;
+      left: 6rem;
+      right: 6rem;
+      z-index: 15;
+      text-align: center;
+      font-weight: 500;
+      font-size: 2rem;
+      color: #FFFFFF;
+      line-height: 3rem;
+      text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
+      -webkit-text-stroke: 1px #000000;
+      pointer-events: none;
+    }
+
+    .custom-video-controls {
+      position: absolute;
+      bottom: 2.4rem;
+      left: 0;
+      right: 0;
+      width: 100%;
+      padding: 0 2.4rem;
+      box-sizing: border-box;
       z-index: 20;
       display: flex;
       flex-direction: column;
@@ -267,8 +282,7 @@
       transition: opacity 0.3s ease;
 
       .progress-bar {
-        width: 46rem;
-        max-width: 100%;
+        width: 100%;
         cursor: pointer;
 
         .progress-track {
@@ -300,8 +314,7 @@
       }
 
       .controls-row {
-        width: 46rem;
-        max-width: 100%;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -382,6 +395,54 @@
             .volume-slider:active {
               opacity: 1;
               pointer-events: auto;
+            }
+          }
+
+          .subtitle-control {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+
+            .subtitle-label {
+              font-size: 1.2rem;
+              color: #FFFFFF;
+              white-space: nowrap;
+            }
+
+            .subtitle-arrow {
+              flex-shrink: 0;
+            }
+
+            .subtitle-menu {
+              position: absolute;
+              bottom: 2.8rem;
+              right: 0;
+              background: rgba(39, 41, 41, 0.7);
+              border-radius: 0.2;
+              padding: 0.6rem 0;
+              min-width: 8rem;
+              z-index: 30;
+
+              .subtitle-option {
+                padding: 0.6rem 1.2rem;
+                font-size: 1.2rem;
+                text-align: center;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                white-space: nowrap;
+
+                &:hover {
+                  color: #FFFFFF;
+                }
+
+                &.active {
+                  color: #FFFFFF;
+                  font-weight: 500;
+                }
+              }
             }
           }
 
@@ -543,7 +604,7 @@
   // Collection Info Bar
   .collection-info-bar {
     position: fixed;
-    bottom: 9rem;
+    bottom: 7.6rem;
     left: 2.4rem;
     background-color: rgba(255,255,255,0.5);
     display: flex;

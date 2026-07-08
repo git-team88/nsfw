@@ -390,8 +390,7 @@ watch(() => locale.value, () => {
     width: 100%;
     height: 100%;
     border-radius: 0.8rem;
-    aspect-ratio: 3/4;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   .character-name {

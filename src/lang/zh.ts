@@ -2183,6 +2183,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     videoUrlInvalid: "视频地址无效，请重试。",
     videoPlayFailed: "视频播放失败",
     videoUrlCopied: "视频地址已复制",
+    subtitle: "字幕",
+    subtitleNone: "无",
     detail: "详情",
     collection: "合集",
     lastUpdated: "最后更新",

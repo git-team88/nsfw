@@ -22,7 +22,7 @@ export function trackSignUp() {
 }
 
 export function trackPurchase(params: {
-  paymentType: "subscription" | "topup";
+  paymentType: "1" | "2" | "3";
   value: number;
   currency: string;
 }) {

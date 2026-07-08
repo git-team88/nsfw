@@ -18,8 +18,103 @@
         <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
+              <!-- Video content -->
+              <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+                <div v-if="!isVideoLocked">
+                  <div class="video-poster" v-if="isVideoEnded && currentCollection.cover">
+                    <img :src="currentCollection.cover" alt="Cover" draggable="false" />
+                  </div>
+
+                  <div class="video-loading" v-if="isVideoLoading">
+                    <div class="loading-spinner"></div>
+                  </div>
+
+                  <video
+                    ref="videoRef"
+                    class="video-player"
+                    :src="currentCollection?.videoUrl || detail.videoUrl"
+                    :poster="currentCollection?.cover"
+                    preload="auto"
+                    playsinline
+                    autoplay
+                    muted
+                    :class="{ 'video-hidden': isVideoLoading }"
+                    @click="togglePlay"
+                    @play="isPlaying = true; isVideoEnded = false"
+                    @pause="isPlaying = false"
+                    @timeupdate="onTimeUpdate"
+                    @loadedmetadata="onLoadedMetadata"
+                    @error="onVideoError"
+                    @canplay="onCanPlay"
+                    @waiting="onVideoWaiting"
+                    @playing="onVideoPlaying"
+                    @volumechange="onVolumeChange"
+                    @ended="onVideoEnded"
+                  ></video>
+
+                  <div class="custom-video-controls" v-show="isVideoHovered || !isPlaying || isDraggingProgress">
+                    <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
+                      <div class="progress-track">
+                        <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
+                        <div class="progress-filled" :style="{ width: progressPercent() + '%' }"></div>
+                      </div>
+                    </div>
+                    <div class="controls-row">
+                      <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                      <div class="controls-right">
+                        <div class="volume-control">
+                          <div class="volume-slider">
+                            <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
+                              <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                            </div>
+                          </div>
+                          <div class="volume-btn" @click.stop="toggleMute">
+                            <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
+                            <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                          </div>
+                        </div>
+                        <div class="ctrl-fullscreen-btn" @click.stop="togglePageFullscreen">
+                          <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                          <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="play-overlay" v-show="!isPlaying" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  </div>
+
+                </div>
+
+                <div v-if="isVideoLocked" class="video-lock-overlay">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
+
+                  <div class="lock-content">
+                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
+                    <div class="lock-info">
+                      <!-- Paid content lock -->
+                      <template v-if="isPaidContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                        <span class="lock-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </template>
+                      <!-- Teenager or sensitive content lock -->
+                      <template v-else-if="isSensitiveContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
+                        <span class="lock-btn" @click="navigateToProfileSettings">
+                          {{ t("detail.lock.profileSettings") }}
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Image content -->
-              <div v-if="detail.type == '1'" class="comic-gallery">
+              <div v-else-if="detail.type == '1'" class="comic-gallery">
                 <div class="comic-scroll" ref="comicScrollRef" @scroll="handleComicScroll">
                   <div
                       class="comic-image-wrap"
@@ -49,104 +144,101 @@
               </div>
             </template>
 
-            <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
-              <div v-if="!isVideoLocked">
-                <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
-                  <img :src="currentVideoPoster" alt="Cover" draggable="false" />
-                </div>
-
-                <div class="video-loading" v-if="isVideoLoading">
-                  <div class="loading-spinner"></div>
-                </div>
-
-                <video
-                  ref="videoRef"
-                  class="video-player"
-                  :src="currentVideoSrc"
-                  :poster="currentVideoPoster"
-                  preload="auto"
-                  playsinline
-                  muted
-                  @click="togglePlay"
-                  @play="isPlaying = true; isVideoEnded = false"
-                  @pause="isPlaying = false"
-                  @timeupdate="onTimeUpdate"
-                  @loadedmetadata="onLoadedMetadata"
-                  @error="onVideoError"
-                  @canplay="onCanPlay"
-                  @waiting="onVideoWaiting"
-                  @playing="onVideoPlaying"
-                  @volumechange="onVolumeChange"
-                  @ended="onVideoEnded"
-                ></video>
-
-                <div class="subtitle-overlay" v-if="currentSubtitleText && selectedSubtitleLang" v-html="currentSubtitleText.replace(/\n/g, '<br/>')"></div>
-
-                <div class="custom-video-controls" v-show="(isVideoHovered || !isPlaying || isDraggingProgress) && !isVideoLoading">
-                  <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
-                    <div class="progress-track">
-                      <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
-                      <div class="progress-filled" :style="{ width: progressPercent() + '%' }"></div>
-                    </div>
+            <template v-else-if="detail.type == '3'">
+              <div class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+                <div v-if="!isVideoLocked">
+                  <div class="video-poster" v-if="isVideoEnded && detail.cover">
+                    <img :src="detail.cover" alt="Cover" draggable="false" />
                   </div>
-                  <div class="controls-row">
-                    <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
-                    <div class="controls-right">
-                      <div class="subtitle-control" v-if="subtitles.length > 0" @click.stop="showSubtitleMenu = !showSubtitleMenu">
-                          <span class="subtitle-label">{{ t('detail.subtitle') }}：{{ selectedSubtitleLang ? t(subtitleLangMap[selectedSubtitleLang] || '') : t('detail.subtitleNone') }}</span>
-                        <svg class="subtitle-arrow" viewBox="0 0 12 12" width="10" height="10"><path d="M3 5l3 3 3-3" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <div class="subtitle-menu" v-show="showSubtitleMenu" @click.stop>
-                          <div class="subtitle-option" :class="{ active: selectedSubtitleLang === lang }" v-for="lang in subtitleMenuLangs" :key="lang" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang]) }}</div>
-                        </div>
+
+                  <div class="video-loading" v-if="isVideoLoading">
+                    <div class="loading-spinner"></div>
+                  </div>
+
+                  <video
+                    ref="videoRef"
+                    class="video-player"
+                    :src="detail.videoUrl"
+                    :poster="detail.cover"
+                    preload="auto"
+                    playsinline
+                    autoplay
+                    muted
+                    :class="{ 'video-hidden': isVideoLoading }"
+                    @click="togglePlay"
+                    @play="isPlaying = true; isVideoEnded = false"
+                    @pause="isPlaying = false"
+                    @timeupdate="onTimeUpdate"
+                    @loadedmetadata="onLoadedMetadata"
+                    @error="onVideoError"
+                    @canplay="onCanPlay"
+                    @waiting="onVideoWaiting"
+                    @playing="onVideoPlaying"
+                    @volumechange="onVolumeChange"
+                    @ended="onVideoEnded"
+                  ></video>
+
+                  <div class="custom-video-controls" v-show="isVideoHovered || !isPlaying || isDraggingProgress">
+                    <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
+                      <div class="progress-track">
+                        <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
+                        <div class="progress-filled" :style="{ width: progressPercent() + '%' }"></div>
                       </div>
-                      <div class="volume-control">
-                        <div class="volume-slider">
-                          <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
-                            <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                    </div>
+                    <div class="controls-row">
+                      <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                      <div class="controls-right">
+                        <div class="volume-control">
+                          <div class="volume-slider">
+                            <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
+                              <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                            </div>
+                          </div>
+                          <div class="volume-btn" @click.stop="toggleMute">
+                            <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
+                            <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
                           </div>
                         </div>
-                        <div class="volume-btn" @click.stop="toggleMute">
-                          <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
-                          <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                        <div class="ctrl-fullscreen-btn" @click.stop="togglePageFullscreen">
+                          <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
+                          <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
                         </div>
-                      </div>
-                      <div class="ctrl-fullscreen-btn" @click.stop="togglePageFullscreen">
-                        <img v-if="!isPageFullscreen" src="@/assets/images/detail/fullscreen.png" alt="Fullscreen" />
-                        <img v-else src="@/assets/images/detail/unfull.png" alt="Exit Fullscreen" />
                       </div>
                     </div>
                   </div>
+
+                  <div class="play-overlay" v-show="!isPlaying" @click="togglePlay">
+                    <img src="@/assets/images/detail/play.png" alt="Play" />
+                  </div>
+
                 </div>
 
-                <div class="play-overlay" v-show="!isPlaying && !isVideoLoading" @click="togglePlay">
-                  <img src="@/assets/images/detail/play.png" alt="Play" />
-                </div>
+                <div v-if="isVideoLocked" class="video-lock-overlay">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
 
-              </div>
-
-              <div v-if="isVideoLocked" class="video-lock-overlay">
-                <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
-
-                <div class="lock-content">
-                  <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
-                  <div class="lock-info">
-                    <template v-if="isPaidContentLocked">
-                      <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
-                      <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                      <span class="lock-btn" @click="onSubscribe">
-                        {{ t("detail.lock.subscribe") }}
-                      </span>
-                    </template>
-                    <template v-else-if="isSensitiveContentLocked">
-                      <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
-                      <span class="lock-btn" @click="navigateToProfileSettings">
-                        {{ t("detail.lock.profileSettings") }}
-                      </span>
-                    </template>
+                  <div class="lock-content">
+                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
+                    <div class="lock-info">
+                      <!-- Paid content lock -->
+                      <template v-if="isPaidContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                        <span class="lock-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </template>
+                      <!-- Teenager or sensitive content lock -->
+                      <template v-else-if="isSensitiveContentLocked">
+                        <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
+                        <span class="lock-btn" @click="navigateToProfileSettings">
+                          {{ t("detail.lock.profileSettings") }}
+                        </span>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </template>
 
             <template v-else-if="detail.type == '1'">
               <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
@@ -826,7 +918,7 @@ const router = useRouter();
 // --- State ---
 const id = ref<number>(Number(route.query.id));
 const contentType = ref<string>(route.query.contentType as string || "");
-const isPlaying = ref(false);
+const isPlaying = ref(true);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
 const videoRef = ref<HTMLVideoElement | null>(null);
@@ -859,121 +951,6 @@ const duration = ref(0);
 const isDraggingProgress = ref(false);
 const progressBarRef = ref<HTMLElement | null>(null);
 const bufferedPercent = ref(0);
-const subtitles = ref<{ lang: string; url: string }[]>([]);
-const selectedSubtitleLang = ref<string>('');
-const showSubtitleMenu = ref(false);
-const subtitleCues = ref<{ start: number; end: number; text: string }[]>([]);
-const currentSubtitleText = ref('');
-
-const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: 'novel.language.tc', jp: 'novel.language.jp', en: 'novel.language.en' };
-
-async function loadSubtitleCues() {
-  subtitleCues.value = [];
-  currentSubtitleText.value = '';
-  const rawUrl = subtitleTrackUrl.value;
-  if (!rawUrl) return;
-  try {
-    const res = await fetch(rawUrl, { cache: 'no-cache' });
-    if (!res.ok) return;
-    const text = await res.text();
-    subtitleCues.value = parseVTT(text);
-  } catch {
-    subtitleCues.value = [];
-  }
-}
-
-const subtitleTrackUrl = computed(() => {
-  if (!selectedSubtitleLang.value) return '';
-  const sub = subtitles.value.find(s => s.lang == selectedSubtitleLang.value);
-  return sub?.url || '';
-});
-
-function selectSubtitle(lang: string) {
-  selectedSubtitleLang.value = lang == 'none' ? '' : lang;
-  showSubtitleMenu.value = false;
-  loadSubtitleCues();
-}
-
-function parseVTT(text: string): { start: number; end: number; text: string }[] {
-  const cues: { start: number; end: number; text: string }[] = [];
-  const blocks = text.replace(/\r\n/g, '\n').split('\n\n');
-  for (const block of blocks) {
-    const lines = block.trim().split('\n');
-    let timeLineIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes('-->')) { timeLineIdx = i; break; }
-    }
-    if (timeLineIdx === -1) continue;
-    const match = lines[timeLineIdx].match(/(\d{0,2}:?\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{0,2}:?\d{2}:\d{2}\.\d{3})/);
-    if (!match) continue;
-    const parseTime = (t: string) => {
-      const parts = t.split(':');
-      if (parts.length === 3) {
-        return Number(parts[0]) * 3600 + Number(parts[1]) * 60 + Number(parts[2]);
-      }
-      return Number(parts[0]) * 60 + Number(parts[1]);
-    };
-    const start = parseTime(match[1]);
-    const end = parseTime(match[2]);
-    const txt = lines.slice(timeLineIdx + 1).join('\n');
-    if (txt.trim()) cues.push({ start, end, text: txt.trim() });
-  }
-  return cues;
-}
-
-watch(subtitleTrackUrl, () => {
-  loadSubtitleCues();
-}, { immediate: true });
-
-function updateCurrentSubtitle() {
-  if (!subtitleCues.value.length || !currentTime.value) {
-    currentSubtitleText.value = '';
-    return;
-  }
-  const t = currentTime.value;
-  const cue = subtitleCues.value.find(c => t >= c.start && t <= c.end);
-  currentSubtitleText.value = cue?.text || '';
-}
-
-function enableSubtitleTrack() {
-  if (!videoRef.value || !selectedSubtitleLang.value) return;
-  nextTick(() => {
-    if (!videoRef.value) return;
-    const tracks = videoRef.value.textTracks;
-    for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = 'hidden';
-    }
-    for (let i = 0; i < tracks.length; i++) {
-      if (tracks[i].language === selectedSubtitleLang.value) {
-        tracks[i].mode = 'showing';
-        break;
-      }
-    }
-  });
-  setTimeout(() => {
-    if (!videoRef.value) return;
-    const tracks = videoRef.value.textTracks;
-    for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = 'hidden';
-    }
-    for (let i = 0; i < tracks.length; i++) {
-      if (tracks[i].language === selectedSubtitleLang.value) {
-        tracks[i].mode = 'showing';
-        break;
-      }
-    }
-  }, 1000);
-}
-
-watch([() => videoRef.value, () => subtitles.value.length, selectedSubtitleLang], () => {
-  enableSubtitleTrack();
-});
-
-const subtitleMenuLangs = computed(() => {
-  const langs = subtitles.value.map(s => s.lang).filter(l => l !== selectedSubtitleLang.value);
-  return ['none', ...langs];
-});
-
 const isDraggingVolume = ref(false);
 const volumeTrackRef = ref<HTMLElement | null>(null);
 const isVideoHovered = ref(false);
@@ -1139,7 +1116,6 @@ interface DetailData {
   type: string;
   videoUrl: string;
   cover: string;
-  language: string;
   images: imgItem[];
   articleHtml: string;
   content: string;
@@ -1174,7 +1150,6 @@ const detail = ref<DetailData>({
   type: "",
   videoUrl: "",
   cover: "",
-  language: "",
   images: [],
   articleHtml: "",
   content: "",
@@ -1225,29 +1200,6 @@ const currentCollection = computed(() => {
   return collections.value[currentCollectionIndex.value] || null;
 });
 
-const currentVideoSrc = computed(() => {
-  if (isCollectionMode.value && currentCollection.value?.videoUrl) {
-    return currentCollection.value.videoUrl;
-  }
-  return detail.value.videoUrl;
-});
-
-watch([currentVideoSrc, videoRef], () => {
-  if (!currentVideoSrc.value || !videoRef.value) return;
-  if (detail.value.type !== '3') return;
-
-  nextTick(() => {
-    tryAutoPlay();
-  });
-});
-
-const currentVideoPoster = computed(() => {
-  if (isCollectionMode.value && currentCollection.value?.cover) {
-    return currentCollection.value.cover;
-  }
-  return detail.value.cover;
-});
-
 // User region (true = not in China, false = in China)
 const userRegion = ref(false);
 
@@ -1293,7 +1245,6 @@ async function enterCollectionMode() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
   }
-
   activeTab.value = 'collection';
   isRightPanelHidden.value = false;
 
@@ -1704,6 +1655,12 @@ function playCollectionItem(chapter: any) {
     // 重置视频状态
     isVideoLoading.value = true;
     isVideoEnded.value = false;
+
+    // 模拟视频加载完成
+    setTimeout(() => {
+      isVideoLoading.value = false;
+      isPlaying.value = true;
+    }, 1000);
   } else {
     // 进入合集模式并播放点击的项目
     enterCollectionMode();
@@ -1825,28 +1782,6 @@ function setSeoMeta(title: string, description: string, type: string) {
 }
 
 // API Data Load
-async function fetchSubtitles(postId: number) {
-  try {
-    const res = await api.getSubtitlesPublic({ post_id: postId }) as any;
-    if (res.code == 0 || res.code == 200) {
-      const list = res.data?.subtitles || [];
-      subtitles.value = Array.isArray(list) ? list : [];
-      const navLang = locale.value == 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value == 'jp' ? 'jp' : 'en';
-      if (subtitles.value.some(s => s.lang == navLang)) {
-        selectedSubtitleLang.value = navLang;
-      } else {
-        selectedSubtitleLang.value = '';
-      }
-    } else {
-      subtitles.value = [];
-      selectedSubtitleLang.value = '';
-    }
-  } catch {
-    subtitles.value = [];
-    selectedSubtitleLang.value = '';
-  }
-}
-
 async function fetchDetail(newId: number) {
   // Get query parameters at the beginning
   const type = route.query.type as string || "";
@@ -1954,15 +1889,13 @@ async function fetchDetail(newId: number) {
     headers['ts'] = ts;
     headers['sign'] = sign;
 
-    const detailPromise = fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+    const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
       headers: headers,
       body: data
-    }).then(r => r.json());
+    });
 
-    const subtitlePromise = api.getSubtitlesPublic({ post_id: newId }).catch(() => null);
-
-    const [res, subRes] = await Promise.all([detailPromise, subtitlePromise]);
+    const res = await response.json();
 
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post || res.data;
@@ -1992,7 +1925,6 @@ async function fetchDetail(newId: number) {
         type: data.type,
         videoUrl: data.video_url || "",
         cover: data.cover || "",
-        language: data.language || "",
         images: res.data.images || [],
         articleHtml: formatContent(data.content_replace || data.content || ""),
         content: data.content || "",
@@ -2018,19 +1950,6 @@ async function fetchDetail(newId: number) {
         detail.value.description,
         detail.value.type
       );
-
-      if (detail.value.type === '3' && subRes && ((subRes as any).code === 0 || (subRes as any).code === 200)) {
-        const list = (subRes as any).data?.subtitles || (subRes as any).data || [];
-        if (Array.isArray(list) && list.length > 0) {
-          subtitles.value = list;
-          const navLang = locale.value === 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value === 'jp' ? 'jp' : 'en';
-          if (subtitles.value.some(s => s.lang === navLang)) {
-            selectedSubtitleLang.value = navLang;
-          } else {
-            selectedSubtitleLang.value = '';
-          }
-        }
-      }
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0) {
@@ -2089,7 +2008,6 @@ async function fetchDetail(newId: number) {
         type: "1",
         videoUrl: "",
         cover: "",
-        language: "",
         images: [],
         articleHtml: "",
         content: "",
@@ -2126,7 +2044,6 @@ async function fetchDetail(newId: number) {
       type: "1",
       videoUrl: "",
       cover: "",
-      language: "",
       images: [],
       articleHtml: "",
       content: "",
@@ -2158,15 +2075,6 @@ async function fetchDetail(newId: number) {
   currentImageIndex.value = 0;
   isArticleExpanded.value = false;
   isVideoLoading.value = true;
-  isPlaying.value = false;
-
-  if (detail.value.type == '3') {
-    setTimeout(() => {
-      if (isVideoLoading.value) {
-        isVideoLoading.value = false;
-      }
-    }, 8000);
-  }
 
   // Load comments after fetching detail
   await loadComments();
@@ -2931,40 +2839,24 @@ function onTimeUpdate(e: Event) {
   if (v.buffered.length > 0) {
     bufferedPercent.value = (v.buffered.end(v.buffered.length - 1) / (duration.value || 1)) * 100;
   }
-
-  updateCurrentSubtitle();
 }
 
 function onLoadedMetadata(e: Event) {
   const v = e.target as HTMLVideoElement;
   duration.value = v.duration;
   v.volume = volume.value;
-  v.muted = true;
+  v.muted = volume.value === 0;
+  isPlaying.value = true;
+  v.play().catch(() => {});
 }
 
 function onCanPlay() {
   isVideoBuffering.value = false;
-  tryAutoPlay();
-}
+  isVideoLoading.value = false;
 
-function tryAutoPlay() {
-  if (!videoRef.value) return;
-
-  if (!videoRef.value.paused) {
-    isPlaying.value = true;
-    isVideoLoading.value = false;
-    return;
-  }
-
-  videoRef.value.muted = true;
-  const playPromise = videoRef.value.play();
-  if (playPromise !== undefined) {
-    playPromise.then(() => {
-      isPlaying.value = true;
-      isVideoLoading.value = false;
-    }).catch(() => {
-      isPlaying.value = false;
-      isVideoLoading.value = false;
+  if (videoRef.value && videoRef.value.paused) {
+    videoRef.value.play().catch(error => {
+      console.log('Video play failed:', error);
     });
   }
 }
@@ -3038,7 +2930,11 @@ function onVideoEnded() {
   isPlaying.value = false;
   isVideoEnded.value = true;
   if (videoRef.value) {
+    videoRef.value.pause();
+    // 重置视频到开始位置，确保视频画面回到初始状态
     videoRef.value.currentTime = 0;
+    // 确保视频不会自动播放下一遍
+    videoRef.value.autoplay = false;
   }
 
   // 在合集模式下，自动跳转到下一集，但如果是最后一集则暂停
@@ -3054,6 +2950,15 @@ function onVideoEnded() {
       // 重置视频状态
       isVideoLoading.value = true;
       isVideoEnded.value = false;
+
+      // 模拟视频加载完成
+      setTimeout(() => {
+        isVideoLoading.value = false;
+        // 如果下一集需要订阅但用户没订阅，不自动播放，保持暂停状态
+        if (!needSubscription) {
+          isPlaying.value = true;
+        }
+      }, 1000);
     }, 2000);
   }
   // 如果是最后一集，保持暂停状态
@@ -4712,13 +4617,6 @@ function formatNumber(n: number | undefined) {
 // Click Outside to close menus
 function handleClickOutside(event: MouseEvent) {
   const target = event.target as Node;
-
-  if (showSubtitleMenu.value) {
-    const subtitleControl = (target as HTMLElement).closest?.('.subtitle-control');
-    if (!subtitleControl) {
-      showSubtitleMenu.value = false;
-    }
-  }
 
   // Header More
   if (headerMoreRef.value && !headerMoreRef.value.contains(target)) {

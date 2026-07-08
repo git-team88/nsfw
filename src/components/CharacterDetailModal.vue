@@ -13,7 +13,7 @@
         <!-- Left Side: Character Image with Background and Button -->
         <div class="left-section">
           <div class="character-image-container">
-            <img :src="character?.image" :alt="character?.name" class="character-image" />
+            <img :src="processImageUrl(character?.image)" :alt="character?.name" class="character-image" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
           </div>
           <button class="cast-btn" @click="castCharacter">{{ t('characterLibrary.castBtn') }}<span v-if="character?.isOfficial && character?.useCostPoints"> / {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}</span></button>
         </div>
@@ -23,7 +23,7 @@
           <h3 class="character-name">{{ character?.name }}</h3>
           <p class="character-description">{{ character?.description }}</p>
           <div class="design-sheet" v-if="character?.tri_image">
-            <img :src="character?.tri_image" alt="" class="design-sheet-image" />
+            <img :src="processImageUrl(character?.tri_image)" alt="" class="design-sheet-image" />
           </div>
         </div>
       </div>
@@ -34,6 +34,8 @@
 <script setup lang="ts" name="CharacterDetailModal">
 import { useI18n } from 'vue-i18n';
 import router from '@/router';
+import { processImageUrl } from '@/util/utils';
+import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const props = defineProps<{
   visible: boolean;
@@ -124,7 +126,7 @@ function castCharacter() {
   .character-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 0.8rem;
   }
 }

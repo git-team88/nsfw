@@ -37,11 +37,13 @@ const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
 
-const sessionId = (route.query.session_id || route.query.order_id || "") as string;
-if (sessionId) {
+const amount = Number(route.query.amount || 0);
+if (amount > 0) {
+  const mode = (route.query.mode || "") as string;
+  const paymentType = mode === "subscription" ? "2" : mode === "payment" ? "3" : "2";
   trackPurchase({
-    paymentType: "topup",
-    value: Number(route.query.amount || 0),
+    paymentType,
+    value: amount,
     currency: (route.query.currency || "JPY") as string,
   });
 }

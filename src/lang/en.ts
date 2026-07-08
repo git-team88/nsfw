@@ -2080,6 +2080,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     videoUrlInvalid: "Video URL is invalid. Please try again.",
     videoPlayFailed: "Video play failed",
     videoUrlCopied: "Video URL copied",
+    subtitle: "Subtitles",
+    subtitleNone: "None",
     detail: "Details",
     collection: "Collection",
     lastUpdated: "Last updated",

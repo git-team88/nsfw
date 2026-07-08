@@ -2173,6 +2173,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     videoUrlInvalid: "視頻地址無效，請重試。",
     videoPlayFailed: "視頻播放失敗",
     videoUrlCopied: "視頻地址已複製",
+    subtitle: "字幕",
+    subtitleNone: "無",
     detail: "詳情",
     collection: "合集",
     lastUpdated: "最後更新",

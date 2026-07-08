@@ -1446,6 +1446,13 @@ const hasFailed = ref<boolean>(false);
 const statusMessage = ref<string>('');
 const isInsufficientBalance = computed(() => hasFailed.value && statusMessage.value.includes('user credit is not enough'));
 const outlineData = ref<any>(null);
+
+watch(() => outlineData.value, (newVal) => {
+  if (newVal?.base_info?.total_chapters) {
+    chapterCount.value = newVal.base_info.total_chapters;
+  }
+});
+
 const backupOutlineData = ref<any>(null);
 const chapters = ref<any[]>([]);
 const showRegenerateInput = ref<boolean>(false);
@@ -3535,10 +3542,33 @@ const addOutlineCharacter = () => {
     description: ''
   });
   outlineEditDirty.value = true;
+  nextTick(() => {
+    const container = outlineContentRef.value;
+    const characterItems = container?.querySelectorAll('.character-item');
+    if (characterItems && characterItems.length > 0) {
+      const lastItem = characterItems[characterItems.length - 1];
+      lastItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 };
 const removeOutlineCharacter = (index: number) => {
   if (!editingOutlineData.value) return;
   editingOutlineData.value.characters.splice(index, 1);
+  const newErrors = new Set<string>();
+  outlineEditErrorKeys.value.forEach(key => {
+    const match = key.match(/^(character-name|character-desc)-(\d+)$/);
+    if (match) {
+      const idx = parseInt(match[2]);
+      if (idx < index) {
+        newErrors.add(key);
+      } else if (idx > index) {
+        newErrors.add(`${match[1]}-${idx - 1}`);
+      }
+    } else {
+      newErrors.add(key);
+    }
+  });
+  outlineEditErrorKeys.value = newErrors;
   outlineEditDirty.value = true;
 };
 
@@ -3546,6 +3576,21 @@ const removeOutlineChapter = (index: number) => {
   if (!editingOutlineData.value) return;
   editingOutlineData.value.outline.splice(index, 1);
   updateOutlineChapterNumbers();
+  const newErrors = new Set<string>();
+  outlineEditErrorKeys.value.forEach(key => {
+    const match = key.match(/^(chapter-title|chapter-desc)-(\d+)$/);
+    if (match) {
+      const idx = parseInt(match[2]);
+      if (idx < index) {
+        newErrors.add(key);
+      } else if (idx > index) {
+        newErrors.add(`${match[1]}-${idx - 1}`);
+      }
+    } else {
+      newErrors.add(key);
+    }
+  });
+  outlineEditErrorKeys.value = newErrors;
   outlineEditDirty.value = true;
 };
 
@@ -3562,7 +3607,29 @@ const insertChapterBefore = (index: number) => {
     description: ''
   });
   updateOutlineChapterNumbers();
+  const newErrors = new Set<string>();
+  outlineEditErrorKeys.value.forEach(key => {
+    const match = key.match(/^(chapter-title|chapter-desc)-(\d+)$/);
+    if (match) {
+      const idx = parseInt(match[2]);
+      if (idx < index) {
+        newErrors.add(key);
+      } else {
+        newErrors.add(`${match[1]}-${idx + 1}`);
+      }
+    } else {
+      newErrors.add(key);
+    }
+  });
+  outlineEditErrorKeys.value = newErrors;
   outlineEditDirty.value = true;
+  nextTick(() => {
+    const container = outlineContentRef.value;
+    const chapterCards = container?.querySelectorAll('.chapter-card');
+    if (chapterCards && chapterCards[index]) {
+      chapterCards[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 };
 
 const insertChapterAfter = (index: number) => {
@@ -3578,7 +3645,29 @@ const insertChapterAfter = (index: number) => {
     description: ''
   });
   updateOutlineChapterNumbers();
+  const newErrors = new Set<string>();
+  outlineEditErrorKeys.value.forEach(key => {
+    const match = key.match(/^(chapter-title|chapter-desc)-(\d+)$/);
+    if (match) {
+      const idx = parseInt(match[2]);
+      if (idx <= index) {
+        newErrors.add(key);
+      } else {
+        newErrors.add(`${match[1]}-${idx + 1}`);
+      }
+    } else {
+      newErrors.add(key);
+    }
+  });
+  outlineEditErrorKeys.value = newErrors;
   outlineEditDirty.value = true;
+  nextTick(() => {
+    const container = outlineContentRef.value;
+    const chapterCards = container?.querySelectorAll('.chapter-card');
+    if (chapterCards && chapterCards[index + 1]) {
+      chapterCards[index + 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 };
 
 const updateOutlineChapterNumbers = () => {
@@ -4684,7 +4773,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
   // Check if this chapter is being generated or in preparation or failed
   if (chapterNum == stepChapterIndex.value && (taskStatus.value == 'DOING' || isPreparing.value || taskStatus.value == 'FAIL')) {
     loadingProcessType.value = 'chapter';
-    loadingKey.value++;
     // Use polling to fetch chapter content if in DOING state
     if (taskStatus.value == 'DOING') {
       await fetchChapterStream(chapterNum);
@@ -4698,7 +4786,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
     // For the chapter being generated, use polling
     if (chapterNum == stepChapterIndex.value) {
       loadingProcessType.value = 'chapter';
-      loadingKey.value++;
       await fetchChapterStream(chapterNum);
       return;
     }
