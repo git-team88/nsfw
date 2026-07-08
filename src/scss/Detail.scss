@@ -266,14 +266,12 @@
       pointer-events: none;
     }
 
-    .custom-video-controls {
+        .custom-video-controls {
       position: absolute;
-      bottom: 2.4rem;
-      left: 0;
-      right: 0;
-      width: 100%;
-      padding: 0 2.4rem;
-      box-sizing: border-box;
+      bottom: 1.2rem;
+      left: 2.4rem;
+      right: 2.4rem;
+      width: calc(100% - 4.8rem);
       z-index: 20;
       display: flex;
       flex-direction: column;
@@ -319,9 +317,30 @@
         align-items: center;
         justify-content: space-between;
 
+        .controls-left {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+
+          .ctrl-play-btn {
+            width: 2rem;
+            height: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img {
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+
         .time-display {
+          font-weight: 500;
           font-size: 1.4rem;
-          color: rgba(255, 255, 255, 0.80);
+          color: #FFFFFF;
           font-variant-numeric: tabular-nums;
         }
 
@@ -332,9 +351,35 @@
 
           .volume-control {
             position: relative;
+            width: 3rem;
+            height: 2rem;
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
+
+            .volume-btn {
+              width: 2rem;
+              height: 2rem;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              img {
+                width: 100%;
+                height: 100%;
+              }
+
+              .volume-muted-icon {
+                width: 2rem;
+                height: 2rem;
+              }
+            }
+
+            &:hover .volume-slider {
+              opacity: 1;
+              pointer-events: auto;
+            }
 
             .volume-slider {
               width: 1.2rem;
@@ -345,7 +390,7 @@
               align-items: center;
               justify-content: center;
               position: absolute;
-              bottom: 2.8rem;
+              bottom: 2rem;
               left: 50%;
               transform: translateX(-50%);
               cursor: pointer;

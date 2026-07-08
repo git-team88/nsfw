@@ -50,7 +50,7 @@
             </template>
 
             <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
-              <div v-if="!isVideoLocked">
+              <div v-if="!isVideoLocked" @click="togglePlay">
                 <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
                   <img :src="currentVideoPoster" alt="Cover" draggable="false" />
                 </div>
@@ -67,7 +67,6 @@
                   preload="auto"
                   playsinline
                   muted
-                  @click="togglePlay"
                   @play="isPlaying = true; isVideoEnded = false"
                   @pause="isPlaying = false"
                   @timeupdate="onTimeUpdate"
@@ -82,7 +81,7 @@
 
                 <div class="subtitle-overlay" v-if="currentSubtitleText && selectedSubtitleLang" v-html="currentSubtitleText.replace(/\n/g, '<br/>')"></div>
 
-                <div class="custom-video-controls" v-show="(isVideoHovered || !isPlaying || isDraggingProgress) && !isVideoLoading">
+                <div class="custom-video-controls" v-show="(isVideoHovered || !isPlaying || isDraggingProgress) && !isVideoLoading" @click.stop>
                   <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
                     <div class="progress-track">
                       <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
@@ -90,7 +89,13 @@
                     </div>
                   </div>
                   <div class="controls-row">
-                    <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                    <div class="controls-left">
+                      <div class="ctrl-play-btn" @click.stop="togglePlay">
+                        <img v-if="!isPlaying" src="@/assets/images/detail/play_icon.png" alt="Play" />
+                        <img v-else src="@/assets/images/detail/pause_icon.png" alt="Pause" />
+                      </div>
+                      <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
+                    </div>
                     <div class="controls-right">
                       <div class="subtitle-control" v-if="subtitles.length > 0" @click.stop="showSubtitleMenu = !showSubtitleMenu">
                           <span class="subtitle-label">{{ t('detail.subtitle') }}：{{ selectedSubtitleLang ? t(subtitleLangMap[selectedSubtitleLang] || '') : t('detail.subtitleNone') }}</span>
@@ -99,10 +104,10 @@
                           <div class="subtitle-option" :class="{ active: selectedSubtitleLang === lang }" v-for="lang in subtitleMenuLangs" :key="lang" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang]) }}</div>
                         </div>
                       </div>
-                      <div class="volume-control">
-                        <div class="volume-slider">
-                          <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
-                            <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
+                       <div class="volume-control" :class="{ 'volume-active': showVolumeSlider || isDraggingVolume }" @mouseenter="showVolumeSlider = true" @mouseleave="onVolumeControlLeave">
+                         <div class="volume-slider" @mouseenter="showVolumeSlider = true" @mouseleave="onVolumeSliderLeave">
+                           <div ref="volumeTrackRef" class="volume-track" @mousedown="onVolumeDragStart">
+                             <div class="volume-filled" :style="{ height: (volume * 100) + '%' }"></div>
                           </div>
                         </div>
                         <div class="volume-btn" @click.stop="toggleMute">
@@ -118,7 +123,7 @@
                   </div>
                 </div>
 
-                <div class="play-overlay" v-show="!isPlaying && !isVideoLoading" @click="togglePlay">
+                <div class="play-overlay" v-show="!isPlaying && !isVideoLoading" @click.stop="togglePlay">
                   <img src="@/assets/images/detail/play.png" alt="Play" />
                 </div>
 
@@ -980,18 +985,20 @@ const isVideoHovered = ref(false);
 const showVolumeSlider = ref(false);
 const volumeSliderTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
-function scheduleVolumeSliderClose() {
-  if (volumeSliderTimer.value) {
-    clearTimeout(volumeSliderTimer.value);
-  }
-  volumeSliderTimer.value = setTimeout(() => {
-    showVolumeSlider.value = false;
-  }, 3000);
-}
-
 function onVideoMouseLeave() {
   if (isDraggingProgress.value || isDraggingVolume.value) return;
   isVideoHovered.value = false;
+  showVolumeSlider.value = false;
+}
+
+function onVolumeControlLeave() {
+  if (isDraggingVolume.value) return;
+  showVolumeSlider.value = false;
+}
+
+function onVolumeSliderLeave() {
+  if (isDraggingVolume.value) return;
+  showVolumeSlider.value = false;
 }
 
 function progressPercent() {
@@ -3145,7 +3152,6 @@ function onVolumeDragStart(e: MouseEvent) {
     isDraggingVolume.value = false;
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
-    scheduleVolumeSliderClose();
   };
 
   document.addEventListener('mousemove', onMove);
