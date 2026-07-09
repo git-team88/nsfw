@@ -1993,9 +1993,46 @@
         }
       }
 
-      .similar-hint {
-        font-size: 1.4rem;
-        color: #99A1AF;
+      .similar-header-right {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+
+        .similar-hint {
+          font-size: 1.4rem;
+          color: #99A1AF;
+        }
+
+        .similar-toggle-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          height: 3rem;
+          padding: 0 1rem;
+          background: #FFFFFF;
+          border-radius: 1.6rem;
+          border: 1px solid #E5E7EB;
+          font-size: 1.2rem;
+          color: #6A7282;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover {
+            background: rgba(251, 100, 182, 0.06);
+            border-color: rgba(251, 100, 182, 0.5);
+            color: #FB64B6;
+          }
+
+          .similar-toggle-arrow {
+            width: 1.4rem;
+            height: 1.4rem;
+            transition: transform 0.2s;
+
+            &.collapsed {
+              transform: rotate(180deg);
+            }
+          }
+        }
       }
     }
 
@@ -2089,8 +2126,11 @@
     }
 
     .similar-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 16rem;
       text-align: center;
-      padding: 2rem 0;
       font-size: 1.4rem;
       color: #99A1AF;
     }

@@ -378,6 +378,8 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     similarRefresh: "換一批",
     similarExitHint: "退出當前頁面不會中斷生成進度",
     similarEmpty: "暫無相似內容",
+    similarExpand: "展開",
+    similarCollapse: "收起",
     outlineWillBeGeneratedHere: "小說大綱將在此處生成",
     generateNextChapter: "生成下一章",
     generateAllChapters: "全部生成",
@@ -2587,6 +2589,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     sceneEdit: "分集圖片修改",
     storyboardEdit: "分鏡修改",
     characterEdit: "角色修改",
+    globalAssets: "全局資源",
+    renewGlobalAssets: "全局資源修改",
     mergeVideos: "分鏡合成",
     sceneRefresh: "分集圖片重新生成",
     storyboardRefresh: "分鏡重新生成",
@@ -2709,6 +2713,16 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
         title: "AI 漫劇生成器｜一句話生成二次元動畫短劇 - MoeGen",
         keywords: "AI漫劇生成,AI動畫短劇,二次元動畫AI,AI動漫劇本,AI短劇,動畫劇生成,Anime Drama AI",
         description: "MoeGen AI 漫劇生成器，將小說 / 創意一句話轉換為二次元動畫短劇，自動生成分鏡、對白、配音與動態畫面，動畫創作者的 AI 神器。"
+      },
+      photo: {
+        title: "AI 圖片與插畫生成器 MoeGen 萌創｜一鍵生成高品質二次元角色立繪",
+        keywords: "AI圖片生成, AI插畫, 二次元立繪, 角色設計 AI, MoeGen, 萌創",
+        description: "MoeGen AI 圖片生成工具，專注於二次元美學。輸入描述詞即可快速生成專業級的動漫插畫、角色設計與精美立繪，讓您的想像力化為現實。"
+      },
+      video: {
+        title: "AI 影片生成器 MoeGen 萌創｜圖文快速轉換二次元動態影片",
+        keywords: "AI影片生成, 圖生影片, 文生影片, 二次元短影音, MoeGen, 萌創",
+        description: "使用 MoeGen AI 影片生成工具，輕鬆將靜態插畫或文字描述轉換為流暢的二次元動態影片。為您的社群媒體創作吸睛的短影音內容。"
       }
     },
     detail: {

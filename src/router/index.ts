@@ -2,13 +2,53 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
-// import Terms from "@/views/login/Terms.vue";
-// import Privacy from "@/views/login/Privacy.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
 import ResetPassword from "@/views/login/ResetPassword.vue";
-// import PaymentTerms from "@/views/PaymentTerms.vue";
+import i18n from "@/lang/i18n";
+
+const LANG_URL_TO_I18N: Record<string, string> = {
+  ja: 'jp',
+  en: 'en',
+  cn: 'zh',
+  tc: 'tc',
+};
+
+const LANG_URL_TO_HTML: Record<string, string> = {
+  ja: 'ja',
+  en: 'en',
+  cn: 'zh-CN',
+  tc: 'zh-TW',
+};
+
+const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video'];
+
+const langHomeRoutes = Object.entries(LANG_URL_TO_I18N).map(([urlPrefix, i18nKey]) => ({
+  path: `/${urlPrefix}`,
+  name: `Home_${i18nKey}`,
+  component: Home,
+  meta: { lang: i18nKey },
+}));
+
+const langContentTypeRoutes = Object.entries(LANG_URL_TO_I18N).flatMap(([urlPrefix, i18nKey]) =>
+  CONTENT_TYPES.map(type => ({
+    path: `/${urlPrefix}/${type}`,
+    name: `Home_${i18nKey}_${type}`,
+    component: Home,
+    meta: { lang: i18nKey, contentType: type },
+  }))
+);
+
+const contentTypeRoutes = CONTENT_TYPES.map(type => ({
+  path: `/${type}`,
+  name: `Home_${type}`,
+  component: Home,
+  meta: { contentType: type },
+}));
 
 const routes = [
+  ...langHomeRoutes,
+  ...langContentTypeRoutes,
+  ...contentTypeRoutes,
   {
     path: "/",
     name: "Home",
@@ -279,10 +319,21 @@ const router = createRouter({
 
 // Subdomain routing logic
 router.beforeEach((to, from, next) => {
+  const langFromMeta = to.meta.lang as string | undefined;
+  if (langFromMeta) {
+    i18n.global.locale.value = langFromMeta;
+    document.documentElement.lang = LANG_URL_TO_HTML[Object.entries(LANG_URL_TO_I18N).find(([, v]) => v === langFromMeta)?.[0] || 'ja'] || 'ja';
+    localStorage.setItem('lang', langFromMeta);
+  }
+
+  const contentTypeFromMeta = to.meta.contentType as string | undefined;
+  if (contentTypeFromMeta) {
+    to.meta.contentType = contentTypeFromMeta;
+  }
+
   const host = window.location.hostname;
   const subdomain = host.split('.')[0];
 
-  // Map subdomain to content type
   const subdomainMap: Record<string, string> = {
     'novel': 'novel',
     'comic': 'comic',
@@ -291,7 +342,6 @@ router.beforeEach((to, from, next) => {
     'video': 'video'
   };
 
-  // Store subdomain info in route meta
   if (subdomainMap[subdomain]) {
     to.meta.contentType = subdomainMap[subdomain];
   }

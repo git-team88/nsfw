@@ -444,9 +444,13 @@ async function loadData(fromLoadMore = false) {
           postList.value = newPosts;
         }
 
-        const totalPosts = Number(res.data?.allnums) || 0;
-        const loadedPosts = postList.value ? postList.value.length : 0;
-        postsHasMore.value = totalPosts > postsLimit.value && loadedPosts < totalPosts;
+        const rawPostCount = res.data?.count || (res.data?.data || []).length;
+        if (rawPostCount < postsLimit.value) {
+          postsHasMore.value = false;
+        } else {
+          const totalPosts = Number(res.data?.allnums) || 0;
+          postsHasMore.value = (postList.value ? postList.value.length : 0) < totalPosts;
+        }
 
         postsPage.value++;
 
@@ -512,10 +516,13 @@ async function loadData(fromLoadMore = false) {
           users.value = [...users.value, ...userList];
         }
 
-        // 计算是否还有更多数据
-        const totalUsers = Number(res.data?.allnums) || 0;
-        const loadedUsers = users.value.length;
-        usersHasMore.value = loadedUsers < totalUsers;
+        const rawUserCount = res.data?.count || (res.data?.data || []).length;
+        if (rawUserCount < 18) {
+          usersHasMore.value = false;
+        } else {
+          const totalUsers = Number(res.data?.allnums) || 0;
+          usersHasMore.value = users.value.length < totalUsers;
+        }
 
         usersPage.value++;
 

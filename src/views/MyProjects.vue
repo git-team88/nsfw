@@ -586,9 +586,13 @@ async function loadProjects(reset = false) {
         projects.value = [...projects.value, ...newProjects];
       }
 
-      // Check if there are more pages based on data_count
-      const totalCount = response.data?.data_count || response.data_count || 0;
-      hasMore.value = projects.value.length < totalCount;
+      const rawProjectCount = response.data?.count || response.data?.data?.length || newProjects.length;
+      if (rawProjectCount < itemsPerPage.value) {
+        hasMore.value = false;
+      } else {
+        const totalCount = response.data?.data_count || response.data_count || 0;
+        hasMore.value = projects.value.length < totalCount;
+      }
 
       // Wait for images to load before updating loading state
       nextTick(() => {

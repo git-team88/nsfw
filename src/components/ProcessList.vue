@@ -418,6 +418,12 @@ const getItemLabel = (type: string, item: any) => {
     return t('process.comic') + '-' + t('process.characterEdit');
   } else if (item.step_name == 'renew_manju_character') {
     return t('process.manju') + '-' + t('process.characterEdit');
+  } else if (item.step_name == 'global_assets') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.globalAssets');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.globalAssets');
+  } else if (item.step_name == 'renew_global_assets') {
+    if (type == 'manhua') return t('process.comic') + '-' + t('process.renewGlobalAssets');
+    if (type == 'manju') return t('process.manju') + '-' + t('process.renewGlobalAssets');
   } else if (item.step_name == 'renew_manju_cover') {
     if (type == 'manju') return t('process.manju') + '-' + t('process.coverChange');
   } else if (item.step_name == 'merge_videos') {

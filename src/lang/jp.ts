@@ -2269,6 +2269,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     similarRefresh: "別の一覧",
     similarExitHint: "現在のページを閉じても生成は中断されません",
     similarEmpty: "類似コンテンツはありません",
+    similarExpand: "展開",
+    similarCollapse: "折りたたむ",
     outlineWillBeGeneratedHere: "小説のあらすじはここに生成されます",
     generateNextChapter: "次の章を生成",
     generateAllChapters: "すべて生成",
@@ -2540,6 +2542,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     sceneEdit: "話数画像変更",
     storyboardEdit: "絵コンテ変更",
     characterEdit: "キャラクター変更",
+    globalAssets: "グローバルリソース",
+    renewGlobalAssets: "グローバルリソース変更",
     mergeVideos: "絵コンテ合成",
     sceneRefresh: "話数画像再生成",
     storyboardRefresh: "絵コンテ再生成",
@@ -2694,6 +2698,16 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
         title: "AI アニメドラマ生成｜ひとことで二次元アニメショート - MoeGen",
         keywords: "AIアニメドラマ,AIアニメ短編,アニメ脚本AI,アニメ自動生成,ショートアニメAI,AI 声優",
         description: "MoeGen の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
+      },
+      photo: {
+        title: "AIイラスト・画像生成ツール MoeGen 萌創｜高品質な二次元キャラクターを作成",
+        keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, MoeGen, 萌創",
+        description: "MoeGenのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
+      },
+      video: {
+        title: "AI動画生成ツール MoeGen 萌創｜イラストやテキストから二次元ビデオを作成",
+        keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, MoeGen, 萌創",
+        description: "MoeGenのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
       }
     },
     detail: {

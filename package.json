@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
-    "preview": "vite preview",
     "build-only": "vite build",
+    "preview": "vite preview",
+    "prerender": "vite preview --port 4173 & sleep 3 && node scripts/prerender.mjs && kill $(lsof -ti:4173) 2>/dev/null",
+    "build:seo": "npm run build-only && npm run prerender",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix"
   },
@@ -43,6 +45,7 @@
     "@types/node": "^22.13.4",
     "@types/qs": "^6.9.18",
     "@types/uuid": "^10.0.0",
+    "@unhead/vue": "^3.1.7",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-typescript": "^14.4.0",
     "@vue/tsconfig": "^0.7.0",
@@ -50,6 +53,7 @@
     "eslint-plugin-vue": "^9.32.0",
     "less": "^4.5.1",
     "npm-run-all2": "^7.0.2",
+    "puppeteer": "^25.3.0",
     "terser": "^5.46.1",
     "typescript": "~5.7.3",
     "vite": "^6.1.0",

@@ -314,6 +314,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     similarRefresh: "Next Batch",
     similarExitHint: "Leaving this page will not interrupt generation",
     similarEmpty: "No similar content",
+    similarExpand: "Expand",
+    similarCollapse: "Collapse",
     outlineWillBeGeneratedHere: "Novel outline will be generated here",
     generateNextChapter: "Generate Next Chapter",
     generateAllChapters: "Generate All",
@@ -2493,6 +2495,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     sceneEdit: "Scene Edit",
     storyboardEdit: "Storyboard Edit",
     characterEdit: "Character Edit",
+    globalAssets: "Global Assets",
+    renewGlobalAssets: "Global Assets Change",
     mergeVideos: "Storyboard Merge",
     sceneRefresh: "Scene Regenerate",
     storyboardRefresh: "Storyboard Regenerate",
@@ -2623,6 +2627,16 @@ If you have any questions, complaints, comments or suggestions regarding persona
         title: "AI Anime Drama Generator | One Line to Animated Short - MoeGen",
         keywords: "AI anime drama, AI animated short, anime script AI, AI short anime, vertical anime AI",
         description: "Turn one line into a 1-3 min anime drama short. Auto storyboard, dialogue, voice, BGM. Built for anime creators."
+      },
+      photo: {
+        title: "AI Anime Image & Art Generator by MoeGen",
+        keywords: "AI anime art generator, AI image creator, anime character design, MoeGen",
+        description: "Generate breathtaking anime art, character designs, and illustrations with MoeGen's AI image generator. Just type your prompt and get high-quality anime photos instantly."
+      },
+      video: {
+        title: "AI Video Generator by MoeGen",
+        keywords: "AI video generator, image to video, text to video, anime short video, MoeGen",
+        description: "Create smooth, dynamic anime videos from text prompts or static images with MoeGen's AI video generator. Perfect for creating engaging short-form content for social media."
       }
     },
     detail: {

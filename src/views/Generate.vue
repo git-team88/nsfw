@@ -1004,7 +1004,7 @@ const getPhotoMaxInputLimit = (): number => {
 };
 
 const getVideoMaxInputLimit = (): number => {
-  return currentVideoMode.value === 'normal' ? 500 : 5000;
+  return currentVideoMode.value === 'normal' ? 1000 : 5000;
 };
 
 const getPhotoInputContent = () => {
@@ -1708,6 +1708,7 @@ const resetVideoSettings = () => {
 
 const switchBottomTab = (tab: string) => {
   bottomActiveTab.value = tab;
+  setSeoMeta(tab);
   if (tab == 'photo') {
     resetPhotoSettings();
     // Clear video input when switching to photo
@@ -2847,6 +2848,9 @@ async function uploadVideo(file: File): Promise<string> {
   // Step 2: Upload file using PUT method
   const uploadRes = await fetch(presignedUrl, {
     method: 'PUT',
+    headers: {
+      'Content-Type': ext === 'mov' ? 'video/quicktime' : 'video/mp4',
+    },
     body: file,
   });
 
@@ -3924,6 +3928,37 @@ const handleScroll = () => {
   }
 };
 
+function setSeoMeta(tab: string) {
+  const seoKeyMap: Record<string, string> = {
+    'photo': 'seo.home.photo',
+    'video': 'seo.home.video'
+  };
+  const seoKey = seoKeyMap[tab];
+  if (!seoKey) return;
+
+  const title = t(`${seoKey}.title`);
+  const keywords = t(`${seoKey}.keywords`);
+  const description = t(`${seoKey}.description`);
+
+  document.title = title;
+
+  let metaKeywords = document.querySelector('meta[name="keywords"]');
+  if (!metaKeywords) {
+    metaKeywords = document.createElement('meta');
+    metaKeywords.setAttribute('name', 'keywords');
+    document.head.appendChild(metaKeywords);
+  }
+  metaKeywords.setAttribute('content', keywords);
+
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', description);
+}
+
 const selectType = (type: string) => {
   selectedType.value = type;
   showTypeDropdown.value = false;
@@ -3980,6 +4015,8 @@ onMounted(() => {
     return false;
   }
 
+  setSeoMeta(bottomActiveTab.value);
+
   // 滚动到页面顶部
   window.scrollTo({ top: 0, behavior: 'instant' });
 
@@ -4005,6 +4042,10 @@ onMounted(() => {
     // 没有目标记录，正常加载
     loadRecords();
   }
+});
+
+watch(() => locale.value, () => {
+  setSeoMeta(bottomActiveTab.value);
 });
 
 

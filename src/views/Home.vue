@@ -1246,6 +1246,8 @@ import ProcessList from '@/components/ProcessList.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import router from '@/router';
+import { useRoute } from 'vue-router';
+const route = useRoute();
 import api from '@/api/index';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -3524,7 +3526,6 @@ const getMediaDuration = (file: File): Promise<number> => {
 const captureVideoFirstFrame = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
     video.preload = 'metadata';
     video.muted = true;
     video.playsInline = true;
@@ -3976,7 +3977,7 @@ async function uploadVideo(file: File): Promise<string> {
   const uploadRes = await fetch(presignedUrl, {
     method: 'PUT',
     headers: {
-      'Content-Type': 'video/mp4',
+      'Content-Type': ext === 'mov' ? 'video/quicktime' : 'video/mp4',
     },
     body: file,
   });
@@ -4218,7 +4219,7 @@ const getMaxInputLimit = (): number => {
     case 'photo':
       return 5000;
     case 'video':
-      return currentVideoMode.value === 'normal' ? 500 : 5000;
+      return currentVideoMode.value === 'normal' ? 1000 : 5000;
     default:
       return 5000;
   }
@@ -5027,6 +5028,8 @@ const loadContent = async (page = 1) => {
       });
 
       // Filter out blocked users
+      const rawCount = res.data?.count || (res.data?.data || res.data || []).length;
+
       data = data.filter((item: any) => item.is_blacked != 1 && item.blogger_info?.is_blacked != 1);
 
       if (page === 1) {
@@ -5035,11 +5038,13 @@ const loadContent = async (page = 1) => {
         allContent.value = [...allContent.value, ...data];
       }
 
-      // Update total count
-      const totalNum = res.data?.allnums;
-      totalPosts.value = typeof totalNum === 'number' && !isNaN(totalNum) ? totalNum : (typeof totalNum === 'string' && !isNaN(Number(totalNum)) ? Number(totalNum) : 0);
-
-      hasMoreContent.value = allContent.value.length < totalPosts.value;
+      if (rawCount < pageSize.value) {
+        hasMoreContent.value = false;
+      } else {
+        const totalNum = res.data?.allnums;
+        totalPosts.value = typeof totalNum === 'number' && !isNaN(totalNum) ? totalNum : (typeof totalNum === 'string' && !isNaN(Number(totalNum)) ? Number(totalNum) : 0);
+        hasMoreContent.value = allContent.value.length < totalPosts.value;
+      }
 
       nextTick(() => {
         layoutWaterfall();
@@ -5155,9 +5160,13 @@ const fetchFollowUserList = async (append = false) => {
         followUserList.value = newUsers;
        }
 
-      followUserTotal.value = parseInt(res.data?.allnums) || res.data?.count || res.data?.total || 0;
-
-      hasMoreUsers.value = followUserList.value.length < followUserTotal.value;
+      const rawUserCount = res.data?.count || (res.data?.data || res.data?.list || []).length;
+      if (rawUserCount < 36) {
+        hasMoreUsers.value = false;
+      } else {
+        followUserTotal.value = parseInt(res.data?.allnums) || res.data?.count || res.data?.total || 0;
+        hasMoreUsers.value = followUserList.value.length < followUserTotal.value;
+      }
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : locale.value == 'jp' ? res.msg_jp : res.msg);
     }
@@ -5251,7 +5260,9 @@ function setSeoMeta(type?: string) {
     const seoKeyMap: Record<string, string> = {
       'novel': 'seo.home.novel',
       'comic': 'seo.home.comic',
-      'drama': 'seo.home.drama'
+      'drama': 'seo.home.drama',
+      'photo': 'seo.home.photo',
+      'video': 'seo.home.video'
     };
     const seoKey = seoKeyMap[type];
     if (seoKey) {
@@ -5323,22 +5334,20 @@ onMounted(async () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
-  // Set contentType based on URL path
+  // Set contentType based on route meta or URL path
+  const routeContentType = route.meta.contentType as string | undefined;
   const path = window.location.pathname;
-  const contentTypeFromPath: Record<string, string> = {
-    '/novel': 'novel',
-    '/comic': 'comic',
-    '/drama': 'drama',
-    '/photo': 'photo',
-    '/video': 'video'
-  };
+  const pathSegments = path.replace(/^\/(ja|en|cn|tc)/, '').split('/').filter(Boolean);
+  const validTypes = ['novel', 'comic', 'drama', 'photo', 'video'];
+  const pathContentType = pathSegments.length > 0 && validTypes.includes(pathSegments[0]) ? pathSegments[0] : '';
 
-  if (contentTypeFromPath[path]) {
-    contentType.value = contentTypeFromPath[path];
+  const detectedContentType = routeContentType || pathContentType || null;
+  if (detectedContentType) {
+    contentType.value = detectedContentType;
   }
 
   // Set SEO meta tags based on current content type
-  setSeoMeta(contentTypeFromPath[path] || undefined);
+  setSeoMeta(detectedContentType || undefined);
 
   // Restore last content tab and content type if coming back from detail page
   try {

@@ -985,6 +985,15 @@ const isVideoHovered = ref(false);
 const showVolumeSlider = ref(false);
 const volumeSliderTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
+function scheduleVolumeSliderClose() {
+  if (volumeSliderTimer.value) {
+    clearTimeout(volumeSliderTimer.value);
+  }
+  volumeSliderTimer.value = setTimeout(() => {
+    showVolumeSlider.value = false;
+  }, 3000);
+}
+
 function onVideoMouseLeave() {
   if (isDraggingProgress.value || isDraggingVolume.value) return;
   isVideoHovered.value = false;
@@ -3036,7 +3045,7 @@ function onVolumeChange(e: Event) {
     v.volume = 0.6;
     volume.value = 0.6;
   } else if (!v.muted) {
-    volume.value = v.volume;
+    volume.value = Math.round(v.volume * 10) / 10;
   }
   localStorage.setItem('videoVolume', volume.value.toString());
 }
@@ -3163,7 +3172,7 @@ function updateVolumeFromEvent(e: MouseEvent) {
   if (!track || !videoRef.value) return;
   const rect = track.getBoundingClientRect();
   const y = e.clientY - rect.top;
-  const percent = Math.max(0, Math.min(1, 1 - y / rect.height));
+  const percent = Math.round(Math.max(0, Math.min(1, 1 - y / rect.height)) * 10) / 10;
   volume.value = percent;
   videoRef.value.volume = percent;
   videoRef.value.muted = percent === 0;

@@ -560,7 +560,7 @@
           </div>
 
           <!-- Insufficient Balance Failed State Display -->
-          <div v-else-if="hasFailed && isInsufficientBalance" class="failed-state insufficient-balance-state">
+          <div v-else-if="hasFailed && isInsufficientBalance && (!currentChapter || currentChapter.chapter == stepChapterIndex)" class="failed-state insufficient-balance-state">
             <div class="failed-icon">
               <img src="@/assets/images/novel/fail.png" alt="">
             </div>
@@ -576,7 +576,7 @@
             </div>
           </div>
 
-          <div v-else-if="hasFailed" class="failed-state">
+          <div v-else-if="hasFailed && (!currentChapter || currentChapter.chapter == stepChapterIndex)" class="failed-state">
             <div class="failed-icon">
               <img src="@/assets/images/novel/fail.png" alt="">
             </div>
@@ -845,16 +845,19 @@
       </div>
 
       <!-- Similar Content Section -->
-      <div v-if="shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter))" class="similar-section">
+      <div  class="similar-section" v-if="shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter))">
         <div class="similar-inner">
           <div class="similar-header">
             <div class="similar-header-left">
               <span class="similar-title">{{ t('novel.similarRecommend') }}</span>
               <button class="similar-refresh-btn" :disabled="similarLoading" @click="refreshSimilar">{{ t('novel.similarRefresh') }} <span v-if="similarLoading" class="btn-spinner btn-spinner-small"></span></button>
             </div>
-            <span class="similar-hint">{{ t('novel.similarExitHint') }}</span>
+            <div class="similar-header-right">
+              <span class="similar-hint">{{ t('novel.similarExitHint') }}</span>
+              <button class="similar-toggle-btn" @click="toggleSimilarCollapsed">{{ isSimilarCollapsed ? t('novel.similarExpand') : t('novel.similarCollapse') }}<img class="similar-toggle-arrow" :class="{ 'collapsed': isSimilarCollapsed }" src="@/assets/images/novel/arrow_icon.png" alt="" /></button>
+            </div>
           </div>
-          <div class="similar-list" :class="{ 'similar-loading': similarLoading }">
+          <div v-if="!isSimilarCollapsed && (similarList.length > 0 || similarLoading)" class="similar-list" :class="{ 'similar-loading': similarLoading }">
             <div v-if="similarLoading" class="similar-list-loading">
               <div class="loading-spinner"></div>
             </div>
@@ -872,7 +875,7 @@
               </div>
             </div>
           </div>
-          <div v-if="similarList.length == 0 && !similarLoading" class="similar-empty">{{ t('novel.similarEmpty') }}</div>
+          <div v-if="!isSimilarCollapsed && similarList.length == 0 && !similarLoading" class="similar-empty">{{ t('novel.similarEmpty') }}</div>
         </div>
       </div>
 
@@ -1431,6 +1434,12 @@ const similarList = ref<any[]>([]);
 const similarPage = ref<number>(1);
 const similarTotalPages = ref<number>(1);
 const similarLoading = ref<boolean>(false);
+const isSimilarCollapsed = ref<boolean>(localStorage.getItem('similarCollapsed') === '1');
+
+const toggleSimilarCollapsed = () => {
+  isSimilarCollapsed.value = !isSimilarCollapsed.value;
+  localStorage.setItem('similarCollapsed', isSimilarCollapsed.value ? '1' : '0');
+};
 const projectName = ref<string>('');
 const originalProjectName = ref<string>('');
 const isEditingName = ref<boolean>(false);
@@ -2121,7 +2130,7 @@ const shouldShowEstimatedTime = computed(() => {
 const shouldShowActionButtons = computed(() => {
   if (taskStatus.value == 'DOING') return false;
   if (isLoading.value) return false;
-  if (hasFailed.value) return false;
+  if (hasFailed.value && (!currentChapter.value || currentChapter.value.chapter == stepChapterIndex.value)) return false;
   if (!outlineData.value && !currentChapter.value && !outlineStreamDone.value) return false;
   return true;
 });
@@ -2176,7 +2185,15 @@ const shouldShowGenerateButtons = computed(() => {
   if (!currentChapter.value) return true;
 
   // For chapter page, only show on the latest chapter (stepChapterIndex)
-  if (currentChapter.value.chapter !== stepChapterIndex.value) return false;
+  // When a chapter failed, show on the latest successful chapter instead
+  if (hasFailed.value && taskStatus.value == 'FAIL') {
+    const maxExistingChapter = chapters.value.length > 0
+      ? Math.max(...chapters.value.map((c: any) => c.chapter))
+      : 0;
+    if (currentChapter.value.chapter !== maxExistingChapter) return false;
+  } else {
+    if (currentChapter.value.chapter !== stepChapterIndex.value) return false;
+  }
 
   return true;
 });
@@ -4720,7 +4737,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
     };
     displayedContent.value = '';
     outlineContent.value = '';
-    hasFailed.value = false;
     isLoading.value = false;
     // Keep isPreparing true so the preparation state is shown
     // Start polling detailProject API for chapter PREPARE state
@@ -4820,7 +4836,6 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
         // Update result content with filtered content
         result.content = filteredContent;
-        hasFailed.value = false;
 
         // Get outline chapter title for reference
         const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterNum);
@@ -5725,7 +5740,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 let estimateFromChapter: number | undefined;
                 if (lastGenerationType.value == 'chapter') {
                   estimateStepName = isBatchChapter.value == 1 ? 'all_chapters' : 'chapter';
-                  estimateFromChapter = isBatchChapter.value == 1 ? (stepChapterIndex.value || 1) : (currentChapter.value?.chapter || 1);
+                  estimateFromChapter = stepChapterIndex.value || 1;
                 }
                 const estRes = await api.novelEstimate({
                   session_id: sessionId.value,
@@ -6376,7 +6391,65 @@ const fetchNovelOutline = async () => {
           isFetchingNovelOutline.value = false;
           return;
         } else if (stepStatus == 'FAIL' && chapterIndex) {
-          const chapterData = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          const chapterAtIndex = chapters.value.find((c: any) => c.chapter == chapterIndex);
+          if (chapterAtIndex) {
+            const maxExistingChapter = chapters.value.length > 0
+              ? Math.max(...chapters.value.map((c: any) => c.chapter))
+              : 0;
+            stepChapterIndex.value = maxExistingChapter;
+            hasFailed.value = false;
+            taskStatus.value = 'SUCCESS';
+
+            if (outlineData.value?.base_info?.total_chapters) {
+              chapterCount.value = outlineData.value.base_info.total_chapters;
+            }
+
+            const latestChapterData = chapters.value.find((c: any) => c.chapter == maxExistingChapter);
+
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, maxExistingChapter) as any;
+              if (chapterRes.code == 200 && chapterRes.data) {
+                let content = chapterRes.data.content || '';
+                content = content.replace(/\\n/g, '\n');
+                currentChapter.value = {
+                  chapter: maxExistingChapter,
+                  title: latestChapterData?.title || chapterRes.data.title || '',
+                  content
+                };
+                displayedContent.value = content;
+                updateChapterHistoryFromDetail(chapterRes);
+              } else {
+                currentChapter.value = {
+                  chapter: maxExistingChapter,
+                  title: latestChapterData?.title || '',
+                  content: ''
+                };
+                displayedContent.value = '';
+              }
+            } catch (e) {
+              currentChapter.value = {
+                chapter: maxExistingChapter,
+                title: latestChapterData?.title || '',
+                content: ''
+              };
+              displayedContent.value = '';
+            }
+
+            isPreparing.value = false;
+            prepareQueueInfo.value = null;
+            generatingChapter.value = null;
+            currentStepName.value = 'chapter';
+            lastGenerationType.value = 'chapter';
+            showCoverEditBtn.value = true;
+            isLoading.value = false;
+            isLoadingComplete.value = true;
+            isFetchingNovelOutline.value = false;
+            await fetchUserBalance();
+            return;
+          }
+
+          stepChapterIndex.value = chapterIndex;
+          const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
           currentChapter.value = {
             chapter: chapterIndex,
             title: chapterData?.title || '',
@@ -6394,15 +6467,13 @@ const fetchNovelOutline = async () => {
           startLoadingAnimation('chapter');
 
           const existingChapter = chapters.value.find((c: any) => c.chapter == chapterIndex);
-          if (existingChapter) {
-            try {
-              const chapterRes = await api.detailChapter(sessionId.value, chapterIndex) as any;
-              if (chapterRes.code == 200 && chapterRes.data) {
-                updateChapterHistoryFromDetail(chapterRes);
-              }
-            } catch (e) {
-              console.error('Error fetching chapter detail on FAIL:', e);
-            }
+          if (!existingChapter) {
+            chapters.value.push({
+              id: `temp-${chapterIndex}`,
+              chapter: chapterIndex,
+              title: chapterData?.title || t('novel.untitled'),
+              is_publish: 2
+            });
           }
 
           await fetchUserBalance();
