@@ -79,6 +79,9 @@
                     <span class="price-num">{{ formatPrice(plan.price) }}</span>
                     <span class="price-unit">{{ t('aiRecharge.unit') }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
+                  <div v-if="activeTab === 'credits_pack' && plan.original_price" class="plan-strikethrough-price">
+                    <span>{{ formatPrice(plan.original_price) }}{{ t('aiRecharge.unit') }}</span>
+                  </div>
                 </div>
 
                 <div class="plan-credits-box">
@@ -217,6 +220,7 @@ interface RechargePlan {
   bonus_credits?: string;
   discount_desc?: any[];
   discount_price?: string;
+  original_price?: string;
   estimated_novel_chapters?: string;
   estimated_comic_episodes?: string;
   estimated_short_drama_episodes?: string;
@@ -314,8 +318,7 @@ onMounted(async () => {
 
 async function checkFirstMonthDiscount() {
   try {
-    const response = await api.getFirstMonthDiscountStatus();
-    const res = response.data;
+    const res = await api.getFirstMonthDiscountStatus() as any;
     if (res.code == 0) {
       const isFirstMonth = res.data?.is_first_month;
       hasFirstMonthDiscount.value = isFirstMonth == 1;
@@ -368,6 +371,7 @@ function getList() {
             bonus_credits: plan.bonus_credits,
             discount_desc: plan.discount_desc || [],
             discount_price: plan.discount_price || '0',
+            original_price: plan.original_price || '',
             estimated_novel_chapters: plan.estimated_novel_chapters || '0',
             estimated_comic_episodes: plan.estimated_comic_episodes || '0',
             estimated_short_drama_episodes: plan.estimated_short_drama_episodes || '0',
@@ -804,6 +808,13 @@ function cancelCoupon() {
                 color: #364153;
                 margin-left: 0.4rem;
               }
+            }
+
+            .plan-strikethrough-price {
+              font-size: 1.4rem;
+              color: #99A1AF;
+              text-decoration: line-through;
+              margin-top: 0.4rem;
             }
           }
 
