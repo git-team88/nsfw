@@ -1353,7 +1353,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     firstMonth30OffPrefix: '初月',
     firstMonth30OffSuffix: '30%オフ',
     firstMonth30OffThen: '初月30%オフ、その後{price}{unit}/{period}',
-    firstMonth30OffThenPrice: 'その後{price}{unit}/{period}',
+    firstMonth30OffThenPrice: 'その後{price}{unit}',
     includesCredits: '{credits}クレジット付き',
     includes: '含む',
     bonusCredits: 'ボーナス{credits}クレジット',

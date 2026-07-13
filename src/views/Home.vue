@@ -3336,7 +3336,7 @@ const generatePhoto = async () => {
     // Settings updated successfully, now generate photo
     const params = {
       session_id: sessionId,
-      topic: inputContent.trim()
+      topic: contentWithRefTags
     };
 
     const response = await api.generateSinglePhoto(params) as any;

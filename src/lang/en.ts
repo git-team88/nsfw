@@ -2172,7 +2172,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     firstMonth30OffPrefix: 'First month',
     firstMonth30OffSuffix: '30% off',
     firstMonth30OffThen: 'First month 30% off, then {price}{unit}/{period}',
-    firstMonth30OffThenPrice: 'then {price}{unit}/{period}',
+    firstMonth30OffThenPrice: 'then {price}{unit}',
     includesCredits: 'Includes {credits} Credits',
     includes: 'Includes',
     bonusCredits: 'Bonus {credits} Credits',

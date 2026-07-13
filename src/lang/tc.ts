@@ -2479,7 +2479,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     firstMonth30OffPrefix: '首月',
     firstMonth30OffSuffix: '7折',
     firstMonth30OffThen: '首月7折，之後{price}{unit}/{period}',
-    firstMonth30OffThenPrice: '次月續費{price}{unit}/{period}',
+    firstMonth30OffThenPrice: '次月續費{price}{unit}',
     includesCredits: '包含 {credits} Credits',
     includes: '套餐包含',
     bonusCredits: '額外贈送 {credits} Credits',

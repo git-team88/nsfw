@@ -70,14 +70,14 @@
                   <div class="plan-original-price">{{ formatPrice(plan.price) }}{{ t('aiRecharge.unit') }}</div>
                   <div class="plan-price-desc">
                     <span class="desc-highlight">{{ t('aiRecharge.firstMonth30Off') }}，</span><br>
-                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: formatPrice(plan.price), unit: t('aiRecharge.unit'), period: getBillingPeriodText(plan.billing_period || '1') }) }}。</span>
+                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: formatPrice(plan.price), unit: t('aiRecharge.unit') }) }}。</span>
                   </div>
                 </div>
 
                 <div v-else class="plan-price-section">
                   <div class="plan-price-value">
                     <span class="price-num">{{ formatPrice(plan.price) }}</span>
-                    <span class="price-unit">{{ t('aiRecharge.unit') }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
+                    <span class="price-unit">{{ t('aiRecharge.unit') }}{{ activeTab == 'credits_pack' ? '' : getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
                   <div v-if="activeTab === 'credits_pack' && plan.original_price" class="plan-strikethrough-price">
                     <span>{{ formatPrice(plan.original_price) }}{{ t('aiRecharge.unit') }}</span>
@@ -126,7 +126,7 @@
         <div v-if="rechargePlans.length > 0" class="bottom-bar">
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.originalPrice') }}</div>
-            <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}{{ currentBillingPeriod }}</span></div>
+            <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></div>
           </div>
 
           <div v-if="activeTab !== 'subscription' || !hasFirstMonthDiscount" class="bottom-bar-divider"></div>
@@ -154,7 +154,7 @@
 
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.actualAmount') }}</div>
-            <div class="block-value total-value"><span class="price-num">{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}{{ currentBillingPeriod }}</span></div>
+            <div class="block-value total-value"><span class="price-num">{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></div>
           </div>
 
           <div class="bottom-bar-divider"></div>
