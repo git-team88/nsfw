@@ -25,8 +25,16 @@
       </div>
     </div>
 
+    <!-- Access Denied Overlay -->
+    <div v-if="isAccessDenied" class="access-denied-overlay">
+      <img class="access-denied-icon" src="@/assets/images/novel/lock.png" alt="" />
+      <span class="access-denied-title">{{ t('novel.accessDeniedTitle') }}</span>
+      <span class="access-denied-desc">{{ t('novel.accessDeniedDesc') }}</span>
+      <button class="access-denied-btn" @click="goHome">{{ t('novel.accessDeniedBtn') }}</button>
+    </div>
+
     <!-- Left Area -->
-    <div class="left-area">
+    <div v-if="!isAccessDenied" class="left-area">
       <!-- Project Name with Edit Icon -->
       <div class="project-name-section">
         <div class="project-name">
@@ -422,7 +430,7 @@
     </div>
 
     <!-- Right Area -->
-    <div class="right-area">
+    <div v-if="!isAccessDenied" class="right-area">
       <!-- Top Bar with Credit -->
       <div class="right-top-bar">
          <div class="header-bean" @click="checkOutlineEditBeforeAction(goRechargeDetail)">
@@ -1414,6 +1422,7 @@ const sessionId = ref<string>('');
 const userInfo = ref<any>(null);
 const isLoading = ref(true);
 const isDetailLoaded = ref(false);
+const isAccessDenied = ref(false);
 const outlineContent = ref<string>('');
 const displayedContent = ref<string>('');
 const pendingDisplayContent = ref<string>(''); // Store content to display after loading animation completes
@@ -5853,6 +5862,13 @@ const fetchNovelOutline = async () => {
 
     // Step 1: Call detailProject API
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
+
+    if (detailProjectRes.code == 404) {
+      isAccessDenied.value = true;
+      isLoading.value = false;
+      isFetchingNovelOutline.value = false;
+      return;
+    }
 
     if (detailProjectRes.code !== 200) {
       toast(detailProjectRes.message || t('novel.error.fetchFailed'));

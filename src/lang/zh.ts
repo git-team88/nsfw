@@ -634,7 +634,10 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     chapter_step_14: "细节描写师：正在优化语言表达、提升阅读体验",
     chapter_step_15: "语言优化已完成",
     chapter_step_16: "小说章节专家：正在整合内容，生成本章完整正文",
-    chapter_step_17: "小说章节生成已完成"
+    chapter_step_17: "小说章节生成已完成",
+    accessDeniedTitle: "该项目无法访问",
+    accessDeniedDesc: "项目可能已被删除、移动，或你暂时没有访问权限。",
+    accessDeniedBtn: "返回首页",
   },
   privacy: `隐私政策<br />
   欢迎使用产品及相关服务！ 请您仔细阅读、理解并遵守《隐私政策》。<br />

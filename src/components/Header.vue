@@ -1094,7 +1094,7 @@ defineExpose({
             .register-tip {
               position: absolute;
               right: 50%;
-              transform: translateX(30%);
+              transform: translateX(31%);
               top: -0.2rem;
               display: flex;
               align-items: center;

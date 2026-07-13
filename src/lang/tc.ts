@@ -632,7 +632,10 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     chapter_step_14: "細節描寫師：正在優化語言表達、提升閱讀體驗",
     chapter_step_15: "語言優化已完成",
     chapter_step_16: "小說章節專家：正在整合內容，生成本章完整正文",
-    chapter_step_17: "小說章節生成已完成"
+    chapter_step_17: "小說章節生成已完成",
+    accessDeniedTitle: "該項目無法訪問",
+    accessDeniedDesc: "項目可能已被刪除、移動，或你暫時沒有訪問權限。",
+    accessDeniedBtn: "返回首頁",
   },
   privacy: `隱私政策<br />
   歡迎使用產品及相關服務！ 請您仔細閱讀、理解並遵守《隱私政策》。<br />

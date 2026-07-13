@@ -574,7 +574,10 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     chapter_step_14: "Detail Describer: Optimizing language expression and enhancing reading experience",
     chapter_step_15: "Language optimization completed",
     chapter_step_16: "Novel Chapter Expert: Integrating content to generate complete chapter text",
-    chapter_step_17: "Novel chapter generation completed"
+    chapter_step_17: "Novel chapter generation completed",
+    accessDeniedTitle: "This project cannot be accessed",
+    accessDeniedDesc: "The project may have been deleted, moved, or you do not have access permission.",
+    accessDeniedBtn: "Back to Home",
   },
   privacy: `Privacy Policy<br />
 Welcome to use our products and related services! Please carefully read, understand and comply with this Privacy Policy.<br />

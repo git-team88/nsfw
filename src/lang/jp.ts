@@ -2564,7 +2564,10 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     chapter_step_14: "ディテール描写師：言語表現の最適化と読み物体験の向上中",
     chapter_step_15: "言語の最適化が完了しました",
     chapter_step_16: "小説の章専門家：コンテンツの統合と本章の完全なテキストの生成中",
-    chapter_step_17: "小説の章の生成が完了しました"
+    chapter_step_17: "小説の章の生成が完了しました",
+    accessDeniedTitle: "このプロジェクトにアクセスできません",
+    accessDeniedDesc: "プロジェクトが削除、移動された可能性があります。または、アクセス権限がありません。",
+    accessDeniedBtn: "ホームに戻る",
   },
   process: {
     taskProgress: "タスクの進行状況",
