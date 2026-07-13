@@ -4,6 +4,12 @@
 
     <div class="container">
       <div class="title">{{ t("header.register") }}</div>
+      <div class="free-computing">
+        <div class="free-computing-inner">
+          <img src="@/assets/images/register/gift.png" alt="" />
+          <span>{{ t("register.freeComputing") }}</span>
+        </div>
+      </div>
 
       <div>
         <div class="info">
@@ -18,7 +24,7 @@
                   v-model="email"
                   :placeholder="t('register.email')"
                   spellcheck="false"
-                  autocomplete="false"
+                  autocomplete="off"
                   @blur="handleEmailVerify"
                 />
               </div>
@@ -36,7 +42,7 @@
                   :placeholder="t('register.password')"
                   maxlength="20"
                   spellcheck="false"
-                  autocomplete="false"
+                  autocomplete="off"
                   @blur="handlePasswordVerify"
                 />
 
@@ -65,7 +71,7 @@
                   v-model="code"
                   :placeholder="t('register.code')"
                   spellcheck="false"
-                  autocomplete="false"
+                  autocomplete="off"
                   @blur="handleCodeVerify"
                 />
 
@@ -85,16 +91,15 @@
                     v-model="inviteCode"
                     :placeholder="t('inviteCode.enterCode')"
                     spellcheck="false"
-                    autocomplete="false"
+                    autocomplete="off"
                   />
                 </div>
               </div>
             </div>
+            <button class="email-btn" :class="isEnd ? 'on' : ''" type="button" @click="goEmailRegister()">
+              {{ t("header.register") }}
+            </button>
           </form>
-
-          <div class="email-btn" :class="isEnd ? 'on' : ''" @click="goEmailRegister()">
-            {{ t("header.register") }}
-          </div>
         </div>
 
         <div class="other-login">
@@ -245,11 +250,11 @@ onMounted(async () => {
     googleRegister();
   }
 
-  if (token) {
-    router.push("/");
-  } else {
-    initGoogle();
-  }
+  // if (token) {
+  //   router.push("/");
+  // } else {
+  //   initGoogle();
+  // }
 });
 
 watch(() => locale.value, () => {
@@ -572,7 +577,6 @@ function googleRegister() {
     padding: 16rem 0 3rem;
 
     .title {
-      margin: 0 0 4rem;
       font: {
         weight: 500;
         size: 2rem;
@@ -580,6 +584,31 @@ function googleRegister() {
       line-height: 2rem;
       text-align: center;
       color: #101828;
+    }
+
+    .free-computing {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1.2rem 0 2rem;
+
+      .free-computing-inner{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1rem;
+        background: linear-gradient(160deg, #FFFFFF 0%, #FFF3FA 52%, #FFE5F3 100%);
+        border-radius: 1.4rem;
+        border: 1px solid rgba(251, 100, 182, 0.3);
+        font-size: 1.2rem;
+        color: #FB64B6;
+
+        img {
+          width: 1.2rem;
+          height: 1.2rem;
+          margin-right: 0.4rem;
+        }
+      }
     }
 
     .step {
@@ -772,6 +801,9 @@ function googleRegister() {
         justify-content: center;
         width: 100%;
         height: 4.8rem;
+        border: none;
+        outline: none;
+        padding: 0;
         font: {
           size: 1.6rem;
         }

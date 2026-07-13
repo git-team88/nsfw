@@ -807,7 +807,7 @@ function handleCloseCollectionListModal() {
 
 function handleSelectCollectionCard(collection: any) {
   if (!route.query.session_id && !selectedProject.value?.session_id && !postId.value) return;
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
     pendingCollectionId.value = collection.id;
     pendingCollectionData.value = collection;
     showSwitchCollectionModal.value = true;
@@ -822,7 +822,7 @@ async function handleSelectCollectionFromModal(collection: any) {
 }
 
 function handleCreateCollectionFromModal() {
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value) {
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value) {
     pendingCollectionId.value = null;
     pendingCollectionData.value = null;
     showSwitchCollectionModal.value = true;
@@ -867,7 +867,7 @@ async function selectCollection(id: number) {
     await doSelectCollection(id);
     return;
   }
-  if (isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
+  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
     pendingCollectionId.value = id;
     showSwitchCollectionModal.value = true;
     showCollectionDropdown.value = false;

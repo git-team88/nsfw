@@ -27,8 +27,8 @@ const htmlLangMap: Record<string, string> = {
 
 const hreflangConfig = [
   { hreflang: 'ja', langPrefix: 'ja', i18nKey: 'jp' },
-  { hreflang: 'zh-CN', langPrefix: 'cn', i18nKey: 'zh' },
-  { hreflang: 'zh-TW', langPrefix: 'tc', i18nKey: 'tc' },
+  { hreflang: 'zh-CN', langPrefix: 'zh-cn', i18nKey: 'zh' },
+  { hreflang: 'zh-TW', langPrefix: 'zh-tw', i18nKey: 'tc' },
   { hreflang: 'en', langPrefix: 'en', i18nKey: 'en' },
   { hreflang: 'x-default', langPrefix: 'ja', i18nKey: 'jp' },
 ];
@@ -50,7 +50,7 @@ function updateHtmlLang() {
 function updateHreflang() {
   document.querySelectorAll('link[data-hreflang]').forEach(el => el.remove());
 
-  const currentPath = route.path.replace(/^\/(ja|tc|cn|en)(\/)?/, '/');
+  const currentPath = route.path.replace(/^\/(ja|zh-tw|zh-cn|en)(\/)?/, '/');
 
   hreflangConfig.forEach(({ hreflang, langPrefix }) => {
     if (hreflang === 'x-default') return;

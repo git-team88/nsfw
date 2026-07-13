@@ -687,7 +687,7 @@
                   @click="playCollectionItem(item)">
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
-                    <img class="collection-cover" :src="item.cover" alt="" />
+                    <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
                     <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id !== uid">{{ t('detail.subscribe') }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
@@ -1259,9 +1259,9 @@ watch([currentVideoSrc, videoRef], () => {
 
 const currentVideoPoster = computed(() => {
   if (isCollectionMode.value && currentCollection.value?.cover) {
-    return currentCollection.value.cover;
+    return processImageUrl(currentCollection.value.cover);
   }
-  return detail.value.cover;
+  return processImageUrl(detail.value.cover);
 });
 
 // User region (true = not in China, false = in China)
@@ -2073,7 +2073,7 @@ async function fetchDetail(newId: number) {
       // Preload cover image for faster display
       if (detail.value.cover) {
         const img = new Image();
-        img.src = detail.value.cover;
+        img.src = processImageUrl(detail.value.cover);
       }
 
       // Store navigation info
@@ -3342,7 +3342,7 @@ function nextImage() {
 function openLargeViewer(type: number) {
   if (type == 2) {
     const obj = {
-      image_url: detail.value.cover
+      image_url: processImageUrl(detail.value.cover)
     }
     largeImage.value.push(obj)
   } else {

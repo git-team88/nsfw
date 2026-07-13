@@ -15,6 +15,14 @@
     </style>
 
     <script>
+      var GA_ID = window.location.hostname.endsWith('moegen.ai') ? 'G-82ZH65FHJS' : 'G-BBR6VR3HNF';
+      window.GA_ID = GA_ID;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+      document.head.appendChild(s);
+    </script>
+    <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('consent', 'default', {
@@ -27,15 +35,18 @@
         security_storage: 'granted',
       });
       gtag('js', new Date());
-      gtag('config', 'G-82ZH65FHJS');
+      if (GA_ID !== 'G-82ZH65FHJS') {
+        gtag('config', GA_ID, { debug_mode: true });
+      } else {
+        gtag('config', GA_ID);
+      }
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-82ZH65FHJS"></script>
   </head>
 
   <body>
     <div id="app"></div>
 
     <script type="module" src="/src/main.ts"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render=6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF"></script>
+    <!-- <script src="https://www.google.com/recaptcha/api.js?render=6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF"></script> -->
   </body>
 </html>

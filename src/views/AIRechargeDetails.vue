@@ -222,6 +222,7 @@ const subTabs = computed(() => {
   if (activeTab.value == 'recharge') {
     return [
       { value: 'subscribe', label: t('aiRechargeDetails.subscribe') },
+      { value: 'boost-pack', label: t('aiRechargeDetails.boostPack') },
       { value: 'invite', label: t('aiRechargeDetails.inviteRewards') },
       { value: 'other', label: t('aiRechargeDetails.other') }
     ];

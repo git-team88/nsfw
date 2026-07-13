@@ -1339,10 +1339,11 @@ const findAtSymbolBeforeCursor = (element: HTMLElement, selection: Selection): {
 };
 
 const handlePhotoKeydown = (event: KeyboardEvent) => {
-  if (event.key == 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    generatePhoto();
-    return;
+  if (event.key == 'Enter') {
+    if (event.shiftKey) {
+      event.preventDefault();
+      document.execCommand('insertLineBreak');
+    }
   }
 
   const maxLimit = getPhotoMaxInputLimit();

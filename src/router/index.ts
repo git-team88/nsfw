@@ -9,15 +9,15 @@ import i18n from "@/lang/i18n";
 const LANG_URL_TO_I18N: Record<string, string> = {
   ja: 'jp',
   en: 'en',
-  cn: 'zh',
-  tc: 'tc',
+  'zh-cn': 'zh',
+  'zh-tw': 'tc',
 };
 
 const LANG_URL_TO_HTML: Record<string, string> = {
   ja: 'ja',
   en: 'en',
-  cn: 'zh-CN',
-  tc: 'zh-TW',
+  'zh-cn': 'zh-CN',
+  'zh-tw': 'zh-TW',
 };
 
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video'];

@@ -2,14 +2,25 @@ declare global {
   interface Window {
     dataLayer: unknown[][];
     gtag: (...args: unknown[]) => void;
+    GA_ID: string;
   }
 }
 
-const GA_ID = "G-82ZH65FHJS";
+const GA_ID =
+  typeof window !== "undefined" && window.GA_ID
+    ? window.GA_ID
+    : "G-82ZH65FHJS";
+
+const isDebug =
+  typeof window !== "undefined" &&
+  !window.location.hostname.endsWith("moegen.ai");
 
 function gtag(...args: unknown[]) {
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag(...args);
+    if (isDebug) {
+      console.log("[GA Debug]", ...args);
+    }
   }
 }
 

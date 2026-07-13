@@ -25,6 +25,13 @@
               >
                 {{ t("user.paymentHistory.tabRecharge") }}
               </div>
+              <div
+                class="tab-item"
+                :class="{ active: activeSubTab == 'topup' }"
+                @click="switchTab('topup')"
+              >
+                {{ t("user.paymentHistory.tabTopUp") }}
+              </div>
             </div>
             <div class="actions-right" v-if="hasData">
               <button class="view-all-btn" @click="viewAllPaymentHistory">
@@ -129,7 +136,24 @@
                 <EmptyState v-if="!processingList.length" />
               </div>
 
-              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && activeSubTab === 'recharge' && total > pageSize">
+              <div class="list-area" v-else-if="activeSubTab === 'topup'">
+                <div class="sub-item" v-for="item in topupProcessingList" :key="item.id">
+                  <div class="left">
+                    <div class="plan-info">
+                      <div class="plan-name">{{ item.plan_info?.name || item.name }}</div>
+                      <div class="compute-info">{{ item.plan_info?.description || item.description }}</div>
+                    </div>
+                  </div>
+                  <div class="right">
+                    <div class="price-info">
+                      <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}</div>
+                    </div>
+                  </div>
+                </div>
+                <EmptyState v-if="!topupProcessingList.length" />
+              </div>
+
+              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup') && total > pageSize">
                 <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
               </div>
             </div>
@@ -140,7 +164,7 @@
                 <div class="tbody" v-if="listData.length">
                   <div class="tr" v-for="item in listData" :key="item.id">
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
-                    <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : t('user.paymentHistory.subscriptionType')}}</div>
+                    <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
                     <div class="td amount">{{ item.amount || item.price }}{{ t('aiRecharge.unit') }}</div>
                     <div class="td actions">
@@ -240,12 +264,13 @@ const router = useRouter();
 const route = useRoute();
 const sidebarKey = ref("payment-history");
 const activeMainTab = ref<"processing" | "orderHistory">("processing");
-const activeSubTab = ref<"subscribe" | "recharge">("subscribe");
-const activeOrderHistoryTab = ref<"subscribe" | "recharge">("subscribe");
+const activeSubTab = ref<"subscribe" | "recharge" | "topup">("subscribe");
+const activeOrderHistoryTab = ref<"subscribe" | "recharge" | "topup">("subscribe");
 
 const loading = ref(false);
 const listData = ref<any[]>([]);
 const processingList = ref<any[]>([]);
+const topupProcessingList = ref<any[]>([]);
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -261,6 +286,9 @@ const showInfo = ref(false);
 
 const hasData = computed(() => {
   if (activeMainTab.value === 'processing') {
+    if (activeSubTab.value === 'topup') {
+      return topupProcessingList.value.length > 0;
+    }
     return processingList.value.length > 0;
   } else {
     return listData.value.length > 0;
@@ -282,7 +310,7 @@ function switchMainTab(tab: "processing" | "orderHistory") {
   }
 }
 
-function switchTab(tab: "subscribe" | "recharge") {
+function switchTab(tab: "subscribe" | "recharge" | "topup") {
   router.replace({
     path: '/user-payment-history'
   });
@@ -312,11 +340,18 @@ async function fetchData() {
         listData.value = data;
         total.value = res.data?.allnums || 0;
       }
-    } else {
+    } else if (activeSubTab.value === "recharge") {
       res = await api.userAiPayList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
         const data = res.data?.data || res.data || [];
 
+        listData.value = data;
+        total.value = res.data?.allnums || 0;
+      }
+    } else if (activeSubTab.value === "topup") {
+      res = await api.userPaymentOrderList(page.value, pageSize.value) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data || res.data || [];
         listData.value = data;
         total.value = res.data?.allnums || 0;
       }
@@ -380,6 +415,25 @@ async function fetchProcessingData() {
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
+    } else if (activeSubTab.value === 'topup') {
+      const res = await api.userPaymentOrderList(page.value, pageSize.value) as any;
+      if (res.code === 0 || res.code === 200) {
+        const data = res.data?.data || [];
+        topupProcessingList.value = data.map((item: any) => ({
+          id: item.id,
+          name: item.plan_desc?.[0]?.name || item.plan?.name || '',
+          description: item.plan_desc?.[0]?.description || item.plan?.description || '',
+          price: item.amount || item.plan?.price || 0,
+          pay_time: item.pay_time || item.created_at || '',
+          plan_info: {
+            name: item.plan_desc?.[0]?.name || item.plan?.name || '',
+            description: item.plan_desc?.[0]?.description || item.plan?.description || '',
+          }
+        }));
+        total.value = res.data?.allnums || 0;
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      }
     }
   } catch (error) {
     toast(t('fail'));
@@ -409,7 +463,7 @@ function getTimeUnit(billingPeriod: string) {
 }
 
 watch(page, () => {
-  if (activeMainTab.value === 'processing' && activeSubTab.value === 'recharge') {
+  if (activeMainTab.value === 'processing' && (activeSubTab.value === 'recharge' || activeSubTab.value === 'topup')) {
     fetchProcessingData();
   } else {
     fetchData();
@@ -590,6 +644,10 @@ onMounted(() => {
     fetchProcessingData();
   } else if (type == '2') {
     activeSubTab.value = 'recharge';
+    page.value = 1;
+    fetchProcessingData();
+  } else if (type == '3') {
+    activeSubTab.value = 'topup';
     page.value = 1;
     fetchProcessingData();
   } else {

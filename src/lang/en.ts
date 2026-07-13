@@ -771,6 +771,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
     noRegister: "Don't have an account? ",
     goRegister: "Go to Register",
     logoutConfirm: "Are you sure you want to sign out?",
+    registerTip: {
+      newUser: "New user sign up bonus",
+      benefit: "Free credits pack · Instant delivery",
+    },
     userCard: {
       subscribeLabel: "Subscribe",
       followersLabel: "Follow",
@@ -1036,7 +1040,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       credits: " Credits",
       rulesTitle: "Promotion Rules:",
       rule: `When others register for MoeGen using your invitation code, you will receive a commission reward.<br />
-      Commission rule: A successful invitation is counted when the invited user registers and completes their first purchase. You will receive 10 credits for each successful invitation.<br />
+      Commission rule: A successful invitation is counted when the invited user registers and completes their first purchase. You will receive 3% of the first purchase credits for each successful invitation.<br />
       These rules may be updated periodically. The revised rules will be announced on the official website before taking effect.<br />
       Continuing to use the service after the updated rules take effect means you have read, understood, and accepted the revised rules.`,
       copySuccess: "Invitation link copied",
@@ -1250,7 +1254,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       subscribe: "Subscribe",
       aiToolRecharge: "AI Tool Recharge",
       tabSubscribe: "Subscribe",
-      tabRecharge: "AI Tool Recharge",
+      tabRecharge: "AI Tool Subscription",
+      tabTopUp: "AI Tool Top-Up Pack",
       issueInvoice: "Issue Invoice",
       viewInvoice: "View Invoice",
       downloadInvoice: "Download Invoice",
@@ -1398,6 +1403,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     privacy: "Privacy Policy",
     tipEnd: "",
     loginTip: `By logging into this service,<br /> you agree to the `,
+    freeComputing: "Sign up for free credits",
   },
   birthday: {
     title: "Please Enter Your Date of Birth",
@@ -1509,6 +1515,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     nextPage: "Next",
     of: "of",
     castBtn: "Cast Them",
+    applyToComic: "Apply to Comic",
+    applyToDrama: "Apply to Drama",
     loading: "Loading...",
     retry: "Retry",
     error: {
@@ -2137,6 +2145,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     annualAutoRenewal: "Annual Auto-Renewal",
     computePack: "Compute Pack",
     validityPeriod: "Valid for {months} months from issuance",
+    permanentValid: "Valid long-term",
     periodMonth: "/month",
     period3Month: "/3month",
     period6Month: "/6month",
@@ -2155,7 +2164,31 @@ If you have any questions, complaints, comments or suggestions regarding persona
     firstMonthZeroPurchase: 'First Month 0 Yen',
     couponComingSoon: 'Coupon feature coming soon',
     cancelCoupon: 'Cancel Use',
-    couponInfo: 'If payment is not made after creating an order, the coupon will be refunded after 30 minutes'
+    couponInfo: 'If payment is not made after creating an order, the coupon will be refunded after 30 minutes',
+    subscriptionTab: 'Subscription',
+    creditsPackTab: 'Credits Pack',
+    creditsPackTip: 'You need to subscribe to a monthly plan before purchasing Credits Pack',
+    firstMonth30Off: 'First month 30% off',
+    firstMonth30OffPrefix: 'First month',
+    firstMonth30OffSuffix: '30% off',
+    firstMonth30OffThen: 'First month 30% off, then {price}{unit}/{period}',
+    firstMonth30OffThenPrice: 'then {price}{unit}/{period}',
+    includesCredits: 'Includes {credits} Credits',
+    includes: 'Includes',
+    bonusCredits: 'Bonus {credits} Credits',
+    bonusGift: 'Bonus Gift',
+    estimatedOutput: 'Generated Content Estimate',
+    novelLabel: 'Novel',
+    novelUnit: ' ch.',
+    comicLabel: 'Comic',
+    comicUnit: ' ep.',
+    mangaLabel: 'Drama',
+    mangaUnit: ' ep.',
+    imageLabel: 'Image',
+    imageUnitSuffix: ' pcs.',
+    videoLabel: 'Video',
+    videoUnitSuffix: ' clips.',
+    unknownPlan: 'Unknown Plan'
   },
   coupon: {
     addCoupon: 'Add Coupon',

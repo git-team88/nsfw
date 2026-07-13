@@ -21,7 +21,7 @@
                   v-model="email"
                   :placeholder="t('register.email')"
                   spellcheck="false"
-                  autocomplete="false"
+                  autocomplete="off"
                   @blur="handleEmailVerify"
                 />
               </div>
@@ -41,7 +41,7 @@
                   :placeholder="t('register.password')"
                   maxlength="20"
                   spellcheck="false"
-                  autocomplete="false"
+                  autocomplete="off"
                   @blur="handlePasswordVerify"
                 />
 
@@ -60,11 +60,10 @@
                 <span>{{ t("register.forgetLabel") }}</span>
               </p>
             </div>
+            <button class="email-btn" :class="isEnd ? 'on' : ''" type="button" @click="goEmailLogin()">
+              {{ t("header.login") }}
+            </button>
           </form>
-
-          <div class="email-btn" :class="isEnd ? 'on' : ''" @click="goEmailLogin()">
-            {{ t("header.login") }}
-          </div>
         </div>
 
         <div class="other-login">
@@ -481,6 +480,9 @@ function googleLogin() {
         justify-content: center;
         width: 100%;
         height: 4.8rem;
+        border: none;
+        outline: none;
+        padding: 0;
         font: {
           size: 1.6rem;
         }

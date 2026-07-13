@@ -23,7 +23,7 @@
           <div class="author-section">
             <div class="author-left">
               <div class="cover-image">
-                <img :src="collection.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
+                <img :src="processImageUrl(collection.cover) || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
                 <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                   <span class="r18-text">R18</span>
                 </div>
@@ -190,7 +190,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
-import { formatTimestamp } from '@/util/utils';
+import { formatTimestamp, processImageUrl } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
 import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';

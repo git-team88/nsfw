@@ -5406,6 +5406,7 @@ onMounted(async () => {
     const castedCharacter = localStorage.getItem('castedCharacter');
     if (castedCharacter) {
       const character = JSON.parse(castedCharacter);
+      const castType = character.castType || null;
 
       const currentSelectedCharacters = getSelectedCharacters();
       const currentUploadedImages = getUploadedImages();
@@ -5418,35 +5419,29 @@ onMounted(async () => {
           currentSelectedCharacters.value.push(character);
           currentCombinedItems.value.push({ ...character, type: 'character' });
 
-          // Insert character tag into input-textarea
+          // Insert character tag into input-textarea after DOM update
+          await nextTick();
           if (editableInputRef.value) {
             const target = editableInputRef.value;
 
-            // Create character tag
             const characterTag = document.createElement('span');
             characterTag.className = 'character-tag-input';
-            characterTag.contentEditable = 'false'; // Make the character tag non-editable
+            characterTag.contentEditable = 'false';
 
-            // Create image element
             const img = document.createElement('img');
             img.src = character.image;
             img.alt = character.name;
             img.className = 'character-tag-img';
 
-            // Create text node with character name
             const textNode = document.createTextNode(character.name);
 
-            // Append image and text to tag
             characterTag.appendChild(img);
             characterTag.appendChild(textNode);
 
-            // Append character tag to the end
             target.appendChild(characterTag);
 
-            // Focus the input to ensure cursor is visible
             target.focus();
 
-            // Set cursor position after the character tag
             const selection = window.getSelection();
             if (selection) {
               const range = document.createRange();
@@ -5456,13 +5451,13 @@ onMounted(async () => {
               selection.addRange(range);
             }
 
-            // Update input empty state
             isInputEmpty.value = false;
           }
 
-          // Remove from cache
           localStorage.removeItem('castedCharacter');
         }
+      } else {
+        localStorage.removeItem('castedCharacter');
       }
     }
   } catch (error) {

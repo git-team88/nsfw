@@ -36,12 +36,12 @@
               <input type="text" v-model="projectName" class="project-name-input" ref="projectNameInputRef" spellcheck="false" maxlength="60" @blur="handleProjectNameBlur" />
               <span class="project-name-counter">{{ projectName.length }}/60</span>
             </div>
-              <div class="edit-actions">
-              <img class="save-icon" src="@/assets/images/novel/check.png" alt="Save" @mousedown.prevent="checkOutlineEditBeforeAction(saveProjectName)" />
-              <img class="cancel-icon" src="@/assets/images/novel/cancel.png" alt="Cancel" @mousedown.prevent="checkOutlineEditBeforeAction(cancelEditProjectName)" />
+               <div class="edit-actions">
+              <button class="save-icon" @mousedown.prevent="checkOutlineEditBeforeAction(saveProjectName)"><img src="@/assets/images/novel/check.png" alt="Save" /></button>
+              <button class="cancel-icon" @mousedown.prevent="checkOutlineEditBeforeAction(cancelEditProjectName)"><img src="@/assets/images/novel/cancel.png" alt="Cancel" /></button>
             </div>
           </div>
-          <img v-if="!isEditingName" class="edit-icon" src="@/assets/images/novel/edit.png" alt="Edit" @click="checkOutlineEditBeforeAction(startEditProjectName)" />
+          <button v-if="!isEditingName" class="edit-icon" @click="checkOutlineEditBeforeAction(startEditProjectName)"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
         </div>
       </div>
 
@@ -157,22 +157,20 @@
                 <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
                 <span class="chapter-item-title">{{ chapter.title }}</span>
 
-                <img
+                <button
                   v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex) && !(isPreparing && chapter.chapter == stepChapterIndex)"
                   class="edit-chapter-btn"
-                  src="@/assets/images/novel/edit.png"
-                  alt="Edit"
                   @click.stop="checkOutlineEditBeforeAction(() => startEditChapterTitle(chapter.chapter, chapter.title))"
-                />
-                <span
+                ><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
+                <button
                   v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex)"
                   class="chapter-publish-btn unpublish"
                   @click.stop="checkOutlineEditBeforeAction(() => handlePublishChapter(chapter))"
-                >{{ t('novel.publish') }}</span>
-                <span
+                >{{ t('novel.publish') }}</button>
+                <button
                   v-else-if="chapter.is_publish == 1"
                   class="chapter-publish-btn published"
-                >{{ t('novel.published') }}</span>
+                >{{ t('novel.published') }}</button>
 
               </div>
               <div v-else class="chapter-title-edit" @click.stop>
@@ -190,18 +188,14 @@
                   <span class="chapter-title-counter">{{ editingChapterTitle.length }}/60</span>
                 </div>
                 <div class="chapter-edit-actions">
-                  <img
+                  <button
                     class="edit-action-btn"
-                    src="@/assets/images/novel/check.png"
-                    alt="Save"
                     @mousedown.prevent="saveChapterTitle(chapter.chapter)"
-                  />
-                  <img
+                  ><img src="@/assets/images/novel/check.png" alt="Save" /></button>
+                  <button
                     class="edit-action-btn"
-                    src="@/assets/images/novel/cancel.png"
-                    alt="Cancel"
                     @mousedown.prevent="cancelChapterTitle"
-                  />
+                  ><img src="@/assets/images/novel/cancel.png" alt="Cancel" /></button>
                 </div>
               </div>
             </div>
@@ -264,10 +258,10 @@
                   <span class="regenerate-cost">{{ regenerateCost }}</span>
                   <img src="@/assets/images/novel/coin.png" alt="" />
                 </div>
-                <div class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
+                <button class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
                   <img v-if="!isSendingRegenerate" src="@/assets/images/novel/send.png" alt="" />
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -304,7 +298,7 @@
                         <span class="img-bg"></span>
                       </div>
 
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeUploadedCoverImage(item.id)" />
+                      <button class="remove-btn" @click="removeUploadedCoverImage(item.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
                     </div>
                   </div>
 
@@ -349,9 +343,9 @@
 
                   <div class="input-box">
                     <div class="input-options">
-                      <div class="option-btn reference-btn" @click="() => { if (checkLogin() && checkCoverItemLimit()) triggerCoverFileUpload() }">
+                      <button class="option-btn reference-btn" @click="() => { if (checkLogin() && checkCoverItemLimit()) triggerCoverFileUpload() }">
                         <img src="@/assets/images/novel/upload.png" alt="" />
-                      </div>
+                      </button>
                     </div>
 
                     <div class="input-cover-right">
@@ -360,9 +354,9 @@
                         <img src="@/assets/images/novel/coin.png" alt="" />
                       </div>
 
-                      <div class="generate-btn" @click="generateNovelCover">
+                      <button class="generate-btn" @click="generateNovelCover">
                         <img src="@/assets/images/novel/send.png" alt="Send" />
-                      </div>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -388,10 +382,10 @@
                   <img src="@/assets/images/novel/coin.png" alt="" />
                 </div>
 
-                <div class="outline-edit-send-btn" :class="{ loading: isSendingOutlineEdit }" @click="sendAiEditOutlineRequest">
+                <button class="outline-edit-send-btn" :class="{ loading: isSendingOutlineEdit }" @click="sendAiEditOutlineRequest">
                   <img v-if="!isSendingOutlineEdit" src="@/assets/images/novel/send.png" alt="" />
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </div>
+                </button>
 
               </div>
             </div>
@@ -415,10 +409,10 @@
                   <img src="@/assets/images/novel/coin.png" alt="" />
                 </div>
 
-                <div class="outline-edit-send-btn" :class="{ loading: isSendingChapterEdit }" @click="sendAiEditChapterRequest">
+                <button class="outline-edit-send-btn" :class="{ loading: isSendingChapterEdit }" @click="sendAiEditChapterRequest">
                   <img v-if="!isSendingChapterEdit" src="@/assets/images/novel/send.png" alt="" />
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </div>
+                </button>
 
               </div>
             </div>
@@ -438,7 +432,7 @@
 
          <span class="header-line"></span>
 
-         <span class="header-recharge" @click="checkOutlineEditBeforeAction(goRecharge)">{{ t("header.recharge") }}</span>
+         <button class="header-recharge" @click="checkOutlineEditBeforeAction(goRecharge)">{{ t("header.recharge") }}</button>
       </div>
 
       <!-- Novel Outline -->
@@ -653,7 +647,7 @@
             <div v-if="editingOutlineData.characters && editingOutlineData.characters.length > 0" class="section characters">
               <h3 class="section-title">
                 {{ t('novel.characterGallery') }}
-                <span class="outline-edit-add-btn" @click="addOutlineCharacter">{{ t('novel.addCharacter') }}</span>
+                <button class="outline-edit-add-btn" @click="addOutlineCharacter">{{ t('novel.addCharacter') }}</button>
               </h3>
               <div class="characters-list">
                 <div v-for="(character, index) in editingOutlineData.characters" :key="index" class="character-item">
@@ -662,7 +656,7 @@
                        <span class="character-name-label">{{ t('novel.characterNameLabel') }}</span>
                        <span class="character-name-counter">（{{ character.name.length }}/20）</span>
                      </div>
-                     <span v-if="editingOutlineData.characters.length > 1" class="delete-character-btn" @click="removeOutlineCharacter(index)">{{ t('novel.deleteCharacter') }}</span>
+                      <button v-if="editingOutlineData.characters.length > 1" class="delete-character-btn" @click="removeOutlineCharacter(index)">{{ t('novel.deleteCharacter') }}</button>
                    </div>
                   <div class="character-name-input-row">
                     <input v-model="character.name" class="outline-edit-input" :class="{ 'outline-edit-error': outlineEditErrorKeys.has(`character-name-${index}`) }" :maxlength="20" :placeholder="t('novel.characterNamePlaceholder')" @input="outlineEditErrorKeys.delete(`character-name-${index}`); markOutlineEditDirty()" />
@@ -692,9 +686,9 @@
                        <span class="chapter-title-counter">（{{ chapter.title.length }}/60）</span>
                      </div>
                     <div class="chapter-title-actions">
-                      <span v-if="editingOutlineData.outline.length > 1" class="delete-chapter-btn" @click="removeOutlineChapter(index)">{{ t('novel.deleteChapter') }}</span>
-                      <span class="insert-chapter-btn" @click="insertChapterBefore(index)">{{ t('novel.insertChapterBefore') }}</span>
-                      <span class="insert-chapter-btn" @click="insertChapterAfter(index)">{{ t('novel.insertChapterAfter') }}</span>
+                       <button v-if="editingOutlineData.outline.length > 1" class="delete-chapter-btn" @click="removeOutlineChapter(index)">{{ t('novel.deleteChapter') }}</button>
+                       <button class="insert-chapter-btn" @click="insertChapterBefore(index)">{{ t('novel.insertChapterBefore') }}</button>
+                       <button class="insert-chapter-btn" @click="insertChapterAfter(index)">{{ t('novel.insertChapterAfter') }}</button>
                     </div>
                   </div>
                   <div class="chapter-title-input-row">
@@ -777,26 +771,26 @@
                   <div class="skeleton-line cover-skeleton"></div>
                 </div>
                 <div v-else-if="coverRenewFailed" class="cover-renew-failed">
-                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
-                  <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
-                  <span class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</span>
-                </div>
-                <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
-                  <div class="skeleton-line cover-skeleton"></div>
-                </div>
-                <div class="cover-image" v-else-if="coverImage">
-                  <img :src="coverImageWebp" alt="" />
-                  <img class="zoom-cover-btn" src="@/assets/images/novel/zoom.png" alt="Zoom" @click="zoomCoverImage(coverImage)" />
-                </div>
-                <div class="cover-placeholder" v-else-if="!coverTaskId">
-                  <span>{{ t('novel.coverPlaceholder') }}</span>
-                </div>
+                   <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
+                   <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
+                   <button class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</button>
+                 </div>
+                 <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
+                   <div class="skeleton-line cover-skeleton"></div>
+                 </div>
+                 <div class="cover-image" v-else-if="coverImage">
+                   <img :src="coverImageWebp" alt="" />
+                   <button class="zoom-cover-btn" @click="zoomCoverImage(coverImage)"><img src="@/assets/images/novel/zoom.png" alt="Zoom" /></button>
+                 </div>
+                 <div class="cover-placeholder" v-else-if="!coverTaskId">
+                   <span>{{ t('novel.coverPlaceholder') }}</span>
+                 </div>
 
-                <div class="cover-renew">
-                   <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
-                   <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/cover_edit.png" alt="Edit" @click="handleCoverEditClick" />
-                  <img v-if="coverRenewFailed && !isPreparing" src="@/assets/images/novel/refresh.png" @click="handleCoverEditClick" />
-                </div>
+                 <div class="cover-renew">
+                    <button v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" class="cover-action-btn" @click="handleCoverHistoryClick"><img src="@/assets/images/novel/history.png" /></button>
+                    <button v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/cover_edit.png" alt="Edit" /></button>
+                   <button v-if="coverRenewFailed && !isPreparing" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/refresh.png" /></button>
+                 </div>
 
               </div>
             </div>
@@ -814,24 +808,24 @@
                   <div class="skeleton-line cover-skeleton"></div>
                 </div>
                 <div v-else-if="coverRenewFailed" class="cover-renew-failed">
-                  <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
-                  <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
-                  <span class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</span>
-                </div>
-                <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
-                  <div class="skeleton-line cover-skeleton"></div>
-                </div>
-                <div class="cover-image" v-else-if="coverImage">
-                  <img :src="coverImageWebp" alt="" />
-                  <img class="zoom-cover-btn" src="@/assets/images/novel/zoom.png" alt="Zoom" @click="zoomCoverImage(coverImage)" />
-                </div>
-                <div class="cover-placeholder" v-else-if="!coverTaskId">
-                  <span>{{ t('novel.coverPlaceholder') }}</span>
-                </div>
-                <div class="cover-renew">
-                   <img v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" src="@/assets/images/novel/history.png" @click="handleCoverHistoryClick" />
-                   <img v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" src="@/assets/images/novel/edit.png" alt="Edit" @click="handleCoverEditClick" />
-                </div>
+                   <img class="cover-renew-failed-icon" src="@/assets/images/novel/cover_fail.png" alt="" />
+                   <span class="cover-renew-failed-text">{{ t('novel.coverRenewFailed') }}</span>
+                   <button class="use-prev-cover-btn" @click="usePreviousCover">{{ t('novel.usePrevCover') }}</button>
+                 </div>
+                 <div v-else-if="coverLoading" class="cover-skeleton-wrapper">
+                   <div class="skeleton-line cover-skeleton"></div>
+                 </div>
+                 <div class="cover-image" v-else-if="coverImage">
+                   <img :src="coverImageWebp" alt="" />
+                   <button class="zoom-cover-btn" @click="zoomCoverImage(coverImage)"><img src="@/assets/images/novel/zoom.png" alt="Zoom" /></button>
+                 </div>
+                 <div class="cover-placeholder" v-else-if="!coverTaskId">
+                   <span>{{ t('novel.coverPlaceholder') }}</span>
+                 </div>
+                 <div class="cover-renew">
+                    <button v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" class="cover-action-btn" @click="handleCoverHistoryClick"><img src="@/assets/images/novel/history.png" /></button>
+                    <button v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
+                 </div>
               </div>
             </div>
           </div>
@@ -850,7 +844,7 @@
           <div class="similar-header">
             <div class="similar-header-left">
               <span class="similar-title">{{ t('novel.similarRecommend') }}</span>
-              <button class="similar-refresh-btn" :disabled="similarLoading" @click="refreshSimilar">{{ t('novel.similarRefresh') }} <span v-if="similarLoading" class="btn-spinner btn-spinner-small"></span></button>
+              <button v-if="!isSimilarCollapsed" class="similar-refresh-btn" :disabled="similarLoading" @click="refreshSimilar">{{ t('novel.similarRefresh') }} <span v-if="similarLoading" class="btn-spinner btn-spinner-small"></span></button>
             </div>
             <div class="similar-header-right">
               <span class="similar-hint">{{ t('novel.similarExitHint') }}</span>
@@ -928,7 +922,7 @@
     <!-- Cover Zoom Modal -->
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
       <div class="cover-zoom-content" @click.stop>
-        <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeCoverZoomModal" />
+        <button class="close-zoom-btn" @click="closeCoverZoomModal"><img src="@/assets/images/novel/close.png" alt="Close" /></button>
         <img :src="zoomedCoverImage + '?imageMogr2/format/webp/quality/60'" alt="" class="zoomed-cover-image" />
       </div>
     </div>
@@ -6237,7 +6231,7 @@ const fetchNovelOutline = async () => {
 
           // Check if chapterIndex is greater than chapters length, add generating chapter if needed
           const existingChapter = chapters.value.find((c: any) => c.chapter == chapterIndex);
-          if (!existingChapter && (stepStatus == 'PREPARE' || stepStatus == 'DOING' || stepStatus == 'FAIL')) {
+          if (!existingChapter && (stepStatus == 'PREPARE' || stepStatus == 'DOING')) {
             // Get chapter title from outline data if available
             const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterIndex);
             chapters.value.push({
@@ -8278,8 +8272,10 @@ function handleCoverKeydown(event: KeyboardEvent) {
   if (event.key == "Escape") {
     showCoverAtDropdown.value = false;
   } else if (event.key == "Enter") {
-    event.preventDefault();
-    generateNovelCover();
+    if (event.shiftKey) {
+      event.preventDefault();
+      document.execCommand('insertLineBreak');
+    }
   }
 
   const maxLimit = 5000;

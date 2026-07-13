@@ -549,6 +549,10 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     noRegister: "アカウントをお持ちでない方",
     goRegister: "登録する",
     logoutConfirm: "ログアウト（推奨）してもよろしいですか？",
+    registerTip: {
+      newUser: "新規登録でもらえる",
+      benefit: "無料算力パック · すぐに届く",
+    },
     userCard: {
       subscribeLabel: "サブスクリプション",
       followersLabel: "フォロー中",
@@ -779,7 +783,10 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       totalReward: "招待報酬 合計（クレジット）",
       credits: " クレジット",
       rulesTitle: "プロモーションルール：",
-      rule: "他のユーザーがあなたの共有した招待コードを通じて【MoeGen】に登録し、初回購入が完了すると招待特典が付与されます。1人招待成功するごとに10クレジットを付与します。本キャンペーンは、状況に応じて不定期に変更される場合がございます。変更後のルールは、効力発生前に公式サイトで告知しますので、最新のルールをご確認ください。本ルールの変更後も引き続き利用した場合、変更後の内容を十分に読み、理解し、同意のうえ遵守したものとみなされます。",
+      rule: `他のユーザーがあなたの共有した招待コードを通じて【MoeGen】に登録し、初回購入が完了すると招待特典が付与されます。<br />
+      1人招待成功するごとに初回購入の3%クレジットを付与します。<br />
+      本キャンペーンは、状況に応じて不定期に変更される場合がございます。変更後のルールは、効力発生前に公式サイトで告知しますので、最新のルールをご確認ください。<br />
+      本ルールの変更後も引き続き利用した場合、変更後の内容を十分に読み、理解し、同意のうえ遵守したものとみなされます。`,
       copySuccess: "招待リンクをコピーしました",
       viewDetails: "報酬収益明細を見る"
     },
@@ -1026,7 +1033,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       subscribe: "サブスク",
       aiToolRecharge: "AIツールのメンバーシップ",
       tabSubscribe: "サブスク",
-      tabRecharge: "AIツールのメンバーシップ",
+      tabRecharge: "AIツールサブスク",
+      tabTopUp: "AIツール追加パック",
       issueInvoice: "請求書を発行",
       viewInvoice: "請求書を見る",
       downloadInvoice: "請求書をダウンロード",
@@ -1173,6 +1181,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     privacy: "プライバシーポリシー",
     tipEnd: "",
     loginTip: "本サービスにログインすることにより、お客様は以下に同意したものとみなされます",
+    freeComputing: "登録で無料算力プレゼント",
   },
   birthday: {
     title: "生年月日を入力してください",
@@ -1284,6 +1293,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     nextPage: "次のページ",
     of: "全",
     castBtn: "キャラクター設定を使用",
+    applyToComic: "漫画に適用",
+    applyToDrama: "漫劇に適用",
     loading: "読み込み中...",
     retry: "再試行",
     error: {
@@ -1315,6 +1326,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     annualAutoRenewal: "年額自動更新",
     computePack: "計クレジットパック",
     validityPeriod: "発行から{months}ヶ月間有効",
+    permanentValid: "長期有効",
     periodMonth: "/月",
     period3Month: "/3ヶ月",
     period6Month: "/6ヶ月",
@@ -1333,7 +1345,31 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     firstMonthZeroPurchase: '初月0円',
     couponComingSoon: 'クーポン機能は近日公開予定',
     cancelCoupon: '使用をキャンセル',
-    couponInfo: '注文追加後に支払わなかった場合、30分後にクーポンが返還されます'
+    couponInfo: '注文追加後に支払わなかった場合、30分後にクーポンが返還されます',
+    subscriptionTab: 'サブスクリプション',
+    creditsPackTab: 'クレジットパック',
+    creditsPackTip: '月額サブスクリプションに加入後、クレジットパックを購入できます',
+    firstMonth30Off: '初月30%オフ',
+    firstMonth30OffPrefix: '初月',
+    firstMonth30OffSuffix: '30%オフ',
+    firstMonth30OffThen: '初月30%オフ、その後{price}{unit}/{period}',
+    firstMonth30OffThenPrice: 'その後{price}{unit}/{period}',
+    includesCredits: '{credits}クレジット付き',
+    includes: '含む',
+    bonusCredits: 'ボーナス{credits}クレジット',
+    bonusGift: '追加ギフト',
+    estimatedOutput: '生成コンテンツ予測',
+    novelLabel: '小説',
+    novelUnit: '章',
+    comicLabel: 'マンガ',
+    comicUnit: '話',
+    mangaLabel: 'アニメドラマ',
+    mangaUnit: '話',
+    imageLabel: '画像',
+    imageUnitSuffix: '枚',
+    videoLabel: '動画',
+    videoUnitSuffix: '本',
+    unknownPlan: '不明なプラン'
   },
   coupon: {
     addCoupon: 'クーポンを追加',

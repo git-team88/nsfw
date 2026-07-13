@@ -15,7 +15,8 @@
           <div class="character-image-container">
             <img :src="processImageUrl(character?.image)" :alt="character?.name" class="character-image" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
           </div>
-          <button class="cast-btn" @click="castCharacter">{{ t('characterLibrary.castBtn') }}<span v-if="character?.isOfficial && character?.useCostPoints"> / {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}</span></button>
+          <button class="cast-btn" @click="castCharacter('comic')">{{ t('characterLibrary.applyToComic') }}<span v-if="character?.isOfficial && character?.useCostPoints"> / {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}</span></button>
+          <button class="cast-btn" @click="castCharacter('drama')">{{ t('characterLibrary.applyToDrama') }}<span v-if="character?.isOfficial && character?.useCostPoints"> / {{ character.useCostPoints }} {{ t('aiRecharge.credits') }}</span></button>
         </div>
 
         <!-- Right Side: Character Info and Design Sheet -->
@@ -53,12 +54,10 @@ function closeModal() {
   emit('close');
 }
 
-function castCharacter() {
+function castCharacter(type: string) {
   if (props.character) {
-    // 将角色对象存在缓存中
-    localStorage.setItem('castedCharacter', JSON.stringify(props.character));
-    // 跳转到首页
-    router.push('/');
+    localStorage.setItem('castedCharacter', JSON.stringify({ ...props.character, castType: type }));
+    router.push(`/${type}`);
   }
 }
 </script>
@@ -111,7 +110,7 @@ function castCharacter() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2.4rem;
+  gap: 1.2rem;
   padding: 3.6rem;
   border-radius: 1.2rem;
   background: url('@/assets/images/project/bg.png') no-repeat;
@@ -120,8 +119,10 @@ function castCharacter() {
 
 .character-image-container {
   position: relative;
-  width: 30rem;
-  height: 40rem;
+  width: 25.8rem;
+  height: 33.4rem;
+  border-radius: 1.2rem;
+  background: #FFFFFF;
 
   .character-image {
     width: 100%;

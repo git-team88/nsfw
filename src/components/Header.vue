@@ -129,7 +129,27 @@
 
           <div class="user-btn" v-else>
             <span class="user-login" @click="goLogin()">{{ t("header.login") }}</span>
-            <span class="user-register" @click="goRegister()">{{ t("header.register") }}</span>
+            <span class="user-register" @click="goRegister()">
+              {{ t("header.register") }}
+              <div class="register-tip">
+                <div class="tip-gift-icon">
+                  <img src="@/assets/images/header/gift.png" alt="" />
+                </div>
+
+                <div class="tip-content">
+                  <div class="register-tip-top">
+                    <span class="tip-new-user">{{ t("header.registerTip.newUser") }}</span>
+                    <span class="tip-arrow-badge">
+                      <img src="@/assets/images/header/icon.png" alt="" />
+                    </span>
+                  </div>
+                  <div class="register-tip-bottom">
+                    <img class="tip-benefit-icon" src="@/assets/images/header/tip.png" alt="" />
+                    <span>{{ t("header.registerTip.benefit") }}</span>
+                  </div>
+                </div>
+              </div>
+            </span>
           </div>
         </div>
       </div>
@@ -1063,6 +1083,83 @@ defineExpose({
                 width: 100%;
                 height: 100%;
                 background: rgba(255, 255, 255, 0.1);
+              }
+            }
+
+            .register-tip {
+              position: absolute;
+              right: -2rem;
+              top: 4.8rem;
+              width: 27rem;
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+
+              .tip-gift-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                width: 3.2rem;
+                height: 3.2rem;
+                background: #FB64B6;
+                border-radius: 1.6rem;
+
+                img {
+                  width: 1.6rem;
+                  height: 1.6rem;
+                }
+              }
+
+              .tip-content{
+                flex: 1;
+                flex-shrink: 0;
+              }
+
+              .register-tip-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+
+                .tip-new-user {
+                  font-size: 1.4rem;
+                  color: #101828;
+                  font-weight: 500;
+                }
+
+                .tip-arrow-badge {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 3.2rem;
+                  height: 1.8rem;
+                  background: #FFFFFF;
+                  border-radius: 1.2rem;
+
+                  img {
+                    width: 1.2rem;
+                    height: 1.2rem;
+                  }
+                }
+              }
+
+              .register-tip-bottom {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                margin-top: 1rem;
+
+                .tip-benefit-icon {
+                  width: 1.2rem;
+                  height: 1.2rem;
+                }
+
+                span {
+                  font-weight: 500;
+                  font-size: 1.2rem;
+                  color: #FB64B6;
+                }
               }
             }
           }

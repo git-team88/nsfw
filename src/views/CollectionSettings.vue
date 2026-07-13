@@ -29,7 +29,7 @@
         <div class="section">
           <div class="cover-section">
             <div class="cover-info">
-              <img :src="collection.cover || defaultCover" alt="" class="cover-image" />
+              <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-image" />
               <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
                 <span class="r18-text">R18</span>
               </div>
@@ -106,7 +106,7 @@ import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
-import { formatTimestamp } from '@/util/utils';
+import { formatTimestamp, processImageUrl } from '@/util/utils';
 import api from '@/api/index';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
@@ -141,7 +141,7 @@ const collection = ref({
 });
 
 const collectionInfo = computed(() => ({
-  cover: collection.value.cover || defaultCover,
+  cover: processImageUrl(collection.value.cover) || defaultCover,
   title: collection.value.title,
   chapterCount: parseInt(collection.value.chapter_count) || collection.value.publishedChapters || 0,
   type: collection.value.type

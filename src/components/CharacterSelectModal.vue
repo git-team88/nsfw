@@ -31,7 +31,7 @@
             @click="toggleCharacterSelection(character)"
           >
             <div class="character-avatar">
-              <img :src="character.image" :alt="character.name" />
+              <img :src="processImageUrl(character.image)" :alt="character.name" />
             </div>
             <div class="character-info">
               <div class="character-name-box">
@@ -81,6 +81,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
+import { processImageUrl } from '@/util/utils';
 import { aiUrl } from '@/util/config';
 
 const { t } = useI18n();
@@ -389,11 +390,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin-right: 1.6rem;
   flex-shrink: 0;
+  background: #FFFFFF;
 
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 }
 

@@ -434,6 +434,11 @@ export default {
       url: "user/getAiOrderList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
+  userPaymentOrderList: (page: number, limit: number) =>
+    axios.request({
+      url: "user/getPaymentOrderList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
   AIRecharge: (data: any) =>
     axios.request({
       url: "post/getAIRechargeUrl",
@@ -962,10 +967,15 @@ export default {
       data,
     }),
 
-  aIRechargePlan: () =>
+  aIRechargePlan: (mode?: string) =>
     axios.request({
-      url: "index/getAIRechargePlan",
-      method: "POST",
+      url: "index/getAIRechargePlan" + (mode ? `?mode=${mode}` : ''),
+      method: "GET",
+    }),
+  getFirstMonthDiscountStatus: () =>
+    axios.request({
+      url: "user/getFirstMonthDiscountStatus",
+      method: "GET",
     }),
   getBanner: () =>
     axios.request({

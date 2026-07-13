@@ -143,14 +143,30 @@
           width: 2.4rem;
           height: 2.4rem;
           cursor: pointer;
+          background: none;
+          border: none;
+          padding: 0;
+
+          img {
+            width: 2.4rem;
+            height: 2.4rem;
+          }
         }
 
-        .edit-icon {
-          width: 2.4rem;
-          height: 2.4rem;
-          margin-left: 1.2rem;
-          cursor: pointer;
-        }
+         .edit-icon {
+           width: 2.4rem;
+           height: 2.4rem;
+           margin-left: 1.2rem;
+           cursor: pointer;
+           background: none;
+           border: none;
+           padding: 0;
+
+           img {
+             width: 2.4rem;
+             height: 2.4rem;
+           }
+         }
       }
     }
 
@@ -398,14 +414,22 @@
           cursor: pointer;
         }
 
-        .edit-chapter-btn {
-          width: 2.4rem;
-          height: 2.4rem;
-          cursor: pointer;
-          margin-left: 0.8rem;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
+         .edit-chapter-btn {
+           width: 2.4rem;
+           height: 2.4rem;
+           cursor: pointer;
+           margin-left: 0.8rem;
+           opacity: 0;
+           transition: opacity 0.3s ease;
+           background: none;
+           border: none;
+           padding: 0;
+
+           img {
+             width: 2.4rem;
+             height: 2.4rem;
+           }
+         }
 
         &:hover .edit-chapter-btn {
           opacity: 1;
@@ -444,6 +468,14 @@
               width: 2.4rem;
               height: 2.4rem;
               cursor: pointer;
+              background: none;
+              border: none;
+              padding: 0;
+
+              img {
+                width: 2.4rem;
+                height: 2.4rem;
+              }
             }
           }
         }
@@ -606,12 +638,15 @@
           }
         }
 
-        .send-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: opacity 0.3s ease;
+         .send-btn {
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           transition: opacity 0.3s ease;
+           background: none;
+           border: none;
+           padding: 0;
 
           img{
             width: 2.8rem;
@@ -696,14 +731,16 @@
         background: #99A1AF;
       }
 
-      .header-recharge {
-        display: flex;
-        align-items: center;
-        height: 4rem;
-        padding: 0 0.8rem;
-        font-size: 1.2rem;
-        color: #101828;
-        cursor: pointer;
+       .header-recharge {
+         display: flex;
+         align-items: center;
+         height: 4rem;
+         padding: 0 0.8rem;
+         font-size: 1.2rem;
+         color: #101828;
+         cursor: pointer;
+         background: none;
+         border: none;
 
         &:hover {
           -webkit-border-radius: 0 0.6rem 0.6rem 0;
@@ -1465,6 +1502,9 @@
               font-size: 1.4rem;
               color: #FB64B6;
               cursor: pointer;
+              background: none;
+              border: none;
+              padding: 0;
             }
            }
         }
@@ -1560,6 +1600,10 @@
                 .delete-character-btn {
                   color: #99A1AF;
                   cursor: pointer;
+                  background: none;
+                  border: none;
+                  padding: 0;
+                  font-size: inherit;
                 }
               }
 
@@ -1676,11 +1720,19 @@
                 .delete-chapter-btn {
                   color: #99A1AF;
                   cursor: pointer;
+                  background: none;
+                  border: none;
+                  padding: 0;
+                  font-size: inherit;
                 }
 
                 .insert-chapter-btn {
                   color: #FB64B6;
                   cursor: pointer;
+                  background: none;
+                  border: none;
+                  padding: 0;
+                  font-size: inherit;
                 }
               }
             }
@@ -2425,22 +2477,28 @@
    position: relative;
  }
 
- .chapter-publish-btn {
-   color: #FB64B6;
-   font-size: 1.4rem;
-   margin-left: 0.8rem;
-   cursor: pointer;
- }
-
-  .chapter-publish-btn.unpublish {
-    display: inline;
+  .chapter-publish-btn {
+    color: #FB64B6;
+    font-size: 1.4rem;
+    margin-left: 0.8rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
   }
 
-  .chapter-publish-btn.published {
-  display: inline;
-  color: #99A1AF;
-  cursor: default;
-}
+   .chapter-publish-btn.unpublish {
+     display: inline;
+   }
+
+   .chapter-publish-btn.published {
+   display: inline;
+   color: #99A1AF;
+   cursor: default;
+   background: none;
+   border: none;
+   padding: 0;
+ }
 
 /* Novel Cover Section */
 .novel-cover {
@@ -2466,14 +2524,22 @@
         object-fit: cover;
       }
 
-      .zoom-cover-btn {
-        position: absolute;
-        bottom: 1rem;
-        right: 1rem;
-        width: 3.6rem;
-        height: 3.6rem;
-        cursor: pointer;
-      }
+       .zoom-cover-btn {
+         position: absolute;
+         bottom: 1rem;
+         right: 1rem;
+         width: 3.6rem;
+         height: 3.6rem;
+         cursor: pointer;
+         background: none;
+         border: none;
+         padding: 0;
+
+         img {
+           width: 3.6rem;
+           height: 3.6rem;
+         }
+       }
     }
 
     .cover-skeleton-wrapper {
@@ -2513,11 +2579,14 @@
         color: #6A7282;
       }
 
-      .use-prev-cover-btn {
-        font-size: 1.4rem;
-        color: #FB64B6;
-        cursor: pointer;
-      }
+       .use-prev-cover-btn {
+         font-size: 1.4rem;
+         color: #FB64B6;
+         cursor: pointer;
+         background: none;
+         border: none;
+         padding: 0;
+       }
     }
 
     .cover-renew-retry-btn {
@@ -2546,17 +2615,25 @@
       color: #99A1AF;
     }
 
-    .cover-renew{
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+     .cover-renew{
+       display: flex;
+       flex-direction: column;
+       gap: 1rem;
 
-      img {
-        width: 3.6rem;
-        height: 3.6rem;
-        cursor: pointer;
-      }
-    }
+       .cover-action-btn {
+         width: 3.6rem;
+         height: 3.6rem;
+         cursor: pointer;
+         background: none;
+         border: none;
+         padding: 0;
+
+         img {
+           width: 3.6rem;
+           height: 3.6rem;
+         }
+       }
+     }
 
   }
 }
@@ -2705,15 +2782,23 @@
               z-index: 5;
             }
 
-            .remove-btn {
-              position: absolute;
-              top: .2rem;
-              right: .2rem;
-              width: 1.6rem;
-              height: 1.6rem;
-              cursor: pointer;
-              z-index: 10;
-            }
+             .remove-btn {
+               position: absolute;
+               top: .2rem;
+               right: .2rem;
+               width: 1.6rem;
+               height: 1.6rem;
+               cursor: pointer;
+               z-index: 10;
+               background: none;
+               border: none;
+               padding: 0;
+
+               img {
+                 width: 1.6rem;
+                 height: 1.6rem;
+               }
+             }
           }
         }
 
@@ -2848,13 +2933,16 @@
             gap: 1rem;
             align-items: center;
 
-            .option-btn {
-              width: 2.8rem;
-              height: 2.8rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
+             .option-btn {
+               width: 2.8rem;
+               height: 2.8rem;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               cursor: pointer;
+               background: none;
+               border: none;
+               padding: 0;
 
               img {
                 width: 100%;
@@ -2891,13 +2979,16 @@
             }
           }
 
-          .generate-btn {
-            width: 2.8rem;
-            height: 2.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+           .generate-btn {
+             width: 2.8rem;
+             height: 2.8rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             background: none;
+             border: none;
+             padding: 0;
 
             img {
               width: 100%;
@@ -2968,13 +3059,16 @@
         gap: 0.8rem;
         margin-top: 1rem;
 
-        .outline-edit-send-btn {
-          width: 2.8rem;
-          height: 2.8rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
+         .outline-edit-send-btn {
+           width: 2.8rem;
+           height: 2.8rem;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           background: none;
+           border: none;
+           padding: 0;
 
           img {
             width: 100%;
@@ -3129,14 +3223,22 @@
       border-radius: 0.6rem;
     }
 
-    .zoom-cover-btn {
-      position: absolute;
-      bottom: 1rem;
-      right: 1rem;
-      width: 3.6rem;
-      height: 3.6rem;
-      cursor: pointer;
-    }
+     .zoom-cover-btn {
+       position: absolute;
+       bottom: 1rem;
+       right: 1rem;
+       width: 3.6rem;
+       height: 3.6rem;
+       cursor: pointer;
+       background: none;
+       border: none;
+       padding: 0;
+
+       img {
+         width: 3.6rem;
+         height: 3.6rem;
+       }
+     }
   }
 
   .result-actions {
@@ -3215,15 +3317,23 @@
     align-items: center;
     justify-content: center;
 
-    .close-zoom-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: 4.8rem;
-      height: 4.8rem;
-      cursor: pointer;
-      z-index: 10;
-    }
+     .close-zoom-btn {
+       position: absolute;
+       top: 1rem;
+       right: 1rem;
+       width: 4.8rem;
+       height: 4.8rem;
+       cursor: pointer;
+       z-index: 10;
+       background: none;
+       border: none;
+       padding: 0;
+
+       img {
+         width: 4.8rem;
+         height: 4.8rem;
+       }
+     }
 
     .zoomed-cover-image {
       height: 100%;
