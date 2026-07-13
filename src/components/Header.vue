@@ -128,8 +128,8 @@
           </div>
 
           <div class="user-btn" v-else>
-            <span class="user-login" @click="goLogin()">{{ t("header.login") }}</span>
-            <span class="user-register" @click="goRegister()">
+            <button class="user-login" @click="goLogin()">{{ t("header.login") }}</button>
+            <button class="user-register" @click="goRegister()">
               {{ t("header.register") }}
               <div class="register-tip">
                 <div class="tip-gift-icon">
@@ -149,7 +149,7 @@
                   </div>
                 </div>
               </div>
-            </span>
+            </button>
           </div>
         </div>
       </div>
@@ -804,6 +804,7 @@ defineExpose({
           transform: translateX(-50%);
           background: #FFFFFF;
           box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+          z-index: 330;
 
           span {
             width: 100%;
@@ -829,86 +830,86 @@ defineExpose({
       }
 
       .header-news-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin: 0 1rem 0 0;
+
+        .header-news {
           position: relative;
           display: flex;
           align-items: center;
-          margin: 0 1rem 0 0;
+          cursor: pointer;
 
-          .header-news {
-            position: relative;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
+          .news-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1.2rem;
+            transition: all ease 0.2s;
 
-            .news-icon {
-              width: 4rem;
-              height: 4rem;
-              border-radius: 1.2rem;
-              transition: all ease 0.2s;
-
-              &:hover {
-                background: #F5F5F5;
-              }
-            }
-
-            .circle {
-              position: absolute;
-              top: 0;
-              right: -0.2rem;
-              width: 0.8rem;
-              height: 0.8rem;
-              border-radius: 50%;
-              background: #ff3a3a;
+            &:hover {
+              background: #F5F5F5;
             }
           }
 
-          .news-dropdown {
+          .circle {
             position: absolute;
-            left: 0;
-            top: 4.6rem;
-            min-width: 17rem;
-            max-width: 30rem;
-            width: max-content;
-            border-radius: 0.8rem;
-            padding: 0.6rem 1.2rem;
-            background: #FFFFFF;
-            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
-            z-index: 10;
+            top: 0;
+            right: -0.2rem;
+            width: 0.8rem;
+            height: 0.8rem;
+            border-radius: 50%;
+            background: #ff3a3a;
+          }
+        }
 
-            .news-item {
+        .news-dropdown {
+          position: absolute;
+          left: 0;
+          top: 4.6rem;
+          min-width: 17rem;
+          max-width: 30rem;
+          width: max-content;
+          border-radius: 0.8rem;
+          padding: 0.6rem 1.2rem;
+          background: #FFFFFF;
+          box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+          z-index: 10;
+
+          .news-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.2rem;
+            padding: 0.8rem 0;
+            font-size: 1.4rem;
+            color: #6A7282;
+            cursor: pointer;
+            white-space: nowrap;
+
+            &:hover{
+              color: #101828;
+            }
+
+            span{
+              flex-shrink: 0;
+            }
+
+            .count-dot {
+              min-width: 1.6rem;
+              height: 1.6rem;
+              padding: 0 0.6rem;
+              background: #FA2D47;
+              color: #ffffff;
+              border-radius: 0.8rem;
+              font-size: 1rem;
               display: flex;
               align-items: center;
-              justify-content: space-between;
-              gap: 1.2rem;
-              padding: 0.8rem 0;
-              font-size: 1.4rem;
-              color: #6A7282;
-              cursor: pointer;
-              white-space: nowrap;
-
-              &:hover{
-                color: #101828;
-              }
-
-              span{
-                flex-shrink: 0;
-              }
-
-              .count-dot {
-                min-width: 1.6rem;
-                height: 1.6rem;
-                padding: 0 0.6rem;
-                background: #FA2D47;
-                color: #ffffff;
-                border-radius: 0.8rem;
-                font-size: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              }
+              justify-content: center;
             }
           }
         }
+      }
 
       .header-bean-box {
         display: flex;
@@ -1050,6 +1051,8 @@ defineExpose({
             background: #F5F5F5;
             color: #6A7282;
             cursor: pointer;
+            border: none;
+            outline: none;
 
             &:hover {
               color: #fb64b6;
@@ -1072,6 +1075,8 @@ defineExpose({
             background: #FB64B6;
             color: #ffffff;
             cursor: pointer;
+            border: none;
+            outline: none;
 
             &:hover {
               position: relative;
@@ -1088,12 +1093,20 @@ defineExpose({
 
             .register-tip {
               position: absolute;
-              right: -2rem;
-              top: 4.8rem;
-              width: 27rem;
+              right: 50%;
+              transform: translateX(30%);
+              top: -0.2rem;
               display: flex;
               align-items: center;
               gap: 1rem;
+              min-width: 33.8rem;
+              min-height: 14rem;
+              padding: 5.8rem 4.8rem 4.8rem;
+              pointer-events: none;
+              background-image: url('@/assets/images/register/tip_bg.png');
+              background-size: 100% 100%;
+              background-repeat: no-repeat;
+              background-position: center;
 
               .tip-gift-icon {
                 display: flex;
@@ -1148,7 +1161,7 @@ defineExpose({
                 display: flex;
                 align-items: center;
                 gap: 0.4rem;
-                margin-top: 1rem;
+                margin-top: 0.6rem;
 
                 .tip-benefit-icon {
                   width: 1.2rem;

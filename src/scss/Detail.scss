@@ -707,17 +707,21 @@
 
   // Collection Mode Info Bar
   .collection-mode-bar {
-    position: absolute;
+    position: fixed;
     bottom: 9rem;
     left: 2.4rem;
-    right: 2.4rem;
-    max-width: 80%;
+    width: max-content;
+    max-width: calc(100vw - 66rem);
     background-color:  rgba(255,255,255,0.5);
     color: #364153;
     padding: 1.2rem;
     border-radius: 0.6rem;
     z-index: 10;
     box-sizing: border-box;
+
+    .isRightPanelHidden .media-container & {
+      right: 2.4rem;
+    }
 
     .current-episode {
       display: flex;
@@ -736,9 +740,8 @@
       }
 
       .episode-title {
-        max-width: calc(100% - 7rem);
-        font-size: 1.6rem;
         flex: 1;
+        font-size: 1.6rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;

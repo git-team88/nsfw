@@ -54,9 +54,9 @@
               {{ tab.label }}
             </span>
           </div>
-          <div class="date-range">
+          <!-- <div class="date-range">
             <DateRangePicker v-model="dateRange" theme="pink" />
-          </div>
+          </div> -->
         </div>
 
         <!-- Sub Navigation -->
@@ -288,9 +288,9 @@ watch(page, () => {
   fetchTransactions();
 });
 
-watch(dateRange, () => {
-  fetchTransactions();
-});
+// watch(dateRange, () => {
+//   fetchTransactions();
+// });
 
 function fetchTransactions() {
   loading.value = true;

@@ -153,7 +153,7 @@
               </div>
             </div>
 
-            <template v-else-if="detail.type == '1'">
+            <template v-else-if="detail.type == '1' && !isCollectionMode">
               <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
                 <div
                   class="image-stack-item"
