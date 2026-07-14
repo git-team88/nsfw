@@ -85,24 +85,53 @@
 
             <!-- Chapter Selection -->
             <div class="chapter-selection">
-              <label>{{ t('submit.image.selectChapter') }}</label>
-              <div class="chapter-dropdown">
-                <div class="custom-select" :class="{ 'open': showChapterDropdown }" @click="toggleChapterDropdown($event)">
-                  <span class="select-value">{{ getChapterLabel(selectedEpisode) }}</span>
-                  <div class="select-arrow">
-                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+              <div class="chapter-lists-container">
+                <div v-if="unpublishedChapters.length > 0" class="pending-section">
+                  <div class="pending-header">
+                    <span class="pending-label">{{ t('submit.image.pendingChapters') }}</span>
+                    <button class="select-all-btn" @click="toggleSelectAllChapters">
+                      <span class="select-all-text">{{ t('submit.image.selectAll', { count: unpublishedChapters.length }) }}</span>
+                      <img
+                        class="select-all-checkbox"
+                        :src="isAllChaptersSelected ? checkboxActive : checkboxInactive"
+                        alt=""
+                      />
+                    </button>
+                  </div>
+                  <div class="pending-chapters-list">
+                    <div
+                      v-for="(chapter, index) in unpublishedChapters"
+                      :key="'pending-' + chapter.chapter"
+                      class="pending-chapter-item"
+                      :class="{ selected: selectedChapters.includes(chapter.chapter) }"
+                      @click="toggleChapterSelection(chapter.chapter)"
+                    >
+                      <span class="chapter-name" :class="{ active: index === 0 }">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+                      <div class="chapter-status-wrap">
+                        <span class="chapter-status-text">{{ t('submit.image.pending') }}</span>
+                        <img
+                          class="chapter-checkbox"
+                          :src="selectedChapters.includes(chapter.chapter) ? checkboxActive : checkboxInactive"
+                          alt=""
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="custom-dropdown" v-if="showChapterDropdown">
-                  <div
-                    class="chapter-dropdown-item"
-                    :class="{ 'selected': selectedEpisode == chapter.chapter }"
-                    v-for="chapter in selectedProject?.chapters || []"
-                    :key="chapter.chapter"
-                    @click="selectChapter(chapter)"
-                  >
-                    <span class="chapter-number">{{ t('chapter', { chapter: chapter.chapter }) }}</span>
-                    <span class="chapter-status" v-if="chapter.is_publish == 1">{{ t('novel.published') }}</span>
+                <div v-if="publishedChapters.length > 0" class="published-section">
+                  <div class="published-header">
+                    <span class="published-tab-label">{{ t('submit.image.publishedChapters') }}</span>
+                    <span class="published-count-info">{{ t('submit.image.publishedCount', { count: publishedChapters.length }) }}</span>
+                  </div>
+                  <div class="published-chapters-list">
+                    <div
+                      v-for="(chapter, index) in publishedChapters"
+                      :key="'published-' + chapter.chapter"
+                      class="published-chapter-item"
+                    >
+                      <span class="chapter-name" :class="{ active: index === 0 }">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+                      <span class="chapter-status-text published">{{ t('novel.published') }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -112,11 +141,11 @@
             <div class="publish-section">
               <button
                 class="publish-btn"
-                :class="{ 'published': isChapterPublished }"
-                @click="handlePublish"
-                :disabled="isChapterPublished"
+                :class="selectedChapters.length > 0 ? 'active' : 'disabled'"
+                @click="handlePublishFromSelection"
+                :disabled="selectedChapters.length === 0"
               >
-                {{ isChapterPublished ? t('novel.published') : t('submit.cover.confirm') }}
+                {{ t('submit.cover.confirm') }}
               </button>
             </div>
           </div>
@@ -218,198 +247,346 @@
       </div>
 
       <!-- Full Content View: After clicking Next Step or Edit Mode -->
-      <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
-        <div class="content-section">
-          <div class="content-label-box">
-            <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
-          </div>
+        <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
 
-          <div class="caption-container">
-            <div class="input-wrap">
-              <input
-                v-model="form.title"
-                class="title-input"
-                type="text"
-                :maxlength="TITLE_MAX"
-                :placeholder="t('submit.titlePlaceholder')"
-                @input="handleTitleInput"
-                @blur="handleTitleBlur"
-              />
-              <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
+          <!-- Single mode: content-section with caption + content-perm -->
+          <div v-if="!isBatchPublish" class="content-section">
+            <div class="content-label-box">
+              <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
             </div>
-            <div class="caption-line"></div>
-            <div class="textarea-wrap">
-              <div
-                ref="captionRef"
-                class="description-content"
-                contenteditable="true"
-                :placeholder="t('submit.descriptionPlaceholder')"
-                @input="handleCaptionInput"
-                @blur="onCaptionBlur"
-                @paste="handlePaste"
-              ></div>
-            </div>
-          </div>
 
-          <div class="content-perm">
-            <div class="perm-box">
-              <div class="form-label-inner">
-                <label class="form-label">{{ t("submit.permission") }}</label>
-                <div class="info-icon" @mouseover="adjustTooltipPosition">
-                  <img src="@/assets/images/publish/intro.png" alt="Info" />
-                  <div class="tooltip-arrow"></div>
-                  <div class="tooltip">
-                    <div class="tooltip-content">
-                      <div v-html="t('submit.permissionInfo')"></div>
-                    </div>
-                  </div>
-                </div>
-
+            <div class="caption-container">
+              <div class="input-wrap">
+                <input
+                  v-model="form.title"
+                  class="title-input"
+                  type="text"
+                  :maxlength="TITLE_MAX"
+                  :placeholder="t('submit.titlePlaceholder')"
+                  @input="handleTitleInput"
+                  @blur="handleTitleBlur"
+                />
+                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
               </div>
-
-              <div class="perm-options">
+              <div class="caption-line"></div>
+              <div class="textarea-wrap">
                 <div
-                  class="perm-option"
-                  v-for="(opt, index) in permOptions"
-                  :key="opt.key"
-                  @click="handlePermissionChange(opt.key, index)"
-                >
-                  <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                  <span>{{ t(opt.labelKey) }}
-                    <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
-                  </span>
-                </div>
+                  ref="captionRef"
+                  class="description-content"
+                  contenteditable="true"
+                  :placeholder="t('submit.descriptionPlaceholder')"
+                  @input="handleCaptionInput"
+                  @blur="onCaptionBlur"
+                  @paste="handlePaste"
+                ></div>
               </div>
             </div>
 
-            <div class="caption-actions-box">
-              <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Collection -->
-        <div class="collection-section">
-          <div class="form-item">
-            <div class="collection-row">
-              <div class="collection-group">
+            <div class="content-perm">
+              <div class="perm-box">
                 <div class="form-label-inner">
-                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
-
+                  <label class="form-label">{{ t("submit.permission") }}</label>
                   <div class="info-icon" @mouseover="adjustTooltipPosition">
                     <img src="@/assets/images/publish/intro.png" alt="Info" />
                     <div class="tooltip-arrow"></div>
                     <div class="tooltip">
                       <div class="tooltip-content">
-                        <div v-html="t('submit.collectionInfo')"></div>
+                        <div v-html="t('submit.permissionInfo')"></div>
                       </div>
                     </div>
                   </div>
-
-                  <div class="switch-collection-btn" @click="openCollectionListModal">
-                    <span>{{ t('collection.switchCollection') }}</span>
-                    <img src="@/assets/images/publish/switch.png" alt="" />
-                  </div>
                 </div>
 
-                <div class="collection-display">
-                  <div class="collection-info" v-if="selectedCollection">
-                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                    <div class="collection-text">
-                      <div class="collection-top">
-                        <span class="collection-name">{{ selectedCollection.name }}</span>
-                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
+                <div class="perm-options">
+                  <div
+                    class="perm-option"
+                    v-for="(opt, index) in permOptions"
+                    :key="opt.key"
+                    @click="handlePermissionChange(opt.key, index)"
+                  >
+                    <img :src="form.permission === opt.key ? selectActive : select" alt="" />
+                    <span>{{ t(opt.labelKey) }}
+                      <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="caption-actions-box">
+                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch mode: collection + batch settings in one white container -->
+          <div v-if="isBatchPublish" class="batch-collection-perm-wrapper">
+            <div class="collection-section">
+              <div class="form-item">
+                <div class="collection-row">
+                  <div class="collection-group">
+                    <div class="form-label-inner">
+                      <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+
+                      <div class="info-icon" @mouseover="adjustTooltipPosition">
+                        <img src="@/assets/images/publish/intro.png" alt="Info" />
+                        <div class="tooltip-arrow"></div>
+                        <div class="tooltip">
+                          <div class="tooltip-content">
+                            <div v-html="t('submit.collectionInfo')"></div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div class="content-sensitive">
-                        <div class="sensitive-left">
-                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+                      <span v-if="publishedChapters.length > 0" class="batch-published-info">{{ t('novel.batchPublish.publishedInCollection', { count: publishedChapters.length }) }}</span>
 
-                          <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <img src="@/assets/images/publish/info.png" alt="Info" />
-                            <div class="tooltip-arrow"></div>
-                            <div class="tooltip">
-                              <div class="tooltip-content">
-                                <div v-html="t('submit.sensitiveContent')"></div>
-                              </div>
-                            </div>
+                      <div class="switch-collection-btn" @click="openCollectionListModal">
+                        <span>{{ t('collection.switchCollection') }}</span>
+                        <img src="@/assets/images/publish/switch.png" alt="" />
+                      </div>
+                    </div>
+
+                    <div class="collection-display">
+                      <div class="collection-info" v-if="selectedCollection">
+                        <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                        <div class="collection-text">
+                          <div class="collection-top">
+                            <span class="collection-name">{{ selectedCollection.name }}</span>
+                            <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                           </div>
 
-                          <img
-                            class="sensitive-switch"
-                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
-                            alt=""
-                            @click="toggleCollectionSensitive"
-                          />
+                          <div class="content-sensitive">
+                            <div class="sensitive-left">
+                              <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                              <div class="info-icon" @mouseover="adjustTooltipPosition">
+                                <img src="@/assets/images/publish/info.png" alt="Info" />
+                                <div class="tooltip-arrow"></div>
+                                <div class="tooltip">
+                                  <div class="tooltip-content">
+                                    <div v-html="t('submit.sensitiveContent')"></div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <img
+                                class="sensitive-switch"
+                                :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                                alt=""
+                                @click="toggleCollectionSensitive"
+                              />
+                            </div>
+                            <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                          </div>
                         </div>
-                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                      <div class="collection-info" v-else>
+                        <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="batch-perm-settings">
+              <span class="batch-perm-title">{{ t('novel.batchPublish.batchSettings') }}</span>
+              <div class="batch-perm-options">
+                <div
+                  class="perm-option"
+                  v-for="(opt, index) in batchPermOptions"
+                  :key="opt.key"
+                  @click="handleBatchPermissionChange(opt.key, index)"
+                >
+                  <img :src="batchPermission === opt.key ? selectActive : select" alt="" />
+                  <span v-if="opt.key === 'partial'">
+                    {{ t('novel.batchPublish.partialStart') }}
+                    <span class="partial-chapter-inline-select" @click.stop="handleInlineChapterSelect($event)">
+                      <input
+                        type="number"
+                        class="partial-chapter-inline-input"
+                        v-model.number="batchPartialStartChapter"
+                        @click.stop
+                        :min="1"
+                      />
+                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      <div v-if="showBatchChapterDropdown && batchPermission === 'partial'" class="partial-chapter-dropdown">
+                        <div
+                          v-for="ch in batchCollectionChapterList"
+                          :key="ch"
+                          class="partial-chapter-dropdown-item"
+                          :class="{ selected: batchPartialStartChapter === ch }"
+                          @click.stop="selectBatchPartialStart(ch)"
+                        >
+                          {{ ch }}
+                        </div>
+                      </div>
+                    </span>
+                    {{ t('novel.batchPublish.partialEnd') }}
+                  </span>
+                  <span v-else>{{ t(opt.labelKey) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch mode: batch chapter title edit section -->
+          <div v-if="isBatchPublish" class="batch-chapter-edit-section">
+            <span class="batch-edit-title">{{ t('novel.batchPublish.chapterTitleEdit') }}</span>
+
+            <div class="batch-page-tabs">
+              <div
+                v-for="(tab, idx) in batchPageTabs"
+                :key="idx"
+                class="batch-page-tab"
+                :class="{ active: idx === activeBatchPage }"
+                @click="activeBatchPage = idx"
+              >
+                <span>{{ tab }}</span>
+              </div>
+            </div>
+
+            <div class="batch-chapter-list">
+              <div
+                v-for="chapter in batchVisibleChapters"
+                :key="chapter.chapter"
+                class="batch-chapter-item"
+              >
+                <span class="batch-chapter-label">{{ t('chapter', { chapter: chapter.chapter }) }}：{{ chapter.title }}</span>
+                <div class="batch-chapter-fields">
+                  <div class="batch-field-label">
+                    <span class="required">*</span>
+                    <span class="field-name">{{ t('novel.batchPublish.chapterTitleLabel') }}</span>
+                  </div>
+                  <span class="batch-char-count">({{ getBatchChapterTitleLength(chapter.chapter) }}/60)</span>
+                  <div class="batch-field-order">
+                    <span class="order-label">{{ t('novel.batchPublish.collectionOrder') }}</span>
+                    <span class="order-value">{{ getCollectionOrder(chapter.chapter) }}</span>
+                  </div>
+                </div>
+                <div class="batch-chapter-input-wrap">
+                  <input
+                    type="text"
+                    class="batch-chapter-input"
+                    :value="getBatchChapterTitle(chapter.chapter)"
+                    @input="updateBatchChapterTitle(chapter.chapter, $event)"
+                    :placeholder="t('novel.batchPublish.chapterTitlePlaceholder')"
+                    maxlength="60"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Single mode: collection-section -->
+          <div v-if="!isBatchPublish" class="collection-section">
+            <div class="form-item">
+              <div class="collection-row">
+                <div class="collection-group">
+                  <div class="form-label-inner">
+                    <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+
+                    <div class="info-icon" @mouseover="adjustTooltipPosition">
+                      <img src="@/assets/images/publish/intro.png" alt="Info" />
+                      <div class="tooltip-arrow"></div>
+                      <div class="tooltip">
+                        <div class="tooltip-content">
+                          <div v-html="t('submit.collectionInfo')"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="switch-collection-btn" @click="openCollectionListModal">
+                      <span>{{ t('collection.switchCollection') }}</span>
+                      <img src="@/assets/images/publish/switch.png" alt="" />
+                    </div>
+                  </div>
+
+                  <div class="collection-display">
+                    <div class="collection-info" v-if="selectedCollection">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="collection-text">
+                        <div class="collection-top">
+                          <span class="collection-name">{{ selectedCollection.name }}</span>
+                          <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
+                        </div>
+
+                        <div class="content-sensitive">
+                          <div class="sensitive-left">
+                            <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                            <div class="info-icon" @mouseover="adjustTooltipPosition">
+                              <img src="@/assets/images/publish/info.png" alt="Info" />
+                              <div class="tooltip-arrow"></div>
+                              <div class="tooltip">
+                                <div class="tooltip-content">
+                                  <div v-html="t('submit.sensitiveContent')"></div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <img
+                              class="sensitive-switch"
+                              :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                              alt=""
+                              @click="toggleCollectionSensitive"
+                            />
+                          </div>
+                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="collection-info" v-else>
+                      <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                    </div>
+                  </div>
+
+
+                </div>
+                <div class="collection-group" v-if="!isNoCollection">
+                  <label class="form-label">{{ t("collection.orderInCollection") }}</label>
+                  <div class="collection-select">
+                    <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                      <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
+                      <div class="select-arrow">
+                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      </div>
+                    </div>
+                    <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                      <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                        {{ episode.label }}
                       </div>
                     </div>
                   </div>
-                  <div class="collection-info" v-else>
-                    <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
-                  </div>
-                </div>
-
-
-              </div>
-              <div class="collection-group" v-if="!isNoCollection">
-                <label class="form-label">{{ t("collection.orderInCollection") }}</label>
-                <div class="collection-select">
-                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                    <div class="select-arrow">
-                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                    </div>
-                  </div>
-                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
-                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                      {{ episode.label }}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Cover Image - hidden, using collection cover automatically -->
-        <!-- <div class="section">
-          <div class="form-item">
-            <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}
-            </label>
-            <div class="cover-row">
-              <div class="cover-box">
-                <img v-if="coverPreview || (selectedCollection && selectedCollection.cover)" :src="coverPreview || selectedCollection.cover" alt="" />
-              </div>
-              <div class="reupload-box">
-                <button class="reupload" @click="openCoverModal">{{ t("submit.cover.set") }}</button>
-              </div>
+          <div class="submit-row">
+            <button v-if="isBatchPublish" class="submit" :disabled="uploading" @click="onBatchPublish">
+              {{ t("submit.submit") }}
+            </button>
+            <button v-else class="submit" :disabled="uploading" @click="onSubmit">
+              {{ t("submit.submit") }}
+            </button>
+          </div>
+
+          <div class="agreement-row">
+            <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
+              <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
+              <img v-else src="@/assets/images/register/check.png" alt="" />
             </div>
+            <span class="agreement-text"
+              >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+            >
           </div>
-        </div> -->
-
-        <div class="submit-row">
-          <button class="submit" :disabled="uploading" @click="onSubmit">
-            {{ t("submit.submit") }}
-          </button>
-        </div>
-
-        <div class="agreement-row">
-          <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
-            <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
-            <img v-else src="@/assets/images/register/check.png" alt="" />
-          </div>
-          <span class="agreement-text"
-            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
-          >
         </div>
       </div>
     </div>
-  </div>
 
   <UploadMask :visible="isUpload"></UploadMask>
+  <LoadingMask :visible="isSelectionLoading" @cancel="cancelSelectionLoading" />
 
   <ConfirmLeaveModal :show="isShowConfirm" @cancel="confirmStay" @confirm="confirmLeave" />
 
@@ -436,6 +613,25 @@
     :project="previewProject"
     @close="closeViewModal"
     @publish="handlePublish"
+    @batch-publish="handleBatchPublishFromModal"
+  />
+
+  <!-- Batch Publish Progress Dialog -->
+  <BatchPublishProgressDialog
+    :visible="showBatchPublishProgress"
+    :chapters="batchPublishChapterStatuses"
+    @close="showBatchPublishProgress = false"
+    @complete="handleBatchPublishComplete"
+  />
+
+  <!-- Batch Publish Fail Dialog -->
+  <BatchPublishFailDialog
+    :visible="showBatchPublishFail"
+    :chapters="batchPublishFailChapters"
+    :failed-chapter="batchPublishFailedChapter"
+    @close="showBatchPublishFail = false"
+    @exit="handleBatchPublishExit"
+    @retry="handleBatchPublishRetry"
   />
 
   <!-- Community Convention Modal -->
@@ -494,8 +690,11 @@ import ConfirmLeaveModal from "@/components/ConfirmLeaveModal.vue";
 import SetArticleCoverModal from "@/components/SetArticleCoverModal.vue";
 import SensitiveConfirmModal from "@/components/SensitiveConfirmModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import LoadingMask from "@/components/LoadingMask.vue";
 import Pagination from "@/components/Pagination.vue";
 import ProjectNovelViewModal from "@/components/ProjectNovelViewModal.vue";
+import BatchPublishProgressDialog from "@/components/BatchPublishProgressDialog.vue";
+import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
@@ -516,6 +715,8 @@ import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
+import checkboxActive from "@/assets/images/register/check_active.png";
+import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import router from "@/router";
@@ -584,6 +785,14 @@ const showCoverModal = ref(false);
 const chapterIdForPublish = ref<number | null>(null);
 const agreeToTerms = ref(false);
 
+const isBatchPublishMode = ref(false);
+const batchPublishIndexes = ref<number[]>([]);
+const batchPublishCurrentIndex = ref(0);
+const batchPublishTotal = ref(0);
+const batchPublishProgress = ref<{ chapter: number; status: string }[]>([]);
+const batchPublishFailCount = ref(0);
+const batchChapterDetails = ref<Record<number, { title: string; content: string }>>({});
+
 // Check if cover is provided in the URL
 const hasUrlCover = ref(false);
 
@@ -600,6 +809,8 @@ const hasTitleGeneratedCover = ref(false);
 const projectCover = ref('');
 
 const uploading = ref(false);
+const isSelectionLoading = ref(false);
+let isSelectionCancelled = false;
 
 const disableComments = ref(false);
 const editorHtml = ref("");
@@ -750,6 +961,11 @@ const isLoadingCollections = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
+const showBatchPublishProgress = ref(false);
+const showBatchPublishFail = ref(false);
+const batchPublishChapterStatuses = ref<{ chapter: number; status: 'success' | 'publishing' | 'waiting' | 'fail' | 'unpublished' }[]>([]);
+const batchPublishFailChapters = ref<{ chapter: number; status: 'success' | 'fail' | 'unpublished' }[]>([]);
+const batchPublishFailedChapter = ref<number | undefined>(undefined);
 
 // Community Convention Modal
 const showConventionModal = ref(false);
@@ -995,6 +1211,226 @@ const isChapterPublished = computed(() => {
   const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
   return chapter?.is_publish == 1;
 });
+
+const selectedChapters = ref<number[]>([]);
+
+const isBatchPublish = computed(() => selectedChapters.value.length > 1);
+
+const activeBatchPage = ref(0);
+const batchChapterTitles = ref<Record<number, string>>({});
+const batchChapterContents = ref<Record<number, string>>({});
+
+const batchPermission = ref<'public' | 'partial' | 'private'>('public');
+const batchPartialStartChapter = ref<number>(1);
+const showBatchChapterDropdown = ref(false);
+
+const batchCollectionChapterList = computed(() => {
+  const start = parseInt(selectedEpisodeNumber.value) || 1;
+  const count = selectedChapters.value.length;
+  const list: number[] = [];
+  for (let i = 0; i < count; i++) {
+    list.push(start + i);
+  }
+  return list;
+});
+
+watch(batchCollectionChapterList, (list) => {
+  if (list.length > 0) {
+    if (!list.includes(batchPartialStartChapter.value)) {
+      batchPartialStartChapter.value = list[0];
+    }
+  }
+}, { immediate: true });
+const batchPermOptions = [
+  { key: 'public', labelKey: 'submit.permPublic' },
+  { key: 'partial', labelKey: 'submit.permPartial' },
+  { key: 'private', labelKey: 'submit.permPrivate' },
+];
+
+async function handleBatchPermissionChange(permission: string, _index: number) {
+  if (_index === 1 && !hasActiveSubscription.value) {
+    showSubscriptionModal.value = true;
+    return;
+  }
+  batchPermission.value = permission as 'public' | 'partial' | 'private';
+
+  if (permission === 'partial' && batchCollectionChapterList.value.length > 0) {
+    batchPartialStartChapter.value = batchCollectionChapterList.value[0];
+  }
+}
+
+function toggleBatchChapterDropdown(event: Event) {
+  event.stopPropagation();
+  showBatchChapterDropdown.value = !showBatchChapterDropdown.value;
+}
+
+function handleInlineChapterSelect(event: Event) {
+  event.stopPropagation();
+  if (batchPermission.value !== 'partial') {
+    batchPermission.value = 'partial';
+    if (batchCollectionChapterList.value.length > 0) {
+      batchPartialStartChapter.value = batchCollectionChapterList.value[0];
+    }
+  }
+  showBatchChapterDropdown.value = !showBatchChapterDropdown.value;
+}
+
+function selectBatchPartialStart(ch: number) {
+  batchPartialStartChapter.value = ch;
+  showBatchChapterDropdown.value = false;
+}
+
+const CHAPTERS_PER_PAGE = 20;
+
+const batchPageTabs = computed(() => {
+  const chapters = unpublishedChapters.value.filter((c: any) => selectedChapters.value.includes(c.chapter));
+  const total = chapters.length;
+  const pages = Math.ceil(total / CHAPTERS_PER_PAGE) || 1;
+  const tabs: string[] = [];
+  for (let i = 0; i < pages; i++) {
+    const startChapter = chapters[i * CHAPTERS_PER_PAGE]?.chapter;
+    const endChapter = chapters[Math.min((i + 1) * CHAPTERS_PER_PAGE - 1, total - 1)]?.chapter;
+    if (startChapter === endChapter) {
+      tabs.push(`${startChapter}`);
+    } else {
+      tabs.push(`${startChapter}-${endChapter}`);
+    }
+  }
+  return tabs;
+});
+
+const batchVisibleChapters = computed(() => {
+  if (!selectedProject.value?.chapters) return [];
+  const chapters = unpublishedChapters.value.filter((c: any) => selectedChapters.value.includes(c.chapter));
+  const start = activeBatchPage.value * CHAPTERS_PER_PAGE;
+  const end = start + CHAPTERS_PER_PAGE;
+  return chapters.slice(start, end);
+});
+
+function getBatchChapterTitle(chapterNum: number): string {
+  if (batchChapterTitles.value[chapterNum]) return batchChapterTitles.value[chapterNum];
+  const chapter = (selectedProject.value?.chapters || []).find((c: any) => c.chapter === chapterNum);
+  if (chapter) return `${t('chapter', { chapter: chapter.chapter })} ${chapter.title}`;
+  return '';
+}
+
+function getBatchChapterTitleLength(chapterNum: number): number {
+  return getBatchChapterTitle(chapterNum).length;
+}
+
+function getCollectionOrder(chapterNum: number): number {
+  const idx = selectedChapters.value.indexOf(chapterNum);
+  const start = parseInt(selectedEpisodeNumber.value) || 1;
+  return start + idx;
+}
+
+function updateBatchChapterTitle(chapterNum: number, event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  batchChapterTitles.value[chapterNum] = value;
+}
+
+const unpublishedChapters = computed(() =>
+  (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish == 2)
+);
+
+const publishedChapters = computed(() =>
+  (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish == 1)
+);
+
+const isAllChaptersSelected = computed(() =>
+  unpublishedChapters.value.length > 0 &&
+  selectedChapters.value.length === unpublishedChapters.value.length
+);
+
+function toggleSelectAllChapters() {
+  if (isAllChaptersSelected.value) {
+    selectedChapters.value = [];
+  } else {
+    selectedChapters.value = unpublishedChapters.value.map((c: any) => c.chapter);
+  }
+}
+
+function toggleChapterSelection(chapterNum: number) {
+  const idx = selectedChapters.value.indexOf(chapterNum);
+  if (idx === -1) {
+    selectedChapters.value.push(chapterNum);
+  } else {
+    selectedChapters.value.splice(idx, 1);
+  }
+}
+
+async function handlePublishFromSelection() {
+  if (selectedChapters.value.length === 0) return;
+
+  isSelectionLoading.value = true;
+  isSelectionCancelled = false;
+
+  if (isBatchPublish.value) {
+    const targetProject = selectedProject.value;
+    if (!targetProject) { isSelectionLoading.value = false; return; }
+
+    const sessionId = targetProject.session_id;
+    if (!sessionId) { isSelectionLoading.value = false; return; }
+
+    const firstChapterNum = selectedChapters.value[0];
+    let firstChapterContent = '';
+    let firstChapterTitle = '';
+
+    for (const chNum of selectedChapters.value) {
+      if (isSelectionCancelled) {
+        isSelectionLoading.value = false;
+        return;
+      }
+      try {
+        const res = await api.detailChapter(sessionId, chNum) as any;
+        if (res.code === 200 && res.data) {
+          if (res.data.is_publish === 1) {
+            isSelectionLoading.value = false;
+            toast(t('submit.image.episodeNotUnpublished'));
+            setTimeout(() => { location.reload(); }, 1000);
+            return;
+          }
+          batchChapterContents.value[chNum] = res.data.content || '';
+          if (chNum === firstChapterNum) {
+            firstChapterContent = res.data.content || '';
+            firstChapterTitle = res.data.title || '';
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching chapter ${chNum} details:`, error);
+      }
+    }
+
+    if (isSelectionCancelled) {
+      isSelectionLoading.value = false;
+      return;
+    }
+
+    isSelectionLoading.value = false;
+
+    const chapterText = t('chapter', { chapter: firstChapterNum });
+    let generatedTitle = `${chapterText} ${firstChapterTitle || targetProject.name}`;
+    selectedEpisode.value = firstChapterNum as any;
+    await handlePublish({
+      project: targetProject,
+      episode: firstChapterNum,
+      title: generatedTitle,
+      content: firstChapterContent,
+      chapterIndex: firstChapterNum,
+      session_id: sessionId,
+      cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
+    });
+  } else {
+    selectedEpisode.value = selectedChapters.value[0] as any;
+    isSelectionLoading.value = false;
+    await handlePublish();
+  }
+}
+
+const cancelSelectionLoading = () => {
+  isSelectionCancelled = true;
+  isSelectionLoading.value = false;
+};
 
 // Cover generation
 function generateCoverFromTitle() {
@@ -2265,6 +2701,12 @@ function handleClickOutside(event: MouseEvent) {
   if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
+
+  // Handle batch chapter dropdown
+  const batchChapterDropdown = document.querySelector(".partial-chapter-dropdown");
+  if (showBatchChapterDropdown.value && batchChapterDropdown && !batchChapterDropdown.contains(target)) {
+    showBatchChapterDropdown.value = false;
+  }
 }
 
 // Project details cache
@@ -2321,7 +2763,7 @@ async function fetchProjects(loadMore = false) {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
-  // Close dropdown
+  selectedChapters.value = [];
   showProjectDropdown.value = false;
 
   // Mark as editing mode when selecting from history
@@ -2503,6 +2945,207 @@ async function openViewModal(project: any) {
 function closeViewModal() {
   showViewModal.value = false;
   previewProject.value = null;
+}
+
+async function handleBatchPublishFromModal() {
+  if (!selectedProject.value) return;
+  if (isSelectionLoading.value) return;
+  isSelectionLoading.value = true;
+  isSelectionCancelled = false;
+
+  const targetProject = selectedProject.value;
+  const sessionId = targetProject.session_id;
+  if (!sessionId) { isSelectionLoading.value = false; return; }
+
+  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish !== 1);
+  selectedChapters.value = unpublished.map((c: any) => c.chapter);
+
+  if (selectedChapters.value.length === 0 || isSelectionCancelled) {
+    isSelectionLoading.value = false;
+    return;
+  }
+
+  const firstChapterNum = selectedChapters.value[0];
+  let firstChapterContent = '';
+  let firstChapterTitle = '';
+
+  for (const chNum of selectedChapters.value) {
+    if (isSelectionCancelled) {
+      isSelectionLoading.value = false;
+      return;
+    }
+    try {
+      const res = await api.detailChapter(sessionId, chNum) as any;
+      if (res.code === 200 && res.data) {
+        if (res.data.is_publish === 1) {
+          isSelectionLoading.value = false;
+          toast(t('submit.image.episodeNotUnpublished'));
+          setTimeout(() => { location.reload(); }, 1000);
+          return;
+        }
+        batchChapterContents.value[chNum] = res.data.content || '';
+        if (chNum === firstChapterNum) {
+          firstChapterContent = res.data.content || '';
+          firstChapterTitle = res.data.title || '';
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching chapter ${chNum} details:`, error);
+    }
+  }
+
+  if (isSelectionCancelled) {
+    isSelectionLoading.value = false;
+    return;
+  }
+
+  isSelectionLoading.value = false;
+
+  const chapterText = t('chapter', { chapter: firstChapterNum });
+  let generatedTitle = `${chapterText} ${firstChapterTitle || targetProject.name}`;
+  selectedEpisode.value = firstChapterNum as any;
+  await handlePublish({
+    project: targetProject,
+    episode: firstChapterNum,
+    title: generatedTitle,
+    content: firstChapterContent,
+    chapterIndex: firstChapterNum,
+    session_id: sessionId,
+    cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
+  });
+}
+
+function handleBatchPublishAllSuccess(count: number) {
+  const sid = selectedProject.value?.session_id || (route.query.session_id as string);
+  if (sid) {
+    sessionStorage.removeItem(`batchPublishCover_${sid}`);
+    sessionStorage.removeItem(`batchPublishTitle_${sid}`);
+  }
+  toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
+  router.push('/user-home');
+}
+
+async function onBatchPublish() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  if (!selectedCollection.value) {
+    toast(t('collection.noCollection'));
+    return;
+  }
+
+  if (!agreeTerms.value) {
+    showConventionModal.value = true;
+    return;
+  }
+
+  batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
+    chapter,
+    status: 'waiting' as const
+  }));
+  showBatchPublishProgress.value = true;
+
+  const session_id = selectedProject.value?.session_id || (route.query.session_id as string);
+  const collectionStart = parseInt(selectedEpisodeNumber.value) || 1;
+
+  for (let i = 0; i < selectedChapters.value.length; i++) {
+    const chapterNum = selectedChapters.value[i];
+    const collectionChapterIndex = collectionStart + i;
+
+    batchPublishChapterStatuses.value[i].status = 'publishing';
+
+    try {
+      let content = batchChapterContents.value[chapterNum] || batchChapterDetails.value[chapterNum]?.content || '';
+      let title = batchChapterTitles.value[chapterNum] || getBatchChapterTitle(chapterNum);
+
+      const accessRights = batchPermission.value === 'partial'
+        ? (collectionChapterIndex >= batchPartialStartChapter.value ? 2 : 1)
+        : batchPermission.value === 'private' ? 3 : 1;
+
+      const payload = {
+        type: 2,
+        title: title.substring(0, 60),
+        cover: coverPreview.value || (selectedCollection.value?.cover || ''),
+        content: content,
+        is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+        access_rights: accessRights,
+        book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
+        chapter_index: collectionChapterIndex,
+        ...(session_id ? { session_id } : {}),
+        ai_chapter_index: chapterNum,
+      };
+
+      const headers = new Headers();
+      const { ts, sign } = window.AntiCrawler.generateAuthParams(token);
+      headers.append("token", token);
+      headers.append("ts", ts);
+      headers.append("sign", sign);
+      headers.append("Content-Type", "application/json");
+      headers.append("Platform", "web");
+
+      const response = await fetch(`${baseUrl}post/addPost`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+      const result = await response.text();
+      const res = JSON.parse(result);
+
+      if (res.code == 0 || res.code == 200) {
+        batchPublishChapterStatuses.value[i].status = 'success';
+      } else {
+        batchPublishChapterStatuses.value[i].status = 'fail';
+        for (let j = i + 1; j < selectedChapters.value.length; j++) {
+          batchPublishChapterStatuses.value[j].status = 'unpublished';
+        }
+        break;
+      }
+    } catch (error) {
+      console.error(`Error publishing chapter ${chapterNum}:`, error);
+      batchPublishChapterStatuses.value[i].status = 'fail';
+      for (let j = i + 1; j < selectedChapters.value.length; j++) {
+        batchPublishChapterStatuses.value[j].status = 'unpublished';
+      }
+      break;
+    }
+  }
+
+  handleBatchPublishComplete();
+}
+
+function handleBatchPublishComplete() {
+  showBatchPublishProgress.value = false;
+  const successCount = batchPublishChapterStatuses.value.filter(c => c.status === 'success').length;
+  const totalCount = batchPublishChapterStatuses.value.length;
+  if (successCount === totalCount) {
+    handleBatchPublishAllSuccess(totalCount);
+  } else {
+    batchPublishFailChapters.value = batchPublishChapterStatuses.value.map(c => ({
+      chapter: c.chapter,
+      status: c.status
+    }));
+    const failItem = batchPublishChapterStatuses.value.find(c => c.status === 'fail');
+    batchPublishFailedChapter.value = failItem?.chapter;
+    showBatchPublishFail.value = true;
+  }
+}
+
+function handleBatchPublishExit() {
+  const sid = selectedProject.value?.session_id || (route.query.session_id as string);
+  if (sid) {
+    sessionStorage.removeItem(`batchPublishCover_${sid}`);
+    sessionStorage.removeItem(`batchPublishTitle_${sid}`);
+  }
+  showBatchPublishFail.value = false;
+  router.push('/user-home');
+}
+
+function handleBatchPublishRetry() {
+  showBatchPublishFail.value = false;
+  showBatchPublishProgress.value = true;
 }
 
 async function handlePublish(publishData?: any) {
@@ -2774,6 +3417,137 @@ onMounted(async () => {
     const index = route.query.index as string;
     const cover = route.query.cover as string;
     const title = route.query.title as string;
+    const isBatch = route.query.batch === 'true';
+
+    if (isBatch && session_id) {
+      const batchIndexesRaw = route.query.indexes as string;
+      const batchCover = sessionStorage.getItem(`batchPublishCover_${session_id}`) || '';
+      const batchTitle = sessionStorage.getItem(`batchPublishTitle_${session_id}`) || '';
+      if (batchIndexesRaw) {
+        const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
+
+        try {
+          const projectRes = await api.detailProject(session_id) as any;
+          if (projectRes.code === 200 && projectRes.data) {
+            selectedProject.value = {
+              ...projectRes.data,
+              session_id,
+              chapters: projectRes.data.chapters || []
+            };
+            if (projectRes.data.result_async?.generate_novel_cover) {
+              projectCover.value = projectRes.data.result_async.generate_novel_cover;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching project details:', error);
+        }
+
+        if (batchCover) {
+          coverPreview.value = batchCover;
+          hasUrlCover.value = true;
+        } else if (projectCover.value) {
+          coverPreview.value = projectCover.value;
+          hasUrlCover.value = true;
+        }
+
+        if (batchTitle) {
+          form.value.title = batchTitle;
+          projectNameForNewCollection.value = batchTitle;
+        }
+
+        isBatchPublishMode.value = true;
+        batchPublishIndexes.value = batchIndexes;
+        batchPublishCurrentIndex.value = 0;
+        batchPublishTotal.value = batchIndexes.length;
+        batchPublishProgress.value = [];
+        batchPublishFailCount.value = 0;
+
+        selectedChapters.value = batchIndexes;
+
+        for (const chapterIndex of batchIndexes) {
+          try {
+            const res = await api.detailChapter(session_id, chapterIndex) as any;
+            if (res.code === 200 && res.data) {
+              batchChapterDetails.value[chapterIndex] = {
+                title: res.data.title || '',
+                content: res.data.content || ''
+              };
+            }
+          } catch (e) {
+            console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
+          }
+        }
+
+        // Setup collection
+        if (batchTitle) {
+          try {
+            let searchRes: any = null;
+            if (session_id) {
+              searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+            }
+            if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+              searchRes = await api.searchFullCollection({ title: batchTitle, type: 2 }) as any;
+            }
+
+            if (searchRes.code == 0) {
+              const book_id = searchRes.data?.book_id || 0;
+
+              if (book_id == 0) {
+                const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
+                const collectionDescription = t('collection.defaultDescription');
+                const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+                const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+
+                const createRes = await api.addCollection({
+                  title: batchTitle,
+                  type: 2,
+                  cover: collectionCover,
+                  description: collectionDescription,
+                  is_nsfw: collectionIsNsfw
+                }) as any;
+
+                if (createRes.code == 0 && createRes.data?.book_id) {
+                  selectedCollection.value = {
+                    id: createRes.data.book_id,
+                    name: batchTitle,
+                    cover: collectionCover,
+                    description: collectionDescription,
+                    is_nsfw: collectionIsNsfw
+                  };
+                  selectedEpisodeNumber.value = '1';
+                  isNoCollection.value = false;
+                }
+              } else {
+                const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+                if (collectionRes.code == 0 && collectionRes.data) {
+                  const allnums = collectionRes.data.count || 0;
+                  const episodeNumber = parseInt(allnums) + 1;
+
+                  selectedCollection.value = {
+                    id: book_id,
+                    name: searchRes.data?.book_info?.title || batchTitle,
+                    cover: searchRes.data?.book_info?.cover,
+                    description: searchRes.data?.book_info?.description,
+                    is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                  };
+                  selectedEpisodeNumber.value = episodeNumber.toString();
+                  isNoCollection.value = false;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error setting up collection:', error);
+          }
+        }
+
+        showFullContent.value = true;
+        await fetchCollections(false);
+      } else {
+        router.push({ path: '/novel-generate', query: { session_id } });
+      }
+      return;
+    }
 
     if (session_id && index) {
       // Request chapter detail interface

@@ -35,7 +35,7 @@
 
         <div class="recharge-plan-section">
 
-          <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount" class="first-month-off-banner">
+          <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount && rechargePlans.some(p => planHasDiscount(p))" class="first-month-off-banner">
             <span class="banner-highlight">{{ t('aiRecharge.firstMonth30OffPrefix') }}</span>{{ t('aiRecharge.firstMonth30OffSuffix') }}
           </div>
 
@@ -46,6 +46,11 @@
           <div v-if="isLoading && rechargePlans.length === 0" class="list-loading">
             <div class="list-loading-spinner"></div>
             <div class="list-loading-text">{{ t('loading') }}</div>
+          </div>
+
+          <div v-else-if="!isLoading && rechargePlans.length === 0" class="plan-empty-state">
+            <img src="@/assets/images/base/no_data.png" alt="empty" />
+            <p class="plan-empty-text">{{ t('common.noData') }}</p>
           </div>
 
           <div v-else class="plan-grid">
@@ -59,10 +64,10 @@
 
               <img v-if="selectedPlan != plan.plan_id" class="plan-bg" src="@/assets/images/recharge/bg.png" alt="" />
 
-              <div class="plan-card-inner" :class="{ active: selectedPlan == plan.plan_id, 'discount-card': activeTab == 'subscription' && hasFirstMonthDiscount, 'credits-card': activeTab == 'credits_pack' }">
+              <div class="plan-card-inner" :class="{ active: selectedPlan == plan.plan_id, 'discount-card': activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan), 'credits-card': activeTab == 'credits_pack' }">
                 <span class="plan-mode" v-if="getPlanTitle(plan) !== t('aiRecharge.unknownPlan')">{{ getPlanTitle(plan) }}</span>
 
-                <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount" class="plan-price-section">
+                <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan)" class="plan-price-section">
                   <div class="plan-discount-price">
                     <span class="price-num">{{ formatPrice(getFirstMonthPrice(plan)) }}</span>
                     <span class="price-unit">{{ t('aiRecharge.unit') }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
@@ -129,9 +134,9 @@
             <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></div>
           </div>
 
-          <div v-if="activeTab !== 'subscription' || !hasFirstMonthDiscount" class="bottom-bar-divider"></div>
+          <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" class="bottom-bar-divider"></div>
 
-          <div v-if="activeTab !== 'subscription' || !hasFirstMonthDiscount" class="bottom-block">
+          <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" class="bottom-block">
             <div class="block-label">
               {{ t('aiRecharge.coupon') }}
               <div class="coupon-info-icon">
@@ -247,6 +252,12 @@ const tabModeMap: Record<string, string> = {
   credits_pack: 'payment',
 };
 
+const currentPlanHasDiscount = computed(() => {
+  const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
+  if (!plan) return false;
+  return planHasDiscount(plan);
+});
+
 const planOriginalPrice = computed(() => {
   const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
   if (!plan) return 0;
@@ -256,7 +267,7 @@ const planOriginalPrice = computed(() => {
 const originalPrice = computed(() => {
   const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
   if (!plan) return 0;
-  if (activeTab.value == 'subscription' && hasFirstMonthDiscount.value) {
+  if (activeTab.value == 'subscription' && hasFirstMonthDiscount.value && planHasDiscount(plan)) {
     return getFirstMonthPrice(plan);
   }
   return parseFloat(plan.price);
@@ -423,12 +434,18 @@ function selectPlan(planId: number | string) {
   }
 }
 
+function planHasDiscount(plan: RechargePlan): boolean {
+  if (plan.discount_price && parseInt(plan.discount_price) > 0) return true;
+  if (plan.discount_desc && plan.discount_desc.length > 0 && plan.discount_desc[0] > 0) return true;
+  return false;
+}
+
 function getFirstMonthPrice(plan: RechargePlan): number {
   if (plan.discount_price) {
     return parseInt(plan.discount_price) || 0;
   }
   const price = parseFloat(plan.price);
-  const discount = (plan.discount_desc && plan.discount_desc[0]) || 30;
+  const discount = (plan.discount_desc && plan.discount_desc[0]) || 0;
   return Math.round(price * (1 - discount / 100));
 }
 
@@ -678,6 +695,27 @@ function cancelCoupon() {
     .list-loading-text {
       font-size: 1.4rem;
       color: #6A7282;
+    }
+  }
+
+  .plan-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10rem 2rem 0;
+
+    img {
+      width: 12rem;
+      height: 12rem;
+      margin-bottom: 2rem;
+      opacity: 0.6;
+    }
+
+    .plan-empty-text {
+      font-size: 1.4rem;
+      color: #99A1AF;
+      font-weight: 300;
     }
   }
 
