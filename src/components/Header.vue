@@ -510,8 +510,8 @@ function getMessageInfo() {
     });
 }
 
-function getUserInfo() {
-  api
+function getUserInfo(): Promise<void> {
+  return api
     .userInfo()
     .then((res) => {
       const data = res as any;
