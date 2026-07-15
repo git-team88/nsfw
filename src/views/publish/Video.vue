@@ -1465,12 +1465,12 @@ function handleBatchPublishComplete() {
 
 function handleBatchPublishAllSuccess(count: number) {
   toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=3`);
 }
 
 function handleBatchPublishExit() {
   showBatchPublishFail.value = false;
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=3`);
 }
 
 function handleBatchPublishRetry() {
