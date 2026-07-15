@@ -83,6 +83,10 @@ async function prerender() {
         `<link rel="alternate" hreflang="${HREFLANG_MAP[l]}" href="https://www.moegen.ai/${l}${pagePath === '/' ? '/' : pagePath}" />`
       ).join('\n')
 
+      html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${seo.description}" />`)
+      html = html.replace(/<meta\s+name=["']keywords["'][^>]*>/i, `<meta name="keywords" content="${seo.keywords}" />`)
+      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seo.title}</title>`)
+
       const inject = `
 ${hreflangTags}
 <link rel="alternate" hreflang="x-default" href="https://www.moegen.ai/ja${pagePath === '/' ? '/' : pagePath}" />

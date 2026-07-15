@@ -1246,7 +1246,7 @@ import ProcessList from '@/components/ProcessList.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import router from '@/router';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 import api from '@/api/index';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
@@ -2470,17 +2470,14 @@ const removeCharacter = (character: any) => {
 
 // Content type selection
 const selectContentType = (type: string) => {
-  // Update URL with content type path
-  const typePathMap: Record<string, string> = {
-    'novel': '/novel',
-    'comic': '/comic',
-    'drama': '/drama',
-    'photo': '/photo',
-    'video': '/video'
-  };
-
-  const path = typePathMap[type] || '/novel';
-  history.replaceState({}, '', path);
+  const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw' };
+  const urlLang = i18nToUrlLang[locale.value] || 'ja';
+  const routeName = `Home_${locale.value}_${type}`;
+  if (router.hasRoute(routeName)) {
+    router.push({ name: routeName });
+  } else {
+    router.push(`/${urlLang}/${type}`);
+  }
 
   // Reset all content and settings when switching content types
   // Clear video-related content
