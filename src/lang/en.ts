@@ -1097,7 +1097,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       editEmail: "Edit Email Only",
       changeEmailTitle: "Change Contact Email",
       edit: "Edit",
-      birthdayCannotEdit: "(Once you fill in your birthday, it cannot be modified. Please make sure you fill it in correctly.)",
+      birthdayCannotEdit: "(Once you fill in your birthday, it cannot be modified. Please ensure you fill it in correctly.)",
       codePlaceholder: "Enter verification code",
       idDocumentFront: "ID Document (Front)",
       idDocumentBack: "ID Document (Back)",

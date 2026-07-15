@@ -1201,7 +1201,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       changeEmailTitle: "更換聯繫郵箱",
       edit: "修改",
       editConfirm: "確定",
-      birthdayCannotEdit: "（生日一經填寫，則不能修改，請保證填寫正確）",
+      birthdayCannotEdit: "（生日一經填寫，則不能修改，請確保填寫正確）",
       codePlaceholder: "請輸入驗證碼",
       idDocumentFront: "證件（正面）",
       idDocumentBack: "證件（背面）",

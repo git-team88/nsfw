@@ -874,7 +874,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       editEmail: "メールアドレスのみ変更",
       changeEmailTitle: "連絡先メールアドレス変更",
       edit: "変更",
-      birthdayCannotEdit: "（誕生日は一度入力すると変更できませんので、正確に入力してください）",
+      birthdayCannotEdit: "（誕生日は一度入力すると変更できませんので、正確にご入力ください）",
       codePlaceholder: "確認コードを入力してください",
       idDocumentFront: "本人確認書類（表）",
       idDocumentBack: "本人確認書類（裏）",
