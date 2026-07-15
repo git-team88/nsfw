@@ -1387,7 +1387,7 @@ function handleBatchPublishComplete() {
   } else {
     batchPublishFailChapters.value = batchPublishChapterStatuses.value.map(c => ({
       chapter: c.chapter,
-      status: c.status
+      status: c.status as 'success' | 'fail' | 'unpublished'
     }));
     const failItem = batchPublishChapterStatuses.value.find(c => c.status === 'fail');
     batchPublishFailedChapter.value = failItem?.chapter;
@@ -4388,7 +4388,6 @@ async function initBatchPublish(session_id: string) {
     projectCoverForNewCollection.value = coverPreview.value || '';
   }
 
-  isBatchPublishMode.value = true;
   selectedChapters.value = batchIndexes;
 
   let hasChapterError = false;

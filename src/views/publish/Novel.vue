@@ -3152,7 +3152,7 @@ function handleBatchPublishComplete() {
   } else {
     batchPublishFailChapters.value = batchPublishChapterStatuses.value.map(c => ({
       chapter: c.chapter,
-      status: c.status
+      status: c.status as 'success' | 'fail' | 'unpublished'
     }));
     const failItem = batchPublishChapterStatuses.value.find(c => c.status === 'fail');
     batchPublishFailedChapter.value = failItem?.chapter;

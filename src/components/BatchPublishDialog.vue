@@ -142,7 +142,7 @@ const handleNextStep = async () => {
 
       const freshChapters = res.data.chapters;
       const alreadyPublished = selectedChapters.value.filter(chapterNum => {
-        const freshChapter = freshChapters.find(c => c.chapter === chapterNum);
+        const freshChapter = freshChapters.find((c: any) => c.chapter === chapterNum);
         return freshChapter && freshChapter.is_publish == 1;
       });
 
