@@ -5863,7 +5863,7 @@ const fetchNovelOutline = async () => {
     // Step 1: Call detailProject API
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
 
-    if (detailProjectRes.code == 404) {
+    if (detailProjectRes.code == 404 || detailProjectRes.code == 10423) {
       isAccessDenied.value = true;
       isLoading.value = false;
       isFetchingNovelOutline.value = false;
