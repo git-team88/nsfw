@@ -60,8 +60,9 @@
                 <span>{{ t("register.forgetLabel") }}</span>
               </p>
             </div>
-            <button class="email-btn" :class="isEnd ? 'on' : ''" type="button" @click="goEmailLogin()">
+            <button class="email-btn" :class="isEnd ? 'on' : ''" :disabled="isLoading" type="button" @click="goEmailLogin()">
               {{ t("header.login") }}
+              <span class="btn-spinner" v-if="isLoading"></span>
             </button>
           </form>
         </div>
@@ -115,7 +116,7 @@ import { toast } from "@/util/toast";
 import { initLanguage } from "@/util/utils";
 import api from "@/api/index";
 import router from "@/router";
-import { trackLogin } from "@/utils/analytics";
+import { trackLogin, setUserId } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
 
@@ -128,6 +129,7 @@ const emailError = ref("");
 const passwordError = ref("");
 
 const isShowLoad = ref(false);
+const isLoading = ref(false);
 
 const isEnd = computed(() => {
   if (email.value.length >= 2 && password.value.length >= 6) {
@@ -262,9 +264,11 @@ function validatePassword(password: string) {
 }
 
 function goEmailLogin() {
-  if (!isEnd.value) {
+  if (!isEnd.value || isLoading.value) {
     return false;
   }
+
+  isLoading.value = true;
 
   const data = {
     email: email.value,
@@ -276,11 +280,9 @@ function goEmailLogin() {
     .then((res: any) => {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("uid", res.data.user_id);
+        setUserId(String(res.data.user_id));
         trackLogin();
-
-        if (headerRef.value) {
-          headerRef.value.getLoginUserInfo()
-        }
 
         router.push("/");
       } else {
@@ -289,6 +291,9 @@ function goEmailLogin() {
     })
     .catch((err: any) => {
       console.log(err);
+    })
+    .finally(() => {
+      isLoading.value = false;
     });
 }
 
@@ -314,15 +319,9 @@ function googleLogin() {
       if (res.code == 0) {
         localStorage.setItem("token", res.data.token);
         localStorage.removeItem("lType");
+        localStorage.setItem("uid", res.data.user_id);
+        setUserId(String(res.data.user_id));
         trackLogin();
-
-        // if (res.data && res.data.is_first == 1) {
-        //   localStorage.setItem("isFirstLogin", "1");
-        // }
-
-        if (headerRef.value) {
-          headerRef.value.getLoginUserInfo()
-        }
 
         router.push("/");
       } else if (res.code == 10110) {
@@ -495,6 +494,26 @@ function googleLogin() {
         &.on {
           background: #FB64B6;
           cursor: pointer;
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          &:hover::after {
+            content: none;
+          }
+        }
+
+        .btn-spinner {
+          display: inline-block;
+          width: 2rem;
+          height: 2rem;
+          margin-left: 0.8rem;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #ffffff;
+          border-radius: 50%;
+          animation: rotate 1s linear infinite;
         }
 
         &:hover {

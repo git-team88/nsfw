@@ -96,8 +96,9 @@
                 </div>
               </div>
             </div>
-            <button class="email-btn" :class="isEnd ? 'on' : ''" type="button" @click="goEmailRegister()">
+            <button class="email-btn" :class="isEnd ? 'on' : ''" :disabled="isLoading" type="button" @click="goEmailRegister()">
               {{ t("header.register") }}
+              <span class="btn-spinner" v-if="isLoading"></span>
             </button>
           </form>
         </div>
@@ -182,6 +183,7 @@ const passwordError = ref("");
 const codeError = ref("");
 
 const isShowLoad = ref(false);
+const isLoading = ref(false);
 const showBirthday = ref(false);
 const showInviteCodeModal = ref(false);
 
@@ -250,11 +252,11 @@ onMounted(async () => {
     googleRegister();
   }
 
-  // if (token) {
-  //   router.push("/");
-  // } else {
-  //   initGoogle();
-  // }
+  if (token) {
+    router.push("/");
+  } else {
+    initGoogle();
+  }
 });
 
 watch(() => locale.value, () => {
@@ -458,7 +460,7 @@ function validatePassword(password: string) {
 }
 
 function goEmailRegister() {
-  if (!isEnd.value) {
+  if (!isEnd.value || isLoading.value) {
     return false;
   }
 
@@ -481,6 +483,8 @@ function goEmailRegister() {
     codeError.value = t("register.code");
     return false;
   }
+
+  isLoading.value = true;
 
   const emailData = {
       email: email.value,
@@ -512,6 +516,9 @@ function goEmailRegister() {
       .catch((err: any) => {
         showBirthday.value = false;
         toast(t('fail'));
+      })
+      .finally(() => {
+        isLoading.value = false;
       });
 }
 
@@ -816,6 +823,26 @@ function googleRegister() {
         &.on {
           background: #FB64B6;
           cursor: pointer;
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          &:hover::after {
+            content: none;
+          }
+        }
+
+        .btn-spinner {
+          display: inline-block;
+          width: 2rem;
+          height: 2rem;
+          margin-left: 0.8rem;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #ffffff;
+          border-radius: 50%;
+          animation: rotate 1s linear infinite;
         }
 
         &:hover {

@@ -4,6 +4,8 @@ export default {
     notAble: "認証方式を利用できません",
     loading: "読み込み中..."
   },
+  cancel: "キャンセル",
+  confirm: "確認",
   agreeTitle: "利用規約",
   closedBetaAgreementTitle: "クローズドβテスト同意書",
   closedBetaAgreement: `現在、MoeGenはクローズドβテスト期間中のため、正式な利用規約は掲載しておりません。<br />
@@ -1514,7 +1516,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       new: "新規キャラクター設定",
       cancel: "キャンセル",
       confirm: "確認",
-      limmit: 'キャラクター設定は最大7つまで選択できます',
+      limit: 'キャラクター設定は最大7つまで選択できます',
       noCharacters: "キャラクター設定がありません",
       officialCharacters: "公式キャラクター設定",
       myCharacters: "マイキャラクター設定",
@@ -1665,25 +1667,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",
     deleteWarning: "削除された履歴レコードは復元できません"
   },
-  aiCreations: {
-    title: "未公開のAI作品から選択",
-    filter: {
-      all: "すべて",
-      video: "動画",
-      image: "画像"
-    },
-    sort: {
-      asc: "古い順",
-      desc: "新しい順"
-    },
-    selectionInfo: "動画を1本、または画像を1〜10枚選択できます。",
-    clearAll: "すべてクリア",
-    cancel: "キャンセル",
-    confirm: "確認",
-    selectTip: "種類の異なる形式は同時選択できません。",
-    selectVideoTip: "動画タイプの項目のみ選択できます。",
-    selectVideoFirst: "まず動画を1つ選択してください。"
-  },
+
   submit: {
     tabs: {
       video: "アニメドラマ",
@@ -1742,7 +1726,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       specFormat: "動画形式：",
       formatInfo: "MP4、MOV",
       specSize: "ファイルサイズ：",
-      sizeInfo1: "10GB以下",
+      sizeInfo1: "5GB以下",
       sizeInfo2: "再生時間：1時間以内",
       specResolution: "推奨解像度：",
       resolutionInfo: "推奨：1080P",
@@ -1779,6 +1763,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       formatError: "サポートされていない動画形式です。MP4、MOVのみ対応しています",
       multiSelectError: "動画ファイルは1つのみ選択してください",
       corruptedError: "動画ファイルが破損しているか再生できません。別のファイルをお試しください",
+      sizeError: "動画ファイルサイズは5GBを超えることはできません",
+      durationLimit: "動画の再生時間は1時間を超えることはできません。別のファイルをお試しください",
       published: "公開済み",
       projectView: {
         detail: "詳細",
@@ -1814,6 +1800,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       aiGenerateStart: "生成を開始する",
       minCharacters: "少なくとも10文字を入力してください",
       cover: "カバー",
+      coverChange: "表紙変更",
       selectBackground: "背景を選択してください",
       generationFailed: "カバーの生成に失敗しました。今回の生成ではクレジットは差し引かれません",
       generationTimeout: "カバーの生成がタイムアウトしました。もう一度お試しください",
@@ -1867,6 +1854,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
         publishChapter: "この章を公開",
         published: "公開済み",
         episodeSummary: "この話のあらすじ",
+        chapterDescription: "章の詳細",
         publishedIndicator: "公開済みを示す",
       },
     },
@@ -2853,7 +2841,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       title: "完結の注意事項",
       description: "ユーザー体験を確保するため、作品のストーリーが完全で一貫性があり、中途半端な結末がないことを確認してから完結にしてください。",
       note: "注意：完結に設定後、以下の操作はできなくなります！",
-      item1: `1. 新しい章/エピソードの公開、および既存の章/エピソードの修正ができなくなります<br />
+      item: `1. 新しい章/エピソードの公開、および既存の章/エピソードの修正ができなくなります<br />
       2. 連載中に戻すことはできません`,
       cancel: "キャンセル",
       next: "次へ"

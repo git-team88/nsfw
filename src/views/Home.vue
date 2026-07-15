@@ -2160,20 +2160,18 @@ const handleSensitiveContentToggle = () => {
     return;
   }
 
-  headerRef.value?.getUserInfo()?.then(() => {
-    if (checkAgeForSensitiveContent()) {
-      return;
-    }
+  if (checkAgeForSensitiveContent()) {
+    return;
+  }
 
-    const hasConfirmed = localStorage.getItem('sensitiveContentDontAsk') == '1';
-    if (hasConfirmed) {
-      allowSensitiveContent.value = true;
-      localStorage.setItem('allowSensitiveContent', '1');
-      loadContent(1);
-    } else {
-      showSensitiveContentConfirmModal.value = true;
-    }
-  });
+  const hasConfirmed = localStorage.getItem('sensitiveContentDontAsk') == '1';
+  if (hasConfirmed) {
+    allowSensitiveContent.value = true;
+    localStorage.setItem('allowSensitiveContent', '1');
+    loadContent(1);
+  } else {
+    showSensitiveContentConfirmModal.value = true;
+  }
 };
 
 const confirmSensitiveContent = () => {
@@ -2223,22 +2221,21 @@ const switchVideoMode = (mode: string, index: number) => {
       return false;
     }
 
-    headerRef.value?.getUserInfo()?.then(() => {
-      if (checkAgeForUnlimitedMode('video')) {
-        return;
-      }
+    if (checkAgeForUnlimitedMode('video')) {
+      return;
+    }
 
-      const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
-      if (hasConfirmed) {
-        currentVideoMode.value = 'unlimited';
-        showVideoModeDropdown.value = false;
-      } else {
-        showUnlimitedModal.value = true;
-      }
-    });
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentVideoMode.value = 'unlimited';
+      showVideoModeDropdown.value = false;
+    } else {
+      showUnlimitedModal.value = true;
+    }
   } else {
     currentVideoMode.value = 'normal';
     showVideoModeDropdown.value = false;
+    // 如果当前选中的是视频续写模式，切换回多模态模式
     if (selectedVideoMultimodal.value === 'videoExtend') {
       selectedVideoMultimodal.value = 'multimodal';
       resetVideoInputs();
@@ -2254,19 +2251,17 @@ const switchNovelMode = (mode: string, index: number) => {
       return false;
     }
 
-    headerRef.value?.getUserInfo()?.then(() => {
-      if (checkAgeForUnlimitedMode('novel')) {
-        return;
-      }
+    if (checkAgeForUnlimitedMode('novel')) {
+      return;
+    }
 
-      const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
-      if (hasConfirmed) {
-        currentNovelMode.value = 'unlimited';
-        showModeDropdown.value = false;
-      } else {
-        showUnlimitedModal.value = true;
-      }
-    });
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentNovelMode.value = 'unlimited';
+      showModeDropdown.value = false;
+    } else {
+      showUnlimitedModal.value = true;
+    }
   } else {
     currentNovelMode.value = 'normal';
     showModeDropdown.value = false;
@@ -2281,18 +2276,16 @@ const switchComicMode = (mode: string, index: number) => {
       return false;
     }
 
-    headerRef.value?.getUserInfo()?.then(() => {
-      if (checkAgeForUnlimitedMode('comic')) {
-        return;
-      }
+    if (checkAgeForUnlimitedMode('comic')) {
+      return;
+    }
 
-      const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
-      if (hasConfirmed) {
-        currentComicMode.value = 'unlimited';
-      } else {
-        showUnlimitedModal.value = true;
-      }
-    });
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentComicMode.value = 'unlimited';
+    } else {
+      showUnlimitedModal.value = true;
+    }
   } else {
     currentComicMode.value = 'normal';
   }
@@ -2306,18 +2299,16 @@ const switchDramaMode = (mode: string, index: number) => {
       return false;
     }
 
-    headerRef.value?.getUserInfo()?.then(() => {
-      if (checkAgeForUnlimitedMode('drama')) {
-        return;
-      }
+    if (checkAgeForUnlimitedMode('drama')) {
+      return;
+    }
 
-      const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
-      if (hasConfirmed) {
-        currentDramaMode.value = 'unlimited';
-      } else {
-        showUnlimitedModal.value = true;
-      }
-    });
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentDramaMode.value = 'unlimited';
+    } else {
+      showUnlimitedModal.value = true;
+    }
   } else {
     currentDramaMode.value = 'normal';
   }
@@ -2331,18 +2322,16 @@ const switchPhotoMode = (mode: string, index: number) => {
       return false;
     }
 
-    headerRef.value?.getUserInfo()?.then(() => {
-      if (checkAgeForUnlimitedMode('photo')) {
-        return;
-      }
+    if (checkAgeForUnlimitedMode('photo')) {
+      return;
+    }
 
-      const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
-      if (hasConfirmed) {
-        currentPhotoMode.value = 'unlimited';
-      } else {
-        showUnlimitedModal.value = true;
-      }
-    });
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      currentPhotoMode.value = 'unlimited';
+    } else {
+      showUnlimitedModal.value = true;
+    }
   } else {
     currentPhotoMode.value = 'normal';
   }

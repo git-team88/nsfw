@@ -4,6 +4,8 @@ export default {
     notAble: '验证码执行方法不可用',
     loading: '加载中...'
   },
+  cancel: "取消",
+  confirm: "确认",
   agreeTitle: "用户协议",
   closedBetaAgreementTitle: "封闭β测试协议",
   closedBetaAgreement: `目前，MoeGen 处于封闭 β 测试期间，因此暂未刊登正式的使用条款。<br />
@@ -1988,6 +1990,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       multiSelectError: "仅支持选择一个视频文件",
       corruptedError: "视频文件损坏或无法播放，请更换视频",
       durationLimit: "视频时长不能超过1小时，请更换视频",
+      published: "已发布",
 
       projectView: {
         detail: "详情",
@@ -2019,6 +2022,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       aiGenerateStart: "开始生成",
       minCharacters: "请至少输入10字",
       cover: "封面",
+      coverChange: "封面修改",
       selectBackground: "请选择背景",
       generationFailed: "封面生成失败，本次生成未扣除算力",
       generationTimeout: "封面生成超时，请重试",
@@ -2066,6 +2070,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       selectComicFirst: "请先选择一部漫画",
       noChapterContent: "暂无章节内容",
       noUnpublishedChapters: "当前没有可发布的集数",
+      noChapters: "暂无章节",
       episodeNotUnpublished: "该章节已发布，即将自动刷新最新章节状态，请稍后操作",
       episodeAlreadyPublished: "该集数已发布，即将自动刷新最新集数状态，请稍后操作",
       published: "已发布",

@@ -4,6 +4,8 @@ export default {
     notAble: '驗證碼執行方法不可用',
     loading: '載入中...'
   },
+  cancel: "取消",
+  confirm: "確認",
   agreeTitle: "使用者協議",
   closedBetaAgreementTitle: "封閉β測試協議",
   closedBetaAgreement: `目前，MoeGen 處於封閉 β 測試期間，因此暫未刊登正式的使用條款。<br />
@@ -1976,11 +1978,13 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       noVideoContent: "暫無視頻內容",
       selectProject: "視頻作品項目名稱",
       selectVideoFirst: "請先選擇一部漫劇",
+      episodeAlreadyPublished: "該集數已發布，即將自動刷新最新集數狀態，請稍後操作",
       sizeError: "視頻文件大小不能超過5GB",
       formatError: "不支持的視頻格式，僅支持MP4、MOV",
       multiSelectError: "僅支持選擇一個視頻文件",
       corruptedError: "視頻文件損壞或無法播放，請更換視頻",
       durationLimit: "視頻時長不能超過1小時，請更換視頻",
+      published: "已發布",
       projectView: {
         detail: "詳情",
         publishEpisode: "發布本集",
@@ -2011,6 +2015,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       aiGenerateStart: "開始生成",
       minCharacters: "請至少輸入10字",
       cover: "封面",
+      coverChange: "封面修改",
       selectBackground: "請選擇背景",
       generationFailed: "封面生成失敗，本次生成未扣除算力",
       generationTimeout: "封面生成超時，請重試",
@@ -2058,6 +2063,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       selectComicFirst: "請先選擇一部漫畫",
       noChapterContent: "暫無章節內容",
       noUnpublishedChapters: "當前沒有可發布的集數",
+      noChapters: "暫無章節",
+      episodeNotUnpublished: "該章節已發布，即將自動刷新最新章節狀態，請稍後操作",
+      episodeAlreadyPublished: "該集數已發布，即將自動刷新最新集數狀態，請稍後操作",
       published: "已發布",
       projectView: {
         detail: "詳情",
