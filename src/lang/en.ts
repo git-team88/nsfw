@@ -483,6 +483,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       published: "Published",
       publishedCount: "({count} chapters, not operable)",
       nextStep: "Next",
+      someAlreadyPublished: "{count} chapter(s) already published in another window, removed automatically",
+      chapterLoadError: "Some chapters failed to load, please try again later",
       batchPublishAll: "Batch Publish All Unpublished",
       publishProgress: "Publish Progress",
       publishingWait: "Publishing in progress, please wait...",

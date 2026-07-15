@@ -2488,6 +2488,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       published: "公開済み",
       publishedCount: "（{count}章、操作不可）",
       nextStep: "次へ",
+      someAlreadyPublished: "{count}章は別のウィンドウで公開済み、自動的に削除しました",
+      chapterLoadError: "一部の章の読み込みに失敗しました。後でもう一度お試しください",
       batchPublishAll: "未公開の全章を一括公開",
       publishProgress: "公開進捗",
       publishingWait: "公開中です、お待ちください...",

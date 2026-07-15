@@ -246,8 +246,14 @@
         </div>
       </div>
 
+      <!-- Batch Publish Loading -->
+      <div v-if="isLoadingBatchPublish" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ t('home.loading') }}</div>
+      </div>
+
       <!-- Full Content View: After clicking Next Step or Edit Mode -->
-        <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
+        <div class="content-wrapper" v-if="showFullContent || postId || shouldShowSessionContent">
 
           <!-- Single mode: content-section with caption + content-perm -->
           <div v-if="!isBatchPublish" class="content-section">
@@ -786,6 +792,7 @@ const chapterIdForPublish = ref<number | null>(null);
 const agreeToTerms = ref(false);
 
 const isBatchPublishMode = ref(false);
+const isLoadingBatchPublish = ref(false);
 const batchPublishIndexes = ref<number[]>([]);
 const batchPublishCurrentIndex = ref(0);
 const batchPublishTotal = ref(0);
@@ -871,6 +878,12 @@ const pendingCollectionIdForSensitive = ref<number | null>(null);
 
 // UI state
 const showFullContent = ref(false);
+
+const isBatchRoute = computed(() => route.query.batch === 'true');
+const shouldShowSessionContent = computed(() => {
+  if (!route.query.session_id) return false;
+  return showFullContent.value;
+});
 
 // Upload options
 const uploadOption = ref('history');
@@ -985,6 +998,24 @@ watch(() => route.path, (newPath) => {
     tabIndex.value = index;
   }
 });
+
+let isRouteInitialized = false;
+watch(() => route.query, async (newQuery) => {
+  if (isRouteInitialized) return;
+  const session_id = newQuery.session_id as string;
+  if (!session_id) return;
+  const isBatch = newQuery.batch === 'true';
+  const index = newQuery.index as string;
+
+  isRouteInitialized = true;
+  isEditingWork.value = true;
+
+  if (isBatch) {
+    await initBatchPublish(session_id);
+  } else if (index) {
+    await initSingleChapter(session_id, index, newQuery.cover as string, newQuery.title as string);
+  }
+}, { immediate: false });
 
 // Cover settings
 const coverTitle = ref("");
@@ -3017,12 +3048,8 @@ async function handleBatchPublishFromModal() {
 
 function handleBatchPublishAllSuccess(count: number) {
   const sid = selectedProject.value?.session_id || (route.query.session_id as string);
-  if (sid) {
-    sessionStorage.removeItem(`batchPublishCover_${sid}`);
-    sessionStorage.removeItem(`batchPublishTitle_${sid}`);
-  }
   toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=2`);
 }
 
 async function onBatchPublish() {
@@ -3135,12 +3162,8 @@ function handleBatchPublishComplete() {
 
 function handleBatchPublishExit() {
   const sid = selectedProject.value?.session_id || (route.query.session_id as string);
-  if (sid) {
-    sessionStorage.removeItem(`batchPublishCover_${sid}`);
-    sessionStorage.removeItem(`batchPublishTitle_${sid}`);
-  }
   showBatchPublishFail.value = false;
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=2`);
 }
 
 function handleBatchPublishRetry() {
@@ -3394,6 +3417,310 @@ async function handlePermissionChange(permission: string, index: number) {
 }
 
 // Lifecycle
+async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
+  try {
+    try {
+      await fetchProjectDetails(session_id);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+
+    const res = await api.detailChapter(session_id, parseInt(index)) as any;
+    if (res.code === 200 && res.data && res.data.content) {
+      if (res.data.title) {
+        const chapterNumber = t('chapter', { chapter: index });
+        form.value.title = `${chapterNumber} ${res.data.title}`;
+      } else {
+        form.value.title = `${t('chapter', { chapter: index })}`;
+      }
+      form.value.description = res.data.content;
+
+      if (cover) {
+        coverPreview.value = cover;
+        hasUrlCover.value = true;
+      } else {
+        await generateAndUploadCover();
+      }
+
+      async function generateAndUploadCover() {
+        generateCoverFromTitle();
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          isUpload.value = true;
+          try {
+            if (coverPreview.value.startsWith('data:image/')) {
+              const response = await fetch(coverPreview.value);
+              const blob = await response.blob();
+              const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+              const formData = new FormData();
+              formData.append("file", file);
+
+              const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+              const parma = {
+                method: "POST",
+                headers: {
+                  token: token,
+                  'Platform': 'web',
+                  ...authHeaders,
+                },
+                body: formData,
+              };
+
+              const res = await fetch(baseUrl + "user/uploadImage", parma);
+              const data = await res.json();
+              if (data.code == 0 || data.code == 200) {
+                const url = (data?.data && (data.data.url || data.data)) || data?.url;
+                if (typeof url == "string") {
+                  coverPreview.value = url;
+                }
+              } else {
+                toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'zh' ? data.msg_jp : data.msg_jp)
+              }
+            }
+          } catch (error) {
+            console.error("Cover upload error:", error);
+            toast(t('fail'));
+          } finally {
+            isUpload.value = false;
+          }
+        }
+      }
+
+      showFullContent.value = true;
+
+      setTimeout(() => {
+        if (captionRef.value) {
+          const processedContent = form.value.description.replace(/\\n/g, '\n');
+          captionRef.value.textContent = processedContent;
+          captionLength.value = processedContent.length;
+        }
+      }, 0);
+
+      if (title) {
+        projectNameForNewCollection.value = title;
+        projectCoverForNewCollection.value = coverPreview.value || '';
+        try {
+          let searchRes: any = null;
+          if (session_id) {
+            searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+          }
+          if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+            searchRes = await api.searchFullCollection({ title, type: 2 }) as any;
+          }
+
+          if (searchRes.code == 0) {
+            const book_id = searchRes.data?.book_id || 0;
+
+            if (book_id == 0) {
+              const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
+              const collectionDescription = t('collection.defaultDescription');
+              const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+              const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+
+              const createRes = await api.addCollection({
+                title,
+                type: 2,
+                cover: collectionCover,
+                description: collectionDescription,
+                is_nsfw: collectionIsNsfw
+              }) as any;
+
+              if (createRes.code == 0 && createRes.data?.book_id) {
+                selectedCollection.value = {
+                  id: createRes.data.book_id,
+                  name: title,
+                  cover: collectionCover,
+                  description: collectionDescription,
+                  is_nsfw: collectionIsNsfw
+                };
+                selectedEpisodeNumber.value = '1';
+                isNoCollection.value = false;
+              }
+            } else {
+              const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+              if (collectionRes.code == 0 && collectionRes.data) {
+                const allnums = collectionRes.data.count || 0;
+                const episodeNumber = parseInt(allnums) + 1;
+
+                selectedCollection.value = {
+                  id: book_id,
+                  name: searchRes.data?.book_info?.title || title,
+                  cover: searchRes.data?.book_info?.cover,
+                  description: searchRes.data?.book_info?.description,
+                  is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                };
+                selectedEpisodeNumber.value = episodeNumber.toString();
+                isNoCollection.value = false;
+
+                episodes.value = [];
+                for (let i = 1; i <= episodeNumber; i++) {
+                  episodes.value.push({
+                    value: i.toString(),
+                    label: i.toString()
+                  });
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error handling collection from route:', error);
+        }
+      }
+
+      await checkSubscriptionStatus();
+    }
+  } catch (error) {
+    console.error('Error fetching chapter details:', error);
+    await fetchProjects();
+    await checkSubscriptionStatus();
+  }
+}
+
+async function initBatchPublish(session_id: string) {
+  const batchIndexesRaw = route.query.indexes as string;
+  const batchCover = route.query.cover as string;
+  const batchName = route.query.name as string;
+  if (!batchIndexesRaw) {
+    isLoadingBatchPublish.value = false;
+    router.push({ path: '/novel-generate', query: { session_id } });
+    return;
+  }
+
+  const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
+
+  isLoadingBatchPublish.value = true;
+
+  try {
+    const projectRes = await api.detailProject(session_id) as any;
+    if (projectRes.code === 200 && projectRes.data) {
+      selectedProject.value = {
+        ...projectRes.data,
+        session_id,
+        chapters: projectRes.data.chapters || []
+      };
+      if (projectRes.data.result_async?.generate_novel_cover) {
+        projectCover.value = projectRes.data.result_async.generate_novel_cover;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching project details:', error);
+  }
+
+  if (batchCover) {
+    coverPreview.value = batchCover;
+    hasUrlCover.value = true;
+  } else if (projectCover.value) {
+    coverPreview.value = projectCover.value;
+    hasUrlCover.value = true;
+  }
+
+  const projectTitle = batchName || selectedProject.value?.name || '';
+  if (projectTitle) {
+    projectNameForNewCollection.value = projectTitle;
+  }
+
+  isBatchPublishMode.value = true;
+  batchPublishIndexes.value = batchIndexes;
+  batchPublishCurrentIndex.value = 0;
+  batchPublishTotal.value = batchIndexes.length;
+  batchPublishProgress.value = [];
+  batchPublishFailCount.value = 0;
+
+  selectedChapters.value = batchIndexes;
+
+  let hasChapterError = false;
+  for (const chapterIndex of batchIndexes) {
+    try {
+      const res = await api.detailChapter(session_id, chapterIndex) as any;
+      if (res.code === 200 && res.data) {
+        batchChapterDetails.value[chapterIndex] = {
+          title: res.data.title || '',
+          content: res.data.content || ''
+        };
+      } else {
+        hasChapterError = true;
+      }
+    } catch (e) {
+      hasChapterError = true;
+      console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
+    }
+  }
+
+  if (hasChapterError) {
+    toast(t('novel.batchPublish.chapterLoadError'));
+  }
+
+  // Setup collection
+  if (projectTitle) {
+    try {
+      let searchRes: any = null;
+      if (session_id) {
+        searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+      }
+      if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+        searchRes = await api.searchFullCollection({ title: projectTitle, type: 2 }) as any;
+      }
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
+          const collectionDescription = t('collection.defaultDescription');
+          const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+          const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+
+          const createRes = await api.addCollection({
+            title: projectTitle,
+            type: 2,
+            cover: collectionCover,
+            description: collectionDescription,
+            is_nsfw: collectionIsNsfw
+          }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: projectTitle,
+              cover: collectionCover,
+              description: collectionDescription,
+              is_nsfw: collectionIsNsfw
+            };
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnums = collectionRes.data.count || 0;
+            const episodeNumber = parseInt(allnums) + 1;
+
+            selectedCollection.value = {
+              id: book_id,
+              name: searchRes.data?.book_info?.title || projectTitle,
+              cover: searchRes.data?.book_info?.cover,
+              description: searchRes.data?.book_info?.description,
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+            };
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up collection:', error);
+    }
+  }
+
+  isLoadingBatchPublish.value = false;
+  showFullContent.value = true;
+  await fetchCollections(false);
+}
+
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
@@ -3408,329 +3735,25 @@ onMounted(async () => {
     // After getting post details (which sets user_id), fetch collections
     await fetchCollections(false);
   } else {
-    // Check if session_id and index are provided
     const session_id = route.query.session_id as string;
-
-    if (session_id) {
-      isEditingWork.value = true;
-    }
     const index = route.query.index as string;
     const cover = route.query.cover as string;
     const title = route.query.title as string;
     const isBatch = route.query.batch === 'true';
 
     if (isBatch && session_id) {
-      const batchIndexesRaw = route.query.indexes as string;
-      const batchCover = sessionStorage.getItem(`batchPublishCover_${session_id}`) || '';
-      const batchTitle = sessionStorage.getItem(`batchPublishTitle_${session_id}`) || '';
-      if (batchIndexesRaw) {
-        const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
-
-        try {
-          const projectRes = await api.detailProject(session_id) as any;
-          if (projectRes.code === 200 && projectRes.data) {
-            selectedProject.value = {
-              ...projectRes.data,
-              session_id,
-              chapters: projectRes.data.chapters || []
-            };
-            if (projectRes.data.result_async?.generate_novel_cover) {
-              projectCover.value = projectRes.data.result_async.generate_novel_cover;
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching project details:', error);
-        }
-
-        if (batchCover) {
-          coverPreview.value = batchCover;
-          hasUrlCover.value = true;
-        } else if (projectCover.value) {
-          coverPreview.value = projectCover.value;
-          hasUrlCover.value = true;
-        }
-
-        if (batchTitle) {
-          form.value.title = batchTitle;
-          projectNameForNewCollection.value = batchTitle;
-        }
-
-        isBatchPublishMode.value = true;
-        batchPublishIndexes.value = batchIndexes;
-        batchPublishCurrentIndex.value = 0;
-        batchPublishTotal.value = batchIndexes.length;
-        batchPublishProgress.value = [];
-        batchPublishFailCount.value = 0;
-
-        selectedChapters.value = batchIndexes;
-
-        for (const chapterIndex of batchIndexes) {
-          try {
-            const res = await api.detailChapter(session_id, chapterIndex) as any;
-            if (res.code === 200 && res.data) {
-              batchChapterDetails.value[chapterIndex] = {
-                title: res.data.title || '',
-                content: res.data.content || ''
-              };
-            }
-          } catch (e) {
-            console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
-          }
-        }
-
-        // Setup collection
-        if (batchTitle) {
-          try {
-            let searchRes: any = null;
-            if (session_id) {
-              searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
-            }
-            if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
-              searchRes = await api.searchFullCollection({ title: batchTitle, type: 2 }) as any;
-            }
-
-            if (searchRes.code == 0) {
-              const book_id = searchRes.data?.book_id || 0;
-
-              if (book_id == 0) {
-                const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
-                const collectionDescription = t('collection.defaultDescription');
-                const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-                const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
-
-                const createRes = await api.addCollection({
-                  title: batchTitle,
-                  type: 2,
-                  cover: collectionCover,
-                  description: collectionDescription,
-                  is_nsfw: collectionIsNsfw
-                }) as any;
-
-                if (createRes.code == 0 && createRes.data?.book_id) {
-                  selectedCollection.value = {
-                    id: createRes.data.book_id,
-                    name: batchTitle,
-                    cover: collectionCover,
-                    description: collectionDescription,
-                    is_nsfw: collectionIsNsfw
-                  };
-                  selectedEpisodeNumber.value = '1';
-                  isNoCollection.value = false;
-                }
-              } else {
-                const collectionRes = await api.singleCollectionIndex(book_id) as any;
-
-                if (collectionRes.code == 0 && collectionRes.data) {
-                  const allnums = collectionRes.data.count || 0;
-                  const episodeNumber = parseInt(allnums) + 1;
-
-                  selectedCollection.value = {
-                    id: book_id,
-                    name: searchRes.data?.book_info?.title || batchTitle,
-                    cover: searchRes.data?.book_info?.cover,
-                    description: searchRes.data?.book_info?.description,
-                    is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
-                  };
-                  selectedEpisodeNumber.value = episodeNumber.toString();
-                  isNoCollection.value = false;
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error setting up collection:', error);
-          }
-        }
-
-        showFullContent.value = true;
-        await fetchCollections(false);
-      } else {
-        router.push({ path: '/novel-generate', query: { session_id } });
-      }
+      isEditingWork.value = true;
+      await initBatchPublish(session_id);
       return;
     }
 
+    if (session_id) {
+      isEditingWork.value = true;
+    }
+
     if (session_id && index) {
-      // Request chapter detail interface
-      try {
-        // Request project details to get the cover
-        try {
-          await fetchProjectDetails(session_id);
-        } catch (error) {
-          console.error('Error fetching project details:', error);
-        }
-
-        const res = await api.detailChapter(session_id, parseInt(index)) as any;
-        if (res.code === 200 && res.data && res.data.content) {
-          // Set form data
-          if (res.data.title) {
-            // Format: 章节号+章节名称
-            const chapterNumber = t('chapter', { chapter: index });
-            form.value.title = `${chapterNumber} ${res.data.title}`;
-          } else {
-            // Fallback: 章节号
-            form.value.title = `${t('chapter', { chapter: index })}`;
-          }
-          form.value.description = res.data.content;
-
-          // Set cover if provided
-          if (cover) {
-            // If cover is provided in the URL, just display it, no need to upload
-            coverPreview.value = cover;
-            hasUrlCover.value = true;
-          } else {
-            // Generate cover from title and upload it
-            await generateAndUploadCover();
-          }
-
-          // Function to generate cover from title and upload it
-          async function generateAndUploadCover() {
-            // Generate cover from title using canvas
-            generateCoverFromTitle();
-
-            // Upload the generated cover to server
-            const token = localStorage.getItem("token");
-            if (token) {
-              isUpload.value = true;
-              try {
-                // Check if coverPreview is a data URL (generated by canvas)
-                if (coverPreview.value.startsWith('data:image/')) {
-                  // Convert data URL to blob
-                  const response = await fetch(coverPreview.value);
-                  const blob = await response.blob();
-                  const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-                  const formData = new FormData();
-                  formData.append("file", file);
-
-                  const authHeaders = window.AntiCrawler.generateAuthParams(token);
-
-                  const parma = {
-                    method: "POST",
-                    headers: {
-                      token: token,
-                      'Platform': 'web',
-                      ...authHeaders,
-                    },
-                    body: formData,
-                  };
-
-                  const res = await fetch(baseUrl + "user/uploadImage", parma);
-                  const data = await res.json();
-                  if (data.code == 0 || data.code == 200) {
-                    const url = (data?.data && (data.data.url || data.data)) || data?.url;
-                    if (typeof url == "string") {
-                      coverPreview.value = url;
-                    }
-                  } else {
-                    toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
-                  }
-                }
-              } catch (error) {
-                console.error("Cover upload error:", error);
-                toast(t('fail'));
-              } finally {
-                isUpload.value = false;
-              }
-            }
-          }
-
-          // Show full content view
-          showFullContent.value = true;
-
-          // Update contenteditable div
-          setTimeout(() => {
-            if (captionRef.value) {
-              // Convert literal \n to actual newlines
-              const processedContent = form.value.description.replace(/\\n/g, '\n');
-              captionRef.value.textContent = processedContent;
-              captionLength.value = processedContent.length;
-            }
-          }, 0);
-
-          // Handle collection logic if title is provided
-          if (title) {
-            projectNameForNewCollection.value = title;
-            projectCoverForNewCollection.value = coverPreview.value || '';
-            try {
-              let searchRes: any = null;
-              if (session_id) {
-                searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
-              }
-              if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
-                searchRes = await api.searchFullCollection({ title, type: 2 }) as any;
-              }
-
-              if (searchRes.code == 0) {
-                const book_id = searchRes.data?.book_id || 0;
-
-                if (book_id == 0) {
-                  const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
-                  const collectionDescription = t('collection.defaultDescription');
-                  const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-                  const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
-
-                  const createRes = await api.addCollection({
-                    title,
-                    type: 2,
-                    cover: collectionCover,
-                    description: collectionDescription,
-                    is_nsfw: collectionIsNsfw
-                  }) as any;
-
-                  if (createRes.code == 0 && createRes.data?.book_id) {
-
-                    selectedCollection.value = {
-                      id: createRes.data.book_id,
-                      name: title,
-                      cover: collectionCover,
-                      description: collectionDescription,
-                      is_nsfw: collectionIsNsfw
-                    };
-                    selectedEpisodeNumber.value = '1';
-                    isNoCollection.value = false;
-                  }
-                } else {
-                  const collectionRes = await api.singleCollectionIndex(book_id) as any;
-
-                  if (collectionRes.code == 0 && collectionRes.data) {
-                    const allnums = collectionRes.data.count || 0;
-                    const episodeNumber = parseInt(allnums) + 1;
-
-                    selectedCollection.value = {
-                      id: book_id,
-                      name: searchRes.data?.book_info?.title || title,
-                      cover: searchRes.data?.book_info?.cover,
-                      description: searchRes.data?.book_info?.description,
-                      is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
-                    };
-                    selectedEpisodeNumber.value = episodeNumber.toString();
-                    isNoCollection.value = false;
-
-                    episodes.value = [];
-                    for (let i = 1; i <= episodeNumber; i++) {
-                      episodes.value.push({
-                        value: i.toString(),
-                        label: i.toString()
-                      });
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Error handling collection from route:', error);
-            }
-          }
-
-          // Check subscription status for this user
-          await checkSubscriptionStatus();
-        }
-      } catch (error) {
-        console.error('Error fetching chapter details:', error);
-        // Fetch projects and check subscription status if chapter detail fails
-        await fetchProjects();
-        await checkSubscriptionStatus();
-      }
+      await initSingleChapter(session_id, index, cover, title);
     } else {
-      // Fetch projects and check subscription status for new posts
       await fetchProjects();
       await checkSubscriptionStatus();
     }

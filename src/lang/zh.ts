@@ -544,6 +544,8 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       published: "已发布",
       publishedCount: "（{count}章，不可操作）",
       nextStep: "下一步",
+      someAlreadyPublished: "{count}个章节已在其他窗口发布，已自动移除",
+      chapterLoadError: "部分章节加载失败，请稍后重试",
       batchPublishAll: "批量发布全部待发",
       publishProgress: "发布进度",
       publishingWait: "正在发布中，请稍等...",

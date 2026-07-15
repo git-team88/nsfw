@@ -62,11 +62,12 @@
       <div class="dialog-footer">
         <button
           class="next-step-btn"
-          :class="{ disabled: selectedChapters.length === 0 }"
-          :disabled="selectedChapters.length === 0"
+          :class="{ disabled: selectedChapters.length === 0 || isNextStepLoading }"
+          :disabled="selectedChapters.length === 0 || isNextStepLoading"
           @click="handleNextStep"
         >
           <span class="next-step-text">{{ t('novel.batchPublish.nextStep') }}</span>
+          <span v-if="isNextStepLoading" class="btn-spinner"></span>
         </button>
       </div>
     </div>
@@ -78,20 +79,26 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import checkActive from '@/assets/images/register/check_active.png';
 import checkInactive from '@/assets/images/register/check.png';
+import api from '@/api/index';
+import { toast } from '@/util/toast';
 
 const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
   chapters: any[];
+  sessionId: string;
+  checkOwnership: () => boolean;
 }>();
 
 const emit = defineEmits<{
   close: [];
   confirm: [chapters: any[]];
+  refresh: [chapters: any[]];
 }>();
 
 const selectedChapters = ref<number[]>([]);
+const isNextStepLoading = ref<boolean>(false);
 
 const unpublishedChapters = computed(() =>
   props.chapters.filter(c => c.is_publish == 2)
@@ -123,8 +130,35 @@ const toggleChapter = (chapterNum: number) => {
   }
 };
 
-const handleNextStep = () => {
+const handleNextStep = async () => {
   if (selectedChapters.value.length === 0) return;
+  if (props.checkOwnership()) return;
+
+  isNextStepLoading.value = true;
+  try {
+    const res = await api.detailProject(props.sessionId) as any;
+    if (res.code === 200 && res.data?.chapters) {
+      emit('refresh', res.data.chapters);
+
+      const freshChapters = res.data.chapters;
+      const alreadyPublished = selectedChapters.value.filter(chapterNum => {
+        const freshChapter = freshChapters.find(c => c.chapter === chapterNum);
+        return freshChapter && freshChapter.is_publish == 1;
+      });
+
+      if (alreadyPublished.length > 0) {
+        toast(t('novel.batchPublish.someAlreadyPublished', { count: alreadyPublished.length }));
+        isNextStepLoading.value = false;
+        emit('close');
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to refresh chapters before next step:', e);
+  } finally {
+    isNextStepLoading.value = false;
+  }
+
   const selected = props.chapters.filter(c => selectedChapters.value.includes(c.chapter));
   emit('confirm', selected);
 };
@@ -342,6 +376,7 @@ watch(() => props.visible, (newVal) => {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
 
     &:hover:not(.disabled) {
       position: relative;
@@ -367,6 +402,22 @@ watch(() => props.visible, (newVal) => {
       font-size: 1.4rem;
       line-height: 2rem;
     }
+
+    .btn-spinner {
+      display: inline-block;
+      width: 1.4rem;
+      height: 1.4rem;
+      border: 1.5px solid #FFFFFF;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: btn-spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
   }
+}
+
+@keyframes btn-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

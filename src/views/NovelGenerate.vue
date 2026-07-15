@@ -153,8 +153,10 @@
             <button
               v-if="unpublishedChapterCount > 2"
               class="batch-publish-btn"
+              :class="{ loading: isBatchPublishBtnLoading }"
+              :disabled="isBatchPublishBtnLoading"
               @click.stop="handleBatchPublishClick"
-            >{{ t('novel.batchPublish.batchPublish') }}</button>
+            >{{ t('novel.batchPublish.batchPublish') }}<span v-if="isBatchPublishBtnLoading" class="btn-spinner btn-spinner-small"></span></button>
           </div>
 
           <!-- Chapter List -->
@@ -1024,8 +1026,11 @@
     <BatchPublishDialog
       :visible="showBatchPublishDialog"
       :chapters="chapters"
+      :session-id="sessionId"
+      :check-ownership="checkProjectOwnership"
       @close="showBatchPublishDialog = false"
       @confirm="handleBatchPublishConfirm"
+      @refresh="handleBatchPublishRefresh"
     />
 
   </div>
@@ -1594,6 +1599,7 @@ const showGenerateAllChaptersModal = ref<boolean>(false);
 const showFreezeComputingPowerModal = ref<boolean>(false);
 const showBatchPublishDialog = ref<boolean>(false);
 const isBatchPublishLoading = ref<boolean>(false);
+const isBatchPublishBtnLoading = ref<boolean>(false);
 let isBatchPublishCancelled = false;
 const freezeComputingPower = ref<number>(0);
 const pendingGenerationAction = ref<string>(''); // 'outline', 'chapter', 'all', 'retry-outline', 'retry-chapter', 'retry-all'
@@ -4995,6 +5001,8 @@ const handlePublishChapter = async (chapter: any) => {
 };
 
 const handleBatchPublishClick = async () => {
+  if (checkProjectOwnership()) return;
+  isBatchPublishBtnLoading.value = true;
   try {
     const res = await api.detailProject(sessionId.value) as any;
     if (res.code === 200 && res.data?.chapters) {
@@ -5002,11 +5010,17 @@ const handleBatchPublishClick = async () => {
     }
   } catch (e) {
     console.error('Failed to refresh chapters:', e);
+  } finally {
+    isBatchPublishBtnLoading.value = false;
   }
 
   if (unpublishedChapterCount.value > 2) {
     showBatchPublishDialog.value = true;
   }
+};
+
+const handleBatchPublishRefresh = (freshChapters: any[]) => {
+  chapters.value = freshChapters;
 };
 
 const handleBatchPublishConfirm = async (selectedChapters: any[]) => {
@@ -5023,19 +5037,32 @@ const handleBatchPublishConfirm = async (selectedChapters: any[]) => {
     return;
   }
 
-  const chapterIndexes = selectedChapters.map(c => c.chapter);
   const cover = coverImage.value || '';
   const title = projectName.value || '';
 
-  sessionStorage.setItem(`batchPublishCover_${sessionId.value}`, cover);
-  sessionStorage.setItem(`batchPublishTitle_${sessionId.value}`, title);
+  if (selectedChapters.length === 1) {
+    router.push({
+      path: '/publish/novel',
+      query: {
+        session_id: sessionId.value,
+        cover,
+        index: selectedChapters[0].chapter,
+        title
+      }
+    });
+    return;
+  }
+
+  const chapterIndexes = selectedChapters.map(c => c.chapter);
 
   router.push({
     path: '/publish/novel',
     query: {
       session_id: sessionId.value,
       batch: 'true',
-      indexes: chapterIndexes.join(',')
+      indexes: chapterIndexes.join(','),
+      cover,
+      name: title
     }
   });
 };

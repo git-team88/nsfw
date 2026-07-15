@@ -201,7 +201,13 @@
         </div>
       </div>
 
-      <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
+      <!-- Batch Publish Loading -->
+      <div v-if="isLoadingBatchPublish" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ t('home.loading') }}</div>
+      </div>
+
+      <div class="content-wrapper" v-if="showFullContent || postId || shouldShowSessionContent">
         <input
           ref="reuploadInputRef"
           type="file"
@@ -984,6 +990,7 @@ const isChapterPublished = computed(() => {
 
 const selectedChapters = ref<number[]>([]);
 const isBatchPublish = computed(() => selectedChapters.value.length > 1);
+const isLoadingBatchPublish = ref(false);
 
 const unpublishedChapters = computed(() =>
   (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish != 1)
@@ -1390,12 +1397,12 @@ function handleBatchPublishComplete() {
 
 function handleBatchPublishAllSuccess(count: number) {
   toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=1`);
 }
 
 function handleBatchPublishExit() {
   showBatchPublishFail.value = false;
-  router.push('/user-home');
+  router.push(`/user-home?id=${uid}&type=1`);
 }
 
 function handleBatchPublishRetry() {
@@ -1898,6 +1905,12 @@ const chapterIdForPublish = ref<number | null>(null);
 
 // UI state
 const showFullContent = ref(false);
+
+const isBatchRoute = computed(() => route.query.batch === 'true');
+const shouldShowSessionContent = computed(() => {
+  if (!route.query.session_id) return false;
+  return showFullContent.value;
+});
 
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);
@@ -4156,6 +4169,318 @@ watch(() => route.path, (newPath) => {
   }
 });
 
+let isRouteInitialized = false;
+watch(() => route.query, async (newQuery) => {
+  if (isRouteInitialized) return;
+  const session_id = newQuery.session_id as string;
+  if (!session_id) return;
+  const isBatch = newQuery.batch === 'true';
+  const index = newQuery.index as string;
+
+  isRouteInitialized = true;
+  isEditingWork.value = true;
+
+  if (isBatch) {
+    await initBatchPublish(session_id);
+  } else if (index) {
+    const cover = newQuery.cover as string;
+    const title = newQuery.title as string;
+    await initSingleChapter(session_id, index, cover, title);
+  }
+}, { immediate: false });
+
+async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
+  try {
+    try {
+      const projectRes = await api.detailProject(session_id) as any;
+      if (projectRes.code == 200 && projectRes.data) {
+        const projectData = projectRes.data;
+        const projectCover = projectData.result_async?.generate_manhua_cover;
+        if (projectCover) {
+          projectCoverForModal.value = projectCover;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+
+    const chapterResponse = await api.detailChapter(session_id, parseInt(index)) as any;
+    if (chapterResponse.code === 200 && chapterResponse.data) {
+      const chapterData = chapterResponse.data;
+
+      let episodeImages: string[] = [];
+      if (chapterData.final_images) {
+        episodeImages = chapterData.final_images;
+      } else if (chapterData.images) {
+        episodeImages = chapterData.images;
+      } else if (chapterData.result_async?.final_images) {
+        episodeImages = chapterData.result_async.final_images;
+      } else if (chapterData.result_async?.images) {
+        episodeImages = chapterData.result_async.images;
+      }
+
+      let chapterCover = '';
+      if (cover) {
+        chapterCover = cover;
+      } else if (chapterData.cover) {
+        chapterCover = chapterData.cover;
+      } else if (chapterData.result_async?.cover) {
+        chapterCover = chapterData.result_async.cover;
+      }
+
+      let episodeTitle = '';
+      if (chapterData.title) {
+        episodeTitle = chapterData.title;
+      }
+
+      let episodeDescription = '';
+      if (chapterData.chapter_description) {
+        episodeDescription = chapterData.chapter_description;
+      }
+
+      const episodeText = t('submit.image.episode', { episode: index });
+      if (episodeTitle) {
+        form.value.title = `${episodeText} ${episodeTitle}`;
+      } else {
+        form.value.title = episodeText;
+      }
+
+      imageFiles.value = [];
+      episodeImages.forEach((imageUrl, index) => {
+        const mockFile = {
+          _key: `${Date.now()}_${index}`,
+          _preview: imageUrl,
+          _url: imageUrl
+        } as PreviewFile;
+        imageFiles.value.push(mockFile);
+      });
+
+      if (chapterCover) {
+        coverPreview.value = chapterCover;
+      } else if (imageFiles.value.length > 0) {
+        coverPreview.value = imageFiles.value[0]._url || imageFiles.value[0]._preview;
+      }
+
+      showFullContent.value = true;
+
+      if (episodeDescription) {
+        form.value.description = episodeDescription;
+        nextTick(() => {
+          if (captionRef.value) {
+            captionRef.value.innerText = episodeDescription;
+          }
+        });
+      }
+
+      if (title) {
+        projectNameForNewCollection.value = title;
+        projectCoverForNewCollection.value = coverPreview.value || '';
+        try {
+          let searchRes: any = null;
+          if (session_id) {
+            searchRes = await api.searchSessionId({ session_id, type: 1 }) as any;
+          }
+          if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+            searchRes = await api.searchFullCollection({ title, type: 1 }) as any;
+          }
+
+          if (searchRes.code == 0) {
+            const book_id = searchRes.data?.book_id || 0;
+
+            if (book_id == 0) {
+              const createRes = await api.addCollection({
+                title,
+                type: 1,
+                cover: coverPreview.value || '',
+                description: t('collectionSettings.sampleDescription'),
+                is_nsfw: 0
+              }) as any;
+
+              if (createRes.code == 0 && createRes.data?.book_id) {
+                selectedCollection.value = {
+                  id: createRes.data.book_id,
+                  name: title,
+                  cover: coverPreview.value || '',
+                  description: t('collectionSettings.sampleDescription'),
+                  is_nsfw: 0
+                };
+                selectedEpisodeNumber.value = '1';
+                isNoCollection.value = false;
+              }
+            } else {
+              const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+              if (collectionRes.code == 0 && collectionRes.data) {
+                const allnum = collectionRes.data.count || 0;
+                const episodeNumber = parseInt(allnum) + 1;
+                const collectionCover = searchRes.data?.book_info?.cover || '';
+
+                selectedCollection.value = {
+                  id: book_id,
+                  name: searchRes.data?.book_info?.title || title,
+                  cover: collectionCover,
+                  description: searchRes.data?.book_info?.description || '',
+                  is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                };
+                selectedEpisodeNumber.value = episodeNumber.toString();
+                isNoCollection.value = false;
+
+                episodes.value = [];
+                for (let i = 1; i <= episodeNumber; i++) {
+                  episodes.value.push({
+                    value: i.toString(),
+                    label: i.toString()
+                  });
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error handling collection from route:', error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error handling session_id and index:', error);
+    await fetchProjects();
+  }
+}
+
+async function initBatchPublish(session_id: string) {
+  const batchIndexesRaw = route.query.indexes as string;
+  const batchCover = route.query.cover as string || '';
+  const batchName = route.query.name as string || '';
+  if (!batchIndexesRaw) {
+    isLoadingBatchPublish.value = false;
+    router.push({ path: '/novel-generate', query: { session_id } });
+    return;
+  }
+
+  const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
+
+  isLoadingBatchPublish.value = true;
+
+  try {
+    const projectRes = await api.detailProject(session_id) as any;
+    if (projectRes.code === 200 && projectRes.data) {
+      selectedProject.value = {
+        ...projectRes.data,
+        session_id,
+        chapters: projectRes.data.chapters || []
+      };
+      if (projectRes.data.result_async?.generate_manhua_cover) {
+        projectCoverForModal.value = projectRes.data.result_async.generate_manhua_cover;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching project details:', error);
+  }
+
+  if (batchCover) {
+    coverPreview.value = batchCover;
+  } else if (selectedProject.value?.result_async?.generate_manhua_cover) {
+    coverPreview.value = selectedProject.value.result_async.generate_manhua_cover;
+  }
+
+  const projectTitle = batchName || selectedProject.value?.name || '';
+  if (projectTitle) {
+    projectNameForNewCollection.value = projectTitle;
+    projectCoverForNewCollection.value = coverPreview.value || '';
+  }
+
+  isBatchPublishMode.value = true;
+  selectedChapters.value = batchIndexes;
+
+  let hasChapterError = false;
+  for (const chapterIndex of batchIndexes) {
+    try {
+      const res = await api.detailChapter(session_id, chapterIndex) as any;
+      if (res.code === 200 && res.data) {
+        batchChapterContents.value[chapterIndex] = res.data.chapter_description || '';
+      } else {
+        hasChapterError = true;
+      }
+    } catch (e) {
+      hasChapterError = true;
+      console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
+    }
+  }
+
+  if (hasChapterError) {
+    toast(t('novel.batchPublish.chapterLoadError'));
+  }
+
+  // Setup collection
+  if (projectTitle) {
+    try {
+      let searchRes: any = null;
+      if (session_id) {
+        searchRes = await api.searchSessionId({ session_id, type: 1 }) as any;
+      }
+      if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+        searchRes = await api.searchFullCollection({ title: projectTitle, type: 1 }) as any;
+      }
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          const createRes = await api.addCollection({
+            title: projectTitle,
+            type: 1,
+            cover: coverPreview.value || '',
+            description: t('collectionSettings.sampleDescription'),
+            is_nsfw: 0
+          }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: projectTitle,
+              cover: coverPreview.value || '',
+              description: t('collectionSettings.sampleDescription'),
+              is_nsfw: 0
+            };
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnum = collectionRes.data.count || 0;
+            const episodeNumber = parseInt(allnum) + 1;
+
+            selectedCollection.value = {
+              id: book_id,
+              name: searchRes.data?.book_info?.title || projectTitle,
+              cover: searchRes.data?.book_info?.cover || '',
+              description: searchRes.data?.book_info?.description || '',
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+            };
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+
+            episodes.value = [];
+            for (let i = 1; i <= episodeNumber; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: i.toString()
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up collection:', error);
+    }
+  }
+
+    isLoadingBatchPublish.value = false;
+    showFullContent.value = true;
+    await fetchCollections(false);
+}
+
 // Lifecycle hooks
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
@@ -4171,182 +4496,20 @@ onMounted(async () => {
     const index = route.query.index as string;
     const cover = route.query.cover as string;
     const title = route.query.title as string;
+    const isBatch = route.query.batch === 'true';
+
+    if (isBatch && session_id) {
+      isEditingWork.value = true;
+      await initBatchPublish(session_id);
+      return;
+    }
 
     if (session_id) {
       isEditingWork.value = true;
     }
 
     if (session_id && index) {
-      // Request chapter detail interface
-      try {
-        // Request project details to get the cover
-        try {
-          const projectRes = await api.detailProject(session_id) as any;
-          if (projectRes.code == 200 && projectRes.data) {
-            const projectData = projectRes.data;
-            // Get the project cover
-            const projectCover = projectData.result_async?.generate_manhua_cover;
-            if (projectCover) {
-              // Store project cover for cover modal
-              projectCoverForModal.value = projectCover;
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching project details:', error);
-        }
-
-        const chapterResponse = await api.detailChapter(session_id, parseInt(index)) as any;
-        if (chapterResponse.code === 200 && chapterResponse.data) {
-          const chapterData = chapterResponse.data;
-
-          // Extract images
-          let episodeImages: string[] = [];
-          if (chapterData.final_images) {
-            episodeImages = chapterData.final_images;
-          } else if (chapterData.images) {
-            episodeImages = chapterData.images;
-          } else if (chapterData.result_async?.final_images) {
-            episodeImages = chapterData.result_async.final_images;
-          } else if (chapterData.result_async?.images) {
-            episodeImages = chapterData.result_async.images;
-          }
-
-          // Extract cover - prioritize URL parameter, then chapter data
-          let chapterCover = '';
-          if (cover) {
-            chapterCover = cover;
-          } else if (chapterData.cover) {
-            chapterCover = chapterData.cover;
-          } else if (chapterData.result_async?.cover) {
-            chapterCover = chapterData.result_async.cover;
-          }
-
-          // Extract title
-          let episodeTitle = '';
-          if (chapterData.title) {
-            episodeTitle = chapterData.title;
-          }
-
-          // Extract description
-          let episodeDescription = '';
-          if (chapterData.chapter_description) {
-            episodeDescription = chapterData.chapter_description;
-          }
-
-          // Generate title
-          const episodeText = t('submit.image.episode', { episode: index });
-          if (episodeTitle) {
-            form.value.title = `${episodeText} ${episodeTitle}`;
-          } else {
-            form.value.title = episodeText;
-          }
-
-          // 将集数图片添加到图片数组中
-          imageFiles.value = [];
-          episodeImages.forEach((imageUrl, index) => {
-            const mockFile = {
-              _key: `${Date.now()}_${index}`,
-              _preview: imageUrl,
-              _url: imageUrl
-            } as PreviewFile;
-            imageFiles.value.push(mockFile);
-          });
-
-          // 设置封面
-          if (chapterCover) {
-            coverPreview.value = chapterCover;
-          } else if (imageFiles.value.length > 0) {
-            coverPreview.value = imageFiles.value[0]._url || imageFiles.value[0]._preview;
-          }
-
-          // Show publish form
-          showFullContent.value = true;
-
-          // Set description
-          if (episodeDescription) {
-            form.value.description = episodeDescription;
-            nextTick(() => {
-              if (captionRef.value) {
-                captionRef.value.innerText = episodeDescription;
-              }
-            });
-          }
-
-          // Handle collection logic if title is provided
-          if (title) {
-            projectNameForNewCollection.value = title;
-            projectCoverForNewCollection.value = coverPreview.value || '';
-            try {
-              let searchRes: any = null;
-              if (session_id) {
-                searchRes = await api.searchSessionId({ session_id, type: 1 }) as any;
-              }
-              if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
-                searchRes = await api.searchFullCollection({ title, type: 1 }) as any;
-              }
-
-              if (searchRes.code == 0) {
-                const book_id = searchRes.data?.book_id || 0;
-
-                if (book_id == 0) {
-                  const createRes = await api.addCollection({
-                    title,
-                    type: 1,
-                    cover: coverPreview.value || '',
-                    description: t('collectionSettings.sampleDescription'),
-                    is_nsfw: 0
-                  }) as any;
-
-                  if (createRes.code == 0 && createRes.data?.book_id) {
-
-                    selectedCollection.value = {
-                      id: createRes.data.book_id,
-                      name: title,
-                      cover: coverPreview.value || '',
-                      description: t('collectionSettings.sampleDescription'),
-                      is_nsfw: 0
-                    };
-                    selectedEpisodeNumber.value = '1';
-                    isNoCollection.value = false;
-                  }
-                } else {
-                  const collectionRes = await api.singleCollectionIndex(book_id) as any;
-
-                  if (collectionRes.code == 0 && collectionRes.data) {
-                    const allnum = collectionRes.data.count || 0;
-                    const episodeNumber = parseInt(allnum) + 1;
-                    const collectionCover = searchRes.data?.book_info?.cover || '';
-
-                    selectedCollection.value = {
-                      id: book_id,
-                      name: searchRes.data?.book_info?.title || title,
-                      cover: collectionCover,
-                      description: searchRes.data?.book_info?.description || '',
-                      is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
-                    };
-                    selectedEpisodeNumber.value = episodeNumber.toString();
-                    isNoCollection.value = false;
-
-                    episodes.value = [];
-                    for (let i = 1; i <= episodeNumber; i++) {
-                      episodes.value.push({
-                        value: i.toString(),
-                        label: i.toString()
-                      });
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Error handling collection from route:', error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error handling session_id and index:', error);
-        // If error, fall back to fetching projects
-        await fetchProjects();
-      }
+      await initSingleChapter(session_id, index, cover, title);
     } else {
       // Fetch projects for comic tab
       await fetchProjects();

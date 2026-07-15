@@ -193,7 +193,13 @@
         </div>
       </div>
 
-      <div class="content-wrapper" v-if="uploadSuccess || postId || route.query.session_id">
+      <!-- Batch Publish Loading -->
+      <div v-if="isLoadingBatchPublish" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ t('home.loading') }}</div>
+      </div>
+
+      <div class="content-wrapper" v-if="uploadSuccess || postId || shouldShowSessionContent">
 
         <!-- Single mode: video status + permission -->
         <div v-if="!isBatchPublish" class="section">
@@ -797,6 +803,12 @@ function getI18nMsg(res: any) {
 // State
 const isUpload = ref(false);
 const uploadSuccess = ref(false);
+
+const isBatchRoute = computed(() => route.query.batch === 'true');
+const shouldShowSessionContent = computed(() => {
+  if (!route.query.session_id) return false;
+  return uploadSuccess.value;
+});
 const uploadError = ref("");
 const uploadProgress = ref(0);
 const videoSize = ref(0);
@@ -1014,6 +1026,25 @@ watch(() => route.path, (newPath) => {
   }
 });
 
+let isRouteInitialized = false;
+watch(() => route.query, async (newQuery) => {
+  if (isRouteInitialized) return;
+  const sessionIdParam = newQuery.session_id as string;
+  if (!sessionIdParam) return;
+  const isBatch = newQuery.batch === 'true';
+  const urlParam = newQuery.url as string;
+
+  isRouteInitialized = true;
+
+  if (isBatch) {
+    isEditingWork.value = true;
+    await initBatchPublish(sessionIdParam);
+  } else if (urlParam) {
+    const indexParam = newQuery.index as string;
+    await initSingleChapter(sessionIdParam, urlParam, indexParam);
+  }
+}, { immediate: false });
+
 
 
 // Check if selected chapter is already published
@@ -1025,6 +1056,7 @@ const isChapterPublished = computed(() => {
 
 const selectedChapters = ref<number[]>([]);
 const isBatchPublish = computed(() => selectedChapters.value.length > 1);
+const isLoadingBatchPublish = ref(false);
 
 const unpublishedChapters = computed(() =>
   (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish != 1)
@@ -3766,20 +3798,9 @@ function openCommunityConvention() {
   window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
-onMounted(async () => {
-  document.addEventListener("click", handleClickOutside);
-
-  getCountry();
-  await checkSubscriptionStatus();
-
-  const sessionIdParam = route.query.session_id as string;
-  if (sessionIdParam) {
-    sessionId.value = sessionIdParam;
-    isEditingWork.value = true;
-  }
-
-  const urlParam = route.query.url as string;
-  const indexParam = route.query.index as string;
+async function initSingleChapter(sessionIdParam: string, urlParam: string, indexParam: string) {
+  sessionId.value = sessionIdParam;
+  isEditingWork.value = true;
 
   if (urlParam && urlParam.trim()) {
     videoUrl.value = urlParam;
@@ -3791,7 +3812,6 @@ onMounted(async () => {
       coverPreview.value = coverParam;
     }
 
-    // Handle collection logic if title is provided
     const title = route.query.title as string;
     if (title) {
       projectNameForNewCollection.value = title;
@@ -3862,7 +3882,6 @@ onMounted(async () => {
       }
     }
 
-    // Request chapter details if session_id and index are provided
     if (sessionIdParam && indexParam) {
       try {
         const chapterRes = await api.detailChapter(sessionIdParam, parseInt(indexParam)) as any;
@@ -3877,7 +3896,6 @@ onMounted(async () => {
             form.value.description = chapterData.chapter_description;
             captionLength.value = chapterData.chapter_description.length;
 
-            // Render content to captionRef
             await nextTick();
             if (captionRef.value) {
               const content = chapterData.chapter_description;
@@ -3944,6 +3962,165 @@ onMounted(async () => {
         console.error('Error fetching chapter details:', error);
       }
     }
+  }
+}
+
+async function initBatchPublish(session_id: string) {
+  const batchIndexesRaw = route.query.indexes as string;
+  const batchCover = route.query.cover as string || '';
+  const batchName = route.query.name as string || '';
+  if (!batchIndexesRaw) {
+    isLoadingBatchPublish.value = false;
+    router.push({ path: '/novel-generate', query: { session_id } });
+    return;
+  }
+
+  const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
+
+  isLoadingBatchPublish.value = true;
+
+  try {
+    const projectRes = await api.detailProject(session_id) as any;
+    if (projectRes.code === 200 && projectRes.data) {
+      selectedProject.value = {
+        ...projectRes.data,
+        session_id,
+        chapters: projectRes.data.chapters || []
+      };
+      if (projectRes.data.result_async?.generate_manju_cover) {
+        coverPreview.value = projectRes.data.result_async.generate_manju_cover;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching project details:', error);
+  }
+
+  sessionId.value = session_id;
+
+  if (batchCover) {
+    coverPreview.value = batchCover;
+  }
+
+  const projectTitle = batchName || selectedProject.value?.name || '';
+  if (projectTitle) {
+    projectNameForNewCollection.value = projectTitle;
+    projectCoverForNewCollection.value = coverPreview.value || '';
+  }
+
+  selectedChapters.value = batchIndexes;
+
+  let hasChapterError = false;
+  for (const chapterIndex of batchIndexes) {
+    try {
+      const res = await api.detailChapter(session_id, chapterIndex) as any;
+      if (res.code === 200 && res.data) {
+        batchChapterContents.value[chapterIndex] = res.data.chapter_description || '';
+      } else {
+        hasChapterError = true;
+      }
+    } catch (e) {
+      hasChapterError = true;
+      console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
+    }
+  }
+
+  if (hasChapterError) {
+    toast(t('novel.batchPublish.chapterLoadError'));
+  }
+
+  // Setup collection
+  if (projectTitle) {
+    try {
+      let searchRes: any = null;
+      if (session_id) {
+        searchRes = await api.searchSessionId({ session_id, type: 3 }) as any;
+      }
+      if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+        searchRes = await api.searchFullCollection({ title: projectTitle, type: 3 }) as any;
+      }
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          const createRes = await api.addCollection({
+            title: projectTitle,
+            type: 3,
+            cover: coverPreview.value || '',
+            description: t('collectionSettings.sampleDescription'),
+            is_nsfw: 0
+          }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: projectTitle,
+              cover: coverPreview.value || '',
+              description: t('collectionSettings.sampleDescription'),
+              is_nsfw: 0
+            };
+            selectedCollectionId.value = createRes.data.book_id;
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnums = collectionRes.data.count || 0;
+            const episodeNumber = parseInt(allnums) + 1;
+
+            selectedCollection.value = {
+              id: book_id,
+              name: searchRes.data?.book_info?.title || projectTitle,
+              cover: searchRes.data?.book_info?.cover || '',
+              description: searchRes.data?.book_info?.description || '',
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+            };
+            selectedCollectionId.value = book_id;
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+
+            episodes.value = [];
+            for (let i = 1; i <= episodeNumber; i++) {
+              episodes.value.push({
+                value: i.toString(),
+                label: i.toString()
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up collection:', error);
+    }
+  }
+
+  isLoadingBatchPublish.value = false;
+  uploadSuccess.value = true;
+  uploadProgress.value = 100;
+  await fetchCollections(false);
+}
+
+onMounted(async () => {
+  document.addEventListener("click", handleClickOutside);
+
+  getCountry();
+  await checkSubscriptionStatus();
+
+  const sessionIdParam = route.query.session_id as string;
+  const urlParam = route.query.url as string;
+  const indexParam = route.query.index as string;
+  const isBatch = route.query.batch === 'true';
+
+  if (isBatch && sessionIdParam) {
+    isEditingWork.value = true;
+    await initBatchPublish(sessionIdParam);
+  } else if (sessionIdParam && urlParam) {
+    await initSingleChapter(sessionIdParam, urlParam, indexParam);
+  } else if (sessionIdParam) {
+    sessionId.value = sessionIdParam;
+    isEditingWork.value = true;
   } else if (postId.value) {
     isEditingWork.value = true;
     await getPostDetails();

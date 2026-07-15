@@ -383,6 +383,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 0.4rem;
         min-width: 9.8rem;
         height: 4rem;
         padding: 0 1rem;
@@ -394,6 +395,22 @@
         cursor: pointer;
         transition: opacity 0.3s ease;
         white-space: nowrap;
+
+        &.loading {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        .btn-spinner {
+          display: inline-block;
+          width: 1.2rem;
+          height: 1.2rem;
+          border: 1.5px solid #FFFFFF;
+          border-right-color: transparent;
+          border-radius: 50%;
+          animation: btn-spin 0.6s linear infinite;
+          flex-shrink: 0;
+        }
 
         &:hover {
           position: relative;
