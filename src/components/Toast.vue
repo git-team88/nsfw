@@ -39,7 +39,6 @@
     transform: translate(-50%, -50%);
     padding: 12px 20px;
     font-size: 16px;
-    -webkit-border-radius: 4px;
     border-radius: 4px;
     background: rgba(0, 0, 0, .4);
     color: #ffffff;

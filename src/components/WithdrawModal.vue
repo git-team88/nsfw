@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-mask">
     <div class="modal withdraw-modal">
       <button class="modal-close" @click="$emit('close')">
-        <img src="@/assets/images/base/close.png" alt="Close" />
+        <button class="close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </button>
       <div class="modal-title">{{ t("user.revenue.totalWithdrawable") }}</div>
       <div class="modal-amount">{{ totalWithdrawable != null ? `${formatSci(totalWithdrawable)}` : "--" }}</div>
@@ -81,11 +81,16 @@ function openLink() {
   width: 500px;
   padding: 18px;
   border-radius: 12px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   position: relative;
 }
 
 .modal-close {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 14px;
   top: 16px;
@@ -102,16 +107,16 @@ function openLink() {
 
 .modal-title {
   font-size: 20px;
-  color: #99A1AF;
+  color: #9a93a4;
   margin-bottom: 30px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
 }
 
 .modal-amount {
   font-size: 32px;
-  color: #364153;
-  font-weight: 500;
+  color: #161122;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -125,23 +130,18 @@ function openLink() {
   margin: 30px auto 12px;
   border: none;
   border-radius: 8px;
-  background: #FB64B6;
+  background: #FF4D8D;
   color: #ffffff;
   font-size: 14px;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    position: relative;
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
-    }
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: 2px 2px 0 #161122;
   }
 }
 
@@ -155,7 +155,7 @@ function openLink() {
   align-items: center;
   gap: 6px;
   justify-content: center;
-  color: #99A1AF;
+  color: #9a93a4;
   font-size: 14px;
 }
 
@@ -175,7 +175,7 @@ function openLink() {
 
 .modal-agree span {
   a {
-    color: #fb64b6;
+    color: #FF4D8D;
     text-decoration: none;
     margin-left: 4px;
   }

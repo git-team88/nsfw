@@ -153,7 +153,7 @@ function go() {
   border: 2.5px solid #161122;
   border-radius: 10px;
   background: #fff;
-  color: #6A7282;
+  color: #5b5566;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
@@ -233,7 +233,7 @@ function go() {
 
 .theme-pink .pg-num.on,
 .theme-pink .pg-num.on:hover {
-  background: #FB64B6;
+  background: #FF4D8D;
   color: #fff;
   border-color: #161122;
   box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.22);
@@ -241,7 +241,7 @@ function go() {
 }
 
 .theme-pink .pg-go-btn {
-  color: #FB64B6;
+  color: #FF4D8D;
 }
 
 .theme-pink .pg-go-btn:hover {

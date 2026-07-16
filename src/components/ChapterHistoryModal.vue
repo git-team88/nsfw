@@ -21,7 +21,7 @@
 
       <div class="chapter-history-right">
         <div class="close-btn-wrapper">
-          <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+          <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         </div>
 
         <div v-if="chapterList.length == 0" class="chapter-preview-loading">
@@ -124,7 +124,7 @@ function handleUse() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,7 +132,9 @@ function handleUse() {
 
   .chapter-history-content {
     position: relative;
-    background: #FFFFFF;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
     width: 980px;
     height: 640px;
@@ -142,14 +144,14 @@ function handleUse() {
     .chapter-history-left {
       width: 280px;
       height: 640px;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
       padding: 20px 5px 20px 20px;
       flex-shrink: 0;
 
       .chapter-history-title {
-        font-weight: 500;
+        font-weight: 600;
         font-size: 16px;
-        color: #364153;
+        color: #161122;
         text-align: left;
         margin: 0 0 16px 0;
       }
@@ -171,12 +173,12 @@ function handleUse() {
             -webkit-box-orient: vertical;
             overflow: hidden;
             font-size: 14px;
-            color: #6A7282;
+            color: #5b5566;
           }
 
           &.active {
             .chapter-item-text {
-              color: #FB64B6;
+              color: #FF4D8D;
             }
           }
         }
@@ -191,8 +193,8 @@ function handleUse() {
         .loading-spinner {
           width: 24px;
           height: 24px;
-          border: 3px solid #E0E0E0;
-          border-top: 3px solid #6A7282;
+          border: 3px solid rgba(22, 17, 34, 0.12);
+          border-top: 3px solid #5b5566;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
@@ -217,6 +219,9 @@ function handleUse() {
         cursor: pointer;
 
         .close-btn {
+          background: none;
+          border: none;
+          padding: 0;
           width: 20px;
           height: 20px;
         }
@@ -233,15 +238,15 @@ function handleUse() {
         .loading-spinner {
           width: 24px;
           height: 24px;
-          border: 3px solid #F5F5F5;
-          border-top: 3px solid #6A7282;
+          border: 3px solid rgba(22, 17, 34, 0.12);
+          border-top: 3px solid #5b5566;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
 
         .loading-text {
           font-size: 14px;
-          color: #6A7282;
+          color: #5b5566;
         }
       }
 
@@ -252,15 +257,15 @@ function handleUse() {
 
         .chapter-preview-title {
           font-size: 28px;
-          font-weight: 500;
-          color: #101828;
+          font-weight: 600;
+          color: #161122;
           text-align: center;
           margin-bottom: 16px;
         }
 
         .chapter-preview-text {
           font-size: 16px;
-          color: #364153;
+          color: #161122;
           line-height: 32px;
           white-space: pre-wrap;
           word-break: break-word;
@@ -273,7 +278,7 @@ function handleUse() {
         align-items: center;
         justify-content: center;
         font-size: 14px;
-        color: #99A1AF;
+        color: #9a93a4;
       }
 
       .chapter-history-footer {
@@ -281,7 +286,7 @@ function handleUse() {
         padding: 20px 35px;
         display: flex;
         gap: 30px;
-        border-top: 1px solid #F5F5F5;
+        border-top: 1px solid rgba(22, 17, 34, 0.12);
 
         .cancel-btn {
           flex: 1;
@@ -290,8 +295,8 @@ function handleUse() {
           border-radius: 8px;
           font-size: 14px;
           cursor: pointer;
-          background: #F5F5F5;
-          color: #6A7282;
+          background: rgba(22, 17, 34, 0.06);
+          color: #5b5566;
         }
 
         .use-btn {
@@ -301,7 +306,7 @@ function handleUse() {
           border-radius: 8px;
           font-size: 14px;
           cursor: pointer;
-          background: #FB64B6;
+          background: #FF4D8D;
           color: #ffffff;
           display: flex;
           align-items: center;
@@ -323,18 +328,13 @@ function handleUse() {
           }
 
           &:hover:not(:disabled) {
-            position: relative;
-
-            &::after {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(255, 255, 255, 0.1);
-            }
-          }
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
+        }
         }
       }
     }

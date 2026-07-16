@@ -486,32 +486,43 @@ function goToPaymentHistory() {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+$yellow: #FFD23F;
+$green: #22A06B;
+$highlight: #FFF3D6;
+
 .ai-recharge-details {
   width: 100%;
-  background: #FFFFFF;
+  background: $cream;
 }
 
 .container {
-  width: 84rem;
-  margin: 14rem auto 2rem;
+  max-width: 840px;
+  margin: 140px auto 20px;
+  padding: 0 30px;
   position: relative;
 
   .back {
-    position: fixed;
-    left: 50%;
-    top: 14rem;
-    width: 4rem;
-    height: 4rem;
+    position: absolute;
+    top: 0;
+    left: 30px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: translateX(-55rem);
     cursor: pointer;
     z-index: 10;
 
     img {
-      width: 4rem;
-      height: 4rem;
+      width: 40px;
+      height: 40px;
     }
   }
 }
@@ -519,103 +530,113 @@ function goToPaymentHistory() {
 .content-box {
   .page-title {
     position: relative;
-    font-size: 2.4rem;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 800;
+    color: $ink;
+    margin-bottom: 24px;
     text-align: center;
-    color: #101828;
-    margin-bottom: 3.6rem;
   }
 
-  // Balance Section
   .balance-section {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 0 3rem;
-    padding: 2.4rem;
-    background-color: #F5F5F5;
-    border-radius: 1.2rem;
+    margin: 0 0 24px;
+    padding: 24px;
+    background: $paper;
+    border: 3px solid $ink;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     .balance-box {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 12px;
 
-      img{
-        width: 5.6rem;
-        height: 5.6rem;
+      img {
+        width: 56px;
+        height: 56px;
       }
 
-      .balance-info{
+      .balance-info {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 4px;
       }
 
       .balance-label {
-        font-size: 1.2rem;
-        color: #99A1AF;
+        font-size: 13px;
+        font-weight: 700;
+        color: $muted;
       }
 
       .balance-amount {
-        font-size: 2.4rem;
-        font-weight: 500;
-        color: #101828;
+        font-size: 28px;
+        font-weight: 800;
+        color: $ink;
       }
     }
 
     .action-buttons {
       display: flex;
-      gap: 1.8rem;
+      gap: 16px;
 
       .recharge-btn,
       .payment-history-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 13.6rem;
-        height: 4.8rem;
-        border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        min-width: 136px;
+        height: 44px;
+        font-size: 14px;
+        font-weight: 800;
         cursor: pointer;
+        border: 2.5px solid $ink;
+        border-radius: 13px;
+        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
       }
 
       .recharge-btn {
-        background-color: #fb64b6;
+        background: $pink;
         color: #ffffff;
+        box-shadow: 3px 3px 0 $ink;
 
-        &:hover{
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-          }
+        &:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: 5px 5px 0 $ink;
+        }
+
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 $ink;
         }
       }
 
       .payment-history-btn {
-        background-color: #ffffff;
-        color: #6A7282;
+        background: $paper;
+        color: $sub;
+        box-shadow: 3px 3px 0 $ink;
 
         &:hover {
-          color: #fb64b6;
+          transform: translate(-2px, -2px);
+          box-shadow: 5px 5px 0 $ink;
+          color: $ink;
+        }
+
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 $ink;
         }
       }
     }
   }
 
-  // Frozen Computing Power Section
   .frozen-power-section {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
-    margin: 0 0 3rem;
+    gap: 12px;
+    margin: 0 0 24px;
 
     .frozen-power-info {
       display: flex;
@@ -623,13 +644,15 @@ function goToPaymentHistory() {
     }
 
     .frozen-power-label {
-      font-size: 1.6rem;
-      color: #101828;
+      font-size: 16px;
+      font-weight: 800;
+      color: $ink;
     }
 
     .frozen-power-amount {
-      font-size: 1.6rem;
-      color: #FB64B6;
+      font-size: 16px;
+      font-weight: 800;
+      color: $pink;
     }
 
     .tooltip-wrapper {
@@ -639,89 +662,104 @@ function goToPaymentHistory() {
       align-items: center;
 
       .info-icon {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
       }
 
       .tooltip-content {
         position: absolute;
         left: 50%;
-        top: calc(100% + 1.2rem);
-        width: 36rem;
-        padding: 1.6rem;
+        top: calc(100% + 12px);
+        width: 360px;
+        padding: 12px 16px;
         transform: translateX(-50%);
-        background-color: #FFFFFF;
-        border-radius: 0.8rem;
-        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        background: $paper;
+        border: 2.5px solid $ink;
+        border-radius: 10px;
+        box-shadow: 3px 3px 0 $ink;
         z-index: 100;
 
         &::before {
           content: '';
           position: absolute;
           left: 50%;
-          top: -1.2rem;
-          width: 3.2rem;
-          height: 1.2rem;
+          top: -8px;
+          width: 0;
+          height: 0;
           transform: translateX(-50%);
-          background: url('@/assets/images/base/icon.png') no-repeat center center;
-          background-size: contain;
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-bottom: 8px solid $ink;
+        }
+        &::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          top: -5px;
+          width: 0;
+          height: 0;
+          transform: translateX(-50%);
+          border-left: 7px solid transparent;
+          border-right: 7px solid transparent;
+          border-bottom: 7px solid $paper;
         }
 
         .tooltip-title {
-          font-size: 1.2rem;
-          color: #364153;
-          margin-bottom: 0.4rem;
+          font-size: 14px;
+          font-weight: 800;
+          color: $ink;
+          margin-bottom: 6px;
         }
 
         .tooltip-rules {
-          font-size: 1.2rem;
-          color: #364153;
-          line-height: 2rem;
+          font-size: 12px;
+          font-weight: 600;
+          color: $sub;
+          line-height: 20px;
         }
       }
     }
   }
 
-  // Filter Section
   .filter-section {
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 2rem;
-    padding: 0 0 1.2rem;
-    border-bottom: 1px solid #F5F5F5;
+    margin-bottom: 24px;
+    padding: 0 0 12px;
+    border-bottom: 2.5px solid $ink;
 
     .tabs {
       display: flex;
-      gap: 3rem;
-      height: 100%;
+      gap: 30px;
 
       .tab {
         display: flex;
         align-items: center;
-        height: 4rem;
-        font-size: 1.6rem;
-        color: #6A7282;
+        height: 40px;
+        font-size: 16px;
+        color: $muted;
         cursor: pointer;
         position: relative;
+        font-weight: 700;
 
-        &:hover{
-          color: #101828;
+        &:hover {
+          color: $pink;
         }
 
         &.active {
-          color: #101828;
-          font-weight: 500;
+          color: $ink;
+          font-weight: 800;
 
           &::after {
             content: '';
             position: absolute;
-            bottom: -1.2rem;
+            bottom: -12px;
             left: 0;
             width: 100%;
-            height: 0.2rem;
-            background-color: #fb64b6;
+            height: 3px;
+            background: $pink;
+            border-radius: 2px;
           }
         }
       }
@@ -734,37 +772,44 @@ function goToPaymentHistory() {
   }
 
   .subnav-section {
-    margin-bottom: 1.6rem;
+    margin-bottom: 16px;
 
     .subnav-tabs {
       display: flex;
-      gap: 1.2rem;
+      gap: 12px;
 
       .subtab {
         display: flex;
         align-items: center;
-        height: 3.2rem;
-        padding: 0 1.6rem;
-        font-size: 1.4rem;
-        color: #99A1AF;
+        height: 32px;
+        padding: 0 16px;
+        font-size: 14px;
+        font-weight: 700;
+        color: $muted;
         cursor: pointer;
-        border-radius: 0.8rem;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: background 0.16s, border-color 0.16s, color 0.16s;
 
-        &:hover{
-          color: #6A7282;
+        &:hover {
+          color: $sub;
+          background: $highlight;
+          border-color: $line;
         }
 
         &.active {
-          color: #6A7282;
-          background: #F5F5F5;
+          color: $ink;
+          font-weight: 800;
+          background: $highlight;
+          border: 2px solid $ink;
+          box-shadow: 2px 2px 0 rgba(22,17,34,0.12);
         }
       }
     }
   }
 
-  // Transaction List
   .transaction-list {
-    margin: 0 0 2.4rem;
+    margin: 0 0 24px;
 
     .loading-state {
       display: flex;
@@ -772,21 +817,22 @@ function goToPaymentHistory() {
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: 40rem;
+      min-height: 400px;
 
       .loading-spinner {
-        width: 4rem;
-        height: 4rem;
-        border: 0.4rem solid #F5F5F5;
-        border-top: 0.4rem solid #6A7282;
+        width: 40px;
+        height: 40px;
+        border: 4px solid $highlight;
+        border-top: 4px solid $ink;
         border-radius: 50%;
         animation: spin 1s ease-in-out infinite;
-        margin-bottom: 2rem;
+        margin-bottom: 20px;
       }
 
       .loading-text {
-        font-size: 1.4rem;
-        color: #99A1AF;
+        font-size: 14px;
+        font-weight: 700;
+        color: $ink;
       }
 
       @keyframes spin {
@@ -794,10 +840,10 @@ function goToPaymentHistory() {
       }
 
       .loading-spinner-small {
-        width: 1.6rem;
-        height: 1.6rem;
+        width: 16px;
+        height: 16px;
         border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #FFFFFF;
+        border-top-color: #ffffff;
         border-radius: 50%;
         animation: spin 1s ease-in-out infinite;
         display: inline-block;
@@ -807,13 +853,19 @@ function goToPaymentHistory() {
     .transaction-item {
       display: flex;
       align-items: center;
-      gap: 2rem;
-      padding: 1.8rem;
-      border-radius: 0.8rem;
-      margin-bottom: 1.2rem;
+      gap: 20px;
+      padding: 18px;
+      border-radius: 13px;
+      border: 2.5px solid $ink;
+      background: $paper;
+      margin-bottom: 8px;
+      box-shadow: 3px 3px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
-      &:hover{
-        box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+      &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 $ink;
+        background: $highlight;
       }
 
       &:last-child {
@@ -823,11 +875,11 @@ function goToPaymentHistory() {
       .transaction-column {
         display: flex;
         align-items: center;
-        gap: 1.2rem;
+        gap: 12px;
 
         &.user-column {
           flex: 0 0 40%;
-          min-width: 20rem;
+          min-width: 200px;
         }
 
         &.source-column {
@@ -836,7 +888,7 @@ function goToPaymentHistory() {
 
         &.amount-column {
           flex: 0 0 15%;
-          min-width: 10rem;
+          min-width: 100px;
           justify-content: flex-end;
         }
 
@@ -844,95 +896,119 @@ function goToPaymentHistory() {
           flex: 1;
           display: flex;
           align-items: center;
-          gap: 1.2rem;
+          gap: 12px;
         }
 
         &.recharge-right-column {
           flex: 0 0 15%;
-          min-width: 10rem;
+          min-width: 100px;
           justify-content: flex-end;
         }
 
         .column-content {
           display: flex;
           flex-direction: column;
-          gap: 0.4rem;
+          gap: 4px;
         }
       }
 
       .transaction-icon {
-        width: 5.2rem;
-        height: 5.2rem;
+        width: 52px;
+        height: 52px;
         display: flex;
         align-items: center;
         justify-content: center;
 
         img {
-          width: 2.2rem;
-          height: 2.2rem;
+          width: 22px;
+          height: 22px;
         }
       }
 
       .user-name {
-        font-size: 1.6rem;
-        color: #101828;
-        font-weight: 500;
+        font-size: 16px;
+        color: $ink;
+        font-weight: 800;
       }
 
       .transaction-date {
-        font-size: 1.4rem;
-        color: #99A1AF;
+        font-size: 14px;
+        font-weight: 600;
+        color: $muted;
       }
 
       .reward-source {
-        margin-bottom: 0.6rem;
-        font-size: 1.6rem;
-        color: #364153;
+        margin-bottom: 6px;
+        font-size: 16px;
+        font-weight: 800;
+        color: $ink;
       }
 
       .transaction-type {
-        font-size: 1.2rem;
-        color: #99A1AF;
-        margin-top: 0.4rem;
+        font-size: 12px;
+        font-weight: 600;
+        color: $muted;
+        margin-top: 4px;
       }
 
       .transaction-amount {
-        font-weight: 500;
-        font-size: 1.6rem;
-        color: #364153;
+        font-weight: 800;
+        font-size: 16px;
+        color: $ink;
         text-align: right;
+
+        &.positive {
+          color: $pink;
+        }
       }
 
       .user-info {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        gap: 8px;
       }
 
       .user-avatar-small {
-        width: 2.4rem;
-        height: 2.4rem;
-        border-radius: 0.4rem;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 2px solid $ink;
         object-fit: cover;
       }
 
       .user-nickname {
-        font-size: 1.2rem;
-        color: #6A7282;
+        font-size: 12px;
+        font-weight: 700;
+        color: $sub;
 
-        span{
-          color: #99A1AF;
+        span {
+          color: $muted;
         }
       }
     }
-
-
   }
 
   .pagination-wrap {
     display: flex;
     justify-content: center;
-    margin-top: 2.4rem;
+    margin-top: 24px;
+  }
+}
+
+@keyframes chPanelIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .balance-section,
+  .transaction-item {
+    animation: none !important;
+  }
+  .transaction-item:hover,
+  .recharge-btn:hover,
+  .payment-history-btn:hover {
+    transform: none;
   }
 }
 </style>

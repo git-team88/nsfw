@@ -2,12 +2,7 @@
   <div class="character-detail-modal" v-if="visible">
     <div class="modal-overlay"></div>
     <div class="modal-content">
-      <img
-        class="close-btn"
-        src="@/assets/images/base/close.png"
-        alt=""
-        @click="closeModal"
-      />
+      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-body">
         <!-- Left Side: Character Image with Background and Button -->
@@ -108,6 +103,9 @@ $sub: #5b5566;
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 18px;
   top: 18px;
@@ -160,7 +158,9 @@ $sub: #5b5566;
   height: 260px;
   border-radius: 16px;
   border: 3px solid $ink;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   box-shadow: 4px 4px 0 $ink;
   overflow: hidden;
 

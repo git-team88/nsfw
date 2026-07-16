@@ -1302,6 +1302,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   },
   myProjects: {
     title: "マイプロジェクト",
+    sub: "つくった作品をまとめて管理",
     tabs: {
       novel: "小説",
       manhua: "マンガ",
@@ -1338,6 +1339,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   },
   characterLibrary: {
     title: "キャラクター設定一覧",
+    sub: "つくったキャラを、いつでも主役に呼び出せる。",
     createNew: "新規キャラクター設定を追加",
     prevPage: "前のページ",
     nextPage: "次のページ",

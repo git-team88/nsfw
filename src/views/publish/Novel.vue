@@ -521,8 +521,6 @@ import requireSwitchOff from "@/assets/images/publish/close.png";
 import router from "@/router";
 import { useRoute } from "vue-router";
 
-import "@/scss/Novel.scss";
-
 const isUpload = ref(false);
 const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
@@ -2969,6 +2967,6 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
  @use '@/scss/Novel.scss';
 </style>

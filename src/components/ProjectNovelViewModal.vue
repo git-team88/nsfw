@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="novel-modal-overlay">
     <div class="modal-content">
-      <img class="close-btn" @click="handleClose" src="@/assets/images/base/close.png" alt="Close" />
+      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-body">
         <div class="modal-left">
@@ -223,7 +223,7 @@ watch(() => props.project, (newProject) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,6 +244,9 @@ watch(() => props.project, (newProject) => {
 }
 
 .close-btn{
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 18px;
   top: 18px;

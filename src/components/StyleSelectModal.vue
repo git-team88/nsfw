@@ -1,12 +1,7 @@
 <template>
   <div class="modal-overlay">
     <div class="modal-content">
-      <img
-        class="modal-close"
-        src="@/assets/images/base/close.png"
-        alt="Close"
-        @click="handleClose"
-      />
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('home.styleSelect.title') }}</h3>
 
@@ -198,7 +193,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,7 +201,9 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   width: 768px;
   display: flex;
@@ -214,6 +211,9 @@ onMounted(() => {
   position: relative;
 
   .modal-close {
+    background: none;
+    border: none;
+    padding: 0;
     position: absolute;
     right: 18px;
     top: 18px;
@@ -224,11 +224,11 @@ onMounted(() => {
 
   .modal-title {
     font-size: 16px;
-    font-weight: 500;
-    color: #364153;
+    font-weight: 600;
+    color: #161122;
     margin: 0;
     padding: 18px 20px;
-    border-bottom: 1px solid #F5F5F5;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   }
 
   .modal-body {
@@ -254,7 +254,7 @@ onMounted(() => {
 
         &.selected {
           img{
-            border-color: #fb64b6;
+            border-color: #FF4D8D;
           }
         }
 
@@ -271,7 +271,7 @@ onMounted(() => {
           left: 0;
           bottom: 0;
           font-size: 14px;
-          color: #364153;
+          color: #161122;
           text-align: center;
           width: 100%;
           padding: 6px 0;
@@ -303,7 +303,7 @@ onMounted(() => {
 
           span {
             font-size: 14px;
-            color: #6a7282;
+            color: #5b5566;
           }
 
           @keyframes spin {
@@ -340,7 +340,7 @@ onMounted(() => {
               padding: 8px 24px;
               font-size: 14px;
               color: #fff;
-              background: #fb64b6;
+              background: #FF4D8D;
               border: none;
               border-radius: 8px;
               cursor: pointer;
@@ -359,7 +359,7 @@ onMounted(() => {
 
           .empty-message {
             font-size: 14px;
-            color: #6a7282;
+            color: #5b5566;
           }
         }
   }
@@ -370,7 +370,7 @@ onMounted(() => {
     justify-content: flex-end;
     gap: 24px;
     padding: 18px 24px ;
-    border-top: 1px solid #F5F5F5;
+    border-top: 1px solid rgba(22, 17, 34, 0.12);
 
     .modal-btn {
       display: flex;
@@ -384,30 +384,25 @@ onMounted(() => {
       cursor: pointer;
 
       &.cancel {
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
 
         &:hover {
-          color: #FB64B6;
+          color: #FF4D8D;
         }
       }
 
       &.confirm {
-        background: #FB64B6;
+        background: #FF4D8D;
         color: #ffffff;
 
         &:hover:not(:disabled) {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
 
         &:disabled {

@@ -5,6 +5,7 @@
     <div class="container">
       <!-- Page Title -->
       <h2 class="page-title">{{ t('characterLibrary.title') }}</h2>
+      <p class="page-sub">{{ t('characterLibrary.sub') }}</p>
 
       <!-- Tab Navigation -->
       <div class="tab-navigation">
@@ -286,30 +287,29 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 .character-library {
   width: 100%;
   min-height: 100vh;
-  padding: 14rem 0 0;
   background: $cream;
 }
 
 .container {
   max-width: 1160px;
   margin: 0 auto 2rem;
-  padding: 0 1.2rem;
+  padding: 100px 20px;
 
   @media (min-width: 768px) {
-    padding: 0 1.6rem;
+    padding: 100px 24px;
   }
 }
 
 .page-title {
   font-weight: 800;
-  font-size: 2.6rem;
+  font-size: 26px;
   color: $ink;
   margin-bottom: 0.6rem;
   letter-spacing: 0.02em;
 }
 
 .page-sub {
-  font-size: 1.3rem;
+  font-size: 13px;
   color: $muted;
   font-weight: 600;
   margin-bottom: 1.8rem;
@@ -606,7 +606,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 /* Responsive */
 @media (max-width: 720px) {
   .container {
-    padding: 0 1rem;
+    padding: 100px 16px;
   }
 
   .character-grid {

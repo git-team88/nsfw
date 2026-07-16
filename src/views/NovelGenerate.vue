@@ -465,11 +465,10 @@
              <button class="ai-edit-btn" @click="startAiEditOutline">
                {{ t('novel.aiEdit') }}
              </button>
-            <div class="outline-edit-tooltip-icon">
-              <img src="@/assets/images/home/intro.png" alt="Info" />
-              <div class="outline-edit-tooltip-arrow"></div>
-              <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
-            </div>
+             <div class="outline-edit-tooltip-icon">
+               <img src="@/assets/images/home/intro.png" alt="Info" />
+               <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
+             </div>
           </div>
           <template v-else-if="currentChapter">
             <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
@@ -479,7 +478,6 @@
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
               <div class="outline-edit-tooltip-icon">
                 <img src="@/assets/images/home/intro.png" alt="Info" />
-                <div class="outline-edit-tooltip-arrow"></div>
                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
               </div>
               </template>

@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="freeze-computing-power-modal">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="handleClose" />
+      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('novel.freezeComputingPower.title') }}</h3>
 
@@ -76,7 +76,7 @@ const handleConfirm = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,13 +84,18 @@ const handleConfirm = () => {
 
   .modal-content {
     position: relative;
-    background: #FFFFFF;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
     width: 500px;
     padding: 18px 36px 24px;
     overflow: hidden;
 
     .close-btn {
+      background: none;
+      border: none;
+      padding: 0;
       position: absolute;
       right: 12px;
       top: 16px;
@@ -101,8 +106,8 @@ const handleConfirm = () => {
 
     .modal-title {
       font-size: 16px;
-      font-weight: 500;
-      color: #364153;
+      font-weight: 600;
+      color: #161122;
       margin-bottom: 24px;
       text-align: center;
     }
@@ -114,18 +119,18 @@ const handleConfirm = () => {
       font-size: 14px;
 
       .info-label {
-        color: #364153;
+        color: #161122;
       }
 
       .info-value {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     .modal-rules {
       margin-bottom: 24px;
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
       line-height: 20px;
     }
 
@@ -147,30 +152,25 @@ const handleConfirm = () => {
         cursor: pointer;
 
         &.cancel {
-          background: #F5F5F5;
-          color: #6A7282;
+          background: rgba(22, 17, 34, 0.06);
+          color: #5b5566;
 
           &:hover {
-            color: #FB64B6;
+            color: #FF4D8D;
           }
         }
 
         &.confirm {
-          background: #FB64B6;
+          background: #FF4D8D;
           color: #ffffff;
 
-          &:hover {
-            position: relative;
-            &::after {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(255, 255, 255, 0.1);
-              z-index: 1;
-            }
+          &:hover:not(:disabled) {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 #161122;
+          }
+          &:active {
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 #161122;
           }
         }
       }
@@ -191,7 +191,7 @@ const handleConfirm = () => {
 
       span {
         font-size: 14px;
-        color: #6a7282;
+        color: #5b5566;
       }
     }
   }

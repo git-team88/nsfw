@@ -224,7 +224,7 @@ function modifyInfo() {
       size: 24px;
     }
     line-height: 36px;
-    color: #101828;
+    color: #161122;
   }
 
   .form {
@@ -247,14 +247,13 @@ function modifyInfo() {
         padding: 10px;
         font-size: 16px;
         border: 1px solid #fccee8;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.9);
-        color: #101828;
+        color: #161122;
 
         &:hover,
         &:focus {
-          border: 1px solid #fb64b6;
+          border: 1px solid #FF4D8D;
         }
       }
 
@@ -266,9 +265,8 @@ function modifyInfo() {
           width: 80px;
           height: 80px;
           margin-right: 10px;
-          border: 1px solid #fb64b6;
+          border: 1px solid #FF4D8D;
           border-radius: 8px;
-          -webkit-border-radius: 8px;
           object-fit: cover;
         }
 
@@ -278,7 +276,7 @@ function modifyInfo() {
 
           span {
             font-size: 14px;
-            color: #fb64b6;
+            color: #FF4D8D;
           }
 
           .avatar-ipt {
@@ -315,7 +313,7 @@ function modifyInfo() {
 
           span {
             font-size: 16px;
-            color: #364153;
+            color: #161122;
           }
         }
       }
@@ -328,9 +326,8 @@ function modifyInfo() {
       width: 480px;
       height: 48px;
       font-size: 16px;
-      -webkit-border-radius: 8px;
       border-radius: 8px;
-      background: linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
+      background: linear-gradient(45deg, #FF4D8D 0%, #ff94ce 50%, #FF4D8D 100%);
       color: #ffffff;
       cursor: pointer;
     }

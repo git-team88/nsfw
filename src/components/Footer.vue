@@ -60,7 +60,7 @@ const navigateTo = (path: string) => {
   width: 100%;
   height: 34px;
   padding: 0 40px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
   background: rgba(255, 255, 255, 0.96);
   z-index: 30;
 }
@@ -74,17 +74,17 @@ const navigateTo = (path: string) => {
     width: 3px;
     height: 3px;
     border-radius: 100%;
-    background: #99A1AF;
+    background: #9a93a4;
   }
 }
 
 .policy-item {
-  color: #99A1AF;
+  color: #9a93a4;
   font-size: 12px;
 }
 
 .footer-copyright {
-  color: #99A1AF;
+  color: #9a93a4;
   font-size: 12px;
 }
 </style>

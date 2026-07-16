@@ -682,7 +682,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .collection-detail {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #FFFDF7;
   padding-bottom: 40px;
 }
 
@@ -702,7 +702,7 @@ onBeforeUnmount(() => {
     width: 40px;
     height: 40px;
     border: 3px solid #e0e0e0;
-    border-top-color: #ff47a9;
+    border-top-color: #FF4D8D;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -719,18 +719,18 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-bottom: 20px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #9a93a4;
 
   .breadcrumb-item {
     cursor: pointer;
     flex-shrink: 0;
 
     &:hover {
-      color: #FB64B6;
+      color: #FF4D8D;
     }
 
     &.active {
-      color: #364153;
+      color: #161122;
       cursor: default;
       flex: 1;
       min-width: 0;
@@ -757,7 +757,9 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   padding: 20px 0 20px 20px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 
   .author-left {
@@ -787,7 +789,7 @@ onBeforeUnmount(() => {
       right: 0;
       width: 100px;
       height: 100px;
-      background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
+      background: linear-gradient(222deg, #FF4D8D 0%, rgba(255,77,141,0) 50%);
       border-radius: 0 12px 0 0;
       display: flex;
       align-items: flex-start;
@@ -818,7 +820,7 @@ onBeforeUnmount(() => {
     .title {
       font-size: 24px;
       font-weight: 600;
-      color: #101828;
+      color: #161122;
       margin-bottom: 0;
       line-height: 36px;
       display: -webkit-box;
@@ -861,7 +863,7 @@ onBeforeUnmount(() => {
     .update-chapter{
       display: flex;
       align-items: center;
-      color: #FB64B6;
+      color: #FF4D8D;
 
       .chapter-value {
         flex: 1;
@@ -881,17 +883,17 @@ onBeforeUnmount(() => {
 
       .status{
         font-weight: 500;
-        color: #364153;
+        color: #161122;
       }
 
       .time {
-        color: #99A1AF;
+        color: #9a93a4;
       }
     }
 
     .read-info {
       font-size: 16px;
-      color: #6A7282;
+      color: #5b5566;
       display: flex;
       align-items: center;
 
@@ -912,7 +914,7 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     width: 312px;
     padding: 0 30px;
-    border-left: 1px dashed #DDDDDD;
+    border-left: 1px dashed rgba(22, 17, 34, 0.12);
 
     .avatar-top{
       display: flex;
@@ -939,7 +941,7 @@ onBeforeUnmount(() => {
     .author-name {
       font-size: 16px;
       font-weight: 500;
-      color: #364153;
+      color: #161122;
       cursor: pointer;
     }
 
@@ -959,7 +961,7 @@ onBeforeUnmount(() => {
         width: 1px;
         height: 20px;
         margin: 0 40px;
-        background: #F5F5F5;
+        background: rgba(22, 17, 34, 0.12);
       }
 
       .stat-item {
@@ -970,12 +972,12 @@ onBeforeUnmount(() => {
         .stat-value {
           font-size: 16px;
           font-weight: 500;
-          color: #364153;
+          color: #161122;
         }
 
         .stat-label {
           font-size: 14px;
-          color: #6A7282;
+          color: #5b5566;
           margin-bottom: 8px;
         }
       }
@@ -1003,19 +1005,19 @@ onBeforeUnmount(() => {
         overflow: hidden;
 
         &.btn-follow {
-          background: #fb64b6;
+          background: #FF4D8D;
           color: #ffffff;
+          border: 3px solid #161122;
+          box-shadow: 4px 4px 0 #161122;
 
           &:hover {
-            &::after {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(255, 255, 255, 0.1);
-            }
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 #161122;
+          }
+
+          &:active {
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 #161122;
           }
 
           .hover-text {
@@ -1023,11 +1025,15 @@ onBeforeUnmount(() => {
           }
 
           &.followed {
-            background: #F5F5F5;
-            color: #6A7282;
+            background: rgba(22, 17, 34, 0.06);
+            color: #5b5566;
+            border: 3px solid #161122;
+            box-shadow: 4px 4px 0 #161122;
 
             &:hover {
-              color: #fb64b6;
+              color: #FF4D8D;
+              transform: translate(-1px, -1px);
+              box-shadow: 5px 5px 0 #161122;
 
               .btn-text {
                 display: none;
@@ -1037,6 +1043,11 @@ onBeforeUnmount(() => {
                 display: inline;
               }
             }
+
+            &:active {
+              transform: translate(0, 0);
+              box-shadow: 2px 2px 0 #161122;
+            }
           }
         }
 
@@ -1044,22 +1055,24 @@ onBeforeUnmount(() => {
           background: #00d3f2;
           color: #ffffff;
           padding: 0 10px;
+          border: 3px solid #161122;
+          box-shadow: 4px 4px 0 #161122;
 
           &:hover {
-            &::after {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(255, 255, 255, 0.1);
-            }
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 #161122;
+          }
+
+          &:active {
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 #161122;
           }
 
           &.subscribed {
-            background: #F5F5F5;
-            color: #6A7282;
+            background: rgba(22, 17, 34, 0.06);
+            color: #5b5566;
+            border: 3px solid #161122;
+            box-shadow: 4px 4px 0 #161122;
             cursor: not-allowed;
           }
         }
@@ -1069,7 +1082,7 @@ onBeforeUnmount(() => {
     .subscribe-tip {
       margin-top: 10px;
       font-size: 14px;
-      color: #99A1AF;
+      color: #9a93a4;
       text-align: center;
     }
   }
@@ -1094,13 +1107,17 @@ onBeforeUnmount(() => {
 
 .section {
   padding: 20px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 }
 
 .section-chapter{
   padding: 0 20px 20px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 }
 
@@ -1109,24 +1126,24 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   height: 66px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 }
 
 .section-title {
   font-size: 20px;
-  font-weight: 500;
-  color: #101828;
+  font-weight: 600;
+  color: #161122;
   margin-bottom: 12px;
 }
 
 .private-hint {
   font-size: 14px;
-  color: #99A1AF;
+  color: #9a93a4;
 }
 
 .publish-btn {
   padding: 8px 20px;
-  background: #FF47A9;
+  background: #FF4D8D;
   color: #FFFFFF;
   border: none;
   border-radius: 6px;
@@ -1137,7 +1154,7 @@ onBeforeUnmount(() => {
 
 .description-content {
   font-size: 14px;
-  color: #6A7282;
+  color: #5b5566;
   line-height: 24px;
 }
 
@@ -1151,7 +1168,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   height: 72px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   cursor: pointer;
 
   .chapter-left {
@@ -1172,13 +1189,13 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
 
       &.status-subscribed {
-        background: rgba(251,100,182,0.12);
-        color: #FB64B6;
+        background: rgba(255, 77, 141, 0.12);
+        color: #FF4D8D;
       }
 
       &.status-private {
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
       }
     }
 
@@ -1187,7 +1204,7 @@ onBeforeUnmount(() => {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: #364153;
+      color: #161122;
       flex-shrink: 1;
       min-width: 0;
     }
@@ -1209,7 +1226,7 @@ onBeforeUnmount(() => {
       cursor: pointer;
 
       &:hover{
-        background-color: #F5F5F5;
+        background-color: rgba(22, 17, 34, 0.06);
       }
 
       .action-icon {
@@ -1219,12 +1236,12 @@ onBeforeUnmount(() => {
 
       .action-text {
         font-size: 14px;
-        color: #364153;
+        color: #161122;
         white-space: nowrap;
       }
 
       .action-text-danger {
-        color: #99A1AF;
+        color: #9a93a4;
       }
     }
   }
@@ -1449,7 +1466,7 @@ onBeforeUnmount(() => {
       width: 100%;
       padding: 16px 0;
       border-left: none;
-      border-top: 1px dashed #DDDDDD;
+      border-top: 1px dashed rgba(22, 17, 34, 0.12);
       margin-top: 12px;
       flex-direction: row;
       .avatar-top {

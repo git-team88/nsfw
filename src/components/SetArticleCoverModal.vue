@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <img src="@/assets/images/base/close.png" class="close-btn" @click="close" />
+      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <div class="tabs">
@@ -69,7 +69,7 @@
                 class="background-cell"
                 :class="{ selected: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) }"
                 @click="selectImage(img)"
-                :style="{ backgroundColor: '#F5F5F5', border: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) ? '1px solid #fb64b6' : '1px solid transparent' }"
+                :style="{ backgroundColor: 'rgba(22,17,34,0.06)', border: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) ? '1px solid #FF4D8D' : '1px solid transparent' }"
               >
                 <div class="bg-preview-img" v-if="img.isLoading">
                   <div class="loading-placeholder"></div>
@@ -1102,7 +1102,7 @@ function handleTitleInput() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1113,7 +1113,9 @@ function handleTitleInput() {
 .modal-content {
   position: relative;
   width: 520px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -1121,6 +1123,9 @@ function handleTitleInput() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 20px;
   right: 18px;
@@ -1131,7 +1136,7 @@ function handleTitleInput() {
 
 .modal-header {
   height: 60px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1153,8 +1158,8 @@ function handleTitleInput() {
       position: relative;
 
       &.active {
-        color: #101828;
-        font-weight: 500;
+        color: #161122;
+        font-weight: 600;
 
         &::after {
           content: "";
@@ -1163,7 +1168,7 @@ function handleTitleInput() {
           left: 0;
           width: 100%;
           height: 2px;
-          background: #fb64b6;
+          background: #FF4D8D;
         }
       }
     }
@@ -1192,7 +1197,7 @@ function handleTitleInput() {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #f5f5f5;
+    background: rgba(22, 17, 34, 0.06);
 
     &.ai-generating {
       background: linear-gradient( 29deg, #F0F0F0 0%, #F5F5F5 25%, #F0F0F0 50%, #F5F5F5 75%, #F0F0F0 100%), #FCCEE8;
@@ -1329,7 +1334,7 @@ function handleTitleInput() {
   .loading-spinner {
     width: 20px;
     height: 20px;
-    border: 2px solid #fb64b6;
+    border: 2px solid #FF4D8D;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -1375,7 +1380,7 @@ function handleTitleInput() {
   }
 
   .quote-mark {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 40px;
     color: #58474c;
     position: absolute;
@@ -1393,7 +1398,7 @@ function handleTitleInput() {
   }
 
   .title-text {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
     color: #58474c;
     text-align: center;
@@ -1413,7 +1418,7 @@ function handleTitleInput() {
   }
 
   .placeholder {
-    color: #99a1af;
+    color: #9a93a4;
     font-size: 14px;
   }
 
@@ -1430,9 +1435,9 @@ function handleTitleInput() {
 
     .section-title {
       font-size: 14px;
-      color: #364153;
+      color: #161122;
       margin-bottom: 10px;
-      font-weight: 500;
+      font-weight: 600;
     }
   }
 
@@ -1456,7 +1461,7 @@ function handleTitleInput() {
       }
 
       &.selected {
-        border-color: #fb64b6;
+        border-color: #FF4D8D;
       }
 
       .bg-preview {
@@ -1470,7 +1475,7 @@ function handleTitleInput() {
       }
 
       .mini-title {
-        font-weight: 500;
+        font-weight: 600;
         font-size: 24px;
         color: #444550;
         text-align: center;
@@ -1501,16 +1506,16 @@ function handleTitleInput() {
     .modal-text {
       margin: 24px 0 12px;
       font-size: 14px;
-      color: #364153;
+      color: #161122;
 
       :deep(span){
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     .modal-tip {
       font-size: 12px;
-      color: #99a1af;
+      color: #9a93a4;
     }
   }
 
@@ -1550,7 +1555,7 @@ function handleTitleInput() {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        border: 1px solid #fb64b6;
+        border: 1px solid #FF4D8D;
         box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
         pointer-events: none;
         z-index: 5;
@@ -1564,7 +1569,7 @@ function handleTitleInput() {
 
 .modal-footer {
   padding: 18px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -1576,10 +1581,10 @@ function handleTitleInput() {
   .reupload-btn {
     min-width: 136px;
     height: 48px;
-    border: 1px solid #FB64B6;
+    border: 1px solid #FF4D8D;
     border-radius: 8px;
     font-size: 14px;
-    color: #FB64B6;
+    color: #FF4D8D;
     background: none;
     cursor: pointer;
     &:hover {
@@ -1598,7 +1603,7 @@ function handleTitleInput() {
   }
 
   .btn.confirm {
-    background: #fb64b6;
+    background: #FF4D8D;
     color: #ffffff;
     border: none;
     min-width: 136px;
@@ -1608,17 +1613,13 @@ function handleTitleInput() {
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      position: relative;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-      }
-    }
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
+        }
 
     &:disabled {
       background: #f8d7e8;
@@ -1639,7 +1640,7 @@ function handleTitleInput() {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1657,7 +1658,7 @@ function handleTitleInput() {
 
     .modal-message {
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
       margin-bottom: 12px;
       text-align: center;
     }
@@ -1672,15 +1673,14 @@ function handleTitleInput() {
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
 
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
 
@@ -1688,26 +1688,20 @@ function handleTitleInput() {
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
         border: none;
-        background: #fb64b6;
+        background: #FF4D8D;
         color: #ffffff;
 
-        &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

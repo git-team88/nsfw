@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ isEdit ? t('userHome.collection.editName') : t('collection.createCollection') }}</h3>
-        <img class="close-btn" src="@/assets/images/base/close.png" alt="Close" @click="handleCancel" />
+        <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
 
       <div class="modal-body">
@@ -400,7 +400,7 @@ function handleModalKeydown(e: KeyboardEvent) {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -410,7 +410,9 @@ function handleModalKeydown(e: KeyboardEvent) {
 .modal-content {
   width: 840px;
   max-height: 90vh;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -422,17 +424,20 @@ function handleModalKeydown(e: KeyboardEvent) {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   flex-shrink: 0;
 
   h3 {
     margin: 0;
     font-size: 18px;
-    font-weight: 500;
-    color: #101828;
+    font-weight: 600;
+    color: #161122;
   }
 
   .close-btn {
+    background: none;
+    border: none;
+    padding: 0;
     width: 32px;
     height: 32px;
     cursor: pointer;
@@ -452,19 +457,19 @@ function handleModalKeydown(e: KeyboardEvent) {
     display: flex;
     align-items: center;
     font-size: 16px;
-    font-weight: 500;
-    color: #364153;
+    font-weight: 600;
+    color: #161122;
     margin-bottom: 12px;
     gap: 10px;
 
     .required {
       font-weight: normal;
-      color: #FA2D47;
+      color: #E5484D;
     }
 
     .char-counter {
       font-size: 14px;
-      color: #99A1AF;
+      color: #9a93a4;
     }
   }
 
@@ -472,20 +477,20 @@ function handleModalKeydown(e: KeyboardEvent) {
     width: 100%;
     height: 50px;
     padding: 10px;
-    border: 1px solid #F5F5F5;
+    border: 1px solid rgba(22, 17, 34, 0.12);
     border-radius: 8px;
     font-size: 16px;
-    color: #364153;
-    background: #F5F5F5;
+    color: #161122;
+    background: rgba(22, 17, 34, 0.06);
     outline: none;
     box-sizing: border-box;
 
     &::placeholder {
-      color: #99A1AF;
+      color: #9a93a4;
     }
 
     &:focus {
-      border-color: #FB64B6;
+      border-color: #FF4D8D;
     }
   }
 
@@ -493,28 +498,28 @@ function handleModalKeydown(e: KeyboardEvent) {
     width: 100%;
     height: 200px;
     padding: 10px;
-    border: 1px solid #F5F5F5;
+    border: 1px solid rgba(22, 17, 34, 0.12);
     border-radius: 8px;
     font-size: 16px;
-    color: #364153;
+    color: #161122;
     min-height: 200px;
     resize: none;
     outline: none;
     line-height: 24px;
-    background: #F5F5F5;
+    background: rgba(22, 17, 34, 0.06);
     box-sizing: border-box;
 
     &::placeholder {
-      color: #99A1AF;
+      color: #9a93a4;
     }
 
     &:focus {
-      border-color: #FB64B6;
+      border-color: #FF4D8D;
     }
   }
 
   .error-message {
-    color: #FA2D47;
+    color: #E5484D;
     font-size: 12px;
     margin-top: 12px;
     margin-bottom: 0;
@@ -566,7 +571,9 @@ function handleModalKeydown(e: KeyboardEvent) {
   margin-left: 20px;
   padding: 18px;
   width: 280px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   font-size: 12px;
   line-height: 16px;
   border-radius: 8px;
@@ -580,10 +587,10 @@ function handleModalKeydown(e: KeyboardEvent) {
   .tooltip-content {
     font-size: 12px;
     line-height: 20px;
-    color: #99A1AF;
+    color: #9a93a4;
 
     :deep(span) {
-      color: #364153;
+      color: #161122;
     }
   }
 }
@@ -616,7 +623,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 
     span {
       font-size: 14px;
-      color: #364153;
+      color: #161122;
     }
   }
 }
@@ -627,14 +634,14 @@ function handleModalKeydown(e: KeyboardEvent) {
       display: flex;
       align-items: center;
       font-size: 16px;
-      font-weight: 500;
-      color: #364153;
+      font-weight: 600;
+      color: #161122;
       margin-bottom: 12px;
       gap: 10px;
 
       .required {
         font-weight: normal;
-        color: #FA2D47;
+        color: #E5484D;
       }
     }
 
@@ -653,7 +660,7 @@ function handleModalKeydown(e: KeyboardEvent) {
       border-radius: 12px;
       cursor: pointer;
       overflow: hidden;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
 
       .cover-preview {
         width: 100%;
@@ -674,14 +681,14 @@ function handleModalKeydown(e: KeyboardEvent) {
 
         span {
           font-size: 16px;
-          color: #6A7282;
+          color: #5b5566;
         }
       }
     }
 
     .set-cover {
       font-size: 16px;
-      color: #FB64B6;
+      color: #FF4D8D;
       cursor: pointer;
 
       &:hover {
@@ -700,7 +707,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 }
 
 .edit-sync-tip {
-  color: #FA2D47;
+  color: #E5484D;
   font-size: 14px;
   margin-top: 10px;
   margin-bottom: 0;
@@ -718,30 +725,25 @@ function handleModalKeydown(e: KeyboardEvent) {
   transition: all 0.2s;
 
   &.btn-cancel {
-    background: #F5F5F5;
-    color: #6A7282;
+    background: rgba(22, 17, 34, 0.06);
+    color: #5b5566;
 
     &:hover {
-      color: #FB64B6;
+      color: #FF4D8D;
     }
   }
 
   &.btn-save {
-    background: #FB64B6;
+    background: #FF4D8D;
     color: #fff;
 
     &:hover:not(:disabled) {
-      position: relative;
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-      }
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
     }
 
     &:disabled {

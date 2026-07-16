@@ -1525,6 +1525,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   myProjects: {
     title: "My Projects",
+    sub: "Manage all the works you've created in one place",
     tabs: {
       novel: "Novel",
       manhua: "Comic",
@@ -1561,6 +1562,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   characterLibrary: {
     title: "Character Library",
+    sub: "Call the characters you've made into the spotlight anytime.",
     createNew: "Create a new character",
     prevPage: "Previous",
     nextPage: "Next",

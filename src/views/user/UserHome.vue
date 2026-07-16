@@ -2158,52 +2158,56 @@ async function unpinCollection(collection: any) {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
-  border: 2.5px solid #161122;
-  border-radius: 14px;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
-  padding: 16px 24px;
-  background: #FFFDF7;
+  border-bottom: 1px solid #f2f4f7;
 
   .posts-title {
     display: flex;
-    gap: 30px;
-    font-size: 16px;
-    color: #161122;
-    cursor: pointer;
+    gap: 6px;
+    border: 2.5px solid #161122;
+    border-radius: 14px;
+    padding: 5px;
+    background: #FFFDF7;
 
     .type-item {
-      padding-bottom: 24px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #161122;
+      cursor: pointer;
+      background: transparent;
+      transition: background-color 0.2s, color 0.2s;
+
       &:hover{
-        color: #161122;
+        background: rgba(255, 77, 141, 0.1);
       }
 
       &.active {
-        position: relative;
-        color: #161122;
-        font-weight: 800;
-
-        &::after{
-          position: absolute;
-          left: 0;
-          bottom: 0;
-          content: "";
-          width: 100%;
-          height: 3px;
-          background-color: #FF4D8D;
-        }
+        background: #FF4D8D;
+        color: #fff;
       }
     }
   }
 
   .stats-nums {
     display: flex;
-    gap: 24px;
-    font-size: 14px;
+    gap: 6px;
+    border: 2.5px solid #161122;
+    border-radius: 14px;
+    padding: 5px;
+    background: #FFFDF7;
+
     .stat-item {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
       color: #161122;
       cursor: pointer;
+      background: transparent;
+      transition: background-color 0.2s, color 0.2s;
 
       &:hover:not(:last-child){
+        background: rgba(255, 77, 141, 0.1);
         color: #FF4D8D;
         .val {
           color: #FF4D8D;
@@ -2211,14 +2215,19 @@ async function unpinCollection(collection: any) {
       }
 
       &.active {
-        color: #FF4D8D;
+        background: #FF4D8D;
+        color: #fff;
 
         .val {
-          color: #FF4D8D;
+          color: #fff;
         }
       }
+
+      .label {
+        font-weight: 500;
+      }
+
       .val {
-        color: #161122;
         font-weight: 800;
         margin-left: 4px;
       }
@@ -2614,6 +2623,7 @@ async function unpinCollection(collection: any) {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    padding: 24px;
   }
 
 .follow-card {

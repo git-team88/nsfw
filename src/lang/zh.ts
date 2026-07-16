@@ -1631,6 +1631,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   },
   myProjects: {
     title: "我的项目",
+    sub: "统一管理你创作的所有作品",
     tabs: {
       novel: "小说",
       manhua: "漫画",
@@ -1667,6 +1668,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   },
   characterLibrary: {
     title: "角色库",
+    sub: "创建的角色，随时可以召唤出场。",
     createNew: "创建新角色",
     prevPage: "上一页",
     nextPage: "下一页",

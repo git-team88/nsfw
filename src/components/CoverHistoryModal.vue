@@ -3,7 +3,7 @@
     <div class="cover-history-content" @click.stop>
       <div class="cover-history-header">
         <h3 class="cover-history-title">{{ t('novel.coverHistoryTitle') }}</h3>
-        <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+        <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
       <div class="cover-history-list">
         <div
@@ -80,7 +80,7 @@ const handleConfirm = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,7 +88,9 @@ const handleConfirm = () => {
 
   .cover-history-content {
     position: relative;
-    background: #FFFFFF;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
     width: 720px;
     padding: 18px 0;
@@ -100,17 +102,20 @@ const handleConfirm = () => {
       align-items: center;
       justify-content: space-between;
       padding: 0 18px 18px 24px;
-      border-bottom: 1px solid #F5F5F5;
+      border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
       .cover-history-title {
         font-size: 16px;
-        font-weight: 500;
-        color: #364153;
+        font-weight: 600;
+        color: #161122;
         text-align: left;
         margin: 0;
       }
 
       .close-btn {
+        background: none;
+        border: none;
+        padding: 0;
         width: 20px;
         height: 20px;
         cursor: pointer;
@@ -136,7 +141,7 @@ const handleConfirm = () => {
         border: 2px solid transparent;
 
         &.active {
-          border-color: #FB64B6;
+          border-color: #FF4D8D;
         }
 
         .cover-history-spinner {
@@ -148,13 +153,13 @@ const handleConfirm = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #F5F5F5;
+          background: rgba(22, 17, 34, 0.06);
 
           .spinner {
             width: 30px;
             height: 30px;
-            border: 3px solid #E0E0E0;
-            border-top-color: #FB64B6;
+            border: 3px solid rgba(22, 17, 34, 0.12);
+            border-top-color: #FF4D8D;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
           }
@@ -174,13 +179,13 @@ const handleConfirm = () => {
       justify-content: center;
       height: 200px;
       font-size: 14px;
-      color: #99A1AF;
+      color: #9a93a4;
       padding: 0 30px 40px;
     }
 
     .cover-history-footer {
       padding: 18px 30px 0;
-      border-top: 1px solid #F5F5F5;
+      border-top: 1px solid rgba(22, 17, 34, 0.12);
       display: flex;
       justify-content: center;
 
@@ -191,21 +196,16 @@ const handleConfirm = () => {
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        background: #FB64B6;
+        background: #FF4D8D;
         color: #ffffff;
 
-        &:hover {
-          position: relative;
-
-          &::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.1);
-          }
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

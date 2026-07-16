@@ -3,7 +3,7 @@
     <div class="view-modal">
       <div class="modal-content">
         <button class="close-btn" @click="$emit('close')">
-          <img src="@/assets/images/base/close.png" alt="Close" />
+          <button class="close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         </button>
 
         <!-- 左侧部分 -->
@@ -287,7 +287,7 @@ function nextPage() {
 .comic-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +299,9 @@ function nextPage() {
   width: 980px;
   height: calc(100vh - 340px);
   max-height: 560px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 14px;
   border: 3px solid #161122;
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
@@ -420,7 +422,9 @@ function nextPage() {
   position: relative;
   min-width: 40px;
   height: 40px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border: 2px solid #161122;
   border-radius: 11px;
   cursor: pointer;
@@ -479,7 +483,9 @@ function nextPage() {
 .nav-btn {
   width: 40px;
   height: 40px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border: 2px solid #161122;
   border-radius: 11px;
   cursor: pointer;
@@ -500,6 +506,9 @@ function nextPage() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 18px;
   right: 18px;

@@ -36,7 +36,9 @@ defineExpose({ show })
 
   .limit-toast-content {
     max-width: 250px;
-    background: #ffffff;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 4px;
     padding: 12px 16px;
     display: flex;
@@ -59,7 +61,7 @@ defineExpose({ show })
     .limit-toast-msg {
       position: relative;
       font-size: 16px;
-      color: #fa2d47;
+      color: #E5484D;
       word-break: break-word;
     }
   }

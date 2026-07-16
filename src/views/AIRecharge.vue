@@ -569,33 +569,25 @@ $green: #22A06B;
 
 .container {
   max-width: 1160px;
-  margin: 14rem auto 2rem;
-  padding: 0 1.2rem;
+  margin: 140px auto 20px;
+  padding: 0 30px;
   position: relative;
-
-  @media (min-width: 768px) {
-    padding: 0 1.6rem;
-  }
 
   .back {
     position: absolute;
     top: 0;
-    left: 1.2rem;
-    width: 4rem;
-    height: 4rem;
+    left: 30px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 10;
 
-    @media (min-width: 768px) {
-      left: 1.6rem;
-    }
-
     img {
-      width: 4rem;
-      height: 4rem;
+      width: 40px;
+      height: 40px;
     }
   }
 }
@@ -603,11 +595,12 @@ $green: #22A06B;
 .content-box {
   .page-title {
     position: relative;
-    font-size: 3rem;
+    font-size: 20px;
     font-weight: 800;
     color: $ink;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
     letter-spacing: 0.01em;
+    text-align: center;
   }
 
   .tab-box {
@@ -615,26 +608,26 @@ $green: #22A06B;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 10px;
 
     .tab-group {
       display: flex;
       background: #fff;
       border: 2.5px solid $ink;
-      border-radius: 1.4rem;
+      border-radius: 14px;
       padding: 5px;
     }
 
     .tab-item {
       display: flex;
       align-items: center;
-      height: 3.6rem;
-      font-size: 1.45rem;
+      height: 36px;
+      font-size: 14px;
       font-weight: 800;
       color: $ink;
       cursor: pointer;
-      padding: 0 2rem;
-      border-radius: 1rem;
+      padding: 0 20px;
+      border-radius: 10px;
       transition: background-color 0.16s, color 0.16s;
       background: transparent;
 
@@ -653,11 +646,11 @@ $green: #22A06B;
       right: 0;
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 10px;
 
       span {
         font-weight: 700;
-        font-size: 1.3rem;
+        font-size: 13px;
         color: $muted;
         cursor: pointer;
         transition: color 0.16s;
@@ -670,9 +663,9 @@ $green: #22A06B;
   }
 
   .first-month-off-banner {
-    font-size: 1.6rem;
+    font-size: 16px;
     color: $ink;
-    margin: 1rem 0 0;
+    margin: 10px 0 0;
     text-align: center;
     font-weight: 700;
 
@@ -683,10 +676,10 @@ $green: #22A06B;
   }
 
   .credits-pack-tip {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: $muted;
     font-weight: 600;
-    margin-top: 1rem;
+    margin-top: 10px;
     text-align: center;
   }
 
@@ -695,33 +688,33 @@ $green: #22A06B;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6rem 0;
+    padding: 60px 0;
 
     .list-loading-spinner {
-      width: 4rem;
-      height: 4rem;
-      border: 0.4rem solid $line;
-      border-top: 0.4rem solid $ink;
+      width: 40px;
+      height: 40px;
+      border: 4px solid $line;
+      border-top: 4px solid $ink;
       border-radius: 50%;
       animation: spin 1s ease-in-out infinite;
-      margin-bottom: 1.6rem;
+      margin-bottom: 16px;
     }
 
     .list-loading-text {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: $muted;
       font-weight: 600;
     }
   }
 
   .recharge-plan-section {
-    margin: 0 0 3rem;
+    margin: 0 0 30px;
 
     .plan-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.6rem;
-      margin-top: 2.4rem;
+      gap: 16px;
+      margin-top: 24px;
       animation: chUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.26s backwards;
 
       @media (max-width: 720px) {
@@ -735,7 +728,7 @@ $green: #22A06B;
           position: absolute;
           right: 0;
           top: 0;
-          width: 12rem;
+          width: 120px;
           pointer-events: none;
           z-index: 10;
         }
@@ -746,12 +739,12 @@ $green: #22A06B;
           flex-direction: column;
           background: #FFFFFF;
           border: 3px solid $ink;
-          border-radius: 1.6rem;
+          border-radius: 16px;
           box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
-          font-size: 1.4rem;
+          font-size: 14px;
           color: $muted;
           cursor: pointer;
-          padding: 2.4rem 2rem;
+          padding: 24px 20px;
           z-index: 5;
           overflow: hidden;
           transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
@@ -785,44 +778,44 @@ $green: #22A06B;
           }
 
           .plan-mode {
-            font-size: 1.4rem;
+            font-size: 14px;
             font-weight: 800;
             color: $muted;
-            margin-bottom: 2rem;
+            margin-bottom: 20px;
             text-align: left;
           }
 
           .plan-price-section {
-            margin-bottom: 1.2rem;
+            margin-bottom: 12px;
 
             .plan-discount-price {
               display: flex;
               align-items: baseline;
-              margin-bottom: 0.4rem;
+              margin-bottom: 4px;
 
               .price-num {
-                font-size: 2.8rem;
+                font-size: 28px;
                 font-weight: 800;
                 color: $ink;
               }
 
               .price-unit {
-                font-size: 1.5rem;
+                font-size: 15px;
                 color: $sub;
-                margin-left: 0.4rem;
+                margin-left: 4px;
               }
             }
 
             .plan-original-price {
-              font-size: 1.2rem;
+              font-size: 12px;
               color: $muted;
               text-decoration: line-through;
-              margin-bottom: 1rem;
+              margin-bottom: 10px;
             }
 
             .plan-price-desc {
-              font-size: 1.2rem;
-              line-height: 1.6rem;
+              font-size: 12px;
+              line-height: 16px;
 
               .desc-highlight {
                 color: $pink;
@@ -840,53 +833,53 @@ $green: #22A06B;
               align-items: baseline;
 
               .price-num {
-                font-size: 2.8rem;
+                font-size: 28px;
                 font-weight: 800;
                 color: $ink;
               }
 
               .price-unit {
-                font-size: 1.5rem;
+                font-size: 15px;
                 color: $sub;
-                margin-left: 0.4rem;
+                margin-left: 4px;
               }
             }
 
             .plan-strikethrough-price {
-              font-size: 1.4rem;
+              font-size: 14px;
               color: $muted;
               text-decoration: line-through;
-              margin-top: 0.4rem;
+              margin-top: 4px;
             }
           }
 
           .plan-credits-box {
             width: 100%;
             background: #F7F7F8;
-            border-radius: 1.2rem;
-            padding: 1.2rem;
+            border-radius: 12px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
 
             .plan-credits-main {
-              font-size: 1.4rem;
+              font-size: 14px;
               color: $sub;
-              margin-bottom: 0.6rem;
+              margin-bottom: 6px;
 
               .credits-value {
-                margin: 0 0.4rem;
+                margin: 0 4px;
                 color: $ink;
                 font-weight: 800;
               }
             }
 
             .plan-credits-bonus {
-              font-size: 1.4rem;
+              font-size: 14px;
               color: $sub;
-              margin-bottom: 0.6rem;
+              margin-bottom: 6px;
 
               .bonus-includes {
-                margin-right: 0.4rem;
+                margin-right: 4px;
                 color: $pink;
                 font-weight: 800;
               }
@@ -897,34 +890,34 @@ $green: #22A06B;
             }
 
             .plan-credits-valid {
-              font-size: 1.4rem;
+              font-size: 14px;
               color: $sub;
             }
           }
 
           .plan-estimated-output {
-            margin-top: 1.6rem;
+            margin-top: 16px;
 
             .estimated-title {
-              font-size: 1.4rem;
+              font-size: 14px;
               font-weight: 800;
               color: $ink;
-              margin-bottom: 0.8rem;
+              margin-bottom: 8px;
             }
 
             .estimated-list {
               .estimated-item {
-                font-size: 1.4rem;
-                line-height: 2rem;
+                font-size: 14px;
+                line-height: 20px;
                 color: $muted;
-                margin-bottom: 0.6rem;
+                margin-bottom: 6px;
 
                 &:last-child {
                   margin-bottom: 0;
                 }
 
                 .estimated-num {
-                  margin: 0 0.2rem;
+                  margin: 0 2px;
                   color: $pink;
                   font-weight: 800;
                 }
@@ -935,16 +928,16 @@ $green: #22A06B;
 
         .zero-plan-badge {
           position: absolute;
-          top: -2.6rem;
+          top: -26px;
           left: 0;
           right: 0;
-          height: 4rem;
-          border-radius: 1.2rem 1.2rem 0 0;
+          height: 40px;
+          border-radius: 12px 12px 0 0;
           background: $pink;
           color: #ffffff;
           font-weight: 800;
-          font-size: 1.2rem;
-          padding-top: 0.6rem;
+          font-size: 12px;
+          padding-top: 6px;
           text-align: center;
           white-space: nowrap;
           overflow: hidden;
@@ -960,18 +953,18 @@ $green: #22A06B;
   .bottom-bar {
     display: flex;
     align-items: stretch;
-    margin-top: 3rem;
+    margin-top: 30px;
     background: $paper;
     border: 3px solid $ink;
-    border-radius: 2.4rem;
+    border-radius: 24px;
     box-shadow: 6px 6px 0 rgba(22,17,34,0.14);
-    padding: 2.4rem 0;
+    padding: 24px 0;
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     @media (max-width: 720px) {
       flex-direction: column;
-      padding: 2rem;
-      border-radius: 1.6rem;
+      padding: 20px;
+      border-radius: 16px;
     }
 
     .bottom-block {
@@ -980,10 +973,10 @@ $green: #22A06B;
       flex-direction: column;
       align-items: flex-start;
       justify-content: center;
-      padding: 0 2rem;
+      padding: 0 20px;
 
       @media (max-width: 720px) {
-        padding: 1rem 0;
+        padding: 10px 0;
         align-items: center;
       }
 
@@ -992,42 +985,42 @@ $green: #22A06B;
       }
 
       .block-label {
-        font-size: 1.4rem;
+        font-size: 14px;
         font-weight: 800;
         color: $ink;
-        margin-bottom: 2rem;
+        margin-bottom: 20px;
         display: flex;
         align-items: center;
 
         @media (max-width: 720px) {
-          margin-bottom: 1rem;
+          margin-bottom: 10px;
         }
 
         .coupon-info-icon {
           position: relative;
-          margin-left: 0.6rem;
+          margin-left: 6px;
           cursor: pointer;
 
           img {
-            width: 1.6rem;
-            height: 1.6rem;
+            width: 16px;
+            height: 16px;
           }
 
           .coupon-tooltip {
             display: none;
             position: absolute;
-            left: 2rem;
-            top: -1rem;
-            max-width: 28rem;
+            left: 20px;
+            top: -10px;
+            max-width: 280px;
             width: max-content;
-            padding: 1rem 1.6rem;
+            padding: 10px 16px;
             background: #FFFFFF;
             border: 2px solid $ink;
             box-shadow: 3px 3px 0 $ink;
             color: $muted;
-            font-size: 1.2rem;
+            font-size: 12px;
             font-weight: 600;
-            border-radius: 1rem;
+            border-radius: 10px;
             z-index: 100;
           }
 
@@ -1040,22 +1033,22 @@ $green: #22A06B;
       .block-value {
         display: flex;
         align-items: baseline;
-        gap: 0.4rem;
+        gap: 4px;
 
         .price-num {
-          font-size: 2rem;
+          font-size: 20px;
           font-weight: 800;
           color: $ink;
         }
 
         .price-unit {
-          font-size: 1.5rem;
+          font-size: 15px;
           color: $sub;
         }
 
         &.total-value {
           .price-num {
-            font-size: 2.4rem;
+            font-size: 24px;
             color: $pink;
           }
         }
@@ -1064,32 +1057,32 @@ $green: #22A06B;
       .coupon-link {
         color: $pink;
         font-weight: 800;
-        font-size: 1.4rem;
+        font-size: 14px;
         cursor: pointer;
         text-decoration: underline;
         text-underline-offset: 2px;
       }
 
       .discount-amount {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: $ink;
         font-weight: 800;
       }
 
       .cancel-coupon-btn {
-        min-width: 8rem;
-        height: 3rem;
+        min-width: 80px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 12px;
         font-weight: 800;
         color: $muted;
         border: 2px solid $line;
         background: none;
         cursor: pointer;
-        padding: 0.4rem 1rem;
-        border-radius: 1rem;
+        padding: 4px 10px;
+        border-radius: 10px;
         transition: background-color 0.2s;
 
         &:hover {
@@ -1099,7 +1092,7 @@ $green: #22A06B;
 
       &.bottom-block-btn {
         .agreements {
-          margin-bottom: 2rem;
+          margin-bottom: 20px;
         }
       }
     }
@@ -1120,22 +1113,22 @@ $green: #22A06B;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
+    gap: 6px;
 
     .check-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 1.3rem;
+      gap: 10px;
+      font-size: 13px;
       font-weight: 700;
       color: $muted;
       cursor: pointer;
 
       .checkbox {
-        width: 2.2rem;
-        height: 2.2rem;
+        width: 22px;
+        height: 22px;
         border: 2.5px solid $ink;
-        border-radius: 0.7rem;
+        border-radius: 7px;
         background: #fff;
         position: relative;
         display: inline-block;
@@ -1155,10 +1148,10 @@ $green: #22A06B;
         &::after {
           content: '';
           position: absolute;
-          left: 0.6rem;
-          top: 0.2rem;
-          width: 0.6rem;
-          height: 1.1rem;
+          left: 6px;
+          top: 2px;
+          width: 6px;
+          height: 11px;
           border: solid #fff;
           border-width: 0 3px 3px 0;
           transform: rotate(45deg);
@@ -1179,13 +1172,13 @@ $green: #22A06B;
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 20rem;
-    height: 4.4rem;
+    max-width: 200px;
+    height: 44px;
     background: linear-gradient(135deg, $pink, #FF7A45);
     color: #ffffff;
     border: 2.5px solid $ink;
-    border-radius: 1.3rem;
-    font-size: 1.45rem;
+    border-radius: 13px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     box-shadow: 3px 3px 0 $ink;
@@ -1215,9 +1208,9 @@ $green: #22A06B;
       span::before {
         content: '';
         display: inline-block;
-        width: 1.6rem;
-        height: 1.6rem;
-        margin-right: 0.8rem;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
         border-top-color: #ffffff;
@@ -1240,35 +1233,35 @@ $green: #22A06B;
     position: relative;
     border: 2px solid rgba(255,77,141,0.1);
     background: rgba(255,77,141,0.06);
-    border-radius: 1.2rem;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 10px;
 
     img {
       position: absolute;
-      top: calc(-1.2rem - 1px);
-      left: 8.6rem;
-      width: 3.1rem;
-      height: 1.2rem;
+      top: calc(-12px - 1px);
+      left: 86px;
+      width: 31px;
+      height: 12px;
       z-index: 10;
     }
 
     .rules-content {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: $muted;
       font-weight: 600;
-      line-height: 2.4rem;
+      line-height: 24px;
       white-space: pre-line;
       position: relative;
 
       &::before {
         content: '';
         display: inline-block;
-        width: 1.8rem;
-        height: 1.4rem;
+        width: 18px;
+        height: 14px;
       }
 
       &::first-line {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: $sub;
         font-weight: 800;
       }

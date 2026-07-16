@@ -247,8 +247,8 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   border-radius: 6px;
-  background: #F5F5F5;
-  color: #6a7282;
+  background: rgba(22, 17, 34, 0.06);
+  color: #5b5566;
   cursor: pointer;
 }
 
@@ -259,7 +259,7 @@ onBeforeUnmount(() => {
 
 .drp-trigger .text {
   font-size: 14px;
-  color: #6a7282;
+  color: #5b5566;
 }
 
 .drp-trigger .arrow {
@@ -278,7 +278,9 @@ onBeforeUnmount(() => {
   width: 360px;
   padding: 20px;
   border-radius: 8px;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.1);
   z-index: 500;
 }
@@ -286,7 +288,7 @@ onBeforeUnmount(() => {
 .field label {
   display: block;
   font-size: 14px;
-  color: #364153;
+  color: #161122;
   margin-bottom: 7px;
 }
 
@@ -336,7 +338,7 @@ onBeforeUnmount(() => {
 }
 
 .btn.cancel {
-  background: #F5F5F5;
+  background: rgba(22, 17, 34, 0.06);
   cursor: pointer;
 }
 
@@ -367,9 +369,9 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 1px solid #F5F5F5 !important;
+    border: 1px solid rgba(22, 17, 34, 0.12) !important;
     border-radius: 8px !important;
-    background: #F5F5F5 !important;
+    background: rgba(22, 17, 34, 0.06) !important;
     box-shadow: none !important;
   }
   :deep(.el-input__wrapper:hover) {
@@ -379,7 +381,7 @@ onBeforeUnmount(() => {
     border-color: #00d3f2 !important;
   }
   :deep(.el-input__inner) {
-    color: #364153 !important;
+    color: #161122 !important;
     font-size: 14px !important;
   }
 }
@@ -402,7 +404,7 @@ onBeforeUnmount(() => {
 }
 
 .theme-pink .drp-trigger:hover {
-  border-color: #fb64b6;
+  border-color: #FF4D8D;
 }
 
 .theme-pink .drp-pop {
@@ -418,46 +420,40 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 1px solid #F5F5F5 !important;
+    border: 1px solid rgba(22, 17, 34, 0.12) !important;
     border-radius: 8px !important;
-    background: #F5F5F5 !important;
+    background: rgba(22, 17, 34, 0.06) !important;
     box-shadow: none !important;
   }
 
   :deep(.el-input__wrapper.is-focus) {
-    border-color: #fb64b6 !important;
+    border-color: #FF4D8D !important;
   }
   :deep(.el-input__inner) {
-    color: #364153 !important;
+    color: #161122 !important;
     font-size: 14px !important;
   }
 }
 
 .theme-pink .btn.cancel {
-  background: #F5F5F5;
-  color: #6A7282;
+  background: rgba(22, 17, 34, 0.06);
+  color: #5b5566;
 }
 
 .theme-pink .btn.cancel:hover {
-  color: #FB64B6;
+  color: #FF4D8D;
 }
 
 .theme-pink .btn.apply {
-  background: #fb64b6;
+  background: #FF4D8D;
 
-  &:hover{
-    position: relative;
-
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
-    }
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: 2px 2px 0 #161122;
   }
 }
 </style>

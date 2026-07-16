@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible" @click="handleOverlayClick">
     <div class="modal-content" @click.stop>
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('close')" />
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3 class="modal-title">{{ t('collectionSettings.confirmFinish.title') }}</h3>
@@ -66,7 +66,7 @@ function getUpdatedText(): string {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,6 +84,9 @@ function getUpdatedText(): string {
   padding: 18px 30px 24px;
 
   .close-btn {
+    background: none;
+    border: none;
+    padding: 0;
     position: absolute;
     top: 20px;
     right: 12px;
@@ -97,8 +100,8 @@ function getUpdatedText(): string {
 
     .modal-title {
       font-size: 16px;
-      font-weight: 500;
-      color: #364153;
+      font-weight: 600;
+      color: #161122;
       margin: 0;
       text-align: center;
     }
@@ -109,7 +112,7 @@ function getUpdatedText(): string {
 
     .confirm-text {
       font-size: 14px;
-      color: #364153;
+      color: #161122;
       line-height: 20px;
       margin-bottom: 20px;
       text-align: left;
@@ -138,8 +141,8 @@ function getUpdatedText(): string {
         .collection-title {
           white-space: wrap;
           font-size: 14px;
-          font-weight: 500;
-          color: #364153;
+          font-weight: 600;
+          color: #161122;
           max-width: 100%;
           word-break: break-all;
           white-space: normal;
@@ -147,7 +150,7 @@ function getUpdatedText(): string {
 
         .collection-status {
           font-size: 14px;
-          color: #6A7282;
+          color: #5b5566;
         }
       }
     }
@@ -168,30 +171,26 @@ function getUpdatedText(): string {
     }
 
     .btn-cancel {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
 
       &:hover {
-        color: #fb64b6;
+        color: #FF4D8D;
       }
     }
 
     .btn-danger {
-      background: #FB64B6;
+      background: #FF4D8D;
       color: #ffffff;
 
-      &:hover {
-        position: relative;
-        &::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
+      &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
         }
-      }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
+        }
     }
   }
 }

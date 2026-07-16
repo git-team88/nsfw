@@ -30,7 +30,7 @@ const { t } = useI18n();
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,7 +53,7 @@ const { t } = useI18n();
         text-align: center;
         font-size: 14px;
         line-height: 1.5;
-        color: #6A7282;
+        color: #5b5566;
         margin: 0;
       }
     }
@@ -74,30 +74,25 @@ const { t } = useI18n();
       }
 
       .cancel-btn {
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
 
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
 
       .exit-btn {
-        background: #fb64b6;
+        background: #FF4D8D;
         color: #ffffff;
 
-        &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

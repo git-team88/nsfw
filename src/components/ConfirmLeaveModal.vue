@@ -1,12 +1,7 @@
 <template>
   <div class="confirm-mask" v-if="show">
     <div class="confirm-modal">
-      <img
-        class="confirm-close"
-        src="@/assets/images/base/close.png"
-        alt=""
-        @click="$emit('cancel')"
-      />
+      <button class="confirm-close" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       <p class="confirm-text">{{ t("submit.confirm.leaveTip") }}</p>
       <div class="confirm-actions">
         <button class="confirm-btn secondary" @click="$emit('cancel')">
@@ -36,16 +31,17 @@ const { t, locale } = useI18n();
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   z-index: 500;
 }
 .confirm-modal {
   position: relative;
   width: 500px;
   padding: 44px 20px 24px;
-  -webkit-border-radius: 14px;
   border-radius: 14px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border: 3px solid #161122;
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
 }
@@ -74,7 +70,6 @@ const { t, locale } = useI18n();
 .confirm-btn {
   min-width: 136px;
   height: 48px;
-  -webkit-border-radius: 14px;
   border-radius: 14px;
   font-size: 14px;
   cursor: pointer;

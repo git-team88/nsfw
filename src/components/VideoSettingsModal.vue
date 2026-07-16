@@ -1,12 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
-      <img
-        class="modal-close"
-        src="@/assets/images/base/close.png"
-        alt="Close"
-        @click="$emit('close')"
-      />
+      <button class="modal-close" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('home.videoSettings.title') }}</h3>
 
@@ -144,7 +139,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   z-index: 500;
 }
 
@@ -152,10 +147,15 @@ onMounted(() => {
   position: relative;
   width: 520px;
   border-radius: 12px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
 }
 
 .modal-close {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 18px;
   top: 20px;
@@ -166,11 +166,11 @@ onMounted(() => {
 
 .modal-title {
   font-size: 16px;
-  font-weight: 500;
-  color: #364153;
+  font-weight: 600;
+  color: #161122;
   margin: 0;
   padding: 18px 20px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 }
 
 .modal-body {
@@ -186,7 +186,7 @@ onMounted(() => {
   .setting-label {
     font-weight: normal;
     font-size: 14px;
-    color: #99A1AF;
+    color: #9a93a4;
     margin-bottom: 14px;
   }
 }
@@ -211,7 +211,7 @@ onMounted(() => {
 
   .radio-label {
     font-size: 14px;
-    color: #6a7282;
+    color: #5b5566;
   }
 }
 
@@ -221,7 +221,7 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 24px;
   padding: 18px 24px ;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
 
   .modal-btn {
     display: flex;
@@ -235,30 +235,25 @@ onMounted(() => {
     cursor: pointer;
 
     &.cancel {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
 
       &:hover {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     &.confirm {
-      background: #FB64B6;
+      background: #FF4D8D;
       color: #ffffff;
 
       &:hover:not(:disabled) {
-        position: relative;
-        &::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 1;
-        }
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
 
       &:disabled {

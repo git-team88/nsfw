@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <img class="close-btn" src="../assets/images/base/close.png" alt="" @click="emitCancel" />
+      <button class="close-btn" @click="emitCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <span class="title">{{ t("submit.sensitiveConfirmTitle") }}</span>
@@ -68,7 +68,7 @@ function emitConfirm() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,13 +79,18 @@ function emitConfirm() {
   position: relative;
   width: 500px;
   padding: 18px 36px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 14px;
   border: 3px solid #161122;
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   overflow: hidden;
 
   .close-btn {
+    background: none;
+    border: none;
+    padding: 0;
     position: absolute;
     top: 20px;
     right: 18px;
@@ -149,7 +154,6 @@ function emitConfirm() {
     button {
       min-width: 136px;
       height: 48px;
-      -webkit-border-radius: 14px;
       border-radius: 14px;
       font-size: 14px;
       cursor: pointer;

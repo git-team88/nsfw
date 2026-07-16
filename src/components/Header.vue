@@ -831,7 +831,9 @@ defineExpose({
           padding: 8px;
           border: 3px solid #161122;
           border-radius: 18px;
-          background: #FFFFFF;
+          background: #FFFDF7;
+          border: 3px solid #161122;
+          box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
           box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
           transform: translateX(-50%);
           z-index: 330;
@@ -921,7 +923,9 @@ defineExpose({
           border: 3px solid #161122;
           border-radius: 18px;
           padding: 8px;
-          background: #FFFFFF;
+          background: #FFFDF7;
+          border: 3px solid #161122;
+          box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
           box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
           z-index: 10;
           overflow: hidden;
@@ -1115,7 +1119,9 @@ defineExpose({
             font-weight: 800;
             border-radius: 13px;
             border: 2px solid #161122;
-            background: #FFFFFF;
+            background: #FFFDF7;
+            border: 3px solid #161122;
+            box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
             color: #161122;
             cursor: pointer;
             box-shadow: 2px 2px 0 #161122;
@@ -1205,7 +1211,9 @@ defineExpose({
                   justify-content: center;
                   width: 32px;
                   height: 18px;
-                  background: #FFFFFF;
+                  background: #FFFDF7;
+                  border: 3px solid #161122;
+                  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
                   border-radius: 12px;
 
                   img {
@@ -1261,7 +1269,9 @@ defineExpose({
             width: 308px;
             border: 3px solid #161122;
             border-radius: 20px;
-            background: #FFFFFF;
+            background: #FFFDF7;
+            border: 3px solid #161122;
+            box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
             box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
             z-index: 1;
             overflow: hidden;
@@ -1434,7 +1444,7 @@ defineExpose({
           align-items: center;
           transform: translateX(-50%);
           font-size: 20px;
-          font-weight: 500;
+          font-weight: 600;
           text-transform: uppercase;
           color: #161122;
           img {
@@ -1470,7 +1480,7 @@ defineExpose({
     p {
       margin: 20px 0 0;
       font-size: 18px;
-      font-weight: 500;
+      font-weight: 600;
       color: #ffffff;
     }
   }

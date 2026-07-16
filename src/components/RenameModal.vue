@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="handleOverlayClick" />
+      <button class="close-btn" @click="handleOverlayClick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3 class="modal-title">{{ t('myProjects.renameModal.title') }}</h3>
@@ -87,7 +87,7 @@ function handleOverlayClick() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,6 +103,9 @@ function handleOverlayClick() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 12px;
   right: 12px;
@@ -115,12 +118,12 @@ function handleOverlayClick() {
   display: flex;
   align-items: center;
   padding: 0 20px 18px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
   h3 {
     font-size: 16px;
-    font-weight: 500;
-    color: #364153;
+    font-weight: 600;
+    color: #161122;
     margin: 0;
   }
 }
@@ -128,7 +131,7 @@ function handleOverlayClick() {
 .modal-body {
   margin-bottom: 18px;
   padding: 18px 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
   .form-group {
       display: flex;
@@ -141,14 +144,14 @@ function handleOverlayClick() {
 
         label {
           font-size: 14px;
-          color: #4A5565;
+          color: #161122;
           margin: 0;
         }
 
         .char-counter {
           margin-left: 6px;
           font-size: 12px;
-          color: #99A1AF;
+          color: #9a93a4;
         }
       }
 
@@ -159,19 +162,19 @@ function handleOverlayClick() {
           width: 100%;
           height: 50px;
           padding: 14px 10px;
-          border: 1px solid #F5F5F5;
+          border: 1px solid rgba(22, 17, 34, 0.12);
           border-radius: 8px;
           font-size: 14px;
-          color: #364153;
+          color: #161122;
           outline: none;
-          background: #F5F5F5;
+          background: rgba(22, 17, 34, 0.06);
 
           &:focus {
-            border-color: #FB64B6;
+            border-color: #FF4D8D;
           }
 
           &::placeholder {
-            color: #99A1AF;
+            color: #9a93a4;
           }
         }
       }
@@ -187,37 +190,31 @@ function handleOverlayClick() {
     min-width: 136px;
     height: 48px;
     border: none;
-    -webkit-border-radius: 8px;
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
   }
 
   .cancel-btn {
-    background: #F5F5F5;
-    color: #6A7282;
+    background: rgba(22, 17, 34, 0.06);
+    color: #5b5566;
 
     &:hover {
-      color: #FB64B6;
+      color: #FF4D8D;
     }
   }
   .confirm-btn {
     border: none;
-    background: #FB64B6;
+    background: #FF4D8D;
     color: #ffffff;
 
-    &:hover {
-      position: relative;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        z-index: 1;
-      }
+    &:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 }

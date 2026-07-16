@@ -1,12 +1,7 @@
 <template>
   <div class="underage-modal-overlay" @click.self="handleClose">
     <div class="underage-modal">
-      <img
-        class="modal-close"
-        src="@/assets/images/base/close.png"
-        alt=""
-        @click="handleClose"
-      />
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-content">
         <p>{{ t('home.underage.description') }}</p>
@@ -39,7 +34,7 @@ const handleClose = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,13 +43,18 @@ const handleClose = () => {
 
 .underage-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   width: 500px;
   padding: 36px;
   overflow: hidden;
 
   .modal-close {
+    background: none;
+    border: none;
+    padding: 0;
     position: absolute;
     right: 12px;
     top: 16px;
@@ -68,7 +68,7 @@ const handleClose = () => {
 
     p {
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
       line-height: 20px;
       margin: 0;
     }
@@ -92,21 +92,16 @@ const handleClose = () => {
       cursor: pointer;
 
       &.confirm {
-        background: #FB64B6;
+        background: #FF4D8D;
         color: #ffffff;
 
         &:hover:not(:disabled) {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

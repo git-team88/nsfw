@@ -1,7 +1,7 @@
 <template>
   <div class="create-modal-overlay" v-if="visible">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="Close" @click="handleCancel" />
+      <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3>{{ t('collection.createCollection') }}</h3>
@@ -119,7 +119,7 @@ function resetForm() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -135,6 +135,9 @@ function resetForm() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 20px;
   right: 20px;
@@ -148,13 +151,13 @@ function resetForm() {
   justify-content: space-between;
   align-items: center;
   padding: 18px 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
   h3 {
     margin: 0;
     font-size: 16px;
-    font-weight: 500;
-    color: #101828;
+    font-weight: 600;
+    color: #161122;
   }
 }
 
@@ -166,7 +169,7 @@ function resetForm() {
       display: block;
       margin-bottom: 12px;
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
     }
 
     .input-with-counter {
@@ -178,31 +181,31 @@ function resetForm() {
       width: 100%;
       height: 50px;
       padding: 12px 10px;
-      border: 1px solid #F5F5F5;
+      border: 1px solid rgba(22, 17, 34, 0.12);
       border-radius: 8px;
       font-size: 14px;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
       outline: none;
-      color: #364153;
+      color: #161122;
 
       &:focus {
-        border-color: #fb64b6;
+        border-color: #FF4D8D;
       }
 
       &::placeholder {
-        color: #99A1AF;
+        color: #9a93a4;
       }
     }
 
     .character-counter {
       font-size: 12px;
-      color: #99A1AF;
+      color: #9a93a4;
     }
 
     .error-message {
       margin-top: 6px;
       font-size: 14px;
-      color: #FA2D47;
+      color: #E5484D;
     }
   }
 }
@@ -213,7 +216,7 @@ function resetForm() {
   justify-content: center;
   gap: 24px;
   padding: 18px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
 
   .btn {
     min-width: 136px;
@@ -224,16 +227,16 @@ function resetForm() {
     cursor: pointer;
 
     &.btn-cancel {
-      background-color: #F5F5F5;
-      color: #6A7282;
+      background-color: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
 
       &:hover {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     &.btn-save {
-      background-color: #FB64B6;
+      background-color: #FF4D8D;
       color: #FFFFFF;
 
       &:disabled {

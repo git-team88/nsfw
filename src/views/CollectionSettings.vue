@@ -27,24 +27,26 @@
 
         <!-- Basic Info Section -->
         <div class="section">
-          <div class="cover-section">
-            <div class="cover-info">
-              <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-image" />
-              <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
-                <span class="r18-text">R18</span>
+          <div class="basic-info-row">
+            <div class="cover-section">
+              <div class="cover-info">
+                <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-image" />
+                <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
+                  <span class="r18-text">R18</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="detail-section">
-            <div class="info-item">
-              <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
-              <span class="info-value">{{ collection.title }}</span>
-            </div>
+            <div class="detail-section">
+              <div class="info-item">
+                <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
+                <span class="info-value">{{ collection.title }}</span>
+              </div>
 
-            <div class="info-item">
-              <span class="info-label">{{ t('collectionSettings.description') }}：</span>
-              <span class="info-value description">{{ collection.description }}</span>
+              <div class="info-item">
+                <span class="info-label">{{ t('collectionSettings.description') }}：</span>
+                <span class="info-value description">{{ collection.description }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -288,7 +290,7 @@ async function confirmDelete() {
 <style lang="scss" scoped>
 .collection-settings {
   min-height: 100vh;
-  background-color: #FFFFFF;
+  background-color: #FFFDF7;
 }
 
 .content-container {
@@ -309,6 +311,10 @@ async function confirmDelete() {
   transform: translateX(-540px);
   cursor: pointer;
   z-index: 10;
+  border: 2px solid #161122;
+  border-radius: 8px;
+  background: #FFFDF7;
+  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.16);
 
   img {
     width: 40px;
@@ -320,12 +326,12 @@ async function confirmDelete() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
 
   .page-title {
     font-size: 20px;
     font-weight: 600;
-    color: #101828;
+    color: #161122;
     margin: 0;
   }
 
@@ -348,79 +354,89 @@ async function confirmDelete() {
     transition: all 0.2s;
 
     &.btn-delete {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: #FFFDF7;
+      color: #5b5566;
+      border: 2px solid #161122;
+      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
       &:hover {
-        color: #FB64B6;
+        color: #FF4D8D;
+        border-color: #FF4D8D;
       }
     }
 
     &.btn-finish {
       background: #00D3F2;
       color: #FFFFFF;
+      border: 3px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
 
       &:hover {
-        position: relative;
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
 
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 5;
-        }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
 
       &.disabled {
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
         cursor: not-allowed;
-
-        &:hover {
-          &::before {
-            display: none;
-          }
-        }
+        border: 2px solid #161122;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
       }
     }
 
     &.btn-edit {
-      background: #FB64B6;
+      background: #FF4D8D;
       color: #FFFFFF;
+      border: 3px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
 
       &:hover {
-        position: relative;
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
 
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 5;
-        }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
     }
   }
 }
 
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .section {
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border-radius: 12px;
+  padding: 20px;
+
   .section-title {
     font-size: 16px;
     font-weight: 600;
-    color: #101828;
+    color: #161122;
     margin: 0 0 20px 0;
   }
 }
 
+.basic-info-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
 .cover-section {
-  margin-bottom: 20px;
 
   .cover-info{
     position: relative;
@@ -432,6 +448,8 @@ async function confirmDelete() {
     height: 240px;
     object-fit: cover;
     border-radius: 12px;
+    border: 2px solid #161122;
+    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
   }
 
   .r18-overlay {
@@ -440,7 +458,7 @@ async function confirmDelete() {
     right: 0;
     width: 100px;
     height: 100px;
-    background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
+    background: linear-gradient(222deg, #FF4D8D 0%, rgba(255,77,141,0) 50%);
     border-radius: 0 12px 0 0;
     display: flex;
     align-items: flex-start;
@@ -460,7 +478,7 @@ async function confirmDelete() {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-bottom: 40px;
+  flex: 1;
 
   .info-item {
     display: flex;
@@ -468,14 +486,14 @@ async function confirmDelete() {
     gap: 10px;
 
     .info-label {
-      font-weight: 500;
+      font-weight: 600;
       font-size: 16px;
-      color: #99A1AF;
+      color: #9a93a4;
     }
 
     .info-value {
       font-size: 16px;
-      color: #364153;
+      color: #161122;
       font-weight: 500;
 
       &.description {
@@ -504,9 +522,9 @@ async function confirmDelete() {
     justify-content: center;
     width: 50px;
     height: 30px;
-    background: rgba(251, 100, 182, 0.2);
+    background: rgba(255, 77, 141, 0.2);
     border-radius: 4px;
-    color: #FB64B6;
+    color: #FF4D8D;
     font-size: 14px;
   }
 }
@@ -523,19 +541,19 @@ async function confirmDelete() {
   gap: 10px;
 
   .info-label {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
-    color: #99A1AF;
+    color: #9a93a4;
   }
 
   .info-value {
     font-size: 16px;
     font-weight: 500;
-    color: #364153;
+    color: #161122;
 
     .private-hint {
       font-weight: normal;
-      color: #99A1AF;
+      color: #9a93a4;
     }
   }
 }
@@ -571,14 +589,19 @@ async function confirmDelete() {
       font-size: 0.9722vw;
     }
   }
+  .main-content {
+    gap: 1.6667vw;
+  }
   .section {
     .section-title {
       font-size: 1.1111vw;
       margin: 0 0 1.3889vw 0;
     }
   }
+  .basic-info-row {
+    gap: 1.3889vw;
+  }
   .cover-section {
-    margin-bottom: 1.3889vw;
     .cover-info {
       width: 12.5vw;
       height: 16.6667vw;
@@ -600,7 +623,6 @@ async function confirmDelete() {
   }
   .detail-section {
     gap: 1.3889vw;
-    margin-bottom: 2.7778vw;
     .info-item {
       gap: 0.6944vw;
       .info-label {
@@ -652,7 +674,7 @@ async function confirmDelete() {
     }
   }
   .page-header {
-    margin-bottom: 12px;
+    margin-bottom: 20px;
     .page-title {
       font-size: 20px;
     }
@@ -667,14 +689,19 @@ async function confirmDelete() {
       font-size: 14px;
     }
   }
+  .main-content {
+    gap: 24px;
+  }
   .section {
     .section-title {
       font-size: 16px;
       margin: 0 0 20px 0;
     }
   }
+  .basic-info-row {
+    gap: 20px;
+  }
   .cover-section {
-    margin-bottom: 20px;
     .cover-info {
       width: 180px;
       height: 240px;
@@ -696,7 +723,6 @@ async function confirmDelete() {
   }
   .detail-section {
     gap: 20px;
-    margin-bottom: 40px;
     .info-item {
       gap: 10px;
       .info-label {
@@ -755,7 +781,7 @@ async function confirmDelete() {
     }
   }
   .page-header {
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     .page-title {
       font-size: 18px;
     }
@@ -770,14 +796,20 @@ async function confirmDelete() {
       font-size: 12px;
     }
   }
+  .main-content {
+    gap: 16px;
+  }
   .section {
     .section-title {
       font-size: 14px;
       margin: 0 0 12px 0;
     }
   }
+  .basic-info-row {
+    flex-direction: column;
+    gap: 12px;
+  }
   .cover-section {
-    margin-bottom: 16px;
     .cover-info {
       width: 140px;
       height: 186px;
@@ -799,7 +831,6 @@ async function confirmDelete() {
   }
   .detail-section {
     gap: 12px;
-    margin-bottom: 24px;
     .info-item {
       gap: 6px;
       .info-label {

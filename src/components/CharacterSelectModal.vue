@@ -1,12 +1,7 @@
 <template>
   <div class="modal-overlay" @click.self="handleClose">
     <div class="modal-content">
-      <img
-        class="modal-close"
-        src="@/assets/images/base/close.png"
-        alt="Close"
-        @click="handleClose"
-      />
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('home.characterSelect.title') }}</h3>
 
@@ -297,12 +292,14 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   z-index: 500;
 }
 
 .modal-content {
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   width: 480px;
   display: flex;
@@ -311,6 +308,9 @@ onBeforeUnmount(() => {
 }
 
 .modal-close {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 12px;
   top: 12px;
@@ -321,11 +321,11 @@ onBeforeUnmount(() => {
 
 .modal-title {
   font-size: 16px;
-  font-weight: 500;
-  color: #364153;
+  font-weight: 600;
+  color: #161122;
   margin: 0;
   padding: 18px 20px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 }
 
 .tab-navigation {
@@ -341,17 +341,17 @@ onBeforeUnmount(() => {
     padding: 0 16px;
     border-radius: 6px;
     font-size: 14px;
-    color: #99A1AF;
+    color: #9a93a4;
     cursor: pointer;
     position: relative;
 
     &:hover{
-      color: #6A7282;
+      color: #5b5566;
     }
 
     &.active {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
     }
   }
 }
@@ -372,13 +372,13 @@ onBeforeUnmount(() => {
 .character-item {
   display: flex;
   cursor: pointer;
-  border: 2px solid #F5F5F5;
+  border: 2px solid rgba(22, 17, 34, 0.12);
   border-radius: 8px;
   padding: 12px;
-  background: #F5F5F5;
+  background: rgba(22, 17, 34, 0.06);
 
   &.selected {
-    border-color: #fb64b6;
+    border-color: #FF4D8D;
   }
 }
 
@@ -410,7 +410,7 @@ onBeforeUnmount(() => {
     margin-bottom: 6px;
   }
   .character-name {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
     color: #0A0A0A;
     overflow: hidden;
@@ -420,13 +420,13 @@ onBeforeUnmount(() => {
 
   .character-cost {
     font-size: 12px;
-    color: #fb64b6;
+    color: #FF4D8D;
     white-space: nowrap;
   }
 
   .character-description {
     font-size: 12px;
-    color: #364153;
+    color: #161122;
     line-height: 18px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: 24px;
   padding: 18px 24px ;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
 
   .modal-btn {
     display: flex;
@@ -457,30 +457,25 @@ onBeforeUnmount(() => {
     cursor: pointer;
 
     &.cancel {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
 
       &:hover {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     &.confirm {
-      background: #FB64B6;
+      background: #FF4D8D;
       color: #ffffff;
 
       &:hover:not(:disabled) {
-        position: relative;
-        &::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 1;
-        }
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
 
       &:disabled {
@@ -495,7 +490,7 @@ onBeforeUnmount(() => {
 .no-characters{
   text-align: center;
   font-size: 14px;
-  color: #6a7282;
+  color: #5b5566;
 }
 
 .loading-more {
@@ -513,7 +508,7 @@ onBeforeUnmount(() => {
 
   span {
     font-size: 14px;
-    color: #6a7282;
+    color: #5b5566;
   }
 }
 
@@ -542,7 +537,7 @@ onBeforeUnmount(() => {
   }
 
   span {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
     text-transform: none;
     background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);

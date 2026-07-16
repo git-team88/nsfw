@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="close" @click="close" />
+      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3>{{ title || t("report.title") }}</h3>
@@ -254,7 +254,7 @@ async function submit() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +264,9 @@ async function submit() {
 .modal-content {
   position: relative;
   width: 420px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -272,6 +274,9 @@ async function submit() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 20px;
   right: 18px;
@@ -285,12 +290,12 @@ async function submit() {
   justify-content: space-between;
   align-items: center;
   padding: 18px 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
   h3 {
     font-size: 16px;
-    font-weight: 500;
-    color: #101828;
+    font-weight: 600;
+    color: #161122;
     margin: 0;
   }
 }
@@ -318,16 +323,16 @@ async function submit() {
   padding: 0 12px;
   border-radius: 8px;
   cursor: pointer;
-  color: #6A7282;
+  color: #5b5566;
 
   &:hover {
-    color: #4A5565;
+    color: #161122;
   }
 
   &.active {
-    background: #F5F5F5;
+    background: rgba(22, 17, 34, 0.06);
     .label-text {
-      color: #4A5565;
+      color: #161122;
     }
   }
 
@@ -349,8 +354,8 @@ async function submit() {
 .info-row {
   margin-bottom: 24px;
   font-size: 16px;
-  font-weight: 500;
-  color: #364153;
+  font-weight: 600;
+  color: #161122;
 }
 
 .form-item {
@@ -366,11 +371,11 @@ async function submit() {
     margin-bottom: 12px;
     .label {
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
     }
     .count {
       font-size: 12px;
-      color: #99A1AF;
+      color: #9a93a4;
     }
   }
 }
@@ -379,21 +384,21 @@ async function submit() {
   width: 100%;
   height: 136px;
   padding: 10px;
-  border: 1px solid #F5F5F5;
+  border: 1px solid rgba(22, 17, 34, 0.12);
   border-radius: 8px;
   resize: none;
   font-family: inherit;
   font-size: 14px;
-  background: #F5F5F5;
-  color: #364153;
+  background: rgba(22, 17, 34, 0.06);
+  color: #161122;
 
   &::placeholder {
-    color: #99a1af;
+    color: #9a93a4;
   }
 
   &:focus {
     outline: none;
-    border-color: #fb64b6;
+    border-color: #FF4D8D;
   }
 }
 
@@ -442,7 +447,7 @@ async function submit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F5F5F5;
+  background: rgba(22, 17, 34, 0.06);
   cursor: pointer;
 
   &.uploading {
@@ -461,7 +466,7 @@ async function submit() {
   width: 24px;
   height: 24px;
   border: 2px solid rgba(251, 100, 182, 0.3);
-  border-top: 2px solid #fb64b6;
+  border-top: 2px solid #FF4D8D;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -473,7 +478,7 @@ async function submit() {
 
 .modal-footer {
   padding: 18px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   justify-content: center;
 
@@ -482,7 +487,7 @@ async function submit() {
     height: 48px;
     border-radius: 8px;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     border: none;
     transition: all 0.2s;
@@ -490,31 +495,17 @@ async function submit() {
 
   .next-btn,
   .submit-btn {
-    background: #fb64b6;
+    background: #FF4D8D;
     color: #ffffff;
 
-    &:hover {
-      position: relative;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-      }
+    &:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
     }
 
-    &:disabled {
-      background: rgba(251, 100, 182, 0.5);
-      cursor: not-allowed;
-
-      &:hover {
-        &::after {
-          opacity: 0;
-        }
-      }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 }

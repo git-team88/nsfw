@@ -242,7 +242,7 @@ onUnmounted(() => {
   flex: 1;
   width: 100px;
   height: 48px;
-  border: 1px solid #F5F5F5;
+  border: 1px solid rgba(22, 17, 34, 0.12);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -250,7 +250,7 @@ onUnmounted(() => {
   padding: 0 12px;
   position: relative;
   cursor: pointer;
-  background: #F5F5F5;
+  background: rgba(22, 17, 34, 0.06);
 
   &.edit{
     background: #FFFFFF;
@@ -258,20 +258,20 @@ onUnmounted(() => {
 }
 
 .select-box.active {
-  border-color: #fb64b6;
+  border-color: #FF4D8D;
 }
 
 .selected {
   font-size: 14px;
-  color: #99a1af;
+  color: #9a93a4;
 }
 
 .selected.on {
-  color: #364153;
+  color: #161122;
 }
 
 .date-text {
-  color: #6a7282;
+  color: #5b5566;
   font-size: 14px;
 }
 
@@ -293,7 +293,9 @@ onUnmounted(() => {
   max-height: 204px;
   padding: 6px 0;
   overflow-y: auto;
-  background: #FFFFFF;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
   border-radius: 8px;
   margin-top: 8px;
@@ -306,16 +308,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #6a7282;
+  color: #5b5566;
   cursor: pointer;
 }
 
 .opt:hover {
-  color: #101828;
+  color: #161122;
 }
 
 .opt.on {
-  font-weight: 500;
-  color: #101828;
+  font-weight: 600;
+  color: #161122;
 }
 </style>

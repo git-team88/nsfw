@@ -34,7 +34,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,13 +52,13 @@ const emit = defineEmits<{
 
     .modal-message {
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
       margin-bottom: 24px;
       text-align: center;
       line-height: 1.6;
 
       :deep(span) {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
@@ -71,15 +71,14 @@ const emit = defineEmits<{
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
 
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
 
@@ -87,26 +86,20 @@ const emit = defineEmits<{
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
         border: none;
-        background: #fb64b6;
+        background: #FF4D8D;
         color: #ffffff;
 
-        &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

@@ -264,27 +264,6 @@
     }
   }
 
-  .agreement-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 12px;
-    font-size: 14px;
-    color: #6a7282;
-    .checkbox {
-      cursor: pointer;
-      img {
-        width: 24px;
-        height: 24px;
-      }
-    }
-    a {
-      color: #fb64b6;
-      text-decoration: none;
-    }
-  }
-
   /* Mention Dropdown */
   .mention-dropdown {
     position: fixed;
@@ -1304,8 +1283,6 @@
         }
       }
     }
-  }
-
   }
 
   .agreement-row {

@@ -5,6 +5,7 @@
     <div class="container">
       <div class="projects-header">
         <h2>{{ t('myProjects.title') }}</h2>
+        <p class="projects-sub">{{ t('myProjects.sub') }}</p>
 
         <!-- Main Tabs: 小说, 漫画, 漫剧, 图片, 视频 -->
         <div class="main-tabs">
@@ -734,7 +735,6 @@ $yellow: #FFD23F;
 .my-projects {
   width: 100%;
   min-height: 100vh;
-  padding: 14rem 0 0;
   background: $cream;
   scroll-behavior: smooth;
   overflow-y: auto;
@@ -744,10 +744,10 @@ $yellow: #FFD23F;
 .container {
   max-width: 1160px;
   margin: 0 auto 2rem;
-  padding: 0 1.2rem;
+  padding: 100px 20px;
 
   @media (min-width: 768px) {
-    padding: 0 1.6rem;
+    padding: 100px 24px;
   }
 }
 
@@ -756,14 +756,14 @@ $yellow: #FFD23F;
 
   h2 {
     font-weight: 800;
-    font-size: 2.6rem;
+    font-size: 26px;
     color: $ink;
     margin-bottom: 0.6rem;
     letter-spacing: 0.02em;
   }
 
   .projects-sub {
-    font-size: 1.3rem;
+    font-size: 13px;
     color: $muted;
     font-weight: 600;
     margin-bottom: 1.8rem;
@@ -945,7 +945,7 @@ $yellow: #FFD23F;
       position: relative;
       height: 260px;
       padding: 70px 30px 0;
-      font-size: 20px;
+    font-size: 26px;
       line-height: 30px;
       background: linear-gradient(135deg, #FFC24B, #FF7AAE);
       color: $ink;
@@ -1275,7 +1275,7 @@ $yellow: #FFD23F;
 /* Responsive */
 @media (max-width: 720px) {
   .container {
-    padding: 0 1rem;
+    padding: 100px 16px;
   }
 
   .projects-header .main-tabs .tab-item {

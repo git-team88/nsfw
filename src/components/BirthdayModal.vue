@@ -59,7 +59,7 @@ function close() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,12 +67,17 @@ function close() {
 }
 .modal {
   width: 520px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   padding: 18px 0;
   position: relative;
 }
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   right: 20px;
   top: 20px;
@@ -82,8 +87,8 @@ function close() {
 }
 .title {
   font-size: 16px;
-  font-weight: 500;
-  color: #101828;
+  font-weight: 600;
+  color: #161122;
   margin-bottom: 18px;
   margin-left: 18px;
 }
@@ -99,7 +104,7 @@ function close() {
   color: #4a5565;
   margin-bottom: 12px;
   span {
-    color: #fa2d47;
+    color: #E5484D;
     margin-right: 4px;
   }
 }
@@ -110,13 +115,13 @@ function close() {
   width: 240px;
   height: 48px;
   margin: 0 auto;
-  background: #fb64b6;
+  background: #FF4D8D;
   border-radius: 8px;
   color: #ffffff;
   font-size: 14px;
   border: none;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
 .confirm-btn:disabled {
   position: relative;

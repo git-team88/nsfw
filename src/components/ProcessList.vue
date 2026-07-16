@@ -784,7 +784,7 @@ $line: #F0EADF;
 
           .item-title {
             margin-top: 2px;
-            font-weight: 600;
+            font-weight: 800;
             font-size: 11px;
             color: $ink;
             opacity: 0.55;

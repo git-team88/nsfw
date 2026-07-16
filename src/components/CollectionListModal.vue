@@ -4,7 +4,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ t('collection.selectCollection') }}</h3>
-        <img class="close-btn" src="@/assets/images/base/close.png" alt="Close" @click="handleClose" />
+        <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
 
       <div class="new-collection-row" @click="handleCreateNew">
@@ -184,14 +184,16 @@ watch(() => props.modelValue, (newVal) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
 }
 
 .modal-content {
   position: relative;
   width: 840px;
   max-height: 700px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -203,17 +205,20 @@ watch(() => props.modelValue, (newVal) => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   flex-shrink: 0;
 
   h3 {
     margin: 0;
     font-size: 18px;
-    font-weight: 500;
-    color: #101828;
+    font-weight: 600;
+    color: #161122;
   }
 
   .close-btn {
+    background: none;
+    border: none;
+    padding: 0;
     width: 32px;
     height: 32px;
     cursor: pointer;
@@ -240,7 +245,7 @@ watch(() => props.modelValue, (newVal) => {
     width: 100%;
     height: 94px;
     border-radius: 8px;
-    color: #99A1AF;
+    color: #9a93a4;
     font-size: 14px;
     background-color: #F9FAFB;
 
@@ -267,7 +272,7 @@ watch(() => props.modelValue, (newVal) => {
   background: #F9FAFB;
 
   &.selected {
-    border-color: #FB64B6;
+    border-color: #FF4D8D;
   }
 
   .card-cover {
@@ -276,7 +281,7 @@ watch(() => props.modelValue, (newVal) => {
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
-    background: #F5F5F5;
+    background: rgba(22, 17, 34, 0.06);
 
     img {
       width: 100%;
@@ -287,7 +292,7 @@ watch(() => props.modelValue, (newVal) => {
     .cover-placeholder {
       width: 100%;
       height: 100%;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
     }
   }
 
@@ -302,7 +307,7 @@ watch(() => props.modelValue, (newVal) => {
 
   .card-title {
     font-size: 14px;
-    color: #364153;
+    color: #161122;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
@@ -314,7 +319,7 @@ watch(() => props.modelValue, (newVal) => {
 
   .card-desc {
     font-size: 12px;
-    color: #99A1AF;
+    color: #9a93a4;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
@@ -332,13 +337,13 @@ watch(() => props.modelValue, (newVal) => {
   gap: 8px;
   padding: 20px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #9a93a4;
 
   .loading-spinner {
     width: 20px;
     height: 20px;
-    border: 2px solid #F5F5F5;
-    border-top: 2px solid #6A7282;
+    border: 2px solid rgba(22, 17, 34, 0.12);
+    border-top: 2px solid #5b5566;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -353,14 +358,14 @@ watch(() => props.modelValue, (newVal) => {
   text-align: center;
   padding: 10px;
   font-size: 12px;
-  color: #99A1AF;
+  color: #9a93a4;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #9a93a4;
 }
 
 .modal-footer {
@@ -368,7 +373,7 @@ watch(() => props.modelValue, (newVal) => {
   justify-content: center;
   gap: 24px;
   padding: 20px 24px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
   flex-shrink: 0;
 
   .btn {
@@ -382,30 +387,25 @@ watch(() => props.modelValue, (newVal) => {
     transition: all 0.2s;
 
     &.btn-cancel {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: rgba(22, 17, 34, 0.06);
+      color: #5b5566;
 
       &:hover {
-        color: #FB64B6;
+        color: #FF4D8D;
       }
     }
 
     &.btn-confirm {
-      background: #FB64B6;
+      background: #FF4D8D;
       color: #fff;
 
-      &:hover {
-        position: relative;
-
-        &::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-        }
+      &:hover:not(:disabled) {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
     }
   }

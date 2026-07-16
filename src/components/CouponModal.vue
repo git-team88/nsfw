@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="coupon-modal-overlay" @click.self="handleClose">
     <div class="coupon-modal">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="handleClose" />
+      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <span class="modal-title">{{ t('coupon.addCoupon') }}</span>
@@ -93,7 +93,7 @@ async function handleConfirm() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,11 +103,16 @@ async function handleConfirm() {
 .coupon-modal {
   position: relative;
   width: 520px;
-  background: #ffffff;
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 
   .close-btn {
+    background: none;
+    border: none;
+    padding: 0;
     position: absolute;
     top: 20px;
     right: 20px;
@@ -118,22 +123,22 @@ async function handleConfirm() {
 
   .modal-header {
     padding: 18px 24px;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
     .modal-title {
       font-size: 16px;
-      font-weight: 500;
-      color: #364153;
+      font-weight: 600;
+      color: #161122;
     }
   }
 
   .modal-body {
     padding: 18px 24px;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
     .input-label {
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
       margin-bottom: 12px;
     }
 
@@ -144,15 +149,15 @@ async function handleConfirm() {
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       font-size: 14px;
-      color: #364153;
+      color: #161122;
       outline: none;
 
       &::placeholder {
-        color: #99A1AF;
+        color: #9a93a4;
       }
 
       &:focus {
-        border-color: #fb64b6;
+        border-color: #FF4D8D;
       }
     }
 
@@ -171,26 +176,23 @@ async function handleConfirm() {
     .confirm-btn {
       width: 240px;
       height: 48px;
-      background: #fb64b6;
+      background: #FF4D8D;
       color: #ffffff;
       border: none;
       border-radius: 8px;
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       position: relative;
       overflow: hidden;
 
       &:hover:not(:disabled) {
-        &:after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-        }
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
 
       &:disabled {

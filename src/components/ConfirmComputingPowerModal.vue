@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="confirm-computing-power-modal">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="$emit('cancel')" />
+      <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <p class="modal-message" v-html="t('novel.confirmComputingPowerPrefix', { power: `<span class='computing-power-value'>${computingPower}</span>` }) + ((frozenPower ?? 0) > 0 ? `<span class='modal-frozen'>${t('novel.confirmComputingPowerFrozen', { frozen: `<span class='computing-power-value'>${frozenPower}</span>` })}</span>` : '') + t('novel.confirmComputingPowerSuffix')"></p>
       <div class="modal-actions">
@@ -36,7 +36,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,6 +53,9 @@ const emit = defineEmits<{
     padding: 44px 30px 24px;
 
     .close-btn {
+      background: none;
+      border: none;
+      padding: 0;
       position: absolute;
       top: 12px;
       right: 12px;
@@ -63,18 +66,18 @@ const emit = defineEmits<{
 
     .modal-message {
       font-size: 14px;
-      color: #364153;
+      color: #161122;
       margin-bottom: 24px;
       text-align: center;
       line-height: 20px;
 
       :deep(.computing-power-value) {
         margin: 0 4px;
-        color: #FB64B6;
+        color: #FF4D8D;
       }
 
       :deep(.modal-frozen) {
-        color: #6A7282;
+        color: #5b5566;
       }
     }
 
@@ -87,15 +90,14 @@ const emit = defineEmits<{
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        background: #F5F5F5;
-        color: #6A7282;
+        background: rgba(22, 17, 34, 0.06);
+        color: #5b5566;
 
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
 
@@ -103,26 +105,20 @@ const emit = defineEmits<{
         min-width: 136px;
         height: 48px;
         border: none;
-        -webkit-border-radius: 8px;
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
         border: none;
-        background: #fb64b6;
+        background: #FF4D8D;
         color: #ffffff;
 
-        &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

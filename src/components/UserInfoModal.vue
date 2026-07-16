@@ -222,6 +222,9 @@ function close() {
 }
 
 .close-btn {
+  background: none;
+  border: none;
+  padding: 0;
   position: absolute;
   top: 14px;
   right: 16px;

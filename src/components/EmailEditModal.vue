@@ -1,7 +1,7 @@
 <template>
   <div class="exit-confirm-modal" v-if="visible">
     <div class="modal-content">
-      <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="closeModal" />
+      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       <h3 class="modal-title">{{ t("user.personal.changeEmailTitle") }}</h3>
       <div class="modal-form">
         <div class="form-item">
@@ -257,7 +257,7 @@ function saveEmail() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,11 +269,16 @@ function saveEmail() {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    background: #FFFFFF;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
     padding: 0 0 18px;
 
     .close-btn {
+      background: none;
+      border: none;
+      padding: 0;
       position: absolute;
       top: 20px;
       right: 12px;
@@ -284,16 +289,16 @@ function saveEmail() {
 
     .modal-title {
       padding: 18px 24px;
-      border-bottom: 1px solid #F5F5F5;
+      border-bottom: 1px solid rgba(22, 17, 34, 0.12);
       font-size: 16px;
-      font-weight: 500;
-      color: #364153;
+      font-weight: 600;
+      color: #161122;
     }
 
     .modal-form {
       margin-bottom: 18px;
       padding: 18px 32px;
-      border-bottom: 1px solid #F5F5F5;
+      border-bottom: 1px solid rgba(22, 17, 34, 0.12);
     }
 
     .form-item {
@@ -304,31 +309,31 @@ function saveEmail() {
       display: block;
       margin-bottom: 8px;
       font-size: 14px;
-      color: #6A7282;
+      color: #5b5566;
     }
 
     .required-asterisk {
-      color: #FA2D47;
+      color: #E5484D;
     }
 
     .form-input {
       width: 100%;
       height: 50px;
       padding: 12px 16px;
-      border: 1px solid #F5F5F5;
+      border: 1px solid rgba(22, 17, 34, 0.12);
       border-radius: 8px;
       font-size: 14px;
-      color: #364153;
+      color: #161122;
       outline: none;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
       box-sizing: border-box;
 
       &:focus {
-        border-color: #FB64B6;
+        border-color: #FF4D8D;
       }
 
       &::placeholder {
-        color: #99A1AF;
+        color: #9a93a4;
       }
     }
 
@@ -337,14 +342,14 @@ function saveEmail() {
       padding-right: 20px;
       border-radius: 8px;
       gap: 10px;
-      background: #F5F5F5;
+      background: rgba(22, 17, 34, 0.06);
 
       .code-input {
         flex: 1;
         height: 50px;
         padding: 12px 16px;
         font-size: 14px;
-        color: #364153;
+        color: #161122;
         outline: none;
         border: none;
         background: transparent;
@@ -354,12 +359,12 @@ function saveEmail() {
     .send-code-btn {
       font-size: 14px;
       background: none;
-      color: #FB64B6;
+      color: #FF4D8D;
       cursor: pointer;
       border: none;
 
       &:disabled {
-        color: #99A1AF;
+        color: #9a93a4;
         cursor: not-allowed;
       }
     }
@@ -376,7 +381,7 @@ function saveEmail() {
         font-size: 14px;
         cursor: pointer;
         border: none;
-        background: #FB64B6;
+        background: #FF4D8D;
         color: #FFFFFF;
 
         &:disabled {
@@ -385,17 +390,12 @@ function saveEmail() {
         }
 
         &:hover:not(:disabled) {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
     }

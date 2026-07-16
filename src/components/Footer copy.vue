@@ -61,7 +61,7 @@ const navigateTo = (path: string) => {
   align-items: center;
   padding: 0 24px 24px;
   margin-top: 30px;
-  border-top: 1px solid #F5F5F5;
+  border-top: 1px solid rgba(22, 17, 34, 0.12);
   background: rgba(255,255,255,0.8);
 }
 
@@ -73,11 +73,11 @@ const navigateTo = (path: string) => {
   width: 100%;
   height: 70px;
   margin-bottom: 24px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 }
 
 .nav-item {
-  color: #6A7282;
+  color: #5b5566;
   text-decoration: none;
   font-size: 14px;
 }
@@ -93,13 +93,13 @@ const navigateTo = (path: string) => {
 }
 
 .policy-item {
-  color: #99A1AF;
+  color: #9a93a4;
   text-decoration: none;
   font-size: 12px;
 }
 
 .footer-copyright {
-  color: #99A1AF;
+  color: #9a93a4;
   font-size: 12px;
 }
 </style>
