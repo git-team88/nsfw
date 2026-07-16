@@ -775,13 +775,13 @@ defineExpose({
   position: relative;
   width: 100%;
   margin: 0 auto;
-  padding: 2.4rem 0;
+  padding: 24px 0;
 }
 
 .process-step {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 3.6rem;
+  margin-bottom: 36px;
   opacity: 1;
   transition: all 0.3s ease;
 
@@ -800,14 +800,14 @@ defineExpose({
   flex-direction: column;
   align-items: flex-start;
   flex: 1;
-  gap: 2.4rem;
+  gap: 24px;
   width: 100%;
 }
 
 .step-with-role {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 10px;
   width: 100%;
 }
 
@@ -816,8 +816,8 @@ defineExpose({
 }
 
 .role-avatar {
-  width: 4.8rem;
-  height: 4.8rem;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -826,12 +826,12 @@ defineExpose({
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .role-name {
-  font-size: 1.6rem;
+  font-size: 16px;
   color: #364153;
 }
 
@@ -839,16 +839,16 @@ defineExpose({
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 1rem;
+  gap: 10px;
 }
 
 .step-description {
-  font-size: 1.4rem;
-  line-height: 1.8rem;
+  font-size: 14px;
+  line-height: 18px;
   color: #364153;
-  padding: 1.2rem;
+  padding: 12px;
   border: 1px solid rgba(251, 100, 182, 0.3);
-  border-radius: 0.8rem;
+  border-radius: 8px;
   background: rgba(251, 100, 182, 0.12);
   position: relative;
   display: flex;
@@ -869,7 +869,7 @@ defineExpose({
   left: 0;
   height: 100%;
   background: rgba(251, 100, 182, 0.12);
-  border-radius: 0.8rem;
+  border-radius: 8px;
   transition: width 0.2s ease;
   z-index: 0;
 }
@@ -883,7 +883,7 @@ defineExpose({
 }
 
 .progress-percentage {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #99A1AF;
   white-space: nowrap;
   z-index: 1;
@@ -891,9 +891,9 @@ defineExpose({
 
 .loading-icon {
   display: inline-block;
-  width: 2.2rem;
-  height: 2.2rem;
-  margin-left: 1.2rem;
+  width: 22px;
+  height: 22px;
+  margin-left: 12px;
   vertical-align: middle;
   animation: spin 1s linear infinite;
 }
@@ -913,16 +913,16 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 0;
-  font-size: 1.4rem;
-  line-height: 1.8rem;
+  font-size: 14px;
+  line-height: 18px;
 
   .team-avatar {
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 22px;
+    height: 22px;
   }
 
   .team-username {
-    margin-right: 1rem;
+    margin-right: 10px;
     color: #FB64B6;
   }
 
@@ -933,11 +933,11 @@ defineExpose({
   .team-target {
     display: flex;
     align-items: center;
-    margin: 0 1rem 0 1.6rem;
+    margin: 0 10px 0 16px;
 
     .team-target-avatar {
-      width: 2.2rem;
-      height: 2.2rem;
+      width: 22px;
+      height: 22px;
     }
 
     .team-target-username {

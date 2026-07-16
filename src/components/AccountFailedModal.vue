@@ -57,28 +57,28 @@ function handleModify() {
 }
 
 .account-required-modal {
-  width: 48rem;
+  width: 480px;
   background: #ffffff;
-  border-radius: 1.2rem;
-  padding: 3.2rem;
+  border-radius: 12px;
+  padding: 32px;
   position: relative;
 
   .modal-close {
     position: absolute;
-    right: 2rem;
-    top: 2rem;
-    width: 2rem;
-    height: 2rem;
+    right: 20px;
+    top: 20px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 
   .modal-content {
     text-align: center;
-    padding: 2rem 0;
+    padding: 20px 0;
   }
 
   .modal-message {
-    font-size: 1.6rem;
+    font-size: 16px;
     color: #364153;
     margin: 0;
   }
@@ -86,15 +86,15 @@ function handleModify() {
   .modal-actions {
     display: flex;
     justify-content: center;
-    gap: 2.4rem;
-    margin-top: 3.2rem;
+    gap: 24px;
+    margin-top: 32px;
 
     button {
-      min-width: 13.6rem;
-      height: 4.8rem;
+      min-width: 136px;
+      height: 48px;
       border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       cursor: pointer;
     }
 
@@ -120,7 +120,7 @@ function handleModify() {
           left: 0;
           width: 100%;
           height: 100%;
-          border-radius: 0.8rem;
+          border-radius: 8px;
           background: rgba(255, 255, 255, 0.1);
           z-index: 1;
         }

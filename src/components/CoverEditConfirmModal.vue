@@ -41,17 +41,17 @@ const { t } = useI18n();
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50rem;
+    width: 500px;
     background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 2.4rem;
+    border-radius: 12px;
+    padding: 24px;
 
     .modal-body {
-      margin-bottom: 3.4rem;
+      margin-bottom: 34px;
 
       .modal-message {
         text-align: center;
-        font-size: 1.4rem;
+        font-size: 14px;
         line-height: 1.5;
         color: #6A7282;
         margin: 0;
@@ -61,14 +61,14 @@ const { t } = useI18n();
     .modal-footer {
       display: flex;
       justify-content: center;
-      gap: 2.4rem;
+      gap: 24px;
 
       .cancel-btn, .exit-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         transition: all 0.3s;
       }

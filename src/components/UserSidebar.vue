@@ -86,65 +86,95 @@ function cancelLogout() {
 
 <style scoped lang="scss">
 .user-sidebar {
-  width: 29rem;
-  padding: 13rem 1.2rem 2rem;
+  width: 220px;
+  padding: 100px 0 14px;
   position: sticky;
   top: 0;
   align-self: flex-start;
   height: 100vh;
-  background: #F5F5F5;
   overflow: auto;
 }
 .title {
-  height: 4.8rem;
-  display: flex;
-  align-items: center;
-  padding: 0 1.8rem;
-  font-weight: 500;
-  font-size: 1.8rem;
-  color: #101828;
-  margin-bottom: 0.2rem;
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
+  padding: 0 14px 8px;
+  letter-spacing: 0.01em;
 }
 .items {
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0;
 }
 .item {
-  height: 4.8rem;
   display: flex;
   align-items: center;
-  padding: 0 0 0 1.8rem;
-  border-radius: 0.8rem;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 13.5px;
   cursor: pointer;
-  color: #6A7282;
-  position: relative;
+  color: #161122;
+  transition: background 0.15s;
 }
 .item:hover {
-  color: #364153;
+  background: #F3EFE7;
 }
 .item.on {
-  font-weight: 500;
-  background: #FFFFFF;
-  color: #364153;
+  background: #161122;
+  color: #fff;
 }
-.item.on::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 0.3rem;
-  height: 2.4rem;
-  background: #fb64b6;
-  border-radius: 0.2rem;
-  transform: translateY(-50%);
+.item.on::after {
+  content: '';
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF4D8D;
+  animation: stDot 2.6s ease-in-out infinite;
+}
+@keyframes stDot {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
 }
 .logout {
-  position: absolute;
-  left: 3.6rem;
-  bottom: 2.4rem;
-  font-size: 1.4rem;
-  color: #99A1AF;
+  font-weight: 800;
+  font-size: 13px;
+  color: #E5484D;
   cursor: pointer;
+  padding: 14px;
+  margin-top: 8px;
+}
+@media (max-width: 900px) {
+  .user-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 0;
+  }
+  .items {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+  .item {
+    flex: none;
+    width: auto;
+    white-space: nowrap;
+  }
+  .item.on::after {
+    margin-left: 8px;
+  }
 }
 </style>

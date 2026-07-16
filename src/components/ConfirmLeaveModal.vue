@@ -41,65 +41,66 @@ const { t, locale } = useI18n();
 }
 .confirm-modal {
   position: relative;
-  width: 50rem;
-  padding: 4.4rem 2rem 2.4rem;
-  -webkit-border-radius: 1.2rem;
-  border-radius: 1.2rem;
+  width: 500px;
+  padding: 44px 20px 24px;
+  -webkit-border-radius: 14px;
+  border-radius: 14px;
   background: #ffffff;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
 }
 .confirm-close {
   position: absolute;
-  right: 1.2rem;
-  top: 1.2rem;
-  width: 2rem;
-  height: 2rem;
+  right: 12px;
+  top: 12px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 .confirm-text {
-  margin-bottom: 2.4rem;
-  font-size: 1.4rem;
-  line-height: 2rem;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 20px;
   text-align: center;
-  color: #364153;
+  color: #161122;
+  font-weight: 700;
 }
 .confirm-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.4rem;
+  gap: 24px;
 }
 .confirm-btn {
-  min-width: 13.6rem;
-  height: 4.8rem;
-  border: none;
-  -webkit-border-radius: 0.8rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  min-width: 136px;
+  height: 48px;
+  -webkit-border-radius: 14px;
+  border-radius: 14px;
+  font-size: 14px;
   cursor: pointer;
   &.secondary {
-    background: #f5f5f5;
-    color: #6A7282;
+    background: #ffffff;
+    color: #161122;
+    border: 2px solid #161122;
+    box-shadow: 2px 2px 0 #161122;
+    font-weight: 800;
 
     &:hover {
-      color: #fb64b6;
+      border-color: #FF4D8E;
+      color: #FF4D8E;
     }
   }
   &.primary {
-    background: #fb64b6;
+    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
     color: #ffffff;
+    border: 2px solid #161122;
+    box-shadow: 2px 2px 0 #161122;
+    font-weight: 800;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
-      position: relative;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        z-index: 1;
-      }
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 0 #161122;
     }
   }
 }

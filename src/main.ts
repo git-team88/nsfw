@@ -1,6 +1,5 @@
 import "./assets/base.css";
 import "element-plus/dist/index.css";
-import "./assets/js/fontRem.js";
 
 import { createApp } from "vue";
 import App from "./App.vue";

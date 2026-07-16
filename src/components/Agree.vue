@@ -1,21 +1,24 @@
 <template>
   <div class="agree-box" v-if="isShowAgree">
-    <div class="bg"></div>
+    <div class="bg" @click="closeAgree()"></div>
     <div class="agree">
-      <img class="close" src="@/assets/images/base/close.png" alt="" @click="closeAgree()" />
+      <button class="close" @click="closeAgree()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
 
       <div class="title">{{ t('closedBetaAgreementTitle') }}</div>
       <div class="content" ref="contentContainer" @scroll="handleScrollFunc">
         <div v-html="t('closedBetaAgreement')"></div>
       </div>
       <div class="tip">{{ t('agreeTip') }}</div>
-      <div class="agree-btn" :class="isFinishAgree ? 'on' : ''" @click="goRegister()">
-        <span>{{ btnText }}</span>
-      </div>
+      <button class="agree-btn" :class="isFinishAgree ? 'on' : ''" @click="goRegister()">
+        {{ btnText }}
+      </button>
       <div class="agree-check" @click="isAgree = !isAgree">
-        <img src="@/assets/images/register/check_active.png" alt="" v-if="isAgree" />
-        <img src="@/assets/images/register/check.png" alt="" v-else />
-        <span>{{ t('checkAgreeText') }}</span>
+        <span class="check-box" :class="isAgree ? 'checked' : ''">
+          <svg v-if="isAgree" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </span>
+        <span class="check-text">{{ t('checkAgreeText') }}</span>
       </div>
     </div>
   </div>
@@ -155,124 +158,132 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: 640;
 
     .bg {
-      width: 100%;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(22, 17, 34, 0.4);
+      z-index: 640;
     }
 
     .agree{
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 68rem;
-      padding: 2rem;
-      transform: translateX(-50%) translateY(-50%);
-      -webkit-border-radius: 1.2rem;
-      border-radius: 1.2rem;
-      background: #FFFFFF;
+      transform: translate(-50%, -50%);
       z-index: 650;
+      width: 680px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px 36px 28px;
+      border: 3px solid #161122;
+      border-radius: 6px;
+      background: #FFFDF7;
+      box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
 
       .close{
         position: absolute;
-        top: 1.4rem;
-        right: 2rem;
-        width: 2rem;
-        height: 2rem;
-        z-index: 660;
+        top: 14px;
+        right: 16px;
+        width: 28px;
+        height: 28px;
+        border: 2px solid #161122;
+        border-radius: 8px;
+        background: #fff;
+        display: grid;
+        place-items: center;
         cursor: pointer;
+        z-index: 660;
+        transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+        box-shadow: 2px 2px 0 #161122;
+
         &:hover{
-          opacity: .8;
+          transform: translateY(-1px);
+          box-shadow: 3px 3px 0 #161122;
         }
       }
 
       .title{
-        margin: 0 0 2rem;
-        padding: 0 0 2rem;
-        font: {
-          size: 1.8rem;
-        }
+        margin: 0 0 20px;
+        padding: 0 0 20px;
+        font-size: 22px;
+        font-weight: 800;
         text-align: center;
-        color: #364153;
+        color: #161122;
+        border-bottom: 2px solid rgba(22, 17, 34, 0.12);
       }
 
       .content{
-        height: 34rem;
-        margin: 2.4rem 0 1rem;
-        font-size: 1.4rem;
+        max-height: 340px;
+        margin: 24px 0 12px;
+        font-size: 14px;
+        font-weight: 600;
         overflow-y: auto;
         line-height: 1.7;
-        color: #6A7282;
+        color: #5b5566;
+        padding: 16px;
+        border: 2.5px solid #161122;
+        border-radius: 12px;
+        background: #fff;
 
-        :deep(h1) { font-weight: bold; font-size: 2.4rem; margin: 0 0 1rem 0; color: #4A5565;}
-        :deep(.sub) { color: #4A5565; margin-top: 0; }
-        :deep(.meta) { color: #4A5565; margin-bottom: 2rem; font-size: 1.4rem; }
-        :deep(.meta a) { color: #00FFFF; text-decoration: none; }
+        :deep(h1) { font-weight: 800; font-size: 24px; margin: 0 0 16px 0; color: #161122;}
+        :deep(.sub) { color: #5b5566; margin-top: 0; }
+        :deep(.meta) { color: #5b5566; margin-bottom: 24px; font-size: 14px; }
+        :deep(.meta a) { color: #FF4D8D; text-decoration: none; }
         :deep(.meta a:hover) { text-decoration: underline; }
-        :deep(h2) { font-weight: bold; font-size: 2rem; margin: 3rem 0; border-left: 4px solid #00FFFF; padding-left: .6rem; color: #4A5565;}
-        :deep(h3) { font-weight: bold; font-size: 1.75rem; margin: 2.8rem 0; color: #4A5565;}
-        :deep(p) { margin: 1.5rem 0; }
-        :deep(ul) { padding-left: 1.8rem; list-style: disc;}
+        :deep(h2) { font-weight: 800; font-size: 20px; margin: 32px 0; border-left: 4px solid #FF4D8D; padding-left: 8px; color: #161122;}
+        :deep(h3) { font-weight: 800; font-size: 18px; margin: 28px 0; color: #161122;}
+        :deep(p) { margin: 16px 0; }
+        :deep(ul) { padding-left: 24px; list-style: disc;}
         :deep(li) { list-style: disc;}
-        :deep(code) { background: rgba(0, 255, 255, 0.12); padding:.7rem .9rem; border-radius:4px; }
-        :deep(table) { width:100%; border-collapse: collapse; margin: 1.6rem 0; font-size: 1.6rem;}
-        :deep(th), :deep(td){ border:1px solid rgba(255, 255, 255, 0.12); padding:1.2rem 1.1rem; vertical-align: top;}
-        :deep(thead th){ background:rgba(255, 255, 255, 0.06); text-align:left; }
-        :deep(.notice){ background: rgba(0, 255, 255, 0.12); border:1px solid #00FFFF; padding: 1.4rem 1.6rem; border-radius:8px; }
-        :deep(footer){ margin-top:5rem; color:#6A7282; font-size:1.4rem;}
+        :deep(code) { background: rgba(255, 77, 141, 0.12); padding: 6px 8px; border-radius: 4px; }
+        :deep(table) { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;}
+        :deep(th), :deep(td){ border: 1px solid rgba(22, 17, 34, 0.12); padding: 12px; vertical-align: top;}
+        :deep(thead th){ background: rgba(22, 17, 34, 0.06); text-align: left; }
+        :deep(.notice){ background: rgba(255, 77, 141, 0.12); border: 2px solid #FF4D8D; padding: 16px; border-radius: 12px; }
+        :deep(footer){ margin-top: 48px; color: #9a93a4; font-size: 14px;}
       }
 
       .tip{
-        margin: 0 0 0.6rem;
-        font: {
-          size: 1.4rem;
-        }
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 700;
         text-align: center;
-        color: #FA2D47;
+        color: #E5484D;
       }
 
       .agree-btn{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0 0 0.6rem;
-        span{
-          position: relative;
-          min-width: 18rem;
-          height: 4.8rem;
-          padding: 0 1rem;
-          font: {
-            size: 1.6rem;
-          }
-          text-align: center;
-          line-height: 4.8rem;
-          -webkit-border-radius: .8rem;
-          border-radius: .8rem;
-          background: rgba(251,100,182,0.5);
-          color: #FFFFFF;
-          cursor: default;
-        }
-        &.on{
-          span{
-            background: #FB64B6;
-            cursor: pointer;
+        width: 100%;
+        border: 2.5px solid #161122;
+        border-radius: 13px;
+        background: rgba(255, 77, 141, 0.4);
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 800;
+        padding: 14px;
+        cursor: not-allowed;
+        box-shadow: 3px 3px 0 #161122;
+        transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, background 0.2s;
 
-            &:hover{
-              position: relative;
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.1);
-              }
-            }
+        &.on{
+          background: #FF4D8D;
+          cursor: pointer;
+
+          &:hover{
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 #161122;
+          }
+
+          &:active{
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 #161122;
           }
         }
       }
@@ -281,19 +292,44 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        gap: 8px;
+        margin-top: 12px;
         cursor: pointer;
-        img{
-          width: 1.6rem;
-          height: 1.6rem;
-          margin: 0 1rem 0 0;
-        }
-        span{
-          font: {
-            size: 1.4rem;
+        user-select: none;
+
+        .check-box{
+          width: 22px;
+          height: 22px;
+          border: 2.5px solid #161122;
+          border-radius: 7px;
+          background: #fff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.16s;
+          flex-shrink: 0;
+
+          &.checked{
+            background: #FF4D8D;
+            animation: checkBounce 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
           }
-          color: #6A7282;
+        }
+
+        .check-text{
+          font-size: 12.5px;
+          font-weight: 600;
+          line-height: 1.7;
+          color: #161122;
+          opacity: 0.8;
         }
       }
     }
+  }
+
+  @keyframes checkBounce {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.2); }
+    70% { transform: scale(0.93); }
+    100% { transform: scale(1); }
   }
 </style>

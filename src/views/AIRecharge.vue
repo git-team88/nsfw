@@ -552,28 +552,46 @@ function cancelCoupon() {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+$yellow: #FFD23F;
+$green: #22A06B;
+
 .ai-recharge {
   width: 100%;
-  background: #FFFFFF;
+  background: $cream;
 }
 
 .container {
-  width: 100rem;
+  max-width: 1160px;
   margin: 14rem auto 2rem;
+  padding: 0 1.2rem;
   position: relative;
 
+  @media (min-width: 768px) {
+    padding: 0 1.6rem;
+  }
+
   .back {
-    position: fixed;
-    left: 50%;
-    top: 14rem;
+    position: absolute;
+    top: 0;
+    left: 1.2rem;
     width: 4rem;
     height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: translateX(-55rem);
     cursor: pointer;
     z-index: 10;
+
+    @media (min-width: 768px) {
+      left: 1.6rem;
+    }
 
     img {
       width: 4rem;
@@ -585,11 +603,11 @@ function cancelCoupon() {
 .content-box {
   .page-title {
     position: relative;
-    font-size: 3.2rem;
-    font-weight: 500;
-    text-align: center;
-    color: #101828;
+    font-size: 3rem;
+    font-weight: 800;
+    color: $ink;
     margin-bottom: 2rem;
+    letter-spacing: 0.01em;
   }
 
   .tab-box {
@@ -597,28 +615,36 @@ function cancelCoupon() {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 1rem;
 
     .tab-group {
       display: flex;
-      background: #F5F5F5;
-      border-radius: 2.2rem;
-      padding: 0.4rem;
+      background: #fff;
+      border: 2.5px solid $ink;
+      border-radius: 1.4rem;
+      padding: 5px;
     }
 
     .tab-item {
       display: flex;
       align-items: center;
       height: 3.6rem;
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: #6A7282;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: $ink;
       cursor: pointer;
-      padding: 0 2.2rem;
-      border-radius: 2.2rem;
+      padding: 0 2rem;
+      border-radius: 1rem;
+      transition: background-color 0.16s, color 0.16s;
+      background: transparent;
 
       &.active {
-        color: #364153;
-        background: #FFFFFF;
+        background: $ink;
+        color: #fff;
+      }
+
+      &:hover:not(.active) {
+        background: $paper;
       }
     }
 
@@ -627,13 +653,17 @@ function cancelCoupon() {
       right: 0;
       display: flex;
       align-items: center;
-      span {
-        font-size: 1.4rem;
-        color: #99A1AF;
-        cursor: pointer;
+      gap: 1rem;
 
-        &:last-child {
-          margin-left: 3rem;
+      span {
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: $muted;
+        cursor: pointer;
+        transition: color 0.16s;
+
+        &:hover {
+          color: $pink;
         }
       }
     }
@@ -641,19 +671,21 @@ function cancelCoupon() {
 
   .first-month-off-banner {
     font-size: 1.6rem;
-    color: #364153;
+    color: $ink;
     margin: 1rem 0 0;
     text-align: center;
+    font-weight: 700;
 
     .banner-highlight {
-      font-weight: 500;
-      color: #FB64B6;
+      font-weight: 800;
+      color: $pink;
     }
   }
 
   .credits-pack-tip {
     font-size: 1.4rem;
-    color: #6A7282;
+    color: $muted;
+    font-weight: 600;
     margin-top: 1rem;
     text-align: center;
   }
@@ -668,8 +700,8 @@ function cancelCoupon() {
     .list-loading-spinner {
       width: 4rem;
       height: 4rem;
-      border: 0.4rem solid #F5F5F5;
-      border-top: 0.4rem solid #6A7282;
+      border: 0.4rem solid $line;
+      border-top: 0.4rem solid $ink;
       border-radius: 50%;
       animation: spin 1s ease-in-out infinite;
       margin-bottom: 1.6rem;
@@ -677,7 +709,8 @@ function cancelCoupon() {
 
     .list-loading-text {
       font-size: 1.4rem;
-      color: #6A7282;
+      color: $muted;
+      font-weight: 600;
     }
   }
 
@@ -685,10 +718,15 @@ function cancelCoupon() {
     margin: 0 0 3rem;
 
     .plan-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.6rem;
       margin-top: 2.4rem;
+      animation: chUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.26s backwards;
+
+      @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+      }
 
       .plan-card {
         position: relative;
@@ -706,45 +744,50 @@ function cancelCoupon() {
           position: relative;
           display: flex;
           flex-direction: column;
-          width: 23rem;
-          height: 42rem;
           background: #FFFFFF;
-          border: 2px solid transparent;
-          border-radius: 2.4rem;
-          box-shadow: 0px 2px 12px 0px rgba(0,0,0,0.08);
+          border: 3px solid $ink;
+          border-radius: 1.6rem;
+          box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
           font-size: 1.4rem;
-          color: #6A7282;
+          color: $muted;
           cursor: pointer;
-          padding: 2rem;
+          padding: 2.4rem 2rem;
           z-index: 5;
           overflow: hidden;
+          transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+          animation: chPlanIn 0.6s cubic-bezier(0.16,1,0.3,1) var(--d, 0ms) backwards;
+
+          &:hover {
+            transform: translateY(-5px);
+            box-shadow: 7px 9px 0 rgba(22,17,34,0.18);
+          }
 
           &.discount-card {
-            height: 48rem;
+            background: #FFF3D6;
           }
 
           &.credits-card {
             height: auto;
           }
 
-          &:hover {
-            border-color: #fb64b6;
-          }
-
           &.active {
-            background: rgba(251,100,182,0.06);
-            border: 2px solid #FB64B6;
-            box-shadow: 0px 4px 16px 0px rgba(251,100,182,0.15);
+            background: #FFF3D6;
+            border-color: $ink;
+            box-shadow: 4px 4px 0 $ink;
+
+            &:hover {
+              box-shadow: 7px 9px 0 $ink;
+            }
 
             .plan-credits-box {
-              background: rgba(251,100,182,0.12);
+              background: rgba(255,77,141,0.12);
             }
           }
 
           .plan-mode {
             font-size: 1.4rem;
-            font-weight: 500;
-            color: #6A7282;
+            font-weight: 800;
+            color: $muted;
             margin-bottom: 2rem;
             text-align: left;
           }
@@ -759,20 +802,20 @@ function cancelCoupon() {
 
               .price-num {
                 font-size: 2.8rem;
-                font-weight: 700;
-                color: #101828;
+                font-weight: 800;
+                color: $ink;
               }
 
               .price-unit {
-                font-size: 1.6rem;
-                color: #364153;
+                font-size: 1.5rem;
+                color: $sub;
                 margin-left: 0.4rem;
               }
             }
 
             .plan-original-price {
               font-size: 1.2rem;
-              color: #99A1AF;
+              color: $muted;
               text-decoration: line-through;
               margin-bottom: 1rem;
             }
@@ -782,14 +825,13 @@ function cancelCoupon() {
               line-height: 1.6rem;
 
               .desc-highlight {
-                margin-bottom: 0.4rem;
-                color: #FB64B6;
-                font-weight: 500;
+                color: $pink;
+                font-weight: 800;
               }
 
               .desc-then {
-                color: #6A7282;
-                font-weight: 500;
+                color: $muted;
+                font-weight: 600;
               }
             }
 
@@ -799,20 +841,20 @@ function cancelCoupon() {
 
               .price-num {
                 font-size: 2.8rem;
-                font-weight: 700;
-                color: #101828;
+                font-weight: 800;
+                color: $ink;
               }
 
               .price-unit {
-                font-size: 1.6rem;
-                color: #364153;
+                font-size: 1.5rem;
+                color: $sub;
                 margin-left: 0.4rem;
               }
             }
 
             .plan-strikethrough-price {
               font-size: 1.4rem;
-              color: #99A1AF;
+              color: $muted;
               text-decoration: line-through;
               margin-top: 0.4rem;
             }
@@ -828,43 +870,45 @@ function cancelCoupon() {
 
             .plan-credits-main {
               font-size: 1.4rem;
-              color: #4A5565;
+              color: $sub;
               margin-bottom: 0.6rem;
 
               .credits-value {
                 margin: 0 0.4rem;
-                color: #101828;
-                font-weight: 500;
+                color: $ink;
+                font-weight: 800;
               }
             }
 
             .plan-credits-bonus {
               font-size: 1.4rem;
-              color: #4A5565;
+              color: $sub;
               margin-bottom: 0.6rem;
 
               .bonus-includes {
                 margin-right: 0.4rem;
-                color: #FB64B6;
+                color: $pink;
+                font-weight: 800;
               }
 
               .bonus-value {
-                color: #4A5565;
+                color: $sub;
               }
             }
 
             .plan-credits-valid {
               font-size: 1.4rem;
-              color: #4A5565;
+              color: $sub;
             }
           }
 
           .plan-estimated-output {
             margin-top: 1.6rem;
+
             .estimated-title {
               font-size: 1.4rem;
-              font-weight: 500;
-              color: #364153;
+              font-weight: 800;
+              color: $ink;
               margin-bottom: 0.8rem;
             }
 
@@ -872,7 +916,7 @@ function cancelCoupon() {
               .estimated-item {
                 font-size: 1.4rem;
                 line-height: 2rem;
-                color: #6A7282;
+                color: $muted;
                 margin-bottom: 0.6rem;
 
                 &:last-child {
@@ -881,7 +925,8 @@ function cancelCoupon() {
 
                 .estimated-num {
                   margin: 0 0.2rem;
-                  color: #FB64B6;
+                  color: $pink;
+                  font-weight: 800;
                 }
               }
             }
@@ -892,17 +937,21 @@ function cancelCoupon() {
           position: absolute;
           top: -2.6rem;
           left: 0;
-          width: 23rem;
+          right: 0;
           height: 4rem;
           border-radius: 1.2rem 1.2rem 0 0;
-          background: #FB64B6;
+          background: $pink;
           color: #ffffff;
+          font-weight: 800;
           font-size: 1.2rem;
           padding-top: 0.6rem;
           text-align: center;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          border: 2px solid $ink;
+          box-shadow: 2px 2px 0 $ink;
+          animation: chChip 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.5s backwards;
         }
       }
     }
@@ -912,10 +961,18 @@ function cancelCoupon() {
     display: flex;
     align-items: stretch;
     margin-top: 3rem;
-    background: #FFFFFF;
-    box-shadow: 0px 0px 24px 0px rgba(0,0,0,0.04);
+    background: $paper;
+    border: 3px solid $ink;
     border-radius: 2.4rem;
+    box-shadow: 6px 6px 0 rgba(22,17,34,0.14);
     padding: 2.4rem 0;
+    animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+
+    @media (max-width: 720px) {
+      flex-direction: column;
+      padding: 2rem;
+      border-radius: 1.6rem;
+    }
 
     .bottom-block {
       flex: 1;
@@ -925,16 +982,26 @@ function cancelCoupon() {
       justify-content: center;
       padding: 0 2rem;
 
+      @media (max-width: 720px) {
+        padding: 1rem 0;
+        align-items: center;
+      }
+
       &.bottom-block-btn {
         align-items: center;
       }
 
       .block-label {
         font-size: 1.4rem;
-        color: #364153;
+        font-weight: 800;
+        color: $ink;
         margin-bottom: 2rem;
         display: flex;
         align-items: center;
+
+        @media (max-width: 720px) {
+          margin-bottom: 1rem;
+        }
 
         .coupon-info-icon {
           position: relative;
@@ -955,10 +1022,12 @@ function cancelCoupon() {
             width: max-content;
             padding: 1rem 1.6rem;
             background: #FFFFFF;
-            box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
-            color: #6A7282;
+            border: 2px solid $ink;
+            box-shadow: 3px 3px 0 $ink;
+            color: $muted;
             font-size: 1.2rem;
-            border-radius: 0.8rem;
+            font-weight: 600;
+            border-radius: 1rem;
             z-index: 100;
           }
 
@@ -975,32 +1044,36 @@ function cancelCoupon() {
 
         .price-num {
           font-size: 2rem;
-          font-weight: 700;
-          color: #101828;
+          font-weight: 800;
+          color: $ink;
         }
 
         .price-unit {
-          font-size: 1.6rem;
-          color: #364153;
+          font-size: 1.5rem;
+          color: $sub;
         }
 
         &.total-value {
           .price-num {
             font-size: 2.4rem;
-            color: #FB64B6;
+            color: $pink;
           }
         }
       }
 
       .coupon-link {
-        color: #99A1AF;
-        cursor: pointer;
+        color: $pink;
+        font-weight: 800;
         font-size: 1.4rem;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
 
       .discount-amount {
         font-size: 1.4rem;
-        color: #364153;
+        color: $ink;
+        font-weight: 800;
       }
 
       .cancel-coupon-btn {
@@ -1010,16 +1083,17 @@ function cancelCoupon() {
         align-items: center;
         justify-content: center;
         font-size: 1.2rem;
-        color: #99A1AF;
-        border: 1px solid #E5E7EB;
+        font-weight: 800;
+        color: $muted;
+        border: 2px solid $line;
         background: none;
         cursor: pointer;
         padding: 0.4rem 1rem;
-        border-radius: 0.6rem;
+        border-radius: 1rem;
         transition: background-color 0.2s;
 
         &:hover {
-          background-color: #E5E7EB;
+          background-color: $line;
         }
       }
 
@@ -1032,8 +1106,13 @@ function cancelCoupon() {
 
     .bottom-bar-divider {
       width: 1px;
-      background: #F7F7F8;
+      background: $line;
       align-self: stretch;
+
+      @media (max-width: 720px) {
+        width: 100%;
+        height: 1px;
+      }
     }
   }
 
@@ -1046,14 +1125,22 @@ function cancelCoupon() {
     .check-item {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 1.4rem;
-      color: #99A1AF;
+      gap: 1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: $muted;
+      cursor: pointer;
 
       .checkbox {
-        width: 2rem;
-        height: 2rem;
+        width: 2.2rem;
+        height: 2.2rem;
+        border: 2.5px solid $ink;
+        border-radius: 0.7rem;
+        background: #fff;
+        position: relative;
+        display: inline-block;
         cursor: pointer;
+        transition: background 0.16s;
 
         img {
           width: 100%;
@@ -1061,53 +1148,66 @@ function cancelCoupon() {
         }
       }
 
+      .checkbox.on {
+        background: $pink;
+        animation: chCheckBounce 0.38s cubic-bezier(0.34,1.56,0.64,1);
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 0.6rem;
+          top: 0.2rem;
+          width: 0.6rem;
+          height: 1.1rem;
+          border: solid #fff;
+          border-width: 0 3px 3px 0;
+          transform: rotate(45deg);
+        }
+      }
+
       a {
-        color: #fb64b6;
-        text-decoration: none;
-        margin-left: 0.2rem;
-        cursor: default;
+        color: $pink;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
       }
     }
   }
 
   .pay-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     max-width: 20rem;
     height: 4.4rem;
-    margin: 0 auto;
-    background: #fb64b6;
+    background: linear-gradient(135deg, $pink, #FF7A45);
     color: #ffffff;
-    border: none;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
-    font-weight: 500;
+    border: 2.5px solid $ink;
+    border-radius: 1.3rem;
+    font-size: 1.45rem;
+    font-weight: 800;
     cursor: pointer;
+    box-shadow: 3px 3px 0 $ink;
+    transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
     &:hover {
-      position: relative;
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 $ink;
+    }
 
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-      }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 $ink;
     }
 
     &:disabled {
-      background: rgba(251, 100, 182, 0.5);
+      opacity: 0.5;
       cursor: not-allowed;
 
       &:hover {
-        &::after {
-          opacity: 0;
-        }
+        transform: none;
+        box-shadow: 3px 3px 0 $ink;
       }
     }
 
@@ -1138,8 +1238,8 @@ function cancelCoupon() {
 
   .zero-plan-rules {
     position: relative;
-    border: 1px solid rgba(251,100,182,0.1);
-    background: rgba(251,100,182,0.06);
+    border: 2px solid rgba(255,77,141,0.1);
+    background: rgba(255,77,141,0.06);
     border-radius: 1.2rem;
     padding: 1rem;
 
@@ -1154,7 +1254,8 @@ function cancelCoupon() {
 
     .rules-content {
       font-size: 1.2rem;
-      color: #99A1AF;
+      color: $muted;
+      font-weight: 600;
       line-height: 2.4rem;
       white-space: pre-line;
       position: relative;
@@ -1168,9 +1269,49 @@ function cancelCoupon() {
 
       &::first-line {
         font-size: 1.4rem;
-        color: #6A7282;
+        color: $sub;
+        font-weight: 800;
       }
     }
+  }
+}
+
+@keyframes chPanelIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes chPlanIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes chChip {
+  from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes chCheckBounce {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  70% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+@keyframes chUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-card-inner,
+  .bottom-bar,
+  .zero-plan-badge {
+    animation: none !important;
+  }
+  .plan-card-inner:hover,
+  .pay-btn:hover {
+    transform: none;
   }
 }
 </style>

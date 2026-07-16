@@ -1,30 +1,17 @@
 <template>
-  <div class="reset">
+  <div class="reset-page">
     <Header ref="headerRef" :cur="-1"></Header>
 
-    <div class="container">
-      <div class="title">{{ t("header.reset.title") }}</div>
+    <div class="auth-single">
+      <div class="auth-card">
+        <h1>{{ t("header.reset.title") }}</h1>
+        <p class="auth-sub">{{ t("header.reset.tip") }}</p>
 
-      <div class="step">
-        <div class="step-item on">
-          <span>{{ t("register.step1") }}</span>
-          <span>{{ t("header.reset.btn") }}</span>
-        </div>
-
-        <b></b>
-        <div class="step-item">
-          <span>{{ t("register.step2") }}</span>
-          <span>{{ t("header.reset.link") }}</span>
-        </div>
-      </div>
-
-      <div class="content">
-        <div class="email-title">{{ t("header.reset.tip") }}</div>
-
-        <div class="email-info">
+        <div class="auth-field">
+          <label>{{ t("register.emailLabel") }}</label>
           <input
             id="email"
-            class="email-ipt"
+            class="auth-input"
             type="text"
             v-model="email"
             :placeholder="t('register.email')"
@@ -33,9 +20,13 @@
           />
         </div>
 
-        <div class="email-btn" :class="isEnd ? 'on' : ''" @click="goSendEmail()">
+        <button
+          class="auth-submit"
+          :class="isEnd ? 'active' : ''"
+          @click="goSendEmail()"
+        >
           {{ t("header.reset.btn") }}
-        </div>
+        </button>
       </div>
     </div>
   </div>
@@ -53,6 +44,8 @@ import { useI18n } from "vue-i18n";
 
 const { t, locale } = useI18n();
 
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
+
 const email = ref("");
 const isGrecaptchaReady = ref(false);
 
@@ -67,7 +60,6 @@ const isEnd = computed(() => {
 declare let grecaptcha: any;
 
 onMounted(async () => {
-  // 初始化语言设置
   await initLanguage();
 
   const token = localStorage.getItem("token");
@@ -148,122 +140,132 @@ function goSendEmail() {
 </script>
 
 <style lang="scss" scoped>
-.reset {
+.reset-page {
   width: 100%;
-  height: 100vh;
-  background: #FFFFFF;
+  min-height: 100vh;
+  background: #FFFBF4;
+  padding-top: 80px;
 
-  .container {
-    max-width: 48rem;
+  .auth-single {
+    max-width: 520px;
+    margin: 32px auto 32px;
+    padding: 0 28px;
+  }
+
+  .auth-card {
+    border: 3px solid #161122;
+    border-radius: 6px;
+    background: #FFFDF7;
+    padding: 44px 46px 38px;
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+      font-size: 27px;
+      font-weight: 400;
+      color: #161122;
+      margin: 0 0 5px;
+    }
+
+    .auth-sub {
+      margin: 0 0 22px;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.7;
+      opacity: 0.55;
+      color: #161122;
+    }
+  }
+
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 15px;
+
+    label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #161122;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .auth-input {
     width: 100%;
-    height: 100%;
-    margin: 0 auto;
-    padding: 16rem 0 3rem;
+    box-sizing: border-box;
+    border: 2.5px solid #161122;
+    border-radius: 12px;
+    background: #fff;
+    padding: 13px 15px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #161122;
+    outline: none;
+    transition: box-shadow 0.18s;
 
-    .title {
-      font: {
-        weight: 500;
-        size: 3rem;
-      }
-      text-align: center;
-      color: #101828;
+    &::placeholder {
+      color: #bdb7c4;
     }
 
-    .step {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      margin: 4rem 0 6rem;
+    &:focus {
+      box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    }
+  }
 
-      .step-item {
-        position: relative;
-        padding: 0 0 2.4rem;
+  .auth-submit {
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    background: rgba(255, 77, 141, 0.4);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px;
+    width: 100%;
+    cursor: not-allowed;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, background 0.2s;
 
-        &.on {
-          span {
-            color: #364153;
-          }
-        }
+    &.active {
+      background: #FF4D8D;
+      cursor: pointer;
 
-        span {
-          font-size: 1.6rem;
-          color: #99A1AF;
-
-          &:last-child {
-            position: absolute;
-            left: 50%;
-            bottom: 0;
-            width: max-content;
-            font-size: 1.4rem;
-            transform: translateX(-50%);
-            color: #99A1AF;
-          }
-        }
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
       }
 
-      b {
-        width: 18rem;
-        margin: 1rem 1rem 0;
-        border-bottom: 1px dashed #6a7282;
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .reset-page {
+    .auth-single {
+      padding: 0 12px;
+      margin: 16px auto 16px;
+    }
+
+    .auth-card {
+      padding: 24px 20px 24px;
+
+      h1 {
+        font-size: 22px;
       }
     }
 
-    .content {
-      .email-title {
-        font-size: 1.4rem;
-        color: #6A7282;
-      }
-      .email-info {
-        position: relative;
-        width: 100%;
-        margin: 0.7rem 0 2.4rem;
+    .auth-input {
+      padding: 11px 13px;
+      font-size: 14px;
+    }
 
-        .email-ipt {
-          position: relative;
-          width: 100%;
-          height: 5rem;
-          padding: 1rem;
-          font: {
-            weight: normal;
-            size: 1.4rem;
-          }
-          -webkit-border-radius: 0.8rem;
-          border-radius: 0.8rem;
-          background: #F5F5F5;
-          color: #101828;
-
-          &::placeholder {
-            color: #99A1AF;
-          }
-
-          &:hover,
-          &:focus {
-            border: 1px solid #fb64b6;
-          }
-        }
-      }
-
-      .email-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 4.8rem;
-        margin: 0 auto;
-        font: {
-          size: 1.6rem;
-        }
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        background: rgba(251, 100, 182, 0.5);
-        color: #ffffff;
-        cursor: default;
-
-        &.on {
-          background: #FB64B6;
-          cursor: pointer;
-        }
-      }
+    .auth-submit {
+      padding: 13px;
+      font-size: 15px;
     }
   }
 }

@@ -97,28 +97,28 @@ function handleOverlayClick() {
 .modal-content {
   position: relative;
   background-color: #ffffff;
-  border-radius: 1.2rem;
-  width: 52rem;
-  padding: 1.8rem 0;
+  border-radius: 12px;
+  width: 520px;
+  padding: 18px 0;
 }
 
 .close-btn {
   position: absolute;
-  top: 1.2rem;
-  right: 1.2rem;
-  width: 2rem;
-  height: 2rem;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
-  padding: 0 2rem 1.8rem;
+  padding: 0 20px 18px;
   border-bottom: 1px solid #F5F5F5;
 
   h3 {
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #364153;
     margin: 0;
@@ -126,8 +126,8 @@ function handleOverlayClick() {
 }
 
 .modal-body {
-  margin-bottom: 1.8rem;
-  padding: 1.8rem 2.4rem;
+  margin-bottom: 18px;
+  padding: 18px 24px;
   border-bottom: 1px solid #F5F5F5;
 
   .form-group {
@@ -137,17 +137,17 @@ function handleOverlayClick() {
       .label-with-counter {
         display: flex;
         align-items: center;
-        margin-bottom: 1.2rem;
+        margin-bottom: 12px;
 
         label {
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #4A5565;
           margin: 0;
         }
 
         .char-counter {
-          margin-left: 0.6rem;
-          font-size: 1.2rem;
+          margin-left: 6px;
+          font-size: 12px;
           color: #99A1AF;
         }
       }
@@ -157,11 +157,11 @@ function handleOverlayClick() {
 
         .input-field {
           width: 100%;
-          height: 5rem;
-          padding: 1.4rem 1rem;
+          height: 50px;
+          padding: 14px 10px;
           border: 1px solid #F5F5F5;
-          border-radius: 0.8rem;
-          font-size: 1.4rem;
+          border-radius: 8px;
+          font-size: 14px;
           color: #364153;
           outline: none;
           background: #F5F5F5;
@@ -181,15 +181,15 @@ function handleOverlayClick() {
 .modal-footer {
   display: flex;
   justify-content: center;
-  gap: 2.4rem;
+  gap: 24px;
 
   .btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: none;
-    -webkit-border-radius: 0.8rem;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
   }
 

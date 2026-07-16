@@ -6,7 +6,7 @@
           <img src="@/assets/images/header/logo.png" />
         </div>
 
-        <div class="nav" v-if="isLogin">
+        <div class="nav">
           <div
             class="nav-item"
             :class="{ on: cur == index }"
@@ -117,10 +117,13 @@
                   :key="item.key"
                   @click="navigateMenu(item)"
                 >
+                  <span class="uc-item-icon" v-html="getMenuIcon(item.key)"></span>
                   <span>{{ t(item.label) }}</span>
-                  <img src="../assets/images/header/arrow.png" alt="" />
                 </div>
-                <div class="uc-item logout" @click="logout()">
+              </div>
+              <div class="uc-logout-section">
+                <div class="uc-item uc-item-logout" @click="logout()">
+                  <span class="uc-item-icon" v-html="logoutIcon"></span>
                   <span>{{ t("header.menu.logout") }}</span>
                 </div>
               </div>
@@ -131,7 +134,7 @@
             <button class="user-login" @click="goLogin()">{{ t("header.login") }}</button>
             <button class="user-register" @click="goRegister()">
               {{ t("header.register") }}
-              <div class="register-tip">
+              <div class="register-tip" style="display:none">
                 <div class="tip-gift-icon">
                   <img src="@/assets/images/header/gift.png" alt="" />
                 </div>
@@ -684,6 +687,26 @@ function goPaymentHistory() {
   router.push('/user-payment-history');
 }
 
+const svgShell = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
+
+function getMenuIcon(key: string): string {
+  const icons: Record<string, string> = {
+    personal: svgShell + '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>',
+    account: svgShell + '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg>',
+    profile: svgShell + '<path d="M5 18h14"/><path d="M5 18 4 9l4.5 3.4L12 6l3.5 6.4L20 9l-1 9Z"/></svg>',
+    subscription: svgShell + '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>',
+    invite: svgShell + '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/></svg>',
+    revenue: svgShell + '<path d="M4 20h16"/><rect x="6" y="13" width="3" height="7" rx=".5"/><rect x="11" y="9" width="3" height="11" rx=".5"/><rect x="16" y="5" width="3" height="15" rx=".5"/></svg>',
+    interactive: svgShell + '<path d="M4 16l5-5 4 4 7-8"/><path d="M15 7h5v5"/></svg>',
+    messages: svgShell + '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+    privacy: svgShell + '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    'payment-history': svgShell + '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>',
+  };
+  return icons[key] || svgShell + '<circle cx="12" cy="12" r="10"/></svg>';
+}
+
+const logoutIcon = svgShell + '<path d="M12 3v8"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg>';
+
 // 暴露给父组件的方法
 defineExpose({
   getUserInfo,
@@ -754,11 +777,12 @@ defineExpose({
 
           &:hover {
             opacity: 1;
-            background: #F3EFE7;
+            background: rgba(255,77,142,0.06);
           }
 
           &.on {
-            background: #F3EFE7;
+            background: #FF4D8E;
+            color: #ffffff;
             opacity: 1;
           }
         }
@@ -960,6 +984,42 @@ defineExpose({
           box-shadow: 3px 3px 0 #161122;
         }
 
+        .header-bean {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+
+          img {
+            width: 24px;
+            height: 24px;
+            margin-right: 6px;
+          }
+
+          span {
+            font-size: 14px;
+            font-weight: 800;
+            color: #FFD23F;
+          }
+        }
+
+        .header-line {
+          width: 1px;
+          height: 20px;
+          background: rgba(255, 255, 255, 0.3);
+          margin: 0 12px;
+        }
+
+        .header-recharge {
+          font-size: 13px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.7);
+          cursor: pointer;
+
+          &:hover {
+            color: #fff;
+          }
+        }
+
         .bean-symbol {
           font-size: 19px;
           color: #FFD23F;
@@ -1019,7 +1079,6 @@ defineExpose({
           background: #FFFFFF;
           box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
           color: #161122;
-          opacity: 0.65;
           overflow: hidden;
 
           span {
@@ -1027,6 +1086,7 @@ defineExpose({
             padding: 11px 12px;
             margin: 0;
             cursor: pointer;
+            opacity: 0.65;
             border-radius: 11px;
             transition: background 0.15s, opacity 0.15s;
 
@@ -1198,59 +1258,80 @@ defineExpose({
             position: absolute;
             right: 0;
             top: 56px;
-            width: 280px;
+            width: 308px;
             border: 3px solid #161122;
-            border-radius: 18px;
+            border-radius: 20px;
             background: #FFFFFF;
             box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
             z-index: 1;
             overflow: hidden;
+            transform-origin: top right;
+            animation: avmPanelIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+            @keyframes avmPanelIn {
+              0% { opacity: 0; transform: scale(.92) translateY(-6px); }
+              100% { opacity: 1; transform: scale(1) translateY(0); }
+            }
 
             .us-top-box {
-              margin-bottom: 2px;
-              padding: 12px;
-              border-bottom: 1px solid #F3EFE7;
+              padding: 18px 18px 14px;
               cursor: pointer;
 
               .uc-top {
                 display: flex;
                 align-items: center;
+                gap: 13px;
 
                 .uc-avatar {
-                  width: 42px;
-                  height: 42px;
-                  border-radius: 14px;
-                  border: 2px solid #161122;
-                  margin-right: 12px;
+                  width: 56px;
+                  height: 56px;
+                  border-radius: 50%;
+                  border: 2.5px solid #161122;
+                  object-fit: cover;
+                  flex-shrink: 0;
                 }
 
                 .uc-meta {
                   display: flex;
                   flex-direction: column;
+                  min-width: 0;
 
                   .uc-name {
-                    font-size: 14px;
+                    font-size: 17px;
                     font-weight: 800;
                     color: #161122;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                   }
 
                   .uc-id {
                     margin-top: 4px;
                     font-size: 12px;
                     font-weight: 600;
-                    color: #9a93a4;
+                    color: #161122;
+                    opacity: 0.5;
                   }
                 }
               }
               .uc-stats {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 12px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                border: 2px solid #161122;
+                border-radius: 13px;
+                overflow: hidden;
+                margin-top: 14px;
 
                 .uc-stat {
                   display: flex;
                   flex-direction: column;
                   align-items: center;
+                  padding: 9px 4px;
+                  border-right: 1px solid rgba(22,17,34,.12);
+
+                  &:last-child {
+                    border-right: none;
+                  }
 
                   .uc-stat-num {
                     font-size: 16px;
@@ -1259,10 +1340,11 @@ defineExpose({
                   }
 
                   .uc-stat-label {
-                    margin-top: 4px;
-                    font-size: 12px;
+                    margin-top: 2px;
+                    font-size: 10px;
                     font-weight: 600;
-                    color: #9a93a4;
+                    color: #161122;
+                    opacity: 0.55;
                   }
                 }
               }
@@ -1271,33 +1353,72 @@ defineExpose({
             .uc-menu {
               display: flex;
               flex-direction: column;
+              padding: 6px 8px 8px;
+              border-top: 1px solid rgba(22,17,34,.1);
 
               .uc-item {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                height: 40px;
-                padding: 0 16px;
-                font-size: 14px;
+                gap: 11px;
+                padding: 9px 11px;
+                font-size: 13.5px;
                 font-weight: 700;
                 color: #161122;
-                opacity: 0.7;
+                border-radius: 11px;
                 cursor: pointer;
-                transition: background 0.15s, opacity 0.15s;
+                transition: background 0.15s ease-out, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease-out;
+                width: 100%;
+                text-align: left;
 
                 &:hover {
-                  background: #FFEFF5;
-                  opacity: 1;
+                  background: #F3EFE7;
+                  transform: translateX(3px);
                 }
 
-                &.logout {
-                  border-top: 1px solid #F3EFE7;
-                  color: #9a93a4;
+                &:hover .uc-item-icon {
+                  color: #FF4D8D;
                 }
 
-                img {
-                  width: 16px;
-                  height: 16px;
+                .uc-item-icon {
+                  width: 20px;
+                  height: 20px;
+                  display: grid;
+                  place-items: center;
+                  flex-shrink: 0;
+                  color: #161122;
+                  transition: color 0.15s ease-out;
+                }
+              }
+            }
+
+            .uc-logout-section {
+              padding: 8px;
+              border-top: 1px solid rgba(22,17,34,.1);
+
+              .uc-item-logout {
+                display: flex;
+                align-items: center;
+                gap: 11px;
+                padding: 9px 11px;
+                font-size: 13.5px;
+                font-weight: 700;
+                color: #E5484D;
+                border-radius: 11px;
+                cursor: pointer;
+                transition: background 0.15s ease-out, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
+                &:hover {
+                  background: rgba(229, 72, 77, 0.08);
+                  transform: translateX(3px);
+                }
+
+                .uc-item-icon {
+                  width: 20px;
+                  height: 20px;
+                  display: grid;
+                  place-items: center;
+                  flex-shrink: 0;
+                  color: #E5484D;
                 }
               }
             }

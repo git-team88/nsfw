@@ -295,91 +295,114 @@ async function handleAccountFailedModify() {
 .user-subscription {
   width: 100%;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #FFFBF4;
 }
 
 .container {
-  max-width: 144rem;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
-  gap: 6rem;
-  padding-right: 6rem;
+  gap: 18px;
+  padding: 0 30px;
 }
 .main {
   flex: 1;
-  padding-top: 14rem;
+  padding-top: 100px;
+}
+.panel {
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  border-radius: 6px;
+  padding: 24px;
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 2.4rem;
+  margin: 0 0 24px;
 }
 .panel-title {
-  font-weight: 500;
-  font-size: 2rem;
-  color: #99A1AF;
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
 }
 .edit-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 8.8rem;
-  height: 4rem;
-  background: #FB64B6;
-  border: none;
-  border-radius: 0.8rem;
+  min-width: 88px;
+  height: 40px;
+  background: #FF4D8D;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
   color: #FFFFFF;
   cursor: pointer;
-  font-size: 1.4rem;
-  padding: 0 1rem;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 0 10px;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #161122;
+  }
 }
 .tip {
   display: flex;
   align-items: center;
-  height: 5.4rem;
-  margin: 0 0 2.4rem;
-  padding: 1rem 1.6rem;
-  border: 1px solid rgba(251,100,182,0.2);;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
-  background: rgba(251,100,182,0.06);
-  color: #364153;
+  height: 54px;
+  margin: 0 0 24px;
+  padding: 10px 16px;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  font-size: 14px;
+  font-weight: 800;
+  background: #FFFDF7;
+  color: #161122;
 }
 
 .account-section {
-  margin: 0 0 2.4rem;
-  padding: 1.6rem;
-  border-radius: 1.2rem;
+  margin: 0 0 24px;
+  padding: 16px;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F5F5F5;
+  background: #FFFDF7;
 }
 
 .account-info {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 12px;
 
-  img{
-    width: 5.2rem;
-    height: 5.2rem;
+  img {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 2px solid #161122;
   }
 }
 
 .section-title {
-  margin-bottom: 0.8rem;
-  font-weight: 500;
-  font-size: 1.6rem;
-  color: #101828;
-  gap: 0.8rem;
+  margin-bottom: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  color: #161122;
 }
 
 .account-content {
-  font-size: 1.4rem;
-  color: #99A1AF;
+  font-size: 14px;
+  color: #161122;
   flex: 1;
 }
 
@@ -387,58 +410,96 @@ async function handleAccountFailedModify() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 13.6rem;
-  height: 4.8rem;
-  background: #fb64b6;
-  color: #ffffff;
-  border: none;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  min-width: 136px;
+  height: 48px;
+  background: #FF4D8D;
+  color: #FFFFFF;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.15s, box-shadow 0.15s;
 
   &:hover {
-    position: relative;
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
-    }
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #161122;
   }
 }
 
 .change-account-btn {
-  color: #99A1AF;
-  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 136px;
+  height: 48px;
+  background: #FFFFFF;
+  color: #161122;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #161122;
+  }
 }
 
-.modify-account-btn{
-  color: #FB64B6;
-  font-size: 1.4rem;
+.modify-account-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 136px;
+  height: 48px;
+  background: #FF4D8D;
+  color: #FFFFFF;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #161122;
+  }
 }
 
 .account-status {
   display: flex;
   align-items: center;
-  font-size: 1.4rem;
-  color: #6A7282;
-  gap: 0.4rem;
+  font-size: 14px;
+  font-weight: 800;
+  color: #161122;
+  gap: 4px;
 
-  img{
-    width: 2rem;
-    height: 2rem;
+  img {
+    width: 20px;
+    height: 20px;
   }
 }
 
 .section {
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
 }
 .section:last-child {
   margin-bottom: 0;
@@ -452,33 +513,45 @@ async function handleAccountFailedModify() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 1.4rem;
-  color: #364153;
+  font-size: 14px;
+  font-weight: 800;
+  color: #161122;
 }
 .label {
-  font-size: 1.4rem;
-  color: #99A1AF;
+  font-size: 14px;
+  font-weight: 800;
+  color: #161122;
+
+  span {
+    font-size: 12px;
+    border: 2px solid #161122;
+    border-radius: 999px;
+    font-weight: 800;
+    padding: 2px 8px;
+    color: #161122;
+  }
 }
 .price-row {
   display: flex;
   align-items: baseline;
-  margin-top: 1.6rem;
-  font-size: 1.6rem;
-  gap: 0.2rem;
+  margin-top: 16px;
+  font-size: 16px;
+  gap: 2px;
 }
 .price {
-  font-size: 3.6rem;
-  color: #fb64b6;
+  font-size: 36px;
+  font-weight: 800;
+  color: #FF4D8D;
 }
 .per {
-  font-size: 1.6rem;
-  color: #364153;
+  font-size: 16px;
+  color: #161122;
 }
 .benefits {
   display: flex;
   align-items: center;
-  margin-top: 1.6rem;
-  font-size: 1.4rem;
-  color: #364153;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #161122;
 }
 </style>

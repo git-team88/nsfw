@@ -78,38 +78,38 @@ function openLink() {
 }
 
 .modal {
-  width: 50rem;
-  padding: 1.8rem;
-  border-radius: 1.2rem;
+  width: 500px;
+  padding: 18px;
+  border-radius: 12px;
   background: #ffffff;
   position: relative;
 }
 
 .modal-close {
   position: absolute;
-  right: 1.4rem;
-  top: 1.6rem;
+  right: 14px;
+  top: 16px;
   background: none;
   border: none;
   cursor: pointer;
   z-index: 1;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 }
 
 .modal-title {
-  font-size: 2rem;
+  font-size: 20px;
   color: #99A1AF;
-  margin-bottom: 3rem;
+  margin-bottom: 30px;
   font-weight: 500;
   text-align: center;
 }
 
 .modal-amount {
-  font-size: 3.2rem;
+  font-size: 32px;
   color: #364153;
   font-weight: 500;
   text-align: center;
@@ -120,14 +120,14 @@ function openLink() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24rem;
-  height: 4.8rem;
-  margin: 3rem auto 1.2rem;
+  width: 240px;
+  height: 48px;
+  margin: 30px auto 12px;
   border: none;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   background: #FB64B6;
   color: #ffffff;
-  font-size: 1.4rem;
+  font-size: 14px;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -153,15 +153,15 @@ function openLink() {
 .modal-agree {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 6px;
   justify-content: center;
   color: #99A1AF;
-  font-size: 1.4rem;
+  font-size: 14px;
 }
 
 .check-btn {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -169,15 +169,15 @@ function openLink() {
 }
 
 .check-btn img {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 24px;
+  height: 24px;
 }
 
 .modal-agree span {
   a {
     color: #fb64b6;
     text-decoration: none;
-    margin-left: 0.4rem;
+    margin-left: 4px;
   }
 }
 </style>

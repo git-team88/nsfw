@@ -51,56 +51,133 @@ function postAnother() {
 .submit-success{
   width: 100%;
   min-height: 100vh;
-  padding: 14rem 0 0;
-  background: #FFFFFF;
+  padding: 140px 0 0;
+  background: #FFFBF4;
 }
 .container{
   position: relative;
-  max-width: 90rem;
+  max-width: 900px;
   margin: 0 auto;
+  padding: 0 28px;
 }
 
 .content{
   h2{
-    font: {
-      weight: 600;
-      size: 2rem;
-    }
+    font-weight: 800;
+    font-size: 20px;
     text-align: center;
-    color: #101828;
+    color: #161122;
   }
   .icon{
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 4rem 0 6rem;
-    img{ width: 34.8rem; height: 20rem; }
+    margin: 40px 0 60px;
+    img{ width: 348px; height: 200px; }
   }
   .actions{
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2.4rem;
+    gap: 24px;
     .btn{
-      min-width: 24rem;
-      height: 4.8rem;
-      border: none;
-      -webkit-border-radius: .8rem;
-      border-radius: .8rem;
-      font: {
-        weight: 600;
-        size: 1.6rem;
-      }
+      min-width: 240px;
+      height: 48px;
+      border: 2px solid #161122;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 16px;
       cursor: pointer;
+      box-shadow: 2px 2px 0 #161122;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
       &.secondary{
-        border: 1px solid #FB64B6;
-        background: none;
-        color: #FB64B6;
+        background: #FFFFFF;
+        color: #161122;
+
+        &:hover {
+          border-color: #FF4D8E;
+          color: #FF4D8E;
+          transform: translateY(-1px);
+          box-shadow: 3px 3px 0 #161122;
+        }
       }
       &.primary{
-        background: #FB64B6;
+        background: linear-gradient(135deg, #FF4D8D, #FF7A45);
         color: #FFFFFF;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 3px 3px 0 #161122;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .submit-success {
+    padding: 80px 0 0;
+
+    .container {
+      padding: 0 20px;
+    }
+
+    .content {
+      h2 {
+        font-size: 18px;
+      }
+
+      .icon {
+        margin: 30px 0 40px;
+        img {
+          width: 240px;
+          height: auto;
+        }
+      }
+
+      .actions {
+        gap: 16px;
+
+        .btn {
+          min-width: 160px;
+          height: 44px;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .submit-success {
+    padding: 70px 0 0;
+
+    .container {
+      padding: 0 16px;
+    }
+
+    .content {
+      h2 {
+        font-size: 16px;
+      }
+
+      .icon {
+        margin: 24px 0 30px;
+        img {
+          width: 100%;
+          height: auto;
+        }
+      }
+
+      .actions {
+        flex-direction: column;
+        gap: 12px;
+
+        .btn {
+          width: 100%;
+          min-width: unset;
+        }
       }
     }
   }

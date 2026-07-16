@@ -1,31 +1,25 @@
 <template>
-  <div class="reset">
+  <div class="reset-page">
     <Header ref="headerRef" :cur="-1"></Header>
 
-    <div class="container">
-      <div class="title">{{ t("header.reset.title") }}</div>
-
-      <div class="step">
-        <div class="step-item">
-          <span>{{ t("register.step1") }}</span>
-          <span>{{ t("header.reset.btn") }}</span>
+    <div class="auth-single">
+      <div class="auth-card">
+        <div class="check-circle">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22A06B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
 
-        <b></b>
-        <div class="step-item on">
-          <span>{{ t("register.step2") }}</span>
-          <span>{{ t("header.reset.link") }}</span>
+        <h1>{{ t("header.reset.title") }}</h1>
+
+        <div class="info-block">
+          <p>{{ t("header.reset.info1") }}</p>
+          <p>{{ t("header.reset.info2") }}</p>
         </div>
-      </div>
 
-      <div class="content">
-        <p>{{ t("header.reset.info1") }}</p>
-        <p>{{ t("header.reset.info2") }}</p>
-      </div>
+        <button class="auth-submit active" @click="confirmReset()">
+          {{ t("header.reset.login") }}
+        </button>
 
-      <div class="reset-btn-box">
-        <span class="reset-btn" @click="confirmReset()">{{ t("header.reset.login") }}</span>
-        <span class="reset-back" @click="backReset()">{{ t("header.reset.resend") }}</span>
+        <span class="resend-link" @click="backReset()">{{ t("header.reset.resend") }} →</span>
       </div>
     </div>
   </div>
@@ -43,7 +37,6 @@ const { t, locale } = useI18n();
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 onMounted(async () => {
-  // 初始化语言设置
   await initLanguage();
 
   const token = localStorage.getItem("token");
@@ -53,6 +46,7 @@ onMounted(async () => {
     return false;
   }
 });
+
 function backReset() {
   router.push("/reset-password");
 }
@@ -63,131 +57,125 @@ function confirmReset() {
 </script>
 
 <style lang="scss" scoped>
-.reset {
+.reset-page {
   width: 100%;
-  height: 100vh;
-  background: #FFFFFF;
+  min-height: 100vh;
+  background: #FFFBF4;
+  padding-top: 80px;
 
-  .container {
-    max-width: 48rem;
+  .auth-single {
+    max-width: 520px;
+    margin: 32px auto 32px;
+    padding: 0 28px;
+  }
+
+  .auth-card {
+    border: 3px solid #161122;
+    border-radius: 6px;
+    background: #FFFDF7;
+    padding: 44px 46px 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    h1 {
+      font-size: 27px;
+      font-weight: 400;
+      color: #161122;
+      margin: 0 0 22px;
+    }
+  }
+
+  .check-circle {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    border: 3px solid #161122;
+    background: #DFF5E9;
+    display: grid;
+    place-items: center;
+    box-shadow: 3px 3px 0 #161122;
+  }
+
+  .info-block {
     width: 100%;
-    height: 100%;
-    margin: 0 auto;
-    padding: 16rem 0 3rem;
+    margin: 0 0 22px;
 
-    .title {
-      font: {
-        weight: 500;
-        size: 2rem;
-      }
-      line-height: 2rem;
-      text-align: center;
-      color: #101828;
-    }
+    p {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.7;
+      color: #5b5566;
 
-    .step {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      margin: 4rem 0;
-
-      .step-item {
-        position: relative;
-        padding: 0 0 2.4rem;
-
-        &.on {
-          span {
-            color: #364153;
-          }
-        }
-
-        span {
-          font-size: 1.6rem;
-          color: #99A1AF;
-
-          &:last-child {
-            position: absolute;
-            left: 50%;
-            bottom: 0;
-            width: max-content;
-            font-size: 1.4rem;
-            transform: translateX(-50%);
-            color: #99A1AF;
-          }
-        }
-      }
-
-      b {
-        width: 18rem;
-        margin: 1rem 1rem 0;
-        border-bottom: 1px dashed #6a7282;
+      &:last-child {
+        margin: 0;
       }
     }
+  }
 
-    .content {
-      margin: 6rem 0 0;
-      p {
-        margin: 0 0 1.2rem;
-        font-size: 1.4rem;
-        line-height: 2.2rem;
-        color: #6A7282;
+  .auth-submit {
+    width: 100%;
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    background: #FF4D8D;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-        &:last-child {
-          margin: 0;
-        }
+    &:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
+    }
+  }
+
+  .resend-link {
+    margin-top: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #161122;
+    opacity: 0.55;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .reset-page {
+    .auth-single {
+      padding: 0 12px;
+      margin: 16px auto 16px;
+    }
+
+    .auth-card {
+      padding: 24px 20px 24px;
+
+      h1 {
+        font-size: 22px;
       }
     }
 
-    .reset-btn-box {
-      margin: 2.4rem 0 0;
+    .auth-input {
+      padding: 11px 13px;
+      font-size: 14px;
+    }
 
-      .reset-back {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48rem;
-        height: 4.8rem;
-        margin: 1.4rem 0 0;
-        font-size: 1.6rem;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        background: #F5F5F5;
-        color: #6A7282;
-        cursor: pointer;
-
-        &:hover{
-          color: #FB64B6;
-        }
-      }
-
-      .reset-btn {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48rem;
-        height: 4.8rem;
-        font-size: 1.6rem;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        background: #FB64B6;
-        color: #ffffff;
-        cursor: pointer;
-
-        &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-          }
-        }
-      }
+    .auth-submit {
+      padding: 13px;
+      font-size: 15px;
     }
   }
 }

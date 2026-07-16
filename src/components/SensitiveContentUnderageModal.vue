@@ -49,17 +49,17 @@ const handleClose = () => {
 .sensitive-content-underage-modal {
   position: relative;
   background: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 50rem;
-  padding: 3.6rem;
+  border-radius: 12px;
+  width: 500px;
+  padding: 36px;
   overflow: hidden;
 
   .modal-close {
     position: absolute;
-    right: 1.2rem;
-    top: 1.6rem;
-    width: 2rem;
-    height: 2rem;
+    right: 12px;
+    top: 16px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 
@@ -67,9 +67,9 @@ const handleClose = () => {
     text-align: center;
 
     p {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6A7282;
-      line-height: 2rem;
+      line-height: 20px;
       margin: 0;
     }
   }
@@ -78,17 +78,17 @@ const handleClose = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 3.2rem;
+    margin-top: 32px;
 
     .modal-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 13.6rem;
-      height: 4.8rem;
+      min-width: 136px;
+      height: 48px;
       border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       cursor: pointer;
 
       &.confirm {

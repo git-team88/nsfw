@@ -21,7 +21,7 @@ const props = defineProps<{
 <style scoped lang="scss">
 .custom-toast {
   position: fixed;
-  top: 11rem;
+  top: 110px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -68,24 +68,24 @@ const props = defineProps<{
 
   .toast-content {
     position: relative;
-    max-width: 25rem;
+    max-width: 250px;
     background: #ffffff;
     border: 1px solid transparent;
-    border-radius: 0.4rem;
-    padding: 1.2rem 1.6rem;
+    border-radius: 4px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
+    gap: 6px;
     box-shadow: 0px 0px 32px 0px rgba(0, 0, 0, 0.2);
 
     .toast-icon {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 24px;
+      height: 24px;
     }
 
     .toast-msg {
-      font-size: 1.6rem;
+      font-size: 16px;
       word-break: break-word;
     }
   }

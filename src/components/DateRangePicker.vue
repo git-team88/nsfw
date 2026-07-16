@@ -144,13 +144,13 @@ function toggle(event: MouseEvent) {
         bottom: "100%",
         top: "auto",
         marginTop: "0",
-        marginBottom: "0.8rem",
+        marginBottom: "8px",
       };
     } else {
       popStyle.value = {
         top: "100%",
         bottom: "auto",
-        marginTop: "0.8rem",
+        marginTop: "8px",
         marginBottom: "0",
       };
     }
@@ -241,30 +241,30 @@ onBeforeUnmount(() => {
 }
 
 .drp-trigger {
-  height: 4rem;
-  padding: 0 1rem;
+  height: 40px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  border-radius: 0.6rem;
+  gap: 8px;
+  border-radius: 6px;
   background: #F5F5F5;
   color: #6a7282;
   cursor: pointer;
 }
 
 .drp-trigger .icon {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 16px;
+  height: 16px;
 }
 
 .drp-trigger .text {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6a7282;
 }
 
 .drp-trigger .arrow {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 16px;
+  height: 16px;
   transition: transform 0.2s ease;
   &.open {
     transform: rotate(180deg);
@@ -274,10 +274,10 @@ onBeforeUnmount(() => {
 .drp-pop {
   position: absolute;
   left: 0;
-  top: 5rem;
-  width: 36rem;
-  padding: 2rem;
-  border-radius: 0.8rem;
+  top: 50px;
+  width: 360px;
+  padding: 20px;
+  border-radius: 8px;
   background: #FFFFFF;
   box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.1);
   z-index: 500;
@@ -285,9 +285,9 @@ onBeforeUnmount(() => {
 
 .field label {
   display: block;
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #364153;
-  margin-bottom: 0.7rem;
+  margin-bottom: 7px;
 }
 
 .date-input-wrapper {
@@ -297,17 +297,17 @@ onBeforeUnmount(() => {
 
 .clear-btn {
   position: absolute;
-  right: 1rem;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  height: 3rem;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
   color: #ccc;
-  font-size: 2.2rem;
+  font-size: 22px;
   line-height: 1;
   cursor: pointer;
   padding: 0;
@@ -321,17 +321,17 @@ onBeforeUnmount(() => {
 
 .actions {
   display: flex;
-  gap: 1rem;
+  gap: 10px;
   justify-content: flex-end;
-  margin-top: 2rem;
+  margin-top: 20px;
 }
 
 .btn {
-  width: 15.2rem;
-  height: 4rem;
-  padding: 0 1.2rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  width: 152px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -359,16 +359,16 @@ onBeforeUnmount(() => {
 }
 
 .theme-blue .field {
-  margin-bottom: 1.6rem;
+  margin-bottom: 16px;
 
   :deep(.el-date-editor.el-input) {
     width: 100%;
-    height: 4rem;
+    height: 40px;
   }
   :deep(.el-input__wrapper) {
-    height: 4rem;
+    height: 40px;
     border: 1px solid #F5F5F5 !important;
-    border-radius: 0.8rem !important;
+    border-radius: 8px !important;
     background: #F5F5F5 !important;
     box-shadow: none !important;
   }
@@ -380,7 +380,7 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__inner) {
     color: #364153 !important;
-    font-size: 1.4rem !important;
+    font-size: 14px !important;
   }
 }
 
@@ -410,16 +410,16 @@ onBeforeUnmount(() => {
 }
 
 .theme-pink .field {
-  margin-bottom: 1.6rem;
+  margin-bottom: 16px;
 
   :deep(.el-date-editor.el-input) {
     width: 100%;
-    height: 4rem;
+    height: 40px;
   }
   :deep(.el-input__wrapper) {
-    height: 4rem;
+    height: 40px;
     border: 1px solid #F5F5F5 !important;
-    border-radius: 0.8rem !important;
+    border-radius: 8px !important;
     background: #F5F5F5 !important;
     box-shadow: none !important;
   }
@@ -429,7 +429,7 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__inner) {
     color: #364153 !important;
-    font-size: 1.4rem !important;
+    font-size: 14px !important;
   }
 }
 

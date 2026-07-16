@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: isInputting ? '20rem' : '90px' }">
+      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: isInputting ? '200px' : '90px' }">
         <!-- Comments tab -->
         <div class="comments-tab" v-if="activeTab == 'comment'">
           <div class="comments-header">
@@ -2139,10 +2139,10 @@ function likeReply(id: string, liked: boolean) {
   position: fixed;
   top: 0;
   right: 0;
-  width: 60rem;
+  width: 600px;
   height: 100vh;
   background-color: white;
-  box-shadow: -0.2rem 0 1rem rgba(0, 0, 0, 0.1);
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1001;
   display: flex;
   flex-direction: column;
@@ -2152,19 +2152,19 @@ function likeReply(id: string, liked: boolean) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 8.4rem;
-    padding: 0 2.4rem;
+    height: 84px;
+    padding: 0 24px;
     border-bottom: 1px solid #F5F5F5;
 
     .header-tabs {
       display: flex;
       height: 100%;
-      gap: 3rem;
+      gap: 30px;
 
       .tab-item {
         display: flex;
         align-items: center;
-        font-size: 1.8rem;
+        font-size: 18px;
         color: #6A7282;
         cursor: pointer;
         position: relative;
@@ -2179,7 +2179,7 @@ function likeReply(id: string, liked: boolean) {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 0.2rem;
+            height: 2px;
             background-color: #FB64B6;
           }
         }
@@ -2188,10 +2188,10 @@ function likeReply(id: string, liked: boolean) {
 
     .close-btn {
       position: absolute;
-      top: 1.8rem;
-      right: 2.4rem;
-      width: 4.8rem;
-      height: 4.8rem;
+      top: 18px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
       cursor: pointer;
 
       img {
@@ -2207,54 +2207,54 @@ function likeReply(id: string, liked: boolean) {
     scroll-behavior: smooth;
     display: flex;
     flex-direction: column;
-    padding-bottom: 9rem;
+    padding-bottom: 90px;
 
     .detail-tab {
       flex: 1;
       overflow-y: auto;
-      padding: 2.4rem;
+      padding: 24px;
 
       .detail-content {
         .user-info {
           display: flex;
           align-items: center;
-          gap: 1.2rem;
-          margin-bottom: 2.4rem;
+          gap: 12px;
+          margin-bottom: 24px;
           cursor: pointer;
 
           .avatar {
-            width: 4.8rem;
-            height: 4.8rem;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
           }
 
           .nickname {
-            font-size: 1.6rem;
+            font-size: 16px;
             color: #364153;
             font-weight: 500;
           }
         }
 
         .post-info {
-          margin-bottom: 2.4rem;
+          margin-bottom: 24px;
 
           .post-title {
-            font-size: 2rem;
+            font-size: 20px;
             color: #364153;
             font-weight: 500;
-            margin-bottom: 1.6rem;
+            margin-bottom: 16px;
           }
 
           .post-desc {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #6A7282;
-            line-height: 2rem;
-            margin-bottom: 1.6rem;
+            line-height: 20px;
+            margin-bottom: 16px;
           }
 
           .post-time-box {
             .post-time {
-              font-size: 1.2rem;
+              font-size: 12px;
               color: #99A1AF;
             }
           }
@@ -2263,16 +2263,16 @@ function likeReply(id: string, liked: boolean) {
         .header-actions {
           .action-btns {
             display: flex;
-            gap: 1.6rem;
+            gap: 16px;
 
             .action-btn {
-              padding: 0.8rem 2rem;
-              border-radius: 2rem;
-              font-size: 1.4rem;
+              padding: 8px 20px;
+              border-radius: 20px;
+              font-size: 14px;
               cursor: pointer;
               display: flex;
               align-items: center;
-              gap: 0.8rem;
+              gap: 8px;
 
               &.follow-btn {
                 background-color: #ff6b6b;
@@ -2280,8 +2280,8 @@ function likeReply(id: string, liked: boolean) {
                 position: relative;
 
                 img {
-                  width: 1.6rem;
-                  height: 1.6rem;
+                  width: 16px;
+                  height: 16px;
                 }
 
                 .btn-text {
@@ -2298,7 +2298,7 @@ function likeReply(id: string, liked: boolean) {
                   align-items: center;
                   justify-content: center;
                   background-color: #e955a8;
-                  border-radius: 2rem;
+                  border-radius: 20px;
                   opacity: 0;
                   transition: opacity 0.3s;
                 }
@@ -2329,37 +2329,37 @@ function likeReply(id: string, liked: boolean) {
       flex-direction: column;
 
       .comments-header {
-        padding: 2.4rem;
-        font-size: 1.4rem;
+        padding: 24px;
+        font-size: 14px;
         color: #6A7282;
       }
 
       .comments-list {
         flex: 1;
         overflow-y: auto;
-        padding: 0 2.4rem;
+        padding: 0 24px;
 
         .loading-more {
           text-align: center;
-          padding: 2rem 0;
+          padding: 20px 0;
           color: #99a1af;
-          font-size: 1.4rem;
+          font-size: 14px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1.6rem;
+          gap: 16px;
 
           .loading-spinner {
-            width: 4rem;
-            height: 4rem;
-            border: 0.4rem solid #F5F5F5;
-            border-top: 0.4rem solid #6A7282;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #F5F5F5;
+            border-top: 4px solid #6A7282;
             border-radius: 50%;
             animation: spin 1s ease-in-out infinite;
           }
 
           p {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #99A1AF;
           }
 
@@ -2370,24 +2370,24 @@ function likeReply(id: string, liked: boolean) {
         }
 
         .empty-with-padding {
-          padding: 4rem 0;
+          padding: 40px 0;
         }
       }
 
       .comment-item {
-        margin-bottom: 1.2rem;
+        margin-bottom: 12px;
 
         .comment-main {
           display: flex;
-          gap: 1.2rem;
-          padding: 0.6rem;
-          border-radius: 0.8rem;
+          gap: 12px;
+          padding: 6px;
+          border-radius: 8px;
         }
 
         .c-avatar {
-          width: 4rem;
-          height: 4rem;
-          border-radius: 0.6rem;
+          width: 40px;
+          height: 40px;
+          border-radius: 6px;
           object-fit: cover;
           flex-shrink: 0;
         }
@@ -2401,7 +2401,7 @@ function likeReply(id: string, liked: boolean) {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 0.6rem;
+          margin-bottom: 6px;
 
           .author-wrap {
             display: flex;
@@ -2410,14 +2410,14 @@ function likeReply(id: string, liked: boolean) {
           }
 
           .c-author {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #6a7282;
           }
 
           .reply-to {
             color: #fb64b6;
-            margin-left: 1.2rem;
-            font-size: 1.2rem;
+            margin-left: 12px;
+            font-size: 12px;
           }
 
           .c-more-btn {
@@ -2428,8 +2428,8 @@ function likeReply(id: string, liked: boolean) {
             transition: opacity 0.2s;
 
             img {
-              width: 2rem;
-              height: 2rem;
+              width: 20px;
+              height: 20px;
             }
           }
         }
@@ -2441,22 +2441,22 @@ function likeReply(id: string, liked: boolean) {
         }
 
         .c-text {
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #364153;
-          line-height: 2rem;
-          margin-bottom: 0.6rem;
+          line-height: 20px;
+          margin-bottom: 6px;
           word-break: break-all;
 
           &.hidden {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            font-size: 1.4rem;
+            gap: 4px;
+            font-size: 14px;
             color: #99A1AF;
 
             .hidden-icon {
-              width: 2rem;
-              height: 2rem;
+              width: 20px;
+              height: 20px;
               object-fit: contain;
               flex-shrink: 0;
             }
@@ -2465,28 +2465,28 @@ function likeReply(id: string, liked: boolean) {
 
         /* Comment Media (Images and Videos) */
         .c-media {
-          margin: 0.6rem 0 1rem;
+          margin: 6px 0 10px;
 
           .c-images {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.8rem;
+            gap: 8px;
 
             .c-image {
               display: flex;
               align-items: center;
               justify-content: center;
-              width: 10.8rem;
-              height: 10.8rem;
-              border-radius: 0.8rem;
+              width: 108px;
+              height: 108px;
+              border-radius: 8px;
               background: #F5F5F5;
               cursor: pointer;
 
               img{
                 max-width: 100%;
                 width: auto;
-                height: 10.8rem;
-                border-radius: 0.8rem;
+                height: 108px;
+                border-radius: 8px;
                 object-fit: contain;
               }
             }
@@ -2494,20 +2494,20 @@ function likeReply(id: string, liked: boolean) {
 
           .c-video {
             position: relative;
-            max-width: 24rem;
+            max-width: 240px;
             .c-video-player {
               width: 100%;
-              max-height: 20rem;
+              max-height: 200px;
               object-fit: cover;
-              border-radius: 0.8rem;
+              border-radius: 8px;
             }
 
             img{
               position: absolute;
-              right: 0.8rem;
-              bottom: 0.8rem;
-              width: 2.2rem;
-              height: 2.2rem;
+              right: 8px;
+              bottom: 8px;
+              width: 22px;
+              height: 22px;
               cursor: pointer;
               z-index: 5;
             }
@@ -2520,25 +2520,25 @@ function likeReply(id: string, liked: boolean) {
           align-items: center;
 
           .c-time {
-            font-size: 1.2rem;
+            font-size: 12px;
             color: #99a1af;
           }
 
           .c-actions {
             display: flex;
-            gap: 1.8rem;
+            gap: 18px;
 
             .action-btn {
               display: flex;
               align-items: center;
-              gap: 0.6rem;
+              gap: 6px;
               cursor: pointer;
               color: #99A1AF;
-              font-size: 1.2rem;
+              font-size: 12px;
 
               b {
-                width: 1.8rem;
-                height: 1.8rem;
+                width: 18px;
+                height: 18px;
               }
 
               &.like-btn {
@@ -2588,15 +2588,15 @@ function likeReply(id: string, liked: boolean) {
       }
 
       .replies-list {
-        margin-left: 4.8rem;
-        margin-top: 0.4rem;
+        margin-left: 48px;
+        margin-top: 4px;
 
         .reply-item {
           display: flex;
-          gap: 0.8rem;
-          margin-bottom: 0.6rem;
-          padding: 0.6rem;
-          border-radius: 0.8rem;
+          gap: 8px;
+          margin-bottom: 6px;
+          padding: 6px;
+          border-radius: 8px;
 
           &:last-child {
             margin-bottom: 0;
@@ -2605,17 +2605,17 @@ function likeReply(id: string, liked: boolean) {
 
         .replies-btn {
           margin-left: 0;
-          margin-top: 0.8rem;
-          margin-bottom: 0.8rem;
+          margin-top: 8px;
+          margin-bottom: 8px;
         }
       }
 
       .show-more-replies {
-        font-size: 1.2rem;
+        font-size: 12px;
         color: #ff6b6b;
         cursor: pointer;
-        margin-left: 5.2rem;
-        margin-top: 0.8rem;
+        margin-left: 52px;
+        margin-top: 8px;
 
         &:hover {
           text-decoration: underline;
@@ -2626,11 +2626,11 @@ function likeReply(id: string, liked: boolean) {
         position: fixed;
         bottom: 0;
         right: 0;
-        width: 60rem;
-        padding: 1.8rem 2.4rem;
+        width: 600px;
+        padding: 18px 24px;
         border-top: 1px solid #F5F5F5;
         background: #ffffff;
-        min-height: 8.6rem;
+        min-height: 86px;
         display: flex;
         align-items: center;
         z-index: 20;
@@ -2643,37 +2643,37 @@ function likeReply(id: string, liked: boolean) {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 1.2rem;
+          gap: 12px;
 
           .fake-input {
             flex: 1;
-            height: 5rem;
+            height: 50px;
             background: #f5f5f5;
-            border-radius: 0.8rem;
-            padding: 1.2rem;
+            border-radius: 8px;
+            padding: 12px;
             display: flex;
             align-items: center;
             color: #99a1af;
-            font-size: 1.4rem;
+            font-size: 14px;
             cursor: text;
           }
 
           .footer-actions {
             display: flex;
             align-items: center;
-            gap: 1.8rem;
+            gap: 18px;
 
             .icon-action {
               display: flex;
               align-items: center;
-              gap: 0.6rem;
+              gap: 6px;
               cursor: pointer;
               color: #6a7282;
-              font-size: 1.4rem;
+              font-size: 14px;
 
               b {
-                width: 2.4rem;
-                height: 2.4rem;
+                width: 24px;
+                height: 24px;
               }
 
               &.footer-like {
@@ -2732,16 +2732,16 @@ function likeReply(id: string, liked: boolean) {
           width: 100%;
 
           .reply-indicator {
-            margin-bottom: 1.2rem;
+            margin-bottom: 12px;
 
             .reply-author {
-              font-size: 1.2rem;
-              margin-bottom: 0.6rem;
+              font-size: 12px;
+              margin-bottom: 6px;
               color: #99a1af;
             }
             .reply-text {
-              font-size: 1.4rem;
-              line-height: 2rem;
+              font-size: 14px;
+              line-height: 20px;
               color: #6a7282;
             }
           }
@@ -2749,11 +2749,11 @@ function likeReply(id: string, liked: boolean) {
           .input-wrapper {
             position: relative;
             width: 100%;
-            min-height: 10rem;
-            margin-bottom: 1.2rem;
-            padding: 0.8rem 1.2rem 2.4rem;
+            min-height: 100px;
+            margin-bottom: 12px;
+            padding: 8px 12px 24px;
             border: 1px solid #F5F5F5;
-            border-radius: 0.8rem;
+            border-radius: 8px;
             background: #f5f5f5;
 
             &:focus-within {
@@ -2762,13 +2762,13 @@ function likeReply(id: string, liked: boolean) {
 
             .real-input{
               width: 100%;
-              min-height: 6rem;
-              max-height: 12rem;
+              min-height: 60px;
+              max-height: 120px;
               cursor: text;
               outline: none;
               overflow-y: auto;
-              font-size: 1.4rem;
-              line-height: 2rem;
+              font-size: 14px;
+              line-height: 20px;
               color: #364153;
               white-space: pre-wrap;
               word-break: break-word;
@@ -2785,16 +2785,16 @@ function likeReply(id: string, liked: boolean) {
 
               :deep(.tag) {
                 color: #00d3f2;
-                margin-right: 0.4rem;
+                margin-right: 4px;
                 user-select: none;
               }
             }
 
             .char-count {
               position: absolute;
-              right: 1.2rem;
-              bottom: 0.8rem;
-              font-size: 1.2rem;
+              right: 12px;
+              bottom: 8px;
+              font-size: 12px;
               color: #99a1af;
 
               &.over-limit {
@@ -2806,24 +2806,24 @@ function likeReply(id: string, liked: boolean) {
 
         .input-actions-top {
           display: flex;
-          gap: 1rem;
-          margin-bottom: 0.8rem;
+          gap: 10px;
+          margin-bottom: 8px;
 
           .action-btn {
-            padding: 0.5rem 1rem;
+            padding: 5px 10px;
             border: none;
             background: #f5f5f5;
-            border-radius: 0.6rem;
-            font-size: 1.2rem;
+            border-radius: 6px;
+            font-size: 12px;
             color: #6a7282;
             cursor: pointer;
 
             &.upload-btn {
-              padding: 0.5rem;
+              padding: 5px;
 
               img {
-                width: 1.6rem;
-                height: 1.6rem;
+                width: 16px;
+                height: 16px;
               }
             }
           }
@@ -2833,24 +2833,24 @@ function likeReply(id: string, liked: boolean) {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-top: 0.8rem;
+          margin-top: 8px;
 
           .uploaded-files {
             display: flex;
-            gap: 0.8rem;
+            gap: 8px;
 
             .file-item {
               position: relative;
-              width: 6.4rem;
-              height: 6.4rem;
-              border-radius: 0.4rem;
+              width: 64px;
+              height: 64px;
+              border-radius: 4px;
               background: #FFFFFF;
               overflow: hidden;
 
               img {
                 max-width: 100%;
                 width: auto;
-                height: 6.4rem;
+                height: 64px;
                 object-fit: contain;
                 cursor: pointer;
               }
@@ -2875,19 +2875,19 @@ function likeReply(id: string, liked: boolean) {
                   left: 50%;
                   top: 50%;
                   transform: translateX(-50%) translateY(-30%);
-                  width: 6rem;
-                  height: 6rem;
+                  width: 60px;
+                  height: 60px;
                   cursor: pointer;
                 }
               }
 
               .remove-file {
                 position: absolute;
-                top: 0.2rem;
-                right: 0.2rem;
-                width: 1.6rem;
-                height: 1.6rem;
-                font-size: 1.4rem;
+                top: 2px;
+                right: 2px;
+                width: 16px;
+                height: 16px;
+                font-size: 14px;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
@@ -2904,21 +2904,21 @@ function likeReply(id: string, liked: boolean) {
           .upload-btn-box{
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            gap: 12px;
             img{
-              width: 3.8rem;
-              height: 3.8rem;
+              width: 38px;
+              height: 38px;
               cursor: pointer;
             }
           }
 
           .input-actions {
             display: flex;
-            gap: 0.6rem;
+            gap: 6px;
 
             .cancel-btn {
-              width: 5rem;
-              height: 5rem;
+              width: 50px;
+              height: 50px;
               background: url("@/assets/images/detail/cancel.png") no-repeat;
               background-size: 100% 100%;
               cursor: pointer;
@@ -2930,8 +2930,8 @@ function likeReply(id: string, liked: boolean) {
             }
 
             .send-btn {
-              width: 4.8rem;
-              height: 4.8rem;
+              width: 48px;
+              height: 48px;
               background: url("@/assets/images/detail/send.png") no-repeat;
               background-size: 100% 100%;
               cursor: pointer;
@@ -2953,21 +2953,21 @@ function likeReply(id: string, liked: boolean) {
       flex-direction: column;
 
       .collection-name {
-        margin-bottom: 2rem;
-        padding: 2.4rem 2.4rem 0;
-        font-size: 1.6rem;
+        margin-bottom: 20px;
+        padding: 24px 24px 0;
+        font-size: 16px;
         font-weight: 500;
-        line-height: 3.2rem;
+        line-height: 32px;
         color: #364153;
       }
 
       .toc-header {
         display: flex;
         align-items: center;
-        gap: 1.2rem;
-        padding: 0 2.4rem 2.4rem;
-        border-bottom: 0.1rem solid #F5F5F5;
-        font-size: 1.4rem;
+        gap: 12px;
+        padding: 0 24px 24px;
+        border-bottom: 1px solid #F5F5F5;
+        font-size: 14px;
         color: #6A7282;
 
         .view-collection-info{
@@ -2981,8 +2981,8 @@ function likeReply(id: string, liked: boolean) {
         overflow-y: auto;
 
         .toc-item {
-            height: 7.2rem;
-            padding: 0 2.4rem;
+            height: 72px;
+            padding: 0 24px;
             cursor: pointer;
             position: relative;
             display: flex;
@@ -3010,29 +3010,29 @@ function likeReply(id: string, liked: boolean) {
             .chapter-title {
               flex: 1;
               min-width: 0;
-              font-size: 1.6rem;
+              font-size: 16px;
               color: #364153;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              margin-right: 1.2rem;
+              margin-right: 12px;
             }
 
             .subscribe-badge {
               flex-shrink: 0;
-              padding: 0.6rem 1.6rem;
+              padding: 6px 16px;
               background-color: #F5F5F5;
               color: #6A7282;
-              border-radius: 0.6rem;
-              font-size: 1.4rem;
+              border-radius: 6px;
+              font-size: 14px;
             }
 
             .chapter-actions {
               display: flex;
               align-items: center;
               height: 100%;
-              padding-left: 1.6rem;
-              border-bottom: 0.1rem solid #F5F5F5;
+              padding-left: 16px;
+              border-bottom: 1px solid #F5F5F5;
 
               .collection-views {
                 display: flex;
@@ -3040,9 +3040,9 @@ function likeReply(id: string, liked: boolean) {
                 cursor: pointer;
 
                 img {
-                  width: 1.6rem;
-                  height: 1.6rem;
-                  margin-right: 0.8rem;
+                  width: 16px;
+                  height: 16px;
+                  margin-right: 8px;
 
                   &.active {
                     filter: invert(50%) sepia(100%) saturate(500%) hue-rotate(300deg) brightness(100%) contrast(100%);
@@ -3050,7 +3050,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 span {
-                  font-size: 1.4rem;
+                  font-size: 14px;
                   color: #6A7282;
                 }
               }
@@ -3062,21 +3062,21 @@ function likeReply(id: string, liked: boolean) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 4rem 0;
-          min-height: 20rem;
+          padding: 40px 0;
+          min-height: 200px;
 
           .loading-spinner {
-            width: 2.4rem;
-            height: 2.4rem;
-            border: 0.3rem solid #f3f3f3;
-            border-top: 0.3rem solid #ff6b6b;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6b6b;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1.2rem;
+            margin-bottom: 12px;
           }
 
           p {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #99A1AF;
           }
 
@@ -3087,8 +3087,8 @@ function likeReply(id: string, liked: boolean) {
         }
 
         .empty-with-padding {
-          padding: 4rem 0;
-          min-height: 20rem;
+          padding: 40px 0;
+          min-height: 200px;
         }
 
 
@@ -3099,8 +3099,8 @@ function likeReply(id: string, liked: boolean) {
 
 .no-more {
   text-align: center;
-  padding: 2rem;
-  font-size: 1.4rem;
+  padding: 20px;
+  font-size: 14px;
   color: #99A1AF;
 }
 
@@ -3122,8 +3122,8 @@ function likeReply(id: string, liked: boolean) {
   transition: opacity 0.2s;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -3135,10 +3135,10 @@ function likeReply(id: string, liked: boolean) {
 
 .dropdown-menu {
   position: absolute;
-  right: -1.8rem;
+  right: -18px;
   top: 100%;
-  margin-top: 0.2rem;
-  border-radius: 0.6rem;
+  margin-top: 2px;
+  border-radius: 6px;
   background: #FFFFFF;
   box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
   z-index: 100;
@@ -3148,10 +3148,10 @@ function likeReply(id: string, liked: boolean) {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 5.8rem;
-    height: 2.8rem;
-    padding: 0.5rem 1rem;
-    font-size: 1.2rem;
+    min-width: 58px;
+    height: 28px;
+    padding: 5px 10px;
+    font-size: 12px;
     color: #6A7282;
   }
 }

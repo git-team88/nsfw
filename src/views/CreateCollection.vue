@@ -187,7 +187,7 @@ function adjustTooltipPosition(event: MouseEvent) {
     tooltip.style.left = '100%';
     tooltip.style.right = 'auto';
     tooltip.style.transform = 'translateY(-50%)';
-    tooltip.style.marginLeft = '2rem';
+    tooltip.style.marginLeft = '20px';
     tooltip.style.marginRight = '0';
     tooltip.classList.remove('tooltip-left');
 
@@ -198,7 +198,7 @@ function adjustTooltipPosition(event: MouseEvent) {
       tooltip.style.left = 'auto';
       tooltip.style.right = '100%';
       tooltip.style.marginLeft = '0';
-      tooltip.style.marginRight = '2rem';
+      tooltip.style.marginRight = '20px';
       tooltip.classList.add('tooltip-left');
     }
   }
@@ -334,21 +334,21 @@ function goBack() {
 }
 
 .content-container {
-  max-width: 84rem;
+  max-width: 840px;
   margin: 0 auto;
-  padding: 14rem 0 2.4rem;
+  padding: 140px 24px 24px;
 }
 
 .back-btn {
   position: fixed;
   left: 50%;
-  top: 14rem;
-  width: 4rem;
-  height: 4rem;
+  top: 140px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateX(-54rem);
+  transform: translateX(-540px);
   cursor: pointer;
   z-index: 10;
   border: none;
@@ -356,8 +356,8 @@ function goBack() {
   padding: 0;
 
   img {
-    width: 4rem;
-    height: 4rem;
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -367,16 +367,16 @@ function goBack() {
 }
 
 .form-group {
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 
   .form-label {
     display: flex;
     align-items: center;
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #364153;
-    margin-bottom: 1.2rem;
-    gap: 1rem;
+    margin-bottom: 12px;
+    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -384,18 +384,18 @@ function goBack() {
     }
 
     .char-counter {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #99A1AF;
     }
   }
 
   .form-input {
     width: 100%;
-    height: 5rem;
-    padding: 1rem;
+    height: 50px;
+    padding: 10px;
     border: 1px solid #F5F5F5;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
+    border-radius: 8px;
+    font-size: 16px;
     color: #364153;
     background: #F5F5F5;
     outline: none;
@@ -411,16 +411,16 @@ function goBack() {
 
   .form-textarea {
     width: 100%;
-    height: 20rem;
-    padding: 1rem;
+    height: 200px;
+    padding: 10px;
     border: 1px solid #F5F5F5;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
+    border-radius: 8px;
+    font-size: 16px;
     color: #364153;
-    min-height: 20rem;
+    min-height: 200px;
     resize: none;
     outline: none;
-    line-height: 2.4rem;
+    line-height: 24px;
     background: #F5F5F5;
 
     &::placeholder {
@@ -434,8 +434,8 @@ function goBack() {
 
   .error-message {
     color: #FA2D47;
-    font-size: 1.2rem;
-    margin-top: 1.2rem;
+    font-size: 12px;
+    margin-top: 12px;
     margin-bottom: 0;
   }
 }
@@ -454,8 +454,8 @@ function goBack() {
   z-index: 30;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -464,9 +464,9 @@ function goBack() {
   top: 50%;
   left: 100%;
   transform: translateY(-50%);
-  margin-left: 0.8rem;
-  width: 1.2rem;
-  height: 3.3rem;
+  margin-left: 8px;
+  width: 12px;
+  height: 33px;
   background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
   background-size: contain;
   flex-shrink: 0;
@@ -482,13 +482,13 @@ function goBack() {
   top: 50%;
   left: 100%;
   transform: translateY(-50%);
-  margin-left: 2rem;
-  padding: 1.8rem;
-  width: 28rem;
+  margin-left: 20px;
+  padding: 18px;
+  width: 280px;
   background: #FFFFFF;
-  font-size: 1.2rem;
-  line-height: 1.6rem;
-  border-radius: 0.8rem;
+  font-size: 12px;
+  line-height: 16px;
+  border-radius: 8px;
   white-space: normal;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
@@ -497,8 +497,8 @@ function goBack() {
   transition: all 0.2s ease;
 
   .tooltip-content {
-    font-size: 1.2rem;
-    line-height: 2rem;
+    font-size: 12px;
+    line-height: 20px;
     color: #99A1AF;
 
     :deep(span) {
@@ -519,22 +519,22 @@ function goBack() {
 
 .sensitive-options {
   display: flex;
-  gap: 3.2rem;
-  margin-top: 1.2rem;
+  gap: 32px;
+  margin-top: 12px;
 
   .option {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 8px;
     cursor: pointer;
 
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 24px;
+      height: 24px;
     }
 
     span {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #364153;
     }
   }
@@ -544,11 +544,11 @@ function goBack() {
   .cover-label {
     display: flex;
     align-items: center;
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #364153;
-    margin-bottom: 1.2rem;
-    gap: 1rem;
+    margin-bottom: 12px;
+    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -559,16 +559,16 @@ function goBack() {
   .cover-upload-box{
     display: flex;
     align-items: flex-end;
-    gap: 1.2rem;
+    gap: 12px;
   }
 
   .cover-upload {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18rem;
-    height: 24rem;
-    border-radius: 1.2rem;
+    width: 180px;
+    height: 240px;
+    border-radius: 12px;
     cursor: pointer;
     overflow: hidden;
     background: #F5F5F5;
@@ -583,22 +583,22 @@ function goBack() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1rem;
+      gap: 10px;
 
       img {
-        width: 4.4rem;
-        height: 4.4rem;
+        width: 44px;
+        height: 44px;
       }
 
       span {
-        font-size: 1.6rem;
+        font-size: 16px;
         color: #6A7282;
       }
     }
   }
 
   .set-cover {
-    font-size: 1.6rem;
+    font-size: 16px;
     color: #FB64B6;
     cursor: pointer;
   }
@@ -611,16 +611,16 @@ function goBack() {
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 2.4rem;
-  margin-top: 3rem;
+  gap: 24px;
+  margin-top: 30px;
 }
 
 .btn {
-  min-width: 13.6rem;
-  height: 4.8rem;
-  padding: 0 4.8rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  min-width: 136px;
+  height: 48px;
+  padding: 0 48px;
+  border-radius: 8px;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
@@ -656,6 +656,243 @@ function goBack() {
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+}
+
+@media (max-width: 1440px) {
+  .content-container {
+    max-width: 840px;
+    padding: 140px 24px 24px;
+  }
+  .back-btn {
+    top: 140px;
+    width: 40px;
+    height: 40px;
+    transform: translateX(-540px);
+    img {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  .form-group {
+    margin-bottom: 20px;
+    .form-label {
+      font-size: 16px;
+      margin-bottom: 12px;
+      gap: 10px;
+      .char-counter {
+        font-size: 14px;
+      }
+    }
+    .form-input {
+      height: 50px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .form-textarea {
+      height: 200px;
+      min-height: 200px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+      line-height: 24px;
+    }
+    .error-message {
+      font-size: 12px;
+      margin-top: 12px;
+    }
+  }
+  .info-icon img {
+    width: 20px;
+    height: 20px;
+  }
+  .tooltip-arrow {
+    margin-left: 8px;
+    width: 12px;
+    height: 33px;
+  }
+  .tooltip {
+    margin-left: 20px;
+    padding: 18px;
+    width: 280px;
+    border-radius: 8px;
+    .tooltip-content {
+      font-size: 12px;
+      line-height: 20px;
+    }
+  }
+  .sensitive-options {
+    gap: 32px;
+    margin-top: 12px;
+    .option {
+      gap: 8px;
+      img {
+        width: 24px;
+        height: 24px;
+      }
+      span {
+        font-size: 14px;
+      }
+    }
+  }
+  .cover-wrapper {
+    .cover-label {
+      font-size: 16px;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .cover-upload-box {
+      gap: 12px;
+    }
+    .cover-upload {
+      width: 180px;
+      height: 240px;
+      border-radius: 12px;
+      .cover-placeholder {
+        gap: 10px;
+        img {
+          width: 44px;
+          height: 44px;
+        }
+        span {
+          font-size: 16px;
+        }
+      }
+    }
+    .set-cover {
+      font-size: 16px;
+    }
+  }
+  .action-buttons {
+    gap: 24px;
+    margin-top: 30px;
+  }
+  .btn {
+    min-width: 136px;
+    height: 48px;
+    padding: 0 48px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    max-width: 100%;
+    padding: 80px 16px 16px;
+  }
+  .back-btn {
+    top: 80px;
+    left: 16px;
+    width: 32px;
+    height: 32px;
+    transform: none;
+    img {
+      width: 32px;
+      height: 32px;
+    }
+  }
+  .form-group {
+    margin-bottom: 16px;
+    .form-label {
+      font-size: 14px;
+      margin-bottom: 8px;
+      gap: 6px;
+      .char-counter {
+        font-size: 12px;
+      }
+    }
+    .form-input {
+      height: 44px;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .form-textarea {
+      height: 160px;
+      min-height: 160px;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .error-message {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  }
+  .info-icon img {
+    width: 16px;
+    height: 16px;
+  }
+  .tooltip {
+    margin-left: 12px;
+    padding: 12px;
+    width: 200px;
+    border-radius: 6px;
+    .tooltip-content {
+      font-size: 12px;
+      line-height: 18px;
+    }
+  }
+  .tooltip-arrow {
+    margin-left: 6px;
+    width: 10px;
+    height: 28px;
+  }
+  .sensitive-options {
+    gap: 24px;
+    margin-top: 8px;
+    .option {
+      gap: 6px;
+      img {
+        width: 20px;
+        height: 20px;
+      }
+      span {
+        font-size: 12px;
+      }
+    }
+  }
+  .cover-wrapper {
+    .cover-label {
+      font-size: 14px;
+      margin-bottom: 8px;
+      gap: 6px;
+    }
+    .cover-upload-box {
+      gap: 8px;
+    }
+    .cover-upload {
+      width: 140px;
+      height: 186px;
+      border-radius: 8px;
+      .cover-placeholder {
+        gap: 6px;
+        img {
+          width: 32px;
+          height: 32px;
+        }
+        span {
+          font-size: 14px;
+        }
+      }
+    }
+    .set-cover {
+      font-size: 14px;
+    }
+  }
+  .action-buttons {
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .btn {
+    min-width: 100px;
+    height: 40px;
+    padding: 0 24px;
+    border-radius: 6px;
+    font-size: 14px;
   }
 }
 </style>

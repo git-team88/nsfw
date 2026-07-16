@@ -37,14 +37,14 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    padding: 1.2rem 2rem;
-    font-size: 1.6rem;
-    -webkit-border-radius: .4rem;
-    border-radius: .4rem;
+    padding: 12px 20px;
+    font-size: 16px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
     background: rgba(0, 0, 0, .4);
     color: #ffffff;
     z-index: 2000;
-    max-width: 50rem;
+    max-width: 500px;
     text-align: center;
     word-break: break-word;
   }

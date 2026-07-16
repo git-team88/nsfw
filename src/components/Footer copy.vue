@@ -59,8 +59,8 @@ const navigateTo = (path: string) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 2.4rem 2.4rem;
-  margin-top: 3rem;
+  padding: 0 24px 24px;
+  margin-top: 30px;
   border-top: 1px solid #F5F5F5;
   background: rgba(255,255,255,0.8);
 }
@@ -69,37 +69,37 @@ const navigateTo = (path: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3.8rem;
+  gap: 38px;
   width: 100%;
-  height: 7rem;
-  margin-bottom: 2.4rem;
+  height: 70px;
+  margin-bottom: 24px;
   border-bottom: 1px solid #F5F5F5;
 }
 
 .nav-item {
   color: #6A7282;
   text-decoration: none;
-  font-size: 1.4rem;
+  font-size: 14px;
 }
 
 .footer-policies {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7.5rem;
+  gap: 75px;
   width: 100%;
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
   align-items: center;
 }
 
 .policy-item {
   color: #99A1AF;
   text-decoration: none;
-  font-size: 1.2rem;
+  font-size: 12px;
 }
 
 .footer-copyright {
   color: #99A1AF;
-  font-size: 1.2rem;
+  font-size: 12px;
 }
 </style>

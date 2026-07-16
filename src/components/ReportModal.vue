@@ -263,9 +263,9 @@ async function submit() {
 
 .modal-content {
   position: relative;
-  width: 42rem;
+  width: 420px;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -273,10 +273,10 @@ async function submit() {
 
 .close-btn {
   position: absolute;
-  top: 2rem;
-  right: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  top: 20px;
+  right: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
@@ -284,11 +284,11 @@ async function submit() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.8rem 2.4rem;
+  padding: 18px 24px;
   border-bottom: 1px solid #F5F5F5;
 
   h3 {
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #101828;
     margin: 0;
@@ -296,12 +296,12 @@ async function submit() {
 }
 
 .modal-body {
-  padding: 1.2rem;
-  max-height: 39rem;
+  padding: 12px;
+  max-height: 390px;
   overflow-y: auto;
 
   &.step {
-    padding: 1.8rem 2.4rem;
+    padding: 18px 24px;
   }
 }
 
@@ -311,12 +311,12 @@ async function submit() {
 }
 
 .radio-item {
-  height: 4.4rem;
+  height: 44px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1.2rem;
-  border-radius: 0.8rem;
+  padding: 0 12px;
+  border-radius: 8px;
   cursor: pointer;
   color: #6A7282;
 
@@ -332,12 +332,12 @@ async function submit() {
   }
 
   .label-text {
-    font-size: 1.4rem;
+    font-size: 14px;
   }
 
   .radio {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
 
     img {
       width: 100%;
@@ -347,14 +347,14 @@ async function submit() {
 }
 
 .info-row {
-  margin-bottom: 2.4rem;
-  font-size: 1.6rem;
+  margin-bottom: 24px;
+  font-size: 16px;
   font-weight: 500;
   color: #364153;
 }
 
 .form-item {
-  margin-bottom: 1.8rem;
+  margin-bottom: 18px;
 
   &:last-child {
     margin-bottom: 0;
@@ -362,14 +362,14 @@ async function submit() {
   .label-row {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1.2rem;
+    gap: 6px;
+    margin-bottom: 12px;
     .label {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6A7282;
     }
     .count {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #99A1AF;
     }
   }
@@ -377,13 +377,13 @@ async function submit() {
 
 .desc-input {
   width: 100%;
-  height: 13.6rem;
-  padding: 1rem;
+  height: 136px;
+  padding: 10px;
   border: 1px solid #F5F5F5;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   resize: none;
   font-family: inherit;
-  font-size: 1.4rem;
+  font-size: 14px;
   background: #F5F5F5;
   color: #364153;
 
@@ -399,30 +399,30 @@ async function submit() {
 
 .upload-list {
   display: flex;
-  gap: 1.2rem;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .img-item {
   position: relative;
-  width: 10rem;
-  height: 10rem;
-  border-radius: 0.8rem;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
   overflow: hidden;
 
   &:hover {
     .delete-mask {
       position: absolute;
-      top: 0.4rem;
-      right: 0.4rem;
-      width: 2rem;
-      height: 2rem;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
       z-index: 5;
 
       img {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
       }
     }
   }
@@ -436,9 +436,9 @@ async function submit() {
 }
 
 .upload-btn {
-  width: 10rem;
-  height: 10rem;
-  border-radius: 0.8rem;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -451,15 +451,15 @@ async function submit() {
   }
 
   img {
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
   }
 }
 
 .uploading-spinner {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 24px;
+  height: 24px;
   border: 2px solid rgba(251, 100, 182, 0.3);
   border-top: 2px solid #fb64b6;
   border-radius: 50%;
@@ -472,16 +472,16 @@ async function submit() {
 }
 
 .modal-footer {
-  padding: 1.8rem;
+  padding: 18px;
   border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: center;
 
   button {
-    width: 24rem;
-    height: 4.8rem;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
+    width: 240px;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 16px;
     font-weight: 500;
     cursor: pointer;
     border: none;

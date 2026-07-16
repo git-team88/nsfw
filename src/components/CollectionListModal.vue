@@ -189,10 +189,10 @@ watch(() => props.modelValue, (newVal) => {
 
 .modal-content {
   position: relative;
-  width: 84rem;
-  max-height: 70rem;
+  width: 840px;
+  max-height: 700px;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -202,20 +202,20 @@ watch(() => props.modelValue, (newVal) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2rem 2.4rem;
+  padding: 20px 24px;
   border-bottom: 1px solid #F5F5F5;
   flex-shrink: 0;
 
   h3 {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 18px;
     font-weight: 500;
     color: #101828;
   }
 
   .close-btn {
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
   }
 }
@@ -223,12 +223,12 @@ watch(() => props.modelValue, (newVal) => {
 .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem 2.4rem;
+  padding: 20px 24px;
 }
 
 .new-collection-row {
   flex-shrink: 0;
-  padding: 2rem 2.4rem 0;
+  padding: 20px 24px 0;
   cursor: pointer;
 
   .new-collection-btn {
@@ -236,17 +236,17 @@ watch(() => props.modelValue, (newVal) => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 10px;
     width: 100%;
-    height: 9.4rem;
-    border-radius: 0.8rem;
+    height: 94px;
+    border-radius: 8px;
     color: #99A1AF;
-    font-size: 1.4rem;
+    font-size: 14px;
     background-color: #F9FAFB;
 
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 24px;
+      height: 24px;
     }
   }
 }
@@ -254,14 +254,14 @@ watch(() => props.modelValue, (newVal) => {
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.6rem;
+  gap: 16px;
 }
 
 .collection-card {
   display: flex;
-  gap: 1.2rem;
+  gap: 12px;
   border: 1px solid #FFFFFF;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
   background: #F9FAFB;
@@ -271,9 +271,9 @@ watch(() => props.modelValue, (newVal) => {
   }
 
   .card-cover {
-    width: 7.2rem;
-    height: 9.6rem;
-    border-radius: 0.8rem;
+    width: 72px;
+    height: 96px;
+    border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
     background: #F5F5F5;
@@ -296,12 +296,12 @@ watch(() => props.modelValue, (newVal) => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    padding: 1rem 1rem 1rem 0;
+    gap: 4px;
+    padding: 10px 10px 10px 0;
   }
 
   .card-title {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: #364153;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -313,7 +313,7 @@ watch(() => props.modelValue, (newVal) => {
   }
 
   .card-desc {
-    font-size: 1.2rem;
+    font-size: 12px;
     color: #99A1AF;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -329,14 +329,14 @@ watch(() => props.modelValue, (newVal) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
-  padding: 2rem;
-  font-size: 1.4rem;
+  gap: 8px;
+  padding: 20px;
+  font-size: 14px;
   color: #99A1AF;
 
   .loading-spinner {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
     border: 2px solid #F5F5F5;
     border-top: 2px solid #6A7282;
     border-radius: 50%;
@@ -351,32 +351,32 @@ watch(() => props.modelValue, (newVal) => {
 
 .no-more {
   text-align: center;
-  padding: 1rem;
-  font-size: 1.2rem;
+  padding: 10px;
+  font-size: 12px;
   color: #99A1AF;
 }
 
 .empty-state {
   text-align: center;
-  padding: 4rem;
-  font-size: 1.4rem;
+  padding: 40px;
+  font-size: 14px;
   color: #99A1AF;
 }
 
 .modal-footer {
   display: flex;
   justify-content: center;
-  gap: 2.4rem;
-  padding: 2rem 2.4rem;
+  gap: 24px;
+  padding: 20px 24px;
   border-top: 1px solid #F5F5F5;
   flex-shrink: 0;
 
   .btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
-    padding: 0 4.8rem;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    min-width: 136px;
+    height: 48px;
+    padding: 0 48px;
+    border-radius: 8px;
+    font-size: 14px;
     border: none;
     cursor: pointer;
     transition: all 0.2s;

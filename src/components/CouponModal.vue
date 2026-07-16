@@ -102,48 +102,48 @@ async function handleConfirm() {
 
 .coupon-modal {
   position: relative;
-  width: 52rem;
+  width: 520px;
   background: #ffffff;
-  border-radius: 1.2rem;
-  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 
   .close-btn {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
-    width: 2rem;
-    height: 2rem;
+    top: 20px;
+    right: 20px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 
   .modal-header {
-    padding: 1.8rem 2.4rem;
+    padding: 18px 24px;
     border-bottom: 1px solid #f5f5f5;
 
     .modal-title {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
     }
   }
 
   .modal-body {
-    padding: 1.8rem 2.4rem;
+    padding: 18px 24px;
     border-bottom: 1px solid #f5f5f5;
 
     .input-label {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6A7282;
-      margin-bottom: 1.2rem;
+      margin-bottom: 12px;
     }
 
     .coupon-input {
       width: 100%;
-      height: 4.8rem;
-      padding: 0 1.6rem;
+      height: 48px;
+      padding: 0 16px;
       border: 1px solid #e5e7eb;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       color: #364153;
       outline: none;
 
@@ -157,8 +157,8 @@ async function handleConfirm() {
     }
 
     .error-message {
-      margin-top: 1rem;
-      font-size: 1.2rem;
+      margin-top: 10px;
+      font-size: 12px;
       color: #ff4d4f;
     }
   }
@@ -166,16 +166,16 @@ async function handleConfirm() {
   .modal-footer {
     display: flex;
     justify-content: center;
-    padding: 1.8rem 0;
+    padding: 18px 0;
 
     .confirm-btn {
-      width: 24rem;
-      height: 4.8rem;
+      width: 240px;
+      height: 48px;
       background: #fb64b6;
       color: #ffffff;
       border: none;
-      border-radius: 0.8rem;
-      font-size: 1.6rem;
+      border-radius: 8px;
+      font-size: 16px;
       font-weight: 500;
       cursor: pointer;
       position: relative;

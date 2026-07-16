@@ -60,9 +60,10 @@
           >
             <div
               class="project-card"
-              v-for="project in projects"
+              v-for="(project, index) in projects"
               :key="project.id"
               ref="projectCardRefs"
+              :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
             >
 
               <!-- Project Cover -->
@@ -721,48 +722,77 @@ function handleScroll() {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+$yellow: #FFD23F;
+
 .my-projects {
   width: 100%;
   min-height: 100vh;
   padding: 14rem 0 0;
-  background: #FFFFFF;
+  background: $cream;
   scroll-behavior: smooth;
   overflow-y: auto;
   max-height: 100vh;
 }
 
 .container {
-  max-width: 108rem;
+  max-width: 1160px;
   margin: 0 auto 2rem;
+  padding: 0 1.2rem;
+
+  @media (min-width: 768px) {
+    padding: 0 1.6rem;
+  }
 }
 
 .projects-header {
   margin-bottom: 2.4rem;
 
   h2 {
-    font-weight: 500;
-    font-size: 2rem;
-    color: #99A1AF;
-    margin-bottom: 2.4rem;
+    font-weight: 800;
+    font-size: 2.6rem;
+    color: $ink;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  .projects-sub {
+    font-size: 1.3rem;
+    color: $muted;
+    font-weight: 600;
+    margin-bottom: 1.8rem;
   }
 
   .main-tabs {
     display: flex;
-    gap: 3rem;
-    border-bottom: 1px solid #F5F5F5;
+    gap: 0.8rem;
+    flex-wrap: wrap;
     margin-bottom: 2rem;
 
     .tab-item {
-      padding: 0 0 2rem;
-      font-size: 1.6rem;
-      color: #6A7282;
+      font-weight: 800;
+      font-size: 1.3rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 999px;
+      border: 2px solid $ink;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
+      transition: all 0.16s;
+      background: #fff;
+      color: $ink;
 
       &.active {
-        font-weight: 500;
-        color: #101828;
-        border-bottom-color: #fb64b6;
+        background: $ink;
+        color: #fff;
+      }
+
+      &:hover:not(.active) {
+        background: $paper;
       }
     }
   }
@@ -779,17 +809,17 @@ function handleScroll() {
       padding: 0 1.6rem;
       border-radius: 0.6rem;
       font-size: 1.4rem;
-      color: #99A1AF;
+      color: $muted;
       cursor: pointer;
       position: relative;
 
-      &:hover{
-        color: #6A7282;
+      &:hover {
+        color: $sub;
       }
 
       &.active {
-        background: #F5F5F5;
-        color: #6A7282;
+        background: $paper;
+        color: $ink;
       }
     }
   }
@@ -797,35 +827,8 @@ function handleScroll() {
 
 /* Process Section */
 .process-section {
-  margin-bottom: 3.2rem;
+  margin-bottom: 1rem;
 }
-
-  // .status-tabs {
-  //   display: flex;
-  //   gap: 1.2rem;
-
-  //   .tab-item {
-  //     display: flex;
-  //     align-items: center;
-  //     height: 3.2rem;
-  //     padding: 0 1.6rem;
-  //     border-radius: 0.6rem;
-  //     font-size: 1.4rem;
-  //     border: 1px solid transparent;
-  //     color: #6a7282;
-  //     cursor: pointer;
-
-  //     &:hover{
-  //       border-color: rgba(251,100,182,0.2);
-  //     }
-
-  //     &.active {
-  //       border-color: #FB64B6;
-  //       background: rgba(251, 100, 182, 0.12);
-  //       color: #fb64b6;
-  //     }
-  //   }
-  // }
 
 .projects-box {
   min-height: 40rem;
@@ -833,54 +836,71 @@ function handleScroll() {
 
 .projects-container {
   min-height: 40rem;
+  overflow: visible;
 
   .waterfall {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 1.6rem;
     width: 100%;
     margin: 0 auto;
+    overflow: visible;
   }
 
   .project-card {
-    width: 25.8rem;
     position: relative;
     break-inside: avoid;
+    background: #fff;
+    border: 3px solid $ink;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 $ink;
+    cursor: pointer;
+    overflow: visible;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 6px 6px 0 $ink;
+    }
 
     .publish-btn {
       position: absolute;
-      top: 1.2rem;
-      right: 1.2rem;
-      display: flex;
+      top: 10px;
+      right: 10px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #FFFFFF;
-      color: #364153;
-      min-width: 6rem;
-      height: 2.8rem;
-      padding: 0 1rem;
-      border-radius: 0.6rem;
-      font-size: 1.2rem;
+      background: #fff;
+      border: 2px solid $ink;
+      color: $ink;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
       cursor: pointer;
       z-index: 10;
+      box-shadow: 2px 2px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
       opacity: 0;
-      transition: opacity 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 3px 3px 0 $ink;
+      }
     }
 
     .card-cover {
       position: relative;
       width: 100%;
-      height: 34.4rem;
+      height: 260px;
       overflow: hidden;
-      border-radius: 1.2rem;
-      background: #F5F5F5;
+      border-radius: 16px 16px 0 0;
 
       .cover-img {
         width: 100%;
         height: 100%;
-        border-radius: 0.8rem;
         object-fit: cover;
-        transition: transform 0.3s ease;
+        transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
       }
 
       .character-images {
@@ -899,8 +919,8 @@ function handleScroll() {
         img {
           width: 100%;
           height: 100%;
-          border-radius: 0.8rem;
           object-fit: cover;
+          transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
         }
       }
 
@@ -913,24 +933,24 @@ function handleScroll() {
         z-index: 5;
 
         img {
-          width: 8rem;
-          height: 8rem;
+          width: 60px;
+          height: 60px;
         }
       }
     }
 
-    .novel-cover{
+    .novel-cover {
       display: flex;
       justify-content: center;
       position: relative;
-      width: 25.8rem;
-      height: 34.4rem;
-      padding: 7rem 3.6rem 0;
-      border-radius: 1.2rem;
-      font-size: 2.4rem;
-      line-height: 3.6rem;
-      background: rgba(251, 100, 182, 0.5);
-      color: #364153;
+      height: 260px;
+      padding: 70px 30px 0;
+      font-size: 20px;
+      line-height: 30px;
+      background: linear-gradient(135deg, #FFC24B, #FF7AAE);
+      color: $ink;
+      border-radius: 16px 16px 0 0;
+      overflow: hidden;
 
       &:hover {
         .edit-btn {
@@ -938,17 +958,17 @@ function handleScroll() {
         }
       }
 
-      b{
+      b {
         position: absolute;
-        left: 3rem;
-        top: 4rem;
-        font-weight: normal;
-        font-size: 4.8rem;
-        color: #364153;
+        left: 30px;
+        top: 40px;
+        font-weight: 800;
+        font-size: 48px;
+        color: $ink;
       }
 
-      span{
-        height: 22rem;
+      span {
+        height: 80px;
         overflow-y: hidden;
         word-break: break-all;
       }
@@ -956,37 +976,41 @@ function handleScroll() {
 
     .edit-btn {
       position: absolute;
-      bottom: 2.4rem;
+      bottom: 12px;
       left: 50%;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       transform: translateX(-50%);
-      background: #FB64B6;
+      background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
-      padding: 0 2rem;
-      min-width: 9.8rem;
-      height: 4rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 0 16px;
+      height: 32px;
+      border-radius: 10px;
       cursor: pointer;
       z-index: 10;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translateX(-50%) translateY(-2px);
+      }
     }
 
-    .card-cover:hover {
+    .card-cover:hover,
+    .novel-cover:hover {
       .edit-btn {
         opacity: 1;
       }
     }
 
-    // Photo Cover Grid Layout - 四分显示
     .photo-cover {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #F5F5F5;
+      background: #e7e1d8;
     }
 
     .grid-images {
@@ -1003,7 +1027,7 @@ function handleScroll() {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #F5F5F5;
+      background: #e7e1d8;
       overflow: hidden;
 
       img {
@@ -1034,29 +1058,33 @@ function handleScroll() {
       justify-content: center;
       width: 100%;
       height: 100%;
-      color: #99A1AF;
-      font-size: 1.4rem;
+      color: $muted;
+      font-size: 14px;
     }
 
     .photo-edit-btn {
       position: absolute;
-      bottom: 2.4rem;
+      bottom: 12px;
       left: 50%;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       transform: translateX(-50%);
-      background: #FB64B6;
+      background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
-      padding: 0 2rem;
-      min-width: 9.8rem;
-      height: 4rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 0 16px;
+      height: 32px;
+      border-radius: 10px;
       cursor: pointer;
       z-index: 10;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translateX(-50%) translateY(-2px);
+      }
     }
 
     .photo-cover:hover {
@@ -1081,23 +1109,27 @@ function handleScroll() {
 
     .video-edit-btn {
       position: absolute;
-      bottom: 2.4rem;
+      bottom: 12px;
       left: 50%;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       transform: translateX(-50%);
-      background: #FB64B6;
+      background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
-      padding: 0 2rem;
-      min-width: 9.8rem;
-      height: 4rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 0 16px;
+      height: 32px;
+      border-radius: 10px;
       cursor: pointer;
       z-index: 10;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translateX(-50%) translateY(-2px);
+      }
     }
 
     .video-cover:hover {
@@ -1113,13 +1145,14 @@ function handleScroll() {
     }
 
     .card-info {
-      padding: 1.2rem 0 0;
+      padding: 12px 14px 14px;
 
       .card-desc {
-        font-size: 1.4rem;
-        color: #101828;
-        margin-bottom: 1.2rem;
-        line-height: 2rem;
+        font-size: 14px;
+        font-weight: 800;
+        color: $ink;
+        margin-bottom: 8px;
+        line-height: 20px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         line-clamp: 2;
@@ -1135,46 +1168,54 @@ function handleScroll() {
         align-items: center;
 
         .time {
-          font-size: 1.2rem;
-          color: #99A1AF;
+          font-size: 12px;
+          color: $muted;
+          font-weight: 600;
         }
 
         .more-btn-wrap {
           position: relative;
+
           img {
-            width: 1.8rem;
-            height: 1.8rem;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
           }
 
           .dropdown-menu {
             position: absolute;
             right: 0;
-            border-radius: 0.8rem;
-            padding: 0.6rem 0;
-            z-index: 10;
-            min-width: 10rem;
+            border: 2px solid $ink;
+            border-radius: 10px;
+            padding: 4px 0;
+            z-index: 9999;
+            min-width: 100px;
             background: #FFFFFF;
-            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+            box-shadow: 3px 3px 0 $ink;
 
             &.bottom {
               top: 100%;
-              margin-top: 0.4rem;
+              margin-top: 4px;
             }
             &.top {
               bottom: 100%;
-              margin-bottom: 0.4rem;
+              margin-bottom: 4px;
             }
 
             .menu-item {
-              padding: 0.6rem 0;
-              font-size: 1.4rem;
-              color: #6a7282;
+              padding: 6px 12px;
+              font-size: 13px;
+              font-weight: 700;
+              color: $sub;
               cursor: pointer;
               text-align: center;
+
               &:hover {
-                font-weight: 500;
-                color: #364153;
+                color: $ink;
+              }
+
+              &.delete {
+                color: #E5484D;
               }
             }
           }
@@ -1185,13 +1226,14 @@ function handleScroll() {
 
   .loading-trigger {
     text-align: center;
-    padding: 2rem 0;
-    color: #99a1af;
-    font-size: 1.4rem;
+    padding: 20px 0;
+    color: $muted;
+    font-size: 14px;
+    font-weight: 600;
   }
 }
 
-/* Loading and Empty States */
+/* Loading State */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -1203,20 +1245,61 @@ function handleScroll() {
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid #F5F5F5;
-    border-top: 0.4rem solid #6A7282;
+    border: 0.4rem solid $line;
+    border-top: 0.4rem solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 2rem;
   }
 
-  p {
-    font-size: 1.6rem;
-    color: #6A7282;
+  .loading-text {
+    font-size: 1.4rem;
+    color: $muted;
+    font-weight: 600;
   }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes projCardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .projects-header .main-tabs .tab-item {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.2rem;
+  }
+
+  .project-card .card-cover,
+  .project-card .novel-cover {
+    height: 18rem;
+  }
+
+  .project-card .card-info .card-desc {
+    font-size: 1.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card {
+    animation: none !important;
+  }
+  .project-card:hover {
+    transform: none;
+    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  }
 }
 </style>

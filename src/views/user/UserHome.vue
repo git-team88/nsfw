@@ -183,9 +183,10 @@
             >
               <div
                 class="collection-card"
-                v-for="collection in collections"
+                v-for="(collection, index) in collections"
                 :key="collection.id"
                 ref="collectionCardRefs"
+                :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
                 <div class="card-cover" @click="goCollectionDetail(collection.id)">
                    <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
@@ -268,7 +269,7 @@
 
               <div v-else>
                 <div class="follow-list" v-if="followList.length > 0">
-                  <div class="follow-card" v-for="user in followList" :key="user.id" @click="goUserHome(user.id)">
+                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }" @click="goUserHome(user.id)">
                     <div class="card-top">
                       <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <div class="user-meta">
@@ -1833,14 +1834,23 @@ async function unpinCollection(collection: any) {
 <style scoped lang="scss">
 .user-homepage {
   min-height: 100vh;
-  background: #FFFFFF;
-  padding-bottom: 2rem;
+  background: #FFFBF4;
+  padding: 100px 16px 40px;
+
+  @media (max-width: 768px) {
+    padding: 80px 24px 40px;
+  }
 }
 
 .home-bg {
   position: relative;
   width: 100%;
-  height: 28rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  height: 180px;
+  border-radius: 6px;
+  border: 2px solid #161122;
+  overflow: hidden;
 
   &::after {
     content: "";
@@ -1849,7 +1859,7 @@ async function unpinCollection(collection: any) {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, rgba(254, 253, 254, 0) 0%, #fefdfe 100%);
+    background: linear-gradient(180deg, rgba(255, 253, 247, 0) 0%, #FFFDF7 100%);
   }
 
   img {
@@ -1860,32 +1870,33 @@ async function unpinCollection(collection: any) {
 }
 
 .main-content {
-  max-width: 108rem;
-  margin: -12rem auto 0;
+  max-width: 1080px;
+  margin: -10px auto 0;
+  position: relative;
 }
 
 .user-info-card {
   display: flex;
   align-items: flex-start;
-  gap: 1.2rem;
-  margin-bottom: 3rem;
-  border-radius: 1.2rem;
-  padding: 2.4rem;
-  background: linear-gradient(0deg, rgba(255, 255, 255, 0.8) 0%, #ffffff 100%);
-  box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
+  gap: 12px;
+  padding: 24px 0;
 
   .info-left {
     display: flex;
     align-items: center;
-    width: 10rem;
-    height: 10rem;
+    width: 108px;
+    height: 108px;
     line-height: 0;
+    margin-top: -60px;
+    position: relative;
+    z-index: 2;
 
     .avatar {
-      width: 10rem;
-      height: 10rem;
-      border-radius: 0.8rem;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      border: 4px solid #161122;
+      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
       object-fit: cover;
     }
   }
@@ -1897,96 +1908,78 @@ async function unpinCollection(collection: any) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 2rem;
 
       .text-info {
         .name-row {
           display: flex;
           align-items: center;
           .nickname {
-            font-size: 2rem;
-            font-weight: 500;
-            color: #101828;
+            font-size: 26px;
+            font-weight: 800;
+            color: #161122;
           }
         }
         .kyc-row {
           display: flex;
 
           span{
-            min-width: 5.6rem;
-            height: 2.8rem;
+            min-width: 56px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 0.8rem;
-            padding: 0 1rem;
-            border-radius: 0.6rem;
-            font-size: 1.2rem;
-            background: rgba(251,100,182,0.12);
-            color: #FB64B6;
+            margin-top: 8px;
+            padding: 0 10px;
+            border-radius: 6px;
+            border: 2px solid #FF4D8D;
+            font-size: 12px;
+            background: rgba(255, 77, 141, 0.12);
+            color: #FF4D8D;
           }
         }
         .id-row {
-          font-size: 1.4rem;
-          color: #6a7282;
+          font-size: 14px;
+          color: #161122;
         }
       }
 
       .actions {
         display: flex;
-        gap: 1.2rem;
+        gap: 12px;
         align-items: center;
 
         .btn {
-          min-width: 13.6rem;
-          height: 4.8rem;
-          padding: 0 1rem;
-          border-radius: 0.8rem;
+          min-width: 136px;
+          height: 48px;
+          padding: 0 10px;
+          border-radius: 13px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 1rem;
+          gap: 10px;
+          border: 2.5px solid #161122;
 
           &.edit {
-            background: #fb64b6;
-            color: #ffffff;
-            border: none;
+            background: #FFFFFF;
+            color: #161122;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
 
             &:hover{
-              position: relative;
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.1);
-              }
+              background: #FFFDF7;
+              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
             }
           }
 
           &.follow {
-            background: #fb64b6;
-            color: #ffffff;
-            border: none;
+            background: #FF4D8D;
+            color: #FFFFFF;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
             position: relative;
             overflow: hidden;
 
             &:hover {
-              position: relative;
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.1);
-              }
+              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
             }
 
             .hover-text {
@@ -1995,11 +1988,12 @@ async function unpinCollection(collection: any) {
 
             &.followed {
               position: relative;
-              background: #F5F5F5;
-              color: #6A7282;
+              background: #FFFDF7;
+              color: #161122;
 
               &:hover {
-                color: #fb64b6;
+                color: #FF4D8D;
+                box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
 
                 .btn-text {
                   display: none;
@@ -2012,36 +2006,24 @@ async function unpinCollection(collection: any) {
           }
 
           &.subscribe {
-            background: #00d3f2;
-            color: #ffffff;
-            border: none;
-            padding: 0 2rem;
+            background: #FF4D8D;
+            color: #FFFFFF;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            padding: 0 20px;
 
             &:hover {
-              position: relative;
-              transition: all 0.2s;
-
-              &::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.1);
-              }
+              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
             }
 
             &.subscribed {
               position: relative;
-              background: #F5F5F5;
-              color: #6A7282;
+              background: #FFFDF7;
+              color: #161122;
               cursor: not-allowed;
+              box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
               &:hover {
-                &::after {
-                  display: none;
-                }
+                box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
               }
             }
 
@@ -2050,20 +2032,22 @@ async function unpinCollection(collection: any) {
             }
           }
           &.share {
-            background: #F5F5F5;
-            color: #6A7282;
-            padding: 0 1.6rem;
+            background: #FFFFFF;
+            color: #161122;
+            padding: 0 16px;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
 
             .share-icon {
               display: inline-block;
-              width: 2.4rem;
-              height: 2.4rem;
+              width: 24px;
+              height: 24px;
               background-image: url('@/assets/images/user/share.png');
               background-size: cover;
             }
 
             &:hover {
-              color: #fb64b6;
+              color: #FF4D8D;
+              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
 
               .share-icon {
                 background-image: url('@/assets/images/user/share_hover.png');
@@ -2074,10 +2058,10 @@ async function unpinCollection(collection: any) {
             background: transparent;
             border: none;
             padding: 0;
-            width: 3.2rem;
+            width: 32px;
             img {
-              width: 2.4rem;
-              height: 2.4rem;
+              width: 24px;
+              height: 24px;
             }
           }
         }
@@ -2085,39 +2069,46 @@ async function unpinCollection(collection: any) {
         .more-menu-wrap {
           position: relative;
           img {
-            width: 1.8rem;
-            height: 1.8rem;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
           }
 
           .dropdown-menu {
             position: absolute;
             right: 0;
-            border-radius: 0.8rem;
-            padding: 0.6rem 0;
+            border-radius: 6px;
+            border: 2.5px solid #161122;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            padding: 6px 0;
             z-index: 10;
-            min-width: 10rem;
-            background: #FFFFFF;
-            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+            min-width: 100px;
+            background: #FFFDF7;
 
             &.bottom {
               top: 100%;
-              margin-top: 0.4rem;
+              margin-top: 4px;
             }
             &.top {
               bottom: 100%;
-              margin-bottom: 0.4rem;
+              margin-bottom: 4px;
             }
 
             .menu-item {
-              padding: 0.6rem 0;
-              font-size: 1.4rem;
-              color: #6a7282;
+              padding: 6px 0;
+              font-size: 14px;
+              color: #161122;
               cursor: pointer;
               text-align: center;
               &:hover {
-                font-weight: 500;
-                color: #364153;
+                font-weight: 800;
+                color: #FF4D8D;
+              }
+
+              &.block-item {
+                &.blocked {
+                  color: #FF4D8D;
+                }
               }
             }
           }
@@ -2127,10 +2118,12 @@ async function unpinCollection(collection: any) {
 
     .desc-box {
       position: relative;
+      margin-top: 20px;
+
       .desc-text {
-        font-size: 1.4rem;
-        color: #6a7282;
-        line-height: 2rem;
+        font-size: 14px;
+        color: #161122;
+        line-height: 20px;
         &.collapsed {
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -2142,18 +2135,18 @@ async function unpinCollection(collection: any) {
       .expand-btn {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        margin-top: 1rem;
+        gap: 6px;
+        margin-top: 10px;
         cursor: pointer;
-        color: #00d3f2;
-        font-size: 1.4rem;
+        color: #FF4D8D;
+        font-size: 14px;
 
         &.hide {
-          color: #99a1af;
+          color: #161122;
         }
         img {
-          width: 2rem;
-          height: 2rem;
+          width: 20px;
+          height: 20px;
         }
       }
     }
@@ -2164,26 +2157,30 @@ async function unpinCollection(collection: any) {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2.4rem;
-  border-bottom: 1px solid #f2f4f7;
+  margin-bottom: 24px;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+  padding: 16px 24px;
+  background: #FFFDF7;
 
   .posts-title {
     display: flex;
-    gap: 3rem;
-    font-size: 1.6rem;
-    color: #6A7282;
+    gap: 30px;
+    font-size: 16px;
+    color: #161122;
     cursor: pointer;
 
     .type-item {
-      padding-bottom: 2.4rem;
+      padding-bottom: 24px;
       &:hover{
-        color: #101828;
+        color: #161122;
       }
 
       &.active {
         position: relative;
-        color: #101828;
-        font-weight: 500;
+        color: #161122;
+        font-weight: 800;
 
         &::after{
           position: absolute;
@@ -2191,8 +2188,8 @@ async function unpinCollection(collection: any) {
           bottom: 0;
           content: "";
           width: 100%;
-          height: 0.2rem;
-          background-color: #FB64B6;
+          height: 3px;
+          background-color: #FF4D8D;
         }
       }
     }
@@ -2200,30 +2197,30 @@ async function unpinCollection(collection: any) {
 
   .stats-nums {
     display: flex;
-    gap: 2.4rem;
-    font-size: 1.4rem;
+    gap: 24px;
+    font-size: 14px;
     .stat-item {
-      color: #99A1AF;
+      color: #161122;
       cursor: pointer;
 
       &:hover:not(:last-child){
-        color: #fb64b6;
+        color: #FF4D8D;
         .val {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
 
       &.active {
-        color: #fb64b6;
+        color: #FF4D8D;
 
         .val {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
       .val {
-        color: #364153;
-        font-weight: 500;
-        margin-left: 0.4rem;
+        color: #161122;
+        font-weight: 800;
+        margin-left: 4px;
       }
     }
   }
@@ -2233,19 +2230,19 @@ async function unpinCollection(collection: any) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.4rem;
-  gap: 0.8rem;
+  margin-bottom: 24px;
+  gap: 8px;
 
   .collection-tabs-container {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 8px;
     flex: 1;
 
     .tab-prev-btn,
     .tab-next-btn {
-      width: 2rem;
-      height: 2rem;
+      width: 20px;
+      height: 20px;
       border: none;
       display: flex;
       align-items: center;
@@ -2255,8 +2252,8 @@ async function unpinCollection(collection: any) {
       flex-shrink: 0;
 
       img {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
       }
 
       &:disabled {
@@ -2268,7 +2265,7 @@ async function unpinCollection(collection: any) {
     .tabs {
       display: flex;
       flex-wrap: nowrap;
-      gap: 0.8rem;
+      gap: 8px;
       height: 100%;
 
       &::-webkit-scrollbar {
@@ -2280,18 +2277,21 @@ async function unpinCollection(collection: any) {
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        width: 14.8rem;
-        font-size: 1.4rem;
-        color: #6A7282;
+        width: 148px;
+        font-size: 14px;
+        color: #161122;
         cursor: pointer;
         position: relative;
-        padding: 0.8rem 1.6rem;
-        border: 1px solid #F5F5F5;
-        border-radius: 0.6rem;
+        padding: 8px 16px;
+        border: 2.5px solid #161122;
+        border-radius: 6px;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
+        background: #FFFDF7;
         white-space: nowrap;
 
         &.active {
-          background: #F5F5F5;
+          background: #FFFFFF;
+          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
         }
 
         .tab-title {
@@ -2302,9 +2302,9 @@ async function unpinCollection(collection: any) {
         }
 
         .tab-count {
-          margin-left: 0.4rem;
-          font-size: 1.2rem;
-          color: #99A1AF;
+          margin-left: 4px;
+          font-size: 12px;
+          color: #161122;
         }
       }
     }
@@ -2312,15 +2312,15 @@ async function unpinCollection(collection: any) {
 
   .filters {
     display: flex;
-    gap: 2rem;
+    gap: 20px;
     align-items: center;
 
     .sort-box {
       display: flex;
 
       .sort-btn {
-        width: 2.4rem;
-        height: 2.4rem;
+        width: 24px;
+        height: 24px;
         cursor: pointer;
         transition: opacity 0.3s ease;
 
@@ -2333,35 +2333,36 @@ async function unpinCollection(collection: any) {
     .more-menu-wrap {
       position: relative;
       img {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
         cursor: pointer;
       }
 
       .dropdown-menu {
         position: absolute;
         right: 0;
-        border-radius: 0.8rem;
-        padding: 1.2rem 0.8rem;
+        border-radius: 6px;
+        border: 2.5px solid #161122;
+        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+        padding: 12px 8px;
         z-index: 10;
-        min-width: 10rem;
+        min-width: 100px;
         width: max-content;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0px 0px 12px -4px rgba(0,0,0,0.18);
+        background: #FFFDF7;
 
         &.bottom {
           top: 100%;
-          margin-top: 0.6rem;
+          margin-top: 6px;
         }
         &.top {
           bottom: 100%;
-          margin-bottom: 0.6rem;
+          margin-bottom: 6px;
         }
 
         .menu-item {
-          margin-bottom: 1.2rem;
-          font-size: 1.4rem;
-          color: #99A1AF;
+          margin-bottom: 12px;
+          font-size: 14px;
+          color: #161122;
           cursor: pointer;
           text-align: center;
 
@@ -2370,7 +2371,7 @@ async function unpinCollection(collection: any) {
           }
 
           &:hover {
-            color: #364153;
+            color: #FF4D8D;
           }
         }
       }
@@ -2379,23 +2380,23 @@ async function unpinCollection(collection: any) {
 }
 
 .posts-container {
-  min-height: 40rem;
+  min-height: 400px;
 
   .waterfall {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.6rem;
+    gap: 16px;
     width: 100%;
     margin: 0 auto;
   }
 
   .post-card {
-    width: 25.8rem;
+    width: 258px;
 
     .card-cover {
       position: relative;
       width: 100%;
-      height: 34.4rem;
+      height: 344px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2403,8 +2404,10 @@ async function unpinCollection(collection: any) {
       img.cover-img {
         width: 100%;
         display: block;
-        height: 34.4rem;
-        border-radius: 1.2rem;
+        height: 344px;
+        border-radius: 16px;
+        border: 2.5px solid #161122;
+        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
         object-fit: cover;
       }
 
@@ -2414,31 +2417,33 @@ async function unpinCollection(collection: any) {
         left: 50%;
         transform: translate(-50%, -42%);
         img {
-          width: 8rem;
-          height: 8rem;
+          width: 80px;
+          height: 80px;
         }
       }
 
       .pinned-tag {
         position: absolute;
-        top: 0.8rem;
-        left: 0.8rem;
+        top: 8px;
+        left: 8px;
         background: #FFFFFF;
-        color: #364153;
-        padding: 0.7rem 1rem;
-        border-radius: 0.6rem;
-        font-size: 1.2rem;
+        color: #161122;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 2px solid #161122;
+        font-size: 12px;
+        font-weight: 800;
       }
     }
 
     .card-info {
-      padding: 1.2rem 0 0;
+      padding: 12px 0 0;
 
       .card-desc {
-        font-size: 1.4rem;
-        color: #101828;
-        margin-bottom: 1.2rem;
-        line-height: 2rem;
+        font-size: 14px;
+        color: #161122;
+        margin-bottom: 12px;
+        line-height: 20px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         line-clamp: 2;
@@ -2454,46 +2459,47 @@ async function unpinCollection(collection: any) {
         align-items: center;
 
         .time {
-          font-size: 1.2rem;
-          color: #99A1AF;
+          font-size: 12px;
+          color: #161122;
         }
 
         .more-btn-wrap {
           position: relative;
           img {
-            width: 1.8rem;
-            height: 1.8rem;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
           }
 
           .dropdown-menu {
             position: absolute;
             right: 0;
-            border-radius: 0.8rem;
-            padding: 0.6rem 0;
+            border-radius: 6px;
+            border: 2.5px solid #161122;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            padding: 6px 0;
             z-index: 10;
-            min-width: 10rem;
-            background: #FFFFFF;
-            box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+            min-width: 100px;
+            background: #FFFDF7;
 
             &.bottom {
               top: 100%;
-              margin-top: 0.4rem;
+              margin-top: 4px;
             }
             &.top {
               bottom: 100%;
-              margin-bottom: 0.4rem;
+              margin-bottom: 4px;
             }
 
             .menu-item {
-              padding: 0.6rem 0;
-              font-size: 1.4rem;
-              color: #6a7282;
+              padding: 6px 0;
+              font-size: 14px;
+              color: #161122;
               cursor: pointer;
               text-align: center;
               &:hover {
-                font-weight: 500;
-                color: #364153;
+                font-weight: 800;
+                color: #FF4D8D;
               }
             }
           }
@@ -2508,9 +2514,9 @@ async function unpinCollection(collection: any) {
 
   .no-data {
     text-align: center;
-    color: #99a1af;
-    font-size: 1.4rem;
-    padding: 4rem 0;
+    color: #161122;
+    font-size: 14px;
+    padding: 40px 0;
   }
 
   .loading-state {
@@ -2518,22 +2524,22 @@ async function unpinCollection(collection: any) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 40rem;
+    min-height: 400px;
   }
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid #F5F5F5;
-    border-top: 0.4rem solid #6A7282;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #161122;
+    border-top: 4px solid #FF4D8D;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 1.6rem;
+    margin-bottom: 16px;
   }
 
   .loading-text {
-    font-size: 1.6rem;
-    color: #6A7282;
+    font-size: 16px;
+    color: #161122;
   }
 
   @keyframes spin {
@@ -2547,32 +2553,34 @@ async function unpinCollection(collection: any) {
 }
 
 .follow-container {
-  background: #ffffff;
-  border-radius: 1.2rem;
-  padding: 0 0 2.4rem;
-  min-height: 40rem;
+  background: #FFFDF7;
+  border-radius: 16px;
+  border: 2.5px solid #161122;
+  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
+  padding: 0 0 24px;
+  min-height: 400px;
 
   .loading-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 40rem;
+    min-height: 400px;
   }
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid #F5F5F5;
-    border-top: 0.4rem solid #6A7282;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #161122;
+    border-top: 4px solid #FF4D8D;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 1.6rem;
+    margin-bottom: 16px;
   }
 
   .loading-text {
-    font-size: 1.6rem;
-    color: #6A7282;
+    font-size: 16px;
+    color: #161122;
   }
 
   @keyframes spin {
@@ -2589,87 +2597,83 @@ async function unpinCollection(collection: any) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8rem 0;
+    padding: 80px 0;
     .hide-icon {
-      width: 4.8rem;
-      height: 4.8rem;
-      margin-bottom: 1.2rem;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
     }
     p {
-      font-weight: 500;
-      font-size: 1.6rem;
-      color: #99A1AF;
+      font-weight: 800;
+      font-size: 16px;
+      color: #161122;
     }
   }
 
   .follow-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2.4rem;
+    gap: 24px;
   }
 
-  .follow-card {
-    padding: 1.8rem;
-    border-radius: 0.8rem;
-    transition: all 0.2s;
-    cursor: pointer;
+.follow-card {
+      padding: 18px;
+      border-radius: 16px;
+      border: 3px solid #161122;
+      box-shadow: 4px 4px 0 #161122;
+      background: #FFFDF7;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+      cursor: pointer;
 
-    &:hover {
-      background: #ffffff;
-      box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.06);
-    }
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 6px 6px 0 #161122;
+      }
 
     .card-top {
       display: flex;
       align-items: center;
-      gap: 1.2rem;
-      margin-bottom: 1.2rem;
+      gap: 12px;
+      margin-bottom: 12px;
 
       .user-avatar {
-        width: 4.8rem;
-        height: 4.8rem;
-        border-radius: 0.8rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2.5px solid #161122;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
         object-fit: cover;
       }
       .user-meta {
         flex: 1;
         .nickname {
-          font-size: 1.4rem;
-          font-weight: 500;
-          color: #101828;
-          margin-bottom: 0.6rem;
+          font-size: 14px;
+          font-weight: 800;
+          color: #161122;
+          margin-bottom: 6px;
         }
         .fans-count {
-          font-size: 1.2rem;
-          color: #99A1AF;
+          font-size: 12px;
+          color: #161122;
         }
       }
 
       .follow-btn {
-        min-width: 9.8rem;
-        height: 4rem;
-        padding: 0 1.6rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        min-width: 98px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 13px;
+        border: 2.5px solid #161122;
+        font-size: 14px;
         cursor: pointer;
-        background: #fb64b6;
-        color: #ffffff;
+        background: #FF4D8D;
+        color: #FFFFFF;
+        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
         position: relative;
         overflow: hidden;
 
         &:hover {
-          position: relative;
-
-          &::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-          }
+          box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
         }
 
         .hover-text {
@@ -2677,11 +2681,13 @@ async function unpinCollection(collection: any) {
         }
 
         &.followed {
-          background: #F5F5F5;
-          color: #6A7282;
+          background: #FFFDF7;
+          color: #161122;
+          box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
           &:hover {
-            color: #fb64b6;
+            color: #FF4D8D;
+            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
 
             .btn-text {
               display: none;
@@ -2695,38 +2701,38 @@ async function unpinCollection(collection: any) {
     }
 
     .card-bio {
-      height: 3.6rem;
-      font-size: 1.2rem;
-      line-height: 1.8rem;
+      height: 36px;
+      font-size: 12px;
+      line-height: 18px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      color: #6a7282;
+      color: #161122;
     }
   }
 
   .pagination-wrap {
     display: flex;
     justify-content: center;
-    padding-top: 2.4rem;
+    padding-top: 24px;
 
     :deep(.el-pagination) {
       .el-pager li {
         background: transparent;
         &.is-active {
-          color: #fb64b6;
-          font-weight: 500;
+          color: #FF4D8D;
+          font-weight: 800;
         }
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
       button {
         background: transparent;
         &:hover {
-          color: #fb64b6;
+          color: #FF4D8D;
         }
       }
     }
@@ -2739,7 +2745,7 @@ async function unpinCollection(collection: any) {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.3);
   z-index: 999;
   display: flex;
   justify-content: center;
@@ -2747,19 +2753,21 @@ async function unpinCollection(collection: any) {
 
   .pin-modal {
     position: relative;
-    width: 70rem;
-    background: #ffffff;
-    border-radius: 1.2rem;
-    padding: 1.8rem 0;
+    width: 700px;
+    background: #FFFDF7;
+    border-radius: 16px;
+    border: 2.5px solid #161122;
+    box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.2);
+    padding: 18px 0;
     display: flex;
     flex-direction: column;
 
     .close-icon {
       position: absolute;
-      top: 1.8rem;
-      right: 1.8rem;
-      width: 2rem;
-      height: 2rem;
+      top: 18px;
+      right: 18px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
@@ -2767,30 +2775,30 @@ async function unpinCollection(collection: any) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 2.4rem 1.8rem;
-      margin-bottom: 1.8rem;
-      border-bottom: 1px solid #F5F5F5;;
+      padding: 0 24px 18px;
+      margin-bottom: 18px;
+      border-bottom: 2.5px solid #161122;
 
       .title {
-        font-size: 1.6rem;
-        font-weight: 500;
-        color: #364153;
+        font-size: 16px;
+        font-weight: 800;
+        color: #161122;
       }
     }
 
     .modal-desc {
-      padding: 0 2.4rem;
-      font-size: 1.4rem;
-      color: #99A1AF;
-      margin-bottom: 1.8rem;
+      padding: 0 24px;
+      font-size: 14px;
+      color: #161122;
+      margin-bottom: 18px;
     }
 
     .pinned-list {
       display: flex;
-      gap: 1.2rem;
-      margin-bottom: 1.8rem;
-      padding: 0 2.4rem 2.4rem;
-      border-bottom: 1px solid #F5F5F5;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 0 24px 24px;
+      border-bottom: 2.5px solid #161122;
 
       .pinned-item {
         flex: 1;
@@ -2798,17 +2806,18 @@ async function unpinCollection(collection: any) {
 
         .item-cover {
           width: 100%;
-          margin-bottom: 1.2rem;
+          margin-bottom: 12px;
           aspect-ratio: 3/4;
           object-fit: cover;
-          border: 2px solid transparent;
-          border-radius: 0.8rem;
+          border: 2.5px solid #161122;
+          border-radius: 8px;
+          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.15);
           transition: all 0.2s;
         }
 
         .item-title {
-          font-size: 1.4rem;
-          color: #101828;
+          font-size: 14px;
+          color: #161122;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2816,11 +2825,12 @@ async function unpinCollection(collection: any) {
 
         &.selected {
           .item-cover {
-            border-color: #fb64b6;
+            border-color: #FF4D8D;
+            box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.3);
           }
 
           .item-title {
-            color: #fb64b6;
+            color: #FF4D8D;
           }
         }
       }
@@ -2828,64 +2838,77 @@ async function unpinCollection(collection: any) {
 
     .confirm-btn {
       align-self: center;
-      width: 24rem;
-      height: 4.8rem;
-      background: #fb64b6;
-      color: #ffffff;
-      border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      width: 240px;
+      height: 48px;
+      background: #FF4D8D;
+      color: #FFFFFF;
+      border: 2.5px solid #161122;
+      border-radius: 13px;
+      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+      font-size: 14px;
       cursor: pointer;
 
       &:disabled {
-        background: rgba(251, 100, 182, 0.5);
+        background: rgba(255, 77, 141, 0.5);
         cursor: not-allowed;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
       }
 
       &:hover:not(:disabled) {
-        position: relative;
-
-        &::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-        }
+        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
       }
     }
   }
 }
 
-/* Collections Styles */
 .collections-container {
-  min-height: 40rem;
+  min-height: 400px;
 
   .collections-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.6rem;
+    gap: 16px;
   }
 
   .collection-card {
-    width: 25.8rem;
+    width: 258px;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 #161122;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 6px 6px 0 #161122;
+
+      .cover-img {
+        transform: scale(1.06);
+      }
+    }
 
     .card-cover {
       position: relative;
       width: 100%;
-      height: 34.4rem;
+      height: 260px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      overflow: hidden;
+      border-radius: 16px 16px 0 0;
+
       img.cover-img {
         width: 100%;
         display: block;
-        height: 34.4rem;
-        border-radius: 1.2rem;
+        height: 100%;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
         object-fit: cover;
+        transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
       }
 
       .video-overlay {
@@ -2894,8 +2917,8 @@ async function unpinCollection(collection: any) {
         left: 50%;
         transform: translate(-50%, -42%);
         img {
-          width: 8rem;
-          height: 8rem;
+          width: 60px;
+          height: 60px;
         }
       }
 
@@ -2903,95 +2926,96 @@ async function unpinCollection(collection: any) {
         position: absolute;
         top: 0;
         right: 0;
-        width: 10rem;
-        height: 10rem;
-        background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
-        border-radius: 0 1.2rem 0 0;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(222deg, #FF4D8D 0%, rgba(255, 77, 141, 0) 50%);
+        border-radius: 0 16px 0 0;
         display: flex;
         align-items: flex-start;
         justify-content: flex-end;
-        padding: 0.6rem;
+        padding: 6px;
 
         .r18-text {
-          font-size: 1.6rem;
-          font-weight: 500;
+          font-size: 14px;
+          font-weight: 800;
           color: #FFFFFF;
-          text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
+          text-shadow: 0px 0px 8px rgba(22, 17, 34, 0.18);
         }
       }
 
       .pinned-tag {
         position: absolute;
-        top: 0.8rem;
-        left: 0.8rem;
-        background: #FFFFFF;
-        color: #364153;
-        padding: 0.7rem 1rem;
-        border-radius: 0.6rem;
-        font-size: 1.2rem;
+        top: 10px;
+        left: 10px;
+        background: #FFD23F;
+        color: #161122;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 2px solid #161122;
+        font-size: 11px;
+        font-weight: 800;
+        box-shadow: 2px 2px 0 #161122;
       }
 
       .card-bottom{
         position: absolute;
         bottom: 0;
         width: 100%;
-        height: 6.4rem;
+        height: 56px;
         display: flex;
         align-items: flex-end;
-        padding: 0 1.2rem 1.2rem;
-        border-radius: 0 0 1.2rem 1.2rem;
-        background: linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
+        padding: 0 12px 12px;
+        border-radius: 0 0 0 0;
+        background: linear-gradient(0deg, rgba(22, 17, 34, 0.2) 0%, rgba(22, 17, 34, 0) 100%);
       }
 
       .update-badge{
-        font-size: 1.2rem;
+        font-size: 11px;
         color: #FFFFFF;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        font-weight: 700;
+        text-shadow: 0 1px 3px rgba(22, 17, 34, 0.3);
       }
 
       .card-actions {
         margin-left: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
+        gap: 6px;
 
         .card-action-btn {
-          width: 2.8rem;
-          height: 2.8rem;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.15);
+          border: 2px solid #161122;
+          background: rgba(255, 253, 247, 0.9);
+          box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+          &:hover {
+            transform: scale(1.1);
+          }
 
           img {
-            width: 1.4rem;
-            height: 1.4rem;
+            width: 14px;
+            height: 14px;
           }
         }
       }
     }
 
     .card-info {
-      padding: 1.2rem 0 0;
+      padding: 12px 14px 14px;
 
       .card-desc {
-        font-size: 1.4rem;
-        color: #101828;
-        margin-bottom: 1.2rem;
-        line-height: 2rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        word-break: break-word;
-        overflow-wrap: anywhere;font-size: 1.4rem;
-        color: #101828;
-        margin-bottom: 1.2rem;
-        line-height: 2rem;
+        font-size: 14px;
+        font-weight: 800;
+        color: #161122;
+        margin-bottom: 0;
+        line-height: 20px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         line-clamp: 2;
@@ -3001,10 +3025,6 @@ async function unpinCollection(collection: any) {
         overflow-wrap: anywhere;
       }
     }
-
-    &:hover .card-footer .more-btn-wrap img {
-      opacity: 1;
-    }
   }
 }
 
@@ -3013,22 +3033,29 @@ async function unpinCollection(collection: any) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 40rem;
+  min-height: 400px;
 }
 
 .loading-spinner {
-  width: 4rem;
-  height: 4rem;
-  border: 0.4rem solid #F5F5F5;
-  border-top: 0.4rem solid #6A7282;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #161122;
+  border-top: 4px solid #FF4D8D;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1.6rem;
+  margin-bottom: 16px;
+}
+
+.small {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+  border-top-width: 3px;
 }
 
 .loading-text {
-  font-size: 1.6rem;
-  color: #6A7282;
+  font-size: 16px;
+  color: #161122;
 }
 
 .block-tip {
@@ -3036,18 +3063,19 @@ async function unpinCollection(collection: any) {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-top: -0.8rem;
-  padding: 1rem;
-  background: rgba(0,0,0,0.2);
-  box-shadow: 0px 0px 18px 0px rgba(0,0,0,0.08);
-  color: #FFFFFF;
-  border-radius: 0.8rem;
-  font-size: 1.2rem;
-  line-height: 1.6;
+  margin-top: -8px;
+  padding: 10px;
+  background: #161122;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.3);
+  color: #FFFDF7;
+  border-radius: 6px;
+  border: 2px solid #161122;
+  font-size: 12px;
+  line-height: 16px;
   white-space: nowrap;
   z-index: 10;
   text-align: center;
-  width: 22rem;
+  width: 220px;
   white-space: normal;
   word-break: break-word;
 }
@@ -3057,20 +3085,28 @@ async function unpinCollection(collection: any) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 15rem 0;
+  padding: 150px 0;
   text-align: center;
 
   .blocked-icon {
-    width: 4.8rem;
-    height: 4.8rem;
-    margin-bottom: 1.2rem;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
   }
 
   p {
-    font-size: 1.4rem;
-    color: #6A7282;
-    line-height: 1.6;
+    font-size: 14px;
+    color: #161122;
+    line-height: 16px;
   }
+}
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+  color: #161122;
+  font-size: 14px;
 }
 
 @keyframes spin {
@@ -3082,6 +3118,19 @@ async function unpinCollection(collection: any) {
   }
 }
 
+.collection-card {
+  animation: cardIn 480ms cubic-bezier(0.16,1,0.3,1) backwards;
+}
+
+.follow-card {
+  animation: cardIn 480ms cubic-bezier(0.16,1,0.3,1) backwards;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .collection-header {
   display: flex;
   align-items: center;
@@ -3089,23 +3138,25 @@ async function unpinCollection(collection: any) {
   .create-collection-btn {
     display: flex;
     align-items: center;
-    height: 4rem;
-    gap: 0.6rem;
-    padding: 0 2rem;
-    background: #F5F5F5;
-    color: #6A7282;
-    border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    height: 40px;
+    gap: 6px;
+    padding: 0 20px;
+    background: #FFFDF7;
+    color: #161122;
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+    font-size: 14px;
     cursor: pointer;
 
     &:hover{
-      color: #FB64B6;
+      color: #FF4D8D;
+      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
     }
 
     .plus-icon {
-      width: 2rem;
-      height: 2rem;
+      width: 20px;
+      height: 20px;
     }
   }
 }
@@ -3124,7 +3175,7 @@ async function unpinCollection(collection: any) {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(22, 17, 34, 0.3);
   }
 
   .modal-content {
@@ -3132,77 +3183,71 @@ async function unpinCollection(collection: any) {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50rem;
-    background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 1.8rem 2.4rem 2.4rem;
+    width: 500px;
+    background-color: #FFFDF7;
+    border-radius: 16px;
+    border: 2.5px solid #161122;
+    box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.2);
+    padding: 18px 24px 24px;
     text-align: center;
 
     .close-btn {
       position: absolute;
-      top: 2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
+      top: 20px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-title {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #101828;
-      margin-bottom: 1.6rem;
+      font-size: 18px;
+      font-weight: 800;
+      color: #161122;
+      margin-bottom: 16px;
     }
 
     .modal-message {
-      font-size: 1.4rem;
-      color: #6A7282;
-      line-height: 1.6;
-      margin-bottom: 2.4rem;
+      font-size: 14px;
+      color: #161122;
+      line-height: 16px;
+      margin-bottom: 24px;
     }
 
     .modal-footer {
       display: flex;
-      gap: 1.6rem;
+      gap: 16px;
       justify-content: center;
 
       .btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 13.6rem;
-        height: 4.4rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        min-width: 136px;
+        height: 44px;
+        border-radius: 13px;
+        font-size: 14px;
         cursor: pointer;
-        border: none;
+        border: 2.5px solid #161122;
 
         &.btn-cancel {
-          background: #F5F5F5;
-          color: #6A7282;
+          background: #FFFDF7;
+          color: #161122;
+          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
 
           &:hover {
-            color: #fb64b6;
+            color: #FF4D8D;
+            box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
           }
         }
 
         &.btn-confirm {
-          border: none;
-          background: #fb64b6;
-          color: #ffffff;
+          background: #FF4D8D;
+          color: #FFFFFF;
+          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
 
           &:hover {
-            position: relative;
-            &::after {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              background: rgba(255, 255, 255, 0.1);
-              z-index: 1;
-            }
+            box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
           }
         }
       }

@@ -1,5 +1,6 @@
 <template>
   <div class="register-page">
+    <Header ref="headerRef" :cur="-1"></Header>
     <div class="auth-grid">
       <div class="auth-brand">
         <div class="brand-glow" aria-hidden="true"></div>
@@ -88,9 +89,9 @@
               />
               <button
                 class="send-btn"
-                :class="isSend || !isGrecaptchaReady ? 'disabled' : ''"
+                :class="isSend ? 'disabled' : ''"
                 type="submit"
-                :disabled="!isGrecaptchaReady"
+                :disabled="isSend"
               >
                 {{ emailTxt }}
               </button>
@@ -130,9 +131,9 @@
         <div class="auth-tip">
           <span v-if="locale == 'jp'" v-html="t('register.tipInfo')"></span>
           <span v-else v-html="t('register.tipInfo')"></span>
-          <a class="auth-link">{{ t("register.terms") }}</a>
+          <span class="auth-terms">{{ t("register.terms") }}</span>
           {{ t("register.infix") }}
-          <a class="auth-link">{{ t("register.privacy") }}</a>
+          <span class="auth-terms">{{ t("register.privacy") }}</span>
           <template v-if="locale == 'jp'"> {{ t("register.tipEnd") }}</template>
         </div>
       </div>
@@ -156,6 +157,7 @@
 </template>
 
 <script setup lang="ts" name="Register">
+import Header from "@/components/Header.vue";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
@@ -168,6 +170,8 @@ import router from "@/router";
 import { trackSignUp } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
+
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
 const emailToken = ref("");
@@ -191,7 +195,6 @@ const isGrecaptchaReady = ref(false);
 const hasEverSent = ref(false);
 
 const emailTxt = computed(() => {
-  if (!isGrecaptchaReady.value) return t("grecaptcha.loading");
   return hasEverSent.value ? t("register.resend") : t("register.send");
 });
 
@@ -564,17 +567,16 @@ function googleRegister() {
   width: 100%;
   min-height: 100vh;
   background: #FFFBF4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 24px;
+  padding-top: 80px;
 
   .auth-grid {
     display: grid;
     grid-template-columns: 1.02fr 1fr;
     gap: 8px;
     width: 100%;
-    max-width: 960px;
+    max-width: 1320px;
+    margin: 0 auto 32px;
+    padding: 0 28px;
     align-items: stretch;
   }
 
@@ -589,7 +591,7 @@ function googleRegister() {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 520px;
+    min-height: 620px;
 
     .brand-glow {
       position: absolute;
@@ -958,6 +960,12 @@ function googleRegister() {
     line-height: 1.6;
   }
 
+  .auth-terms {
+    color: #FF4D8D;
+    font-weight: 800;
+    cursor: default;
+  }
+
   .load {
     position: fixed;
     left: 0;
@@ -987,12 +995,11 @@ function googleRegister() {
 
 @media (max-width: 900px) {
   .register-page {
-    padding: 20px 16px;
-    align-items: flex-start;
-
     .auth-grid {
       grid-template-columns: 1fr;
       max-width: 520px;
+      margin: 0 auto 20px;
+      padding: 0 16px;
     }
 
     .auth-brand {
@@ -1012,7 +1019,10 @@ function googleRegister() {
 
 @media (max-width: 480px) {
   .register-page {
-    padding: 16px 12px;
+    .auth-grid {
+      margin: 0 auto 16px;
+      padding: 0 12px;
+    }
 
     .auth-brand {
       padding: 24px 20px;

@@ -70,26 +70,26 @@ function handleConfirm() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50rem;
+    width: 500px;
     background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 1.8rem 2.4rem;
+    border-radius: 12px;
+    padding: 18px 24px;
     text-align: center;
 
     .close-btn {
       position: absolute;
-      top: 2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
+      top: 20px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-header {
-      margin-bottom: 2.4rem;
+      margin-bottom: 24px;
 
       .modal-title {
-        font-size: 1.8rem;
+        font-size: 18px;
         font-weight: bold;
         color: #364153;
         margin: 0;
@@ -97,34 +97,34 @@ function handleConfirm() {
     }
 
     .modal-body {
-      margin-bottom: 2.4rem;
+      margin-bottom: 24px;
       text-align: left;
 
       .confirm-text {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: #364153;
-        line-height: 2rem;
-        margin-bottom: 1rem;
+        line-height: 20px;
+        margin-bottom: 10px;
       }
 
       .note-text {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: #6A7282;
-        line-height: 2rem;
+        line-height: 20px;
       }
     }
 
     .modal-footer {
       display: flex;
       justify-content: center;
-      gap: 2.4rem;
+      gap: 24px;
 
       button {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
       }
 

@@ -265,7 +265,7 @@ function adjustTooltipPosition(event: MouseEvent) {
     tooltip.style.left = '100%';
     tooltip.style.right = 'auto';
     tooltip.style.transform = 'translateY(-50%)';
-    tooltip.style.marginLeft = '2rem';
+    tooltip.style.marginLeft = '20px';
     tooltip.style.marginRight = '0';
     tooltip.classList.remove('tooltip-left');
 
@@ -276,7 +276,7 @@ function adjustTooltipPosition(event: MouseEvent) {
       tooltip.style.left = 'auto';
       tooltip.style.right = '100%';
       tooltip.style.marginLeft = '0';
-      tooltip.style.marginRight = '2rem';
+      tooltip.style.marginRight = '20px';
       tooltip.classList.add('tooltip-left');
     }
   }
@@ -408,10 +408,10 @@ function handleModalKeydown(e: KeyboardEvent) {
 }
 
 .modal-content {
-  width: 84rem;
+  width: 840px;
   max-height: 90vh;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -421,41 +421,41 @@ function handleModalKeydown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2rem 2.4rem;
+  padding: 20px 24px;
   border-bottom: 1px solid #F5F5F5;
   flex-shrink: 0;
 
   h3 {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 18px;
     font-weight: 500;
     color: #101828;
   }
 
   .close-btn {
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
   }
 }
 
 .modal-body {
-  padding: 2.4rem;
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
 }
 
 .form-group {
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 
   .form-label {
     display: flex;
     align-items: center;
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #364153;
-    margin-bottom: 1.2rem;
-    gap: 1rem;
+    margin-bottom: 12px;
+    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -463,18 +463,18 @@ function handleModalKeydown(e: KeyboardEvent) {
     }
 
     .char-counter {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #99A1AF;
     }
   }
 
   .form-input {
     width: 100%;
-    height: 5rem;
-    padding: 1rem;
+    height: 50px;
+    padding: 10px;
     border: 1px solid #F5F5F5;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
+    border-radius: 8px;
+    font-size: 16px;
     color: #364153;
     background: #F5F5F5;
     outline: none;
@@ -491,16 +491,16 @@ function handleModalKeydown(e: KeyboardEvent) {
 
   .form-textarea {
     width: 100%;
-    height: 20rem;
-    padding: 1rem;
+    height: 200px;
+    padding: 10px;
     border: 1px solid #F5F5F5;
-    border-radius: 0.8rem;
-    font-size: 1.6rem;
+    border-radius: 8px;
+    font-size: 16px;
     color: #364153;
-    min-height: 20rem;
+    min-height: 200px;
     resize: none;
     outline: none;
-    line-height: 2.4rem;
+    line-height: 24px;
     background: #F5F5F5;
     box-sizing: border-box;
 
@@ -515,8 +515,8 @@ function handleModalKeydown(e: KeyboardEvent) {
 
   .error-message {
     color: #FA2D47;
-    font-size: 1.2rem;
-    margin-top: 1.2rem;
+    font-size: 12px;
+    margin-top: 12px;
     margin-bottom: 0;
   }
 }
@@ -535,8 +535,8 @@ function handleModalKeydown(e: KeyboardEvent) {
   z-index: 30;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -545,9 +545,9 @@ function handleModalKeydown(e: KeyboardEvent) {
   top: 50%;
   left: 100%;
   transform: translateY(-50%);
-  margin-left: 0.8rem;
-  width: 1.2rem;
-  height: 3.3rem;
+  margin-left: 8px;
+  width: 12px;
+  height: 33px;
   background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
   background-size: contain;
   flex-shrink: 0;
@@ -563,13 +563,13 @@ function handleModalKeydown(e: KeyboardEvent) {
   top: 50%;
   left: 100%;
   transform: translateY(-50%);
-  margin-left: 2rem;
-  padding: 1.8rem;
-  width: 28rem;
+  margin-left: 20px;
+  padding: 18px;
+  width: 280px;
   background: #FFFFFF;
-  font-size: 1.2rem;
-  line-height: 1.6rem;
-  border-radius: 0.8rem;
+  font-size: 12px;
+  line-height: 16px;
+  border-radius: 8px;
   white-space: normal;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
@@ -578,8 +578,8 @@ function handleModalKeydown(e: KeyboardEvent) {
   transition: all 0.2s ease;
 
   .tooltip-content {
-    font-size: 1.2rem;
-    line-height: 2rem;
+    font-size: 12px;
+    line-height: 20px;
     color: #99A1AF;
 
     :deep(span) {
@@ -600,22 +600,22 @@ function handleModalKeydown(e: KeyboardEvent) {
 
 .sensitive-options {
   display: flex;
-  gap: 3.2rem;
-  margin-top: 1.2rem;
+  gap: 32px;
+  margin-top: 12px;
 
   .option {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 8px;
     cursor: pointer;
 
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 24px;
+      height: 24px;
     }
 
     span {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #364153;
     }
   }
@@ -626,11 +626,11 @@ function handleModalKeydown(e: KeyboardEvent) {
     .cover-label {
       display: flex;
       align-items: center;
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
-      margin-bottom: 1.2rem;
-      gap: 1rem;
+      margin-bottom: 12px;
+      gap: 10px;
 
       .required {
         font-weight: normal;
@@ -641,16 +641,16 @@ function handleModalKeydown(e: KeyboardEvent) {
     .cover-upload-box {
       display: flex;
       align-items: flex-end;
-      gap: 1.2rem;
+      gap: 12px;
     }
 
     .cover-upload {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 18rem;
-      height: 24rem;
-      border-radius: 1.2rem;
+      width: 180px;
+      height: 240px;
+      border-radius: 12px;
       cursor: pointer;
       overflow: hidden;
       background: #F5F5F5;
@@ -665,22 +665,22 @@ function handleModalKeydown(e: KeyboardEvent) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1rem;
+        gap: 10px;
 
         img {
-          width: 4.4rem;
-          height: 4.4rem;
+          width: 44px;
+          height: 44px;
         }
 
         span {
-          font-size: 1.6rem;
+          font-size: 16px;
           color: #6A7282;
         }
       }
     }
 
     .set-cover {
-      font-size: 1.6rem;
+      font-size: 16px;
       color: #FB64B6;
       cursor: pointer;
 
@@ -695,24 +695,24 @@ function handleModalKeydown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.4rem;
-  margin-top: 3rem;
+  gap: 24px;
+  margin-top: 30px;
 }
 
 .edit-sync-tip {
   color: #FA2D47;
-  font-size: 1.4rem;
-  margin-top: 1rem;
+  font-size: 14px;
+  margin-top: 10px;
   margin-bottom: 0;
   text-align: center;
 }
 
 .btn {
-  min-width: 13.6rem;
-  height: 4.8rem;
-  padding: 0 4.8rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  min-width: 136px;
+  height: 48px;
+  padding: 0 48px;
+  border-radius: 8px;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   transition: all 0.2s;

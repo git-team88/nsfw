@@ -68,10 +68,10 @@ const closeModal = () => {
 
   .close-btn {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
-    width: 3rem;
-    height: 3rem;
+    top: 20px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
     cursor: pointer;
     z-index: 10;
   }

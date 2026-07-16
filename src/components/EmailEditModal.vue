@@ -268,42 +268,42 @@ function saveEmail() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50rem;
+    width: 500px;
     background: #FFFFFF;
-    border-radius: 1.2rem;
-    padding: 0 0 1.8rem;
+    border-radius: 12px;
+    padding: 0 0 18px;
 
     .close-btn {
       position: absolute;
-      top: 2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
+      top: 20px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-title {
-      padding: 1.8rem 2.4rem;
+      padding: 18px 24px;
       border-bottom: 1px solid #F5F5F5;
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
     }
 
     .modal-form {
-      margin-bottom: 1.8rem;
-      padding: 1.8rem 3.2rem;
+      margin-bottom: 18px;
+      padding: 18px 32px;
       border-bottom: 1px solid #F5F5F5;
     }
 
     .form-item {
-      margin-bottom: 1.6rem;
+      margin-bottom: 16px;
     }
 
     .form-label {
       display: block;
-      margin-bottom: 0.8rem;
-      font-size: 1.4rem;
+      margin-bottom: 8px;
+      font-size: 14px;
       color: #6A7282;
     }
 
@@ -313,11 +313,11 @@ function saveEmail() {
 
     .form-input {
       width: 100%;
-      height: 5rem;
-      padding: 1.2rem 1.6rem;
+      height: 50px;
+      padding: 12px 16px;
       border: 1px solid #F5F5F5;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       color: #364153;
       outline: none;
       background: #F5F5F5;
@@ -334,16 +334,16 @@ function saveEmail() {
 
     .code-input-group {
       display: flex;
-      padding-right: 2rem;
-      border-radius: 0.8rem;
-      gap: 1rem;
+      padding-right: 20px;
+      border-radius: 8px;
+      gap: 10px;
       background: #F5F5F5;
 
       .code-input {
         flex: 1;
-        height: 5rem;
-        padding: 1.2rem 1.6rem;
-        font-size: 1.4rem;
+        height: 50px;
+        padding: 12px 16px;
+        font-size: 14px;
         color: #364153;
         outline: none;
         border: none;
@@ -352,7 +352,7 @@ function saveEmail() {
     }
 
     .send-code-btn {
-      font-size: 1.4rem;
+      font-size: 14px;
       background: none;
       color: #FB64B6;
       cursor: pointer;
@@ -369,11 +369,11 @@ function saveEmail() {
       justify-content: center;
 
       .modal-confirm-btn {
-        min-width: 24rem;
-        height: 4.8rem;
+        min-width: 240px;
+        height: 48px;
         border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         border: none;
         background: #FB64B6;

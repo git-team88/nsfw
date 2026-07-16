@@ -133,34 +133,34 @@ function handleUse() {
   .chapter-history-content {
     position: relative;
     background: #FFFFFF;
-    border-radius: 1.2rem;
-    width: 98rem;
-    height: 64rem;
+    border-radius: 12px;
+    width: 980px;
+    height: 640px;
     display: flex;
     overflow: hidden;
 
     .chapter-history-left {
-      width: 28rem;
-      height: 64rem;
+      width: 280px;
+      height: 640px;
       background: #F5F5F5;
-      padding: 2rem 0.5rem 2rem 2rem;
+      padding: 20px 5px 20px 20px;
       flex-shrink: 0;
 
       .chapter-history-title {
         font-weight: 500;
-        font-size: 1.6rem;
+        font-size: 16px;
         color: #364153;
         text-align: left;
-        margin: 0 0 1.6rem 0;
+        margin: 0 0 16px 0;
       }
 
       .chapter-history-list {
-        max-height: 56rem;
+        max-height: 560px;
         overflow-y: auto;
 
         .chapter-history-item {
           cursor: pointer;
-          margin-bottom: 1.6rem;
+          margin-bottom: 16px;
           display: flex;
 
           .chapter-item-text {
@@ -170,7 +170,7 @@ function handleUse() {
             line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #6A7282;
           }
 
@@ -186,13 +186,13 @@ function handleUse() {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 20rem;
+        height: 200px;
 
         .loading-spinner {
-          width: 2.4rem;
-          height: 2.4rem;
-          border: 0.3rem solid #E0E0E0;
-          border-top: 0.3rem solid #6A7282;
+          width: 24px;
+          height: 24px;
+          border: 3px solid #E0E0E0;
+          border-top: 3px solid #6A7282;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
@@ -207,8 +207,8 @@ function handleUse() {
 
       .close-btn-wrapper {
         width: 100%;
-        height: 6rem;
-        padding: 0 2rem 0 0;
+        height: 60px;
+        padding: 0 20px 0 0;
         background: #FFFFFF;
         display: flex;
         align-items: center;
@@ -217,8 +217,8 @@ function handleUse() {
         cursor: pointer;
 
         .close-btn {
-          width: 2rem;
-          height: 2rem;
+          width: 20px;
+          height: 20px;
         }
       }
 
@@ -228,19 +228,19 @@ function handleUse() {
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        gap: 1rem;
+        gap: 10px;
 
         .loading-spinner {
-          width: 2.4rem;
-          height: 2.4rem;
-          border: 0.3rem solid #F5F5F5;
-          border-top: 0.3rem solid #6A7282;
+          width: 24px;
+          height: 24px;
+          border: 3px solid #F5F5F5;
+          border-top: 3px solid #6A7282;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
 
         .loading-text {
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #6A7282;
         }
       }
@@ -248,20 +248,20 @@ function handleUse() {
       .chapter-preview-content {
         flex: 1;
         overflow-y: auto;
-        padding: 1rem 2rem 2.4rem;
+        padding: 10px 20px 24px;
 
         .chapter-preview-title {
-          font-size: 2.8rem;
+          font-size: 28px;
           font-weight: 500;
           color: #101828;
           text-align: center;
-          margin-bottom: 1.6rem;
+          margin-bottom: 16px;
         }
 
         .chapter-preview-text {
-          font-size: 1.6rem;
+          font-size: 16px;
           color: #364153;
-          line-height: 3.2rem;
+          line-height: 32px;
           white-space: pre-wrap;
           word-break: break-word;
         }
@@ -272,23 +272,23 @@ function handleUse() {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 14px;
         color: #99A1AF;
       }
 
       .chapter-history-footer {
         flex-shrink: 0;
-        padding: 2rem 3.5rem;
+        padding: 20px 35px;
         display: flex;
-        gap: 3rem;
+        gap: 30px;
         border-top: 1px solid #F5F5F5;
 
         .cancel-btn {
           flex: 1;
-          height: 4.8rem;
+          height: 48px;
           border: none;
-          border-radius: 0.8rem;
-          font-size: 1.4rem;
+          border-radius: 8px;
+          font-size: 14px;
           cursor: pointer;
           background: #F5F5F5;
           color: #6A7282;
@@ -296,17 +296,17 @@ function handleUse() {
 
         .use-btn {
           flex: 1;
-          height: 4.8rem;
+          height: 48px;
           border: none;
-          border-radius: 0.8rem;
-          font-size: 1.4rem;
+          border-radius: 8px;
+          font-size: 14px;
           cursor: pointer;
           background: #FB64B6;
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 1rem;
+          gap: 10px;
 
           &:disabled {
             cursor: not-allowed;
@@ -314,10 +314,10 @@ function handleUse() {
           }
 
           .btn-loading-spinner {
-            width: 1.8rem;
-            height: 1.8rem;
-            border: 0.2rem solid rgba(255, 255, 255, 0.3);
-            border-top: 0.2rem solid #ffffff;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }

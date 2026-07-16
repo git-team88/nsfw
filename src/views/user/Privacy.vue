@@ -11,12 +11,9 @@
           <div class="content">
             <div class="item" v-for="item in settings" :key="item.key">
               <div class="label">{{ t(item.label) }}</div>
-              <img
-                class="switch"
-                :src="info[item.key] == '1' ? openIcon : closeIcon"
-                @click="toggle(item.key)"
-                alt="switch"
-              />
+              <button type="button" role="switch" :aria-checked="info[item.key] == '1'" class="toggle" :class="{ on: info[item.key] == '1' }" @click="toggle(item.key)">
+                <span class="knob" aria-hidden="true"></span>
+              </button>
             </div>
           </div>
         </div>
@@ -30,8 +27,7 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import openIcon from "@/assets/images/user/open.png";
-import closeIcon from "@/assets/images/user/close.png";
+
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 
@@ -112,50 +108,116 @@ function toggle(key: string) {
 }
 </script>
 
-<style scoped lang="scss">
+<style scoped lang="css">
 .user-privacy {
   width: 100%;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #FFFBF4;
 }
 .container {
-  max-width: 144rem;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
-  gap: 6rem;
-  padding-right: 6rem;
+  gap: 18px;
+  padding: 0 30px;
 }
 .main {
   flex: 1;
-  padding-top: 14rem;
+  padding-top: 100px;
 }
-
 .panel-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.4rem;
+  margin: 0 0 4px;
 }
 .panel-title {
-  font-weight: 500;
-  font-size: 2rem;
-  color: #99A1AF;
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
+  position: relative;
+  padding-bottom: 10px;
 }
-
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
+}
+.content {
+  background: #FFFDF7;
+  border: 3px solid #161122;
+  border-radius: 6px;
+  padding: 26px 28px;
+  min-height: 380px;
+  margin-top: 16px;
+}
 .item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 5.6rem;
-  border-bottom: 1px solid #F5F5F5;
+  gap: 14px;
+  padding: 15px 0;
+  border-top: 2px solid rgba(22,17,34,.08);
+}
+.item:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 .label {
-  font-size: 1.4rem;
-  color: #364153;
+  font-weight: 800;
+  font-size: 14px;
+  color: #161122;
+  flex: 1;
+  min-width: 0;
 }
-.switch {
-  width: 4.4rem;
-  height: 2.4rem;
+.toggle {
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2.5px solid #161122;
+  background: #fff;
+  position: relative;
   cursor: pointer;
+  flex: none;
+  padding: 0;
+  transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toggle .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #161122;
+  transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+.toggle.on {
+  background: #22C55E;
+}
+.toggle.on .knob {
+  left: 22px;
+  background: #fff;
+}
+.toggle:active .knob {
+  transform: scaleX(1.18);
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 0 30px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .content {
+    padding: 20px 16px;
+  }
+}
+@media (max-width: 420px) {
+  .content {
+    padding: 16px 12px;
+  }
 }
 </style>

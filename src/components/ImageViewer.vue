@@ -124,18 +124,18 @@ function zoomOut() {
 
   .close-viewer-btn {
     position: fixed;
-    top: 2.4rem;
-    left: 2.4rem;
-    width: 4.8rem;
-    height: 4.8rem;
+    top: 24px;
+    left: 24px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     cursor: pointer;
     z-index: 2100;
 
     span {
-      width: 4.8rem;
-      height: 4.8rem;
+      width: 48px;
+      height: 48px;
       background: url("@/assets/images/detail/big_close.png");
       background-size: 100% 100%;
     }
@@ -157,8 +157,8 @@ function zoomOut() {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 4.8rem;
-    height: 4.8rem;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -166,12 +166,12 @@ function zoomOut() {
     z-index: 5;
 
     span {
-      width: 4.8rem;
-      height: 4.8rem;
+      width: 48px;
+      height: 48px;
     }
 
     &.prev {
-      left: 2.4rem;
+      left: 24px;
       span {
         background: url("@/assets/images/detail/left.png") no-repeat;
         background-size: 100% 100%;
@@ -186,7 +186,7 @@ function zoomOut() {
       }
     }
     &.next {
-      right: 2.4rem;
+      right: 24px;
       span {
         background: url("@/assets/images/detail/right.png") no-repeat;
         background-size: 100% 100%;
@@ -204,22 +204,22 @@ function zoomOut() {
 
   .zoom-controls {
     position: absolute;
-    bottom: 2.4rem;
-    right: 2.4rem;
-    height: 3.2rem;
+    bottom: 24px;
+    right: 24px;
+    height: 32px;
     background: rgba(0, 0, 0, 0.2);
-    border-radius: 1.6rem;
-    padding: 0 3.2rem;
+    border-radius: 16px;
+    padding: 0 32px;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 10px;
     color: #fff;
 
     .zoom-btn {
       position: absolute;
       top: 0;
-      width: 3.2rem;
-      height: 3.2rem;
+      width: 32px;
+      height: 32px;
       cursor: pointer;
       z-index: 2110;
 
@@ -243,8 +243,8 @@ function zoomOut() {
     }
 
     .zoom-text {
-      font-size: 1.6rem;
-      min-width: 5.6rem;
+      font-size: 16px;
+      min-width: 56px;
       text-align: center;
       color: #ffffff;
     }

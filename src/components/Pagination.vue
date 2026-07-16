@@ -1,20 +1,22 @@
 <template>
   <div class="pagination" :class="`theme-${theme}`">
+    <button class="pg-btn" :disabled="page <= 1" @click="to(page - 1)">
+      <svg class="pg-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9.25 12.06L8.72 11.53L5.90 8.71C5.50 8.32 5.50 7.68 5.90 7.29L8.72 4.47L9.25 3.94L10.31 5.00L9.78 5.53L7.31 8.00L9.78 10.47L10.31 11.00L9.25 12.06Z" fill="currentColor"/>
+      </svg>
+      <span>{{ t('pagination.prev') }}</span>
+    </button>
     <div class="pg-pages">
       <template v-for="p in pages" :key="`p-${p}`">
-        <span v-if="p === '...'" class="pg-ellipsis">...</span>
+        <span v-if="p === '...'" class="pg-ellipsis">…</span>
         <button v-else class="pg-num" :class="{ on: p === page }" @click="to(p as number)">{{ p }}</button>
       </template>
     </div>
-    <button class="pg-btn" :disabled="page<=1" @click="to(page-1)">
-      <img class="pg-icon" :src="leftDisIcon" alt="" v-if="page<=1" />
-      <img class="pg-icon" :src="leftIcon" alt="" v-else />
-      <span>{{ t('pagination.prev') }}</span>
-    </button>
-    <button class="pg-btn" :disabled="page>=totalPages" @click="to(page+1)">
+    <button class="pg-btn" :disabled="page >= totalPages" @click="to(page + 1)">
       <span>{{ t('pagination.next') }}</span>
-      <img class="pg-icon" :src="rightDisIcon" alt="" v-if="page>=totalPages" />
-      <img class="pg-icon" :src="rightIcon" alt="" v-else />
+      <svg class="pg-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M6.75 3.94L7.28 4.47L10.10 7.29C10.50 7.68 10.50 8.32 10.10 8.71L7.28 11.53L6.75 12.06L5.69 11.00L6.22 10.47L8.69 8.00L6.22 5.53L5.69 5.00L6.75 3.94Z" fill="currentColor"/>
+      </svg>
     </button>
     <div class="pg-go">
       <span>{{ t('pagination.page') }}</span>
@@ -30,10 +32,6 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const props = defineProps<{ total: number; pageSize: number; modelValue: number; theme?: 'pink' | 'blue' }>()
 const emit = defineEmits(['update:modelValue'])
-import leftIcon from '@/assets/images/base/left.png'
-import leftDisIcon from '@/assets/images/base/left_dis.png'
-import rightIcon from '@/assets/images/base/right.png'
-import rightDisIcon from '@/assets/images/base/right_dis.png'
 const page = computed(() => {
   const val = props.modelValue
   if (typeof val !== 'number' || isNaN(val)) {
@@ -50,7 +48,7 @@ const theme = computed(() => props.theme ?? 'blue')
 const pages = computed<(number | '...')[]>(() => {
   const total = totalPages.value
   const current = Math.max(1, Math.min(page.value, total))
-  
+
   if (total <= 5) {
     return Array.from({ length: total }).map((_, i) => i + 1)
   }
@@ -91,32 +89,192 @@ function go() {
 </script>
 
 <style scoped lang="scss">
-.pagination{
-  display:flex; align-items:center; justify-content: center; gap:1rem; flex-wrap:wrap;
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.pg-btn{ height:3.2rem; padding:0 1rem; border:none; background:none; color:#364153; cursor: pointer;}
-.pg-btn:disabled{ cursor:default; color: #99A1AF;}
-.pg-btn{ display:flex; align-items:center; gap:.6rem; }
-.pg-icon{ width:1.6rem; height:1.6rem; }
-.pg-pages{ display:flex; gap:.6rem; }
-.pg-num{ height:3.2rem; min-width:3.2rem; padding:0 .6rem; border:none; border-radius:.6rem; background: none; color:#6A7282; cursor: pointer;}
-.pg-num:hover{ color: 364153;}
-.pg-ellipsis{ display:flex; align-items:center; justify-content:center; width:3.2rem; color:#99A1AF; }
-.pg-go{ display:flex; align-items:center; gap:.6rem; font-size: 1.4rem; color:#99A1AF; }
-.pg-input{ width:5rem; height:3.2rem; padding:0 .6rem; border-radius:.6rem; text-align: center; background: #F5F5F5;}
-.pg-go-btn{ height:3.2rem; padding:0 .8rem; border:none; border-radius:.6rem; background:none; color:#fff; }
 
-.theme-blue .pg-go-btn{ color:#00D3F2; cursor: pointer; }
-.theme-blue .pg-go-btn:hover{background: rgba(0,211,242,0.12);}
-.theme-blue .pg-num:hover{ background: rgba(0,211,242,0.12); color: #00D3F2;}
-.theme-blue .pg-num.on, .theme-blue .pg-num.on:hover{ background: linear-gradient( 360deg, #00D3F2 0%, #7FEFFF 50%, #00D3F2 100%);
-box-shadow: 0px 2px 8px 0px rgba(0,211,242,0.3); color:#FFFFFF; }
-.theme-blue .pg-input{ border: 1px solid rgba(0,211,242,0.2);}
-.theme-blue .pg-input:focus{ border: 1px solid #00D3F2;}
+.pg-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 2.5px solid #161122;
+  border-radius: 10px;
+  background: #fff;
+  color: #161122;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.12);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s;
+}
 
-.theme-pink .pg-go-btn{ color:#FB64B6; cursor: pointer; }
-.theme-pink .pg-num:hover{ color: 364153;}
-.theme-pink .pg-num.on, .theme-pink .pg-num.on:hover{ background: #FB64B6; color:#FFFFFF; }
-.theme-pink .pg-input{ background: #F5F5F5;}
-.theme-pink .pg-input:focus{ border: 1px solid #FB64B6;}
+.pg-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
+}
+
+.pg-btn:active:not(:disabled) {
+  transform: translate(0, 0);
+  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.12);
+}
+
+.pg-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.06);
+}
+
+.pg-btn:focus-visible {
+  outline: 2.5px solid #FF4D8D;
+  outline-offset: 2px;
+}
+
+.pg-arrow {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.pg-pages {
+  display: flex;
+  gap: 6px;
+}
+
+.pg-num {
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: 2.5px solid #161122;
+  border-radius: 10px;
+  background: #fff;
+  color: #6A7282;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s, background 0.16s, color 0.16s;
+}
+
+.pg-num:hover:not(.on) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.14);
+  color: #161122;
+}
+
+.pg-num:focus-visible {
+  outline: 2.5px solid #FF4D8D;
+  outline-offset: 2px;
+}
+
+.pg-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  font-weight: 800;
+  color: #9a93a4;
+}
+
+.pg-go {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #9a93a4;
+}
+
+.pg-input {
+  width: 50px;
+  height: 32px;
+  padding: 0 8px;
+  border: 2.5px solid #161122;
+  border-radius: 10px;
+  text-align: center;
+  background: #FFFCF6;
+  font-weight: 800;
+  font-size: 14px;
+  color: #161122;
+}
+
+.pg-input:focus {
+  outline: 2.5px solid #FF4D8D;
+  outline-offset: 2px;
+}
+
+.pg-go-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 2.5px solid #161122;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.12);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s, background 0.16s;
+}
+
+.pg-go-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
+}
+
+.pg-go-btn:focus-visible {
+  outline: 2.5px solid #FF4D8D;
+  outline-offset: 2px;
+}
+
+.theme-pink .pg-num.on,
+.theme-pink .pg-num.on:hover {
+  background: #FB64B6;
+  color: #fff;
+  border-color: #161122;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.22);
+  transform: none;
+}
+
+.theme-pink .pg-go-btn {
+  color: #FB64B6;
+}
+
+.theme-pink .pg-go-btn:hover {
+  background: #FFE1EC;
+}
+
+.theme-blue .pg-num.on,
+.theme-blue .pg-num.on:hover {
+  background: #161122;
+  color: #00D3F2;
+  border-color: #161122;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.22);
+  transform: none;
+}
+
+.theme-blue .pg-go-btn {
+  color: #00D3F2;
+}
+
+.theme-blue .pg-go-btn:hover {
+  background: rgba(0, 211, 242, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-btn,
+  .pg-num,
+  .pg-go-btn {
+    transition: none !important;
+  }
+  .pg-btn:hover:not(:disabled),
+  .pg-num:hover:not(.on),
+  .pg-go-btn:hover {
+    transform: none !important;
+  }
+}
 </style>

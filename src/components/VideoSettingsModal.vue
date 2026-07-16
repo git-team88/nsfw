@@ -150,44 +150,44 @@ onMounted(() => {
 
 .modal-content {
   position: relative;
-  width: 52rem;
-  border-radius: 1.2rem;
+  width: 520px;
+  border-radius: 12px;
   background: #ffffff;
 }
 
 .modal-close {
   position: absolute;
-  right: 1.8rem;
-  top: 2rem;
-  width: 2rem;
-  height: 2rem;
+  right: 18px;
+  top: 20px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-title {
-  font-size: 1.6rem;
+  font-size: 16px;
   font-weight: 500;
   color: #364153;
   margin: 0;
-  padding: 1.8rem 2rem;
+  padding: 18px 20px;
   border-bottom: 1px solid #F5F5F5;
 }
 
 .modal-body {
-  padding: 2.4rem;
+  padding: 24px;
 }
 
 .setting-section {
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
   &:last-child{
     margin-bottom: 0;
   }
 
   .setting-label {
     font-weight: normal;
-    font-size: 1.4rem;
+    font-size: 14px;
     color: #99A1AF;
-    margin-bottom: 1.4rem;
+    margin-bottom: 14px;
   }
 }
 
@@ -195,22 +195,22 @@ onMounted(() => {
 .aspect-options {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 20px;
 }
 
 .radio-option {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 6px;
   cursor: pointer;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 
   .radio-label {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: #6a7282;
   }
 }
@@ -219,19 +219,19 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2.4rem;
-  padding: 1.8rem 2.4rem ;
+  gap: 24px;
+  padding: 18px 24px ;
   border-top: 1px solid #F5F5F5;
 
   .modal-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &.cancel {

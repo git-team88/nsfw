@@ -116,43 +116,43 @@ const skip = () => {
 .modal-content {
   position: relative;
   background-color: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 44rem;
+  border-radius: 12px;
+  width: 440px;
   z-index: 510;
   display: flex;
   flex-direction: column;
-  padding: 2rem 3rem 3rem;
+  padding: 20px 30px 30px;
   box-sizing: border-box;
 }
 
 .logo {
-  width: 16.4rem;
-  height: 3.8rem;
+  width: 164px;
+  height: 38px;
 }
 
 .modal-body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin-top: 1rem;
+  margin-top: 10px;
 }
 
 .modal-header {
   width: 100%;
-  margin-top: 2rem;
+  margin-top: 20px;
   font-weight: bold;
-  font-size: 2rem;
+  font-size: 20px;
   color: #101828;
 }
 
 .modal-description {
-  font-size: 1.6rem;
+  font-size: 16px;
   color: #99A1AF;
 }
 
 .input-section {
   width: 100%;
-  margin-top: 3rem;
+  margin-top: 30px;
 }
 
 .invite-code-input {
@@ -160,11 +160,11 @@ const skip = () => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 5rem;
-  padding: 0 1.6rem;
+  height: 50px;
+  padding: 0 16px;
   border: 1px solid #F5F5F5;
-  border-radius: 0.8rem;
-  font-size: 1.6rem;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 500;
   text-align: center;
   color: #101828;
@@ -183,17 +183,17 @@ const skip = () => {
 
 .error-container {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 10px;
 }
 
 .error-message {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #FA2D47;
 }
 
 .modal-footer {
   width: 100%;
-  padding-top: 2rem;
+  padding-top: 20px;
 }
 
 .confirm-btn {
@@ -201,11 +201,11 @@ const skip = () => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 5rem;
+  height: 50px;
   background: #FB64B6;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   color: #ffffff;
-  font-size: 1.4rem;
+  font-size: 14px;
   border: 1px solid #F5F5F5;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -236,12 +236,12 @@ const skip = () => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 5rem;
-  margin-top: 1rem;
+  height: 50px;
+  margin-top: 10px;
   background: #F5F5F5;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   color: #6A7282;
-  font-size: 1.4rem;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;

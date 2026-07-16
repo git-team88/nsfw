@@ -398,10 +398,12 @@ onMounted(() => {
 
 .view-modal {
   position: relative;
-  width: 98rem;
-  height: 57rem;
+  width: 980px;
+  height: 570px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 14px;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   overflow: hidden;
 }
 
@@ -412,73 +414,65 @@ onMounted(() => {
 
 /* 左侧部分 */
 .left-section {
-  width: 37.2rem;
+  width: 372px;
   height: 100%;
-  padding: 2rem 3.6rem;
-  background: #F5F5F5;
+  padding: 20px 36px;
+  background: #FFEFF5;
+  border-right: 2px solid #161122;
   display: flex;
   flex-direction: column;
 }
 
 .project-name {
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: #364153;
-  margin-bottom: 2rem;
+  font-size: 16px;
+  font-weight: 800;
+  color: #161122;
+  margin-bottom: 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .project-cover {
-  width: 30rem;
+  width: 300px;
   aspect-ratio: 3/4;
   object-fit: cover;
-  border-radius: 1.2rem;
-  margin-bottom: 2rem;
+  border-radius: 14px;
+  margin-bottom: 20px;
 }
 
 .publish-btn {
   width: 100%;
-  height: 4.8rem;
-  border: none;
-  border-radius: 0.8rem;
-  font-size: 1.6rem;
-  font-weight: 500;
-  background-color: #fb64b6;
+  height: 48px;
+  border: 2px solid #161122;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF4D8D, #FF7A45);
   color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    position: relative;
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: inherit;
-    }
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0 #161122;
   }
 
   &.published {
-    background-color: rgba(251, 100, 182, 0.5);
-    color: #FFFFFF;
+    background: rgba(255, 77, 142, 0.4);
+    color: #161122;
     cursor: not-allowed;
 
     &:hover {
-      &::after {
-        display: none;
-      }
+      transform: none;
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 
   &:disabled {
-    background-color: rgba(251, 100, 182, 0.5);
-    color: #FFFFFF;
+    background: rgba(255, 77, 142, 0.4);
+    color: #161122;
     cursor: not-allowed;
   }
 }
@@ -488,8 +482,8 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 56rem;
-  padding: 2rem 2.4rem 2rem 2.4rem;
+  height: 560px;
+  padding: 20px 24px 20px 24px;
   background: #ffffff;
   overflow-y: auto;
   box-sizing: border-box;
@@ -498,90 +492,97 @@ onMounted(() => {
 .right-header {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
 }
 
 .detail-title {
-  font-size: 1.4rem;
-  color: #364153;
+  font-size: 14px;
+  font-weight: 800;
+  color: #161122;
   flex-shrink: 0;
 }
 
 .episode-nav {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
   flex: 1;
-  margin-bottom: 1.8rem;
+  margin-bottom: 18px;
 }
 
 .episode-tabs {
   display: flex;
-  gap: 0.6rem;
+  gap: 6px;
   overflow-x: auto;
-  padding: 0 0 0.4rem;
+  padding: 0 0 4px;
 }
 
 .episode-tab {
   position: relative;
-  min-width: 4rem;
-  height: 4rem;
-  background: #F5F5F5;
-  border-radius: 0.6rem;
+  min-width: 40px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 2px solid #161122;
+  border-radius: 11px;
   cursor: pointer;
-  font-size: 1.4rem;
-  color: #6A7282;
+  font-size: 14px;
+  color: #161122;
+  opacity: 0.65;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 
   &.active {
-    background-color: rgba(251, 100, 182, 0.12);
-    color: #FB64B6;
+    background: #FF4D8E;
+    color: #ffffff;
+    opacity: 1;
   }
 
   &:hover:not(.active) {
-    color: #FB64B6;
+    color: #161122;
+    opacity: 1;
   }
 
   .published-icon {
     position: absolute;
-    right: 0.4rem;
-    bottom: 0.4rem;
-    width: 1.2rem;
-    height: 1.2rem;
+    right: 4px;
+    bottom: 4px;
+    width: 12px;
+    height: 12px;
   }
 }
 
 .detail-title-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
 }
 
 .published-badge {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 1.2rem;
-  color: #99A1AF;
+  gap: 4px;
+  font-size: 12px;
+  color: #161122;
+  opacity: 0.4;
 
   .published-dot {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 12px;
+    height: 12px;
   }
 
   .published-text {
-    font-size: 1.2rem;
+    font-size: 12px;
   }
 }
 
 .nav-btn {
-  width: 4rem;
-  height: 4rem;
-  background: #F5F5F5;
-  border-radius: 0.6rem;
+  width: 40px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 2px solid #161122;
+  border-radius: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -594,17 +595,17 @@ onMounted(() => {
   }
 
   img {
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 24px;
+    height: 24px;
   }
 }
 
 .close-btn{
   position: absolute;
-  right: 1.8rem;
-  top: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  right: 18px;
+  top: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
@@ -617,30 +618,30 @@ onMounted(() => {
 }
 
 .episode-title {
-  font-size: 1.2rem;
-  color: #99A1AF;
-  margin-bottom: 1rem;
+  font-size: 12px;
+  color: #161122;
+  opacity: 0.4;
+  margin-bottom: 10px;
 }
 
 .video-player {
   display: flex;
   justify-content: center;
   width: 100%;
-  height: 31.2rem;
+  height: 312px;
   aspect-ratio: 16/9;
-  background: #F5F5F5;
-  border-radius: 0.8rem;
+  background: #FFEFF5;
+  border-radius: 14px;
+  border: 2px solid #161122;
   overflow: hidden;
   position: relative;
 
-  // 9:16 vertical video - centered with max width
   &.ratio-9-16 {
     aspect-ratio: 9/16;
     max-width: 50%;
     margin: 0 auto;
   }
 
-  // 16:9 landscape video - full width
   &.ratio-16-9 {
     aspect-ratio: 16/9;
     width: 100%;
@@ -655,21 +656,20 @@ onMounted(() => {
 /* Video cover preview with play button */
 .video-cover-preview {
   width: 100%;
-  height: 31.2rem;
+  height: 312px;
   aspect-ratio: 16/9;
-  border-radius: 0.8rem;
+  border-radius: 14px;
+  border: 2px solid #161122;
   position: relative;
   cursor: pointer;
-  background-color: #F5F5F5;
+  background-color: #FFEFF5;
 
-  // 9:16 vertical video - centered with max width
   &.ratio-9-16 {
     aspect-ratio: 9/16;
     max-width: 50%;
     margin: 0 auto;
   }
 
-  // 16:9 landscape video - full width
   &.ratio-16-9 {
     aspect-ratio: 16/9;
     width: 100%;
@@ -678,7 +678,7 @@ onMounted(() => {
 
 .cover-preview-image {
   width: 100%;
-  height: 31.2rem;
+  height: 312px;
   object-fit: contain;
 }
 
@@ -694,8 +694,8 @@ onMounted(() => {
 }
 
 .cover-play-button {
-  width: 6rem;
-  height: 6rem;
+  width: 60px;
+  height: 60px;
 }
 
 .video-loading,
@@ -705,23 +705,44 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  color: #6A7282;
-  background: #F5F5F5;
-  border-radius: 0.8rem;
+  font-size: 14px;
+  color: #161122;
+  opacity: 0.65;
+  background: #FFEFF5;
+  border-radius: 14px;
+  border: 2px solid #161122;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #F3EFE7;
+  border-top: 4px solid #161122;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #161122;
+  opacity: 0.65;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Video ratio styles */
 .video-cover-preview,
 .video-player {
-  // 9:16 vertical video - centered with max width
   &.ratio-9-16 {
     aspect-ratio: 9/16;
     max-width: 50%;
     margin: 0 auto;
   }
 
-  // 16:9 landscape video - full width
   &.ratio-16-9 {
     aspect-ratio: 16/9;
     width: 100%;
@@ -730,44 +751,46 @@ onMounted(() => {
 
 /* Episode description */
 .video-details {
-  margin-top: 2rem;
+  margin-top: 20px;
 }
 
 .video-cover {
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 
   h3 {
-    font-size: 1.4rem;
-    color: #364153;
-    margin-bottom: 1rem;
+    font-size: 14px;
+    font-weight: 800;
+    color: #161122;
+    margin-bottom: 10px;
   }
 
   .cover-image {
     width: 100%;
-    border-radius: 0.8rem;
+    border-radius: 14px;
     object-fit: cover;
   }
 }
 
 .video-images {
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 
   h3 {
-    font-size: 1.4rem;
-    color: #364153;
-    margin-bottom: 1rem;
+    font-size: 14px;
+    font-weight: 800;
+    color: #161122;
+    margin-bottom: 10px;
   }
 
   .image-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 10px;
   }
 
   .video-detail-image {
     width: 100%;
     aspect-ratio: 16/9;
-    border-radius: 0.8rem;
+    border-radius: 14px;
     object-fit: cover;
   }
 }
@@ -775,16 +798,18 @@ onMounted(() => {
 /* Episode description */
 .episode-description {
   .description-label {
-    font-size: 1.2rem;
-    color: #99A1AF;
-    margin-bottom: 1rem;
+    font-size: 12px;
+    color: #161122;
+    opacity: 0.4;
+    margin-bottom: 10px;
   }
 
   .description-content {
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    line-height: 2rem;
-    color: #6A7282;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 20px;
+    color: #161122;
+    opacity: 0.65;
     white-space: pre-wrap;
   }
 }

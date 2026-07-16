@@ -103,52 +103,57 @@ function goToAiPointsDetails() {
 .invite-revenue {
   width: 100%;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #FFFBF4;
 }
 .container {
-  max-width: 144rem;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
-  gap: 6rem;
-  padding-right: 6rem;
+  gap: 18px;
+  padding: 0 30px;
 }
 .main {
   flex: 1;
-  padding-top: 14rem;
+  padding-top: 100px;
 }
 .panel-title {
-  margin-bottom: 2.4rem;
-  font-weight: 500;
-  font-size: 2rem;
-  color: #99A1AF;
+  margin-bottom: 24px;
+  font-weight: 700;
+  font-size: 20px;
+  color: #161122;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .invite-link-section {
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
 }
 
 .withdraw-banner {
-  margin: 0 0 2.4rem;
-  padding: 1.6rem 1.8rem;
-  background: #F5F5F5;
-  border-radius: 0.8rem;
+  margin: 0 0 24px;
+  padding: 28px 26px;
+  background: radial-gradient(ellipse at 30% 15%, #FFE885, #FF9E45 58%, #FF5FA2);
+  border: 3px solid #161122;
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   .banner-left {
     flex: 1;
-    max-width: 72rem;
+    max-width: 720px;
     .banner-tip {
-      font-size: 1.4rem;
-      color: #364153;
-      line-height: 2.4rem;
+      font-size: 14px;
+      color: #161122;
+      line-height: 24px;
       word-break: break-word;
 
-      :deep(a){
-        color: #364153;
+      :deep(a) {
+        color: #161122;
+        font-weight: 600;
 
-        &:hover{
+        &:hover {
           text-decoration: underline;
         }
       }
@@ -159,26 +164,36 @@ function goToAiPointsDetails() {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 13.6rem;
-    height: 4.8rem;
-    padding: 0 2.4rem;
-    background: #FFFFFF;
-    border-radius: 0.8rem;
-    color: #6A7282;
-    font-weight: 500;
-    font-size: 1.6rem;
+    min-width: 136px;
+    height: 48px;
+    padding: 0 24px;
+    background: #FF4D8D;
+    border: 2.5px solid #161122;
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 #161122;
+    color: #FFFDF7;
+    font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
 
-    &:hover{
-      color: #FB64B6;
+    &:hover {
+      color: #FFFDF7;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #161122;
     }
   }
 }
 
 .metrics {
   display: flex;
-  gap: 3rem;
-  margin: 0 0 2.4rem;
+  gap: 30px;
+  margin: 0 0 24px;
 }
 .metric {
   flex: 1;
@@ -186,41 +201,51 @@ function goToAiPointsDetails() {
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  height: 14.6rem;
-  border-radius: 0.8rem;
-  padding: 2.4rem;
-  background: #F5F5F5;
+  height: 146px;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  padding: 24px;
+  background: #FFFDF7;
 }
 
 .metric-label {
-  color: #99A1AF;
-  font-size: 1.4rem;
+  color: #161122;
+  font-size: 14px;
+  font-weight: 600;
 }
 .metric-value {
-  margin-top: 1.6rem;
-  font-weight: 500;
-  font-size: 3.2rem;
-  color: #364153;
+  margin-top: 16px;
+  font-weight: 700;
+  font-size: 32px;
+  color: #161122;
 }
 
 .metrics-footer {
   display: flex;
   justify-content: flex-end;
-  margin: 0 0 2.4rem;
-  font-size: 1.4rem;
-  color: #FB64B6;
+  margin: 0 0 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FF4D8D;
   cursor: pointer;
 }
 
 .block-title {
-  margin-bottom: 1.2rem;
-  font-size: 1.4rem;
-  color: #364153;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #161122;
 }
 
 .rules-content {
-  font-size: 1.4rem;
-  color: #99A1AF;
-  line-height: 2.4rem;
+  font-size: 14px;
+  color: #161122;
+  line-height: 24px;
+  background: #FFFDF7;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  padding: 20px;
 }
 </style>

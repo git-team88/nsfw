@@ -172,11 +172,9 @@ const isLoadingFrames = ref(false);
 const estimatedFrameCount = ref(8);
 
 function getCropDimensions() {
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  // Crop frame is 15rem x 20rem = 3:4 aspect ratio
   return {
-    width: 15 * rootFontSize,
-    height: 20 * rootFontSize,
+    width: 150,
+    height: 200,
   };
 }
 
@@ -294,7 +292,7 @@ async function generateFrames() {
     } else if (props.coverUrl) {
       const matchIndex = frames.value.findIndex(f => f === selectedFrame.value);
       if (matchIndex >= 0) {
-        const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const frameWidth = 45;
         dragPos.value = (matchIndex + 0.5) * frameWidth;
       } else {
         dragPos.value = 0;
@@ -332,8 +330,8 @@ function onDragMove(e: MouseEvent) {
 
   dragPos.value = x;
 
-  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const index = Math.min(
+  const frameWidth = 45;
+
     Math.floor(x / frameWidth),
     frames.value.length - 1,
   );
@@ -351,7 +349,7 @@ function onDragEnd() {
 function onCoverClick() {
   if (!timelineRef.value || !props.coverUrl) return;
 
-  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const frameWidth = 45;
 
   const clickedPosition = 0.5 * frameWidth;
 
@@ -364,7 +362,7 @@ function onCoverClick() {
 async function onFrameClick(index: number) {
   if (!timelineRef.value) return;
 
-  const frameWidth = 4.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const frameWidth = 45;
 
   const clickedPosition = (index + 0.5) * frameWidth;
 
@@ -628,9 +626,9 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-content {
   position: relative;
-  width: 52rem;
+  width: 520px;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -638,32 +636,32 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .close-btn {
   position: absolute;
-  top: 2rem;
-  right: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  top: 20px;
+  right: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-header {
-  height: 6rem;
+  height: 60px;
   border-bottom: 1px solid #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2.4rem;
+  padding: 0 24px;
 
   .tabs {
     display: flex;
     align-items: center;
-    gap: 2.4rem;
+    gap: 24px;
     height: 100%;
 
     span {
       height: 100%;
       display: flex;
       align-items: center;
-      font-size: 1.6rem;
+      font-size: 16px;
       color: #6A7282;
       cursor: pointer;
       position: relative;
@@ -691,13 +689,13 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 .modal-body {
-  padding: 2.4rem 2.4rem 3rem;
+  padding: 24px 24px 30px;
 }
 
 .select-mode {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 20px;
 
   .preview-container {
     display: flex;
@@ -706,9 +704,9 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   }
 
   .preview-crop-box {
-    width: 47rem;
-    height: 22.4rem;
-    border-radius: 0.8rem;
+    width: 470px;
+    height: 224px;
+    border-radius: 8px;
     position: relative;
     display: flex;
     align-items: center;
@@ -722,8 +720,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   }
 
   .crop-frame {
-    width: 15rem;
-    height: 20rem;
+    width: 150px;
+    height: 200px;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -745,19 +743,19 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
   .placeholder {
     color: #fff;
-    font-size: 1.2rem;
+    font-size: 12px;
     text-align: center;
   }
 
   .crop-tip {
-    font-size: 1.2rem;
+    font-size: 12px;
     color: #999;
   }
 
   .modal-list{
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 4px;
 
     .cover-cell {
       display: flex;
@@ -767,8 +765,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       border: 1px solid #FFFFFF;
 
       img {
-        width: 4.5rem;
-        height: 6rem;
+        width: 45px;
+        height: 60px;
         object-fit: cover;
       }
 
@@ -783,24 +781,24 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     position: relative;
     display: flex;
     justify-content: flex-start;
-    height: 6rem;
+    height: 60px;
     cursor: pointer;
     overflow-x: auto; // 允许横向滚动
     overflow-y: hidden;
 
     // 自定义滚动条样式
     &::-webkit-scrollbar {
-      height: 0.6rem;
+      height: 6px;
     }
 
     &::-webkit-scrollbar-track {
       background: #f0f0f0;
-      border-radius: 0.3rem;
+      border-radius: 3px;
     }
 
     &::-webkit-scrollbar-thumb {
       background: #FB64B6;
-      border-radius: 0.3rem;
+      border-radius: 3px;
     }
 
     .frames-strip {
@@ -819,8 +817,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         height: 100%;
         flex-shrink: 0; // 防止帧被压缩
         img {
-          width: 4.5rem;
-          height: 6rem;
+          width: 45px;
+          height: 60px;
           object-fit: cover;
         }
       }
@@ -832,7 +830,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       }
 
       .frame-skeleton {
-        flex: 0 0 4.5rem;
+        flex: 0 0 45px;
         height: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
@@ -840,7 +838,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       }
 
       .cover-skeleton {
-        flex: 0 0 4.5rem;
+        flex: 0 0 45px;
         height: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
@@ -859,8 +857,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
     .drag-handle {
       position: absolute;
-      top: -0.5rem;
-      bottom: -0.5rem;
+      top: -5px;
+      bottom: -5px;
       width: 4px;
       margin-left: -2px; /* Center align */
       cursor: ew-resize;
@@ -881,11 +879,11 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .upload-mode {
   height: 100%;
-  padding: 3rem 0;
+  padding: 30px 0;
 
   .upload-area {
     width: 100%;
-    height: 28rem;
+    height: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -893,13 +891,13 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     cursor: pointer;
 
     img {
-      width: 4.8rem;
-      height: 4.8rem;
+      width: 48px;
+      height: 48px;
     }
 
     .modal-text {
-      margin: 2.4rem 0 1.2rem;
-      font-size: 1.4rem;
+      margin: 24px 0 12px;
+      font-size: 14px;
       color: #364153;
 
       :deep(span){
@@ -908,7 +906,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     }
 
     .modal-tip {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #99a1af;
     }
   }
@@ -918,12 +916,12 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.6rem;
+    gap: 16px;
 
     .preview-crop-box {
-      width: 47rem;
-      height: 22.4rem;
-      border-radius: 0.8rem;
+      width: 470px;
+      height: 224px;
+      border-radius: 8px;
       position: relative;
       display: flex;
       align-items: center;
@@ -943,8 +941,8 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       }
 
       .crop-frame {
-        width: 15rem;
-        height: 20rem;
+        width: 150px;
+        height: 200px;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -961,22 +959,22 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 .modal-footer {
-  padding: 1.8rem;
+  padding: 18px;
   border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: flex-end;
-  gap: 1.2rem;
+  gap: 12px;
 
   .reupload-box{
     position: relative;
   }
 
   .reupload-btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: 1px solid #FB64B6;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     color: #FB64B6;
     background: none;
     cursor: pointer;
@@ -999,10 +997,10 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     background: #fb64b6;
     color: #ffffff;
     border: none;
-    min-width: 13.6rem;
-    height: 4.8rem;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    min-width: 136px;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &:hover {

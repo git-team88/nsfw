@@ -49,32 +49,32 @@ const handleClose = () => {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50rem;
+    width: 500px;
     background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 2.4rem;
+    border-radius: 12px;
+    padding: 24px;
 
     .close-btn {
       position: absolute;
-      top: 1.2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
+      top: 12px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-title {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
-      margin-bottom: 3.6rem;
+      margin-bottom: 36px;
       text-align: center;
     }
 
     .modal-message {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6A7282;
-      margin-bottom: 3.4rem;
+      margin-bottom: 34px;
       text-align: center;
       line-height: 1.6;
     }
@@ -82,15 +82,15 @@ const handleClose = () => {
     .modal-actions {
       display: flex;
       justify-content: center;
-      gap: 2.4rem;
+      gap: 24px;
 
       .modal-cancel-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         background: #F5F5F5;
         color: #6A7282;
@@ -101,12 +101,12 @@ const handleClose = () => {
       }
 
       .modal-confirm-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         border: none;
         background: #fb64b6;

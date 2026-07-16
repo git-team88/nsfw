@@ -23,6 +23,7 @@
       </div>
 
       <!-- Loading State -->
+      <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="loading-spinner"></div>
         <div class="loading-text">{{ t('characterLibrary.loading') }}</div>
@@ -31,24 +32,16 @@
       <!-- Error State -->
       <div v-else-if="error" class="error-state">
         <div class="error-message">{{ error }}</div>
-        <!-- <button class="retry-button" @click="loadCharacters">{{ t('characterLibrary.retry') }}</button> -->
       </div>
 
       <!-- Character Grid -->
       <div v-else-if="filteredCharacters.length > 0" class="character-grid">
-        <!-- Create New Button -->
-        <!-- <div class="create-new-card" @click="goToCreatePage" @mouseenter="isHovering = true" @mouseleave="isHovering = false">
-          <div class="create-new-icon">
-            <img :src="isHovering ? addHoverIcon : addIcon" alt="Create New" />
-          </div>
-          <div class="create-new-text">{{ t('characterLibrary.createNew') }}</div>
-        </div> -->
-
         <!-- Character Cards -->
         <div
           v-for="(character, index) in currentPageCharacters"
           :key="character.id"
           class="character-card"
+          :style="{ animationDelay: `${Math.min((index + 1) * 45, 400)}ms` }"
           @click="openCharacterDetail(character)"
         >
           <!-- Power标识 -->
@@ -56,7 +49,11 @@
             <img class="power-icon" src="@/assets/images/project/coin.png" alt="" />
             <span class="power-value">{{ character.useCostPoints }}</span>
           </div>
-          <img class="character-img" :src="processImageUrl(character.image)" :alt="character.name" />
+          <div class="character-img-wrap">
+            <img class="character-img" :src="processImageUrl(character.image)" :alt="character.name" />
+            <span class="halftone" aria-hidden="true"></span>
+            <span class="char-sheen" aria-hidden="true"></span>
+          </div>
           <span class="character-name">{{ character.name }}</span>
         </div>
       </div>
@@ -275,71 +272,97 @@ watch(() => locale.value, () => {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+$yellow: #FFD23F;
+
+$role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
+
 .character-library {
   width: 100%;
   min-height: 100vh;
   padding: 14rem 0 0;
-  background: #FFFFFF;
+  background: $cream;
 }
 
 .container {
-  max-width: 108rem;
+  max-width: 1160px;
   margin: 0 auto 2rem;
+  padding: 0 1.2rem;
+
+  @media (min-width: 768px) {
+    padding: 0 1.6rem;
+  }
 }
 
 .page-title {
-  font-weight: 500;
-  font-size: 2rem;
-  color: #99A1AF;
-  margin-bottom: 2.4rem;
+  font-weight: 800;
+  font-size: 2.6rem;
+  color: $ink;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+.page-sub {
+  font-size: 1.3rem;
+  color: $muted;
+  font-weight: 600;
+  margin-bottom: 1.8rem;
+}
+
+.count-badge {
+  font-weight: 800;
+  font-size: 1.3rem;
+  border: 2px solid $ink;
+  border-radius: 999px;
+  padding: 0.4rem 1.4rem;
+  background: #fff;
+  box-shadow: 2px 2px 0 $ink;
+  margin-left: auto;
 }
 
 .tab-navigation {
   display: flex;
-  gap: 3rem;
+  gap: 0.8rem;
+  flex-wrap: wrap;
   margin-bottom: 2.4rem;
-  border-bottom: 1px solid #F5F5F5;
 
   .tab {
-    flex: 0 0 auto;
-    padding: 0 0 1.8rem;
-    font-size: 1.6rem;
-    color: #6A7282;
+    font-weight: 800;
+    font-size: 1.3rem;
+    padding: 0.8rem 1.6rem;
+    border-radius: 999px;
+    border: 2px solid $ink;
     cursor: pointer;
-    position: relative;
-    margin-right: 1.2rem;
-
-    &:hover{
-      color: #101828;
-    }
+    transition: all 0.16s;
+    background: #fff;
+    color: $ink;
 
     &.active {
-      color: #101828;
-      font-weight: 500;
+      background: $ink;
+      color: #fff;
+    }
 
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background-color: #fb64b6;
-        border-radius: 1px;
-      }
+    &:hover:not(.active) {
+      background: $paper;
     }
   }
 }
 
 /* Process Section */
 .process-section {
-  margin-bottom: 3.2rem;
+  margin-bottom: 1rem;
 }
 
 .character-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 2.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.6rem;
 }
 
 .create-new-card {
@@ -347,18 +370,42 @@ watch(() => locale.value, () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 20rem;
-  height: 26.7rem;
-  border-radius:0.8rem;
-  background: linear-gradient( 90deg, rgba(194, 122, 255, 0.08) 0%, rgba(255, 127, 250, 0.08) 50%, rgba(251, 100, 243, 0.08) 100%);
+  min-height: 22rem;
+  border-radius: 1.6rem;
+  border: 3px dashed rgba(22,17,34,0.3);
+  background: rgba(255,255,255,0.5);
+  padding: 3rem 2rem;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+
+  &:hover {
+    transform: translateY(-4px);
+    border-style: solid;
+    border-color: $ink;
+    background: #fff;
+    box-shadow: 6px 6px 0 $ink;
+
+    .create-new-icon {
+      transform: rotate(12deg);
+      border-style: solid;
+      border-color: $ink;
+      background: $pink;
+      color: #fff;
+    }
+  }
 
   .create-new-icon {
-    width: 8rem;
-    height: 8rem;
+    width: 5.6rem;
+    height: 5.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
+    border: 3px dashed rgba(22,17,34,0.4);
+    background: transparent;
+    color: $ink;
+    transition: all 0.42s cubic-bezier(0.34,1.56,0.64,1);
+    animation: charBreathe 4.4s ease-in-out infinite;
 
     img {
       width: 100%;
@@ -367,68 +414,109 @@ watch(() => locale.value, () => {
     }
   }
 
+  &:hover .create-new-icon {
+    animation-play-state: paused;
+  }
+
   .create-new-text {
-    font-weight: 500;
+    font-weight: 800;
     font-size: 1.4rem;
-    text-transform: none;
-    background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: $ink;
+    margin-top: 1.2rem;
   }
 }
 
 .character-card {
   position: relative;
-  width: 20rem;
-  height: 26.7rem;
-  border-radius: 0.8rem;
-  box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.12);
+  background: #fff;
+  border: 3px solid $ink;
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 $ink;
   cursor: pointer;
+  overflow: visible;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s;
 
-  .character-img {
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 6px 6px 0 $ink;
+
+    .char-sheen {
+      transform: translateX(140%);
+    }
+
+    .character-power {
+      transform: translateY(-2px) rotate(-3deg);
+    }
+  }
+
+  .character-img-wrap {
+    position: relative;
     width: 100%;
-    height: 100%;
-    border-radius: 0.8rem;
-    object-fit: contain;
+    height: 220px;
+    overflow: hidden;
+    border-radius: 16px 16px 0 0;
+
+    .character-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .char-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transform: translateX(-140%) rotate(6deg);
+      transition: transform 900ms cubic-bezier(0.16,1,0.3,1);
+      background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%);
+    }
+
+    .halftone {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      mix-blend-mode: overlay;
+      background-image: radial-gradient($ink 1px, transparent 1.4px);
+      background-size: 9px 9px;
+    }
   }
 
   .character-name {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 4.4rem;
-    font-size: 1.4rem;
-    border-radius: 0 0 0.8rem 0.8rem;
-    color: #101828;
+    display: block;
+    padding: 8px 14px 12px;
+    font-weight: 800;
+    font-size: 15px;
+    color: $ink;
+    line-height: 1.4;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    background: rgba(255,255,255,0.9);
   }
 
   .character-power {
     position: absolute;
-    top: 0.6rem;
-    left: 0.6rem;
-    display: flex;
+    top: 10px;
+    left: 10px;
+    display: inline-flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #99A1AF;
-    padding: 0.4rem;
-    border-radius: 0.4rem;
-    font-size: 1.2rem;
+    gap: 4px;
+    background: $yellow;
+    border: 2px solid $ink;
+    color: $ink;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 11px;
     z-index: 1;
+    box-shadow: 2px 2px 0 $ink;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
 
     .power-icon {
-      width: 1.2rem;
-      height: 1.2rem;
-      margin-right: 0.4rem;
+      width: 12px;
+      height: 12px;
     }
   }
 }
@@ -445,26 +533,26 @@ watch(() => locale.value, () => {
   align-items: center;
   justify-content: center;
   min-height: 40rem;
-}
 
-.loading-spinner {
-  width: 4rem;
-  height: 4rem;
-  border: 0.4rem solid #F5F5F5;
-  border-top: 0.4rem solid #6A7282;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1.6rem;
+  .loading-spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 0.4rem solid $line;
+    border-top: 0.4rem solid $ink;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 2rem;
+  }
+
+  .loading-text {
+    font-size: 1.4rem;
+    color: $muted;
+    font-weight: 600;
+  }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-text {
-  font-size: 1.6rem;
-  color: #6A7282;
+  to { transform: rotate(360deg); }
 }
 
 .error-state {
@@ -474,30 +562,77 @@ watch(() => locale.value, () => {
   justify-content: center;
   min-height: 40rem;
   text-align: center;
+  grid-column: 1 / -1;
 }
 
 .error-message {
   font-size: 1.4rem;
-  color: #ff4d4f;
+  color: #E5484D;
+  font-weight: 800;
   margin-bottom: 1.6rem;
 }
 
 .retry-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24rem;
-  height: 4.8rem;
-  padding: 0.8rem 2.4rem;
+  font-weight: 800;
   font-size: 1.4rem;
   color: #fff;
-  background: #fb64b6;
+  background: linear-gradient(135deg, $pink, #FF7A45);
   border: none;
-  border-radius: 0.8rem;
+  border-radius: 1.4rem;
+  padding: 1rem 2.4rem;
   cursor: pointer;
+  box-shadow: 3px 3px 0 $ink;
+  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
   &:hover {
-    opacity: 0.8;
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 $ink;
+  }
+}
+
+@keyframes charCardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes charBreathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,141,0); }
+  50% { box-shadow: 0 0 0 7px rgba(255,77,141,0.14); }
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .character-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+
+  .tab-navigation .tab {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-card {
+    animation: none !important;
+  }
+  .character-card:hover {
+    transform: none;
+    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  }
+  .create-new-card:hover {
+    transform: none;
+  }
+  .create-new-icon {
+    animation: none !important;
   }
 }
 </style>

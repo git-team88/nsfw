@@ -31,14 +31,14 @@ const props = defineProps<{
   z-index: 10000;
 
   img {
-    width: 4rem;
-    height: 4rem;
+    width: 40px;
+    height: 40px;
     animation: rotate 1.5s linear infinite;
   }
 
   p {
-    margin-top: 1.6rem;
-    font-size: 1.4rem;
+    margin-top: 16px;
+    font-size: 14px;
     color: #FFFFFF;
   }
 }

@@ -1,5 +1,6 @@
 <template>
   <div class="login-page">
+    <Header ref="headerRef" :cur="-1"></Header>
     <div class="auth-grid">
       <div class="auth-brand">
         <div class="brand-glow" aria-hidden="true"></div>
@@ -10,7 +11,6 @@
           <p class="brand-copy">{{ t("auth.login.brandCopy") }}</p>
         </div>
         <div class="brand-perks">
-          <span>{{ t("auth.login.perk") }}</span>
         </div>
       </div>
 
@@ -67,7 +67,7 @@
             </button>
           </div>
           <span class="auth-hint auth-hint-ng" v-if="passwordError">{{ passwordError }}</span>
-          <span class="auth-hint">
+          <span class="auth-hint" style="text-align: right; display: block;">
             <a class="auth-link" @click="goForget()">{{ t("register.forgetLabel") }}</a>
           </span>
         </div>
@@ -91,9 +91,9 @@
         <div class="auth-tip">
           <span v-if="locale == 'jp'" v-html="t('register.loginTip')"></span>
           <span v-else v-html="t('register.loginTip')"></span>
-          <a class="auth-link">{{ t("register.terms") }}</a>
+          <span class="auth-terms">{{ t("register.terms") }}</span>
           {{ t("register.infix") }}
-          <a class="auth-link">{{ t("register.privacy") }}</a>
+          <span class="auth-terms">{{ t("register.privacy") }}</span>
           <template v-if="locale == 'jp'"> {{ t("register.tipEnd") }}</template>
         </div>
       </div>
@@ -101,11 +101,12 @@
 
     <UploadMask v-if="isShowLoad" :visible="isShowLoad" :text="t('loading')" />
 
-    <Agree ref="agreeRef" @toRegister="toRegister"></Agree>
+    <Agree ref="agreeRef" @toRegister="goRegister"></Agree>
   </div>
 </template>
 
 <script setup lang="ts" name="Login">
+import Header from "@/components/Header.vue";
 import Agree from "@/components/Agree.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
@@ -121,6 +122,7 @@ import { trackLogin, setUserId } from "@/utils/analytics";
 const { t, locale } = useI18n();
 
 const agreeRef = ref<InstanceType<typeof Agree> | null>(null);
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
 const isShowPassword = ref(false);
@@ -190,12 +192,6 @@ function goRegister() {
   if (agreeRef.value) {
     agreeRef.value.showAgree();
   }
-}
-
-function toRegister() {
-  router.push({
-    path: "/register",
-  });
 }
 
 function goForget() {
@@ -344,17 +340,16 @@ function googleLogin() {
   width: 100%;
   min-height: 100vh;
   background: #FFFBF4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 24px;
+  padding-top: 80px;
 
   .auth-grid {
     display: grid;
     grid-template-columns: 1.02fr 1fr;
     gap: 8px;
     width: 100%;
-    max-width: 960px;
+    max-width: 1320px;
+    margin: 0 auto 32px;
+    padding: 0 28px;
     align-items: stretch;
   }
 
@@ -369,7 +364,7 @@ function googleLogin() {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 520px;
+    min-height: 620px;
 
     .brand-glow {
       position: absolute;
@@ -704,16 +699,21 @@ function googleLogin() {
     color: #9a93a4;
     line-height: 1.6;
   }
+
+  .auth-terms {
+    color: #FF4D8D;
+    font-weight: 800;
+    cursor: default;
+  }
 }
 
 @media (max-width: 900px) {
   .login-page {
-    padding: 20px 16px;
-    align-items: flex-start;
-
     .auth-grid {
       grid-template-columns: 1fr;
       max-width: 520px;
+      margin: 0 auto 20px;
+      padding: 0 16px;
     }
 
     .auth-brand {
@@ -733,7 +733,10 @@ function googleLogin() {
 
 @media (max-width: 480px) {
   .login-page {
-    padding: 16px 12px;
+    .auth-grid {
+      margin: 0 auto 16px;
+      padding: 0 12px;
+    }
 
     .auth-brand {
       padding: 24px 20px;

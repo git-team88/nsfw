@@ -229,25 +229,25 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .date-row {
   display: flex;
-  gap: 1.6rem;
+  gap: 16px;
 }
 
 .select-container {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 8px;
 }
 
 .select-box {
   flex: 1;
-  width: 10rem;
-  height: 4.8rem;
+  width: 100px;
+  height: 48px;
   border: 1px solid #F5F5F5;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.2rem;
+  padding: 0 12px;
   position: relative;
   cursor: pointer;
   background: #F5F5F5;
@@ -262,7 +262,7 @@ onUnmounted(() => {
 }
 
 .selected {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #99a1af;
 }
 
@@ -272,12 +272,12 @@ onUnmounted(() => {
 
 .date-text {
   color: #6a7282;
-  font-size: 1.4rem;
+  font-size: 14px;
 }
 
 .arrow {
-  width: 2rem;
-  height: 2rem;
+  width: 20px;
+  height: 20px;
   transition: transform 0.2s;
 }
 
@@ -290,22 +290,22 @@ onUnmounted(() => {
   top: 100%;
   left: 0;
   width: 100%;
-  max-height: 20.4rem;
-  padding: 0.6rem 0;
+  max-height: 204px;
+  padding: 6px 0;
   overflow-y: auto;
   background: #FFFFFF;
   box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
-  border-radius: 0.8rem;
-  margin-top: 0.8rem;
+  border-radius: 8px;
+  margin-top: 8px;
   z-index: 10;
 }
 
 .opt {
-  height: 3.2rem;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6a7282;
   cursor: pointer;
 }

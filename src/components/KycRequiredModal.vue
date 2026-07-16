@@ -61,40 +61,40 @@ function handleGoKyc() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 52rem;
+    width: 520px;
     background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 5.4rem 2.4rem 2.4rem;
+    border-radius: 12px;
+    padding: 54px 24px 24px;
 
     .close-btn {
       position: absolute;
-      top: 2rem;
-      right: 1.2rem;
-      width: 2rem;
-      height: 2rem;
+      top: 20px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-message {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #364153;
-      margin-bottom: 3.4rem;
+      margin-bottom: 34px;
       text-align: center;
-      line-height: 2rem;
+      line-height: 20px;
     }
 
     .modal-footer {
       display: flex;
       justify-content: center;
-      gap: 2.4rem;
+      gap: 24px;
 
       button {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
       }
 

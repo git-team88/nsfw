@@ -129,17 +129,17 @@ function resetForm() {
 .modal-content {
   position: relative;
   background-color: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 52rem;
+  border-radius: 12px;
+  width: 520px;
   overflow: hidden;
 }
 
 .close-btn {
   position: absolute;
-  top: 2rem;
-  right: 2rem;
-  width: 2rem;
-  height: 2rem;
+  top: 20px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
@@ -147,25 +147,25 @@ function resetForm() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.8rem 2.4rem;
+  padding: 18px 24px;
   border-bottom: 1px solid #F5F5F5;
 
   h3 {
     margin: 0;
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #101828;
   }
 }
 
 .modal-body {
-  padding: 2.4rem;
+  padding: 24px;
 
   .form-group {
     .form-label {
       display: block;
-      margin-bottom: 1.2rem;
-      font-size: 1.4rem;
+      margin-bottom: 12px;
+      font-size: 14px;
       color: #6A7282;
     }
 
@@ -176,11 +176,11 @@ function resetForm() {
 
     .form-input {
       width: 100%;
-      height: 5rem;
-      padding: 1.2rem 1rem;
+      height: 50px;
+      padding: 12px 10px;
       border: 1px solid #F5F5F5;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       background: #F5F5F5;
       outline: none;
       color: #364153;
@@ -195,13 +195,13 @@ function resetForm() {
     }
 
     .character-counter {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #99A1AF;
     }
 
     .error-message {
-      margin-top: 0.6rem;
-      font-size: 1.4rem;
+      margin-top: 6px;
+      font-size: 14px;
       color: #FA2D47;
     }
   }
@@ -211,16 +211,16 @@ function resetForm() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.4rem;
-  padding: 1.8rem;
+  gap: 24px;
+  padding: 18px;
   border-top: 1px solid #F5F5F5;
 
   .btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &.btn-cancel {

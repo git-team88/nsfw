@@ -47,11 +47,13 @@ const emit = defineEmits(['cancel', 'confirm']);
 
 .modal-content {
   position: relative;
-  width: 68rem;
-  height: 47rem;
-  padding: 1.4rem 0 2.4rem;
+  width: 680px;
+  height: 470px;
+  padding: 14px 0 24px;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 14px;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -61,33 +63,35 @@ const emit = defineEmits(['cancel', 'confirm']);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
 
   h3 {
-    font-size: 1.8rem;
-    color: #364153;
+    font-size: 18px;
+    font-weight: 800;
+    color: #161122;
     margin: 0;
   }
 }
 
 .close-btn {
   position: absolute;
-  top: 1.2rem;
-  right: 1.2rem;
-  width: 2rem;
-  height: 2rem;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-body {
   flex: 1;
-  padding: 0 2rem;
+  padding: 0 20px;
   overflow-y: auto;
 
   .convention-content {
-    font-size: 1.4rem;
-    color: #364153;
-    line-height: 2rem;
+    font-size: 14px;
+    color: #161122;
+    font-weight: 700;
+    line-height: 20px;
     white-space: pre-line;
   }
 }
@@ -95,43 +99,39 @@ const emit = defineEmits(['cancel', 'confirm']);
 .modal-footer {
   display: flex;
   justify-content: center;
-  gap: 2.4rem;
-  margin-top: 2.4rem;
+  gap: 24px;
+  margin-top: 24px;
 
   .btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
-    border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    min-width: 136px;
+    height: 48px;
+    border: 2px solid #161122;
+    border-radius: 14px;
+    font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &.cancel {
-      background: #F5F5F5;
-      color: #6A7282;
+      background: #FFFFFF;
+      color: #161122;
+      box-shadow: 2px 2px 0 #161122;
+      font-weight: 800;
 
       &:hover {
-        color: #fb64b6;
+        border-color: #FF4D8E;
+        color: #FF4D8E;
       }
     }
 
     &.confirm {
-      background: #fb64b6;
+      background: linear-gradient(135deg, #FF4D8D, #FF7A45);
       color: #ffffff;
+      box-shadow: 2px 2px 0 #161122;
+      font-weight: 800;
 
       &:hover {
-        position: relative;
-        &::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: inherit;
-        }
+        transform: translateY(-1px);
+        box-shadow: 3px 3px 0 #161122;
       }
     }
   }

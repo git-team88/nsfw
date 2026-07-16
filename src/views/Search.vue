@@ -3,18 +3,55 @@
     <Header :cur="-1"></Header>
 
     <div class="container">
-      <!-- Search Bar -->
-      <div class="search-bar">
-        <div class="search-input-wrap">
-          <input
-            v-model="inputKeyword"
-            type="text"
-            class="search-input"
-            :placeholder="t('search.placeholder')"
-            @keyup.enter="performSearch"
-          />
-          <img class="search-btn" src="@/assets/images/user/search.png" alt="Search" @click="performSearch" />
+      <!-- Search Panel -->
+      <div class="search-panel">
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <input
+              v-model="inputKeyword"
+              type="text"
+              class="search-input"
+              :placeholder="t('search.placeholder')"
+              @keyup.enter="performSearch"
+            />
+            <img class="search-btn" src="@/assets/images/user/search.png" alt="Search" @click="performSearch" />
+          </div>
         </div>
+
+        <!-- Search Results -->
+        <div class="search-results">
+          <div class="results-header">
+            <h2>{{ t('search.resultsFor') }}
+              <span v-if="searchKeyword">[{{ searchKeyword }}]</span>
+            </h2>
+
+            <!-- Tabs: Posts / users -->
+            <div class="result-tabs">
+              <div
+                v-for="tab in tabs"
+                :key="tab.value"
+                class="tab-item"
+                :class="{ active: activeTab === tab.value }"
+                @click="switchTab(tab.value)"
+              >
+                {{ tab.label }}
+              </div>
+            </div>
+
+            <!-- Post Type Filters -->
+            <div class="post-filters" v-if="activeTab === 'posts'">
+              <div
+                v-for="filter in postFilters"
+                :key="filter.id"
+                class="filter-item"
+                :class="{ active: postFilter == filter.id }"
+                @click="setPostFilter(filter.id)"
+              >
+                {{ filter.label }}
+              </div>
+            </div>
+          </div>
       </div>
 
       <!-- Search Results -->
@@ -60,9 +97,10 @@
           >
             <div
               class="content-item"
-              v-for="post in postList"
+              v-for="(post, index) in postList"
               :key="post.id"
               ref="postCardRefs"
+              :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
               @click="goToDetail(post.id)"
             >
               <div class="content-image">
@@ -125,9 +163,10 @@
         <!-- Users List -->
         <div v-else-if="activeTab === 'users'" class="users-list">
           <div
-            v-for="user in users"
+            v-for="(user, index) in users"
             :key="user.id"
             class="user-card"
+            :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
             @click="goToUserHome(user.id)"
           >
             <div class="card-top">
@@ -176,6 +215,7 @@
         <!-- Infinite Scroll Sentinel -->
         <div ref="loadingSentinel" style="height: 1px; margin-top: 20px;"></div>
       </div>
+      </div><!-- end search-panel -->
     </div>
   </div>
 </template>
@@ -774,40 +814,86 @@ watch(postList, () => {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+
 .search-page {
   width: 100%;
   min-height: 100vh;
   padding: 12rem 0 0;
-  background: #FFFFFF;
+  background: $cream;
 }
 
 .container {
-  max-width: 108rem;
+  max-width: 1160px;
   margin: 0 auto;
+  padding: 0 1.2rem;
+
+  @media (min-width: 768px) {
+    padding: 0 1.6rem;
+  }
+}
+
+.search-panel {
+  background: $paper;
+  border: 3px solid $ink;
+  border-radius: 6px;
+  padding: 2.4rem 1.8rem 3.2rem;
+  box-shadow: 6px 6px 0 rgba(22,17,34,0.14);
+  animation: sePanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+
+  @media (min-width: 768px) {
+    padding: 3.4rem 4rem 4.4rem;
+  }
 }
 
 .search-bar {
-  margin: 2rem 0 2.4rem;
+  margin: 0 0 2rem;
+
   .search-input-wrap {
     position: relative;
     max-width: 100%;
+
     .search-input {
       width: 100%;
-      height: 4.8rem;
-      background: #F5F5F5;
-      border: 1px solid #F5F5F5;
-      border-radius: 0.8rem;
-      padding: 0 6rem 0 1.2rem;
+      height: 4.4rem;
+      background: #fff;
+      border: 2px solid $ink;
+      border-radius: 999px;
+      padding: 0 5rem 0 3.6rem;
       font-family: inherit;
-      font-size: 1.4rem;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: $ink;
       outline: none;
+      transition: box-shadow 0.18s;
+
       &::placeholder {
-        color: #99A1AF;
+        color: $muted;
+        font-weight: 700;
       }
+
       &:focus {
-        border: 1px solid #fb64b6;
+        box-shadow: 0 0 0 4px rgba(255,77,141,0.25);
       }
     }
+
+    .search-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.6rem;
+      height: 1.6rem;
+      color: $muted;
+      pointer-events: none;
+    }
+
     .search-btn {
       position: absolute;
       right: 0.6rem;
@@ -819,6 +905,7 @@ watch(postList, () => {
       align-items: center;
       justify-content: center;
       cursor: pointer;
+
       img {
         width: 1.8rem;
         height: 1.8rem;
@@ -830,126 +917,189 @@ watch(postList, () => {
 .search-results {
   .results-header {
     h2 {
-      font-weight: normal;
-      font-size: 1.6rem;
-      color: #99A1AF;
-      margin-bottom: 2.4rem;
+      font-weight: 800;
+      font-size: 3rem;
+      color: $ink;
+      margin-bottom: 0;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: flex-end;
+      gap: 1.4rem;
+      flex-wrap: wrap;
 
-      span{
-        color: #6A7282;
+      span {
+        font-weight: 800;
+        background: #FFEFF5;
+        border: 2.5px solid $ink;
+        border-radius: 999px;
+        padding: 0.4rem 1.5rem;
+        font-size: 1.5rem;
+        box-shadow: 2px 2px 0 $ink;
+        animation: seChipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
       }
     }
+
+    .search-count {
+      font-weight: 600;
+      font-size: 1.4rem;
+      color: $muted;
+      margin-top: 0.8rem;
+      margin-bottom: 2rem;
+    }
+
     .result-tabs {
       display: flex;
-      gap: 3rem;
-      border-bottom: 1px solid #F5F5F5;
-      .tab-item {
-        padding: 0 0 2rem;
-        font-size: 1.6rem;
-        color: #6a7282;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      background: #fff;
+      border: 2.5px solid $ink;
+      border-radius: 1.4rem;
+      padding: 5px;
+      margin-bottom: 2.6rem;
 
-        &:hover{
-          color: #101828;
-        }
+      .tab-item {
+        font-weight: 800;
+        font-size: 1.45rem;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: background-color 0.16s, color 0.16s;
+        color: $ink;
+        background: transparent;
 
         &.active {
-          font-weight: 500;
-          color: #101828;
-          border-bottom-color: #fb64b6;
+          background: $ink;
+          color: #fff;
+        }
+
+        &:hover:not(.active) {
+          background: $paper;
         }
       }
     }
+
     .post-filters {
       display: flex;
-      gap: 1.2rem;
-      margin: 2.4rem 0;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin: 0 0 2rem;
+
       .filter-item {
-        display: flex;
-        align-items: center;
-        height: 3.2rem;
-        padding: 0 1.6rem;
-        border-radius: 0.6rem;
-        font-size: 1.4rem;
-        color: #6A7282;
+        font-weight: 800;
+        font-size: 1.3rem;
+        padding: 0.8rem 1.6rem;
+        border-radius: 999px;
+        border: 2px solid $ink;
         cursor: pointer;
+        transition: all 0.16s;
+        background: #fff;
+        color: $ink;
 
         &.active {
-          background: #F5F5F5;
+          background: $ink;
+          color: #fff;
+        }
+
+        &:hover:not(.active) {
+          background: $paper;
         }
       }
     }
   }
 }
 
-/* Masonry Layout for Posts */
+/* Grid Layout for Posts */
 .posts-container {
-  margin: 2.4rem 0;
+  margin: 0;
+
   .waterfall {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.6rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.8rem;
     width: 100%;
     margin: 0 auto;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+    }
   }
 }
 
 .content-item {
-  width: 25.8rem;
   cursor: pointer;
   overflow: hidden;
   break-inside: avoid;
+  background: #fff;
+  border: 2.5px solid $ink;
+  border-radius: 1.6rem;
+  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
+  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 7px 8px 0 rgba(22,17,34,0.2);
+  }
 
   .content-image {
     width: 100%;
-    height: 34.4rem;
-    border-radius: 0.8rem;
+    aspect-ratio: 3 / 4;
     position: relative;
+    overflow: hidden;
 
     img {
       width: 100%;
       height: 100%;
-      border-radius: 0.8rem;
       object-fit: cover;
+      transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    &:hover img {
+      transform: scale(1.06);
     }
 
     .r18-overlay {
       position: absolute;
       top: 0;
       right: 0;
-      width: 10rem;
-      height: 10rem;
-      background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50.19%);
-      border-radius: 0 0.8rem 0 0;
+      width: 8rem;
+      height: 8rem;
+      background: linear-gradient(222deg, $pink 0%, rgba(255,77,141,0) 50%);
+      border-radius: 0 1.6rem 0 0;
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
       padding: 0.6rem;
 
       .r18-text {
-        font-size: 1.6rem;
-        font-weight: 500;
+        font-size: 1.4rem;
+        font-weight: 800;
         color: #FFFFFF;
         text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
       }
     }
 
-    /* Type Icon */
     .type-icon {
       position: absolute;
-      top: 0.1rem;
-      left: 0.1rem;
+      top: 0.8rem;
+      left: 0.8rem;
       z-index: 1;
+      background: #FFC24B;
+      border: 2px solid $ink;
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: $ink;
 
       img {
-        width: 4rem;
-        height: 4rem;
+        width: 3.2rem;
+        height: 3.2rem;
         object-fit: contain;
       }
     }
 
-    /* Play Icon */
     .play-icon {
       position: absolute;
       left: 50%;
@@ -958,40 +1108,23 @@ watch(postList, () => {
       z-index: 1;
 
       img {
-        width: 8rem;
-        height: 8rem;
+        width: 6rem;
+        height: 6rem;
         object-fit: contain;
       }
     }
 
-    .content-bottom{
+    .content-bottom {
       position: absolute;
       bottom: 0;
       width: 100%;
-      height: 6.4rem;
+      height: 5rem;
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      padding: 0 1.2rem 1.2rem;
-      border-radius: 0 0 1.2rem 1.2rem;
-      background: linear-gradient( 0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
-    }
-
-    .content-stats {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      z-index: 1;
-
-      span {
-        font-size: 1.2rem;
-        color: #FFFFFF;
-      }
-
-      img {
-        width: 1.8rem;
-        height: 1.8rem;
-      }
+      padding: 0 1rem 1rem;
+      border-radius: 0 0 1.6rem 1.6rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
     }
 
     .update-info {
@@ -1007,30 +1140,29 @@ watch(postList, () => {
         color: rgba(255, 255, 255, 0.5);
       }
     }
-
-    .video-duration {
-      font-size: 1.4rem;
-      color: rgba(255, 255, 255, 0.7);
-      z-index: 1;
-    }
   }
+
   .content-info {
-    padding: 1.2rem 0 0;
+    padding: 1.4rem 1.5rem 1.5rem;
 
     .content-desc {
-      margin-bottom: 1.2rem;
-      font-size: 1.4rem;
-      color: #101828;
-      line-height: 2rem;
+      font-weight: 800;
+      font-size: 1.7rem;
+      color: $ink;
+      line-height: 1.35;
+      min-height: 4.6rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
     }
 
     .content-meta {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 0.9rem;
+      margin-top: 1.1rem;
 
       .author-info {
         display: flex;
@@ -1043,13 +1175,15 @@ watch(postList, () => {
           width: 3rem;
           height: 3rem;
           flex-shrink: 0;
-          border-radius: 0.4rem;
+          border-radius: 999px;
+          border: 2px solid $ink;
           object-fit: cover;
         }
 
         .author-name {
-          font-size: 1.2rem;
-          color: #99A1AF;
+          font-weight: 600;
+          font-size: 1.35rem;
+          color: $muted;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -1061,12 +1195,14 @@ watch(postList, () => {
         align-items: center;
         gap: 0.4rem;
         flex-shrink: 0;
-        margin-left: 0.8rem;
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: $pink;
 
         span {
-          font-weight: 500;
-          font-size: 1.2rem;
-          color: #99A1AF;
+          font-weight: 800;
+          font-size: 1.3rem;
+          color: $muted;
         }
 
         img {
@@ -1081,105 +1217,128 @@ watch(postList, () => {
 .loading-trigger {
   text-align: center;
   padding: 2rem 0;
-  color: #99a1af;
+  color: $muted;
   font-size: 1.4rem;
 }
 
-/* Users List */
+/* Users Grid */
 .users-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.8rem;
-  margin: 1.6rem 0 2.4rem;
+  margin: 0;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .user-card {
-  padding: 1.8rem;
-  border-radius: 0.8rem;
-  transition: all 0.2s;
+  background: #fff;
+  border: 2.5px solid $ink;
+  border-radius: 1.6rem;
+  padding: 2.2rem 1.8rem;
+  text-align: center;
   cursor: pointer;
-  &:hover {
-    background: #ffffff;
-    box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.06);
-  }
-  .card-top {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    margin-bottom: 1.2rem;
-    .user-avatar {
-      width: 4.8rem;
-      height: 4.8rem;
-      border-radius: 0.8rem;
-      object-fit: cover;
-    }
-    .user-meta {
-      flex: 1;
-      .nickname {
-        font-size: 1.4rem;
-        font-weight: 500;
-        color: #364153;
-        margin-bottom: 0.6rem;
-      }
-      .fans-count {
-        font-size: 1.2rem;
-        color: #6a7282;
-      }
-    }
-    .follow-btn {
-      min-width: 9.8rem;
-      height: 4rem;
-      padding: 0 1.6rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      cursor: pointer;
-      background: #fb64b6;
-      color: #ffffff;
-      position: relative;
-      overflow: hidden;
-      &:hover {
-        position: relative;
-        &::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 1;
-        }
-      }
-      .hover-text {
-        display: none;
-      }
-      &.followed {
-        background: #F5F5F5;
-        color: #99A1AF;
-        &:hover {
-          position: relative;
-          color: #fb64b6;
+  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
+  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
 
-          .btn-text {
-            display: none;
-          }
-          .hover-text {
-            display: inline;
-          }
-        }
-      }
-    }
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 6px 8px 0 rgba(22,17,34,0.16);
   }
-  .card-bio {
-    height: 3.6rem;
+
+  .user-avatar {
+    width: 7.8rem;
+    height: 7.8rem;
+    border-radius: 999px;
+    border: 2.5px solid $ink;
+    margin: 0 auto 1.2rem;
+    object-fit: cover;
+    box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+  }
+
+  .nickname {
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: $ink;
+  }
+
+  .fans-count {
+    font-weight: 600;
     font-size: 1.2rem;
-    color: #6a7282;
+    color: $muted;
+    margin-top: 0.2rem;
+  }
+
+  .card-bio {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: $muted;
     line-height: 1.8rem;
+    margin-top: 0.9rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .follow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 9rem;
+    height: 3.6rem;
+    padding: 0 1.4rem;
+    border-radius: 1.3rem;
+    font-weight: 800;
+    font-size: 1.3rem;
+    cursor: pointer;
+    background: linear-gradient(135deg, $pink, #FF7A45);
+    color: #ffffff;
+    border: none;
+    box-shadow: 3px 3px 0 $ink;
+    transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 0.9rem;
+
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 $ink;
+    }
+
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 $ink;
+    }
+
+    .hover-text {
+      display: none;
+    }
+
+    &.followed {
+      background: #fff;
+      color: $muted;
+      border: 2.5px solid $ink;
+      box-shadow: 2px 2px 0 $ink;
+
+      &:hover {
+        color: $pink;
+        transform: translate(-2px, -2px);
+        box-shadow: 4px 4px 0 $ink;
+
+        .btn-text {
+          display: none;
+        }
+
+        .hover-text {
+          display: inline;
+        }
+      }
+    }
   }
 }
 
@@ -1195,15 +1354,16 @@ watch(postList, () => {
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid #F5F5F5;
-    border-top: 0.4rem solid #6A7282;
+    border: 0.4rem solid $line;
+    border-top: 0.4rem solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 2rem;
   }
+
   p {
     font-size: 1.6rem;
-    color: #6a7282;
+    color: $muted;
   }
 }
 
@@ -1213,21 +1373,94 @@ watch(postList, () => {
   justify-content: center;
   gap: 1rem;
   padding: 3rem 0;
+
   .loading-spinner {
     width: 4rem;
     height: 4rem;
-    border: 0.4rem solid #F5F5F5;
-    border-top: 0.4rem solid #6A7282;
+    border: 0.4rem solid $line;
+    border-top: 0.4rem solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
   }
+
   p {
     font-size: 1.6rem;
-    color: #6a7282;
+    color: $muted;
   }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes sePanelIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes seChipIn {
+  from { opacity: 0; transform: scale(0.55) rotate(-8deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes seCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Skeleton placeholder */
+.se-skel {
+  background: $line;
+  border-radius: 1.6rem;
+  animation: seSkelPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes seSkelPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .search-panel {
+    padding: 2rem 1.2rem 2.4rem;
+  }
+
+  .results-header h2 {
+    font-size: 2.4rem;
+
+    span {
+      font-size: 1.3rem;
+    }
+  }
+
+  .content-item .content-info .content-desc {
+    font-size: 1.4rem;
+    min-height: 3.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-panel, .content-item, .user-card {
+    animation: none !important;
+  }
+  .content-item:hover, .user-card:hover {
+    transform: none;
+    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  }
+  .content-item .content-image img {
+    transition: none;
+  }
+  .content-item:hover .content-image img {
+    transform: none;
+  }
+  .se-skel {
+    animation: none !important;
+    opacity: 0.7;
+  }
 }
 </style>

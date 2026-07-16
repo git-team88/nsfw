@@ -57,28 +57,28 @@ const closeModal = () => {
   z-index: 1000;
   .preview-content {
     position: relative;
-    width: 54rem;
-    padding: 2.4rem 3.6rem;
+    width: 540px;
+    padding: 24px 36px;
     background: #ffffff;
-    border-radius: 1.2rem;
+    border-radius: 12px;
     overflow: hidden;
   }
 
   .close-btn {
     position: absolute;
-    top: 1.6rem;
-    right: 1.2rem;
-    width: 2rem;
-    height: 2rem;
+    top: 16px;
+    right: 12px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
   .preview-header {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 1.8rem;
+    margin-bottom: 18px;
     .title {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
     }
@@ -87,8 +87,8 @@ const closeModal = () => {
     display: flex;
     justify-content: center;
     width: 100%;
-    height: 30rem;
-    border-radius: 0.8rem;
+    height: 300px;
+    border-radius: 8px;
     background: #F5F5F5;
 
     video {

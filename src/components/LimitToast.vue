@@ -29,16 +29,16 @@ defineExpose({ show })
 <style lang="scss" scoped>
 .limit-toast {
   position: fixed;
-  top: 3rem;
+  top: 30px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2000;
 
   .limit-toast-content {
-    max-width: 25rem;
+    max-width: 250px;
     background: #ffffff;
-    border-radius: 0.4rem;
-    padding: 1.2rem 1.6rem;
+    border-radius: 4px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,12 +53,12 @@ defineExpose({ show })
       width: 100%;
       height: 100%;
       background: rgba(250, 45, 71, 0.06);
-      border-radius: 0.4rem;
+      border-radius: 4px;
     }
 
     .limit-toast-msg {
       position: relative;
-      font-size: 1.6rem;
+      font-size: 16px;
       color: #fa2d47;
       word-break: break-word;
     }

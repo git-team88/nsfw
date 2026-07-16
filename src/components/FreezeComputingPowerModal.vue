@@ -85,33 +85,33 @@ const handleConfirm = () => {
   .modal-content {
     position: relative;
     background: #FFFFFF;
-    border-radius: 1.2rem;
-    width: 50rem;
-    padding: 1.8rem 3.6rem 2.4rem;
+    border-radius: 12px;
+    width: 500px;
+    padding: 18px 36px 24px;
     overflow: hidden;
 
     .close-btn {
       position: absolute;
-      right: 1.2rem;
-      top: 1.6rem;
-      width: 2rem;
-      height: 2rem;
+      right: 12px;
+      top: 16px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
     }
 
     .modal-title {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
-      margin-bottom: 2.4rem;
+      margin-bottom: 24px;
       text-align: center;
     }
 
     .freeze-power-info {
       display: flex;
       align-items: baseline;
-      margin-bottom: 1rem;
-      font-size: 1.4rem;
+      margin-bottom: 10px;
+      font-size: 14px;
 
       .info-label {
         color: #364153;
@@ -123,27 +123,27 @@ const handleConfirm = () => {
     }
 
     .modal-rules {
-      margin-bottom: 2.4rem;
-      font-size: 1.4rem;
+      margin-bottom: 24px;
+      font-size: 14px;
       color: #6A7282;
-      line-height: 2rem;
+      line-height: 20px;
     }
 
     .modal-footer {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 2.4rem;
+      gap: 24px;
 
       .modal-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
 
         &.cancel {
@@ -180,17 +180,17 @@ const handleConfirm = () => {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
-      margin-top: 1.2rem;
+      gap: 6px;
+      margin-top: 12px;
       cursor: pointer;
 
       img {
-        width: 2.4rem;
-        height: 2.4rem;
+        width: 24px;
+        height: 24px;
       }
 
       span {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: #6a7282;
       }
     }

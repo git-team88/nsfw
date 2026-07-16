@@ -58,8 +58,8 @@ const navigateTo = (path: string) => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 3.4rem;
-  padding: 0 4rem;
+  height: 34px;
+  padding: 0 40px;
   border-top: 1px solid #F5F5F5;
   background: rgba(255, 255, 255, 0.96);
   z-index: 30;
@@ -68,11 +68,11 @@ const navigateTo = (path: string) => {
 .footer-policies {
   display: flex;
   align-items: center;
-  gap: 3.6rem;
+  gap: 36px;
 
   b{
-    width: 0.3rem;
-    height: 0.3rem;
+    width: 3px;
+    height: 3px;
     border-radius: 100%;
     background: #99A1AF;
   }
@@ -80,11 +80,11 @@ const navigateTo = (path: string) => {
 
 .policy-item {
   color: #99A1AF;
-  font-size: 1.2rem;
+  font-size: 12px;
 }
 
 .footer-copyright {
   color: #99A1AF;
-  font-size: 1.2rem;
+  font-size: 12px;
 }
 </style>

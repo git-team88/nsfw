@@ -94,9 +94,9 @@ async function startGeneration() {
 
 .ai-generate-content {
   position: relative;
-  width: 52rem;
+  width: 520px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -104,38 +104,38 @@ async function startGeneration() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2.4rem;
+  padding: 24px;
   border-bottom: 1px solid #F5F5F5;
 
   h3 {
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #101828;
     margin: 0;
   }
 
   .ai-generate-close {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 }
 
 .ai-generate-body {
-  padding: 1.8rem 2.4rem;
+  padding: 18px 24px;
   border-bottom: 1px solid #F5F5F5;
 
   .input-container {
     position: relative;
-    height: 12rem;
-    padding: 1rem;
-    border-radius: 0.8rem;
+    height: 120px;
+    padding: 10px;
+    border-radius: 8px;
     background: #F5F5F5;
 
     .ai-generate-input {
       width: 100%;
-      height: 8rem;
-      font-size: 1.4rem;
+      height: 80px;
+      font-size: 14px;
       color: #364153;
       resize: none;
       outline: none;
@@ -148,7 +148,7 @@ async function startGeneration() {
 
     .word-count {
       text-align: right;
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #99A1AF;
     }
   }
@@ -157,16 +157,16 @@ async function startGeneration() {
 .ai-generate-footer {
   display: flex;
   justify-content: center;
-  padding: 1.8rem;
+  padding: 18px;
 
   .ai-generate-btn-large {
-    min-width: 24rem;
-    height: 4.8rem;
+    min-width: 240px;
+    height: 48px;
     background: #FB64B6;
     color: #FFFFFF;
     border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -180,7 +180,7 @@ async function startGeneration() {
         width: 100%;
         height: 100%;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 0.8rem;
+        border-radius: 8px;
       }
     }
 

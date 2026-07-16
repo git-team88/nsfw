@@ -149,53 +149,53 @@ const handleOverlayClick = () => {
 
 .guide-content {
   position: relative;
-  width: 139.2rem;
+  width: 1392px;
   height: 100%;
   margin: 0 auto;
 }
 
 .guide-one{
   position: absolute;
-  width: 108rem;
-  height: 42rem;
-  top: 26rem;
+  width: 1080px;
+  height: 420px;
+  top: 260px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .guide-two{
   position: absolute;
-  width: 27.2rem;
-  height: 25rem;
-  top: 3.5rem;
-  left: 19rem;
+  width: 272px;
+  height: 250px;
+  top: 35px;
+  left: 190px;
 }
 
 .guide-three{
   position: absolute;
-  width: 27.2rem;
-  height: 24rem;
-  top: 4rem;
-  right: -1.4rem;
+  width: 272px;
+  height: 240px;
+  top: 40px;
+  right: -14px;
 }
 
 .guide-four{
   position: absolute;
-  width: 32rem;
-  height: 25rem;
-  top: 9rem;
-  right: 2rem;
+  width: 320px;
+  height: 250px;
+  top: 90px;
+  right: 20px;
 
   .guide-next{
     position: absolute;
-    bottom: 1.6rem;
+    bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    width: 14rem;
-    height: 4rem;
+    width: 140px;
+    height: 40px;
     cursor: pointer;
     z-index: 520;
   }
@@ -218,14 +218,14 @@ const handleOverlayClick = () => {
 }
 
 .skip-btn {
-  width: 14rem;
-  height: 4rem;
+  width: 140px;
+  height: 40px;
   cursor: pointer;
 }
 
 .next-btn {
-  width: 14rem;
-  height: 4rem;
+  width: 140px;
+  height: 40px;
   cursor: pointer;
 }
 </style>

@@ -683,13 +683,13 @@ onBeforeUnmount(() => {
 .collection-detail {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding-bottom: 4rem;
+  padding-bottom: 40px;
 }
 
 .content-container {
-  max-width: 108rem;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 12rem 0 2.4rem;
+  padding: 120px 24px 24px;
 }
 
 .loading-state {
@@ -699,8 +699,8 @@ onBeforeUnmount(() => {
   min-height: 60vh;
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
+    width: 40px;
+    height: 40px;
     border: 3px solid #e0e0e0;
     border-top-color: #ff47a9;
     border-radius: 50%;
@@ -717,8 +717,8 @@ onBeforeUnmount(() => {
 .breadcrumb {
   display: flex;
   align-items: center;
-  margin-bottom: 2rem;
-  font-size: 1.4rem;
+  margin-bottom: 20px;
+  font-size: 14px;
   color: #99A1AF;
 
   .breadcrumb-item {
@@ -741,7 +741,7 @@ onBeforeUnmount(() => {
   }
 
   .breadcrumb-arrow {
-    margin: 0 1rem;
+    margin: 0 10px;
     color: #ddd;
     flex-shrink: 0;
   }
@@ -750,29 +750,29 @@ onBeforeUnmount(() => {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 16px;
 }
 
 .author-section {
   display: flex;
   justify-content: space-between;
-  padding: 2rem 0 2rem 2rem;
+  padding: 20px 0 20px 20px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 12px;
 
   .author-left {
     display: flex;
-    gap: 2rem;
+    gap: 20px;
     flex: 1;
-    padding-right: 2rem;
+    padding-right: 20px;
     min-width: 0;
   }
 
   .cover-image {
     position: relative;
-    width: 21.2rem;
-    height: 28.4rem;
-    border-radius: 1.2rem;
+    width: 212px;
+    height: 284px;
+    border-radius: 12px;
     overflow: hidden;
 
     img {
@@ -785,17 +785,17 @@ onBeforeUnmount(() => {
       position: absolute;
       top: 0;
       right: 0;
-      width: 10rem;
-      height: 10rem;
+      width: 100px;
+      height: 100px;
       background: linear-gradient(222deg, #FB64B6 0%, rgba(251,100,182,0) 50%);
-      border-radius: 0 1.2rem 0 0;
+      border-radius: 0 12px 0 0;
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
-      padding: 0.6rem;
+      padding: 6px;
 
       .r18-text {
-        font-size: 1.6rem;
+        font-size: 16px;
         font-weight: 500;
         color: #FFFFFF;
         text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
@@ -816,11 +816,11 @@ onBeforeUnmount(() => {
     }
 
     .title {
-      font-size: 2.4rem;
+      font-size: 24px;
       font-weight: 600;
       color: #101828;
       margin-bottom: 0;
-      line-height: 3.6rem;
+      line-height: 36px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
@@ -830,13 +830,13 @@ onBeforeUnmount(() => {
 
     .tags-list {
       display: flex;
-      gap: 0.8rem;
-      margin-bottom: 1.2rem;
+      gap: 8px;
+      margin-bottom: 12px;
 
       .tag-item {
-        padding: 0.4rem 1rem;
-        border-radius: 2rem;
-        font-size: 1.2rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
         color: #fff;
 
         &.tag-pink {
@@ -855,7 +855,7 @@ onBeforeUnmount(() => {
     .update-read-section {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 10px;
       overflow: hidden;
     }
     .update-chapter{
@@ -877,7 +877,7 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 1.6rem;
+      font-size: 16px;
 
       .status{
         font-weight: 500;
@@ -890,7 +890,7 @@ onBeforeUnmount(() => {
     }
 
     .read-info {
-      font-size: 1.6rem;
+      font-size: 16px;
       color: #6A7282;
       display: flex;
       align-items: center;
@@ -910,8 +910,8 @@ onBeforeUnmount(() => {
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    width: 31.2rem;
-    padding: 0 3rem;
+    width: 312px;
+    padding: 0 30px;
     border-left: 1px dashed #DDDDDD;
 
     .avatar-top{
@@ -922,11 +922,11 @@ onBeforeUnmount(() => {
     }
 
     .avatar-container {
-      width: 8rem;
-      height: 8rem;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin-bottom: 10px;
       cursor: pointer;
 
       img {
@@ -937,7 +937,7 @@ onBeforeUnmount(() => {
     }
 
     .author-name {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
       cursor: pointer;
@@ -953,12 +953,12 @@ onBeforeUnmount(() => {
     .stats {
       display: flex;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 20px;
 
       .stat-line{
         width: 1px;
-        height: 2rem;
-        margin: 0 4rem;
+        height: 20px;
+        margin: 0 40px;
         background: #F5F5F5;
       }
 
@@ -968,15 +968,15 @@ onBeforeUnmount(() => {
         align-items: center;
 
         .stat-value {
-          font-size: 1.6rem;
+          font-size: 16px;
           font-weight: 500;
           color: #364153;
         }
 
         .stat-label {
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #6A7282;
-          margin-bottom: 0.8rem;
+          margin-bottom: 8px;
         }
       }
     }
@@ -985,15 +985,15 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1.2rem;
+      gap: 12px;
       width: 100%;
 
       .btn {
-        min-width: 12rem;
-        height: 4.8rem;
-        padding: 0 1rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        min-width: 120px;
+        height: 48px;
+        padding: 0 10px;
+        border-radius: 8px;
+        font-size: 14px;
         border: none;
         cursor: pointer;
         display: flex;
@@ -1043,7 +1043,7 @@ onBeforeUnmount(() => {
         &.btn-subscribe {
           background: #00d3f2;
           color: #ffffff;
-          padding: 0 1rem;
+          padding: 0 10px;
 
           &:hover {
             &::after {
@@ -1067,8 +1067,8 @@ onBeforeUnmount(() => {
     }
 
     .subscribe-tip {
-      margin-top: 1rem;
-      font-size: 1.4rem;
+      margin-top: 10px;
+      font-size: 14px;
       color: #99A1AF;
       text-align: center;
     }
@@ -1079,66 +1079,66 @@ onBeforeUnmount(() => {
     align-items: center;
 
     .settings-btn {
-      padding: 1rem;
+      padding: 10px;
       background: transparent;
       border: none;
       cursor: pointer;
 
       img {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
       }
     }
   }
 }
 
 .section {
-  padding: 2rem;
+  padding: 20px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 12px;
 }
 
 .section-chapter{
-  padding: 0 2rem 2rem;
+  padding: 0 20px 20px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 12px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 6.6rem;
+  height: 66px;
   border-bottom: 1px solid #F5F5F5;
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 20px;
   font-weight: 500;
   color: #101828;
-  margin-bottom: 1.2rem;
+  margin-bottom: 12px;
 }
 
 .private-hint {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #99A1AF;
 }
 
 .publish-btn {
-  padding: 0.8rem 2rem;
+  padding: 8px 20px;
   background: #FF47A9;
   color: #FFFFFF;
   border: none;
-  border-radius: 0.6rem;
-  font-size: 1.4rem;
+  border-radius: 6px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
 
 .description-content {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6A7282;
-  line-height: 2.4rem;
+  line-height: 24px;
 }
 
 .chapter-list {
@@ -1150,14 +1150,14 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 7.2rem;
+  height: 72px;
   border-bottom: 1px solid #f5f5f5;
   cursor: pointer;
 
   .chapter-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 10px;
     overflow: hidden;
     flex: 1;
     min-width: 0;
@@ -1165,10 +1165,10 @@ onBeforeUnmount(() => {
     .chapter-status {
       display: flex;
       align-items: center;
-      height: 3.2rem;
-      padding: 0 1.6rem;
-      border-radius: 0.6rem;
-      font-size: 1.4rem;
+      height: 32px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-size: 14px;
       flex-shrink: 0;
 
       &.status-subscribed {
@@ -1183,7 +1183,7 @@ onBeforeUnmount(() => {
     }
 
     .chapter-title {
-      font-size: 1.6rem;
+      font-size: 16px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1196,16 +1196,16 @@ onBeforeUnmount(() => {
   .chapter-right {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 4px;
     flex-shrink: 0;
-    padding-left: 1rem;
+    padding-left: 10px;
 
     .chapter-action {
       display: flex;
       align-items: center;
-      gap: 0.2rem;
-      padding: 0.6rem 1rem;
-      border-radius: 0.6rem;
+      gap: 2px;
+      padding: 6px 10px;
+      border-radius: 6px;
       cursor: pointer;
 
       &:hover{
@@ -1213,18 +1213,348 @@ onBeforeUnmount(() => {
       }
 
       .action-icon {
-        width: 1.6rem;
-        height: 1.6rem;
+        width: 16px;
+        height: 16px;
       }
 
       .action-text {
-        font-size: 1.4rem;
+        font-size: 14px;
         color: #364153;
         white-space: nowrap;
       }
 
       .action-text-danger {
         color: #99A1AF;
+      }
+    }
+  }
+}
+
+@media (max-width: 1440px) {
+  .content-container {
+    max-width: 75vw;
+    padding: 8.3333vw 1.6667vw 1.6667vw;
+  }
+  .breadcrumb {
+    margin-bottom: 1.3889vw;
+    font-size: 0.9722vw;
+    .breadcrumb-arrow {
+      margin: 0 0.6944vw;
+    }
+  }
+  .main-content {
+    gap: 1.1111vw;
+  }
+  .author-section {
+    padding: 1.3889vw 0 1.3889vw 1.3889vw;
+    border-radius: 0.8333vw;
+    .author-left {
+      gap: 1.3889vw;
+      padding-right: 1.3889vw;
+    }
+    .cover-image {
+      width: 14.7222vw;
+      height: 19.7222vw;
+      border-radius: 0.8333vw;
+      .r18-overlay {
+        width: 6.9444vw;
+        height: 6.9444vw;
+        border-radius: 0 0.8333vw 0 0;
+        padding: 0.4167vw;
+        .r18-text {
+          font-size: 1.1111vw;
+        }
+      }
+    }
+    .author-info {
+      .title {
+        font-size: 1.6667vw;
+        line-height: 2.5vw;
+      }
+      .tags-list {
+        gap: 0.5556vw;
+        margin-bottom: 0.8333vw;
+        .tag-item {
+          padding: 0.2778vw 0.6944vw;
+          border-radius: 1.3889vw;
+          font-size: 0.8333vw;
+        }
+      }
+      .update-read-section {
+        gap: 0.6944vw;
+      }
+      .update-info {
+        font-size: 1.1111vw;
+      }
+      .read-info {
+        font-size: 1.1111vw;
+      }
+    }
+    .author-right {
+      width: 21.6667vw;
+      padding: 0 2.0833vw;
+      .avatar-container {
+        width: 5.5556vw;
+        height: 5.5556vw;
+        margin-bottom: 0.6944vw;
+      }
+      .author-name {
+        font-size: 1.1111vw;
+      }
+      .stats {
+        margin-bottom: 1.3889vw;
+        .stat-line {
+          height: 1.3889vw;
+          margin: 0 2.7778vw;
+        }
+        .stat-item {
+          .stat-value {
+            font-size: 1.1111vw;
+          }
+          .stat-label {
+            font-size: 0.9722vw;
+            margin-bottom: 0.5556vw;
+          }
+        }
+      }
+      .action-buttons {
+        gap: 0.8333vw;
+        .btn {
+          min-width: 8.3333vw;
+          height: 3.3333vw;
+          padding: 0 0.6944vw;
+          border-radius: 0.5556vw;
+          font-size: 0.9722vw;
+        }
+      }
+      .subscribe-tip {
+        margin-top: 0.6944vw;
+        font-size: 0.9722vw;
+      }
+    }
+  }
+  .section {
+    padding: 1.3889vw;
+    border-radius: 0.8333vw;
+  }
+  .section-chapter {
+    padding: 0 1.3889vw 1.3889vw;
+    border-radius: 0.8333vw;
+  }
+  .section-header {
+    height: 4.5833vw;
+  }
+  .section-title {
+    font-size: 1.3889vw;
+    margin-bottom: 0.8333vw;
+  }
+  .private-hint {
+    font-size: 0.9722vw;
+  }
+  .publish-btn {
+    padding: 0.5556vw 1.3889vw;
+    border-radius: 0.4167vw;
+    font-size: 0.9722vw;
+  }
+  .description-content {
+    font-size: 0.9722vw;
+    line-height: 1.6667vw;
+  }
+  .chapter-item {
+    height: 5vw;
+    .chapter-left {
+      gap: 0.6944vw;
+      .chapter-status {
+        height: 2.2222vw;
+        padding: 0 1.1111vw;
+        border-radius: 0.4167vw;
+        font-size: 0.9722vw;
+      }
+      .chapter-title {
+        font-size: 1.1111vw;
+      }
+    }
+    .chapter-right {
+      gap: 0.2778vw;
+      padding-left: 0.6944vw;
+      .chapter-action {
+        gap: 0.1389vw;
+        padding: 0.4167vw 0.6944vw;
+        border-radius: 0.4167vw;
+        .action-icon {
+          width: 1.1111vw;
+          height: 1.1111vw;
+        }
+        .action-text {
+          font-size: 0.9722vw;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    max-width: 100%;
+    padding: 80px 16px 16px;
+  }
+  .breadcrumb {
+    margin-bottom: 12px;
+    font-size: 12px;
+    .breadcrumb-arrow {
+      margin: 0 6px;
+    }
+  }
+  .main-content {
+    gap: 12px;
+  }
+  .author-section {
+    flex-direction: column;
+    padding: 16px;
+    border-radius: 8px;
+    .author-left {
+      gap: 12px;
+      padding-right: 0;
+    }
+    .cover-image {
+      width: 120px;
+      height: 160px;
+      border-radius: 8px;
+      .r18-overlay {
+        width: 60px;
+        height: 60px;
+        border-radius: 0 8px 0 0;
+        padding: 4px;
+        .r18-text {
+          font-size: 12px;
+        }
+      }
+    }
+    .author-info {
+      .title {
+        font-size: 18px;
+        line-height: 26px;
+      }
+      .update-read-section {
+        gap: 6px;
+      }
+      .update-info {
+        font-size: 14px;
+      }
+      .read-info {
+        font-size: 14px;
+      }
+    }
+    .author-right {
+      width: 100%;
+      padding: 16px 0;
+      border-left: none;
+      border-top: 1px dashed #DDDDDD;
+      margin-top: 12px;
+      flex-direction: row;
+      .avatar-top {
+        flex-direction: row;
+        gap: 8px;
+      }
+      .avatar-container {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0;
+      }
+      .author-name {
+        font-size: 14px;
+      }
+      .avatar-bottom {
+        flex-direction: row;
+        justify-content: flex-end;
+      }
+      .stats {
+        margin-bottom: 0;
+        .stat-line {
+          height: 16px;
+          margin: 0 20px;
+        }
+        .stat-item {
+          .stat-value {
+            font-size: 14px;
+          }
+          .stat-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+          }
+        }
+      }
+      .action-buttons {
+        gap: 8px;
+        .btn {
+          min-width: 80px;
+          height: 36px;
+          padding: 0 8px;
+          border-radius: 6px;
+          font-size: 12px;
+        }
+      }
+      .subscribe-tip {
+        margin-top: 6px;
+        font-size: 12px;
+      }
+    }
+  }
+  .section {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  .section-chapter {
+    padding: 0 12px 12px;
+    border-radius: 8px;
+  }
+  .section-header {
+    height: 48px;
+  }
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .private-hint {
+    font-size: 12px;
+  }
+  .publish-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .description-content {
+    font-size: 12px;
+    line-height: 20px;
+  }
+  .chapter-item {
+    height: 52px;
+    .chapter-left {
+      gap: 6px;
+      .chapter-status {
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .chapter-title {
+        font-size: 14px;
+      }
+    }
+    .chapter-right {
+      gap: 2px;
+      padding-left: 6px;
+      .chapter-action {
+        gap: 2px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        .action-icon {
+          width: 14px;
+          height: 14px;
+        }
+        .action-text {
+          font-size: 12px;
+        }
       }
     }
   }

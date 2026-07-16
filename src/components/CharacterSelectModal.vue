@@ -303,8 +303,8 @@ onBeforeUnmount(() => {
 
 .modal-content {
   background: #ffffff;
-  border-radius: 1.2rem;
-  width: 48rem;
+  border-radius: 12px;
+  width: 480px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -312,35 +312,35 @@ onBeforeUnmount(() => {
 
 .modal-close {
   position: absolute;
-  right: 1.2rem;
-  top: 1.2rem;
-  width: 2rem;
-  height: 2rem;
+  right: 12px;
+  top: 12px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-title {
-  font-size: 1.6rem;
+  font-size: 16px;
   font-weight: 500;
   color: #364153;
   margin: 0;
-  padding: 1.8rem 2rem;
+  padding: 18px 20px;
   border-bottom: 1px solid #F5F5F5;
 }
 
 .tab-navigation {
   display: flex;
-  gap: 1.2rem;
-  margin: 1.6rem 2.4rem;
+  gap: 12px;
+  margin: 16px 24px;
 
   .tab {
     display: flex;
     align-items: center;
-    height: 3.2rem;
+    height: 32px;
     text-align: center;
-    padding: 0 1.6rem;
-    border-radius: 0.6rem;
-    font-size: 1.4rem;
+    padding: 0 16px;
+    border-radius: 6px;
+    font-size: 14px;
     color: #99A1AF;
     cursor: pointer;
     position: relative;
@@ -357,24 +357,24 @@ onBeforeUnmount(() => {
 }
 
 .modal-body {
-  max-height: 42rem;
-  padding: 0 2.4rem 2rem;
+  max-height: 420px;
+  padding: 0 24px 20px;
   overflow-y: auto;
 }
 
 .character-list {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  margin-bottom: 1.2rem;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .character-item {
   display: flex;
   cursor: pointer;
   border: 2px solid #F5F5F5;
-  border-radius: 0.8rem;
-  padding: 1.2rem;
+  border-radius: 8px;
+  padding: 12px;
   background: #F5F5F5;
 
   &.selected {
@@ -384,11 +384,11 @@ onBeforeUnmount(() => {
 
 .character-avatar {
   position: relative;
-  width: 7.4rem;
-  height: 9.8rem;
-  border-radius: 0.8rem;
+  width: 74px;
+  height: 98px;
+  border-radius: 8px;
   overflow: hidden;
-  margin-right: 1.6rem;
+  margin-right: 16px;
   flex-shrink: 0;
   background: #FFFFFF;
 
@@ -407,11 +407,11 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.6rem;
+    margin-bottom: 6px;
   }
   .character-name {
     font-weight: 500;
-    font-size: 1.6rem;
+    font-size: 16px;
     color: #0A0A0A;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -419,15 +419,15 @@ onBeforeUnmount(() => {
   }
 
   .character-cost {
-    font-size: 1.2rem;
+    font-size: 12px;
     color: #fb64b6;
     white-space: nowrap;
   }
 
   .character-description {
-    font-size: 1.2rem;
+    font-size: 12px;
     color: #364153;
-    line-height: 1.8rem;
+    line-height: 18px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -441,19 +441,19 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2.4rem;
-  padding: 1.8rem 2.4rem ;
+  gap: 24px;
+  padding: 18px 24px ;
   border-top: 1px solid #F5F5F5;
 
   .modal-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: none;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &.cancel {
@@ -494,7 +494,7 @@ onBeforeUnmount(() => {
 
 .no-characters{
   text-align: center;
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6a7282;
 }
 
@@ -502,17 +502,17 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  padding: 2rem 0;
+  gap: 10px;
+  padding: 20px 0;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
     animation: spin 1s linear infinite;
   }
 
   span {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: #6a7282;
   }
 }
@@ -521,8 +521,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.2rem;
-  border-radius: 0.8rem;
+  padding: 12px;
+  border-radius: 8px;
   background: linear-gradient( 90deg, rgba(194, 122, 255, 0.08) 0%, rgba(255, 127, 250, 0.08) 50%, rgba(251, 100, 243, 0.08) 100%);
   cursor: pointer;
   transition: all 0.2s ease-in;
@@ -535,15 +535,15 @@ onBeforeUnmount(() => {
   }
 
   b {
-    width: 8rem;
-    height: 8rem;
+    width: 80px;
+    height: 80px;
     background: url('@/assets/images/project/add.png') no-repeat;
     background-size: 100% 100%;
   }
 
   span {
     font-weight: 500;
-    font-size: 1.4rem;
+    font-size: 14px;
     text-transform: none;
     background: linear-gradient(90deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);
     -webkit-background-clip: text;

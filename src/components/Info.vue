@@ -211,19 +211,19 @@ function modifyInfo() {
 
 <style lang="scss" scoped>
 .container {
-  max-width: 48rem;
+  max-width: 480px;
   width: 100%;
   height: 100%;
   margin: 0 auto;
-  padding: 16rem 0 3rem;
+  padding: 160px 0 30px;
 
   .tip {
-    margin-bottom: 4rem;
+    margin-bottom: 40px;
     font: {
       weight: 500;
-      size: 2.4rem;
+      size: 24px;
     }
-    line-height: 3.6rem;
+    line-height: 36px;
     color: #101828;
   }
 
@@ -231,24 +231,24 @@ function modifyInfo() {
     .info-item {
       display: flex;
       align-items: center;
-      margin: 0 0 2.4rem -9rem;
+      margin: 0 0 24px -90px;
 
       label {
-        width: 7rem;
+        width: 70px;
         text-align: right;
-        margin: 0 2rem 0 0;
-        font-size: 1.4rem;
+        margin: 0 20px 0 0;
+        font-size: 14px;
         color: #4a5565;
       }
 
       .name-ipt {
-        width: 48rem;
-        height: 5rem;
-        padding: 1rem;
-        font-size: 1.6rem;
+        width: 480px;
+        height: 50px;
+        padding: 10px;
+        font-size: 16px;
         border: 1px solid #fccee8;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.9);
         color: #101828;
 
@@ -263,12 +263,12 @@ function modifyInfo() {
         align-items: flex-end;
 
         .avatar {
-          width: 8rem;
-          height: 8rem;
-          margin-right: 1rem;
+          width: 80px;
+          height: 80px;
+          margin-right: 10px;
           border: 1px solid #fb64b6;
-          border-radius: 0.8rem;
-          -webkit-border-radius: 0.8rem;
+          border-radius: 8px;
+          -webkit-border-radius: 8px;
           object-fit: cover;
         }
 
@@ -277,7 +277,7 @@ function modifyInfo() {
           cursor: pointer;
 
           span {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #fb64b6;
           }
 
@@ -286,7 +286,7 @@ function modifyInfo() {
             left: 0;
             bottom: 0;
             width: 100%;
-            height: 4rem;
+            height: 40px;
             opacity: 0;
             z-index: 20;
             cursor: pointer;
@@ -300,7 +300,7 @@ function modifyInfo() {
         .info-age-list {
           display: flex;
           align-items: center;
-          margin-right: 2rem;
+          margin-right: 20px;
           cursor: pointer;
 
           &:last-child {
@@ -308,13 +308,13 @@ function modifyInfo() {
           }
 
           img {
-            width: 2.4rem;
-            height: 2.4rem;
-            margin-right: 0.6rem;
+            width: 24px;
+            height: 24px;
+            margin-right: 6px;
           }
 
           span {
-            font-size: 1.6rem;
+            font-size: 16px;
             color: #364153;
           }
         }
@@ -325,11 +325,11 @@ function modifyInfo() {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 48rem;
-      height: 4.8rem;
-      font-size: 1.6rem;
-      -webkit-border-radius: 0.8rem;
-      border-radius: 0.8rem;
+      width: 480px;
+      height: 48px;
+      font-size: 16px;
+      -webkit-border-radius: 8px;
+      border-radius: 8px;
       background: linear-gradient(45deg, #fb64b6 0%, #ff94ce 50%, #fb64b6 100%);
       color: #ffffff;
       cursor: pointer;
@@ -351,14 +351,14 @@ function modifyInfo() {
   background: rgba(0, 0, 0, 0.4);
   z-index: 800;
   img {
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 32px;
+    height: 32px;
     animation: rotate 2s linear infinite;
   }
   p {
-    margin: 2rem 0 0;
+    margin: 20px 0 0;
     font: {
-      size: 1.8rem;
+      size: 18px;
       weight: 500;
     }
     color: #ffffff;

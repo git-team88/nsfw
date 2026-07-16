@@ -207,40 +207,40 @@ onMounted(() => {
 
 .modal-content {
   background: #ffffff;
-  border-radius: 1.2rem;
-  width: 76.8rem;
+  border-radius: 12px;
+  width: 768px;
   display: flex;
   flex-direction: column;
   position: relative;
 
   .modal-close {
     position: absolute;
-    right: 1.8rem;
-    top: 1.8rem;
-    width: 2rem;
-    height: 2rem;
+    right: 18px;
+    top: 18px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 
   .modal-title {
-    font-size: 1.6rem;
+    font-size: 16px;
     font-weight: 500;
     color: #364153;
     margin: 0;
-    padding: 1.8rem 2rem;
+    padding: 18px 20px;
     border-bottom: 1px solid #F5F5F5;
   }
 
   .modal-body {
     flex: 1;
-    padding: 2rem 0 2rem 2.4rem;
-    max-height: 46rem;
+    padding: 20px 0 20px 24px;
+    max-height: 460px;
     overflow-y: auto;
 
     .style {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.8rem;
+      gap: 8px;
 
       .style-item {
         position: relative;
@@ -248,9 +248,9 @@ onMounted(() => {
         flex-direction: column;
         align-items: center;
         cursor: pointer;
-        width: 13.6rem;
+        width: 136px;
 
-        border-radius: 0.8rem;
+        border-radius: 8px;
 
         &.selected {
           img{
@@ -259,10 +259,10 @@ onMounted(() => {
         }
 
         img {
-          width: 13.6rem;
-          height: 13.6rem;
+          width: 136px;
+          height: 136px;
           object-fit: cover;
-          border-radius: 0.8rem;
+          border-radius: 8px;
           border: 2px solid transparent;
         }
 
@@ -270,15 +270,15 @@ onMounted(() => {
           position: absolute;
           left: 0;
           bottom: 0;
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #364153;
           text-align: center;
           width: 100%;
-          padding: 0.6rem 0;
+          padding: 6px 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          border-radius: 0 0 0.8rem 0.8rem;
+          border-radius: 0 0 8px 8px;
           background: linear-gradient( 180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 100%);
           z-index: 1;
         }
@@ -291,18 +291,18 @@ onMounted(() => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 1rem;
-          padding: 4rem;
-          margin-top: 1rem;
+          gap: 10px;
+          padding: 40px;
+          margin-top: 10px;
 
           img {
-            width: 2rem;
-            height: 2rem;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
           }
 
           span {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #6a7282;
           }
 
@@ -321,28 +321,28 @@ onMounted(() => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 1.6rem;
-          padding: 4rem;
+          gap: 16px;
+          padding: 40px;
           text-align: center;
 
           .error-message {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #ff4d4f;
-            max-width: 40rem;
+            max-width: 400px;
           }
 
           .retry-button {
              display: flex;
               align-items: center;
               justify-content: center;
-              min-width: 24rem;
-              height: 4.8rem;
-              padding: 0.8rem 2.4rem;
-              font-size: 1.4rem;
+              min-width: 240px;
+              height: 48px;
+              padding: 8px 24px;
+              font-size: 14px;
               color: #fff;
               background: #fb64b6;
               border: none;
-              border-radius: 0.8rem;
+              border-radius: 8px;
               cursor: pointer;
 
               &:hover {
@@ -355,10 +355,10 @@ onMounted(() => {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4rem;
+          padding: 40px;
 
           .empty-message {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #6a7282;
           }
         }
@@ -368,19 +368,19 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 2.4rem;
-    padding: 1.8rem 2.4rem ;
+    gap: 24px;
+    padding: 18px 24px ;
     border-top: 1px solid #F5F5F5;
 
     .modal-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 13.6rem;
-      height: 4.8rem;
+      min-width: 136px;
+      height: 48px;
       border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       cursor: pointer;
 
       &.cancel {

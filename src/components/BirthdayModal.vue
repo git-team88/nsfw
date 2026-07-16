@@ -66,54 +66,54 @@ function close() {
   z-index: 500;
 }
 .modal {
-  width: 52rem;
+  width: 520px;
   background: #ffffff;
-  border-radius: 1.2rem;
-  padding: 1.8rem 0;
+  border-radius: 12px;
+  padding: 18px 0;
   position: relative;
 }
 .close-btn {
   position: absolute;
-  right: 2rem;
-  top: 2rem;
-  width: 2rem;
-  height: 2rem;
+  right: 20px;
+  top: 20px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 .title {
-  font-size: 1.6rem;
+  font-size: 16px;
   font-weight: 500;
   color: #101828;
-  margin-bottom: 1.8rem;
-  margin-left: 1.8rem;
+  margin-bottom: 18px;
+  margin-left: 18px;
 }
 .date-picker {
-  margin-bottom: 1.8rem;
-  padding: 1.8rem 3.2rem;
+  margin-bottom: 18px;
+  padding: 18px 32px;
   border-top: 1px solid rgba(251, 100, 182, 0.2);
   border-bottom: 1px solid rgba(251, 100, 182, 0.2);
 }
 
 .label {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #4a5565;
-  margin-bottom: 1.2rem;
+  margin-bottom: 12px;
   span {
     color: #fa2d47;
-    margin-right: 0.4rem;
+    margin-right: 4px;
   }
 }
 .confirm-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24rem;
-  height: 4.8rem;
+  width: 240px;
+  height: 48px;
   margin: 0 auto;
   background: #fb64b6;
-  border-radius: 0.8rem;
+  border-radius: 8px;
   color: #ffffff;
-  font-size: 1.4rem;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   font-weight: 500;

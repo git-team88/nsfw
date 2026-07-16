@@ -296,88 +296,82 @@ function nextPage() {
 
 .view-modal {
   position: relative;
-  width: 98rem;
-  height: calc(100vh - 34rem);
-  max-height: 56rem;
+  width: 980px;
+  height: calc(100vh - 340px);
+  max-height: 560px;
   background: #FFFFFF;
-  border-radius: 1.2rem;
+  border-radius: 14px;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   overflow: hidden;
 }
 
 .modal-content {
   display: flex;
-  height: 56rem;
+  height: 560px;
 }
 
 /* 左侧部分 */
 .left-section {
-  width: 37.2rem;
+  width: 372px;
   height: 100%;
-  padding: 2rem 3.6rem;
-  background: #F5F5F5;
+  padding: 20px 36px;
+  background: #FFEFF5;
+  border-right: 2px solid #161122;
   display: flex;
   flex-direction: column;
 }
 
 .project-name {
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: #364153;
-  margin-bottom: 2rem;
+  font-size: 16px;
+  font-weight: 800;
+  color: #161122;
+  margin-bottom: 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .project-cover {
-  width: 30rem;
+  width: 300px;
   aspect-ratio: 3/4;
   object-fit: cover;
-  border-radius: 1.2rem;
-  margin-bottom: 2rem;
+  border-radius: 14px;
+  margin-bottom: 20px;
 }
 
 .publish-btn {
   width: 100%;
-  height: 4.8rem;
-  border: none;
-  border-radius: 0.8rem;
-  font-size: 1.6rem;
-  font-weight: 500;
-  background-color: #fb64b6;
+  height: 48px;
+  border: 2px solid #161122;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF4D8D, #FF7A45);
   color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    position: relative;
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: inherit;
-    }
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0 #161122;
   }
 
   &.published {
-    background-color: rgba(251, 100, 182, 0.5);
-    color: #FFFFFF;
+    background: rgba(255, 77, 142, 0.4);
+    color: #161122;
     cursor: not-allowed;
 
     &:hover {
-      &::after {
-        display: none;
-      }
+      transform: none;
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 
   &:disabled {
-    background-color: rgba(251, 100, 182, 0.5);
-    color: #FFFFFF;
+    background: rgba(255, 77, 142, 0.4);
+    color: #161122;
     cursor: not-allowed;
   }
 }
@@ -388,7 +382,7 @@ function nextPage() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 2rem 2.4rem 2rem 2.4rem;
+  padding: 20px 24px 20px 24px;
   background: #ffffff;
   overflow-y: auto;
   box-sizing: border-box;
@@ -397,90 +391,97 @@ function nextPage() {
 .right-header {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
 }
 
 .detail-title {
-  font-size: 1.4rem;
-  color: #364153;
+  font-size: 14px;
+  font-weight: 800;
+  color: #161122;
   flex-shrink: 0;
 }
 
 .episode-nav {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
   flex: 1;
-  margin-bottom: 1.8rem;
+  margin-bottom: 18px;
 }
 
 .episode-tabs {
   display: flex;
-  gap: 0.6rem;
+  gap: 6px;
   overflow-x: auto;
-  padding: 0.4rem 0;
+  padding: 4px 0;
 }
 
 .episode-tab {
   position: relative;
-  min-width: 4rem;
-  height: 4rem;
-  background: #F5F5F5;
-  border-radius: 0.6rem;
+  min-width: 40px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 2px solid #161122;
+  border-radius: 11px;
   cursor: pointer;
-  font-size: 1.4rem;
-  color: #6A7282;
+  font-size: 14px;
+  color: #161122;
+  opacity: 0.65;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 
   &.active {
-    background-color: rgba(251, 100, 182, 0.12);
-    color: #FB64B6;
+    background: #FF4D8E;
+    color: #ffffff;
+    opacity: 1;
   }
 
   &:hover:not(.active) {
-    color: #FB64B6;
+    color: #161122;
+    opacity: 1;
   }
 
   .published-icon {
     position: absolute;
-    right: 0.4rem;
-    bottom: 0.4rem;
-    width: 1.2rem;
-    height: 1.2rem;
+    right: 4px;
+    bottom: 4px;
+    width: 12px;
+    height: 12px;
   }
 }
 
 .detail-title-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
 }
 
 .published-badge {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 1.2rem;
-  color: #99A1AF;
+  gap: 4px;
+  font-size: 12px;
+  color: #161122;
+  opacity: 0.4;
 
   .published-dot {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 12px;
+    height: 12px;
   }
 
   .published-text {
-    font-size: 1.2rem;
+    font-size: 12px;
   }
 }
 
 .nav-btn {
-  width: 4rem;
-  height: 4rem;
-  background: #F5F5F5;
-  border-radius: 0.6rem;
+  width: 40px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 2px solid #161122;
+  border-radius: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -493,17 +494,17 @@ function nextPage() {
   }
 
   img {
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 24px;
+    height: 24px;
   }
 }
 
 .close-btn {
   position: absolute;
-  top: 1.8rem;
-  right: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  top: 18px;
+  right: 18px;
+  width: 20px;
+  height: 20px;
   border: none;
   background: none;
   cursor: pointer;
@@ -513,28 +514,30 @@ function nextPage() {
   flex-shrink: 0;
 
   img {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
   }
 }
 
 .right-body {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 1rem;
+  padding-bottom: 10px;
 }
 
 .episode-title {
-  font-size: 1.2rem;
-  color: #99A1AF;
-  margin-bottom: 1rem;
+  font-size: 12px;
+  color: #161122;
+  opacity: 0.4;
+  margin-bottom: 10px;
 }
 
 .episode-desc {
-  font-size: 1.2rem;
-  color: #6A7282;
-  line-height: 1.8rem;
-  margin-bottom: 1rem;
+  font-size: 12px;
+  color: #161122;
+  opacity: 0.65;
+  line-height: 18px;
+  margin-bottom: 10px;
 }
 
 .episode-images {
@@ -552,22 +555,23 @@ function nextPage() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 0;
+  padding: 40px 0;
 }
 
 .loading-spinner {
-  width: 4rem;
-  height: 4rem;
-  border: 0.4rem solid #F5F5F5;
-  border-top: 0.4rem solid #FB64B6;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #F3EFE7;
+  border-top: 4px solid #161122;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1.2rem;
+  margin-bottom: 12px;
 }
 
 .loading-text {
-  font-size: 1.4rem;
-  color: #6A7282;
+  font-size: 14px;
+  color: #161122;
+  opacity: 0.65;
 }
 
 @keyframes spin {

@@ -74,17 +74,17 @@ const handleConfirm = () => {
 .unlimited-mode-modal {
   position: relative;
   background: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 50rem;
-  padding: 2rem 3.6rem;
+  border-radius: 12px;
+  width: 500px;
+  padding: 20px 36px;
   overflow: hidden;
 
   .modal-close {
     position: absolute;
-    right: 1.2rem;
-    top: 1.6rem;
-    width: 2rem;
-    height: 2rem;
+    right: 12px;
+    top: 16px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   }
 
@@ -94,7 +94,7 @@ const handleConfirm = () => {
     align-items: center;
 
     h3 {
-      font-size: 1.6rem;
+      font-size: 16px;
       font-weight: 500;
       color: #364153;
       margin: 0;
@@ -102,12 +102,12 @@ const handleConfirm = () => {
   }
 
   .modal-content {
-    margin: 3.4rem 0;
+    margin: 34px 0;
     text-align: center;
     p {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #364153;
-      line-height: 2.4rem;
+      line-height: 24px;
       margin: 0;
     }
   }
@@ -116,17 +116,17 @@ const handleConfirm = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2.4rem;
+    gap: 24px;
 
     .modal-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 13.6rem;
-      height: 4.8rem;
+      min-width: 136px;
+      height: 48px;
       border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
+      border-radius: 8px;
+      font-size: 14px;
       cursor: pointer;
 
       &.cancel {
@@ -169,16 +169,16 @@ const handleConfirm = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    margin-top: 1.2rem;
+    gap: 6px;
+    margin-top: 12px;
     cursor: pointer;
 
     img {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 24px;
+      height: 24px;
     }
     span {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6a7282;
     }
   }

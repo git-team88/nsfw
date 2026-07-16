@@ -367,14 +367,10 @@ const isImgDragging = ref(false);
 const lastY = ref(0);
 const lastX = ref(0);
 
-// Calculate crop dimensions - target 900x1200
 function getCropDimensions() {
-  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const CROP_W_REM = 15; // From CSS: width: 15rem;
-  const CROP_H_REM = 20; // From CSS: height: 20rem;
   return {
-    width: CROP_W_REM * rootFontSize,
-    height: CROP_H_REM * rootFontSize,
+    width: 150,
+    height: 200,
   };
 }
 
@@ -956,8 +952,8 @@ async function confirm() {
 async function generateCover(backgroundColor: string, title: string): Promise<string> {
   // Create canvas for cover generation
   const canvas = document.createElement("canvas");
-  canvas.width = 600; // 15rem at 40px font size
-  canvas.height = 800; // 20rem at 40px font size
+  canvas.width = 150;
+  canvas.height = 200;
   const ctx = canvas.getContext("2d")!;
 
   // Draw background
@@ -1116,9 +1112,9 @@ function handleTitleInput() {
 
 .modal-content {
   position: relative;
-  width: 52rem;
+  width: 520px;
   background: #ffffff;
-  border-radius: 1.2rem;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1126,32 +1122,32 @@ function handleTitleInput() {
 
 .close-btn {
   position: absolute;
-  top: 2rem;
-  right: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  top: 20px;
+  right: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-header {
-  height: 6rem;
+  height: 60px;
   border-bottom: 1px solid #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2.4rem;
+  padding: 0 24px;
 
   .tabs {
     display: flex;
     align-items: center;
-    gap: 2.4rem;
+    gap: 24px;
     height: 100%;
 
     span {
       height: 100%;
       display: flex;
       align-items: center;
-      font-size: 1.6rem;
+      font-size: 16px;
       color: #667085;
       cursor: pointer;
       position: relative;
@@ -1175,13 +1171,13 @@ function handleTitleInput() {
 }
 
 .modal-body {
-  padding: 1.8rem 2.4rem;
+  padding: 18px 24px;
 }
 
 .select-mode {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 20px;
   align-items: center;
 
   .preview-container {
@@ -1189,8 +1185,8 @@ function handleTitleInput() {
   }
 
   .preview-box {
-    width: 15rem;
-    height: 20rem;
+    width: 150px;
+    height: 200px;
     position: relative;
     display: flex;
     align-items: center;
@@ -1205,8 +1201,8 @@ function handleTitleInput() {
   }
 
   .preview-text{
-    width: 15rem;
-    height: 20rem;
+    width: 150px;
+    height: 200px;
     position: relative;
     display: flex;
     align-items: center;
@@ -1221,7 +1217,7 @@ function handleTitleInput() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.6rem;
+    gap: 16px;
   }
 
   .skeleton {
@@ -1245,11 +1241,11 @@ function handleTitleInput() {
   .ai-generate-btn-container {
     position: absolute;
     bottom: 0;
-    left: 17rem;
+    left: 170px;
     width: max-content;
     display: flex;
     justify-content: center;
-    border-radius: 0.8rem;
+    border-radius: 8px;
     background: linear-gradient( 90deg, rgba(194, 122, 255, 0.07) 0%, rgba(255, 127, 250, 0.07) 50%, rgba(251, 100, 243, 0.07) 100%);
     box-shadow: 0px 0px 12px 0px rgba(251,100,182,0.12);
     overflow: hidden;
@@ -1275,8 +1271,8 @@ function handleTitleInput() {
   }
 
   .ai-generate-btn {
-    font-size: 1.4rem;
-    padding: 1rem;
+    font-size: 14px;
+    padding: 10px;
     color: transparent;
     background: linear-gradient(135deg, #C27AFF 0%, #FF7FFA 50%, #FB64F3 100%);;
     -webkit-background-clip: text;
@@ -1309,13 +1305,13 @@ function handleTitleInput() {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-radius: 0.4rem;
+    border-radius: 4px;
   }
 
   .bg-img {
     width: 100%;
     height: 100%;
-    border-radius: 0.4rem;
+    border-radius: 4px;
     object-fit: cover;
   }
 
@@ -1331,8 +1327,8 @@ function handleTitleInput() {
   }
 
   .loading-spinner {
-    width: 2rem;
-    height: 2rem;
+    width: 20px;
+    height: 20px;
     border: 2px solid #fb64b6;
     border-top-color: transparent;
     border-radius: 50%;
@@ -1380,11 +1376,11 @@ function handleTitleInput() {
 
   .quote-mark {
     font-weight: 500;
-    font-size: 4rem;
+    font-size: 40px;
     color: #58474c;
     position: absolute;
-    top: 1.6rem;
-    left: 1.8rem;
+    top: 16px;
+    left: 18px;
   }
 
   .title-input-container {
@@ -1392,13 +1388,13 @@ function handleTitleInput() {
     width: 75%;
     display: flex;
     flex-direction: column;
-    padding-top: 5rem;
+    padding-top: 50px;
     z-index: 1;
   }
 
   .title-text {
     font-weight: 500;
-    font-size: 1.4rem;
+    font-size: 14px;
     color: #58474c;
     text-align: center;
     background: transparent;
@@ -1406,36 +1402,36 @@ function handleTitleInput() {
     outline: none;
     max-width: 100%;
     resize: none;
-    height: 13rem;
+    height: 130px;
     line-height: 1.5;
   }
 
   .title-count {
-    font-size: 1.2rem;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.7);
-    margin-top: 0.5rem;
+    margin-top: 5px;
   }
 
   .placeholder {
     color: #99a1af;
-    font-size: 1.4rem;
+    font-size: 14px;
   }
 
   .backgrounds-section-box{
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 8px;
     width: 100%;
     overflow-x: auto;
   }
 
   .backgrounds-section {
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
 
     .section-title {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #364153;
-      margin-bottom: 1rem;
+      margin-bottom: 10px;
       font-weight: 500;
     }
   }
@@ -1443,12 +1439,12 @@ function handleTitleInput() {
   .backgrounds-strip {
     display: flex;
     justify-content: flex-start;
-    gap: 0.8rem;
+    gap: 8px;
 
     .background-cell {
-      width: 5.4rem;
-      height: 7.2rem;
-      border-radius: 0.4rem;
+      width: 54px;
+      height: 72px;
+      border-radius: 4px;
       overflow: hidden;
       cursor: pointer;
       border: 1px solid transparent;
@@ -1475,7 +1471,7 @@ function handleTitleInput() {
 
       .mini-title {
         font-weight: 500;
-        font-size: 2.4rem;
+        font-size: 24px;
         color: #444550;
         text-align: center;
         z-index: 1;
@@ -1486,11 +1482,11 @@ function handleTitleInput() {
 
 .upload-mode {
   height: 100%;
-  padding: 0.4rem 0;
+  padding: 4px 0;
 
   .upload-area {
     width: 100%;
-    height: 28rem;
+    height: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1498,13 +1494,13 @@ function handleTitleInput() {
     cursor: pointer;
 
     img {
-      width: 4.8rem;
-      height: 4.8rem;
+      width: 48px;
+      height: 48px;
     }
 
     .modal-text {
-      margin: 2.4rem 0 1.2rem;
-      font-size: 1.4rem;
+      margin: 24px 0 12px;
+      font-size: 14px;
       color: #364153;
 
       :deep(span){
@@ -1513,7 +1509,7 @@ function handleTitleInput() {
     }
 
     .modal-tip {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #99a1af;
     }
   }
@@ -1523,12 +1519,12 @@ function handleTitleInput() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.6rem;
+    gap: 16px;
 
     .preview-crop-box {
-      width: 47rem;
-      height: 22.4rem;
-      border-radius: 0.8rem;
+      width: 470px;
+      height: 224px;
+      border-radius: 8px;
       position: relative;
       display: flex;
       align-items: center;
@@ -1548,8 +1544,8 @@ function handleTitleInput() {
       }
 
       .crop-frame {
-        width: 15rem;
-        height: 20rem;
+        width: 150px;
+        height: 200px;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -1567,22 +1563,22 @@ function handleTitleInput() {
 }
 
 .modal-footer {
-  padding: 1.8rem;
+  padding: 18px;
   border-top: 1px solid #F5F5F5;
   display: flex;
   justify-content: flex-end;
-  gap: 1.2rem;
+  gap: 12px;
 
   .reupload-box{
     position: relative;
   }
 
   .reupload-btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
+    min-width: 136px;
+    height: 48px;
     border: 1px solid #FB64B6;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    border-radius: 8px;
+    font-size: 14px;
     color: #FB64B6;
     background: none;
     cursor: pointer;
@@ -1605,10 +1601,10 @@ function handleTitleInput() {
     background: #fb64b6;
     color: #ffffff;
     border: none;
-    min-width: 13.6rem;
-    height: 4.8rem;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
+    min-width: 136px;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -1654,31 +1650,31 @@ function handleTitleInput() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 52rem;
+    width: 520px;
     background-color: #ffffff;
-    border-radius: 1.2rem;
-    padding: 5.4rem 2.4rem 2.4rem;
+    border-radius: 12px;
+    padding: 54px 24px 24px;
 
     .modal-message {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #6A7282;
-      margin-bottom: 1.2rem;
+      margin-bottom: 12px;
       text-align: center;
     }
 
     .modal-actions {
       display: flex;
       justify-content: center;
-      gap: 2.4rem;
-      margin-top: 2.4rem;
+      gap: 24px;
+      margin-top: 24px;
 
       .modal-cancel-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         background: #F5F5F5;
         color: #6A7282;
@@ -1689,12 +1685,12 @@ function handleTitleInput() {
       }
 
       .modal-retry-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         border: none;
         background: #fb64b6;

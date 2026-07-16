@@ -233,47 +233,50 @@ watch(() => props.project, (newProject) => {
 .modal-content {
   position: relative;
   background-color: #FFFFFF;
-  border-radius: 1.2rem;
-  width: 98rem;
-  height: calc(100vh - 26rem);
-  max-height: 64rem;
+  border-radius: 14px;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  width: 980px;
+  height: calc(100vh - 260px);
+  max-height: 640px;
   display: flex;
   flex-direction: column;
 }
 
 .close-btn{
   position: absolute;
-  right: 1.8rem;
-  top: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  right: 18px;
+  top: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
 .modal-body {
   display: flex;
   height: 100%;
-  gap: 2rem;
+  gap: 20px;
   overflow: hidden;
 }
 
 .modal-left{
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
-  width: 28rem;
+  gap: 16px;
+  width: 280px;
   height: 100%;
-  padding: 2rem;
-  border-radius: 1.2rem 0 0 1.2rem;
-  background: #F5F5F5;
+  padding: 20px;
+  border-radius: 14px 0 0 14px;
+  background: #FFEFF5;
+  border-right: 2px solid #161122;
 
   .modal-title{
-    font-weight: 500;
-    font-size: 1.6rem;
+    font-weight: 800;
+    font-size: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #364153;
+    color: #161122;
   }
 }
 
@@ -282,20 +285,23 @@ watch(() => props.project, (newProject) => {
   overflow-y: auto;
 
   .chapter-item {
-    margin-bottom: 1.6rem;
-    font-size: 1.4rem;
-    color: #6A7282;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #161122;
+    opacity: 0.65;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     &:hover {
-      color: #364153;
+      color: #161122;
+      opacity: 1;
     }
 
     &.active {
-      color: #364153;
+      color: #161122;
+      opacity: 1;
     }
 
     .chapter-info {
@@ -303,9 +309,10 @@ watch(() => props.project, (newProject) => {
     }
 
     .chapter-status {
-      color: #99A1AF;
-      font-size: 1.2rem;
-      margin-left: 1rem;
+      color: #161122;
+      opacity: 0.4;
+      font-size: 12px;
+      margin-left: 10px;
     }
   }
 }
@@ -325,65 +332,56 @@ watch(() => props.project, (newProject) => {
   overflow: hidden;
 
   .content-title {
-    padding: 1.6rem 0 2rem;
-    font-size: 1.6rem;
-    font-weight: 500;
-    color: #364153;
+    padding: 16px 0 20px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #161122;
   }
 
   .content-text {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 1.6rem;
-    font-size: 1.4rem;
-    line-height: 1.8rem;
-    color: #364153;
+    padding-bottom: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #161122;
     white-space: pre-wrap;
   }
 }
 
 .modal-footer {
-  padding: 2rem;
+  padding: 20px;
   display: flex;
   justify-content: center;
 }
 
 .publish-btn {
-  min-width: 30rem;
-  height: 5.6rem;
-  border: none;
-  border-radius: 0.8rem;
-  font-size: 1.6rem;
-  background: #FB64B6;
+  min-width: 300px;
+  height: 56px;
+  border: 2px solid #161122;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF4D8D, #FF7A45);
   color: #ffffff;
   cursor: pointer;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: inherit;
-    }
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0 #161122;
   }
 
   &.published {
-    background: rgba(251, 100, 182, 0.5);
-    color: #FFFFFF;
+    background: rgba(255, 77, 142, 0.4);
+    color: #161122;
     cursor: not-allowed;
 
     &:hover {
-      position: relative;
-
-      &::after {
-        display: none;
-      }
+      transform: none;
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 }

@@ -245,61 +245,57 @@ onBeforeUnmount(() => {
 .user-my-follows-subs {
   width: 100%;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #FFFBF4;
 }
 .container {
-  max-width: 139.2rem;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
-  gap: 2.4rem;
+  gap: 18px;
+  padding: 0 30px;
 }
 .main {
   flex: 1;
-  padding-top: 12rem;
+  padding-top: 100px;
 }
 .panel {
-  min-height: calc(100vh - 14rem);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  border-radius: 1.2rem;
-  padding: 2.4rem 0;
+  min-height: calc(100vh - 140px);
+  background: #FFFDF7;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  padding: 24px 0;
 }
 .panel-top {
-  margin-bottom: 2.4rem;
-  padding: 0 3.6rem;
+  margin-bottom: 24px;
+  padding: 0 36px;
 }
 .panel-title {
-  font-weight: 500;
-  font-size: 2rem;
-  color: #101828;
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
 }
 
 .tabs {
-  display: flex;
-  gap: 3.2rem;
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
-  margin-bottom: 2.4rem;
-  padding: 0 3.6rem;
+  display: inline-flex;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  padding: 5px;
+  margin-bottom: 24px;
+  margin-left: 36px;
+  background: #FFFDF7;
 }
 .tab-item {
-  padding-bottom: 1.8rem;
-  font-size: 1.6rem;
-  color: #6a7282;
+  padding: 8px 20px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #161122;
   cursor: pointer;
-  position: relative;
+  border-radius: 10px;
+  transition: all 0.15s ease;
   &.active {
-    color: #101828;
-    font-weight: 500;
-    &::after {
-      content: "";
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: #fb64b6;
-      border-radius: 2px;
-    }
+    color: #FFFDF7;
+    background: #161122;
   }
 }
 
@@ -307,10 +303,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40rem;
+  height: 400px;
   img {
-    width: 4rem;
-    height: 4rem;
+    width: 40px;
+    height: 40px;
     animation: rotate 1.5s linear infinite;
   }
 }
@@ -327,13 +323,13 @@ onBeforeUnmount(() => {
 .list-area {
   display: flex;
   flex-direction: column;
-  padding: 0 3.6rem;
-  gap: 1.2rem;
-  min-height: 40rem;
+  padding: 0 36px;
+  gap: 12px;
+  min-height: 400px;
 }
 
 .pagination-wrap {
-  margin-top: 4rem;
+  margin-top: 40px;
   display: flex;
   justify-content: center;
 }
@@ -343,62 +339,76 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.8rem 2.4rem 1.8rem 1.8rem;
-  border: 1px solid rgba(251, 100, 182, 0.1);
-  border-radius: 0.8rem;
+  padding: 18px 24px 18px 18px;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  background: #FFFDF7;
   cursor: pointer;
+  transition: transform 0.15s ease;
 
   &:hover {
-    box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
   }
   .left {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 12px;
     .avatar {
-      width: 5.2rem;
-      height: 5.2rem;
-      border-radius: 0.8rem;
+      width: 52px;
+      height: 52px;
+      border: 2px solid #161122;
+      border-radius: 50%;
       object-fit: cover;
     }
     .info {
       .name {
-        max-width: 60rem;
+        max-width: 600px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 1.6rem;
-        color: #101828;
+        font-size: 16px;
+        font-weight: 800;
+        color: #161122;
       }
       .id {
-        font-size: 1.4rem;
-        color: #99a1af;
-        margin-top: 0.8rem;
+        font-size: 14px;
+        color: #161122;
+        opacity: 0.6;
+        margin-top: 4px;
       }
     }
   }
 }
 
 .follow-btn {
-  min-width: 11.2rem;
-  height: 4rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
+  min-width: 112px;
+  height: 40px;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
-  border: 1px solid rgba(251, 100, 182, 0.2);
-  background: none;
-  color: rgba(251, 100, 182, 0.5);
+  border: 2.5px solid #161122;
+  background: #FF4D8D;
+  color: #FFFDF7;
+  box-shadow: 3px 3px 0 #161122;
   position: relative;
   overflow: hidden;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #161122;
+  }
 
   &.following {
     .hover-text {
       display: none;
     }
     &:hover {
-      background: rgba(251, 100, 182, 0.06);
-      border-color: #fb64b6;
-      color: #fb64b6;
+      background: #161122;
+      color: #FF4D8D;
       .text {
         display: none;
       }
@@ -413,18 +423,19 @@ onBeforeUnmount(() => {
   .right {
     display: flex;
     align-items: center;
-    gap: 2.4rem;
+    gap: 24px;
     .price-info {
       text-align: right;
       .price {
-        font-size: 1.6rem;
-        color: #fb64b6;
-        font-weight: 500;
+        font-size: 16px;
+        color: #FF4D8D;
+        font-weight: 800;
       }
       .date {
-        font-size: 1.4rem;
-        color: #99a1af;
-        margin-top: 0.4rem;
+        font-size: 14px;
+        color: #161122;
+        opacity: 0.6;
+        margin-top: 4px;
       }
     }
 
@@ -432,28 +443,29 @@ onBeforeUnmount(() => {
       .more-box {
         position: relative;
         .more-icon {
-          width: 2.4rem;
-          height: 2.4rem;
+          width: 24px;
+          height: 24px;
           cursor: pointer;
         }
         .more-menu {
           position: absolute;
           right: 0;
-          top: 2.2rem;
+          top: 22px;
           display: flex;
           align-items: center;
           justify-content: center;
           width: auto;
-          min-width: 16rem;
-          background: #ffffff;
-          border: 1px solid rgba(251, 100, 182, 0.2);
-          border-radius: 0.6rem;
-          box-shadow: 0px 0px 15px -3px rgba(0, 0, 0, 0.08);
+          min-width: 160px;
+          background: #FFFDF7;
+          border: 2.5px solid #161122;
+          border-radius: 10px;
+          box-shadow: 3px 3px 0 #161122;
           z-index: 10;
           .menu-item {
-            padding: 0.8rem 1rem;
-            font-size: 1.2rem;
-            color: #6a7282;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #161122;
             cursor: pointer;
           }
         }
@@ -462,14 +474,15 @@ onBeforeUnmount(() => {
       .menu-auto {
         display: flex;
         align-items: center;
-        gap: 2.4rem;
-        font-size: 1.4rem;
-        color: #00d3f2;
+        gap: 24px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #FF4D8D;
 
         b {
           width: 1px;
-          height: 2.4rem;
-          background: rgba(251, 100, 182, 0.2);
+          height: 24px;
+          background: #161122;
         }
       }
     }
