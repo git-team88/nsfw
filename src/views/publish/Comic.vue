@@ -246,10 +246,9 @@
           <div class="perm-box">
             <div class="form-label-inner">
               <label class="form-label">{{ t("submit.permission") }}</label>
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <img src="@/assets/images/publish/intro.png" alt="Info" />
-                <div class="tooltip-arrow"></div>
-                <div class="tooltip">
+              <div class="info-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <div class="info-tooltip">
                   <div class="tooltip-content">
                     <div v-html="t('submit.permissionInfo')"></div>
                   </div>
@@ -280,10 +279,9 @@
                 <div class="form-label-inner">
                   <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
-                  <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <img src="@/assets/images/publish/intro.png" alt="Info" />
-                    <div class="tooltip-arrow"></div>
-                    <div class="tooltip">
+                  <div class="info-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div class="info-tooltip">
                       <div class="tooltip-content">
                         <div v-html="t('submit.collectionInfo')"></div>
                       </div>
@@ -309,10 +307,9 @@
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
-                          <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <img src="@/assets/images/publish/info.png" alt="Info" />
-                            <div class="tooltip-arrow"></div>
-                            <div class="tooltip">
+                          <div class="info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <div class="info-tooltip">
                               <div class="tooltip-content">
                                 <div v-html="t('submit.sensitiveContent')"></div>
                               </div>
@@ -2578,58 +2575,6 @@ function handleClickOutside(event: MouseEvent) {
   }
   if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
-  }
-}
-
-// Handle tooltip position to avoid window edge overflow
-function adjustTooltipPosition(event: MouseEvent) {
-  const infoIcon = event.currentTarget as HTMLElement;
-  const tooltip = infoIcon.querySelector('.tooltip') as HTMLElement;
-
-  if (tooltip) {
-    // Reset tooltip styles
-    tooltip.style.top = '50%';
-    tooltip.style.left = '100%';
-    tooltip.style.right = 'auto';
-    tooltip.style.transform = 'translateY(-50%)';
-    tooltip.style.marginLeft = '2rem';
-    tooltip.style.marginRight = '0';
-    tooltip.classList.remove('tooltip-left');
-
-    // Get element positions
-    const infoIconRect = infoIcon.getBoundingClientRect();
-
-    // Calculate available space
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    // Check horizontal overflow
-    if (infoIconRect.right + 300 > windowWidth) {
-      // Adjust tooltip
-      tooltip.style.left = 'auto';
-      tooltip.style.right = '100%';
-      tooltip.style.marginLeft = '0';
-      tooltip.style.marginRight = '2rem';
-      tooltip.classList.add('tooltip-left');
-    }
-
-    // Check vertical overflow for tooltip
-    const tooltipTop = infoIconRect.top + infoIconRect.height / 2 - 180 / 2;
-    if (tooltipTop + 180 > windowHeight) {
-      // Adjust position upwards
-      const overflow = (tooltipTop + 180) - windowHeight;
-      tooltip.style.top = 'auto';
-      tooltip.style.bottom = '0';
-      tooltip.style.transform = 'none';
-    } else if (tooltipTop < 0) {
-      // Adjust position downwards
-      tooltip.style.top = '0';
-      tooltip.style.transform = 'none';
-    } else {
-      // Center vertically
-      tooltip.style.top = '50%';
-      tooltip.style.transform = 'translateY(-50%)';
-    }
   }
 }
 

@@ -2873,6 +2873,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     collectionName: "コレクション名",
     tags: "タグ",
     description: "紹介",
+    descriptionInfo: `<span>コレクション概要：</span>コレクションの内容を説明し、読者がコレクションのテーマやスタイルを理解できるようにします。概要はコレクション詳細ページに表示されます。`,
     otherInfo: "その他の情報",
     status: "ステータス",
     publishedChapters: "公開済みの章",

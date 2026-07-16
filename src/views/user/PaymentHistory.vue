@@ -888,42 +888,32 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
   margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 2.5px solid #161122;
 }
 .tabs {
-  display: flex;
-  gap: 32px;
-  height: 100%;
+  display: inline-flex;
+  gap: 6px;
+  background: #fff;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  padding: 5px;
 }
 .tab-item {
-  display: flex;
-  align-items: center;
-  height: 100%;
   font-size: 16px;
-  color: #161122;
+  color: #6A7282;
+  padding: 8px 16px;
   cursor: pointer;
-  position: relative;
+  border-radius: 10px;
   font-weight: 500;
-
-      &:hover {
-        color: #FF4D8D;
-      }
-  &.active {
+  transition: all 0.15s ease;
+  &:hover {
     color: #161122;
+  }
+  &.active {
+    background: #161122;
+    color: #fff;
+    border-radius: 10px;
     font-weight: 800;
-    &::after {
-      content: "";
-      position: absolute;
-      bottom: -12px;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: #FF4D8D;
-      border-radius: 2px;
-    }
   }
 }
 

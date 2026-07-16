@@ -2905,6 +2905,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     collectionName: "合集名稱",
     tags: "標籤",
     description: "簡介",
+    descriptionInfo: `<span>合集簡介：</span>用於描述合集內容，幫助讀者了解合集的主題和風格。簡介將展示在合集詳情頁。`,
     otherInfo: "其他信息",
     status: "狀態",
     publishedChapters: "已發布章節",

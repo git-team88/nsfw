@@ -1,10 +1,11 @@
 <template>
   <div class="submit-article" :class="showFullContent ? 'on' : ''">
-    <Header :cur="-1"></Header>
+    <Header ref="headerRef" :cur="-1" @user-info-loaded="handleUserInfoLoaded"></Header>
 
     <div class="submit-container">
       <div class="back" @click="goBack">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <img src="@/assets/images/publish/back.png" alt="" v-if="showFullContent" />
+        <img src="@/assets/images/base/back.png" alt="" v-else />
       </div>
 
       <div class="tabs" :class="showFullContent ? 'on' : ''">
@@ -155,10 +156,9 @@
                 <div class="upload-btn" @click="triggerDocumentUpload">
                   <img src="@/assets/images/publish/text.png" alt="Upload" class="upload-icon" />
                   <span class="upload-text">{{ t('submit.uploadDocument') }}</span>
-                  <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <img src="@/assets/images/publish/intro.png" alt="Info" />
-                    <div class="tooltip-arrow"></div>
-                    <div class="tooltip">
+                  <div class="info-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div class="info-tooltip">
                       <div class="tooltip-content">
                         <div v-html="t('submit.uploadDocumentInfo')"></div>
                       </div>
@@ -219,74 +219,39 @@
 
       <!-- Full Content View: After clicking Next Step or Edit Mode -->
       <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
-        <div class="content-section">
-          <div class="content-label-box">
+        <!-- Permission Range -->
+        <div class="section">
+          <div class="form-label-box">
             <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
           </div>
 
-          <div class="caption-container">
-            <div class="input-wrap">
-              <input
-                v-model="form.title"
-                class="title-input"
-                type="text"
-                :maxlength="TITLE_MAX"
-                :placeholder="t('submit.titlePlaceholder')"
-                @input="handleTitleInput"
-                @blur="handleTitleBlur"
-              />
-              <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
-            </div>
-            <div class="caption-line"></div>
-            <div class="textarea-wrap">
-              <div
-                ref="captionRef"
-                class="description-content"
-                contenteditable="true"
-                :placeholder="t('submit.descriptionPlaceholder')"
-                @input="handleCaptionInput"
-                @blur="onCaptionBlur"
-                @paste="handlePaste"
-              ></div>
-            </div>
-          </div>
-
-          <div class="content-perm">
-            <div class="perm-box">
-              <div class="form-label-inner">
-                <label class="form-label">{{ t("submit.permission") }}</label>
-                <div class="info-icon" @mouseover="adjustTooltipPosition">
-                  <img src="@/assets/images/publish/intro.png" alt="Info" />
-                  <div class="tooltip-arrow"></div>
-                  <div class="tooltip">
-                    <div class="tooltip-content">
-                      <div v-html="t('submit.permissionInfo')"></div>
-                    </div>
+          <div class="perm-box">
+            <div class="form-label-inner">
+              <label class="form-label">{{ t("submit.permission") }}</label>
+              <div class="info-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <div class="info-tooltip">
+                  <div class="tooltip-content">
+                    <div v-html="t('submit.permissionInfo')"></div>
                   </div>
                 </div>
-
-              </div>
-
-              <div class="perm-options">
-                <div
-                  class="perm-option"
-                  v-for="(opt, index) in permOptions"
-                  :key="opt.key"
-                  @click="handlePermissionChange(opt.key, index)"
-                >
-                  <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                  <span>{{ t(opt.labelKey) }}
-                    <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
-                  </span>
-                </div>
               </div>
             </div>
 
-            <div class="caption-actions-box">
-              <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+            <div class="perm-options">
+              <div
+                class="perm-option"
+                v-for="(opt, index) in permOptions"
+                :key="opt.key"
+                @click="handlePermissionChange(opt.key, index)"
+              >
+                <img :src="form.permission === opt.key ? selectActive : select" alt="" />
+                <span>{{ t(opt.labelKey) }}
+                  <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
+                </span>
+              </div>
             </div>
           </div>
-
         </div>
 
         <!-- Collection -->
@@ -297,10 +262,9 @@
                 <div class="form-label-inner">
                   <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
-                  <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <img src="@/assets/images/publish/intro.png" alt="Info" />
-                    <div class="tooltip-arrow"></div>
-                    <div class="tooltip">
+                  <div class="info-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div class="info-tooltip">
                       <div class="tooltip-content">
                         <div v-html="t('submit.collectionInfo')"></div>
                       </div>
@@ -326,10 +290,9 @@
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
-                          <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <img src="@/assets/images/publish/info.png" alt="Info" />
-                            <div class="tooltip-arrow"></div>
-                            <div class="tooltip">
+                          <div class="info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <div class="info-tooltip">
                               <div class="tooltip-content">
                                 <div v-html="t('submit.sensitiveContent')"></div>
                               </div>
@@ -352,7 +315,6 @@
                   </div>
                 </div>
 
-
               </div>
               <div class="collection-group" v-if="!isNoCollection">
                 <label class="form-label">{{ t("collection.orderInCollection") }}</label>
@@ -374,28 +336,91 @@
           </div>
         </div>
 
-        <!-- Cover Image - hidden, using collection cover automatically -->
-        <!-- <div class="section">
+        <!-- Title & Description -->
+        <div class="content-section">
           <div class="form-item">
-            <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}
-            </label>
-            <div class="cover-row">
-              <div class="cover-box">
-                <img v-if="coverPreview || (selectedCollection && selectedCollection.cover)" :src="coverPreview || selectedCollection.cover" alt="" />
+            <div class="caption-container" :class="{ 'title-error': titleError }">
+              <div class="label-row">
+                <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
+                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
               </div>
-              <div class="reupload-box">
-                <button class="reupload" @click="openCoverModal">{{ t("submit.cover.set") }}</button>
+
+              <div class="title-input-wrap">
+                <input
+                  v-model="form.title"
+                  class="title-input"
+                  type="text"
+                  :maxlength="TITLE_MAX"
+                  :placeholder="t('submit.titlePlaceholder')"
+                  @input="onTitleInput"
+                />
+              </div>
+
+              <div class="label-row">
+                <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
+                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+              </div>
+
+              <div class="desc-input-wrap">
+                <div
+                  ref="captionRef"
+                  class="description-content"
+                  contenteditable="true"
+                  :placeholder="t('submit.descriptionPlaceholder')"
+                  @input="handleCaptionInput"
+                  @keydown="handleCaptionKeydown"
+                  @click="handleCaptionClick"
+                  @blur="onCaptionBlur"
+                  @paste="handlePaste"
+                ></div>
+
+                <div class="caption-actions-box">
+                  <div class="caption-actions">
+                    <button class="action-btn" @click="onActionBtnClick('#')">
+                      #{{ t("submit.topic") }}
+                    </button>
+                    <button class="action-btn" @click="onActionBtnClick('@')">
+                      @{{ t("submit.mention") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mention/Topic Dropdown -->
+            <div
+              v-if="showDropdown"
+              class="mention-dropdown"
+              :style="getDropdownStyle()"
+            >
+              <div class="dropdown-list">
+                <div v-if="isDropdownLoading" class="dropdown-loading">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('loading') }}</span>
+                </div>
+                <template v-else>
+                  <div
+                    v-for="item in dropdownItems"
+                    :key="item.value"
+                    class="dropdown-item"
+                    @click="selectDropdownItem(item)"
+                  >
+                    <div class="item-left">
+                      <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
+                      <span class="label">{{ item.label }}</span>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
-        </div> -->
+        </div>
 
         <div class="submit-row">
-          <button class="submit" :disabled="uploading" @click="onSubmit">
+          <button class="submit" :class="!canSubmit ? 'dis' : ''" :disabled="!canSubmit || uploading" @click="onSubmit">
             {{ t("submit.submit") }}
           </button>
         </div>
-
         <div class="agreement-row">
           <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
             <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
@@ -607,44 +632,90 @@ const MAX_COUNT = 10000;
 const captionRef = ref<HTMLDivElement | null>(null);
 const captionLength = ref(0);
 
+interface DropdownItem {
+  label: string;
+  value: string;
+  views?: string;
+  followers?: string;
+  avatar?: string;
+}
+
 // Mention/Topic dropdown
 const showDropdown = ref(false);
-const dropdownItems = ref<any[]>([]);
-const dropdownPosition = ref({ top: 0, left: 0 });
-const dropdownType = ref('');
+const dropdownType = ref<"#" | "@" | "">("");
+const dropdownItems = ref<DropdownItem[]>([]);
+const dropdownPosition = ref<{ top?: number; left?: number; right?: number; position?: 'above'; bottom?: number; align?: 'right' }>({ top: 0, left: 0 });
+const lastRange = ref<Range | null>(null);
+const isDropdownLoading = ref(false);
+const isOpeningDropdown = ref(false);
+
+const titleError = ref(false);
+const headerRef = ref<InstanceType<typeof Header> | null>(null);
+
+const userRegion = ref(false);
+const isAdult = ref(false);
 
 
-// Handle dropdown item selection
-function selectDropdownItem(item: any) {
-  if (!captionRef.value) return;
-
-  const currentText = captionRef.value.textContent || "";
-  const currentLength = currentText.replace(/\n$/, "").length;
-  if (currentLength >= DESC_MAX) return;
+function selectDropdownItem(item: { label: string; value: string }) {
+  if (!lastRange.value || !captionRef.value) return;
 
   const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
+  if (!selection) return;
 
-  const range = selection.getRangeAt(0);
-  range.deleteContents();
+  if (dropdownType.value === "#") {
+    const topicCount = captionRef.value.querySelectorAll(".tag.topic").length;
+    if (topicCount >= 5) {
+      toast(t("submit.video.toastTopicLimit"));
+      showDropdown.value = false;
+      return;
+    }
+  }
 
-  const remaining = DESC_MAX - currentLength;
-  const insertText = item.value.substring(0, remaining);
+  const currentText = captionRef.value.innerText || "";
+  const currentLength = currentText.length;
+  const tagText = dropdownType.value === "#" ? "#" + item.label : "@" + item.label;
+  const spaceText = " ";
+  const newLength = currentLength + tagText.length + spaceText.length;
 
-  const textNode = document.createTextNode(insertText);
-  range.insertNode(textNode);
+  if (newLength > DESC_MAX) {
+    showDropdown.value = false;
+    return;
+  }
 
-  range.setStartAfter(textNode);
+  const range = lastRange.value;
+  const textNode = range.startContainer;
+  const offset = range.startOffset;
+  const textContent = textNode.textContent || "";
+  const textBefore = textContent.substring(0, offset);
+  const match = textBefore.match(/([#@])([^#@\s]*)$/);
+
+  if (match) {
+    const triggerIndex = match.index!;
+    range.setStart(textNode, triggerIndex);
+    range.setEnd(textNode, offset);
+    range.deleteContents();
+  }
+
+  const span = document.createElement("span");
+  span.className = `tag ${dropdownType.value === "#" ? "topic" : "mention"}`;
+  span.contentEditable = "false";
+  span.innerText = dropdownType.value === "#" ? "#" + item.label : "@" + item.label;
+  span.style.color = "#00d3f2";
+
+  range.insertNode(span);
+
+  const space = document.createTextNode("\u0020");
+  range.setStartAfter(span);
+  range.insertNode(space);
+  range.setStartAfter(space);
   range.collapse(true);
+
   selection.removeAllRanges();
   selection.addRange(range);
 
-  if (captionRef.value) {
-    const text = captionRef.value.textContent || "";
-    captionLength.value = text.replace(/\n$/, "").length;
-  }
-
   showDropdown.value = false;
+  updateCaptionStats();
+  captionRef.value.focus();
 }
 
 // Project dropdown ref
@@ -828,6 +899,32 @@ function handleTitleInput() {
   if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
     generateCoverFromTitle();
   }
+}
+
+function onTitleInput() {
+  if (titleError.value && form.value.title.trim()) {
+    titleError.value = false;
+  }
+}
+
+function handleUserInfoLoaded(userInfo: any) {
+  if (userInfo) {
+    isAdult.value = userInfo.is_adult == 1;
+  }
+}
+
+function getCountry() {
+  api.getCode().then((res: any) => {
+    if (res.code == 0) {
+      if (res.data.countryCode != 'CN') {
+        userRegion.value = true;
+      } else {
+        userRegion.value = false;
+      }
+    }
+  }).catch(err => {
+    console.log(err);
+  })
 }
 
 // Handle title blur and upload cover
@@ -1355,58 +1452,6 @@ function openCommunityConvention() {
   window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
-// Handle tooltip position to avoid window edge overflow
-function adjustTooltipPosition(event: MouseEvent) {
-  const infoIcon = event.currentTarget as HTMLElement;
-  const tooltip = infoIcon.querySelector('.tooltip') as HTMLElement;
-
-  if (tooltip) {
-    // Reset tooltip styles
-    tooltip.style.top = '50%';
-    tooltip.style.left = '100%';
-    tooltip.style.right = 'auto';
-    tooltip.style.transform = 'translateY(-50%)';
-    tooltip.style.marginLeft = '2rem';
-    tooltip.style.marginRight = '0';
-    tooltip.classList.remove('tooltip-left');
-
-    // Get element positions
-    const infoIconRect = infoIcon.getBoundingClientRect();
-
-    // Calculate available space
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    // Check horizontal overflow
-    if (infoIconRect.right + 300 > windowWidth) {
-      // Adjust tooltip
-      tooltip.style.left = 'auto';
-      tooltip.style.right = '100%';
-      tooltip.style.marginLeft = '0';
-      tooltip.style.marginRight = '2rem';
-      tooltip.classList.add('tooltip-left');
-    }
-
-    // Check vertical overflow for tooltip
-    const tooltipTop = infoIconRect.top + infoIconRect.height / 2 - 180 / 2;
-    if (tooltipTop + 180 > windowHeight) {
-      // Adjust position upwards
-      const overflow = (tooltipTop + 180) - windowHeight;
-      tooltip.style.top = 'auto';
-      tooltip.style.bottom = '0';
-      tooltip.style.transform = 'none';
-    } else if (tooltipTop < 0) {
-      // Adjust position downwards
-      tooltip.style.top = '0';
-      tooltip.style.transform = 'none';
-    } else {
-      // Center vertically
-      tooltip.style.top = '50%';
-      tooltip.style.transform = 'translateY(-50%)';
-    }
-  }
-}
-
 // Submit
 async function onSubmit() {
   const token = localStorage.getItem("token");
@@ -1511,26 +1556,368 @@ async function onSubmit() {
 }
 
 // Caption methods
-function handleCaptionInput(e: Event) {
-  const target = e.target as HTMLDivElement;
-  const text = target.textContent || "";
-  if (text.length > DESC_MAX) {
-    const truncated = text.substring(0, DESC_MAX);
-    target.textContent = truncated;
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(target);
-    range.collapse(false);
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    captionLength.value = DESC_MAX;
-  } else {
-    captionLength.value = text.replace(/\n$/, "").length;
+function truncateContentPreservingTags(element: HTMLElement, maxLength: number) {
+  const childNodes = Array.from(element.childNodes);
+  let totalLength = 0;
+  let overflow = false;
+
+  for (let i = 0; i < childNodes.length; i++) {
+    const node = childNodes[i];
+
+    if (overflow) {
+      element.removeChild(node);
+      continue;
+    }
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      const nodeLength = text.replace(/\n$/, '').length;
+
+      if (totalLength + nodeLength > maxLength) {
+        const remaining = maxLength - totalLength;
+        node.textContent = text.substring(0, remaining > 0 ? remaining : 0);
+        overflow = true;
+      } else {
+        totalLength += nodeLength;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const elText = el.innerText || '';
+      const elLength = elText.replace(/\n$/, '').length;
+
+      if (totalLength + elLength > maxLength) {
+        if (el.classList.contains('tag')) {
+          element.removeChild(node);
+        } else {
+          truncateContentPreservingTags(el, maxLength - totalLength);
+          overflow = true;
+        }
+      } else {
+        totalLength += elLength;
+      }
+    }
   }
+
+  element.querySelectorAll('.tag').forEach((span: Element) => {
+    const el = span as HTMLElement;
+    el.style.color = '#00d3f2';
+    el.contentEditable = 'false';
+  });
+}
+
+async function handleCaptionInput(e: Event) {
+  const target = e.target as HTMLDivElement;
+
+  if (captionRef.value) {
+    captionRef.value.querySelectorAll('.tag').forEach((span: Element) => {
+      const el = span as HTMLElement;
+      el.style.color = '#00d3f2';
+      el.contentEditable = 'false';
+    });
+  }
+
+  const text = target.innerText || "";
+  const trimmedText = text.replace(/\n$/, "");
+  const currentLength = trimmedText.length;
+
+  if (currentLength > DESC_MAX) {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      truncateContentPreservingTags(target, DESC_MAX);
+
+      captionLength.value = DESC_MAX;
+
+      const range = document.createRange();
+      range.selectNodeContents(target);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    return;
+  }
+
+  captionLength.value = currentLength;
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+
+  const match = textBefore.match(/([#@])([^#@\s]*)$/u);
+  if (match) {
+    const trigger = match[1] as "#" | "@";
+    const query = match[2];
+    dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
+    showDropdown.value = true;
+    lastRange.value = range.cloneRange();
+    updateDropdownPosition();
+    searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
+   } else {
+    showDropdown.value = false;
+  }
+
+  requestAnimationFrame(() => {
+    if (captionRef.value) {
+      const el = captionRef.value;
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const r = sel.getRangeAt(0);
+        const tmp = document.createElement('span');
+        tmp.textContent = '\u200b';
+        r.insertNode(tmp);
+        const top = tmp.offsetTop;
+        const lineHeight = parseInt(getComputedStyle(el).lineHeight) || 20;
+        tmp.parentNode?.removeChild(tmp);
+        el.normalize();
+        if (top + lineHeight > el.scrollTop + el.clientHeight) {
+          el.scrollTop = top + lineHeight - el.clientHeight;
+        }
+      }
+    }
+  });
 }
 
 function handleCaptionKeydown(e: KeyboardEvent) {
-  // No special handling needed
+  if (e.key === " " || e.key === "Spacebar") {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    if (range.collapsed) {
+      const node = range.startContainer;
+      if (node.nodeType === Node.TEXT_NODE && range.startOffset === 0) {
+        const prevSibling = node.previousSibling;
+        if (prevSibling?.nodeName === 'SPAN') {
+          const span = prevSibling as HTMLElement;
+          if (span.classList.contains('tag')) {
+            e.preventDefault();
+            node.textContent = '\u0020' + (node.textContent || '');
+            const newRange = document.createRange();
+            newRange.setStart(node, 1);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            updateCaptionStats();
+            return;
+          }
+        }
+      }
+      if (node === captionRef.value && range.startOffset > 0) {
+        const child = node.childNodes[range.startOffset - 1];
+        if (child?.nodeName === 'SPAN') {
+          const span = child as HTMLElement;
+          if (span.classList.contains('tag')) {
+            e.preventDefault();
+            const space = document.createTextNode('\u0020');
+            node.insertBefore(space, node.childNodes[range.startOffset] || null);
+            const newRange = document.createRange();
+            newRange.setStart(space, 1);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            updateCaptionStats();
+            return;
+          }
+        }
+      }
+    }
+
+    const textNode = range.startContainer;
+
+    if (textNode.nodeType === Node.TEXT_NODE) {
+      const textBefore = textNode.textContent?.substring(0, range.startOffset) || "";
+
+      const hashMatch = textBefore.match(/#([^#@]+)$/u);
+
+      if (hashMatch) {
+        const tagContent = hashMatch[1];
+        const hasChineseChars = /[\u4e00-\u9fa5]/.test(tagContent);
+        const hasSpaces = tagContent.includes(" ");
+        const hasApostrophes = tagContent.includes("'") || tagContent.includes('"');
+
+        if (hasApostrophes) {
+          return;
+        } else if (hasChineseChars || hasSpaces) {
+          if (captionRef.value) {
+            const existingTopicTags = captionRef.value.querySelectorAll('.tag.topic');
+            if (existingTopicTags.length >= 5) {
+              e.preventDefault();
+              toast(t('submit.video.toastTopicLimit'));
+              return;
+            }
+          }
+
+          const fullMatch = "#" + tagContent.trim();
+          const currentText = captionRef.value?.innerText || "";
+          const currentLength = currentText.length;
+          const spaceText = " ";
+          const newLength = currentLength - (range.startOffset - hashMatch.index!) + fullMatch.length + spaceText.length;
+
+          if (newLength > DESC_MAX) {
+            e.preventDefault();
+            return;
+          }
+
+          e.preventDefault();
+
+          const matchStartIndex = hashMatch.index!;
+
+          const tagRange = document.createRange();
+          tagRange.setStart(textNode, matchStartIndex);
+          tagRange.setEnd(textNode, range.startOffset);
+
+          tagRange.deleteContents();
+
+          const span = document.createElement("span");
+          span.className = "tag topic";
+          span.contentEditable = "false";
+          span.textContent = fullMatch;
+          span.style.color = "#00d3f2";
+
+          tagRange.insertNode(span);
+
+          const space = document.createTextNode("\u0020");
+          tagRange.setStartAfter(span);
+          tagRange.insertNode(space);
+
+          tagRange.setStart(space, 1);
+          tagRange.collapse(true);
+
+          selection.removeAllRanges();
+          selection.addRange(tagRange);
+
+          showDropdown.value = false;
+
+          updateCaptionStats();
+          return;
+        } else {
+          if (captionRef.value) {
+            const existingTopicTags = captionRef.value.querySelectorAll('.tag.topic');
+            if (existingTopicTags.length >= 5) {
+              e.preventDefault();
+              toast(t('submit.video.toastTopicLimit'));
+              return;
+            }
+          }
+
+          const fullMatch = hashMatch[0];
+          const currentText = captionRef.value?.innerText || "";
+          const currentLength = currentText.length;
+          const spaceText = " ";
+          const newLength = currentLength - (range.startOffset - hashMatch.index!) + fullMatch.length + spaceText.length;
+
+          if (newLength > DESC_MAX) {
+            e.preventDefault();
+            return;
+          }
+
+          e.preventDefault();
+
+          const matchStartIndex = hashMatch.index!;
+
+          const tagRange = document.createRange();
+          tagRange.setStart(textNode, matchStartIndex);
+          tagRange.setEnd(textNode, range.startOffset);
+
+          tagRange.deleteContents();
+
+          const span = document.createElement("span");
+          span.className = "tag topic";
+          span.contentEditable = "false";
+          span.textContent = fullMatch;
+          span.style.color = "#00d3f2";
+
+          tagRange.insertNode(span);
+
+          const space = document.createTextNode("\u0020");
+          tagRange.setStartAfter(span);
+          tagRange.insertNode(space);
+
+          tagRange.setStart(space, 1);
+          tagRange.collapse(true);
+
+          selection.removeAllRanges();
+          selection.addRange(tagRange);
+
+          showDropdown.value = false;
+
+          updateCaptionStats();
+          return;
+        }
+      }
+    }
+  }
+
+  if (e.key === "Backspace") {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    if (range.collapsed) {
+      const node = range.startContainer;
+      const offset = range.startOffset;
+
+      if (node.nodeType === Node.TEXT_NODE && offset > 0) {
+        const charBefore = node.textContent?.[offset - 1];
+
+        if (charBefore === "\u0020" || charBefore === " ") {
+          if (offset === 1 && node.previousSibling?.nodeName === "SPAN") {
+            const span = node.previousSibling as HTMLElement;
+            if (span.classList.contains("tag")) {
+              return;
+            }
+          }
+        }
+      }
+
+      if (offset === 0 && node.previousSibling?.nodeName === "SPAN") {
+        const span = node.previousSibling as HTMLElement;
+        if (span.classList.contains("tag")) {
+          e.preventDefault();
+          span.remove();
+          showDropdown.value = false;
+          updateCaptionStats();
+          return;
+        }
+      }
+
+      if (node.nodeType === Node.TEXT_NODE && offset === 0) {
+        const prevSibling = node.previousSibling;
+        if (prevSibling?.nodeName === "SPAN") {
+          const span = prevSibling as HTMLElement;
+          if (span.classList.contains("tag")) {
+            e.preventDefault();
+            span.remove();
+            showDropdown.value = false;
+            updateCaptionStats();
+            return;
+          }
+        }
+      }
+    }
+  }
 }
 
 function updateCaptionStats() {
@@ -1540,40 +1927,273 @@ function updateCaptionStats() {
   }
 }
 
-function onCaptionBlur() {
-  if (captionRef.value) {
-    form.value.description = captionRef.value.textContent || "";
+function handleCaptionClick() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+
+  let node: Node | null = range.startContainer;
+  let inSpan = false;
+  while (node && node !== captionRef.value) {
+    if (node.nodeName === 'SPAN') {
+      inSpan = true;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (inSpan) {
+    showDropdown.value = false;
+    return;
+  }
+
+  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+
+  if (textBefore.endsWith('#') || textBefore.endsWith('@')) {
+    const trigger = textBefore.endsWith('#') ? '#' : '@';
+    const query = '';
+    dropdownType.value = trigger;
+    isOpeningDropdown.value = true;
+    showDropdown.value = true;
+    lastRange.value = range.cloneRange();
+    updateDropdownPosition();
+    searchTags(trigger, query);
+    setTimeout(() => {
+      isOpeningDropdown.value = false;
+    }, 100);
+  } else {
+    showDropdown.value = false;
   }
 }
 
-  function handlePaste(e: ClipboardEvent) {
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+const debouncedSearchTags = debounce(async (type: "#" | "@", query: string) => {
+  isDropdownLoading.value = true;
+  try {
+    if (type === "#") {
+      const res = await api.searchTopic({ keyword: query });
+      dropdownItems.value = (res.data || []).map((item: any) => ({
+        label: item.name,
+        value: item.name,
+        views: item.view_count,
+        id: item.id
+      }));
+    } else {
+      const res = await api.searchUser({ keyword: query });
+      dropdownItems.value = (res.data || []).map((item: any) => ({
+        label: item.nickname,
+        value: item.nickname,
+        avatar: item.avatar,
+        followers: item.follower_count,
+        id: item.id
+      }));
+    }
+  } catch (error) {
+    console.error("Search error:", error);
+    dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
+  }
+}, 300);
+
+async function searchTags(type: "#" | "@", query: string) {
+  debouncedSearchTags(type, query);
+}
+
+async function searchTagsImmediate(type: "#" | "@", query: string) {
+  isDropdownLoading.value = true;
+  try {
+    if (type === "#") {
+      const res = await api.searchTopic({ keyword: query });
+      dropdownItems.value = (res.data || []).map((item: any) => ({
+        label: item.name,
+        value: item.name,
+        views: item.view_count,
+        id: item.id
+      }));
+    } else {
+      const res = await api.searchUser({ keyword: query });
+      dropdownItems.value = (res.data || []).map((item: any) => ({
+        label: item.nickname,
+        value: item.nickname,
+        avatar: item.avatar,
+        followers: item.follower_count,
+        id: item.id
+      }));
+    }
+  } catch (error) {
+    console.error("Search error:", error);
+    dropdownItems.value = [];
+  } finally {
+    isDropdownLoading.value = false;
+  }
+}
+
+function getDropdownStyle(): Record<string, string> {
+  const style: Record<string, string> = {};
+
+  if (dropdownPosition.value.position === 'above') {
+    style.bottom = `${dropdownPosition.value.bottom}px`;
+  } else {
+    style.top = `${dropdownPosition.value.top}px`;
+  }
+
+  if (dropdownPosition.value.right !== undefined) {
+    style.right = `${dropdownPosition.value.right}px`;
+  } else if (dropdownPosition.value.left !== undefined) {
+    style.left = `${dropdownPosition.value.left}px`;
+  }
+
+  return style;
+}
+
+function onActionBtnClick(symbol: "#" | "@") {
+  if (!captionRef.value) return;
+  captionRef.value.focus();
+
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  let range: Range;
+  if (selection.rangeCount > 0) {
+    range = selection.getRangeAt(0);
+  } else {
+    range = document.createRange();
+    range.selectNodeContents(captionRef.value);
+    range.collapse(false);
+  }
+
+  range.deleteContents();
+
+  const textNode = document.createTextNode(symbol);
+  range.insertNode(textNode);
+
+  range.setStartAfter(textNode);
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  const insertedNode = textNode;
+
+  dropdownType.value = symbol;
+
+  nextTick(async () => {
+    await searchTagsImmediate(symbol, "");
+
+    const currentSelection = window.getSelection();
+    if (!currentSelection || currentSelection.rangeCount === 0) return;
+
+    const currentRange = currentSelection.getRangeAt(0);
+    lastRange.value = currentRange.cloneRange();
+
+    const symbolRange = document.createRange();
+    symbolRange.selectNodeContents(insertedNode);
+    const rect = symbolRange.getBoundingClientRect();
+
+    const captionRect = captionRef.value?.getBoundingClientRect();
+
+    let absTop = rect.bottom + 5;
+    let absLeft = rect.left;
+
+    if ((rect.width === 0 && rect.height === 0) || !captionRect || absTop < 50 || absLeft < 10 || absTop > window.innerHeight - 50) {
+      if (captionRect) {
+        absTop = captionRect.top + 26;
+        absLeft = captionRect.left;
+      }
+    }
+
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft,
+    };
+
+    const dropdownHeight = 250;
+    const dropdownWidth = 280;
+
+    if (absTop + dropdownHeight > window.innerHeight) {
+      const spaceAbove = absTop - (captionRect?.top || 0);
+      if (spaceAbove >= dropdownHeight) {
+        dropdownPosition.value.top = absTop - dropdownHeight - 8;
+      } else {
+        dropdownPosition.value.top = 100;
+      }
+    }
+
+    if (absLeft + dropdownWidth > window.innerWidth) {
+      dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 10);
+    }
+
+    showDropdown.value = true;
+    captionRef.value?.focus();
+  });
+}
+
+function onCaptionBlur() {
+  if (captionRef.value) {
+    form.value.description = captionRef.value.innerText;
+  }
+}
+
+function handlePaste(e: ClipboardEvent) {
     e.preventDefault();
 
-    const pasteText = e.clipboardData?.getData('text/plain') || '';
-    if (!pasteText) return;
-
-    const currentText = captionRef.value?.textContent || "";
-    const currentLength = currentText.replace(/\n$/, "").length;
-    const remaining = DESC_MAX - currentLength;
-
-    if (remaining <= 0) return;
-
-    const text = pasteText.substring(0, remaining);
+    const text = e.clipboardData?.getData('text/plain') || '';
 
     const selection = window.getSelection();
     if (!selection) return;
 
     const range = selection.getRangeAt(0);
+
+    const currentText = captionRef.value?.innerText || '';
+    const currentLength = currentText.length;
+
+    const remainingLength = DESC_MAX - currentLength;
+
+    const pasteText = remainingLength > 0 ? text.substring(0, remainingLength) : '';
+
     range.deleteContents();
 
-    const textNode = document.createTextNode(text);
+    const textNode = document.createTextNode(pasteText);
     range.insertNode(textNode);
 
-    range.setStartAfter(textNode);
-    range.collapse(true);
-
+    const newRange = document.createRange();
+    newRange.setStartAfter(textNode);
+    newRange.collapse(true);
     selection.removeAllRanges();
-    selection.addRange(range);
+    selection.addRange(newRange);
+
+    captionRef.value?.querySelectorAll('.tag').forEach((span: Element) => {
+      const el = span as HTMLElement;
+      el.style.color = '#00d3f2';
+      el.contentEditable = 'false';
+    });
+
+    requestAnimationFrame(() => {
+      if (captionRef.value) {
+        const el = captionRef.value;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const r = sel.getRangeAt(0);
+          const tmp = document.createElement('span');
+          tmp.textContent = '\u200b';
+          r.insertNode(tmp);
+          const top = tmp.offsetTop;
+          const lineHeight = parseInt(getComputedStyle(el).lineHeight) || 20;
+          tmp.parentNode?.removeChild(tmp);
+          el.normalize();
+          if (top + lineHeight > el.scrollTop + el.clientHeight) {
+            el.scrollTop = top + lineHeight - el.clientHeight;
+          }
+        }
+      }
+    });
 
     updateCaptionStats();
   }
@@ -1725,19 +2345,58 @@ function updateDropdownPosition() {
   if (!selection || selection.rangeCount === 0 || !captionRef.value) return;
 
   const range = selection.getRangeAt(0).cloneRange();
-  const rect = range.getBoundingClientRect();
 
-  const absTop = rect.bottom + 5;
-  const absLeft = rect.left;
+  let rect: DOMRect;
+  if (range.collapsed) {
+    const marker = document.createElement('span');
+    marker.textContent = '\u200B';
+    range.insertNode(marker);
+    rect = marker.getBoundingClientRect();
+    marker.parentNode?.removeChild(marker);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    rect = range.getBoundingClientRect();
+  }
 
-  dropdownPosition.value = {
-    top: absTop,
-    left: absLeft + 2,
-  };
+  let absTop = rect.bottom + 5;
+  let absLeft = rect.left;
+
+  if ((rect.width === 0 && rect.height === 0) || absTop < 100 || absLeft < 10) {
+    const captionRect = captionRef.value.getBoundingClientRect();
+    absTop = captionRect.top + 26;
+    absLeft = captionRect.left;
+  }
 
   const dropdownHeight = 250;
+  const dropdownWidth = 480;
+
   if (absTop + dropdownHeight > window.innerHeight) {
-    dropdownPosition.value.top = rect.top - dropdownHeight - 5;
+    const spaceAbove = rect.top;
+    if (spaceAbove >= dropdownHeight) {
+      dropdownPosition.value = {
+        top: 0,
+        position: 'above',
+        bottom: window.innerHeight - rect.top + 5,
+        left: absLeft + 2,
+      };
+    } else {
+      dropdownPosition.value = {
+        top: 50,
+        left: absLeft + 2,
+      };
+    }
+  } else {
+    dropdownPosition.value = {
+      top: absTop,
+      left: absLeft + 2,
+    };
+  }
+
+  if (absLeft + dropdownWidth > window.innerWidth) {
+    dropdownPosition.value.left = Math.max(10, window.innerWidth - dropdownWidth - 20);
+    dropdownPosition.value.right = undefined;
   }
 }
 
@@ -2248,6 +2907,14 @@ function selectChapter(chapter: any) {
 // Close dropdowns when clicking outside
 function handleClickOutside(event: MouseEvent) {
   const target = event.target as Node;
+  if (isOpeningDropdown.value) return;
+
+  if (showDropdown.value &&
+      !document.querySelector(".mention-dropdown")?.contains(target) &&
+      !captionRef.value?.contains(target)) {
+    showDropdown.value = false;
+  }
+
   if (showProjectDropdown.value && projectDropdownRef.value && !projectDropdownRef.value.contains(target)) {
     showProjectDropdown.value = false;
   }

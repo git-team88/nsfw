@@ -11,7 +11,10 @@
           <div class="content">
             <div class="item">
               <div class="item-header">
-                <div class="label">{{ t("user.account.email") }}</div>
+                <div class="label-group">
+                  <div class="label">{{ t("user.account.email") }}</div>
+                  <div class="value" v-if="emailBind && !loading">{{ emailBind.identifier }}</div>
+                </div>
                 <div class="action-group" v-if="!loading">
                   <span
                     class="action-btn"
@@ -26,16 +29,14 @@
                   >
                 </div>
               </div>
-              <div class="value-box">
-                <template v-if="!loading">{{
-                  emailBind ? emailBind.identifier : t("user.account.notBound")
-                }}</template>
-              </div>
             </div>
 
             <div class="item">
               <div class="item-header">
-                <div class="label">{{ t("user.account.google") }}</div>
+                <div class="label-group">
+                  <div class="label">{{ t("user.account.google") }}</div>
+                  <div class="value" v-if="googleBind && !loading">{{ googleBind.identifier }}</div>
+                </div>
                 <div class="action-group" v-if="!loading">
                   <span class="action-btn" @click="changeGoogle">{{
                     googleBind ? t("user.account.change") : t("user.account.link")
@@ -48,11 +49,6 @@
                   >
                 </div>
               </div>
-              <div class="value-box">
-                <template v-if="!loading">{{
-                  googleBind ? googleBind.identifier : t("user.account.notBound")
-                }}</template>
-              </div>
             </div>
           </div>
         </div>
@@ -61,9 +57,9 @@
 
     <div class="modal-mask" v-if="showEmailModal">
       <div class="modal">
+        <button class="close-btn" @click="closeEmailModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <div class="modal-header">
           <div class="modal-title">{{ t("user.account.changeEmail") }}</div>
-          <img class="close-icon" :src="closeIcon" @click="closeEmailModal" alt="close" />
         </div>
 
         <form class="email-form" id="emailForm" @submit.prevent="handleSubmit">
@@ -154,7 +150,7 @@
 
     <div class="modal-mask" v-if="showUnbindModal">
       <div class="unbind-modal">
-        <img class="unbind-icon" :src="closeIcon" @click="closeUnbindModal" alt="close" />
+        <button class="close-btn" @click="closeUnbindModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <div class="unbind-body">
           <div class="unbind-title">{{ t("user.account.unbindConfirm") }}</div>
         </div>
@@ -184,7 +180,6 @@ import api from "@/api/index";
 import { toast } from "@/util/toast";
 import router from "@/router";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
-import closeIcon from "@/assets/images/base/close.png";
 
 const { t, locale } = useI18n();
 const sidebarKey = ref("account");
@@ -596,24 +591,35 @@ function confirmUnbind() {
   align-items: center;
   flex: 1;
   min-width: 0;
-  flex-direction: column;
-  gap: 8px;
-}
-.item .item-header {
-  flex-direction: row;
   gap: 14px;
+}
+.label-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 .label {
   font-weight: 800;
   font-size: 14px;
   color: #161122;
-  flex: 1;
+  white-space: nowrap;
+}
+.value {
+  font-weight: 800;
+  font-size: 14px;
+  color: #161122;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .action-group {
   display: flex;
   gap: 14px;
   align-items: center;
+  flex-shrink: 0;
 }
 .action-btn {
   display: inline-flex;
@@ -644,13 +650,6 @@ function confirmUnbind() {
 .unbind-btn:hover {
   text-decoration: underline;
 }
-.value-box {
-  flex: 1;
-  min-width: 0;
-  font-weight: 800;
-  font-size: 14px;
-  color: #161122;
-}
 
 .modal-mask {
   position: fixed;
@@ -670,10 +669,10 @@ function confirmUnbind() {
   padding: 24px 26px;
   box-shadow: 6px 6px 0 rgba(22,17,34,.3);
 }
+.modal {
+  position: relative;
+}
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin: 0 0 10px;
 }
 .modal-title {
@@ -682,10 +681,26 @@ function confirmUnbind() {
   color: #161122;
   margin: 0;
 }
-.close-icon {
-  width: 32px;
-  height: 32px;
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  border: 2.5px solid #161122;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 2px 2px 0 #161122;
+  padding: 6px;
+  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 10;
+}
+.close-btn:hover {
+  transform: scale(1.1);
 }
 .email-form {
   padding: 18px 0;
@@ -832,20 +847,13 @@ function confirmUnbind() {
 
 .unbind-modal {
   width: min(440px, 94%);
+  position: relative;
   background: #FFFDF7;
   border: 3px solid #161122;
   border-radius: 18px;
   padding: 24px 26px;
   box-shadow: 6px 6px 0 rgba(22,17,34,.3);
   text-align: center;
-}
-.unbind-icon {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
 }
 .unbind-title {
   font-weight: 800;
@@ -936,7 +944,12 @@ function confirmUnbind() {
   }
   .item-header {
     flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
+  }
+  .label-group {
+    flex-direction: column;
+    gap: 4px;
   }
 }
 </style>

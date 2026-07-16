@@ -2921,6 +2921,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     collectionName: "合集名称",
     tags: "标签",
     description: "简介",
+    descriptionInfo: `<span>合集简介：</span>用于描述合集内容，帮助读者了解合集的主题和风格。简介将展示在合集详情页。`,
     otherInfo: "其他信息",
     status: "状态",
     publishedChapters: "已发布章节",

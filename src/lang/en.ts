@@ -2812,6 +2812,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     collectionName: "Collection Name",
     tags: "Tags",
     description: "Description",
+    descriptionInfo: `<span>Collection Description:</span> Used to describe the collection content, helping readers understand the theme and style of the collection. The description will be displayed on the collection detail page.`,
     otherInfo: "Other Info",
     status: "Status",
     publishedChapters: "Published Chapters",

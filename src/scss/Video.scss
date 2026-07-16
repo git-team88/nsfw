@@ -34,50 +34,37 @@
   }
 
   .tabs {
-    display: flex;
-    align-items: center;
+    display: inline-flex;
     gap: 6px;
-    height: 44px;
+    background: #fff;
+    border: 2.5px solid #161122;
+    border-radius: 14px;
+    padding: 5px;
     margin-bottom: 20px;
 
     &.on {
-      height: 64px;
-      padding: 0 30px;
       margin-bottom: 12px;
-      border: 3px solid #161122;
-      border-radius: 14px;
-      background: #FFFFFF;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
-
-      span {
-        align-items: center;
-      }
     }
 
     span {
-      display: flex;
-      align-items: flex-start;
-      height: 100%;
-      padding: 0 15px;
-      font-size: 16px;
-      font-weight: 700;
-      color: #161122;
-      opacity: 0.55;
+      font-size: 14px;
+      color: #6A7282;
+      padding: 8px 16px;
       cursor: pointer;
-      border-radius: 14px;
-      transition: opacity 0.15s, background 0.15s;
+      border-radius: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.15s ease;
 
       &:hover {
-        opacity: 0.85;
-        background: rgba(255, 77, 142, 0.06);
+        color: #161122;
       }
 
       &.on {
-        position: relative;
-        font-weight: 800;
-        color: #ffffff;
-        opacity: 1;
         background: #FF4D8E;
+        color: #fff;
+        border-radius: 10px;
+        font-weight: 800;
 
         &::before {
           display: none;
@@ -365,7 +352,7 @@
           }
 
           &.open {
-            border-radius: 14px 14px 0 0;
+            border-radius: 6px;
 
             .select-arrow img {
               transform: rotate(180deg);
@@ -382,11 +369,10 @@
           max-height: 350px;
           overflow-y: auto;
           background: #ffffff;
-          margin-top: 0;
+          margin-top: 10px;
           padding: 8px;
           border: 2px solid #161122;
-          border-top: none;
-          border-radius: 0 0 14px 14px;
+          border-radius: 6px;
           box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
           z-index: 100;
 
@@ -432,12 +418,10 @@
 
           &.dropdown-top {
             top: auto;
-            bottom: 100%;
+            bottom: calc(100% + 10px);
             margin-top: 0;
             margin-bottom: 0;
-            border-top: 2px solid #161122;
-            border-bottom: none;
-            border-radius: 14px 14px 0 0;
+            border-radius: 6px;
           }
         }
       }
@@ -855,7 +839,7 @@
               }
 
               &.open {
-                border-radius: 14px 14px 0 0;
+                border-radius: 6px;
 
                 .select-arrow img {
                   transform: rotate(180deg);
@@ -880,7 +864,7 @@
               padding: 8px;
               background: #FFFFFF;
               border: 2px solid #161122;
-              border-radius: 0 0 14px 14px;
+              border-radius: 6px;
               box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
               z-index: 10;
               max-height: 350px;
@@ -1230,98 +1214,80 @@
 
   .info-icon {
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    margin-left: 8px;
     cursor: pointer;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 2px solid #161122;
+    background: #FFF3D6;
+    margin-left: 8px;
 
-    img {
+    svg {
       width: 20px;
       height: 20px;
     }
-  }
 
-  .tooltip-arrow {
-    position: absolute;
-    top: 50%;
-    left: 100%;
-    transform: translateY(-50%);
-    margin-left: 8px;
-    width: 12px;
-    height: 33px;
-    background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
-    background-size: contain;
-    flex-shrink: 0;
-    display: block;
-    z-index: 21;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-  }
-
-  .tooltip {
-    position: absolute;
-    top: 50%;
-    left: 100%;
-    transform: translateY(-50%);
-    margin-left: 20px;
-    padding: 18px;
-    width: 280px;
-    background: #FFFFFF;
-    border: 2px solid #161122;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 16px;
-    border-radius: 14px;
-    white-space: normal;
-    box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
-    z-index: 20;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-
-    .tooltip-title {
+    .info-tooltip {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: #FFFDF7;
       color: #161122;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .tooltip-content {
       font-size: 12px;
-      line-height: 20px;
-      color: #161122;
-      opacity: 0.55;
+      font-weight: 600;
+      line-height: 1.7;
+      border-radius: 10px;
+      border: 2.5px solid #161122;
+      box-shadow: 3px 3px 0 #161122;
+      white-space: normal;
+      width: 280px;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
 
-      :deep(span) {
+      &::before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        right: 14px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #161122;
+      }
+      &::after {
+        content: "";
+        position: absolute;
+        top: -5px;
+        right: 14px;
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-bottom: 7px solid #FFFDF7;
+      }
+
+      .tooltip-content {
         color: #161122;
-        opacity: 1;
+        font-size: 12px;
+        line-height: 20px;
+
+        :deep(span) {
+          color: #161122;
+        }
       }
     }
   }
 
-  .info-icon:hover .tooltip {
+  .info-icon:hover .info-tooltip {
     opacity: 1;
     visibility: visible;
-  }
-
-  .info-icon:hover .tooltip-arrow {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .info-icon .tooltip.tooltip-left {
-    left: auto;
-    right: 100%;
-    margin-left: 0;
-    margin-right: 20px;
-  }
-
-  .info-icon .tooltip-arrow.arrow-left {
-    left: auto;
-    right: 100%;
-    margin-left: 0;
-    margin-right: 8px;
-    transform: translateY(-50%) rotate(180deg);
   }
 
   .mention-dropdown {
