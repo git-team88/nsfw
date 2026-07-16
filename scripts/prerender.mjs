@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const LANG_ROUTES = ['ja', 'en', 'zh-cn', 'zh-tw']
+const LANG_URL_TO_HTML = { ja: 'ja', en: 'en', 'zh-cn': 'zh-CN', 'zh-tw': 'zh-TW' }
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
 
 const SEO_DATA = {
@@ -49,6 +50,28 @@ const routes = LANG_ROUTES.flatMap(lang =>
   [`/${lang}`, ...CONTENT_TYPES.map(type => `/${lang}/${type}`)]
 )
 
+function cleanupRuntimeResidue(html) {
+  // reCAPTCHA: Puppeteer 在 localhost 加载的 reCAPTCHA 绑定了 localhost:4173，完全移除
+  // 实际 reCAPTCHA 由 SPA 运行时用正式 siteKey 初始化
+  html = html.replace(/<script[^>]*src[^>]*gstatic\.com\/recaptcha[^>]*><\/script>/gi, '')
+  html = html.replace(/<iframe[^>]*google\.com\/recaptcha[^>]*>[^<]*<\/iframe>/gi, '')
+  html = html.replace(/<iframe[^>]*google\.com\/recaptcha[^>]*>/gi, '')
+  html = html.replace(/<style[^>]*>\s*\.grecaptcha-badge[^<]*<\/style>/gi, '')
+
+  // GA: Puppeteer 动态创建的 <script async> 标签用了测试 ID (G-BBR6VR3HNF)，需要移除
+  // 原始内联 GA 初始化脚本 (var GA_ID = window.location.hostname...) 保留不动，
+  // 它会在 www.moegen.ai 上自动选生产 ID (G-82ZH65FHJS)
+  html = html.replace(/<script[^>]*async[^>]*src[^>]*googletagmanager[^>]*><\/script>/gi, '')
+
+  // Vue 运行时标记
+  html = html.replace(/<div id="app" data-v-app="">/, '<div id="app">')
+
+  // 运行时 hreflang 链接（由 App.vue 动态生成的 data-hreflang）
+  html = html.replace(/<link[^>]*data-hreflang[^>]*>/g, '')
+
+  return html
+}
+
 async function prerender() {
   const distDir = path.join(__dirname, '..', 'dist')
   const indexPath = path.join(distDir, 'index.html')
@@ -57,8 +80,6 @@ async function prerender() {
     console.error('dist/index.html not found. Run "npm run build-only" first.')
     process.exit(1)
   }
-
-  const indexHtml = fs.readFileSync(indexPath, 'utf-8')
 
   console.log('Starting prerender...')
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
@@ -74,18 +95,22 @@ async function prerender() {
 
       let html = await page.content()
 
+      html = cleanupRuntimeResidue(html)
+
       const match = route.match(/^\/(ja|en|zh-cn|zh-tw)(\/(novel|comic|drama|photo|video))?$/)
       const lang = match ? match[1] : 'ja'
       const pagePath = match?.[3] ? `/${match[3]}` : '/'
       const seo = SEO_DATA[lang]?.[pagePath] || SEO_DATA.ja['/']
+      const htmlLang = LANG_URL_TO_HTML[lang] || 'ja'
+
+      html = html.replace(/<html[^>]*>/i, `<html lang="${htmlLang}">`)
+      html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${seo.description}" />`)
+      html = html.replace(/<meta\s+name=["']keywords["'][^>]*>/i, `<meta name="keywords" content="${seo.keywords}" />`)
+      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seo.title}</title>`)
 
       const hreflangTags = LANG_ROUTES.map(l =>
         `<link rel="alternate" hreflang="${HREFLANG_MAP[l]}" href="https://www.moegen.ai/${l}${pagePath === '/' ? '/' : pagePath}" />`
       ).join('\n')
-
-      html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${seo.description}" />`)
-      html = html.replace(/<meta\s+name=["']keywords["'][^>]*>/i, `<meta name="keywords" content="${seo.keywords}" />`)
-      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seo.title}</title>`)
 
       const inject = `
 ${hreflangTags}

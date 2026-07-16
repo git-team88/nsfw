@@ -2472,11 +2472,9 @@ const removeCharacter = (character: any) => {
 const selectContentType = (type: string) => {
   const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw' };
   const urlLang = i18nToUrlLang[locale.value] || 'ja';
-  const routeName = `Home_${locale.value}_${type}`;
-  if (router.hasRoute(routeName)) {
-    router.push({ name: routeName });
-  } else {
-    router.push(`/${urlLang}/${type}`);
+  const targetPath = `/${urlLang}/${type}`;
+  if (window.location.pathname !== targetPath) {
+    window.history.replaceState({}, '', targetPath);
   }
 
   // Reset all content and settings when switching content types
