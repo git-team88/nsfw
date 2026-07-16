@@ -79,7 +79,9 @@ function getUpdatedText(): string {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 500px;
-  background-color: #FFFFFF;
+  background-color: #FFFDF7;
+  border: 3px solid #161122;
+  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
   padding: 18px 30px 24px;
 
@@ -88,10 +90,10 @@ function getUpdatedText(): string {
     border: none;
     padding: 0;
     position: absolute;
-    top: 20px;
-    right: 12px;
-    width: 20px;
-    height: 20px;
+    top: 16px;
+    right: 18px;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
   }
 
@@ -120,7 +122,7 @@ function getUpdatedText(): string {
 
     .collection-preview {
       display: flex;
-      background: #F9FAFB;
+      background: rgba(22, 17, 34, 0.06);
       border-radius: 12px;
 
       .cover-image {
@@ -128,6 +130,8 @@ function getUpdatedText(): string {
         height: 164px;
         object-fit: cover;
         border-radius: 8px;
+        border: 2px solid #161122;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
       }
 
       .collection-info {
@@ -171,17 +175,22 @@ function getUpdatedText(): string {
     }
 
     .btn-cancel {
-      background: rgba(22, 17, 34, 0.06);
+      background: #FFFDF7;
       color: #5b5566;
+      border: 2px solid #161122;
+      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
       &:hover {
         color: #FF4D8D;
+        border-color: #FF4D8D;
       }
     }
 
     .btn-danger {
       background: #FF4D8D;
       color: #ffffff;
+      border: 3px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
 
       &:hover:not(:disabled) {
           transform: translate(-1px, -1px);

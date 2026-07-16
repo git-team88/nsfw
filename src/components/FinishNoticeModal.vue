@@ -56,22 +56,24 @@ function handleOverlayClick() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 500px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 18px 30px 24px;
+     width: 500px;
+     background-color: #FFFDF7;
+     border: 3px solid #161122;
+     box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+     border-radius: 12px;
+     padding: 18px 30px 24px;
 
-    .close-btn {
-      background: none;
-      border: none;
-      padding: 0;
-      position: absolute;
-      top: 20px;
-      right: 12px;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
+     .close-btn {
+       background: none;
+       border: none;
+       padding: 0;
+       position: absolute;
+       top: 16px;
+       right: 18px;
+       width: 32px;
+       height: 32px;
+       cursor: pointer;
+     }
 
     .modal-title {
       font-size: 16px;
@@ -107,42 +109,43 @@ function handleOverlayClick() {
       justify-content: center;
       gap: 24px;
 
-      .modal-cancel-btn {
-        min-width: 136px;
-        height: 48px;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+       .modal-cancel-btn {
+         min-width: 136px;
+         height: 48px;
+         border: 2px solid #161122;
+         border-radius: 8px;
+         font-size: 14px;
+         cursor: pointer;
+         background: #FFFDF7;
+         color: #5b5566;
+         box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
-        &:hover {
-          color: #FF4D8D;
-        }
-      }
+         &:hover {
+           color: #FF4D8D;
+           border-color: #FF4D8D;
+         }
+       }
 
-      .modal-confirm-btn {
-        min-width: 136px;
-        height: 48px;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-        background: #FF4D8D;
-        color: #ffffff;
-        position: relative;
-        overflow: hidden;
+       .modal-confirm-btn {
+         min-width: 136px;
+         height: 48px;
+         border: 3px solid #161122;
+         border-radius: 8px;
+         font-size: 14px;
+         cursor: pointer;
+         background: #FF4D8D;
+         color: #ffffff;
+         box-shadow: 2px 2px 0 #161122;
 
-        &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
-      }
+         &:hover:not(:disabled) {
+           transform: translate(-1px, -1px);
+           box-shadow: 4px 4px 0 #161122;
+         }
+         &:active {
+           transform: translate(0, 0);
+           box-shadow: 2px 2px 0 #161122;
+         }
+       }
     }
   }
 }

@@ -72,10 +72,21 @@
 
         <!-- Description Section -->
         <div class="form-group">
-          <label class="form-label">
-            <span>{{ t('collectionSettings.description') }}</span>
-            <span class="char-counter">({{ description.length }}/1000)</span>
-          </label>
+          <div class="form-label-inner">
+            <label class="form-label" style="margin-bottom: 0;">
+              <span>{{ t('collectionSettings.description') }}</span>
+              <span class="char-counter">({{ description.length }}/1000)</span>
+            </label>
+            <div class="info-icon" @mouseover="adjustTooltipPosition">
+              <img src="@/assets/images/publish/info.png" alt="Info" />
+              <div class="tooltip-arrow"></div>
+              <div class="tooltip">
+                <div class="tooltip-content">
+                  <div v-html="t('collectionSettings.descriptionInfo')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
           <textarea
             v-model="description"
             class="form-textarea"

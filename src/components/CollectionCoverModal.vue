@@ -595,10 +595,10 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   border: none;
   padding: 0;
   position: absolute;
-  top: 20px;
+  top: 16px;
   right: 18px;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
 }
 
@@ -611,40 +611,40 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   padding: 0 24px;
 
   .tabs {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    height: 100%;
+    display: inline-flex;
+    gap: 6px;
+    background: #FFFDF7;
+    border: 2.5px solid #161122;
+    border-radius: 14px;
+    padding: 5px;
 
     span {
-      height: 100%;
       display: flex;
       align-items: center;
-      font-size: 16px;
-      color: #667085;
+      font-size: 14px;
+      color: #5b5566;
       cursor: pointer;
-      position: relative;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+
+      &:hover {
+        color: #161122;
+      }
 
       &.active {
-        color: #161122;
-        font-weight: 600;
-
-        &::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 2px;
-          background: #FF4D8D;
-        }
+        background: #161122;
+        color: #fff;
+        border-radius: 10px;
+        font-weight: 800;
       }
     }
   }
 }
 
 .modal-body {
-  padding: 18px 24px;
+  padding: 24px 24px 30px;
 }
 
 .select-mode {
@@ -810,7 +810,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 .modal-footer {
-  padding: 18px;
+  padding: 20px 24px;
   border-top: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   justify-content: flex-end;
@@ -823,14 +823,18 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   .reupload-btn {
     min-width: 136px;
     height: 48px;
-    border: 1px solid #FF4D8D;
+    border: 2px solid #161122;
     border-radius: 8px;
     font-size: 14px;
-    color: #FF4D8D;
-    background: none;
+    color: #5b5566;
+    background: #FFFDF7;
     cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+
     &:hover {
-      background: rgba(251,100,182,0.12);
+      color: #FF4D8D;
+      border-color: #FF4D8D;
     }
   }
 
@@ -847,21 +851,23 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   .btn.confirm {
     background: #FF4D8D;
     color: #ffffff;
-    border: none;
+    border: 3px solid #161122;
     min-width: 136px;
     height: 48px;
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 0 #161122;
 
     &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+    &:active:not(:disabled) {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
+    }
 
     &:disabled {
       background: #f8d7e8;

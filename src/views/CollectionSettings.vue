@@ -10,43 +10,40 @@
 
       <!-- Main Content -->
       <div class="main-content">
-        <!-- Header -->
-        <div class="page-header">
-          <h1 class="page-title">{{ t('collectionSettings.title') }}</h1>
-          <div class="action-buttons">
-            <button class="btn btn-delete" @click="handleDelete">{{ t('collectionSettings.delete') }}</button>
-            <button
-              class="btn btn-finish"
-              :class="{ 'disabled': collection.status == '2' }"
-              :disabled="collection.status == '2'"
-              @click="handleFinish"
-            >{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.setFinish') }}</button>
-            <button class="btn btn-edit" @click="goEditCollection">{{ t('collectionSettings.edit') }}</button>
-          </div>
-        </div>
-
-        <!-- Basic Info Section -->
+        <!-- Basic Info Card -->
         <div class="section">
-          <div class="basic-info-row">
-            <div class="cover-section">
-              <div class="cover-info">
-                <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-image" />
-                <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
-                  <span class="r18-text">R18</span>
-                </div>
+          <div class="page-header">
+            <h1 class="page-title">{{ t('collectionSettings.title') }}</h1>
+            <div class="action-buttons">
+              <button class="btn btn-delete" @click="handleDelete">{{ t('collectionSettings.delete') }}</button>
+              <button
+                class="btn btn-finish"
+                :class="{ 'disabled': collection.status == '2' }"
+                :disabled="collection.status == '2'"
+                @click="handleFinish"
+              >{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.setFinish') }}</button>
+              <button class="btn btn-edit" @click="goEditCollection">{{ t('collectionSettings.edit') }}</button>
+            </div>
+          </div>
+
+          <div class="cover-section">
+            <div class="cover-info">
+              <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-image" />
+              <div class="r18-overlay" v-if="collection.is_nsfw == '1'">
+                <span class="r18-text">R18</span>
               </div>
             </div>
+          </div>
 
-            <div class="detail-section">
-              <div class="info-item">
-                <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
-                <span class="info-value">{{ collection.title }}</span>
-              </div>
+          <div class="detail-section">
+            <div class="info-item">
+              <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
+              <span class="info-value">{{ collection.title }}</span>
+            </div>
 
-              <div class="info-item">
-                <span class="info-label">{{ t('collectionSettings.description') }}：</span>
-                <span class="info-value description">{{ collection.description }}</span>
-              </div>
+            <div class="info-item">
+              <span class="info-label">{{ t('collectionSettings.description') }}：</span>
+              <span class="info-value description">{{ collection.description }}</span>
             </div>
           </div>
         </div>
@@ -326,7 +323,9 @@ async function confirmDelete() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 
   .page-title {
     font-size: 20px;
@@ -430,13 +429,8 @@ async function confirmDelete() {
   }
 }
 
-.basic-info-row {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
 .cover-section {
+  margin-bottom: 20px;
 
   .cover-info{
     position: relative;
@@ -478,7 +472,6 @@ async function confirmDelete() {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  flex: 1;
 
   .info-item {
     display: flex;
@@ -574,7 +567,9 @@ async function confirmDelete() {
     }
   }
   .page-header {
-    margin-bottom: 0.8333vw;
+    margin-bottom: 1.3889vw;
+    padding-bottom: 1.3889vw;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
     .page-title {
       font-size: 1.3889vw;
     }
@@ -598,10 +593,8 @@ async function confirmDelete() {
       margin: 0 0 1.3889vw 0;
     }
   }
-  .basic-info-row {
-    gap: 1.3889vw;
-  }
   .cover-section {
+    margin-bottom: 1.3889vw;
     .cover-info {
       width: 12.5vw;
       height: 16.6667vw;
@@ -675,6 +668,8 @@ async function confirmDelete() {
   }
   .page-header {
     margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
     .page-title {
       font-size: 20px;
     }
@@ -698,10 +693,8 @@ async function confirmDelete() {
       margin: 0 0 20px 0;
     }
   }
-  .basic-info-row {
-    gap: 20px;
-  }
   .cover-section {
+    margin-bottom: 20px;
     .cover-info {
       width: 180px;
       height: 240px;
@@ -782,6 +775,8 @@ async function confirmDelete() {
   }
   .page-header {
     margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
     .page-title {
       font-size: 18px;
     }
@@ -805,11 +800,8 @@ async function confirmDelete() {
       margin: 0 0 12px 0;
     }
   }
-  .basic-info-row {
-    flex-direction: column;
-    gap: 12px;
-  }
   .cover-section {
+    margin-bottom: 16px;
     .cover-info {
       width: 140px;
       height: 186px;
