@@ -1,138 +1,139 @@
 <template>
-  <div class="register">
-    <Header ref="headerRef" :cur="-1"></Header>
-
-    <div class="container">
-      <div class="title">{{ t("header.register") }}</div>
-      <div class="free-computing">
-        <div class="free-computing-inner">
-          <img src="@/assets/images/register/gift.png" alt="" />
-          <span>{{ t("register.freeComputing") }}</span>
+  <div class="register-page">
+    <div class="auth-grid">
+      <div class="auth-brand">
+        <div class="brand-glow" aria-hidden="true"></div>
+        <div class="brand-dots" aria-hidden="true"></div>
+        <span class="brand-badge">{{ t("auth.register.badge") }}</span>
+        <div class="brand-textblock">
+          <h2>{{ t("auth.register.brandTitle") }}</h2>
+          <p class="brand-copy">{{ t("auth.register.brandCopy") }}</p>
+        </div>
+        <div class="brand-perks">
+          <span>{{ t("auth.register.perk1") }}</span>
+          <span>{{ t("auth.register.perk2") }}</span>
         </div>
       </div>
 
-      <div>
-        <div class="info">
-          <form id="emailForm" @submit.prevent="handleSubmit">
-            <div class="email-item-box">
-              <div class="email-item-title"><span>*</span>{{ t("register.emailLabel") }}</div>
-              <div class="email-item">
-                <input
-                  id="email"
-                  class="email-ipt"
-                  type="text"
-                  v-model="email"
-                  :placeholder="t('register.email')"
-                  spellcheck="false"
-                  autocomplete="off"
-                  @blur="handleEmailVerify"
-                />
-              </div>
-              <div class="email-error" v-if="emailError">{{ emailError }}</div>
-            </div>
+      <div class="auth-card">
+        <h1>{{ t("header.register") }}</h1>
+        <p class="auth-sub">{{ t("auth.register.sub") }}</p>
 
-            <div class="email-item-box">
-              <div class="email-item-title"><span>*</span>{{ t("register.passwordLabel") }}</div>
-              <div class="email-item">
-                <input
-                  id="password"
-                  class="email-ipt"
-                  :type="isShowPassword ? 'text' : 'password'"
-                  v-model="password"
-                  :placeholder="t('register.password')"
-                  maxlength="20"
-                  spellcheck="false"
-                  autocomplete="off"
-                  @blur="handlePasswordVerify"
-                />
-
-                <div
-                  class="icon"
-                  @click="isShowPassword = !isShowPassword"
-                  v-if="password && password.length > 0"
-                >
-                  <img src="@/assets/images/register/eye.png" v-if="isShowPassword" />
-                  <img src="@/assets/images/register/close.png" v-else />
-                </div>
-              </div>
-              <div class="email-error" v-if="passwordError">{{ passwordError }}</div>
-            </div>
-
-            <div class="email-item-box">
-              <div class="email-item-title-box">
-                <div class="email-item-title"><span>*</span>{{ t("register.codeLabel") }}</div>
-              </div>
-
-              <div class="email-item">
-                <input
-                  id="code"
-                  class="email-code"
-                  type="text"
-                  v-model="code"
-                  :placeholder="t('register.code')"
-                  spellcheck="false"
-                  autocomplete="off"
-                  @blur="handleCodeVerify"
-                />
-
-                <button class="email-txt" :class="isSend || !isGrecaptchaReady ? 'on' : ''" type="submit" :disabled="!isGrecaptchaReady">
-                  {{ emailTxt }}
-                </button>
-              </div>
-              <div class="email-error" :class="{ 'success': codeError == t('register.spamTip') }" v-if="codeError">{{ codeError }}</div>
-
-              <div class="email-item-box" style="margin-top: 1.4rem;">
-                <div class="email-item-title">{{ t("inviteCode.title") }}</div>
-                <div class="email-item">
-                  <input
-                    id="inviteCode"
-                    class="email-ipt"
-                    type="text"
-                    v-model="inviteCode"
-                    :placeholder="t('inviteCode.enterCode')"
-                    spellcheck="false"
-                    autocomplete="off"
-                  />
-                </div>
-              </div>
-            </div>
-            <button class="email-btn" :class="isEnd ? 'on' : ''" :disabled="isLoading" type="button" @click="goEmailRegister()">
-              {{ t("header.register") }}
-              <span class="btn-spinner" v-if="isLoading"></span>
-            </button>
-          </form>
+        <div class="auth-field">
+          <button type="button" class="oauth-btn" @click="showGoogle()">
+            <img src="@/assets/images/register/google.png" alt="Google" />
+            <span>{{ t("register.google") }}</span>
+          </button>
         </div>
 
-        <div class="other-login">
-          <p class="other-login-title">
-            <b></b>
-            <span>{{ t("register.or") }}</span>
-            <b></b>
-          </p>
-
-          <div class="icon-box">
-            <div class="google-icon" @click="showGoogle()">
-              <img src="@/assets/images/register/google.png" alt="" />
-              <span>{{ t("register.google") }}</span>
-            </div>
-          </div>
+        <div class="auth-divider">
+          <span>{{ t("register.or") }}</span>
         </div>
 
-        <div class="tip">
-          <div class="tip-text" v-if="locale == 'jp'">
-            <span v-html="t('register.tipInfo')"></span>
-            <b>{{ t("register.terms") }}</b>
-            {{ t("register.infix") }}
-            <b>{{ t("register.privacy") }}</b>
-            {{ t("register.tipEnd") }}
+        <form id="emailForm" @submit.prevent="handleSubmit">
+          <div class="auth-field">
+            <label>{{ t("register.emailLabel") }}</label>
+            <input
+              id="email"
+              class="auth-input"
+              type="text"
+              v-model="email"
+              :placeholder="t('register.email')"
+              spellcheck="false"
+              autocomplete="off"
+              @blur="handleEmailVerify"
+            />
+            <span class="auth-hint auth-hint-ng" v-if="emailError">{{ emailError }}</span>
           </div>
 
-          <div class="tip-text" v-else>
-            <span v-html="t('register.tipInfo')"></span>
-            <b>{{ t("register.terms") }}</b>
-            {{ t("register.infix") }}
-            <b>{{ t("register.privacy") }}</b>
+          <div class="auth-field">
+            <label>{{ t("register.passwordLabel") }}</label>
+            <div class="password-row">
+              <input
+                id="password"
+                class="auth-input"
+                :type="isShowPassword ? 'text' : 'password'"
+                v-model="password"
+                :placeholder="t('register.password')"
+                maxlength="20"
+                spellcheck="false"
+                autocomplete="off"
+                @blur="handlePasswordVerify"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="isShowPassword = !isShowPassword"
+                v-if="password && password.length > 0"
+              >
+                <img src="@/assets/images/register/eye.png" v-if="isShowPassword" />
+                <img src="@/assets/images/register/close.png" v-else />
+              </button>
+            </div>
+            <span class="auth-hint auth-hint-ng" v-if="passwordError">{{ passwordError }}</span>
           </div>
+
+          <div class="auth-field">
+            <label>{{ t("register.codeLabel") }}</label>
+            <div class="input-row">
+              <input
+                id="code"
+                class="auth-input code-input"
+                type="text"
+                v-model="code"
+                :placeholder="t('register.code')"
+                spellcheck="false"
+                autocomplete="off"
+                @blur="handleCodeVerify"
+              />
+              <button
+                class="send-btn"
+                :class="isSend || !isGrecaptchaReady ? 'disabled' : ''"
+                type="submit"
+                :disabled="!isGrecaptchaReady"
+              >
+                {{ emailTxt }}
+              </button>
+            </div>
+            <span
+              class="auth-hint"
+              :class="codeError == t('register.spamTip') ? 'auth-hint-ok' : 'auth-hint-ng'"
+              v-if="codeError"
+            >{{ codeError }}</span>
+          </div>
+
+          <div class="auth-field">
+            <label>{{ t("inviteCode.title") }}</label>
+            <input
+              id="inviteCode"
+              class="auth-input"
+              type="text"
+              v-model="inviteCode"
+              :placeholder="t('inviteCode.enterCode')"
+              spellcheck="false"
+              autocomplete="off"
+            />
+          </div>
+        </form>
+
+        <button
+          class="auth-submit"
+          :class="isEnd ? 'active' : ''"
+          :disabled="isLoading"
+          type="button"
+          @click="goEmailRegister()"
+        >
+          {{ t("header.register") }}
+          <span class="btn-spinner" v-if="isLoading"></span>
+        </button>
+
+        <div class="auth-tip">
+          <span v-if="locale == 'jp'" v-html="t('register.tipInfo')"></span>
+          <span v-else v-html="t('register.tipInfo')"></span>
+          <a class="auth-link">{{ t("register.terms") }}</a>
+          {{ t("register.infix") }}
+          <a class="auth-link">{{ t("register.privacy") }}</a>
+          <template v-if="locale == 'jp'"> {{ t("register.tipEnd") }}</template>
         </div>
       </div>
     </div>
@@ -155,7 +156,6 @@
 </template>
 
 <script setup lang="ts" name="Register">
-import Header from "@/components/Header.vue";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
@@ -168,8 +168,6 @@ import router from "@/router";
 import { trackSignUp } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
-
-const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const email = ref("");
 const emailToken = ref("");
@@ -232,7 +230,6 @@ function setSeoMeta() {
 }
 
 onMounted(async () => {
-  // 初始化语言设置
   await initLanguage();
 
   setSeoMeta();
@@ -450,10 +447,6 @@ function timeCount() {
   }, 1000);
 }
 
-function goLink() {
-  localStorage.setItem("isBack", "1");
-}
-
 function validatePassword(password: string) {
   const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{8,20}$/u;
   return regex.test(password);
@@ -500,10 +493,6 @@ function goEmailRegister() {
         if (res.code == 0) {
           showBirthday.value = false;
           trackSignUp();
-
-          if (headerRef.value) {
-            headerRef.value.getLoginUserInfo()
-          }
 
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("isFirstRegister", "1");
@@ -571,372 +560,402 @@ function googleRegister() {
 </script>
 
 <style lang="scss" scoped>
-.register {
+.register-page {
   width: 100%;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #FFFBF4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
 
-  .container {
-    max-width: 48rem;
+  .auth-grid {
+    display: grid;
+    grid-template-columns: 1.02fr 1fr;
+    gap: 8px;
     width: 100%;
-    height: 100%;
-    margin: 0 auto;
-    padding: 16rem 0 3rem;
+    max-width: 960px;
+    align-items: stretch;
+  }
 
-    .title {
-      font: {
-        weight: 500;
-        size: 2rem;
-      }
-      line-height: 2rem;
-      text-align: center;
-      color: #101828;
+  .auth-brand {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    border: 3px solid #161122;
+    border-radius: 6px;
+    background: radial-gradient(ellipse 96% 92% at 28% 18%, #FFF6D6 0%, #FFE885 26%, #FFD23F 52%, #FF9E45 76%, #FF7AAE 100%);
+    padding: 52px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 520px;
+
+    .brand-glow {
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      left: -50px;
+      top: -70px;
+      z-index: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.65), transparent 70%);
+      filter: blur(6px);
+      opacity: 0.8;
+      pointer-events: none;
     }
 
-    .free-computing {
+    .brand-dots {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(22, 17, 34, 0.16) 1.4px, transparent 1.4px);
+      background-size: 15px 15px;
+      -webkit-mask-image: linear-gradient(150deg, #000, transparent 66%);
+      mask-image: linear-gradient(150deg, #000, transparent 66%);
+    }
+
+    .brand-badge {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      background: #161122;
+      color: #FFD23F;
+      padding: 7px 14px;
+      border-radius: 999px;
+      width: fit-content;
+    }
+
+    .brand-textblock {
+      position: relative;
+      z-index: 1;
+
+      h2 {
+        font-size: 40px;
+        font-weight: 400;
+        line-height: 1.28;
+        color: #161122;
+        margin: 0;
+        letter-spacing: 0.01em;
+        white-space: pre-line;
+      }
+    }
+
+    .brand-copy {
+      margin: 16px 0 0;
+      font-size: 14.5px;
+      font-weight: 700;
+      line-height: 1.9;
+      color: #161122;
+      opacity: 0.72;
+      max-width: 320px;
+    }
+
+    .brand-perks {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #161122;
+      opacity: 0.75;
+    }
+  }
+
+  .auth-card {
+    border: 3px solid #161122;
+    border-radius: 6px;
+    background: #FFFDF7;
+    min-width: 0;
+    padding: 44px 46px 38px;
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+      font-size: 27px;
+      font-weight: 400;
+      color: #161122;
+      margin: 0 0 5px;
+    }
+
+    .auth-sub {
+      margin: 0 0 22px;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.7;
+      opacity: 0.55;
+      color: #161122;
+    }
+  }
+
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 15px;
+
+    label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #161122;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .auth-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 2.5px solid #161122;
+    border-radius: 12px;
+    background: #fff;
+    padding: 13px 15px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #161122;
+    outline: none;
+    transition: box-shadow 0.18s;
+
+    &::placeholder {
+      color: #bdb7c4;
+    }
+
+    &:focus {
+      box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    }
+  }
+
+  .password-row {
+    position: relative;
+
+    .auth-input {
+      width: 100%;
+      padding-right: 44px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 1.2rem 0 2rem;
 
-      .free-computing-inner{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.6rem 1rem;
-        background: linear-gradient(160deg, #FFFFFF 0%, #FFF3FA 52%, #FFE5F3 100%);
-        border-radius: 1.4rem;
-        border: 1px solid rgba(251, 100, 182, 0.3);
-        font-size: 1.2rem;
-        color: #FB64B6;
-
-        img {
-          width: 1.2rem;
-          height: 1.2rem;
-          margin-right: 0.4rem;
-        }
+      img {
+        width: 20px;
+        height: 20px;
       }
     }
+  }
 
-    .step {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 2rem 0 3rem;
+  .input-row {
+    display: flex;
+    gap: 9px;
+    align-items: stretch;
 
-      span {
-        font-size: 1.8rem;
-        color: rgba(255, 255, 255, 0.5);
-
-        &.step-text {
-          &.on {
-            color: #33a3ff;
-          }
-        }
-
-        &:nth-of-type(2) {
-          position: relative;
-          width: 18rem;
-          margin: 0 1rem;
-          border-bottom: 1px dashed transparent;
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(
-              90deg,
-              rgba(51, 163, 255, 0.1),
-              rgba(51, 163, 255, 0.5),
-              rgba(51, 163, 255, 0.1)
-            );
-            -webkit-mask: repeating-linear-gradient(
-              to right,
-              #000 0,
-              #000 4px,
-              transparent 4px,
-              transparent 8px
-            );
-            mask: repeating-linear-gradient(
-              to right,
-              #000 0,
-              #000 4px,
-              transparent 4px,
-              transparent 8px
-            );
-          }
-        }
-      }
+    .code-input {
+      flex: 1;
+      min-width: 0;
     }
 
-    .info {
-      .email-item-box {
-        margin: 0 0 1.4rem;
-        .email-item-title-box {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
+    .send-btn {
+      flex: none;
+      box-sizing: border-box;
+      border: 2.5px solid #161122;
+      border-radius: 12px;
+      background: #fff;
+      color: #161122;
+      font-size: 13.5px;
+      font-weight: 800;
+      padding: 0 16px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #161122;
+      white-space: nowrap;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-        .email-item-title-intro{
-          font-size: 1.4rem;
-          color: #99A1AF;
-          img{
-            width: 1.6rem;
-            cursor: pointer;
-          }
-        }
-
-        .email-item-title {
-          font-size: 1.4rem;
-          color: #6A7282;
-          span {
-            color: #fa2d47;
-          }
-        }
-
-        .email-item {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-          margin: 1rem 0 0;
-
-          .email-ipt {
-            position: relative;
-            width: 100%;
-            height: 4.4rem;
-            padding: 1rem;
-            font: {
-              weight: normal;
-              size: 1.4rem;
-            }
-            -webkit-border-radius: 0.8rem;
-            border-radius: 0.8rem;
-            background: #F5F5F5;
-            color: #101828;
-
-            &::placeholder {
-              color: #99A1AF;
-            }
-
-            &:hover,
-            &:focus {
-              border: 1px solid #fb64b6;
-            }
-          }
-
-          .icon {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            width: 2.4rem;
-            height: 2.4rem;
-            cursor: pointer;
-
-            img {
-              width: 2.4rem;
-              height: 2.4rem;
-            }
-          }
-
-          .email-code {
-            width: 100%;
-            height: 4.4rem;
-            padding: 1rem;
-            font: {
-              size: 1.4rem;
-            }
-            -webkit-border-radius: 0.8rem;
-            border-radius: 0.8rem;
-            background: #F5F5F5;
-            color: #101828;
-
-            &::placeholder {
-              color: #99A1AF;
-            }
-
-            &:hover,
-            &:focus {
-              border: 1px solid #fb64b6;
-            }
-          }
-
-          .email-txt {
-            position: absolute;
-            top: 0;
-            right: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 4.4rem;
-            font: {
-              weight: 300;
-              size: 1.4rem;
-            }
-            background: none;
-            color: #fb64b6;
-            cursor: pointer;
-            &.on {
-              color: #99A1AF;
-              cursor: not-allowed;
-            }
-          }
-        }
-
-        .email-error {
-          margin-top: 0.4rem;
-          font: {
-            weight: 300;
-            size: 1.2rem;
-          }
-          color: #fa2d47;
-
-          &.success {
-            color: #99A1AF;
-          }
-        }
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
       }
 
-      .email-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 4.8rem;
-        border: none;
-        outline: none;
-        padding: 0;
-        font: {
-          size: 1.6rem;
-        }
-        -webkit-border-radius: 0.8rem;
-        border-radius: 0.8rem;
-        background: rgba(251,100,182,0.5);
-        color: #ffffff;
-        cursor: default;
-
-        &.on {
-          background: #FB64B6;
-          cursor: pointer;
-        }
-
-        &:disabled {
-          cursor: not-allowed;
-          opacity: 0.6;
-
-          &:hover::after {
-            content: none;
-          }
-        }
-
-        .btn-spinner {
-          display: inline-block;
-          width: 2rem;
-          height: 2rem;
-          margin-left: 0.8rem;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #ffffff;
-          border-radius: 50%;
-          animation: rotate 1s linear infinite;
-        }
+      &.disabled {
+        color: #bdb7c4;
+        cursor: not-allowed;
 
         &:hover {
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-          }
+          transform: none;
+          box-shadow: 3px 3px 0 #161122;
         }
       }
     }
+  }
 
-    .tip {
-      margin: 2rem 0 0;
-      font-size: 1.2rem;
-      text-align: center;
-      color: #99A1AF;
+  .auth-hint {
+    display: inline-block;
+    min-height: 1px;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.5;
+    opacity: 0.55;
+    color: #161122;
 
-      b {
-        font-weight: normal;
-        color: #fb64b6;
+    &.auth-hint-ng {
+      color: #E5484D;
+      opacity: 1;
+      font-weight: 800;
+    }
+
+    &.auth-hint-ok {
+      color: #22A06B;
+      opacity: 1;
+      font-weight: 800;
+    }
+  }
+
+  .auth-link {
+    color: #FF4D8D;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 2.5px solid #161122;
+    border-radius: 12px;
+    background: #fff;
+    padding: 13px;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #161122;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 4px 5px 0 #161122;
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 2px 2px 0 #161122;
+    }
+
+    img {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: #bdb7c4;
+    font-size: 12px;
+    font-weight: 700;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: rgba(22, 17, 34, 0.12);
+    }
+  }
+
+  .auth-submit {
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    background: #FF4D8D;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:not(.active) {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      &:hover {
+        transform: none;
+        box-shadow: 3px 3px 0 #161122;
       }
     }
 
-    .other-login {
-      margin: 2rem 0 0;
-
-      .other-login-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 0 0 1.4rem;
-        font-size: 1.4rem;
-        color: #6A7282;
-
-        b {
-          width: 21.2rem;
-          height: 1px;
-          background: #F5F5F5;
-        }
+    &.active {
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
       }
-      .icon-box {
-        display: flex;
-        align-items: center;
-        justify-content: center;
 
-        .google-icon {
-          position: relative;
-          width: 100%;
-          height: 4.8rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          -webkit-border-radius: 0.8rem;
-          border-radius: 0.8rem;
-          background: #F5F5F5;
-          cursor: pointer;
-
-          &:hover{
-            span{
-              color: #FB64B6;
-            }
-          }
-
-          .g_id_signin {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 4。8rem;
-            opacity: 0;
-            overflow: hidden;
-            z-index: 600;
-          }
-        }
-
-        img {
-          width: 3.2rem;
-          height: 3.2rem;
-          margin: 0 1rem 0 0;
-          cursor: pointer;
-        }
-
-        span {
-          font-size: 1.4rem;
-          color: #6A7282;
-        }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
       }
     }
+
+    &:disabled {
+      cursor: not-allowed;
+
+      &:hover {
+        transform: none;
+        box-shadow: 3px 3px 0 #161122;
+      }
+    }
+
+    .btn-spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      margin-left: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: rotate 1s linear infinite;
+    }
+  }
+
+  .auth-tip {
+    margin: 16px 0 0;
+    font-size: 12px;
+    text-align: center;
+    color: #9a93a4;
+    line-height: 1.6;
   }
 
   .load {
@@ -953,17 +972,87 @@ function googleRegister() {
     background: rgba(0, 0, 0, 0.4);
     z-index: 800;
     img {
-      width: 3.2rem;
-      height: 3.2rem;
+      width: 32px;
+      height: 32px;
       animation: rotate 2s linear infinite;
     }
     p {
-      margin: 2rem 0 0;
-      font: {
-        size: 1.8rem;
-        weight: 500;
-      }
+      margin: 20px 0 0;
+      font-size: 18px;
+      font-weight: 500;
       color: #ffffff;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .register-page {
+    padding: 20px 16px;
+    align-items: flex-start;
+
+    .auth-grid {
+      grid-template-columns: 1fr;
+      max-width: 520px;
+    }
+
+    .auth-brand {
+      min-height: 170px;
+      padding: 32px 26px;
+
+      .brand-textblock h2 {
+        font-size: 30px;
+      }
+    }
+
+    .auth-card {
+      padding: 32px 24px 30px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .register-page {
+    padding: 16px 12px;
+
+    .auth-brand {
+      padding: 24px 20px;
+      min-height: 140px;
+
+      .brand-textblock h2 {
+        font-size: 24px;
+      }
+
+      .brand-copy {
+        font-size: 13px;
+      }
+    }
+
+    .auth-card {
+      padding: 24px 20px 24px;
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+
+    .auth-input {
+      padding: 11px 13px;
+      font-size: 14px;
+    }
+
+    .auth-submit {
+      padding: 13px;
+      font-size: 15px;
+    }
+
+    .oauth-btn {
+      padding: 11px;
+      font-size: 13.5px;
+    }
+
+    .send-btn {
+      padding: 0 12px;
+      font-size: 12px;
     }
   }
 }
