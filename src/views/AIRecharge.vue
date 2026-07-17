@@ -3,7 +3,7 @@
     <Header ref="headerRef" :cur="-1"></Header>
     <div class="container">
       <div class="back" @click="goBack">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="content-box">
@@ -53,6 +53,7 @@
               v-for="(plan, index) in rechargePlans"
               :key="plan.plan_id"
               class="plan-card"
+              :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               @click="selectPlan(plan.plan_id)"
             >
               <div v-if="index == 0 && isUserNew && promotionTitle" class="zero-plan-badge">{{ promotionTitle }}</div>
@@ -575,19 +576,25 @@ $green: #22A06B;
 
   .back {
     position: absolute;
-    top: 0;
+    top: -52px;
     left: 30px;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #161122;
     cursor: pointer;
     z-index: 10;
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    background: #FFFDF7;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-    img {
-      width: 40px;
-      height: 40px;
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0 #161122;
     }
   }
 }
@@ -612,7 +619,6 @@ $green: #22A06B;
 
     .tab-group {
       display: flex;
-      background: #fff;
       border: 2.5px solid $ink;
       border-radius: 14px;
       padding: 5px;
@@ -715,7 +721,6 @@ $green: #22A06B;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-top: 24px;
-      animation: chUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.26s backwards;
 
       @media (max-width: 720px) {
         grid-template-columns: 1fr;
@@ -723,6 +728,7 @@ $green: #22A06B;
 
       .plan-card {
         position: relative;
+        animation: projCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 
         .plan-bg {
           position: absolute;
@@ -748,7 +754,6 @@ $green: #22A06B;
           z-index: 5;
           overflow: hidden;
           transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
-          animation: chPlanIn 0.6s cubic-bezier(0.16,1,0.3,1) var(--d, 0ms) backwards;
 
           &:hover {
             transform: translateY(-5px);
@@ -1274,8 +1279,8 @@ $green: #22A06B;
   to { opacity: 1; transform: none; }
 }
 
-@keyframes chPlanIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+@keyframes projCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.95); }
   to { opacity: 1; transform: none; }
 }
 
@@ -1305,6 +1310,9 @@ $green: #22A06B;
   .plan-card-inner:hover,
   .pay-btn:hover {
     transform: none;
+  }
+  .plan-list-enter-active {
+    transition: none !important;
   }
 }
 </style>

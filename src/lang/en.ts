@@ -760,6 +760,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     title2: "Create",
     title3: "My Projects",
     title4: "Character Library",
+    title6: "Ranking",
     title5: "My Community",
     recharge: "Recharge",
     register: "Sign up",
@@ -2859,5 +2860,17 @@ If you have any questions, complaints, comments or suggestions regarding persona
       cancel: "Cancel",
       confirm: "Confirm"
     }
+  },
+  rank: {
+    title: "Ranking",
+    sub: "The most-read works right now",
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+    all: "All",
+    manga: "Manga",
+    novel: "Novel",
+    anime: "Anime",
+    empty: "No works in this category yet"
   }
 };

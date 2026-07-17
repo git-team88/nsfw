@@ -537,6 +537,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     title2: "創作",
     title3: "マイプロジェクト",
     title4: "キャラクター設定一覧",
+    title6: "ランキング",
     title5: "コミュニティ",
     recharge: "クレジット",
     register: "新規登録",
@@ -2920,5 +2921,17 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       cancel: "キャンセル",
       confirm: "確認"
     }
+  },
+  rank: {
+    title: "ランキング",
+    sub: "いま最も読まれている作品",
+    daily: "日間",
+    weekly: "週間",
+    monthly: "月間",
+    all: "全て",
+    manga: "漫画",
+    novel: "小説",
+    anime: "アニメ",
+    empty: "この条件の作品はまだありません"
   }
 };

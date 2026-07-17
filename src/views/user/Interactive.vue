@@ -672,11 +672,6 @@ async function downloadSingleWorkData() {
   padding: 8px 20px;
   border-radius: 10px;
   transition: all 0.15s ease;
-
-  &:hover {
-    color: #161122;
-    background: #FFF0F5;
-  }
 }
 .tabs span.on {
   font-weight: 700;
@@ -715,11 +710,6 @@ async function downloadSingleWorkData() {
 .date-range {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px;
-  border: 2.5px solid #161122;
-  border-radius: 12px;
-  background: #FFFDF7;
 }
 .date-range input {
   height: 28px;
@@ -858,10 +848,10 @@ async function downloadSingleWorkData() {
   gap: 12px;
 
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #161122;
-    border-top: 4px solid #FF4D8D;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7e1d8;
+    border-top: 3px solid #161122;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     box-sizing: border-box;

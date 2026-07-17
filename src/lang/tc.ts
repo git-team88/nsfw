@@ -864,6 +864,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     title2: "創作",
     title3: "我的項目",
     title4: "角色庫",
+    title6: "排行榜",
     title5: "我的社區",
     recharge: "充值",
     register: "註冊",
@@ -2952,5 +2953,17 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       cancel: "取消",
       confirm: "確定"
     }
+  },
+  rank: {
+    title: "排行榜",
+    sub: "當前最受歡迎的作品",
+    daily: "日榜",
+    weekly: "週榜",
+    monthly: "月榜",
+    all: "全部",
+    manga: "漫畫",
+    novel: "小說",
+    anime: "動畫",
+    empty: "該分類暫無作品"
   }
 };

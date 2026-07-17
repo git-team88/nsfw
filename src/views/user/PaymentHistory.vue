@@ -56,7 +56,7 @@
             <!-- Processing Tab Content -->
             <div v-if="activeMainTab == 'processing'">
               <div class="list-area" v-if="activeSubTab === 'subscribe'">
-                <div class="sub-item" v-for="item in processingList" :key="item.id">
+                <div class="sub-item" v-for="(item, idx) in processingList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                   <div class="left">
                     <img class="avatar" :src="item.avatar || defaultAvatar" alt="" @click="goUserHome(item.userId)" @error="($event.target as HTMLImageElement).src = defaultAvatar" />
                     <div class="info">
@@ -99,7 +99,7 @@
               </div>
 
               <div class="list-area" v-else-if="activeSubTab === 'recharge'">
-                <div class="sub-item" v-for="item in processingList" :key="item.id">
+                <div class="sub-item" v-for="(item, idx) in processingList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                   <div class="left">
                     <div class="plan-info">
                       <div class="plan-name">{{ getLocalizedPlanDesc(item.plan_desc).name || item.plan_info?.name }}</div>
@@ -137,7 +137,7 @@
               </div>
 
               <div class="list-area" v-else-if="activeSubTab === 'topup'">
-                <div class="sub-item" v-for="item in topupProcessingList" :key="item.id">
+                <div class="sub-item" v-for="(item, idx) in topupProcessingList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                   <div class="left">
                     <div class="plan-info">
                       <div class="plan-name">{{ item.plan_info?.name || item.name }}</div>
@@ -162,7 +162,7 @@
             <div v-else-if="activeMainTab === 'orderHistory'">
               <div class="table">
                 <div class="tbody" v-if="listData.length">
-                  <div class="tr" v-for="item in listData" :key="item.id">
+                  <div class="tr" v-for="(item, idx) in listData" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
@@ -893,22 +893,19 @@ onBeforeUnmount(() => {
 .tabs {
   display: inline-flex;
   gap: 6px;
-  background: #fff;
   border: 2.5px solid #161122;
   border-radius: 14px;
   padding: 5px;
 }
 .tab-item {
   font-size: 16px;
-  color: #6A7282;
+  color: #161122;
   padding: 8px 16px;
   cursor: pointer;
   border-radius: 10px;
   font-weight: 500;
   transition: all 0.15s ease;
-  &:hover {
-    color: #161122;
-  }
+
   &.active {
     background: #161122;
     color: #fff;
@@ -1022,9 +1019,13 @@ onBeforeUnmount(() => {
   cursor: pointer;
   box-shadow: 3px 3px 0 #161122;
   margin-bottom: 8px;
+  animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  will-change: transform;
+  transition: transform 0.12s ease-out, box-shadow 0.12s;
 
   &:hover {
-    background: #FFF3D6;
+    transform: translateX(4px);
+    box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
 
     .btn-view {
       background: #FFFDF7;
@@ -1130,10 +1131,10 @@ onBeforeUnmount(() => {
   gap: 12px;
 
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #FFF3D6;
-    border-top: 4px solid #161122;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7e1d8;
+    border-top: 3px solid #161122;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     box-sizing: border-box;
@@ -1148,6 +1149,11 @@ onBeforeUnmount(() => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes rkRow {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 .list-area {
@@ -1167,10 +1173,13 @@ onBeforeUnmount(() => {
   background: #FFFDF7;
   cursor: pointer;
   box-shadow: 3px 3px 0 #161122;
+  animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  will-change: transform;
+  transition: transform 0.12s ease-out, box-shadow 0.12s;
 
   &:hover {
-    box-shadow: 1px 1px 0 #161122;
-    transform: translate(2px, 2px);
+    transform: translateX(4px);
+    box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
   }
   .left {
     flex: 1;

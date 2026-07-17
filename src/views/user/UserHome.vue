@@ -1,6 +1,6 @@
 <template>
   <div class="user-homepage">
-    <Header :cur="3" ref="headerRef"></Header>
+    <Header :cur="4" ref="headerRef"></Header>
 
     <!-- Top Banner -->
     <div class="home-bg">
@@ -2178,12 +2178,9 @@ async function unpinCollection(collection: any) {
       background: transparent;
       transition: background-color 0.2s, color 0.2s;
 
-      &:hover{
-        background: rgba(255, 77, 141, 0.1);
-      }
 
       &.active {
-        background: #FF4D8D;
+        background: #161122;
         color: #fff;
       }
     }
@@ -2206,16 +2203,8 @@ async function unpinCollection(collection: any) {
       background: transparent;
       transition: background-color 0.2s, color 0.2s;
 
-      &:hover:not(:last-child){
-        background: rgba(255, 77, 141, 0.1);
-        color: #FF4D8D;
-        .val {
-          color: #FF4D8D;
-        }
-      }
-
       &.active {
-        background: #FF4D8D;
+        background: #161122;
         color: #fff;
 
         .val {
@@ -2537,12 +2526,12 @@ async function unpinCollection(collection: any) {
   }
 
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #161122;
-    border-top: 4px solid #FF4D8D;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7e1d8;
+    border-top: 3px solid #161122;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 1s ease-in-out infinite;
     margin-bottom: 16px;
   }
 
@@ -2578,12 +2567,12 @@ async function unpinCollection(collection: any) {
   }
 
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #161122;
-    border-top: 4px solid #FF4D8D;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7e1d8;
+    border-top: 3px solid #161122;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 1s ease-in-out infinite;
     margin-bottom: 16px;
   }
 
@@ -3047,20 +3036,20 @@ async function unpinCollection(collection: any) {
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #161122;
-  border-top: 4px solid #FF4D8D;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e7e1d8;
+  border-top: 3px solid #161122;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 1s ease-in-out infinite;
   margin-bottom: 16px;
 }
 
 .small {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-  border-top-width: 3px;
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  border-top-width: 2px;
 }
 
 .loading-text {

@@ -3,7 +3,7 @@
     <Header ref="headerRef" :cur="-1" @balanceInfoLoaded="handleBalanceLoaded"></Header>
     <div class="container">
       <div class="back" @click="goBack">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="content-box">
@@ -50,9 +50,7 @@
               class="tab"
               :class="{ active: activeTab === tab.value }"
               @click="switchTab(tab.value)"
-            >
-              {{ tab.label }}
-            </span>
+            >{{ tab.label }}</span>
           </div>
           <!-- <div class="date-range">
             <DateRangePicker v-model="dateRange" theme="pink" />
@@ -89,6 +87,7 @@
             v-for="(item, index) in filteredTransactions"
             :key="index"
             class="transaction-item"
+            :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
             :class="{ 'consumption': activeSubTab == 'subscribe' || activeSubTab == 'other', 'recharge': activeSubTab == 'boost-pack', 'invite': activeSubTab == 'invite' }"
           >
 
@@ -503,26 +502,32 @@ $highlight: #FFF3D6;
 }
 
 .container {
-  max-width: 840px;
+  max-width: 1160px;
   margin: 140px auto 20px;
   padding: 0 30px;
   position: relative;
 
   .back {
     position: absolute;
-    top: 0;
+    top: -52px;
     left: 30px;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #161122;
     cursor: pointer;
     z-index: 10;
+    border: 2.5px solid #161122;
+    border-radius: 13px;
+    background: #FFFDF7;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-    img {
-      width: 40px;
-      height: 40px;
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0 #161122;
     }
   }
 }
@@ -548,6 +553,8 @@ $highlight: #FFF3D6;
     border-radius: 14px;
     box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    flex-wrap: wrap;
+    gap: 16px;
 
     .balance-box {
       display: flex;
@@ -581,6 +588,7 @@ $highlight: #FFF3D6;
     .action-buttons {
       display: flex;
       gap: 16px;
+      flex-wrap: wrap;
 
       .recharge-btn,
       .payment-history-btn {
@@ -627,6 +635,23 @@ $highlight: #FFF3D6;
         &:active {
           transform: translate(0, 0);
           box-shadow: 2px 2px 0 $ink;
+        }
+      }
+    }
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 18px;
+
+      .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+
+        .recharge-btn,
+        .payment-history-btn {
+          min-width: 0;
+          width: 100%;
         }
       }
     }
@@ -724,50 +749,38 @@ $highlight: #FFF3D6;
   .filter-section {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 24px;
-    padding: 0 0 12px;
-    border-bottom: 2.5px solid $ink;
 
     .tabs {
-      display: flex;
-      gap: 30px;
+      display: inline-flex;
+      gap: 6px;
+      background: #fff;
+      border: 2.5px solid $ink;
+      border-radius: 14px;
+      padding: 5px;
 
       .tab {
         display: flex;
         align-items: center;
-        height: 40px;
-        font-size: 16px;
-        color: $muted;
+        height: 36px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #161122;
         cursor: pointer;
-        position: relative;
-        font-weight: 700;
+        padding: 0 24px;
+        border-radius: 10px;
+        transition: background-color 0.15s, color 0.15s;
+        background: transparent;
 
-        &:hover {
-          color: $pink;
+        &:hover:not(.active) {
+          background: $paper;
         }
 
         &.active {
-          color: $ink;
-          font-weight: 800;
-
-          &::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: $pink;
-            border-radius: 2px;
-          }
+          background: $pink;
+          color: #fff;
         }
       }
-    }
-
-    .date-range {
-      display: flex;
-      align-items: center;
     }
   }
 
@@ -775,34 +788,33 @@ $highlight: #FFF3D6;
     margin-bottom: 16px;
 
     .subnav-tabs {
-      display: flex;
-      gap: 12px;
+      display: inline-flex;
+      gap: 6px;
+      background: $paper;
+      border: 2.5px solid $ink;
+      border-radius: 14px;
+      padding: 5px;
 
       .subtab {
         display: flex;
         align-items: center;
-        height: 32px;
-        padding: 0 16px;
-        font-size: 14px;
-        font-weight: 700;
-        color: $muted;
+        height: 36px;
+        padding: 0 22px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #161122;
         cursor: pointer;
         border-radius: 10px;
-        border: 2px solid transparent;
-        transition: background 0.16s, border-color 0.16s, color 0.16s;
+        transition: background-color 0.15s, color 0.15s;
+        background: transparent;
 
-        &:hover {
-          color: $sub;
-          background: $highlight;
-          border-color: $line;
+        &:hover:not(.active) {
+          background: rgba(255,77,141,0.06);
         }
 
         &.active {
-          color: $ink;
-          font-weight: 800;
-          background: $highlight;
-          border: 2px solid $ink;
-          box-shadow: 2px 2px 0 rgba(22,17,34,0.12);
+          background: #161122;
+          color: #fff;
         }
       }
     }
@@ -859,13 +871,13 @@ $highlight: #FFF3D6;
       border: 2.5px solid $ink;
       background: $paper;
       margin-bottom: 8px;
-      box-shadow: 3px 3px 0 $ink;
-      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+      box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+      animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      transition: transform 0.12s ease-out, box-shadow 0.12s;
 
       &:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: 5px 5px 0 $ink;
-        background: $highlight;
+        transform: translateX(4px);
+        box-shadow: 5px 3px 0 rgba(22,17,34,0.14);
       }
 
       &:last-child {
@@ -1000,14 +1012,22 @@ $highlight: #FFF3D6;
   to { opacity: 1; transform: none; }
 }
 
+@keyframes rkRow {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .balance-section,
-  .transaction-item {
+  .transaction-item,
+  .seg-btn,
+  .subtab.active {
     animation: none !important;
   }
   .transaction-item:hover,
   .recharge-btn:hover,
-  .payment-history-btn:hover {
+  .payment-history-btn:hover,
+  .seg-btn:hover {
     transform: none;
   }
 }

@@ -87,6 +87,13 @@ async function handleConfirm() {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$paper: #FFFDF7;
+$cream: #FFFBF4;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+
 .coupon-modal-overlay {
   position: fixed;
   top: 0;
@@ -103,19 +110,24 @@ async function handleConfirm() {
 .coupon-modal {
   position: relative;
   width: 520px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  background: $paper;
+  border: 3px solid $ink;
+  border-radius: 16px;
+  box-shadow: 6px 6px 0 $ink;
+
+  @media (max-width: 640px) {
+    width: 90%;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 $ink;
+  }
 
   .close-btn {
     background: none;
     border: none;
     padding: 0;
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 16px;
+    right: 16px;
     width: 20px;
     height: 20px;
     cursor: pointer;
@@ -123,22 +135,23 @@ async function handleConfirm() {
 
   .modal-header {
     padding: 18px 24px;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 2.5px solid $ink;
 
     .modal-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #161122;
+      font-size: 18px;
+      font-weight: 800;
+      color: $ink;
     }
   }
 
   .modal-body {
-    padding: 18px 24px;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    padding: 24px;
+    border-bottom: 2.5px solid $ink;
 
     .input-label {
       font-size: 14px;
-      color: #5b5566;
+      font-weight: 800;
+      color: $sub;
       margin-bottom: 12px;
     }
 
@@ -146,62 +159,72 @@ async function handleConfirm() {
       width: 100%;
       height: 48px;
       padding: 0 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      border: 2.5px solid $ink;
+      border-radius: 12px;
       font-size: 14px;
-      color: #161122;
+      font-weight: 700;
+      color: $ink;
       outline: none;
+      background: $cream;
+      box-shadow: 2px 2px 0 $ink;
+      transition: border-color 0.15s, box-shadow 0.15s;
 
       &::placeholder {
-        color: #9a93a4;
+        color: $muted;
+        font-weight: 600;
       }
 
       &:focus {
-        border-color: #FF4D8D;
+        border-color: $pink;
+        box-shadow: 2px 2px 0 $pink;
       }
     }
 
     .error-message {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 12px;
-      color: #ff4d4f;
+      font-weight: 700;
+      color: $pink;
     }
   }
 
   .modal-footer {
     display: flex;
     justify-content: center;
-    padding: 18px 0;
+    padding: 20px 24px;
 
     .confirm-btn {
-      width: 240px;
+      width: 100%;
+      max-width: 240px;
       height: 48px;
-      background: #FF4D8D;
+      background: $pink;
       color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
+      border: 2.5px solid $ink;
+      border-radius: 13px;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
+      box-shadow: 3px 3px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
       &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 $ink;
       }
-      &:active {
+
+      &:active:not(:disabled) {
         transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 2px 2px 0 $ink;
       }
 
       &:disabled {
-        background: rgba(251, 100, 182, 0.5);
+        opacity: 0.5;
         cursor: not-allowed;
       }
 
       &.loading {
         pointer-events: none;
+        opacity: 0.5;
       }
     }
   }

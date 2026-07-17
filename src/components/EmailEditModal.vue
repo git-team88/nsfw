@@ -15,7 +15,7 @@
             <span class="required-asterisk">*</span>{{ t("user.personal.emailCode") }}
           </div>
           <div class="code-input-group">
-            <input type="text" class="form-input code-input" v-model="emailForm.code" :placeholder="t('user.personal.codePlaceholder')" spallcheck="false" />
+            <input type="text" class="code-input" v-model="emailForm.code" :placeholder="t('user.personal.codePlaceholder')" spallcheck="false" />
             <button type="button" class="send-code-btn" @click="sendEmailCode" :disabled="isSendCode" :class="{ 'disabled': isSendCode }">{{ emailCodeTxt }}</button>
           </div>
         </div>
@@ -271,78 +271,90 @@ function saveEmail() {
     width: 500px;
     background: #FFFDF7;
     border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+    box-shadow: 6px 6px 0 #161122;
     border-radius: 12px;
-    padding: 0 0 18px;
+    padding: 18px 24px 24px;
 
     .close-btn {
-      background: none;
-      border: none;
-      padding: 0;
+      background: #fff;
+      border: 2.5px solid #161122;
+      border-radius: 999px;
+      padding: 6px;
       position: absolute;
-      top: 20px;
-      right: 12px;
-      width: 20px;
-      height: 20px;
+      top: 12px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
       cursor: pointer;
+      box-shadow: 2px 2px 0 #161122;
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
+
+      &:hover {
+        transform: scale(1.1);
+      }
     }
 
     .modal-title {
-      padding: 18px 24px;
-      border-bottom: 1px solid rgba(22, 17, 34, 0.12);
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 800;
       color: #161122;
+      margin-bottom: 24px;
+      text-align: center;
     }
 
     .modal-form {
-      margin-bottom: 18px;
-      padding: 18px 32px;
-      border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+      padding: 0;
     }
 
     .form-item {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .form-label {
       display: block;
       margin-bottom: 8px;
       font-size: 14px;
-      color: #5b5566;
+      font-weight: 700;
+      color: #161122;
+
+      &.required::before {
+        content: "*";
+        color: #FF4D8D;
+        margin-right: 4px;
+      }
     }
 
     .required-asterisk {
-      color: #E5484D;
+      color: #FF4D8D;
     }
 
     .form-input {
       width: 100%;
       height: 50px;
       padding: 12px 16px;
-      border: 1px solid rgba(22, 17, 34, 0.12);
-      border-radius: 8px;
+      border: 2.5px solid #161122;
+      border-radius: 12px;
       font-size: 14px;
       color: #161122;
       outline: none;
-      background: rgba(22, 17, 34, 0.06);
+      background: #FFFDF7;
       box-sizing: border-box;
+      transition: box-shadow 0.2s, border-color 0.2s;
 
       &:focus {
-        border-color: #FF4D8D;
+        box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
       }
 
       &::placeholder {
-        color: #9a93a4;
+        color: #161122;
+        opacity: 0.4;
       }
     }
 
     .code-input-group {
       display: flex;
-      padding-right: 20px;
-      border-radius: 8px;
-      gap: 10px;
-      background: rgba(22, 17, 34, 0.06);
+      gap: 12px;
 
       .code-input {
         flex: 1;
@@ -351,38 +363,72 @@ function saveEmail() {
         font-size: 14px;
         color: #161122;
         outline: none;
-        border: none;
-        background: transparent;
+        background: #FFFDF7;
+        border: 2.5px solid #161122;
+        border-radius: 12px;
+        box-sizing: border-box;
+        transition: box-shadow 0.2s;
+
+        &:focus {
+          box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+        }
+
+        &::placeholder {
+          color: #161122;
+          opacity: 0.4;
+        }
       }
-    }
 
-    .send-code-btn {
-      font-size: 14px;
-      background: none;
-      color: #FF4D8D;
-      cursor: pointer;
-      border: none;
+      .send-code-btn {
+        height: 50px;
+        min-width: 130px;
+        padding: 0 16px;
+        font-size: 14px;
+        font-weight: 700;
+        background: #FFFDF7;
+        color: #FF4D8D;
+        cursor: pointer;
+        border: 2.5px solid #161122;
+        border-radius: 12px;
+        box-shadow: 3px 3px 0 #161122;
+        transition: transform 0.1s, box-shadow 0.1s;
 
-      &:disabled {
-        color: #9a93a4;
-        cursor: not-allowed;
+        &:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active:not(:disabled) {
+          transform: translate(1px, 1px);
+          box-shadow: 1px 1px 0 #161122;
+        }
+
+        &:disabled, &.disabled {
+          color: #161122;
+          opacity: 0.4;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 3px 3px 0 #161122;
+        }
       }
     }
 
     .modal-actions {
       display: flex;
       justify-content: center;
+      margin-top: 6px;
 
       .modal-confirm-btn {
         min-width: 240px;
         height: 48px;
-        border: none;
-        border-radius: 8px;
+        border: 2.5px solid #161122;
+        border-radius: 13px;
         font-size: 14px;
+        font-weight: 800;
         cursor: pointer;
-        border: none;
         background: #FF4D8D;
         color: #FFFFFF;
+        box-shadow: 3px 3px 0 #161122;
+        transition: transform 0.1s, box-shadow 0.1s;
 
         &:disabled {
           background: rgba(251, 100, 182, 0.5);
@@ -393,9 +439,9 @@ function saveEmail() {
           transform: translate(-1px, -1px);
           box-shadow: 4px 4px 0 #161122;
         }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+        &:active:not(:disabled) {
+          transform: translate(1px, 1px);
+          box-shadow: 1px 1px 0 #161122;
         }
       }
     }

@@ -41,14 +41,13 @@ const emit = defineEmits<{
   z-index: 1000;
 
   .modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 500px;
-    background-color: #ffffff;
+    position: relative;
+    background: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
-    padding: 44px 24px 24px;
+    width: 500px;
+    padding: 18px 30px 24px;
 
     .modal-message {
       font-size: 14px;
@@ -89,7 +88,6 @@ const emit = defineEmits<{
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        border: none;
         background: #FF4D8D;
         color: #ffffff;
 

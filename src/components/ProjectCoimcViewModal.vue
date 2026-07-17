@@ -2,9 +2,7 @@
   <div v-if="visible" class="comic-modal-overlay">
     <div class="view-modal">
       <div class="modal-content">
-        <button class="close-btn" @click="$emit('close')">
-          <button class="close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
-        </button>
+        <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
         <!-- 左侧部分 -->
         <div class="left-section">
@@ -259,7 +257,7 @@ async function handlePublish() {
 
   // Get cover from project (合集封面)
   const cover = props.project.cover || props.project.result_async?.generate_manhua_cover;
-  
+
   emit('publish', {
     project: props.project,
     episode: selectedEpisode.value,
@@ -415,7 +413,7 @@ function nextPage() {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 4px 0;
+  padding: 4px 5px 5px 0;
 }
 
 .episode-tab {
@@ -424,7 +422,7 @@ function nextPage() {
   height: 40px;
   background: #FFFDF7;
   border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
   border: 2px solid #161122;
   border-radius: 11px;
   cursor: pointer;
@@ -506,25 +504,26 @@ function nextPage() {
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  padding: 0;
+  background: #fff;
+  border: 2.5px solid #161122;
+  border-radius: 999px;
+  padding: 6px;
   position: absolute;
   top: 18px;
   right: 18px;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: none;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  img {
-    width: 20px;
-    height: 20px;
+  &:hover {
+    transform: scale(1.1);
   }
 }
 

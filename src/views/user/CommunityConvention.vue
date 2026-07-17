@@ -4,7 +4,7 @@
 
     <div class="inner">
       <div class="terms-detail-back" @click="goBack" v-if="!isHide">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="terms-detail" v-html="t('communityConvention')"></div>
@@ -119,12 +119,17 @@ function goBack() {
       align-items: center;
       justify-content: center;
       transform: translateX(-55rem);
+      color: #fff;
       cursor: pointer;
       z-index: 10;
+      border: 2px solid #fff;
+      border-radius: 1.3rem;
+      box-shadow: 0.3rem 0.3rem 0 #fff;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-      img {
-        width: 4rem;
-        height: 4rem;
+      &:hover {
+        transform: translateX(-55rem) translateY(-1px);
+        box-shadow: 0.4rem 0.4rem 0 #fff;
       }
     }
 

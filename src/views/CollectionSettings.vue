@@ -5,7 +5,7 @@
     <div class="content-container">
       <!-- Back Button -->
       <button class="back-btn" @click="goBack">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
 
       <!-- Main Content -->
@@ -291,31 +291,33 @@ async function confirmDelete() {
 }
 
 .content-container {
-  max-width: 840px;
+  max-width: 1160px;
   margin: 0 auto;
   padding: 130px 24px 24px;
+  position: relative;
 }
 
 .back-btn {
-  position: fixed;
-  left: 50%;
-  top: 140px;
+  position: absolute;
+  top: 0;
+  left: -52px;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateX(-540px);
+  color: #161122;
   cursor: pointer;
   z-index: 10;
-  border: 2px solid #161122;
-  border-radius: 8px;
+  border: 2.5px solid #161122;
+  border-radius: 13px;
   background: #FFFDF7;
-  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 3px 3px 0 #161122;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-  img {
-    width: 40px;
-    height: 40px;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 #161122;
   }
 }
 
@@ -553,18 +555,14 @@ async function confirmDelete() {
 
 @media (max-width: 1440px) {
   .content-container {
-    max-width: 58.3333vw;
+    max-width: 80.5556vw;
     padding: 9.0278vw 1.6667vw 1.6667vw;
   }
   .back-btn {
     top: 9.7222vw;
     width: 2.7778vw;
     height: 2.7778vw;
-     transform: translateX(-37.5vw);
-    img {
-      width: 2.7778vw;
-      height: 2.7778vw;
-    }
+    left: -3.6111vw;
   }
   .page-header {
     margin-bottom: 1.3889vw;
@@ -660,11 +658,7 @@ async function confirmDelete() {
     top: 140px;
     width: 40px;
     height: 40px;
-    transform: translateX(-37.5vw);
-    img {
-      width: 40px;
-      height: 40px;
-    }
+    left: -52px;
   }
   .page-header {
     margin-bottom: 20px;
@@ -763,15 +757,11 @@ async function confirmDelete() {
     padding: 80px 16px 16px;
   }
   .back-btn {
+    position: fixed;
     top: 80px;
     left: 16px;
     width: 32px;
     height: 32px;
-    transform: none;
-    img {
-      width: 32px;
-      height: 32px;
-    }
   }
   .page-header {
     margin-bottom: 16px;

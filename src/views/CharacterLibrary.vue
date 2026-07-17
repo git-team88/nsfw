@@ -292,11 +292,11 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
 .container {
   max-width: 1160px;
-  margin: 0 auto 2rem;
-  padding: 100px 20px;
+  margin: 0 auto 20px;
+  padding: 100px 20px 20px;
 
   @media (min-width: 768px) {
-    padding: 100px 24px;
+    padding: 100px 24px 24px;
   }
 }
 
@@ -304,7 +304,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   font-weight: 800;
   font-size: 26px;
   color: $ink;
-  margin-bottom: 0.6rem;
+  margin-bottom: 6px;
   letter-spacing: 0.02em;
 }
 
@@ -312,15 +312,15 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   font-size: 13px;
   color: $muted;
   font-weight: 600;
-  margin-bottom: 1.8rem;
+  margin-bottom: 18px;
 }
 
 .count-badge {
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 13px;
   border: 2px solid $ink;
   border-radius: 999px;
-  padding: 0.4rem 1.4rem;
+  padding: 4px 14px;
   background: #fff;
   box-shadow: 2px 2px 0 $ink;
   margin-left: auto;
@@ -328,14 +328,14 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
 .tab-navigation {
   display: flex;
-  gap: 0.8rem;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
 
   .tab {
     font-weight: 800;
-    font-size: 1.3rem;
-    padding: 0.8rem 1.6rem;
+    font-size: 13px;
+    padding: 8px 16px;
     border-radius: 999px;
     border: 2px solid $ink;
     cursor: pointer;
@@ -349,20 +349,20 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     }
 
     &:hover:not(.active) {
-      background: $paper;
+      color: $ink;
     }
   }
 }
 
 /* Process Section */
 .process-section {
-  margin-bottom: 1rem;
+  margin-bottom: 10px;
 }
 
 .character-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.6rem;
+  gap: 16px;
 }
 
 .create-new-card {
@@ -370,11 +370,11 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 22rem;
-  border-radius: 1.6rem;
+  min-height: 220px;
+  border-radius: 16px;
   border: 3px dashed rgba(22,17,34,0.3);
   background: rgba(255,255,255,0.5);
-  padding: 3rem 2rem;
+  padding: 30px 20px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
 
@@ -395,8 +395,8 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   }
 
   .create-new-icon {
-    width: 5.6rem;
-    height: 5.6rem;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -420,9 +420,9 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
   .create-new-text {
     font-weight: 800;
-    font-size: 1.4rem;
+    font-size: 14px;
     color: $ink;
-    margin-top: 1.2rem;
+    margin-top: 12px;
   }
 }
 
@@ -434,6 +434,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   box-shadow: 4px 4px 0 $ink;
   cursor: pointer;
   overflow: visible;
+  animation: charCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s;
 
   &:hover {
@@ -524,7 +525,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 .pagination-container {
   display: flex;
   justify-content: center;
-  margin-top: 2.4rem;
+  margin-top: 24px;
 }
 
 .loading-state {
@@ -532,20 +533,20 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 40rem;
+  min-height: 400px;
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid $line;
-    border-top: 0.4rem solid $ink;
+    width: 40px;
+    height: 40px;
+    border: 4px solid $line;
+    border-top: 4px solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
   }
 
   .loading-text {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: $muted;
     font-weight: 600;
   }
@@ -560,16 +561,16 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 40rem;
+  min-height: 400px;
   text-align: center;
   grid-column: 1 / -1;
 }
 
 .error-message {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #E5484D;
   font-weight: 800;
-  margin-bottom: 1.6rem;
+  margin-bottom: 16px;
 }
 
 .retry-button {
@@ -577,12 +578,12 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #fff;
   background: linear-gradient(135deg, $pink, #FF7A45);
   border: none;
-  border-radius: 1.4rem;
-  padding: 1rem 2.4rem;
+  border-radius: 14px;
+  padding: 10px 24px;
   cursor: pointer;
   box-shadow: 3px 3px 0 $ink;
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
@@ -594,8 +595,8 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 }
 
 @keyframes charCardIn {
-  from { opacity: 0; transform: translateY(14px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(20px) scale(0.94); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes charBreathe {
@@ -611,12 +612,12 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
   .character-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.2rem;
+    gap: 12px;
   }
 
   .tab-navigation .tab {
-    font-size: 1.2rem;
-    padding: 0.6rem 1.2rem;
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 

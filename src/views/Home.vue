@@ -107,7 +107,7 @@
                     <input
                       ref="fileInputRef"
                       type="file"
-                      accept="image/*,video/mp4,video/quicktime,audio/mp3,audio/wav"
+                      :accept="currentVideoMode == 'normal' ? 'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav' : 'image/*,video/mp4,video/quicktime'"
                       class="file-input"
                       style="display: none;"
                       @change="handleFileChange"
@@ -227,24 +227,9 @@
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
                       <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                        <img
-                          v-if="isTeenager"
-                          src="@/assets/images/home/not_allow.png"
-                          alt="Unlimited disabled"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else-if="currentVideoMode == 'unlimited' && !isTeenager"
-                          src="@/assets/images/home/open.png"
-                          alt="Unlimited on"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else
-                          src="@/assets/images/home/close.png"
-                          alt="Unlimited off"
-                          class="unlimited-icon"
-                        />
+                        <button class="nsfw-toggle" :class="{ on: currentVideoMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                          <span class="nsfw-dot"></span>
+                        </button>
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                       </div>
 
@@ -542,24 +527,9 @@
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
                       <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
-                        <img
-                          v-if="isTeenager"
-                          src="@/assets/images/home/not_allow.png"
-                          alt="Unlimited disabled"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else-if="currentPhotoMode == 'unlimited' && !isTeenager"
-                          src="@/assets/images/home/open.png"
-                          alt="Unlimited on"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else
-                          src="@/assets/images/home/close.png"
-                          alt="Unlimited off"
-                          class="unlimited-icon"
-                        />
+                        <button class="nsfw-toggle" :class="{ on: currentPhotoMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                          <span class="nsfw-dot"></span>
+                        </button>
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                       </div>
 
@@ -758,24 +728,9 @@
                   <div class="input-box">
                     <div class="input-options novel-input-options">
                       <div v-if="userRegion" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
-                        <img
-                          v-if="isTeenager"
-                          src="@/assets/images/home/not_allow.png"
-                          alt="Unlimited disabled"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else-if="currentNovelMode == 'unlimited' && !isTeenager"
-                          src="@/assets/images/home/open.png"
-                          alt="Unlimited on"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else
-                          src="@/assets/images/home/close.png"
-                          alt="Unlimited off"
-                          class="unlimited-icon"
-                        />
+                        <button class="nsfw-toggle" :class="{ on: currentNovelMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                          <span class="nsfw-dot"></span>
+                        </button>
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                       </div>
 
@@ -913,20 +868,9 @@
 
           <div class="sensitive-content-toggle" v-if="userRegion && activeContentTab != 'suggested' && viewMode == 'user'">
             <span class="toggle-label">{{ t('home.sensitiveContent') }}</span>
-            <div class="unlimited-switch" @click="handleSensitiveContentToggle">
-              <img
-                v-if="allowSensitiveContent"
-                src="@/assets/images/home/open.png"
-                alt="Sensitive content on"
-                class="unlimited-icon"
-              />
-              <img
-                v-else
-                src="@/assets/images/home/close.png"
-                alt="Sensitive content off"
-                class="unlimited-icon"
-              />
-            </div>
+            <button class="nsfw-toggle" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle">
+              <span class="nsfw-dot"></span>
+            </button>
           </div>
         </div>
 
@@ -946,20 +890,9 @@
           <!-- Sensitive Content Toggle -->
           <div class="sensitive-content-toggle" v-if="userRegion && (activeContentTab == 'suggested' || viewMode == 'content')">
             <span class="toggle-label">{{ t('home.sensitiveContent') }}</span>
-            <div class="unlimited-switch" @click="handleSensitiveContentToggle">
-              <img
-                v-if="allowSensitiveContent"
-                src="@/assets/images/home/open.png"
-                alt="Sensitive content on"
-                class="unlimited-icon"
-              />
-              <img
-                v-else
-                src="@/assets/images/home/close.png"
-                alt="Sensitive content off"
-                class="unlimited-icon"
-              />
-            </div>
+            <button class="nsfw-toggle" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle">
+              <span class="nsfw-dot"></span>
+            </button>
           </div>
 
           <!-- <div class="sort-filter">
@@ -3734,6 +3667,9 @@ const handleFileChange = async (event: Event) => {
               }
             }
           } else if (file.type.startsWith('audio/')) {
+            if (currentVideoMode.value === 'unlimited') {
+              return;
+            }
             fileType = 'audio';
             // Validate audio format
             const audioExtensions = ['.mp3', '.wav'];

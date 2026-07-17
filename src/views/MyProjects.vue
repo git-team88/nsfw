@@ -61,6 +61,7 @@
           >
             <div
               class="project-card"
+              :class="{ 'menu-open': activeMenuProjectId === project.id }"
               v-for="(project, index) in projects"
               :key="project.id"
               ref="projectCardRefs"
@@ -168,8 +169,12 @@
                   <div v-if="project.images && project.images.length > 0 && project.story_mode === 'nsfw'" class="single-image">
                     <img :src="processImageUrl(project.images[0])" alt="" class="single-image-img" />
                   </div>
-                  <!-- 普通模式：显示4张 -->
-                  <div v-else-if="project.images && project.images.length > 0" class="grid-images">
+                  <!-- 普通模式：1张图单独填满 -->
+                  <div v-else-if="project.images && project.images.length === 1" class="single-image">
+                    <img :src="processImageUrl(project.images[0])" alt="" class="single-image-img" />
+                  </div>
+                  <!-- 普通模式：4张2x2网格，不足4张用占位图填充 -->
+                  <div v-else-if="project.images && project.images.length > 1" class="grid-images">
                     <div
                       class="grid-image-item"
                       v-for="(img, index) in project.images.slice(0, 4)"
@@ -177,10 +182,9 @@
                     >
                       <img :src="processImageUrl(img)" alt="" />
                     </div>
-                    <!-- 如果只有1张图，填充空白 -->
-                    <div v-if="project.images.length === 1" class="grid-image-item"><img :src="pic" alt="" /></div>
-                    <div v-if="project.images.length <= 2" class="grid-image-item"><img :src="pic" alt="" /></div>
-                    <div v-if="project.images.length <= 3" class="grid-image-item"><img :src="pic" alt="" /></div>
+                    <div v-for="n in Math.max(0, 4 - project.images.length)" :key="'placeholder-' + n" class="grid-image-item">
+                      <img :src="pic" alt="" />
+                    </div>
                   </div>
                   <div v-else class="default-cover">
                     <img :src="pic" alt="" class="cover-img" />
@@ -743,22 +747,22 @@ $yellow: #FFD23F;
 
 .container {
   max-width: 1160px;
-  margin: 0 auto 2rem;
-  padding: 100px 20px;
+  margin: 0 auto 20px;
+  padding: 100px 20px 20px;
 
   @media (min-width: 768px) {
-    padding: 100px 24px;
+    padding: 100px 24px 24px;
   }
 }
 
 .projects-header {
-  margin-bottom: 2.4rem;
+  margin-bottom: 24px;
 
   h2 {
     font-weight: 800;
     font-size: 26px;
     color: $ink;
-    margin-bottom: 0.6rem;
+    margin-bottom: 6px;
     letter-spacing: 0.02em;
   }
 
@@ -766,19 +770,19 @@ $yellow: #FFD23F;
     font-size: 13px;
     color: $muted;
     font-weight: 600;
-    margin-bottom: 1.8rem;
+    margin-bottom: 18px;
   }
 
   .main-tabs {
     display: flex;
-    gap: 0.8rem;
+    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
 
     .tab-item {
       font-weight: 800;
-      font-size: 1.3rem;
-      padding: 0.8rem 1.6rem;
+      font-size: 13px;
+      padding: 8px 16px;
       border-radius: 999px;
       border: 2px solid $ink;
       cursor: pointer;
@@ -792,23 +796,23 @@ $yellow: #FFD23F;
       }
 
       &:hover:not(.active) {
-        background: $paper;
+        color: $ink;
       }
     }
   }
 
   .status-tabs {
     display: flex;
-    gap: 1.2rem;
-    margin-bottom: 1.6rem;
+    gap: 12px;
+    margin-bottom: 16px;
 
     .tab-item {
       display: flex;
       align-items: center;
-      height: 3.2rem;
-      padding: 0 1.6rem;
-      border-radius: 0.6rem;
-      font-size: 1.4rem;
+      height: 32px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-size: 14px;
       color: $muted;
       cursor: pointer;
       position: relative;
@@ -827,21 +831,21 @@ $yellow: #FFD23F;
 
 /* Process Section */
 .process-section {
-  margin-bottom: 1rem;
+  margin-bottom: 10px;
 }
 
 .projects-box {
-  min-height: 40rem;
+  min-height: 400px;
 }
 
 .projects-container {
-  min-height: 40rem;
+  min-height: 400px;
   overflow: visible;
 
   .waterfall {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 1.6rem;
+    gap: 16px;
     width: 100%;
     margin: 0 auto;
     overflow: visible;
@@ -856,7 +860,12 @@ $yellow: #FFD23F;
     box-shadow: 4px 4px 0 $ink;
     cursor: pointer;
     overflow: visible;
+    animation: projCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
     transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+
+    &.menu-open {
+      z-index: 100;
+    }
 
     &:hover {
       transform: translateY(-4px);
@@ -985,9 +994,9 @@ $yellow: #FFD23F;
       background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
       font-weight: 800;
-      font-size: 13px;
-      padding: 0 16px;
-      height: 32px;
+      font-size: 15px;
+      padding: 0 20px;
+      height: 36px;
       border-radius: 10px;
       cursor: pointer;
       z-index: 10;
@@ -1073,9 +1082,9 @@ $yellow: #FFD23F;
       background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
       font-weight: 800;
-      font-size: 13px;
-      padding: 0 16px;
-      height: 32px;
+      font-size: 15px;
+      padding: 0 20px;
+      height: 36px;
       border-radius: 10px;
       cursor: pointer;
       z-index: 10;
@@ -1118,9 +1127,9 @@ $yellow: #FFD23F;
       background: linear-gradient(135deg, $pink, #FF7A45);
       color: #ffffff;
       font-weight: 800;
-      font-size: 13px;
-      padding: 0 16px;
-      height: 32px;
+      font-size: 15px;
+      padding: 0 20px;
+      height: 36px;
       border-radius: 10px;
       cursor: pointer;
       z-index: 10;
@@ -1240,20 +1249,20 @@ $yellow: #FFD23F;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 40rem;
+  min-height: 400px;
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid $line;
-    border-top: 0.4rem solid $ink;
+    width: 40px;
+    height: 40px;
+    border: 4px solid $line;
+    border-top: 4px solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
   }
 
   .loading-text {
-    font-size: 1.4rem;
+    font-size: 14px;
     color: $muted;
     font-weight: 600;
   }
@@ -1268,8 +1277,8 @@ $yellow: #FFD23F;
 }
 
 @keyframes projCardIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(18px) scale(0.95); }
+  to { opacity: 1; transform: none; }
 }
 
 /* Responsive */
@@ -1279,17 +1288,17 @@ $yellow: #FFD23F;
   }
 
   .projects-header .main-tabs .tab-item {
-    font-size: 1.2rem;
-    padding: 0.6rem 1.2rem;
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
   .project-card .card-cover,
   .project-card .novel-cover {
-    height: 18rem;
+    height: 180px;
   }
 
   .project-card .card-info .card-desc {
-    font-size: 1.3rem;
+    font-size: 13px;
   }
 }
 

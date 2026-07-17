@@ -236,20 +236,40 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+$ink: #161122;
+$paper: #FFFDF7;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$line: #e7e1d8;
+
 .drp {
   position: relative;
 }
 
 .drp-trigger {
   height: 40px;
-  padding: 0 10px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: 6px;
-  background: rgba(22, 17, 34, 0.06);
-  color: #5b5566;
+  border: 2.5px solid $ink;
+  border-radius: 12px;
+  background: $paper;
+  color: $ink;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  box-shadow: 2px 2px 0 $ink;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 $ink;
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: 1px 1px 0 $ink;
+  }
 }
 
 .drp-trigger .icon {
@@ -259,13 +279,13 @@ onBeforeUnmount(() => {
 
 .drp-trigger .text {
   font-size: 14px;
-  color: #5b5566;
+  color: $ink;
 }
 
 .drp-trigger .arrow {
   width: 16px;
   height: 16px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   &.open {
     transform: rotate(180deg);
   }
@@ -277,18 +297,18 @@ onBeforeUnmount(() => {
   top: 50px;
   width: 360px;
   padding: 20px;
-  border-radius: 8px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.1);
+  border-radius: 14px;
+  background: $paper;
+  border: 3px solid $ink;
+  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.14);
   z-index: 500;
 }
 
 .field label {
   display: block;
   font-size: 14px;
-  color: #161122;
+  color: $ink;
+  font-weight: 800;
   margin-bottom: 7px;
 }
 
@@ -308,16 +328,16 @@ onBeforeUnmount(() => {
   justify-content: center;
   border: none;
   background: transparent;
-  color: #ccc;
+  color: $muted;
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
   padding: 0;
-  transition: color 0.2s ease;
+  transition: color 0.14s;
   z-index: 10;
 
   &:hover {
-    color: #999;
+    color: $ink;
   }
 }
 
@@ -332,32 +352,50 @@ onBeforeUnmount(() => {
   width: 152px;
   height: 40px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 }
 
 .btn.cancel {
-  background: rgba(22, 17, 34, 0.06);
-  cursor: pointer;
+  background: $paper;
+  border: 2.5px solid $ink;
+  color: $ink;
+  box-shadow: 2px 2px 0 $ink;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 $ink;
+    color: $pink;
+    border-color: $pink;
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: 1px 1px 0 $ink;
+  }
 }
 
 .btn.apply {
-  border: none;
-  color: #FFFFFF;
-  cursor: pointer;
+  border: 2.5px solid $ink;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 $ink;
+
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 $ink;
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: 2px 2px 0 $ink;
+  }
 }
 
 .theme-blue .drp-trigger {
-  border-color: rgba(0, 211, 242, 0.2);
-}
-
-.theme-blue .drp-trigger:hover {
-  border-color: #00d3f2;
-}
-
-.theme-blue .drp-pop {
-  border-color: rgba(0, 211, 242, 0.2);
+  &:hover {
+    border-color: #00d3f2;
+  }
 }
 
 .theme-blue .field {
@@ -369,9 +407,9 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 1px solid rgba(22, 17, 34, 0.12) !important;
-    border-radius: 8px !important;
-    background: rgba(22, 17, 34, 0.06) !important;
+    border: 2.5px solid $ink !important;
+    border-radius: 12px !important;
+    background: #fff !important;
     box-shadow: none !important;
   }
   :deep(.el-input__wrapper:hover) {
@@ -379,20 +417,18 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper.is-focus) {
     border-color: #00d3f2 !important;
+    box-shadow: 3px 3px 0 rgba(0, 211, 242, 0.42) !important;
   }
   :deep(.el-input__inner) {
-    color: #161122 !important;
+    color: $ink !important;
     font-size: 14px !important;
+    font-weight: 600 !important;
   }
-}
-
-.theme-blue .btn.cancel {
-  border-color: rgba(0, 211, 242, 0.6);
-  color: #00d3f2;
 }
 
 .theme-blue .btn.cancel:hover {
-  background: rgba(0, 211, 242, 0.12);
+  color: #00d3f2;
+  border-color: #00d3f2;
 }
 
 .theme-blue .btn.apply {
@@ -400,15 +436,9 @@ onBeforeUnmount(() => {
 }
 
 .theme-pink .drp-trigger {
-  border-color: rgba(251, 100, 182, 0.2);
-}
-
-.theme-pink .drp-trigger:hover {
-  border-color: #FF4D8D;
-}
-
-.theme-pink .drp-pop {
-  border-color: rgba(251, 100, 182, 0.2);
+  &:hover {
+    border-color: $pink;
+  }
 }
 
 .theme-pink .field {
@@ -420,40 +450,29 @@ onBeforeUnmount(() => {
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 1px solid rgba(22, 17, 34, 0.12) !important;
-    border-radius: 8px !important;
-    background: rgba(22, 17, 34, 0.06) !important;
+    border: 2.5px solid $ink !important;
+    border-radius: 12px !important;
+    background: #fff !important;
     box-shadow: none !important;
   }
 
   :deep(.el-input__wrapper.is-focus) {
-    border-color: #FF4D8D !important;
+    border-color: $pink !important;
+    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42) !important;
   }
   :deep(.el-input__inner) {
-    color: #161122 !important;
+    color: $ink !important;
     font-size: 14px !important;
+    font-weight: 600 !important;
   }
-}
-
-.theme-pink .btn.cancel {
-  background: rgba(22, 17, 34, 0.06);
-  color: #5b5566;
 }
 
 .theme-pink .btn.cancel:hover {
-  color: #FF4D8D;
+  color: $pink;
+  border-color: $pink;
 }
 
 .theme-pink .btn.apply {
-  background: #FF4D8D;
-
-  &:hover:not(:disabled) {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(0, 0);
-    box-shadow: 2px 2px 0 #161122;
-  }
+  background: $pink;
 }
 </style>

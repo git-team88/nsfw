@@ -32,18 +32,15 @@ function backToSubscription() {
 <style scoped lang="scss">
 .account-failed-page {
   width: 100%;
-  background: #FFFDF7;
+  min-height: 100vh;
+  padding: 140px 0 0;
+  background: #FFFBF4;
 }
 
 .container {
   max-width: 650px;
-  min-height: calc(100vh - 140px);
-  margin: 120px auto 20px;
-  padding: 24px 36px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  box-shadow: 3px 3px 0 #161122;
+  margin: 0 auto;
+  padding: 0 28px;
 }
 
 .content-box {
@@ -51,10 +48,9 @@ function backToSubscription() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 0;
 
   .page-title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
     color: #161122;
     margin-bottom: 20px;
@@ -70,7 +66,7 @@ function backToSubscription() {
   .failed-icon {
     width: 80px;
     height: 80px;
-    margin: 40px 0;
+    margin: 40px 0 60px;
     background: #ef4444;
     border: 3px solid #161122;
     border-radius: 50%;
@@ -78,7 +74,8 @@ function backToSubscription() {
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     img {
       display: none;
@@ -104,21 +101,69 @@ function backToSubscription() {
   }
 
   .back-btn {
-    min-width: 250px;
+    min-width: 240px;
     height: 48px;
-    background: #FF4D8D;
-    color: #FFFDF7;
-    border: 2.5px solid #161122;
-    border-radius: 13px;
+    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+    color: #FFFFFF;
+    border: 2px solid #161122;
+    border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
-      box-shadow: 1px 1px 0 #161122;
-      transform: translate(2px, 2px);
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 0 #161122;
+    }
+  }
+}
+
+@keyframes chPanelIn {
+  0% { opacity: 0; transform: scale(.92) translateY(-6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .account-failed-page {
+    padding: 80px 0 0;
+  }
+  .container {
+    padding: 0 20px;
+  }
+  .content-box {
+    .page-title {
+      font-size: 18px;
+    }
+    .failed-icon {
+      margin: 30px 0 40px;
+    }
+    .back-btn {
+      min-width: 160px;
+      height: 44px;
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .account-failed-page {
+    padding: 70px 0 0;
+  }
+  .container {
+    padding: 0 16px;
+  }
+  .content-box {
+    .page-title {
+      font-size: 16px;
+    }
+    .failed-icon {
+      margin: 24px 0 30px;
+    }
+    .back-btn {
+      width: 100%;
+      min-width: unset;
     }
   }
 }

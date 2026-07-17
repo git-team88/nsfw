@@ -276,7 +276,6 @@ async function fetchData() {
 .tabs {
   display: inline-flex;
   gap: 6px;
-  background: #fff;
   border: 2.5px solid #161122;
   border-radius: 14px;
   padding: 5px;
@@ -284,15 +283,12 @@ async function fetchData() {
 }
 .tab-item {
   font-size: 16px;
-  color: #6A7282;
+  color: #161122;
   padding: 8px 16px;
   cursor: pointer;
   border-radius: 10px;
   font-weight: 500;
   transition: all 0.15s ease;
-  &:hover {
-    color: #161122;
-  }
 }
 .tab-item.active {
   background: #161122;
@@ -327,10 +323,10 @@ async function fetchData() {
   font-size: 14px;
   color: #161122;
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #161122;
-    border-top: 4px solid #FF4D8D;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7e1d8;
+    border-top: 3px solid #161122;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 12px;

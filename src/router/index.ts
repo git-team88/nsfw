@@ -295,6 +295,11 @@ const routes = [
     component: () => import("@/views/CreateCollection.vue"),
   },
   {
+    path: "/ranking",
+    name: "Ranking",
+    component: () => import("@/views/Ranking.vue"),
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/",
   },

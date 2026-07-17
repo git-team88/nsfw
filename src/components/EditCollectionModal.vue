@@ -446,12 +446,19 @@ function handleModalKeydown(e: KeyboardEvent) {
   }
 
   .close-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    background: #fff;
+    border: 2.5px solid #161122;
+    border-radius: 999px;
+    padding: 6px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 
@@ -488,13 +495,14 @@ function handleModalKeydown(e: KeyboardEvent) {
     width: 100%;
     height: 50px;
     padding: 10px;
-    border: 1px solid rgba(22, 17, 34, 0.12);
+    border: 2px solid #161122;
     border-radius: 8px;
     font-size: 16px;
     color: #161122;
-    background: rgba(22, 17, 34, 0.06);
+    background: #FFFDF7;
     outline: none;
     box-sizing: border-box;
+    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
       color: #9a93a4;
@@ -502,6 +510,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 
     &:focus {
       border-color: #FF4D8D;
+      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
     }
   }
 
@@ -509,7 +518,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     width: 100%;
     height: 200px;
     padding: 10px;
-    border: 1px solid rgba(22, 17, 34, 0.12);
+    border: 2px solid #161122;
     border-radius: 8px;
     font-size: 16px;
     color: #161122;
@@ -517,8 +526,9 @@ function handleModalKeydown(e: KeyboardEvent) {
     resize: none;
     outline: none;
     line-height: 24px;
-    background: rgba(22, 17, 34, 0.06);
+    background: #FFFDF7;
     box-sizing: border-box;
+    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
       color: #9a93a4;
@@ -526,6 +536,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 
     &:focus {
       border-color: #FF4D8D;
+      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
     }
   }
 

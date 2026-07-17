@@ -4,7 +4,7 @@
 
     <div class="inner">
       <div class="terms-detail-back" @click="goBack" v-if="!isHide">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="terms-detail" v-html="t('computingPowerRules')">
@@ -65,64 +65,74 @@ function goBack() {
 .terms {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 12rem 0 0;
-  background: #FFFFFF;
+  padding: 120px 0 0;
+  background: #FFFDF7;
 
   .inner {
-    max-width: 144rem;
+    max-width: 840px;
     width: 100%;
-    margin: 0 auto 2rem;
+    margin: 0 auto 20px;
+    padding: 0 30px;
 
     .terms-detail-back {
-      position: fixed;
-      left: 50%;
-      top: 12rem;
-      width: 4rem;
-      height: 4rem;
+      position: absolute;
+      top: 0;
+      left: 30px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: translateX(-55rem);
+      color: #161122;
       cursor: pointer;
       z-index: 10;
+      border: 2.5px solid #161122;
+      border-radius: 13px;
+      background: #FFFDF7;
+      box-shadow: 3px 3px 0 #161122;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-      img {
-        width: 4rem;
-        height: 4rem;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0 #161122;
       }
     }
 
     .terms-detail {
-      max-width: 86rem;
-      margin: 0 auto 2rem;
-      font-size: 1.4rem;
-      line-height: 2.8rem;
+      margin: 0 auto 20px;
+      font-size: 14px;
+      line-height: 28px;
       color: #364153;
 
       :deep(h1) {
         font-weight: bold;
-        font-size: 2.4rem;
-        margin: 0 0 2rem 0;
-        color: #364153;
+        font-size: 24px;
+        margin: 0 0 20px 0;
+        color: #161122;
         text-align: center;
       }
 
       :deep(h2) {
         font-weight: bold;
-        font-size: 1.8rem;
-        margin: 2rem 0;
-        padding-left: 0.6rem;
-        color: #364153;
+        font-size: 18px;
+        margin: 20px 0;
+        padding-left: 6px;
+        color: #161122;
       }
 
       :deep(h3) {
         font-weight: bold;
-        font-size: 1.6rem;
-        margin: 2.8rem 0;
-        color: #364153;
+        font-size: 16px;
+        margin: 28px 0;
+        color: #161122;
+      }
+
+      :deep(a) {
+        color: #FF4D8D;
+        text-decoration: underline;
       }
     }
   }

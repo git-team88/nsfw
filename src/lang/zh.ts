@@ -866,6 +866,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     title2: "创作",
     title3: "我的项目",
     title4: "角色库",
+    title6: "排行榜",
     title5: "我的社区",
     recharge: "充值",
     register: "注册",
@@ -2968,5 +2969,17 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       cancel: "取消",
       confirm: "确定"
     }
+  },
+  rank: {
+    title: "排行榜",
+    sub: "当前最受欢迎的作品",
+    daily: "日榜",
+    weekly: "周榜",
+    monthly: "月榜",
+    all: "全部",
+    manga: "漫画",
+    novel: "小说",
+    anime: "动画",
+    empty: "该分类暂无作品"
   }
 };

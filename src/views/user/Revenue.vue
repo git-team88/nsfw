@@ -415,13 +415,6 @@ function formatSci(n: number | null) {
 .date-range {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
-  padding: 6px 12px;
 }
 .date-range input {
   height: 28px;

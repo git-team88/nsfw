@@ -294,7 +294,7 @@ function handlePublish() {
   trackClickPublishButton(3);
   // Get cover from project (合集封面)
   const cover = props.project.cover || props.project.result_async?.generate_manju_cover;
-  
+
   emit('publish', {
     project: props.project,
     episode: parseInt(selectedEpisode.value),
@@ -516,7 +516,7 @@ onMounted(() => {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 0 0 4px;
+  padding: 4px 5px 5px 0;
 }
 
 .episode-tab {
@@ -525,7 +525,7 @@ onMounted(() => {
   height: 40px;
   background: #FFFDF7;
   border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
   border: 2px solid #161122;
   border-radius: 11px;
   cursor: pointer;
@@ -607,15 +607,23 @@ onMounted(() => {
 }
 
 .close-btn{
-  background: none;
-  border: none;
-  padding: 0;
+  background: #fff;
+  border: 2.5px solid #161122;
+  border-radius: 999px;
+  padding: 6px;
   position: absolute;
   right: 18px;
   top: 18px;
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
 .right-body {

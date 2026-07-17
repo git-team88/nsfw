@@ -3,7 +3,7 @@
     <Header :cur="-1"></Header>
     <div class="container">
       <div class="back" @click="router.back()">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="content-box">
@@ -239,27 +239,29 @@ onMounted(() => {
 .container {
   max-width: 650px;
   margin: 140px auto 20px;
+  position: relative;
 
   .back {
-    position: fixed;
-    left: 50%;
-    top: 140px;
+    position: absolute;
+    top: -52px;
+    left: 0;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: translateX(-550px);
+    color: #161122;
     cursor: pointer;
     z-index: 10;
     border: 2.5px solid #161122;
     border-radius: 13px;
     box-shadow: 3px 3px 0 #161122;
     background: #FFFDF7;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-    img {
-      width: 24px;
-      height: 24px;
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0 #161122;
     }
   }
 }

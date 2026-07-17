@@ -4,7 +4,7 @@
 
     <div class="inner">
       <div class="terms-detail-back" @click="goBack" v-if="!isHide">
-        <img src="@/assets/images/base/back.png" alt="" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </div>
 
       <div class="terms-detail" v-html="t('agreement')"></div>
@@ -101,57 +101,62 @@ function goBack() {
   width: 100%;
   min-height: 100vh;
   scroll-behavior: smooth;
-  padding: 14rem 0 0;
-  background: #FFFFFF;
+  padding: 140px 0 0;
+  background: #FFFDF7;
 
   .inner {
-    max-width: 144rem;
+    max-width: 840px;
     width: 100%;
-    margin: 0 auto 2rem;
+    margin: 0 auto 20px;
+    padding: 0 30px;
 
     .terms-detail-back {
-      position: fixed;
-      left: 50%;
-      top: 12rem;
-      width: 4rem;
-      height: 4rem;
+      position: absolute;
+      top: 0;
+      left: 30px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: translateX(-55rem);
+      color: #161122;
       cursor: pointer;
       z-index: 10;
+      border: 2.5px solid #161122;
+      border-radius: 13px;
+      background: #FFFDF7;
+      box-shadow: 3px 3px 0 #161122;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-      img {
-        width: 4rem;
-        height: 4rem;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0 #161122;
       }
     }
 
     .terms-detail {
-      max-width: 86rem;
-      margin: 0 auto 2rem;
-      font-size: 1.4rem;
-      line-height: 2.8rem;
+      margin: 0 auto 20px;
+      font-size: 14px;
+      line-height: 28px;
       color: #364153;
 
       :deep(h1) {
         font-weight: bold;
-        font-size: 2.4rem;
-        margin: 0 0 1rem 0;
-        color: rgba(255, 255, 255, 0.9);
+        font-size: 24px;
+        margin: 0 0 10px 0;
+        color: #161122;
       }
       :deep(.sub) {
-        color: rgba(255, 255, 255, 0.5);
+        color: #9a93a4;
         margin-top: 0;
       }
       :deep(.meta) {
-        color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 2rem;
-        font-size: 1.4rem;
+        color: #5b5566;
+        margin-bottom: 20px;
+        font-size: 14px;
       }
       :deep(.meta a) {
-        color: #00ffff;
+        color: #FF4D8D;
         text-decoration: none;
       }
       :deep(.meta a:hover) {
@@ -159,62 +164,62 @@ function goBack() {
       }
       :deep(h2) {
         font-weight: bold;
-        font-size: 2rem;
-        margin: 3rem 0;
-        border-left: 4px solid #00ffff;
-        padding-left: 0.6rem;
-        color: rgba(255, 255, 255, 0.9);
+        font-size: 20px;
+        margin: 30px 0;
+        border-left: 4px solid #FF4D8D;
+        padding-left: 6px;
+        color: #161122;
       }
       :deep(h3) {
         font-weight: bold;
-        font-size: 1.75rem;
-        margin: 2.8rem 0;
-        color: rgba(255, 255, 255, 0.9);
+        font-size: 17.5px;
+        margin: 28px 0;
+        color: #161122;
       }
       :deep(p) {
-        margin: 1.5rem 0;
+        margin: 15px 0;
       }
       :deep(ul) {
-        padding-left: 1.8rem;
+        padding-left: 18px;
         list-style: disc;
       }
       :deep(li) {
         list-style: disc;
       }
       :deep(code) {
-        background: rgba(0, 255, 255, 0.12);
-        padding: 0.7rem 0.9rem;
+        background: rgba(255,77,141,0.08);
+        padding: 7px 9px;
         border-radius: 4px;
       }
       :deep(table) {
         width: 100%;
         border-collapse: collapse;
-        margin: 1.6rem 0;
-        font-size: 1.6rem;
+        margin: 16px 0;
+        font-size: 16px;
       }
       :deep(th),
       :deep(td) {
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 1.2rem 1.1rem;
+        border: 1px solid rgba(22,17,34,0.12);
+        padding: 12px 11px;
         vertical-align: top;
       }
       :deep(thead th) {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(22,17,34,0.04);
         text-align: left;
       }
       :deep(.notice) {
-        background: rgba(0, 255, 255, 0.12);
-        border: 1px solid #00ffff;
-        padding: 1.4rem 1.6rem;
+        background: rgba(255,77,141,0.08);
+        border: 1px solid #FF4D8D;
+        padding: 14px 16px;
         border-radius: 8px;
       }
       :deep(footer) {
-        margin-top: 5rem;
-        color: rgba(255, 255, 255, 0.3);
-        font-size: 1.4rem;
+        margin-top: 50px;
+        color: #9a93a4;
+        font-size: 14px;
       }
       :deep(a) {
-        color: #364153;
+        color: #FF4D8D;
         text-decoration: underline;
       }
     }
