@@ -611,10 +611,9 @@ $line: #F0EADF;
 
 .process-container {
   position: fixed;
-  top: 130px;
-  left: 50%;
+  top: 110px;
+  right: 16px;
   width: 240px;
-  transform: translateX(460px);
   z-index: 100;
   animation: tdIn .3s cubic-bezier(.16,1,.3,1) both;
   transform-origin: top right;
@@ -908,8 +907,8 @@ $line: #F0EADF;
 }
 
 @keyframes tdIn {
-  0% { opacity: 0; transform: translateX(460px) scale(.9) translateY(10px); }
-  100% { opacity: 1; transform: translateX(460px) scale(1) translateY(0); }
+  0% { opacity: 0; transform: scale(.9) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes tdPanelIn {

@@ -245,7 +245,7 @@ async function fetchData() {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -341,5 +341,35 @@ async function fetchData() {
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding: 20px 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .panel-title {
+    font-size: 22px;
+  }
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tab-item {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
 }
 </style>

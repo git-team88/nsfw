@@ -464,4 +464,48 @@ onMounted(() => {
     line-height: 18px;
   }
 }
+
+@media (max-width: 768px) {
+  .container {
+    margin: 100px 20px 20px;
+  }
+  .creator-info {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .price-tag {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    margin: 80px 12px 16px;
+  }
+  .content-box .page-title {
+    font-size: 18px;
+  }
+  .content-box .creator-info {
+    padding: 12px;
+  }
+  .content-box .creator-info .info-left .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .content-box .creator-info .price-tag {
+    min-width: auto;
+    height: 36px;
+    padding: 6px 12px;
+    font-size: 13px;
+    span {
+      font-size: 15px;
+    }
+  }
+  .container .back {
+    top: -44px;
+    width: 36px;
+    height: 36px;
+  }
+}
 </style>

@@ -221,4 +221,48 @@ function goBack() {
     }
   }
 }
+
+@media (max-width: 768px) {
+  .terms {
+    padding: 10rem 0 0;
+  }
+  .inner .terms-detail-back {
+    position: fixed;
+    left: 1rem;
+    top: 10rem;
+    transform: none;
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+  .inner .terms-detail {
+    max-width: 100%;
+    padding: 0 1rem;
+    font-size: 1.2rem;
+    line-height: 2.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .terms {
+    padding: 8rem 0 0;
+  }
+  .inner .terms-detail-back {
+    left: 1rem;
+    top: 8rem;
+  }
+  .inner .terms-detail {
+    font-size: 1.1rem;
+    line-height: 2rem;
+    :deep(h1) {
+      font-size: 1.8rem;
+    }
+    :deep(h2) {
+      font-size: 1.5rem;
+    }
+    :deep(h3) {
+      font-size: 1.3rem;
+    }
+  }
+}
 </style>

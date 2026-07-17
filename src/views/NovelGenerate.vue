@@ -1,5 +1,5 @@
 <template>
-  <div class="novel-generate-page">
+  <div class="novel-generate-page" @click="closeDropdowns">
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -223,7 +223,7 @@
             <div class="regenerate-footer">
               <div class="regenerate-settings">
                 <!-- Word Count Selector -->
-                <div class="novel-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
+                 <div class="novel-selector" @click.stop="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
                   <div class="selector-header">
                      <span>{{ t('novel.totalWords') }} : {{ selectedWordCountDisplay }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
@@ -242,7 +242,7 @@
                 </div>
 
                 <!-- Language Selector -->
-                <div class="novel-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
+                 <div class="novel-selector" @click.stop="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
                   <div class="selector-header">
                     <span>{{ selectedLanguageLabel }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
@@ -267,7 +267,7 @@
                   <img src="@/assets/images/novel/coin.png" alt="" />
                 </div>
                 <button class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
-                  <img v-if="!isSendingRegenerate" src="@/assets/images/novel/send.png" alt="" />
+                  <svg v-if="!isSendingRegenerate" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
                 </button>
               </div>
@@ -363,7 +363,7 @@
                       </div>
 
                       <button class="generate-btn" @click="generateNovelCover">
-                        <img src="@/assets/images/novel/send.png" alt="Send" />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                       </button>
                     </div>
                   </div>
@@ -391,7 +391,7 @@
                 </div>
 
                 <button class="outline-edit-send-btn" :class="{ loading: isSendingOutlineEdit }" @click="sendAiEditOutlineRequest">
-                  <img v-if="!isSendingOutlineEdit" src="@/assets/images/novel/send.png" alt="" />
+                  <svg v-if="!isSendingOutlineEdit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
                 </button>
 
@@ -418,7 +418,7 @@
                 </div>
 
                 <button class="outline-edit-send-btn" :class="{ loading: isSendingChapterEdit }" @click="sendAiEditChapterRequest">
-                  <img v-if="!isSendingChapterEdit" src="@/assets/images/novel/send.png" alt="" />
+                  <svg v-if="!isSendingChapterEdit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
                 </button>
 
@@ -465,10 +465,10 @@
              <button class="ai-edit-btn" @click="startAiEditOutline">
                {{ t('novel.aiEdit') }}
              </button>
-             <div class="outline-edit-tooltip-icon">
-               <img src="@/assets/images/home/intro.png" alt="Info" />
-               <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
-             </div>
+               <div class="outline-edit-tooltip-icon">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
+               </div>
           </div>
           <template v-else-if="currentChapter">
             <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
@@ -477,7 +477,7 @@
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
               <div class="outline-edit-tooltip-icon">
-                <img src="@/assets/images/home/intro.png" alt="Info" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
               </div>
               </template>
@@ -2423,6 +2423,11 @@ const toggleWordCountDropdown = () => {
 const toggleLanguageDropdown = () => {
   showLanguageDropdown.value = !showLanguageDropdown.value;
   showWordCountDropdown.value = false;
+};
+
+const closeDropdowns = () => {
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
 };
 
 const selectWordCount = (count: string) => {

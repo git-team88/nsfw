@@ -666,7 +666,8 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .invoice-preview-container {
   position: relative;
-  width: 800px;
+  width: min(800px, 100%);
+  max-width: 100%;
   max-height: 90vh;
   background: #FFFDF7;
   border: 3px solid #161122;
@@ -857,7 +858,7 @@ onBeforeUnmount(() => {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -948,13 +949,6 @@ onBeforeUnmount(() => {
 .info-icon {
   position: relative;
   cursor: pointer;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 2px solid #161122;
-  background: #FFF3D6;
 
   svg {
     width: 20px;
@@ -1402,7 +1396,7 @@ onBeforeUnmount(() => {
   z-index: 600;
 }
 .modal {
-  width: 520px;
+  width: min(520px, calc(100vw - 32px));
   background: #FFFDF7;
   border-radius: 6px;
   border: 3px solid #161122;
@@ -1497,6 +1491,93 @@ onBeforeUnmount(() => {
         transform: translate(2px, 2px);
       }
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .tabs-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .tr {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .td.time {
+    width: auto;
+    min-width: 140px;
+  }
+  .td.quantity {
+    width: auto;
+    min-width: 60px;
+  }
+  .td.amount {
+    width: auto;
+    min-width: 80px;
+  }
+  .td.actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .sub-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sub-item .right {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .panel-title {
+    font-size: 22px;
+  }
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tab-item {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  .actions-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .view-all-btn {
+    min-width: auto;
+    height: 36px;
+    font-size: 13px;
+  }
+  .btn-invoice,
+  .btn-view,
+  .btn-download {
+    min-width: 100px;
+    height: 36px;
+    font-size: 13px;
+  }
+  .tr {
+    padding: 12px 14px;
+  }
+  .td {
+    font-size: 13px;
   }
 }
 </style>

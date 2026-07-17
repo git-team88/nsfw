@@ -70,7 +70,7 @@
   }
 
   .left-area {
-    width: 372px;
+    width: clamp(320px, 30vw, 400px);
     min-height: 100vh;
     background: #FFFFFF;
     display: flex;
@@ -531,6 +531,7 @@
         resize: none;
         outline: none;
         font-family: inherit;
+        background: none;
 
         &::placeholder {
           color: #9a93a4;
@@ -595,7 +596,7 @@
             background: #FFFDF7;
             border: 2px solid #161122;
             border-radius: 10px;
-            padding: 12px 14px;
+            padding: 12px 5px;
             box-shadow: 3px 3px 0 #161122;
             z-index: 100;
 
@@ -642,7 +643,7 @@
           }
         }
 
-         .send-btn {
+          .send-btn {
            display: flex;
            align-items: center;
            justify-content: center;
@@ -654,11 +655,6 @@
            box-shadow: 2px 2px 0 #161122;
            cursor: pointer;
            transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-          img{
-            width: 20px;
-            height: 20px;
-          }
 
           &:hover {
             transform: scale(1.1);
@@ -695,7 +691,7 @@
 
   .right-area {
     flex: 1;
-    margin-left: 440px; /* 68px + 372px */
+    margin-left: calc(68px + clamp(320px, 30vw, 400px));
     padding: 80px 60px 0;
     min-height: 100vh;
     box-sizing: border-box;
@@ -1031,18 +1027,24 @@
             cursor: pointer;
           }
 
-          .outline-edit-tooltip-icon {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            overflow: visible;
-            z-index: 30;
+           .outline-edit-tooltip-icon {
+             position: relative;
+             display: inline-flex;
+             align-items: center;
+             cursor: pointer;
+             overflow: visible;
+             z-index: 30;
 
-            img {
-              width: 20px;
-              height: 20px;
-            }
+             svg {
+               width: 20px;
+               height: 20px;
+               stroke: #5b5566;
+               transition: stroke 0.16s ease;
+             }
+
+             &:hover svg {
+               stroke: #161122;
+             }
 
              .outline-edit-tooltip {
                position: absolute;
@@ -1110,7 +1112,7 @@
            font-size: 14px;
            font-weight: 700;
            cursor: pointer;
- 
+
            &:hover {
              color: #FF4D8E;
              opacity: 1;
@@ -1186,18 +1188,24 @@
             cursor: pointer;
           }
 
-          .outline-edit-tooltip-icon {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            overflow: visible;
-            z-index: 30;
+           .outline-edit-tooltip-icon {
+             position: relative;
+             display: inline-flex;
+             align-items: center;
+             cursor: pointer;
+             overflow: visible;
+             z-index: 30;
 
-            img {
-              width: 20px;
-              height: 20px;
-            }
+             svg {
+               width: 20px;
+               height: 20px;
+               stroke: #5b5566;
+               transition: stroke 0.16s ease;
+             }
+
+             &:hover svg {
+               stroke: #161122;
+             }
 
              .outline-edit-tooltip {
                position: absolute;
@@ -2063,7 +2071,7 @@
   .similar-section {
     position: fixed;
     bottom: 0;
-    left: 440px;
+    left: calc(30vw + 68px);
     right: 0;
     background: #FFFFFF;
     border-top: 2px solid rgba(22, 17, 34, 0.1);
@@ -2771,7 +2779,9 @@
   position: fixed;
   bottom: 0;
   left: 68px;
-  width: 372px;
+    width: 30vw;
+    min-width: 320px;
+    max-width: 400px;
   background-color: #FFFFFF;
   border-top: 2px solid rgba(22, 17, 34, 0.1);
   padding: 12px;
@@ -2936,21 +2946,22 @@
           }
         }
 
-        .input-textarea {
-          position: relative;
-          width: 100%;
-          height: 100px;
-          overflow-y: auto;
-          font-family: inherit;
-          font-size: 14px;
-          line-height: 24px;
-          resize: none;
-          outline: none;
-          text-decoration: none;
-          border-bottom: none;
-          border: none;
-          color: #161122;
-          padding: 0;
+         .input-textarea {
+           position: relative;
+           width: 100%;
+           height: 100px;
+           overflow-y: auto;
+           font-family: inherit;
+           font-size: 14px;
+           line-height: 24px;
+           resize: none;
+           outline: none;
+           text-decoration: none;
+           border-bottom: none;
+           border: none;
+           color: #161122;
+           padding: 0;
+           background: none;
 
           &[contenteditable] {
             text-decoration: none !important;
@@ -3120,28 +3131,23 @@
             }
           }
 
-           .generate-btn {
-             width: 36px;
-             height: 36px;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             border-radius: 999px;
-             border: 2.5px solid #161122;
-             background: #FF4D8D;
-             box-shadow: 2px 2px 0 #161122;
-             cursor: pointer;
-             transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+            .generate-btn {
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 999px;
+              border: 2.5px solid #161122;
+              background: #FF4D8D;
+              box-shadow: 2px 2px 0 #161122;
+              cursor: pointer;
+              transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-            img {
-              width: 20px;
-              height: 20px;
-            }
-
-            &:hover {
-              transform: scale(1.1);
-            }
-          }
+             &:hover {
+               transform: scale(1.1);
+             }
+           }
         }
       }
     }
@@ -3152,7 +3158,9 @@
   position: fixed;
   bottom: 0;
   left: 68px;
-  width: 372px;
+    width: 30vw;
+    min-width: 320px;
+    max-width: 400px;
   background-color: #FFFFFF;
   border-top: 2px solid rgba(22, 17, 34, 0.1);
   padding: 12px;
@@ -3197,6 +3205,7 @@
         font-size: 14px;
         color: #161122;
         resize: none;
+        background: none;
         outline: none;
         font-family: inherit;
 
@@ -3212,23 +3221,18 @@
         gap: 8px;
         margin-top: 10px;
 
-         .outline-edit-send-btn {
-           width: 36px;
-           height: 36px;
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           border-radius: 999px;
-           border: 2.5px solid #161122;
-           background: #FF4D8D;
-           box-shadow: 2px 2px 0 #161122;
-           cursor: pointer;
-           transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-          img {
-            width: 20px;
-            height: 20px;
-          }
+          .outline-edit-send-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 2.5px solid #161122;
+            background: #FF4D8D;
+            box-shadow: 2px 2px 0 #161122;
+            cursor: pointer;
+            transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
           &:hover {
             transform: scale(1.1);

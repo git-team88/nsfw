@@ -200,7 +200,7 @@ function formatSci(n: number | null) {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -631,5 +631,67 @@ td {
 .block .pagination {
   margin: 24px 0;
   justify-content: center;
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .metrics {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .metric {
+    min-height: auto;
+    padding: 20px;
+  }
+  .metric-value {
+    font-size: 24px;
+  }
+  .withdraw-banner .btn-group {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .table {
+    margin: 0 16px;
+    overflow-x: auto;
+  }
+  .block-tools {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0 16px;
+  }
+  .modal {
+    width: min(360px, calc(100vw - 32px));
+  }
+}
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .metric {
+    padding: 16px;
+  }
+  .metric-value {
+    font-size: 20px;
+  }
+  .withdraw-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  .tabs {
+    padding: 0 16px 16px;
+    gap: 16px;
+  }
+  .th, .td {
+    padding: 0 10px;
+    font-size: 13px;
+  }
 }
 </style>

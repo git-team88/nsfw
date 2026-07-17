@@ -207,7 +207,7 @@ function handleUse() {
     position: relative;
     background: #FFFDF7;
     border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+    box-shadow: 8px 8px 0 #161122;
     border-radius: 12px;
     width: 980px;
     height: 640px;
@@ -289,14 +289,21 @@ function handleUse() {
         align-items: center;
         justify-content: flex-end;
         z-index: 10;
-        cursor: pointer;
 
         .close-btn {
-          background: none;
-          border: none;
-          padding: 0;
-          width: 20px;
-          height: 20px;
+          background: #fff;
+          border: 2.5px solid #161122;
+          border-radius: 999px;
+          padding: 6px;
+          width: 36px;
+          height: 36px;
+          cursor: pointer;
+          box-shadow: 2px 2px 0 #161122;
+          transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+          &:hover {
+            transform: scale(1.1);
+          }
         }
       }
 
@@ -463,20 +470,29 @@ function handleUse() {
         .cancel-btn {
           flex: 1;
           height: 48px;
-          border: none;
+          border: 3px solid #161122;
           border-radius: 8px;
           font-size: 14px;
+          font-weight: 700;
           cursor: pointer;
           background: rgba(22, 17, 34, 0.06);
           color: #5b5566;
+          box-shadow: 3px 3px 0 #161122;
+
+          &:hover {
+            color: #FF4D8D;
+            box-shadow: 4px 4px 0 #161122;
+            transform: translateY(-1px);
+          }
         }
 
         .use-btn {
           flex: 1;
           height: 48px;
-          border: none;
+          border: 3px solid #161122;
           border-radius: 8px;
           font-size: 14px;
+          font-weight: 700;
           cursor: pointer;
           background: #FF4D8D;
           color: #ffffff;
@@ -484,6 +500,7 @@ function handleUse() {
           align-items: center;
           justify-content: center;
           gap: 10px;
+          box-shadow: 3px 3px 0 #161122;
 
           &:disabled {
             cursor: not-allowed;
@@ -500,13 +517,13 @@ function handleUse() {
           }
 
           &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 #161122;
+          }
+          &:active {
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 #161122;
+          }
         }
       }
     }

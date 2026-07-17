@@ -360,7 +360,7 @@ async function handleAccountFailedModify() {
 }
 
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -645,5 +645,63 @@ async function handleAccountFailedModify() {
   cursor: default;
   box-shadow: 1px 1px 0 #161122;
   transform: none;
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .account-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .create-account-btn,
+  .change-account-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  .price-options {
+    gap: 16px;
+  }
+}
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .tip {
+    height: auto;
+    margin: 0 12px 12px;
+    padding: 10px 12px;
+  }
+  .account-section {
+    margin: 0 12px 24px;
+  }
+  .sections-wrap {
+    padding: 12px;
+  }
+  .price-options {
+    gap: 12px;
+  }
+  .textarea {
+    height: 120px;
+  }
+  .btn {
+    min-width: auto;
+    flex: 1;
+  }
+  .actions {
+    gap: 8px;
+  }
+  .account-info img {
+    width: 36px;
+    height: 36px;
+  }
 }
 </style>

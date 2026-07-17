@@ -161,20 +161,21 @@ function cancelLogout() {
     position: static;
     padding: 0;
   }
+  .title {
+    margin-bottom: 8px;
+  }
   .items {
     display: flex;
-    overflow-x: auto;
-    gap: 4px;
-    flex-direction: row;
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: 0;
   }
   .item {
     flex: none;
-    width: auto;
-    white-space: nowrap;
+    width: 100%;
+    white-space: normal;
   }
   .item.on::after {
-    margin-left: 8px;
+    margin-left: auto;
   }
 }
 </style>

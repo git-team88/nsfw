@@ -1840,6 +1840,10 @@ async function unpinCollection(collection: any) {
   @media (max-width: 768px) {
     padding: 80px 24px 40px;
   }
+
+  @media (max-width: 420px) {
+    padding: 60px 12px 30px;
+  }
 }
 
 .home-bg {
@@ -2864,13 +2868,12 @@ async function unpinCollection(collection: any) {
   min-height: 400px;
 
   .collections-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
     gap: 16px;
   }
 
   .collection-card {
-    width: 258px;
     background: #FFFDF7;
     border: 3px solid #161122;
     border-radius: 16px;
@@ -3130,6 +3133,65 @@ async function unpinCollection(collection: any) {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (max-width: 420px) {
+  .user-info-card {
+    flex-direction: column;
+    .info-left {
+      width: 72px;
+      height: 72px;
+      margin-top: -40px;
+      .avatar {
+        width: 72px;
+        height: 72px;
+      }
+    }
+    .info-right .text-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      .text-info .name-row .nickname {
+        font-size: 20px;
+      }
+      .actions {
+        flex-wrap: wrap;
+        .btn {
+          min-width: 100px;
+          height: 40px;
+          font-size: 13px;
+        }
+      }
+    }
+  }
+  .stats-bar {
+    flex-direction: column;
+    gap: 12px;
+    .posts-title .type-item {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    .stats-nums .stat-item {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+  }
+  .collections-container .collections-grid {
+    gap: 12px;
+  }
+  .collection-card {
+    width: calc(50% - 6px);
+  }
+  .follow-container .follow-list {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .pin-modal-overlay .pin-modal {
+    width: calc(100vw - 32px);
+  }
+  .block-confirm-modal .modal-content {
+    width: calc(100vw - 32px);
+  }
+}
+
 .collection-header {
   display: flex;
   align-items: center;
@@ -3160,6 +3222,392 @@ async function unpinCollection(collection: any) {
   }
 }
 
+@media (max-width: 768px) {
+  .home-bg {
+    height: 120px;
+  }
+
+  .user-info-card {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0;
+
+    .info-left {
+      width: 80px;
+      height: 80px;
+      margin-top: -40px;
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        border-width: 3px;
+      }
+    }
+
+    .info-right {
+      width: 100%;
+
+      .text-inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+
+        .text-info {
+          .name-row {
+            .nickname {
+              font-size: 20px;
+            }
+          }
+          .kyc-row {
+            span {
+              height: 24px;
+              font-size: 11px;
+              min-width: 48px;
+              margin-top: 4px;
+            }
+          }
+        }
+
+        .actions {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+
+          .btn {
+            min-width: 100px;
+            height: 40px;
+            font-size: 13px;
+            padding: 0 8px;
+
+            &.subscribe {
+              padding: 0 12px;
+            }
+          }
+        }
+      }
+
+      .desc-box {
+        margin-top: 12px;
+        text-align: center;
+      }
+    }
+  }
+
+  .stats-bar {
+    flex-direction: column;
+    gap: 12px;
+
+    .posts-title {
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+
+      .type-item {
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+    }
+
+    .stats-nums {
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+
+      .stat-item {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 16px;
+
+    .collection-tabs-container {
+      .tabs {
+        .tab-item {
+          width: 120px;
+          font-size: 12px;
+          padding: 6px 10px;
+        }
+      }
+    }
+  }
+
+  .collections-container {
+    .collection-card {
+      width: 100%;
+      max-width: 100%;
+
+      .card-cover {
+        height: 200px;
+      }
+    }
+  }
+
+  .follow-container {
+    .follow-list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .follow-card {
+      padding: 12px;
+
+      .card-top {
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .user-avatar {
+          width: 40px;
+          height: 40px;
+        }
+        .user-meta {
+          .nickname {
+            font-size: 13px;
+          }
+          .fans-count {
+            font-size: 11px;
+          }
+        }
+
+        .follow-btn {
+          min-width: 80px;
+          height: 34px;
+          font-size: 12px;
+          padding: 0 10px;
+        }
+      }
+
+      .card-bio {
+        font-size: 11px;
+        height: 30px;
+        line-height: 15px;
+      }
+    }
+  }
+
+  .pin-modal-overlay {
+    .pin-modal {
+      width: calc(100vw - 32px);
+      max-width: 700px;
+      padding: 14px 0;
+
+      .close-icon {
+        top: 14px;
+        right: 14px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .modal-header {
+        padding: 0 16px 14px;
+        margin-bottom: 14px;
+
+        .title {
+          font-size: 14px;
+        }
+      }
+
+      .modal-desc {
+        padding: 0 16px;
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+
+      .pinned-list {
+        gap: 8px;
+        padding: 0 16px 16px;
+        flex-wrap: wrap;
+
+        .pinned-item {
+          .item-title {
+            font-size: 12px;
+          }
+        }
+      }
+
+      .confirm-btn {
+        width: 180px;
+        height: 42px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .block-confirm-modal {
+    .modal-content {
+      width: calc(100vw - 32px);
+      max-width: 500px;
+      padding: 14px 16px 20px;
+
+      .modal-title {
+        font-size: 16px;
+      }
+
+      .modal-message {
+        font-size: 13px;
+        margin-bottom: 20px;
+      }
+
+      .modal-footer {
+        gap: 12px;
+
+        .btn {
+          min-width: 120px;
+          height: 40px;
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .user-homepage {
+    padding: 70px 16px 30px;
+  }
+
+  .home-bg {
+    height: 90px;
+    border-radius: 4px;
+  }
+
+  .user-info-card {
+    .info-left {
+      width: 64px;
+      height: 64px;
+      margin-top: -32px;
+
+      .avatar {
+        width: 64px;
+        height: 64px;
+        border-width: 2px;
+      }
+    }
+
+    .info-right {
+      .text-inner {
+        .text-info {
+          .name-row {
+            .nickname {
+              font-size: 18px;
+            }
+          }
+        }
+
+        .actions {
+          .btn {
+            min-width: 80px;
+            height: 36px;
+            font-size: 12px;
+            gap: 6px;
+          }
+        }
+      }
+    }
+  }
+
+  .stats-bar {
+    .posts-title {
+      .type-item {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
+
+    .stats-nums {
+      .stat-item {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .collections-container {
+    .collection-card {
+      width: 100%;
+      max-width: 100%;
+
+      .card-cover {
+        height: 160px;
+
+        .r18-overlay {
+          width: 60px;
+          height: 60px;
+          padding: 4px;
+
+          .r18-text {
+            font-size: 12px;
+          }
+        }
+
+        .pinned-tag {
+          font-size: 10px;
+          padding: 2px 6px;
+        }
+
+        .card-bottom {
+          height: 44px;
+          padding: 0 8px 8px;
+
+          .update-badge {
+            font-size: 10px;
+          }
+
+          .card-actions {
+            .card-action-btn {
+              width: 24px;
+              height: 24px;
+
+              img {
+                width: 12px;
+                height: 12px;
+              }
+            }
+          }
+        }
+      }
+
+      .card-info {
+        padding: 8px 10px 10px;
+
+        .card-desc {
+          font-size: 12px;
+          line-height: 16px;
+        }
+      }
+    }
+  }
+
+  .follow-container {
+    .follow-list {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 12px;
+    }
+  }
+
+  .collection-header {
+    .create-collection-btn {
+      height: 36px;
+      padding: 0 14px;
+      font-size: 12px;
+
+      .plus-icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
 .block-confirm-modal {
   position: fixed;
   top: 0;
@@ -3183,6 +3631,7 @@ async function unpinCollection(collection: any) {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
+    max-width: calc(100vw - 32px);
     background-color: #FFFDF7;
     border-radius: 16px;
     border: 2.5px solid #161122;

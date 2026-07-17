@@ -77,4 +77,14 @@ function goUserHome(userId: string) {
   color: #99A1AF;
   font-weight: 300;
 }
+
+@media (max-width: 420px) {
+  .msg-item {
+    padding: 1.2rem;
+  }
+  .avatar {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+}
 </style>

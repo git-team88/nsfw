@@ -293,7 +293,7 @@ async function confirmDelete() {
 .content-container {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 130px 24px 24px;
+  padding: 110px 24px 24px;
   position: relative;
 }
 
@@ -325,6 +325,8 @@ async function confirmDelete() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(22, 17, 34, 0.12);
@@ -338,6 +340,7 @@ async function confirmDelete() {
 
   .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
   }
 
@@ -555,8 +558,7 @@ async function confirmDelete() {
 
 @media (max-width: 1440px) {
   .content-container {
-    max-width: 80.5556vw;
-    padding: 9.0278vw 1.6667vw 1.6667vw;
+    max-width: 80vw;
   }
   .back-btn {
     top: 9.7222vw;
@@ -655,7 +657,7 @@ async function confirmDelete() {
   }
 
   .back-btn {
-    top: 140px;
+    top: 100px;
     width: 40px;
     height: 40px;
     left: -52px;
@@ -754,7 +756,7 @@ async function confirmDelete() {
 @media (max-width: 768px) {
   .content-container {
     max-width: 100%;
-    padding: 80px 16px 16px;
+    padding: 130px 16px 16px;
   }
   .back-btn {
     position: fixed;
@@ -767,11 +769,14 @@ async function confirmDelete() {
     margin-bottom: 16px;
     padding-bottom: 16px;
     border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    flex-wrap: wrap;
+    gap: 8px;
     .page-title {
       font-size: 18px;
     }
     .action-buttons {
       gap: 8px;
+      flex-wrap: wrap;
     }
     .btn {
       min-width: 80px;
@@ -850,6 +855,61 @@ async function confirmDelete() {
     }
     .info-value {
       font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container {
+    padding: 130px 12px 12px;
+  }
+  .back-btn {
+    position: fixed;
+    top: 80px;
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    border-width: 2px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    .page-title {
+      font-size: 16px;
+    }
+    .action-buttons {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 6px;
+    }
+    .btn {
+      min-width: 0;
+      flex: 1;
+      height: 32px;
+      padding: 0 8px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+  }
+  .section {
+    padding: 12px;
+  }
+  .cover-section {
+    .cover-info {
+      width: 120px;
+      height: 160px;
+    }
+    .cover-image {
+      width: 120px;
+      height: 160px;
     }
   }
 }

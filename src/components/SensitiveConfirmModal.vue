@@ -88,15 +88,25 @@ function emitConfirm() {
   overflow: hidden;
 
   .close-btn {
-    background: none;
-    border: none;
+    background: #fff;
+    border: 2.5px solid #161122;
+    border-radius: 999px;
     padding: 0;
     position: absolute;
     top: 20px;
     right: 18px;
-    width: 20px;
-    height: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 
   .modal-header {

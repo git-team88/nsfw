@@ -123,7 +123,7 @@
   .option-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 14px;
     font-weight: 700;
     color: #161122;
@@ -133,12 +133,48 @@
     &:hover {
       opacity: 1;
     }
+
+    &.active {
+      opacity: 1;
+
+      .radio-dot {
+        border-color: #FF4D8E;
+
+        .radio-inner {
+          transform: scale(1);
+        }
+      }
+
+      .option-label {
+        opacity: 1;
+      }
+    }
   }
 
-  .radio-icon {
-    width: 24px;
-    height: 24px;
+  .radio-dot {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #161122;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    transition: border-color 0.2s ease;
+
+    .radio-inner {
+      width: 10px;
+      height: 10px;
+      background: #FF4D8E;
+      border-radius: 50%;
+      transform: scale(0);
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .option-label {
+    opacity: 0.65;
+    transition: opacity 0.2s ease;
   }
 
   @keyframes fadeIn {
@@ -1296,13 +1332,6 @@
   .info-icon {
     position: relative;
     cursor: pointer;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 2px solid #161122;
-    background: #FFF3D6;
     margin-left: 8px;
 
     svg {

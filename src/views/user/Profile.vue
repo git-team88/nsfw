@@ -68,7 +68,7 @@ function goEdit() {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -162,7 +162,7 @@ function goEdit() {
 @media (max-width: 900px) {
   .container {
     flex-direction: column;
-    padding: 0 30px;
+    padding: 80px 30px 24px;
   }
   .main {
     padding-top: 20px;

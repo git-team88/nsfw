@@ -90,7 +90,7 @@ const handleConfirm = () => {
     position: relative;
     background: #FFFDF7;
     border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+    box-shadow: 8px 8px 0 #161122;
     border-radius: 12px;
     width: 720px;
     padding: 18px 0;
@@ -113,12 +113,19 @@ const handleConfirm = () => {
       }
 
       .close-btn {
-        background: none;
-        border: none;
-        padding: 0;
-        width: 20px;
-        height: 20px;
+        background: #fff;
+        border: 2.5px solid #161122;
+        border-radius: 999px;
+        padding: 6px;
+        width: 36px;
+        height: 36px;
         cursor: pointer;
+        box-shadow: 2px 2px 0 #161122;
+        transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        &:hover {
+          transform: scale(1.1);
+        }
       }
     }
 
@@ -192,12 +199,14 @@ const handleConfirm = () => {
       .confirm-btn {
         min-width: 136px;
         height: 48px;
-        border: none;
+        border: 3px solid #161122;
         border-radius: 8px;
         font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
         background: #FF4D8D;
         color: #ffffff;
+        box-shadow: 3px 3px 0 #161122;
 
         &:hover:not(:disabled) {
           transform: translate(-1px, -1px);

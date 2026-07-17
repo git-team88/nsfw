@@ -248,7 +248,7 @@ onBeforeUnmount(() => {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -486,6 +486,62 @@ onBeforeUnmount(() => {
         }
       }
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .panel-top {
+    padding: 0 20px;
+  }
+  .tabs {
+    margin-left: 20px;
+  }
+  .list-area {
+    padding: 0 20px;
+  }
+  .follow-item,
+  .sub-item {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .sub-item .right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel-top {
+    padding: 0 16px;
+  }
+  .tabs {
+    margin-left: 16px;
+  }
+  .list-area {
+    padding: 0 16px;
+  }
+  .follow-item,
+  .sub-item {
+    padding: 14px 16px;
+  }
+  .follow-item .left .info .name,
+  .sub-item .left .info .name {
+    max-width: 200px;
+  }
+  .follow-btn {
+    min-width: 90px;
+    height: 36px;
+    font-size: 13px;
   }
 }
 </style>

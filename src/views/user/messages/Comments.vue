@@ -159,4 +159,24 @@ function goUserHome(userId: string) {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+@media (max-width: 420px) {
+  .msg-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.2rem;
+  }
+  .right-work-box {
+    width: 100%;
+    margin-top: 0.8rem;
+  }
+  .content {
+    max-width: 100%;
+    white-space: normal;
+  }
+  .avatar {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+}
 </style>

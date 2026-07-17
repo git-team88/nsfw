@@ -216,12 +216,22 @@ watch(() => props.modelValue, (newVal) => {
   }
 
   .close-btn {
-    background: none;
-    border: none;
+    background: #fff;
+    border: 2.5px solid #161122;
+    border-radius: 999px;
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 
@@ -380,32 +390,35 @@ watch(() => props.modelValue, (newVal) => {
     min-width: 136px;
     height: 48px;
     padding: 0 48px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 14px;
-    border: none;
     cursor: pointer;
     transition: all 0.2s;
 
     &.btn-cancel {
-      background: rgba(22, 17, 34, 0.06);
-      color: #5b5566;
+      background: #ffffff;
+      color: #161122;
+      border: 2px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
+      font-weight: 800;
 
       &:hover {
-        color: #FF4D8D;
+        border-color: #FF4D8E;
+        color: #FF4D8E;
       }
     }
 
     &.btn-confirm {
-      background: #FF4D8D;
-      color: #fff;
+      border: 2px solid #161122;
+      background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+      color: #ffffff;
+      box-shadow: 2px 2px 0 #161122;
+      font-weight: 800;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-      &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-      &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 3px 3px 0 #161122;
       }
     }
   }

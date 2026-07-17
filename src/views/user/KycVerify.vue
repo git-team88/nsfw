@@ -431,7 +431,7 @@
     <!-- 戻る確認モーダル -->
     <div v-if="showBackConfirmModal" class="exit-confirm-modal" @click="cancelGoBack">
       <div class="modal-content" @click.stop>
-        <img class="close-btn" src="@/assets/images/base/close.png" alt="" @click="cancelGoBack" />
+        <button class="close-btn" @click="cancelGoBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <h3 class="modal-title">{{ t("user.materialProvider.backConfirmTitle") }}</h3>
         <p class="modal-message">{{ t("user.materialProvider.backConfirmText") }}</p>
         <div class="modal-actions">
@@ -1421,25 +1421,26 @@ function openTermsOfService() {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 150px 30px 24px;
 }
 .main {
   position: relative;
+  flex: 1;
   padding-top: 100px;
   background: #FFFDF7;
   border: 3px solid #161122;
   border-radius: 6px;
-  padding: 40px 48px;
+  padding: 24px 36px;
   margin-top: 0;
 }
 
 .kyc-back {
   position: absolute;
-  top: -52px;
+  top: -58px;
   left: 0;
   width: 40px;
   height: 40px;
@@ -2212,10 +2213,7 @@ function openTermsOfService() {
   z-index: 1000;
 
   .modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     width: 500px;
     background: #FFFDF7;
     border: 3px solid #161122;
@@ -2224,12 +2222,23 @@ function openTermsOfService() {
     padding: 18px 24px 24px;
 
     .close-btn {
+      background: #fff;
+      border: 2.5px solid #161122;
+      border-radius: 999px;
+      padding: 6px;
       position: absolute;
-      top: 20px;
-      right: 12px;
-      width: 24px;
-      height: 24px;
+      top: 12px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
       cursor: pointer;
+      box-shadow: 2px 2px 0 #161122;
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
+
+      &:hover {
+        transform: scale(1.1);
+      }
     }
 
     .modal-title {
@@ -2431,5 +2440,93 @@ function openTermsOfService() {
   color: #161122;
   opacity: 0.4;
   text-align: center;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 120px 20px 24px;
+  }
+  .main {
+    padding: 20px 16px;
+  }
+  .step-nav {
+    margin: 24px 0;
+  }
+  .acceptance-item {
+    width: 100%;
+  }
+  .acceptance-list {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 100px 12px 16px;
+  }
+  .main {
+    padding: 16px 12px;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .two-inputs-container {
+    flex-direction: column;
+    gap: 0;
+  }
+  .half-width-field {
+    flex: 1;
+    max-width: 100%;
+  }
+  .doc-type-cards {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .doc-type-card {
+    height: auto;
+    padding: 12px;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .doc-icon {
+    margin-bottom: 0;
+  }
+  .button-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn {
+    width: 100%;
+  }
+  .btn-spacer {
+    display: none;
+  }
+  .error-modal {
+    width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
+  .exit-confirm-modal .modal-content {
+    width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
+  .warning-banner {
+    font-size: 14px;
+    line-height: 24px;
+  }
+  .acceptance-box {
+    padding: 16px;
+  }
+  .upload-area {
+    height: 160px;
+  }
+  .preview-image {
+    height: 160px;
+  }
 }
 </style>

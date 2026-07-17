@@ -106,7 +106,7 @@ function goToAiPointsDetails() {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -247,5 +247,53 @@ function goToAiPointsDetails() {
   border-radius: 13px;
   box-shadow: 3px 3px 0 #161122;
   padding: 20px;
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .withdraw-banner {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .withdraw-banner .banner-left {
+    max-width: 100%;
+  }
+  .metric {
+    height: auto;
+    padding: 20px;
+  }
+  .metric-value {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .metrics {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .metric {
+    padding: 16px;
+  }
+  .metric-value {
+    font-size: 20px;
+  }
+  .copy-link-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  .withdraw-banner {
+    padding: 20px 16px;
+  }
 }
 </style>

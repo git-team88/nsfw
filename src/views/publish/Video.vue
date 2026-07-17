@@ -31,13 +31,12 @@
             v-for="option in uploadOptions"
             :key="option.id"
             class="option-item"
+            :class="{ active: uploadOption === option.value }"
             @click="uploadOption = option.value"
           >
-            <img
-              :src="uploadOption === option.value ? selectActive : select"
-              alt="Select"
-              class="radio-icon"
-            />
+            <span class="radio-dot">
+              <span class="radio-inner"></span>
+            </span>
             <span class="option-label">{{ t(option.label) }}</span>
           </div>
         </div>

@@ -589,7 +589,7 @@ async function downloadSingleWorkData() {
   background: #FFFBF4;
 }
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -868,5 +868,69 @@ async function downloadSingleWorkData() {
 .block .pagination {
   margin: 24px 0;
   justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .metric {
+    height: auto;
+    padding: 20px;
+  }
+  .metric-value {
+    font-size: 24px;
+  }
+  .table {
+    overflow-x: auto;
+  }
+  .table.overall .thead,
+  .table.overall .tr {
+    grid-template-columns: 1fr 1fr 1fr;
+    min-width: 400px;
+  }
+  .table.work .thead,
+  .table.work .tr {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    min-width: 500px;
+  }
+  .block-tools {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .metrics {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .metric {
+    padding: 16px;
+  }
+  .metric-value {
+    font-size: 20px;
+  }
+  .block {
+    padding: 16px;
+  }
+  .tabs span {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  .block-title {
+    padding: 0 16px;
+  }
+  .th, .td {
+    padding: 0 10px;
+    font-size: 13px;
+  }
 }
 </style>

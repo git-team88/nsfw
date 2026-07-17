@@ -299,7 +299,7 @@ async function handleAccountFailedModify() {
 }
 
 .container {
-  max-width: 1440px;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   gap: 18px;
@@ -553,5 +553,41 @@ async function handleAccountFailedModify() {
   margin-top: 16px;
   font-size: 14px;
   color: #161122;
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    padding: 80px 20px 24px;
+  }
+  .main {
+    padding-top: 20px;
+  }
+  .account-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .create-account-btn,
+  .change-account-btn,
+  .modify-account-btn {
+    width: 100%;
+    min-width: auto;
+  }
+}
+@media (max-width: 420px) {
+  .container {
+    padding: 0 12px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .tip {
+    height: auto;
+    padding: 10px 12px;
+  }
+  .account-info img {
+    width: 36px;
+    height: 36px;
+  }
 }
 </style>
