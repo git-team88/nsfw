@@ -1547,10 +1547,23 @@
         &.open {
           border-radius: 6px;
 
-          .select-arrow img {
-            transform: rotate(180deg);
-          }
-        }
+    &.selected {
+      .chapter-name {
+        color: #364153;
+      }
+    }
+
+    .chapter-name {
+      flex: 1;
+      font-size: 1.4rem;
+      color: #6A7282;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 2.2rem;
+
+      &:hover {
+        color: #364153;
       }
 
       .custom-dropdown {
@@ -1617,6 +1630,90 @@
           border-radius: 6px;
         }
       }
+    }
+
+    .chapter-status-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 0.4rem;
+
+      .chapter-status-text {
+        font-size: 1.4rem;
+        color: #99A1AF;
+        white-space: nowrap;
+        line-height: 2.2rem;
+      }
+
+      .chapter-checkbox {
+        width: 2.4rem;
+        height: 2.4rem;
+      }
+    }
+  }
+
+  .published-section {
+    width: 40rem;
+  }
+
+  .published-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding-bottom: 1.6rem;
+  }
+
+  .published-tab-label {
+    font-size: 1.6rem;
+    color: #101828;
+    white-space: nowrap;
+  }
+
+  .published-count-info {
+    font-size: 1.4rem;
+    color: #99A1AF;
+    white-space: nowrap;
+    line-height: 2rem;
+  }
+
+  .published-chapters-list {
+    background-color: #F5F5F5;
+    border-radius: 0.8rem;
+    padding: 1.8rem 1.2rem;
+    width: 40rem;
+  }
+
+  .published-chapter-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 2.2rem;
+    margin-bottom: 1.8rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .chapter-name {
+      flex: 1;
+      font-size: 1.4rem;
+      color: #6A7282;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 2.2rem;
+
+      &.active {
+        color: #364153;
+      }
+    }
+
+    .chapter-status-text.published {
+      font-size: 1.4rem;
+      color: #6A7282;
+      white-space: nowrap;
+      line-height: 2.2rem;
     }
   }
 

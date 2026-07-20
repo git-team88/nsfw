@@ -150,6 +150,13 @@
             :disabled="!outlineData || !outlineData.outline"
           >
             <span class="preview-title">{{ t('novel.novelOutline') }}</span>
+            <button
+              v-if="unpublishedChapterCount > 2"
+              class="batch-publish-btn"
+              :class="{ loading: isBatchPublishBtnLoading }"
+              :disabled="isBatchPublishBtnLoading"
+              @click.stop="handleBatchPublishClick"
+            >{{ t('novel.batchPublish.batchPublish') }}<span v-if="isBatchPublishBtnLoading" class="btn-spinner btn-spinner-small"></span></button>
           </div>
 
           <!-- Chapter List -->
@@ -897,6 +904,9 @@
       </div>
     </div>
 
+    <!-- Batch Publish Loading Mask -->
+    <LoadingMask :visible="isBatchPublishLoading" @cancel="cancelBatchPublish" />
+
     <!-- Cover Action Confirmation Modal -->
     <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
@@ -986,6 +996,16 @@
       @confirm="confirmOutlineEditExit"
     />
 
+    <!-- Batch Publish Dialog -->
+    <BatchPublishDialog
+      :visible="showBatchPublishDialog"
+      :chapters="chapters"
+      :session-id="sessionId"
+      :check-ownership="checkProjectOwnership"
+      @close="showBatchPublishDialog = false"
+      @confirm="handleBatchPublishConfirm"
+      @refresh="handleBatchPublishRefresh"
+    />
 
   </div>
 </template>
@@ -1372,6 +1392,7 @@ import { aiUrl, baseUrl } from '@/util/config';
 import { parseToUnixTimestamp } from '@/util/utils';
 
 import UploadMask from '@/components/UploadMask.vue';
+import LoadingMask from '@/components/LoadingMask.vue';
 import ConfirmComputingPowerModal from '@/components/ConfirmComputingPowerModal.vue';
 
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
@@ -1382,6 +1403,7 @@ import OutlineHistoryModal from '@/components/OutlineHistoryModal.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import ExitConfirmModal from '@/components/ExitConfirmModal.vue';
 import ChapterHistoryModal from '@/components/ChapterHistoryModal.vue';
+import BatchPublishDialog from '@/components/BatchPublishDialog.vue';
 import NovelLoading from '@/components/NovelLoading.vue';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
@@ -1441,6 +1463,7 @@ watch(() => outlineData.value, (newVal) => {
 
 const backupOutlineData = ref<any>(null);
 const chapters = ref<any[]>([]);
+const unpublishedChapterCount = computed(() => chapters.value.filter(c => c.is_publish == 2).length);
 const showRegenerateInput = ref<boolean>(false);
 const regenerateContent = ref<string>('');
 const isSendingRegenerate = ref<boolean>(false);
@@ -1548,6 +1571,10 @@ const showConfirmComputingPowerModal = ref<boolean>(false);
 const showInsufficientBalanceModal = ref<boolean>(false);
 const showGenerateAllChaptersModal = ref<boolean>(false);
 const showFreezeComputingPowerModal = ref<boolean>(false);
+const showBatchPublishDialog = ref<boolean>(false);
+const isBatchPublishLoading = ref<boolean>(false);
+const isBatchPublishBtnLoading = ref<boolean>(false);
+let isBatchPublishCancelled = false;
 const freezeComputingPower = ref<number>(0);
 const pendingGenerationAction = ref<string>(''); // 'outline', 'chapter', 'all', 'retry-outline', 'retry-chapter', 'retry-all'
 const showTaskLimitExceededModal = ref<boolean>(false);
@@ -4950,6 +4977,78 @@ const handlePublishChapter = async (chapter: any) => {
       title
     }
   });
+};
+
+const handleBatchPublishClick = async () => {
+  if (checkProjectOwnership()) return;
+  isBatchPublishBtnLoading.value = true;
+  try {
+    const res = await api.detailProject(sessionId.value) as any;
+    if (res.code === 200 && res.data?.chapters) {
+      chapters.value = res.data.chapters;
+    }
+  } catch (e) {
+    console.error('Failed to refresh chapters:', e);
+  } finally {
+    isBatchPublishBtnLoading.value = false;
+  }
+
+  if (unpublishedChapterCount.value > 2) {
+    showBatchPublishDialog.value = true;
+  }
+};
+
+const handleBatchPublishRefresh = (freshChapters: any[]) => {
+  chapters.value = freshChapters;
+};
+
+const handleBatchPublishConfirm = async (selectedChapters: any[]) => {
+  showBatchPublishDialog.value = false;
+  if (selectedChapters.length === 0) return;
+
+  isBatchPublishLoading.value = true;
+  isBatchPublishCancelled = false;
+
+  await nextTick();
+
+  if (isBatchPublishCancelled) {
+    isBatchPublishLoading.value = false;
+    return;
+  }
+
+  const cover = coverImage.value || '';
+  const title = projectName.value || '';
+
+  if (selectedChapters.length === 1) {
+    router.push({
+      path: '/publish/novel',
+      query: {
+        session_id: sessionId.value,
+        cover,
+        index: selectedChapters[0].chapter,
+        title
+      }
+    });
+    return;
+  }
+
+  const chapterIndexes = selectedChapters.map(c => c.chapter);
+
+  router.push({
+    path: '/publish/novel',
+    query: {
+      session_id: sessionId.value,
+      batch: 'true',
+      indexes: chapterIndexes.join(','),
+      cover,
+      name: title
+    }
+  });
+};
+
+const cancelBatchPublish = () => {
+  isBatchPublishCancelled = true;
+  isBatchPublishLoading.value = false;
 };
 
 // Handle outline preview click

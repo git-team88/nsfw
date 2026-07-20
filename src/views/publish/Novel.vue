@@ -84,24 +84,53 @@
 
             <!-- Chapter Selection -->
             <div class="chapter-selection">
-              <label>{{ t('submit.image.selectChapter') }}</label>
-              <div class="chapter-dropdown">
-                <div class="custom-select" :class="{ 'open': showChapterDropdown }" @click="toggleChapterDropdown($event)">
-                  <span class="select-value">{{ getChapterLabel(selectedEpisode) }}</span>
-                  <div class="select-arrow">
-                    <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+              <div class="chapter-lists-container">
+                <div v-if="unpublishedChapters.length > 0" class="pending-section">
+                  <div class="pending-header">
+                    <span class="pending-label">{{ t('submit.image.pendingChapters') }}</span>
+                    <button class="select-all-btn" @click="toggleSelectAllChapters">
+                      <span class="select-all-text">{{ t('submit.image.selectAll', { count: unpublishedChapters.length }) }}</span>
+                      <img
+                        class="select-all-checkbox"
+                        :src="isAllChaptersSelected ? checkboxActive : checkboxInactive"
+                        alt=""
+                      />
+                    </button>
+                  </div>
+                  <div class="pending-chapters-list">
+                    <div
+                      v-for="(chapter, index) in unpublishedChapters"
+                      :key="'pending-' + chapter.chapter"
+                      class="pending-chapter-item"
+                      :class="{ selected: selectedChapters.includes(chapter.chapter) }"
+                      @click="toggleChapterSelection(chapter.chapter)"
+                    >
+                      <span class="chapter-name" :class="{ active: index === 0 }">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+                      <div class="chapter-status-wrap">
+                        <span class="chapter-status-text">{{ t('submit.image.pending') }}</span>
+                        <img
+                          class="chapter-checkbox"
+                          :src="selectedChapters.includes(chapter.chapter) ? checkboxActive : checkboxInactive"
+                          alt=""
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="custom-dropdown" v-if="showChapterDropdown">
-                  <div
-                    class="chapter-dropdown-item"
-                    :class="{ 'selected': selectedEpisode == chapter.chapter }"
-                    v-for="chapter in selectedProject?.chapters || []"
-                    :key="chapter.chapter"
-                    @click="selectChapter(chapter)"
-                  >
-                    <span class="chapter-number">{{ t('chapter', { chapter: chapter.chapter }) }}</span>
-                    <span class="chapter-status" v-if="chapter.is_publish == 1">{{ t('novel.published') }}</span>
+                <div v-if="publishedChapters.length > 0" class="published-section">
+                  <div class="published-header">
+                    <span class="published-tab-label">{{ t('submit.image.publishedChapters') }}</span>
+                    <span class="published-count-info">{{ t('submit.image.publishedCount', { count: publishedChapters.length }) }}</span>
+                  </div>
+                  <div class="published-chapters-list">
+                    <div
+                      v-for="(chapter, index) in publishedChapters"
+                      :key="'published-' + chapter.chapter"
+                      class="published-chapter-item"
+                    >
+                      <span class="chapter-name" :class="{ active: index === 0 }">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+                      <span class="chapter-status-text published">{{ t('novel.published') }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -111,11 +140,11 @@
             <div class="publish-section">
               <button
                 class="publish-btn"
-                :class="{ 'published': isChapterPublished }"
-                @click="handlePublish"
-                :disabled="isChapterPublished"
+                :class="selectedChapters.length > 0 ? 'active' : 'disabled'"
+                @click="handlePublishFromSelection"
+                :disabled="selectedChapters.length === 0"
               >
-                {{ isChapterPublished ? t('novel.published') : t('submit.cover.confirm') }}
+                {{ t('submit.cover.confirm') }}
               </button>
             </div>
           </div>
@@ -215,6 +244,12 @@
         </div>
       </div>
 
+      <!-- Batch Publish Loading -->
+      <div v-if="isLoadingBatchPublish" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ t('home.loading') }}</div>
+      </div>
+
       <!-- Full Content View: After clicking Next Step or Edit Mode -->
       <div class="content-wrapper" v-if="showFullContent || postId || route.query.session_id">
         <!-- Permission Range -->
@@ -258,35 +293,58 @@
             <div class="collection-row">
               <div class="collection-group">
                 <div class="form-label-inner">
-                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
-
+                  <label class="form-label">{{ t("submit.permission") }}</label>
                   <div class="info-icon" @mouseover="adjustTooltipPosition">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     <div class="info-tooltip">
                       <div class="tooltip-content">
-                        <div v-html="t('submit.collectionInfo')"></div>
+                        <div v-html="t('submit.permissionInfo')"></div>
                       </div>
                     </div>
                   </div>
-
-                  <div class="switch-collection-btn" @click="openCollectionListModal">
-                    <span>{{ t('collection.switchCollection') }}</span>
-                    <img src="@/assets/images/publish/switch.png" alt="" />
-                  </div>
                 </div>
 
-                <div class="collection-display">
-                  <div class="collection-info" v-if="selectedCollection">
-                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                    <div class="collection-text">
-                      <div class="collection-top">
-                        <span class="collection-name">{{ selectedCollection.name }}</span>
-                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
+                <div class="perm-options">
+                  <div
+                    class="perm-option"
+                    v-for="(opt, index) in permOptions"
+                    :key="opt.key"
+                    @click="handlePermissionChange(opt.key, index)"
+                  >
+                    <img :src="form.permission === opt.key ? selectActive : select" alt="" />
+                    <span>{{ t(opt.labelKey) }}
+                      <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="caption-actions-box">
+                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch mode: collection + batch settings in one white container -->
+          <div v-if="isBatchPublish" class="batch-collection-perm-wrapper">
+            <div class="collection-section">
+              <div class="form-item">
+                <div class="collection-row">
+                  <div class="collection-group">
+                    <div class="form-label-inner">
+                      <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+
+                      <div class="info-icon" @mouseover="adjustTooltipPosition">
+                        <img src="@/assets/images/publish/intro.png" alt="Info" />
+                        <div class="tooltip-arrow"></div>
+                        <div class="tooltip">
+                          <div class="tooltip-content">
+                            <div v-html="t('submit.collectionInfo')"></div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div class="content-sensitive">
-                        <div class="sensitive-left">
-                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+                      <span v-if="publishedChapters.length > 0" class="batch-published-info">{{ t('novel.batchPublish.publishedInCollection', { count: publishedChapters.length }) }}</span>
 
                           <div class="info-icon" @mouseover="adjustTooltipPosition">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -297,14 +355,207 @@
                             </div>
                           </div>
 
-                          <img
-                            class="sensitive-switch"
-                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
-                            alt=""
-                            @click="toggleCollectionSensitive"
-                          />
+                          <div class="content-sensitive">
+                            <div class="sensitive-left">
+                              <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                              <div class="info-icon" @mouseover="adjustTooltipPosition">
+                                <img src="@/assets/images/publish/info.png" alt="Info" />
+                                <div class="tooltip-arrow"></div>
+                                <div class="tooltip">
+                                  <div class="tooltip-content">
+                                    <div v-html="t('submit.sensitiveContent')"></div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <img
+                                class="sensitive-switch"
+                                :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                                alt=""
+                                @click="toggleCollectionSensitive"
+                              />
+                            </div>
+                            <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                          </div>
                         </div>
-                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                      <div class="collection-info" v-else>
+                        <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="batch-perm-settings">
+              <span class="batch-perm-title">{{ t('novel.batchPublish.batchSettings') }}</span>
+              <div class="batch-perm-options">
+                <div
+                  class="perm-option"
+                  v-for="(opt, index) in batchPermOptions"
+                  :key="opt.key"
+                  @click="handleBatchPermissionChange(opt.key, index)"
+                >
+                  <img :src="batchPermission === opt.key ? selectActive : select" alt="" />
+                  <span v-if="opt.key === 'partial'">
+                    {{ t('novel.batchPublish.partialStart') }}
+                    <span class="partial-chapter-inline-select" @click.stop="handleInlineChapterSelect($event)">
+                      <input
+                        type="number"
+                        class="partial-chapter-inline-input"
+                        v-model.number="batchPartialStartChapter"
+                        @click.stop
+                        :min="1"
+                      />
+                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      <div v-if="showBatchChapterDropdown && batchPermission === 'partial'" class="partial-chapter-dropdown">
+                        <div
+                          v-for="ch in batchCollectionChapterList"
+                          :key="ch"
+                          class="partial-chapter-dropdown-item"
+                          :class="{ selected: batchPartialStartChapter === ch }"
+                          @click.stop="selectBatchPartialStart(ch)"
+                        >
+                          {{ ch }}
+                        </div>
+                      </div>
+                    </span>
+                    {{ t('novel.batchPublish.partialEnd') }}
+                  </span>
+                  <span v-else>{{ t(opt.labelKey) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch mode: batch chapter title edit section -->
+          <div v-if="isBatchPublish" class="batch-chapter-edit-section">
+            <span class="batch-edit-title">{{ t('novel.batchPublish.chapterTitleEdit') }}</span>
+
+            <div class="batch-page-tabs">
+              <div
+                v-for="(tab, idx) in batchPageTabs"
+                :key="idx"
+                class="batch-page-tab"
+                :class="{ active: idx === activeBatchPage }"
+                @click="activeBatchPage = idx"
+              >
+                <span>{{ tab }}</span>
+              </div>
+            </div>
+
+            <div class="batch-chapter-list">
+              <div
+                v-for="chapter in batchVisibleChapters"
+                :key="chapter.chapter"
+                class="batch-chapter-item"
+              >
+                <span class="batch-chapter-label">{{ t('chapter', { chapter: chapter.chapter }) }}：{{ chapter.title }}</span>
+                <div class="batch-chapter-fields">
+                  <div class="batch-field-label">
+                    <span class="required">*</span>
+                    <span class="field-name">{{ t('novel.batchPublish.chapterTitleLabel') }}</span>
+                  </div>
+                  <span class="batch-char-count">({{ getBatchChapterTitleLength(chapter.chapter) }}/60)</span>
+                  <div class="batch-field-order">
+                    <span class="order-label">{{ t('novel.batchPublish.collectionOrder') }}</span>
+                    <span class="order-value">{{ getCollectionOrder(chapter.chapter) }}</span>
+                  </div>
+                </div>
+                <div class="batch-chapter-input-wrap">
+                  <input
+                    type="text"
+                    class="batch-chapter-input"
+                    :value="getBatchChapterTitle(chapter.chapter)"
+                    @input="updateBatchChapterTitle(chapter.chapter, $event)"
+                    :placeholder="t('novel.batchPublish.chapterTitlePlaceholder')"
+                    maxlength="60"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Single mode: collection-section -->
+          <div v-if="!isBatchPublish" class="collection-section">
+            <div class="form-item">
+              <div class="collection-row">
+                <div class="collection-group">
+                  <div class="form-label-inner">
+                    <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+
+                    <div class="info-icon" @mouseover="adjustTooltipPosition">
+                      <img src="@/assets/images/publish/intro.png" alt="Info" />
+                      <div class="tooltip-arrow"></div>
+                      <div class="tooltip">
+                        <div class="tooltip-content">
+                          <div v-html="t('submit.collectionInfo')"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="switch-collection-btn" @click="openCollectionListModal">
+                      <span>{{ t('collection.switchCollection') }}</span>
+                      <img src="@/assets/images/publish/switch.png" alt="" />
+                    </div>
+                  </div>
+
+                  <div class="collection-display">
+                    <div class="collection-info" v-if="selectedCollection">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="collection-text">
+                        <div class="collection-top">
+                          <span class="collection-name">{{ selectedCollection.name }}</span>
+                          <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
+                        </div>
+
+                        <div class="content-sensitive">
+                          <div class="sensitive-left">
+                            <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                            <div class="info-icon" @mouseover="adjustTooltipPosition">
+                              <img src="@/assets/images/publish/info.png" alt="Info" />
+                              <div class="tooltip-arrow"></div>
+                              <div class="tooltip">
+                                <div class="tooltip-content">
+                                  <div v-html="t('submit.sensitiveContent')"></div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <img
+                              class="sensitive-switch"
+                              :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                              alt=""
+                              @click="toggleCollectionSensitive"
+                            />
+                          </div>
+                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="collection-info" v-else>
+                      <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                    </div>
+                  </div>
+
+
+                </div>
+                <div class="collection-group" v-if="!isNoCollection">
+                  <label class="form-label">{{ t("collection.orderInCollection") }}</label>
+                  <div class="collection-select">
+                    <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                      <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
+                      <div class="select-arrow">
+                        <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                      </div>
+                    </div>
+                    <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                      <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                        {{ episode.label }}
                       </div>
                     </div>
                   </div>
@@ -332,7 +583,6 @@
               </div>
             </div>
           </div>
-        </div>
 
         <!-- Title & Description -->
         <div class="content-section">
@@ -411,6 +661,9 @@
                 </template>
               </div>
             </div>
+            <span class="agreement-text"
+              >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+            >
           </div>
         </div>
 
@@ -430,9 +683,9 @@
         </div>
       </div>
     </div>
-  </div>
 
   <UploadMask :visible="isUpload"></UploadMask>
+  <LoadingMask :visible="isSelectionLoading" @cancel="cancelSelectionLoading" />
 
   <ConfirmLeaveModal :show="isShowConfirm" @cancel="confirmStay" @confirm="confirmLeave" />
 
@@ -459,6 +712,25 @@
     :project="previewProject"
     @close="closeViewModal"
     @publish="handlePublish"
+    @batch-publish="handleBatchPublishFromModal"
+  />
+
+  <!-- Batch Publish Progress Dialog -->
+  <BatchPublishProgressDialog
+    :visible="showBatchPublishProgress"
+    :chapters="batchPublishChapterStatuses"
+    @close="showBatchPublishProgress = false"
+    @complete="handleBatchPublishComplete"
+  />
+
+  <!-- Batch Publish Fail Dialog -->
+  <BatchPublishFailDialog
+    :visible="showBatchPublishFail"
+    :chapters="batchPublishFailChapters"
+    :failed-chapter="batchPublishFailedChapter"
+    @close="showBatchPublishFail = false"
+    @exit="handleBatchPublishExit"
+    @retry="handleBatchPublishRetry"
   />
 
   <!-- Community Convention Modal -->
@@ -517,8 +789,11 @@ import ConfirmLeaveModal from "@/components/ConfirmLeaveModal.vue";
 import SetArticleCoverModal from "@/components/SetArticleCoverModal.vue";
 import SensitiveConfirmModal from "@/components/SensitiveConfirmModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import LoadingMask from "@/components/LoadingMask.vue";
 import Pagination from "@/components/Pagination.vue";
 import ProjectNovelViewModal from "@/components/ProjectNovelViewModal.vue";
+import BatchPublishProgressDialog from "@/components/BatchPublishProgressDialog.vue";
+import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
@@ -539,6 +814,8 @@ import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
+import checkboxActive from "@/assets/images/register/check_active.png";
+import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import router from "@/router";
@@ -646,6 +923,15 @@ const showCoverModal = ref(false);
 const chapterIdForPublish = ref<number | null>(null);
 const agreeToTerms = ref(false);
 
+const isBatchPublishMode = ref(false);
+const isLoadingBatchPublish = ref(false);
+const batchPublishIndexes = ref<number[]>([]);
+const batchPublishCurrentIndex = ref(0);
+const batchPublishTotal = ref(0);
+const batchPublishProgress = ref<{ chapter: number; status: string }[]>([]);
+const batchPublishFailCount = ref(0);
+const batchChapterDetails = ref<Record<number, { title: string; content: string }>>({});
+
 // Check if cover is provided in the URL
 const hasUrlCover = ref(false);
 
@@ -662,6 +948,8 @@ const hasTitleGeneratedCover = ref(false);
 const projectCover = ref('');
 
 const uploading = ref(false);
+const isSelectionLoading = ref(false);
+let isSelectionCancelled = false;
 
 const disableComments = ref(false);
 const editorHtml = ref("");
@@ -769,6 +1057,12 @@ const pendingCollectionIdForSensitive = ref<number | null>(null);
 // UI state
 const showFullContent = ref(false);
 
+const isBatchRoute = computed(() => route.query.batch === 'true');
+const shouldShowSessionContent = computed(() => {
+  if (!route.query.session_id) return false;
+  return showFullContent.value;
+});
+
 // Upload options
 const uploadOption = ref('history');
 const uploadOptions = [
@@ -858,6 +1152,11 @@ const isLoadingCollections = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
+const showBatchPublishProgress = ref(false);
+const showBatchPublishFail = ref(false);
+const batchPublishChapterStatuses = ref<{ chapter: number; status: 'success' | 'publishing' | 'waiting' | 'fail' | 'unpublished' }[]>([]);
+const batchPublishFailChapters = ref<{ chapter: number; status: 'success' | 'fail' | 'unpublished' }[]>([]);
+const batchPublishFailedChapter = ref<number | undefined>(undefined);
 
 // Community Convention Modal
 const showConventionModal = ref(false);
@@ -877,6 +1176,24 @@ watch(() => route.path, (newPath) => {
     tabIndex.value = index;
   }
 });
+
+let isRouteInitialized = false;
+watch(() => route.query, async (newQuery) => {
+  if (isRouteInitialized) return;
+  const session_id = newQuery.session_id as string;
+  if (!session_id) return;
+  const isBatch = newQuery.batch === 'true';
+  const index = newQuery.index as string;
+
+  isRouteInitialized = true;
+  isEditingWork.value = true;
+
+  if (isBatch) {
+    await initBatchPublish(session_id);
+  } else if (index) {
+    await initSingleChapter(session_id, index, newQuery.cover as string, newQuery.title as string);
+  }
+}, { immediate: false });
 
 // Cover settings
 const coverTitle = ref("");
@@ -1129,6 +1446,226 @@ const isChapterPublished = computed(() => {
   const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
   return chapter?.is_publish == 1;
 });
+
+const selectedChapters = ref<number[]>([]);
+
+const isBatchPublish = computed(() => selectedChapters.value.length > 1);
+
+const activeBatchPage = ref(0);
+const batchChapterTitles = ref<Record<number, string>>({});
+const batchChapterContents = ref<Record<number, string>>({});
+
+const batchPermission = ref<'public' | 'partial' | 'private'>('public');
+const batchPartialStartChapter = ref<number>(1);
+const showBatchChapterDropdown = ref(false);
+
+const batchCollectionChapterList = computed(() => {
+  const start = parseInt(selectedEpisodeNumber.value) || 1;
+  const count = selectedChapters.value.length;
+  const list: number[] = [];
+  for (let i = 0; i < count; i++) {
+    list.push(start + i);
+  }
+  return list;
+});
+
+watch(batchCollectionChapterList, (list) => {
+  if (list.length > 0) {
+    if (!list.includes(batchPartialStartChapter.value)) {
+      batchPartialStartChapter.value = list[0];
+    }
+  }
+}, { immediate: true });
+const batchPermOptions = [
+  { key: 'public', labelKey: 'submit.permPublic' },
+  { key: 'partial', labelKey: 'submit.permPartial' },
+  { key: 'private', labelKey: 'submit.permPrivate' },
+];
+
+async function handleBatchPermissionChange(permission: string, _index: number) {
+  if (_index === 1 && !hasActiveSubscription.value) {
+    showSubscriptionModal.value = true;
+    return;
+  }
+  batchPermission.value = permission as 'public' | 'partial' | 'private';
+
+  if (permission === 'partial' && batchCollectionChapterList.value.length > 0) {
+    batchPartialStartChapter.value = batchCollectionChapterList.value[0];
+  }
+}
+
+function toggleBatchChapterDropdown(event: Event) {
+  event.stopPropagation();
+  showBatchChapterDropdown.value = !showBatchChapterDropdown.value;
+}
+
+function handleInlineChapterSelect(event: Event) {
+  event.stopPropagation();
+  if (batchPermission.value !== 'partial') {
+    batchPermission.value = 'partial';
+    if (batchCollectionChapterList.value.length > 0) {
+      batchPartialStartChapter.value = batchCollectionChapterList.value[0];
+    }
+  }
+  showBatchChapterDropdown.value = !showBatchChapterDropdown.value;
+}
+
+function selectBatchPartialStart(ch: number) {
+  batchPartialStartChapter.value = ch;
+  showBatchChapterDropdown.value = false;
+}
+
+const CHAPTERS_PER_PAGE = 20;
+
+const batchPageTabs = computed(() => {
+  const chapters = unpublishedChapters.value.filter((c: any) => selectedChapters.value.includes(c.chapter));
+  const total = chapters.length;
+  const pages = Math.ceil(total / CHAPTERS_PER_PAGE) || 1;
+  const tabs: string[] = [];
+  for (let i = 0; i < pages; i++) {
+    const startChapter = chapters[i * CHAPTERS_PER_PAGE]?.chapter;
+    const endChapter = chapters[Math.min((i + 1) * CHAPTERS_PER_PAGE - 1, total - 1)]?.chapter;
+    if (startChapter === endChapter) {
+      tabs.push(`${startChapter}`);
+    } else {
+      tabs.push(`${startChapter}-${endChapter}`);
+    }
+  }
+  return tabs;
+});
+
+const batchVisibleChapters = computed(() => {
+  if (!selectedProject.value?.chapters) return [];
+  const chapters = unpublishedChapters.value.filter((c: any) => selectedChapters.value.includes(c.chapter));
+  const start = activeBatchPage.value * CHAPTERS_PER_PAGE;
+  const end = start + CHAPTERS_PER_PAGE;
+  return chapters.slice(start, end);
+});
+
+function getBatchChapterTitle(chapterNum: number): string {
+  if (batchChapterTitles.value[chapterNum]) return batchChapterTitles.value[chapterNum];
+  const chapter = (selectedProject.value?.chapters || []).find((c: any) => c.chapter === chapterNum);
+  if (chapter) return `${t('chapter', { chapter: chapter.chapter })} ${chapter.title}`;
+  return '';
+}
+
+function getBatchChapterTitleLength(chapterNum: number): number {
+  return getBatchChapterTitle(chapterNum).length;
+}
+
+function getCollectionOrder(chapterNum: number): number {
+  const idx = selectedChapters.value.indexOf(chapterNum);
+  const start = parseInt(selectedEpisodeNumber.value) || 1;
+  return start + idx;
+}
+
+function updateBatchChapterTitle(chapterNum: number, event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  batchChapterTitles.value[chapterNum] = value;
+}
+
+const unpublishedChapters = computed(() =>
+  (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish == 2)
+);
+
+const publishedChapters = computed(() =>
+  (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish == 1)
+);
+
+const isAllChaptersSelected = computed(() =>
+  unpublishedChapters.value.length > 0 &&
+  selectedChapters.value.length === unpublishedChapters.value.length
+);
+
+function toggleSelectAllChapters() {
+  if (isAllChaptersSelected.value) {
+    selectedChapters.value = [];
+  } else {
+    selectedChapters.value = unpublishedChapters.value.map((c: any) => c.chapter);
+  }
+}
+
+function toggleChapterSelection(chapterNum: number) {
+  const idx = selectedChapters.value.indexOf(chapterNum);
+  if (idx === -1) {
+    selectedChapters.value.push(chapterNum);
+  } else {
+    selectedChapters.value.splice(idx, 1);
+  }
+}
+
+async function handlePublishFromSelection() {
+  if (selectedChapters.value.length === 0) return;
+
+  isSelectionLoading.value = true;
+  isSelectionCancelled = false;
+
+  if (isBatchPublish.value) {
+    const targetProject = selectedProject.value;
+    if (!targetProject) { isSelectionLoading.value = false; return; }
+
+    const sessionId = targetProject.session_id;
+    if (!sessionId) { isSelectionLoading.value = false; return; }
+
+    const firstChapterNum = selectedChapters.value[0];
+    let firstChapterContent = '';
+    let firstChapterTitle = '';
+
+    for (const chNum of selectedChapters.value) {
+      if (isSelectionCancelled) {
+        isSelectionLoading.value = false;
+        return;
+      }
+      try {
+        const res = await api.detailChapter(sessionId, chNum) as any;
+        if (res.code === 200 && res.data) {
+          if (res.data.is_publish === 1) {
+            isSelectionLoading.value = false;
+            toast(t('submit.image.episodeNotUnpublished'));
+            setTimeout(() => { location.reload(); }, 1000);
+            return;
+          }
+          batchChapterContents.value[chNum] = res.data.content || '';
+          if (chNum === firstChapterNum) {
+            firstChapterContent = res.data.content || '';
+            firstChapterTitle = res.data.title || '';
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching chapter ${chNum} details:`, error);
+      }
+    }
+
+    if (isSelectionCancelled) {
+      isSelectionLoading.value = false;
+      return;
+    }
+
+    isSelectionLoading.value = false;
+
+    const chapterText = t('chapter', { chapter: firstChapterNum });
+    let generatedTitle = `${chapterText} ${firstChapterTitle || targetProject.name}`;
+    selectedEpisode.value = firstChapterNum as any;
+    await handlePublish({
+      project: targetProject,
+      episode: firstChapterNum,
+      title: generatedTitle,
+      content: firstChapterContent,
+      chapterIndex: firstChapterNum,
+      session_id: sessionId,
+      cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
+    });
+  } else {
+    selectedEpisode.value = selectedChapters.value[0] as any;
+    isSelectionLoading.value = false;
+    await handlePublish();
+  }
+}
+
+const cancelSelectionLoading = () => {
+  isSelectionCancelled = true;
+  isSelectionLoading.value = false;
+};
 
 // Cover generation
 function generateCoverFromTitle() {
@@ -2969,6 +3506,12 @@ function handleClickOutside(event: MouseEvent) {
   if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
   }
+
+  // Handle batch chapter dropdown
+  const batchChapterDropdown = document.querySelector(".partial-chapter-dropdown");
+  if (showBatchChapterDropdown.value && batchChapterDropdown && !batchChapterDropdown.contains(target)) {
+    showBatchChapterDropdown.value = false;
+  }
 }
 
 // Project details cache
@@ -3025,7 +3568,7 @@ async function fetchProjects(loadMore = false) {
 async function selectProject(project: any) {
   selectedProjectId.value = project.id;
   selectedProject.value = project;
-  // Close dropdown
+  selectedChapters.value = [];
   showProjectDropdown.value = false;
 
   // Mark as editing mode when selecting from history
@@ -3207,6 +3750,199 @@ async function openViewModal(project: any) {
 function closeViewModal() {
   showViewModal.value = false;
   previewProject.value = null;
+}
+
+async function handleBatchPublishFromModal() {
+  if (!selectedProject.value) return;
+  if (isSelectionLoading.value) return;
+  isSelectionLoading.value = true;
+  isSelectionCancelled = false;
+
+  const targetProject = selectedProject.value;
+  const sessionId = targetProject.session_id;
+  if (!sessionId) { isSelectionLoading.value = false; return; }
+
+  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish !== 1);
+  selectedChapters.value = unpublished.map((c: any) => c.chapter);
+
+  if (selectedChapters.value.length === 0 || isSelectionCancelled) {
+    isSelectionLoading.value = false;
+    return;
+  }
+
+  const firstChapterNum = selectedChapters.value[0];
+  let firstChapterContent = '';
+  let firstChapterTitle = '';
+
+  for (const chNum of selectedChapters.value) {
+    if (isSelectionCancelled) {
+      isSelectionLoading.value = false;
+      return;
+    }
+    try {
+      const res = await api.detailChapter(sessionId, chNum) as any;
+      if (res.code === 200 && res.data) {
+        if (res.data.is_publish === 1) {
+          isSelectionLoading.value = false;
+          toast(t('submit.image.episodeNotUnpublished'));
+          setTimeout(() => { location.reload(); }, 1000);
+          return;
+        }
+        batchChapterContents.value[chNum] = res.data.content || '';
+        if (chNum === firstChapterNum) {
+          firstChapterContent = res.data.content || '';
+          firstChapterTitle = res.data.title || '';
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching chapter ${chNum} details:`, error);
+    }
+  }
+
+  if (isSelectionCancelled) {
+    isSelectionLoading.value = false;
+    return;
+  }
+
+  isSelectionLoading.value = false;
+
+  const chapterText = t('chapter', { chapter: firstChapterNum });
+  let generatedTitle = `${chapterText} ${firstChapterTitle || targetProject.name}`;
+  selectedEpisode.value = firstChapterNum as any;
+  await handlePublish({
+    project: targetProject,
+    episode: firstChapterNum,
+    title: generatedTitle,
+    content: firstChapterContent,
+    chapterIndex: firstChapterNum,
+    session_id: sessionId,
+    cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
+  });
+}
+
+function handleBatchPublishAllSuccess(count: number) {
+  const sid = selectedProject.value?.session_id || (route.query.session_id as string);
+  toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
+  router.push(`/user-home?id=${uid}&type=2`);
+}
+
+async function onBatchPublish() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  if (!selectedCollection.value) {
+    toast(t('collection.noCollection'));
+    return;
+  }
+
+  if (!agreeTerms.value) {
+    showConventionModal.value = true;
+    return;
+  }
+
+  batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
+    chapter,
+    status: 'waiting' as const
+  }));
+  showBatchPublishProgress.value = true;
+
+  const session_id = selectedProject.value?.session_id || (route.query.session_id as string);
+  const collectionStart = parseInt(selectedEpisodeNumber.value) || 1;
+
+  for (let i = 0; i < selectedChapters.value.length; i++) {
+    const chapterNum = selectedChapters.value[i];
+    const collectionChapterIndex = collectionStart + i;
+
+    batchPublishChapterStatuses.value[i].status = 'publishing';
+
+    try {
+      let content = batchChapterContents.value[chapterNum] || batchChapterDetails.value[chapterNum]?.content || '';
+      let title = batchChapterTitles.value[chapterNum] || getBatchChapterTitle(chapterNum);
+
+      const accessRights = batchPermission.value === 'partial'
+        ? (collectionChapterIndex >= batchPartialStartChapter.value ? 2 : 1)
+        : batchPermission.value === 'private' ? 3 : 1;
+
+      const payload = {
+        type: 2,
+        title: title.substring(0, 60),
+        cover: coverPreview.value || (selectedCollection.value?.cover || ''),
+        content: content,
+        is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+        access_rights: accessRights,
+        book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
+        chapter_index: collectionChapterIndex,
+        ...(session_id ? { session_id } : {}),
+        ai_chapter_index: chapterNum,
+      };
+
+      const headers = new Headers();
+      const { ts, sign } = window.AntiCrawler.generateAuthParams(token);
+      headers.append("token", token);
+      headers.append("ts", ts);
+      headers.append("sign", sign);
+      headers.append("Content-Type", "application/json");
+      headers.append("Platform", "web");
+
+      const response = await fetch(`${baseUrl}post/addPost`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+      const result = await response.text();
+      const res = JSON.parse(result);
+
+      if (res.code == 0 || res.code == 200) {
+        batchPublishChapterStatuses.value[i].status = 'success';
+      } else {
+        batchPublishChapterStatuses.value[i].status = 'fail';
+        for (let j = i + 1; j < selectedChapters.value.length; j++) {
+          batchPublishChapterStatuses.value[j].status = 'unpublished';
+        }
+        break;
+      }
+    } catch (error) {
+      console.error(`Error publishing chapter ${chapterNum}:`, error);
+      batchPublishChapterStatuses.value[i].status = 'fail';
+      for (let j = i + 1; j < selectedChapters.value.length; j++) {
+        batchPublishChapterStatuses.value[j].status = 'unpublished';
+      }
+      break;
+    }
+  }
+
+  handleBatchPublishComplete();
+}
+
+function handleBatchPublishComplete() {
+  showBatchPublishProgress.value = false;
+  const successCount = batchPublishChapterStatuses.value.filter(c => c.status === 'success').length;
+  const totalCount = batchPublishChapterStatuses.value.length;
+  if (successCount === totalCount) {
+    handleBatchPublishAllSuccess(totalCount);
+  } else {
+    batchPublishFailChapters.value = batchPublishChapterStatuses.value.map(c => ({
+      chapter: c.chapter,
+      status: c.status as 'success' | 'fail' | 'unpublished'
+    }));
+    const failItem = batchPublishChapterStatuses.value.find(c => c.status === 'fail');
+    batchPublishFailedChapter.value = failItem?.chapter;
+    showBatchPublishFail.value = true;
+  }
+}
+
+function handleBatchPublishExit() {
+  const sid = selectedProject.value?.session_id || (route.query.session_id as string);
+  showBatchPublishFail.value = false;
+  router.push(`/user-home?id=${uid}&type=2`);
+}
+
+function handleBatchPublishRetry() {
+  showBatchPublishFail.value = false;
+  showBatchPublishProgress.value = true;
 }
 
 async function handlePublish(publishData?: any) {
@@ -3455,6 +4191,310 @@ async function handlePermissionChange(permission: string, index: number) {
 }
 
 // Lifecycle
+async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
+  try {
+    try {
+      await fetchProjectDetails(session_id);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+
+    const res = await api.detailChapter(session_id, parseInt(index)) as any;
+    if (res.code === 200 && res.data && res.data.content) {
+      if (res.data.title) {
+        const chapterNumber = t('chapter', { chapter: index });
+        form.value.title = `${chapterNumber} ${res.data.title}`;
+      } else {
+        form.value.title = `${t('chapter', { chapter: index })}`;
+      }
+      form.value.description = res.data.content;
+
+      if (cover) {
+        coverPreview.value = cover;
+        hasUrlCover.value = true;
+      } else {
+        await generateAndUploadCover();
+      }
+
+      async function generateAndUploadCover() {
+        generateCoverFromTitle();
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          isUpload.value = true;
+          try {
+            if (coverPreview.value.startsWith('data:image/')) {
+              const response = await fetch(coverPreview.value);
+              const blob = await response.blob();
+              const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+              const formData = new FormData();
+              formData.append("file", file);
+
+              const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+              const parma = {
+                method: "POST",
+                headers: {
+                  token: token,
+                  'Platform': 'web',
+                  ...authHeaders,
+                },
+                body: formData,
+              };
+
+              const res = await fetch(baseUrl + "user/uploadImage", parma);
+              const data = await res.json();
+              if (data.code == 0 || data.code == 200) {
+                const url = (data?.data && (data.data.url || data.data)) || data?.url;
+                if (typeof url == "string") {
+                  coverPreview.value = url;
+                }
+              } else {
+                toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'zh' ? data.msg_jp : data.msg_jp)
+              }
+            }
+          } catch (error) {
+            console.error("Cover upload error:", error);
+            toast(t('fail'));
+          } finally {
+            isUpload.value = false;
+          }
+        }
+      }
+
+      showFullContent.value = true;
+
+      setTimeout(() => {
+        if (captionRef.value) {
+          const processedContent = form.value.description.replace(/\\n/g, '\n');
+          captionRef.value.textContent = processedContent;
+          captionLength.value = processedContent.length;
+        }
+      }, 0);
+
+      if (title) {
+        projectNameForNewCollection.value = title;
+        projectCoverForNewCollection.value = coverPreview.value || '';
+        try {
+          let searchRes: any = null;
+          if (session_id) {
+            searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+          }
+          if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+            searchRes = await api.searchFullCollection({ title, type: 2 }) as any;
+          }
+
+          if (searchRes.code == 0) {
+            const book_id = searchRes.data?.book_id || 0;
+
+            if (book_id == 0) {
+              const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
+              const collectionDescription = t('collection.defaultDescription');
+              const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+              const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+
+              const createRes = await api.addCollection({
+                title,
+                type: 2,
+                cover: collectionCover,
+                description: collectionDescription,
+                is_nsfw: collectionIsNsfw
+              }) as any;
+
+              if (createRes.code == 0 && createRes.data?.book_id) {
+                selectedCollection.value = {
+                  id: createRes.data.book_id,
+                  name: title,
+                  cover: collectionCover,
+                  description: collectionDescription,
+                  is_nsfw: collectionIsNsfw
+                };
+                selectedEpisodeNumber.value = '1';
+                isNoCollection.value = false;
+              }
+            } else {
+              const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+              if (collectionRes.code == 0 && collectionRes.data) {
+                const allnums = collectionRes.data.count || 0;
+                const episodeNumber = parseInt(allnums) + 1;
+
+                selectedCollection.value = {
+                  id: book_id,
+                  name: searchRes.data?.book_info?.title || title,
+                  cover: searchRes.data?.book_info?.cover,
+                  description: searchRes.data?.book_info?.description,
+                  is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                };
+                selectedEpisodeNumber.value = episodeNumber.toString();
+                isNoCollection.value = false;
+
+                episodes.value = [];
+                for (let i = 1; i <= episodeNumber; i++) {
+                  episodes.value.push({
+                    value: i.toString(),
+                    label: i.toString()
+                  });
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error handling collection from route:', error);
+        }
+      }
+
+      await checkSubscriptionStatus();
+    }
+  } catch (error) {
+    console.error('Error fetching chapter details:', error);
+    await fetchProjects();
+    await checkSubscriptionStatus();
+  }
+}
+
+async function initBatchPublish(session_id: string) {
+  const batchIndexesRaw = route.query.indexes as string;
+  const batchCover = route.query.cover as string;
+  const batchName = route.query.name as string;
+  if (!batchIndexesRaw) {
+    isLoadingBatchPublish.value = false;
+    router.push({ path: '/novel-generate', query: { session_id } });
+    return;
+  }
+
+  const batchIndexes = batchIndexesRaw.split(',').map(Number).filter(n => !isNaN(n));
+
+  isLoadingBatchPublish.value = true;
+
+  try {
+    const projectRes = await api.detailProject(session_id) as any;
+    if (projectRes.code === 200 && projectRes.data) {
+      selectedProject.value = {
+        ...projectRes.data,
+        session_id,
+        chapters: projectRes.data.chapters || []
+      };
+      if (projectRes.data.result_async?.generate_novel_cover) {
+        projectCover.value = projectRes.data.result_async.generate_novel_cover;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching project details:', error);
+  }
+
+  if (batchCover) {
+    coverPreview.value = batchCover;
+    hasUrlCover.value = true;
+  } else if (projectCover.value) {
+    coverPreview.value = projectCover.value;
+    hasUrlCover.value = true;
+  }
+
+  const projectTitle = batchName || selectedProject.value?.name || '';
+  if (projectTitle) {
+    projectNameForNewCollection.value = projectTitle;
+  }
+
+  isBatchPublishMode.value = true;
+  batchPublishIndexes.value = batchIndexes;
+  batchPublishCurrentIndex.value = 0;
+  batchPublishTotal.value = batchIndexes.length;
+  batchPublishProgress.value = [];
+  batchPublishFailCount.value = 0;
+
+  selectedChapters.value = batchIndexes;
+
+  let hasChapterError = false;
+  for (const chapterIndex of batchIndexes) {
+    try {
+      const res = await api.detailChapter(session_id, chapterIndex) as any;
+      if (res.code === 200 && res.data) {
+        batchChapterDetails.value[chapterIndex] = {
+          title: res.data.title || '',
+          content: res.data.content || ''
+        };
+      } else {
+        hasChapterError = true;
+      }
+    } catch (e) {
+      hasChapterError = true;
+      console.error(`Failed to fetch chapter ${chapterIndex}:`, e);
+    }
+  }
+
+  if (hasChapterError) {
+    toast(t('novel.batchPublish.chapterLoadError'));
+  }
+
+  // Setup collection
+  if (projectTitle) {
+    try {
+      let searchRes: any = null;
+      if (session_id) {
+        searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
+      }
+      if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
+        searchRes = await api.searchFullCollection({ title: projectTitle, type: 2 }) as any;
+      }
+
+      if (searchRes.code == 0) {
+        const book_id = searchRes.data?.book_id || 0;
+
+        if (book_id == 0) {
+          const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
+          const collectionDescription = t('collection.defaultDescription');
+          const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
+          const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+
+          const createRes = await api.addCollection({
+            title: projectTitle,
+            type: 2,
+            cover: collectionCover,
+            description: collectionDescription,
+            is_nsfw: collectionIsNsfw
+          }) as any;
+
+          if (createRes.code == 0 && createRes.data?.book_id) {
+            selectedCollection.value = {
+              id: createRes.data.book_id,
+              name: projectTitle,
+              cover: collectionCover,
+              description: collectionDescription,
+              is_nsfw: collectionIsNsfw
+            };
+            selectedEpisodeNumber.value = '1';
+            isNoCollection.value = false;
+          }
+        } else {
+          const collectionRes = await api.singleCollectionIndex(book_id) as any;
+
+          if (collectionRes.code == 0 && collectionRes.data) {
+            const allnums = collectionRes.data.count || 0;
+            const episodeNumber = parseInt(allnums) + 1;
+
+            selectedCollection.value = {
+              id: book_id,
+              name: searchRes.data?.book_info?.title || projectTitle,
+              cover: searchRes.data?.book_info?.cover,
+              description: searchRes.data?.book_info?.description,
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+            };
+            selectedEpisodeNumber.value = episodeNumber.toString();
+            isNoCollection.value = false;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up collection:', error);
+    }
+  }
+
+  isLoadingBatchPublish.value = false;
+  showFullContent.value = true;
+  await fetchCollections(false);
+}
+
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 
@@ -3469,198 +4509,25 @@ onMounted(async () => {
     // After getting post details (which sets user_id), fetch collections
     await fetchCollections(false);
   } else {
-    // Check if session_id and index are provided
     const session_id = route.query.session_id as string;
+    const index = route.query.index as string;
+    const cover = route.query.cover as string;
+    const title = route.query.title as string;
+    const isBatch = route.query.batch === 'true';
+
+    if (isBatch && session_id) {
+      isEditingWork.value = true;
+      await initBatchPublish(session_id);
+      return;
+    }
 
     if (session_id) {
       isEditingWork.value = true;
     }
-    const index = route.query.index as string;
-    const cover = route.query.cover as string;
-    const title = route.query.title as string;
 
     if (session_id && index) {
-      // Request chapter detail interface
-      try {
-        // Request project details to get the cover
-        try {
-          await fetchProjectDetails(session_id);
-        } catch (error) {
-          console.error('Error fetching project details:', error);
-        }
-
-        const res = await api.detailChapter(session_id, parseInt(index)) as any;
-        if (res.code === 200 && res.data && res.data.content) {
-          // Set form data
-          if (res.data.title) {
-            // Format: 章节号+章节名称
-            const chapterNumber = t('chapter', { chapter: index });
-            form.value.title = `${chapterNumber} ${res.data.title}`;
-          } else {
-            // Fallback: 章节号
-            form.value.title = `${t('chapter', { chapter: index })}`;
-          }
-          form.value.description = res.data.content;
-
-          // Set cover if provided
-          if (cover) {
-            // If cover is provided in the URL, just display it, no need to upload
-            coverPreview.value = cover;
-            hasUrlCover.value = true;
-          } else {
-            // Generate cover from title and upload it
-            await generateAndUploadCover();
-          }
-
-          // Function to generate cover from title and upload it
-          async function generateAndUploadCover() {
-            // Generate cover from title using canvas
-            generateCoverFromTitle();
-
-            // Upload the generated cover to server
-            const token = localStorage.getItem("token");
-            if (token) {
-              isUpload.value = true;
-              try {
-                // Check if coverPreview is a data URL (generated by canvas)
-                if (coverPreview.value.startsWith('data:image/')) {
-                  // Convert data URL to blob
-                  const response = await fetch(coverPreview.value);
-                  const blob = await response.blob();
-                  const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-                  const formData = new FormData();
-                  formData.append("file", file);
-
-                  const authHeaders = window.AntiCrawler.generateAuthParams(token);
-
-                  const parma = {
-                    method: "POST",
-                    headers: {
-                      token: token,
-                      'Platform': 'web',
-                      ...authHeaders,
-                    },
-                    body: formData,
-                  };
-
-                  const res = await fetch(baseUrl + "user/uploadImage", parma);
-                  const data = await res.json();
-                  if (data.code == 0 || data.code == 200) {
-                    const url = (data?.data && (data.data.url || data.data)) || data?.url;
-                    if (typeof url == "string") {
-                      coverPreview.value = url;
-                    }
-                  } else {
-                    toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
-                  }
-                }
-              } catch (error) {
-                console.error("Cover upload error:", error);
-                toast(t('fail'));
-              } finally {
-                isUpload.value = false;
-              }
-            }
-          }
-
-          // Show full content view
-          showFullContent.value = true;
-
-          // Update contenteditable div
-          setTimeout(() => {
-            if (captionRef.value) {
-              // Convert literal \n to actual newlines
-              const processedContent = form.value.description.replace(/\\n/g, '\n');
-              captionRef.value.textContent = processedContent;
-              captionLength.value = processedContent.length;
-            }
-          }, 0);
-
-          // Handle collection logic if title is provided
-          if (title) {
-            projectNameForNewCollection.value = title;
-            projectCoverForNewCollection.value = coverPreview.value || '';
-            try {
-              let searchRes: any = null;
-              if (session_id) {
-                searchRes = await api.searchSessionId({ session_id, type: 2 }) as any;
-              }
-              if (!searchRes || searchRes.code != 0 || !searchRes.data?.book_id) {
-                searchRes = await api.searchFullCollection({ title, type: 2 }) as any;
-              }
-
-              if (searchRes.code == 0) {
-                const book_id = searchRes.data?.book_id || 0;
-
-                if (book_id == 0) {
-                  const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
-                  const collectionDescription = t('collection.defaultDescription');
-                  const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-                  const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
-
-                  const createRes = await api.addCollection({
-                    title,
-                    type: 2,
-                    cover: collectionCover,
-                    description: collectionDescription,
-                    is_nsfw: collectionIsNsfw
-                  }) as any;
-
-                  if (createRes.code == 0 && createRes.data?.book_id) {
-
-                    selectedCollection.value = {
-                      id: createRes.data.book_id,
-                      name: title,
-                      cover: collectionCover,
-                      description: collectionDescription,
-                      is_nsfw: collectionIsNsfw
-                    };
-                    selectedEpisodeNumber.value = '1';
-                    isNoCollection.value = false;
-                  }
-                } else {
-                  const collectionRes = await api.singleCollectionIndex(book_id) as any;
-
-                  if (collectionRes.code == 0 && collectionRes.data) {
-                    const allnums = collectionRes.data.count || 0;
-                    const episodeNumber = parseInt(allnums) + 1;
-
-                    selectedCollection.value = {
-                      id: book_id,
-                      name: searchRes.data?.book_info?.title || title,
-                      cover: searchRes.data?.book_info?.cover,
-                      description: searchRes.data?.book_info?.description,
-                      is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
-                    };
-                    selectedEpisodeNumber.value = episodeNumber.toString();
-                    isNoCollection.value = false;
-
-                    episodes.value = [];
-                    for (let i = 1; i <= episodeNumber; i++) {
-                      episodes.value.push({
-                        value: i.toString(),
-                        label: i.toString()
-                      });
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Error handling collection from route:', error);
-            }
-          }
-
-          // Check subscription status for this user
-          await checkSubscriptionStatus();
-        }
-      } catch (error) {
-        console.error('Error fetching chapter details:', error);
-        // Fetch projects and check subscription status if chapter detail fails
-        await fetchProjects();
-        await checkSubscriptionStatus();
-      }
+      await initSingleChapter(session_id, index, cover, title);
     } else {
-      // Fetch projects and check subscription status for new posts
       await fetchProjects();
       await checkSubscriptionStatus();
     }

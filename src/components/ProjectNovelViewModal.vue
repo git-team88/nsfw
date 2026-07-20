@@ -30,6 +30,14 @@
 
           <div class="modal-footer">
             <button
+              v-if="unpublishedChaptersCount > 2"
+              class="batch-publish-btn"
+              :disabled="isBatchPublishing"
+              @click="handleBatchPublish"
+            >
+              {{ t('novel.batchPublish.batchPublishAll') }}
+            </button>
+            <button
               class="publish-btn"
               :class="{ 'published': isChapterPublished }"
               @click="handlePublish"
@@ -45,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -63,11 +71,16 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close', 'publish']);
+const emit = defineEmits(['close', 'publish', 'batchPublish']);
+
+const unpublishedChaptersCount = computed(() =>
+  chapters.value.filter((c: any) => c.is_publish !== 1).length
+);
 
 // Chapter selection
 const selectedChapter = ref('1');
 const loading = ref(false);
+const isBatchPublishing = ref(false);
 const chapterContent = ref('');
 
 // Get chapters from project
@@ -152,6 +165,14 @@ function selectChapter(chapter: string) {
 // Handle close
 function handleClose() {
   emit('close');
+}
+
+// Handle batch publish - close modal and go directly to batch publish page
+function handleBatchPublish() {
+  if (isBatchPublishing.value) return;
+  isBatchPublishing.value = true;
+  emit('close');
+  emit('batchPublish');
 }
 
 // Handle overlay click
@@ -365,6 +386,23 @@ watch(() => props.project, (newProject) => {
   padding: 20px;
   display: flex;
   justify-content: center;
+  gap: 1.6rem;
+}
+
+.batch-publish-btn {
+  min-width: 30rem;
+  height: 5.6rem;
+  border: none;
+  border-radius: 0.8rem;
+  font-size: 1.6rem;
+  background: #F5F5F5;
+  color: #6A7282;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #FB64B6;
+  }
 }
 
 .publish-btn {
