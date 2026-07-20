@@ -184,26 +184,17 @@
               <div v-else class="chapter-title-edit" @click.stop>
                 <div class="chapter-edit-content">
                   <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
-                  <input
-                    type="text"
-                    v-model="editingChapterTitle"
-                    class="chapter-title-input"
-                    @input="editingChapterTitle = editingChapterTitle.substring(0, 60)"
-                    @blur="handleChapterTitleBlur"
-                    :maxlength="60"
-                    :ref="el => chapterTitleInputs[chapter.chapter] = el"
-                  />
-                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/60</span>
+                  <span class="chapter-item-title">{{ chapter.title }}</span>
                 </div>
                 <div class="chapter-edit-actions">
                   <button
-                    class="edit-action-btn"
-                    @mousedown.prevent="saveChapterTitle(chapter.chapter)"
-                  ><img src="@/assets/images/novel/check.png" alt="Save" /></button>
-                  <button
-                    class="edit-action-btn"
+                    class="edit-action-btn cancel-edit"
                     @mousedown.prevent="cancelChapterTitle"
                   ><img src="@/assets/images/novel/cancel.png" alt="Cancel" /></button>
+                  <button
+                    class="edit-action-btn save-edit"
+                    @mousedown.prevent="saveChapterTitle(chapter.chapter)"
+                  ><img src="@/assets/images/novel/check.png" alt="Save" /></button>
                 </div>
               </div>
             </div>
@@ -261,16 +252,11 @@
                 </div>
               </div>
 
-              <div class="regenerate-action-buttons">
-                <div class="regenerate-cost-display">
-                  <span class="regenerate-cost">{{ regenerateCost }}</span>
-                  <img src="@/assets/images/novel/coin.png" alt="" />
-                </div>
-                <button class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
-                  <svg v-if="!isSendingRegenerate" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
-                </button>
-              </div>
+              <button class="send-btn" :class="{ loading: isSendingRegenerate }" @click="sendRegenerateRequest">
+                <span v-if="!isSendingRegenerate" class="send-btn-cost">{{ regenerateCost }}</span>
+                <img v-if="!isSendingRegenerate" class="send-btn-coin" src="@/assets/images/novel/coin.png" alt="" />
+                <div v-if="isSendingRegenerate" class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
+              </button>
             </div>
           </div>
 
@@ -385,16 +371,11 @@
               <textarea v-model="aiEditOutlineInput" class="outline-edit-textarea" :placeholder="t('novel.outlineEditPlaceholder')" @input="handleOutlineEditInput"></textarea>
 
               <div class="outline-edit-footer">
-                <div class="outline-edit-cost-display">
-                  <span class="outline-edit-cost">{{ outlineEditCost }}</span>
-                  <img src="@/assets/images/novel/coin.png" alt="" />
-                </div>
-
                 <button class="outline-edit-send-btn" :class="{ loading: isSendingOutlineEdit }" @click="sendAiEditOutlineRequest">
-                  <svg v-if="!isSendingOutlineEdit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
+                  <span v-if="!isSendingOutlineEdit" class="send-btn-cost">{{ outlineEditCost }}</span>
+                  <img v-if="!isSendingOutlineEdit" class="send-btn-coin" src="@/assets/images/novel/coin.png" alt="" />
+                  <div v-if="isSendingOutlineEdit" class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
                 </button>
-
               </div>
             </div>
           </div>
@@ -412,16 +393,11 @@
               <textarea v-model="aiEditChapterInput" class="outline-edit-textarea" :placeholder="t('novel.chapterEditPlaceholder')" @input="handleAiEditChapterInput"></textarea>
 
               <div class="outline-edit-footer">
-                <div class="outline-edit-cost-display">
-                  <span class="outline-edit-cost">{{ chapterEditCost }}</span>
-                  <img src="@/assets/images/novel/coin.png" alt="" />
-                </div>
-
                 <button class="outline-edit-send-btn" :class="{ loading: isSendingChapterEdit }" @click="sendAiEditChapterRequest">
-                  <svg v-if="!isSendingChapterEdit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
+                  <span v-if="!isSendingChapterEdit" class="send-btn-cost">{{ chapterEditCost }}</span>
+                  <img v-if="!isSendingChapterEdit" class="send-btn-coin" src="@/assets/images/novel/coin.png" alt="" />
+                  <div v-if="isSendingChapterEdit" class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
                 </button>
-
               </div>
             </div>
           </div>

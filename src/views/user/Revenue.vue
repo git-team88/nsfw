@@ -5,8 +5,10 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel">
+        <div class="panel-top">
           <div class="panel-title">{{ t("user.sidebar.revenue") }}</div>
+        </div>
+        <div class="content">
           <div class="metrics">
             <div class="metric fans">
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
@@ -204,24 +206,41 @@ function formatSci(n: number | null) {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
-}
-.panel {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
   padding: 24px;
-  box-shadow: 4px 4px 0 #161122;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
+}
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 24px;
 }
 .panel-title {
-  margin-bottom: 24px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
+}
+.content {
 }
 .metrics {
   display: flex;
@@ -235,11 +254,10 @@ function formatSci(n: number | null) {
   align-items: flex-start;
   justify-content: space-between;
   min-height: 146px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
   padding: 24px;
   background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
 }
 .metric.fans {
   border-top: 5px solid #FF4D8D;
@@ -373,11 +391,10 @@ function formatSci(n: number | null) {
   border-radius: 2px;
 }
 .block {
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
   padding: 0;
   background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
 }
 .block-title {
   display: flex;
@@ -459,11 +476,10 @@ function formatSci(n: number | null) {
 }
 
 .table {
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
   overflow: hidden;
   margin: 0 36px;
-  box-shadow: 3px 3px 0 #161122;
 }
 .thead,
 .tr {
@@ -521,10 +537,9 @@ function formatSci(n: number | null) {
   padding: 20px;
   border-radius: 18px;
   background: #FFFDF7;
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   position: relative;
   text-align: center;
-  box-shadow: 8px 8px 0 #161122;
 }
 .modal-close {
   position: absolute;
@@ -638,7 +653,7 @@ td {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .metrics {
     flex-direction: column;
@@ -672,7 +687,7 @@ td {
   .container {
     padding: 0 12px;
   }
-  .panel {
+  .content {
     padding: 16px;
   }
   .metric {

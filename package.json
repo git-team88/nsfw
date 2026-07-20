@@ -16,7 +16,6 @@
   "dependencies": {
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "next",
-    "ant-design-vue": "^4.0.0-rc.6",
     "axios": "^1.8.1",
     "bignumber.js": "^9.3.0",
     "cfb": "^1.2.2",

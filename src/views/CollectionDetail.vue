@@ -785,22 +785,20 @@ onBeforeUnmount(() => {
 
     .r18-overlay {
       position: absolute;
-      top: 0;
-      right: 0;
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(222deg, #FF4D8D 0%, rgba(255,77,141,0) 50%);
-      border-radius: 0 12px 0 0;
+      top: 10px;
+      right: 10px;
+      height: 28px;
+      background: rgba(16,24,40,0.7);
+      border-radius: 14px;
       display: flex;
-      align-items: flex-start;
-      justify-content: flex-end;
-      padding: 6px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
 
       .r18-text {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 500;
         color: #FFFFFF;
-        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
       }
     }
   }
@@ -1274,10 +1272,9 @@ onBeforeUnmount(() => {
       height: 19.7222vw;
       border-radius: 0.8333vw;
       .r18-overlay {
-        width: 6.9444vw;
-        height: 6.9444vw;
-        border-radius: 0 0.8333vw 0 0;
-        padding: 0.4167vw;
+        height: 28px;
+        border-radius: 14px;
+        padding: 0 0.6944vw;
         .r18-text {
           font-size: 1.1111vw;
         }
@@ -1438,10 +1435,9 @@ onBeforeUnmount(() => {
       height: 160px;
       border-radius: 8px;
       .r18-overlay {
-        width: 60px;
-        height: 60px;
-        border-radius: 0 8px 0 0;
-        padding: 4px;
+        height: 24px;
+        border-radius: 12px;
+        padding: 0 6px;
         .r18-text {
           font-size: 12px;
         }

@@ -23,6 +23,7 @@
         <div class="header-news-box" v-if="isLogin">
           <div class="header-news" @click="showNewsMenu()">
             <img class="news-icon" src="@/assets/images/header/news_icon.png" alt="" />
+            <img class="news-icon-hover" src="@/assets/images/header/news_hover.png" alt="" />
             <span class="circle" v-if="unTotal > 0"></span>
           </div>
           <div class="news-dropdown" v-if="isShowNewsMenu">
@@ -39,7 +40,10 @@
         </div>
 
         <div class="language">
-          <img class="language-icon" src="@/assets/images/header/language_icon.png" @click="showLang" />
+          <div class="language-icon" @click="showLang">
+            <img class="lang-img" src="@/assets/images/header/language_icon.png" />
+            <img class="lang-img-hover" src="@/assets/images/header/language_hover.png" />
+          </div>
 
           <div class="language-select" v-if="isShowLang">
             <span
@@ -807,25 +811,33 @@ defineExpose({
         display: flex;
 
         .language-icon {
+          position: relative;
           width: 44px;
           height: 44px;
-          border-radius: 14px;
-          border: 2px solid #161122;
           display: grid;
           place-items: center;
           cursor: pointer;
-          background: #fff;
-          transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-          box-shadow: 2px 2px 0 #161122;
 
-          &:hover {
-            transform: translateY(-1px);
-            box-shadow: 3px 3px 0 #161122;
+          .lang-img {
+            width: 44px;
+            height: 44px;
           }
 
-          img {
-            width: 23px;
-            height: 23px;
+          .lang-img-hover {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            opacity: 0;
+            transition: opacity 0.2s;
+          }
+
+          &:hover {
+            .lang-img {
+              opacity: 0;
+            }
+            .lang-img-hover {
+              opacity: 1;
+            }
           }
         }
 
@@ -886,21 +898,28 @@ defineExpose({
           place-items: center;
           width: 44px;
           height: 44px;
-          border-radius: 14px;
-          border: 2px solid #161122;
           cursor: pointer;
-          background: #fff;
-          box-shadow: 2px 2px 0 #161122;
-          transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-
-          &:hover {
-            transform: translateY(-1px);
-            box-shadow: 3px 3px 0 #161122;
-          }
 
           .news-icon {
-            width: 23px;
-            height: 23px;
+            width: 44px;
+            height: 44px;
+          }
+
+          .news-icon-hover {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            opacity: 0;
+            transition: opacity 0.2s;
+          }
+
+          &:hover {
+            .news-icon {
+              opacity: 0;
+            }
+            .news-icon-hover {
+              opacity: 1;
+            }
           }
 
           .circle {
@@ -1530,11 +1549,21 @@ defineExpose({
         .language .language-icon {
           width: 40px;
           height: 40px;
+
+          .lang-img, .lang-img-hover {
+            width: 40px;
+            height: 40px;
+          }
         }
 
         .header-news-box .header-news {
           width: 40px;
           height: 40px;
+
+          .news-icon, .news-icon-hover {
+            width: 40px;
+            height: 40px;
+          }
         }
 
         .user .user-btn {
@@ -1571,11 +1600,21 @@ defineExpose({
         .language .language-icon {
           width: 36px;
           height: 36px;
+
+          .lang-img, .lang-img-hover {
+            width: 36px;
+            height: 36px;
+          }
         }
 
         .header-news-box .header-news {
           width: 36px;
           height: 36px;
+
+          .news-icon, .news-icon-hover {
+            width: 36px;
+            height: 36px;
+          }
         }
 
         .user .user-btn {

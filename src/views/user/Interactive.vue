@@ -4,157 +4,161 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel-title">{{ t("user.interactive.title") }}</div>
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-label">{{ t("user.interactive.fansTotal") }}</div>
-            <div class="metric-value">{{ formatSci(fansTotal) }}</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">{{ t("user.interactive.likesTotal") }}</div>
-            <div class="metric-value">{{ formatSci(likesTotal) }}</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">{{ t("user.interactive.commentsTotal") }}</div>
-            <div class="metric-value">{{ formatSci(commentsTotal) }}</div>
-          </div>
+        <div class="panel-top">
+          <div class="panel-title">{{ t("user.interactive.title") }}</div>
         </div>
-
-        <div class="tabs">
-          <span :class="{ on: tab === 'fan' }" @click="tab = 'fan'">{{
-            t("user.interactive.tabFan")
-          }}</span>
-          <span :class="{ on: tab === 'work' }" @click="tab = 'work'">{{
-            t("user.interactive.tabWork")
-          }}</span>
-        </div>
-
-        <div class="block overall" v-if="tab === 'fan'">
-          <div class="block-tools">
-            <div class="date-range">
-              <DateRangePicker v-model="range1" theme="pink" />
+        <div class="content">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">{{ t("user.interactive.fansTotal") }}</div>
+              <div class="metric-value">{{ formatSci(fansTotal) }}</div>
             </div>
-            <button
-              class="download"
-              @click="downloadFanData"
-            >
-              <img class="dl-icon" :src="downloadIcon" alt="" />
-              <span>{{ t("user.interactive.download") }}</span>
-            </button>
+            <div class="metric">
+              <div class="metric-label">{{ t("user.interactive.likesTotal") }}</div>
+              <div class="metric-value">{{ formatSci(likesTotal) }}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">{{ t("user.interactive.commentsTotal") }}</div>
+              <div class="metric-value">{{ formatSci(commentsTotal) }}</div>
+            </div>
           </div>
-          <div class="table overall">
-            <div class="thead">
-              <div class="th">{{ t("user.interactive.date") }}</div>
-              <div class="th">{{ t("user.interactive.followerChange") }}</div>
-              <div class="th">{{ t("user.interactive.totalFollowers") }}</div>
+
+          <div class="tabs">
+            <span :class="{ on: tab === 'fan' }" @click="tab = 'fan'">{{
+              t("user.interactive.tabFan")
+            }}</span>
+            <span :class="{ on: tab === 'work' }" @click="tab = 'work'">{{
+              t("user.interactive.tabWork")
+            }}</span>
+          </div>
+
+          <div class="block overall" v-if="tab === 'fan'">
+            <div class="block-tools">
+              <div class="date-range">
+                <DateRangePicker v-model="range1" theme="pink" />
+              </div>
+              <button
+                class="download"
+                @click="downloadFanData"
+              >
+                <img class="dl-icon" :src="downloadIcon" alt="" />
+                <span>{{ t("user.interactive.download") }}</span>
+              </button>
             </div>
-            <div class="tbody">
-              <div v-if="loadingFan" class="loading-row">
-                <div class="loading-spinner"></div>
-                <span>{{ t('home.loading') }}</span>
+            <div class="table overall">
+              <div class="thead">
+                <div class="th">{{ t("user.interactive.date") }}</div>
+                <div class="th">{{ t("user.interactive.followerChange") }}</div>
+                <div class="th">{{ t("user.interactive.totalFollowers") }}</div>
               </div>
-              <div v-else-if="pagedFan.length == 0" class="empty-row">
-                <EmptyState />
-              </div>
-              <div v-else class="tr" v-for="row in pagedFan" :key="row.id">
-                <div class="td">{{ row.dateLabel }}</div>
-                <div class="td">
-                  <span :class="row.change >= 0 ? 'num-green' : 'num-red'">
-                    {{ formatChange(row.change) }}
-                  </span>
+              <div class="tbody">
+                <div v-if="loadingFan" class="loading-row">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('home.loading') }}</span>
                 </div>
-                <div class="td">{{ formatSci(row.total) }}</div>
-              </div>
-            </div>
-          </div>
-          <Pagination v-if="!loadingFan && totalFan > limit" v-model="pageFan" :total="totalFan" :pageSize="limit" theme="pink" />
-        </div>
-
-        <div class="block overall" v-if="tab === 'work'">
-          <div class="block-title">{{ t("user.interactive.overall") }}</div>
-          <div class="block-tools">
-            <div class="date-range">
-              <DateRangePicker v-model="range1" theme="pink" />
-            </div>
-            <button
-              class="download"
-              @click="downloadOverallData"
-            >
-              <img class="dl-icon" :src="downloadIcon" alt="" />
-              <span>{{ t("user.interactive.download") }}</span>
-            </button>
-          </div>
-          <div class="table overall">
-            <div class="thead">
-              <div class="th">{{ t("user.interactive.date") }}</div>
-              <div class="th">{{ t("user.interactive.dailyLikes") }}</div>
-              <div class="th">{{ t("user.interactive.dailyComments") }}</div>
-            </div>
-            <div class="tbody">
-              <div v-if="loadingOverall" class="loading-row">
-                <div class="loading-spinner"></div>
-                <span>{{ t('home.loading') }}</span>
-              </div>
-              <div v-else-if="pagedOverall.length === 0" class="empty-row">
-                <EmptyState />
-              </div>
-              <div v-else class="tr" v-for="row in pagedOverall" :key="row.id">
-                <div class="td">{{ row.dateLabel }}</div>
-                <div class="td">{{ formatSci(row.likes) }}</div>
-                <div class="td">{{ formatSci(row.comments) }}</div>
-              </div>
-            </div>
-          </div>
-          <Pagination
-            v-if="!loadingOverall && totalOverall > limit"
-            v-model="pageOverall"
-            :total="totalOverall"
-            :pageSize="limit"
-            theme="pink"
-          />
-        </div>
-
-        <div class="block work" v-if="tab === 'work'">
-          <div class="block-title">{{ t("user.interactive.individual") }}</div>
-          <div class="block-tools">
-            <div class="date-range">
-              <DateRangePicker v-model="range2" theme="pink" />
-            </div>
-            <button
-              class="download"
-              @click="downloadSingleWorkData"
-            >
-              <img class="dl-icon" :src="downloadIcon" alt="" />
-              <span>{{ t("user.interactive.download") }}</span>
-            </button>
-          </div>
-          <div class="table work">
-            <div class="thead">
-              <div class="th">{{ t("user.interactive.date") }}</div>
-              <div class="th">{{ t("user.interactive.workTitle") }}</div>
-              <div class="th">{{ t("user.interactive.dailyLikes") }}</div>
-              <div class="th">{{ t("user.interactive.dailyComments") }}</div>
-            </div>
-            <div class="tbody">
-              <div v-if="loadingWork" class="loading-row">
-                <div class="loading-spinner"></div>
-                <span>{{ t('home.loading') }}</span>
-              </div>
-              <div v-else-if="pagedWork.length === 0" class="empty-row">
-                <EmptyState />
-              </div>
-              <div v-else class="tr" v-for="row in pagedWork" :key="row.id">
-                <div class="td">{{ row.dateLabel }}</div>
-                <div class="td info">
-                  <img :src="row.cover" alt="" />
-                  <span>{{ row.title }}</span>
+                <div v-else-if="pagedFan.length == 0" class="empty-row">
+                  <EmptyState />
                 </div>
-                <div class="td">{{ formatSci(row.likes) }}</div>
-                <div class="td">{{ formatSci(row.comments) }}</div>
+                <div v-else class="tr" v-for="row in pagedFan" :key="row.id">
+                  <div class="td">{{ row.dateLabel }}</div>
+                  <div class="td">
+                    <span :class="row.change >= 0 ? 'num-green' : 'num-red'">
+                      {{ formatChange(row.change) }}
+                    </span>
+                  </div>
+                  <div class="td">{{ formatSci(row.total) }}</div>
+                </div>
               </div>
             </div>
+            <Pagination v-if="!loadingFan && totalFan > limit" v-model="pageFan" :total="totalFan" :pageSize="limit" theme="pink" />
           </div>
-          <Pagination v-if="!loadingWork && totalWork > limit" v-model="pageWork" :total="totalWork" :pageSize="limit" theme="blue" />
+
+          <div class="block overall" v-if="tab === 'work'">
+            <div class="block-title">{{ t("user.interactive.overall") }}</div>
+            <div class="block-tools">
+              <div class="date-range">
+                <DateRangePicker v-model="range1" theme="pink" />
+              </div>
+              <button
+                class="download"
+                @click="downloadOverallData"
+              >
+                <img class="dl-icon" :src="downloadIcon" alt="" />
+                <span>{{ t("user.interactive.download") }}</span>
+              </button>
+            </div>
+            <div class="table overall">
+              <div class="thead">
+                <div class="th">{{ t("user.interactive.date") }}</div>
+                <div class="th">{{ t("user.interactive.dailyLikes") }}</div>
+                <div class="th">{{ t("user.interactive.dailyComments") }}</div>
+              </div>
+              <div class="tbody">
+                <div v-if="loadingOverall" class="loading-row">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('home.loading') }}</span>
+                </div>
+                <div v-else-if="pagedOverall.length === 0" class="empty-row">
+                  <EmptyState />
+                </div>
+                <div v-else class="tr" v-for="row in pagedOverall" :key="row.id">
+                  <div class="td">{{ row.dateLabel }}</div>
+                  <div class="td">{{ formatSci(row.likes) }}</div>
+                  <div class="td">{{ formatSci(row.comments) }}</div>
+                </div>
+              </div>
+            </div>
+            <Pagination
+              v-if="!loadingOverall && totalOverall > limit"
+              v-model="pageOverall"
+              :total="totalOverall"
+              :pageSize="limit"
+              theme="pink"
+            />
+          </div>
+
+          <div class="block work" v-if="tab === 'work'">
+            <div class="block-title">{{ t("user.interactive.individual") }}</div>
+            <div class="block-tools">
+              <div class="date-range">
+                <DateRangePicker v-model="range2" theme="pink" />
+              </div>
+              <button
+                class="download"
+                @click="downloadSingleWorkData"
+              >
+                <img class="dl-icon" :src="downloadIcon" alt="" />
+                <span>{{ t("user.interactive.download") }}</span>
+              </button>
+            </div>
+            <div class="table work">
+              <div class="thead">
+                <div class="th">{{ t("user.interactive.date") }}</div>
+                <div class="th">{{ t("user.interactive.workTitle") }}</div>
+                <div class="th">{{ t("user.interactive.dailyLikes") }}</div>
+                <div class="th">{{ t("user.interactive.dailyComments") }}</div>
+              </div>
+              <div class="tbody">
+                <div v-if="loadingWork" class="loading-row">
+                  <div class="loading-spinner"></div>
+                  <span>{{ t('home.loading') }}</span>
+                </div>
+                <div v-else-if="pagedWork.length === 0" class="empty-row">
+                  <EmptyState />
+                </div>
+                <div v-else class="tr" v-for="row in pagedWork" :key="row.id">
+                  <div class="td">{{ row.dateLabel }}</div>
+                  <div class="td info">
+                    <img :src="row.cover" alt="" />
+                    <span>{{ row.title }}</span>
+                  </div>
+                  <div class="td">{{ formatSci(row.likes) }}</div>
+                  <div class="td">{{ formatSci(row.comments) }}</div>
+                </div>
+              </div>
+            </div>
+            <Pagination v-if="!loadingWork && totalWork > limit" v-model="pageWork" :total="totalWork" :pageSize="limit" theme="blue" />
+          </div>
         </div>
       </div>
     </div>
@@ -593,18 +597,42 @@ async function downloadSingleWorkData() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 24px;
+}
 .panel-title {
-  margin-bottom: 24px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
+}
+.content {
 }
 .metrics {
   display: flex;
@@ -620,9 +648,8 @@ async function downloadSingleWorkData() {
   height: 146px;
   padding: 24px;
   background: #FFFDF7;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
-  box-shadow: 3px 3px 0 #161122;
   position: relative;
   overflow: hidden;
 }
@@ -659,7 +686,7 @@ async function downloadSingleWorkData() {
   display: inline-flex;
   gap: 0;
   padding: 5px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
   background: #FFFDF7;
   margin-bottom: 24px;
@@ -679,12 +706,7 @@ async function downloadSingleWorkData() {
   background: #161122;
   border-radius: 10px;
 }
-.block {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 20px;
-}
+
 .block-title {
   display: flex;
   align-items: center;
@@ -704,7 +726,7 @@ async function downloadSingleWorkData() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 24px 0;
+  margin: 0 0 24px;
 }
 
 .date-range {
@@ -751,9 +773,8 @@ async function downloadSingleWorkData() {
   height: 16px;
 }
 .table {
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   overflow: hidden;
   margin: 0 0 24px;
   background: #FFFDF7;
@@ -876,7 +897,7 @@ async function downloadSingleWorkData() {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .metric {
     height: auto;

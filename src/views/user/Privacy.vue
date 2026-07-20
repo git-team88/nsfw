@@ -119,14 +119,19 @@ function toggle(key: string) {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 .panel-top {
-  margin: 0 0 4px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
@@ -146,10 +151,6 @@ function toggle(key: string) {
   background: #FF4D8D;
 }
 .content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 26px 28px;
   min-height: 380px;
   margin-top: 16px;
 }
@@ -209,7 +210,7 @@ function toggle(key: string) {
     padding: 80px 30px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .content {
     padding: 20px 16px;

@@ -4,10 +4,10 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel">
-          <div class="panel-top">
-            <div class="panel-title">{{ t("user.myFollowsSubs.title") }}</div>
-          </div>
+        <div class="panel-top">
+          <div class="panel-title">{{ t("user.myFollowsSubs.title") }}</div>
+        </div>
+        <div class="content">
 
           <div class="tabs">
             <div class="tab-item" :class="{ active: activeTab === 0 }" @click="switchTab(0)">
@@ -252,33 +252,48 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
-}
-.panel {
-  min-height: calc(100vh - 140px);
-  background: #FFFDF7;
+  padding: 24px;
   border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
-  padding: 24px 0;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
+}
+.content {
+  min-height: calc(100vh - 140px);
 }
 .panel-top {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 24px;
   padding: 0 36px;
 }
 .panel-title {
   font-weight: 800;
   font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
 }
 
 .tabs {
   display: inline-flex;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
   padding: 5px;
   margin-bottom: 24px;
@@ -340,9 +355,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 18px 24px 18px 18px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   background: #FFFDF7;
   cursor: pointer;
   transition: transform 0.15s ease;
@@ -448,19 +462,18 @@ onBeforeUnmount(() => {
           cursor: pointer;
         }
         .more-menu {
-          position: absolute;
-          right: 0;
-          top: 22px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: auto;
-          min-width: 160px;
-          background: #FFFDF7;
-          border: 2.5px solid #161122;
-          border-radius: 10px;
-          box-shadow: 3px 3px 0 #161122;
-          z-index: 10;
+           position: absolute;
+           right: 0;
+           top: 22px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           width: auto;
+           min-width: 160px;
+           background: #FFFDF7;
+   border: 2px solid #161122;
+           border-radius: 10px;
+           z-index: 10;
           .menu-item {
             padding: 8px 10px;
             font-size: 12px;
@@ -495,7 +508,7 @@ onBeforeUnmount(() => {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .panel-top {
     padding: 0 20px;

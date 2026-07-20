@@ -47,14 +47,14 @@ function goUserHome(userId: string) {
 .list-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 13px;
 }
 .msg-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.8rem;
-  border-radius: 1.2rem;
+  padding: 14px;
+  border-radius: 19px;
   transition: all 0.2s;
   cursor: pointer;
 }
@@ -63,30 +63,30 @@ function goUserHome(userId: string) {
 }
 .left-info {
   display: flex;
-  gap: 1.2rem;
+  gap: 19px;
   align-items: flex-start;
 }
 .avatar {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 0.8rem;
+  width: 70px;
+  height: 70px;
+  border-radius: 13px;
   object-fit: cover;
 }
 .text-col {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 10px;
 }
 .username {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6A7282;
 }
 .desc {
-  font-size: 1.4rem;
- color: #364153;
+  font-size: 14px;
+  color: #364153;
 }
 .time {
-  font-size: 1.2rem;
+  font-size: 12px;
   color: #99A1AF;
   font-weight: 300;
 }
@@ -94,18 +94,16 @@ function goUserHome(userId: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 16.2rem;
-  padding: 0 1.6rem;
-  height: 4rem;
+  min-width: 260px;
+  padding: 0 26px;
+  height: 64px;
   background: #fb64b6;
-  border-radius: 0.8rem;
+  border-radius: 13px;
   color: #ffffff;
   border: none;
-  font-size: 1.4rem;
+  font-size: 14px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  gap: 10px;
   box-shadow: 0px 2px 15px -3px rgba(251, 100, 182, 0.16);
 
   &:hover{
@@ -123,25 +121,25 @@ function goUserHome(userId: string) {
   }
 }
 .btn-icon {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 26px;
+  height: 26px;
 }
 
 @media (max-width: 420px) {
   .msg-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.8rem;
-    padding: 1.2rem;
+    gap: 13px;
+    padding: 19px;
   }
   .action-btn {
     width: 100%;
     min-width: auto;
-    height: 3.6rem;
+    height: 58px;
   }
   .avatar {
-    width: 3.6rem;
-    height: 3.6rem;
+    width: 58px;
+    height: 58px;
   }
 }
 </style>

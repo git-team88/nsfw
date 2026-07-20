@@ -748,10 +748,10 @@ $yellow: #FFD23F;
 .container {
   max-width: 1160px;
   margin: 0 auto 20px;
-  padding: 100px 20px 20px;
+  padding: 100px 12px 20px;
 
   @media (min-width: 768px) {
-    padding: 100px 24px 24px;
+    padding: 100px 16px 24px;
   }
 }
 

@@ -519,18 +519,23 @@ function closeCoverZoomModal() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 4px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
@@ -548,14 +553,6 @@ function closeCoverZoomModal() {
   height: 4px;
   border-radius: 2px;
   background: #FF4D8D;
-}
-
-.content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 26px 28px;
-  min-height: 380px;
 }
 
 .section {
@@ -599,10 +596,6 @@ function closeCoverZoomModal() {
   font-weight: 800;
   font-size: 15px;
   color: #161122;
-  padding: 13px 15px;
-  border: 2.5px solid #161122;
-  border-radius: 12px;
-  background: #fff;
 }
 .avatar-img {
   width: 112px;
@@ -618,14 +611,13 @@ function closeCoverZoomModal() {
   font-weight: 800;
   font-size: 15px;
   color: #161122;
-  padding: 13px 15px;
-  border: 2.5px solid #161122;
-  border-radius: 12px;
-  background: #fff;
 }
 
 .kyc-section {
   margin-top: 36px;
+  border: 2px solid #161122;
+  border-radius: 14px;
+  padding: 20px;
 }
 .kyc-row {
   display: flex;
@@ -712,11 +704,8 @@ function closeCoverZoomModal() {
 }
 
 .kyc-info {
-  margin: 20px 0;
+  margin: 20px 0 0;
   background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 20px;
 }
 .kyc-info-header {
   display: flex;
@@ -836,11 +825,6 @@ function closeCoverZoomModal() {
 
 .kyc-base-section, .kyc-docs-section, .kyc-photo-section {
   margin-top: 20px;
-  padding: 0 20px;
-  border: 2.5px solid #161122;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 3px 3px 0 rgba(22,17,34,.12);
 }
 .kyc-base-title, .kyc-docs-title, .kyc-photo-title {
   display: flex;
@@ -894,7 +878,7 @@ function closeCoverZoomModal() {
     padding: 80px 30px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .content {
     padding: 20px 16px;

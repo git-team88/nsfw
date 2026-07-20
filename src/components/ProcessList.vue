@@ -643,8 +643,22 @@ $line: #F0EADF;
     }
 
     &.has-success {
-      .process-title .status-icon {
-        animation: tdPulse 1.8s ease-out infinite;
+      background: $pink;
+      color: #fff;
+      border-color: $ink;
+      box-shadow: 4px 4px 0 $ink;
+
+      .process-title {
+        color: #fff;
+
+        .status-icon {
+          background: #fff;
+          animation: tdPulse 1.8s ease-out infinite;
+        }
+      }
+
+      .dropdown-arrow {
+        filter: brightness(0) invert(1);
       }
     }
 

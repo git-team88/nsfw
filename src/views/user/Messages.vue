@@ -4,10 +4,10 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel">
-          <div class="panel-top">
-            <div class="panel-title">{{ t("user.messages.title") }}</div>
-          </div>
+        <div class="panel-top">
+          <div class="panel-title">{{ t("user.messages.title") }}</div>
+        </div>
+        <div class="content">
 
           <div class="tabs">
             <div class="tab-item" :class="{ active: activeTab == 0 }" @click="switchTab(0)">
@@ -249,34 +249,46 @@ async function fetchData() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding: 80px 0 20px;
-}
-.panel {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  box-shadow: 4px 4px 0 #161122;
   padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
+}
+.content {
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
-  font-size: 30px;
+  font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
 }
 .tabs {
   display: inline-flex;
   gap: 6px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
   padding: 5px;
   margin-bottom: 24px;
@@ -349,7 +361,7 @@ async function fetchData() {
     padding: 80px 20px 24px;
   }
   .main {
-    padding: 20px 0;
+  padding: 24px;
   }
 }
 
@@ -357,11 +369,8 @@ async function fetchData() {
   .container {
     padding: 0 12px;
   }
-  .panel {
+  .content {
     padding: 16px;
-  }
-  .panel-title {
-    font-size: 22px;
   }
   .tabs {
     flex-wrap: wrap;

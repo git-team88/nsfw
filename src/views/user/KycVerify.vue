@@ -1430,10 +1430,9 @@ function openTermsOfService() {
 .main {
   position: relative;
   flex: 1;
-  padding-top: 100px;
   background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
   padding: 24px 36px;
   margin-top: 0;
 }

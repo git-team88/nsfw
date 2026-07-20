@@ -45,8 +45,6 @@ function toDetail(post: any, comment: any) {
     return false;
   }
 
-  // Only show deleted message if status explicitly indicates deleted (0)
-  // Don't treat missing status or other values as deleted
   if (comment && comment.status == 0) {
     toast(t('mentions.commentDeleted'));
     return false;
@@ -70,14 +68,14 @@ function goUserHome(userId: string) {
 .list-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 13px;
 }
 .msg-item {
   display: flex;
   justify-content: space-between;
-  padding: 1.8rem;
+  padding: 14px;
   border: 1px solid rgba(251, 100, 182, 0.1);
-  border-radius: 1.2rem;
+  border-radius: 19px;
   transition: all 0.2s;
   cursor: pointer;
 }
@@ -86,39 +84,39 @@ function goUserHome(userId: string) {
 }
 .left-info {
   display: flex;
-  gap: 1.2rem;
+  gap: 19px;
   align-items: flex-start;
 }
 .avatar {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 0.8rem;
+  width: 70px;
+  height: 70px;
+  border-radius: 13px;
   object-fit: cover;
 }
 .text-col {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 10px;
 }
 .username {
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #6A7282;
 }
 .desc {
   display: flex;
   align-items: center;
-  font-size: 1.4rem;
+  font-size: 14px;
   color: #364153;
 }
 .content {
-  max-width: 44rem;
+  max-width: 704px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #364153;
 }
 .time {
-  font-size: 1.2rem;
+  font-size: 12px;
   color: #99A1AF;
   font-weight: 300;
 }
@@ -126,12 +124,12 @@ function goUserHome(userId: string) {
 .right-work-box {
   display: flex;
   align-items: center;
-  width: 34rem;
-  gap: 1.8rem;
+  width: 544px;
+  gap: 29px;
 
   .line {
     width: 1px;
-    height: 4rem;
+    height: 64px;
     background: #F5F5F5;
   }
 }
@@ -139,18 +137,18 @@ function goUserHome(userId: string) {
 .right-work {
   display: flex;
   align-items: flex-start;
-  gap: 1.2rem;
+  gap: 19px;
 }
 .work-cover {
-  width: 5.4rem;
-  height: 7.2rem;
+  width: 86px;
+  height: 115px;
   object-fit: cover;
-  border-radius: 0.8rem;
+  border-radius: 13px;
 }
 .work-title {
   font-weight: 500;
-  font-size: 1.4rem;
-  line-height: 2rem;
+  font-size: 14px;
+  line-height: 20px;
   color: #99A1AF;
   word-break: break-all;
   display: -webkit-box;
@@ -164,19 +162,19 @@ function goUserHome(userId: string) {
   .msg-item {
     flex-direction: column;
     align-items: flex-start;
-    padding: 1.2rem;
+    padding: 19px;
   }
   .right-work-box {
     width: 100%;
-    margin-top: 0.8rem;
+    margin-top: 13px;
   }
   .content {
     max-width: 100%;
     white-space: normal;
   }
   .avatar {
-    width: 3.6rem;
-    height: 3.6rem;
+    width: 58px;
+    height: 58px;
   }
 }
 </style>

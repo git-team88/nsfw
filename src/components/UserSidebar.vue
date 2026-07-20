@@ -87,12 +87,14 @@ function cancelLogout() {
 <style scoped lang="scss">
 .user-sidebar {
   width: 220px;
-  padding: 100px 0 14px;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: 100vh;
+  padding: 24px 14px;
+  position: fixed;
+  top: 100px;
+  height: calc(100vh - 124px);
   overflow: auto;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
 }
 .title {
   font-weight: 800;
@@ -102,10 +104,7 @@ function cancelLogout() {
   letter-spacing: 0.01em;
 }
 .items {
-  border: 2.5px solid #161122;
-  border-radius: 14px;
-  background: #fff;
-  padding: 8px;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -151,8 +150,7 @@ function cancelLogout() {
   font-size: 13px;
   color: #E5484D;
   cursor: pointer;
-  padding: 14px;
-  margin-top: 8px;
+  padding: 0 14px;
 }
 @media (max-width: 900px) {
   .user-sidebar {

@@ -4,10 +4,10 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel">
-          <div class="panel-top">
-            <div class="panel-title">{{ t("user.subscription.title") }}</div>
-          </div>
+        <div class="panel-top">
+          <div class="panel-title">{{ t("user.subscription.title") }}</div>
+        </div>
+        <div class="content">
 
           <div class="tip">{{ t("user.subscription.tip") }}</div>
 
@@ -364,38 +364,50 @@ async function handleAccountFailedModify() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
-}
-.panel {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
   padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
+}
+.content {
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 24px 12px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
   font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
 }
 .tip {
   display: flex;
   align-items: center;
   height: 54px;
-  margin: 0 12px 12px;
+  margin: 0 0 12px;
   padding: 10px 16px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   font-size: 14px;
   font-weight: 800;
   background: #FFFDF7;
@@ -403,11 +415,10 @@ async function handleAccountFailedModify() {
 }
 
 .account-section {
-  margin: 0 12px 24px;
+  margin: 0 0 24px;
   padding: 16px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -508,9 +519,8 @@ async function handleAccountFailedModify() {
 }
 .sections-wrap {
   padding: 16px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   background: #FFFDF7;
 }
 .section {
@@ -526,19 +536,13 @@ async function handleAccountFailedModify() {
 
   .count {
     font-size: 12px;
-    border: 2px solid #161122;
-    border-radius: 999px;
     font-weight: 800;
-    padding: 2px 8px;
     color: #161122;
   }
 
   .info {
     font-size: 12px;
-    border: 2px solid #161122;
-    border-radius: 999px;
     font-weight: 800;
-    padding: 2px 8px;
     color: #161122;
   }
 }
@@ -547,7 +551,7 @@ async function handleAccountFailedModify() {
   flex-wrap: wrap;
   align-items: center;
   margin-top: 16px;
-  gap: 32px;
+  gap: 20px;
 }
 .price-option {
   display: flex;
@@ -582,7 +586,6 @@ async function handleAccountFailedModify() {
   background: #FFFFFF;
   outline: none;
   color: #161122;
-  box-shadow: 3px 3px 0 #161122;
 }
 .textarea:focus {
   border-color: #FF4D8D;
@@ -652,7 +655,7 @@ async function handleAccountFailedModify() {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .account-section {
     flex-direction: column;
@@ -672,16 +675,16 @@ async function handleAccountFailedModify() {
   .container {
     padding: 0 12px;
   }
-  .panel {
+  .content {
     padding: 16px;
   }
   .tip {
     height: auto;
-    margin: 0 12px 12px;
+    margin: 0 0 12px;
     padding: 10px 12px;
   }
   .account-section {
-    margin: 0 12px 24px;
+    margin: 0 0 24px;
   }
   .sections-wrap {
     padding: 12px;

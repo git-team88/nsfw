@@ -4,10 +4,10 @@
     <div class="container">
       <UserSidebar v-model="sidebarKey" />
       <div class="main">
-        <div class="panel">
-          <div class="panel-top">
-            <div class="panel-title">{{ t("user.paymentHistory.title") }}</div>
-          </div>
+        <div class="panel-top">
+          <div class="panel-title">{{ t("user.paymentHistory.title") }}</div>
+        </div>
+        <div class="content">
 
           <div class="tabs-row">
             <div class="tabs">
@@ -670,7 +670,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   max-height: 90vh;
   background: #FFFDF7;
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   border-radius: 6px;
   padding: 24px;
   overflow-y: auto;
@@ -707,9 +707,8 @@ onBeforeUnmount(() => {
   min-height: 800px;
   background: #FFFDF7;
   padding: 40px 30px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   color: #161122;
   font-family: Arial, sans-serif;
 
@@ -862,27 +861,43 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 
-.panel {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 24px;
+.content {
 }
 
 .panel-top {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
-  font-size: 30px;
+  font-size: 20px;
   color: #161122;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
 }
 
 .tabs-row {
@@ -894,7 +909,7 @@ onBeforeUnmount(() => {
 .tabs {
   display: inline-flex;
   gap: 6px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 14px;
   padding: 5px;
 }
@@ -967,8 +982,7 @@ onBeforeUnmount(() => {
     font-weight: 600;
     line-height: 1.7;
     border-radius: 10px;
-    border: 2.5px solid #161122;
-    box-shadow: 3px 3px 0 #161122;
+    border: 2px solid #161122;
     white-space: nowrap;
     z-index: 100;
 
@@ -1001,17 +1015,16 @@ onBeforeUnmount(() => {
   min-height: 400px;
 }
 .tbody {
-  border-top: 2.5px solid #161122;
+  border-top: 2px solid #161122;
 }
 .tr {
   display: flex;
   align-items: center;
   padding: 14px 20px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
   background: #FFFDF7;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
   margin-bottom: 8px;
   animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   will-change: transform;
@@ -1163,10 +1176,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   padding: 18px 24px 18px 18px;
   border-radius: 13px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   background: #FFFDF7;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
   animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   will-change: transform;
   transition: transform 0.12s ease-out, box-shadow 0.12s;
@@ -1245,19 +1257,18 @@ onBeforeUnmount(() => {
           cursor: pointer;
         }
         .more-menu {
-          position: absolute;
-          right: 0;
-          top: 22px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: auto;
-          min-width: 160px;
-          border-radius: 6px;
-          background: #FFFDF7;
-          border: 2.5px solid #161122;
-          box-shadow: 3px 3px 0 #161122;
-          z-index: 10;
+           position: absolute;
+           right: 0;
+           top: 22px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           width: auto;
+           min-width: 160px;
+           border-radius: 6px;
+           background: #FFFDF7;
+   border: 2px solid #161122;
+           z-index: 10;
 
           .menu-item {
             width: 100%;
@@ -1332,18 +1343,17 @@ onBeforeUnmount(() => {
       }
     }
     .more-menu {
-      position: absolute;
-      right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: auto;
-      min-width: 160px;
-      border-radius: 6px;
-      background: #FFFDF7;
-      border: 2.5px solid #161122;
-      box-shadow: 3px 3px 0 #161122;
-      z-index: 10;
+       position: absolute;
+       right: 0;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       width: auto;
+       min-width: 160px;
+       border-radius: 6px;
+       background: #FFFDF7;
+       border: 2px solid #161122;
+       z-index: 10;
 
       .menu-item {
         width: 100%;
@@ -1399,10 +1409,9 @@ onBeforeUnmount(() => {
   width: min(520px, calc(100vw - 32px));
   background: #FFFDF7;
   border-radius: 6px;
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   padding: 18px 0;
   position: relative;
-  box-shadow: 6px 6px 0 #161122;
 
   .modal-close {
     position: absolute;
@@ -1500,7 +1509,7 @@ onBeforeUnmount(() => {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .tabs-row {
     flex-wrap: wrap;
@@ -1543,11 +1552,8 @@ onBeforeUnmount(() => {
   .container {
     padding: 0 12px;
   }
-  .panel {
+  .content {
     padding: 16px;
-  }
-  .panel-title {
-    font-size: 22px;
   }
   .tabs {
     flex-wrap: wrap;

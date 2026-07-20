@@ -534,17 +534,22 @@ function confirmUnbind() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 4px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
@@ -565,10 +570,6 @@ function confirmUnbind() {
 }
 
 .content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 26px 28px;
   min-height: 380px;
 }
 .item {
@@ -664,10 +665,9 @@ function confirmUnbind() {
 .modal {
   width: min(520px, 94%);
   background: #FFFDF7;
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   border-radius: 18px;
   padding: 24px 26px;
-  box-shadow: 6px 6px 0 rgba(22,17,34,.3);
 }
 .modal {
   position: relative;
@@ -849,10 +849,9 @@ function confirmUnbind() {
   width: min(440px, 94%);
   position: relative;
   background: #FFFDF7;
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   border-radius: 18px;
   padding: 24px 26px;
-  box-shadow: 6px 6px 0 rgba(22,17,34,.3);
   text-align: center;
 }
 .unbind-title {
@@ -932,7 +931,7 @@ function confirmUnbind() {
     padding: 80px 30px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .content {
     padding: 20px 16px;

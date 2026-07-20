@@ -72,17 +72,22 @@ function goEdit() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 3px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 4px;
+  margin: 0 0 24px;
 }
 .panel-title {
   font-weight: 800;
@@ -102,10 +107,6 @@ function goEdit() {
   background: #FF4D8D;
 }
 .content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  padding: 26px 28px;
   min-height: 380px;
 }
 .section {
@@ -156,8 +157,7 @@ function goEdit() {
   margin-top: 12px;
   object-fit: cover;
   border-radius: 6px;
-  border: 3px solid #161122;
-  box-shadow: 3px 3px 0 rgba(22,17,34,.12);
+  border: 2px solid #161122;
 }
 @media (max-width: 900px) {
   .container {
@@ -165,7 +165,7 @@ function goEdit() {
     padding: 80px 30px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .content {
     padding: 20px 16px;

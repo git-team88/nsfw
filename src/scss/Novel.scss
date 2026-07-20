@@ -259,14 +259,13 @@
   }
 
   .project-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(198px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
   }
 
   .project-item {
-    width: 198px;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1573,7 +1572,11 @@
 
 @media (max-width: 480px) {
   .submit-article {
-    padding: 70px 0 16px;
+    padding: 120px 0 16px;
+
+    .back {
+      top: -102px;
+    }
 
     .submit-container {
       padding: 0 16px;

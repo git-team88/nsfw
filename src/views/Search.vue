@@ -1061,22 +1061,20 @@ $line: #e7e1d8;
 
     .r18-overlay {
       position: absolute;
-      top: 0;
-      right: 0;
-      width: 8rem;
-      height: 8rem;
-      background: linear-gradient(222deg, $pink 0%, rgba(255,77,141,0) 50%);
-      border-radius: 0 1.6rem 0 0;
+      top: 0.6rem;
+      right: 0.6rem;
+      height: 2.8rem;
+      background: rgba(16,24,40,0.7);
+      border-radius: 1.4rem;
       display: flex;
-      align-items: flex-start;
-      justify-content: flex-end;
-      padding: 0.6rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.8rem;
 
       .r18-text {
         font-size: 1.4rem;
-        font-weight: 800;
+        font-weight: 500;
         color: #FFFFFF;
-        text-shadow: 0px 0px 8px rgba(0,0,0,0.18);
       }
     }
 

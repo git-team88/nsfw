@@ -212,16 +212,14 @@
     }
 
     .project-grid {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(198px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
-      justify-content: center;
     }
 
     .project-item {
       position: relative;
-      width: 198px;
       height: 264px;
       border: 2px solid #161122;
       border-radius: 14px;
@@ -1523,8 +1521,11 @@
       }
     }
 
+    .history-list .project-grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
     .history-list .project-item {
-      width: 140px;
       height: 190px;
     }
 
@@ -1544,7 +1545,11 @@
 
 @media (max-width: 480px) {
   .submit-video {
-    padding: 70px 0 16px;
+    padding: 120px 0 16px;
+
+    .back {
+      top: -102px;
+    }
 
     .submit-container {
       padding: 0 16px;
@@ -1575,7 +1580,6 @@
     }
 
     .history-list .project-item {
-      width: 48%;
       height: auto;
 
       .project-image {

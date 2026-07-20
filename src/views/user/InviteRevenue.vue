@@ -5,8 +5,10 @@
     <div class="container">
       <UserSidebar modelValue="inviteRevenue" />
       <div class="main">
-        <div class="panel">
+        <div class="panel-top">
           <div class="panel-title">{{ t('user.inviteRevenue.title') }}</div>
+        </div>
+        <div class="content">
 
           <div class="invite-link-section">
             <div class="withdraw-banner">
@@ -110,19 +112,43 @@ function goToAiPointsDetails() {
   margin: 0 auto;
   display: flex;
   gap: 18px;
-  padding: 0 30px;
+  padding: 100px 30px 24px;
 }
 .main {
   flex: 1;
-  padding-top: 100px;
+  padding: 24px;
+  border: 2.5px solid #161122;
+  border-radius: 14px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 124px);
+  margin-left: 238px;
+}
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 24px;
 }
 .panel-title {
-  margin-bottom: 24px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 20px;
   color: #161122;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: relative;
+  padding-bottom: 10px;
+}
+.panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: #FF4D8D;
+}
+.content {
 }
 
 .invite-link-section {
@@ -133,9 +159,8 @@ function goToAiPointsDetails() {
   margin: 0 0 24px;
   padding: 28px 26px;
   background: radial-gradient(ellipse at 30% 15%, #FFE885, #FF9E45 58%, #FF5FA2);
-  border: 3px solid #161122;
+  border: 2px solid #161122;
   border-radius: 18px;
-  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,7 +193,7 @@ function goToAiPointsDetails() {
     height: 48px;
     padding: 0 24px;
     background: #FF4D8D;
-    border: 2.5px solid #161122;
+  border: 3px solid #161122;
     border-radius: 12px;
     box-shadow: 3px 3px 0 #161122;
     color: #FFFDF7;
@@ -202,9 +227,8 @@ function goToAiPointsDetails() {
   align-items: flex-start;
   justify-content: space-between;
   height: 146px;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   padding: 24px;
   background: #FFFDF7;
 }
@@ -243,9 +267,8 @@ function goToAiPointsDetails() {
   color: #161122;
   line-height: 24px;
   background: #FFFDF7;
-  border: 2.5px solid #161122;
+  border: 2px solid #161122;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
   padding: 20px;
 }
 
@@ -255,7 +278,7 @@ function goToAiPointsDetails() {
     padding: 80px 20px 24px;
   }
   .main {
-    padding-top: 20px;
+  padding: 24px;
   }
   .withdraw-banner {
     flex-direction: column;
