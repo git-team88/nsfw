@@ -245,7 +245,7 @@
           <div class="perm-box">
             <div class="form-label-inner">
               <label class="form-label">{{ t("submit.permission") }}</label>
-              <div class="info-icon">
+              <div class="info-icon" @mouseover="adjustTooltipPosition">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <div class="info-tooltip">
                   <div class="tooltip-content">
@@ -278,7 +278,7 @@
                 <div class="form-label-inner">
                   <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
-                  <div class="info-icon">
+                  <div class="info-icon" @mouseover="adjustTooltipPosition">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     <div class="info-tooltip">
                       <div class="tooltip-content">
@@ -306,7 +306,7 @@
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
-                          <div class="info-icon">
+                          <div class="info-icon" @mouseover="adjustTooltipPosition">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                             <div class="info-tooltip">
                               <div class="tooltip-content">
@@ -575,6 +575,47 @@ import requireSwitchOff from "@/assets/images/publish/close.png";
 import { useRoute } from "vue-router";
 
 const isUpload = ref(false);
+
+function adjustTooltipPosition(event: MouseEvent) {
+  const infoIcon = event.currentTarget as HTMLElement;
+  const tooltip = infoIcon.querySelector('.info-tooltip') as HTMLElement;
+  if (tooltip) {
+    tooltip.classList.remove('tooltip-align-left', 'tooltip-fixed');
+    tooltip.style.position = '';
+    tooltip.style.top = '';
+    tooltip.style.left = '';
+    tooltip.style.right = '';
+    tooltip.style.marginTop = '';
+    tooltip.style.removeProperty('--arrow-left');
+
+    const infoIconRect = infoIcon.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const tooltipWidth = 280;
+    const margin = 10;
+
+    const wouldOverflowLeft = infoIconRect.right - tooltipWidth < margin;
+    const wouldOverflowRight = infoIconRect.left + tooltipWidth > windowWidth - margin;
+
+    if (!wouldOverflowLeft) return;
+
+    if (!wouldOverflowRight) {
+      tooltip.classList.add('tooltip-align-left');
+      return;
+    }
+
+    tooltip.classList.add('tooltip-align-left', 'tooltip-fixed');
+    tooltip.style.position = 'fixed';
+    tooltip.style.top = `${infoIconRect.bottom + 10}px`;
+    tooltip.style.left = `${margin}px`;
+    tooltip.style.right = 'auto';
+    tooltip.style.marginTop = '0';
+
+    const iconCenterX = infoIconRect.left + infoIconRect.width / 2;
+    const arrowOffset = iconCenterX - margin;
+    tooltip.style.setProperty('--arrow-left', `${Math.max(8, Math.min(arrowOffset, tooltipWidth - 20))}px`);
+  }
+}
+
 const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
   { key: "partial", labelKey: "submit.permPartial" },

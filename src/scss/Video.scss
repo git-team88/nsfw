@@ -1328,6 +1328,35 @@
     visibility: visible;
   }
 
+  .info-tooltip.tooltip-align-left {
+    right: auto;
+    left: 0;
+
+    &::before {
+      right: auto;
+      left: 4px;
+    }
+    &::after {
+      right: auto;
+      left: 5px;
+    }
+  }
+
+  .info-tooltip.tooltip-fixed {
+    position: fixed;
+    right: auto;
+    margin-top: 0;
+
+    &::before {
+      right: auto;
+      left: var(--arrow-left, 10px);
+    }
+    &::after {
+      right: auto;
+      left: var(--arrow-left, 10px);
+    }
+  }
+
   .mention-dropdown {
     position: fixed;
     width: 480px;
@@ -1452,12 +1481,16 @@
       width: 100%;
       padding: 0 32px;
     }
+
+    .back{
+      left: 30px;
+    }
   }
 }
 
 @media (max-width: 768px) {
   .submit-video {
-    padding: 80px 0 20px;
+    padding: 140px 0 20px;
 
     .submit-container {
       padding: 0 20px;
