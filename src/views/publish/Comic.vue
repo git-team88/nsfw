@@ -5,6 +5,7 @@
     <div class="submit-container">
       <div class="back" @click="goBack">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="back-text">{{ t('back') }}</span>
       </div>
 
       <div class="tabs" :class="(imageFiles.length > 0 || isBatchPublish) ? 'on' : ''">
@@ -20,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!showFullContent && !postId && !route.query.session_id">
+      <div class="upload-tabs" v-if="!showFullContent && !postId && !isInitializing">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
         </div>
@@ -201,12 +202,12 @@
       </div>
 
       <!-- Batch Publish Loading -->
-      <div v-if="isLoadingBatchPublish" class="loading-state">
+      <div v-if="isLoadingBatchPublish || isInitializing" class="loading-state">
         <div class="loading-spinner"></div>
         <div class="loading-text">{{ t('home.loading') }}</div>
       </div>
 
-      <div class="content-wrapper" v-if="showFullContent || postId || shouldShowSessionContent">
+      <div class="content-wrapper" v-if="showFullContent || postId">
         <input
           ref="reuploadInputRef"
           type="file"
@@ -317,9 +318,8 @@
                     <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
                     <div class="info-icon" @mouseover="adjustTooltipPosition">
-                      <img src="@/assets/images/publish/intro.png" alt="Info" />
-                      <div class="tooltip-arrow"></div>
-                      <div class="tooltip">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                      <div class="info-tooltip">
                         <div class="tooltip-content">
                           <div v-html="t('submit.collectionInfo')"></div>
                         </div>
@@ -348,9 +348,8 @@
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                             <div class="info-icon" @mouseover="adjustTooltipPosition">
-                              <img src="@/assets/images/publish/info.png" alt="Info" />
-                              <div class="tooltip-arrow"></div>
-                              <div class="tooltip">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                              <div class="info-tooltip">
                                 <div class="tooltip-content">
                                   <div v-html="t('submit.sensitiveContent')"></div>
                                 </div>
@@ -469,90 +468,6 @@
 
         <!-- Single mode: collection-section -->
         <div v-if="!isBatchPublish" class="collection-section">
-          <div class="form-item">
-            <div class="collection-row">
-              <div class="collection-group">
-                <div class="form-label-inner">
-                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
-
-                  <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <img src="@/assets/images/publish/intro.png" alt="Info" />
-                    <div class="tooltip-arrow"></div>
-                    <div class="tooltip">
-                      <div class="tooltip-content">
-                        <div v-html="t('submit.collectionInfo')"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="switch-collection-btn" @click="openCollectionListModal">
-                    <span>{{ t('collection.switchCollection') }}</span>
-                    <img src="@/assets/images/publish/switch.png" alt="" />
-                  </div>
-                </div>
-
-                <div class="collection-display">
-                  <div class="collection-info" v-if="selectedCollection">
-                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                    <div class="collection-text">
-                      <div class="collection-top">
-                        <span class="collection-name">{{ selectedCollection.name }}</span>
-                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
-                      </div>
-
-                      <div class="content-sensitive">
-                        <div class="sensitive-left">
-                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
-
-                          <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <img src="@/assets/images/publish/info.png" alt="Info" />
-                            <div class="tooltip-arrow"></div>
-                            <div class="tooltip">
-                              <div class="tooltip-content">
-                                <div v-html="t('submit.sensitiveContent')"></div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <img
-                            class="sensitive-switch"
-                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
-                            alt=""
-                            @click="toggleCollectionSensitive"
-                          />
-                        </div>
-                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="collection-info" v-else>
-                    <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="collection-group" v-if="!isNoCollection">
-                <label class="form-label">{{ t("collection.orderInCollection") }}</label>
-                <div class="collection-select">
-                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                    <div class="select-arrow">
-                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                    </div>
-                  </div>
-                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
-                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                      {{ episode.label }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Title & Description (single mode only) -->
-        <div v-if="!isBatchPublish" class="content-section">
           <div class="form-item">
             <div class="collection-row">
               <div class="collection-group">
@@ -1028,6 +943,7 @@ const isChapterPublished = computed(() => {
 const selectedChapters = ref<number[]>([]);
 const isBatchPublish = computed(() => selectedChapters.value.length > 1);
 const isLoadingBatchPublish = ref(false);
+const isInitializing = ref(false);
 
 const unpublishedChapters = computed(() =>
   (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish != 1)
@@ -4479,39 +4395,42 @@ async function initBatchPublish(session_id: string) {
 
 // Lifecycle hooks
 onMounted(async () => {
-  document.addEventListener("click", handleClickOutside);
-  getCountry();
-  await checkSubscriptionStatus(); // Check subscription status on page load
-  // Get post details if postId exists
-  if (postId.value) {
-    isEditingWork.value = true;
-    getPostDetails();
-  } else {
-    // Check if session_id and index are provided
-    const session_id = route.query.session_id as string;
-    const index = route.query.index as string;
-    const cover = route.query.cover as string;
-    const title = route.query.title as string;
-    const isBatch = route.query.batch === 'true';
-
-    if (isBatch && session_id) {
+    document.addEventListener("click", handleClickOutside);
+    getCountry();
+    await checkSubscriptionStatus();
+    if (postId.value) {
+      isInitializing.value = true;
       isEditingWork.value = true;
-      await initBatchPublish(session_id);
-      return;
-    }
-
-    if (session_id) {
-      isEditingWork.value = true;
-    }
-
-    if (session_id && index) {
-      await initSingleChapter(session_id, index, cover, title);
+      getPostDetails();
+      isInitializing.value = false;
     } else {
-      // Fetch projects for comic tab
-      await fetchProjects();
+      const session_id = route.query.session_id as string;
+      const index = route.query.index as string;
+      const cover = route.query.cover as string;
+      const title = route.query.title as string;
+      const isBatch = route.query.batch === 'true';
+
+      if (isBatch && session_id) {
+        isInitializing.value = true;
+        isEditingWork.value = true;
+        await initBatchPublish(session_id);
+        isInitializing.value = false;
+        return;
+      }
+
+      if (session_id) {
+        isEditingWork.value = true;
+      }
+
+      if (session_id && index) {
+        isInitializing.value = true;
+        await initSingleChapter(session_id, index, cover, title);
+        isInitializing.value = false;
+      } else {
+        await fetchProjects();
+      }
     }
-  }
-});
+  });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);

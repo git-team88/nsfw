@@ -6,6 +6,7 @@ export default {
   },
   cancel: "キャンセル",
   confirm: "確認",
+  back: "戻る",
   agreeTitle: "利用規約",
   closedBetaAgreementTitle: "クローズドβテスト同意書",
   closedBetaAgreement: `現在、MoeGenはクローズドβテスト期間中のため、正式な利用規約は掲載しておりません。<br />

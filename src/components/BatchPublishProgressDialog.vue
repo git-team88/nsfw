@@ -1,8 +1,9 @@
 <template>
   <div v-if="visible" class="batch-progress-overlay" @click.self="$emit('close')">
     <div class="batch-progress-dialog">
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+
       <div class="dialog-header">
-        <img class="close-icon" src="@/assets/images/base/close.png" alt="" @click="$emit('close')" />
         <span class="dialog-title">{{ t('novel.batchPublish.publishProgress') }}</span>
       </div>
 
@@ -90,13 +91,20 @@ const progressPercent = computed(() => {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$cream: #FFFBF4;
+$line: #F0EADF;
+
 .batch-progress-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,78 +113,101 @@ const progressPercent = computed(() => {
 
 .batch-progress-dialog {
   background-color: #ffffff;
-  border-radius: 1.2rem;
-  width: 50rem;
-  padding: 1.8rem 2rem 2rem;
+  border: 2px solid $ink;
+  border-radius: 14px;
+  box-shadow: 6px 6px 0 $ink;
+  width: 500px;
+  padding: 18px 24px 24px;
   position: relative;
+  animation: tdIn .3s cubic-bezier(.16,1,.3,1) both;
+}
+
+.close-btn {
+  background: #fff;
+  border: 2.5px solid $ink;
+  border-radius: 50%;
+  padding: 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 $ink;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  z-index: 1;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 $ink;
+  }
 }
 
 .dialog-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 2.4rem;
+  height: 24px;
   position: relative;
 
-  .close-icon {
-    position: absolute;
-    right: 0;
-    top: 0.2rem;
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-  }
-
   .dialog-title {
-    font-size: 1.6rem;
-    font-weight: 500;
-    color: #364153;
+    font-size: 16px;
+    font-weight: 800;
+    color: $ink;
     text-align: center;
-    line-height: 2.4rem;
+    line-height: 24px;
   }
 }
 
 .progress-message {
-  margin-top: 2.4rem;
+  margin-top: 24px;
 
   .message-text {
-    font-size: 1.4rem;
-    color: #364153;
-    line-height: 2rem;
+    font-size: 14px;
+    font-weight: 600;
+    color: $ink;
+    line-height: 20px;
   }
 }
 
 .progress-summary {
-  margin-top: 1.6rem;
+  margin-top: 16px;
 
   .progress-label {
-    font-size: 1.4rem;
-    color: #6A7282;
-    line-height: 2rem;
+    font-size: 14px;
+    font-weight: 700;
+    color: $sub;
+    line-height: 20px;
   }
 }
 
 .progress-bar-track {
-  margin-top: 1rem;
-  background-color: #F5F5F5;
-  border-radius: 0.8rem;
-  height: 0.8rem;
+  margin-top: 10px;
+  background-color: $line;
+  border: 1.5px solid $ink;
+  border-radius: 999px;
+  height: 10px;
   width: 100%;
 
   .progress-bar-fill {
-    background-color: #FB64B6;
-    border-radius: 0.8rem;
+    background: linear-gradient(90deg, $pink, #FF9E45);
+    border-radius: 999px;
     height: 100%;
-    transition: width 0.3s ease;
+    transition: width 0.3s cubic-bezier(.16,1,.3,1);
   }
 }
 
 .chapter-progress-list {
-  margin-top: 1.2rem;
-  background-color: #F5F5F5;
-  border-radius: 0.8rem;
-  padding: 1.2rem;
-  max-height: 20rem;
+  margin-top: 16px;
+  background-color: $cream;
+  border: 2px solid $ink;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
+  padding: 12px;
+  max-height: 200px;
   overflow-y: auto;
 }
 
@@ -184,27 +215,32 @@ const progressPercent = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 2.2rem;
-  margin-bottom: 1.2rem;
+  height: 28px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1.5px solid rgba(22, 17, 34, 0.1);
+  border-radius: 8px;
 
   &:last-child {
     margin-bottom: 0;
   }
 
   .chapter-name {
-    font-size: 1.4rem;
-    color: #6A7282;
-    line-height: 2.2rem;
+    font-size: 14px;
+    font-weight: 700;
+    color: $ink;
+    line-height: 22px;
   }
 
   .chapter-status-wrap {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
 
     .status-icon {
-      width: 1.8rem;
-      height: 1.8rem;
+      width: 18px;
+      height: 18px;
     }
 
     .status-icon.rotating {
@@ -212,20 +248,29 @@ const progressPercent = computed(() => {
     }
 
     .status-text {
-      font-size: 1.4rem;
-      line-height: 2.2rem;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 22px;
       white-space: nowrap;
 
       &.success {
-        color: #6A7282;
+        color: #22C55E;
+      }
+
+      &.fail {
+        color: #E5484D;
       }
 
       &.publishing {
-        color: #6A7282;
+        color: $pink;
       }
 
       &.waiting {
-        color: #6A7282;
+        color: $muted;
+      }
+
+      &.unpublished {
+        color: #F59E0B;
       }
     }
   }
@@ -234,5 +279,10 @@ const progressPercent = computed(() => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes tdIn {
+  0% { opacity: 0; transform: scale(.92) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 </style>

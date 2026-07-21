@@ -6,6 +6,7 @@ export default {
   },
   cancel: "Cancel",
   confirm: "Confirm",
+  back: "Back",
   agreeTitle: "Terms of Use",
   closedBetaAgreementTitle: "Closed Beta Agreement",
   closedBetaAgreement: `MoeGen is currently in a closed beta testing period, and the official Terms of Service have not yet been published.<br />

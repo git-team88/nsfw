@@ -1,6 +1,7 @@
 <template>
   <div class="novel-generate-page" @click="closeDropdowns">
 
+    <div class="left-panel">
     <!-- Sidebar -->
     <div class="sidebar">
       <!-- Logo -->
@@ -411,6 +412,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <!-- Right Area -->
     <div v-if="!isAccessDenied" class="right-area">
@@ -448,10 +450,10 @@
              <button class="ai-edit-btn" @click="startAiEditOutline">
                {{ t('novel.aiEdit') }}
              </button>
-               <div class="outline-edit-tooltip-icon">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
-               </div>
+                <div class="outline-edit-tooltip-icon">
+                  <img src="@/assets/images/novel/intro.png" alt="" />
+                  <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
+                </div>
           </div>
           <template v-else-if="currentChapter">
             <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
@@ -459,10 +461,10 @@
               <template v-if="!hasFailed">
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
               <button class="ai-edit-btn" @click="startAiEditChapter">{{ t('novel.aiEdit') }}</button>
-              <div class="outline-edit-tooltip-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
-              </div>
+               <div class="outline-edit-tooltip-icon">
+                 <img src="@/assets/images/novel/intro.png" alt="" />
+                 <div class="outline-edit-tooltip">{{ t('novel.outlineEditTooltip') }}</div>
+               </div>
               </template>
             </div>
           </template>
@@ -847,10 +849,8 @@
             <div v-for="item in similarList" :key="item.id" class="similar-item" @click="goToSimilarDetail(item)">
               <div class="similar-item-cover">
                 <img :src="item.cover || ''" alt="" />
-                <div class="similar-item-type">
-                  <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                  <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                  <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                <div class="similar-item-type" v-if="item.type">
+                  <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
                 </div>
                 <div class="similar-item-r18" v-if="item.is_nsfw == '1'">
                   <span class="r18-text">R18</span>

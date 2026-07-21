@@ -736,6 +736,11 @@ $highlight: #FFF3D6;
   }
 }
 
+@keyframes mgBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 // Bottom Generator Styles - exactly same as Home.vue input area
 .bottom-generator {
   position: fixed;
@@ -754,38 +759,41 @@ $highlight: #FFF3D6;
     position: relative;
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 12px;
   }
 
   .content-type-selector {
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    gap: 0;
-    background: $paper;
-    border: 2.5px solid $ink;
-    border-radius: 14px;
-    padding: 5px;
+    gap: 10px;
 
     .type-btn {
       position: relative;
-      display: flex;
+      display: inline-flex;
       flex-wrap: nowrap;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-width: 100px;
-      height: 36px;
-      border-radius: 10px;
-      border: none;
-      background: transparent;
+      height: auto;
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 2px solid $ink;
+      background: $paper;
       cursor: pointer;
-      transition: background-color 0.16s, color 0.16s;
+      box-shadow: 2px 2px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), background 0.12s, color 0.12s;
+
+      &:hover:not(.active) {
+        transform: translate(-2px, -2px);
+      }
 
       &.active {
         background: $pink;
-        border-radius: 10px;
+        border-radius: 999px;
         box-shadow: 2px 2px 0 rgba(22,17,34,0.12);
 
         .type-text {
@@ -801,44 +809,24 @@ $highlight: #FFF3D6;
         }
       }
 
-      &:hover:not(.active) {
-        background: $highlight;
-      }
-
       .type-text {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
-        padding: 0 12px;
+        padding: 0;
       }
 
       span {
-        font-size: 14px;
-        font-weight: 700;
-        color: $sub;
+        font-size: 15px;
+        font-weight: 800;
+        color: $ink;
       }
     }
   }
 
-  .main-right{
-    position: relative;
-    padding-right: 60px;
-  }
 
-  .input-role{
-    position: absolute;
-    top: -58px;
-    right: 0;
-    width: 50px;
-    height: 98px;
-
-    img{
-      width: 100%;
-      height: 100%;
-    }
-  }
 
   .novel-mode-content {
     .novel-textarea {
@@ -980,25 +968,44 @@ $highlight: #FFF3D6;
   }
 
   .unlimited-switch {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 2px solid $ink;
+    background: $paper;
     cursor: pointer;
+    box-shadow: 2px 2px 0 $ink;
+    transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+    &:hover {
+      transform: translate(-2px, -2px);
+    }
 
     &.disabled {
       cursor: not-allowed;
     }
 
+    &.active {
+      background: $ink;
+
+      .unlimited-label {
+        color: #fff;
+      }
+    }
+
     .unlimited-icon {
-      width: 52px;
-      height: 28px;
-      object-fit: contain;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     .unlimited-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: $muted;
+      font-size: 13px;
+      font-weight: 800;
+      color: $ink;
     }
   }
 
@@ -1292,11 +1299,11 @@ $highlight: #FFF3D6;
     .input-textarea {
       position: relative;
       width: 100%;
-      height: 10px;
+      height: 100px;
       overflow-y: auto;
       font-family: inherit;
       font-size: 16px;
-      line-height: 28px;
+      line-height: 1.5;
       resize: none;
       outline: none;
       text-decoration: none;
@@ -1318,6 +1325,7 @@ $highlight: #FFF3D6;
         white-space: nowrap;
         flex: 1;
         max-width: calc(100% - 10px);
+        line-height: 1.5;
       }
 
       &[contenteditable] {
@@ -1336,6 +1344,17 @@ $highlight: #FFF3D6;
         content: attr(data-placeholder);
         color: $muted;
         pointer-events: none;
+      }
+
+      &:empty::after {
+        content: '';
+        display: inline-block;
+        width: 2px;
+        height: 19px;
+        background: $pink;
+        vertical-align: middle;
+        margin-left: 1px;
+        animation: mgBlink 1.05s steps(1, end) infinite;
       }
 
       .placeholder {
@@ -1458,31 +1477,31 @@ $highlight: #FFF3D6;
       gap: 16px;
 
       .option-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
-        height: 44px;
-        padding: 0 12px;
-        border-radius: 10px;
-        border: 2.5px solid $ink;
-        background: $cream;
+        gap: 7px;
+        height: auto;
+        padding: 8px 14px;
+        border-radius: 11px;
+        border: 2px solid $ink;
+        background: $paper;
         cursor: pointer;
-        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+        box-shadow: 2px 2px 0 $ink;
+        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
         &:hover {
           transform: translate(-2px, -2px);
-          box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
         }
 
         img {
-          width: 20px;
-          height: 20px;
+          width: 15px;
+          height: 15px;
         }
 
         span {
-          font-size: 14px;
-          font-weight: 700;
-          color: $muted;
+          font-size: 13px;
+          font-weight: 800;
+          color: $ink;
         }
       }
 
@@ -1491,14 +1510,21 @@ $highlight: #FFF3D6;
         cursor: pointer;
 
         .selector-header {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 10px;
-          height: 44px;
-          padding: 0 12px;
-          border-radius: 10px;
-          border: 2.5px solid $ink;
-          background: $cream;
+          gap: 7px;
+          height: auto;
+          padding: 8px 14px;
+          border-radius: 11px;
+          border: 2px solid $ink;
+          background: $paper;
+          box-shadow: 2px 2px 0 $ink;
+          cursor: pointer;
+          transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+          &:hover {
+            transform: translate(-2px, -2px);
+          }
 
           .selector-img {
             display: flex;
@@ -1514,15 +1540,15 @@ $highlight: #FFF3D6;
           }
 
           span {
-            font-size: 14px;
-            font-weight: 700;
-            color: $muted;
+            font-size: 13px;
+            font-weight: 800;
+            color: $ink;
           }
 
           .dropdown-arrow {
-            width: 20px;
-            height: 20px;
-            transition: transform 0.3s ease;
+            width: 16px;
+            height: 16px;
+            transition: transform 0.15s ease;
           }
         }
 
@@ -1534,35 +1560,43 @@ $highlight: #FFF3D6;
           position: absolute;
           bottom: calc(100% + 6px);
           left: 0;
-          padding: 8px;
+          padding: 12px 14px;
           background: $paper;
-          border: 2.5px solid $ink;
+          border: 2px solid $ink;
           border-radius: 10px;
-          box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+          box-shadow: 2px 2px 0 $ink;
           z-index: 1000;
           min-width: 160px;
           width: max-content;
 
           .dropdown-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            font-size: 14px;
-            font-weight: 700;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 800;
             border-radius: 8px;
-            transition: all 0.3s ease;
-            color: $muted;
+            border: 1.5px solid $line;
+            color: $ink;
+            cursor: pointer;
+            background: $paper;
+            transition: background 0.12s, border-color 0.12s;
+            width: 100%;
+            margin-bottom: 4px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
 
             &:hover {
-              color: $sub;
-              background: $highlight;
+              border-color: $pink;
             }
 
             &.active {
-              background: $pink;
+              background: $ink;
               color: #fff;
-              font-weight: 800;
+              border-color: $ink;
             }
 
             .item-img {
@@ -1701,11 +1735,10 @@ $highlight: #FFF3D6;
         border-radius: 13px;
         box-shadow: 3px 3px 0 $ink;
         cursor: pointer;
-        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
         &:hover {
           transform: translate(-2px, -2px);
-          box-shadow: 5px 5px 0 rgba(22,17,34,0.14);
         }
 
         span {
@@ -1732,25 +1765,32 @@ $highlight: #FFF3D6;
     }
 
     .selector-header {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
-      height: 44px;
-      padding: 0 12px;
-      border-radius: 10px;
-      border: 2.5px solid $ink;
-      background: $cream;
+      gap: 7px;
+      height: auto;
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: 2px solid $ink;
+      background: $paper;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translate(-2px, -2px);
+      }
 
       span {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 800;
         color: $ink;
       }
 
       .dropdown-arrow {
-        width: 20px;
-        height: 20px;
-        transition: transform 0.3s ease;
+        width: 16px;
+        height: 16px;
+        transition: transform 0.15s ease;
       }
     }
 
@@ -1762,16 +1802,17 @@ $highlight: #FFF3D6;
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      padding: 12px;
+      padding: 12px 14px;
       background: $paper;
-      border: 2.5px solid $ink;
+      border: 2px solid $ink;
       border-radius: 10px;
-      box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+      box-shadow: 2px 2px 0 $ink;
       z-index: 1000;
       min-width: 160px;
+      width: max-content;
 
       .settings-section {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
 
         &:last-child {
           margin-bottom: 0;
@@ -1780,10 +1821,10 @@ $highlight: #FFF3D6;
 
       .settings-label {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         color: $muted;
-        margin-bottom: 8px;
-        font-weight: 600;
+        margin-bottom: 5px;
+        font-weight: 700;
       }
 
       .settings-options {
@@ -1793,23 +1834,41 @@ $highlight: #FFF3D6;
       }
 
       .dropdown-item {
-        padding: 6px 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 800;
         border-radius: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        color: $sub;
+        border: 1.5px solid $line;
+        color: $ink;
         cursor: pointer;
-        transition: all 0.2s ease;
+        background: $paper;
+        transition: background 0.12s, border-color 0.12s;
+        width: 100%;
 
         &:hover {
-          background: $highlight;
-          color: $ink;
+          border-color: $pink;
         }
 
         &.active {
-          background: $pink;
+          background: $ink;
           color: #fff;
-          font-weight: 800;
+          border-color: $ink;
+        }
+
+        .item-img {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+
+          img {
+            width: 20px;
+            height: 20px;
+          }
         }
       }
     }
@@ -1820,37 +1879,43 @@ $highlight: #FFF3D6;
     position: relative;
 
     .selector-header {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 12px;
-      height: 44px;
-      padding: 0 12px;
-      border-radius: 10px;
-      border: 2.5px solid $ink;
-      background: $cream;
+      gap: 7px;
+      height: auto;
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: 2px solid $ink;
+      background: $paper;
       cursor: pointer;
+      box-shadow: 2px 2px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translate(-2px, -2px);
+      }
 
       span {
-        font-size: 14px;
-        font-weight: 700;
-        color: $sub;
+        font-size: 12px;
+        font-weight: 800;
+        color: $ink;
 
         &.settings-divider {
           width: 1px;
           height: 12px;
-          background: $line;
+          background: rgba(22,17,34,0.2);
         }
 
         &.settings-line{
           width: 1px;
-          height: 20px;
-          background: $line;
+          height: 16px;
+          background: rgba(22,17,34,0.2);
         }
       }
 
       .dropdown-arrow {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -1859,15 +1924,15 @@ $highlight: #FFF3D6;
       bottom: calc(100% + 6px);
       left: 0;
       width: max-content;
-      padding: 12px;
-      border: 2.5px solid $ink;
+      padding: 12px 14px;
+      border: 2px solid $ink;
       border-radius: 10px;
       background: $paper;
-      box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+      box-shadow: 2px 2px 0 $ink;
       z-index: 10;
 
       .settings-section {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
 
         &:last-child {
           margin-bottom: 0;
@@ -1877,9 +1942,9 @@ $highlight: #FFF3D6;
       .settings-label {
         display: block;
         font-weight: 700;
-        font-size: 14px;
-        color: $ink;
-        margin-bottom: 6px;
+        font-size: 11px;
+        color: $muted;
+        margin-bottom: 5px;
       }
 
       .settings-options {
@@ -1889,28 +1954,27 @@ $highlight: #FFF3D6;
       }
 
       .dropdown-item {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 26px;
+        padding: 5px 10px;
         border-radius: 8px;
-        border: 2.5px solid $ink;
-        font-size: 14px;
-        font-weight: 700;
-        color: $muted;
+        border: 1.5px solid $line;
+        font-size: 12px;
+        font-weight: 800;
+        color: $ink;
         cursor: pointer;
+        background: $paper;
+        transition: background 0.12s, border-color 0.12s;
 
         &:hover {
-          color: $ink;
-          background: $highlight;
+          border-color: $pink;
         }
 
         &.active {
-          border: none;
-          background: $pink;
+          background: $ink;
           color: #fff;
-          font-weight: 800;
+          border-color: $ink;
         }
       }
     }
@@ -1921,37 +1985,43 @@ $highlight: #FFF3D6;
     position: relative;
 
     .selector-header {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 12px;
-      height: 44px;
-      padding: 0 12px;
-      border-radius: 10px;
-      border: 2.5px solid $ink;
-      background: $cream;
+      gap: 7px;
+      height: auto;
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: 2px solid $ink;
+      background: $paper;
       cursor: pointer;
+      box-shadow: 2px 2px 0 $ink;
+      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+
+      &:hover {
+        transform: translate(-2px, -2px);
+      }
 
       span {
-        font-size: 14px;
-        font-weight: 700;
-        color: $sub;
+        font-size: 12px;
+        font-weight: 800;
+        color: $ink;
 
         &.settings-divider {
           width: 1px;
           height: 12px;
-          background: $line;
+          background: rgba(22,17,34,0.2);
         }
 
         &.settings-line {
           width: 1px;
-          height: 20px;
-          background: $line;
+          height: 16px;
+          background: rgba(22,17,34,0.2);
         }
       }
 
       .dropdown-arrow {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -1960,16 +2030,16 @@ $highlight: #FFF3D6;
       bottom: calc(100% + 6px);
       left: 0;
       width: max-content;
-      padding: 12px;
-      border: 2.5px solid $ink;
+      padding: 12px 14px;
+      border: 2px solid $ink;
       border-radius: 10px;
       background: $paper;
-      box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+      box-shadow: 2px 2px 0 $ink;
       z-index: 10;
       min-width: 230px;
 
       .settings-section {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
 
         &:last-child {
           margin-bottom: 0;
@@ -1979,9 +2049,9 @@ $highlight: #FFF3D6;
       .settings-label {
         display: block;
         font-weight: 700;
-        font-size: 14px;
-        color: $ink;
-        margin-bottom: 6px;
+        font-size: 11px;
+        color: $muted;
+        margin-bottom: 5px;
       }
 
       .settings-options {
@@ -1991,28 +2061,27 @@ $highlight: #FFF3D6;
       }
 
       .dropdown-item {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 26px;
+        padding: 5px 10px;
         border-radius: 8px;
-        border: 2.5px solid $ink;
-        font-size: 14px;
-        font-weight: 700;
-        color: $muted;
+        border: 1.5px solid $line;
+        font-size: 12px;
+        font-weight: 800;
+        color: $ink;
         cursor: pointer;
+        background: $paper;
+        transition: background 0.12s, border-color 0.12s;
 
         &:hover {
-          color: $ink;
-          background: $highlight;
+          border-color: $pink;
         }
 
         &.active {
-          border: none;
-          background: $pink;
+          background: $ink;
           color: #fff;
-          font-weight: 800;
+          border-color: $ink;
         }
       }
 

@@ -42,9 +42,7 @@
                 </div>
                 <!-- Type Icon -->
                 <div class="type-icon" v-if="item.type">
-                  <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                  <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                  <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                  <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
                 </div>
                 <!-- Video Play Icon -->
                 <div v-if="item.type == '3'" class="play-icon">
@@ -633,14 +631,27 @@ watch(contentList, () => {
     /* Type Icon */
     .type-icon {
       position: absolute;
-      top: 0.1rem;
-      left: 0.1rem;
+      top: 8px;
+      left: 8px;
       z-index: 1;
 
-      img {
-        width: 4rem;
-        height: 4rem;
-        object-fit: contain;
+      .type-badge {
+        display: inline-block;
+        border: 2px solid #161122;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-weight: 800;
+        font-size: 12px;
+        color: #161122;
+        background: #FFC24B;
+
+        &.type-2 {
+          background: #C9B6FF;
+        }
+
+        &.type-3 {
+          background: #7FD8E8;
+        }
       }
     }
 

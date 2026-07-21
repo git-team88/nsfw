@@ -5,6 +5,7 @@
       <div class="main">
         <div class="kyc-back" @click="goBack">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <span class="back-text">{{ t('back') }}</span>
         </div>
 
         <!-- 页面标题 -->
@@ -1441,11 +1442,11 @@ function openTermsOfService() {
   position: absolute;
   top: -58px;
   left: 0;
-  width: 40px;
+  width: auto;
   height: 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
   color: #161122;
   cursor: pointer;
   z-index: 10;
@@ -1453,7 +1454,14 @@ function openTermsOfService() {
   border-radius: 13px;
   background: #FFFDF7;
   box-shadow: 3px 3px 0 #161122;
+  padding: 0 10px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+
+  .back-text {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
 
   &:hover {
     transform: translateY(-1px);

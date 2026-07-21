@@ -852,7 +852,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
 .right-panel {
   position: relative;
-  width: 420px;
+  width: 450px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -1337,7 +1337,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 420px;  padding: 18px 24px;
+  width: 450px;
+  padding: 18px 24px;
   border-top: 2px solid $ink;
   background: $paper;
   min-height: 86px;
@@ -1767,10 +1768,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 }
 
 .collection-info-section {
-  padding: 16px 24px;
+  padding: 16px 0;
   border-bottom: 2px solid $line;
-  background: #fff;
-  border-radius: 12px;
   margin: 0 18px;
 
   .collection-title {
@@ -1803,12 +1802,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 }
 
 .collection-list {
-  margin-top: 12px;
+  margin: 12px 18px 0;
   height: calc(100vh - 270px);
   overflow-y: auto;
 
   .collection-item {
-    padding: 16px 24px;
+    padding: 14px;
     cursor: pointer;
     border-radius: 12px;
     border: 2px solid transparent;
@@ -1820,9 +1819,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     }
 
     &.active {
-      background: #fff;
       border-color: $ink;
-      box-shadow: $shadow-hard-sm;
     }
   }
 

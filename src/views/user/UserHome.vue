@@ -269,17 +269,21 @@
 
               <div v-else>
                 <div class="follow-list" v-if="followList.length > 0">
-                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }" @click="goUserHome(user.id)">
-                    <div class="card-top">
-                      <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-                      <div class="user-meta">
-                        <div class="nickname">{{ user.nickname }}</div>
-                        <div class="fans-count">
-                          {{ t("userHome.followList.totalFans", { num: formatNumber(user.fans) }) }}
+                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms`, boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }">
+                    <div class="card-body" @click="goUserHome(user.id)">
+                      <div class="card-top">
+                        <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                        <div class="user-meta">
+                          <div class="nickname">{{ user.nickname }}</div>
+                          <div class="fans-count">
+                            {{ t("userHome.followList.totalFans", { num: formatNumber(user.fans) }) }}
+                          </div>
                         </div>
                       </div>
+                      <div class="card-bio">{{ user.bio }}</div>
+                    </div>
+                    <div class="card-footer" v-if="String(user.id) !== uid">
                       <button
-                        v-if="String(user.id) !== uid"
                         class="follow-btn"
                         :class="{ followed: user.isFollowed }"
                         @click.stop="toggleListFollow(user)"
@@ -294,7 +298,6 @@
                         }}</span>
                       </button>
                     </div>
-                    <div class="card-bio">{{ user.bio }}</div>
                   </div>
                 </div>
 
@@ -1145,6 +1148,10 @@ function formatNumber(num: number) {
   }
   return num.toLocaleString();
 }
+
+// Colorful shadow palette for follow user cards
+const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
+const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
 // Get start date (6 days ago)
 function getStartDate() {
@@ -2620,85 +2627,54 @@ async function unpinCollection(collection: any) {
   }
 
 .follow-card {
-      padding: 18px;
+      display: flex;
+      flex-direction: column;
       border-radius: 16px;
       border: 3px solid #161122;
-      box-shadow: 4px 4px 0 #161122;
       background: #FFFDF7;
-      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
-      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
 
       &:hover {
-        transform: translateY(-4px);
-        box-shadow: 6px 6px 0 #161122;
+        transform: translate(-2px, -2px);
       }
+
+    .card-body {
+      flex: 1;
+      padding: 18px 18px 12px;
+      cursor: pointer;
+    }
 
     .card-top {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
 
       .user-avatar {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         border: 2.5px solid #161122;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
         object-fit: cover;
+        flex-shrink: 0;
       }
       .user-meta {
         flex: 1;
+        min-width: 0;
         .nickname {
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 800;
           color: #161122;
           margin-bottom: 6px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .fans-count {
           font-size: 12px;
-          color: #161122;
-        }
-      }
-
-      .follow-btn {
-        min-width: 98px;
-        height: 40px;
-        padding: 0 16px;
-        border-radius: 13px;
-        border: 2.5px solid #161122;
-        font-size: 14px;
-        cursor: pointer;
-        background: #FF4D8D;
-        color: #FFFFFF;
-        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
-        position: relative;
-        overflow: hidden;
-
-        &:hover {
-          box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
-        }
-
-        .hover-text {
-          display: none;
-        }
-
-        &.followed {
-          background: #FFFDF7;
-          color: #161122;
-          box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
-
-          &:hover {
-            color: #FF4D8D;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
-
-            .btn-text {
-              display: none;
-            }
-            .hover-text {
-              display: inline;
-            }
-          }
+          font-weight: 800;
+          color: #9a93a4;
         }
       }
     }
@@ -2712,7 +2688,59 @@ async function unpinCollection(collection: any) {
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      color: #161122;
+      color: #5b5566;
+    }
+
+    .card-footer {
+      padding: 0 18px 18px;
+
+      .follow-btn {
+        width: 100%;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 13px;
+        border: 2.5px solid #161122;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        background: #FF4D8D;
+        color: #FFFFFF;
+        box-shadow: 2px 2px 0 #161122;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s ease-out;
+
+        &:hover {
+          transform: translate(-1px, -2px);
+          box-shadow: 4px 5px 0 #161122;
+        }
+
+        &:active {
+          transform: translate(1px, 1px);
+          box-shadow: 1px 1px 0 #161122;
+        }
+
+        .hover-text {
+          display: none;
+        }
+
+        &.followed {
+          background: #FFFDF7;
+          color: #9a93a4;
+
+          &:hover {
+            color: #FF4D8D;
+            border-color: #FF4D8D;
+
+            .btn-text {
+              display: none;
+            }
+            .hover-text {
+              display: inline;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -3352,15 +3380,16 @@ async function unpinCollection(collection: any) {
     }
 
     .follow-card {
-      padding: 12px;
+      .card-body {
+        padding: 12px 12px 8px;
+      }
 
       .card-top {
-        flex-wrap: wrap;
         gap: 8px;
 
         .user-avatar {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
         }
         .user-meta {
           .nickname {
@@ -3370,19 +3399,22 @@ async function unpinCollection(collection: any) {
             font-size: 11px;
           }
         }
-
-        .follow-btn {
-          min-width: 80px;
-          height: 34px;
-          font-size: 12px;
-          padding: 0 10px;
-        }
       }
 
       .card-bio {
         font-size: 11px;
         height: 30px;
         line-height: 15px;
+      }
+
+      .card-footer {
+        padding: 0 12px 12px;
+
+        .follow-btn {
+          height: 34px;
+          font-size: 12px;
+          padding: 0 10px;
+        }
       }
     }
   }

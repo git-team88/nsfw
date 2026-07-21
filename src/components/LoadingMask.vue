@@ -1,6 +1,6 @@
 <template>
   <div class="loading-mask" v-if="visible">
-    <img src="@/assets/images/base/load.png" alt="Loading" />
+    <div class="loading-spinner"></div>
     <button class="cancel-btn" v-if="showCancel" @click="emit('cancel')">{{ cancelText || t('novel.batchPublish.cancelOperation') }}</button>
   </div>
 </template>
@@ -24,36 +24,55 @@ const emit = defineEmits<{
 </script>
 
 <style scoped lang="scss">
+$ink: #161122;
+$pink: #FF4D8D;
+
 .loading-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 34, 0.4);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 500;
 
-  img {
-    width: 4rem;
-    height: 4rem;
-    animation: spin 1.5s linear infinite;
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #F3EFE7;
+    border-top: 4px solid $ink;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
   }
 
   .cancel-btn {
-    min-width: 13.6rem;
-    height: 4.8rem;
-    margin-top: 4rem;
-    padding: 0 1.2rem;
-    border-radius: 0.8rem;
-    font-size: 1.4rem;
-    border: none;
-    background: rgba(0, 0, 0, 0.5);
-    color: #FFFFFF;
+    min-width: 136px;
+    height: 48px;
+    margin-top: 32px;
+    padding: 0 16px;
+    background: #fff;
+    border: 2.5px solid $ink;
+    border-radius: 13px;
+    font-size: 14px;
+    font-weight: 800;
+    color: $ink;
     cursor: pointer;
+    box-shadow: 3px 3px 0 $ink;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+
+    &:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 $ink;
+    }
+
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 $ink;
+    }
   }
 }
 

@@ -5,6 +5,7 @@
     <div class="submit-container">
       <div class="back" @click="goBack">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="back-text">{{ t('back') }}</span>
       </div>
 
       <div class="tabs" :class="(uploadSuccess || postId || isBatchPublish) ? 'on' : ''">
@@ -20,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!uploadSuccess && !postId && !route.query.session_id">
+      <div class="upload-tabs" v-if="!uploadSuccess && !postId && !isInitializing">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.video.videoLabel") }}</span>
         </div>
@@ -193,12 +194,12 @@
       </div>
 
       <!-- Batch Publish Loading -->
-      <div v-if="isLoadingBatchPublish" class="loading-state">
+      <div v-if="isLoadingBatchPublish || isInitializing" class="loading-state">
         <div class="loading-spinner"></div>
         <div class="loading-text">{{ t('home.loading') }}</div>
       </div>
 
-      <div class="content-wrapper" v-if="uploadSuccess || postId || shouldShowSessionContent">
+      <div class="content-wrapper" v-if="uploadSuccess || postId">
 
         <!-- Single mode: video status + permission -->
         <div v-if="!isBatchPublish" class="section">
@@ -296,9 +297,8 @@
                     <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
                     <div class="info-icon" @mouseover="adjustTooltipPosition">
-                      <img src="@/assets/images/publish/intro.png" alt="Info" />
-                      <div class="tooltip-arrow"></div>
-                      <div class="tooltip">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                      <div class="info-tooltip">
                         <div class="tooltip-content">
                           <div v-html="t('submit.collectionInfo')"></div>
                         </div>
@@ -327,9 +327,8 @@
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                             <div class="info-icon" @mouseover="adjustTooltipPosition">
-                              <img src="@/assets/images/publish/info.png" alt="Info" />
-                              <div class="tooltip-arrow"></div>
-                              <div class="tooltip">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                              <div class="info-tooltip">
                                 <div class="tooltip-content">
                                   <div v-html="t('submit.sensitiveContent')"></div>
                                 </div>
@@ -1095,6 +1094,7 @@ const isChapterPublished = computed(() => {
 const selectedChapters = ref<number[]>([]);
 const isBatchPublish = computed(() => selectedChapters.value.length > 1);
 const isLoadingBatchPublish = ref(false);
+const isInitializing = ref(false);
 
 const unpublishedChapters = computed(() =>
   (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish != 1)
@@ -4100,31 +4100,37 @@ async function initBatchPublish(session_id: string) {
 }
 
 onMounted(async () => {
-  document.addEventListener("click", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
 
-  getCountry();
-  await checkSubscriptionStatus();
+    getCountry();
+    await checkSubscriptionStatus();
 
-  const sessionIdParam = route.query.session_id as string;
-  const urlParam = route.query.url as string;
-  const indexParam = route.query.index as string;
-  const isBatch = route.query.batch === 'true';
+    const sessionIdParam = route.query.session_id as string;
+    const urlParam = route.query.url as string;
+    const indexParam = route.query.index as string;
+    const isBatch = route.query.batch === 'true';
 
-  if (isBatch && sessionIdParam) {
-    isEditingWork.value = true;
-    await initBatchPublish(sessionIdParam);
-  } else if (sessionIdParam && urlParam) {
-    await initSingleChapter(sessionIdParam, urlParam, indexParam);
-  } else if (sessionIdParam) {
-    sessionId.value = sessionIdParam;
-    isEditingWork.value = true;
-  } else if (postId.value) {
-    isEditingWork.value = true;
-    await getPostDetails();
-  } else {
-    await fetchProjects();
-  }
-});
+    if (isBatch && sessionIdParam) {
+      isInitializing.value = true;
+      isEditingWork.value = true;
+      await initBatchPublish(sessionIdParam);
+      isInitializing.value = false;
+    } else if (sessionIdParam && urlParam) {
+      isInitializing.value = true;
+      await initSingleChapter(sessionIdParam, urlParam, indexParam);
+      isInitializing.value = false;
+    } else if (sessionIdParam) {
+      sessionId.value = sessionIdParam;
+      isEditingWork.value = true;
+    } else if (postId.value) {
+      isInitializing.value = true;
+      isEditingWork.value = true;
+      await getPostDetails();
+      isInitializing.value = false;
+    } else {
+      await fetchProjects();
+    }
+  });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);

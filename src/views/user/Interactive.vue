@@ -632,8 +632,7 @@ async function downloadSingleWorkData() {
   border-radius: 2px;
   background: #FF4D8D;
 }
-.content {
-}
+
 .metrics {
   display: flex;
   gap: 20px;
@@ -851,6 +850,7 @@ async function downloadSingleWorkData() {
     line-height: 20px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     word-break: break-word;

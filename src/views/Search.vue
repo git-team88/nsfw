@@ -20,45 +20,10 @@
         </div>
 
         <!-- Search Results -->
-        <div class="search-results">
-          <div class="results-header">
-            <h2>{{ t('search.resultsFor') }}
-              <span v-if="searchKeyword">[{{ searchKeyword }}]</span>
-            </h2>
-
-            <!-- Tabs: Posts / users -->
-            <div class="result-tabs">
-              <div
-                v-for="tab in tabs"
-                :key="tab.value"
-                class="tab-item"
-                :class="{ active: activeTab === tab.value }"
-                @click="switchTab(tab.value)"
-              >
-                {{ tab.label }}
-              </div>
-            </div>
-
-            <!-- Post Type Filters -->
-            <div class="post-filters" v-if="activeTab === 'posts'">
-              <div
-                v-for="filter in postFilters"
-                :key="filter.id"
-                class="filter-item"
-                :class="{ active: postFilter == filter.id }"
-                @click="setPostFilter(filter.id)"
-              >
-                {{ filter.label }}
-              </div>
-            </div>
-          </div>
-      </div>
-
-      <!-- Search Results -->
       <div class="search-results">
         <div class="results-header">
           <h2>{{ t('search.resultsFor') }}
-            <span>[{{ searchKeyword }}]</span>
+            <span v-if="searchKeyword">[{{ searchKeyword }}]</span>
           </h2>
 
           <!-- Tabs: Posts / Users -->
@@ -110,9 +75,7 @@
                 </div>
                 <!-- Type Icon -->
                 <div class="type-icon" v-if="post.type">
-                  <img v-if="post.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                  <img v-else-if="post.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                  <img v-else-if="post.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                  <span class="type-badge" :class="'type-' + post.type">{{ post.type == '1' ? t('collection.typeComic') : post.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
                 </div>
                 <!-- Video Play Icon -->
                 <div v-if="post.type == '3'" class="play-icon">
@@ -825,35 +788,33 @@ $line: #e7e1d8;
 .search-page {
   width: 100%;
   min-height: 100vh;
-  padding: 12rem 0 0;
+  padding: 120px 0 0;
   background: $cream;
 }
 
 .container {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 1.2rem;
+  padding: 0 12px;
 
   @media (min-width: 768px) {
-    padding: 0 1.6rem;
+    padding: 0 16px;
   }
 }
 
 .search-panel {
   background: $paper;
-  border: 3px solid $ink;
   border-radius: 6px;
-  padding: 2.4rem 1.8rem 3.2rem;
-  box-shadow: 6px 6px 0 rgba(22,17,34,0.14);
+  padding: 0 18px;
   animation: sePanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
   @media (min-width: 768px) {
-    padding: 3.4rem 4rem 4.4rem;
+    padding: 0 40px;
   }
 }
 
 .search-bar {
-  margin: 0 0 2rem;
+  margin: 0 0 20px;
 
   .search-input-wrap {
     position: relative;
@@ -861,14 +822,14 @@ $line: #e7e1d8;
 
     .search-input {
       width: 100%;
-      height: 4.4rem;
+      height: 44px;
       background: #fff;
       border: 2px solid $ink;
       border-radius: 999px;
-      padding: 0 5rem 0 3.6rem;
+      padding: 0 50px 0 36px;
       font-family: inherit;
       font-weight: 700;
-      font-size: 1.3rem;
+      font-size: 13px;
       color: $ink;
       outline: none;
       transition: box-shadow 0.18s;
@@ -885,30 +846,30 @@ $line: #e7e1d8;
 
     .search-icon {
       position: absolute;
-      left: 1.2rem;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      width: 1.6rem;
-      height: 1.6rem;
+      width: 16px;
+      height: 16px;
       color: $muted;
       pointer-events: none;
     }
 
     .search-btn {
       position: absolute;
-      right: 0.6rem;
+      right: 6px;
       top: 50%;
       transform: translateY(-50%);
-      width: 3.6rem;
-      height: 3.6rem;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
 
       img {
-        width: 1.8rem;
-        height: 1.8rem;
+        width: 18px;
+        height: 18px;
       }
     }
   }
@@ -918,13 +879,13 @@ $line: #e7e1d8;
   .results-header {
     h2 {
       font-weight: 800;
-      font-size: 3rem;
+      font-size: 30px;
       color: $ink;
-      margin-bottom: 0;
+      margin-bottom: 16px;
       letter-spacing: 0.02em;
       display: flex;
       align-items: flex-end;
-      gap: 1.4rem;
+      gap: 14px;
       flex-wrap: wrap;
 
       span {
@@ -932,8 +893,8 @@ $line: #e7e1d8;
         background: #FFEFF5;
         border: 2.5px solid $ink;
         border-radius: 999px;
-        padding: 0.4rem 1.5rem;
-        font-size: 1.5rem;
+        padding: 4px 15px;
+        font-size: 15px;
         box-shadow: 2px 2px 0 $ink;
         animation: seChipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
       }
@@ -941,27 +902,27 @@ $line: #e7e1d8;
 
     .search-count {
       font-weight: 600;
-      font-size: 1.4rem;
+      font-size: 14px;
       color: $muted;
-      margin-top: 0.8rem;
-      margin-bottom: 2rem;
+      margin-top: 8px;
+      margin-bottom: 20px;
     }
 
     .result-tabs {
       display: flex;
-      gap: 0.6rem;
+      gap: 6px;
       flex-wrap: wrap;
       background: #fff;
       border: 2.5px solid $ink;
-      border-radius: 1.4rem;
+      border-radius: 14px;
       padding: 5px;
-      margin-bottom: 2.6rem;
+      margin-bottom: 26px;
 
       .tab-item {
         font-weight: 800;
-        font-size: 1.45rem;
-        padding: 1rem 2rem;
-        border-radius: 1rem;
+        font-size: 15px;
+        padding: 10px 20px;
+        border-radius: 10px;
         cursor: pointer;
         transition: background-color 0.16s, color 0.16s;
         color: $ink;
@@ -980,14 +941,14 @@ $line: #e7e1d8;
 
     .post-filters {
       display: flex;
-      gap: 0.8rem;
+      gap: 8px;
       flex-wrap: wrap;
-      margin: 0 0 2rem;
+      margin: 0 0 20px;
 
       .filter-item {
         font-weight: 800;
-        font-size: 1.3rem;
-        padding: 0.8rem 1.6rem;
+        font-size: 13px;
+        padding: 8px 16px;
         border-radius: 999px;
         border: 2px solid $ink;
         cursor: pointer;
@@ -1015,13 +976,13 @@ $line: #e7e1d8;
   .waterfall {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.8rem;
+    gap: 18px;
     width: 100%;
     margin: 0 auto;
 
     @media (min-width: 768px) {
       grid-template-columns: repeat(4, 1fr);
-      gap: 2rem;
+      gap: 20px;
     }
   }
 }
@@ -1032,7 +993,7 @@ $line: #e7e1d8;
   break-inside: avoid;
   background: #fff;
   border: 2.5px solid $ink;
-  border-radius: 1.6rem;
+  border-radius: 16px;
   box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
@@ -1061,18 +1022,18 @@ $line: #e7e1d8;
 
     .r18-overlay {
       position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      height: 2.8rem;
+      top: 6px;
+      right: 6px;
+      height: 28px;
       background: rgba(16,24,40,0.7);
-      border-radius: 1.4rem;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 0.8rem;
+      padding: 0 8px;
 
       .r18-text {
-        font-size: 1.4rem;
+        font-size: 14px;
         font-weight: 500;
         color: #FFFFFF;
       }
@@ -1080,21 +1041,27 @@ $line: #e7e1d8;
 
     .type-icon {
       position: absolute;
-      top: 0.8rem;
-      left: 0.8rem;
+      top: 8px;
+      left: 8px;
       z-index: 1;
-      background: #FFC24B;
-      border: 2px solid $ink;
-      border-radius: 999px;
-      padding: 0.3rem 1rem;
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: $ink;
 
-      img {
-        width: 3.2rem;
-        height: 3.2rem;
-        object-fit: contain;
+      .type-badge {
+        display: inline-block;
+        border: 2px solid $ink;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-weight: 800;
+        font-size: 12px;
+        color: $ink;
+        background: #FFC24B;
+
+        &.type-2 {
+          background: #C9B6FF;
+        }
+
+        &.type-3 {
+          background: #7FD8E8;
+        }
       }
     }
 
@@ -1106,8 +1073,8 @@ $line: #e7e1d8;
       z-index: 1;
 
       img {
-        width: 6rem;
-        height: 6rem;
+        width: 60px;
+        height: 60px;
         object-fit: contain;
       }
     }
@@ -1116,20 +1083,20 @@ $line: #e7e1d8;
       position: absolute;
       bottom: 0;
       width: 100%;
-      height: 5rem;
+      height: 50px;
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      padding: 0 1rem 1rem;
-      border-radius: 0 0 1.6rem 1.6rem;
+      padding: 0 10px 10px;
+      border-radius: 0 0 16px 16px;
       background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
     }
 
     .update-info {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 1.1rem;
+      gap: 4px;
+      font-size: 11px;
       color: rgba(255, 255, 255, 0.9);
       z-index: 1;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -1141,14 +1108,14 @@ $line: #e7e1d8;
   }
 
   .content-info {
-    padding: 1.4rem 1.5rem 1.5rem;
+    padding: 14px 15px 15px;
 
     .content-desc {
       font-weight: 800;
-      font-size: 1.7rem;
+      font-size: 17px;
       color: $ink;
       line-height: 1.35;
-      min-height: 4.6rem;
+      min-height: 46px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
@@ -1159,19 +1126,19 @@ $line: #e7e1d8;
     .content-meta {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
-      margin-top: 1.1rem;
+      gap: 9px;
+      margin-top: 11px;
 
       .author-info {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 6px;
         min-width: 0;
         flex: 1;
 
         .author-avatar {
-          width: 3rem;
-          height: 3rem;
+          width: 30px;
+          height: 30px;
           flex-shrink: 0;
           border-radius: 999px;
           border: 2px solid $ink;
@@ -1180,7 +1147,7 @@ $line: #e7e1d8;
 
         .author-name {
           font-weight: 600;
-          font-size: 1.35rem;
+          font-size: 14px;
           color: $muted;
           overflow: hidden;
           white-space: nowrap;
@@ -1191,21 +1158,21 @@ $line: #e7e1d8;
       .content-stats-top {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 4px;
         flex-shrink: 0;
         font-weight: 800;
-        font-size: 1.5rem;
+        font-size: 15px;
         color: $pink;
 
         span {
           font-weight: 800;
-          font-size: 1.3rem;
+          font-size: 13px;
           color: $muted;
         }
 
         img {
-          width: 1.6rem;
-          height: 1.6rem;
+          width: 16px;
+          height: 16px;
         }
       }
     }
@@ -1214,16 +1181,16 @@ $line: #e7e1d8;
 
 .loading-trigger {
   text-align: center;
-  padding: 2rem 0;
+  padding: 20px 0;
   color: $muted;
-  font-size: 1.4rem;
+  font-size: 14px;
 }
 
 /* Users Grid */
 .users-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.8rem;
+  gap: 18px;
   margin: 0;
 
   @media (min-width: 768px) {
@@ -1234,8 +1201,8 @@ $line: #e7e1d8;
 .user-card {
   background: #fff;
   border: 2.5px solid $ink;
-  border-radius: 1.6rem;
-  padding: 2.2rem 1.8rem;
+  border-radius: 16px;
+  padding: 22px 18px;
   text-align: center;
   cursor: pointer;
   box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
@@ -1248,34 +1215,34 @@ $line: #e7e1d8;
   }
 
   .user-avatar {
-    width: 7.8rem;
-    height: 7.8rem;
+    width: 78px;
+    height: 78px;
     border-radius: 999px;
     border: 2.5px solid $ink;
-    margin: 0 auto 1.2rem;
+    margin: 0 auto 12px;
     object-fit: cover;
     box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
   }
 
   .nickname {
     font-weight: 800;
-    font-size: 1.6rem;
+    font-size: 16px;
     color: $ink;
   }
 
   .fans-count {
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 12px;
     color: $muted;
-    margin-top: 0.2rem;
+    margin-top: 2px;
   }
 
   .card-bio {
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 12px;
     color: $muted;
-    line-height: 1.8rem;
-    margin-top: 0.9rem;
+    line-height: 18px;
+    margin-top: 9px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -1287,12 +1254,12 @@ $line: #e7e1d8;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 9rem;
-    height: 3.6rem;
-    padding: 0 1.4rem;
-    border-radius: 1.3rem;
+    min-width: 90px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 13px;
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: 13px;
     cursor: pointer;
     background: linear-gradient(135deg, $pink, #FF7A45);
     color: #ffffff;
@@ -1301,7 +1268,7 @@ $line: #e7e1d8;
     transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
     position: relative;
     overflow: hidden;
-    margin-top: 0.9rem;
+    margin-top: 9px;
 
     &:hover {
       transform: translate(-2px, -2px);
@@ -1347,20 +1314,20 @@ $line: #e7e1d8;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6rem 0;
+  padding: 60px 0;
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid $line;
-    border-top: 0.4rem solid $ink;
+    width: 40px;
+    height: 40px;
+    border: 4px solid $line;
+    border-top: 4px solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
   }
 
   p {
-    font-size: 1.6rem;
+    font-size: 16px;
     color: $muted;
   }
 }
@@ -1369,20 +1336,20 @@ $line: #e7e1d8;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  padding: 3rem 0;
+  gap: 10px;
+  padding: 30px 0;
 
   .loading-spinner {
-    width: 4rem;
-    height: 4rem;
-    border: 0.4rem solid $line;
-    border-top: 0.4rem solid $ink;
+    width: 40px;
+    height: 40px;
+    border: 4px solid $line;
+    border-top: 4px solid $ink;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
   }
 
   p {
-    font-size: 1.6rem;
+    font-size: 16px;
     color: $muted;
   }
 }
@@ -1409,7 +1376,7 @@ $line: #e7e1d8;
 /* Skeleton placeholder */
 .se-skel {
   background: $line;
-  border-radius: 1.6rem;
+  border-radius: 16px;
   animation: seSkelPulse 1.6s ease-in-out infinite;
 }
 
@@ -1421,24 +1388,24 @@ $line: #e7e1d8;
 /* Responsive */
 @media (max-width: 720px) {
   .container {
-    padding: 0 1rem;
+    padding: 0 10px;
   }
 
   .search-panel {
-    padding: 2rem 1.2rem 2.4rem;
+    padding: 0 12px;
   }
 
   .results-header h2 {
-    font-size: 2.4rem;
+    font-size: 24px;
 
     span {
-      font-size: 1.3rem;
+      font-size: 13px;
     }
   }
 
   .content-item .content-info .content-desc {
-    font-size: 1.4rem;
-    min-height: 3.8rem;
+    font-size: 14px;
+    min-height: 38px;
   }
 }
 

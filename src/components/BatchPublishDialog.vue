@@ -1,9 +1,10 @@
 <template>
   <div v-if="visible" class="batch-publish-overlay">
     <div class="batch-publish-dialog">
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+
       <div class="dialog-header">
         <span class="dialog-title">{{ t('novel.batchPublish.selectChapters') }}</span>
-        <img class="dialog-close-icon" src="@/assets/images/base/close.png" alt="" @click="$emit('close')" />
       </div>
 
       <div class="dialog-body">
@@ -12,11 +13,9 @@
             <span class="unpublished-label">{{ t('novel.batchPublish.unpublished') }}</span>
             <div class="select-all-btn" @click="toggleSelectAll">
               <span class="select-all-text">{{ t('novel.batchPublish.selectAll', { count: unpublishedChapters.length }) }}</span>
-              <img
-                class="checkbox-icon"
-                :src="isAllSelected ? checkActive : checkInactive"
-                alt=""
-              />
+              <div class="checkbox" :class="{ active: isAllSelected }">
+                <svg v-if="isAllSelected" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
             </div>
           </div>
 
@@ -30,11 +29,9 @@
               <span class="chapter-name">{{ t('novel.chapter', { chapter: chapter.chapter }) }}&nbsp;{{ chapter.title }}</span>
               <div class="chapter-right">
                 <span class="chapter-status-unpublish">{{ t('novel.batchPublish.unpublished') }}</span>
-                <img
-                  class="checkbox-icon"
-                  :src="selectedChapters.includes(chapter.chapter) ? checkActive : checkInactive"
-                  alt=""
-                />
+                <div class="checkbox" :class="{ active: selectedChapters.includes(chapter.chapter) }">
+                  <svg v-if="selectedChapters.includes(chapter.chapter)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
               </div>
             </div>
           </div>
@@ -77,8 +74,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import checkActive from '@/assets/images/register/check_active.png';
-import checkInactive from '@/assets/images/register/check.png';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 
@@ -171,13 +166,19 @@ watch(() => props.visible, (newVal) => {
 </script>
 
 <style lang="scss" scoped>
+$ink: #161122;
+$pink: #FF4D8D;
+$muted: #9a93a4;
+$sub: #5b5566;
+$cream: #FFFBF4;
+
 .batch-publish-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(22, 17, 34, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,44 +187,81 @@ watch(() => props.visible, (newVal) => {
 
 .batch-publish-dialog {
   background-color: #ffffff;
-  border-radius: 1.2rem;
+  border: 2px solid $ink;
+  border-radius: 14px;
+  box-shadow: 6px 6px 0 $ink;
   position: relative;
-  width: 50rem;
-  max-height: 59.6rem;
+  width: 500px;
+  max-height: 596px;
   display: flex;
   flex-direction: column;
+  animation: tdIn .3s cubic-bezier(.16,1,.3,1) both;
+}
+
+.close-btn {
+  background: #fff;
+  border: 2.5px solid $ink;
+  border-radius: 50%;
+  padding: 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 $ink;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  z-index: 1;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 $ink;
+  }
 }
 
 .dialog-header {
   position: relative;
-  padding: 1.8rem 0;
+  padding: 18px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
   .dialog-title {
-    color: #364153;
-    font-size: 1.6rem;
-    font-weight: 500;
-    line-height: 2.4rem;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 24px;
   }
-}
-
-.dialog-close-icon {
-  position: absolute;
-  top: 2rem;
-  right: 1.2rem;
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
 }
 
 .dialog-body {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 0 3.6rem;
+  padding: 0 36px;
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid $ink;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.14s ease;
+
+  &.active {
+    background: $pink;
+    border-color: $ink;
+    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
+  }
 }
 
 .unpublished-section {
@@ -231,47 +269,55 @@ watch(() => props.visible, (newVal) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.2rem;
+    padding: 0 12px;
 
     .unpublished-label {
-      color: #364153;
-      font-size: 1.4rem;
-      line-height: 2.2rem;
+      color: $ink;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 22px;
     }
 
     .select-all-btn {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 6px;
       cursor: pointer;
 
       .select-all-text {
-        color: #99A1AF;
-        font-size: 1.4rem;
-        line-height: 2rem;
-      }
-
-      .checkbox-icon {
-        width: 2.4rem;
-        height: 2.4rem;
+        color: $muted;
+        font-size: 14px;
+        line-height: 20px;
       }
     }
   }
 
   .unpublished-list {
-    background-color: #F5F5F5;
-    border-radius: 0.8rem;
-    max-height: 23rem;
+    background-color: $cream;
+    border: 2px solid $ink;
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
+    max-height: 230px;
     overflow-y: auto;
-    padding: 1.2rem;
-    margin: 1rem 0 0;
+    padding: 12px;
+    margin: 10px 0 0;
 
     .chapter-row {
-      margin-bottom: 1.2rem;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1.5px solid rgba(22, 17, 34, 0.12);
+      border-radius: 8px;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+      }
 
       &:last-child {
         margin-bottom: 0;
@@ -279,8 +325,9 @@ watch(() => props.visible, (newVal) => {
 
       .chapter-name {
         flex: 1;
-        color: #364153;
-        font-size: 1.4rem;
+        color: $ink;
+        font-size: 14px;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -289,55 +336,58 @@ watch(() => props.visible, (newVal) => {
       .chapter-right {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 8px;
       }
 
       .chapter-status-unpublish {
-        color: #99A1AF;
-        font-size: 1.4rem;
-      }
-
-      .checkbox-icon {
-        width: 2.4rem;
-        height: 2.4rem;
+        color: $muted;
+        font-size: 13px;
+        font-weight: 600;
       }
     }
   }
 }
 
 .published-section {
-  margin-top: 1.2rem;
+  margin-top: 16px;
 
   .published-header {
     display: flex;
     align-items: center;
-    padding: 0 1.2rem;
+    gap: 8px;
+    padding: 0 12px;
 
     .published-label {
-      color: #364153;
-      font-size: 1.4rem;
+      color: $ink;
+      font-size: 14px;
+      font-weight: 700;
     }
 
     .published-count {
-      color: #99A1AF;
-      font-size: 1.4rem;
-      line-height: 2rem;
+      color: $muted;
+      font-size: 14px;
+      line-height: 20px;
     }
   }
 
   .published-list {
-    background-color: #F5F5F5;
-    border-radius: 0.8rem;
-    max-height: 22.4rem;
+    background-color: $cream;
+    border: 2px solid rgba(22, 17, 34, 0.15);
+    border-radius: 10px;
+    max-height: 224px;
     overflow-y: auto;
-    padding: 1.2rem;
-    margin: 1rem 0 0;
+    padding: 12px;
+    margin: 10px 0 0;
 
     .chapter-row-published {
-      margin-bottom: 1.2rem;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1.5px solid rgba(22, 17, 34, 0.08);
+      border-radius: 8px;
 
       &:last-child {
         margin-bottom: 0;
@@ -345,16 +395,18 @@ watch(() => props.visible, (newVal) => {
 
       .chapter-name {
         flex: 1;
-        color: #364153;
-        font-size: 1.4rem;
+        color: $ink;
+        font-size: 14px;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .chapter-status-published {
-        color: #6A7282;
-        font-size: 1.4rem;
+        color: $sub;
+        font-size: 13px;
+        font-weight: 600;
       }
     }
   }
@@ -363,51 +415,52 @@ watch(() => props.visible, (newVal) => {
 .dialog-footer {
   display: flex;
   justify-content: center;
-  padding: 2.4rem 0;
+  padding: 24px 0;
   flex-shrink: 0;
 
   .next-step-btn {
-    background-color: #FB64B6;
-    border-radius: 0.8rem;
-    height: 4.8rem;
-    min-width: 13.6rem;
-    border: none;
+    background: $pink;
+    border: 2.5px solid $ink;
+    border-radius: 13px;
+    height: 48px;
+    min-width: 136px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
+    gap: 6px;
+    font-weight: 800;
+    box-shadow: 3px 3px 0 $ink;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(.disabled) {
-      position: relative;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 $ink;
+    }
 
-      &::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.1);
-      }
+    &:active:not(.disabled) {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 $ink;
     }
 
     &.disabled {
-      background: rgba(251, 100, 182, 0.5);
+      background: rgba(255, 77, 141, 0.5);
       cursor: not-allowed;
+      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.15);
     }
 
     .next-step-text {
       color: #ffffff;
-      font-size: 1.4rem;
-      line-height: 2rem;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 20px;
     }
 
     .btn-spinner {
       display: inline-block;
-      width: 1.4rem;
-      height: 1.4rem;
-      border: 1.5px solid #FFFFFF;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #FFFFFF;
       border-right-color: transparent;
       border-radius: 50%;
       animation: btn-spin 0.6s linear infinite;
@@ -419,5 +472,10 @@ watch(() => props.visible, (newVal) => {
 @keyframes btn-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes tdIn {
+  0% { opacity: 0; transform: scale(.92) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 </style>

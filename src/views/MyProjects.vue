@@ -190,7 +190,7 @@
                     <img :src="pic" alt="" class="cover-img" />
                   </div>
                   <!-- 悬浮编辑按钮 -->
-                  <div class="photo-edit-btn" @click="goToGenerate(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
+                  <div class="photo-edit-btn" @click="goToGenerate(project)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
               </div>
 
@@ -199,7 +199,7 @@
                 <div class="card-cover video-cover">
                   <img :src="project.result_async?.final_videos[0].video_cover_url ? processImageUrl(project.result_async.final_videos[0].video_cover_url) : pic" alt="" class="cover-img" />
 
-                  <div class="video-edit-btn" @click="goToGenerate(project.session_id)">{{ t('myProjects.buttons.edit') }}</div>
+                  <div class="video-edit-btn" @click="goToGenerate(project)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
               </div>
 
@@ -370,11 +370,15 @@ function openEditPage(sessionId: string, type: number) {
   }
 }
 
-function goToGenerate(sessionId: string) {
-  // 使用localStorage临时存储sessionId
-  localStorage.setItem('targetSessionId', sessionId);
+function goToGenerate(project: any) {
+  try {
+    sessionStorage.setItem('targetGenerateRecord', JSON.stringify(project));
+  } catch {
+    sessionStorage.removeItem('targetGenerateRecord');
+  }
   router.push({
-    name: 'Generate'
+    name: 'Generate',
+    query: { session_id: project.session_id }
   });
 }
 

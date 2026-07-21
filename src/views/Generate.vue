@@ -42,9 +42,9 @@
         </div>
 
         <!-- Record List -->
-        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '28rem' : '0' }">
+        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '280px' : '0' }">
           <div v-for="(record, index) in displayRecords"
-            :key="record.id"
+            :key="record.session_id || record.id"
             class="record-item"
             :id="`record-${record.session_id}`"
           >
@@ -306,11 +306,7 @@
             </div>
           </div>
 
-          <div class="main-right">
-            <div class="input-role">
-              <img src="@/assets/images/home/role.png" alt="" />
-            </div>
-          </div>
+
         </div>
 
         <!-- Photo Generator -->
@@ -349,7 +345,7 @@
               @focus="handlePhotoInputFocus"
               @blur="handlePhotoInputBlur"
               @paste="handlePhotoPaste"
-              :data-placeholder="t('home.input.placeholderPhoto')"
+              :data-placeholder="photoPlaceholderDisplay"
             ></div>
 
             <!-- @ Dropdown for photo -->
@@ -493,7 +489,7 @@
                 :class="['input-textarea', { collapsed: isVideoInputCollapsed }]"
                 contenteditable="true"
                 spellcheck="false"
-                :data-placeholder="t('home.input.placeholderVideo')"
+                :data-placeholder="videoPlaceholderDisplay"
                 @input="handleVideoInput"
                 @keydown="handleVideoKeydown"
                 @click="handleVideoInputClick"
@@ -864,6 +860,7 @@ const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageModal = ref(false);
 const showUnderageNoBirthdayModal = ref(false);
+const isPositioningTarget = ref(false);
 
 const typeOptions = ref([
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
@@ -939,6 +936,7 @@ const currentPage = ref(1);
 const pageSize = ref(100);
 const displayCount = ref(20);
 const totalCount = ref(0);
+const isLoadingNewer = ref(false);
 const pollingTasks = ref<Set<string>>(new Set());
 const pollingTimers = ref<Map<string, ReturnType<typeof setInterval>>>(new Map());
 const isLoading = ref(false);
@@ -967,6 +965,93 @@ const isVideoInputFocused = ref(false);
 const isUploading = ref(false);
 const previousPhotoInputHtml = ref('');
 const previousVideoInputHtml = ref('');
+
+const photoPlaceholderFull = computed(() => t('home.input.placeholderPhoto'));
+const videoPlaceholderFull = computed(() => t('home.input.placeholderVideo'));
+const photoPlaceholderDisplay = ref('');
+const videoPlaceholderDisplay = ref('');
+const photoTypewriterState = ref({ charIndex: 0, deleting: false });
+const videoTypewriterState = ref({ charIndex: 0, deleting: false });
+let photoTypewriterTimer: ReturnType<typeof setTimeout> | null = null;
+let videoTypewriterTimer: ReturnType<typeof setTimeout> | null = null;
+
+const prefersReducedMotion = ref(false);
+
+const checkReducedMotion = () => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+};
+
+const startPhotoTypewriter = () => {
+  if (photoTypewriterTimer) {
+    clearTimeout(photoTypewriterTimer);
+    photoTypewriterTimer = null;
+  }
+  if (prefersReducedMotion.value || isPhotoInputFocused.value) {
+    photoPlaceholderDisplay.value = photoPlaceholderFull.value;
+    return;
+  }
+  photoTypewriterState.value = { charIndex: 0, deleting: false };
+  const tick = () => {
+    const s = photoTypewriterState.value;
+    if (!s.deleting) {
+      s.charIndex++;
+      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, s.charIndex);
+      if (s.charIndex >= photoPlaceholderFull.value.length) {
+        s.deleting = true;
+        photoTypewriterTimer = setTimeout(tick, 1500);
+        return;
+      }
+      photoTypewriterTimer = setTimeout(tick, 85);
+    } else {
+      s.charIndex--;
+      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
+      if (s.charIndex <= 0) {
+        s.deleting = false;
+        photoTypewriterTimer = setTimeout(tick, 380);
+        return;
+      }
+      photoTypewriterTimer = setTimeout(tick, 42);
+    }
+  };
+  photoTypewriterTimer = setTimeout(tick, 700);
+};
+
+const startVideoTypewriter = () => {
+  if (videoTypewriterTimer) {
+    clearTimeout(videoTypewriterTimer);
+    videoTypewriterTimer = null;
+  }
+  if (prefersReducedMotion.value || isVideoInputFocused.value) {
+    videoPlaceholderDisplay.value = videoPlaceholderFull.value;
+    return;
+  }
+  videoTypewriterState.value = { charIndex: 0, deleting: false };
+  const tick = () => {
+    const s = videoTypewriterState.value;
+    if (!s.deleting) {
+      s.charIndex++;
+      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, s.charIndex);
+      if (s.charIndex >= videoPlaceholderFull.value.length) {
+        s.deleting = true;
+        videoTypewriterTimer = setTimeout(tick, 1500);
+        return;
+      }
+      videoTypewriterTimer = setTimeout(tick, 85);
+    } else {
+      s.charIndex--;
+      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
+      if (s.charIndex <= 0) {
+        s.deleting = false;
+        videoTypewriterTimer = setTimeout(tick, 380);
+        return;
+      }
+      videoTypewriterTimer = setTimeout(tick, 42);
+    }
+  };
+  videoTypewriterTimer = setTimeout(tick, 700);
+};
 
 const getInputCharCount = (element: HTMLElement): number => {
   let charCount = 0;
@@ -1457,27 +1542,45 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
 const handlePhotoInputFocus = () => {
   isPhotoInputFocused.value = true;
   isPhotoInputCollapsed.value = false;
+  lastCollapseState = false;
   if (photoEditableInputRef.value) {
     previousPhotoInputHtml.value = photoEditableInputRef.value.innerHTML;
   }
+  if (photoTypewriterTimer) {
+    clearTimeout(photoTypewriterTimer);
+    photoTypewriterTimer = null;
+  }
+  photoPlaceholderDisplay.value = photoPlaceholderFull.value;
 };
 
 const handlePhotoInputBlur = () => {
   isPhotoInputFocused.value = false;
   checkInputCollapse();
+  if (!isPhotoInputCollapsed.value) {
+    startPhotoTypewriter();
+  }
 };
 
 const handleVideoInputFocus = () => {
   isVideoInputFocused.value = true;
   isVideoInputCollapsed.value = false;
+  lastCollapseState = false;
   if (videoEditableInputRef.value) {
     previousVideoInputHtml.value = videoEditableInputRef.value.innerHTML;
   }
+  if (videoTypewriterTimer) {
+    clearTimeout(videoTypewriterTimer);
+    videoTypewriterTimer = null;
+  }
+  videoPlaceholderDisplay.value = videoPlaceholderFull.value;
 };
 
 const handleVideoInputBlur = () => {
   isVideoInputFocused.value = false;
   checkInputCollapse();
+  if (!isVideoInputCollapsed.value) {
+    startVideoTypewriter();
+  }
 };
 
 const handlePhotoPaste = (event: ClipboardEvent) => {
@@ -1578,6 +1681,8 @@ const checkInputCollapse = () => {
       isPhotoInputCollapsed.value = false;
       isVideoInputCollapsed.value = false;
       lastCollapseState = false;
+      startPhotoTypewriter();
+      startVideoTypewriter();
     }
     return;
   }
@@ -1593,6 +1698,11 @@ const checkInputCollapse = () => {
     isPhotoInputCollapsed.value = targetState;
     isVideoInputCollapsed.value = targetState;
     lastCollapseState = targetState;
+    if (bottomActiveTab.value === 'photo') {
+      startPhotoTypewriter();
+    } else {
+      startVideoTypewriter();
+    }
   }
 };
 
@@ -1717,6 +1827,11 @@ const switchBottomTab = (tab: string) => {
       videoEditableInputRef.value.innerHTML = '';
     }
     uploadedVideoRefs.value = [];
+    if (videoTypewriterTimer) {
+      clearTimeout(videoTypewriterTimer);
+      videoTypewriterTimer = null;
+    }
+    startPhotoTypewriter();
   } else {
     resetVideoSettings();
     // Clear photo input when switching to video
@@ -1725,6 +1840,11 @@ const switchBottomTab = (tab: string) => {
     }
     uploadedPhotoImages.value = [];
     photoInputKey.value++;
+    if (photoTypewriterTimer) {
+      clearTimeout(photoTypewriterTimer);
+      photoTypewriterTimer = null;
+    }
+    startVideoTypewriter();
   }
 };
 
@@ -3213,7 +3333,10 @@ const pollTaskStatus = async (taskId: string) => {
         }
 
         records.value[recordIndex] = { ...updatedRecord };
-        displayRecords.value = [...records.value];
+        const displayedRecordIndex = displayRecords.value.findIndex(r => r.session_id == taskId);
+        if (displayedRecordIndex !== -1) {
+          displayRecords.value[displayedRecordIndex] = { ...updatedRecord };
+        }
 
         if (!isTaskProcessing(taskData.status)) {
           stopPolling(taskId);
@@ -3341,10 +3464,68 @@ const formatContent = (content: string, record: any) => {
   return result;
 };
 
-const loadRecords = async (isLoadMore = false, targetSessionId: string = '') => {
+const normalizeSimpleRecord = (record: any) => {
+  const parseRecordField = (value: any) => {
+    if (typeof value !== 'string') return value || {};
+    try {
+      return JSON.parse(value);
+    } catch {
+      return {};
+    }
+  };
+
+  const userSelected = parseRecordField(record.user_selected);
+  const resultAsync = parseRecordField(record.result_async);
+  const others = userSelected.others || {};
+  const uploadedImages = others.list || [];
+  const coverImage = uploadedImages.length > 0 ? uploadedImages[0].image : record.cover || '';
+
+  let recordType = record.type || 'photo';
+  if (record.story_type === 'simple_video') {
+    recordType = 'video';
+  } else if (record.story_type === 'simple_image') {
+    recordType = 'photo';
+  }
+
+  const finalVideos = resultAsync.final_videos || [];
+  const firstVideo = finalVideos[0] || resultAsync.final_video_output || {};
+  const videoCover = firstVideo.video_cover_url || resultAsync.cover_url || resultAsync.cover || resultAsync.final_video_cover || coverImage;
+  const videoUrl = firstVideo.video_url || resultAsync.final_video || record.video_url || '';
+  const resolution = record.story_type === 'simple_video'
+    ? (userSelected.simple_video_resolution || '').replace(/p$/i, 'P')
+    : userSelected.simple_image_resolution || '';
+
+  return {
+    ...record,
+    user_selected: userSelected,
+    result_async: resultAsync,
+    images: resultAsync.final_images || record.images || [],
+    resolution,
+    ratio: userSelected.ratio || record.ratio || '',
+    duration: userSelected.simple_video_duration || record.duration || '',
+    description: others.content || record.topic || '',
+    formattedDescription: formatContent(others.content || record.topic || '', { ...record, user_selected: userSelected }),
+    type: recordType,
+    cover: coverImage,
+    videoCover,
+    videoUrl,
+    createTime: record.created_at || ''
+  };
+};
+
+const loadRecords = async (isLoadMore = false, targetSessionId: string = '', targetRecord: any = null) => {
   if (isLoading.value) return;
 
   isLoading.value = true;
+  let shouldScrollToTarget = false;
+  const normalizedTargetRecord = targetRecord?.session_id == targetSessionId
+    ? normalizeSimpleRecord(targetRecord)
+    : null;
+  if (targetSessionId && normalizedTargetRecord) {
+    records.value = [normalizedTargetRecord];
+    displayRecords.value = [normalizedTargetRecord];
+    shouldScrollToTarget = true;
+  }
 
   try {
       const storyType = selectedType.value == 'all' ? '' : selectedType.value;
@@ -3353,54 +3534,38 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '') => 
       if (response.code == 200) {
         const dataList = response.data.data_list || response.data.list || [];
 
-        const newRecords = dataList.map((record: any) => {
-          const userSelected = record.user_selected || {};
-          const resultAsync = record.result_async || {};
-          const others = userSelected.others || {};
-          const uploadedImages = others.list || [];
-          const coverImage = uploadedImages.length > 0 ? uploadedImages[0].image : record.cover || '';
+        let newRecords = dataList.map(normalizeSimpleRecord);
 
-          let recordType = record.type || 'photo';
-          if (record.story_type === 'simple_video') {
-            recordType = 'video';
-          } else if (record.story_type === 'simple_image') {
-            recordType = 'photo';
-          }
+        if (targetSessionId && normalizedTargetRecord && !newRecords.some((record: any) => record.session_id == targetSessionId)) {
+          const targetInsertIndex = Math.floor(newRecords.length / 2);
+          newRecords.splice(targetInsertIndex, 0, normalizedTargetRecord);
+        }
 
-          const finalVideos = resultAsync.final_videos || [];
-          const firstVideo = finalVideos.length > 0 ? finalVideos[0] : {};
-          const videoCover = firstVideo.video_cover_url || resultAsync.cover_url || resultAsync.cover || resultAsync.final_video_cover || coverImage;
-          const videoUrl = firstVideo.video_url || resultAsync.final_video || record.video_url || '';
-
-          let resolution = '';
-          if (record.story_type === 'simple_video') {
-            resolution = (userSelected.simple_video_resolution || '').replace(/p$/i, 'P');
-          } else {
-            resolution = userSelected.simple_image_resolution || '';
-          }
-
-          return {
-            ...record,
-            images: resultAsync.final_images || record.images || [],
-            resolution: resolution,
-            ratio: userSelected.ratio || record.ratio || '',
-            duration: userSelected.simple_video_duration || record.duration || '',
-            description: others.content || record.topic || '',
-            formattedDescription: formatContent(others.content || record.topic || '', record),
-            type: recordType,
-            cover: coverImage,
-            videoCover: videoCover,
-            videoUrl: videoUrl,
-            createTime: record.created_at || ''
-          };
-        });
+        newRecords = newRecords.filter((record: any, index: number, list: any[]) =>
+          !record.session_id || list.findIndex(item => item.session_id == record.session_id) === index
+        );
 
         if (isLoadMore && newRecords.length > 0) {
+          const prevDisplayLen = displayRecords.value.length;
+          const beforeHeight = document.documentElement.scrollHeight;
+          const beforeTop = window.scrollY || document.documentElement.scrollTop;
           records.value = [...newRecords, ...records.value];
-          // 滚动加载时，也更新displayRecords
-          displayRecords.value = records.value;
+          // 只渲染"本次加载的更旧数据 + 原有窗口"，避免一次性把内存里的全部记录塞进 DOM
+          displayRecords.value = records.value.slice(0, newRecords.length + prevDisplayLen);
+          // 顶部插入了数据，锚定滚动位置，保持用户当前视图不跳动
+          nextTick(() => {
+            const afterHeight = document.documentElement.scrollHeight;
+            const delta = afterHeight - beforeHeight;
+            if (delta !== 0) {
+              window.scrollTo({ top: beforeTop + delta, behavior: 'auto' });
+            }
+          });
         } else {
           records.value = newRecords;
+
+          // 按实际已加载条数修正当前页码，保证后续滚动到顶部继续加载"更旧"数据时页码不重复
+          // （定位模式使用 limit=1000 一次性加载，等价于消费了多页 pageSize 数据）
+          currentPage.value = Math.max(1, Math.ceil(records.value.length / pageSize.value));
 
           totalCount.value = response.data.data_total || response.data.total || 0;
 
@@ -3414,18 +3579,12 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '') => 
           if (targetSessionId) {
             const targetIndex = records.value.findIndex((r: any) => r.session_id == targetSessionId);
             if (targetIndex !== -1) {
-              // 找到了，计算显示范围：目标前后各5条
               const halfCount = Math.floor(displayCount.value / 2);
               const startIndex = Math.max(0, targetIndex - halfCount);
               const endIndex = Math.min(records.value.length, startIndex + displayCount.value);
               displayRecords.value = records.value.slice(startIndex, endIndex);
-
-              // 滚动到该记录
-              nextTick(() => {
-                scrollToRecord(targetSessionId);
-              });
+              shouldScrollToTarget = true;
             } else {
-              // 没找到目标记录，显示所有数据
               displayRecords.value = records.value;
             }
           } else {
@@ -3447,6 +3606,10 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '') => 
       console.error('Error loading records:', error);
     } finally {
       isLoading.value = false;
+      if (shouldScrollToTarget) {
+        await nextTick();
+        scrollToRecord(targetSessionId);
+      }
     }
   }
 
@@ -3888,7 +4051,41 @@ const generateVideo = async () => {
   }
 };
 
+// 滚动到底部且已加载的记录全部展示后，拉取"更新的"数据（第1页最新一批），
+// 把本地没有的新记录追加到列表底部（底部=最新）
+const loadNewerRecords = async () => {
+  if (isLoadingNewer.value || isLoading.value) return;
+  isLoadingNewer.value = true;
+  try {
+    const storyType = selectedType.value == 'all' ? '' : selectedType.value;
+    const response = await api.singleTaskList(1, pageSize.value, storyType) as any;
+    if (response.code == 200) {
+      const dataList = response.data.data_list || response.data.list || [];
+      const fetched = dataList.map(normalizeSimpleRecord);
+      const existingIds = new Set(records.value.map((r: any) => r.session_id));
+      const newer = fetched.filter((r: any) => r.session_id && !existingIds.has(r.session_id));
+      if (newer.length > 0) {
+        const prevDisplayLen = displayRecords.value.length;
+        records.value = [...records.value, ...newer];
+        // 只渲染"原有窗口 + 本次新增的更新数据"，避免一次性渲染全部记录
+        displayRecords.value = records.value.slice(records.value.length - (prevDisplayLen + newer.length));
+        totalCount.value = response.data.data_total || response.data.total || totalCount.value;
+        newer.forEach((r: any) => {
+          if (isTaskProcessing(r.step_status || r.status)) {
+            startPolling(r.session_id);
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error loading newer records:', error);
+  } finally {
+    isLoadingNewer.value = false;
+  }
+};
+
 const handleScroll = () => {
+  if (isPositioningTarget.value) return;
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
   // If displayRecords is a subset of records, expand display range when scrolling
@@ -3919,13 +4116,30 @@ const handleScroll = () => {
   }
 
   // If we've shown all loaded records, load more from server
-  // Scroll to top to load newer data (since newest is at bottom, new data comes from top)
+  // 滚动到顶部：加载"更旧"的数据（页码递增，prepend 到顶部）
   if (scrollTop < 50 && !isLoading.value && records.value.length > 0) {
     const totalPages = Math.ceil(totalCount.value / pageSize.value);
     if (currentPage.value < totalPages) {
       currentPage.value++;
       loadRecords(true);
     }
+  }
+
+  // 滚动到底部且内存中的记录已展示到最后一条：加载"更新"的数据（追加到底部）
+  const docHeightForNewer = document.documentElement.scrollHeight;
+  const winHeightForNewer = window.innerHeight || document.documentElement.clientHeight;
+  const lastRecordShown =
+    displayRecords.value.length > 0 &&
+    displayRecords.value[displayRecords.value.length - 1]?.session_id ===
+      records.value[records.value.length - 1]?.session_id;
+  if (
+    scrollTop > docHeightForNewer - winHeightForNewer - 100 &&
+    !isLoading.value &&
+    !isLoadingNewer.value &&
+    records.value.length > 0 &&
+    lastRecordShown
+  ) {
+    loadNewerRecords();
   }
 };
 
@@ -3969,13 +4183,44 @@ const selectType = (type: string) => {
 };
 
 const scrollToRecord = (sessionId: string) => {
-  if (!sessionId) return;
-  nextTick(() => {
-    const targetElement = document.getElementById(`record-${sessionId}`);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!sessionId) return false;
+  const targetElement = document.getElementById(`record-${sessionId}`);
+  if (!targetElement) return false;
+
+  isPositioningTarget.value = true;
+  const rect = targetElement.getBoundingClientRect();
+  const bottomGenerator = document.querySelector('.bottom-generator') as HTMLElement | null;
+  const bottomHeight = bottomGenerator ? bottomGenerator.offsetHeight : 0;
+  const headerHeight = 140;
+  const visibleCenter = (window.innerHeight - bottomHeight - headerHeight) / 2 + headerHeight;
+  const targetCenter = rect.top + window.scrollY + rect.height / 2;
+  const targetScrollTop = Math.max(0, targetCenter - visibleCenter);
+  window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+
+  localStorage.removeItem('targetSessionId');
+  localStorage.removeItem('targetSessionType');
+  sessionStorage.removeItem('targetGenerateRecord');
+
+  // 等平滑滚动结束后再释放定位守卫，避免滚动动画期间触发窗口扩展
+  let lastScrollTop = -1;
+  let stableFrames = 0;
+  const startTime = Date.now();
+  const releaseWhenSettled = () => {
+    const current = window.scrollY || document.documentElement.scrollTop;
+    const reachedTarget = Math.abs(current - targetScrollTop) < 2;
+    const isStable = current === lastScrollTop;
+    lastScrollTop = current;
+
+    // 位置稳定连续若干帧、或已到达目标、或超过最大兜底时长，则释放守卫
+    if ((isStable && (stableFrames >= 3 || reachedTarget)) || Date.now() - startTime > 1200) {
+      isPositioningTarget.value = false;
+      return;
     }
-  });
+    stableFrames = isStable ? stableFrames + 1 : 0;
+    window.requestAnimationFrame(releaseWhenSettled);
+  };
+  window.requestAnimationFrame(releaseWhenSettled);
+  return true;
 };
 
 const getCountry = () => {
@@ -4016,6 +4261,20 @@ onMounted(() => {
     return false;
   }
 
+  const querySessionId = Array.isArray(route.query.session_id)
+    ? route.query.session_id[0]
+    : route.query.session_id;
+  const targetSessionId = querySessionId || localStorage.getItem('targetSessionId') || '';
+  const targetRecordJson = sessionStorage.getItem('targetGenerateRecord');
+  let targetRecord: any = null;
+  if (targetRecordJson) {
+    try {
+      targetRecord = JSON.parse(targetRecordJson);
+    } catch {
+      sessionStorage.removeItem('targetGenerateRecord');
+    }
+  }
+
   setSeoMeta(bottomActiveTab.value);
 
   // 滚动到页面顶部
@@ -4029,16 +4288,18 @@ onMounted(() => {
   getCountry();
   getUserInfo();
 
-  // 从localStorage获取sessionId（使用后立即清除，避免刷新后再次滚动）
-  const targetSessionId = localStorage.getItem('targetSessionId') || '';
-  if (targetSessionId) {
-    localStorage.removeItem('targetSessionId');
+  // 启动打字机效果
+  checkReducedMotion();
+  if (bottomActiveTab.value === 'photo') {
+    startPhotoTypewriter();
+  } else {
+    startVideoTypewriter();
   }
 
   if (targetSessionId) {
     // 有目标记录，从第一页开始查找
     currentPage.value = 1;
-    loadRecords(false, targetSessionId);
+    loadRecords(false, targetSessionId, targetRecord);
   } else {
     // 没有目标记录，正常加载
     loadRecords();
@@ -4047,6 +4308,11 @@ onMounted(() => {
 
 watch(() => locale.value, () => {
   setSeoMeta(bottomActiveTab.value);
+  if (bottomActiveTab.value === 'photo') {
+    startPhotoTypewriter();
+  } else {
+    startVideoTypewriter();
+  }
 });
 
 
@@ -4061,6 +4327,14 @@ onUnmounted(() => {
   if (scrollTimeout) {
     clearTimeout(scrollTimeout);
     scrollTimeout = null;
+  }
+  if (photoTypewriterTimer) {
+    clearTimeout(photoTypewriterTimer);
+    photoTypewriterTimer = null;
+  }
+  if (videoTypewriterTimer) {
+    clearTimeout(videoTypewriterTimer);
+    videoTypewriterTimer = null;
   }
 });
 

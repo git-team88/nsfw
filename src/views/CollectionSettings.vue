@@ -6,6 +6,7 @@
       <!-- Back Button -->
       <button class="back-btn" @click="goBack">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="back-text">{{ t('back') }}</span>
       </button>
 
       <!-- Main Content -->
@@ -301,11 +302,11 @@ async function confirmDelete() {
   position: absolute;
   top: 0;
   left: -52px;
-  width: 40px;
+  width: auto;
   height: 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
   color: #161122;
   cursor: pointer;
   z-index: 10;
@@ -313,11 +314,18 @@ async function confirmDelete() {
   border-radius: 13px;
   background: #FFFDF7;
   box-shadow: 3px 3px 0 #161122;
+  padding: 0 10px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
     transform: translateY(-1px);
     box-shadow: 4px 4px 0 #161122;
+  }
+
+  .back-text {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
 
@@ -560,7 +568,7 @@ async function confirmDelete() {
   }
   .back-btn {
     top: 9.7222vw;
-    width: 2.7778vw;
+    width: auto;
     height: 2.7778vw;
     left: -3.6111vw;
   }
@@ -655,7 +663,7 @@ async function confirmDelete() {
 
   .back-btn {
     top: 100px;
-    width: 40px;
+    width: auto;
     height: 40px;
     left: -52px;
   }
@@ -758,7 +766,7 @@ async function confirmDelete() {
     position: fixed;
     top: 80px;
     left: 16px;
-    width: 32px;
+    width: auto;
     height: 32px;
   }
   .page-header {
@@ -862,13 +870,16 @@ async function confirmDelete() {
     position: fixed;
     top: 80px;
     left: 12px;
-    width: 28px;
+    width: auto;
     height: 28px;
     border-radius: 10px;
     border-width: 2px;
     svg {
       width: 16px;
       height: 16px;
+    }
+    .back-text {
+      font-size: 12px;
     }
   }
   .page-header {

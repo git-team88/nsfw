@@ -938,9 +938,7 @@
 
                   <!-- Type Icon -->
                   <div class="type-icon" v-if="item.type">
-                    <img v-if="item.type == '2'" src="@/assets/images/home/novel_icon.png" alt="" />
-                    <img v-else-if="item.type == '1'" src="@/assets/images/home/comic_icon.png" alt="" />
-                    <img v-else-if="item.type == '3'" src="@/assets/images/home/video_icon.png" alt="" />
+                    <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
                   </div>
                   <!-- Video Play Icon -->
                   <div v-if="item.type == '3'" class="play-icon">
@@ -1014,20 +1012,25 @@
             <!-- User List -->
             <div v-else-if="followUserList.length > 0" class="follow-list">
               <div
-                v-for="user in followUserList"
+                v-for="(user, index) in followUserList"
                 :key="user.id"
                 class="follow-card"
+                :style="{ boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }"
               >
-                <div class="card-top" @click="navigateToUserHome(user.id)">
-                  <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-                  <div class="user-meta">
-                    <div class="nickname">{{ user.nickname }}</div>
-                    <div class="fans-count">
-                      {{ t('home.user.fans', { count: formatNumber(user.fans) }) }}
+                <div class="card-body" @click="navigateToUserHome(user.id)">
+                  <div class="card-top">
+                    <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+                    <div class="user-meta">
+                      <div class="nickname">{{ user.nickname }}</div>
+                      <div class="fans-count">
+                        {{ t('home.user.fans', { count: formatNumber(user.fans) }) }}
+                      </div>
                     </div>
                   </div>
+                  <div class="card-bio">{{ user.bio }}</div>
+                </div>
+                <div class="card-footer" v-if="user.id != uid">
                   <button
-                    v-if="user.id != uid"
                     class="follow-btn"
                     :class="{ followed: user.isFollowed }"
                     @click.stop="toggleUserFollow(user)"
@@ -1036,7 +1039,6 @@
                     <span class="hover-text" v-if="user.isFollowed">{{ t('home.user.unfollow') }}</span>
                   </button>
                 </div>
-                <div class="card-bio">{{ user.bio }}</div>
               </div>
             </div>
 
@@ -1190,7 +1192,6 @@ import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
-import bannerImg from "@/assets/images/home/banner.png";
 import audioIcon from "@/assets/images/home/audio.png";
 
 const { t, locale } = useI18n();
@@ -5010,6 +5011,10 @@ const formatNumber = (num: number) => {
   }
   return num.toLocaleString();
 };
+
+// Colorful shadow palette for follow user cards
+const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
+const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
 const navigateToDetail = (id: string, type?: string) => {
   const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama"> = {
