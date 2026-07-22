@@ -37,12 +37,15 @@
             @click="navigateToItem(category.items[category.currentIndex], category.type)"
           >
             <div class="item-top">
-              <img
-              class="item-status"
-              :class="{'doing': category.items[category.currentIndex].step_status == 'DOING'}"
-              :src="getStatusIcon(category.items[category.currentIndex].step_status)"
-              alt="status"
-            />
+              <div
+                class="item-status"
+                :class="{'doing': category.items[category.currentIndex].step_status == 'DOING'}"
+              >
+                <img
+                  :src="getStatusIcon(category.items[category.currentIndex].step_status)"
+                  alt="status"
+                />
+              </div>
               <div class="item-info">
                 <div class="item-type">{{ getItemLabel(category.type, category.items[category.currentIndex]) }}</div>
                 <div class="item-title" v-if="category.items[category.currentIndex].name">{{ category.items[category.currentIndex].name }}</div>
@@ -611,12 +614,14 @@ $line: #F0EADF;
 
 .process-container {
   position: fixed;
-  top: 110px;
+  bottom: 46px;
   right: 16px;
   width: 240px;
   z-index: 100;
+  display: flex;
+  flex-direction: column-reverse;
   animation: tdIn .3s cubic-bezier(.16,1,.3,1) both;
-  transform-origin: top right;
+  transform-origin: bottom right;
 
   .process-header {
     position: relative;
@@ -692,12 +697,13 @@ $line: #F0EADF;
   }
 
   .process-content {
-    margin-top: 6px;
+    margin-bottom: 12px;
     background: $paper;
     border: 3px solid $ink;
     border-radius: 16px;
     box-shadow: 6px 6px 0 $ink;
-    overflow: hidden;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
     animation: tdPanelIn .3s cubic-bezier(.16,1,.3,1) both;
 
     .process-list {
@@ -771,14 +777,13 @@ $line: #F0EADF;
           color: $ink;
           flex-shrink: 0;
 
-          &.doing {
-            background: #FFF3D6;
-            animation: tdSpin 1s linear infinite;
+          img {
+            width: 16px;
+            height: 16px;
           }
 
-          img {
-            width: 14px;
-            height: 14px;
+          &.doing img {
+            animation: tdSpin 1s linear infinite;
           }
         }
 
@@ -926,7 +931,7 @@ $line: #F0EADF;
 }
 
 @keyframes tdPanelIn {
-  0% { opacity: 0; transform: scale(.92) translateY(-6px); }
+  0% { opacity: 0; transform: scale(.92) translateY(6px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -947,7 +952,7 @@ $line: #F0EADF;
   .process-content {
     animation: none !important;
   }
-  .item-status.doing {
+  .item-status.doing img {
     animation: none !important;
   }
   .process-header.has-success .status-icon {

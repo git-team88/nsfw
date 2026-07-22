@@ -801,6 +801,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     title4: "Character Library",
     title6: "Ranking",
     title5: "My Community",
+    menuTitle: "Menu",
     recharge: "Recharge",
     register: "Sign up",
     contribution: "Public",

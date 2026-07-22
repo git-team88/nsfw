@@ -2,6 +2,14 @@
   <div class="header">
     <div class="container">
       <div class="left">
+        <button class="nav-hamburger" @click="openDrawer" aria-label="menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round">
+            <path d="M3 6h18" />
+            <path d="M3 12h18" />
+            <path d="M3 18h18" />
+          </svg>
+        </button>
+
         <div class="logo" @click="goHome">
           <img src="@/assets/images/header/logo.png" />
         </div>
@@ -171,6 +179,35 @@
       @close="cancelLogout"
       @confirm="confirmLogout"
     />
+
+    <!-- Mobile off-canvas drawer -->
+    <Teleport to="body">
+      <div v-if="isDrawerOpen" class="mobile-drawer-root">
+        <div class="mobile-drawer-overlay" @click="closeDrawer"></div>
+        <aside class="mobile-drawer-panel" role="dialog" aria-modal="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">{{ t("header.menuTitle") }}</h2>
+            <button class="drawer-close" @click="closeDrawer" aria-label="close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.4" stroke-linecap="round">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+          <nav class="drawer-nav">
+            <div
+              class="drawer-item"
+              :class="{ on: cur == index }"
+              v-for="(item, index) in navList"
+              :key="index"
+              @click="goNavMobile(item, index)"
+            >
+              {{ item.name }}
+            </div>
+          </nav>
+        </aside>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -225,8 +262,8 @@ const fansCountDisplay = computed(() => {
 const isShowLoad = ref(false);
 const isShowContribution = ref(false);
 const isShowExit = ref(false);
-const isShowNewsMenu = ref(false);
-const unTotal = ref(0);
+const isDrawerOpen = ref(false);
+const isShowNewsMenu = ref(false);const unTotal = ref(0);
 const newsCounts = ref({
   expiring: 0,
   follow: 0,
@@ -391,6 +428,7 @@ onMounted(() => {
 
   document.addEventListener("click", handleClick);
   window.addEventListener('userLogout', handleLogout);
+  document.addEventListener('keydown', handleDrawerKeydown);
 
   eventBus.on('balanceUpdated', getBalance);
 });
@@ -398,6 +436,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClick);
   window.removeEventListener('userLogout', handleLogout);
+  document.removeEventListener('keydown', handleDrawerKeydown);
+  document.body.style.overflow = '';
   eventBus.off('balanceUpdated', getBalance);
 });
 
@@ -426,6 +466,28 @@ const handleClick = (event: MouseEvent) => {
 
 function goHome() {
   router.push('/');
+}
+
+// ---- Mobile drawer ----
+function openDrawer() {
+  isDrawerOpen.value = true;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  isDrawerOpen.value = false;
+  document.body.style.overflow = '';
+}
+
+function goNavMobile(item: { path: string; name?: string }, index: number) {
+  goNav(item, index);
+  closeDrawer();
+}
+
+function handleDrawerKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isDrawerOpen.value) {
+    closeDrawer();
+  }
 }
 
 function goNav(item: { path: string; name?: string }, index: number) {
@@ -756,6 +818,20 @@ defineExpose({
       display: flex;
       align-items: center;
 
+      .nav-hamburger {
+        display: none;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        margin-right: 10px;
+        padding: 0;
+        border: 2px solid #161122;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
       .logo {
         display: flex;
         align-items: center;
@@ -771,20 +847,21 @@ defineExpose({
       .nav {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
 
         .nav-item {
           position: relative;
           display: flex;
           align-items: center;
           height: 44px;
-          padding: 0 15px;
-          font-size: 16px;
+          padding: 0 10px;
+          font-size: 15px;
           font-weight: 700;
           border-radius: 14px;
           color: #161122;
           opacity: 0.6;
           cursor: pointer;
+          white-space: nowrap;
           transition: opacity 0.15s, background 0.15s;
 
           &:hover {
@@ -1007,6 +1084,7 @@ defineExpose({
         background: #161122;
         color: #fff;
         cursor: pointer;
+        flex-shrink: 0;
         box-shadow: 2px 2px 0 #161122;
         transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
@@ -1045,6 +1123,7 @@ defineExpose({
           font-weight: 700;
           color: rgba(255, 255, 255, 0.7);
           cursor: pointer;
+          white-space: nowrap;
 
           &:hover {
             color: #fff;
@@ -1072,9 +1151,10 @@ defineExpose({
 
       .header-contribution-box {
         position: relative;
+        flex-shrink: 0;
         .header-contribution {
           min-width: 98px;
-          height: 44px;
+          height: 46px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1085,12 +1165,10 @@ defineExpose({
           background: linear-gradient(135deg, #FF4D8D, #FF7A45);
           color: #ffffff;
           cursor: pointer;
-          box-shadow: 2px 2px 0 #161122;
-          transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+          transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
 
           &:hover {
             transform: translateY(-1px);
-            box-shadow: 3px 3px 0 #161122;
           }
         }
 
@@ -1520,6 +1598,10 @@ defineExpose({
         .nav {
           display: none;
         }
+
+        .nav-hamburger {
+          display: grid;
+        }
       }
     }
   }
@@ -1633,5 +1715,97 @@ defineExpose({
       }
     }
   }
+}
+
+/* ---- Mobile off-canvas drawer (teleported to body) ---- */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(22, 17, 34, 0.5);
+  animation: drwFade 0.22s ease-out both;
+}
+
+.mobile-drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 901;
+  width: min(78vw, 300px);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow-y: auto;
+  background: #FFFDF7;
+  border-right: 3px solid #161122;
+  box-shadow: 6px 0 0 rgba(22, 17, 34, 0.12);
+  animation: drwSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+
+    .drawer-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #161122;
+    }
+
+    .drawer-close {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 2px solid #161122;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: 2px 2px 0 #161122;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  }
+
+  .drawer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+
+    .drawer-item {
+      padding: 13px 15px;
+      border: 2px solid #161122;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #161122;
+      background: #fff;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background: #FFEFF5;
+      }
+
+      &.on {
+        background: #FF4D8D;
+        color: #fff;
+      }
+    }
+  }
+}
+
+@keyframes drwFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drwSlide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 </style>

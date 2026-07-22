@@ -600,7 +600,6 @@ function handleModalKeydown(e: KeyboardEvent) {
   line-height: 16px;
   border-radius: 8px;
   white-space: normal;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
   opacity: 0;
   visibility: hidden;

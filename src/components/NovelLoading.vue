@@ -847,9 +847,9 @@ defineExpose({
   line-height: 18px;
   color: #161122;
   padding: 12px;
-  border: 1px solid rgba(251, 100, 182, 0.3);
+  border: 2px solid rgba(255,77,142,0.12);
   border-radius: 8px;
-  background: rgba(251, 100, 182, 0.12);
+  background: rgba(255,77,142,0.12);
   position: relative;
   display: flex;
   align-items: center;
@@ -868,7 +868,7 @@ defineExpose({
   top: 0;
   left: 0;
   height: 100%;
-  background: rgba(251, 100, 182, 0.12);
+  background: rgba(255,77,142,0.12);
   border-radius: 8px;
   transition: width 0.2s ease;
   z-index: 0;

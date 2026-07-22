@@ -308,15 +308,23 @@ onBeforeUnmount(() => {
 }
 
 .modal-close {
-  background: none;
-  border: none;
-  padding: 0;
   position: absolute;
   right: 12px;
   top: 12px;
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
   cursor: pointer;
+  border: 2.5px solid #161122;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
 .modal-title {
@@ -339,19 +347,28 @@ onBeforeUnmount(() => {
     height: 32px;
     text-align: center;
     padding: 0 16px;
-    border-radius: 6px;
+    border: 2px solid #161122;
+    border-radius: 8px;
     font-size: 14px;
-    color: #9a93a4;
+    font-weight: 800;
+    background: #fff;
+    color: #161122;
     cursor: pointer;
     position: relative;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-    &:hover{
-      color: #5b5566;
+    &:hover {
+      color: #FF4D8D;
     }
 
     &.active {
-      background: rgba(22, 17, 34, 0.06);
-      color: #5b5566;
+      background: #FF4D8D;
+      color: #fff;
+
+      &:hover {
+        color: #fff;
+      }
     }
   }
 }
@@ -451,14 +468,27 @@ onBeforeUnmount(() => {
     justify-content: center;
     min-width: 136px;
     height: 48px;
-    border: none;
+    border: 2.5px solid #161122;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+
+    &:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+
+    &:active:not(:disabled) {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
+    }
 
     &.cancel {
-      background: rgba(22, 17, 34, 0.06);
-      color: #5b5566;
+      background: #fff;
+      color: #161122;
 
       &:hover {
         color: #FF4D8D;
@@ -469,19 +499,11 @@ onBeforeUnmount(() => {
       background: #FF4D8D;
       color: #ffffff;
 
-      &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-      &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
-      }
-
       &:disabled {
         background: #f8d7e8;
         color: white;
         cursor: not-allowed;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.3);
       }
     }
   }
