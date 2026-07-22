@@ -540,6 +540,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     title4: "キャラクター設定一覧",
     title6: "ランキング",
     title5: "コミュニティ",
+    title7: "イベント",
     menuTitle: "メニュー",
     recharge: "クレジット",
     register: "新規登録",

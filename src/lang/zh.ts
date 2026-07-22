@@ -907,6 +907,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     title4: "角色库",
     title6: "排行榜",
     title5: "我的社区",
+    title7: "活动",
     menuTitle: "菜单",
     recharge: "充值",
     register: "注册",

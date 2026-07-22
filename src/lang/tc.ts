@@ -905,6 +905,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     title4: "角色庫",
     title6: "排行榜",
     title5: "我的社區",
+    title7: "活動",
     menuTitle: "選單",
     recharge: "充值",
     register: "註冊",

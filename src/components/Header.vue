@@ -146,7 +146,7 @@
             <button class="user-login" @click="goLogin()">{{ t("header.login") }}</button>
             <button class="user-register" @click="goRegister()">
               {{ t("header.register") }}
-              <div class="register-tip" style="display:none">
+              <div class="register-tip">
                 <div class="tip-gift-icon">
                   <img src="@/assets/images/header/gift.png" alt="" />
                 </div>
@@ -200,6 +200,7 @@
               :class="{ on: cur == index }"
               v-for="(item, index) in navList"
               :key="index"
+              :style="{ '--drw-i': index }"
               @click="goNavMobile(item, index)"
             >
               {{ item.name }}
@@ -337,6 +338,10 @@ const navList = ref([
     name: t("header.title5"),
     path: "/user-home",
   },
+  {
+    name: t("header.title7"),
+    path: "/activity/list.html",
+  },
 ]);
 
 const typeList = ref([
@@ -387,6 +392,10 @@ watch(locale, () => {
     {
       name: t("header.title5"),
       path: "/user-home",
+    },
+    {
+      name: t("header.title7"),
+      path: "/activity/list.html",
     },
   ];
 
@@ -497,7 +506,14 @@ function goNav(item: { path: string; name?: string }, index: number) {
     return false;
   }
 
-  if (item.path == "/create" || item.path == "/my-projects") {
+  // 静态活动页等非 SPA 路由，走整页跳转，避免被 vue-router 兜底重定向到首页
+  if (item.path.endsWith(".html")) {
+    navIndex.value = index;
+    window.location.href = item.path;
+    return false;
+  }
+
+  if (item.path == "/create" || item.path == "/my-projects" || item.path == "/character-library") {
     if (!token) {
       router.push("/login");
     } else {
@@ -1243,6 +1259,7 @@ defineExpose({
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
             height: 46px;
             padding: 0 16px;
             font-size: 14px;
@@ -1262,20 +1279,18 @@ defineExpose({
 
             .register-tip {
               position: absolute;
-              right: 50%;
-              transform: translateX(31%);
-              top: -2px;
+              right: 0;
+              top: calc(100% + 10px);
               display: flex;
               align-items: center;
               gap: 10px;
-              min-width: 338px;
-              min-height: 140px;
-              padding: 58px 48px 48px;
+              width: max-content;
+              padding: 14px 18px;
               pointer-events: none;
-              background-image: url('@/assets/images/register/tip_bg.png');
-              background-size: 100% 100%;
-              background-repeat: no-repeat;
-              background-position: center;
+              background: linear-gradient(170deg, #FFFFFF 0%, #FFF3FA 52%, #FFE5F3 100%);
+              box-shadow: 3px 3px 0px 0px rgba(255, 77, 142, 0.3);
+              border-radius: 12px;
+              border: 2px solid #FF4D8E;
 
               .tip-gift-icon {
                 display: flex;
@@ -1316,9 +1331,7 @@ defineExpose({
                   justify-content: center;
                   width: 32px;
                   height: 18px;
-                  background: #FFFDF7;
-                  border: 3px solid #161122;
-                  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+                  background: #FFFFFF;
                   border-radius: 12px;
 
                   img {
@@ -1717,13 +1730,14 @@ defineExpose({
   }
 }
 
-/* ---- Mobile off-canvas drawer (teleported to body) ---- */
+/* ---- Mobile off-canvas drawer (teleported to body) — moegen brutalist style ---- */
 .mobile-drawer-overlay {
   position: fixed;
   inset: 0;
   z-index: 900;
   background: rgba(22, 17, 34, 0.5);
   animation: drwFade 0.22s ease-out both;
+  transition: background 0.2s ease-out;
 }
 
 .mobile-drawer-panel {
@@ -1742,6 +1756,11 @@ defineExpose({
   border-right: 3px solid #161122;
   box-shadow: 6px 0 0 rgba(22, 17, 34, 0.12);
   animation: drwSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: box-shadow 0.22s ease-out;
+
+  &:has(.drawer-item:hover) {
+    box-shadow: 9px 0 0 rgba(22, 17, 34, 0.16);
+  }
 
   .drawer-head {
     display: flex;
@@ -1754,6 +1773,7 @@ defineExpose({
       font-size: 20px;
       font-weight: 800;
       color: #161122;
+      letter-spacing: 0.02em;
     }
 
     .drawer-close {
@@ -1768,6 +1788,10 @@ defineExpose({
       box-shadow: 2px 2px 0 #161122;
       cursor: pointer;
       flex-shrink: 0;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      &:hover { transform: rotate(90deg) scale(1.08); }
+      &:active { transform: rotate(90deg) scale(0.92); }
     }
   }
 
@@ -1785,10 +1809,22 @@ defineExpose({
       color: #161122;
       background: #fff;
       cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      box-shadow: 3px 3px 0 #161122;
+      animation: drwItemIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(var(--drw-i, 0) * 45ms + 150ms);
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.16s ease-out,
+                  background-color 0.16s ease-out;
 
       &:hover {
-        background: #FFEFF5;
+        transform: translate(-1px, -2px);
+        box-shadow: 4px 5px 0 #161122;
+        background-color: #F3EFE7;
+      }
+
+      &:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #161122;
       }
 
       &.on {
@@ -1805,7 +1841,22 @@ defineExpose({
 }
 
 @keyframes drwSlide {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from { transform: translateX(-100%); opacity: 0.4; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes drwItemIn {
+  from { transform: translateX(-8px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-overlay,
+  .mobile-drawer-panel,
+  .mobile-drawer-panel .drawer-item {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 </style>
