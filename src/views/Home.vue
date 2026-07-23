@@ -753,25 +753,6 @@
                         </div>
                       </div>
 
-                      <!-- Insert Image Selector - only show when unlimited mode is on -->
-                      <div v-if="currentNovelMode == 'unlimited'" class="novel-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
-                        <div class="selector-header">
-                          <span>{{ t('home.insertImage') }}：{{ selectedInsertImageText }}</span>
-                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
-                        </div>
-                        <div class="dropdown" v-if="showInsertImageDropdown">
-                          <div
-                            v-for="option in insertImageOptions"
-                            :key="option.value"
-                            class="dropdown-item"
-                            :class="{ active: selectedInsertImage == option.value }"
-                            @click.stop="selectInsertImage(option.value)"
-                          >
-                            <span>{{ option.label }}</span>
-                          </div>
-                        </div>
-                      </div>
-
                       <!-- Language Selector -->
                       <div class="novel-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
                         <div class="selector-header">
@@ -787,6 +768,25 @@
                             @click.stop="selectLanguage(lang)"
                           >
                             <span>{{ lang.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Insert Image Selector - only show when unlimited mode is on -->
+                      <div v-if="currentNovelMode == 'unlimited'" class="novel-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                        <div class="selector-header">
+                          <span>{{ t('home.insertImage') }}：{{ selectedInsertImageText }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showInsertImageDropdown">
+                          <div
+                            v-for="option in insertImageOptions"
+                            :key="option.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedInsertImage == option.value }"
+                            @click.stop="selectInsertImage(option.value)"
+                          >
+                            <span>{{ option.label }}</span>
                           </div>
                         </div>
                       </div>
