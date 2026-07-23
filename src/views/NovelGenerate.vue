@@ -221,11 +221,27 @@
 
             <div class="regenerate-footer">
               <div class="regenerate-settings">
+                <!-- NSFW Toggle - only shown when region allows -->
+                <div v-if="userRegion" class="nsfw-toggle" @click="toggleRegenerateNsfw">
+                  <img
+                    v-if="isTeenager"
+                    :src="notAllowIcon"
+                    alt="NSFW disabled"
+                    class="nsfw-switch"
+                  />
+                  <img
+                    v-else
+                    :src="regenerateNsfwMode ? openIcon : closeIcon"
+                    alt="NSFW"
+                    class="nsfw-switch"
+                  />
+                  <span class="nsfw-label">NSFW</span>
+                </div>
+
                 <!-- Word Count Selector -->
-                 <div class="novel-selector" @click.stop="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
+                <div class="novel-selector icon-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
                   <div class="selector-header">
-                     <span>{{ t('novel.totalWords') }} : {{ selectedWordCountDisplay }}</span>
-                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                    <img class="selector-icon" src="@/assets/images/novel/word.png" alt="" />
                   </div>
                   <div class="dropdown" v-if="showWordCountDropdown">
                     <div
@@ -241,10 +257,9 @@
                 </div>
 
                 <!-- Language Selector -->
-                 <div class="novel-selector" @click.stop="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
+                <div class="novel-selector icon-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
                   <div class="selector-header">
-                    <span>{{ selectedLanguageLabel }}</span>
-                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                    <img class="selector-icon" src="@/assets/images/novel/lang.png" alt="" />
                   </div>
                   <div class="dropdown" v-if="showLanguageDropdown">
                     <div
@@ -255,6 +270,24 @@
                       @click.stop="selectLanguage(lang.value)"
                     >
                       <span>{{ lang.label }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Insert Image Selector - only show when region allows and NSFW mode is on -->
+                <div v-if="userRegion && regenerateNsfwMode" class="novel-selector icon-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                  <div class="selector-header">
+                    <img class="selector-icon" src="@/assets/images/novel/pic.png" alt="" />
+                  </div>
+                  <div class="dropdown" v-if="showInsertImageDropdown">
+                    <div
+                      v-for="option in insertImageOptions"
+                      :key="option.value"
+                      class="dropdown-item"
+                      :class="{ active: selectedInsertImage == option.value }"
+                      @click.stop="selectInsertImage(option.value)"
+                    >
+                      <span>{{ option.label }}</span>
                     </div>
                   </div>
                 </div>
@@ -367,6 +400,34 @@
           </div>
         </div>
 
+        <!-- Insert Image Edit Section - Fixed at bottom -->
+        <div v-if="showInsertImageEdit" class="insert-image-edit-section">
+          <div class="insert-image-edit-header">
+            <span class="insert-image-edit-title">{{ t('novel.editImage') }}:</span>
+            <button class="cancel-insert-image-edit-btn" @click="cancelInsertImageEdit">{{ t('novel.cancel') }}</button>
+          </div>
+
+          <div class="insert-image-edit-content">
+            <textarea
+              v-model="insertImagePrompt"
+              class="insert-image-edit-textarea"
+              :placeholder="t('novel.insertImageEditPlaceholder')"
+              spellcheck="false"
+            ></textarea>
+
+            <div class="insert-image-edit-footer">
+              <div class="insert-image-edit-cost-display">
+                <span class="insert-image-edit-cost">{{ insertImageCost }}</span>
+                <img src="@/assets/images/novel/coin.png" alt="" />
+              </div>
+              <button class="insert-image-edit-send-btn" :class="{ loading: isRenewingInsertImage }" @click="generateInsertImage">
+                <img v-if="!isRenewingInsertImage" src="@/assets/images/novel/send.png" alt="" />
+                <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Outline AI Edit Section - Fixed at bottom -->
         <div v-if="isAiEditingOutline" class="outline-edit-section" ref="outlineEditSectionRef">
           <div class="outline-edit-header">
@@ -470,7 +531,7 @@
           </template>
         </div>
 
-        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter)) }" ref="outlineContentRef">
+        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter)), 'similar-collapsed': isSimilarCollapsed }" ref="outlineContentRef">
           <NovelLoading
             v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed && currentStepName != 'renew_novel_cover' && currentStepName != 'refresh_novel_cover')"
             v-show="isGeneratingOutline || (currentChapter && currentChapter.chapter == stepChapterIndex)"
@@ -586,21 +647,54 @@
             <div class="loading-text">{{ t('home.loading') }}</div>
           </div>
             <div class="chapter-text" v-else-if="!isEditingChapter">
-              <p class="paragraph">{{ displayedContent }}<span v-if="isChapterTyping || (taskStatus == 'DOING' && currentChapter.chapter == stepChapterIndex && !displayedContent)" class="typing-cursor" :class="{ 'blink': !displayedContent || isWaitingForData }"></span></p>
+              <template v-if="!hasInsertImages">
+                <p class="paragraph">{{ displayedContent }}<span v-if="isChapterTyping || (taskStatus == 'DOING' && currentChapter.chapter == stepChapterIndex && !displayedContent)" class="typing-cursor" :class="{ 'blink': !displayedContent || isWaitingForData }"></span></p>
+              </template>
+              <template v-else>
+                <template v-for="(seg, idx) in contentSegments" :key="idx">
+                  <p v-if="seg.type === 'text' && seg.text" class="paragraph">{{ seg.text }}</p>
+                  <div v-else-if="seg.type === 'image'" class="insert-image-block">
+                    <img v-if="seg.url" :src="seg.url" alt="" class="insert-image" />
+                    <div class="insert-image-actions">
+                      <button class="insert-image-btn" @click="openInsertImageEdit(seg.placeholder)">{{ t('novel.editImage') }}</button>
+                      <button class="insert-image-btn" @click="openInsertImageHistory(seg.placeholder)">{{ t('novel.imageHistory') }}</button>
+                    </div>
+                  </div>
+                </template>
+              </template>
             </div>
 
             <div class="chapter-textarea" v-else>
-              <div class="chapter-edit-wrapper">
-                <textarea
-                  v-model="editingChapterContent"
-                  class="chapter-edit-textarea"
-                  @input="handleChapterEditInput"
-                  ref="chapterEditTextareaRef"
-                  spellcheck="false"
-                  :maxlength="50000"
-                ></textarea>
-                <div class="chapter-edit-counter">{{ editingChapterContent.length }}/50000</div>
-              </div>
+              <template v-if="!hasInsertImages">
+                <div class="chapter-edit-wrapper">
+                  <textarea
+                    v-model="editingChapterContent"
+                    class="chapter-edit-textarea"
+                    @input="handleChapterEditInput"
+                    ref="chapterEditTextareaRef"
+                    spellcheck="false"
+                    :maxlength="50000"
+                  ></textarea>
+                  <div class="chapter-edit-counter">{{ editingChapterContent.length }}/50000</div>
+                </div>
+              </template>
+              <template v-else>
+                <template v-for="(seg, idx) in editingSegments" :key="idx">
+                  <textarea
+                    v-if="seg.type === 'text'"
+                    v-model="seg.text"
+                    class="chapter-edit-textarea segment-textarea"
+                    spellcheck="false"
+                  ></textarea>
+                  <div v-else-if="seg.type === 'image'" class="insert-image-block">
+                    <img v-if="seg.url" :src="seg.url" alt="" class="insert-image" />
+                    <div class="insert-image-actions">
+                      <button class="insert-image-btn" @click="openInsertImageEdit(seg.placeholder)">{{ t('novel.editImage') }}</button>
+                      <button class="insert-image-btn" @click="openInsertImageHistory(seg.placeholder)">{{ t('novel.imageHistory') }}</button>
+                    </div>
+                  </div>
+                </template>
+              </template>
             </div>
           </div>
 
@@ -938,6 +1032,15 @@
       @select="selectHistoryChapter"
     />
 
+    <!-- Insert Image History Modal -->
+    <InsertImageHistoryModal
+      :visible="showInsertImageHistoryModal"
+      :image-list="insertImageHistoryList"
+      :current-image="getInsertImageUrl(historyTargetPlaceholder)"
+      @cancel="closeInsertImageHistoryModal"
+      @select="selectHistoryInsertImage"
+    />
+
     <!-- Outline History Modal -->
     <OutlineHistoryModal
       :visible="showOutlineHistoryModal"
@@ -946,6 +1049,24 @@
       :is-using="isUsingOutlineHistory"
       @cancel="closeOutlineHistoryModal"
       @select="selectHistoryOutline"
+    />
+
+    <!-- NSFW (Unlimited) Mode Modals -->
+    <UnlimitedModeModal
+      v-if="showUnlimitedModal"
+      @close="showUnlimitedModal = false"
+      @confirm="confirmRegenerateNsfw"
+    />
+
+    <UnderageNoBirthdayModal
+      v-if="showUnderageNoBirthdayModal"
+      @close="showUnderageNoBirthdayModal = false"
+      @go-to-fill="handleGoToFillBirthday"
+    />
+
+    <UnderageModal
+      v-if="showUnderageModal"
+      @close="showUnderageModal = false"
     />
 
     <!-- Confirm Computing Power Modal -->
@@ -1404,8 +1525,15 @@ import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import ExitConfirmModal from '@/components/ExitConfirmModal.vue';
 import ChapterHistoryModal from '@/components/ChapterHistoryModal.vue';
 import BatchPublishDialog from '@/components/BatchPublishDialog.vue';
+import InsertImageHistoryModal from '@/components/InsertImageHistoryModal.vue';
 import NovelLoading from '@/components/NovelLoading.vue';
 import defaultAvatar from '@/assets/images/base/avatar.png';
+import openIcon from '@/assets/images/home/open.png';
+import closeIcon from '@/assets/images/home/close.png';
+import notAllowIcon from '@/assets/images/home/not_allow.png';
+import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
+import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
+import UnderageModal from '@/components/UnderageModal.vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -1518,6 +1646,29 @@ const coverGenerationTaskId = ref<string>('');
 const showCoverEditBtn = ref<boolean>(false);
 const showWordCountDropdown = ref(false);
 const showLanguageDropdown = ref(false);
+
+// NSFW mode & insert image (illustration) settings for regenerate
+const regenerateNsfwMode = ref(false);
+const selectedInsertImage = ref(4);
+const showInsertImageDropdown = ref(false);
+// Region gate for the NSFW switch (only non-CN regions can show it)
+const userRegion = ref(false);
+const hasFetchedRegion = ref(false);
+const isFetchingRegion = ref(false);
+// NSFW age-check / confirmation modal state
+const showUnlimitedModal = ref(false);
+const showUnderageNoBirthdayModal = ref(false);
+const showUnderageModal = ref(false);
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
+const insertImageOptions = computed(() => [
+  { value: 0, label: t('novel.insertImageNone') },
+  { value: 4, label: t('novel.insertImage4') },
+]);
+const selectedInsertImageText = computed(() => {
+  const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
+  return option ? option.label : '';
+});
+
 const currentChapter = ref<any>(null);
 
 const regenerateCost = computed(() => {
@@ -1541,6 +1692,8 @@ const coverRenewTaskId = ref<string>('');
 const coverRenewPollTimer = ref<number | null>(null);
 const editingChapterContent = ref<string>('');
 const originalChapterContent = ref<string>('');
+// Per-segment editing state when the chapter has insert images
+const editingSegments = ref<ChapterSegment[]>([]);
 const estimatedTime = ref<number | null>(null);
 const modalEstimatedTime = ref<string>('');
 const originalEstimatedSeconds = ref<number | null>(null);
@@ -1823,6 +1976,11 @@ const chapterHistoryList = ref<any[]>([]);
 const chapterHistoryCount = ref<number>(0);
 const isUsingChapterHistory = ref<boolean>(false);
 
+// Chapter insert images (illustrations)
+const insertImages = ref<Array<{ img_placeholder: number; url: string }>>([]);
+// Raw history_data["novel_insert_image"] for the current chapter
+const insertImageHistoryData = ref<any>(null);
+
 const updateChapterHistoryFromDetail = (chapterRes: any) => {
   if (chapterRes.data?.history_data) {
     let historyData = chapterRes.data.history_data;
@@ -1836,11 +1994,335 @@ const updateChapterHistoryFromDetail = (chapterRes: any) => {
       chapterHistoryList.value = [];
       chapterHistoryCount.value = 0;
     }
+    // Insert image history (grouped/keyed by img_placeholder, structure resolved when opening modal)
+    insertImageHistoryData.value = historyData?.novel_insert_image ?? null;
   } else {
     chapterHistoryList.value = [];
     chapterHistoryCount.value = 0;
+    insertImageHistoryData.value = null;
+  }
+
+  // Extract insert images from result_async
+  applyInsertImages(chapterRes);
+};
+
+// Parse result_async.insert_images from a chapter detail response
+const applyInsertImages = (chapterRes: any) => {
+  let ra = chapterRes?.data?.result_async;
+  if (typeof ra === 'string') {
+    try { ra = JSON.parse(ra); } catch (e) { ra = null; }
+  }
+  const images = ra?.insert_images;
+  insertImages.value = Array.isArray(images) ? images : [];
+};
+
+const hasInsertImages = computed(() => insertImages.value.length > 0);
+
+// Split displayedContent into ordered text/image segments by [img_placeholder:N] markers
+interface ChapterSegment {
+  type: 'text' | 'image';
+  text?: string;
+  placeholder?: number;
+  url?: string;
+}
+
+const parseContentSegments = (text: string): ChapterSegment[] => {
+  const segments: ChapterSegment[] = [];
+  const source = text || '';
+  const regex = /\[img_placeholder:(\d+)\]/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(source)) !== null) {
+    segments.push({ type: 'text', text: source.slice(lastIndex, match.index) });
+    const placeholder = parseInt(match[1], 10);
+    const img = insertImages.value.find(i => Number(i.img_placeholder) === placeholder);
+    segments.push({ type: 'image', placeholder, url: img?.url || '' });
+    lastIndex = match.index + match[0].length;
+  }
+  segments.push({ type: 'text', text: source.slice(lastIndex) });
+  return segments;
+};
+
+const contentSegments = computed<ChapterSegment[]>(() => {
+  if (!hasInsertImages.value) {
+    return [{ type: 'text', text: displayedContent.value || '' }];
+  }
+  return parseContentSegments(displayedContent.value || '');
+});
+
+// Rebuild raw chapter content (with [img_placeholder:N] markers) from edited segments
+const reconstructChapterContent = (): string => {
+  return editingSegments.value
+    .map(seg => (seg.type === 'image' ? `[img_placeholder:${seg.placeholder}]` : (seg.text || '')))
+    .join('');
+};
+
+// ===== Insert image edit ("修改") + history ("历史") =====
+const showInsertImageEdit = ref<boolean>(false);
+const editingInsertImagePlaceholder = ref<number | null>(null);
+const insertImagePrompt = ref<string>('');
+const isRenewingInsertImage = ref<boolean>(false);
+const insertImageRenewTaskId = ref<string>('');
+const insertImageRenewPollTimer = ref<number | null>(null);
+
+const showInsertImageHistoryModal = ref<boolean>(false);
+const insertImageHistoryList = ref<string[]>([]);
+const historyTargetPlaceholder = ref<number | null>(null);
+// Estimated computing power for renewing an insert image
+const insertImageCost = ref<number>(1);
+
+// Fetch the estimated computing power for the insert image renew (step_name = insert_image)
+const fetchInsertImageEstimate = async () => {
+  try {
+    const estimateRes = await api.novelEstimate({
+      session_id: sessionId.value,
+      step_name: 'insert_image'
+    }) as any;
+    if (estimateRes.code == 200 && estimateRes.data?.total_points) {
+      insertImageCost.value = estimateRes.data.total_points;
+    }
+  } catch (error) {
+    console.error('Error fetching insert image estimate:', error);
   }
 };
+
+// Update an insert image url both in the source list and the edit segments
+const updateInsertImageUrl = (placeholder: number, url: string) => {
+  if (!url) return;
+  const target = insertImages.value.find(i => Number(i.img_placeholder) === placeholder);
+  if (target) target.url = url;
+  editingSegments.value.forEach(seg => {
+    if (seg.type === 'image' && seg.placeholder === placeholder) seg.url = url;
+  });
+};
+
+// Sync edit-mode segment image urls from the current insertImages source
+const syncEditSegmentImages = () => {
+  editingSegments.value.forEach(seg => {
+    if (seg.type === 'image') {
+      const img = insertImages.value.find(i => Number(i.img_placeholder) === seg.placeholder);
+      if (img) seg.url = img.url;
+    }
+  });
+};
+
+// Current image url for a placeholder (used as "current" in the history modal)
+const getInsertImageUrl = (placeholder: number | null): string => {
+  if (placeholder == null) return '';
+  return insertImages.value.find(i => Number(i.img_placeholder) === placeholder)?.url || '';
+};
+
+// Open the edit input box for a specific illustration
+const openInsertImageEdit = (placeholder?: number) => {
+  if (placeholder == null) return;
+  if (checkProjectOwnership()) return;
+  editingInsertImagePlaceholder.value = placeholder;
+  insertImagePrompt.value = '';
+  showInsertImageHistoryModal.value = false;
+  showInsertImageEdit.value = true;
+  // Fetch estimated computing power for the insert image renew
+  fetchInsertImageEstimate();
+};
+
+const cancelInsertImageEdit = () => {
+  showInsertImageEdit.value = false;
+  editingInsertImagePlaceholder.value = null;
+  insertImagePrompt.value = '';
+};
+
+// Regenerate a single illustration from a prompt (mirrors cover renew flow)
+const generateInsertImage = async () => {
+  if (isRenewingInsertImage.value) return;
+  if (editingInsertImagePlaceholder.value == null) return;
+  if (!insertImagePrompt.value.trim()) {
+    toast(t('novel.insertImageEditEmpty'));
+    return;
+  }
+  if (checkProjectOwnership()) return;
+
+  const token = localStorage.getItem('token') || '';
+  const placeholder = editingInsertImagePlaceholder.value;
+  try {
+    isRenewingInsertImage.value = true;
+    if (await isTaskLimitExceeded()) {
+      isRenewingInsertImage.value = false;
+      return;
+    }
+    // 插图重绘接口（已确认）
+    const response = await fetch(`${aiUrl}ai/novel/renew_novel_insert_image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        'token': token
+      },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        chapter: currentChapter.value?.chapter,
+        img_placeholder: placeholder,
+        prompt: insertImagePrompt.value.trim()
+      })
+    });
+    const res = await response.json();
+    if (res.code !== 200) {
+      toast(res.message || t('fail'));
+      isRenewingInsertImage.value = false;
+      return;
+    }
+    const taskId = res.data?.task_id;
+    if (taskId) {
+      startInsertImageRenewPolling(taskId, placeholder);
+    } else {
+      // No task id: try to read url directly
+      const url = res.data?.url || res.data?.insert_image_url || '';
+      if (url) updateInsertImageUrl(placeholder, url);
+      isRenewingInsertImage.value = false;
+      showInsertImageEdit.value = false;
+    }
+  } catch (e) {
+    console.error('Error renewing insert image:', e);
+    toast(t('fail'));
+    isRenewingInsertImage.value = false;
+  }
+};
+
+const stopInsertImageRenewPolling = () => {
+  if (insertImageRenewPollTimer.value) {
+    clearInterval(insertImageRenewPollTimer.value);
+    insertImageRenewPollTimer.value = null;
+  }
+  insertImageRenewTaskId.value = '';
+};
+
+const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
+  insertImageRenewTaskId.value = taskId;
+  isRenewingInsertImage.value = true;
+
+  const poll = async () => {
+    try {
+      const res = await api.taskPolling(taskId) as any;
+      if (handleSessionTimeout(res.code) || res.code == 401) {
+        stopInsertImageRenewPolling();
+        isRenewingInsertImage.value = false;
+        return;
+      }
+      if (res.code == 200 && res.data?.status == 'SUCCESS') {
+        // Renew task result: step_name = renew_novel_insert_image,
+        // edited target is in edit_state = { chapter, image_index }
+        const result = res.data.result || {};
+        const editState = res.data.edit_state || result.edit_state || {};
+        const editedChapter = editState.chapter ?? currentChapter.value?.chapter;
+        const editedIndex = editState.image_index;
+
+        const newUrl = result.insert_image_url
+          || result.renew_novel_insert_image
+          || result.url
+          || '';
+
+        // Only apply to the chapter currently displayed
+        if (currentChapter.value && Number(currentChapter.value.chapter) === Number(editedChapter)) {
+          const matchedByPlaceholder = newUrl && editedIndex != null
+            && insertImages.value.some(i => Number(i.img_placeholder) === Number(editedIndex));
+          if (matchedByPlaceholder) {
+            // edit_state.image_index corresponds to img_placeholder
+            updateInsertImageUrl(Number(editedIndex), newUrl);
+          } else {
+            // Fallback: refresh chapter detail to pull the latest insert images
+            try {
+              const chapterRes = await api.detailChapter(sessionId.value, editedChapter) as any;
+              if (chapterRes.code == 200) {
+                applyInsertImages(chapterRes);
+                syncEditSegmentImages();
+              }
+            } catch (e) {
+              console.error('Error refreshing chapter after insert image renew:', e);
+              if (newUrl) updateInsertImageUrl(placeholder, newUrl);
+            }
+          }
+        }
+
+        isRenewingInsertImage.value = false;
+        showInsertImageEdit.value = false;
+        await fetchUserBalance();
+        stopInsertImageRenewPolling();
+      } else if (res.data?.status == 'FAIL') {
+        toast(t('fail'));
+        isRenewingInsertImage.value = false;
+        await fetchUserBalance();
+        stopInsertImageRenewPolling();
+      }
+    } catch (error) {
+      console.error('Error polling insert image renew:', error);
+      isRenewingInsertImage.value = false;
+      stopInsertImageRenewPolling();
+    }
+  };
+
+  poll();
+  insertImageRenewPollTimer.value = window.setInterval(poll, 3000);
+};
+
+// Normalize various possible history shapes into a url string list
+const normalizeUrlList = (v: any): string[] => {
+  if (!v) return [];
+  if (typeof v === 'string') return [v];
+  if (Array.isArray(v)) {
+    return v
+      .map((x: any) => (typeof x === 'string' ? x : (x?.url || x?.image || '')))
+      .filter(Boolean);
+  }
+  if (typeof v === 'object') return v.url ? [v.url] : [];
+  return [];
+};
+
+const openInsertImageHistory = (placeholder?: number) => {
+  if (placeholder == null) return;
+  historyTargetPlaceholder.value = placeholder;
+  // history_data["novel_insert_image"] is a flat list of illustration history
+  insertImageHistoryList.value = normalizeUrlList(insertImageHistoryData.value);
+  showInsertImageEdit.value = false;
+  showInsertImageHistoryModal.value = true;
+};
+
+const closeInsertImageHistoryModal = () => {
+  showInsertImageHistoryModal.value = false;
+};
+
+// Restore a selected history image for the target placeholder (mirrors cover replace flow)
+const selectHistoryInsertImage = async (url: string) => {
+  if (checkProjectOwnership()) return;
+  if (historyTargetPlaceholder.value == null) return;
+  const placeholder = historyTargetPlaceholder.value;
+  try {
+    const token = localStorage.getItem('token') || '';
+    // TODO 确认端点: 插图历史替换接口
+    const response = await fetch(`${aiUrl}ai/novel/replace_novel_insert_image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        'token': token
+      },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        chapter: currentChapter.value?.chapter,
+        img_placeholder: placeholder,
+        url
+      })
+    });
+    const res = await response.json();
+    if (res.code == 200) {
+      updateInsertImageUrl(placeholder, url);
+      showInsertImageHistoryModal.value = false;
+    } else {
+      toast(res.message || t('fail'));
+    }
+  } catch (e) {
+    console.error('Error replacing insert image:', e);
+    toast(t('fail'));
+  }
+};
+
 const showChapterHistoryModal = ref<boolean>(false);
 
 const isAiEditingChapter = ref<boolean>(false);
@@ -2408,6 +2890,14 @@ const regenerateOutline = async () => {
   if (userSelectedSettings.value?.language) {
     selectedLanguage.value = userSelectedSettings.value.language;
   }
+
+  // Set NSFW mode & illustration setting from user settings (default to 4)
+  regenerateNsfwMode.value = userSelectedSettings.value?.story_mode === 'nsfw';
+  const rawInsertCount = userSelectedSettings.value?.insert_image_count;
+  selectedInsertImage.value = (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '')
+    ? Number(rawInsertCount)
+    : 4;
+  showInsertImageDropdown.value = false;
 };
 
 // Cancel regenerate
@@ -2421,11 +2911,125 @@ const cancelRegenerate = () => {
 const toggleWordCountDropdown = () => {
   showWordCountDropdown.value = !showWordCountDropdown.value;
   showLanguageDropdown.value = false;
+  showInsertImageDropdown.value = false;
 };
 
 const toggleLanguageDropdown = () => {
   showLanguageDropdown.value = !showLanguageDropdown.value;
   showWordCountDropdown.value = false;
+  showInsertImageDropdown.value = false;
+};
+
+const toggleInsertImageDropdown = () => {
+  showInsertImageDropdown.value = !showInsertImageDropdown.value;
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
+};
+
+const selectInsertImage = (value: number) => {
+  selectedInsertImage.value = value;
+  showInsertImageDropdown.value = false;
+};
+
+// Close regenerate footer dropdowns when clicking outside
+const handleRegenerateClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (target && !target.closest('.novel-selector')) {
+    showWordCountDropdown.value = false;
+    showLanguageDropdown.value = false;
+    showInsertImageDropdown.value = false;
+  }
+};
+
+// Determine whether the NSFW switch can be shown based on region (non-CN only)
+function getCountry(): Promise<void> {
+  if (hasFetchedRegion.value) {
+    return Promise.resolve();
+  }
+  if (isFetchingRegion.value) {
+    return new Promise<void>((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (hasFetchedRegion.value) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+    });
+  }
+  isFetchingRegion.value = true;
+  return (api.getCode() as Promise<any>).then((res: any) => {
+    hasFetchedRegion.value = true;
+    isFetchingRegion.value = false;
+    if (res.code == 0 && res.data?.countryCode != 'CN') {
+      userRegion.value = true;
+    } else {
+      userRegion.value = false;
+    }
+  }).catch(err => {
+    console.log(err);
+    userRegion.value = false;
+    hasFetchedRegion.value = true;
+    isFetchingRegion.value = false;
+  });
+}
+
+const toggleRegenerateNsfw = () => {
+  if (!regenerateNsfwMode.value) {
+    // Turning NSFW ON — run age check + confirmation flow (consistent with Home)
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    if (checkAgeForUnlimitedMode()) {
+      return;
+    }
+
+    const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
+    if (hasConfirmed) {
+      regenerateNsfwMode.value = true;
+    } else {
+      showUnlimitedModal.value = true;
+    }
+  } else {
+    // Turning NSFW OFF — reset illustration setting to default
+    regenerateNsfwMode.value = false;
+    selectedInsertImage.value = 4;
+    showInsertImageDropdown.value = false;
+  }
+};
+
+// Age check before enabling NSFW/unlimited mode
+const checkAgeForUnlimitedMode = (): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  const birthday = userInfo.value.info?.birthday;
+
+  if (!birthday) {
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
+
+  if (isTeenager.value) {
+    showUnderageModal.value = true;
+    return true;
+  }
+
+  return false;
+};
+
+// Confirm enabling NSFW mode from the UnlimitedModeModal
+const confirmRegenerateNsfw = () => {
+  regenerateNsfwMode.value = true;
+  showUnlimitedModal.value = false;
+};
+
+const handleGoToFillBirthday = () => {
+  showUnderageNoBirthdayModal.value = false;
+  router.push('/user-personal-edit');
 };
 
 const closeDropdowns = () => {
@@ -2454,6 +3058,7 @@ const sendRegenerateRequest = async () => {
   // Hide dropdowns when sending regenerate request
   showWordCountDropdown.value = false;
   showLanguageDropdown.value = false;
+  showInsertImageDropdown.value = false;
 
   if (!regenerateContent.value?.trim()) {
     toast(t('novel.error.emptyRegenerateContent'));
@@ -2493,11 +3098,17 @@ const sendRegenerateRequest = async () => {
     const previousSettings = userSelectedSettings.value || {};
     const previousOthers = previousSettings.others || {};
 
+    // When the NSFW switch is hidden (region not allowed), force normal mode + 0 images,
+    // even if the previous setting was NSFW/unlimited.
+    const effectiveNsfw = userRegion.value && regenerateNsfwMode.value;
+
     // Build request data based on previous settings, only updating modified fields
     const requestData = {
       ...previousSettings,
       session_id: sessionId.value,
       language: selectedLanguage.value,
+      story_mode: effectiveNsfw ? 'nsfw' : 'normal',
+      insert_image_count: effectiveNsfw ? selectedInsertImage.value : 0,
       others: {
         ...previousOthers,
         content: regenerateContent.value.trim(),
@@ -2572,6 +3183,7 @@ const sendRegenerateRequest = async () => {
     // First hide dropdowns
     showWordCountDropdown.value = false;
     showLanguageDropdown.value = false;
+    showInsertImageDropdown.value = false;
     // Then hide the entire regenerate section
     showRegenerateInput.value = false;
     regenerateContent.value = '';
@@ -2679,6 +3291,10 @@ const handleProjectNameBlur = () => {
      originalChapterContent.value = currentChapter.value.content;
      editingChapterContent.value = currentChapter.value.content;
      editingChapterTitle.value = currentChapter.value.title || '';
+     // Build per-segment editing model when the chapter has insert images
+     editingSegments.value = hasInsertImages.value
+       ? parseContentSegments(currentChapter.value.content)
+       : [];
      isEditingChapter.value = true;
 
     nextTick(() => {
@@ -2898,6 +3514,7 @@ const handleChapterEditInput = () => {
 // Cancel editing chapter
 const cancelEditChapter = () => {
   editingChapterContent.value = originalChapterContent.value;
+  editingSegments.value = [];
   isEditingChapter.value = false;
 };
 
@@ -2912,6 +3529,10 @@ const cancelEditChapter = () => {
       return;
     }
     if (currentChapter.value) {
+      // When the chapter has insert images, rebuild content from the edited segments
+      if (hasInsertImages.value && editingSegments.value.length) {
+        editingChapterContent.value = reconstructChapterContent();
+      }
       if (editingChapterContent.value == originalChapterContent.value && editingChapterTitle.value == currentChapter.value.title) {
         isEditingChapter.value = false;
         return;
@@ -7328,12 +7949,14 @@ onMounted(async () => {
 
   fetchUserInfo();
   fetchUserBalance();
+  getCountry();
   await fetchNovelOutline();
 
   // Don't fetch points estimate here as it's already called in handleStructuredData
 
   window.addEventListener('beforeunload', handleBeforeUnload);
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  document.addEventListener('click', handleRegenerateClickOutside);
 });
 
 watch(() => locale.value, () => {
@@ -7365,8 +7988,10 @@ onBeforeUnmount(() => {
   }
   stopCoverPolling();
   stopCoverRenewPolling();
+  stopInsertImageRenewPolling();
   window.removeEventListener('beforeunload', handleBeforeUnload);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  document.removeEventListener('click', handleRegenerateClickOutside);
 });
 
 onBeforeRouteLeave((_to, _from, next) => {

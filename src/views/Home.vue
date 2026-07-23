@@ -689,7 +689,7 @@
                           class="unlimited-icon"
                         />
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div> -->
+                      </div>
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />
@@ -749,6 +749,25 @@
                             @click.stop="selectWordCount(count.value)"
                           >
                             <span>{{ locale === 'jp' && count.jpLabel ? count.jpLabel : count.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Insert Image Selector - only show when unlimited mode is on -->
+                      <div v-if="currentNovelMode == 'unlimited'" class="novel-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                        <div class="selector-header">
+                          <span>{{ t('home.insertImage') }}：{{ selectedInsertImageText }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showInsertImageDropdown">
+                          <div
+                            v-for="option in insertImageOptions"
+                            :key="option.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedInsertImage == option.value }"
+                            @click.stop="selectInsertImage(option.value)"
+                          >
+                            <span>{{ option.label }}</span>
                           </div>
                         </div>
                       </div>
@@ -1716,6 +1735,19 @@ const selectedLanguageText = computed(() => {
   return lang ? lang.label : '';
 });
 
+// Insert image (illustration) settings
+const selectedInsertImage = ref(0);
+const showInsertImageDropdown = ref(false);
+const insertImageOptions = computed(() => [
+  { value: 0, label: t('home.insertImageNone') },
+  { value: 4, label: t('home.insertImage4') },
+]);
+
+const selectedInsertImageText = computed(() => {
+  const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
+  return option ? option.label : '';
+});
+
 // Mode dropdown for novel mode
 const showModeDropdown = ref(false);
 const novelInput = ref('');
@@ -1783,6 +1815,7 @@ const navigateToNovelGenerate = async () => {
       },
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
+      insert_image_count: selectedInsertImage.value,
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -2193,12 +2226,17 @@ const switchNovelMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       currentNovelMode.value = 'unlimited';
       showModeDropdown.value = false;
+      // 进入无限制模式，默认选中 4 张配图
+      selectedInsertImage.value = 4;
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentNovelMode.value = 'normal';
     showModeDropdown.value = false;
+    // Reset illustration setting when leaving unlimited mode
+    selectedInsertImage.value = 0;
+    showInsertImageDropdown.value = false;
   }
 };
 
@@ -2278,6 +2316,8 @@ const confirmUnlimitedMode = () => {
     currentComicMode.value = 'unlimited';
   } else if (contentType.value === 'novel') {
     currentNovelMode.value = 'unlimited';
+    // 进入无限制模式，默认选中 4 张配图
+    selectedInsertImage.value = 4;
   } else if (contentType.value === 'drama') {
     currentDramaMode.value = 'unlimited';
   } else if (contentType.value === 'photo') {
@@ -2500,12 +2540,26 @@ const toggleWordCountDropdown = () => {
   showWordCountDropdown.value = !showWordCountDropdown.value;
   showLanguageDropdown.value = false;
   showModeDropdown.value = false;
+  showInsertImageDropdown.value = false;
 };
 
 const toggleLanguageDropdown = () => {
   showLanguageDropdown.value = !showLanguageDropdown.value;
   showWordCountDropdown.value = false;
   showModeDropdown.value = false;
+  showInsertImageDropdown.value = false;
+};
+
+const toggleInsertImageDropdown = () => {
+  showInsertImageDropdown.value = !showInsertImageDropdown.value;
+  showWordCountDropdown.value = false;
+  showLanguageDropdown.value = false;
+  showModeDropdown.value = false;
+};
+
+const selectInsertImage = (value: number) => {
+  selectedInsertImage.value = value;
+  showInsertImageDropdown.value = false;
 };
 
 const selectWordCount = (value: string) => {
@@ -2535,6 +2589,7 @@ const handleClickOutside = (event: MouseEvent) => {
     showPhotoSettings.value = false;
     showVideoMultimodalDropdown.value = false;
     showVideoSettings.value = false;
+    showInsertImageDropdown.value = false;
   }
 };
 
