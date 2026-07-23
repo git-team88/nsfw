@@ -557,10 +557,22 @@
 
               <div class="label-row">
                 <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
-                <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+                <div class="label-row-right">
+                  <button class="insert-image-btn" @click="triggerCaptionImageUpload">
+                    <span>{{ t('submit.insertImage') }}</span>
+                  </button>
+                  <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+                </div>
               </div>
 
               <div class="desc-input-wrap">
+                <input
+                  ref="captionImageFileInputRef"
+                  type="file"
+                  accept="image/*"
+                  style="display: none;"
+                  @change="handleCaptionImageChange"
+                />
                 <div
                   ref="captionRef"
                   class="description-content"
@@ -571,6 +583,8 @@
                   @click="handleCaptionClick"
                   @blur="onCaptionBlur"
                   @paste="handlePaste"
+                  @keyup="saveCaptionRange"
+                  @mouseup="saveCaptionRange"
                 ></div>
 
                 <div class="caption-actions-box">
@@ -925,6 +939,8 @@ const MAX_COUNT = 10000;
 // Caption related
 const captionRef = ref<HTMLDivElement | null>(null);
 const captionLength = ref(0);
+// Insert images (illustrations) loaded from the chapter's result_async.insert_images
+const captionInsertImages = ref<string[]>([]);
 
 interface DropdownItem {
   label: string;
@@ -2050,7 +2066,7 @@ async function onSubmit() {
       type: 2,
       title: form.value.title.trim(),
       cover: coverPreview.value || (selectedCollection.value?.cover || ''),
-      content: form.value.description.trim(),
+      content: (captionRef.value ? serializeCaptionContent() : form.value.description).trim(),
       is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
@@ -2683,8 +2699,192 @@ function onActionBtnClick(symbol: "#" | "@") {
 
 function onCaptionBlur() {
   if (captionRef.value) {
-    form.value.description = captionRef.value.innerText;
+    form.value.description = serializeCaptionContent();
   }
+}
+
+// ===== Insert images into the caption content (max 12) =====
+const MAX_CAPTION_IMAGES = 12;
+const captionImageFileInputRef = ref<HTMLInputElement | null>(null);
+
+// Remember the caret position inside the editor so a later upload can insert there
+function saveCaptionRange() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  if (captionRef.value && captionRef.value.contains(range.commonAncestorContainer)) {
+    lastRange.value = range.cloneRange();
+  }
+}
+
+function captionImageCount(): number {
+  return captionRef.value
+    ? captionRef.value.querySelectorAll('img.caption-insert-image').length
+    : 0;
+}
+
+function triggerCaptionImageUpload() {
+  if (captionImageCount() >= MAX_CAPTION_IMAGES) {
+    toast(t('novel.maxCoverImages', { max: MAX_CAPTION_IMAGES }));
+    return;
+  }
+  captionImageFileInputRef.value?.click();
+}
+
+async function handleCaptionImageChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  const file = files[0];
+
+  if (captionImageCount() >= MAX_CAPTION_IMAGES) {
+    toast(t('novel.maxCoverImages', { max: MAX_CAPTION_IMAGES }));
+    input.value = '';
+    return;
+  }
+
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    toast(t('novel.invalidCoverImageType'));
+    input.value = '';
+    return;
+  }
+  const maxSizeMB = 10;
+  if (file.size > maxSizeMB * 1024 * 1024) {
+    toast(t('novel.maxCoverSize', { max: maxSizeMB }));
+    input.value = '';
+    return;
+  }
+
+  // Corrupted image check
+  const imageCorrupted = await new Promise<boolean>((resolve) => {
+    const testImg = new Image();
+    const objUrl = URL.createObjectURL(file);
+    testImg.onload = () => { URL.revokeObjectURL(objUrl); resolve(testImg.width === 0 || testImg.height === 0); };
+    testImg.onerror = () => { URL.revokeObjectURL(objUrl); resolve(true); };
+    testImg.src = objUrl;
+  });
+  if (imageCorrupted) {
+    toast(t('home.error.corruptedImage'));
+    input.value = '';
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) { input.value = ''; return; }
+
+  isUpload.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+    const res = await fetch(baseUrl + 'user/uploadImage', {
+      method: 'POST',
+      headers: { token, 'Platform': 'web', ...authHeaders },
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.code === 0 || data.code === 200) {
+      const url = (data?.data && (data.data.url || data.data)) || data?.url;
+      if (typeof url === 'string') insertCaptionImage(url);
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (e) {
+    console.error('Caption image upload error:', e);
+    toast(t('fail'));
+  } finally {
+    isUpload.value = false;
+    input.value = '';
+  }
+}
+
+// Build an <img> element for an inserted illustration.
+// Display a compressed version, keep the original url in data-url.
+function buildCaptionImage(url: string): HTMLImageElement {
+  const img = document.createElement('img');
+  img.src = url + '?imageMogr2/format/webp/quality/60';
+  img.dataset.url = url;
+  img.className = 'caption-insert-image';
+  img.setAttribute('contenteditable', 'false');
+  return img;
+}
+
+// Serialize the editor content to a string: text as-is, illustrations as
+// self-closing <img src="url" /> tags (original url from data-url).
+function serializeCaptionContent(): string {
+  if (!captionRef.value) return form.value.description || '';
+  const walk = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const el = node as HTMLElement;
+    if (el.tagName === 'IMG') {
+      const url = (el as HTMLImageElement).dataset.url || el.getAttribute('src') || '';
+      return `<img src="${url}" />`;
+    }
+    if (el.tagName === 'BR') return '\n';
+    let s = '';
+    el.childNodes.forEach((c) => { s += walk(c); });
+    return s;
+  };
+  let out = '';
+  captionRef.value.childNodes.forEach((c) => { out += walk(c); });
+  return out;
+}
+
+// Render the chapter content into the editor, replacing each [[img_placeholder]]
+// marker with the matching illustration (in order) from insert_images.
+function renderCaptionContent(content: string, images: string[]) {
+  if (!captionRef.value) return;
+  captionRef.value.innerHTML = '';
+  const source = (content || '').replace(/\\n/g, '\n');
+  const regex = /\[\[img_placeholder\]\]/g;
+  let lastIndex = 0;
+  let occurrence = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(source)) !== null) {
+    const textPart = source.slice(lastIndex, match.index);
+    if (textPart) captionRef.value.appendChild(document.createTextNode(textPart));
+    const url = images[occurrence];
+    if (url) {
+      captionRef.value.appendChild(buildCaptionImage(url));
+    } else {
+      captionRef.value.appendChild(document.createTextNode(match[0]));
+    }
+    occurrence++;
+    lastIndex = match.index + match[0].length;
+  }
+  const tail = source.slice(lastIndex);
+  if (tail) captionRef.value.appendChild(document.createTextNode(tail));
+  captionLength.value = (captionRef.value.textContent || '').replace(/\n$/, '').length;
+}
+
+// Insert an uploaded image at the saved caret position inside the editor
+function insertCaptionImage(url: string) {
+  if (!captionRef.value) return;
+
+  const img = buildCaptionImage(url);
+
+  captionRef.value.focus();
+  const selection = window.getSelection();
+  let range = lastRange.value;
+  // Fall back to the end of the editor if there is no valid saved caret
+  if (!range || !captionRef.value.contains(range.commonAncestorContainer)) {
+    range = document.createRange();
+    range.selectNodeContents(captionRef.value);
+    range.collapse(false);
+  }
+  range.deleteContents();
+  range.insertNode(img);
+
+  // Move the caret right after the inserted image
+  range.setStartAfter(img);
+  range.collapse(true);
+  if (selection) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+  lastRange.value = range.cloneRange();
 }
 
 function handlePaste(e: ClipboardEvent) {
@@ -4179,6 +4379,13 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
       }
       form.value.description = res.data.content;
 
+      // Capture insert images (illustrations) from result_async for [[img_placeholder]] markers
+      let ra = res.data.result_async;
+      if (typeof ra === 'string') {
+        try { ra = JSON.parse(ra); } catch (e) { ra = null; }
+      }
+      captionInsertImages.value = Array.isArray(ra?.insert_images) ? ra.insert_images : [];
+
       if (cover) {
         coverPreview.value = cover;
         hasUrlCover.value = true;
@@ -4236,9 +4443,8 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
 
       setTimeout(() => {
         if (captionRef.value) {
-          const processedContent = form.value.description.replace(/\\n/g, '\n');
-          captionRef.value.textContent = processedContent;
-          captionLength.value = processedContent.length;
+          // Render content with [[img_placeholder]] markers replaced by illustrations
+          renderCaptionContent(form.value.description, captionInsertImages.value);
         }
       }, 0);
 

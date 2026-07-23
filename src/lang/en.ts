@@ -1901,6 +1901,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     titleLabel: "Title",
     articleTitleLabel: "Article",
+    insertImage: "Insert image",
     titlePlaceholder: "Enter title here...",
     titleRequired: "Please enter a title",
     uploadDocument: "Upload Document",

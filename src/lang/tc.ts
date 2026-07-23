@@ -2000,6 +2000,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
     titleLabel: "標題",
     articleTitleLabel: "文章",
+    insertImage: "插入圖片",
     titlePlaceholder: "請輸入標題...",
     titleRequired: "請輸入標題",
     uploadDocument: "上傳文檔",

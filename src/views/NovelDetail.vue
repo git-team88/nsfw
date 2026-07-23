@@ -118,9 +118,12 @@
 
         <div class="chapter-body" :class="isCollectionMode ? 'on' : ''">
           <h2 class="chapter-content-title">{{ detail.title }}</h2>
-          <div v-for="(paragraph, index) in contentSections" :key="index" class="paragraph">
-            {{ paragraph }}
-          </div>
+          <template v-for="(block, index) in contentBlocks" :key="index">
+            <div v-if="block.type === 'text'" class="paragraph">{{ block.text }}</div>
+            <div v-else class="novel-detail-image">
+              <img :src="novelDetailImageSrc(block.url)" alt="" />
+            </div>
+          </template>
         </div>
 
         <!-- Subscription required提示 -->
@@ -331,6 +334,34 @@ const contentSections = computed(() => {
   // Split by newline and filter out empty sections
   return content.split('\n').filter(section => section.trim() !== '');
 });
+
+// Content blocks: text paragraphs + inline <img src="..." /> illustrations
+const contentBlocks = computed(() => {
+  let content = detail.value.content_replace || detail.value.content || '';
+  content = content.replace(/\\n/g, '\n');
+  const blocks: Array<{ type: 'text' | 'image'; text?: string; url?: string }> = [];
+  const regex = /<img[^>]*src=["']([^"']+)["'][^>]*>/g;
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  const pushText = (text: string) => {
+    text.split('\n').forEach((line) => {
+      if (line.trim() !== '') blocks.push({ type: 'text', text: line });
+    });
+  };
+  while ((m = regex.exec(content)) !== null) {
+    pushText(content.slice(lastIndex, m.index));
+    blocks.push({ type: 'image', url: m[1] });
+    lastIndex = m.index + m[0].length;
+  }
+  pushText(content.slice(lastIndex));
+  return blocks;
+});
+
+// Compressed src for detail illustrations
+const novelDetailImageSrc = (url?: string) => {
+  if (!url) return '';
+  return url.includes('?') ? url : url + '?imageMogr2/format/webp/quality/60';
+};
 
 // Processed content with proper line breaks
 const processedContent = computed(() => {

@@ -368,6 +368,20 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             margin-bottom: 0;
           }
         }
+
+        .novel-detail-image {
+          margin-bottom: 24px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          img {
+            display: block;
+            max-width: 100%;
+            border-radius: 8px;
+          }
+        }
       }
 
       .sensitive-body {

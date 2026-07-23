@@ -2006,6 +2006,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     titleLabel: "标题",
     articleTitleLabel: "文章",
+    insertImage: "插入图片",
     titlePlaceholder: "请输入标题...",
     titleRequired: "请输入标题",
     uploadDocument: "上传文档",

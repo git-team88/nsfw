@@ -906,12 +906,34 @@
         align-items: center;
         justify-content: space-between;
 
+        .label-row-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .insert-image-btn {
+          padding: 0;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #FF4D8E;
+          font-size: 14px;
+        }
+
         .char-count {
           font-size: 12px;
           font-weight: 600;
           color: #161122;
           opacity: 0.45;
         }
+      }
+
+      .caption-insert-image {
+        display: block;
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 8px 0;
       }
 
       .title-input-wrap {
