@@ -462,12 +462,9 @@
               <button class="insert-image-upload-btn" @click="() => { if (checkLogin()) triggerInsertImageFileUpload() }">
                 <img src="@/assets/images/novel/upload.png" alt="" />
               </button>
-              <div class="insert-image-edit-cost-display">
-                <span class="insert-image-edit-cost">{{ insertImageCost }}</span>
-                <img src="@/assets/images/novel/coin.png" alt="" />
-              </div>
               <button class="insert-image-edit-send-btn" :class="{ loading: isRenewingInsertImage }" @click="generateInsertImage">
-                <img v-if="!isRenewingInsertImage" src="@/assets/images/novel/send.png" alt="" />
+                <span v-if="!isRenewingInsertImage" class="send-btn-cost">{{ insertImageCost }}</span>
+                <img v-if="!isRenewingInsertImage" class="send-btn-coin" src="@/assets/images/novel/coin.png" alt="" />
                 <div v-else class="btn-spinner-wrapper"><span class="btn-spinner"></span></div>
               </button>
             </div>
