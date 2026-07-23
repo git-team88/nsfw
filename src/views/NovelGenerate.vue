@@ -403,19 +403,65 @@
         <!-- Insert Image Edit Section - Fixed at bottom -->
         <div v-if="showInsertImageEdit" class="insert-image-edit-section">
           <div class="insert-image-edit-header">
-            <span class="insert-image-edit-title">{{ t('novel.editImage') }}:</span>
+            <span class="insert-image-edit-title">{{ t('novel.editImageTitle') }}:</span>
             <button class="cancel-insert-image-edit-btn" @click="cancelInsertImageEdit">{{ t('novel.cancel') }}</button>
           </div>
 
           <div class="insert-image-edit-content">
-            <textarea
-              v-model="insertImagePrompt"
-              class="insert-image-edit-textarea"
-              :placeholder="t('novel.insertImageEditPlaceholder')"
-              spellcheck="false"
-            ></textarea>
+            <!-- Uploaded reference images -->
+            <div class="insert-image-ref-list" v-if="insertImageRefImages.length > 0">
+              <div v-for="img in insertImageRefImages" :key="img.id" class="insert-image-ref-item">
+                <img :src="img.image" alt="" class="insert-image-ref-thumb" />
+                <button class="insert-image-ref-remove" @click="removeInsertImageRefImage(img.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
+              </div>
+            </div>
+
+            <div class="insert-image-input-inner">
+              <div
+                ref="insertImageInputRef"
+                class="insert-image-input"
+                contenteditable="true"
+                spellcheck="false"
+                @input="handleInsertImageInput"
+                @keydown="handleInsertImageKeydown"
+                @click="handleInsertImageInputClick"
+                @blur="handleInsertImageInputBlur"
+                @paste="handleInsertImagePaste"
+                @focus="handleInsertImageInputFocus"
+                @compositionstart="isInsertImageComposing = true"
+                @compositionend="isInsertImageComposing = false"
+                :data-placeholder="t('novel.insertImageEditPlaceholder')"
+              ></div>
+
+              <!-- @ Dropdown -->
+              <div v-if="showInsertImageAtDropdown" class="at-dropdown">
+                <div
+                  v-for="(item, index) in insertImageAtDropdownItems"
+                  :key="index"
+                  class="dropdown-item"
+                  @mousedown.prevent="selectInsertImageAtItem(item)"
+                >
+                  <div class="dropdown-img">
+                    <img :src="item.image" :alt="item.name || ''" />
+                  </div>
+                  <span>{{ t('home.img') }}{{ insertImageRefImages.findIndex(img => img.id == item.id) + 1 }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden file input for reference image upload -->
+            <input
+              ref="insertImageFileInputRef"
+              type="file"
+              accept="image/*"
+              style="display: none;"
+              @change="handleInsertImageFileChange"
+            />
 
             <div class="insert-image-edit-footer">
+              <button class="insert-image-upload-btn" @click="() => { if (checkLogin()) triggerInsertImageFileUpload() }">
+                <img src="@/assets/images/novel/upload.png" alt="" />
+              </button>
               <div class="insert-image-edit-cost-display">
                 <span class="insert-image-edit-cost">{{ insertImageCost }}</span>
                 <img src="@/assets/images/novel/coin.png" alt="" />
@@ -517,7 +563,7 @@
                 </div>
           </div>
           <template v-else-if="currentChapter">
-            <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading" class="chapter-actions">
+            <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading && renewingInsertImagePlaceholder === null" class="chapter-actions">
               <button v-if="hasFailed ? chapterHistoryCount >= 1 : chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
               <template v-if="!hasFailed">
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
@@ -654,10 +700,16 @@
                 <template v-for="(seg, idx) in contentSegments" :key="idx">
                   <p v-if="seg.type === 'text' && seg.text" class="paragraph">{{ seg.text }}</p>
                   <div v-else-if="seg.type === 'image'" class="insert-image-block">
-                    <img v-if="seg.url" :src="seg.url" alt="" class="insert-image" />
-                    <div class="insert-image-actions">
-                      <button class="insert-image-btn" @click="openInsertImageEdit(seg.placeholder)">{{ t('novel.editImage') }}</button>
-                      <button class="insert-image-btn" @click="openInsertImageHistory(seg.placeholder)">{{ t('novel.imageHistory') }}</button>
+                    <div v-if="isInsertImageRenewing(seg.placeholder)" class="insert-image-wrapper">
+                      <div class="insert-image-skeleton"></div>
+                    </div>
+                    <div v-else-if="seg.url" class="insert-image-wrapper">
+                      <img :src="insertImageSrc(seg.url)" alt="" class="insert-image" />
+                      <button class="insert-image-zoom-btn" @click="zoomCoverImage(seg.url)"><img src="@/assets/images/novel/zoom.png" alt="Zoom" /></button>
+                    </div>
+                    <div class="insert-image-actions" v-if="!isChapterRenewingInsertImage()">
+                      <button v-if="hasInsertImageHistory(seg.placeholder)" class="insert-image-action-btn" @click="openInsertImageHistory(seg.placeholder)"><img src="@/assets/images/novel/history.png" alt="History" /></button>
+                      <button class="insert-image-action-btn" @click="openInsertImageEdit(seg.placeholder)"><img src="@/assets/images/novel/cover_edit.png" alt="Edit" /></button>
                     </div>
                   </div>
                 </template>
@@ -687,10 +739,13 @@
                     spellcheck="false"
                   ></textarea>
                   <div v-else-if="seg.type === 'image'" class="insert-image-block">
-                    <img v-if="seg.url" :src="seg.url" alt="" class="insert-image" />
+                    <div v-if="seg.url" class="insert-image-wrapper">
+                      <img :src="insertImageSrc(seg.url)" alt="" class="insert-image" />
+                      <button class="insert-image-zoom-btn" @click="zoomCoverImage(seg.url)"><img src="@/assets/images/novel/zoom.png" alt="Zoom" /></button>
+                    </div>
                     <div class="insert-image-actions">
-                      <button class="insert-image-btn" @click="openInsertImageEdit(seg.placeholder)">{{ t('novel.editImage') }}</button>
-                      <button class="insert-image-btn" @click="openInsertImageHistory(seg.placeholder)">{{ t('novel.imageHistory') }}</button>
+                      <button class="insert-image-action-btn" @click="checkOutlineEditBeforeAction(() => openInsertImageEdit(seg.placeholder))"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
+                      <button class="insert-image-action-btn" @click="checkOutlineEditBeforeAction(() => openInsertImageHistory(seg.placeholder))"><img src="@/assets/images/novel/history.png" alt="History" /></button>
                     </div>
                   </div>
                 </template>
@@ -959,10 +1014,10 @@
       <!-- Action Buttons -->
       <div class="action-buttons">
         <div class="left">
-          <button v-if="currentChapter" class="prev-btn" @click="goPrevChapter">
+          <button v-if="currentChapter" class="prev-btn" @click="checkOutlineEditBeforeAction(goPrevChapter)">
             <img src="@/assets/images/novel/prev.png" alt="" />
           </button>
-          <button v-if="showNextArrow" class="next-btn" @click="goNextChapter">
+          <button v-if="showNextArrow" class="next-btn" @click="checkOutlineEditBeforeAction(goNextChapter)">
             <img src="@/assets/images/novel/next.png" alt="" />
           </button>
         </div>
@@ -1878,7 +1933,13 @@ const isAnyEditing = computed(() => {
 
 const isChapterEditDirty = computed(() => {
   if (!isEditingChapter.value || !currentChapter.value) return false;
-  return editingChapterContent.value !== originalChapterContent.value || editingChapterTitle.value !== (currentChapter.value?.title || '');
+  const titleChanged = editingChapterTitle.value !== (currentChapter.value?.title || '');
+  // Insert-image chapters are edited via per-segment textareas (editingSegments),
+  // so compare the reconstructed content instead of editingChapterContent.
+  const contentChanged = (hasInsertImages.value && editingSegments.value.length)
+    ? reconstructChapterContent() !== originalChapterContent.value
+    : editingChapterContent.value !== originalChapterContent.value;
+  return contentChanged || titleChanged;
 });
 
 const isAnyEditDirty = computed(() => {
@@ -2006,19 +2067,37 @@ const updateChapterHistoryFromDetail = (chapterRes: any) => {
   applyInsertImages(chapterRes);
 };
 
-// Parse result_async.insert_images from a chapter detail response
+// Parse result_async.insert_images from a chapter detail response.
+// insert_images is an ordered array of image URL strings; the Nth
+// [[img_placeholder]] in the content maps to the Nth URL (img_placeholder = index).
 const applyInsertImages = (chapterRes: any) => {
   let ra = chapterRes?.data?.result_async;
   if (typeof ra === 'string') {
     try { ra = JSON.parse(ra); } catch (e) { ra = null; }
   }
   const images = ra?.insert_images;
-  insertImages.value = Array.isArray(images) ? images : [];
+  insertImages.value = Array.isArray(images)
+    ? images.map((item: any, index: number) => ({
+        img_placeholder: index,
+        url: typeof item === 'string'
+          ? item
+          : (item?.url || item?.image_url || item?.img_url || item?.image || '')
+      }))
+    : [];
 };
 
 const hasInsertImages = computed(() => insertImages.value.length > 0);
 
-// Split displayedContent into ordered text/image segments by [img_placeholder:N] markers
+// Compressed src for inline illustration display (raw image is too large).
+// Mirrors the cover webp suffix; zoom still uses the original url.
+const insertImageSrc = (url?: string): string => {
+  if (!url) return '';
+  return url + '?imageMogr2/format/webp/quality/60';
+};
+
+// Split displayedContent into ordered text/image segments by [[img_placeholder]] markers.
+// Each occurrence of the marker maps, in order, to an item in insertImages
+// (sorted by img_placeholder). The image's img_placeholder is kept for edit/history ops.
 interface ChapterSegment {
   type: 'text' | 'image';
   text?: string;
@@ -2026,17 +2105,28 @@ interface ChapterSegment {
   url?: string;
 }
 
+// Insert images ordered by img_placeholder so occurrence order is stable
+const orderedInsertImages = computed(() =>
+  [...insertImages.value].sort((a, b) => Number(a.img_placeholder) - Number(b.img_placeholder))
+);
+
 const parseContentSegments = (text: string): ChapterSegment[] => {
   const segments: ChapterSegment[] = [];
   const source = text || '';
-  const regex = /\[img_placeholder:(\d+)\]/g;
+  const regex = /\[\[img_placeholder\]\]/g;
+  const ordered = orderedInsertImages.value;
   let lastIndex = 0;
+  let occurrence = 0;
   let match: RegExpExecArray | null;
   while ((match = regex.exec(source)) !== null) {
     segments.push({ type: 'text', text: source.slice(lastIndex, match.index) });
-    const placeholder = parseInt(match[1], 10);
-    const img = insertImages.value.find(i => Number(i.img_placeholder) === placeholder);
-    segments.push({ type: 'image', placeholder, url: img?.url || '' });
+    const img = ordered[occurrence];
+    segments.push({
+      type: 'image',
+      placeholder: img ? Number(img.img_placeholder) : occurrence,
+      url: img?.url || ''
+    });
+    occurrence += 1;
     lastIndex = match.index + match[0].length;
   }
   segments.push({ type: 'text', text: source.slice(lastIndex) });
@@ -2050,10 +2140,10 @@ const contentSegments = computed<ChapterSegment[]>(() => {
   return parseContentSegments(displayedContent.value || '');
 });
 
-// Rebuild raw chapter content (with [img_placeholder:N] markers) from edited segments
+// Rebuild raw chapter content (with [[img_placeholder]] markers) from edited segments
 const reconstructChapterContent = (): string => {
   return editingSegments.value
-    .map(seg => (seg.type === 'image' ? `[img_placeholder:${seg.placeholder}]` : (seg.text || '')))
+    .map(seg => (seg.type === 'image' ? `[[img_placeholder]]` : (seg.text || '')))
     .join('');
 };
 
@@ -2064,6 +2154,20 @@ const insertImagePrompt = ref<string>('');
 const isRenewingInsertImage = ref<boolean>(false);
 const insertImageRenewTaskId = ref<string>('');
 const insertImageRenewPollTimer = ref<number | null>(null);
+// Which illustration (by img_placeholder) is currently regenerating — drives its skeleton
+const renewingInsertImagePlaceholder = ref<number | null>(null);
+// Chapter of the illustration currently regenerating (so the skeleton only shows
+// on the correct chapter, not a same-index image in another chapter)
+const renewingInsertImageChapter = ref<number | null>(null);
+// Reference images uploaded for the insert image edit (mirrors cover upload)
+const insertImageRefImages = ref<any[]>([]);
+const insertImageFileInputRef = ref<HTMLInputElement | null>(null);
+// Contenteditable prompt input + @-mention dropdown state (mirrors cover input)
+const insertImageInputRef = ref<HTMLElement | null>(null);
+const showInsertImageAtDropdown = ref<boolean>(false);
+const insertImageAtDropdownItems = ref<any[]>([]);
+const isInsertImageComposing = ref<boolean>(false);
+const previousInsertImageInputHtml = ref<string>('');
 
 const showInsertImageHistoryModal = ref<boolean>(false);
 const insertImageHistoryList = ref<string[]>([]);
@@ -2115,26 +2219,421 @@ const getInsertImageUrl = (placeholder: number | null): string => {
 // Open the edit input box for a specific illustration
 const openInsertImageEdit = (placeholder?: number) => {
   if (placeholder == null) return;
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
   if (checkProjectOwnership()) return;
   editingInsertImagePlaceholder.value = placeholder;
   insertImagePrompt.value = '';
+  insertImageRefImages.value = [];
+  showInsertImageAtDropdown.value = false;
   showInsertImageHistoryModal.value = false;
   showInsertImageEdit.value = true;
+  nextTick(() => { if (insertImageInputRef.value) insertImageInputRef.value.innerHTML = ''; });
   // Fetch estimated computing power for the insert image renew
   fetchInsertImageEstimate();
 };
 
 const cancelInsertImageEdit = () => {
   showInsertImageEdit.value = false;
+  showInsertImageAtDropdown.value = false;
   editingInsertImagePlaceholder.value = null;
   insertImagePrompt.value = '';
+  insertImageRefImages.value = [];
+  if (insertImageInputRef.value) insertImageInputRef.value.innerHTML = '';
+};
+
+// Trigger the hidden file input for insert image reference upload
+const triggerInsertImageFileUpload = () => {
+  insertImageFileInputRef.value?.click();
+};
+
+const removeInsertImageRefImage = (imageId: number) => {
+  insertImageRefImages.value = insertImageRefImages.value.filter(img => img.id !== imageId);
+  // Remove any @-mention chips referencing this image from the prompt input
+  if (insertImageInputRef.value) {
+    const tags = insertImageInputRef.value.querySelectorAll(`span.image-tag[data-item-id="${imageId}"]`);
+    tags.forEach(tag => tag.remove());
+  }
+};
+
+// Upload a reference image for the insert image edit (reuses cover upload endpoint)
+const handleInsertImageFileChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const files = input.files;
+  if (!files || files.length == 0) return;
+  const file = files[0];
+
+  const maxImages = 3;
+  const maxSizeMB = 10;
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+  if (insertImageRefImages.value.length >= maxImages) {
+    toast(t('novel.maxCoverImages', { max: maxImages }));
+    input.value = '';
+    return;
+  }
+
+  const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!validImageTypes.includes(file.type)) {
+    toast(t('novel.invalidCoverImageType'));
+    input.value = '';
+    return;
+  }
+
+  if (file.size > maxSizeBytes) {
+    toast(t('novel.maxCoverSize', { max: maxSizeMB }));
+    input.value = '';
+    return;
+  }
+
+  isUploading.value = true;
+
+  const imageCorrupted = await new Promise<boolean>((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img.width === 0 || img.height === 0); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(true); };
+    img.src = url;
+  });
+
+  if (imageCorrupted) {
+    toast(t('home.error.corruptedImage'));
+    input.value = '';
+    isUploading.value = false;
+    return;
+  }
+
+  try {
+    const uploadedUrl = await uploadCoverImage(file);
+    insertImageRefImages.value.push({
+      id: Date.now(),
+      image: uploadedUrl,
+      file
+    });
+  } catch (error) {
+    console.error('Insert image reference upload error', error);
+    toast(t('fail'));
+  } finally {
+    isUploading.value = false;
+  }
+
+  input.value = '';
+};
+
+// ===== Insert image prompt @-mention (contenteditable) — mirrors the cover input =====
+const INSERT_IMAGE_PROMPT_MAX = 5000;
+
+const getInsertImageInputCharCount = (element: HTMLElement): number => {
+  let charCount = 0;
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        charCount += (node.textContent || '').length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+        charCount += 7;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          walkNodes(node.childNodes[i]);
+        }
+      }
+    }
+  };
+  walkNodes(element);
+  return charCount;
+};
+
+const getInsertImageCursorPosition = (element: HTMLElement): number => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return 0;
+  const range = selection.getRangeAt(0);
+  const preRange = range.cloneRange();
+  preRange.selectNodeContents(element);
+  preRange.setEnd(range.endContainer, range.endOffset);
+  return preRange.toString().length;
+};
+
+// Position the @-dropdown right under the @ symbol
+const positionInsertImageDropdown = (atIndex: number) => {
+  nextTick(() => {
+    try {
+      if (!insertImageInputRef.value) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      let currentPos = 0;
+      let foundAtNode: Node | null = null;
+      let atNodeOffset = 0;
+
+      const findAtSymbol = (node: Node): boolean => {
+        if (node.nodeType === 3) {
+          if (node.parentElement?.hasAttribute('contenteditable') && node.parentElement.contentEditable === 'false') {
+            return false;
+          }
+          const nodeText = node.textContent || '';
+          const nodeLength = nodeText.length;
+          if (currentPos <= atIndex && atIndex < currentPos + nodeLength) {
+            foundAtNode = node;
+            atNodeOffset = atIndex - currentPos;
+            return true;
+          }
+          currentPos += nodeLength;
+        } else if (node.nodeType === 1) {
+          if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+            return false;
+          }
+          for (let i = 0; i < node.childNodes.length; i++) {
+            if (findAtSymbol(node.childNodes[i])) return true;
+          }
+        }
+        return false;
+      };
+
+      findAtSymbol(insertImageInputRef.value);
+
+      if (foundAtNode) {
+        const atRange = document.createRange();
+        atRange.setStart(foundAtNode as Node, atNodeOffset);
+        atRange.setEnd(foundAtNode as Node, atNodeOffset + 1);
+
+        const rect = atRange.getBoundingClientRect();
+        const inputInner = insertImageInputRef.value.parentElement;
+        const dropdown = document.querySelector('.insert-image-edit-section .at-dropdown') as HTMLElement;
+
+        if (inputInner && dropdown) {
+          const inputInnerRect = inputInner.getBoundingClientRect();
+          const relativeTop = rect.bottom - inputInnerRect.top;
+          const relativeLeft = rect.left - inputInnerRect.left;
+          dropdown.style.left = `${relativeLeft}px`;
+
+          const dropdownHeight = dropdown.offsetHeight || 200;
+          const availableBottomSpace = window.innerHeight - rect.bottom;
+          if (availableBottomSpace < dropdownHeight) {
+            dropdown.style.top = `${relativeTop - dropdownHeight - rect.height - 5}px`;
+            dropdown.style.bottom = 'auto';
+          } else {
+            dropdown.style.top = `${relativeTop + 5}px`;
+            dropdown.style.bottom = 'auto';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error positioning insert image dropdown:', error);
+    }
+  });
+};
+
+const maybeShowInsertImageAtDropdown = (target: HTMLElement) => {
+  const cursorPosition = getInsertImageCursorPosition(target);
+  const text = target.textContent || '';
+  const textBeforeCursor = text.substring(0, cursorPosition);
+  const atIndex = textBeforeCursor.lastIndexOf('@');
+  const hasItems = insertImageRefImages.value.length > 0;
+
+  if (atIndex !== -1 && atIndex === textBeforeCursor.length - 1 && hasItems) {
+    showInsertImageAtDropdown.value = true;
+    insertImageAtDropdownItems.value = insertImageRefImages.value;
+    positionInsertImageDropdown(atIndex);
+  } else {
+    showInsertImageAtDropdown.value = false;
+  }
+};
+
+const handleInsertImageInput = () => {
+  if (!insertImageInputRef.value) return;
+  const target = insertImageInputRef.value;
+
+  if (getInsertImageInputCharCount(target) > INSERT_IMAGE_PROMPT_MAX) {
+    target.innerHTML = previousInsertImageInputHtml.value;
+    limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+    return;
+  }
+  previousInsertImageInputHtml.value = target.innerHTML;
+  maybeShowInsertImageAtDropdown(target);
+};
+
+const handleInsertImageKeydown = (event: KeyboardEvent) => {
+  if (isInsertImageComposing.value) return;
+  if (event.key == 'Escape') {
+    showInsertImageAtDropdown.value = false;
+  } else if (event.key == 'Enter' && event.shiftKey) {
+    event.preventDefault();
+    document.execCommand('insertLineBreak');
+  }
+  if (insertImageInputRef.value) {
+    const currentCharCount = getInsertImageInputCharCount(insertImageInputRef.value);
+    if (currentCharCount >= INSERT_IMAGE_PROMPT_MAX && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+    }
+  }
+};
+
+const handleInsertImageInputClick = () => {
+  if (insertImageInputRef.value) maybeShowInsertImageAtDropdown(insertImageInputRef.value);
+};
+
+const handleInsertImageInputBlur = () => {
+  setTimeout(() => { showInsertImageAtDropdown.value = false; }, 200);
+};
+
+const handleInsertImagePaste = (event: ClipboardEvent) => {
+  event.preventDefault();
+  if (!insertImageInputRef.value) return;
+  const currentCharCount = getInsertImageInputCharCount(insertImageInputRef.value);
+  const text = event.clipboardData?.getData('text/plain') || '';
+  if (currentCharCount + text.length > INSERT_IMAGE_PROMPT_MAX) {
+    limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+    return;
+  }
+  document.execCommand('insertText', false, text);
+  nextTick(() => {
+    const el = insertImageInputRef.value;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+      previousInsertImageInputHtml.value = el.innerHTML;
+    }
+  });
+};
+
+const handleInsertImageInputFocus = () => {
+  if (insertImageInputRef.value) previousInsertImageInputHtml.value = insertImageInputRef.value.innerHTML;
+};
+
+// Insert an image chip at the @ symbol
+const selectInsertImageAtItem = (item: any) => {
+  if (!insertImageInputRef.value) return;
+  const target = insertImageInputRef.value;
+  const savedHtml = target.innerHTML;
+
+  if (target.textContent?.trim() === '') target.innerHTML = '';
+
+  const itemTag = document.createElement('span');
+  itemTag.className = 'image-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = String(item.id);
+
+  const img = document.createElement('img');
+  img.src = item.image;
+  img.alt = item.name || '';
+  img.className = 'image-tag-img';
+  itemTag.appendChild(img);
+
+  const imageIndex = insertImageRefImages.value.findIndex(imgItem => imgItem.id === item.id) + 1;
+  const labelText = `${t('home.img')}${imageIndex}`;
+  itemTag.appendChild(document.createTextNode(labelText));
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    target.appendChild(itemTag);
+    target.appendChild(document.createTextNode(' '));
+    target.focus();
+    showInsertImageAtDropdown.value = false;
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+  const cursorPos = getInsertImageCursorPosition(target);
+
+  let atNode: Node | null = null;
+  let atOffset = 0;
+  let currentCharPos = 0;
+
+  const walkNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let parent = node.parentElement;
+      let isInNonEditable = false;
+      while (parent) {
+        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+          isInNonEditable = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!isInNonEditable) {
+        const text = node.textContent || '';
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '@' && currentCharPos + i <= cursorPos) {
+            atNode = node;
+            atOffset = i;
+          }
+        }
+        currentCharPos += text.length;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') return;
+      for (let i = 0; i < node.childNodes.length; i++) walkNodes(node.childNodes[i]);
+    }
+  };
+  walkNodes(target);
+
+  if (atNode) {
+    const atRange = document.createRange();
+    atRange.setStart(atNode, atOffset);
+    atRange.setEnd(range.endContainer, range.endOffset);
+    atRange.deleteContents();
+    atRange.insertNode(itemTag);
+  } else {
+    range.insertNode(itemTag);
+  }
+
+  const space = document.createTextNode(' ');
+  const newRange = document.createRange();
+  newRange.setStartAfter(itemTag);
+  newRange.insertNode(space);
+  newRange.setStartAfter(space);
+  newRange.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+
+  showInsertImageAtDropdown.value = false;
+  insertImageInputRef.value.focus();
+
+  if (getInsertImageInputCharCount(insertImageInputRef.value) > INSERT_IMAGE_PROMPT_MAX) {
+    insertImageInputRef.value.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+    return;
+  }
+  previousInsertImageInputHtml.value = insertImageInputRef.value.innerHTML;
+};
+
+// Build the prompt string, replacing image chips with <ref_N> markers
+const processInsertImagePrompt = (): string => {
+  if (!insertImageInputRef.value) return '';
+  const spans = insertImageInputRef.value.querySelectorAll('span.image-tag');
+  let prompt = insertImageInputRef.value.innerText || insertImageInputRef.value.textContent || '';
+  spans.forEach((span) => {
+    const itemId = span.getAttribute('data-item-id');
+    if (itemId) {
+      const imageIndex = insertImageRefImages.value.findIndex(img => img.id === parseInt(itemId));
+      if (imageIndex !== -1) {
+        prompt = prompt.replace(span.textContent || '', `<ref_${imageIndex + 1}>`);
+      }
+    }
+  });
+  prompt = prompt.replace(/\n/g, '');
+  return prompt.trim();
 };
 
 // Regenerate a single illustration from a prompt (mirrors cover renew flow)
 const generateInsertImage = async () => {
   if (isRenewingInsertImage.value) return;
   if (editingInsertImagePlaceholder.value == null) return;
-  if (!insertImagePrompt.value.trim()) {
+  const prompt = processInsertImagePrompt();
+  if (!prompt) {
     toast(t('novel.insertImageEditEmpty'));
     return;
   }
@@ -2159,8 +2658,9 @@ const generateInsertImage = async () => {
       body: JSON.stringify({
         session_id: sessionId.value,
         chapter: currentChapter.value?.chapter,
-        img_placeholder: placeholder,
-        prompt: insertImagePrompt.value.trim()
+        image_index: placeholder,
+        prompt: prompt,
+        new_reference_images: insertImageRefImages.value.map(img => img.image)
       })
     });
     const res = await response.json();
@@ -2171,7 +2671,15 @@ const generateInsertImage = async () => {
     }
     const taskId = res.data?.task_id;
     if (taskId) {
+      // Close the edit box and show a skeleton on the target illustration.
+      // The skeleton (renewingInsertImagePlaceholder) tracks progress from here,
+      // so reset the send button's loading state.
+      renewingInsertImagePlaceholder.value = placeholder;
+      renewingInsertImageChapter.value = currentChapter.value?.chapter ?? null;
+      showInsertImageEdit.value = false;
+      showInsertImageAtDropdown.value = false;
       startInsertImageRenewPolling(taskId, placeholder);
+      isRenewingInsertImage.value = false;
     } else {
       // No task id: try to read url directly
       const url = res.data?.url || res.data?.insert_image_url || '';
@@ -2192,6 +2700,8 @@ const stopInsertImageRenewPolling = () => {
     insertImageRenewPollTimer.value = null;
   }
   insertImageRenewTaskId.value = '';
+  renewingInsertImagePlaceholder.value = null;
+  renewingInsertImageChapter.value = null;
 };
 
 const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
@@ -2207,37 +2717,28 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
         return;
       }
       if (res.code == 200 && res.data?.status == 'SUCCESS') {
-        // Renew task result: step_name = renew_novel_insert_image,
-        // edited target is in edit_state = { chapter, image_index }
+        // Renew task result carries { chapter, image_index, image_url }
         const result = res.data.result || {};
-        const editState = res.data.edit_state || result.edit_state || {};
-        const editedChapter = editState.chapter ?? currentChapter.value?.chapter;
-        const editedIndex = editState.image_index;
-
-        const newUrl = result.insert_image_url
-          || result.renew_novel_insert_image
-          || result.url
-          || '';
+        const editedChapter = result.chapter ?? currentChapter.value?.chapter;
+        const editedIndex = result.image_index;
+        const newUrl = result.image_url || result.insert_image_url || result.url || '';
 
         // Only apply to the chapter currently displayed
         if (currentChapter.value && Number(currentChapter.value.chapter) === Number(editedChapter)) {
-          const matchedByPlaceholder = newUrl && editedIndex != null
-            && insertImages.value.some(i => Number(i.img_placeholder) === Number(editedIndex));
-          if (matchedByPlaceholder) {
-            // edit_state.image_index corresponds to img_placeholder
+          // Immediate feedback: swap the regenerated illustration's url
+          if (newUrl && editedIndex != null) {
             updateInsertImageUrl(Number(editedIndex), newUrl);
-          } else {
-            // Fallback: refresh chapter detail to pull the latest insert images
-            try {
-              const chapterRes = await api.detailChapter(sessionId.value, editedChapter) as any;
-              if (chapterRes.code == 200) {
-                applyInsertImages(chapterRes);
-                syncEditSegmentImages();
-              }
-            } catch (e) {
-              console.error('Error refreshing chapter after insert image renew:', e);
-              if (newUrl) updateInsertImageUrl(placeholder, newUrl);
+          }
+          // Refresh chapter detail to sync the latest images + history
+          // (history_data.novel_insert_image)
+          try {
+            const chapterRes = await api.detailChapter(sessionId.value, editedChapter) as any;
+            if (chapterRes.code == 200) {
+              updateChapterHistoryFromDetail(chapterRes);
+              syncEditSegmentImages();
             }
+          } catch (e) {
+            console.error('Error refreshing chapter after insert image renew:', e);
           }
         }
 
@@ -2262,24 +2763,59 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
   insertImageRenewPollTimer.value = window.setInterval(poll, 3000);
 };
 
-// Normalize various possible history shapes into a url string list
-const normalizeUrlList = (v: any): string[] => {
-  if (!v) return [];
-  if (typeof v === 'string') return [v];
-  if (Array.isArray(v)) {
-    return v
-      .map((x: any) => (typeof x === 'string' ? x : (x?.url || x?.image || '')))
-      .filter(Boolean);
-  }
-  if (typeof v === 'object') return v.url ? [v.url] : [];
-  return [];
+// Resolve the history url list for a specific illustration.
+// history_data.novel_insert_image is a flat array of records:
+//   { chapter, image_index, image_url, prompt, updated_at, ... }
+// History for an illustration = records matching its chapter + image_index,
+// newest first.
+const getInsertImageHistoryList = (placeholder: number | null): string[] => {
+  if (placeholder == null) return [];
+  const data = insertImageHistoryData.value;
+  if (!Array.isArray(data)) return [];
+  const chapterNum = currentChapter.value?.chapter;
+  return data
+    .filter((item: any) => item && typeof item === 'object'
+      && Number(item.image_index) === Number(placeholder)
+      && (chapterNum == null || Number(item.chapter) === Number(chapterNum)))
+    .sort((a: any, b: any) =>
+      new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
+    .map((item: any) => item.image_url)
+    .filter(Boolean);
+};
+
+// Show the history icon only when the illustration has 2+ history records
+const hasInsertImageHistory = (placeholder?: number): boolean => {
+  if (placeholder == null) return false;
+  return getInsertImageHistoryList(placeholder).length >= 2;
+};
+
+// Whether a given segment's illustration is the one currently regenerating
+// (matched by both chapter and image index, so a same-index image in another
+// chapter never shows the skeleton)
+const isInsertImageRenewing = (placeholder?: number): boolean => {
+  return renewingInsertImagePlaceholder.value != null
+    && renewingInsertImagePlaceholder.value === placeholder
+    && renewingInsertImageChapter.value === (currentChapter.value?.chapter ?? null);
+};
+
+// Whether an illustration in the currently displayed chapter is regenerating.
+// While true, all edit/history icons of this chapter are hidden until the task
+// succeeds or fails.
+const isChapterRenewingInsertImage = (): boolean => {
+  return renewingInsertImagePlaceholder.value != null
+    && renewingInsertImageChapter.value === (currentChapter.value?.chapter ?? null);
 };
 
 const openInsertImageHistory = (placeholder?: number) => {
   if (placeholder == null) return;
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
+  if (checkProjectOwnership()) return;
   historyTargetPlaceholder.value = placeholder;
-  // history_data["novel_insert_image"] is a flat list of illustration history
-  insertImageHistoryList.value = normalizeUrlList(insertImageHistoryData.value);
+  // Resolve the history list for this specific illustration
+  insertImageHistoryList.value = getInsertImageHistoryList(placeholder);
   showInsertImageEdit.value = false;
   showInsertImageHistoryModal.value = true;
 };
@@ -2848,6 +3384,10 @@ const regenerateOutline = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
   if (await checkProjectOwnershipByEstimate('outline')) return;
   // if (!await checkServerStateSync('SUCCESS')) return;
 
@@ -3213,6 +3753,10 @@ const startEditProjectName = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
   if (checkProjectOwnership()) return;
 
   originalProjectName.value = projectName.value;
@@ -3279,6 +3823,10 @@ const handleProjectNameBlur = () => {
    }
    if (coverRenewLoading.value) {
      toast(t('novel.coverRenewLoadingTip'));
+     return;
+   }
+   if (renewingInsertImagePlaceholder.value != null) {
+     toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
      return;
    }
    if (checkProjectOwnership()) return;
@@ -3528,6 +4076,10 @@ const cancelEditChapter = () => {
       toast(t('novel.coverRenewLoadingTip'));
       return;
     }
+    if (renewingInsertImagePlaceholder.value != null) {
+      toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+      return;
+    }
     if (currentChapter.value) {
       // When the chapter has insert images, rebuild content from the edited segments
       if (hasInsertImages.value && editingSegments.value.length) {
@@ -3611,6 +4163,10 @@ const startEditChapterTitle = async (chapterId: number, currentTitle: string) =>
   }
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
   if (checkProjectOwnership()) return;
@@ -3960,6 +4516,10 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
 
   // if (!await checkServerStateSync('SUCCESS')) return;
 
@@ -4152,6 +4712,10 @@ const startManualEditOutline = async () => {
   }
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
   if (await checkProjectOwnershipByEstimate('outline')) return;
@@ -4456,6 +5020,10 @@ const startAiEditOutline = async () => {
   }
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
   const outlineEstimateRes = await api.novelEstimate({
@@ -4942,6 +5510,10 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
 
   // if (!await checkServerStateSync('SUCCESS')) return;
 
@@ -5132,6 +5704,10 @@ const handleRetry = async () => {
     toast(t('novel.coverRenewLoadingTip'));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
   // Check if task limit is exceeded
   if (await isTaskLimitExceeded()) return;
 
@@ -5200,6 +5776,10 @@ const confirmGenerateAllChapters = async () => {
   }
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
 
@@ -6801,6 +7381,62 @@ const fetchNovelOutline = async () => {
 
           isLoading.value = false;
           isLoadingComplete.value = true;
+        }
+
+        isFetchingNovelOutline.value = false;
+        return;
+      } else if (currentStepName.value == 'renew_novel_insert_image') {
+        // Resume an in-progress illustration regeneration after a page refresh
+        const stepStatus = detailProjectRes.data?.step_status;
+        const resultAsync = detailProjectRes.data?.result_async;
+        let editState = detailProjectRes.data?.edit_state;
+        if (typeof editState == 'string') {
+          try { editState = JSON.parse(editState); } catch (e) { editState = null; }
+        }
+        const editedChapter = Number(editState?.chapter);
+        const editedIndex = editState?.image_index;
+
+        // Make sure outline data is available (for chapter titles / sidebar)
+        if (!outlineData.value && resultAsync) {
+          try {
+            let result = resultAsync;
+            if (typeof result == 'string') {
+              try { result = JSON.parse(result); } catch (e) { result = null; }
+            }
+            if (result?.generate_novel_outline) {
+              outlineData.value = result.generate_novel_outline;
+              if (result.generate_novel_outline.base_info?.total_chapters) {
+                chapterCount.value = result.generate_novel_outline.base_info.total_chapters;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing outline data for insert image renew:', e);
+          }
+        }
+
+        const chapterIndex = detailProjectRes.data?.step_chapter_index;
+        if (chapterIndex && chapterIndex >= 1) {
+          stepChapterIndex.value = chapterIndex;
+        }
+        // Ensure the target chapter isn't treated as an ungenerated future chapter
+        if (editedChapter >= 1 && stepChapterIndex.value < editedChapter) {
+          stepChapterIndex.value = editedChapter;
+        }
+
+        taskStatus.value = 'SUCCESS';
+        isLoading.value = false;
+        isLoadingComplete.value = true;
+
+        // Load and display the chapter that owns the illustration (edit_state.chapter)
+        if (editedChapter >= 1) {
+          await goToChapter(editedChapter);
+
+          // If still generating, show the skeleton on that illustration and resume polling
+          if ((stepStatus == 'DOING' || stepStatus == 'PREPARE') && editedIndex != null) {
+            renewingInsertImagePlaceholder.value = Number(editedIndex);
+            renewingInsertImageChapter.value = Number(editedChapter);
+            startInsertImageRenewPolling(sessionId.value, Number(editedIndex));
+          }
         }
 
         isFetchingNovelOutline.value = false;
@@ -8421,6 +9057,10 @@ async function handleCoverEditClick() {
     toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
     return;
   }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
   if (await checkProjectOwnershipByEstimate()) return;
   await toggleCoverEdit();
 }
@@ -8429,6 +9069,10 @@ async function handleCoverHistoryClick() {
   if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
     const chapterNum = generatingChapter.value || stepChapterIndex.value;
     toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
   if (checkProjectOwnership()) return;
@@ -8598,6 +9242,10 @@ const startAiEditChapter = async () => {
   }
   if (coverRenewLoading.value) {
     toast(t('novel.coverRenewLoadingTip'));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
     return;
   }
   const chapterEstimateRes = await api.novelEstimate({
@@ -9137,7 +9785,6 @@ async function uploadCoverImage(file: File): Promise<string> {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('mode', 'normal');
 
   const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
@@ -9170,7 +9817,8 @@ async function handleCoverFileChange(event: Event) {
 
   // Determine limits based on mode
   // Default to normal mode limits if mode is not available
-  const isUnlimitedMode = false; // This should be determined from project settings
+  // Unlimited (NSFW) mode is determined from the current project settings
+  const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
   const maxImages = isUnlimitedMode ? 3 : 7;
   const maxSizeMB = 10;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -9414,7 +10062,8 @@ function checkLogin() {
 }
 
 function checkCoverItemLimit() {
-  const isUnlimitedMode = false; // This should be determined from project settings
+  // Unlimited (NSFW) mode is determined from the current project settings
+  const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
   const maxImages = isUnlimitedMode ? 3 : 7;
   if (combinedCoverItems.value.length >= maxImages) {
     toast(t('novel.maxCoverImages', { max: maxImages }));

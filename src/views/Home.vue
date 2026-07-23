@@ -689,7 +689,7 @@
                           class="unlimited-icon"
                         />
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div>
+                      </div> -->
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />

@@ -119,7 +119,7 @@ const handleConfirm = () => {
 
     .insert-image-history-list {
       display: grid;
-      grid-template-columns: repeat(3, 21rem);
+      grid-template-columns: repeat(2, 30rem);
       gap: 1.2rem;
       justify-content: center;
       max-height: 48rem;
@@ -127,8 +127,8 @@ const handleConfirm = () => {
       overflow-y: auto;
 
       .insert-image-history-item {
-        width: 21rem;
-        height: 21rem;
+        width: 30rem;
+        height: 17rem;
         border-radius: 0.8rem;
         overflow: hidden;
         cursor: pointer;
