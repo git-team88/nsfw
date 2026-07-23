@@ -89,9 +89,9 @@ const handleConfirm = () => {
   .insert-image-history-content {
     position: relative;
     background: #FFFFFF;
-    border-radius: 1.2rem;
-    width: 72rem;
-    padding: 1.8rem 0;
+    border-radius: 12px;
+    width: 720px;
+    padding: 18px 0;
     display: flex;
     flex-direction: column;
 
@@ -99,11 +99,11 @@ const handleConfirm = () => {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 1.8rem 1.8rem 2.4rem;
+      padding: 0 18px 18px 24px;
       border-bottom: 1px solid #F5F5F5;
 
       .insert-image-history-title {
-        font-size: 1.6rem;
+        font-size: 16px;
         font-weight: 500;
         color: #364153;
         text-align: left;
@@ -111,29 +111,29 @@ const handleConfirm = () => {
       }
 
       .close-btn {
-        width: 2rem;
-        height: 2rem;
+        width: 20px;
+        height: 20px;
         cursor: pointer;
       }
     }
 
     .insert-image-history-list {
       display: grid;
-      grid-template-columns: repeat(2, 30rem);
-      gap: 1.2rem;
+      grid-template-columns: repeat(2, 300px);
+      gap: 12px;
       justify-content: center;
-      max-height: 48rem;
-      padding: 2rem 1rem 2rem 2.4rem;
+      max-height: 480px;
+      padding: 20px 10px 20px 24px;
       overflow-y: auto;
 
       .insert-image-history-item {
-        width: 30rem;
-        height: 17rem;
-        border-radius: 0.8rem;
+        width: 300px;
+        height: 170px;
+        border-radius: 8px;
         overflow: hidden;
         cursor: pointer;
         position: relative;
-        border: 0.2rem solid transparent;
+        border: 2px solid transparent;
         background: #F5F5F5;
 
         &.active {
@@ -152,9 +152,9 @@ const handleConfirm = () => {
           background: #F5F5F5;
 
           .spinner {
-            width: 3rem;
-            height: 3rem;
-            border: 0.3rem solid #E0E0E0;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #E0E0E0;
             border-top-color: #FB64B6;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -173,24 +173,24 @@ const handleConfirm = () => {
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 20rem;
-      font-size: 1.4rem;
+      height: 200px;
+      font-size: 14px;
       color: #99A1AF;
-      padding: 0 3rem 4rem;
+      padding: 0 30px 40px;
     }
 
     .insert-image-history-footer {
-      padding: 1.8rem 3rem 0;
+      padding: 18px 30px 0;
       border-top: 1px solid #F5F5F5;
       display: flex;
       justify-content: center;
 
       .confirm-btn {
-        min-width: 13.6rem;
-        height: 4.8rem;
+        min-width: 136px;
+        height: 48px;
         border: none;
-        border-radius: 0.8rem;
-        font-size: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
         background: #FB64B6;
         color: #ffffff;

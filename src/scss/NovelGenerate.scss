@@ -718,16 +718,16 @@
         .nsfw-toggle {
           display: flex;
           align-items: center;
-          gap: 0.6rem;
+          gap: 6px;
           cursor: pointer;
 
           .nsfw-switch {
-            width: 4rem;
-            height: 2.2rem;
+            width: 40px;
+            height: 22px;
           }
 
           .nsfw-label {
-            font-size: 1.2rem;
+            font-size: 12px;
             font-weight: 500;
             color: #364153;
           }
@@ -740,14 +740,14 @@
           &.icon-selector {
             .selector-header {
               min-height: auto;
-              padding: 0.5rem;
-              width: 3.2rem;
-              height: 3.2rem;
+              padding: 5px;
+              width: 32px;
+              height: 32px;
               box-sizing: border-box;
 
               .selector-icon {
-                width: 1.8rem;
-                height: 1.8rem;
+                width: 18px;
+                height: 18px;
                 object-fit: contain;
               }
             }
@@ -756,10 +756,10 @@
               left: 50%;
               right: auto;
               transform: translateX(-50%);
-              min-width: 8rem;
+              min-width: 80px;
 
               .dropdown-item {
-                padding: 0.6rem 1.2rem;
+                padding: 6px 12px;
                 white-space: nowrap;
               }
             }
@@ -1752,34 +1752,34 @@
           .segment-textarea {
             flex: none;
             height: auto;
-            min-height: 12rem;
-            margin-bottom: 2.4rem;
+            min-height: 120px;
+            margin-bottom: 24px;
           }
         }
 
         // Inline illustration block (shared by read + edit views)
         .insert-image-block {
-          margin: 0 0 1.4rem;
+          margin: 0 0 14px;
           display: flex;
           align-items: flex-start;
           justify-content: flex-start;
-          gap: 1rem;
+          gap: 10px;
 
           .insert-image-wrapper {
             position: relative;
-            width: 60rem;
+            width: 600px;
             max-width: 100%;
 
             .insert-image {
               width: 100%;
-              border-radius: 0.8rem;
+              border-radius: 8px;
               display: block;
             }
 
             .insert-image-skeleton {
               width: 100%;
-              height: 34rem;
-              border-radius: 0.8rem;
+              height: 340px;
+              border-radius: 8px;
               background: linear-gradient(90deg, #F5F5F5 25%, #E5E7EB 50%, #F5F5F5 75%);
               background-size: 200% 100%;
               animation: shimmer 1.5s infinite;
@@ -1787,18 +1787,18 @@
 
             .insert-image-zoom-btn {
               position: absolute;
-              top: 1rem;
-              right: 1rem;
-              width: 3.6rem;
-              height: 3.6rem;
+              top: 10px;
+              right: 10px;
+              width: 36px;
+              height: 36px;
               cursor: pointer;
               background: none;
               border: none;
               padding: 0;
 
               img {
-                width: 3.6rem;
-                height: 3.6rem;
+                width: 36px;
+                height: 36px;
               }
             }
           }
@@ -1806,19 +1806,19 @@
           .insert-image-actions {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 10px;
 
             .insert-image-action-btn {
-              width: 3.6rem;
-              height: 3.6rem;
+              width: 36px;
+              height: 36px;
               cursor: pointer;
               background: none;
               border: none;
               padding: 0;
 
               img {
-                width: 3.6rem;
-                height: 3.6rem;
+                width: 36px;
+                height: 36px;
               }
             }
           }
@@ -3560,21 +3560,21 @@
 .insert-image-edit-section {
   position: fixed;
   bottom: 0;
-  left: 6.8rem;
-  width: 37.2rem;
+  left: 68px;
+  width: 372px;
   background-color: #FFFFFF;
   border-top: 1px solid #F5F5F5;
-  padding: 1.2rem;
+  padding: 12px;
   z-index: 1000;
 
   .insert-image-edit-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.6rem;
+    margin-bottom: 16px;
 
     .insert-image-edit-title {
-      font-size: 1.2rem;
+      font-size: 12px;
       color: #364153;
     }
 
@@ -3582,49 +3582,49 @@
       background: none;
       border: none;
       color: #99A1AF;
-      font-size: 1.2rem;
+      font-size: 12px;
       cursor: pointer;
     }
   }
 
   .insert-image-edit-content {
     border: 1px solid #FB64B6;
-    border-radius: 1.2rem;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 10px;
     box-shadow: 0px 0px 18px 0px rgba(251,100,182,0.18);
 
     .insert-image-ref-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-bottom: 1rem;
+      gap: 8px;
+      margin-bottom: 10px;
 
       .insert-image-ref-item {
         position: relative;
-        width: 4.8rem;
-        height: 4.8rem;
+        width: 48px;
+        height: 48px;
 
         .insert-image-ref-thumb {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          border-radius: 0.6rem;
+          border-radius: 6px;
         }
 
         .insert-image-ref-remove {
           position: absolute;
-          top: -0.6rem;
-          right: -0.6rem;
-          width: 1.6rem;
-          height: 1.6rem;
+          top: -6px;
+          right: -6px;
+          width: 16px;
+          height: 16px;
           padding: 0;
           border: none;
           background: none;
           cursor: pointer;
 
           img {
-            width: 1.6rem;
-            height: 1.6rem;
+            width: 16px;
+            height: 16px;
           }
         }
       }
@@ -3632,8 +3632,8 @@
 
     .insert-image-edit-textarea {
       width: 100%;
-      height: 6.2rem;
-      font-size: 1.4rem;
+      height: 62px;
+      font-size: 14px;
       color: #364153;
       resize: none;
       outline: none;
@@ -3650,12 +3650,12 @@
       .insert-image-input {
         position: relative;
         width: 100%;
-        min-height: 6.2rem;
-        max-height: 12rem;
+        min-height: 62px;
+        max-height: 120px;
         overflow-y: auto;
         font-family: inherit;
-        font-size: 1.4rem;
-        line-height: 2.4rem;
+        font-size: 14px;
+        line-height: 24px;
         color: #364153;
         outline: none;
         border: none;
@@ -3673,23 +3673,23 @@
         :deep(.image-tag) {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
-          padding: 0.4rem;
+          gap: 4px;
+          padding: 4px;
           background: #F5F5F5;
-          border-radius: 0.2rem;
-          font-size: 1.2rem;
+          border-radius: 2px;
+          font-size: 12px;
           color: #6A7282;
-          margin: 0 0.6rem;
+          margin: 0 6px;
           user-select: none;
           cursor: default;
           vertical-align: middle;
-          line-height: 1.4rem;
+          line-height: 14px;
 
           .image-tag-img {
             width: auto;
-            max-width: 2rem;
-            height: 2rem;
-            border-radius: 0.2rem;
+            max-width: 20px;
+            height: 20px;
+            border-radius: 2px;
             object-fit: cover;
           }
         }
@@ -3697,20 +3697,20 @@
 
       .at-dropdown {
         position: absolute;
-        width: 11rem;
-        padding: 1.2rem;
-        border-radius: 0.8rem;
+        width: 110px;
+        padding: 12px;
+        border-radius: 8px;
         background: #FFFFFF;
         box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
         z-index: 100;
-        max-height: 20rem;
+        max-height: 200px;
         overflow-y: auto;
 
         .dropdown-item {
           display: flex;
           align-items: center;
-          gap: 0.4rem;
-          margin-bottom: 1.2rem;
+          gap: 4px;
+          margin-bottom: 12px;
           cursor: pointer;
 
           &:last-child { margin-bottom: 0; }
@@ -3721,20 +3721,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.2rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
             background: #F5F5F5;
 
             img {
-              width: 2rem;
-              height: 2rem;
+              width: 20px;
+              height: 20px;
               object-fit: contain;
             }
           }
 
           span {
-            font-size: 1.4rem;
+            font-size: 14px;
             color: #99A1AF;
           }
         }
@@ -3745,12 +3745,12 @@
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 0.8rem;
-      margin-top: 1rem;
+      gap: 8px;
+      margin-top: 10px;
 
       .insert-image-upload-btn {
-        width: 2.8rem;
-        height: 2.8rem;
+        width: 28px;
+        height: 28px;
         margin-right: auto;
         display: flex;
         align-items: center;
@@ -3769,22 +3769,22 @@
       .insert-image-edit-cost-display {
         display: flex;
         align-items: center;
-        gap: 0.2rem;
+        gap: 2px;
 
         .insert-image-edit-cost {
-          font-size: 1.4rem;
+          font-size: 14px;
           color: #99A1AF;
         }
 
         img {
-          width: 1.4rem;
-          height: 1.4rem;
+          width: 14px;
+          height: 14px;
         }
       }
 
       .insert-image-edit-send-btn {
-        width: 2.8rem;
-        height: 2.8rem;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
