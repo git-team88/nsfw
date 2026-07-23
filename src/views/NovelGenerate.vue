@@ -383,16 +383,10 @@
                       </button>
                     </div>
 
-                    <div class="input-cover-right">
-                      <div class="cover-cost-display">
-                        <span class="cover-cost">{{ coverCost }}</span>
-                        <img src="@/assets/images/novel/coin.png" alt="" />
-                      </div>
-
-                      <button class="generate-btn" @click="generateNovelCover">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                      </button>
-                    </div>
+                    <button class="generate-btn" @click="generateNovelCover">
+                      <span class="send-btn-cost">{{ coverCost }}</span>
+                      <img class="send-btn-coin" src="@/assets/images/novel/coin.png" alt="" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2240,6 +2234,14 @@ const cancelInsertImageEdit = () => {
   insertImageRefImages.value = [];
   if (insertImageInputRef.value) insertImageInputRef.value.innerHTML = '';
 };
+
+// Close the insert image edit box when navigating away (switching chapters,
+// going to the outline, etc. — currentChapter changes on any such navigation)
+watch(currentChapter, () => {
+  if (showInsertImageEdit.value) {
+    cancelInsertImageEdit();
+  }
+});
 
 // Trigger the hidden file input for insert image reference upload
 const triggerInsertImageFileUpload = () => {
@@ -10096,6 +10098,11 @@ function processCoverPrompt() {
 
 // Zoom cover image
 function zoomCoverImage(imageUrl: string) {
+  // Close the insert image edit box when opening the large-image view,
+  // so it does not reappear after the zoom modal is closed
+  if (showInsertImageEdit.value) {
+    cancelInsertImageEdit();
+  }
   zoomedCoverImage.value = imageUrl;
   showCoverZoomModal.value = true;
 }
