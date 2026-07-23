@@ -246,7 +246,7 @@
       </div>
 
       <!-- Batch Publish Loading -->
-      <div v-if="isLoadingBatchPublish || isInitializing" class="loading-state">
+      <div v-if="(isLoadingBatchPublish || isInitializing) && !showFullContent && !postId" class="loading-state">
         <div class="loading-spinner"></div>
         <div class="loading-text">{{ t('home.loading') }}</div>
       </div>
@@ -257,6 +257,62 @@
         <div v-if="!isBatchPublish" class="section">
           <div class="form-label-box">
             <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
+          </div>
+
+          <!-- Single mode: Title & Description -->
+          <div class="content-section">
+            <div class="form-item">
+              <div class="caption-container" :class="{ 'title-error': titleError }">
+                <div class="label-row">
+                  <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
+                  <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
+                </div>
+
+                <div class="title-input-wrap">
+                  <input
+                    v-model="form.title"
+                    class="title-input"
+                    type="text"
+                    :maxlength="TITLE_MAX"
+                    :placeholder="t('submit.titlePlaceholder')"
+                    @input="onTitleInput"
+                  />
+                </div>
+
+                <div class="label-row">
+                  <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
+                  <div class="label-row-right">
+                    <button class="insert-image-btn" @click="triggerCaptionImageUpload">
+                      <span>{{ t('submit.insertImage') }}</span>
+                    </button>
+                    <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
+                  </div>
+                </div>
+
+                <div class="desc-input-wrap">
+                  <input
+                    ref="captionImageFileInputRef"
+                    type="file"
+                    accept="image/*"
+                    style="display: none;"
+                    @change="handleCaptionImageChange"
+                  />
+                  <div
+                    ref="captionRef"
+                    class="description-content"
+                    contenteditable="true"
+                    :placeholder="t('submit.descriptionPlaceholder')"
+                    @input="handleCaptionInput"
+                    @keydown="handleCaptionKeydown"
+                    @click="handleCaptionClick"
+                    @blur="onCaptionBlur"
+                    @paste="handlePaste"
+                    @keyup="saveCaptionRange"
+                    @mouseup="saveCaptionRange"
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="perm-box">
@@ -534,100 +590,6 @@
               </div>
             </div>
           </div>
-
-        <!-- Single mode: Title & Description -->
-        <div v-if="!isBatchPublish" class="content-section">
-          <div class="form-item">
-            <div class="caption-container" :class="{ 'title-error': titleError }">
-              <div class="label-row">
-                <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
-                <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
-              </div>
-
-              <div class="title-input-wrap">
-                <input
-                  v-model="form.title"
-                  class="title-input"
-                  type="text"
-                  :maxlength="TITLE_MAX"
-                  :placeholder="t('submit.titlePlaceholder')"
-                  @input="onTitleInput"
-                />
-              </div>
-
-              <div class="label-row">
-                <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
-                <div class="label-row-right">
-                  <button class="insert-image-btn" @click="triggerCaptionImageUpload">
-                    <span>{{ t('submit.insertImage') }}</span>
-                  </button>
-                  <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
-                </div>
-              </div>
-
-              <div class="desc-input-wrap">
-                <input
-                  ref="captionImageFileInputRef"
-                  type="file"
-                  accept="image/*"
-                  style="display: none;"
-                  @change="handleCaptionImageChange"
-                />
-                <div
-                  ref="captionRef"
-                  class="description-content"
-                  contenteditable="true"
-                  :placeholder="t('submit.descriptionPlaceholder')"
-                  @input="handleCaptionInput"
-                  @keydown="handleCaptionKeydown"
-                  @click="handleCaptionClick"
-                  @blur="onCaptionBlur"
-                  @paste="handlePaste"
-                  @keyup="saveCaptionRange"
-                  @mouseup="saveCaptionRange"
-                ></div>
-
-                <div class="caption-actions-box">
-                  <div class="caption-actions">
-                    <button class="action-btn" @click="onActionBtnClick('#')">
-                      #{{ t("submit.topic") }}
-                    </button>
-                    <button class="action-btn" @click="onActionBtnClick('@')">
-                      @{{ t("submit.mention") }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mention/Topic Dropdown -->
-            <div
-              v-if="showDropdown"
-              class="mention-dropdown"
-              :style="getDropdownStyle()"
-            >
-              <div class="dropdown-list">
-                <div v-if="isDropdownLoading" class="dropdown-loading">
-                  <div class="loading-spinner"></div>
-                  <span>{{ t('loading') }}</span>
-                </div>
-                <template v-else>
-                  <div
-                    v-for="item in dropdownItems"
-                    :key="item.value"
-                    class="dropdown-item"
-                    @click="selectDropdownItem(item)"
-                  >
-                    <div class="item-left">
-                      <img v-if="dropdownType === '@'" :src="item.avatar" class="avatar" alt="" />
-                      <span class="label">{{ item.label }}</span>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- Single mode: submit -->
         <div v-if="!isBatchPublish" class="submit-row">
