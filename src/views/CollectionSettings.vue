@@ -299,17 +299,14 @@ async function confirmDelete() {
 }
 
 .back-btn {
-  position: absolute;
-  top: 0;
-  left: -52px;
-  width: auto;
-  height: 40px;
   display: flex;
+  width: fit-content;
+  height: 40px;
   align-items: center;
   gap: 6px;
+  margin-bottom: 20px;
   color: #161122;
   cursor: pointer;
-  z-index: 10;
   border: 2.5px solid #161122;
   border-radius: 13px;
   background: #FFFDF7;
@@ -567,10 +564,9 @@ async function confirmDelete() {
     max-width: 80vw;
   }
   .back-btn {
-    top: 9.7222vw;
-    width: auto;
+    width: fit-content;
     height: 2.7778vw;
-    left: -3.6111vw;
+    margin-bottom: 1.3889vw;
   }
   .page-header {
     margin-bottom: 1.3889vw;
@@ -662,10 +658,9 @@ async function confirmDelete() {
   }
 
   .back-btn {
-    top: 100px;
-    width: auto;
+    width: fit-content;
     height: 40px;
-    left: -52px;
+    margin-bottom: 20px;
   }
   .page-header {
     margin-bottom: 20px;
@@ -763,11 +758,10 @@ async function confirmDelete() {
     padding: 130px 16px 16px;
   }
   .back-btn {
-    position: fixed;
-    top: 80px;
-    left: 16px;
-    width: auto;
+    position: static;
+    width: fit-content;
     height: 32px;
+    margin-bottom: 16px;
   }
   .page-header {
     margin-bottom: 16px;
@@ -867,11 +861,10 @@ async function confirmDelete() {
     padding: 130px 12px 12px;
   }
   .back-btn {
-    position: fixed;
-    top: 80px;
-    left: 12px;
-    width: auto;
+    position: static;
+    width: fit-content;
     height: 28px;
+    margin-bottom: 12px;
     border-radius: 10px;
     border-width: 2px;
     svg {

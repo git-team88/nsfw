@@ -152,7 +152,7 @@
           >
             <span class="preview-title">{{ t('novel.novelOutline') }}</span>
             <button
-              v-if="unpublishedChapterCount > 2"
+              v-if="unpublishedChapterCount >= 2"
               class="batch-publish-btn"
               :class="{ loading: isBatchPublishBtnLoading }"
               :disabled="isBatchPublishBtnLoading"
@@ -6193,7 +6193,7 @@ const handleBatchPublishClick = async () => {
     isBatchPublishBtnLoading.value = false;
   }
 
-  if (unpublishedChapterCount.value > 2) {
+  if (unpublishedChapterCount.value >= 2) {
     showBatchPublishDialog.value = true;
   }
 };

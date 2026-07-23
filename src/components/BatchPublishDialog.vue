@@ -265,11 +265,17 @@ $cream: #FFFBF4;
 }
 
 .unpublished-section {
+  border: 2px solid $ink;
+  border-radius: 10px;
+  background-color: $cream;
+  padding: 12px;
+
   .unpublished-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0;
+    margin-bottom: 10px;
 
     .unpublished-label {
       color: $ink;
@@ -293,14 +299,8 @@ $cream: #FFFBF4;
   }
 
   .unpublished-list {
-    background-color: $cream;
-    border: 2px solid $ink;
-    border-radius: 10px;
-    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
     max-height: 230px;
     overflow-y: auto;
-    padding: 12px;
-    margin: 10px 0 0;
 
     .chapter-row {
       margin-bottom: 8px;

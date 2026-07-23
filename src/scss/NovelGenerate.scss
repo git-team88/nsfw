@@ -1121,7 +1121,6 @@
       background: #FFFFFF;
       border: 2px solid #161122;
       border-radius: 12px;
-      box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.12);
       padding: 0;
       display: flex;
       flex-direction: column;
@@ -1761,6 +1760,15 @@
             height: auto;
             min-height: 120px;
             margin-bottom: 24px;
+            border: 2px solid #161122;
+            border-radius: 8px;
+            background: #FFFDF7;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+            &:focus {
+              border-color: #FF4D8E;
+              box-shadow: 2px 2px 0 #FF4D8E;
+            }
           }
         }
 
@@ -2608,12 +2616,9 @@
         background: #FFFFFF;
         color: #161122;
         font-family: inherit;
-        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
 
         &:hover {
           color: #FF4D8E;
-          box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.2);
-          transform: translateY(-1px);
         }
       }
 
@@ -2632,16 +2637,10 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
-        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
 
         &:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-        }
-
-        &:hover {
-          box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.2);
-          transform: translateY(-1px);
         }
 
         .btn-spinner {
@@ -3468,13 +3467,14 @@
 
 .outline-edit-section {
   position: fixed;
-  bottom: 0;
-  left: 68px;
+  bottom: 16px;
+  left: 84px;
     width: 30vw;
     min-width: 320px;
     max-width: 400px;
   background-color: #FFFFFF;
   border-top: 2px solid rgba(22, 17, 34, 0.1);
+  border-bottom-right-radius: 12px;
   padding: 12px;
   z-index: 1000;
 

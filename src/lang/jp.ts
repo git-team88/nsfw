@@ -1734,6 +1734,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     titleLabel: "タイトル",
     articleTitleLabel: "小説",
     insertImage: "画像を挿入",
+    selectPublishChapter: "公開する章を選択してください",
+    selectPublishEpisode: "公開するエピソードを選択してください",
     titlePlaceholder: "タイトルを入力してください...",
     titleRequired: "タイトルを入力してください",
     uploadDocument: "文書をアップロード",

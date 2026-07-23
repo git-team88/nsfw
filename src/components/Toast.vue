@@ -40,7 +40,7 @@
     padding: 12px 20px;
     font-size: 16px;
     border-radius: 4px;
-    background: rgba(0, 0, 0, .4);
+    background: rgba(0, 0, 0, .75);
     color: #ffffff;
     z-index: 2000;
     max-width: 500px;

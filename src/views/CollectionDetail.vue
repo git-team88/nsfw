@@ -759,7 +759,6 @@ onBeforeUnmount(() => {
   padding: 20px 0 20px 20px;
   background: #FFFDF7;
   border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 
   .author-left {
@@ -1107,7 +1106,6 @@ onBeforeUnmount(() => {
   padding: 20px;
   background: #FFFDF7;
   border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 }
 
@@ -1115,7 +1113,6 @@ onBeforeUnmount(() => {
   padding: 0 20px 20px;
   background: #FFFDF7;
   border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
 }
 

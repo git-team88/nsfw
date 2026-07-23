@@ -151,7 +151,6 @@
                 class="publish-btn"
                 :class="selectedChapters.length > 0 ? 'active' : 'disabled'"
                 @click="handlePublishFromSelection"
-                :disabled="selectedChapters.length === 0"
               >
                 {{ t('submit.cover.confirm') }}
               </button>
@@ -979,7 +978,10 @@ const isSelectionLoading = ref(false);
 let isSelectionCancelled = false;
 
 async function handlePublishFromSelection() {
-  if (selectedChapters.value.length === 0) return;
+  if (selectedChapters.value.length === 0) {
+    toast(t('submit.selectPublishEpisode'));
+    return;
+  }
 
   isSelectionLoading.value = true;
   isSelectionCancelled = false;
@@ -1284,7 +1286,11 @@ async function onBatchPublish() {
 
       const chapterRes = await api.detailChapter(session_id!, chapterNum) as any;
       if (chapterRes.code === 200 && chapterRes.data) {
-        const images = chapterRes.data.result_async?.final_images || [];
+        let cRA = chapterRes.data.result_async;
+        if (typeof cRA === 'string') {
+          try { cRA = JSON.parse(cRA); } catch (e) { cRA = null; }
+        }
+        const images = chapterRes.data.final_images || chapterRes.data.images || cRA?.final_images || cRA?.images || [];
         if (images.length > 0) {
           payload.images = images.join(',');
         }
@@ -3697,9 +3703,20 @@ async function handlePublish(publishData?: any) {
       }
 
       const chapterData = chapterResponse.data;
-      // 从集详情中获取图片
-      if (chapterData.result_async?.final_images) {
-        episodeImages = chapterData.result_async.final_images;
+      // result_async 可能是 JSON 字符串，需先解析
+      let chapterRA = chapterData.result_async;
+      if (typeof chapterRA === 'string') {
+        try { chapterRA = JSON.parse(chapterRA); } catch (e) { chapterRA = null; }
+      }
+      // 从集详情中获取图片（兼容顶层 final_images/images 与 result_async 内）
+      if (chapterData.final_images) {
+        episodeImages = chapterData.final_images;
+      } else if (chapterData.images) {
+        episodeImages = chapterData.images;
+      } else if (chapterRA?.final_images) {
+        episodeImages = chapterRA.final_images;
+      } else if (chapterRA?.images) {
+        episodeImages = chapterRA.images;
       }
 
       // 从集详情中获取封面

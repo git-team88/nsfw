@@ -1902,6 +1902,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     titleLabel: "Title",
     articleTitleLabel: "Article",
     insertImage: "Insert image",
+    selectPublishChapter: "Please select a chapter to publish",
+    selectPublishEpisode: "Please select an episode to publish",
     titlePlaceholder: "Enter title here...",
     titleRequired: "Please enter a title",
     uploadDocument: "Upload Document",

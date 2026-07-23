@@ -1864,6 +1864,8 @@ const handlePhotoFileChange = async (event: Event) => {
     const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 10 : 50;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
     // Check total count limit
     if (uploadedPhotoImages.value.length + files.length > maxPhotos) {
       toast(t('home.error.maxPhotoReached', { max: maxPhotos }));
@@ -1871,10 +1873,22 @@ const handlePhotoFileChange = async (event: Event) => {
       return;
     }
 
-    // Check individual file size
+    // Check individual file format, size and corruption
     for (const file of files) {
+      if (!validImageTypes.includes(file.type)) {
+        toast(t('home.error.invalidPhotoFormat'));
+        input.value = '';
+        return;
+      }
       if (file.size > maxFileSizeBytes) {
         toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
+        input.value = '';
+        return;
+      }
+      // Check if image is corrupted (broken image)
+      const isCorrupted = await isImageCorrupted(file);
+      if (isCorrupted) {
+        toast(t('home.error.corruptedImage'));
         input.value = '';
         return;
       }
@@ -1993,6 +2007,31 @@ const getMediaDuration = (file: File): Promise<number> => {
   });
 };
 
+// Check if image file is corrupted (broken image)
+const isImageCorrupted = (file: File): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      // Check if image dimensions are valid (0x0 usually indicates corruption)
+      if (img.width === 0 || img.height === 0) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+
+    img.src = url;
+  });
+};
+
 const captureVideoFirstFrame = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -2076,6 +2115,24 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
     const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
+
+    // Check image files format and corruption (broken image)
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    for (const file of files) {
+      if (!file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+        if (!validImageTypes.includes(file.type)) {
+          toast(t('home.error.invalidPhotoFormat'));
+          input.value = '';
+          return;
+        }
+        const isCorrupted = await isImageCorrupted(file);
+        if (isCorrupted) {
+          toast(t('home.error.corruptedImage'));
+          input.value = '';
+          return;
+        }
+      }
+    }
 
     // Check video and audio total duration limits (15 seconds each) for video multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal') {
@@ -3038,6 +3095,19 @@ const handleStartFrameChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    // Check image format
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast(t('home.error.invalidPhotoFormat'));
+      target.value = '';
+      return;
+    }
+    // Check if image is corrupted (broken image)
+    if (await isImageCorrupted(file)) {
+      toast(t('home.error.corruptedImage'));
+      target.value = '';
+      return;
+    }
     isUploading.value = true;
     try {
       const uploadedUrl = await uploadImage(file, 'normal');
@@ -3057,6 +3127,19 @@ const handleEndFrameChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    // Check image format
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast(t('home.error.invalidPhotoFormat'));
+      target.value = '';
+      return;
+    }
+    // Check if image is corrupted (broken image)
+    if (await isImageCorrupted(file)) {
+      toast(t('home.error.corruptedImage'));
+      target.value = '';
+      return;
+    }
     isUploading.value = true;
     try {
       const uploadedUrl = await uploadImage(file, 'normal');

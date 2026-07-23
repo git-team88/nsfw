@@ -100,13 +100,13 @@
                   </div>
                   <div class="pending-chapters-list">
                     <div
-                      v-for="(chapter, index) in unpublishedChapters"
+                      v-for="chapter in unpublishedChapters"
                       :key="'pending-' + chapter.chapter"
                       class="pending-chapter-item"
                       :class="{ selected: selectedChapters.includes(chapter.chapter) }"
                       @click="toggleChapterSelection(chapter.chapter)"
                     >
-                      <span class="chapter-name" :class="{ active: index === 0 }">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
+                      <span class="chapter-name">{{ t('chapter', { chapter: chapter.chapter }) }} {{ chapter.title }}</span>
                       <div class="chapter-status-wrap">
                         <span class="chapter-status-text">{{ t('submit.image.pending') }}</span>
                         <img
@@ -143,7 +143,6 @@
                 class="publish-btn"
                 :class="selectedChapters.length > 0 ? 'active' : 'disabled'"
                 @click="handlePublishFromSelection"
-                :disabled="selectedChapters.length === 0"
               >
                 {{ t('submit.cover.confirm') }}
               </button>
@@ -257,17 +256,15 @@
         <div v-if="!isBatchPublish" class="section">
           <div class="form-label-box">
             <span><b>*</b>{{ t("submit.articleTitleLabel") }}</span>
+            <button class="insert-image-btn" @click="triggerCaptionImageUpload">
+              <span>{{ t('submit.insertImage') }}</span>
+            </button>
           </div>
 
           <!-- Single mode: Title & Description -->
           <div class="content-section">
             <div class="form-item">
               <div class="caption-container" :class="{ 'title-error': titleError }">
-                <div class="label-row">
-                  <label class="form-label"><b>*</b>{{ t("submit.titleLabel") }}</label>
-                  <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
-                </div>
-
                 <div class="title-input-wrap">
                   <input
                     v-model="form.title"
@@ -277,16 +274,7 @@
                     :placeholder="t('submit.titlePlaceholder')"
                     @input="onTitleInput"
                   />
-                </div>
-
-                <div class="label-row">
-                  <label class="form-label">{{ t("submit.descriptionLabel") }}</label>
-                  <div class="label-row-right">
-                    <button class="insert-image-btn" @click="triggerCaptionImageUpload">
-                      <span>{{ t('submit.insertImage') }}</span>
-                    </button>
-                    <span class="char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
-                  </div>
+                  <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
                 </div>
 
                 <div class="desc-input-wrap">
@@ -341,6 +329,8 @@
                 </span>
               </div>
             </div>
+
+            <span class="char-count desc-char-count">{{ captionLength }}/{{ DESC_MAX }}</span>
           </div>
         </div>
 
@@ -1543,7 +1533,10 @@ function toggleChapterSelection(chapterNum: number) {
 }
 
 async function handlePublishFromSelection() {
-  if (selectedChapters.value.length === 0) return;
+  if (selectedChapters.value.length === 0) {
+    toast(t('submit.selectPublishChapter'));
+    return;
+  }
 
   isSelectionLoading.value = true;
   isSelectionCancelled = false;
@@ -1736,93 +1729,8 @@ async function getPostDetails() {
       }
 
       // Update contenteditable div with description
-      if (captionRef.value) {
-        const content = postData.content || "";
-        // Clear the div first
-        captionRef.value.innerHTML = '';
-
-        // Process content to handle #tags and @mentions
-        let currentIndex = 0;
-
-        // Find all #tags and @mentions using a more robust approach
-        let pos = 0;
-        const contentLength = content.length;
-
-        while (pos < contentLength) {
-          // Find the next # or @
-          const tagIndex = content.indexOf('#', pos);
-          const mentionIndex = content.indexOf('@', pos);
-
-          // Determine which comes first
-          let nextMatchIndex = -1;
-          let isTag = false;
-
-          if (tagIndex === -1 && mentionIndex === -1) {
-            // No more matches
-            break;
-          } else if (tagIndex === -1) {
-            nextMatchIndex = mentionIndex;
-            isTag = false;
-          } else if (mentionIndex === -1) {
-            nextMatchIndex = tagIndex;
-            isTag = true;
-          } else {
-            nextMatchIndex = Math.min(tagIndex, mentionIndex);
-            isTag = nextMatchIndex === tagIndex;
-          }
-
-          // Add text before the match
-          if (nextMatchIndex > currentIndex) {
-            let textBefore = content.substring(currentIndex, nextMatchIndex);
-            // Convert literal \n to actual newlines
-            textBefore = textBefore.replace(/\\n/g, '\n');
-            const textNode = document.createTextNode(textBefore);
-            captionRef.value?.appendChild(textNode);
-          }
-
-          // Find the end of the tag/mention (until whitespace or end of string)
-          let endIndex = nextMatchIndex + 1;
-          while (endIndex < contentLength) {
-            const char = content[endIndex];
-            if (char === ' ' || char === '\n' || char === '\t') {
-              break;
-            }
-            endIndex++;
-          }
-
-          // Extract the match
-          const matchText = content.substring(nextMatchIndex, endIndex);
-
-          // Create span for the match
-          const span = document.createElement('span');
-          span.className = isTag ? 'tag topic' : 'tag mention';
-          span.style.color = '#00d3f2';
-          span.style.marginRight = '4px';
-          span.contentEditable = 'false';
-          span.textContent = matchText;
-          captionRef.value?.appendChild(span);
-
-          // Add a space after
-          const space = document.createTextNode('\u0020');
-          captionRef.value?.appendChild(space);
-
-          // Update current index
-          currentIndex = endIndex;
-          pos = endIndex;
-        }
-
-        // Add remaining text
-        if (currentIndex < content.length) {
-          let textAfter = content.substring(currentIndex);
-          // Convert literal \n to actual newlines
-          textAfter = textAfter.replace(/\\n/g, '\n');
-          const textNode = document.createTextNode(textAfter);
-          captionRef.value?.appendChild(textNode);
-        }
-
-        // Update caption length
-        captionLength.value = content.length;
-      }
+      // (render inline <img> illustrations + #tags/@mentions)
+      renderSavedCaption(postData.content || "");
 
       // Auto-generate cover if no cover provided
       if (!coverPreview.value && form.value.title.trim()) {
@@ -2818,6 +2726,85 @@ function renderCaptionContent(content: string, images: string[]) {
   }
   const tail = source.slice(lastIndex);
   if (tail) captionRef.value.appendChild(document.createTextNode(tail));
+  captionLength.value = (captionRef.value.textContent || '').replace(/\n$/, '').length;
+}
+
+// Append a plain-text segment to the editor, converting #tags and @mentions
+// into non-editable tag spans (used when loading an existing post).
+function appendCaptionTextWithTags(text: string) {
+  if (!captionRef.value || !text) return;
+  const contentLength = text.length;
+  let currentIndex = 0;
+  let pos = 0;
+
+  while (pos < contentLength) {
+    const tagIndex = text.indexOf('#', pos);
+    const mentionIndex = text.indexOf('@', pos);
+
+    let nextMatchIndex = -1;
+    let isTag = false;
+
+    if (tagIndex === -1 && mentionIndex === -1) {
+      break;
+    } else if (tagIndex === -1) {
+      nextMatchIndex = mentionIndex;
+      isTag = false;
+    } else if (mentionIndex === -1) {
+      nextMatchIndex = tagIndex;
+      isTag = true;
+    } else {
+      nextMatchIndex = Math.min(tagIndex, mentionIndex);
+      isTag = nextMatchIndex === tagIndex;
+    }
+
+    if (nextMatchIndex > currentIndex) {
+      captionRef.value.appendChild(document.createTextNode(text.substring(currentIndex, nextMatchIndex)));
+    }
+
+    let endIndex = nextMatchIndex + 1;
+    while (endIndex < contentLength) {
+      const char = text[endIndex];
+      if (char === ' ' || char === '\n' || char === '\t') break;
+      endIndex++;
+    }
+
+    const span = document.createElement('span');
+    span.className = isTag ? 'tag topic' : 'tag mention';
+    span.style.color = '#00d3f2';
+    span.style.marginRight = '4px';
+    span.contentEditable = 'false';
+    span.textContent = text.substring(nextMatchIndex, endIndex);
+    captionRef.value.appendChild(span);
+    captionRef.value.appendChild(document.createTextNode('\u0020'));
+
+    currentIndex = endIndex;
+    pos = endIndex;
+  }
+
+  if (currentIndex < contentLength) {
+    captionRef.value.appendChild(document.createTextNode(text.substring(currentIndex)));
+  }
+}
+
+// Render a saved post's content into the editor: inline <img ... /> markers
+// become illustration elements; the rest is rendered with #tags/@mentions.
+function renderSavedCaption(rawContent: string) {
+  if (!captionRef.value) return;
+  captionRef.value.innerHTML = '';
+  const content = (rawContent || '').replace(/\\n/g, '\n');
+
+  const imgRegex = /<img[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = imgRegex.exec(content)) !== null) {
+    appendCaptionTextWithTags(content.slice(lastIndex, match.index));
+    // Strip any display-only compression query so the original url is restored
+    const url = match[1].split('?')[0];
+    captionRef.value.appendChild(buildCaptionImage(url));
+    lastIndex = match.index + match[0].length;
+  }
+  appendCaptionTextWithTags(content.slice(lastIndex));
+
   captionLength.value = (captionRef.value.textContent || '').replace(/\n$/, '').length;
 }
 

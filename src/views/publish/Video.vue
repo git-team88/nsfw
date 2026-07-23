@@ -148,7 +148,6 @@
                 class="publish-btn"
                 :class="selectedChapters.length > 0 ? 'active' : 'disabled'"
                 @click="handlePublishFromSelection"
-                :disabled="selectedChapters.length === 0"
               >
                 {{ t('submit.cover.confirm') }}
               </button>
@@ -1130,7 +1129,10 @@ const isSelectionLoading = ref(false);
 let isSelectionCancelled = false;
 
 async function handlePublishFromSelection() {
-  if (selectedChapters.value.length === 0) return;
+  if (selectedChapters.value.length === 0) {
+    toast(t('submit.selectPublishEpisode'));
+    return;
+  }
 
   isSelectionLoading.value = true;
   isSelectionCancelled = false;

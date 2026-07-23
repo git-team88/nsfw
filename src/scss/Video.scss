@@ -178,7 +178,7 @@
       }
 
       .option-label {
-        opacity: 0.65;
+        opacity: 1;
         transition: opacity 0.2s ease;
       }
     }
@@ -575,7 +575,7 @@
         font-size: 14px;
         font-weight: 700;
         color: #161122;
-        opacity: 0.65;
+        opacity: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -661,7 +661,7 @@
         font-size: 14px;
         font-weight: 700;
         color: #161122;
-        opacity: 0.65;
+        opacity: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -920,7 +920,7 @@
       background: #FFFFFF;
       border: 3px solid #161122;
       border-radius: 14px;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
+      box-shadow: none;
     }
 
     .collection-section {
@@ -929,7 +929,7 @@
       background: #FFFFFF;
       border: 3px solid #161122;
       border-radius: 14px;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
+      box-shadow: none;
 
       .switch-collection-btn {
         display: flex;
@@ -1232,7 +1232,7 @@
       border: 3px solid #161122;
       border-radius: 14px;
       background: #FFFFFF;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
+      box-shadow: none;
     }
 
     .caption-container {
