@@ -107,7 +107,7 @@
                     <input
                       ref="fileInputRef"
                       type="file"
-                      :accept="currentVideoMode == 'normal' ? 'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav' : 'image/*,video/mp4,video/quicktime'"
+                      :accept="currentVideoMode == 'unlimited' ? 'image/*,video/mp4,video/quicktime' : 'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
                       class="file-input"
                       style="display: none;"
                       @change="handleFileChange"
@@ -669,27 +669,12 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <!-- <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
-                        <img
-                          v-if="isTeenager"
-                          src="@/assets/images/home/not_allow.png"
-                          alt="Unlimited disabled"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else-if="currentComicMode == 'unlimited'"
-                          src="@/assets/images/home/open.png"
-                          alt="Unlimited on"
-                          class="unlimited-icon"
-                        />
-                        <img
-                          v-else
-                          src="@/assets/images/home/close.png"
-                          alt="Unlimited off"
-                          class="unlimited-icon"
-                        />
-                        <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div> -->
+                      <div v-if="userRegion" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                        <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                          <span class="nsfw-dot"></span>
+                          {{ t('home.mode.unlimited') }}
+                        </span>
+                      </div>
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />
@@ -1443,6 +1428,25 @@ async function handleStartFrameChange(e: Event) {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast(t('home.error.invalidPhotoFormat'));
+      target.value = '';
+      return;
+    }
+    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    if (file.size > maxFileSizeBytes) {
+      toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
+      target.value = '';
+      return;
+    }
+    const isCorrupted = await isImageCorrupted(file);
+    if (isCorrupted) {
+      toast(t('home.error.corruptedImage'));
+      target.value = '';
+      return;
+    }
     isUploading.value = true;
     try {
       const uploadedUrl = await uploadImage(file, currentVideoMode.value);
@@ -1462,6 +1466,25 @@ async function handleEndFrameChange(e: Event) {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast(t('home.error.invalidPhotoFormat'));
+      target.value = '';
+      return;
+    }
+    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    if (file.size > maxFileSizeBytes) {
+      toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
+      target.value = '';
+      return;
+    }
+    const isCorrupted = await isImageCorrupted(file);
+    if (isCorrupted) {
+      toast(t('home.error.corruptedImage'));
+      target.value = '';
+      return;
+    }
     isUploading.value = true;
     try {
       const uploadedUrl = await uploadImage(file, currentVideoMode.value);
@@ -1515,6 +1538,20 @@ async function handleVideoUpload(e: Event) {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    const videoExtensions = ['.mp4', '.mov'];
+    const videoExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!videoExtensions.includes(videoExtension)) {
+      toast(t('home.error.invalidVideoFormat'));
+      target.value = '';
+      return;
+    }
+    const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+    const maxVideoSizeMB = currentVideoMode.value === 'unlimited' ? 100 : 50;
+    if (file.size > maxVideoSizeBytes) {
+      toast(t('home.error.maxVideoSize', { max: maxVideoSizeMB }));
+      target.value = '';
+      return;
+    }
     // Video duration validation
     const duration = await getVideoDuration(file);
 
@@ -3675,18 +3712,16 @@ const handleFileChange = async (event: Event) => {
         }
         // Check image file size
         if (file.size > maxFileSizeBytes) {
-          toast(t('home.error.maxPhotoSize', { max: currentMode === 'unlimited' ? 20 : 30 }));
+          toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
           input.value = '';
           return;
         }
-        // Check if image is corrupted (only for comic and drama tabs)
-        if (contentType.value === 'comic' || contentType.value === 'drama') {
-          const isCorrupted = await isImageCorrupted(file);
-          if (isCorrupted) {
-            toast(t('home.error.corruptedImage'));
-            input.value = '';
-            return;
-          }
+        // Check if image is corrupted
+        const isCorrupted = await isImageCorrupted(file);
+        if (isCorrupted) {
+          toast(t('home.error.corruptedImage'));
+          input.value = '';
+          return;
         }
       }
     }
@@ -3723,7 +3758,9 @@ const handleFileChange = async (event: Event) => {
               }
             }
           } else if (file.type.startsWith('audio/')) {
-            if (currentVideoMode.value === 'unlimited') {
+            // 视频多模态 + 无限制模式：不支持上传音频
+            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && currentVideoMode.value === 'unlimited') {
+              toast(t('home.error.unlimitedNoAudio'));
               return;
             }
             fileType = 'audio';

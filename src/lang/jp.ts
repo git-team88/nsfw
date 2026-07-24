@@ -1653,6 +1653,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       videoExtendDurationLimit: "アップロードした動画は2-5秒の範囲である必要があります",
       videoExtendDurationExceed: "生成時間は、拡張する動画の長さより長くする必要があります",
       unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
+      unlimitedNoAudio: "無制限モードでは音声のアップロードはサポートされていません",
       maxInputLimit: "最大入力制限{max}文字に達しました"
     },
     generate: {

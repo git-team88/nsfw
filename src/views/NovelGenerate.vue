@@ -192,7 +192,16 @@
               <div v-else class="chapter-title-edit" @click.stop>
                 <div class="chapter-edit-content">
                   <span class="chapter-item-label">{{ t('novel.chapter', { chapter: chapter.chapter }) }}</span>
-                  <span class="chapter-item-title">{{ chapter.title }}</span>
+                  <input
+                    type="text"
+                    v-model="editingChapterTitle"
+                    class="chapter-title-input"
+                    @input="editingChapterTitle = editingChapterTitle.substring(0, 60)"
+                    @blur="handleChapterTitleBlur"
+                    :maxlength="60"
+                    :ref="el => chapterTitleInputs[chapter.chapter] = el"
+                  />
+                  <span class="chapter-title-counter">{{ editingChapterTitle.length }}/60</span>
                 </div>
                 <div class="chapter-edit-actions">
                   <button

@@ -810,7 +810,6 @@
 <script setup lang="ts" name="Generate">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -832,7 +831,6 @@ import loadingGif11 from '@/assets/images/home/1_1.gif';
 import audioIcon from '@/assets/images/home/audio.png';
 
 const { t, locale } = useI18n();
-const route = useRoute();
 
 const selectedType = ref('all');
 const showTypeDropdown = ref(false);
@@ -1861,7 +1859,7 @@ const handlePhotoFileChange = async (event: Event) => {
 
     // Photo upload limits based on mode
     const maxPhotos = currentPhotoMode.value === 'unlimited' ? 3 : 7;
-    const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 10 : 50;
+    const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 20 : 30;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -2116,24 +2114,6 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
-    // Check image files format and corruption (broken image)
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    for (const file of files) {
-      if (!file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
-        if (!validImageTypes.includes(file.type)) {
-          toast(t('home.error.invalidPhotoFormat'));
-          input.value = '';
-          return;
-        }
-        const isCorrupted = await isImageCorrupted(file);
-        if (isCorrupted) {
-          toast(t('home.error.corruptedImage'));
-          input.value = '';
-          return;
-        }
-      }
-    }
-
     // Check video and audio total duration limits (15 seconds each) for video multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal') {
       let totalVideoDuration = 0;
@@ -2176,6 +2156,7 @@ const handleVideoRefUpload = async (event: Event) => {
 
     // Check file size limits for multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal') {
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       for (const file of files) {
         if (file.type.startsWith('video/')) {
           if (file.size > maxVideoSizeBytes) {
@@ -2196,8 +2177,19 @@ const handleVideoRefUpload = async (event: Event) => {
             return;
           }
         } else {
+          if (!validImageTypes.includes(file.type)) {
+            toast(t('home.error.invalidPhotoFormat'));
+            input.value = '';
+            return;
+          }
           if (file.size > maxFileSizeBytes) {
-            toast(t('home.error.maxImageSize', { max: currentVideoMode.value === 'unlimited' ? 20 : 30 }));
+            toast(t('home.error.maxPhotoSize', { max: currentVideoMode.value === 'unlimited' ? 20 : 30 }));
+            input.value = '';
+            return;
+          }
+          const isCorrupted = await isImageCorrupted(file);
+          if (isCorrupted) {
+            toast(t('home.error.corruptedImage'));
             input.value = '';
             return;
           }
@@ -3102,6 +3094,13 @@ const handleStartFrameChange = async (event: Event) => {
       target.value = '';
       return;
     }
+    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    if (file.size > maxFileSizeBytes) {
+      toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
+      target.value = '';
+      return;
+    }
     // Check if image is corrupted (broken image)
     if (await isImageCorrupted(file)) {
       toast(t('home.error.corruptedImage'));
@@ -3131,6 +3130,13 @@ const handleEndFrameChange = async (event: Event) => {
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validImageTypes.includes(file.type)) {
       toast(t('home.error.invalidPhotoFormat'));
+      target.value = '';
+      return;
+    }
+    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    if (file.size > maxFileSizeBytes) {
+      toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
       return;
     }
@@ -3179,6 +3185,13 @@ const handleVideoUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
+    const videoExtensions = ['.mp4', '.mov'];
+    const videoExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!videoExtensions.includes(videoExtension)) {
+      toast(t('home.error.invalidVideoFormat'));
+      target.value = '';
+      return;
+    }
     // Video duration validation
     const duration = await getVideoDuration(file);
 
@@ -4344,19 +4357,21 @@ onMounted(() => {
     return false;
   }
 
-  const querySessionId = Array.isArray(route.query.session_id)
-    ? route.query.session_id[0]
-    : route.query.session_id;
-  const targetSessionId = querySessionId || localStorage.getItem('targetSessionId') || '';
+  // 目标定位记录通过 sessionStorage 传递（不再从 URL query 读取 session_id，
+  // 避免地址栏残留导致刷新后反复定位）
   const targetRecordJson = sessionStorage.getItem('targetGenerateRecord');
   let targetRecord: any = null;
   if (targetRecordJson) {
     try {
       targetRecord = JSON.parse(targetRecordJson);
     } catch {
-      sessionStorage.removeItem('targetGenerateRecord');
+      // ignore parse error
     }
   }
+  const targetSessionId = localStorage.getItem('targetSessionId') || targetRecord?.session_id || '';
+  // 读取后立即消费，确保只定位一次，刷新后不再重复定位
+  sessionStorage.removeItem('targetGenerateRecord');
+  localStorage.removeItem('targetSessionId');
 
   setSeoMeta(bottomActiveTab.value);
 

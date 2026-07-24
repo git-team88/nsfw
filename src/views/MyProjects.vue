@@ -165,25 +165,18 @@
               <!-- Photo Tab - 图片类型 -->
               <div v-else-if="activeMainTab == 'photo'">
                 <div class="card-cover photo-cover">
-                  <!-- 无限制模式：显示1张填满 -->
-                  <div v-if="project.images && project.images.length > 0 && project.story_mode === 'nsfw'" class="single-image">
+                  <!-- 只有1张：填满显示 -->
+                  <div v-if="project.images && project.images.length === 1" class="single-image">
                     <img :src="processImageUrl(project.images[0])" alt="" class="single-image-img" />
                   </div>
-                  <!-- 普通模式：1张图单独填满 -->
-                  <div v-else-if="project.images && project.images.length === 1" class="single-image">
-                    <img :src="processImageUrl(project.images[0])" alt="" class="single-image-img" />
-                  </div>
-                  <!-- 普通模式：4张2x2网格，不足4张用占位图填充 -->
-                  <div v-else-if="project.images && project.images.length > 1" class="grid-images">
+                  <!-- 多张：final_images 返回几张就显示几张 -->
+                  <div v-else-if="project.images && project.images.length > 0" class="grid-images">
                     <div
                       class="grid-image-item"
-                      v-for="(img, index) in project.images.slice(0, 4)"
+                      v-for="(img, index) in project.images"
                       :key="index"
                     >
                       <img :src="processImageUrl(img)" alt="" />
-                    </div>
-                    <div v-for="n in Math.max(0, 4 - project.images.length)" :key="'placeholder-' + n" class="grid-image-item">
-                      <img :src="pic" alt="" />
                     </div>
                   </div>
                   <div v-else class="default-cover">
@@ -376,10 +369,9 @@ function goToGenerate(project: any) {
   } catch {
     sessionStorage.removeItem('targetGenerateRecord');
   }
-  router.push({
-    name: 'Generate',
-    query: { session_id: project.session_id }
-  });
+  // 不把 session_id 放进 URL query，避免刷新后地址栏残留 session_id 导致反复定位；
+  // 定位所需的目标记录通过 sessionStorage 传递（Generate 页用完即清除）
+  router.push({ name: 'Generate' });
 }
 
 function playVideo(videoUrl: string) {
@@ -571,14 +563,21 @@ async function loadProjects(reset = false) {
         const processedProject = { ...project };
 
         if (activeMainTab.value == 'photo') {
-          // Extract images from result_async.final_images for photo projects
-          if (project.result_async?.final_images) {
-            processedProject.images = project.result_async.final_images;
-          } else {
-            processedProject.images = [];
+          // result_async may be an object or a JSON string
+          let ra = project.result_async;
+          if (typeof ra === 'string') {
+            try { ra = JSON.parse(ra); } catch (e) { ra = null; }
           }
-          // Save story_mode for display logic
-          processedProject.story_mode = project.user_selected?.story_mode;
+          // Extract images from result_async.final_images for photo projects
+          processedProject.images = ra?.final_images || [];
+
+          // user_selected may be an object or a JSON string; story_mode may also live under result_async
+          let us = project.user_selected;
+          if (typeof us === 'string') {
+            try { us = JSON.parse(us); } catch (e) { us = null; }
+          }
+          // Save story_mode for display logic (nsfw -> single image, otherwise 4-grid)
+          processedProject.story_mode = us?.story_mode ?? ra?.user_selected?.story_mode ?? project.story_mode;
         } else if (activeMainTab.value == 'video') {
           // Extract video info for video projects
           if (project.result_async?.final_video_output) {

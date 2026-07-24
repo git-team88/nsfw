@@ -1927,6 +1927,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       videoExtendDurationLimit: "上传视频应在2-5s",
       videoExtendDurationExceed: "生成时长设置应大于待续写视频长度",
       unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容",
+      unlimitedNoAudio: "无限制模式暂不支持上传音频",
       maxInputLimit: "已达最大输入限制{max}字"
     },
     generate: {
