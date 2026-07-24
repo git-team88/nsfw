@@ -4149,8 +4149,12 @@ const generateVideo = async () => {
 
 // 滚动到底部且已加载的记录全部展示后，拉取"更新的"数据（第1页最新一批），
 // 把本地没有的新记录追加到列表底部（底部=最新）
+// 冷却时间戳：避免在底部时每个 scroll 事件都发请求（无新数据也会重复调用）
+let lastLoadNewerAttempt = 0;
+const LOAD_NEWER_COOLDOWN = 3000;
 const loadNewerRecords = async () => {
   if (isLoadingNewer.value || isLoading.value) return;
+  lastLoadNewerAttempt = Date.now();
   isLoadingNewer.value = true;
   try {
     const storyType = selectedType.value == 'all' ? '' : selectedType.value;
@@ -4232,6 +4236,7 @@ const handleScroll = () => {
     scrollTop > docHeightForNewer - winHeightForNewer - 100 &&
     !isLoading.value &&
     !isLoadingNewer.value &&
+    Date.now() - lastLoadNewerAttempt > LOAD_NEWER_COOLDOWN &&
     records.value.length > 0 &&
     lastRecordShown
   ) {
