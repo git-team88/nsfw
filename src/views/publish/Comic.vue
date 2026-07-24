@@ -1307,7 +1307,7 @@ async function runBatchPublishLoop() {
         }
         const images = chapterRes.data.final_images || chapterRes.data.images || cRA?.final_images || cRA?.images || [];
         if (images.length > 0) {
-          payload.images = images.join(',');
+          payload.image_urls = images;
         }
         if (chapterRes.data.chapter_description) {
           payload.content = chapterRes.data.chapter_description;
