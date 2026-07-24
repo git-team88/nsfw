@@ -229,6 +229,18 @@ export default {
       url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  // 首页人气创作者榜（public）
+  popularUserRank: (page: number, limit: number) =>
+    axios.request({
+      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  // 首页作品人气榜（public）
+  hotBook: (page: number, limit: number) =>
+    axios.request({
+      url: "index/getHotBookPublic?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
   // homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
   //   axios.request({
   //     url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),

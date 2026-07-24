@@ -1,5 +1,5 @@
 <template>
-  <div class="sensitive-content-confirm-modal-overlay" @click.self="handleClose">
+  <div class="sensitive-content-confirm-modal-overlay">
     <div class="sensitive-content-confirm-modal">
       <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
@@ -80,15 +80,25 @@ const handleConfirm = () => {
   overflow: hidden;
 
   .modal-close {
-    background: none;
-    border: none;
-    padding: 0;
     position: absolute;
-    right: 12px;
-    top: 16px;
-    width: 20px;
-    height: 20px;
+    right: 14px;
+    top: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid #161122;
+    box-shadow: 2px 2px 0 #161122;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
     cursor: pointer;
+    transition: transform 0.16s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 
   .modal-header {
@@ -128,14 +138,27 @@ const handleConfirm = () => {
       justify-content: center;
       min-width: 136px;
       height: 48px;
-      border: none;
-      border-radius: 8px;
+      border: 2px solid #161122;
+      border-radius: 12px;
+      box-shadow: 2px 2px 0 #161122;
       font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
+
+      &:hover {
+        transform: translate(-1px, -2px);
+        box-shadow: 4px 5px 0 rgba(22, 17, 34, 0.4);
+      }
+
+      &:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 rgba(22, 17, 34, 0.4);
+      }
 
       &.cancel {
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+        background: #fff;
+        color: #161122;
 
         &:hover {
           color: #FF4D8D;
@@ -145,15 +168,6 @@ const handleConfirm = () => {
       &.confirm {
         background: #FF4D8D;
         color: #ffffff;
-
-        &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
       }
     }
   }

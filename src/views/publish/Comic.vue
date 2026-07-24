@@ -1879,6 +1879,9 @@ const headerRef = ref<InstanceType<typeof Header> | null>(null);
 // Upload options
 const activeTab = ref('comic');
 const uploadOption = ref('history');
+// Guards the uploadOption watcher from resetting state when the option is
+// switched programmatically (e.g. after loading a chapter's images).
+const isProgrammaticUploadChange = ref(false);
 
 // Upload options for v-for
 const uploadOptions = [
@@ -1948,6 +1951,13 @@ const canSubmit = computed(() => {
 });
 
 watch(uploadOption, (newOption) => {
+  // Skip resetting when the switch is triggered programmatically (e.g. after
+  // loading a chapter's images in handlePublish), otherwise the just-loaded
+  // images would be wiped out.
+  if (isProgrammaticUploadChange.value) {
+    isProgrammaticUploadChange.value = false;
+    return;
+  }
   if (newOption === 'history') {
     isLoadingProjects.value = true;
     fetchProjects();
@@ -3869,7 +3879,10 @@ async function handlePublish(publishData?: any) {
   }
 
   // 切换到本地上传标签页，显示有图片的块
-  uploadOption.value = 'local';
+  if (uploadOption.value !== 'local') {
+    isProgrammaticUploadChange.value = true;
+    uploadOption.value = 'local';
+  }
 
   // 显示发布表单
   showFullContent.value = true;

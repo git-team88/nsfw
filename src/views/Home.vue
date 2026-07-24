@@ -4,13 +4,64 @@
 
     <!-- Main Content -->
     <div class="main-content">
+      <!-- Banner（纯图轮播，移到 hero 上方，对齐 moegen-web） -->
+      <div class="event-banner" v-if="banners.length > 0">
+        <div class="swiper-outer banner-swiper">
+          <div class="swiper-container">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
+                <img class="banner-img" :src="banner.cover" alt="" @click="banner.jump_url && (location.href = banner.jump_url)" />
+              </div>
+            </div>
+            <div class="swiper-pagination"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Hero Section -->
       <div class="hero-section">
-        <div class="hero-content">
-          <h1 class="hero-title">{{ t('home.hero.title') }}</h1>
+        <!-- 3D 漂浮漫画卡片背景动效 -->
+        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" />
+        <!-- 中间白色柔光层（对齐 moegen，让中间内容更清晰） -->
+        <div class="hero-glow" aria-hidden="true"></div>
+        <!-- 边上飘的拟声词装饰 -->
+        <div class="hero-parts" aria-hidden="true" ref="heroPartsRef">
+          <img
+            v-for="(p, i) in heroParts"
+            :key="p.before"
+            class="hero-part"
+            :src="`/onomatopoeia/${heroPartSrc[i]}.png`"
+            alt=""
+            :style="heroPartStyle(p, i)"
+          />
+        </div>
+
+        <!-- 左下：说明按钮 -->
+        <a class="hero-howto" href="/guide.html" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+          {{ t('home.howto') }}
+        </a>
+
+        <!-- 右下：暂停/播放背景动画 -->
+        <button class="hero-pause-btn" :title="t('home.pauseAnim')" :aria-label="t('home.pauseAnim')" @click="heroPaused = !heroPaused">
+          <svg v-if="heroPaused" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z" /></svg>
+          <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.6" stroke-linecap="round"><path d="M9 5v14" /><path d="M15 5v14" /></svg>
+        </button>
+
+        <div class="hero-content" style="position: relative; z-index: 2;">
+          <div class="hero-title-wrap">
+            <span class="hero-speedlines left" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="hero-speedlines right" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <h1 class="hero-title">{{ t('home.hero.title') }}</h1>
+          </div>
+          <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
 
           <!-- Input Area -->
-           <div class="input-area-box">
+           <div class="input-area-box" @click="popHeroParts" @focusin="popHeroParts">
             <div class="input-type-box">
               <!-- Content Type Selector -->
               <div class="content-type-selector">
@@ -100,7 +151,7 @@
                       @blur="handleInputBlur"
                       @paste="handlePaste"
                       @focus="handleInputFocus"
-                      :data-placeholder="currentPlaceholder"
+                      :data-placeholder="typedPlaceholder"
                     ></div>
 
                     <!-- Hidden file input for image upload -->
@@ -179,7 +230,7 @@
 
                       <textarea
                         class="frames-textarea"
-                        :placeholder="t('home.input.placeholderVideo')"
+                        :placeholder="typedPlaceholder"
                         v-model="novelInput"
                         spellcheck="false"
                         @input="handleTextareaInput"
@@ -215,7 +266,7 @@
 
                       <textarea
                         class="video-textarea"
-                        :placeholder="t('home.input.placeholderVideo')"
+                        :placeholder="typedPlaceholder"
                         v-model="novelInput"
                         spellcheck="false"
                         @input="handleTextareaInput"
@@ -384,7 +435,7 @@
                     @blur="handleInputBlur"
                     @paste="handlePaste"
                     @focus="handleInputFocus"
-                    :data-placeholder="currentPlaceholder"
+                    :data-placeholder="typedPlaceholder"
                   ></div>
 
                   <!-- Hidden file input for image upload -->
@@ -494,7 +545,7 @@
                     @blur="handleInputBlur"
                     @paste="handlePaste"
                     @focus="handleInputFocus"
-                    :data-placeholder="currentPlaceholder"
+                    :data-placeholder="typedPlaceholder"
                   ></div>
 
                   <!-- Hidden file input for image upload -->
@@ -636,7 +687,7 @@
                     @blur="handleInputBlur"
                     @paste="handlePaste"
                     @focus="handleInputFocus"
-                    :data-placeholder="currentPlaceholder"
+                    :data-placeholder="typedPlaceholder"
                   ></div>
 
                   <!-- Hidden file input for image upload -->
@@ -703,10 +754,12 @@
                 <div class="input-inner">
                   <textarea
                     class="novel-textarea"
-                    :placeholder="t('home.input.placeholderNovel')"
+                    :placeholder="typedPlaceholder"
                     v-model="novelInput"
                     spellcheck="false"
                     @input="handleTextareaInput"
+                    @focus="isInputFocused = true"
+                    @blur="isInputFocused = false"
                     @click="handleNovelTextareaClick"
                   ></textarea>
 
@@ -795,28 +848,18 @@
         </div>
       </div>
 
-      <!-- Event Banner -->
-      <div class="event-banner" v-if="banners.length > 0">
-        <div class="swiper-outer banner-swiper">
-          <div class="swiper-container">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
-                <!-- <a :href="banner.jump_url" target="_blank" v-if="banner.jump_url">
-                  <img class="banner-img" :src="banner.cover" alt="" />
-                </a> -->
-                <img class="banner-img" :src="banner.cover" alt="" />
-              </div>
-            </div>
-            <div class="swiper-pagination"></div>
-          </div>
-        </div>
-      </div>
-
       <ProcessList />
 
+      <!-- 推荐创作者 + 人气作品（3D 动效 Showcase，移植自 moegen-web） -->
+      <HomeShowcase />
+
       <!-- Content Section -->
-      <div class="content-section">
-        <!-- Tabs and Search -->
+      <div id="feed" class="content-section">
+        <div class="feed-heading">
+          <h2 class="feed-title">{{ t('home.feedTitle') }}</h2>
+          <p class="feed-sub">{{ t('home.feedSub') }}</p>
+        </div>
+        <!-- Tabs -->
         <div class="content-header">
           <!-- Tabs -->
           <div class="content-tabs">
@@ -830,6 +873,8 @@
               {{ t(tab.label) }}
             </span>
           </div>
+
+          <div class="header-spacer"></div>
 
           <!-- Search -->
           <div class="search-box">
@@ -871,10 +916,10 @@
           </div>
 
           <div class="sensitive-content-toggle" v-if="userRegion && activeContentTab != 'suggested' && viewMode == 'user'">
-            <span class="nsfw-btn" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle">
-              <span class="nsfw-dot"></span>
-              {{ t('home.sensitiveContent') }}
-            </span>
+            <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
+            <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
+              <span class="nsfw-knob"></span>
+            </button>
           </div>
         </div>
 
@@ -893,23 +938,11 @@
 
           <!-- Sensitive Content Toggle -->
           <div class="sensitive-content-toggle" v-if="userRegion && (activeContentTab == 'suggested' || viewMode == 'content')">
-            <span class="nsfw-btn" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle">
-              <span class="nsfw-dot"></span>
-              {{ t('home.sensitiveContent') }}
-            </span>
+            <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
+            <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
+              <span class="nsfw-knob"></span>
+            </button>
           </div>
-
-          <!-- <div class="sort-filter">
-            <span
-              v-for="option in sortOptions"
-              :key="option.id"
-              class="filter-btn"
-              :class="{ active: sortOrder === option.id }"
-              @click="sortOrder = option.id"
-            >
-              {{ t(option.label) }}
-            </span>
-          </div> -->
         </div>
 
         <!-- Content Grid -->
@@ -931,6 +964,8 @@
                 :key="item.id"
                 class="content-item"
                 :ref="(el) => setContentCardRef(el, index)"
+                @mousemove="onCardTilt"
+                @mouseleave="onCardTiltReset"
                 @click="navigateToDetail(item.id, item.type)"
               >
                 <div class="content-image">
@@ -1127,6 +1162,10 @@
       @close="showGuideModal = false"
     />
 
+    <!-- Event Modal (首页延迟弹出的活动告知) -->
+    <EventModal />
+
+
     <!-- Insufficient Balance Modal -->
     <InsufficientBalanceModal
       :visible="showInsufficientBalanceModal"
@@ -1180,8 +1219,11 @@ import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
 import InviteCodeModal from '@/components/InviteCodeModal.vue';
 import GuideModal from '@/components/GuideModal.vue';
+import EventModal from '@/components/EventModal.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
+import Hero3DBackground from '@/components/Hero3DBackground.vue';
+import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import router from '@/router';
@@ -1730,6 +1772,51 @@ const currentPlaceholder = computed(() => {
   return getCurrentPlaceholder();
 });
 
+// 打字机效果的占位文字：未获焦点且输入为空时循环打出目标 placeholder
+const typedPlaceholder = ref('');
+let typeTimer: ReturnType<typeof setTimeout> | undefined;
+
+const runTypewriter = () => {
+  if (typeTimer) clearTimeout(typeTimer);
+  const full = currentPlaceholder.value || '';
+  // 聚焦或已有输入时，直接显示完整占位（不打字），避免干扰
+  if (isInputFocused.value || !isInputEmpty.value) {
+    typedPlaceholder.value = full;
+    return;
+  }
+  let i = 0;
+  let phase: 'typing' | 'holding' | 'deleting' = 'typing';
+  const TYPE_MS = 55;      // 打字速度
+  const DELETE_MS = 30;    // 删除速度
+  const HOLD_FULL_MS = 1600; // 打完停留
+  const HOLD_EMPTY_MS = 500; // 删完停留
+
+  const step = () => {
+    // 中途聚焦/有输入则停止循环，直接显示完整占位
+    if (isInputFocused.value || !isInputEmpty.value) { typedPlaceholder.value = full; return; }
+    // 目标文案变了（切 tab），重启
+    const cur = currentPlaceholder.value || '';
+    if (cur !== full) { runTypewriter(); return; }
+
+    if (phase === 'typing') {
+      typedPlaceholder.value = full.slice(0, i);
+      if (i >= full.length) { phase = 'holding'; typeTimer = setTimeout(() => { phase = 'deleting'; step(); }, HOLD_FULL_MS); return; }
+      i += 1;
+      typeTimer = setTimeout(step, TYPE_MS);
+    } else if (phase === 'deleting') {
+      typedPlaceholder.value = full.slice(0, i);
+      if (i <= 0) { phase = 'typing'; typeTimer = setTimeout(step, HOLD_EMPTY_MS); return; }
+      i -= 1;
+      typeTimer = setTimeout(step, DELETE_MS);
+    }
+  };
+  typedPlaceholder.value = '';
+  step();
+};
+
+// 占位文字打字机的 watch 在 onMounted 里注册（此处 contentType 等尚未声明，
+// 直接 watch computed 会在 setup 阶段立即求值触发 TDZ 错误）
+
 // Content type
 const contentType = ref('novel'); // video, comic, novel
 const showHelpDropdown = ref(false); // Control help dropdown visibility
@@ -1740,6 +1827,67 @@ const contentTypeOptions = ref([
   { value: 'photo', label: 'home.contentType.photo' },
   { value: 'video', label: 'home.contentType.video' }
 ]);
+
+// hero 背景动画暂停/播放
+const heroPaused = ref(false);
+
+// hero 边上飘的拟声词（对齐 moegen PARTS，浮动装饰 + 点击炸开变换）
+const heroParts = [
+  { before: 'doon', after: 'gokuri', left: '1%', top: '4%', w: 19, rot: -6 },
+  { before: 'left_cloud', after: 'hirameki', left: '12%', top: '45%', w: 8, rot: 0, afterScale: 0.7, afterRot: -30 },
+  { before: 'exclamation', after: 'excl_white', left: '1.5%', top: '33%', w: 9, rot: -4 },
+  { before: 'fk_input', after: 'story_bubble', left: '2.5%', top: '58%', w: 13, rot: 2 },
+  { before: 'zuba', after: 'gogogo', left: '22%', top: '87%', w: 10, rot: -3 },
+  { before: 'fk_oneword', after: 'imagination', left: '84%', top: '4%', w: 12.5, rot: 3 },
+  { before: 'dogaan', after: 'zawazawa', left: '81.5%', top: '27.5%', w: 10, rot: 0 },
+  { before: 'right_cloud', after: 'dokidoki', left: '91.5%', top: '47%', w: 7.5, rot: 0 },
+  { before: 'fk_imagine', after: 'yokan', left: '85%', top: '61%', w: 12.5, rot: -2 },
+  { before: 'bashitsu', after: 'su', left: '62%', top: '87.5%', w: 9, rot: 4 },
+] as { before: string; after: string; left: string; top: string; w: number; rot: number; afterScale?: number; afterRot?: number }[];
+// 每个 part 当前显示的图（点击后从 before 换成 after）
+const heroPartSrc = ref<string[]>(heroParts.map((p) => p.before));
+const heroPartsPopped = ref(false);
+const heroPartStyle = (p: typeof heroParts[number], i: number) => ({
+  left: p.left,
+  top: p.top,
+  '--w': p.w,
+  '--rot': `${p.rot}deg`,
+  '--fdur': `${(6.4 + (i % 5) * 0.9).toFixed(2)}s`,
+  '--fdelay': `${(-(i * 0.83)).toFixed(2)}s`,
+  '--fdx': `${(7 + (i % 3) * 4).toFixed(0)}px`,
+  '--fdy': `${(9 + (i % 4) * 4).toFixed(0)}px`,
+  '--frot': `${(1.6 + (i % 3) * 0.7).toFixed(2)}deg`,
+  animationDelay: `${(0.14 + i * 0.07).toFixed(2)}s, ${(-(i * 0.83)).toFixed(2)}s`,
+}) as any;
+
+// 点击输入框时拟声词"炸开"变换（对齐 moegen popParts）
+const heroPartsRef = ref<HTMLDivElement>();
+const popHeroParts = () => {
+  if (heroPartsPopped.value) return;
+  heroPartsPopped.value = true;
+  const box = heroPartsRef.value;
+  if (!box) return;
+  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
+  items.forEach((im, i) => {
+    const p = heroParts[i];
+    // 先停浮动动画、缩小消失
+    im.style.animation = 'none';
+    im.style.transformOrigin = '50% 50%';
+    const d = (i * 0.04).toFixed(2);
+    im.style.transition = `transform .5s cubic-bezier(.5,0,.75,0) ${d}s, opacity .5s cubic-bezier(.5,0,.75,0) ${d}s`;
+    im.style.transform = `translate(0,0) scale(.06) rotate(${p.rot}deg)`;
+    im.style.opacity = '0';
+    // 换图后放大弹回
+    window.setTimeout(() => {
+      heroPartSrc.value[i] = p.after;
+      const aSc = p.afterScale ?? 1;
+      const aRot = p.afterRot ?? p.rot;
+      im.style.transition = 'transform 1s cubic-bezier(.34,1.56,.64,1), opacity .5s cubic-bezier(.16,1,.3,1)';
+      im.style.transform = `translate(0,0) scale(${aSc}) rotate(${aRot}deg)`;
+      im.style.opacity = '1';
+    }, 520 + i * 40);
+  });
+};
 
 // Word count and language settings
 const selectedWordCount = ref('30K');
@@ -1920,6 +2068,18 @@ const setContentCardRef = (el: Element | ComponentPublicInstance | null, index: 
   if (el && el instanceof HTMLElement) {
     contentCardRefs.value[index] = el;
   }
+};
+
+// 卡片鼠标跟随 3D 倾斜（对齐 moegen GridCard onMove/reset）
+const onCardTilt = (e: MouseEvent) => {
+  const el = e.currentTarget as HTMLElement;
+  const r = el.getBoundingClientRect();
+  const px = (e.clientX - r.left) / r.width - 0.5;
+  const py = (e.clientY - r.top) / r.height - 0.5;
+  el.style.transform = `perspective(900px) rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg) translateY(-3px)`;
+};
+const onCardTiltReset = (e: MouseEvent) => {
+  (e.currentTarget as HTMLElement).style.transform = '';
 };
 
 // Content Types
@@ -5355,6 +5515,11 @@ watch(() => locale.value, (newLocale) => {
 onMounted(async () => {
   window.addEventListener('scroll', handleScrollToBottom);
 
+  // 启动占位打字机 + 注册相关 watch（此时所有依赖 ref 已声明）
+  runTypewriter();
+  watch(currentPlaceholder, () => runTypewriter());
+  watch(isInputFocused, (f) => { if (f) { if (typeTimer) clearTimeout(typeTimer); typedPlaceholder.value = currentPlaceholder.value; } else runTypewriter(); });
+
   // 初始化语言设置
   await initLanguage();
 
@@ -5542,6 +5707,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScrollToBottom);
+  if (typeTimer) clearTimeout(typeTimer);
 });
 
 // Handle window resize

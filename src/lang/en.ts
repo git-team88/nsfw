@@ -1633,9 +1633,49 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   home: {
-    hero: {
-      title: "One spark. Infinite stories."
+    popularCreator: "Popular Creators",
+    feedTitle: "Fresh from everyone",
+    feedSub: "Check out just-posted works",
+    eventModal: {
+      heading: "Event news!!",
+      badge: "Limited time",
+      title: "Fan creation event is on now!!",
+      body: "Join now for generous rewards! Log in daily during the event for extra gifts. Come create your work!",
+      detail: "Learn more",
+      later: "Maybe later",
+      dontShow: "Don't show this again",
     },
+    guide: {
+      title: "Welcome to MoeGen",
+      step1Title: "From one line, a work is born",
+      step1Body: "Just type one line of the story you want. AI generates manga, novels, videos, and more.",
+      step2Title: "Pick a mode",
+      step2Body: "Choose from 5 types: novel, comic, drama, image, or video.",
+      step3Title: "Add characters & references",
+      step3Body: "Use @ to reference characters and reference images for a more precise result.",
+      step4Title: "Let's get started",
+      step4Body: "Press Generate to start creating. Your story begins here.",
+      next: "Next",
+      skip: "Skip",
+      start: "Get started",
+    },
+    popularCreatorSub: "Creators on the rise!",
+    popularBook: "Popular Works",
+    popularBookSub: "The hottest talk of the moment!",
+    fansLabel: "Fans",
+    worksLabel: "Works",
+    followBtn: "Follow",
+    followingBtn: "Following",
+    seeMore: "See more",
+    readMore: "＼ Read more new works! ／",
+    viewList: "List",
+    viewRing: "Ring",
+    hero: {
+      title: "One spark. Infinite stories.",
+      sub: "Just type the world you dreamed up. A full episode's storyboard in seconds."
+    },
+    howto: "How it works",
+    pauseAnim: "Pause/play background animation",
     mode: {
       normal: "Normal Mode",
       unlimited: "NSFW",

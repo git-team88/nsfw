@@ -21,7 +21,10 @@
       </div>
 
       <div class="modal-check">
-        <input type="checkbox" v-model="isCheck" class="modal-checkbox" />
+        <div class="check-box" @click="isCheck = !isCheck">
+          <img src="@/assets/images/register/check_active.png" alt="" v-if="isCheck" />
+          <img src="@/assets/images/register/check.png" alt="" v-else />
+        </div>
         <span @click="isCheck = !isCheck">{{ t("submit.sensitiveDontAsk") }}</span>
       </div>
 
@@ -101,6 +104,7 @@ $yellow: #FFD23F;
   width: min(400px, 92%);
   padding: 22px 24px;
   overflow: hidden;
+  text-align: center;
   animation: modalPop 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   .modal-corner-deco {
@@ -183,15 +187,22 @@ $yellow: #FFD23F;
   .modal-check {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     margin-top: 14px;
     cursor: pointer;
 
-    .modal-checkbox {
-      width: 16px;
-      height: 16px;
-      accent-color: $pink;
+    .check-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
       cursor: pointer;
+
+      img {
+        width: 18px;
+        height: 18px;
+      }
     }
 
     span {

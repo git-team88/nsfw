@@ -80,15 +80,28 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       transition: opacity 0.2s ease, visibility 0.2s ease;
       text-align: center;
 
-      &::before {
+      &::before,
+      &::after {
         content: "";
         position: absolute;
-        top: -8px;
-        left: 6px;
-        width: 24px;
-        height: 10px;
-        background: url('@/assets/images/detail/intro.png') no-repeat center center;
-        background-size: 100% 100%;
+        bottom: 100%;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+      }
+
+      &::before {
+        left: 10px;
+        border-bottom: 10px solid $ink;
+      }
+
+      &::after {
+        left: 12px;
+        margin-bottom: -2px;
+        border-left-width: 6px;
+        border-right-width: 6px;
+        border-bottom: 8px solid $paper;
       }
     }
 
@@ -631,12 +644,13 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       .collection-info-bar {
         position: fixed;
         left: 50%;
-        bottom: 30px;
-        width: 1080px;
-        max-width: 90%;
+        bottom: 40px;
+        width: 1064px;
+        max-width: calc(90% - 6px);
         padding: 12px 24px;
-        border: 2px solid $ink;
-        border-radius: 0;
+        border: none;
+        border-top: 2px solid $ink;
+        border-radius: 0 0 12px 12px;
         transform: translateX(-50%);
         background: $paper;
         z-index: 100;
@@ -779,8 +793,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       z-index: 10;
 
       .nav-btn {
-        width: 80px;
-        height: 80px;
+        width: 48px;
+        height: 48px;
         cursor: pointer;
         background: none;
         display: inline-block;
@@ -860,6 +874,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             .follow-btn {
               min-width: 8.3333vw;
               height: 2.7778vw;
+              min-height: 40px;
               font-size: 0.9722vw;
               border-radius: 0.5556vw;
             }
@@ -973,10 +988,9 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         }
 
         .collection-info-bar {
-          bottom: 2.0833vw;
-          width: 75vw;
-          padding: 0.8333vw 1.6667vw;
-          border-radius: 0.8333vw;
+          bottom: 3.5vw;
+          width: calc(75vw - 6px);
+          padding: 0.8vw 1.6vw;
 
           .collection-info {
             gap: 1.1111vw;
@@ -997,6 +1011,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             .next-btn {
               min-width: 8.3333vw;
               height: 2.7778vw;
+              min-height: 40px;
               font-size: 0.9722vw;
               border-radius: 0.5556vw;
             }
@@ -1029,8 +1044,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         gap: 0.4167vw;
 
         .nav-btn {
-          width: 5.5556vw;
-          height: 5.5556vw;
+          width: 3.3333vw;
+          height: 3.3333vw;
+          min-width: 40px;
+          min-height: 40px;
         }
       }
     }
@@ -1097,7 +1114,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
             .follow-btn {
               min-width: 80px;
-              height: 32px;
+              height: 40px;
               font-size: 12px;
               border-radius: 6px;
             }
@@ -1211,11 +1228,11 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         }
 
         .collection-info-bar {
-          bottom: 16px;
+          bottom: 20px;
           width: 100%;
-          max-width: calc(100% - 32px);
+          max-width: calc(100% - 48px);
           padding: 8px 16px;
-          border-radius: 8px;
+          border-radius: 0;
 
           .collection-info {
             gap: 8px;
@@ -1235,7 +1252,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
             .next-btn {
               min-width: 80px;
-              height: 32px;
+              height: 40px;
               font-size: 12px;
               border-radius: 6px;
             }
@@ -1270,8 +1287,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         gap: 4px;
 
         .nav-btn {
-          width: 60px;
-          height: 60px;
+          width: 48px;
+          height: 48px;
         }
       }
     }

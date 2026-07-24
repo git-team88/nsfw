@@ -1566,9 +1566,9 @@ async function handlePublishFromSelection() {
             setTimeout(() => { location.reload(); }, 1000);
             return;
           }
-          batchChapterContents.value[chNum] = res.data.content || '';
+          batchChapterContents.value[chNum] = mergeInsertImagesIntoContent(res.data.content || '', res.data.result_async);
           if (chNum === firstChapterNum) {
-            firstChapterContent = res.data.content || '';
+            firstChapterContent = batchChapterContents.value[chNum];
             firstChapterTitle = res.data.title || '';
           }
         }
@@ -2678,6 +2678,24 @@ function buildCaptionImage(url: string): HTMLImageElement {
   img.className = 'caption-insert-image';
   img.setAttribute('contenteditable', 'false');
   return img;
+}
+
+// Merge a chapter's [[img_placeholder]] markers with its illustrations
+// (result_async.insert_images) so batch-published content carries the same
+// <img src="url" /> tags that single publish produces via serializeCaptionContent.
+function mergeInsertImagesIntoContent(content: string, resultAsync: any): string {
+  if (!content) return content || '';
+  let ra = resultAsync;
+  if (typeof ra === 'string') {
+    try { ra = JSON.parse(ra); } catch (e) { ra = null; }
+  }
+  const images: string[] = Array.isArray(ra?.insert_images) ? ra.insert_images : [];
+  if (images.length === 0) return content;
+  let occurrence = 0;
+  return content.replace(/\[\[img_placeholder\]\]/g, (match) => {
+    const url = images[occurrence++];
+    return url ? `<img src="${url}" />` : match;
+  });
 }
 
 // Serialize the editor content to a string: text as-is, illustrations as
@@ -3907,9 +3925,9 @@ async function handleBatchPublishFromModal() {
           setTimeout(() => { location.reload(); }, 1000);
           return;
         }
-        batchChapterContents.value[chNum] = res.data.content || '';
+        batchChapterContents.value[chNum] = mergeInsertImagesIntoContent(res.data.content || '', res.data.result_async);
         if (chNum === firstChapterNum) {
-          firstChapterContent = res.data.content || '';
+          firstChapterContent = batchChapterContents.value[chNum];
           firstChapterTitle = res.data.title || '';
         }
       }
@@ -4537,7 +4555,7 @@ async function initBatchPublish(session_id: string) {
       if (res.code === 200 && res.data) {
         batchChapterDetails.value[chapterIndex] = {
           title: res.data.title || '',
-          content: res.data.content || ''
+          content: mergeInsertImagesIntoContent(res.data.content || '', res.data.result_async)
         };
       } else {
         hasChapterError = true;

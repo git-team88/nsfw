@@ -938,7 +938,6 @@
             font-weight: 700;
             color: #161122;
             cursor: pointer;
-            box-shadow: 2px 2px 0 #161122;
 
             &:hover {
               border-color: #FF4D8E;
@@ -1163,7 +1162,6 @@
       border-radius: 14px;
       background: #FFFFFF;
       overflow: hidden;
-      box-shadow: 2px 2px 0 #161122;
 
       .image {
         width: auto;
@@ -1547,7 +1545,6 @@
           justify-content: space-between;
           padding: 0 8px 0 12px;
           cursor: pointer;
-          box-shadow: 2px 2px 0 #161122;
 
           .select-value {
             flex: 1;

@@ -827,8 +827,10 @@ defineExpose({
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1160px;
+    max-width: none;
     margin: 0 auto;
+    padding: 0;
+    min-width: 0;
 
     .left {
       display: flex;
@@ -1604,7 +1606,7 @@ defineExpose({
   }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1280px) {
   .header {
     .container {
       .left {
@@ -1617,6 +1619,18 @@ defineExpose({
         }
       }
     }
+  }
+}
+
+/* Japanese labels are wider than other languages, so collapse the nav
+   into the hamburger earlier to avoid the header overflowing/clipping. */
+@media (max-width: 1440px) {
+  :global(body.ja) .header .container .left .nav {
+    display: none;
+  }
+
+  :global(body.ja) .header .container .left .nav-hamburger {
+    display: grid;
   }
 }
 

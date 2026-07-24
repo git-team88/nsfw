@@ -1739,9 +1739,49 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   home: {
-    hero: {
-      title: "输入一句，作品诞生"
+    popularCreator: "人气创作者",
+    feedTitle: "大家的新作",
+    feedSub: "看看刚刚投稿的作品",
+    eventModal: {
+      heading: "活动信息!!",
+      badge: "限时活动",
+      title: "同人创作活动进行中!!",
+      body: "现在参与即可获得丰厚奖励！活动期间每天登录还有额外好礼，快来创作你的作品吧。",
+      detail: "查看详情",
+      later: "稍后再看",
+      dontShow: "今后不再显示此通知",
     },
+    guide: {
+      title: "欢迎来到 MoeGen",
+      step1Title: "一句话，作品诞生",
+      step1Body: "只需输入一句想创作的故事，AI 自动生成漫画、小说、视频等。",
+      step2Title: "选择模式",
+      step2Body: "从小说、漫画、漫剧、图片、视频五种类型中选择你想创作的类型。",
+      step3Title: "添加角色与参考图",
+      step3Body: "用 @ 引用角色和参考图，让作品更符合你的想法。",
+      step4Title: "现在开始吧",
+      step4Body: "点击「生成」即可开始创作，你的故事从这里开始。",
+      next: "下一步",
+      skip: "跳过",
+      start: "开始",
+    },
+    popularCreatorSub: "人气飙升中的创作者！",
+    popularBook: "人气作品",
+    popularBookSub: "当下最热门的话题作！",
+    fansLabel: "粉丝",
+    worksLabel: "作品",
+    followBtn: "关注",
+    followingBtn: "已关注",
+    seeMore: "查看更多",
+    readMore: "＼ 查看更多新作！ ／",
+    viewList: "列表",
+    viewRing: "环形",
+    hero: {
+      title: "输入一句，作品诞生",
+      sub: "只需输入你想到的世界观，数十秒即可生成一话分镜。"
+    },
+    howto: "详细使用方法",
+    pauseAnim: "停止/播放背景动画",
     mode: {
       normal: "普通模式",
       unlimited: "NSFW",

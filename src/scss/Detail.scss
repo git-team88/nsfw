@@ -45,21 +45,16 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   justify-content: center;
   cursor: pointer;
   z-index: 100;
-  background: $paper;
-  border: 2px solid $ink;
-  border-radius: 12px;
-  box-shadow: $shadow-hard-sm;
   transition: $transition-spring;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: $shadow-hard;
   }
 
   span {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     background: url('@/assets/images/detail/close.png') no-repeat center center;
     background-size: 100% 100%;
   }
@@ -99,15 +94,28 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     transition: opacity 0.2s ease, visibility 0.2s ease;
     text-align: center;
 
-    &::before {
+    &::before,
+    &::after {
       content: "";
       position: absolute;
-      top: -10px;
-      left: 8px;
-      width: 34px;
-      height: 12px;
-      background: url('@/assets/images/detail/intro.png') no-repeat center center;
-      background-size: 100% 100%;
+      bottom: 100%;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+    }
+
+    &::before {
+      left: 12px;
+      border-bottom: 10px solid $ink;
+    }
+
+    &::after {
+      left: 14px;
+      margin-bottom: -2px;
+      border-left-width: 6px;
+      border-right-width: 6px;
+      border-bottom: 8px solid $paper;
     }
   }
 
@@ -752,7 +760,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     padding: 12px;
     border-radius: 12px;
     border: 2px solid $ink;
-    box-shadow: $shadow-hard-sm;
     z-index: 10;
     box-sizing: border-box;
 
@@ -801,12 +808,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   display: flex;
   flex-direction: column;
   transform: translateY(-50%);
-  gap: 60px;
+  gap: 20px;
   z-index: 10;
 
   &.on {
     position: fixed;
-    right: 630px;
+    right: 480px;
   }
 
   .isRightPanelHidden &.on {
@@ -817,35 +824,22 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     width: 48px;
     height: 48px;
     cursor: pointer;
-    border-radius: 12px;
-    border: 2px solid rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.08);
+    border: none;
+    background: transparent;
     transition: $transition-spring;
 
     &:hover {
       transform: translateY(-2px) scale(1.05);
-      border-color: rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.15);
     }
 
     &.up {
       background: url("@/assets/images/detail/prev.png") no-repeat center;
-      background-size: 30px 30px;
-
-      &:hover {
-        background: url("@/assets/images/detail/prev_hover.png") no-repeat center;
-        background-size: 30px 30px;
-      }
+      background-size: 44px 44px;
     }
 
     &.down {
       background: url("@/assets/images/detail/next.png") no-repeat center;
-      background-size: 30px 30px;
-
-      &:hover {
-        background: url("@/assets/images/detail/next_hover.png") no-repeat center;
-        background-size: 30px 30px;
-      }
+      background-size: 44px 44px;
     }
   }
 }
@@ -1654,8 +1648,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       gap: 6px;
 
       .cancel-btn {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
         background: url("@/assets/images/detail/cancel.png") no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -1669,8 +1663,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       }
 
       .send-btn {
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
         background: url("@/assets/images/detail/send.png") no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -1732,38 +1726,35 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
 .tab-bar {
   display: flex;
-  gap: 30px;
-  padding: 0 24px;
-  border-bottom: 2px solid $line;
+  gap: 6px;
+  margin: 0 24px;
+  border: 2.5px solid $ink;
+  border-radius: 14px;
+  padding: 5px;
+  background: #fff;
+  width: fit-content;
 }
 
 .tab-item {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding-bottom: 22px;
-  font-size: 18px;
-  font-weight: 700;
-  color: $muted;
-  position: relative;
+  padding: 8px 22px;
+  font-size: 15px;
+  font-weight: 800;
+  color: $ink;
+  background: transparent;
+  border-radius: 10px;
+  transition: color 0.15s, background-color 0.15s;
 
-  &:hover {
-    color: $ink;
+  &:hover:not(.active) {
+    background: $bg-tag;
   }
 
   &.active {
-    font-weight: 800;
-    color: $ink;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: $pink;
-      border-radius: 999px;
-    }
+    background: $ink;
+    color: #fff;
   }
 }
 
@@ -1807,15 +1798,15 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   overflow-y: auto;
 
   .collection-item {
-    padding: 14px;
+    padding: 12px;
+    margin-bottom: 12px;
     cursor: pointer;
-    border-radius: 12px;
-    border: 2px solid transparent;
-    transition: border-color 0.2s ease, transform 0.14s cubic-bezier(0.34,1.56,0.64,1);
+    border-radius: 14px;
+    border: 2px solid $bg-tag;
+    transition: border-color 0.2s ease;
 
     &:hover {
-      border-color: $line;
-      transform: translateY(-1px);
+      border-color: $muted;
     }
 
     &.active {
