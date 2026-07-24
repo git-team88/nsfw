@@ -160,7 +160,8 @@ const handleNextStep = async () => {
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
-    selectedChapters.value = [];
+    // 打开弹窗时默认全选未发布的章节
+    selectedChapters.value = unpublishedChapters.value.map(c => c.chapter);
   }
 });
 </script>
