@@ -1256,10 +1256,25 @@ async function onBatchPublish() {
   }));
   showBatchPublishProgress.value = true;
 
+  await runBatchPublishLoop();
+}
+
+async function runBatchPublishLoop() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
   const session_id = selectedProject.value?.session_id;
   const collectionStart = parseInt(selectedEpisodeNumber.value) || 1;
 
   for (let i = 0; i < selectedChapters.value.length; i++) {
+    // 跳过已发布成功的章节，仅重试失败/未发布的
+    if (batchPublishChapterStatuses.value[i]?.status === 'success') {
+      continue;
+    }
+
     const chapterNum = selectedChapters.value[i];
     const collectionChapterIndex = collectionStart + i;
 
@@ -1320,7 +1335,9 @@ async function onBatchPublish() {
       } else {
         batchPublishChapterStatuses.value[i].status = 'fail';
         for (let j = i + 1; j < selectedChapters.value.length; j++) {
-          batchPublishChapterStatuses.value[j].status = 'unpublished';
+          if (batchPublishChapterStatuses.value[j].status !== 'success') {
+            batchPublishChapterStatuses.value[j].status = 'unpublished';
+          }
         }
         break;
       }
@@ -1328,7 +1345,9 @@ async function onBatchPublish() {
       console.error(`Error publishing chapter ${chapterNum}:`, error);
       batchPublishChapterStatuses.value[i].status = 'fail';
       for (let j = i + 1; j < selectedChapters.value.length; j++) {
-        batchPublishChapterStatuses.value[j].status = 'unpublished';
+        if (batchPublishChapterStatuses.value[j].status !== 'success') {
+          batchPublishChapterStatuses.value[j].status = 'unpublished';
+        }
       }
       break;
     }
@@ -1365,8 +1384,15 @@ function handleBatchPublishExit() {
 }
 
 function handleBatchPublishRetry() {
+  // 将失败/未发布的章节重置为等待状态，保留已成功的章节
+  batchPublishChapterStatuses.value.forEach(item => {
+    if (item.status !== 'success') {
+      item.status = 'waiting';
+    }
+  });
   showBatchPublishFail.value = false;
   showBatchPublishProgress.value = true;
+  runBatchPublishLoop();
 }
 
 // Check if a project is selected
