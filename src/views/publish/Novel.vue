@@ -1816,6 +1816,7 @@ async function fetchProjectDetails(session_id: string) {
           projectCover.value = '';
         }
       }
+      return projectData;
     }
   } catch (error) {
     console.error("Fetch project details error:", error);
@@ -4221,7 +4222,10 @@ async function handlePublish(publishData?: any) {
 
         if (book_id == 0) {
           const collectionCover = selectedProject.value?.result_async?.generate_novel_cover || '';
-          const collectionDescription = t('collection.defaultDescription');
+          const storySummary = (publishData?.project?.result_async?.generate_novel_outline?.story_summary?.summary
+            || selectedProject.value?.result_async?.generate_novel_outline?.story_summary?.summary
+            || '').slice(0, 1000);
+          const collectionDescription = storySummary || t('collection.defaultDescription');
           const projectStoryMode = publishData?.project?.user_selected?.story_mode || publishData?.project?.story_mode || selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
           const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
 
@@ -4355,9 +4359,10 @@ async function handlePermissionChange(permission: string, index: number) {
 
 // Lifecycle
 async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
+  let projectDetailData: any = null;
   try {
     try {
-      await fetchProjectDetails(session_id);
+      projectDetailData = await fetchProjectDetails(session_id);
     } catch (error) {
       console.error('Error fetching project details:', error);
     }
@@ -4458,7 +4463,10 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
 
             if (book_id == 0) {
               const collectionCover = cover || selectedProject.value?.result_async?.generate_novel_cover || '';
-              const collectionDescription = t('collection.defaultDescription');
+              const storySummary = (projectDetailData?.result_async?.generate_novel_outline?.story_summary?.summary
+                || selectedProject.value?.result_async?.generate_novel_outline?.story_summary?.summary
+                || '').slice(0, 1000);
+              const collectionDescription = storySummary || t('collection.defaultDescription');
               const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
               const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
 
@@ -4612,7 +4620,8 @@ async function initBatchPublish(session_id: string) {
 
         if (book_id == 0) {
           const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
-          const collectionDescription = t('collection.defaultDescription');
+          const storySummary = (selectedProject.value?.result_async?.generate_novel_outline?.story_summary?.summary || '').slice(0, 1000);
+          const collectionDescription = storySummary || t('collection.defaultDescription');
           const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
           const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
 

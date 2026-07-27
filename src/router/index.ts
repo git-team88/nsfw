@@ -22,8 +22,12 @@ const LANG_URL_TO_HTML: Record<string, string> = {
 
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video'];
 
+// SEO 预渲染会生成 `dist/{lang}/{type}/index.html` 静态文件。
+// 通过 alias 让 `/zh-cn/novel/index.html` 这类直接打开的地址也能命中同一路由，
+// 保持规范 URL 不变（不做重定向），避免被 catch-all 重定向回首页。
 const langHomeRoutes = Object.entries(LANG_URL_TO_I18N).map(([urlPrefix, i18nKey]) => ({
   path: `/${urlPrefix}`,
+  alias: `/${urlPrefix}/index.html`,
   name: `Home_${i18nKey}`,
   component: Home,
   meta: { lang: i18nKey },
@@ -32,6 +36,7 @@ const langHomeRoutes = Object.entries(LANG_URL_TO_I18N).map(([urlPrefix, i18nKey
 const langContentTypeRoutes = Object.entries(LANG_URL_TO_I18N).flatMap(([urlPrefix, i18nKey]) =>
   CONTENT_TYPES.map(type => ({
     path: `/${urlPrefix}/${type}`,
+    alias: `/${urlPrefix}/${type}/index.html`,
     name: `Home_${i18nKey}_${type}`,
     component: Home,
     meta: { lang: i18nKey, contentType: type },
@@ -40,6 +45,7 @@ const langContentTypeRoutes = Object.entries(LANG_URL_TO_I18N).flatMap(([urlPref
 
 const contentTypeRoutes = CONTENT_TYPES.map(type => ({
   path: `/${type}`,
+  alias: `/${type}/index.html`,
   name: `Home_${type}`,
   component: Home,
   meta: { contentType: type },
@@ -51,6 +57,7 @@ const routes = [
   ...contentTypeRoutes,
   {
     path: "/",
+    alias: "/index.html",
     name: "Home",
     component: Home,
   },

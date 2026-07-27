@@ -704,7 +704,7 @@
       :is-nsfw="0"
       :type="3"
       :session-id="selectedProject?.session_id || route.query.session_id || sessionId || ''"
-      :story-summary="selectedProject?.result_async?.generate_novel_outline?.story_summary?.summary || ''"
+      :story-summary="selectedProject?.result_async?.generate_manju_outline?.synopsis || ''"
       @close="handleCloseEditCollectionModal"
       @save="handleSaveCollection"
     />
@@ -1205,11 +1205,14 @@ async function handlePublishFromSelection() {
           const book_id = searchRes.data?.book_id || 0;
 
           if (book_id == 0) {
+            const storySummary = (targetProject.result_async?.generate_manju_outline?.synopsis
+              || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
+              || '').slice(0, 1000);
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
               cover: targetProject.result_async?.generate_manju_cover || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             }) as any;
 
@@ -1218,7 +1221,7 @@ async function handlePublishFromSelection() {
                 id: createRes.data.book_id,
                 name: targetProject.name,
                 cover: targetProject.result_async?.generate_manju_cover || '',
-                description: t('collectionSettings.sampleDescription'),
+                description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: 0
               };
               selectedEpisodeNumber.value = '1';
@@ -2292,11 +2295,14 @@ async function handlePublish(publishData?: any) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
+          const storySummary = (publishData?.project?.result_async?.generate_manju_outline?.synopsis
+            || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
+            || '').slice(0, 1000);
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
             cover: project.video_cover_url || '',
-            description: t('collectionSettings.sampleDescription'),
+            description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: 0
           }) as any;
 
@@ -2306,7 +2312,7 @@ async function handlePublish(publishData?: any) {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.video_cover_url || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             };
             selectedEpisodeNumber.value = '1';
@@ -3827,6 +3833,21 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
   sessionId.value = sessionIdParam;
   isEditingWork.value = true;
 
+  if (sessionIdParam) {
+    try {
+      const projectRes = await api.detailProject(sessionIdParam) as any;
+      if (projectRes.code === 200 && projectRes.data) {
+        selectedProject.value = {
+          ...projectRes.data,
+          session_id: sessionIdParam,
+          chapters: projectRes.data.chapters || []
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+  }
+
   if (urlParam && urlParam.trim()) {
     videoUrl.value = urlParam;
     uploadSuccess.value = true;
@@ -3854,11 +3875,13 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
           const book_id = searchRes.data?.book_id || 0;
 
           if (book_id === 0) {
+            const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
+              || '').slice(0, 1000);
             const createRes = await api.addCollection({
               title,
               type: 3,
               cover: coverPreview.value || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             }) as any;
 
@@ -3867,7 +3890,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 id: createRes.data.book_id,
                 name: title,
                 cover: coverPreview.value || '',
-                description: t('collectionSettings.sampleDescription'),
+                description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: 0
               };
               selectedCollectionId.value = createRes.data.book_id;
@@ -4068,11 +4091,13 @@ async function initBatchPublish(session_id: string) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
+          const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
+            || '').slice(0, 1000);
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
             cover: coverPreview.value || '',
-            description: t('collectionSettings.sampleDescription'),
+            description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: 0
           }) as any;
 
@@ -4081,7 +4106,7 @@ async function initBatchPublish(session_id: string) {
               id: createRes.data.book_id,
               name: projectTitle,
               cover: coverPreview.value || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             };
             selectedCollectionId.value = createRes.data.book_id;

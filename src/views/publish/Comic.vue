@@ -717,7 +717,7 @@
       :is-nsfw="0"
       :type="1"
       :session-id="selectedProject?.session_id || route.query.session_id || ''"
-      :story-summary="selectedProject?.result_async?.generate_novel_outline?.story_summary?.summary || ''"
+      :story-summary="selectedProject?.result_async?.generate_manhua_outline?.synopsis || ''"
       @close="handleCloseEditCollectionModal"
       @save="handleSaveCollection"
     />
@@ -1054,11 +1054,12 @@ async function handlePublishFromSelection() {
           const book_id = searchRes.data?.book_id || 0;
 
           if (book_id == 0) {
+            const storySummary = (selectedProject.value?.result_async?.generate_manhua_outline?.synopsis || '').slice(0, 1000);
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 1,
               cover: targetProject.result_async.generate_manhua_cover || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             }) as any;
 
@@ -1067,7 +1068,7 @@ async function handlePublishFromSelection() {
                 id: createRes.data.book_id,
                 name: targetProject.name,
                 cover: targetProject.result_async.generate_manhua_cover || '',
-                description: t('collectionSettings.sampleDescription'),
+                description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: 0
               };
               selectedEpisodeNumber.value = '1';
@@ -3853,11 +3854,14 @@ async function handlePublish(publishData?: any) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
+          const storySummary = (publishData?.project?.result_async?.generate_manhua_outline?.synopsis
+            || selectedProject.value?.result_async?.generate_manhua_outline?.synopsis
+            || '').slice(0, 1000);
           const createRes = await api.addCollection({
             title: project.name,
             type: 1,
             cover: project.result_async.generate_manhua_cover || '',
-            description: t('collectionSettings.sampleDescription'),
+            description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: 0
           }) as any;
 
@@ -3866,7 +3870,7 @@ async function handlePublish(publishData?: any) {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.result_async.generate_manhua_cover || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             };
             isNoCollection.value = false;
@@ -4160,10 +4164,12 @@ watch(() => route.query, async (newQuery) => {
 
 async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
   try {
+    let projectDetailData: any = null;
     try {
       const projectRes = await api.detailProject(session_id) as any;
       if (projectRes.code == 200 && projectRes.data) {
         const projectData = projectRes.data;
+        projectDetailData = projectData;
         const projectCover = projectData.result_async?.generate_manhua_cover;
         if (projectCover) {
           projectCoverForModal.value = projectCover;
@@ -4257,11 +4263,14 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
             const book_id = searchRes.data?.book_id || 0;
 
             if (book_id == 0) {
+              const storySummary = (projectDetailData?.result_async?.generate_manhua_outline?.synopsis
+                || selectedProject.value?.result_async?.generate_manhua_outline?.synopsis
+                || '').slice(0, 1000);
               const createRes = await api.addCollection({
                 title,
                 type: 1,
                 cover: coverPreview.value || '',
-                description: t('collectionSettings.sampleDescription'),
+                description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: 0
               }) as any;
 
@@ -4270,7 +4279,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                   id: createRes.data.book_id,
                   name: title,
                   cover: coverPreview.value || '',
-                  description: t('collectionSettings.sampleDescription'),
+                  description: storySummary || t('collectionSettings.sampleDescription'),
                   is_nsfw: 0
                 };
                 selectedEpisodeNumber.value = '1';
@@ -4393,11 +4402,12 @@ async function initBatchPublish(session_id: string) {
         const book_id = searchRes.data?.book_id || 0;
 
         if (book_id == 0) {
+          const storySummary = (selectedProject.value?.result_async?.generate_manhua_outline?.synopsis || '').slice(0, 1000);
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 1,
             cover: coverPreview.value || '',
-            description: t('collectionSettings.sampleDescription'),
+            description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: 0
           }) as any;
 
@@ -4406,7 +4416,7 @@ async function initBatchPublish(session_id: string) {
               id: createRes.data.book_id,
               name: projectTitle,
               cover: coverPreview.value || '',
-              description: t('collectionSettings.sampleDescription'),
+              description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: 0
             };
             selectedEpisodeNumber.value = '1';

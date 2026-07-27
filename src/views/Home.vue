@@ -1857,11 +1857,22 @@ const heroPartStyle = (p: typeof heroParts[number], i: number) => ({
   '--fdx': `${(7 + (i % 3) * 4).toFixed(0)}px`,
   '--fdy': `${(9 + (i % 4) * 4).toFixed(0)}px`,
   '--frot': `${(1.6 + (i % 3) * 0.7).toFixed(2)}deg`,
-  animationDelay: `${(0.14 + i * 0.07).toFixed(2)}s, ${(-(i * 0.83)).toFixed(2)}s`,
 }) as any;
 
 // 点击输入框时拟声词"炸开"变换（对齐 moegen popParts）
 const heroPartsRef = ref<HTMLDivElement>();
+
+// 挂载时逐个淡入拟声词，再加 mg-parts-live 启动浮动动画（对齐 moegen）
+const initHeroParts = () => {
+  const box = heroPartsRef.value;
+  if (!box) return;
+  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
+  items.forEach((im, i) => {
+    window.setTimeout(() => { im.style.opacity = '1'; }, 140 + i * 70);
+  });
+  box.classList.add('mg-parts-live');
+};
+
 const popHeroParts = () => {
   if (heroPartsPopped.value) return;
   heroPartsPopped.value = true;
@@ -5520,6 +5531,9 @@ onMounted(async () => {
   watch(currentPlaceholder, () => runTypewriter());
   watch(isInputFocused, (f) => { if (f) { if (typeTimer) clearTimeout(typeTimer); typedPlaceholder.value = currentPlaceholder.value; } else runTypewriter(); });
 
+  // 启动 hero 拟声词淡入 + 浮动
+  nextTick(() => initHeroParts());
+
   // 初始化语言设置
   await initLanguage();
 
@@ -5527,20 +5541,33 @@ onMounted(async () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
-  // Set contentType based on route meta or URL path
+  // 根据 URL 识别内容类型
   const routeContentType = route.meta.contentType as string | undefined;
   const path = window.location.pathname;
-  const pathSegments = path.replace(/^\/(ja|en|cn|tc)/, '').split('/').filter(Boolean);
+  const pathSegments = path
+    .replace(/^\/(ja|en|zh-cn|zh-tw)/, '')
+    .replace(/\/index\.html$/, '')
+    .split('/')
+    .filter(Boolean);
   const validTypes = ['novel', 'comic', 'drama', 'photo', 'video'];
   const pathContentType = pathSegments.length > 0 && validTypes.includes(pathSegments[0]) ? pathSegments[0] : '';
 
   const detectedContentType = routeContentType || pathContentType || null;
+
+  // 预渲染/SEO 抓取时（prerender.mjs、seo-server.mjs 会注入 window.__SEO_PRERENDER__ = true）：
+  //   按 URL 显示对应内容类型 tab，保留地址与对应 meta，保证爬虫抓到正确的正文与元信息。
+  // 真实用户刷新 SEO 页面时：回到默认内容类型（小说），地址栏只保留域名（"/"）。
+  const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
   if (detectedContentType) {
-    contentType.value = detectedContentType;
+    if (isSeoPrerender) {
+      contentType.value = detectedContentType;
+    } else if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+    }
   }
 
-  // Set SEO meta tags based on current content type
-  setSeoMeta(detectedContentType || undefined);
+  // Set SEO meta tags: 预渲染按 URL 内容类型；真实用户按实际显示的（默认）内容类型
+  setSeoMeta(isSeoPrerender ? (detectedContentType || undefined) : contentType.value);
 
   // Restore last content tab and content type if coming back from detail page
   try {

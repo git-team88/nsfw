@@ -89,6 +89,9 @@ async function prerender() {
     const url = `http://localhost:4173${route}`
     const page = await browser.newPage()
     try {
+      // 注入 SEO 预渲染标记：Home.vue 据此按 URL 显示对应内容类型并保留地址，
+      // 而不是像真实用户那样重置为默认内容类型 / 只保留域名。
+      await page.evaluateOnNewDocument(() => { window.__SEO_PRERENDER__ = true })
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
       await page.waitForFunction(() => document.querySelector('#app')?.children?.length > 0, { timeout: 10000 }).catch(() => {})
       await new Promise(r => setTimeout(r, 3000))

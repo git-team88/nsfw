@@ -838,6 +838,8 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const isLoading = ref(false);
 const loadText = ref(t('userHome.loading'));
 const isVideoBuffering = ref(false);
+// 是否已完成首次自动播放（首次自动播放需静音以符合浏览器策略，之后应保留用户的音量设置）
+const hasAutoPlayed = ref(false);
 
 // Fullscreen state
 const isPageFullscreen = ref(false);
@@ -1246,6 +1248,11 @@ const currentVideoSrc = computed(() => {
     return currentCollection.value.videoUrl;
   }
   return detail.value.videoUrl;
+});
+
+watch(currentVideoSrc, () => {
+  // 切换视频源时重置自动播放标记，新视频仍需静音自动播放以符合浏览器策略
+  hasAutoPlayed.value = false;
 });
 
 watch([currentVideoSrc, videoRef], () => {
@@ -2972,10 +2979,18 @@ function tryAutoPlay() {
     return;
   }
 
-  videoRef.value.muted = true;
+  // 仅在首次自动播放时强制静音（浏览器自动播放策略要求）；
+  // 之后（如拖动进度条到起点触发的重新缓冲/canplay）保留用户的音量设置，避免被静音
+  if (hasAutoPlayed.value) {
+    videoRef.value.volume = volume.value;
+    videoRef.value.muted = volume.value === 0;
+  } else {
+    videoRef.value.muted = true;
+  }
   const playPromise = videoRef.value.play();
   if (playPromise !== undefined) {
     playPromise.then(() => {
+      hasAutoPlayed.value = true;
       isPlaying.value = true;
       isVideoLoading.value = false;
     }).catch(() => {
