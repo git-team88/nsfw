@@ -21,7 +21,7 @@
       <!-- Hero Section -->
       <div class="hero-section">
         <!-- 3D 漂浮漫画卡片背景动效 -->
-        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" />
+        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
         <!-- 中间白色柔光层（对齐 moegen，让中间内容更清晰） -->
         <div class="hero-glow" aria-hidden="true"></div>
         <!-- 边上飘的拟声词装饰 -->
@@ -48,7 +48,7 @@
           <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.6" stroke-linecap="round"><path d="M9 5v14" /><path d="M15 5v14" /></svg>
         </button>
 
-        <div class="hero-content" style="position: relative; z-index: 2;">
+        <div class="hero-content" style="position: relative; z-index: 20;">
           <div class="hero-title-wrap">
             <span class="hero-speedlines left" aria-hidden="true">
               <span></span><span></span><span></span>
@@ -758,7 +758,7 @@
                     v-model="novelInput"
                     spellcheck="false"
                     @input="handleTextareaInput"
-                    @focus="isInputFocused = true"
+                    @focus="isInputFocused = true; popHeroParts()"
                     @blur="isInputFocused = false"
                     @click="handleNovelTextareaClick"
                   ></textarea>
@@ -1830,6 +1830,8 @@ const contentTypeOptions = ref([
 
 // hero 背景动画暂停/播放
 const heroPaused = ref(false);
+// hero 编辑态：聚焦输入框后 3D 漫画卡片背景散开并消失
+const heroEditing = ref(false);
 
 // hero 边上飘的拟声词（对齐 moegen PARTS，浮动装饰 + 点击炸开变换）
 const heroParts = [
@@ -1876,6 +1878,8 @@ const initHeroParts = () => {
 const popHeroParts = () => {
   if (heroPartsPopped.value) return;
   heroPartsPopped.value = true;
+  // 触发 3D 漫画卡片背景散开并消失
+  heroEditing.value = true;
   const box = heroPartsRef.value;
   if (!box) return;
   const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
@@ -4759,6 +4763,7 @@ const handleInputClick = () => {
 
 // Handle input focus
 const handleInputFocus = () => {
+  popHeroParts();
   checkLogin();
   isInputFocused.value = true;
   if (editableInputRef.value) {
