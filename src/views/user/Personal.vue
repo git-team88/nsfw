@@ -23,9 +23,9 @@
             </div>
 
             <div class="section">
-              <div class="label">{{ t("birthday.label") }}</div>
+              <div class="label">{{ t("birthday.adultLabel") }}</div>
               <div class="birth-box">
-                {{ hasBirthday ? `${formatDatePart(dateValue.month)}-${formatDatePart(dateValue.day)}-${dateValue.year}` : "" }}
+                {{ isAdult === null ? "" : (isAdult ? t("birthday.yes") : t("birthday.no")) }}
               </div>
             </div>
           </div>
@@ -235,6 +235,7 @@ interface InfoData {
 }
 interface UserData {
   user_id?: number;
+  is_adult?: string | number;
   info?: InfoData;
 }
 
@@ -243,17 +244,8 @@ const showSensitive = ref(false);
 const userRegion = ref(false);
 const isLoading = ref(true);
 
-const isAdult = ref(false);
-const dateValue = ref<{ year: number | ""; month: number | ""; day: number | "" }>({
-  year: "",
-  month: "",
-  day: "",
-});
-
-// Check if birthday exists
-const hasBirthday = computed(() => {
-  return dateValue.value.year && dateValue.value.month && dateValue.value.day;
-});
+// 是否满18岁：null=接口未返回（不显示），true=是，false=否
+const isAdult = ref<boolean | null>(null);
 
 // Sample KYC data
 const sampleKycData = ref({
@@ -383,31 +375,12 @@ onMounted(async () => {
       const data = res.data || {};
       userInfo.value = data;
 
+      // Adult status (>=18) comes from backend is_adult flag
+      isAdult.value = data.is_adult == '1';
+
       // Set sensitive content toggle based on show_nsfw value
       if (data.info?.show_nsfw) {
         showSensitive.value = data.info?.show_nsfw == '1';
-      }
-
-      if (data.info?.birthday) {
-        const parts = data.info.birthday.split("-");
-        dateValue.value = {
-          year: parts[0] ? Number(parts[0]) : "",
-          month: parts[1] ? Number(parts[1]) : "",
-          day: parts[2] ? Number(parts[2]) : "",
-        };
-
-        const { year, month, day } = dateValue.value;
-        if (year && month && day) {
-          const birth = new Date(Number(year), Number(month) - 1, Number(day));
-
-          const now = res.timestamp ? new Date(res.timestamp * 1000) : new Date();
-          let age = now.getFullYear() - birth.getFullYear();
-          const m = now.getMonth() - birth.getMonth();
-          if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-            age--;
-          }
-          isAdult.value = age >= 18;
-        }
       }
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
@@ -444,12 +417,6 @@ function goEdit() {
 
 function goKyc() {
   router.push('/user-kyc');
-}
-
-// Format date part to add leading zero
-function formatDatePart(value: number | ""): string {
-  if (value === "" || value === undefined || value === null) return "";
-  return String(value).padStart(2, '0');
 }
 
 function onToggleSensitive() {

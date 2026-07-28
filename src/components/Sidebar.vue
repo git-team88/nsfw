@@ -363,6 +363,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { trackShare } from '@/utils/analytics';
 import { baseUrl } from '@/util/config';
 import { formatTimestamp } from '@/util/utils';
 import { useRoute, useRouter } from "vue-router";
@@ -372,6 +373,12 @@ import PreviewModal from '@/components/PreviewModal.vue';
 
 const route = useRoute();
 const router = useRouter();
+
+// 未登录时跳转到注册页，并记录当前作品地址，注册/登录成功后回跳
+function goAuth() {
+  localStorage.setItem('loginRedirect', route.fullPath);
+  router.push('/register');
+}
 
 // Import images
 import likeIcon from '@/assets/images/detail/like.png';
@@ -703,7 +710,7 @@ function likeComment(id: string, liked: boolean) {
 async function toggleCommentLike(c: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -723,7 +730,7 @@ async function toggleCommentLike(c: any) {
 async function toggleReplyLike(r: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -743,7 +750,7 @@ async function toggleReplyLike(r: any) {
 function startReply(comment: any, reply?: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return false;
   }
 
@@ -896,7 +903,7 @@ async function loadComments(page: number = 1, append: boolean = false) {
 async function submitComment() {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -1254,6 +1261,10 @@ async function loadCommentToReplyList(rid: string) {
 
 // Toggle like
 function toggleLike() {
+  if (!localStorage.getItem('token')) {
+    goAuth();
+    return;
+  }
   if (!props.detail.id) return;
 
   api.likePost({ post_id: props.detail.id, action: liked.value ? 'unlike' : 'like' })
@@ -1276,9 +1287,19 @@ function toggleLike() {
 }
 
 // Share function
-function share() {
-  // Implement share functionality
-  console.log('Share functionality');
+async function share() {
+  const id = props.detail?.id;
+  if (!id) return;
+
+  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    toast(t('userHome.shareSuccess'));
+    trackShare({ method: 'copy_link', itemId: String(id) });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 // Composition event handlers
@@ -1306,7 +1327,7 @@ function onInputBlur() {
 function activateInput() {
   const token = localStorage.getItem("token");
   if (!token) {
-    router.push('/login');
+    goAuth();
     return false;
   }
 
@@ -2019,7 +2040,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
 
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 

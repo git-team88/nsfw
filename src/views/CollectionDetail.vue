@@ -152,20 +152,14 @@
       </template>
     </div>
 
-    <SensitiveContentNoBirthdayModal
-      v-if="showSensitiveContentNoBirthdayModal"
-      @close="showSensitiveContentNoBirthdayModal = false"
-      @go-to-fill="handleGoToFillBirthday"
-    />
-
-    <SensitiveContentUnderageModal
-      v-if="showSensitiveContentUnderageModal"
-      @close="showSensitiveContentUnderageModal = false"
+    <SensitiveContentAdultConfirmModal
+      v-if="showSensitiveContentAdultConfirmModal"
+      @close="showSensitiveContentAdultConfirmModal = false"
+      @confirm="handleSensitiveContentAgeConfirm"
     />
 
     <SensitiveContentConfirmModal
       v-if="showSensitiveContentConfirmModal"
-      :hide-dont-ask="true"
       @close="showSensitiveContentConfirmModal = false"
       @confirm="confirmSensitiveContent"
     />
@@ -182,8 +176,7 @@
 <script setup lang="ts" name="CollectionDetail">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
-import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
-import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
+import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
@@ -257,9 +250,7 @@ const authorInfo = ref<AuthorInfo>({
 const loading = ref(false);
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
-const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
-const showSensitiveContentNoBirthdayModal = ref(false);
-const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
 const pendingChapter = ref<Chapter | null>(null);
 
@@ -350,8 +341,9 @@ async function fetchCollectionDetail() {
       const bookInfo = data.book_info || data;
       const chaptersData = data.chatpers || data.chapters || [];
 
-      // 只根据URL上的uid和本地缓存的uid做对比
-      isOwn.value = isSelf;
+      // 登录后判断是否为自己的作品：本地 uid 与 URL uid 或接口 book_info.user_id 任一匹配即为本人
+      const backendAuthorId = bookInfo?.user_id || '';
+      isOwn.value = !!localUid && (isSelf || String(localUid) === String(backendAuthorId));
 
       collection.value = {
         id: bookInfo.id || data.book_id || '',
@@ -448,44 +440,66 @@ function handleUserInfoLoaded(info: any) {
   userInfo.value = info;
 }
 
-function handleGoToFillBirthday() {
-  showSensitiveContentNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
+  showSensitiveContentAdultConfirmModal.value = false;
+  // 选择"否"：未满18岁，直接关闭不开启
+  if (!isAdult) {
+    pendingChapter.value = null;
+    return;
+  }
+  // 选择"是"：声明已满18岁（与首页一致：已登录写回后端，未登录仅本地缓存）
+  localStorage.setItem('is_adult', '1');
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const res = await api.setAdult({ is_adult: 1 }) as any;
+      if (res.code != 0 && res.code != 200) {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        return;
+      }
+    } catch (error) {
+      console.error('Error setting adult:', error);
+      return;
+    }
+    if (userInfo.value) {
+      userInfo.value.is_adult = 1;
+    }
+  }
+  // 确认满18岁后直接开启敏感浏览并进入章节（不再弹「允许敏感？」）
+  localStorage.setItem('allowSensitiveContent', '1');
+  const chapter = pendingChapter.value;
+  pendingChapter.value = null;
+  if (chapter) {
+    navigateToChapter(chapter);
+  }
 }
 
 function goChapter(chapter: Chapter) {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
-
   if (isOwn.value) {
     navigateToChapter(chapter);
     return;
   }
 
   if (collection.value?.is_nsfw == 1) {
-    if (userInfo.value) {
-      const birthday = userInfo.value.info?.birthday;
-      if (!birthday) {
-        pendingChapter.value = chapter;
-        showSensitiveContentNoBirthdayModal.value = true;
-        return;
-      }
-      if (isTeenager.value) {
-        pendingChapter.value = chapter;
-        showSensitiveContentUnderageModal.value = true;
-        return;
-      }
+    pendingChapter.value = chapter;
+    // 与首页敏感开关一致的年龄判断：已登录看后端 is_adult，未登录看本地 is_adult 自声明
+    const token = localStorage.getItem('token');
+    const notAdult = token
+      ? (!userInfo.value || userInfo.value.is_adult != 1)
+      : localStorage.getItem('is_adult') !== '1';
+    if (notAdult) {
+      showSensitiveContentAdultConfirmModal.value = true;
+      return;
     }
 
-    if (localStorage.getItem('allowSensitiveContent') === '1') {
+    // 已满18岁：已允许敏感 或 已勾选「不再提示」→ 直接进入；否则弹「允许敏感？」
+    if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
+      localStorage.setItem('allowSensitiveContent', '1');
+      pendingChapter.value = null;
       navigateToChapter(chapter);
       return;
     }
 
-    pendingChapter.value = chapter;
     showSensitiveContentConfirmModal.value = true;
     return;
   }

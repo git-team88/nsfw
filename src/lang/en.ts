@@ -1507,6 +1507,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     tipEnd: "",
     loginTip: `By logging into this service,<br /> you agree to the `,
     freeComputing: "Sign up for free credits",
+    haveAccount: "Already have an account?",
+    toLogin: "Log in",
   },
   birthday: {
     title: "Please Enter Your Date of Birth",
@@ -1515,6 +1517,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     day: "Day",
     year: "Year",
     confirm: "Confirm",
+    adultLabel: "Are you 18 or older?",
+    yes: "Yes",
+    no: "No",
   },
   userInfo: {
     title: "Please Enter Your User Info",
@@ -1700,21 +1705,25 @@ If you have any questions, complaints, comments or suggestions regarding persona
       confirm: "Confirm"
     },
     underageNoBirthday: {
-      title: "Please fill in your birthday",
+      title: "Are you 18 or older?",
       description: "Only users aged 18 and above can enable NSFW mode",
+      yes: "Yes",
+      no: "No",
       cancel: "Cancel",
-      goToFill: "Go to fill"
+      confirm: "Confirm"
     },
     underage: {
       description: "Only users aged 18 and above can enable NSFW mode",
       ok: "I know"
     },
     sensitiveContent: "Allow sensitive content",
-    sensitiveContentNoBirthday: {
-      title: "Please fill in your birthday",
+    sensitiveContentAdultConfirm: {
+      title: "Sensitive content, only visible to users aged 18 and above.",
       description: "Only users aged 18 and above can enable sensitive content display",
+      yes: "Yes",
+      no: "No",
       cancel: "Cancel",
-      goToFill: "Go to fill"
+      confirm: "I confirm I am 18+, enable browsing"
     },
     sensitiveContentUnderage: {
       description: "Only users aged 18 and above can enable sensitive content display",
@@ -2245,8 +2254,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
       lastChapterTip: "You've finished this chapter.\nYou can generate content you want to see.",
       goGenerate: "Generate",
       subscribe: "Subscribe",
-      sensitiveContent: "This work contains sensitive content. Would you like to enable reading?",
-      profileSettings: "Enable Sensitive Content Reading",
+      sensitiveContent: "Sensitive content, only visible to users aged 18 and above",
+      profileSettings: "I confirm I am 18+, enable browsing",
+      nsfwBrowseTitle: "Enable NSFW content browsing?",
+      nsfwBrowseDesc: "After users aged 18+ turn on the switch,<br />sensitive content will be visible in the recommendation list and community.",
+      enableNsfw: "Enable NSFW",
+      chinaNotSupported: "Sensitive content is not available to users in mainland China",
     },
     authorClosedSubscription: "This creator has disabled subscriptions",
     permissionText: {

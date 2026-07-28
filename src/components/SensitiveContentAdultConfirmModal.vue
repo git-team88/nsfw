@@ -1,23 +1,21 @@
 <template>
-  <div class="mg-hm-ovl" @click.self="handleClose" role="dialog" aria-modal="true">
+  <div class="mg-hm-ovl" role="dialog" aria-modal="true">
     <div class="mg-hm-panel">
       <div class="hm-decal" aria-hidden="true"></div>
 
-      <button class="hm-close" @click="handleClose" :aria-label="t('home.sensitiveContentNoBirthday.cancel')">
+      <button class="hm-close" @click="handleClose" :aria-label="t('home.sensitiveContentAdultConfirm.cancel')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
 
       <div class="hm-badge">
-        <span class="badge-icon">🎂</span>
+        <span class="badge-icon">🔞</span>
         {{ t('home.sensitiveContent') }}
       </div>
 
-      <h3 class="hm-title">{{ t('home.sensitiveContentNoBirthday.title') }}</h3>
-      <p class="hm-body">{{ t('home.sensitiveContentNoBirthday.description') }}</p>
+      <h3 class="hm-title">{{ t('home.sensitiveContentAdultConfirm.title') }}</h3>
 
       <div class="hm-actions">
-        <button class="mg-hm-btn ghost" @click="handleClose">{{ t('home.sensitiveContentNoBirthday.cancel') }}</button>
-        <button class="mg-hm-btn primary" @click="handleGoToFill">{{ t('home.sensitiveContentNoBirthday.goToFill') }}</button>
+        <button class="mg-hm-btn primary" @click="handleConfirm">{{ t('home.sensitiveContentAdultConfirm.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -30,11 +28,13 @@ const { t } = useI18n();
 
 const emit = defineEmits<{
   close: [];
-  goToFill: [];
+  confirm: [isAdult: boolean];
 }>();
 
 const handleClose = () => emit('close');
-const handleGoToFill = () => emit('goToFill');
+
+// 单按钮：用户自我声明已满18岁
+const handleConfirm = () => emit('confirm', true);
 </script>
 
 <style scoped lang="scss">
@@ -52,7 +52,7 @@ $yellow: #FFD23F;
 
 .mg-hm-panel {
   position: relative;
-  width: min(400px, 92%);
+  width: min(420px, 92%);
   padding: 22px 24px;
   background: $paper;
   border: 3px solid $ink;
@@ -90,10 +90,9 @@ $yellow: #FFD23F;
   .badge-icon { font-size: 13px; }
 }
 
-.hm-title { margin: 0; font-size: 19px; font-weight: 900; color: $ink; }
-.hm-body { margin: 10px 0 0; font-size: 13px; font-weight: 600; line-height: 1.75; color: $ink; opacity: .7; }
+.hm-title { margin: 0; font-size: 18px; font-weight: 900; color: $ink; line-height: 1.5; }
 
-.hm-actions { display: flex; gap: 10px; margin-top: 16px; }
+.hm-actions { display: flex; gap: 10px; margin-top: 20px; }
 .mg-hm-btn {
   flex: 1; padding: 11px 10px; border-radius: 12px; border: 2px solid $ink;
   font-weight: 800; font-size: 14px; cursor: pointer;
@@ -102,7 +101,6 @@ $yellow: #FFD23F;
   &:hover { transform: translate(-1px,-2px); box-shadow: 4px 5px 0 rgba(22,17,34,.4); }
   &:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(22,17,34,.4); }
 }
-.mg-hm-btn.ghost { background: #fff; color: $ink; &:hover { color: $pink; } }
 .mg-hm-btn.primary { background: $pink; color: #fff; }
 
 @keyframes mgHmFade { from { opacity: 0; } to { opacity: 1; } }

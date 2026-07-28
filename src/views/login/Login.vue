@@ -256,6 +256,16 @@ function validatePassword(password: string) {
   return regex.test(password);
 }
 
+// 登录成功后，若有来源作品详情页地址则回跳，否则回首页
+function redirectAfterAuth() {
+  // 登录成功后清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准（登录不补调 setAdult）
+  localStorage.removeItem("pendingSetAdult");
+  localStorage.removeItem("is_adult");
+  const redirect = localStorage.getItem("loginRedirect");
+  localStorage.removeItem("loginRedirect");
+  router.push(redirect || "/");
+}
+
 function goEmailLogin() {
   if (!isEnd.value || isLoading.value) {
     return false;
@@ -277,7 +287,7 @@ function goEmailLogin() {
         setUserId(String(res.data.user_id));
         trackLogin();
 
-        router.push("/");
+        redirectAfterAuth();
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
@@ -316,7 +326,7 @@ function googleLogin() {
         setUserId(String(res.data.user_id));
         trackLogin();
 
-        router.push("/");
+        redirectAfterAuth();
       } else if (res.code == 10110) {
         if (agreeRef.value) {
           agreeRef.value.showAgree();

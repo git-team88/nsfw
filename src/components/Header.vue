@@ -609,6 +609,8 @@ function getUserInfo() {
     .then((res) => {
       const data = res as any;
       if (data.code === 0) {
+        // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
+        localStorage.removeItem('is_adult');
         userInfo.value = data.data;
         subscribeCount.value = data.data.sub_count;
         followersCount.value = data.data.follow_count;
@@ -647,6 +649,8 @@ function getLoginUserInfo() {
     .then((res) => {
       const data = res as any;
       if (data.code === 0) {
+        // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
+        localStorage.removeItem('is_adult');
         userInfo.value = data.data;
 
         localStorage.setItem('uid', data.data.info.id);

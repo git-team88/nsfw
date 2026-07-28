@@ -1236,6 +1236,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     tipEnd: "",
     loginTip: "本サービスにログインすることにより、お客様は以下に同意したものとみなされます",
     freeComputing: "登録で無料算力プレゼント",
+    haveAccount: "すでにアカウントをお持ちですか？",
+    toLogin: "ログイン",
   },
   birthday: {
     title: "生年月日を入力してください",
@@ -1244,6 +1246,9 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     day: "日",
     year: "年",
     confirm: "確認",
+    adultLabel: "18歳以上ですか",
+    yes: "はい",
+    no: "いいえ",
   },
   userInfo: {
     title: "ユーザー情報を入力してください",
@@ -1532,21 +1537,25 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       confirm: "確認"
     },
     underageNoBirthday: {
-      title: "誕生日を入力してください",
+      title: "18歳以上ですか？",
       description: "18歳以上のユーザーのみNSFWモードを有効にできます",
+      yes: "はい",
+      no: "いいえ",
       cancel: "キャンセル",
-      goToFill: "入力する"
+      confirm: "確認"
     },
     underage: {
       description: "18歳以上のユーザーのみNSFWモードを有効にできます",
       ok: "承知しました"
     },
     sensitiveContent: "センシティブコンテンツを許可",
-    sensitiveContentNoBirthday: {
-      title: "誕生日を入力してください",
+    sensitiveContentAdultConfirm: {
+      title: "センシティブな内容です。18歳以上のユーザーのみ閲覧できます。",
       description: "18歳以上のユーザーのみセンシティブコンテンツ表示を有効にできます",
+      yes: "はい",
+      no: "いいえ",
       cancel: "キャンセル",
-      goToFill: "入力する"
+      confirm: "18歳以上であることを確認して閲覧する"
     },
     sensitiveContentUnderage: {
       description: "18歳以上のユーザーのみセンシティブコンテンツ表示を有効にできます",
@@ -2077,8 +2086,12 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       lastChapterTip: "この章を読み終わりました\n見たいコンテンツを直接生成できます",
       goGenerate: "生成する",
       subscribe: "サブスクリプション",
-      sensitiveContent: "作品にセンシティブな情報が含まれています。閲覧を有効にしますか？",
-      profileSettings: "センシティブコンテンツの閲覧を有効にする",
+      sensitiveContent: "センシティブな内容です。18歳以上のユーザーのみ閲覧できます",
+      profileSettings: "18歳以上であることを確認して閲覧する",
+      nsfwBrowseTitle: "NSFWコンテンツの閲覧を有効にしますか？",
+      nsfwBrowseDesc: "18歳以上のユーザーがスイッチをオンにすると、<br />おすすめリストやコミュニティでセンシティブなコンテンツが表示されます。",
+      enableNsfw: "NSFWを有効にする",
+      chinaNotSupported: "中国本土のユーザーはセンシティブなコンテンツを閲覧できません",
     },
     authorClosedSubscription: "このクリエイターはメンバーシップ機能を無効にしました",
     permissionText: {

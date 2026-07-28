@@ -1116,12 +1116,7 @@
     <UnderageNoBirthdayModal
       v-if="showUnderageNoBirthdayModal"
       @close="showUnderageNoBirthdayModal = false"
-      @go-to-fill="handleGoToFillBirthday"
-    />
-
-    <UnderageModal
-      v-if="showUnderageModal"
-      @close="showUnderageModal = false"
+      @confirm="handleUnlimitedAgeConfirm"
     />
 
     <!-- Confirm Computing Power Modal -->
@@ -1588,7 +1583,6 @@ import closeIcon from '@/assets/images/home/close.png';
 import notAllowIcon from '@/assets/images/home/not_allow.png';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
-import UnderageModal from '@/components/UnderageModal.vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -1713,8 +1707,7 @@ const isFetchingRegion = ref(false);
 // NSFW age-check / confirmation modal state
 const showUnlimitedModal = ref(false);
 const showUnderageNoBirthdayModal = ref(false);
-const showUnderageModal = ref(false);
-const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const insertImageOptions = computed(() => [
   { value: 0, label: t('novel.insertImageNone') },
   { value: 4, label: t('novel.insertImage4') },
@@ -3554,15 +3547,9 @@ const checkAgeForUnlimitedMode = (): boolean => {
     return false;
   }
 
-  const birthday = userInfo.value.info?.birthday;
-
-  if (!birthday) {
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
+  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
   if (isTeenager.value) {
-    showUnderageModal.value = true;
+    showUnderageNoBirthdayModal.value = true;
     return true;
   }
 
@@ -3575,9 +3562,29 @@ const confirmRegenerateNsfw = () => {
   showUnlimitedModal.value = false;
 };
 
-const handleGoToFillBirthday = () => {
+const handleUnlimitedAgeConfirm = async (isAdult: boolean) => {
   showUnderageNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+  // 选择"否"：未满18岁，直接关闭不开启
+  if (!isAdult) {
+    return;
+  }
+  // 选择"是"：声明已满18岁，写回后端 is_adult
+  try {
+    const res = await api.setAdult({ is_adult: 1 }) as any;
+    if (res.code != 0 && res.code != 200) {
+      toast(t('fail'));
+      return;
+    }
+  } catch (error) {
+    console.error('Error setting adult:', error);
+    return;
+  }
+  if (userInfo.value) {
+    userInfo.value.is_adult = 1;
+  }
+
+  // 确认满18岁后直接开启无限制模式（不再二次弹「是否开启无限制」确认）
+  regenerateNsfwMode.value = true;
 };
 
 const closeDropdowns = () => {

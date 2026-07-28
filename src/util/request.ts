@@ -50,8 +50,6 @@ class Request {
       const token = localStorage.getItem('token')
       if (token) {
         config.headers.token = token
-      } else {
-        localStorage.removeItem('allowSensitiveContent')
       }
 
       const url = config.url || '';

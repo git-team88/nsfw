@@ -128,6 +128,11 @@
           <span class="btn-spinner" v-if="isLoading"></span>
         </button>
 
+        <p class="auth-foot">
+          {{ t("register.haveAccount") }}
+          <a class="auth-link" @click="goLogin()">{{ t("register.toLogin") }}</a>
+        </p>
+
         <div class="auth-tip">
           <span v-if="locale == 'jp'" v-html="t('register.tipInfo')"></span>
           <span v-else v-html="t('register.tipInfo')"></span>
@@ -455,6 +460,24 @@ function validatePassword(password: string) {
   return regex.test(password);
 }
 
+function goLogin() {
+  router.push("/login");
+}
+
+// 注册/登录成功后，若有来源作品详情页地址则回跳，否则回首页
+function redirectAfterAuth() {
+  // 首次注册：若未登录时自声明满18岁（本地缓存 is_adult=1），注册成功后补调 user/setAdult
+  if (localStorage.getItem("is_adult") === "1") {
+    api.setAdult({ is_adult: 1 }).catch(() => {});
+  }
+  // 清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
+  localStorage.removeItem("pendingSetAdult");
+  localStorage.removeItem("is_adult");
+  const redirect = localStorage.getItem("loginRedirect");
+  localStorage.removeItem("loginRedirect");
+  router.push(redirect || "/");
+}
+
 function goEmailRegister() {
   if (!isEnd.value || isLoading.value) {
     return false;
@@ -499,7 +522,7 @@ function goEmailRegister() {
 
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("isFirstRegister", "1");
-          router.push("/");
+          redirectAfterAuth();
         } else {
           showBirthday.value = false;
           toast(locale.value == "jp" ? res.msg_jp : res.msg);
@@ -544,7 +567,7 @@ function googleRegister() {
         trackSignUp();
 
         localStorage.setItem("isFirstRegister", "1");
-        router.push("/");
+        redirectAfterAuth();
       } else {
         isShowLoad.value = false;
         localStorage.removeItem("rType");
@@ -958,6 +981,15 @@ function googleRegister() {
     text-align: center;
     color: #9a93a4;
     line-height: 1.6;
+  }
+
+  .auth-foot {
+    margin: 20px 0 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.65;
+    color: #161122;
   }
 
   .auth-terms {

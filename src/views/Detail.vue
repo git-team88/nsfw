@@ -21,36 +21,47 @@
               <!-- Image content -->
               <div v-if="detail.type == '1'" class="comic-gallery">
                 <div class="comic-scroll" ref="comicScrollRef" @scroll="handleComicScroll">
-                  <div
-                      class="comic-image-wrap"
-                      v-for="(img, index) in detail.images"
-                      :key="index"
-                      @click="toggleComicZoom(index)"
-                      :style="{ cursor: (isComicFullscreen[index] || false) ? 'zoom-out' : 'zoom-in' }"
-                      @mousedown.prevent
-                    >
-                      <img :src="processImageUrl(img.image_url)" alt="" class="comic-image" draggable="false" @load="onImageLoaded(detail.images.length)" />
+                  <!-- 敏感内容：整个图片区域显示开启面板 -->
+                  <SensitiveNsfwPanel
+                    v-if="isSensitiveContentLocked"
+                    :isTeenager="detail.is_teenager == 1"
+                    :isChina="isChinaRegion"
+                    @enable="enableSensitiveBrowsing"
+                    @confirm-adult="confirmAdultBrowsing"
+                  />
+
+                  <template v-else-if="!isLoading">
+                    <div
+                        class="comic-image-wrap"
+                        v-for="(img, index) in detail.images"
+                        :key="index"
+                        @click="toggleComicZoom(index)"
+                        :style="{ cursor: (isComicFullscreen[index] || false) ? 'zoom-out' : 'zoom-in' }"
+                        @mousedown.prevent
+                      >
+                        <img :src="processImageUrl(img.image_url)" alt="" class="comic-image" draggable="false" @load="onImageLoaded(detail.images.length)" />
+                      </div>
+
+                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
+                      <div class="lock-tip">
+                        <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="subs-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
+                      </div>
                     </div>
 
-                  <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
-                    <div class="lock-tip">
-                      <span>{{ t("detail.lock.tip") }}</span>
-                      <span class="subs-btn" @click="onSubscribe">
-                        {{ t("detail.lock.subscribe") }}
-                      </span>
+                    <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type !== '1')">
+                      <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+                      <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
                     </div>
-                  </div>
-
-                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type !== '1')">
-                    <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
-                    <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
-                  </div>
+                  </template>
                 </div>
               </div>
             </template>
 
             <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
-              <div v-if="!isVideoLocked" @click="togglePlay">
+              <div v-if="!isVideoLocked && !isLoading" @click="togglePlay">
                 <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
                   <img :src="currentVideoPoster" alt="Cover" draggable="false" />
                 </div>
@@ -130,85 +141,98 @@
               </div>
 
               <div v-if="isVideoLocked" class="video-lock-overlay">
-                <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
+                <template v-if="isSensitiveContentLocked && !isPaidContentLocked">
+                  <SensitiveNsfwPanel
+                    :isTeenager="detail.is_teenager == 1"
+                    :isChina="isChinaRegion"
+                    @enable="enableSensitiveBrowsing"
+                    @confirm-adult="confirmAdultBrowsing"
+                  />
+                </template>
+                <template v-else>
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
 
-                <div class="lock-content">
-                  <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
-                  <div class="lock-info">
-                    <template v-if="isPaidContentLocked">
+                  <div class="lock-content">
+                    <img class="lock-icon" src="@/assets/images/detail/lock.png" alt="" />
+                    <div class="lock-info">
                       <span class="lock-txt">{{ t("detail.lock.tip") }}</span>
                       <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
                       <span class="lock-btn" @click="onSubscribe">
                         {{ t("detail.lock.subscribe") }}
                       </span>
-                    </template>
-                    <template v-else-if="isSensitiveContentLocked">
-                      <span class="lock-txt">{{ t("detail.lock.sensitiveContent") }}</span>
-                      <span class="lock-btn" @click="navigateToProfileSettings">
-                        {{ t("detail.lock.profileSettings") }}
-                      </span>
-                    </template>
+                    </div>
                   </div>
-                </div>
+                </template>
               </div>
             </div>
 
             <template v-else-if="detail.type == '1' && !isCollectionMode">
               <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
-                <div
-                  class="image-stack-item"
-                  v-for="(img, index) in detail.images"
-                  :key="index"
-                >
-                  <template v-if="isImageLocked(index)">
-                    <div class="locked-view">
-                      <div class="lock-tip">
-                        <span>{{ t("detail.lock.tip") }}</span>
-                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                        <span class="subs-btn" @click="onSubscribe">
-                          {{ t("detail.lock.subscribe") }}
-                        </span>
-                      </div>
-                    </div>
-                  </template>
-                  <template v-else>
-                    <div
-                      class="image-wrap"
-                      @click="handleImageClick(index)"
-                      @mousedown.prevent
-                    >
-                      <img
-                        class="stacked-image"
-                        :src="processImageUrl(img.image_url) || ''"
-                        alt=""
-                        draggable="false"
-                        @load="onImageLoaded(detail.images.length)"
-                      />
-                    </div>
+                <!-- 敏感内容：整个图片列表区域显示开启面板 -->
+                <SensitiveNsfwPanel
+                  v-if="isSensitiveContentLocked"
+                  :isTeenager="detail.is_teenager == 1"
+                  :isChina="isChinaRegion"
+                  @enable="enableSensitiveBrowsing"
+                  @confirm-adult="confirmAdultBrowsing"
+                />
 
-                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
-                      <div class="lock-tip">
-                        <span>{{ t("detail.lock.tip") }}</span>
-                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                        <span class="subs-btn" @click="onSubscribe">
-                          {{ t("detail.lock.subscribe") }}
-                        </span>
+                <template v-else-if="!isLoading">
+                  <div
+                    class="image-stack-item"
+                    v-for="(img, index) in detail.images"
+                    :key="index"
+                  >
+                    <template v-if="isImageLocked(index)">
+                      <div class="locked-view">
+                        <div class="lock-tip">
+                          <span>{{ t("detail.lock.tip") }}</span>
+                          <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                          <span class="subs-btn" @click="onSubscribe">
+                            {{ t("detail.lock.subscribe") }}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </template>
-                </div>
+                    </template>
+                    <template v-else>
+                      <div
+                        class="image-wrap"
+                        @click="handleImageClick(index)"
+                        @mousedown.prevent
+                      >
+                        <img
+                          class="stacked-image"
+                          :src="processImageUrl(img.image_url) || ''"
+                          alt=""
+                          draggable="false"
+                          @load="onImageLoaded(detail.images.length)"
+                        />
+                      </div>
 
-                <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type != '1')">
-                  <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
-                  <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
-                </div>
+                      <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
+                        <div class="lock-tip">
+                          <span>{{ t("detail.lock.tip") }}</span>
+                          <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                          <span class="subs-btn" @click="onSubscribe">
+                            {{ t("detail.lock.subscribe") }}
+                          </span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type != '1')">
+                    <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+                    <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
+                  </div>
+                </template>
               </div>
             </template>
 
             <!-- Collection Info Bar -->
             <div
               class="collection-info-bar"
-              v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode"
+              v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode && !isSensitiveContentLocked"
             >
 
               <div class="collection-info" @click="enterCurrentChapter">
@@ -773,14 +797,10 @@
     />
 
     <!-- Sensitive Content Modals -->
-    <SensitiveContentNoBirthdayModal
-      v-if="showSensitiveContentNoBirthdayModal"
-      @close="showSensitiveContentNoBirthdayModal = false"
-      @goToFill="handleGoToFillBirthday"
-    />
-    <SensitiveContentUnderageModal
-      v-if="showSensitiveContentUnderageModal"
-      @close="showSensitiveContentUnderageModal = false"
+    <SensitiveContentAdultConfirmModal
+      v-if="showSensitiveContentAdultConfirmModal"
+      @close="showSensitiveContentAdultConfirmModal = false"
+      @confirm="handleSensitiveContentAgeConfirm"
     />
     <SensitiveContentConfirmModal
       v-if="showSensitiveContentConfirmModal"
@@ -799,9 +819,9 @@ import PreviewModal from "@/components/PreviewModal.vue";
 import ImageViewer from "@/components/ImageViewer.vue";
 import PreviewBig from "@/components/PreviewBig.vue";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
-import SensitiveContentNoBirthdayModal from "@/components/SensitiveContentNoBirthdayModal.vue";
-import SensitiveContentUnderageModal from "@/components/SensitiveContentUnderageModal.vue";
+import SensitiveContentAdultConfirmModal from "@/components/SensitiveContentAdultConfirmModal.vue";
 import SensitiveContentConfirmModal from "@/components/SensitiveContentConfirmModal.vue";
+import SensitiveNsfwPanel from "@/components/SensitiveNsfwPanel.vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
@@ -1033,11 +1053,10 @@ const headerMoreVisible = ref(false);
 const headerMoreRef = ref<HTMLElement | null>(null);
 
 // Sensitive content modals
-const showSensitiveContentNoBirthdayModal = ref(false);
-const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
 const pendingChapter = ref<any>(null);
-const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') === '1');
+const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') == '1');
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
 
@@ -1125,6 +1144,12 @@ const currentPreviewIndex = ref(0);
 const curVideoUrl = ref('')
 
 const uid = localStorage.getItem('uid');
+
+// 未登录时跳转到注册页，并记录当前作品详情页地址，注册/登录成功后回跳
+function goAuth() {
+  localStorage.setItem('loginRedirect', route.fullPath);
+  router.push('/register');
+}
 
 // Debounce function
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
@@ -1273,6 +1298,8 @@ const currentVideoPoster = computed(() => {
 
 // User region (true = not in China, false = in China)
 const userRegion = ref(false);
+// 地区接口是否已返回（避免未返回前误判为中国大陆）
+const regionLoaded = ref(false);
 
 // Get user region
 function getCountry(){
@@ -1289,8 +1316,13 @@ function getCountry(){
   }).catch(err => {
     console.log(err);
     userRegion.value = false;
+  }).finally(() => {
+    regionLoaded.value = true;
   })
 }
+
+// 是否中国大陆用户（地区接口已返回且非海外）
+const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
 // Show nsfw parameter based on user region
 // userRegion.value = true means NOT in China, false means IN China
@@ -1465,22 +1497,23 @@ async function navigateToChapter(chapter: any) {
         const userInfoStr = localStorage.getItem('userInfo');
         if (userInfoStr) {
           const parsedUserInfo = JSON.parse(userInfoStr);
-          const birthday = parsedUserInfo.info?.birthday;
-          if (!birthday) {
+          // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
+          if (parsedUserInfo.is_adult != 1) {
             pendingChapter.value = chapter;
-            showSensitiveContentNoBirthdayModal.value = true;
-            return;
-          }
-          if (parsedUserInfo.is_teenager === 1 || parsedUserInfo.is_teenager === '1') {
-            pendingChapter.value = chapter;
-            showSensitiveContentUnderageModal.value = true;
+            showSensitiveContentAdultConfirmModal.value = true;
             return;
           }
         }
         if (!isAllowSensitiveContent.value) {
-          pendingChapter.value = chapter;
-          showSensitiveContentConfirmModal.value = true;
-          return;
+          // 已勾选「不再提示」则直接开启，不再弹「允许敏感？」
+          if (localStorage.getItem('sensitiveContentDontAsk') == '1') {
+            localStorage.setItem('allowSensitiveContent', '1');
+            isAllowSensitiveContent.value = true;
+          } else {
+            pendingChapter.value = chapter;
+            showSensitiveContentConfirmModal.value = true;
+            return;
+          }
         }
       }
     }
@@ -1876,6 +1909,9 @@ async function fetchDetail(newId: number) {
   const cid = route.query.cid as string || "";
   const contentType = route.query.contentType as string || "";
   const language = locale.value == 'zh' ? 'cn' : locale.value;
+  // 未登录用户确认满18岁后缓存的成年标识，随详情接口下发
+  // 仅未登录且本地自声明满18岁（is_adult=1）时才传该参数；其余情况不传（JSON.stringify 会忽略 undefined）
+  const isAdult = (!localStorage.getItem('token') && localStorage.getItem('is_adult') == '1') ? 1 : undefined;
 
   try {
     id.value = newId;
@@ -1898,6 +1934,7 @@ async function fetchDetail(newId: number) {
     if (type == "1")  {
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         fromIndexRecommend: {
           "tab": "hot",
           "type": contentType,
@@ -1908,6 +1945,7 @@ async function fetchDetail(newId: number) {
     } else if (type == "2") {
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         fromIndexFollow: {
           test: 1,
           "type": contentType,
@@ -1918,6 +1956,7 @@ async function fetchDetail(newId: number) {
     } else if (type == "3") {
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         fromIndexSubscription: {
           test: 1,
           "type": contentType,
@@ -1933,6 +1972,7 @@ async function fetchDetail(newId: number) {
 
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         fromBloggerIndex: {
           blogger_id: bloggerId,
           keywords: searchKeyword,
@@ -1947,6 +1987,7 @@ async function fetchDetail(newId: number) {
       const searchKeyword = route.query.keyword as string || "";
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         fromSearch: {
           keywords: searchKeyword,
           "type": contentType,
@@ -1957,6 +1998,7 @@ async function fetchDetail(newId: number) {
     } else {
       data = JSON.stringify({
         post_id: newId,
+        is_adult: isAdult,
         "type": contentType,
         "language": language,
         "show_nsfw": showNsfw.value
@@ -2917,6 +2959,8 @@ const isSensitiveContentLocked = computed(() => {
   const isTeenager = detail.value.is_teenager == 1;
 
   if (!isSensitiveContent.value) return false;
+  // 中国大陆用户：敏感内容始终锁定，不可开启
+  if (isChinaRegion.value) return true;
   if (isTeenager) return true;
   return !isAllowSensitiveContent.value;
 });
@@ -3240,37 +3284,6 @@ function goToHomePage() {
   router.push('/');
 }
 
-async function navigateToProfileSettings() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
-
-  try {
-    const res = await api.userInfo() as any;
-    if (res.code == 0 || res.code == 200) {
-      const data = res.data;
-      localStorage.setItem('userInfo', JSON.stringify(data));
-      const birthday = data.info?.birthday;
-
-      if (!birthday) {
-        showSensitiveContentNoBirthdayModal.value = true;
-        return;
-      }
-
-      if (data.is_teenager === 1 || data.is_teenager === '1') {
-        showSensitiveContentUnderageModal.value = true;
-        return;
-      }
-
-      showSensitiveContentConfirmModal.value = true;
-    }
-  } catch (error) {
-    console.error('Error fetching user info:', error);
-  }
-}
-
 function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
@@ -3285,9 +3298,72 @@ function confirmSensitiveContent() {
   }
 }
 
-function handleGoToFillBirthday() {
-  showSensitiveContentNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+// 成年用户（is_teenager==0）在详情页直接开启敏感内容浏览：仅设置缓存开关，无需 setAdult
+// 开启NSFW（成年用户）：仅缓存"是否允许敏感内容"
+function enableSensitiveBrowsing() {
+  localStorage.setItem('allowSensitiveContent', '1');
+  isAllowSensitiveContent.value = true;
+  fetchDetail(id.value);
+}
+
+// 我确认已满18岁：已登录写回后端 setAdult；未登录仅本地缓存 is_adult
+async function confirmAdultBrowsing() {
+  const token = localStorage.getItem('token');
+  if (token) {
+    // 已登录：声明满18岁，写回后端（不写本地 is_adult，年龄以后端为准）
+    try {
+      const res = await api.setAdult({ is_adult: 1 }) as any;
+      if (res.code != 0 && res.code != 200) {
+        toast(getI18nMsg(res));
+        return;
+      }
+    } catch (error) {
+      console.error('Error setting adult:', error);
+      return;
+    }
+  } else {
+    // 未登录：仅本地缓存 is_adult 自声明
+    localStorage.setItem('is_adult', '1');
+  }
+  // 声明成年后：直接开启敏感内容浏览，左侧切换为内容
+  localStorage.setItem('allowSensitiveContent', '1');
+  isAllowSensitiveContent.value = true;
+  fetchDetail(id.value);
+}
+
+async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
+  showSensitiveContentAdultConfirmModal.value = false;
+  // 选择"否"：未满18岁，直接关闭不开启
+  if (!isAdult) {
+    pendingChapter.value = null;
+    return;
+  }
+  // 选择"是"：声明已满18岁
+  if (localStorage.getItem('token')) {
+    // 已登录：写回后端 is_adult
+    try {
+      const res = await api.setAdult({ is_adult: 1 }) as any;
+      if (res.code != 0 && res.code != 200) {
+        toast(getI18nMsg(res));
+        return;
+      }
+    } catch (error) {
+      console.error('Error setting adult:', error);
+      return;
+    }
+  } else {
+    // 未登录：仅存本地，不请求接口
+    localStorage.setItem('is_adult', '1');
+  }
+  // 声明成年后，直接开启敏感内容浏览，不再二次弹「允许敏感？」确认弹窗
+  localStorage.setItem('allowSensitiveContent', '1');
+  isAllowSensitiveContent.value = true;
+  const chapter = pendingChapter.value;
+  pendingChapter.value = null;
+  if (chapter) {
+    doNavigateToChapter(chapter);
+  }
+  fetchDetail(id.value);
 }
 
 function prevImage() {
@@ -3455,7 +3531,7 @@ function handleImageClick(index: number) {
 async function onSubscribe() {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -3631,7 +3707,7 @@ function fullscreenCommentVideo(videoUrl: string) {
 async function toggleFollow() {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return false;
   }
 
@@ -3665,7 +3741,7 @@ function toggleHeaderMore() {
 function openReportModal(type: string, id: number) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -3695,7 +3771,7 @@ function toggleCommentMore(id: number) {
 async function toggleCommentLike(c: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -3715,7 +3791,7 @@ async function toggleCommentLike(c: any) {
 async function toggleReplyLike(r: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -3736,7 +3812,7 @@ async function toggleReplyLike(r: any) {
 function activateInput() {
   const token = localStorage.getItem("token");
   if (!token) {
-    router.push('/login');
+    goAuth();
     return false;
   }
 
@@ -4305,7 +4381,7 @@ function onInputBlur() {
 function startReply(comment: any, reply?: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return false;
   }
 
@@ -4472,7 +4548,7 @@ async function collapseReplies(c: any) {
 async function submitComment() {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -4638,7 +4714,7 @@ async function submitComment() {
 async function toggleLike() {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 
@@ -4687,7 +4763,7 @@ async function toggleLike() {
 async function toggleCollectionLike(item: any) {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    goAuth();
     return;
   }
 

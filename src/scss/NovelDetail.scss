@@ -410,20 +410,28 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
         .sensitive-content-warning {
           display: flex;
+          flex-direction: column;
           align-items: center;
           gap: 16px;
           width: 360px;
-          padding: 16px;
+          padding: 24px 16px;
           background: $paper;
           border: 3px solid $ink;
           box-shadow: $shadow-hard;
           border-radius: 12px;
 
           .warning-text {
-            flex: 1;
             font-size: 14px;
             text-align: center;
             color: $sub;
+          }
+
+          .warning-desc {
+            font-size: 13px;
+            text-align: center;
+            color: $sub;
+            opacity: .8;
+            line-height: 1.6;
           }
 
           .warning-btn {

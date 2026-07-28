@@ -1106,23 +1106,13 @@
     <UnderageNoBirthdayModal
       v-if="showUnderageNoBirthdayModal"
       @close="showUnderageNoBirthdayModal = false"
-      @go-to-fill="handleGoToFillBirthday"
+      @confirm="handleUnlimitedAgeConfirm"
     />
 
-    <UnderageModal
-      v-if="showUnderageModal"
-      @close="showUnderageModal = false"
-    />
-
-    <SensitiveContentNoBirthdayModal
-      v-if="showSensitiveContentNoBirthdayModal"
-      @close="showSensitiveContentNoBirthdayModal = false"
-      @go-to-fill="handleGoToFillBirthdayForSensitive"
-    />
-
-    <SensitiveContentUnderageModal
-      v-if="showSensitiveContentUnderageModal"
-      @close="showSensitiveContentUnderageModal = false"
+    <SensitiveContentAdultConfirmModal
+      v-if="showSensitiveContentAdultConfirmModal"
+      @close="showSensitiveContentAdultConfirmModal = false"
+      @confirm="handleSensitiveContentAgeConfirm"
     />
 
     <SensitiveContentConfirmModal
@@ -1209,9 +1199,7 @@ import { Autoplay, Pagination } from 'swiper/modules';
 import Header from '@/components/Header.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
-import UnderageModal from '@/components/UnderageModal.vue';
-import SensitiveContentNoBirthdayModal from '@/components/SensitiveContentNoBirthdayModal.vue';
-import SensitiveContentUnderageModal from '@/components/SensitiveContentUnderageModal.vue';
+import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import CharacterSelectModal from '@/components/CharacterSelectModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
@@ -2120,17 +2108,16 @@ const modeOptions = ref([
 const userRegion = ref(false);
 const hasFetchedRegion = ref(false);
 const isFetchingRegion = ref(false);
-const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
+// 是否未成年：以详情接口 is_adult 字段为准（is_adult == 1 为已满18岁）
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 
 // Modals
 const showUnlimitedModal = ref(false);
 const showUnderageNoBirthdayModal = ref(false);
-const showUnderageModal = ref(false);
 const pendingModeType = ref('video');
-const showSensitiveContentNoBirthdayModal = ref(false);
-const showSensitiveContentUnderageModal = ref(false);
+const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
-const allowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') === '1');
+const allowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') == '1');
 const showCharacterModal = ref(false);
 const showStyleModal = ref(false);
 const showVideoSettingsModal = ref(false);
@@ -2306,32 +2293,24 @@ const displayContent = computed(() => {
 // Methods
 
 const checkAgeForSensitiveContent = (): boolean => {
-  if (!userInfo.value) {
+  const token = localStorage.getItem('token');
+  if (token) {
+    // 已登录：以后端 is_adult 为准（is_adult != 1 需先弹「我确认已满18岁」）
+    if (isTeenager.value) {
+      showSensitiveContentAdultConfirmModal.value = true;
+      return true;
+    }
     return false;
   }
-
-  const birthday = userInfo.value.info.birthday;
-
-  if (!birthday) {
-    showSensitiveContentNoBirthdayModal.value = true;
-    return true;
+  // 未登录：以本地自声明为准，已声明满18岁（is_adult=1）则放行，否则弹窗
+  if (localStorage.getItem('is_adult') == '1') {
+    return false;
   }
-
-  if (isTeenager.value) {
-    showSensitiveContentUnderageModal.value = true;
-    return true;
-  }
-
-  return false;
+  showSensitiveContentAdultConfirmModal.value = true;
+  return true;
 };
 
 const handleSensitiveContentToggle = () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
-
   if (allowSensitiveContent.value) {
     allowSensitiveContent.value = false;
     localStorage.setItem('allowSensitiveContent', '0');
@@ -2360,9 +2339,36 @@ const confirmSensitiveContent = () => {
   loadContent(1);
 };
 
-const handleGoToFillBirthdayForSensitive = () => {
-  showSensitiveContentNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+const handleSensitiveContentAgeConfirm = async (isAdult: boolean) => {
+  showSensitiveContentAdultConfirmModal.value = false;
+  // 单按钮自声明满18岁；isAdult 恒为 true
+  if (!isAdult) {
+    return;
+  }
+  // 存本地缓存 is_adult=1（不直接打开开关）
+  localStorage.setItem('is_adult', '1');
+  // 已登录：同时写回后端 is_adult
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const res = await api.setAdult({ is_adult: 1 }) as any;
+      if (res.code != 0 && res.code != 200) {
+        toast(t('fail'));
+        return;
+      }
+    } catch (error) {
+      console.error('Error setting adult:', error);
+      return;
+    }
+    if (userInfo.value) {
+      userInfo.value.is_adult = 1;
+    }
+  }
+
+  // 声明成年后，直接打开敏感内容开关，不再二次弹「允许敏感？」确认弹窗
+  allowSensitiveContent.value = true;
+  localStorage.setItem('allowSensitiveContent', '1');
+  loadContent(1);
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
@@ -2370,26 +2376,39 @@ const checkAgeForUnlimitedMode = (modeType: string): boolean => {
     return false;
   }
 
-  const birthday = userInfo.value.info.birthday;
-
-  if (!birthday) {
-    pendingModeType.value = modeType;
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
+  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
   if (isTeenager.value) {
     pendingModeType.value = modeType;
-    showUnderageModal.value = true;
+    showUnderageNoBirthdayModal.value = true;
     return true;
   }
 
   return false;
 };
 
-const handleGoToFillBirthday = () => {
+const handleUnlimitedAgeConfirm = async (isAdult: boolean) => {
   showUnderageNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+  // 选择"否"：未满18岁，直接关闭不开启
+  if (!isAdult) {
+    return;
+  }
+  // 选择"是"：声明已满18岁，写回后端 is_adult
+  try {
+    const res = await api.setAdult({ is_adult: 1 }) as any;
+    if (res.code != 0 && res.code != 200) {
+      toast(t('fail'));
+      return;
+    }
+  } catch (error) {
+    console.error('Error setting adult:', error);
+    return;
+  }
+  if (userInfo.value) {
+    userInfo.value.is_adult = 1;
+  }
+
+  // 确认满18岁后直接开启无限制模式（不再二次弹「是否开启无限制」确认）
+  confirmUnlimitedMode();
 };
 
 const switchVideoMode = (mode: string, index: number) => {

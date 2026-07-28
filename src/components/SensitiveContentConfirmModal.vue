@@ -51,6 +51,8 @@ const handleConfirm = () => {
   if (isCheck.value) {
     localStorage.setItem('sensitiveContentDontAsk', '1');
   }
+  // 确认允许敏感：开启浏览开关
+  localStorage.setItem('allowSensitiveContent', '1');
   emit('confirm');
 };
 </script>

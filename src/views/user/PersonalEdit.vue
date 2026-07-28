@@ -47,14 +47,21 @@
 
             <div class="section">
               <div class="label">
-                <span>*</span>{{ t("birthday.label") }}
-                <b class="birthday-tip">{{ t("user.personal.birthdayCannotEdit") }}</b>
+                <span>*</span>{{ t("birthday.adultLabel") }}
               </div>
 
-              <div v-if="hasBirthday" class="birth-box">
-                {{ formatDatePart(dateValue.month) }}-{{ formatDatePart(dateValue.day) }}-{{ dateValue.year }}
+              <div class="age-options" v-if="isAdult !== null">
+                <label class="radio" @click="isAdult = true">
+                  <img v-if="isAdult == true" src="@/assets/images/header/check_active.png" alt="" class="radio-icon" />
+                  <img v-else src="@/assets/images/header/check.png" alt="" class="radio-icon" />
+                  {{ t("birthday.yes") }}
+                </label>
+                <label class="radio" @click="isAdult = false">
+                  <img v-if="isAdult == false" src="@/assets/images/header/check_active.png" alt="" class="radio-icon" />
+                  <img v-else src="@/assets/images/header/check.png" alt="" class="radio-icon" />
+                  {{ t("birthday.no") }}
+                </label>
               </div>
-              <BirthPicker v-else v-model="dateValue" :isEdit="true" @change="handleDateChange" />
             </div>
 
             <div class="actions">
@@ -93,9 +100,8 @@
 <script setup lang="ts" name="UserPersonalEdit">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
-import BirthPicker from "@/components/BirthPicker.vue";
 import UploadMask from "@/components/UploadMask.vue";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 
@@ -130,33 +136,15 @@ const isUploading = ref(false);
 const initialValues = ref<{
   nickname: string;
   avatar: string;
-  birthday: string;
 }>({
   nickname: "",
   avatar: "",
-  birthday: "",
 });
 
 const userRegion = ref(false);
 
-const dateValue = ref<{ year: number | ""; month: number | ""; day: number | "" }>({
-  year: "",
-  month: "",
-  day: "",
-});
-
-// Check if birthday exists initially from user info
-const hasBirthday = computed(() => {
-  return !!initialValues.value.birthday;
-});
-
-const isAdult = ref(false);
-
-// Format date part to add leading zero
-function formatDatePart(value: number | ""): string {
-  if (value === "" || value === undefined || value === null) return "";
-  return String(value).padStart(2, '0');
-}
+// 是否满18岁：null=接口未返回（不显示选项），true=是，false=否
+const isAdult = ref<boolean | null>(null);
 
 function onToggleSensitive() {
   if (!isAdult.value) return;
@@ -200,30 +188,10 @@ onMounted(async () => {
       initialValues.value = {
         nickname: data.info?.nickname || "",
         avatar: data.info?.avatar || "",
-        birthday: data.info?.birthday || "",
       };
 
-      if (data.info?.birthday) {
-        const parts = data.info.birthday.split("-");
-        dateValue.value = {
-          year: parts[0] ? Number(parts[0]) : "",
-          month: parts[1] ? Number(parts[1]) : "",
-          day: parts[2] ? Number(parts[2]) : "",
-        };
-
-        const { year, month, day } = dateValue.value;
-        if (year && month && day) {
-          const birth = new Date(Number(year), Number(month) - 1, Number(day));
-
-          const now = res.timestamp ? new Date(res.timestamp * 1000) : new Date();
-          let age = now.getFullYear() - birth.getFullYear();
-          const m = now.getMonth() - birth.getMonth();
-          if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-            age--;
-          }
-          isAdult.value = age >= 18;
-        }
-      }
+      // 根据详情接口回显是否满18岁（is_adult == 1 为「是」，否则「否」）
+      isAdult.value = data.is_adult == 1;
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
@@ -302,10 +270,6 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
     });
 }
 
-function handleDateChange(value: { year: number | ""; month: number | ""; day: number | "" }) {
-  dateValue.value = value;
-}
-
 function onCancel() {
   router.push("/user-personal");
 }
@@ -317,17 +281,18 @@ function onSave() {
 
   saving.value = true;
 
-  const buildBirthdayString = () => {
-    const { year, month, day } = dateValue.value;
-    if (!year || !month || !day) return "";
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  };
-
-  const currentBirthday = buildBirthdayString();
-
   const hasNicknameChanged = nickname.value !== initialValues.value.nickname;
   const hasAvatarChanged = avatarUrl.value !== initialValues.value.avatar;
-  const hasBirthdayChanged = currentBirthday !== initialValues.value.birthday;
+  // 是否满18岁始终有默认值（否），保存时提交
+  const hasAdultChanged = isAdult.value !== null;
+
+  // 同步首页敏感内容开关的缓存字段（allowSensitiveContent），不请求 modifyShowNsfw
+  // 满18岁（是）：打开；未满18岁（否）：关闭
+  if (isAdult.value === true) {
+    localStorage.setItem('allowSensitiveContent', '1');
+  } else if (isAdult.value === false) {
+    localStorage.setItem('allowSensitiveContent', '0');
+  }
 
   const operations: Array<() => Promise<void>> = [];
 
@@ -353,13 +318,9 @@ function onSave() {
     });
   }
 
-  if (hasBirthdayChanged && currentBirthday) {
+  if (hasAdultChanged) {
     operations.push(() => {
-      return api.modifyBirth({
-        year: dateValue.value.year,
-        month: dateValue.value.month,
-        day: dateValue.value.day
-      })
+      return api.setAdult({ is_adult: isAdult.value ? 1 : 0 })
         .then((res: any) => {
           if (res.code !== 200 && res.code !== 0) {
             throw new Error(res.msg);
@@ -544,6 +505,26 @@ function onSave() {
   border: 2.5px solid #161122;
   border-radius: 12px;
   background: #fff;
+}
+
+.age-options {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.age-options .radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 15px;
+  color: #161122;
+  cursor: pointer;
+}
+.radio-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .actions {

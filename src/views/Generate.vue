@@ -792,17 +792,11 @@
       @confirm="confirmUnlimitedMode"
     />
 
-    <!-- Underage Modal -->
-    <UnderageModal
-      v-if="showUnderageModal"
-      @close="showUnderageModal = false"
-    />
-
-    <!-- Underage No Birthday Modal -->
+    <!-- 是否满18岁问询弹窗 -->
     <UnderageNoBirthdayModal
       v-if="showUnderageNoBirthdayModal"
       @close="showUnderageNoBirthdayModal = false"
-      @confirm="handleGoToFillBirthday"
+      @confirm="handleUnlimitedAgeConfirm"
     />
   </div>
 </template>
@@ -822,7 +816,6 @@ import { eventBus } from "@/utils/eventBus";
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
-import UnderageModal from '@/components/UnderageModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import loadingGif916 from '@/assets/images/home/9_16.gif';
@@ -851,12 +844,11 @@ const playingVideoRatio = ref('16:9');
 const playingVideoIsUnlimited = ref(false);
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
-const isTeenager = computed(() => !userInfo.value || userInfo.value.is_teenager == '1');
+const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
-const showUnderageModal = ref(false);
 const showUnderageNoBirthdayModal = ref(false);
 const isPositioningTarget = ref(false);
 
@@ -4571,7 +4563,7 @@ const regenerateRecord = (record: any) => {
     const usedUnlimitedMode = (storyMode == 'nsfw' || storyMode == 'unlimited') && isVideoExtensionMode;
 
     // 检查限制条件
-    const hasUnlimitedModeRestriction = !userRegion.value || !userInfo.value?.info?.birthday || isTeenager.value;
+    const hasUnlimitedModeRestriction = !userRegion.value || isTeenager.value;
 
     if (usedUnlimitedMode && hasUnlimitedModeRestriction) {
       toast(t('home.error.unlimitedModeRestricted'));
@@ -4903,26 +4895,39 @@ const checkAgeForUnlimitedMode = (modeType: string): boolean => {
     return false;
   }
 
-  const birthday = userInfo.value.info.birthday;
-
-  if (!birthday) {
-    pendingModeType.value = modeType;
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
+  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
   if (isTeenager.value) {
     pendingModeType.value = modeType;
-    showUnderageModal.value = true;
+    showUnderageNoBirthdayModal.value = true;
     return true;
   }
 
   return false;
 };
 
-const handleGoToFillBirthday = () => {
+const handleUnlimitedAgeConfirm = async (isAdult: boolean) => {
   showUnderageNoBirthdayModal.value = false;
-  router.push('/user-personal-edit');
+  // 选择"否"：未满18岁，直接关闭不开启
+  if (!isAdult) {
+    return;
+  }
+  // 选择"是"：声明已满18岁，写回后端 is_adult
+  try {
+    const res = await api.setAdult({ is_adult: 1 }) as any;
+    if (res.code != 0 && res.code != 200) {
+      toast(t('fail'));
+      return;
+    }
+  } catch (error) {
+    console.error('Error setting adult:', error);
+    return;
+  }
+  if (userInfo.value) {
+    userInfo.value.is_adult = 1;
+  }
+
+  // 确认满18岁后直接开启无限制模式（不再二次弹「是否开启无限制」确认）
+  confirmUnlimitedMode();
 };
 
 const switchPhotoMode = (mode: string, index: number) => {

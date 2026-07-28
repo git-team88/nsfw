@@ -133,6 +133,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  setAdult: (data: any) =>
+    axios.request({
+      url: "user/setAdult",
+      data: data,
+      method: "POST",
+    }),
   getPrivacy: () =>
     axios.request({
       url: "user/getPrivacy",

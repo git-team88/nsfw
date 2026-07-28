@@ -1610,6 +1610,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     tipEnd: "",
     loginTip: `登錄本服務即表示<br />您同意`,
     freeComputing: "註冊送免費算力",
+    haveAccount: "已有帳號？",
+    toLogin: "登入",
   },
   birthday: {
     title: "請輸入您的出生日期",
@@ -1618,6 +1620,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     day: "日",
     year: "年",
     confirm: "確認",
+    adultLabel: "是否滿18歲",
+    yes: "是",
+    no: "否",
   },
   userInfo: {
     title: "請輸入您的用戶信息",
@@ -1800,21 +1805,25 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       confirm: "確認"
     },
     underageNoBirthday: {
-      title: "請前往填寫生日",
+      title: "是否滿18歲？",
       description: "滿18歲的用戶才能開啟NSFW模式",
+      yes: "是",
+      no: "否",
       cancel: "取消",
-      goToFill: "去填寫"
+      confirm: "確認"
     },
     underage: {
       description: "滿18歲的用戶才能開啟NSFW模式",
       ok: "我知道了"
     },
     sensitiveContent: "允許敏感內容",
-    sensitiveContentNoBirthday: {
-      title: "請前往填寫生日",
+    sensitiveContentAdultConfirm: {
+      title: "敏感內容，僅年滿18歲用戶可見。",
       description: "滿18歲的用戶才能開啟敏感內容展示",
+      yes: "是",
+      no: "否",
       cancel: "取消",
-      goToFill: "去填寫"
+      confirm: "我確認已滿18歲，開啟瀏覽"
     },
     sensitiveContentUnderage: {
       description: "滿18歲的用戶才能開啟敏感內容展示",
@@ -2345,8 +2354,12 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       lastChapterTip: "目前章節已讀完\n您可以直接生成想看的內容",
       goGenerate: "去生成",
       subscribe: "訂閱",
-      sensitiveContent: "作品包含敏感資訊，是否開啟閱讀",
-      profileSettings: "開啟敏感內容閱讀",
+      sensitiveContent: "敏感內容，僅年滿18歲用戶可見",
+      profileSettings: "我確認已滿18歲，開啟瀏覽",
+      nsfwBrowseTitle: "是否開啟NSFW內容瀏覽",
+      nsfwBrowseDesc: "18歲以上用戶開啟開關後<br />在推薦列表和用戶社區中將能看到敏感內容。",
+      enableNsfw: "開啟NSFW",
+      chinaNotSupported: "中國大陸用戶不支持查看敏感內容",
     },
     authorClosedSubscription: "該用戶已關閉訂閱功能",
     permissionText: {

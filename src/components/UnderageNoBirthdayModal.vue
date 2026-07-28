@@ -8,33 +8,52 @@
       </button>
 
       <div class="hm-badge">
-        <span class="badge-icon">🎂</span>
+        <span class="badge-icon">🔞</span>
         {{ t('home.mode.unlimited') }}
       </div>
 
       <h3 class="hm-title">{{ t('home.underageNoBirthday.title') }}</h3>
       <p class="hm-body">{{ t('home.underageNoBirthday.description') }}</p>
 
+      <div class="hm-radios">
+        <button class="hm-radio" :class="{ active: isAdult === true }" @click="isAdult = true">
+          <span class="dot"></span>
+          <span class="txt">{{ t('home.underageNoBirthday.yes') }}</span>
+        </button>
+        <button class="hm-radio" :class="{ active: isAdult === false }" @click="isAdult = false">
+          <span class="dot"></span>
+          <span class="txt">{{ t('home.underageNoBirthday.no') }}</span>
+        </button>
+      </div>
+
       <div class="hm-actions">
         <button class="mg-hm-btn ghost" @click="handleClose">{{ t('home.underageNoBirthday.cancel') }}</button>
-        <button class="mg-hm-btn primary" @click="handleGoToFill">{{ t('home.underageNoBirthday.goToFill') }}</button>
+        <button class="mg-hm-btn primary" :class="{ disabled: isAdult === null }" @click="handleConfirm">{{ t('home.underageNoBirthday.confirm') }}</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
+// 默认选中「否」
+const isAdult = ref<boolean | null>(false);
+
 const emit = defineEmits<{
   close: [];
-  goToFill: [];
+  confirm: [isAdult: boolean];
 }>();
 
 const handleClose = () => emit('close');
-const handleGoToFill = () => emit('goToFill');
+
+const handleConfirm = () => {
+  if (isAdult.value === null) return;
+  emit('confirm', isAdult.value);
+};
 </script>
 
 <style scoped lang="scss">
@@ -93,6 +112,30 @@ $yellow: #FFD23F;
 .hm-title { margin: 0; font-size: 19px; font-weight: 900; color: $ink; }
 .hm-body { margin: 10px 0 0; font-size: 13px; font-weight: 600; line-height: 1.75; color: $ink; opacity: .7; }
 
+.hm-radios {
+  display: flex; gap: 10px; margin-top: 16px;
+  .hm-radio {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px; border-radius: 12px; border: 2px solid $ink; background: #fff;
+    font-weight: 800; font-size: 14px; color: $ink; cursor: pointer;
+    box-shadow: 2px 2px 0 $ink;
+    transition: transform .15s ease-out, box-shadow .15s ease-out;
+    .dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid $ink; box-sizing: border-box; position: relative;
+    }
+    &.active {
+      background: $yellow;
+      .dot::after {
+        content: ""; position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px; height: 8px; border-radius: 50%; background: $ink;
+      }
+    }
+    &:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(22,17,34,.4); }
+  }
+}
+
 .hm-actions { display: flex; gap: 10px; margin-top: 16px; }
 .mg-hm-btn {
   flex: 1; padding: 11px 10px; border-radius: 12px; border: 2px solid $ink;
@@ -103,7 +146,9 @@ $yellow: #FFD23F;
   &:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(22,17,34,.4); }
 }
 .mg-hm-btn.ghost { background: #fff; color: $ink; &:hover { color: $pink; } }
-.mg-hm-btn.primary { background: $pink; color: #fff; }
+.mg-hm-btn.primary { background: $pink; color: #fff;
+  &.disabled { opacity: .5; cursor: not-allowed; &:hover, &:active { transform: none; box-shadow: 2px 2px 0 $ink; } }
+}
 
 @keyframes mgHmFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mgHmPop { 0% { opacity: 0; transform: scale(.94) translateY(8px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
