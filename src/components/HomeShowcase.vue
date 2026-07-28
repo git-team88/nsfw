@@ -25,7 +25,6 @@
           role="link"
           :aria-label="c.name"
           class="cre-card"
-          :style="{ boxShadow: `7px 7px 0 ${c.cover}` }"
           @click="goUser(c)"
         >
           <div class="cre-avatar" :style="{ background: c.avatar }">
@@ -277,6 +276,8 @@ function creLayout() {
     el.style.opacity = depth > 3 ? '0' : String(1 - depth * 0.16);
     el.style.zIndex = String(100 - depth);
     el.style.filter = depth ? `brightness(${(1 - depth * 0.07).toFixed(2)})` : 'none';
+    // 用户卡片不需要阴影
+    el.style.boxShadow = 'none';
   });
 }
 
