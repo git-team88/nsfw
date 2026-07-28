@@ -723,7 +723,9 @@ async function fetchCollections(reset = false) {
         collectionsLoading.value = false;
         return;
       }
-      response = await api.authorCollection(type, currentPage, 20, authorId) as any;
+      // 敏感开关（未登录也以本地 allowSensitiveContent 为准）
+      const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+      response = await api.authorCollection(type, currentPage, 20, authorId, showNsfw) as any;
     }
     if (response.code == 0) {
       const collectionData = response.data?.data || [];
