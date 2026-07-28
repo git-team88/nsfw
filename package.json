@@ -8,8 +8,6 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
     "preview": "vite preview",
-    "prerender": "vite preview --port 4173 & sleep 3 && node scripts/prerender.mjs && kill $(lsof -ti:4173) 2>/dev/null",
-    "build:seo": "npm run build-only && npm run prerender",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix"
   },

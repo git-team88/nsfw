@@ -1,3 +1,6 @@
+// ⚠️ 已废弃（DEPRECATED）：
+// 全站已改为「爬虫按需动态渲染」（scripts/seo-server.mjs），首页/分类页不再构建时预渲染。
+// 本文件保留仅作参考/回退，不再接入构建与部署流程（package.json、build_and_deploy_web.sh 已移除对它的调用）。
 import puppeteer from 'puppeteer'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -110,6 +113,13 @@ async function prerender() {
       html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${seo.description}" />`)
       html = html.replace(/<meta\s+name=["']keywords["'][^>]*>/i, `<meta name="keywords" content="${seo.keywords}" />`)
       html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seo.title}</title>`)
+
+      // PC↔移动 A/C 互指：把 index.html 里静态的移动端 alternate 替换成「本页对应」的移动端 URL
+      // 例：PC /zh-cn/novel → 移动 https://m.moegen.ai/zh-cn/novel/
+      html = html.replace(
+        /<link\s+rel=["']alternate["']\s+media=[^>]*>/i,
+        `<link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.moegen.ai${route}/" />`
+      )
 
       const hreflangTags = LANG_ROUTES.map(l =>
         `<link rel="alternate" hreflang="${HREFLANG_MAP[l]}" href="https://www.moegen.ai/${l}${pagePath === '/' ? '/' : pagePath}" />`

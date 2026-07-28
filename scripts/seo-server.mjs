@@ -72,10 +72,48 @@ function generateSkeleton(url, query = {}) {
 </html>`
 }
 
+function escapeAttr(s) {
+  return String(s).replace(/"/g, '&quot;')
+}
+
+// 渲染后补全「爬虫需要、但 SPA 运行时没注入」的元信息：og:* / twitter:* / hreflang x-default。
+// title/description 直接从已渲染的 HTML 里取（首页来自 Home.vue 的 i18n，详情页来自接口数据），
+// 因此首页与详情页通用，无需再维护一份静态 SEO 文案表。
+function enrichSeoMeta(html, url) {
+  // 运行时已注入 og:title 就跳过，避免重复
+  if (/<meta\s+property=["']og:title["']/i.test(html)) return html
+
+  const titleMatch = html.match(/<title>([^<]*)<\/title>/i)
+  const title = titleMatch ? titleMatch[1].trim() : SITE_NAME
+  const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i)
+  const description = descMatch ? descMatch[1] : ''
+
+  const tags = [
+    `<meta property="og:title" content="${escapeAttr(title)}" />`,
+    `<meta property="og:description" content="${escapeAttr(description)}" />`,
+    `<meta property="og:type" content="website" />`,
+    `<meta property="og:url" content="${escapeAttr(url)}" />`,
+    `<meta property="og:site_name" content="${SITE_NAME}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${escapeAttr(title)}" />`,
+    `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
+  ]
+
+  // 固定语言页（/ja、/ja/novel …）补 x-default 指向 ja 版同路径；详情页无语言变体，跳过
+  const fixed = url.match(/^(https?:\/\/[^/]+)\/(ja|en|zh-cn|zh-tw)(\/(?:novel|comic|drama|photo|video))?\/?(?:[?#]|$)/i)
+  if (fixed && !/hreflang=["']x-default["']/i.test(html)) {
+    const origin = fixed[1]
+    const type = fixed[3] || ''
+    tags.push(`<link rel="alternate" hreflang="x-default" href="${origin}/ja${type || '/'}" />`)
+  }
+
+  return html.replace('</head>', tags.join('\n') + '\n</head>')
+}
+
 let browser = null
 
 async function getBrowser() {
-  if (!browser || !browser.isConnected()) {
+  if (!browser || !browser.connected) {
     browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -128,6 +166,7 @@ async function renderPage(url) {
     await new Promise(r => setTimeout(r, WAIT_AFTER_LOAD))
     let html = await page.content()
     html = html.replace(/<div id="app" data-v-app="">/, '<div id="app">')
+    html = enrichSeoMeta(html, url)
     return html
   } finally {
     await page.close()
@@ -135,7 +174,8 @@ async function renderPage(url) {
 }
 
 app.get('/render', async (req, res) => {
-  const targetUrl = req.query.url
+  // 优先取 nginx 传来的 X-Render-Url（用 $request_uri，不受 rewrite 影响，且请求头不会被 query 解析截断）
+  const targetUrl = req.get('x-render-url') || req.query.url
   if (!targetUrl) return res.status(400).send('Missing url parameter')
 
   try {

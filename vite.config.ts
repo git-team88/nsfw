@@ -6,6 +6,14 @@ export default defineConfig({
   base: '/',
   plugins: [
     vue(),
+    // 打包时去除 index.html 中的 HTML 注释（仅 build 生效，不影响 dev）
+    {
+      name: 'strip-html-comments',
+      apply: 'build',
+      transformIndexHtml(html: string) {
+        return html.replace(/<!--[\s\S]*?-->/g, '');
+      },
+    },
   ],
   resolve: {
     alias: {
