@@ -25,21 +25,13 @@ const htmlLangMap: Record<string, string> = {
   'tc': 'zh-TW'
 };
 
-const hreflangConfig = [
-  { hreflang: 'ja', langPrefix: 'ja', i18nKey: 'jp' },
-  { hreflang: 'zh-CN', langPrefix: 'zh-cn', i18nKey: 'zh' },
-  { hreflang: 'zh-TW', langPrefix: 'zh-tw', i18nKey: 'tc' },
-  { hreflang: 'en', langPrefix: 'en', i18nKey: 'en' },
-  { hreflang: 'x-default', langPrefix: 'ja', i18nKey: 'jp' },
-];
-
-// 按当前 hostname 解析站点/移动端域名：正式站(*.moegen.ai)用正式域名，
-// 其它（测试 testapp.addaiaroot.com / 本地）用测试域名，与 index.html 的判断保持一致。
+// 站点地址（canonical 用）始终用当前实际访问地址（含协议/端口/域名）；
+// 移动端域名仍按正式/测试区分：正式站(*.moegen.ai)→ m.moegen.ai，其它 → m.addaiaroot.com。
 function resolveOrigins() {
   const host = window.location.hostname;
   const isProd = host.endsWith('moegen.ai');
   return {
-    site: isProd ? 'https://www.moegen.ai' : `https://${host}`,
+    site: window.location.origin,
     mobile: isProd ? 'https://m.moegen.ai' : 'https://m.addaiaroot.com',
   };
 }
@@ -57,29 +49,18 @@ function updateHtmlLang() {
 }
 
 function updateHreflang() {
-  // 移除已有 hreflang（含 index.html 里写死的 x-default），统一按当前域名重建
+  // 不再输出 hreflang：清除任何已有的 hreflang 链接（含 index.html 里可能残留的写死项）
   document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
-
-  const { site: SITE_ORIGIN } = resolveOrigins();
-  const currentPath = route.path.replace(/^\/(ja|zh-tw|zh-cn|en)(\/)?/, '/');
-
-  hreflangConfig.forEach(({ hreflang, langPrefix }) => {
-    const link = document.createElement('link');
-    link.rel = 'alternate';
-    link.hreflang = hreflang;
-    link.href = `${SITE_ORIGIN}/${langPrefix}${currentPath}`;
-    link.setAttribute('data-hreflang', hreflang);
-    document.head.appendChild(link);
-  });
 }
 
 // 根据当前路由计算「PC 自指 canonical」与「对应的移动端 alternate」URL。
-// 映射规则（PC www.moegen.ai → 移动 m.moegen.ai，同一作品 id 通用）：
+// canonical：所有页面都自指当前页。
+// mobile（移动端 alternate）：仅以下 4 类页面输出，其余页面为 null（不加 alternate）：
+//   首页/语言页/分类页  → m 站首页
 //   合集详情  /collection/:id            → /detail/book-public/:id
 //   作品详情  /detail?id=x&contentType=t → /detail?id=x&source=t
 //   社区主页  /user-home?id=x            → /user/x
-//   首页/语言/分类页                      → 同路径（移动端补尾斜杠）
-function computeSeoUrls(): { canonical: string; mobile: string } {
+function computeSeoUrls(): { canonical: string; mobile: string | null } {
   const { site: SITE_ORIGIN, mobile: MOBILE_ORIGIN } = resolveOrigins();
   const path = route.path;
   const q = route.query;
@@ -109,33 +90,51 @@ function computeSeoUrls(): { canonical: string; mobile: string } {
     };
   }
 
-  // 首页 / 语言页 / 分类页 及其它：同路径互指，剔除跟踪参数
+  // 首页 / 语言页 / 分类页（Home 组件）：canonical 自指当前页；移动端 alternate 指向 m 站首页。
+  // 用路径判断而非 route.name（初始加载 / SEO 渲染时 route.name 可能尚未就绪）。
+  //   / | /{lang} | /{lang}/{type} | /{type}
   const cleanPath = path === '/' ? '/' : path;
+  const LANGS = 'ja|en|zh-cn|zh-tw';
+  const TYPES = 'novel|comic|drama|photo|video';
+  const isHome =
+    path === '/' ||
+    new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(path) ||
+    new RegExp(`^/(${TYPES})/?$`).test(path);
   return {
     canonical: `${SITE_ORIGIN}${cleanPath}`,
-    mobile: `${MOBILE_ORIGIN}${cleanPath === '/' ? '/' : `${cleanPath}/`}`,
+    mobile: isHome ? `${MOBILE_ORIGIN}/` : null,
   };
 }
 
-// A/C 互指：写入 PC 自指 canonical + 指向移动端的 alternate。
-// 全站各只保留一条（覆盖 index.html 里写死的首页 alternate）。
+// A/C：所有页面写 PC 自指 canonical；仅 4 类页面写移动端 alternate。
+// 原地复用已有 <link>，值没变化就不动（避免切换内容类型 tab 时无谓地删除重建）。
 function updateAltAndCanonical() {
   const { canonical, mobile } = computeSeoUrls();
 
-  document.querySelectorAll('link[rel="alternate"][media]').forEach(el => el.remove());
-  const alt = document.createElement('link');
-  alt.rel = 'alternate';
-  alt.media = 'only screen and (max-width: 640px)';
-  alt.href = mobile;
-  alt.setAttribute('data-alt-mobile', '');
-  document.head.appendChild(alt);
+  // 移动端 alternate
+  let alt = document.head.querySelector<HTMLLinkElement>('link[rel="alternate"][media]');
+  if (mobile) {
+    if (!alt) {
+      alt = document.createElement('link');
+      alt.rel = 'alternate';
+      alt.media = 'only screen and (max-width: 640px)';
+      alt.setAttribute('data-alt-mobile', '');
+      document.head.appendChild(alt);
+    }
+    if (alt.href !== mobile) alt.href = mobile;
+  } else if (alt) {
+    alt.remove();
+  }
 
-  document.querySelectorAll('link[rel="canonical"]').forEach(el => el.remove());
-  const can = document.createElement('link');
-  can.rel = 'canonical';
-  can.href = canonical;
-  can.setAttribute('data-canonical', '');
-  document.head.appendChild(can);
+  // canonical（所有页面都有）
+  let can = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!can) {
+    can = document.createElement('link');
+    can.rel = 'canonical';
+    can.setAttribute('data-canonical', '');
+    document.head.appendChild(can);
+  }
+  if (can.href !== canonical) can.href = canonical;
 }
 
 onMounted(() => {

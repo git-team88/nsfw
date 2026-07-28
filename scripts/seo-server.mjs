@@ -22,7 +22,6 @@ const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
 
 const SEO_TITLES = {
   detail: { ja: '作品詳細 - MoeGen 萌創', en: 'Work Detail - MoeGen', 'zh-cn': '作品详情 - MoeGen 萌创', 'zh-tw': '作品詳情 - MoeGen 萌創' },
-  'novel-detail': { ja: '小説詳細 - MoeGen 萌創', en: 'Novel Detail - MoeGen', 'zh-cn': '小说详情 - MoeGen 萌创', 'zh-tw': '小說詳情 - MoeGen 萌創' },
   collection: { ja: 'コレクション - MoeGen 萌創', en: 'Collection - MoeGen', 'zh-cn': '合集 - MoeGen 萌创', 'zh-tw': '合集 - MoeGen 萌創' },
   novel: { ja: 'AI小説生成 - MoeGen 萌創', en: 'AI Novel Generator - MoeGen', 'zh-cn': 'AI小说生成 - MoeGen 萌创', 'zh-tw': 'AI小說生成 - MoeGen 萌創' },
 }
@@ -33,7 +32,6 @@ function detectLang(url) {
 }
 
 function detectPageType(url) {
-  if (url.includes('/novel-detail')) return 'novel-detail'
   if (url.includes('/detail')) return 'detail'
   if (url.includes('/collection/')) return 'collection'
   if (url.match(/\/novel\/\d+/)) return 'novel'
@@ -98,14 +96,6 @@ function enrichSeoMeta(html, url) {
     `<meta name="twitter:title" content="${escapeAttr(title)}" />`,
     `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
   ]
-
-  // 固定语言页（/ja、/ja/novel …）补 x-default 指向 ja 版同路径；详情页无语言变体，跳过
-  const fixed = url.match(/^(https?:\/\/[^/]+)\/(ja|en|zh-cn|zh-tw)(\/(?:novel|comic|drama|photo|video))?\/?(?:[?#]|$)/i)
-  if (fixed && !/hreflang=["']x-default["']/i.test(html)) {
-    const origin = fixed[1]
-    const type = fixed[3] || ''
-    tags.push(`<link rel="alternate" hreflang="x-default" href="${origin}/ja${type || '/'}" />`)
-  }
 
   return html.replace('</head>', tags.join('\n') + '\n</head>')
 }

@@ -1,5 +1,6 @@
 <template>
   <div class="mg-nsfw-panel">
+    <img class="nsfw-bg" src="@/assets/images/detail/lock_pic.png" alt="" />
     <div class="mg-nsfw-card">
       <template v-if="isChina">
         <!-- 中国大陆：不支持查看敏感内容 -->
@@ -40,6 +41,7 @@ $pink: #FF4D8D;
 $yellow: #FFD23F;
 
 .mg-nsfw-panel {
+  position: relative;
   width: 100%;
   min-height: 320px;
   display: flex;
@@ -48,7 +50,19 @@ $yellow: #FFD23F;
   padding: 24px;
   box-sizing: border-box;
 
+  .nsfw-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .mg-nsfw-card {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;

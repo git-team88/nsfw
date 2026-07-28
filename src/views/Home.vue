@@ -2678,8 +2678,10 @@ const selectContentType = (type: string) => {
   const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw' };
   const urlLang = i18nToUrlLang[locale.value] || 'ja';
   const targetPath = `/${urlLang}/${type}`;
-  if (window.location.pathname !== targetPath) {
-    window.history.replaceState({}, '', targetPath);
+  // 用 router.replace 而非 history.replaceState：后者不会更新 vue-router 的 route，
+  // 导致 App.vue 里依赖 route 的 canonical/alternate/hreflang 不会随内容类型切换而更新。
+  if (route.path !== targetPath) {
+    router.replace(targetPath);
   }
 
   // Reset all content and settings when switching content types
