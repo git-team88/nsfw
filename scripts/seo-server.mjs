@@ -104,10 +104,24 @@ let browser = null
 
 async function getBrowser() {
   if (!browser || !browser.connected) {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    })
+    const launchArgs = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      // 抹掉 navigator.webdriver 自动化标记（配合下方 evaluateOnNewDocument），
+      // 否则前端反爬 antiCrawler.ts 的 isRealBrowser() 会判为非真实浏览器并下发陷阱签名，
+      // 导致依赖接口数据的详情页/合集页渲染成空壳。此项两环境通用。
+      '--disable-blink-features=AutomationControlled'
+    ]
+    // ⚠️ 仅正式环境（站点在 Cloudflare 后面）需要：源站 IP 走公网访问会被 Cloudflare 按 IP 拦截，
+    // 所以把站点域名解析到本机源站绕过 CF（本机需有 127.0.0.1:443 回环反代 → :80）。
+    // 通过环境变量 SEO_RESOLVER_RULES 开启；测试环境不设此变量 → 直接联网渲染，无需回环反代。
+    // 例: SEO_RESOLVER_RULES="MAP www.moegen.ai 127.0.0.1,MAP api.moegen.ai 127.0.0.1"
+    if (process.env.SEO_RESOLVER_RULES) {
+      launchArgs.push(`--host-resolver-rules=${process.env.SEO_RESOLVER_RULES}`)
+      launchArgs.push('--ignore-certificate-errors') // 回环反代用的是自签证书
+    }
+    browser = await puppeteer.launch({ headless: true, args: launchArgs })
   }
   return browser
 }
@@ -147,7 +161,12 @@ async function renderPage(url) {
     await page.setUserAgent('Mozilla/5.0 (compatible; MoeGen-SEO-Bot/1.0)')
     // 注入 SEO 预渲染标记：Home.vue 据此按 URL 显示对应内容类型并保留地址，
     // 而不是像真实用户那样重置为默认内容类型 / 只保留域名。
-    await page.evaluateOnNewDocument(() => { window.__SEO_PRERENDER__ = true })
+    // 同时抹掉 navigator.webdriver（配合 --disable-blink-features=AutomationControlled），
+    // 让 antiCrawler.ts 的 isRealBrowser() 判为真实浏览器，接口才会返回真实数据。
+    await page.evaluateOnNewDocument(() => {
+      window.__SEO_PRERENDER__ = true
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+    })
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: RENDER_TIMEOUT })
     await page.waitForFunction(
       () => document.querySelector('#app')?.children?.length > 0,
@@ -217,6 +236,7 @@ app.listen(PORT, () => {
   console.log(`  SPA URL: ${SPA_URL}`)
   console.log(`  Cache dir: ${CACHE_DIR}`)
   console.log(`  Cache TTL: ${CACHE_TTL}s`)
+  console.log(`  CF bypass (host-resolver): ${process.env.SEO_RESOLVER_RULES ? 'ON -> ' + process.env.SEO_RESOLVER_RULES : 'OFF (direct render)'}`)
 })
 
 process.on('SIGINT', async () => {
