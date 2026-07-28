@@ -1019,11 +1019,11 @@ onBeforeUnmount(() => {
           background: #FF4D8D;
           color: #ffffff;
           border: 3px solid #161122;
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 2px 2px 0 #161122;
 
           &:hover {
             transform: translate(-1px, -1px);
-            box-shadow: 5px 5px 0 #161122;
+            box-shadow: 3px 3px 0 #161122;
           }
 
           &:active {
@@ -1039,12 +1039,12 @@ onBeforeUnmount(() => {
             background: rgba(22, 17, 34, 0.06);
             color: #5b5566;
             border: 3px solid #161122;
-            box-shadow: 4px 4px 0 #161122;
+            box-shadow: 2px 2px 0 #161122;
 
             &:hover {
               color: #FF4D8D;
               transform: translate(-1px, -1px);
-              box-shadow: 5px 5px 0 #161122;
+              box-shadow: 3px 3px 0 #161122;
 
               .btn-text {
                 display: none;
@@ -1067,11 +1067,11 @@ onBeforeUnmount(() => {
           color: #ffffff;
           padding: 0 10px;
           border: 3px solid #161122;
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 2px 2px 0 #161122;
 
           &:hover {
             transform: translate(-1px, -1px);
-            box-shadow: 5px 5px 0 #161122;
+            box-shadow: 3px 3px 0 #161122;
           }
 
           &:active {
@@ -1083,7 +1083,7 @@ onBeforeUnmount(() => {
             background: rgba(22, 17, 34, 0.06);
             color: #5b5566;
             border: 3px solid #161122;
-            box-shadow: 4px 4px 0 #161122;
+            box-shadow: 2px 2px 0 #161122;
             cursor: not-allowed;
           }
         }
@@ -1345,7 +1345,7 @@ onBeforeUnmount(() => {
       .action-buttons {
         gap: 0.8333vw;
         .btn {
-          min-width: 8.3333vw;
+          min-width: 9.3vw;
           height: 3.3333vw;
           padding: 0 0.6944vw;
           border-radius: 0.5556vw;
