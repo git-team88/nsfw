@@ -1,24 +1,24 @@
 <template>
-  <div class="mg-rk-row rank-row" :style="{ animationDelay: `${Math.min(i, 10) * 45}ms` }">
-    <span class="rank-number">{{ w.rank }}</span>
-    <div class="rank-cover" :style="{ background: w.cover }"></div>
-    <div class="rank-info">
-      <div class="rank-title">{{ w.title }}</div>
-      <div class="rank-meta">
-        <span class="type-badge" :style="{ background: badgeBg }">{{ typeLabel }}</span>
-        <span class="rank-author">@{{ w.author }}</span>
-        <span class="rank-change" :style="{ color: chgColor }">{{ chgText }}</span>
+  <div class="mg-rk-row rank-row" :style="{ animationDelay: `${Math.min(i, 10) * 45}ms` }" @click="goDetail">
+    <div class="rank-left">
+      <span class="rank-number">{{ w.rank }}</span>
+      <div class="rank-cover" :style="{ background: w.cover }"></div>
+      <div class="rank-info">
+        <div class="rank-title">{{ w.title }}</div>
+        <div class="rank-meta">
+          <span class="type-badge" :style="{ background: badgeBg }">{{ typeLabel }}</span>
+        </div>
       </div>
+    </div>
+    <div class="rank-author">
+      <img class="rank-avatar" :src="defaultAvatar" alt="" />
+      <span class="rank-author-name">{{ w.author }}</span>
     </div>
     <div class="rank-stats">
       <span class="stat stat-pink">&#9829; {{ fmtK(w.likes) }}</span>
       <span class="stat stat-comment">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
         {{ fmtK(w.comments) }}
-      </span>
-      <span class="stat">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-        {{ fmtKStr(w.views) }}
       </span>
     </div>
   </div>
@@ -27,6 +27,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import defaultAvatar from '@/assets/images/base/avatar.png'
 
 interface RankedWork {
   id: string
@@ -40,10 +42,11 @@ interface RankedWork {
   rank: number
 }
 
+// 类型标签配色（漫话=绿 / 漫剧=青 / 小说=紫）
 const TYPE_BADGE: Record<string, { label: string; bg: string }> = {
-  manga: { label: 'rank.manga', bg: '#FFC24B' },
-  novel: { label: 'rank.novel', bg: '#C9B6FF' },
+  manga: { label: 'rank.manga', bg: '#8FE38C' },
   anime: { label: 'rank.anime', bg: '#7FD8E8' },
+  novel: { label: 'rank.novel', bg: '#C9B6FF' },
 }
 
 const props = defineProps<{ w: RankedWork; i: number }>()
@@ -54,35 +57,24 @@ const badge = computed(() => TYPE_BADGE[props.w.type] ?? { label: 'rank.all', bg
 const badgeBg = computed(() => badge.value.bg)
 const typeLabel = computed(() => t(badge.value.label))
 
-function changeFor(id: string): { text: string; color: string } {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  const m = h % 3
-  if (m === 0) return { text: `▲${(h % 4) + 1}`, color: '#22C55E' }
-  if (m === 1) return { text: `▼${(h % 3) + 1}`, color: '#FF4D8D' }
-  return { text: '±0', color: 'rgba(22,17,34,.4)' }
+const router = useRouter()
+function goDetail() {
+  if (props.w.id) router.push(`/detail?id=${props.w.id}`)
 }
-
-const chg = computed(() => changeFor(props.w.id))
-const chgText = computed(() => chg.value.text)
-const chgColor = computed(() => chg.value.color)
 
 function fmtK(n: number): string {
   return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n)
 }
-
-function fmtKStr(s: string): string {
-  const n = Number(s)
-  return Number.isFinite(n) ? fmtK(n) : s
-}
 </script>
 
 <style scoped lang="scss">
+$ink: #161122;
+
 .rank-row {
   display: flex;
   align-items: center;
   background: #fff;
-  border: 2.5px solid #161122;
+  border: 2.5px solid $ink;
   border-radius: 14px;
   gap: 15px;
   padding: 12px 15px;
@@ -92,21 +84,34 @@ function fmtKStr(s: string): string {
   will-change: transform;
 }
 
+// 左：名次 + 封面 + 标题/标签
+.rank-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
 .rank-number {
-  width: 32px;
+  width: 42px;
+  height: 42px;
   flex: none;
-  text-align: center;
-  font-family: "Mochiy Pop One", "M PLUS Rounded 1c", sans-serif;
-  font-weight: 900;
-  font-size: 26px;
-  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(16,24,40,0.06);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 20px;
+  color: #99A1AF;
 }
 
 .rank-cover {
-  width: 58px;
-  height: 78px;
+  width: 46px;
+  height: 62px;
   flex: none;
-  border: 2px solid #161122;
+  border: 2px solid $ink;
   border-radius: 8px;
   background-size: cover;
   background-position: center;
@@ -129,38 +134,54 @@ function fmtKStr(s: string): string {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 5px;
+  margin-top: 6px;
   min-width: 0;
 }
 
 .type-badge {
-  border: 1.5px solid #161122;
+  border: 1.5px solid $ink;
   font-weight: 800;
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 999px;
   flex-shrink: 0;
-  color: #161122;
+  color: $ink;
 }
 
 .rank-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.rank-avatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid $ink;
+  object-fit: cover;
+}
+
+.rank-author-name {
   font-weight: 600;
-  font-size: 12px;
-  opacity: 0.55;
+  font-size: 16px;
+  opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.rank-change {
-  font-weight: 800;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
 .rank-stats {
   display: flex;
-  gap: 14px;
+  gap: 18px;
   flex: none;
 }
 
@@ -169,8 +190,8 @@ function fmtKStr(s: string): string {
   align-items: center;
   gap: 4px;
   font-weight: 800;
-  font-size: 12.5px;
-  color: #161122;
+  font-size: 14px;
+  color: $ink;
   opacity: 0.7;
   white-space: nowrap;
 

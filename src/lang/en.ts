@@ -3005,6 +3005,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     manga: "Manga",
     novel: "Novel",
     anime: "Anime Drama",
-    empty: "No works in this category yet"
+    empty: "No works in this category yet",
+    loading: "Loading...",
+    noMore: "No more"
   }
 };

@@ -746,6 +746,9 @@
               <div v-if="!isLoadingCollections && !loadingMoreCollections && collections.length > 0 && !hasMoreCollections" class="no-more">
                 {{ t('detail.noMoreCollections') }}
               </div>
+
+              <!-- 触底加载哨兵（页面/容器任意滚动都可触发下一页） -->
+              <div ref="collectionSentinelRef" class="collection-sentinel"></div>
             </div>
           </div>
 
@@ -1776,6 +1779,26 @@ function playCollectionItem(chapter: any) {
 
 // Collection list scroll ref
 const collectionListRef = ref<HTMLElement | null>(null);
+const collectionSentinelRef = ref<HTMLElement | null>(null);
+let collectionObserver: IntersectionObserver | null = null;
+
+// 触底哨兵：无论是合集列表内部滚动（桌面）还是整页滚动（移动端堆叠布局），
+// 只要哨兵进入视口就加载下一页，避免依赖列表元素自身的固定高度滚动。
+function setupCollectionObserver() {
+  if (collectionObserver) return;
+  collectionObserver = new IntersectionObserver((entries) => {
+    if (entries[0]?.isIntersecting && !loadingMoreCollections.value && hasMoreCollections.value && !isLoadingCollections.value) {
+      loadCollections(true);
+    }
+  }, { root: null, rootMargin: '120px' });
+  if (collectionSentinelRef.value) collectionObserver.observe(collectionSentinelRef.value);
+}
+
+watch(activeTab, (tab) => {
+  if (tab === 'collection') {
+    nextTick(() => setupCollectionObserver());
+  }
+});
 
 // Handle collection list scroll for load more
 function handleCollectionScroll() {
@@ -5010,6 +5033,12 @@ onBeforeUnmount(() => {
 
   // Remove fullscreen change listener
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
+
+  // Disconnect collection load-more observer
+  if (collectionObserver) {
+    collectionObserver.disconnect();
+    collectionObserver = null;
+  }
 });
 
 watch(

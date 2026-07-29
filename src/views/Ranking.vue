@@ -88,7 +88,10 @@
 
         <!-- 用户排行 -->
         <template v-else>
-          <div v-if="userLoading" class="ranking-empty">{{ t('rank.empty') }}</div>
+          <div v-if="userLoading" class="ranking-loading">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">{{ t('rank.loading') }}</span>
+          </div>
           <template v-else-if="userItems.length > 0">
             <div class="ranking-podium" v-if="userTop3.length > 0">
               <UserPodiumCard
@@ -104,6 +107,12 @@
               :u="u"
               :i="i"
             />
+
+            <div v-if="userLoadingMore" class="ranking-loading">
+              <div class="loading-spinner"></div>
+              <span class="loading-text">{{ t('rank.loading') }}</span>
+            </div>
+            <div v-else-if="!userHasMore" class="ranking-nomore">{{ t('rank.noMore') }}</div>
           </template>
           <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
         </template>
@@ -114,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Header from '@/components/Header.vue'
 import PodiumCard from '@/components/ranking/PodiumCard.vue'
@@ -142,6 +151,7 @@ interface RankedUser {
   fans: number
   works: number
   rank: number
+  isFollowed: boolean
 }
 
 const { t } = useI18n()
@@ -194,43 +204,56 @@ const top3 = computed(() => filteredItems.value.slice(0, 3))
 const restItems = computed(() => filteredItems.value.slice(3))
 
 const podiumOrder = computed(() => {
+  // 领奖台顺序：左=第2名，中=第1名，右=第3名
   if (top3.value.length === 3) {
     return [top3.value[1], top3.value[0], top3.value[2]]
   }
   return top3.value
 })
 
-// ---------- 用户排行（真实数据） ----------
+// ---------- 用户排行（真实数据，分页） ----------
 const userItems = ref<RankedUser[]>([])
-const userLoading = ref(false)
-let loadedTab = ''
+const userLoading = ref(false)       // 首屏加载
+const userLoadingMore = ref(false)   // 加载下一页
+const userPage = ref(1)
+const userHasMore = ref(true)
+const USER_LIMIT = 30
 
-async function loadUserRank() {
-  const key = userTab.value
-  if (loadedTab === key) return
-  loadedTab = key
-  userLoading.value = true
+async function loadUserRank(reset = false) {
+  if (reset) {
+    userPage.value = 1
+    userHasMore.value = true
+    userItems.value = []
+    userLoading.value = true
+  } else {
+    if (userLoadingMore.value || !userHasMore.value || userLoading.value) return
+    userLoadingMore.value = true
+  }
+  const page = userPage.value
   try {
     // 目前仅有人气榜接口；新锐榜暂复用同一接口，待后端提供后替换
-    const res = (await api.popularUserRank(1, 30)) as any
-    if (loadedTab !== key) return
-    if ((res.code === 0 || res.code === 200) && res.data?.data) {
-      userItems.value = res.data.data.map((it: any, i: number) => ({
-        id: String(it.user_id),
-        name: it.user?.nickname ?? '',
-        avatar: it.user?.avatar || '',
-        fans: Number(it.fans_num) || 0,
-        works: Number(it.post_num) || 0,
-        rank: i + 1,
-      }))
-    } else {
-      userItems.value = []
-    }
+    const res = (await api.popularUserRank(page, USER_LIMIT)) as any
+    const list = ((res.code === 0 || res.code === 200) && res.data?.data) ? res.data.data : []
+    const mapped: RankedUser[] = list.map((it: any, i: number) => ({
+      id: String(it.user_id),
+      name: it.user?.nickname ?? '',
+      avatar: it.user?.avatar || '',
+      fans: Number(it.fans_num) || 0,
+      works: Number(it.post_num) || 0,
+      rank: (page - 1) * USER_LIMIT + i + 1,
+      isFollowed: it.is_follow == 1 || it.is_followed == 1 || it.user?.is_follow == 1,
+    }))
+    if (reset) userItems.value = mapped
+    else userItems.value.push(...mapped)
+    userHasMore.value = list.length >= USER_LIMIT
+    if (userHasMore.value) userPage.value = page + 1
   } catch (e) {
     console.error('popularUserRank', e)
-    userItems.value = []
+    if (reset) userItems.value = []
+    userHasMore.value = false
   } finally {
     userLoading.value = false
+    userLoadingMore.value = false
   }
 }
 
@@ -243,13 +266,30 @@ const userPodiumOrder = computed(() => {
   return userTop3.value
 })
 
+// 切主 tab 后回到第一个 subtab
 watch(mode, (m) => {
-  if (m === 'user') loadUserRank()
+  type.value = 'all'
+  const prevUserTab = userTab.value
+  userTab.value = 'popular'
+  if (m === 'user' && prevUserTab === 'popular') {
+    // userTab 未变化时 watch(userTab) 不会触发，这里手动首屏加载
+    loadUserRank(true)
+  }
 })
 
 watch(userTab, () => {
-  if (mode.value === 'user') loadUserRank()
+  if (mode.value === 'user') loadUserRank(true)
 })
+
+// 下拉到底部加载下一页（仅用户榜有真实分页）
+function onScroll() {
+  if (mode.value !== 'user' || userLoading.value || userLoadingMore.value || !userHasMore.value) return
+  const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 320
+  if (nearBottom) loadUserRank(false)
+}
+
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 function handleUserInfoLoaded() {}
 function handleBalanceInfoLoaded() {}

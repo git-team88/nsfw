@@ -17,6 +17,7 @@
 }
 
 .ranking-panel {
+  min-height: calc(100vh - 126px);
   background: #FFFDF7;
   border: 3px solid #161122;
   border-radius: 6px;
@@ -38,7 +39,6 @@
 
 .ranking-header-left {
   h1 {
-    font-family: "Mochiy Pop One", "M PLUS Rounded 1c", sans-serif;
     font-size: 26px;
     font-weight: 900;
     line-height: 1.2;
@@ -164,15 +164,13 @@
 
 .ranking-podium {
   display: grid;
-  grid-template-columns: 1fr 1.12fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   align-items: end;
-  max-width: 760px;
-  margin: 0 auto 30px;
+  margin: 0 0 20px;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    max-width: 340px;
   }
 }
 
@@ -183,12 +181,45 @@
   color: #9a93a4;
 }
 
+.ranking-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0;
+
+  .loading-text {
+    font-size: 13px;
+    color: #9a93a4;
+  }
+}
+
+.ranking-nomore {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #9a93a4;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(22, 17, 34, 0.12);
+  border-top-color: #FF4D8D;
+  border-radius: 50%;
+  animation: rkSpin 0.8s linear infinite;
+}
+
+@keyframes rkSpin {
+  to { transform: rotate(360deg); }
+}
+
 .mg-rk-pod {
   animation: rkPod 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 7px 9px 0 rgba(22, 17, 34, 0.18) !important;
+    // 悬浮时保留各名次的彩色阴影，不覆盖成灰色
   }
 }
 

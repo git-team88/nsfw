@@ -1,5 +1,5 @@
 <template>
-  <div class="mg-rk-pod user-podium-card" :style="{ animationDelay: `${delay}ms` }" @click="goUser">
+  <div class="mg-rk-pod user-podium-card" :class="`rank-${u.rank}`" :style="{ animationDelay: `${delay}ms` }" @click="goUser">
     <div class="user-podium-top" :style="{ paddingTop: `${26 + lift}px` }">
       <svg v-if="u.rank === 1" class="podium-crown" width="34" height="26" viewBox="0 0 24 20" fill="#FFD23F" stroke="#161122" stroke-width="1.8" stroke-linejoin="round">
         <path d="M2 6l4.5 4L12 2l5.5 8L22 6l-1.8 11H3.8z" />
@@ -12,9 +12,23 @@
     <div class="user-podium-info">
       <div class="user-podium-name">{{ u.name }}</div>
       <div class="user-podium-stats">
-        <span class="stat stat-pink">&#9829; {{ fmtK(u.fans) }} {{ t('rank.userFans') }}</span>
-        <span class="stat">{{ fmtK(u.works) }} {{ t('rank.userWorks') }}</span>
+        <div class="stat-col">
+          <span class="stat-num stat-pink">{{ fmtK(u.fans) }}</span>
+          <span class="stat-label">{{ t('rank.userFans') }}</span>
+        </div>
+        <span class="stat-divider"></span>
+        <div class="stat-col">
+          <span class="stat-num stat-blue">{{ fmtK(u.works) }}</span>
+          <span class="stat-label">{{ t('rank.userWorks') }}</span>
+        </div>
       </div>
+      <button
+        class="user-follow-btn"
+        :class="{ following: u.isFollowed }"
+        @click.stop="toggleFollow"
+      >
+        {{ u.isFollowed ? t('home.followingBtn') : t('home.followBtn') }}
+      </button>
     </div>
   </div>
 </template>
@@ -22,8 +36,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import defaultAvatar from '@/assets/images/base/avatar.png'
+import api from '@/api/index'
 
 interface RankedUser {
   id: string
@@ -32,12 +47,14 @@ interface RankedUser {
   fans: number
   works: number
   rank: number
+  isFollowed: boolean
 }
 
-const PODIUM_COLORS = ['#FFD23F', '#E5E7EB', '#F0A85C']
+const PODIUM_COLORS = ['#FFD347', '#C9D4E5', '#E8A87C']
 
 const props = defineProps<{ u: RankedUser }>()
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 
 const badgeColor = computed(() => PODIUM_COLORS[props.u.rank - 1] ?? '#fff')
@@ -47,6 +64,31 @@ const lift = computed(() => props.u.rank === 1 ? 44 : props.u.rank === 2 ? 22 : 
 
 function goUser() {
   if (props.u.id) router.push(`/user-home?id=${props.u.id}`)
+}
+
+let following = false
+async function toggleFollow() {
+  if (!localStorage.getItem('token')) {
+    localStorage.setItem('loginRedirect', route.fullPath)
+    router.push('/register')
+    return
+  }
+  if (following || !props.u.id) return
+  following = true
+  const data = { followed_id: props.u.id }
+  try {
+    if (props.u.isFollowed) {
+      const res = (await api.unfollow(data)) as any
+      if (res.code === 0 || res.code === 200) props.u.isFollowed = false
+    } else {
+      const res = (await api.follow(data)) as any
+      if (res.code === 0 || res.code === 200) props.u.isFollowed = true
+    }
+  } catch (e) {
+    console.error('toggleFollow', e)
+  } finally {
+    following = false
+  }
 }
 
 function onErr(e: Event) {
@@ -60,15 +102,22 @@ function fmtK(n: number): string {
 </script>
 
 <style scoped lang="scss">
+$ink: #161122;
+
 .user-podium-card {
   display: block;
   background: #fff;
-  border: 3px solid #161122;
-  border-radius: 16px;
+  border: 3px solid $ink;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.16);
   will-change: transform;
+
+  // 黑色边框 + 名次色阴影（金/银/铜），与作品榜一致
+  &.rank-1 { box-shadow: 6px 6px 0 #FFD347; }
+  &.rank-2 { box-shadow: 6px 6px 0 #C9D4E5; }
+  &.rank-3 { box-shadow: 6px 6px 0 #E8A87C; }
 }
 
 .user-podium-top {
@@ -89,25 +138,23 @@ function fmtK(n: number): string {
 
 .podium-badge {
   position: absolute;
-  left: 10px;
-  top: 10px;
+  left: 12px;
+  top: 12px;
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  border: 2.5px solid #161122;
-  font-family: "Mochiy Pop One", "M PLUS Rounded 1c", sans-serif;
+  border-radius: 8px;
+  border: 2.5px solid $ink;
   font-weight: 900;
   font-size: 18px;
-  box-shadow: 2px 2px 0 #161122;
 }
 
 .user-podium-avatar {
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  border: 3px solid #161122;
+  border: 3px solid $ink;
   overflow: hidden;
   background: #e7e1d8;
 
@@ -120,7 +167,7 @@ function fmtK(n: number): string {
 }
 
 .user-podium-info {
-  padding: 0 13px 16px;
+  padding: 0 16px 16px;
   text-align: center;
 }
 
@@ -135,24 +182,68 @@ function fmtK(n: number): string {
 
 .user-podium-stats {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 8px;
+  margin: 12px 0 14px;
 }
 
-.stat {
-  display: inline-flex;
+.stat-col {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-weight: 800;
-  font-size: 12.5px;
-  color: #161122;
-  opacity: 0.7;
-  white-space: nowrap;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
 
-  &.stat-pink {
-    color: #FF4D8D;
-    opacity: 1;
+.stat-num {
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1;
+
+  &.stat-pink { color: #FF4D8D; }
+  &.stat-blue { color: #3B82F6; }
+}
+
+.stat-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #6A7282;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 30px;
+  background: rgba(22, 17, 34, 0.12);
+  flex: none;
+}
+
+.user-follow-btn {
+  width: 100%;
+  height: 48px;
+  border: 2px solid $ink;
+  border-radius: 10px;
+  background: #FF4D8D;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 $ink;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
+
+  &.following {
+    background: #fff;
+    color: $ink;
+  }
+
+  &:hover {
+    transform: translate(-1px, -2px);
+    box-shadow: 4px 5px 0 $ink;
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 $ink;
   }
 }
 </style>

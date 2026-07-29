@@ -3066,6 +3066,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     manga: "漫画",
     novel: "小説",
     anime: "アニメドラマ",
-    empty: "この条件の作品はまだありません"
+    empty: "この条件の作品はまだありません",
+    loading: "読み込み中...",
+    noMore: "これ以上ありません"
   }
 };
