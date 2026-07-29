@@ -159,7 +159,7 @@
             {{ t('detail.nextChapter') }}
           </button>
           <!-- Last chapter prompt in collection mode (right of buttons) -->
-          <div class="last-chapter-inline" v-if="!nextChapterId">
+          <div class="last-chapter-inline" v-if="bookGenSwitch == '2' || !nextChapterId">
             <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
             <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
           </div>
@@ -193,7 +193,7 @@
         </div>
 
         <!-- Last chapter prompt for non-collection mode (bottom of page) -->
-        <div class="last-chapter-section" v-if="!nextChapterId && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
+        <div class="last-chapter-section" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
           <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
           <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
         </div>
@@ -309,6 +309,18 @@ function getCountry() {
   });
 }
 
+// 获取合集章节生成按钮开关：switch=2 每一章都显示，switch=1 仅最后一章显示
+async function fetchBookGenSwitch() {
+  try {
+    const res = await api.getBookGenSwitch() as any;
+    if ((res.code == 0 || res.code == 200) && res.data) {
+      bookGenSwitch.value = String(res.data.switch ?? '1');
+    }
+  } catch (e) {
+    console.error('Error fetching book gen switch:', e);
+  }
+}
+
 // 是否中国大陆用户（地区接口已返回且非海外）
 const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
@@ -411,6 +423,8 @@ const lastUpdated = ref('');
 // Chapter navigation
 const prevChapterId = ref('');
 const nextChapterId = ref('');
+// 合集章节生成按钮开关：'2'=合集每一章都显示 last-chapter；'1'=仅最后一章显示
+const bookGenSwitch = ref('1');
 
 // Navigation arrows
 const isFirst = ref(false);
@@ -1929,6 +1943,7 @@ function handleContextMenu(e: MouseEvent) {
 
 onMounted(async () => {
   getCountry();
+  fetchBookGenSwitch();
   await fetchDetail();
 
   // Add scroll event listener for comments list

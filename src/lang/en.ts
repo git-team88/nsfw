@@ -2251,7 +2251,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     lock: {
       tip: "Subscribers can view the full content",
       unlockOtherWorks: "All other works linked to this user have been unlocked as well.",
-      lastChapterTip: "You've finished this chapter.\nYou can generate content you want to see.",
+      lastChapterTip: "Enter any idea,\nand AI completes the work in one click",
       goGenerate: "Generate",
       subscribe: "Subscribe",
       sensitiveContent: "Sensitive content, only visible to users aged 18 and above",

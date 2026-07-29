@@ -2083,7 +2083,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     lock: {
       tip: "全文はサブスク登録者のみ閲覧できます",
       unlockOtherWorks: "このユーザーの他のすべての作品も同時にロック解除されます",
-      lastChapterTip: "この章を読み終わりました\n見たいコンテンツを直接生成できます",
+      lastChapterTip: "アイデアを入力するだけで、\nAIがワンクリックで作品を完成",
       goGenerate: "生成する",
       subscribe: "サブスクリプション",
       sensitiveContent: "センシティブな内容です。18歳以上のユーザーのみ閲覧できます",

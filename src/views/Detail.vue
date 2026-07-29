@@ -51,7 +51,7 @@
                       </div>
                     </div>
 
-                    <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type !== '1')">
+                    <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && (isImagesLoaded || detail.type !== '1')">
                       <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
                       <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
                     </div>
@@ -221,7 +221,7 @@
                     </template>
                   </div>
 
-                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && !nextChapterId && (isImagesLoaded || detail.type != '1')">
+                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && (isImagesLoaded || detail.type != '1')">
                     <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
                     <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
                   </div>
@@ -1258,6 +1258,8 @@ const chapterCount = ref(0);
 const prevChapterId = ref('');
 const nextChapterId = ref('');
 const isChapterNavigationLoaded = ref(false);
+// 合集章节生成按钮开关：'2'=合集每一章都显示 last-chapter-section；'1'=仅最后一章显示
+const bookGenSwitch = ref('1');
 
 // Track if images are loaded to prevent layout shift
 const isImagesLoaded = ref(false);
@@ -3295,6 +3297,18 @@ function goToHomePage() {
   router.push('/');
 }
 
+// 获取合集章节生成按钮开关：switch=2 每一章都显示，switch=1 仅最后一章显示
+async function fetchBookGenSwitch() {
+  try {
+    const res = await api.getBookGenSwitch() as any;
+    if ((res.code == 0 || res.code == 200) && res.data) {
+      bookGenSwitch.value = String(res.data.switch ?? '1');
+    }
+  } catch (e) {
+    console.error('Error fetching book gen switch:', e);
+  }
+}
+
 function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
@@ -4958,6 +4972,7 @@ onMounted(async () => {
   document.addEventListener("contextmenu", handleContextMenu);
 
   getCountry();
+  fetchBookGenSwitch();
   fetchDetail(id.value);
 
   nextTick(() => {

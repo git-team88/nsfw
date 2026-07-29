@@ -97,7 +97,6 @@ $yellow: #FFD23F;
     font-size: 14px;
     font-weight: 600;
     color: $ink;
-    opacity: .7;
     line-height: 1.7;
   }
 

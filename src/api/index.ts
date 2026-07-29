@@ -133,6 +133,11 @@ export default {
       data: data,
       method: "POST",
     }),
+  getBookGenSwitch: () =>
+    axios.request({
+      url: "index/getBookGenSwitchPublic",
+      method: "GET",
+    }),
   setAdult: (data: any) =>
     axios.request({
       url: "user/setAdult",

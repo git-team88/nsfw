@@ -2351,7 +2351,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     lock: {
       tip: "訂閱者可以查看全文",
       unlockOtherWorks: "同時解鎖了本用戶下的其他全部作品",
-      lastChapterTip: "目前章節已讀完\n您可以直接生成想看的內容",
+      lastChapterTip: "輸入任意想法，\nAi一鍵完成作品",
       goGenerate: "去生成",
       subscribe: "訂閱",
       sensitiveContent: "敏感內容，僅年滿18歲用戶可見",
