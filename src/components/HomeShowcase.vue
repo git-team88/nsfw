@@ -276,8 +276,8 @@ function creLayout() {
     el.style.opacity = depth > 3 ? '0' : String(1 - depth * 0.16);
     el.style.zIndex = String(100 - depth);
     el.style.filter = depth ? `brightness(${(1 - depth * 0.07).toFixed(2)})` : 'none';
-    // 用户卡片不需要阴影
-    el.style.boxShadow = 'none';
+    // 仅最前面的卡片显示阴影（实心硬投影，与其它卡片一致），后面的堆叠卡片不显示
+    el.style.boxShadow = depth === 0 ? '8px 8px 0 #161122' : 'none';
   });
 }
 

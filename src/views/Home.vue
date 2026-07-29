@@ -1154,7 +1154,8 @@
     />
 
     <!-- Event Modal (首页延迟弹出的活动告知) -->
-    <EventModal />
+    <!-- 暂时注释：活动弹窗遮挡了「详细使用方法」按钮，先关闭 -->
+    <!-- <EventModal /> -->
 
 
     <!-- Insufficient Balance Modal -->
@@ -1208,7 +1209,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
 import InviteCodeModal from '@/components/InviteCodeModal.vue';
 import GuideModal from '@/components/GuideModal.vue';
-import EventModal from '@/components/EventModal.vue';
+// import EventModal from '@/components/EventModal.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
 import Hero3DBackground from '@/components/Hero3DBackground.vue';
