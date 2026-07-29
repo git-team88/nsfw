@@ -252,7 +252,7 @@ function handlePasswordVerify() {
 }
 
 function validatePassword(password: string) {
-  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\S]{8,20}$/u;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\S]{8,20}$/u;
   return regex.test(password);
 }
 

@@ -1811,13 +1811,19 @@ $border-med: rgba(22,17,34,0.2);
   margin: 8px;
   border: 3px solid $ink;
   border-radius: 6px;
-  padding: 46px 44px 64px;
-  background:
-    linear-gradient(116deg, transparent 0 6%, #3B82F6 6% 10%, transparent 10%),
-    linear-gradient(116deg, transparent 0 88%, #FF4D8D 88% 93%, transparent 93%),
-    linear-gradient(0deg, transparent 0 34%, #FFD23F 34% 37.5%, transparent 37.5%),
-    linear-gradient(200deg, transparent 0 62%, #22C55E 62% 66%, transparent 66%),
-    #FFFDF7;
+  padding: 46px 44px;
+  // feed 为无限滚动，斜纹若满铺会随内容无限变粗、若压进固定高度又会全堆到顶部。
+  // 因此拆成两段锚定：蓝线锚定顶部，其余 3 条锚定底部，中间留白（底色）铺满。
+  // 每条各自 no-repeat + 固定绘制高度，不随内容量变化。想让某组更靠边/更集中，调对应的高度值。
+  background-image:
+    linear-gradient(116deg, transparent 0 6%, #3B82F6 6% 10%, transparent 10%),   // 蓝：顶部
+    linear-gradient(116deg, transparent 0 88%, #FF4D8D 88% 93%, transparent 93%), // 粉：底部
+    linear-gradient(0deg, transparent 0 34%, #FFD23F 34% 37.5%, transparent 37.5%), // 黄：底部
+    linear-gradient(200deg, transparent 0 62%, #22C55E 62% 66%, transparent 66%);  // 绿：底部
+  background-repeat: no-repeat;
+  background-position: top, bottom, bottom, bottom;
+  background-size: 100% 2100px, 100% 2800px, 100% 2800px, 100% 2800px;
+  background-color: #FFFDF7;
 
   .feed-heading {
     margin-bottom: 22px;
@@ -2235,6 +2241,9 @@ $border-med: rgba(22,17,34,0.2);
     }
 
     .content-item {
+      display: block;
+      text-decoration: none;
+      color: inherit;
       width: auto;
       height: auto;
       cursor: pointer;
@@ -2875,7 +2884,7 @@ $border-med: rgba(22,17,34,0.2);
   }
 
   .content-section {
-    padding: 28px 14px 44px;
+    padding: 28px 14px;
   }
 
   .content-section .content-grid .waterfall {

@@ -50,6 +50,40 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       background: url("@/assets/images/detail/back.png") no-repeat !important;
       background-size: 100% 100% !important;
     }
+
+    // 合集阅读模式：返回改为「‹ 返回」胶囊按钮
+    &.is-collection {
+      width: auto;
+      height: auto;
+    }
+
+    .back-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: $paper;
+      border: 2px solid $ink;
+      border-radius: 14px;
+      box-shadow: $shadow-hard;
+      font-size: 15px;
+      font-weight: 700;
+      color: $ink;
+      line-height: 1;
+      white-space: nowrap;
+
+      span {
+        width: auto;
+        height: auto;
+        background: none;
+      }
+
+      .back-pill-arrow {
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: -2px;
+      }
+    }
   }
 
   .back-icon-container {
@@ -405,7 +439,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         margin: 0 24px;
         height: calc(100vh - 180px);
         background: $cream;
-        border: 2px solid $line;
         border-radius: 12px;
 
         .sensitive-content-warning {
@@ -417,7 +450,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
           padding: 24px 16px;
           background: $paper;
           border: 3px solid $ink;
-          box-shadow: $shadow-hard;
           border-radius: 12px;
 
           .warning-text {
@@ -908,12 +940,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         .sensitive-body {
           width: calc(100% - 3.3333vw);
           margin: 0 1.6667vw;
-          height: calc(100vh - 12.5vw);
+          height: calc(100vh - 16vw);
           border-radius: 0.8333vw;
 
           .sensitive-content-warning {
             width: 25vw;
-            padding: 1.1111vw;
+            padding: 1.4vw 1.2vw;
             border-radius: 0.8333vw;
 
             .warning-text {
@@ -921,8 +953,8 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             }
 
             .warning-btn {
-              min-width: 8.3333vw;
-              height: 2.7778vw;
+              min-width: 15vw;
+              height: 2.9vw;
               font-size: 0.9722vw;
               border-radius: 0.5556vw;
             }

@@ -6,55 +6,107 @@
       <section class="ranking-panel">
         <div class="ranking-header">
           <div class="ranking-header-left">
-            <h1 class="ranking-title">{{ t('rank.title') }}</h1>
+            <h1 class="ranking-title">
+              <img class="ranking-title-icon" src="@/assets/images/rank/icon.png" alt="" />
+              <span>{{ t('rank.title') }}</span>
+            </h1>
             <p class="ranking-sub">{{ t('rank.sub') }}</p>
+          </div>
+
+          <div class="ranking-header-right">
+            <div class="ranking-note">
+              <span>{{ t('rank.statNote') }}</span>
+              <span>{{ t('rank.updateNote') }}</span>
+            </div>
           </div>
         </div>
 
         <div class="ranking-filters">
           <div class="seg-group">
             <button
-              v-for="p in periods"
-              :key="p.id"
+              v-for="m in modes"
+              :key="m.id"
               class="seg-btn"
-              :class="{ active: period === p.id }"
-              @click="period = p.id"
+              :class="{ active: mode === m.id }"
+              @click="mode = m.id"
             >
-              {{ t(p.label) }}
+              {{ t(m.label) }}
             </button>
           </div>
 
-          <div class="seg-group">
+          <!-- 作品排行：内容类型 -->
+          <div class="type-pills" v-if="mode === 'work'">
             <button
               v-for="tp in types"
               :key="tp.id"
-              class="seg-btn"
+              class="type-pill"
               :class="{ active: type === tp.id }"
               @click="type = tp.id"
             >
               {{ t(tp.label) }}
             </button>
           </div>
-        </div>
 
-        <template v-if="filteredItems.length > 0">
-          <div class="ranking-podium" v-if="top3.length > 0">
-            <PodiumCard
-              v-for="w in podiumOrder"
-              :key="w.id"
-              :w="w"
-            />
+          <!-- 用户排行：人气 / 新锐 -->
+          <div class="type-pills" v-else>
+            <button
+              v-for="ut in userTabs"
+              :key="ut.id"
+              class="type-pill"
+              :class="{ active: userTab === ut.id }"
+              @click="userTab = ut.id"
+            >
+              {{ t(ut.label) }}
+            </button>
           </div>
 
-          <RankRow
-            v-for="(w, i) in restItems"
-            :key="w.id"
-            :w="w"
-            :i="i"
-          />
+          <div class="ranking-deco" aria-hidden="true">
+            <span v-for="n in 15" :key="n"></span>
+          </div>
+        </div>
+
+        <!-- 作品排行 -->
+        <template v-if="mode === 'work'">
+          <template v-if="filteredItems.length > 0">
+            <div class="ranking-podium" v-if="top3.length > 0">
+              <PodiumCard
+                v-for="w in podiumOrder"
+                :key="w.id"
+                :w="w"
+              />
+            </div>
+
+            <RankRow
+              v-for="(w, i) in restItems"
+              :key="w.id"
+              :w="w"
+              :i="i"
+            />
+          </template>
+          <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
         </template>
 
-        <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
+        <!-- 用户排行 -->
+        <template v-else>
+          <div v-if="userLoading" class="ranking-empty">{{ t('rank.empty') }}</div>
+          <template v-else-if="userItems.length > 0">
+            <div class="ranking-podium" v-if="userTop3.length > 0">
+              <UserPodiumCard
+                v-for="u in userPodiumOrder"
+                :key="u.id"
+                :u="u"
+              />
+            </div>
+
+            <UserRankRow
+              v-for="(u, i) in userRestItems"
+              :key="u.id"
+              :u="u"
+              :i="i"
+            />
+          </template>
+          <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
+        </template>
       </section>
     </main>
 
@@ -62,11 +114,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Header from '@/components/Header.vue'
 import PodiumCard from '@/components/ranking/PodiumCard.vue'
 import RankRow from '@/components/ranking/RankRow.vue'
+import UserPodiumCard from '@/components/ranking/UserPodiumCard.vue'
+import UserRankRow from '@/components/ranking/UserRankRow.vue'
+import api from '@/api/index'
 
 interface RankedWork {
   id: string
@@ -80,21 +135,35 @@ interface RankedWork {
   rank: number
 }
 
+interface RankedUser {
+  id: string
+  name: string
+  avatar: string
+  fans: number
+  works: number
+  rank: number
+}
+
 const { t } = useI18n()
 
-const period = ref('daily')
+const mode = ref<'work' | 'user'>('work')
 const type = ref('all')
+const userTab = ref<'popular' | 'rising'>('popular')
 
-const periods = [
-  { id: 'daily', label: 'rank.daily' },
-  { id: 'weekly', label: 'rank.weekly' },
-  { id: 'monthly', label: 'rank.monthly' },
+const modes = [
+  { id: 'work' as const, label: 'rank.workRank' },
+  { id: 'user' as const, label: 'rank.userRank' },
+]
+
+const userTabs = [
+  { id: 'popular' as const, label: 'rank.popularAuthor' },
+  { id: 'rising' as const, label: 'rank.risingAuthor' },
 ]
 
 const types = [
   { id: 'all', label: 'rank.all' },
-  { id: 'manga', label: 'rank.manga' },
   { id: 'novel', label: 'rank.novel' },
+  { id: 'manga', label: 'rank.manga' },
   { id: 'anime', label: 'rank.anime' },
 ]
 
@@ -129,6 +198,57 @@ const podiumOrder = computed(() => {
     return [top3.value[1], top3.value[0], top3.value[2]]
   }
   return top3.value
+})
+
+// ---------- 用户排行（真实数据） ----------
+const userItems = ref<RankedUser[]>([])
+const userLoading = ref(false)
+let loadedTab = ''
+
+async function loadUserRank() {
+  const key = userTab.value
+  if (loadedTab === key) return
+  loadedTab = key
+  userLoading.value = true
+  try {
+    // 目前仅有人气榜接口；新锐榜暂复用同一接口，待后端提供后替换
+    const res = (await api.popularUserRank(1, 30)) as any
+    if (loadedTab !== key) return
+    if ((res.code === 0 || res.code === 200) && res.data?.data) {
+      userItems.value = res.data.data.map((it: any, i: number) => ({
+        id: String(it.user_id),
+        name: it.user?.nickname ?? '',
+        avatar: it.user?.avatar || '',
+        fans: Number(it.fans_num) || 0,
+        works: Number(it.post_num) || 0,
+        rank: i + 1,
+      }))
+    } else {
+      userItems.value = []
+    }
+  } catch (e) {
+    console.error('popularUserRank', e)
+    userItems.value = []
+  } finally {
+    userLoading.value = false
+  }
+}
+
+const userTop3 = computed(() => userItems.value.slice(0, 3))
+const userRestItems = computed(() => userItems.value.slice(3))
+const userPodiumOrder = computed(() => {
+  if (userTop3.value.length === 3) {
+    return [userTop3.value[1], userTop3.value[0], userTop3.value[2]]
+  }
+  return userTop3.value
+})
+
+watch(mode, (m) => {
+  if (m === 'user') loadUserRank()
+})
+
+watch(userTab, () => {
+  if (mode.value === 'user') loadUserRank()
 })
 
 function handleUserInfoLoaded() {}

@@ -10,7 +10,7 @@
           <div class="swiper-container">
             <div class="swiper-wrapper">
               <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
-                <img class="banner-img" :src="banner.cover" alt="" @click="banner.jump_url && (location.href = banner.jump_url)" />
+                <img class="banner-img" :src="banner.cover" alt="" @click="banner.jump_url && goBanner(banner.jump_url)" />
               </div>
             </div>
             <div class="swiper-pagination"></div>
@@ -959,14 +959,15 @@
               ref="waterfallRef"
               :key="`waterfall-${activeContentTab}`"
             >
-              <div
+              <a
                 v-for="(item, index) in displayContent"
                 :key="item.id"
                 class="content-item"
                 :ref="(el) => setContentCardRef(el, index)"
+                :href="detailHref(item.id)"
                 @mousemove="onCardTilt"
                 @mouseleave="onCardTiltReset"
-                @click="navigateToDetail(item.id, item.type)"
+                @click.prevent="navigateToDetail(item.id, item.type)"
               >
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
@@ -1014,11 +1015,11 @@
                 <div class="content-info">
                   <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
                   <div class="content-meta">
-                    <div class="author-info" v-if="activeContentTab != 'suggested'" @click.stop="navigateToUserHome(item.author?.id)">
+                    <div class="author-info" v-if="activeContentTab != 'suggested'" @click.stop.prevent="navigateToUserHome(item.author?.id)">
                       <img :src="item.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <span class="author-name">{{ item.author?.nickname }}</span>
                     </div>
-                    <div class="author-info" v-else @click.stop="navigateToUserHome(item.author_info?.id)">
+                    <div class="author-info" v-else @click.stop.prevent="navigateToUserHome(item.author_info?.id)">
                       <img :src="item.author_info?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                       <span class="author-name">{{ item.author_info?.nickname }}</span>
                     </div>
@@ -1028,7 +1029,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
 
             <div v-if="loading" class="loading-state">
@@ -2672,6 +2673,11 @@ const removeCharacter = (character: any) => {
 
   // Do not update local storage - only characters from CharacterLibrary should be cached
 };
+
+// Banner jump
+const goBanner = (url: string) => {
+  window.location.href = url
+}
 
 // Content type selection
 const selectContentType = (type: string) => {
@@ -5318,6 +5324,12 @@ const navigateToDetail = (id: string, type?: string) => {
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
   router.push({ path: '/detail', query: { id: id , type: tabType, contentType: activeContentType.value.toString() } });
+};
+
+// 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
+const detailHref = (id: string) => {
+  const tabType = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
+  return `/detail?id=${id}&type=${tabType}&contentType=${activeContentType.value}`;
 };
 
 const navigateToUserHome = (userId: number) => {

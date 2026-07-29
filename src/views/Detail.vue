@@ -3006,7 +3006,8 @@ function onLoadedMetadata(e: Event) {
   const v = e.target as HTMLVideoElement;
   duration.value = v.duration;
   v.volume = volume.value;
-  v.muted = true;
+  // 按缓存音量决定是否静音（音量为 0 才静音）；带声播放能否成立最终由 tryAutoPlay 处理
+  v.muted = volume.value === 0;
 }
 
 function onCanPlay() {
@@ -3023,14 +3024,11 @@ function tryAutoPlay() {
     return;
   }
 
-  // 仅在首次自动播放时强制静音（浏览器自动播放策略要求）；
-  // 之后（如拖动进度条到起点触发的重新缓冲/canplay）保留用户的音量设置，避免被静音
-  if (hasAutoPlayed.value) {
-    videoRef.value.volume = volume.value;
-    videoRef.value.muted = volume.value === 0;
-  } else {
-    videoRef.value.muted = true;
-  }
+  // 打开即按缓存音量尝试带声自动播放；缓存音量为 0（从未开过声）则静音。
+  // 若浏览器自动播放策略拦截了带声播放，回退为静音重试，保证视频仍能自动播放。
+  const wantSound = volume.value > 0;
+  videoRef.value.volume = volume.value;
+  videoRef.value.muted = !wantSound;
   const playPromise = videoRef.value.play();
   if (playPromise !== undefined) {
     playPromise.then(() => {
@@ -3038,8 +3036,21 @@ function tryAutoPlay() {
       isPlaying.value = true;
       isVideoLoading.value = false;
     }).catch(() => {
-      isPlaying.value = false;
-      isVideoLoading.value = false;
+      // 带声自动播放被拦截 → 回退静音重试
+      if (wantSound && videoRef.value) {
+        videoRef.value.muted = true;
+        videoRef.value.play().then(() => {
+          hasAutoPlayed.value = true;
+          isPlaying.value = true;
+          isVideoLoading.value = false;
+        }).catch(() => {
+          isPlaying.value = false;
+          isVideoLoading.value = false;
+        });
+      } else {
+        isPlaying.value = false;
+        isVideoLoading.value = false;
+      }
     });
   }
 }

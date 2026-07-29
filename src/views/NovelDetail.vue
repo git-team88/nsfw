@@ -1,11 +1,9 @@
 <template>
   <div class="novel-detail">
-    <div class="close-page-btn" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-      <div class="back-icon-container" v-if="isCollectionMode">
-        <span class="close-icon"></span>
-        <div class="info-tooltip">
-          {{ t('detail.exitCollectionReadMode') }}
-        </div>
+    <div class="close-page-btn" :class="{ 'is-collection': isCollectionMode }" @click="isCollectionMode ? exitCollectionMode() : closePage()">
+      <div class="back-pill" v-if="isCollectionMode">
+        <span class="back-pill-arrow">‹</span>
+        <span class="back-pill-text">{{ t('back') }}</span>
       </div>
       <span class="back-icon" v-else></span>
     </div>

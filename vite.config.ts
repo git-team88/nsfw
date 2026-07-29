@@ -88,7 +88,7 @@ export default defineConfig({
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
         manualChunks: {
           vendor: ['vue', 'vue-router', 'vue-i18n', 'pinia'],
-          ui: ['element-plus', 'ant-design-vue'],
+          ui: ['element-plus'],
           utils: ['axios', 'dayjs', 'bignumber.js', 'uuid'],
           doc: ['mammoth', 'cfb']
         }
