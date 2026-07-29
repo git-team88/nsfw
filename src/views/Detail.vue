@@ -1,9 +1,10 @@
 <template>
   <div class="detail-view">
     <div class="" v-if="detail.type == '1' || detail.type == '3'">
-      <div class="close-page-btn" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-        <div class="back-icon-container" v-if="isCollectionMode">
+      <div class="close-page-btn" :class="{ 'is-collection': isCollectionMode }" @click="isCollectionMode ? exitCollectionMode() : closePage()">
+        <div class="back-pill" v-if="isCollectionMode">
           <span class="back-icon"></span>
+          <span class="back-pill-text">{{ t('back') }}</span>
           <div class="info-tooltip">
             {{ t('detail.exitCollectionPlayMode') }}
           </div>

@@ -15,9 +15,12 @@
       <span class="rank-author-name">{{ w.author }}</span>
     </div>
     <div class="rank-stats">
-      <span class="stat stat-pink">&#9829; {{ fmtK(w.likes) }}</span>
+      <span class="stat stat-pink">
+        <img class="stat-icon" src="@/assets/images/rank/like.png" alt="" />
+        {{ fmtK(w.likes) }}
+      </span>
       <span class="stat stat-comment">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+        <img class="stat-icon" src="@/assets/images/rank/comment.png" alt="" />
         {{ fmtK(w.comments) }}
       </span>
     </div>
@@ -198,6 +201,12 @@ $ink: #161122;
   &.stat-pink {
     color: #FF4D8D;
     opacity: 1;
+  }
+
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
   }
 }
 

@@ -2992,11 +2992,6 @@ function likeReply(id: string, liked: boolean) {
               background: url("@/assets/images/detail/cancel.png") no-repeat;
               background-size: 100% 100%;
               cursor: pointer;
-
-              &:hover {
-                background: url("@/assets/images/detail/cancel_hover.png") no-repeat;
-                background-size: 100% 100%;
-              }
             }
 
             .send-btn {
@@ -3006,11 +3001,6 @@ function likeReply(id: string, liked: boolean) {
               background-size: 100% 100%;
               cursor: pointer;
               transition: box-shadow 0.2s ease;
-
-              &:hover {
-                background: url("@/assets/images/detail/send_hover.png") no-repeat;
-                background-size: 100% 100%;
-              }
             }
           }
         }

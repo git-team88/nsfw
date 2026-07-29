@@ -63,6 +63,94 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     background: url('@/assets/images/detail/back.png') no-repeat center center;
     background-size: 100% 100%;
   }
+
+  // 合集模式：返回改为「图标 + 返回」胶囊按钮
+  &.is-collection {
+    width: auto;
+    height: auto;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .back-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: $paper;
+    border: 2px solid $ink;
+    border-radius: 14px;
+    box-shadow: $shadow-hard-sm;
+    font-size: 15px;
+    font-weight: 700;
+    color: $ink;
+    line-height: 1;
+    white-space: nowrap;
+
+    .back-icon {
+      width: 18px;
+      height: 18px;
+      background: url('@/assets/images/detail/back_icon.png') no-repeat center center;
+      background-size: 100% 100%;
+    }
+
+    .back-pill-text {
+      width: auto;
+      height: auto;
+      background: none;
+    }
+
+    .info-tooltip {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: $paper;
+      color: $ink;
+      font-size: 12px;
+      border-radius: 8px;
+      border: 2px solid $ink;
+      white-space: nowrap;
+      z-index: 30;
+      box-shadow: $shadow-hard-sm;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+
+      &::before,
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+      }
+
+      &::before {
+        left: 16px;
+        border-bottom: 10px solid $ink;
+      }
+
+      &::after {
+        left: 18px;
+        margin-bottom: -2px;
+        border-left-width: 6px;
+        border-right-width: 6px;
+        border-bottom: 8px solid $paper;
+      }
+    }
+
+    &:hover .info-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
 }
 
 .back-icon-container {
@@ -1656,8 +1744,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         border-radius: 12px;
 
         &:hover {
-          background: url("@/assets/images/detail/cancel_hover.png") no-repeat;
-          background-size: 100% 100%;
           transform: translateY(-1px);
         }
       }
@@ -1672,8 +1758,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         transition: $transition-spring;
 
         &:hover {
-          background: url("@/assets/images/detail/send_hover.png") no-repeat;
-          background-size: 100% 100%;
           transform: translateY(-2px);
         }
       }

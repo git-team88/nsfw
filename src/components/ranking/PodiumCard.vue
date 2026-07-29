@@ -246,10 +246,17 @@ $ink: #161122;
   }
 }
 
-// 小屏适配：封面保持固定宽度，不随卡片拉伸
-@media (max-width: 640px) {
+// 中等宽度（仍是 3 列但偏挤）：缩小封面宽度，给右侧信息留空间
+@media (max-width: 1100px) and (min-width: 901px) {
   .podium-cover {
     width: 100px;
+  }
+}
+
+// 小屏（≤900 单列一行一个）：封面保持固定宽度，无需调整
+@media (max-width: 900px) {
+  .podium-cover {
+    width: 112px;
     flex: none;
   }
 }

@@ -169,7 +169,7 @@
   align-items: end;
   margin: 0 0 20px;
 
-  @media (max-width: 640px) {
+  @media (max-width: 900px) {
     grid-template-columns: 1fr;
   }
 }

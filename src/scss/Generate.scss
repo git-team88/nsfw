@@ -1655,11 +1655,6 @@ $highlight: #FFF3D6;
         background-size: cover;
         cursor: pointer;
         transform: all 0.3s ease-in;
-
-        &:hover {
-          background: url('@/assets/images/detail/send_hover.png') no-repeat;
-          background-size: cover;
-        }
       }
 
       &.unlimit{
