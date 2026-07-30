@@ -14,6 +14,9 @@ const BOTS = /googlebot|bingbot|baiduspider|yandexbot|duckduckbot|slurp|facebot|
 
 const RENDER_TIMEOUT = 15000
 const WAIT_AFTER_LOAD = 3000
+// 混合策略的「同步等待窗口」：缓存未命中时最多同步等这么久拿完整正文，
+// 超时则先返回骨架、同一次渲染转后台跑完写缓存。需小于 nginx/爬虫的超时阈值。
+const SYNC_RENDER_TIMEOUT = parseInt(process.env.SYNC_RENDER_TIMEOUT || '9000', 10)
 const SITE_NAME = 'MoeGen 萌創'
 const SITE_URL = 'https://www.moegen.ai'
 
@@ -194,22 +197,45 @@ app.get('/render', async (req, res) => {
       return res.type('html').send(cached)
     }
 
-    // 无缓存：先返回带 meta 的骨架 HTML（爬虫可抓到 title/description/canonical）
-    // 同时异步渲染，渲染完成后写入缓存，下次请求直接命中
-    const skeletonHtml = generateSkeleton(targetUrl, req.query)
-    res.set('X-SEO-Cache', 'MISS-ASYNC')
-    res.type('html').send(skeletonHtml)
+    // 无缓存：混合策略。启动一次渲染，在 SYNC_RENDER_TIMEOUT 内完成
+    // → 直接返回带正文/图片的完整 HTML（爬虫首次抓取即有内容）；
+    // 若超时未完成 → 先返回带 meta 的骨架，同一次渲染继续在后台跑完并写缓存
+    // （不重复渲染），下次请求直接命中。渲染失败则降级返回骨架 200（保住 meta）。
+    let responded = false
 
-    // 异步渲染并缓存（不阻塞响应）
-    renderPage(targetUrl).then(html => {
-      setCache(targetUrl, html)
-      console.log(`Async render cached: ${targetUrl}`)
-    }).catch(e => {
-      console.error(`Async render failed: ${targetUrl} - ${e.message}`)
-    })
+    const timer = setTimeout(() => {
+      if (responded) return
+      responded = true
+      res.set('X-SEO-Cache', 'MISS-TIMEOUT-ASYNC')
+      res.type('html').send(generateSkeleton(targetUrl, req.query))
+    }, SYNC_RENDER_TIMEOUT)
+
+    renderPage(targetUrl)
+      .then(html => {
+        setCache(targetUrl, html)
+        if (responded) {
+          // 已超时吐过骨架：此次渲染仅用于写缓存
+          console.log(`Async render cached (after timeout): ${targetUrl}`)
+          return
+        }
+        clearTimeout(timer)
+        responded = true
+        res.set('X-SEO-Cache', 'MISS')
+        res.type('html').send(html)
+      })
+      .catch(e => {
+        console.error(`Render failed: ${targetUrl} - ${e.message}`)
+        if (responded) return
+        clearTimeout(timer)
+        responded = true
+        // 渲染失败降级：返回带 meta 的骨架，至少保证 title/description/canonical 可抓取
+        res.set('X-SEO-Cache', 'ERROR-FALLBACK')
+        res.status(200).type('html').send(generateSkeleton(targetUrl, req.query))
+      })
   } catch (e) {
-    console.error(`Render failed: ${targetUrl} - ${e.message}`)
-    res.status(502).send('Render failed')
+    console.error(`Render handler error: ${targetUrl} - ${e.message}`)
+    // 兜底：即便 getCache 等同步逻辑异常，也返回骨架而非报错，避免爬虫拿到 5xx
+    res.status(200).type('html').send(generateSkeleton(targetUrl, req.query))
   }
 })
 

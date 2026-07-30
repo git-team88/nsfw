@@ -168,17 +168,18 @@
             </div>
 
             <template v-else-if="detail.type == '1' && !isCollectionMode">
-              <div class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
-                <!-- 敏感内容：整个图片列表区域显示开启面板 -->
-                <SensitiveNsfwPanel
-                  v-if="isSensitiveContentLocked"
-                  :isTeenager="detail.is_teenager == 1"
-                  :isChina="isChinaRegion"
-                  @enable="enableSensitiveBrowsing"
-                  @confirm-adult="confirmAdultBrowsing"
-                />
+              <!-- 敏感内容：面板独立于 image-stack，占满整个区域 -->
+              <SensitiveNsfwPanel
+                v-if="isSensitiveContentLocked"
+                class="nsfw-panel-full"
+                :isTeenager="detail.is_teenager == 1"
+                :isChina="isChinaRegion"
+                @enable="enableSensitiveBrowsing"
+                @confirm-adult="confirmAdultBrowsing"
+              />
 
-                <template v-else-if="!isLoading">
+              <div v-else class="image-stack" ref="imageStackRef" @scroll="handleImageStackScroll" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
+                <template v-if="!isLoading">
                   <div
                     class="image-stack-item"
                     v-for="(img, index) in detail.images"

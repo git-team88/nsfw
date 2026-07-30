@@ -11,8 +11,10 @@
       </div>
     </div>
     <div class="rank-author">
-      <img class="rank-avatar" :src="defaultAvatar" alt="" />
-      <span class="rank-author-name">{{ w.author }}</span>
+      <span class="rank-author-link" v-if="w.author" @click.stop="goUser">
+        <img class="rank-avatar" :src="w.avatar || defaultAvatar" alt="" @error="onAvatarErr" />
+        <span class="rank-author-name">{{ w.author }}</span>
+      </span>
     </div>
     <div class="rank-stats">
       <span class="stat stat-pink">
@@ -35,9 +37,13 @@ import defaultAvatar from '@/assets/images/base/avatar.png'
 
 interface RankedWork {
   id: string
+  postId: string
+  postIdNotNsfw: string
   title: string
   type: string
   author: string
+  authorId: string
+  avatar: string
   likes: number
   comments: number
   views: string
@@ -62,7 +68,20 @@ const typeLabel = computed(() => t(badge.value.label))
 
 const router = useRouter()
 function goDetail() {
-  if (props.w.id) router.push(`/detail?id=${props.w.id}`)
+  // 根据是否开启敏感内容读取不同的 post id
+  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1'
+  const pid = (allowSensitive ? props.w.postId : props.w.postIdNotNsfw) || props.w.postId || props.w.postIdNotNsfw
+  if (pid) router.push(`/detail?id=${pid}`)
+}
+
+// 点击作者头像/昵称跳转个人主页
+function goUser() {
+  if (props.w.authorId) router.push(`/user-home?id=${props.w.authorId}`)
+}
+
+function onAvatarErr(e: Event) {
+  const el = e.target as HTMLImageElement
+  if (el) el.src = defaultAvatar
 }
 
 function fmtK(n: number): string {
@@ -106,7 +125,7 @@ $ink: #161122;
   border: 3px solid rgba(16,24,40,0.06);
   border-radius: 12px;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 18px;
   color: #99A1AF;
 }
 
@@ -154,14 +173,22 @@ $ink: #161122;
 .rank-author {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 7px;
-  flex: 1;
+  flex: 0.5;
   min-width: 0;
 
   @media (max-width: 640px) {
     display: none;
   }
+}
+
+.rank-author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  cursor: pointer;
 }
 
 .rank-avatar {
@@ -195,7 +222,6 @@ $ink: #161122;
   font-weight: 800;
   font-size: 14px;
   color: $ink;
-  opacity: 0.7;
   white-space: nowrap;
 
   &.stat-pink {
@@ -204,8 +230,8 @@ $ink: #161122;
   }
 
   .stat-icon {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
   }
 }

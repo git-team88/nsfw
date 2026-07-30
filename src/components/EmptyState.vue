@@ -29,23 +29,18 @@ $muted: #9a93a4;
   justify-content: center;
   padding: 80px 20px 0;
   text-align: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .empty-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 999px;
-  border: 3px solid $ink;
-  padding: 12px;
-  background: linear-gradient(135deg, #FFE885, #FF7AAE);
-  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  width: 140px;
+  height: 140px;
 }
 
 .empty-text {
-  font-size: 15px;
+  font-size: 14px;
   color: $ink;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .empty-hint {

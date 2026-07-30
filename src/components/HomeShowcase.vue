@@ -8,6 +8,7 @@
       <div class="panel-head">
         <h2 class="panel-title">{{ t('home.popularCreator') }}</h2>
         <div class="flex-1"></div>
+        <button class="head-more" @click="goRankUser">{{ t('home.viewAll') }} →</button>
       </div>
       <p class="panel-sub">{{ t('home.popularCreatorSub') }}</p>
 
@@ -49,7 +50,7 @@
           @click="goSprout"
         >
           <div ref="sproutCoverEl" class="sprout-cover"></div>
-          <div class="sprout-badge">{{ t('home.seeMore') }}</div>
+          <div class="sprout-badge">{{ t('home.latestWork') }}</div>
         </div>
       </div>
     </div>
@@ -61,6 +62,7 @@
       </div>
       <div class="panel-head">
         <h2 class="panel-title">{{ t('home.popularBook') }}</h2>
+        <button class="head-more" @click="goRankWork">{{ t('home.seeMore') }} →</button>
         <button class="view-toggle" @click="view = view === 'ring' ? 'rows' : 'ring'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
           {{ view === 'ring' ? t('home.viewList') : t('home.viewRing') }}
@@ -147,12 +149,12 @@ import api from '@/api/index';
 import { toast } from '@/util/toast';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const router = useRouter();
 
 /* ---------- 数据 ---------- */
-interface Creator { id: string; name: string; avatar: string; avatarImg?: string; cover: string; fans: string | number; works: number; isFollowed: boolean }
-interface Work { id: string; title: string; cover: string; author: string; likes: string | number; type: string }
+interface Creator { id: string; name: string; avatar: string; avatarImg?: string; cover: string; fans: string | number; works: number; isFollowed: boolean; latestCover?: string; latestPostId?: string; latestPostIdNotNsfw?: string }
+interface Work { id: string; postId?: string; postIdNotNsfw?: string; title: string; cover: string; author: string; likes: string | number; type: string }
 
 const creators = ref<Creator[]>([]);
 const books = ref<Work[]>([]);
@@ -194,16 +196,23 @@ onMounted(async () => {
   try {
     const res = (await api.popularUserRank(1, 6)) as any;
     if ((res.code === 0 || res.code === 200) && res.data?.data) {
-      creators.value = res.data.data.map((it: any, i: number) => ({
-        id: String(it.user_id),
-        name: it.user?.nickname ?? '',
-        avatar: 'linear-gradient(135deg,#FF7AAE,#FFB443)',
-        avatarImg: it.user?.avatar || undefined,
-        cover: CRE_COVERS[i % CRE_COVERS.length],
-        fans: it.fans_num ?? 0,
-        works: Number(it.post_num) || 0,
-        isFollowed: it.is_followed === 1 || it.is_followed === '1',
-      }));
+      creators.value = res.data.data.map((it: any, i: number) => {
+        // 创作者最新作（合集）信息：接口返回在 book 节点下（无 type，默认漫画 1）
+        const lb = it.book || {};
+        return {
+          id: String(it.user_id),
+          name: it.user?.nickname ?? '',
+          avatar: 'linear-gradient(135deg,#FF7AAE,#FFB443)',
+          avatarImg: it.user?.avatar || undefined,
+          cover: CRE_COVERS[i % CRE_COVERS.length],
+          fans: it.fans_num ?? 0,
+          works: Number(it.post_num) || 0,
+          isFollowed: it.is_followed === 1 || it.is_followed === '1',
+          latestCover: lb.cover || '',
+          latestPostId: String(lb.public_post_id ?? ''),
+          latestPostIdNotNsfw: String(lb.public_post_id_not_nsfw ?? ''),
+        };
+      });
     }
   } catch (e) { console.error('popularUserRank', e); }
 
@@ -212,8 +221,29 @@ onMounted(async () => {
     creators.value = MOCK_CREATORS.map((c, i) => ({ ...c, cover: CRE_COVERS[i % CRE_COVERS.length] }));
   }
 
-  // 人气漫画：先用假数据（接口就绪后改回 api.hotBook）
-  books.value = MOCK_BOOKS.slice();
+  // 人气作品榜（首页只取一页，period=week）
+  try {
+    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, 0)) as any;
+    const list = ((bookRes.code === 0 || bookRes.code === 200) && (bookRes.data?.data || bookRes.data)) || [];
+    if (Array.isArray(list) && list.length) {
+      books.value = list.map((it: any) => {
+        const b = it.book || {};
+        return {
+          id: String(it.book_id ?? b.id ?? ''),
+          postId: String(b.public_post_id ?? ''),
+          postIdNotNsfw: String(b.public_post_id_not_nsfw ?? ''),
+          title: b.title || '',
+          cover: b.cover || '',
+          author: it.user?.nickname ?? '',
+          likes: Number(it.like_count ?? it.all_like ?? it.like_num ?? 0) || 0,
+          type: String(b.type ?? '1'),
+        };
+      });
+    }
+  } catch (e) { console.error('popularBookRank', e); }
+
+  // 作品为空时用假数据兜底，保证 3D 动效可见
+  if (!books.value.length) books.value = MOCK_BOOKS.slice();
 
   // 等卡片 DOM 渲染完再启动动效（否则 cardEls 为空直接 return）
   await nextTick();
@@ -224,7 +254,15 @@ onMounted(async () => {
 const onAvatarErr = (e: Event) => { const el = e.target as HTMLImageElement; if (el) el.src = defaultAvatar; };
 
 function goUser(c: Creator) { router.push(`/user-home?id=${c.id}`); }
-function goWork(w: Work) { router.push(`/detail?id=${w.id}&type=${w.type}`); }
+function goRankUser() { router.push('/ranking?tab=user'); }
+function goRankWork() { router.push('/ranking'); }
+function goWork(w: Work) {
+  // 根据是否开启敏感内容读取不同的 post id
+  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
+  const pid = (allowSensitive ? w.postId : w.postIdNotNsfw) || w.postId || w.postIdNotNsfw;
+  if (pid) router.push(`/detail?id=${pid}&type=${w.type}`);
+  else if (w.id) router.push(`/detail?id=${w.id}&type=${w.type}`);
+}
 
 async function toggleFollow(c: Creator) {
   const token = localStorage.getItem('token');
@@ -300,7 +338,15 @@ function startCreatorStack() {
     const openX = window.innerWidth <= 1080 ? 62 : 152;
     if (sprout) {
       const cover = sproutCoverEl.value;
-      if (cover) cover.style.background = `radial-gradient(circle at 30% 20%,rgba(255,255,255,.35) 1.3px,transparent 1.5px) 0 0/11px 11px,${SPROUT_COVERS[frontIdx % SPROUT_COVERS.length]}`;
+      if (cover) {
+        const dots = 'radial-gradient(circle at 30% 20%,rgba(255,255,255,.35) 1.3px,transparent 1.5px) 0 0/11px 11px';
+        const fallback = SPROUT_COVERS[frontIdx % SPROUT_COVERS.length];
+        const latest = creators.value[frontIdx]?.latestCover;
+        // 展开露出的卡片显示该创作者最新作（合集）封面，无封面时回退渐变
+        cover.style.background = latest
+          ? `url(${latest}) center/cover no-repeat,${dots},${fallback}`
+          : `${dots},${fallback}`;
+      }
       sprout.style.transition = 'transform .6s cubic-bezier(.34,1.4,.5,1), opacity .35s';
       sprout.style.transform = `translate(-50%,-50%) translate(${openX}px,0) rotate(9deg) scale(1)`;
       sprout.style.opacity = '1';
@@ -367,8 +413,12 @@ function onCreMove(e: PointerEvent) {
 
 function goSprout() {
   const frontIdx = orderRef[0];
-  const w = books.value[frontIdx % Math.max(1, books.value.length)];
-  if (w) goWork(w);
+  const c = creators.value[frontIdx];
+  if (!c) return;
+  // 跳转该创作者最新作详情，按敏感内容开关取不同 post id
+  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
+  const pid = (allowSensitive ? c.latestPostId : c.latestPostIdNotNsfw) || c.latestPostId || c.latestPostIdNotNsfw;
+  if (pid) router.push(`/detail?id=${pid}`);
 }
 
 /* ---------- 右侧人气作品 3D 环形 ---------- */
@@ -513,6 +563,10 @@ $pink: #FF4D8D;
 
   .panel-title { font-size: 26px; font-weight: 900; color: $ink; margin: 0; white-space: nowrap; }
   .flex-1 { flex: 1; }
+  .head-more {
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-size: 13px; font-weight: 800; color: $pink; white-space: nowrap;
+  }
   .view-toggle {
     display: inline-flex; align-items: center; gap: 6px;
     background: #fff; border: 2px solid $ink; border-radius: 999px;

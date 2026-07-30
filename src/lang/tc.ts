@@ -1772,6 +1772,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     followBtn: "關注",
     followingBtn: "已關注",
     seeMore: "查看更多",
+    viewAll: "查看全部",
+    latestWork: "最新作",
     readMore: "＼ 檢視更多新作！ ／",
     viewList: "列表",
     viewRing: "環形",

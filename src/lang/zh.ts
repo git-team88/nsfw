@@ -1778,6 +1778,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     followBtn: "关注",
     followingBtn: "已关注",
     seeMore: "查看更多",
+    viewAll: "查看全部",
+    latestWork: "最新作",
     readMore: "＼ 查看更多新作！ ／",
     viewList: "列表",
     viewRing: "环形",

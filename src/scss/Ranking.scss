@@ -22,10 +22,10 @@
   border: 3px solid #161122;
   border-radius: 6px;
   box-shadow: 6px 6px 0 #161122;
-  padding: 24px 18px 32px;
+  padding: 24px 18px;
 
   @media (min-width: 768px) {
-    padding: 34px 40px 44px;
+    padding: 34px 40px 24px;
   }
 }
 
@@ -147,7 +147,7 @@
 
 .type-pill {
   border: 2px solid #161122;
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 8px 18px;
   font-weight: 800;
   font-size: 14px;
@@ -157,6 +157,7 @@
   color: #161122;
 
   &.active {
+    border: 2px solid #FF4D8D;
     background: #FF4D8D;
     color: #fff;
   }

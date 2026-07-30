@@ -67,7 +67,11 @@
 
         <!-- 作品排行 -->
         <template v-if="mode === 'work'">
-          <template v-if="filteredItems.length > 0">
+          <div v-if="workLoading" class="ranking-loading">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">{{ t('rank.loading') }}</span>
+          </div>
+          <template v-else-if="workItems.length > 0">
             <div class="ranking-podium" v-if="top3.length > 0">
               <PodiumCard
                 v-for="w in podiumOrder"
@@ -82,8 +86,14 @@
               :w="w"
               :i="i"
             />
+
+            <div v-if="workLoadingMore" class="ranking-loading">
+              <div class="loading-spinner"></div>
+              <span class="loading-text">{{ t('rank.loading') }}</span>
+            </div>
+            <div v-else-if="!workHasMore" class="ranking-nomore">{{ t('rank.noMore') }}</div>
           </template>
-          <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
+          <EmptyState v-else :text="t('rank.empty')" />
         </template>
 
         <!-- 用户排行 -->
@@ -114,7 +124,7 @@
             </div>
             <div v-else-if="!userHasMore" class="ranking-nomore">{{ t('rank.noMore') }}</div>
           </template>
-          <div v-else class="ranking-empty">{{ t('rank.empty') }}</div>
+          <EmptyState v-else :text="t('rank.empty')" />
         </template>
       </section>
     </main>
@@ -125,18 +135,24 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import Header from '@/components/Header.vue'
 import PodiumCard from '@/components/ranking/PodiumCard.vue'
 import RankRow from '@/components/ranking/RankRow.vue'
 import UserPodiumCard from '@/components/ranking/UserPodiumCard.vue'
 import UserRankRow from '@/components/ranking/UserRankRow.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import api from '@/api/index'
 
 interface RankedWork {
   id: string
+  postId: string
+  postIdNotNsfw: string
   title: string
   type: string
   author: string
+  authorId: string
+  avatar: string
   likes: number
   comments: number
   views: string
@@ -154,7 +170,8 @@ interface RankedUser {
   isFollowed: boolean
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const route = useRoute()
 
 const mode = ref<'work' | 'user'>('work')
 const type = ref('all')
@@ -177,31 +194,70 @@ const types = [
   { id: 'anime', label: 'rank.anime' },
 ]
 
-const fakeData: RankedWork[] = [
-  { id: 'rk-001', title: '星の降る夜に', type: 'novel', author: 'sakura', likes: 2340, comments: 456, views: '12500', cover: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', rank: 1 },
-  { id: 'rk-002', title: '龍の騎士団', type: 'manga', author: 'ryuken', likes: 1890, comments: 321, views: '9800', cover: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', rank: 2 },
-  { id: 'rk-003', title: '桜花戦記', type: 'anime', author: 'hana_s', likes: 1560, comments: 289, views: '7600', cover: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', rank: 3 },
-  { id: 'rk-004', title: '月影の迷宮', type: 'novel', author: 'tsukiyo', likes: 1320, comments: 245, views: '6400', cover: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', rank: 4 },
-  { id: 'rk-005', title: '炎の守護者', type: 'manga', author: 'honoo_k', likes: 1100, comments: 198, views: '5300', cover: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', rank: 5 },
-  { id: 'rk-006', title: '深海の楽園', type: 'anime', author: 'umi_d', likes: 980, comments: 176, views: '4200', cover: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', rank: 6 },
-  { id: 'rk-007', title: '風の歌を聴け', type: 'novel', author: 'kaze_m', likes: 870, comments: 153, views: '3800', cover: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', rank: 7 },
-  { id: 'rk-008', title: '銀河の約束', type: 'manga', author: 'ginga_p', likes: 760, comments: 134, views: '3200', cover: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', rank: 8 },
-  { id: 'rk-009', title: '雪国物語', type: 'anime', author: 'yuki_t', likes: 650, comments: 112, views: '2700', cover: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', rank: 9 },
-  { id: 'rk-010', title: '虹の彼方に', type: 'novel', author: 'niji_w', likes: 540, comments: 98, views: '2200', cover: 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)', rank: 10 },
-  { id: 'rk-011', title: '暗夜の剣士', type: 'manga', author: 'kiri_s', likes: 430, comments: 82, views: '1800', cover: 'linear-gradient(135deg, #cd9cf2 0%, #f6f3ff 100%)', rank: 11 },
-  { id: 'rk-012', title: '花鳥風月', type: 'anime', author: 'kacho_f', likes: 380, comments: 67, views: '1500', cover: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)', rank: 12 },
-  { id: 'rk-013', title: '天界の扉', type: 'novel', author: 'tenka_g', likes: 320, comments: 56, views: '1300', cover: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', rank: 13 },
-  { id: 'rk-014', title: '鬼神伝', type: 'manga', author: 'kijin_r', likes: 280, comments: 48, views: '1100', cover: 'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)', rank: 14 },
-  { id: 'rk-015', title: '光の記憶', type: 'anime', author: 'hikari_n', likes: 240, comments: 39, views: '950', cover: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', rank: 15 },
-]
+// ---------- 作品排行（真实数据，分页 + 下拉加载） ----------
+// 类型筛选 -> 接口 type 参数：0全部 / 1漫话 / 2小说 / 3漫剧
+const TYPE_PARAM: Record<string, number> = { all: 0, manga: 1, novel: 2, anime: 3 }
+// 接口 type 数值 -> 卡片类型标签 key
+const TYPE_KEY: Record<string, string> = { '1': 'manga', '2': 'novel', '3': 'anime' }
 
-const filteredItems = computed(() => {
-  if (type.value === 'all') return fakeData
-  return fakeData.filter(w => w.type === type.value)
-})
+const workItems = ref<RankedWork[]>([])
+const workLoading = ref(false)      // 首屏加载
+const workLoadingMore = ref(false)  // 加载下一页
+const workPage = ref(1)
+const workHasMore = ref(true)
+const WORK_LIMIT = 50
 
-const top3 = computed(() => filteredItems.value.slice(0, 3))
-const restItems = computed(() => filteredItems.value.slice(3))
+async function loadWorkRank(reset = false) {
+  if (reset) {
+    workPage.value = 1
+    workHasMore.value = true
+    workItems.value = []
+    workLoading.value = true
+  } else {
+    if (workLoadingMore.value || !workHasMore.value || workLoading.value) return
+    workLoadingMore.value = true
+  }
+  const page = workPage.value
+  const reqType = type.value
+  try {
+    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, 0)) as any
+    // 请求期间切换了筛选类型则丢弃本次结果
+    if (reqType !== type.value || mode.value !== 'work') return
+    const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []
+    const mapped: RankedWork[] = (Array.isArray(list) ? list : []).map((it: any, i: number) => {
+      const b = it.book || {}
+      return {
+        id: String(it.book_id ?? b.id ?? ''),
+        postId: String(b.public_post_id ?? ''),
+        postIdNotNsfw: String(b.public_post_id_not_nsfw ?? ''),
+        title: b.title || '',
+        type: TYPE_KEY[String(b.type)] ?? 'manga',
+        author: it.user?.nickname ?? '',
+        authorId: String(b.user_id ?? it.user_id ?? it.user?.id ?? ''),
+        avatar: it.user?.avatar || '',
+        likes: Number(it.like_count ?? it.all_like ?? it.like_num ?? 0) || 0,
+        comments: Number(it.comment_count ?? it.all_comment ?? it.comment_num ?? 0) || 0,
+        views: String(it.all_view ?? it.view_num ?? ''),
+        cover: b.cover ? `url(${b.cover}) center/cover no-repeat` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        rank: Number(it.rank) || ((page - 1) * WORK_LIMIT + i + 1),
+      }
+    })
+    if (reset) workItems.value = mapped
+    else workItems.value.push(...mapped)
+    workHasMore.value = mapped.length >= WORK_LIMIT
+    if (workHasMore.value) workPage.value = page + 1
+  } catch (e) {
+    console.error('popularBookRank', e)
+    if (reset) workItems.value = []
+    workHasMore.value = false
+  } finally {
+    workLoading.value = false
+    workLoadingMore.value = false
+  }
+}
+
+const top3 = computed(() => workItems.value.slice(0, 3))
+const restItems = computed(() => workItems.value.slice(3))
 
 const podiumOrder = computed(() => {
   // 领奖台顺序：左=第2名，中=第1名，右=第3名
@@ -217,7 +273,7 @@ const userLoading = ref(false)       // 首屏加载
 const userLoadingMore = ref(false)   // 加载下一页
 const userPage = ref(1)
 const userHasMore = ref(true)
-const USER_LIMIT = 30
+const USER_LIMIT = 50
 
 async function loadUserRank(reset = false) {
   if (reset) {
@@ -230,9 +286,13 @@ async function loadUserRank(reset = false) {
     userLoadingMore.value = true
   }
   const page = userPage.value
+  const reqUserTab = userTab.value
   try {
-    // 目前仅有人气榜接口；新锐榜暂复用同一接口，待后端提供后替换
-    const res = (await api.popularUserRank(page, USER_LIMIT)) as any
+    // 人气作者榜与新锐作者榜均使用 period=week
+    const period = 'week'
+    const res = (await api.popularUserRank(page, USER_LIMIT, period)) as any
+    // 请求期间切换了子榜/主榜则丢弃本次结果
+    if (reqUserTab !== userTab.value || mode.value !== 'user') return
     const list = ((res.code === 0 || res.code === 200) && res.data?.data) ? res.data.data : []
     const mapped: RankedUser[] = list.map((it: any, i: number) => ({
       id: String(it.user_id),
@@ -271,24 +331,45 @@ watch(mode, (m) => {
   type.value = 'all'
   const prevUserTab = userTab.value
   userTab.value = 'popular'
-  if (m === 'user' && prevUserTab === 'popular') {
+  if (m === 'work') {
+    loadWorkRank(true)
+  } else if (m === 'user' && prevUserTab === 'popular') {
     // userTab 未变化时 watch(userTab) 不会触发，这里手动首屏加载
     loadUserRank(true)
   }
+})
+
+// 作品排行：切换类型重新加载
+watch(type, () => {
+  if (mode.value === 'work') loadWorkRank(true)
 })
 
 watch(userTab, () => {
   if (mode.value === 'user') loadUserRank(true)
 })
 
-// 下拉到底部加载下一页（仅用户榜有真实分页）
+// 下拉到底部加载下一页
 function onScroll() {
-  if (mode.value !== 'user' || userLoading.value || userLoadingMore.value || !userHasMore.value) return
   const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 320
-  if (nearBottom) loadUserRank(false)
+  if (!nearBottom) return
+  if (mode.value === 'work') {
+    if (workLoading.value || workLoadingMore.value || !workHasMore.value) return
+    loadWorkRank(false)
+  } else {
+    if (userLoading.value || userLoadingMore.value || !userHasMore.value) return
+    loadUserRank(false)
+  }
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  // 从首页「查看全部」进入时定位到用户榜（切换 mode 会触发 watch 自动加载）
+  if (route.query.tab === 'user') {
+    mode.value = 'user'
+  } else {
+    loadWorkRank(true)
+  }
+})
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 function handleUserInfoLoaded() {}

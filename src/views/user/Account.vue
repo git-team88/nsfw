@@ -300,14 +300,14 @@ function handleEmailVerify() {
 }
 
 function validatePassword(password: string) {
-  const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\S]{8,20}$/u;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)\S{8,20}$/u;
   return regex.test(password);
 }
 
 function handlePasswordVerify() {
   if (
     !password.value ||
-    password.value.length < 6 ||
+    password.value.length < 8 ||
     password.value.length > 20 ||
     !validatePassword(password.value)
   ) {

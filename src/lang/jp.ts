@@ -1504,6 +1504,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     followBtn: "フォロー",
     followingBtn: "フォロー中",
     seeMore: "もっと見る",
+    viewAll: "すべて見る",
+    latestWork: "最新作",
     readMore: "＼ 新着をもっと読む！ ／",
     viewList: "リスト",
     viewRing: "リング",

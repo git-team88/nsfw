@@ -424,6 +424,7 @@ import { processImageUrl, initLanguage, formatTimestamp } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
 import { eventBus } from "@/utils/eventBus";
+import { trackHomeView } from "@/util/viewTracker";
 
 // Check if user is logged in
 function checkLogin() {
@@ -967,6 +968,9 @@ onMounted(async () => {
 
   // First fetch user info
   await fetchUserInfo();
+
+  // 上报个人主页浏览（10 分钟内只上报一次）
+  trackHomeView((route.query.id as string) || userInfo.value.id);
 
     const typeParam = route.query.type;
     if (typeParam) {

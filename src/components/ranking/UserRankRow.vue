@@ -19,10 +19,11 @@
 
       <button
         class="user-follow-btn"
-        :class="{ following: u.isFollowed }"
-        @click.stop="toggleFollow"
+        :class="{ following: u.isFollowed, 'is-placeholder': isSelf }"
+        @click.stop="isSelf ? null : toggleFollow()"
       >
-        {{ u.isFollowed ? t('home.followingBtn') : t('home.followBtn') }}
+        <span class="btn-text">{{ u.isFollowed ? t('home.followingBtn') : t('home.followBtn') }}</span>
+        <span class="hover-text" v-if="u.isFollowed">{{ t('home.user.unfollow') }}</span>
       </button>
     </div>
 
@@ -30,10 +31,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import defaultAvatar from '@/assets/images/base/avatar.png'
 import api from '@/api/index'
+import { toast } from '@/util/toast'
 
 interface RankedUser {
   id: string
@@ -46,9 +49,15 @@ interface RankedUser {
 }
 
 const props = defineProps<{ u: RankedUser; i: number }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
+
+// 是否为当前登录用户自己（自己不显示关注按钮）
+const isSelf = computed(() => {
+  const uid = localStorage.getItem('uid')
+  return !!uid && String(props.u.id) === String(uid)
+})
 
 function goUser() {
   if (props.u.id) router.push(`/user-home?id=${props.u.id}`)
@@ -67,16 +76,32 @@ async function toggleFollow() {
   try {
     if (props.u.isFollowed) {
       const res = (await api.unfollow(data)) as any
-      if (res.code === 0 || res.code === 200) props.u.isFollowed = false
+      if (res.code === 0 || res.code === 200) {
+        props.u.isFollowed = false
+        toast(t('success'))
+      } else {
+        toast(localeMsg(res))
+      }
     } else {
       const res = (await api.follow(data)) as any
-      if (res.code === 0 || res.code === 200) props.u.isFollowed = true
+      if (res.code === 0 || res.code === 200) {
+        props.u.isFollowed = true
+        toast(t('success'))
+      } else {
+        toast(localeMsg(res))
+      }
     }
   } catch (e) {
     console.error('toggleFollow', e)
+    toast(t('fail'))
   } finally {
     following = false
   }
+}
+
+// 按语言取后端返回的提示文案
+function localeMsg(res: any): string {
+  return locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp
 }
 
 function onErr(e: Event) {
@@ -116,7 +141,7 @@ $ink: #161122;
   border: 3px solid rgba(16, 24, 40, 0.06);
   border-radius: 12px;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 18px;
   color: #99A1AF;
 }
 
@@ -196,9 +221,27 @@ $ink: #161122;
   box-shadow: 3px 3px 0 $ink;
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
 
+  .hover-text { display: none; }
+
+  // 自己的账号：保留占位但不可见，避免统计信息错位
+  &.is-placeholder {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   &.following {
     background: #fff;
     color: $ink;
+  }
+
+  // 已关注时悬浮显示「取消关注」
+  &.following:hover {
+    background: #FFECEF;
+    color: #FF4D8D;
+    border-color: #FF4D8D;
+
+    .btn-text { display: none; }
+    .hover-text { display: inline; }
   }
 
   &:hover {

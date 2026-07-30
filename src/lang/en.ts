@@ -1672,6 +1672,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     followBtn: "Follow",
     followingBtn: "Following",
     seeMore: "See more",
+    viewAll: "View all",
+    latestWork: "Latest",
     readMore: "＼ Read more new works! ／",
     viewList: "List",
     viewRing: "Ring",

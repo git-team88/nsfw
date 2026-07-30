@@ -10,8 +10,8 @@
 
     <div class="podium-info">
       <div class="podium-top">
-        <div class="podium-author">
-          <img class="podium-avatar" :src="defaultAvatar" alt="" />
+        <div class="podium-author" v-if="w.author" @click.stop="goUser">
+          <img class="podium-avatar" :src="w.avatar || defaultAvatar" alt="" @error="onAvatarErr" />
           <span class="podium-author-name">{{ w.author }}</span>
         </div>
         <div class="podium-title">{{ w.title }}</div>
@@ -41,9 +41,13 @@ import defaultAvatar from '@/assets/images/base/avatar.png'
 
 interface RankedWork {
   id: string
+  postId: string
+  postIdNotNsfw: string
   title: string
   type: string
   author: string
+  authorId: string
+  avatar: string
   likes: number
   comments: number
   views: string
@@ -66,7 +70,20 @@ const { t } = useI18n()
 const router = useRouter()
 
 function goDetail() {
-  if (props.w.id) router.push(`/detail?id=${props.w.id}`)
+  // 根据是否开启敏感内容读取不同的 post id
+  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1'
+  const pid = (allowSensitive ? props.w.postId : props.w.postIdNotNsfw) || props.w.postId || props.w.postIdNotNsfw
+  if (pid) router.push(`/detail?id=${pid}`)
+}
+
+// 点击作者头像/昵称跳转个人主页
+function goUser() {
+  if (props.w.authorId) router.push(`/user-home?id=${props.w.authorId}`)
+}
+
+function onAvatarErr(e: Event) {
+  const el = e.target as HTMLImageElement
+  if (el) el.src = defaultAvatar
 }
 
 const badgeColor = computed(() => PODIUM_COLORS[props.w.rank - 1] ?? '#fff')
@@ -141,8 +158,7 @@ $ink: #161122;
   border-radius: 8px;
   border: 2px solid $ink;
   font-weight: 900;
-  font-size: 14px;
-  box-shadow: 2px 2px 0 $ink;
+  font-size: 18px;
 }
 
 .podium-info {
@@ -168,6 +184,7 @@ $ink: #161122;
   align-items: center;
   gap: 6px;
   min-width: 0;
+  cursor: pointer;
 }
 
 .podium-avatar {
@@ -240,16 +257,9 @@ $ink: #161122;
   }
 
   .stat-icon {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
-  }
-}
-
-// 中等宽度（仍是 3 列但偏挤）：缩小封面宽度，给右侧信息留空间
-@media (max-width: 1100px) and (min-width: 901px) {
-  .podium-cover {
-    width: 100px;
   }
 }
 

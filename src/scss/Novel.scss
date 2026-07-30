@@ -1890,7 +1890,7 @@
         content: "";
         position: absolute;
         top: -8px;
-        right: 14px;
+        right: 2px;
         width: 0;
         height: 0;
         border-left: 8px solid transparent;
@@ -1901,7 +1901,7 @@
         content: "";
         position: absolute;
         top: -5px;
-        right: 14px;
+        right: 3px;
         width: 0;
         height: 0;
         border-left: 7px solid transparent;
@@ -1932,11 +1932,11 @@
 
     &::before {
       right: auto;
-      left: 4px;
+      left: 2px;
     }
     &::after {
       right: auto;
-      left: 5px;
+      left: 3px;
     }
   }
 

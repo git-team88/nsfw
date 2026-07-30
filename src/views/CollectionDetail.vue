@@ -185,6 +185,7 @@ import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
+import { trackBookView } from '@/util/viewTracker';
 import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
@@ -686,6 +687,11 @@ onMounted(async () => {
   eventBus.on('userLoggedOut', onUserLoggedOut);
   await getCountry();
   fetchCollectionDetail();
+
+  // 上报合集详情浏览（10 分钟内只上报一次）
+  const bookId = route.query.book_id || route.params.id;
+  const bid = (Array.isArray(bookId) ? bookId[0] : bookId) as string;
+  if (bid) trackBookView(bid);
 });
 
 onBeforeUnmount(() => {
@@ -1260,7 +1266,7 @@ onBeforeUnmount(() => {
 @media (max-width: 1440px) {
   .content-container {
     max-width: 75vw;
-    padding: 8.3333vw 1.6667vw 1.6667vw;
+    padding: 10vw 1.6667vw 1.6667vw;
   }
   .breadcrumb {
     margin-bottom: 1.3889vw;
@@ -1422,7 +1428,7 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .content-container {
     max-width: 100%;
-    padding: 80px 16px 16px;
+    padding: 100px 16px 16px;
   }
   .breadcrumb {
     margin-bottom: 12px;

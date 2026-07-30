@@ -240,10 +240,10 @@ export default {
       url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
-  // 首页人气创作者榜（public）
-  popularUserRank: (page: number, limit: number) =>
+  // 首页人气创作者榜（public）period: day|week|month
+  popularUserRank: (page: number, limit: number, period: string = 'week') =>
     axios.request({
-      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit,
+      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period,
       method: "GET",
     }),
   // 首页作品人气榜（public）
@@ -251,6 +251,26 @@ export default {
     axios.request({
       url: "index/getHotBookPublic?page=" + page + "&limit=" + limit,
       method: "GET",
+    }),
+  // 作品人气榜（public）period: day|week|month, type: 0全部|1漫话|2小说|3漫剧
+  popularBookRank: (page: number, limit: number, period: string = 'week', type: number = 0, language?: string, showNsfw?: number) =>
+    axios.request({
+      url: "index/getPopularBookRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + "&type=" + type + (language ? "&language=" + language : "") + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
+      method: "GET",
+    }),
+  // 上报个人主页浏览（public）
+  trackHomeView: (author_id: string | number) =>
+    axios.request({
+      url: "track/handleHomeViewPublic",
+      data: { author_id },
+      method: "POST",
+    }),
+  // 上报合集/作品详情浏览（public）
+  trackBookView: (book_id: string | number) =>
+    axios.request({
+      url: "track/handleBookViewPublic",
+      data: { book_id },
+      method: "POST",
     }),
   // homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
   //   axios.request({
