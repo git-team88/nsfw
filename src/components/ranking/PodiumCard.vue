@@ -52,6 +52,7 @@ interface RankedWork {
   comments: number
   views: string
   cover: string
+  coverUrl: string
   rank: number
 }
 
@@ -117,23 +118,24 @@ $ink: #161122;
   &.rank-3 { box-shadow: 6px 6px 0 #E8A87C; }
 }
 
-// 前 3 名封面高度错落（名次越高越大）
-.rank-1 .podium-cover { height: 220px; }
-.rank-2 .podium-cover { height: 210px; }
-.rank-3 .podium-cover { height: 200px; }
+// 前 3 名封面尺寸错落（名次越高越大）
+.rank-1 .podium-cover { width: 166px; height: 220px; }
+.rank-2 .podium-cover { width: 158px; height: 210px; }
+.rank-3 .podium-cover { width: 150px; height: 200px; }
 
 .podium-cover {
   position: relative;
   flex: none;
   width: 158px;
   height: 200px;
-  border-radius: 12px 0 0 12px;
   overflow: hidden;
 }
 
 .podium-cover-bg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
 }
@@ -263,8 +265,8 @@ $ink: #161122;
   }
 }
 
-// 小屏（≤900 单列一行一个）：封面保持固定宽度，无需调整
-@media (max-width: 900px) {
+// 小屏（≤1000 单列一行一个）：封面保持固定宽度，无需调整
+@media (max-width: 1000px) {
   .podium-cover {
     width: 112px;
     flex: none;

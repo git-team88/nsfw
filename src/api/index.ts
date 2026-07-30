@@ -246,6 +246,12 @@ export default {
       url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period,
       method: "GET",
     }),
+  // 新锐创作者榜（public）period: day|week|month
+  risingUserRank: (page: number, limit: number, period: string = 'week') =>
+    axios.request({
+      url: "index/getRisingUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period,
+      method: "GET",
+    }),
   // 首页作品人气榜（public）
   hotBook: (page: number, limit: number) =>
     axios.request({

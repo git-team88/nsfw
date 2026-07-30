@@ -157,6 +157,7 @@ interface RankedWork {
   comments: number
   views: string
   cover: string
+  coverUrl: string
   rank: number
 }
 
@@ -239,6 +240,7 @@ async function loadWorkRank(reset = false) {
         comments: Number(it.comment_count ?? it.all_comment ?? it.comment_num ?? 0) || 0,
         views: String(it.all_view ?? it.view_num ?? ''),
         cover: b.cover ? `url(${b.cover}) center/cover no-repeat` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        coverUrl: b.cover || '',
         rank: Number(it.rank) || ((page - 1) * WORK_LIMIT + i + 1),
       }
     })
@@ -288,9 +290,11 @@ async function loadUserRank(reset = false) {
   const page = userPage.value
   const reqUserTab = userTab.value
   try {
-    // 人气作者榜与新锐作者榜均使用 period=week
+    // 人气作者榜 / 新锐作者榜，均使用 period=week
     const period = 'week'
-    const res = (await api.popularUserRank(page, USER_LIMIT, period)) as any
+    const res = (reqUserTab === 'rising'
+      ? await api.risingUserRank(page, USER_LIMIT, period)
+      : await api.popularUserRank(page, USER_LIMIT, period)) as any
     // 请求期间切换了子榜/主榜则丢弃本次结果
     if (reqUserTab !== userTab.value || mode.value !== 'user') return
     const list = ((res.code === 0 || res.code === 200) && res.data?.data) ? res.data.data : []

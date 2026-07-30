@@ -48,6 +48,7 @@ interface RankedWork {
   comments: number
   views: string
   cover: string
+  coverUrl: string
   rank: number
 }
 
@@ -165,7 +166,7 @@ $ink: #161122;
   font-weight: 800;
   font-size: 10px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 8px;
   flex-shrink: 0;
   color: $ink;
 }
