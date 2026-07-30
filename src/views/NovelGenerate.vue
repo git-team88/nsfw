@@ -999,7 +999,9 @@
               <div class="similar-item-cover">
                 <img :src="item.cover || ''" alt="" />
                 <div class="similar-item-type" v-if="item.type">
-                  <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
+                  <span v-if="item.type == '2'" class="type-badge type-2">{{ t('home.contentType.novel') }}</span>
+                  <span v-else-if="item.type == '1'" class="type-badge type-1">{{ t('home.contentType.comic') }}</span>
+                  <span v-else-if="item.type == '3'" class="type-badge type-3">{{ t('home.contentType.drama') }}</span>
                 </div>
                 <div class="similar-item-r18" v-if="item.is_nsfw == '1'">
                   <span class="r18-text">R18</span>

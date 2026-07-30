@@ -269,8 +269,8 @@
 
               <div v-else>
                 <div class="follow-list" v-if="followList.length > 0">
-                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms`, boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }">
-                    <div class="card-body" @click="goUserHome(user.id)">
+                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" @click="goUserHome(user.id)" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms`, boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }">
+                    <div class="card-body">
                       <div class="card-top">
                         <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                         <div class="user-meta">
@@ -949,7 +949,8 @@ onMounted(async () => {
   window.scrollTo(0, 0);
 
   await initLanguage();
-  getCountry();
+  // 先拿到地区结果，保证后续 fetchUserInfo/合集请求能正确带上 show_nsfw
+  await getCountry();
   setSeoMeta();
 
   // Restore last content type if coming back from detail page
@@ -2639,6 +2640,7 @@ async function unpinCollection(collection: any) {
       border: 3px solid #161122;
       background: #FFFDF7;
       overflow: hidden;
+      cursor: pointer;
       transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
 
       &:hover {

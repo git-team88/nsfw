@@ -14,6 +14,7 @@
                 <div class="label-group">
                   <div class="label">{{ t("user.account.email") }}</div>
                   <div class="value" v-if="emailBind && !loading">{{ emailBind.identifier }}</div>
+                  <div class="value" v-else-if="!loading">{{ t("user.account.notBound") }}</div>
                 </div>
                 <div class="action-group" v-if="!loading">
                   <span
@@ -36,6 +37,7 @@
                 <div class="label-group">
                   <div class="label">{{ t("user.account.google") }}</div>
                   <div class="value" v-if="googleBind && !loading">{{ googleBind.identifier }}</div>
+                  <div class="value" v-else-if="!loading">{{ t("user.account.notBound") }}</div>
                 </div>
                 <div class="action-group" v-if="!loading">
                   <span class="action-btn" @click="changeGoogle">{{

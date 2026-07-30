@@ -840,10 +840,6 @@ function adjustTooltipPosition(event: MouseEvent) {
 const uploadSuccess = ref(false);
 
 const isBatchRoute = computed(() => route.query.batch === 'true');
-const shouldShowSessionContent = computed(() => {
-  if (!route.query.session_id) return false;
-  return uploadSuccess.value;
-});
 const uploadError = ref("");
 const uploadProgress = ref(0);
 const videoSize = ref(0);

@@ -21,7 +21,7 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!showFullContent && !postId && !isInitializing">
+      <div class="upload-tabs" v-if="!showFullContent && !postId && !isInitializing && !route.query.session_id">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
         </div>
@@ -1893,10 +1893,6 @@ const chapterIdForPublish = ref<number | null>(null);
 const showFullContent = ref(false);
 
 const isBatchRoute = computed(() => route.query.batch === 'true');
-const shouldShowSessionContent = computed(() => {
-  if (!route.query.session_id) return false;
-  return showFullContent.value;
-});
 
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);

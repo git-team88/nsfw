@@ -993,10 +993,6 @@ const pendingCollectionIdForSensitive = ref<number | null>(null);
 const showFullContent = ref(false);
 
 const isBatchRoute = computed(() => route.query.batch === 'true');
-const shouldShowSessionContent = computed(() => {
-  if (!route.query.session_id) return false;
-  return showFullContent.value;
-});
 
 // Upload options
 const uploadOption = ref('history');
@@ -3901,7 +3897,7 @@ async function handleBatchPublishFromModal() {
   if (!sessionId) { isSelectionLoading.value = false; return; }
 
   const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish !== 1);
-  selectedChapters.value = [];
+  selectedChapters.value = unpublished.map((c: any) => c.chapter);
 
   if (selectedChapters.value.length === 0 || isSelectionCancelled) {
     isSelectionLoading.value = false;
