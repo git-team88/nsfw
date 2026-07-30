@@ -25,6 +25,62 @@ watch(() => props.scattered, (v) => { scatteredRef.value = v; });
 
 let cleanup: (() => void) | null = null;
 
+// design 文件夹里的示例封面（随机贴到漂浮分格上）
+const DESIGN_IMAGES = Object.values(
+  import.meta.glob('../assets/images/design/*.{webp,jpg,jpeg,png}', { eager: true, query: '?url', import: 'default' })
+) as string[];
+
+/** 漫画分格的粗黑外框 */
+function drawPanelFrame(g: CanvasRenderingContext2D) {
+  g.strokeStyle = '#161122';
+  g.lineWidth = 12;
+  g.strokeRect(6, 6, 244, 328);
+}
+
+/** 随机取一张 design 封面 */
+function randomDesignUrl(): string {
+  return DESIGN_IMAGES[Math.floor(Math.random() * DESIGN_IMAGES.length)];
+}
+
+interface PanelTex {
+  texture: THREE.CanvasTexture;
+  load: (url: string) => void;
+}
+
+/** 用 design 图片生成漫画分格纹理（cover 填充 + 粗黑框）。复用同一画布，可随时 load 新图重绘。 */
+function makeImagePanel(): PanelTex {
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 340;
+  const g = cv.getContext('2d')!;
+  g.fillStyle = '#e9e9ef';
+  g.fillRect(0, 0, 256, 340);
+  drawPanelFrame(g);
+
+  const texture = new THREE.CanvasTexture(cv);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+
+  let token = 0;
+  const load = (url: string) => {
+    const my = ++token; // 防止旧图片回调覆盖新图
+    const img = new Image();
+    img.onload = () => {
+      if (my !== token) return;
+      g.clearRect(0, 0, 256, 340);
+      const scale = Math.max(256 / img.width, 340 / img.height);
+      const dw = img.width * scale;
+      const dh = img.height * scale;
+      g.drawImage(img, (256 - dw) / 2, (340 - dh) / 2, dw, dh);
+      drawPanelFrame(g);
+      texture.needsUpdate = true;
+    };
+    img.src = url;
+  };
+
+  return { texture, load };
+}
+
 /** 256x340 漫画コマ風テクスチャ(グラデ地×ハーフトーン×集中線×太枠) */
 function makePanelTexture(c1: string, c2: string): THREE.CanvasTexture {
   const cv = document.createElement('canvas');
@@ -146,9 +202,20 @@ onMounted(() => {
   const geo = new THREE.PlaneGeometry(2.0, 2.65);
   const panels: THREE.Mesh[] = [];
   const textures: THREE.CanvasTexture[] = [];
+  const painters: (PanelTex | null)[] = [];
   for (let i = 0; i < PANEL_COUNT; i++) {
-    const [c1, c2] = GRADIENTS[i % GRADIENTS.length];
-    const tex = makePanelTexture(c1, c2);
+    let tex: THREE.CanvasTexture;
+    if (DESIGN_IMAGES.length) {
+      // 从 design 文件夹随机取一张封面
+      const p = makeImagePanel();
+      p.load(randomDesignUrl());
+      painters.push(p);
+      tex = p.texture;
+    } else {
+      const [c1, c2] = GRADIENTS[i % GRADIENTS.length];
+      tex = makePanelTexture(c1, c2);
+      painters.push(null);
+    }
     textures.push(tex);
     const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
     const m = new THREE.Mesh(geo, mat);
@@ -179,13 +246,18 @@ onMounted(() => {
         mat.opacity = Math.max(0, mat.opacity - 0.03 * dt);
       }
     } else if (!pausedRef.value) {
-      for (const m of panels) {
+      for (let i = 0; i < panels.length; i++) {
+        const m = panels[i];
         const d = m.userData as PanelData;
         m.position.z += d.spd * dt * 0.02;
         m.rotation.z += d.rot * dt * 0.01;
         m.position.x += d.vx * dt * 0.01;
         m.position.y += d.vy * dt * 0.01;
-        if (m.position.z > 7.5) resetPanel(m, false);
+        if (m.position.z > 7.5) {
+          resetPanel(m, false);
+          // 回收重生时重新随机换一张 design 封面
+          painters[i]?.load(randomDesignUrl());
+        }
         m.renderOrder = m.position.z;
         (m.material as THREE.MeshBasicMaterial).opacity = depthOpacity(m.position.z);
       }
