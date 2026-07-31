@@ -15,6 +15,14 @@
             </div>
             <div class="swiper-pagination"></div>
           </div>
+          <template v-if="banners.length > 1">
+            <button type="button" class="banner-arrow prev" @click.stop="bannerPrev" aria-label="prev">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" class="banner-arrow next" @click.stop="bannerNext" aria-label="next">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </template>
         </div>
       </div>
 
@@ -5765,6 +5773,10 @@ const initBannerSwiper = () => {
     },
   })
 };
+
+// Banner 左右箭头切换
+const bannerPrev = () => { bannerSwiper.value?.slidePrev(); };
+const bannerNext = () => { bannerSwiper.value?.slideNext(); };
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);

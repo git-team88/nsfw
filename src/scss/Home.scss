@@ -1733,6 +1733,30 @@ $border-med: rgba(22,17,34,0.2);
       height: 100%;
     }
 
+    .banner-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 999px;
+      background: #fff;
+      border: 2.5px solid $ink;
+      box-shadow: 2px 2px 0 $ink;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .12s ease-out;
+
+      &:hover { transform: translateY(-50%) scale(1.12); }
+      &:active { transform: translateY(-50%) scale(.94); }
+      &.prev { left: 14px; }
+      &.next { right: 14px; }
+    }
+
     .swiper-wrapper {
       width: 100%;
       height: 100%;
@@ -1753,15 +1777,15 @@ $border-med: rgba(22,17,34,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 26px;
-      bottom: 0;
-      z-index: 2;
+      gap: 7px;
+      bottom: 9px;
+      z-index: 3;
     }
 
     :deep(.swiper-pagination-bullet) {
       width: 9px;
       height: 9px;
-      margin: 0 3.5px;
+      margin: 0;
       border-radius: 50%;
       border: 2px solid $ink;
       background: #fff;
@@ -2986,6 +3010,13 @@ $border-med: rgba(22,17,34,0.2);
     .banner-swiper,
     .banner-image {
       height: 90px;
+    }
+
+    .banner-arrow {
+      width: 32px;
+      height: 32px;
+      &.prev { left: 8px; }
+      &.next { right: 8px; }
     }
   }
 
