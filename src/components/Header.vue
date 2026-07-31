@@ -1023,14 +1023,14 @@ defineExpose({
 
           .circle {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            min-width: 21px;
-            height: 21px;
+            top: -3px;
+            right: -3px;
+            min-width: 12px;
+            height: 12px;
             padding: 0 5px;
             border-radius: 50%;
             background: #FF4D8D;
-            border: 2px solid #fff;
+            border: 1px solid #fff;
             color: #fff;
             font-size: 11px;
             font-weight: 800;
@@ -1087,7 +1087,7 @@ defineExpose({
               background: #FF4D8D;
               color: #ffffff;
               border-radius: 8px;
-              font-size: 11px;
+              font-size: 12px;
               font-weight: 800;
               display: grid;
               place-items: center;
