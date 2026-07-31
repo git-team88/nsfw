@@ -254,8 +254,8 @@ onMounted(async () => {
 const onAvatarErr = (e: Event) => { const el = e.target as HTMLImageElement; if (el) el.src = defaultAvatar; };
 
 function goUser(c: Creator) { router.push(`/user-home?id=${c.id}`); }
-function goRankUser() { router.push('/ranking?tab=user'); }
-function goRankWork() { router.push('/ranking'); }
+function goRankUser() { router.push('/rank?tab=user'); }
+function goRankWork() { router.push('/rank'); }
 function goWork(w: Work) {
   // 根据是否开启敏感内容读取不同的 post id
   const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';

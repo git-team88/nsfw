@@ -297,7 +297,7 @@ const routes = [
     component: () => import("@/views/CreateCollection.vue"),
   },
   {
-    path: "/ranking",
+    path: "/rank",
     name: "Ranking",
     component: () => import("@/views/Ranking.vue"),
   },

@@ -332,7 +332,7 @@ const navList = ref([
   },
   {
     name: t("header.title6"),
-    path: "/ranking",
+    path: "/rank",
   },
   {
     name: t("header.title5"),
@@ -387,7 +387,7 @@ watch(locale, () => {
     },
     {
       name: t("header.title6"),
-      path: "/ranking",
+      path: "/rank",
     },
     {
       name: t("header.title5"),

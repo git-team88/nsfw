@@ -15,7 +15,7 @@ const router = useRouter();
 // 使切换内容类型 tab 时不触发 Home 组件重挂载（避免重新请求首页所有接口）；
 // 其它页面仍按 path 作为 key。
 const routeViewKey = computed(() => {
-  const path = route.path;
+  const path = route.fullPath;
   const LANGS = 'ja|en|zh-cn|zh-tw';
   const TYPES = 'novel|comic|drama|photo|video';
   const isHome =

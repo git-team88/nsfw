@@ -250,7 +250,6 @@ $ink: #161122;
   font-weight: 800;
   font-size: 14px;
   color: $ink;
-  opacity: 0.7;
   white-space: nowrap;
 
   &.stat-pink {
