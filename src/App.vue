@@ -1,15 +1,29 @@
 <template>
-  <RouterView :key="route.path"></RouterView>
+  <RouterView :key="routeViewKey"></RouterView>
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
 const { locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
+
+// 首页各内容类型路由（/、/{lang}、/{lang}/{type}、/{type}）共用同一 key，
+// 使切换内容类型 tab 时不触发 Home 组件重挂载（避免重新请求首页所有接口）；
+// 其它页面仍按 path 作为 key。
+const routeViewKey = computed(() => {
+  const path = route.path;
+  const LANGS = 'ja|en|zh-cn|zh-tw';
+  const TYPES = 'novel|comic|drama|photo|video';
+  const isHome =
+    path === '/' ||
+    new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(path) ||
+    new RegExp(`^/(${TYPES})/?$`).test(path);
+  return isHome ? 'home' : path;
+});
 
 const languageFontMap: Record<string, string> = {
   'en': 'en',
