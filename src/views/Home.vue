@@ -286,7 +286,7 @@
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
                       <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                        <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -586,7 +586,7 @@
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
                       <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                        <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -729,7 +729,7 @@
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
                       <div v-if="userRegion" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                        <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' && !isTeenager}">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -774,7 +774,7 @@
                   <div class="input-box">
                     <div class="input-options novel-input-options">
                       <div v-if="userRegion" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' && !isTeenager, disabled: isTeenager }">
+                        <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>

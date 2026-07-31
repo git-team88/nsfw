@@ -17,11 +17,13 @@
 
       <div class="hm-radios">
         <button class="hm-radio" :class="{ active: isAdult === true }" @click="isAdult = true">
-          <span class="dot"></span>
+          <img v-if="isAdult === true" class="radio-icon" src="@/assets/images/header/check_active.png" alt="" />
+          <img v-else class="radio-icon" src="@/assets/images/header/check.png" alt="" />
           <span class="txt">{{ t('home.underageNoBirthday.yes') }}</span>
         </button>
         <button class="hm-radio" :class="{ active: isAdult === false }" @click="isAdult = false">
-          <span class="dot"></span>
+          <img v-if="isAdult === false" class="radio-icon" src="@/assets/images/header/check_active.png" alt="" />
+          <img v-else class="radio-icon" src="@/assets/images/header/check.png" alt="" />
           <span class="txt">{{ t('home.underageNoBirthday.no') }}</span>
         </button>
       </div>
@@ -113,26 +115,13 @@ $yellow: #FFD23F;
 .hm-body { margin: 10px 0 0; font-size: 13px; font-weight: 600; line-height: 1.75; color: $ink; opacity: .7; }
 
 .hm-radios {
-  display: flex; gap: 10px; margin-top: 16px;
+  display: flex; gap: 28px; margin-top: 16px;
   .hm-radio {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 10px; border-radius: 12px; border: 2px solid $ink; background: #fff;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0;
+    background: none; border: none; box-shadow: none;
     font-weight: 800; font-size: 14px; color: $ink; cursor: pointer;
-    box-shadow: 2px 2px 0 $ink;
-    transition: transform .15s ease-out, box-shadow .15s ease-out;
-    .dot {
-      width: 16px; height: 16px; border-radius: 50%;
-      border: 2px solid $ink; box-sizing: border-box; position: relative;
-    }
-    &.active {
-      background: $yellow;
-      .dot::after {
-        content: ""; position: absolute; left: 50%; top: 50%;
-        transform: translate(-50%, -50%);
-        width: 8px; height: 8px; border-radius: 50%; background: $ink;
-      }
-    }
-    &:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(22,17,34,.4); }
+    .radio-icon { width: 20px; height: 20px; flex-shrink: 0; display: block; }
   }
 }
 

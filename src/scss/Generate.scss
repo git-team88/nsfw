@@ -984,7 +984,7 @@ $highlight: #FFF3D6;
     }
 
     &.disabled {
-      cursor: not-allowed;
+      cursor: pointer;
     }
 
     &.active {
@@ -993,12 +993,18 @@ $highlight: #FFF3D6;
       .unlimited-label {
         color: #fff;
       }
+
+      .unlimited-dot {
+        background: $pink;
+      }
     }
 
-    .unlimited-icon {
+    .unlimited-dot {
       width: 9px;
       height: 9px;
-      border-radius: 50%;
+      border-radius: 999px;
+      border: 1.5px solid $ink;
+      background: #cfc9d6;
       flex-shrink: 0;
     }
 

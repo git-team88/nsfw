@@ -232,23 +232,14 @@
               <div class="regenerate-settings">
                 <!-- NSFW Toggle - only shown when region allows -->
                 <div v-if="userRegion" class="nsfw-toggle" @click="toggleRegenerateNsfw">
-                  <img
-                    v-if="isTeenager"
-                    :src="notAllowIcon"
-                    alt="NSFW disabled"
-                    class="nsfw-switch"
-                  />
-                  <img
-                    v-else
-                    :src="regenerateNsfwMode ? openIcon : closeIcon"
-                    alt="NSFW"
-                    class="nsfw-switch"
-                  />
-                  <span class="nsfw-label">NSFW</span>
+                  <span class="nsfw-btn" :class="{ on: regenerateNsfwMode }">
+                    <span class="nsfw-dot"></span>
+                    NSFW
+                  </span>
                 </div>
 
                 <!-- Word Count Selector -->
-                <div class="novel-selector icon-selector" @click="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
+                <div class="novel-selector icon-selector" @click.stop="toggleWordCountDropdown" :class="{ open: showWordCountDropdown }">
                   <div class="selector-header">
                     <img class="selector-icon" src="@/assets/images/novel/word.png" alt="" />
                   </div>
@@ -266,7 +257,7 @@
                 </div>
 
                 <!-- Language Selector -->
-                <div class="novel-selector icon-selector" @click="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
+                <div class="novel-selector icon-selector" @click.stop="toggleLanguageDropdown" :class="{ open: showLanguageDropdown }">
                   <div class="selector-header">
                     <img class="selector-icon" src="@/assets/images/novel/lang.png" alt="" />
                   </div>
@@ -284,7 +275,7 @@
                 </div>
 
                 <!-- Insert Image Selector - only show when region allows and NSFW mode is on -->
-                <div v-if="userRegion && regenerateNsfwMode" class="novel-selector icon-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                <div v-if="userRegion && regenerateNsfwMode" class="novel-selector icon-selector" @click.stop="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
                   <div class="selector-header">
                     <img class="selector-icon" src="@/assets/images/novel/pic.png" alt="" />
                   </div>
@@ -1580,9 +1571,6 @@ import BatchPublishDialog from '@/components/BatchPublishDialog.vue';
 import InsertImageHistoryModal from '@/components/InsertImageHistoryModal.vue';
 import NovelLoading from '@/components/NovelLoading.vue';
 import defaultAvatar from '@/assets/images/base/avatar.png';
-import openIcon from '@/assets/images/home/open.png';
-import closeIcon from '@/assets/images/home/close.png';
-import notAllowIcon from '@/assets/images/home/not_allow.png';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 

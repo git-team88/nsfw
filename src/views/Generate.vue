@@ -366,25 +366,8 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
-                  <img
-                    v-if="isTeenager"
-                    src="@/assets/images/home/not_allow.png"
-                    alt="Unlimited disabled"
-                    class="unlimited-icon"
-                  />
-                  <img
-                    v-else-if="currentPhotoMode == 'unlimited' && !isTeenager"
-                    src="@/assets/images/home/open.png"
-                    alt="Unlimited on"
-                    class="unlimited-icon"
-                  />
-                  <img
-                    v-else
-                    src="@/assets/images/home/close.png"
-                    alt="Unlimited off"
-                    class="unlimited-icon"
-                  />
+                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                  <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
@@ -610,25 +593,8 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                  <img
-                    v-if="isTeenager"
-                    src="@/assets/images/home/not_allow.png"
-                    alt="Unlimited disabled"
-                    class="unlimited-icon"
-                  />
-                  <img
-                    v-else-if="currentVideoMode == 'unlimited' && !isTeenager"
-                    src="@/assets/images/home/open.png"
-                    alt="Unlimited on"
-                    class="unlimited-icon"
-                  />
-                  <img
-                    v-else
-                    src="@/assets/images/home/close.png"
-                    alt="Unlimited off"
-                    class="unlimited-icon"
-                  />
+                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                  <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
@@ -4806,23 +4772,23 @@ const deleteVideoRecord = (record: any) => {
 };
 
 const getVideoPlayerStyle = (ratio: string) => {
-  let width = 19.8;
-  let height = 19.8;
+  let width = 198;
+  let height = 198;
 
   if (ratio == '9:16') {
-    width = 19.8;
-    height = 35.2;
+    width = 198;
+    height = 352;
   } else if (ratio == '16:9') {
-    width = 35.2;
-    height = 19.8;
+    width = 352;
+    height = 198;
   } else if (ratio == '1:1') {
-    width = 19.8;
-    height = 19.8;
+    width = 198;
+    height = 198;
   }
 
   return {
-    width: `${width}rem`,
-    height: `${height}rem`
+    width: `${width}px`,
+    height: `${height}px`
   };
 };
 

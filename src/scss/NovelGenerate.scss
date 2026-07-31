@@ -727,18 +727,40 @@
         .nsfw-toggle {
           display: flex;
           align-items: center;
-          gap: 6px;
           cursor: pointer;
 
-          .nsfw-switch {
-            width: 40px;
-            height: 22px;
-          }
+          .nsfw-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: 800;
+            font-size: 13px;
+            border: 2px solid #161122;
+            border-radius: 999px;
+            box-shadow: 2px 2px 0 #161122;
+            user-select: none;
+            padding: 8px 14px;
+            background: #fff;
+            color: #161122;
+            transition: background 0.15s, color 0.15s;
 
-          .nsfw-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #364153;
+            .nsfw-dot {
+              display: block;
+              width: 9px;
+              height: 9px;
+              border-radius: 999px;
+              border: 1.5px solid #161122;
+              background: #cfc9d6;
+            }
+
+            &.on {
+              background: #161122;
+              color: #fff;
+
+              .nsfw-dot {
+                background: #FF4D8D;
+              }
+            }
           }
         }
 
@@ -752,11 +774,12 @@
               padding: 5px;
               width: 32px;
               height: 32px;
+              border: 2px solid #161122;
               box-sizing: border-box;
 
               .selector-icon {
-                width: 18px;
-                height: 18px;
+                width: 20px;
+                height: 20px;
                 object-fit: contain;
               }
             }
@@ -775,13 +798,13 @@
           }
 
           .selector-header {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 28px;
-            padding: 6px 10px;
-            gap: 6px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            padding: 5px;
+            border-radius: 8px;
             border: none;
             background: none;
             box-shadow: none;
@@ -822,21 +845,32 @@
             z-index: 100;
 
             .dropdown-item {
-              padding: 8px 12px;
-              font-size: 13px;
+              display: block;
+              width: 100%;
+              text-align: left;
+              margin-bottom: 4px;
+              padding: 5px 10px;
+              font-size: 12px;
               font-weight: 800;
-              text-align: center;
+              border: 1.5px solid #e7e1d8;
               border-radius: 8px;
-              color: #5b5566;
+              background: #fff;
+              color: #161122;
               cursor: pointer;
+              transition: background 0.12s, border-color 0.12s;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
 
               &:hover {
-                color: #161122;
+                border-color: #FF4D8D;
               }
 
               &.active {
-                background: rgba(22, 17, 34, 0.06);
-                color: #161122;
+                background: #161122;
+                color: #fff;
+                border-color: #161122;
               }
             }
           }
