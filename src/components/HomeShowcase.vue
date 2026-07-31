@@ -480,7 +480,7 @@ function startRing() {
       const x = Math.sin(th) * RING_R;
       const depth = Math.cos(th);
       const tt = (depth + 1) / 2;
-      const sc = (0.58 + Math.pow(tt, 1.6) * 0.92) * b;
+      const sc = (0.1935 + Math.pow(tt, 1.6) * 0.3065) * b;
       const y = -depth * 20;
       el.style.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${sc.toFixed(3)})`;
       el.style.zIndex = hi === i ? '120' : String(Math.round(tt * 100));
@@ -643,12 +643,16 @@ $pink: #FF4D8D;
 .mg-ring { position: relative; height: 420px; user-select: none; z-index: 1; }
 .ring-card {
   position: absolute; left: 50%; top: 52%;
-  width: 200px; aspect-ratio: 3 / 4;
+  width: 600px; aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%);
-  border: 3px solid $ink; border-radius: 16px; overflow: hidden;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  border: 8px solid $ink; border-radius: 48px; overflow: hidden;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.22);
   cursor: pointer; will-change: transform;
 }
+/* 卡片按 2× 超采样渲染（再缩小到相同显示尺寸）以提升清晰度；卡内元素同比 ×2，仅作用于 3D 环形卡（不影响跑马灯） */
+.ring-card .rank-badge { font-size: 32px; padding: 10px 28px; border-width: 6px; }
+.ring-card .card-foot { padding: 90px 36px 36px; }
+.ring-card .card-foot .foot-text { font-size: 32px; }
 .rank-badge {
   position: absolute; left: 9px; top: 9px;
   border: 2px solid $ink; border-radius: 999px;
