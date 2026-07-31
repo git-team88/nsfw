@@ -166,37 +166,38 @@
           </div>
         </div>
 
-        <div class="collection-info-bar" v-if="detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
-          <div class="collection-info" @click="enterCollectionMode(1)">
-            <div class="collection-main">
-              {{ t('detail.collection') }}:{{ detail.book_title }}
-            </div>
-            <div class="collection-line"></div>
-            <div class="update-info">
-              <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
-                {{ t('detail.readToEpisode', { count: detail.latest_read_chapter_index }) }}
-              </template>
-              <template v-else>
-                {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
-              </template>
-            </div>
-          </div>
-          <div class="collection-actions" @click="enterCollectionMode(2)" v-if="chapterCount > 1 && (detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0 || nextChapterId)">
-            <button class="next-btn">
-              <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
-                {{ t('detail.continueReading') }}
-              </template>
-              <template v-else>
-                {{ t('detail.nextChapter') }}
-              </template>
-            </button>
-          </div>
-        </div>
-
         <!-- Last chapter prompt for non-collection mode (bottom of page) -->
         <div class="last-chapter-section" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
           <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
           <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
+        </div>
+      </div>
+
+      <!-- 合集信息条：锚定在阅读卡片底部（覆盖底边框）-->
+      <div class="collection-info-bar" v-if="detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
+        <div class="collection-info" @click="enterCollectionMode(1)">
+          <div class="collection-main">
+            {{ t('detail.collection') }}:{{ detail.book_title }}
+          </div>
+          <div class="collection-line"></div>
+          <div class="update-info">
+            <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+              {{ t('detail.readToEpisode', { count: detail.latest_read_chapter_index }) }}
+            </template>
+            <template v-else>
+              {{ t('detail.updatedToEpisode', { count: chapterCount }) }}
+            </template>
+          </div>
+        </div>
+        <div class="collection-actions" @click="enterCollectionMode(2)" v-if="chapterCount > 1 && (detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0 || nextChapterId)">
+          <button class="next-btn">
+            <template v-if="detail.latest_read_chapter_index && Number(detail.latest_read_chapter_index) > 0">
+              {{ t('detail.continueReading') }}
+            </template>
+            <template v-else>
+              {{ t('detail.nextChapter') }}
+            </template>
+          </button>
         </div>
       </div>
 

@@ -2936,7 +2936,6 @@ async function unpinCollection(collection: any) {
       justify-content: center;
       cursor: pointer;
       overflow: hidden;
-      border-radius: 16px 16px 0 0;
 
       img.cover-img {
         width: 100%;

@@ -670,17 +670,16 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         }
       }
 
+    }
       .collection-info-bar {
-        position: fixed;
-        left: 50%;
-        bottom: 40px;
-        width: 1064px;
-        max-width: calc(90% - 6px);
+        position: absolute;
+        left: 3px;
+        right: 3px;
+        bottom: 93px;
         padding: 12px 24px;
         border: none;
         border-top: 2px solid $ink;
         border-radius: 0 0 12px 12px;
-        transform: translateX(-50%);
         background: $paper;
         z-index: 100;
         display: flex;
@@ -762,7 +761,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
           }
         }
       }
-    }
 
     .floating-actions {
       position: fixed;
@@ -865,7 +863,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
       .novel-content {
         height: calc(100vh - 6.9444vw);
-        border-radius: 0.8333vw;
 
         .chapter-header {
           padding: 1.3889vw 1.6667vw;
@@ -1016,9 +1013,9 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
           }
         }
 
+      }
         .collection-info-bar {
-          bottom: 3.5vw;
-          width: calc(75vw - 6px);
+          bottom: calc(6.25vw + 3px);
           padding: 0.8vw 1.6vw;
 
           .collection-info {
@@ -1046,7 +1043,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             }
           }
         }
-      }
 
       .floating-actions {
         bottom: 2.7778vw;
@@ -1106,7 +1102,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
       .novel-content {
         height: calc(100vh - 120px);
-        border-radius: 8px;
 
         .chapter-header {
           padding: 16px;
@@ -1256,12 +1251,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
           }
         }
 
+      }
         .collection-info-bar {
-          bottom: 20px;
-          width: 100%;
-          max-width: calc(100% - 48px);
+          bottom: 63px;
+          left: 19px;
+          right: 19px;
           padding: 8px 16px;
-          border-radius: 0;
 
           .collection-info {
             gap: 8px;
@@ -1287,11 +1282,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             }
           }
         }
-      }
 
       .floating-actions {
         right: 16px;
-        bottom: 20px;
+        bottom: 135px;
         transform: none;
         gap: 12px;
 

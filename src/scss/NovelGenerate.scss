@@ -22,7 +22,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-radius: 12px 0 0 12px;
+    border-radius: 10px 0 0 10px;
     background: linear-gradient(180deg, #FF4D8E 0%, rgba(255,77,142,0) 100%);
 
     .logo {
@@ -212,11 +212,13 @@
       display: flex;
       flex-direction: column;
       overflow-y: auto;
+      overflow-x: hidden;
       gap: 12px;
 
       .scrollable-content {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -354,7 +356,6 @@
     }
 
     .text-wrapper-1 {
-      background-color: #FFFBF4;
       border: 2px solid #161122;
       border-radius: 12px;
       width: 100%;
@@ -481,6 +482,8 @@
     }
 
     .chapter-list{
+      // 给选中项的右/下投影留出空间，避免被滚动容器裁掉
+      padding: 2px 6px 6px 2px;
       .chapter-item{
         display: flex;
         align-items: center;
@@ -501,7 +504,6 @@
         &.on{
           color: #161122;
           border: 2px solid #101828;
-          background: #FFF0F6;
           box-shadow: 3px 3px 0 rgba(255, 77, 142, 0.3);
           border-radius: 12px;
         }
@@ -904,10 +906,19 @@
 
   .right-area {
     flex: 1;
+    min-width: 0;
     margin-left: calc(68px + clamp(320px, 30vw, 400px));
     padding: 80px 30px 0;
     min-height: calc(100vh - 28px);
     box-sizing: border-box;
+
+    // 右侧阅读区随屏幕收窄减小内边距，保证正文有足够宽度并正常回流
+    @media (max-width: 1200px) {
+      padding: 76px 20px 0;
+    }
+    @media (max-width: 900px) {
+      padding: 72px 14px 0;
+    }
 
     .right-top-bar {
       position: fixed;

@@ -1,143 +1,246 @@
 <template>
-  <div v-if="visible" class="mg-hm-ovl" @click="handleSkip" role="dialog" aria-modal="true">
-    <div class="mg-hm-panel" @click.stop>
-      <div class="hm-decal" aria-hidden="true"></div>
+  <Teleport to="body">
+    <div v-if="visible" class="guide-root" role="dialog" aria-modal="true">
+    <!-- 拦截交互层 -->
+    <div class="guide-block"></div>
 
-      <div class="guide-tag">
-        <span class="tag-star">✦</span>
-        {{ t('home.guide.title') }}
-      </div>
+    <!-- 有目标：聚光灯高亮（box-shadow 镂空遮罩）；无目标：全屏暗色 -->
+    <div v-if="hasTarget" class="guide-spot" :style="spotStyle"></div>
+    <div v-else class="guide-dim"></div>
 
-      <h3 class="guide-title">{{ t(cur.titleKey) }}</h3>
-      <p class="guide-body">{{ t(cur.bodyKey) }}</p>
+    <!-- 底部居中卡片 -->
+    <div class="guide-bubble">
+      <div class="guide-halftone" aria-hidden="true"></div>
+      <svg class="guide-mascot" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <circle cx="24" cy="25" r="18.5" fill="#fff" stroke="#161122" stroke-width="2.6" />
+        <path d="M9 19 Q24 5 39 19" stroke="#161122" stroke-width="2.6" fill="none" stroke-linecap="round" />
+        <circle cx="18" cy="24" r="2.4" fill="#161122" />
+        <circle cx="30" cy="24" r="2.4" fill="#161122" />
+        <path d="M19 31 Q24 35.5 29 31" stroke="#161122" stroke-width="2.4" fill="none" stroke-linecap="round" />
+        <circle cx="13.5" cy="29" r="2" fill="#FF7AAE" />
+        <circle cx="34.5" cy="29" r="2" fill="#FF7AAE" />
+      </svg>
 
-      <!-- step dots -->
-      <div class="guide-dots">
-        <span
-          v-for="(s, i) in STEPS"
-          :key="i"
-          class="dot"
-          :class="{ active: i === step }"
-        ></span>
-      </div>
+      <div class="guide-content">
+        <div class="guide-tag">{{ t('home.guide.label') }} · {{ step + 1 }}/{{ STEPS.length }}</div>
+        <h3 class="guide-title">{{ t(cur.titleKey) }}</h3>
+        <p class="guide-body">{{ t(cur.bodyKey) }}</p>
 
-      <div class="guide-actions">
-        <button v-if="!isLast" class="mg-hm-btn ghost" @click="handleSkip">{{ t('home.guide.skip') }}</button>
-        <button class="mg-hm-btn primary" @click="next">{{ isLast ? t('home.guide.start') : t('home.guide.next') }}</button>
+        <div class="guide-actions">
+          <span class="guide-skip" @click="handleSkip">{{ t('home.guide.skip') }}</span>
+          <span class="flex-1"></span>
+          <button v-if="step > 0" class="guide-btn line" @click="prev">{{ t('home.guide.back') }}</button>
+          <button class="guide-btn fill" @click="next">{{ isLast ? t('home.guide.start') : t('home.guide.next') }}</button>
+        </div>
       </div>
     </div>
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits(['close']);
 const { t } = useI18n();
 
+// 每步锚定的页面元素（与 moegen-new-hp 引导对应）
 const STEPS = [
-  { titleKey: 'home.guide.step1Title', bodyKey: 'home.guide.step1Body' },
-  { titleKey: 'home.guide.step2Title', bodyKey: 'home.guide.step2Body' },
-  { titleKey: 'home.guide.step3Title', bodyKey: 'home.guide.step3Body' },
-  { titleKey: 'home.guide.step4Title', bodyKey: 'home.guide.step4Body' },
+  { titleKey: 'home.guide.step1Title', bodyKey: 'home.guide.step1Body', sel: null as string | null },
+  { titleKey: 'home.guide.step2Title', bodyKey: 'home.guide.step2Body', sel: '.hero-section' },
+  { titleKey: 'home.guide.step3Title', bodyKey: 'home.guide.step3Body', sel: '.mg-crelayer' },
+  { titleKey: 'home.guide.step4Title', bodyKey: 'home.guide.step4Body', sel: '.mg-ring' },
+  { titleKey: 'home.guide.step5Title', bodyKey: 'home.guide.step5Body', sel: '.feed-heading' },
+  { titleKey: 'home.guide.step6Title', bodyKey: 'home.guide.step6Body', sel: null },
 ];
 
 const step = ref(0);
 const isLast = computed(() => step.value === STEPS.length - 1);
 const cur = computed(() => STEPS[step.value]);
+const hasTarget = computed(() => !!cur.value.sel);
+const spotStyle = ref<Record<string, string>>({ opacity: '0' });
 
-// 每次打开重置到第一步 + 锁滚动
+let rafId = 0;
+
+function computeSpot() {
+  const sel = cur.value.sel;
+  if (!sel) return;
+  const el = document.querySelector(sel) as HTMLElement | null;
+  if (!el) { spotStyle.value = { opacity: '0' }; return; }
+  const r = el.getBoundingClientRect();
+  const pad = 10;
+  const margin = 8;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  // 高亮框限制在视口范围内，避免超大或超出屏幕的元素在小屏上定位异常
+  const left = Math.max(margin, r.left - pad);
+  const top = Math.max(margin, r.top - pad);
+  const right = Math.min(vw - margin, r.right + pad);
+  const bottom = Math.min(vh - margin, r.bottom + pad);
+  spotStyle.value = {
+    opacity: '1',
+    left: left + 'px',
+    top: top + 'px',
+    width: Math.max(0, right - left) + 'px',
+    height: Math.max(0, bottom - top) + 'px',
+  };
+}
+
+function reposition() {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(computeSpot);
+}
+
+// 切到某一步：滚动到目标并定位聚光灯
+function goStep(scroll = true) {
+  const sel = cur.value.sel;
+  if (!sel) return;
+  const el = document.querySelector(sel) as HTMLElement | null;
+  if (el && scroll) {
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { /* noop */ }
+  }
+  setTimeout(computeSpot, scroll ? 420 : 0);
+  // 二次校正：等平滑滚动/懒加载布局稳定后再定位一次
+  if (scroll) setTimeout(computeSpot, 760);
+}
+
+function next() {
+  if (isLast.value) { close(); }
+  else { step.value += 1; nextTick(() => goStep()); }
+}
+function prev() {
+  if (step.value > 0) { step.value -= 1; nextTick(() => goStep()); }
+}
+function handleSkip() { close(); }
+function close() { step.value = 0; emit('close'); }
+
+function onScrollResize() { reposition(); }
+
 watch(() => props.visible, (v) => {
   if (v) {
     step.value = 0;
-    document.body.style.overflow = 'hidden';
+    window.addEventListener('scroll', onScrollResize, true);
+    window.addEventListener('resize', onScrollResize);
+    nextTick(() => setTimeout(() => goStep(), 60));
   } else {
-    document.body.style.overflow = '';
+    window.removeEventListener('scroll', onScrollResize, true);
+    window.removeEventListener('resize', onScrollResize);
   }
 });
 
-function next() {
-  if (isLast.value) { step.value = 0; emit('close'); }
-  else step.value += 1;
-}
-function handleSkip() { step.value = 0; emit('close'); }
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScrollResize, true);
+  window.removeEventListener('resize', onScrollResize);
+});
 </script>
 
 <style scoped lang="scss">
 $ink: #161122;
 $pink: #FF4D8D;
-$paper: #FFFDF7;
 
-.mg-hm-ovl {
-  position: fixed; inset: 0; z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: rgba(22, 17, 34, 0.5);
-  animation: mgHmFade .18s ease-out both;
+.guide-root { position: fixed; inset: 0; z-index: 1000; }
+
+/* 拦截页面交互 */
+.guide-block { position: fixed; inset: 0; z-index: 1000; }
+
+/* 聚光灯高亮：内部透明，外部用超大 box-shadow 做暗色遮罩 */
+.guide-spot {
+  position: fixed;
+  z-index: 1001;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(22, 17, 34, .62);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    left .45s cubic-bezier(.16, 1, .3, 1),
+    top .45s cubic-bezier(.16, 1, .3, 1),
+    width .45s cubic-bezier(.16, 1, .3, 1),
+    height .45s cubic-bezier(.16, 1, .3, 1),
+    opacity .3s;
 }
 
-.mg-hm-panel {
-  position: relative;
-  width: min(400px, 92%);
-  padding: 22px 24px;
-  background: $paper;
-  border: 3px solid $ink;
-  border-radius: 18px;
+/* 无目标步骤的全屏暗色 */
+.guide-dim {
+  position: fixed; inset: 0; z-index: 1001;
+  background: rgba(22, 17, 34, .62);
+  pointer-events: none;
+  animation: guideFade .3s ease-out both;
+}
+
+/* 底部居中卡片 */
+.guide-bubble {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  z-index: 1002;
+  width: min(560px, 92vw);
+  background: #fff;
+  border: 4px solid $ink;
+  border-radius: 20px;
+  box-shadow: 9px 9px 0 rgba(22, 17, 34, .5);
+  padding: 20px 26px 18px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
   overflow: hidden;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.18);
-  animation: mgHmPop .26s cubic-bezier(.16,1,.3,1) both;
+  animation: guidePop .5s cubic-bezier(.2, 1.1, .32, 1) both;
 }
 
-.hm-decal {
-  position: absolute; right: 0; top: 0; width: 120px; height: 120px;
-  pointer-events: none; border-radius: 0 14px 0 0;
-  background-image: radial-gradient(#161122 1px, transparent 1px);
-  background-size: 8px 8px; opacity: .07;
-  -webkit-mask-image: radial-gradient(circle at 100% 0%, #000 0 40%, transparent 68%);
-  mask-image: radial-gradient(circle at 100% 0%, #000 0 40%, transparent 68%);
+.guide-halftone {
+  position: absolute; right: -10px; bottom: -10px;
+  width: 130px; height: 100px; pointer-events: none;
+  background: radial-gradient(#161122 1.4px, transparent 1.4px);
+  background-size: 10px 10px; opacity: .08;
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0 46%, transparent 74%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0 46%, transparent 74%);
 }
 
-.guide-tag {
-  display: inline-flex; align-items: center; gap: 8px;
-  margin-bottom: 12px;
-  padding: 4px 12px; border-radius: 999px;
-  background: $pink; color: #fff; border: 2px solid $ink;
-  font-weight: 800; font-size: 11px; letter-spacing: .06em;
-  .tag-star { font-size: 13px; }
+.guide-mascot { width: 62px; height: 62px; flex: none; }
+
+.guide-content { flex: 1; min-width: 0; position: relative; }
+
+.guide-tag { font-weight: 800; font-size: 11px; letter-spacing: .12em; color: $pink; }
+.guide-title { margin: 5px 0 6px; font-size: 21px; font-weight: 900; color: $ink; }
+.guide-body { margin: 0; font-size: 14px; line-height: 1.85; color: $ink; opacity: .85; }
+
+.guide-actions { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.flex-1 { flex: 1; }
+.guide-skip {
+  font-weight: 700; font-size: 13px; color: $ink; opacity: .5;
+  cursor: pointer; user-select: none; transition: opacity .15s;
+  &:hover { opacity: 1; }
 }
-
-.guide-title { margin: 0; font-size: 20px; font-weight: 900; color: $ink; }
-.guide-body { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.8; color: $ink; opacity: .7; }
-
-.guide-dots {
-  display: flex; align-items: center; gap: 6px; margin-top: 16px;
-  .dot {
-    width: 8px; height: 8px; border-radius: 999px;
-    background: #d8d2e0; border: 1.5px solid $ink;
-    transition: all .2s;
-    &.active { width: 20px; background: $pink; }
-  }
-}
-
-.guide-actions { display: flex; gap: 10px; margin-top: 20px; }
-.mg-hm-btn {
-  flex: 1; padding: 11px 10px; border-radius: 12px; border: 2px solid $ink;
-  font-weight: 800; font-size: 14px; cursor: pointer;
+.guide-btn {
+  padding: 9px 16px; border-radius: 12px; border: 2px solid $ink;
+  font-weight: 800; font-size: 13px; cursor: pointer;
   box-shadow: 2px 2px 0 $ink;
-  transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
-  &:hover { transform: translate(-1px,-2px); box-shadow: 4px 5px 0 rgba(22,17,34,.4); }
-  &:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(22,17,34,.4); }
+  transition: transform .15s cubic-bezier(.34, 1.56, .64, 1), box-shadow .15s ease-out;
+  &:hover { transform: translate(-1px, -2px); box-shadow: 4px 5px 0 rgba(22, 17, 34, .4); }
+  &:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(22, 17, 34, .4); }
+  &.line { background: #fff; color: $ink; }
+  &.fill { background: $pink; color: #fff; }
 }
-.mg-hm-btn.ghost { background: #fff; color: $ink; }
-.mg-hm-btn.primary { background: $pink; color: #fff; }
 
-@keyframes mgHmFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes mgHmPop { 0% { opacity: 0; transform: scale(.94) translateY(8px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes guideFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes guidePop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .mg-hm-ovl, .mg-hm-panel { animation: mgHmFade .16s ease-out both; }
-  .mg-hm-btn { transition: none; }
-  .mg-hm-btn:hover, .mg-hm-btn:active { transform: none; }
+  .guide-spot { transition: opacity .2s; }
+  .guide-bubble { animation: guideFade .2s ease-out both; }
+  .guide-btn { transition: none; &:hover, &:active { transform: none; } }
+}
+
+@media (max-width: 768px) {
+  .guide-bubble { padding: 16px 18px 14px; gap: 12px; bottom: 20px; }
+  .guide-mascot { width: 48px; height: 48px; }
+  .guide-title { font-size: 18px; }
+  .guide-body { font-size: 13px; }
 }
 </style>

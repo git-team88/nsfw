@@ -455,7 +455,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     width: 100%;
     height: 220px;
     overflow: hidden;
-    border-radius: 16px 16px 0 0;
+    border-radius: 11px 11px 0 0;
 
     .character-img {
       width: 100%;

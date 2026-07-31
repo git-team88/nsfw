@@ -5595,14 +5595,11 @@ onMounted(async () => {
 
   // 预渲染/SEO 抓取时（prerender.mjs、seo-server.mjs 会注入 window.__SEO_PRERENDER__ = true）：
   //   按 URL 显示对应内容类型 tab，保留地址与对应 meta，保证爬虫抓到正确的正文与元信息。
-  // 真实用户刷新 SEO 页面时：回到默认内容类型（小说），地址栏只保留域名（"/"）。
+  // 真实用户：切换 tab 会 router.replace 到 /{lang}/{type} 虚拟路由并触发重挂载，
+  //   这里按 URL 识别的内容类型恢复 contentType（保证一次点击即生效，且地址栏保留虚拟路由）。
   const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
   if (detectedContentType) {
-    if (isSeoPrerender) {
-      contentType.value = detectedContentType;
-    } else if (window.location.pathname !== '/') {
-      window.history.replaceState({}, '', '/');
-    }
+    contentType.value = detectedContentType;
   }
 
   // Set SEO meta tags: 预渲染按 URL 内容类型；真实用户按实际显示的（默认）内容类型
@@ -5800,7 +5797,8 @@ async function checkFirstRegister() {
   // }
 
   if (isFirstRegister == '1') {
-    showUserInfoModal.value = true;
+    // 首次注册不再弹资料填写弹窗，直接进入新手引导
+    showGuideModal.value = true;
     localStorage.removeItem("isFirstRegister");
   }
 }

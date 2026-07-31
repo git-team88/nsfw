@@ -906,7 +906,6 @@ $yellow: #FFD23F;
       width: 100%;
       height: 260px;
       overflow: hidden;
-      border-radius: 16px 16px 0 0;
 
       .cover-img {
         width: 100%;
@@ -961,7 +960,6 @@ $yellow: #FFD23F;
       line-height: 30px;
       background: linear-gradient(135deg, #FFC24B, #FF7AAE);
       color: $ink;
-      border-radius: 16px 16px 0 0;
       overflow: hidden;
 
       &:hover {
