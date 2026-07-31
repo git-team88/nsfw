@@ -69,7 +69,7 @@
           <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
 
           <!-- Input Area -->
-           <div class="input-area-box" @click="popHeroParts" @focusin="popHeroParts">
+           <div class="input-area-box">
             <div class="input-type-box">
               <!-- Content Type Selector -->
               <div class="content-type-selector">

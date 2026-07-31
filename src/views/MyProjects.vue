@@ -906,6 +906,7 @@ $yellow: #FFD23F;
       width: 100%;
       height: 260px;
       overflow: hidden;
+      border-radius: 13px 13px 0 0;
 
       .cover-img {
         width: 100%;
@@ -961,6 +962,7 @@ $yellow: #FFD23F;
       background: linear-gradient(135deg, #FFC24B, #FF7AAE);
       color: $ink;
       overflow: hidden;
+      border-radius: 13px 13px 0 0;
 
       &:hover {
         .edit-btn {
@@ -1020,7 +1022,6 @@ $yellow: #FFD23F;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #e7e1d8;
     }
 
     .grid-images {
@@ -1029,6 +1030,8 @@ $yellow: #FFD23F;
       grid-template-rows: 1fr 1fr;
       width: 100%;
       height: 100%;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
     }
 
     .grid-image-item {
@@ -1050,6 +1053,7 @@ $yellow: #FFD23F;
     .single-image {
       width: 100%;
       height: 100%;
+      border-radius: 12px 12px 0 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1109,6 +1113,8 @@ $yellow: #FFD23F;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
 
       .cover-img {
         width: 100%;

@@ -406,8 +406,8 @@ $border-med: rgba(22,17,34,0.2);
           }
 
           .dropdown-arrow {
-            width: 10px;
-            height: 10px;
+            width: 16px;
+            height: 16px;
             transition: transform 0.15s ease;
           }
         }
@@ -1084,8 +1084,8 @@ $border-med: rgba(22,17,34,0.2);
       }
 
             .dropdown-arrow {
-              width: 10px;
-              height: 10px;
+              width: 16px;
+              height: 16px;
               transition: transform 0.15s ease;
             }
           }
@@ -1112,6 +1112,7 @@ $border-med: rgba(22,17,34,0.2);
               display: flex;
               align-items: center;
               gap: 8px;
+              margin-bottom: 4px;
               padding: 8px 12px;
               font-size: 13px;
               font-weight: 800;
@@ -1119,13 +1120,17 @@ $border-med: rgba(22,17,34,0.2);
               color: $muted;
               transition: all 0.16s;
 
+              &:last-child {
+                margin-bottom: 0;
+              }
+
               &:hover {
                 color: $ink;
               }
 
               &.active {
-                background: $bg-tag;
-                color: $ink;
+                background: $ink;
+                color: #fff;
               }
 
               .item-img {
@@ -1327,8 +1332,8 @@ $border-med: rgba(22,17,34,0.2);
     }
 
     .dropdown-arrow {
-      width: 10px;
-      height: 10px;
+      width: 16px;
+      height: 16px;
       transition: transform 0.15s ease;
     }
   }
@@ -1530,8 +1535,8 @@ $border-med: rgba(22,17,34,0.2);
     }
 
     .dropdown-arrow {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
     }
   }
 
