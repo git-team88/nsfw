@@ -657,8 +657,8 @@ $border-med: rgba(22,17,34,0.2);
 
           .character-avatar {
             width: auto;
-            max-width: 64px;
-            height: 64px;
+            max-width: 60px;
+            height: 60px;
             border-radius: 8px;
             object-fit: contain;
           }
@@ -696,7 +696,7 @@ $border-med: rgba(22,17,34,0.2);
           .uploaded-image {
             max-width: 100%;
             width: auto;
-            height: 64px;
+            height: 60px;
             object-fit: contain;
             border-radius: 8px;
           }
