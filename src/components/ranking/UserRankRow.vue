@@ -168,9 +168,13 @@ $ink: #161122;
 }
 
 .rank-title {
+  width: 100%;
   font-weight: 800;
   font-size: 15px;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -178,10 +182,9 @@ $ink: #161122;
 .rank-stats {
   display: flex;
   gap: 80px;
-  flex: none;
 
   @media (max-width: 640px) {
-    display: none;
+    gap: 14px;
   }
 }
 
