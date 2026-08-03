@@ -1048,7 +1048,7 @@
 
           .modify-link {
             font-size: 16px;
-            font-weight: 800;
+            font-weight: 8600;
             color: #FF4D8E;
             white-space: nowrap;
             cursor: pointer;
@@ -1064,7 +1064,6 @@
             font-size: 14px;
             font-weight: 800;
             color: #161122;
-            opacity: 0.55;
           }
 
           .collection-select {
@@ -1797,7 +1796,7 @@
         content: "";
         position: absolute;
         top: -8px;
-        right: 14px;
+        right: 2px;
         width: 0;
         height: 0;
         border-left: 8px solid transparent;
@@ -1808,7 +1807,7 @@
         content: "";
         position: absolute;
         top: -5px;
-        right: 14px;
+        right: 2px;
         width: 0;
         height: 0;
         border-left: 7px solid transparent;
