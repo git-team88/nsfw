@@ -352,6 +352,11 @@ watch(userTab, () => {
   if (mode.value === 'user') loadUserRank(true)
 })
 
+// 切换语言时重新请求作品榜（popularBookRank 依赖 locale；用户榜接口不带 locale，无需重取）
+watch(locale, () => {
+  if (mode.value === 'work') loadWorkRank(true)
+})
+
 // 下拉到底部加载下一页
 function onScroll() {
   const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 320
