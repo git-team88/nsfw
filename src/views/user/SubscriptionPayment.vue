@@ -275,6 +275,12 @@ onMounted(() => {
 }
 
 .content-box {
+  border: 2.5px solid #161122;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #161122;
+  padding: 24px;
+  background: #FFFDF7;
+
   .page-title {
     font-size: 20px;
     font-weight: 800;
@@ -287,11 +293,8 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
-    border: 2.5px solid #161122;
-    border-radius: 13px;
-    box-shadow: 3px 3px 0 #161122;
-    padding: 16px;
-    background: #FFFDF7;
+    padding: 0;
+    background: transparent;
 
     .info-left {
       display: flex;
@@ -328,8 +331,8 @@ onMounted(() => {
       min-width: 128px;
       height: 48px;
       padding: 8px 16px;
-      background: #FFFDF7;
-      color: #161122;
+      background: #00D3F2;
+      color: #FFFFFF;
       border-radius: 6px;
       font-weight: 800;
       font-size: 14px;
@@ -337,7 +340,6 @@ onMounted(() => {
 
       span {
         font-size: 18px;
-        color: #FF4D8D;
       }
     }
   }
@@ -417,17 +419,13 @@ onMounted(() => {
       .checkbox {
         width: 22px;
         height: 22px;
-        border: 2.5px solid #161122;
-        border-radius: 3px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #FFFDF7;
-
         img {
-          width: 14px;
-          height: 14px;
+          width: 22px;
+          height: 22px;
         }
       }
 

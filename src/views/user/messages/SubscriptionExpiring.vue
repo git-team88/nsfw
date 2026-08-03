@@ -1,6 +1,6 @@
 <template>
   <div class="list-wrap">
-    <div class="msg-item" v-for="item in list" :key="item.id">
+    <div class="msg-item" :style="{ animationDelay: `${Math.min(index, 12) * 45}ms` }" v-for="(item, index) in list" :key="item.id">
       <div class="left-info">
         <img class="avatar" :src="item.author_info?.avatar || defaultAvatar" alt="" @click="goUserHome(item.author_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
@@ -50,16 +50,20 @@ function goUserHome(userId: string) {
   gap: 13px;
 }
 .msg-item {
+  animation: msgItemIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px;
+  border: 2px solid #161122;
   border-radius: 19px;
-  transition: all 0.2s;
+  will-change: transform;
+  transition: transform 0.12s ease-out, box-shadow 0.12s;
   cursor: pointer;
 }
 .msg-item:hover {
-  box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
+  transform: translateX(4px);
+  box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
 }
 .left-info {
   display: flex;
@@ -83,7 +87,7 @@ function goUserHome(userId: string) {
 }
 .desc {
   font-size: 14px;
-  color: #364153;
+  color: #161122;
 }
 .time {
   font-size: 12px;
@@ -141,5 +145,13 @@ function goUserHome(userId: string) {
     width: 58px;
     height: 58px;
   }
+}
+
+@keyframes msgItemIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg-item { animation: none; }
 }
 </style>

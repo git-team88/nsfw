@@ -990,7 +990,7 @@ onBeforeUnmount(() => {
       content: "";
       position: absolute;
       top: -8px;
-      right: 14px;
+      right: 2px;
       width: 0;
       height: 0;
       border-left: 8px solid transparent;
@@ -1001,7 +1001,7 @@ onBeforeUnmount(() => {
       content: "";
       position: absolute;
       top: -5px;
-      right: 14px;
+      right: 2px;
       width: 0;
       height: 0;
       border-left: 7px solid transparent;

@@ -3096,9 +3096,9 @@ async function unpinCollection(collection: any) {
 .block-tip {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: -8px;
+  right: 0;
+  left: auto;
+  margin-top: 6px;
   padding: 10px;
   background: #161122;
   box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.3);
@@ -3107,10 +3107,10 @@ async function unpinCollection(collection: any) {
   border: 2px solid #161122;
   font-size: 12px;
   line-height: 16px;
-  white-space: nowrap;
   z-index: 10;
   text-align: center;
   width: 220px;
+  max-width: calc(100vw - 32px);
   white-space: normal;
   word-break: break-word;
 }

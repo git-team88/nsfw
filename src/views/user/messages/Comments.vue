@@ -1,6 +1,6 @@
 <template>
   <div class="list-wrap">
-    <div class="msg-item" v-for="item in list" :key="item.id" @click="toDetail(item.post, item.comment)">
+    <div class="msg-item" :style="{ animationDelay: `${Math.min(index, 12) * 45}ms` }" v-for="(item, index) in list" :key="item.id" @click="toDetail(item.post, item.comment)">
       <div class="left-info">
         <img class="avatar" :src="item.commenter.avatar || defaultAvatar" alt="" @click.stop="goUserHome(item.commenter.user_id)" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
         <div class="text-col">
@@ -71,18 +71,22 @@ function goUserHome(userId: string) {
   gap: 13px;
 }
 .msg-item {
+  animation: msgItemIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   display: flex;
   justify-content: space-between;
   padding: 14px;
-  border: 1px solid rgba(251, 100, 182, 0.1);
+  border: 2px solid #161122;
   border-radius: 19px;
-  transition: all 0.2s;
+  will-change: transform;
+  transition: transform 0.12s ease-out, box-shadow 0.12s;
   cursor: pointer;
 }
 .msg-item:hover {
-  box-shadow: 0px 0px 12px 0px rgba(251, 100, 182, 0.06);
+  transform: translateX(4px);
+  box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
 }
 .left-info {
+  min-width: 0;
   display: flex;
   gap: 19px;
   align-items: flex-start;
@@ -94,6 +98,7 @@ function goUserHome(userId: string) {
   object-fit: cover;
 }
 .text-col {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -106,14 +111,14 @@ function goUserHome(userId: string) {
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: #364153;
+  color: #161122;
 }
 .content {
   max-width: 704px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #364153;
+  color: #161122;
 }
 .time {
   font-size: 12px;
@@ -124,17 +129,19 @@ function goUserHome(userId: string) {
 .right-work-box {
   display: flex;
   align-items: center;
-  width: 544px;
+  flex: 0 1 544px;
+  min-width: 0;
   gap: 29px;
 
   .line {
     width: 1px;
     height: 64px;
-    background: #F5F5F5;
+    background: #161122;
   }
 }
 
 .right-work {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 19px;
@@ -146,10 +153,11 @@ function goUserHome(userId: string) {
   border-radius: 13px;
 }
 .work-title {
+  min-width: 0;
   font-weight: 500;
   font-size: 14px;
   line-height: 20px;
-  color: #99A1AF;
+  color: #161122;
   word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -176,5 +184,13 @@ function goUserHome(userId: string) {
     width: 58px;
     height: 58px;
   }
+}
+
+@keyframes msgItemIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg-item { animation: none; }
 }
 </style>

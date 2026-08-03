@@ -264,7 +264,7 @@ async function submit() {
 .modal-content {
   position: relative;
   width: 420px;
-  background: #FFFDF7;
+  background: #FFFFFF;
   border: 3px solid #161122;
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 12px;
@@ -274,15 +274,25 @@ async function submit() {
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  padding: 0;
   position: absolute;
-  top: 20px;
-  right: 18px;
-  width: 20px;
-  height: 20px;
+  top: 14px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #fff;
+  border: 2.5px solid #161122;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 #161122;
   cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
 .modal-header {
@@ -313,6 +323,7 @@ async function submit() {
 .report-options {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .radio-item {
@@ -320,19 +331,23 @@ async function submit() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 12px;
-  border-radius: 8px;
+  padding: 0 14px;
+  border: 2px solid rgba(22, 17, 34, 0.06);
+  border-radius: 10px;
   cursor: pointer;
   color: #5b5566;
+  transition: border-color 0.15s, color 0.15s;
 
   &:hover {
     color: #161122;
+    border-color: rgba(22, 17, 34, 0.35);
   }
 
   &.active {
-    background: rgba(22, 17, 34, 0.06);
+    border-color: #161122;
     .label-text {
       color: #161122;
+      font-weight: 700;
     }
   }
 
@@ -384,13 +399,15 @@ async function submit() {
   width: 100%;
   height: 136px;
   padding: 10px;
-  border: 1px solid rgba(22, 17, 34, 0.12);
-  border-radius: 8px;
+  border: 2px solid #161122;
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
   resize: none;
   font-family: inherit;
   font-size: 14px;
-  background: rgba(22, 17, 34, 0.06);
+  background: #FFFDF7;
   color: #161122;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &::placeholder {
     color: #9a93a4;
@@ -399,6 +416,7 @@ async function submit() {
   &:focus {
     outline: none;
     border-color: #FF4D8D;
+    box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
   }
 }
 
@@ -443,12 +461,20 @@ async function submit() {
 .upload-btn {
   width: 100px;
   height: 100px;
-  border-radius: 8px;
+  border: 2px solid #161122;
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 17, 34, 0.06);
+  background: #FFFDF7;
   cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: #FF4D8D;
+    box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+  }
 
   &.uploading {
     cursor: not-allowed;
@@ -485,27 +511,34 @@ async function submit() {
   button {
     width: 240px;
     height: 48px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 800;
     cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+    border: 2.5px solid #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   }
 
   .next-btn,
   .submit-btn {
     background: #FF4D8D;
     color: #ffffff;
+    box-shadow: 3px 3px 0 #161122;
 
     &:hover:not(:disabled) {
       transform: translate(-1px, -1px);
       box-shadow: 4px 4px 0 #161122;
     }
 
-    &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+    &:active:not(:disabled) {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #161122;
+    }
+
+    &:disabled {
+      background: #F3C6D6;
+      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.35);
+      cursor: not-allowed;
     }
   }
 }
