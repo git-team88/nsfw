@@ -348,22 +348,19 @@ function goBack() {
 .content-container {
   max-width: 840px;
   margin: 0 auto;
-  padding: 140px 24px 24px;
+  padding: 100px 24px 24px;
   position: relative;
 }
 
 .back-btn {
-  position: absolute;
-  top: 0;
-  left: -52px;
-  width: auto;
+  width: fit-content;
   height: 40px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 6px;
   color: #161122;
   cursor: pointer;
-  z-index: 10;
   border: 2.5px solid #161122;
   border-radius: 13px;
   background: #FFFDF7;
@@ -695,13 +692,11 @@ function goBack() {
 @media (max-width: 1440px) {
   .content-container {
     max-width: 840px;
-    padding: 140px 24px 24px;
+    padding: 100px 24px 24px;
   }
   .back-btn {
-    top: 140px;
-    width: auto;
+    width: fit-content;
     height: 40px;
-    left: -52px;
   }
   .form-group {
     margin-bottom: 20px;
@@ -809,13 +804,10 @@ function goBack() {
 @media (max-width: 768px) {
   .content-container {
     max-width: 100%;
-    padding: 80px 16px 16px;
+    padding: 100px 16px 16px;
   }
   .back-btn {
-    position: fixed;
-    top: 80px;
-    left: 16px;
-    width: auto;
+    width: fit-content;
     height: 32px;
   }
   .form-group {

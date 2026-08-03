@@ -859,7 +859,7 @@
       <ProcessList />
 
       <!-- 推荐创作者 + 人气作品（3D 动效 Showcase，移植自 moegen-web） -->
-      <HomeShowcase />
+      <HomeShowcase :user-region="userRegion" :region-ready="hasFetchedRegion" :allow-sensitive="allowSensitiveContent" />
 
       <!-- Content Section -->
       <div id="feed" class="content-section">

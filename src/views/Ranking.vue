@@ -143,6 +143,7 @@ import UserPodiumCard from '@/components/ranking/UserPodiumCard.vue'
 import UserRankRow from '@/components/ranking/UserRankRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import api from '@/api/index'
+import { toast } from '@/util/toast'
 
 interface RankedWork {
   id: string
@@ -173,6 +174,21 @@ interface RankedUser {
 
 const { t, locale } = useI18n()
 const route = useRoute()
+
+// 敏感内容地区判断：进入页面时拉一次，作品榜据此决定 show_nsfw
+const userRegion = ref(false)
+let regionFetched = false
+async function getCountry() {
+  if (regionFetched) return
+  try {
+    const res = (await api.getCode()) as any
+    regionFetched = true
+    userRegion.value = res.code == 0 && res.data?.countryCode !== 'CN'
+  } catch {
+    regionFetched = true
+    userRegion.value = false
+  }
+}
 
 const mode = ref<'work' | 'user'>('work')
 const type = ref('all')
@@ -221,7 +237,7 @@ async function loadWorkRank(reset = false) {
   const page = workPage.value
   const reqType = type.value
   try {
-    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, 0)) as any
+    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0)) as any
     // 请求期间切换了筛选类型则丢弃本次结果
     if (reqType !== type.value || mode.value !== 'work') return
     const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []
@@ -297,6 +313,9 @@ async function loadUserRank(reset = false) {
       : await api.popularUserRank(page, USER_LIMIT, period)) as any
     // 请求期间切换了子榜/主榜则丢弃本次结果
     if (reqUserTab !== userTab.value || mode.value !== 'user') return
+    if (res.code !== 0 && res.code !== 200) {
+      toast((locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp) || t('fail'))
+    }
     const list = ((res.code === 0 || res.code === 200) && res.data?.data) ? res.data.data : []
     const mapped: RankedUser[] = list.map((it: any, i: number) => ({
       id: String(it.user_id),
@@ -313,6 +332,7 @@ async function loadUserRank(reset = false) {
     if (userHasMore.value) userPage.value = page + 1
   } catch (e) {
     console.error('popularUserRank', e)
+    toast(t('fail'))
     if (reset) userItems.value = []
     userHasMore.value = false
   } finally {
@@ -370,8 +390,12 @@ function onScroll() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
+  // 拉地区期间先置加载态，避免作品榜首屏闪现「无数据」
+  if (route.query.tab !== 'user') workLoading.value = true
+  // 进入页面先拿地区，保证作品榜首屏请求带上正确的 show_nsfw
+  await getCountry()
   // 从首页「查看全部」进入时定位到用户榜（切换 mode 会触发 watch 自动加载）
   if (route.query.tab === 'user') {
     mode.value = 'user'

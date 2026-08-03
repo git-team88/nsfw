@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
@@ -151,6 +151,17 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const { t, locale } = useI18n();
 const router = useRouter();
+
+// 敏感内容地区由首页(Home.vue)统一请求后通过 props 传入，避免在此重复请求 getCode
+const props = defineProps<{ userRegion?: boolean; regionReady?: boolean; allowSensitive?: boolean }>();
+// 等待首页地区结果就绪（作品榜请求需要正确的 show_nsfw）；带兜底超时，避免异常时永不加载
+function waitRegionReady(): Promise<void> {
+  if (props.regionReady) return Promise.resolve();
+  return new Promise((resolve) => {
+    const stop = watch(() => props.regionReady, (r) => { if (r) { stop(); resolve(); } });
+    setTimeout(() => { stop(); resolve(); }, 3000);
+  });
+}
 
 /* ---------- 数据 ---------- */
 interface Creator { id: string; name: string; avatar: string; avatarImg?: string; cover: string; fans: string | number; works: number; isFollowed: boolean; latestCover?: string; latestPostId?: string; latestPostIdNotNsfw?: string }
@@ -183,15 +194,6 @@ const MOCK_BOOKS: Work[] = [
   { id: 'm8', title: '雪原之约', cover: '', author: 'Mio', likes: 4600, type: '1' },
 ];
 
-// 创作者假数据兜底
-const MOCK_CREATORS: Creator[] = [
-  { id: 'c1', name: 'Aoi', avatar: 'linear-gradient(135deg,#FF7AAE,#FFB443)', avatarImg: undefined, cover: '#FF5FA2', fans: 12800, works: 42, isFollowed: false },
-  { id: 'c2', name: 'Rin', avatar: 'linear-gradient(135deg,#6C5CE7,#00CEC9)', avatarImg: undefined, cover: '#6C5CE7', fans: 9600, works: 31, isFollowed: true },
-  { id: 'c3', name: 'Kaze', avatar: 'linear-gradient(135deg,#3B82F6,#22D3EE)', avatarImg: undefined, cover: '#3B82F6', fans: 8700, works: 27, isFollowed: false },
-  { id: 'c4', name: 'Yuki', avatar: 'linear-gradient(135deg,#FFD23F,#FF6B6B)', avatarImg: undefined, cover: '#FFD23F', fans: 7400, works: 19, isFollowed: false },
-  { id: 'c5', name: 'Sora', avatar: 'linear-gradient(135deg,#22C55E,#A3E635)', avatarImg: undefined, cover: '#22C55E', fans: 6900, works: 15, isFollowed: false },
-];
-
 onMounted(async () => {
   try {
     const res = (await api.popularUserRank(1, 6)) as any;
@@ -213,20 +215,30 @@ onMounted(async () => {
           latestPostIdNotNsfw: String(lb.public_post_id_not_nsfw ?? ''),
         };
       });
+    } else {
+      toast((locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp) || t('fail'));
     }
-  } catch (e) { console.error('popularUserRank', e); }
-
-  // 创作者为空时用假数据兜底，保证 3D 堆叠动效可见
-  if (!creators.value.length) {
-    creators.value = MOCK_CREATORS.map((c, i) => ({ ...c, cover: CRE_COVERS[i % CRE_COVERS.length] }));
+  } catch (e) {
+    console.error('popularUserRank', e);
+    toast(t('fail'));
   }
 
-  // 人气作品榜（首页只取一页，period=week）
+  // 创作者堆叠动效（左侧面板，与敏感开关无关）
+  await nextTick();
+  startCreatorStack();
+
+  // 人气作品榜（右侧）：首屏加载
+  await loadBooks();
+});
+
+// 人气作品榜取数（敏感开关/语言变化时重新请求，与推荐列表逻辑一致）
+async function loadBooks() {
+  await waitRegionReady();
   try {
-    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, 0)) as any;
+    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
     const list = ((bookRes.code === 0 || bookRes.code === 200) && (bookRes.data?.data || bookRes.data)) || [];
-    if (Array.isArray(list) && list.length) {
-      books.value = list.map((it: any) => {
+    books.value = (Array.isArray(list) && list.length)
+      ? list.map((it: any) => {
         const b = it.book || {};
         return {
           id: String(it.book_id ?? b.id ?? ''),
@@ -238,18 +250,22 @@ onMounted(async () => {
           likes: Number(it.like_count ?? it.all_like ?? it.like_num ?? 0) || 0,
           type: String(b.type ?? '1'),
         };
-      });
-    }
-  } catch (e) { console.error('popularBookRank', e); }
-
+      })
+      : [];
+  } catch (e) {
+    console.error('popularBookRank', e);
+    books.value = [];
+  }
   // 作品为空时用假数据兜底，保证 3D 动效可见
   if (!books.value.length) books.value = MOCK_BOOKS.slice();
-
-  // 等卡片 DOM 渲染完再启动动效（否则 cardEls 为空直接 return）
   await nextTick();
-  startCreatorStack();
   startRing();
-});
+}
+
+// 敏感内容开关切换（Home 传入）时，重新请求作品榜
+watch(() => props.allowSensitive, () => { loadBooks(); });
+// 切换语言时重新请求作品榜（与推荐列表逻辑一致）
+watch(locale, () => { loadBooks(); });
 
 const onAvatarErr = (e: Event) => { const el = e.target as HTMLImageElement; if (el) el.src = defaultAvatar; };
 
@@ -444,6 +460,7 @@ const ringDrag = { on: false, startX: 0, startAngle: 0 };
 let pressedIdx: number | null = null;
 
 function startRing() {
+  if (ringRaf) cancelAnimationFrame(ringRaf);
   ringItems.value = books.value.slice(0, 8);
   const half = Math.ceil(books.value.length / 2);
   rowTop.value = books.value.slice(0, half);

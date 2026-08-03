@@ -1,5 +1,6 @@
 .ranking-page {
   min-height: 100vh;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: #FFFBF4;
@@ -85,7 +86,6 @@
   font-weight: 600;
   font-size: 12px;
   color: #9a93a4;
-  white-space: nowrap;
   line-height: 1.5;
 }
 
@@ -131,6 +131,7 @@
   padding: 9px 18px;
   font-weight: 800;
   font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
   background: transparent;
@@ -155,6 +156,7 @@
   padding: 8px 18px;
   font-weight: 800;
   font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
   background: #fff;
@@ -170,7 +172,8 @@
 .ranking-podium {
   display: grid;
   // 列顺序为 [第2名, 第1名, 第3名]，按名次做不等分（中间第1名最宽）
-  grid-template-columns: 158fr 166fr 150fr;
+  // minmax(0, …fr)：允许轨道收缩到内容以下，避免日语长标题把 min-content 撑大导致溢出
+  grid-template-columns: minmax(0, 158fr) minmax(0, 166fr) minmax(0, 150fr);
   gap: 16px;
   align-items: end;
   margin: 0 0 20px;
