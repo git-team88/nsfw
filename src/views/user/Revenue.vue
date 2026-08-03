@@ -654,6 +654,7 @@ td {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .metrics {
     flex-direction: column;

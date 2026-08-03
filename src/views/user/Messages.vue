@@ -362,6 +362,7 @@ async function fetchData() {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
 }
 

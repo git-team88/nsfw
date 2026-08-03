@@ -898,6 +898,7 @@ async function downloadSingleWorkData() {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .metric {
     height: auto;

@@ -157,7 +157,6 @@ function cancelLogout() {
     width: 100%;
     height: auto;
     position: static;
-    padding: 0;
   }
   .title {
     margin-bottom: 8px;

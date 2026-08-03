@@ -279,6 +279,7 @@ function goToAiPointsDetails() {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .withdraw-banner {
     flex-direction: column;

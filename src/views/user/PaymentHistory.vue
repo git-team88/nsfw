@@ -1510,6 +1510,7 @@ onBeforeUnmount(() => {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .tabs-row {
     flex-wrap: wrap;

@@ -211,6 +211,7 @@ function toggle(key: string) {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .content {
     padding: 20px 16px;

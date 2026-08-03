@@ -509,6 +509,7 @@ onBeforeUnmount(() => {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .panel-top {
     padding: 0 20px;

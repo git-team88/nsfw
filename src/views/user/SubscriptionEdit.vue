@@ -655,6 +655,7 @@ async function handleAccountFailedModify() {
   }
   .main {
   padding: 24px;
+  margin-left: 0;
   }
   .account-section {
     flex-direction: column;
