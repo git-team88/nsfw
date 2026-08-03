@@ -10,21 +10,24 @@
         </div>
       </div>
     </div>
-    <div class="rank-author">
-      <span class="rank-author-link" v-if="w.author" @click.stop="goUser">
-        <img class="rank-avatar" :src="w.avatar || defaultAvatar" alt="" @error="onAvatarErr" />
-        <span class="rank-author-name">{{ w.author }}</span>
-      </span>
-    </div>
-    <div class="rank-stats">
-      <span class="stat stat-pink">
-        <img class="stat-icon" src="@/assets/images/rank/like.png" alt="" />
-        {{ fmtK(w.likes) }}
-      </span>
-      <span class="stat stat-comment">
-        <img class="stat-icon" src="@/assets/images/rank/comment.png" alt="" />
-        {{ fmtK(w.comments) }}
-      </span>
+
+    <div class="rank-right">
+      <div class="rank-author">
+        <span class="rank-author-link" v-if="w.author" @click.stop="goUser">
+          <img class="rank-avatar" :src="w.avatar || defaultAvatar" alt="" @error="onAvatarErr" />
+          <span class="rank-author-name">{{ w.author }}</span>
+        </span>
+      </div>
+      <div class="rank-stats">
+        <span class="stat stat-pink">
+          <img class="stat-icon" src="@/assets/images/rank/like.png" alt="" />
+          {{ fmtK(w.likes) }}
+        </span>
+        <span class="stat stat-comment">
+          <img class="stat-icon" src="@/assets/images/rank/comment.png" alt="" />
+          {{ fmtK(w.comments) }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -148,9 +151,13 @@ $ink: #161122;
 .rank-title {
   font-weight: 800;
   font-size: 15px;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .rank-meta {
@@ -171,17 +178,21 @@ $ink: #161122;
   color: $ink;
 }
 
+.rank-right{
+  display: flex;
+  flex: 0.7;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
 .rank-author {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 7px;
-  flex: 0.5;
+  flex: 1;
   min-width: 0;
-
-  @media (max-width: 640px) {
-    display: none;
-  }
 }
 
 .rank-author-link {
@@ -234,12 +245,6 @@ $ink: #161122;
     width: 20px;
     height: 20px;
     object-fit: contain;
-  }
-}
-
-.stat-comment {
-  @media (max-width: 640px) {
-    display: none;
   }
 }
 </style>
