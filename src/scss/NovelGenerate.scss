@@ -1593,6 +1593,11 @@
 
       &.outline-content-generating {
         padding-bottom: 200px;
+
+        // 相似推荐收起时，底部固定栏只剩标题行，减少预留的 padding-bottom
+        &.similar-collapsed {
+          padding-bottom: 20px;
+        }
       }
       /* Skeleton Loader - 闪屏效果 */
       .skeleton-loader {
@@ -2426,7 +2431,7 @@
   .similar-section {
     position: fixed;
     bottom: 0;
-    left: calc(30vw + 68px);
+    left: calc(68px + clamp(280px, 30vw, 400px));
     right: 0;
     background: #FFFFFF;
     border-top: 2px solid rgba(22, 17, 34, 0.1);
@@ -2444,17 +2449,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 16px;
       margin-bottom: 16px;
 
       .similar-header-left {
         display: flex;
         align-items: center;
         gap: 20px;
+        min-width: 0;
 
         .similar-title {
           font-size: 14px;
           font-weight: 500;
           color: #161122;
+          white-space: nowrap;
         }
 
         .similar-refresh-btn {
@@ -2463,6 +2472,7 @@
           color: #FF4D8E;
           font-size: 14px;
           cursor: pointer;
+          white-space: nowrap;
         }
       }
 
@@ -2470,10 +2480,12 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        min-width: 0;
 
         .similar-hint {
           font-size: 14px;
           color: #9a93a4;
+          white-space: nowrap;
         }
 
         .similar-toggle-btn {
