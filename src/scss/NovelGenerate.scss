@@ -1592,7 +1592,7 @@
       padding: 0 18px 18px;
 
       &.outline-content-generating {
-        padding-bottom: 200px;
+        padding-bottom: 180px;
 
         // 相似推荐收起时，底部固定栏只剩标题行，减少预留的 padding-bottom
         &.similar-collapsed {
@@ -2431,7 +2431,7 @@
   .similar-section {
     position: fixed;
     bottom: 0;
-    left: calc(68px + clamp(280px, 30vw, 400px));
+    left: calc(86px + clamp(280px, 30vw, 400px));
     right: 0;
     background: #FFFFFF;
     border-top: 2px solid rgba(22, 17, 34, 0.1);
