@@ -568,7 +568,7 @@
           </template>
         </div>
 
-        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter)), 'similar-collapsed': isSimilarCollapsed }" ref="outlineContentRef">
+        <div class="outline-content" :class="{ 'outline-content-generating': shouldShowSimilar, 'similar-collapsed': isSimilarCollapsed }" ref="outlineContentRef">
           <NovelLoading
             v-if="(isGeneratingOutline && !outlineStreamDone && !hasFailed) || (taskStatus == 'DOING' && !isLoadingComplete && !hasFailed && currentStepName != 'renew_novel_cover' && currentStepName != 'refresh_novel_cover')"
             v-show="isGeneratingOutline || (currentChapter && currentChapter.chapter == stepChapterIndex)"
@@ -970,7 +970,7 @@
       </div>
 
       <!-- Similar Content Section -->
-      <div  class="similar-section" v-if="shouldShowEstimatedTime && (isGeneratingOutline || (currentChapter && generatingChapter && currentChapter.chapter == generatingChapter))">
+      <div  class="similar-section" v-if="shouldShowSimilar">
         <div class="similar-inner">
           <div class="similar-header">
             <div class="similar-header-left">
@@ -2669,6 +2669,13 @@ const generateInsertImage = async () => {
       renewingInsertImageChapter.value = currentChapter.value?.chapter ?? null;
       showInsertImageEdit.value = false;
       showInsertImageAtDropdown.value = false;
+      await fetchUserBalance();
+      // 配图重绘的冻结算力提示（与封面重绘一致）
+      const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+      if (hideFreezeModal !== '1') {
+        freezeComputingPower.value = Math.round(insertImageCost.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showFreezeComputingPowerModal.value = true;
+      }
       startInsertImageRenewPolling(taskId, placeholder);
       isRenewingInsertImage.value = false;
     } else {
@@ -3139,6 +3146,15 @@ const shouldShowEstimatedTime = computed(() => {
   if (taskStatus.value == 'DOING' || isGeneratingOutline.value || isPreparing.value) return true;
   return false;
 });
+
+// 封面或配图正在重绘（普通重绘会经过这些状态）
+const isImageRenewing = computed(() => coverRenewLoading.value || renewingInsertImagePlaceholder.value != null);
+
+// 相似推荐显示条件：生成大纲/生成当前章节内容时，或封面/配图重绘时
+const shouldShowSimilar = computed(() =>
+  (shouldShowEstimatedTime.value && (isGeneratingOutline.value || (currentChapter.value && generatingChapter.value && currentChapter.value.chapter == generatingChapter.value)))
+  || isImageRenewing.value,
+);
 
 const shouldShowActionButtons = computed(() => {
   if (taskStatus.value == 'DOING') return false;
@@ -8604,7 +8620,7 @@ watch(() => locale.value, () => {
   setSeoMeta();
 });
 
-watch(() => shouldShowEstimatedTime.value, (newVal) => {
+watch(() => shouldShowSimilar.value, (newVal) => {
   if (newVal) {
     fetchSimilarList(1);
   } else {
