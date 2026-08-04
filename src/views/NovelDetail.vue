@@ -1,12 +1,7 @@
 <template>
   <div class="novel-detail">
-    <div class="close-page-btn" :class="{ 'is-collection': isCollectionMode }" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-      <div class="back-pill" v-if="isCollectionMode">
-        <span class="back-icon"></span>
-        <span class="back-pill-text">{{ t('back') }}</span>
-        <div class="info-tooltip">{{ t('detail.exitCollectionReadMode') }}</div>
-      </div>
-      <span class="back-icon" v-else></span>
+    <div class="close-page-btn" @click="closePage()">
+      <span class="back-icon"></span>
     </div>
 
     <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
@@ -722,11 +717,8 @@ async function fetchDetail() {
       // Set chapter navigation
       setChapterNavigation();
 
-      // Auto enter collection mode when:
-      // - type=4 (from collection detail page, only for owner)
-      // - collected=1 (from chapter navigation)
-      // - already in collection mode (chapter navigation)
-      if (detail.value.book_id && Number(detail.value.book_id) > 0 && ((route.query.type == '4' && detail.value.author.id && detail.value.author.id === uid) || route.query.collected == '1' || isCollectionMode.value)) {
+      // Auto enter collection mode when book has chapters
+      if (detail.value.book_id && Number(detail.value.book_id) > 0) {
         isCollectionMode.value = true;
         if (localStorage.getItem('token')) {
           pendingRecordHistory.value = true;
@@ -1445,8 +1437,7 @@ function doNavigateToChapter(chapter: any) {
     path: '/detail',
     query: {
       ...route.query,
-      id: chapter.post_id,
-      collected: '1'
+      id: chapter.post_id
     }
   });
 
@@ -1661,8 +1652,7 @@ async function enterCollectionMode(type: number) {
           path: '/detail',
           query: {
             ...route.query,
-            id: targetChapterId,
-            collected: '1' // Add collected=1 to trigger collection mode on page load
+            id: targetChapterId
           }
         });
         if (localStorage.getItem('token')) {

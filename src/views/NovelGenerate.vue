@@ -701,6 +701,7 @@
                     <div class="insert-image-actions" v-if="!isChapterRenewingInsertImage()">
                       <button v-if="hasInsertImageHistory(seg.placeholder)" class="insert-image-action-btn" @click="openInsertImageHistory(seg.placeholder)"><img src="@/assets/images/novel/history.png" alt="History" /></button>
                       <button class="insert-image-action-btn" @click="openInsertImageEdit(seg.placeholder)"><img src="@/assets/images/novel/cover_edit.png" alt="Edit" /></button>
+                      <MarkupEditIcon v-if="seg.url" class="insert-image-action-btn" :label="t('markup.markupEditAction')" @click="openInsertMarkup(seg.placeholder)" />
                     </div>
                   </div>
                 </template>
@@ -920,6 +921,7 @@
                  <div class="cover-renew">
                     <button v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" class="cover-action-btn" @click="handleCoverHistoryClick"><img src="@/assets/images/novel/history.png" /></button>
                     <button v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/cover_edit.png" alt="Edit" /></button>
+                    <MarkupEditIcon v-if="coverImage && !coverRenewLoading" class="cover-action-btn" :label="t('markup.markupEditAction')" side="right" @click="openCoverMarkup" />
                    <button v-if="coverRenewFailed && !isPreparing" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/refresh.png" /></button>
                  </div>
 
@@ -956,6 +958,7 @@
                  <div class="cover-renew">
                     <button v-if="coverImage && !coverRenewLoading && coverHistoryList.length >= 2" class="cover-action-btn" @click="handleCoverHistoryClick"><img src="@/assets/images/novel/history.png" /></button>
                     <button v-if="(showCoverEditBtn || coverRenewFailed) && coverImage && !coverRenewLoading" class="cover-action-btn" @click="handleCoverEditClick"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
+                    <MarkupEditIcon v-if="coverImage && !coverRenewLoading" class="cover-action-btn" :label="t('markup.markupEditAction')" side="right" @click="openCoverMarkup" />
                  </div>
               </div>
             </div>
@@ -1170,6 +1173,20 @@
       @close="showBatchPublishDialog = false"
       @confirm="handleBatchPublishConfirm"
       @refresh="handleBatchPublishRefresh"
+    />
+
+    <!-- 标记修改（标记修图）编辑器 -->
+    <MarkupImageEditor
+      v-if="markupOpen"
+      :image-url="markupImageUrl"
+      :image-name="markupImageName"
+      :initial-instruction="markupInstruction"
+      :estimated-points="markupEstimatedPoints"
+      :show-guide="showMarkupGuide"
+      :on-close="closeMarkupEditor"
+      :on-send="handleSendMarkedImage"
+      :on-dismiss-guide="handleDismissMarkupGuide"
+      :on-request-guide="() => { showMarkupGuide = true; }"
     />
 
   </div>
@@ -1574,6 +1591,8 @@ import NovelLoading from '@/components/NovelLoading.vue';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
+import MarkupEditIcon from '@/components/markup/MarkupEditIcon.vue';
+import MarkupImageEditor from '@/components/markup/MarkupImageEditor.vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -2159,6 +2178,179 @@ const historyTargetPlaceholder = ref<number | null>(null);
 // Estimated computing power for renewing an insert image
 const insertImageCost = ref<number>(1);
 
+// ===== 标记修改（标记修图）=====
+const markupOpen = ref(false);
+const markupType = ref<'cover' | 'insert'>('cover');
+const markupImageUrl = ref('');
+const markupImageName = ref('');
+const markupPlaceholder = ref<number | null>(null);
+const markupInstruction = ref('');
+const showMarkupGuide = ref(false);
+const markupGuideDisabled = ref(localStorage.getItem('novel-markup-guide-disabled') === '1');
+const markupEstimatedPoints = computed(() => markupType.value === 'cover' ? coverCost.value : insertImageCost.value);
+
+function openMarkupGuideIfNeeded() {
+  if (!markupGuideDisabled.value) showMarkupGuide.value = true;
+}
+function handleDismissMarkupGuide(dontShowAgain: boolean) {
+  showMarkupGuide.value = false;
+  if (dontShowAgain) {
+    markupGuideDisabled.value = true;
+    localStorage.setItem('novel-markup-guide-disabled', '1');
+  }
+}
+function closeMarkupEditor() {
+  markupOpen.value = false;
+}
+
+// 打开封面的标记修改
+async function openCoverMarkup() {
+  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
+    const chapterNum = generatingChapter.value || stepChapterIndex.value;
+    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
+  if (!coverImage.value) return;
+  if (await checkProjectOwnershipByEstimate()) return;
+  markupType.value = 'cover';
+  markupPlaceholder.value = null;
+  markupImageUrl.value = coverImage.value;
+  markupImageName.value = t('novel.novelCover');
+  markupInstruction.value = '';
+  markupOpen.value = true;
+  openMarkupGuideIfNeeded();
+  // 拉取封面预估算力，展示在发送按钮上
+  try {
+    const estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'cover' }) as any;
+    if (estimateRes.code == 200 && estimateRes.data?.total_points) {
+      coverCost.value = estimateRes.data.total_points;
+    }
+  } catch (error) {
+    console.error('Error fetching cover estimate:', error);
+  }
+}
+
+// 打开配图（插图）的标记修改
+async function openInsertMarkup(placeholder?: number) {
+  if (placeholder == null) return;
+  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
+    const chapterNum = generatingChapter.value || stepChapterIndex.value;
+    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+    return;
+  }
+  if (renewingInsertImagePlaceholder.value != null) {
+    toast(t('novel.insertImageRenewLoadingTip', { chapter: renewingInsertImageChapter.value }));
+    return;
+  }
+  if (checkProjectOwnership()) return;
+  const seg = contentSegments.value.find((s: any) => s.type === 'image' && s.placeholder === placeholder);
+  const url = seg?.url ? insertImageSrc(seg.url) : '';
+  if (!url) return;
+  markupType.value = 'insert';
+  markupPlaceholder.value = placeholder;
+  markupImageUrl.value = url;
+  markupImageName.value = `${t('novel.novelCover')}`;
+  markupInstruction.value = '';
+  markupOpen.value = true;
+  openMarkupGuideIfNeeded();
+  // 拉取插图预估算力，展示在发送按钮上
+  fetchInsertImageEstimate();
+}
+
+// 发送标记图：上传后作为参考图 + 修改意见走现有重绘接口
+async function handleSendMarkedImage(blob: Blob, instruction: string) {
+  const file = new File([blob], `markup_${Date.now()}.png`, { type: 'image/png' });
+  const uploadedUrl = await uploadCoverImage(file);
+  if (!uploadedUrl) throw new Error(t('fail'));
+
+  const token = localStorage.getItem('token') || '';
+
+  if (markupType.value === 'cover') {
+    if (await isTaskLimitExceeded()) return;
+    isEditingCover.value = false;
+    coverRenewLoading.value = true;
+    coverRenewFailed.value = false;
+    showCoverEditBtn.value = false;
+    coverAbortController.value = new AbortController();
+    const response = await fetch(`${aiUrl}ai/novel/renew_novel_cover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'token': token },
+      body: JSON.stringify({
+        session_id: sessionId.value,
+        prompt: instruction,
+        new_reference_images: [uploadedUrl],
+        is_markup: true,
+      }),
+      signal: coverAbortController.value.signal,
+    });
+    const res = await response.json();
+    if (res.code == 200) {
+      await fetchUserBalance();
+      // 与普通封面重绘一致：发送后提示本次冻结算力
+      const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+      if (hideFreezeModal !== '1') {
+        freezeComputingPower.value = Math.round(coverCost.value * (balanceInfo.value?.over_freeze_rate || 1));
+        showFreezeComputingPowerModal.value = true;
+      }
+      const taskId = res.data?.task_id || '';
+      if (taskId) startCoverRenewPolling(taskId);
+      markupOpen.value = false;
+    } else {
+      coverRenewLoading.value = false;
+      showCoverEditBtn.value = true;
+      throw new Error(res.message || t('fail'));
+    }
+    return;
+  }
+
+  // insert image
+  const placeholder = markupPlaceholder.value;
+  if (placeholder == null) return;
+  if (await isTaskLimitExceeded()) return;
+  const response = await fetch(`${aiUrl}ai/novel/renew_novel_insert_image`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'token': token },
+    body: JSON.stringify({
+      session_id: sessionId.value,
+      chapter: currentChapter.value?.chapter,
+      image_index: placeholder,
+      prompt: instruction,
+      new_reference_images: [uploadedUrl],
+      is_markup: true,
+    }),
+  });
+  const res = await response.json();
+  if (res.code !== 200) {
+    throw new Error(res.message || t('fail'));
+  }
+  const taskId = res.data?.task_id;
+  markupOpen.value = false;
+  if (taskId) {
+    renewingInsertImagePlaceholder.value = placeholder;
+    renewingInsertImageChapter.value = currentChapter.value?.chapter ?? null;
+    await fetchUserBalance();
+    showInsertFreezeModalIfNeeded();
+    startInsertImageRenewPolling(taskId, placeholder);
+  } else {
+    const url = res.data?.url || res.data?.insert_image_url || '';
+    if (url) updateInsertImageUrl(placeholder, url);
+  }
+}
+
+// 配图重绘的冻结算力提示（与封面重绘一致的展示逻辑）
+function showInsertFreezeModalIfNeeded() {
+  const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
+  if (hideFreezeModal !== '1') {
+    freezeComputingPower.value = Math.round(insertImageCost.value * (balanceInfo.value?.over_freeze_rate || 1));
+    showFreezeComputingPowerModal.value = true;
+  }
+}
+
+
 // Fetch the estimated computing power for the insert image renew (step_name = insert_image)
 const fetchInsertImageEstimate = async () => {
   try {
@@ -2671,12 +2863,7 @@ const generateInsertImage = async () => {
       showInsertImageEdit.value = false;
       showInsertImageAtDropdown.value = false;
       await fetchUserBalance();
-      // 配图重绘的冻结算力提示（与封面重绘一致）
-      const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
-      if (hideFreezeModal !== '1') {
-        freezeComputingPower.value = Math.round(insertImageCost.value * (balanceInfo.value?.over_freeze_rate || 1));
-        showFreezeComputingPowerModal.value = true;
-      }
+      showInsertFreezeModalIfNeeded();
       startInsertImageRenewPolling(taskId, placeholder);
       isRenewingInsertImage.value = false;
     } else {
@@ -3148,7 +3335,7 @@ const shouldShowEstimatedTime = computed(() => {
   return false;
 });
 
-// 封面或配图正在重绘（普通重绘会经过这些状态）
+// 封面或配图正在重绘（普通重绘 / 标记修改都会经过这些状态）
 const isImageRenewing = computed(() => coverRenewLoading.value || renewingInsertImagePlaceholder.value != null);
 
 // 相似推荐显示条件：生成大纲/生成当前章节内容时，或封面/配图重绘时

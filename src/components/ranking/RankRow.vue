@@ -72,10 +72,8 @@ const typeLabel = computed(() => t(badge.value.label))
 
 const router = useRouter()
 function goDetail() {
-  // 根据是否开启敏感内容读取不同的 post id
-  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1'
-  const pid = (allowSensitive ? props.w.postId : props.w.postIdNotNsfw) || props.w.postId || props.w.postIdNotNsfw
-  if (pid) router.push(`/detail?id=${pid}`)
+  const uid = props.w.authorId || '';
+  router.push(`/collection/${props.w.id}${uid ? '?uid=' + uid : ''}`)
 }
 
 // 点击作者头像/昵称跳转个人主页

@@ -1,16 +1,8 @@
 <template>
   <div class="detail-view">
     <div class="" v-if="detail.type == '1' || detail.type == '3'">
-      <div class="close-page-btn" :class="{ 'is-collection': isCollectionMode }" @click="isCollectionMode ? exitCollectionMode() : closePage()">
-        <div class="back-pill" v-if="isCollectionMode">
-          <span class="back-icon"></span>
-          <span class="back-pill-text">{{ t('back') }}</span>
-          <div class="info-tooltip">
-            {{ t('detail.exitCollectionPlayMode') }}
-          </div>
-        </div>
-
-        <span v-else></span>
+      <div class="close-page-btn" @click="closePage()">
+        <span></span>
       </div>
 
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
@@ -1409,8 +1401,7 @@ async function goToNextChapter() {
       path: '/detail',
       query: {
         ...route.query,
-        id: nextChapterId.value,
-        collected: '1' // Add collected=1 to trigger collection mode on page load
+        id: nextChapterId.value
       }
     });
   }
@@ -1458,8 +1449,7 @@ async function enterNextOrCurrentChapter() {
         path: '/detail',
         query: {
           ...route.query,
-          id: targetChapterId,
-          collected: '1' // Add collected=1 to trigger collection mode on page load
+          id: targetChapterId
         }
       });
       if (localStorage.getItem('token')) {
@@ -1535,8 +1525,7 @@ async function doNavigateToChapter(chapter: any) {
     path: '/detail',
     query: {
       ...route.query,
-      id: chapter.post_id,
-      collected: '1' // Add collected=1 to trigger collection mode on page load
+      id: chapter.post_id
     }
   });
 
@@ -1606,12 +1595,14 @@ function onImageLoaded(totalImages: number) {
 
 // Exit collection mode
 function exitCollectionMode() {
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author?.id}`);
+    return;
+  }
   isCollectionMode.value = false;
   activeTab.value = 'detail';
   currentCollectionIndex.value = 0;
-  // Reset isNearBottom to false when exiting collection mode
   isNearBottom.value = false;
-  // Scroll to top when exiting collection mode
   if (imageStackRef.value) {
     imageStackRef.value.scrollTop = 0;
   }
@@ -1619,15 +1610,12 @@ function exitCollectionMode() {
     comicScrollRef.value.scrollTop = 0;
   }
 
-  // Reset navigation and image loading states so last-chapter-section
-  // doesn't appear immediately on exit - wait for proper re-evaluation
   prevChapterId.value = '';
   nextChapterId.value = '';
   isChapterNavigationLoaded.value = false;
   isImagesLoaded.value = false;
   loadedImageCount.value = 0;
 
-  // Re-calculate chapter navigation for non-collection mode
   setChapterNavigation();
 }
 
@@ -2127,16 +2115,17 @@ async function fetchDetail(newId: number) {
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0) {
         await loadChapters();
-        if (pendingRecordHistory.value) {
+
+        // Auto enter collection mode when book has chapters
+        isCollectionMode.value = true;
+        activeTab.value = 'collection';
+        isRightPanelHidden.value = false;
+
+        if (localStorage.getItem('token') && pendingRecordHistory.value) {
           pendingRecordHistory.value = false;
           await recordViewHistory();
-        }
-
-        // Auto enter collection mode when coming from collection navigation
-        if (route.query.collected == '1' || (route.query.type == '4' && detail.value.author.id && detail.value.author.id === uid)) {
-          isCollectionMode.value = true;
-          activeTab.value = 'collection';
-          isRightPanelHidden.value = false;
+        } else if (localStorage.getItem('token')) {
+          pendingRecordHistory.value = true;
         }
       }
 

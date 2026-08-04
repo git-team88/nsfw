@@ -164,8 +164,8 @@ function waitRegionReady(): Promise<void> {
 }
 
 /* ---------- 数据 ---------- */
-interface Creator { id: string; name: string; avatar: string; avatarImg?: string; cover: string; fans: string | number; works: number; isFollowed: boolean; latestCover?: string; latestPostId?: string; latestPostIdNotNsfw?: string }
-interface Work { id: string; postId?: string; postIdNotNsfw?: string; title: string; cover: string; author: string; likes: string | number; type: string }
+interface Creator { id: string; name: string; avatar: string; avatarImg?: string; cover: string; fans: string | number; works: number; isFollowed: boolean; latestCover?: string; latestPostId?: string; latestPostIdNotNsfw?: string; latestBookId?: string }
+interface Work { id: string; postId?: string; postIdNotNsfw?: string; title: string; cover: string; author: string; likes: string | number; type: string; authorId?: string }
 
 const creators = ref<Creator[]>([]);
 const books = ref<Work[]>([]);
@@ -219,6 +219,7 @@ async function loadCreators() {
           latestCover: lb.cover || '',
           latestPostId: String(lb.public_post_id ?? ''),
           latestPostIdNotNsfw: String(lb.public_post_id_not_nsfw ?? ''),
+          latestBookId: String(it.book_id ?? lb.id ?? ''),
         };
       });
     } else {
@@ -255,6 +256,7 @@ async function loadBooks() {
           title: b.title || '',
           cover: b.cover || '',
           author: it.user?.nickname ?? '',
+          authorId: String(b.user_id ?? it.user?.id ?? ''),
           likes: Number(it.like_count ?? it.all_like ?? it.like_num ?? 0) || 0,
           type: String(b.type ?? '1'),
         };
@@ -281,11 +283,8 @@ function goUser(c: Creator) { router.push(`/user-home?id=${c.id}`); }
 function goRankUser() { router.push('/rank?tab=user'); }
 function goRankWork() { router.push('/rank'); }
 function goWork(w: Work) {
-  // 根据是否开启敏感内容读取不同的 post id
-  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-  const pid = (allowSensitive ? w.postId : w.postIdNotNsfw) || w.postId || w.postIdNotNsfw;
-  if (pid) router.push(`/detail?id=${pid}&type=${w.type}`);
-  else if (w.id) router.push(`/detail?id=${w.id}&type=${w.type}`);
+  const uid = w.authorId || '';
+  router.push(`/collection/${w.id}${uid ? '?uid=' + uid : ''}`);
 }
 
 async function toggleFollow(c: Creator) {
@@ -437,12 +436,11 @@ function onCreMove(e: PointerEvent) {
 
 function goSprout() {
   const frontIdx = orderRef[0];
+
   const c = creators.value[frontIdx];
+  console.log(c);
   if (!c) return;
-  // 跳转该创作者最新作详情，按敏感内容开关取不同 post id
-  const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-  const pid = (allowSensitive ? c.latestPostId : c.latestPostIdNotNsfw) || c.latestPostId || c.latestPostIdNotNsfw;
-  if (pid) router.push(`/detail?id=${pid}`);
+  if (c.latestBookId) router.push(`/collection/${c.latestBookId}?uid=${c.id}`);
 }
 
 /* ---------- 右侧人气作品 3D 环形 ---------- */

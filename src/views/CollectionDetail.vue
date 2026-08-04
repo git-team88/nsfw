@@ -527,8 +527,7 @@ function goChapter(chapter: Chapter) {
 }
 
 function navigateToChapter(chapter: Chapter) {
-  const uid = authorInfo.value.id;
-  router.push(`/detail?id=${chapter.id}&type=4&uid=${uid}`);
+  router.push(`/detail?id=${chapter.id}`);
 }
 
 function continueReading() {
@@ -536,8 +535,7 @@ function continueReading() {
   if (!history) return;
 
   if (isOwn.value) {
-    const uid = authorInfo.value.id;
-    router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
+    router.push(`/detail?id=${history.post_id}`);
     return;
   }
 
@@ -555,8 +553,7 @@ function continueReading() {
     if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
       localStorage.setItem('allowSensitiveContent', '1');
       pendingChapter.value = null;
-      const uid = authorInfo.value.id;
-      router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
+      router.push(`/detail?id=${history.post_id}`);
       return;
     }
 
@@ -564,8 +561,7 @@ function continueReading() {
     return;
   }
 
-  const uid = authorInfo.value.id;
-  router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
+  router.push(`/detail?id=${history.post_id}`);
 }
 
 function confirmSensitiveContent() {
@@ -951,7 +947,6 @@ onBeforeUnmount(() => {
       flex-direction: column;
       gap: 10px;
       margin-top: 14px;
-      overflow: hidden;
     }
     .update-chapter{
       display: flex;
@@ -1017,7 +1012,7 @@ onBeforeUnmount(() => {
       align-self: flex-start;
 
       &:hover {
-        opacity: 0.85;
+        box-shadow: 2px 2px 0 #161122;
       }
     }
   }
@@ -1429,6 +1424,7 @@ onBeforeUnmount(() => {
         height: 3.3333vw;
         padding: 0.5556vw 1.3889vw;
         font-size: 12px;
+        border-radius: 0.5556vw;
       }
     }
     .author-right {
