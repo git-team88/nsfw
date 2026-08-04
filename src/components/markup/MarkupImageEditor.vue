@@ -762,11 +762,11 @@ const layerList = computed(() =>
           <section class="comic-markup-send-panel">
             <div class="comic-markup-send-title">
               <strong>{{ mt('markupInstruction') }}</strong>
-              <span>{{ instruction.length }} / 500</span>
+              <span>{{ instruction.length }} / 5000</span>
             </div>
             <textarea
               v-model="instruction"
-              :maxlength="500"
+              :maxlength="5000"
               :placeholder="mt('markupInstructionPlaceholder')"
               @keydown="onInstructionKeydown"
             />
