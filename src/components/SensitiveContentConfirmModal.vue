@@ -148,12 +148,11 @@ const handleConfirm = () => {
 
       &:hover {
         transform: translate(-1px, -2px);
-        box-shadow: 4px 5px 0 rgba(22, 17, 34, 0.4);
+        box-shadow: 3px 3px 0 #161122;
       }
 
       &:active {
         transform: translate(1px, 1px);
-        box-shadow: 1px 1px 0 rgba(22, 17, 34, 0.4);
       }
 
       &.cancel {

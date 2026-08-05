@@ -308,9 +308,10 @@ async function loadUserRank(reset = false) {
   try {
     // 人气作者榜 / 新锐作者榜，均使用 period=week
     const period = 'week'
+    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0
     const res = (reqUserTab === 'rising'
-      ? await api.risingUserRank(page, USER_LIMIT, period)
-      : await api.popularUserRank(page, USER_LIMIT, period)) as any
+      ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw)
+      : await api.popularUserRank(page, USER_LIMIT, period, showNsfw)) as any
     // 请求期间切换了子榜/主榜则丢弃本次结果
     if (reqUserTab !== userTab.value || mode.value !== 'user') return
     if (res.code !== 0 && res.code !== 200) {

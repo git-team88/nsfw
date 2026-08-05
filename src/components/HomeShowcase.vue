@@ -195,8 +195,15 @@ const MOCK_BOOKS: Work[] = [
 ];
 
 onMounted(async () => {
+  await loadCreators();
+  await nextTick();
+  startCreatorStack();
+  await loadBooks();
+});
+
+async function loadCreators() {
   try {
-    const res = (await api.popularUserRank(1, 6)) as any;
+    const res = (await api.popularUserRank(1, 6, 'week', props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
     if ((res.code === 0 || res.code === 200) && res.data?.data) {
       creators.value = res.data.data.map((it: any, i: number) => {
         // 创作者最新作（合集）信息：接口返回在 book 节点下（无 type，默认漫画 1）
@@ -222,14 +229,7 @@ onMounted(async () => {
     console.error('popularUserRank', e);
     toast(t('fail'));
   }
-
-  // 创作者堆叠动效（左侧面板，与敏感开关无关）
-  await nextTick();
-  startCreatorStack();
-
-  // 人气作品榜（右侧）：首屏加载
-  await loadBooks();
-});
+}
 
 // 人气作品榜取数（敏感开关/语言变化时重新请求，与推荐列表逻辑一致）
 async function loadBooks() {
@@ -262,8 +262,8 @@ async function loadBooks() {
   startRing();
 }
 
-// 敏感内容开关切换（Home 传入）时，重新请求作品榜
-watch(() => props.allowSensitive, () => { loadBooks(); });
+// 敏感内容开关切换（Home 传入）时，重新请求用户排行和作品榜
+watch(() => props.allowSensitive, () => { loadCreators(); loadBooks(); });
 // 切换语言时重新请求作品榜（与推荐列表逻辑一致）
 watch(locale, () => { loadBooks(); });
 

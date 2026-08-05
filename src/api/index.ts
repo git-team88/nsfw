@@ -241,15 +241,15 @@ export default {
       method: "GET",
     }),
   // 首页人气创作者榜（public）period: day|week|month
-  popularUserRank: (page: number, limit: number, period: string = 'week') =>
+  popularUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number) =>
     axios.request({
-      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period,
+      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
       method: "GET",
     }),
   // 新锐创作者榜（public）period: day|week|month
-  risingUserRank: (page: number, limit: number, period: string = 'week') =>
+  risingUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number) =>
     axios.request({
-      url: "index/getRisingUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period,
+      url: "index/getRisingUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
       method: "GET",
     }),
   // 首页作品人气榜（public）
