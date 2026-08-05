@@ -160,17 +160,17 @@
             {{ t('detail.nextChapter') }}
           </button>
           <!-- Last chapter prompt in collection mode (right of buttons) -->
-          <div class="last-chapter-inline" v-if="bookGenSwitch == '2' || !nextChapterId">
+          <!-- <div class="last-chapter-inline" v-if="bookGenSwitch == '2' || !nextChapterId">
             <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
             <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
-          </div>
+          </div> -->
         </div>
 
         <!-- Last chapter prompt for non-collection mode (bottom of page) -->
-        <div class="last-chapter-section" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
+        <!-- <div class="last-chapter-section" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0 && !isCollectionMode">
           <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
           <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
-        </div>
+        </div> -->
       </div>
 
       <!-- 合集信息条：锚定在阅读卡片底部（覆盖底边框）-->
@@ -222,6 +222,10 @@
         </div>
         <div class="action-btn share-btn" @click="shareContent">
           <img src="@/assets/images/detail/share.png" alt="Share" />
+        </div>
+        <div class="gen-btn" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0" @click="goToHomePage" @mouseenter="adjustGenTooltipPosition">
+          <img src="@/assets/images/detail/generate_icon.png" alt="Generate" />
+          <div class="gen-tooltip">{{ t("detail.lock.lastChapterTip") }}</div>
         </div>
       </div>
     </div>
@@ -1909,6 +1913,47 @@ function closePage() {
 
 function goToHomePage() {
   router.push('/');
+}
+
+function adjustGenTooltipPosition(event: MouseEvent) {
+  const btn = event.currentTarget as HTMLElement;
+  const tooltip = btn.querySelector('.gen-tooltip') as HTMLElement;
+  if (!tooltip) return;
+
+  tooltip.classList.remove('tooltip-align-right', 'tooltip-fixed');
+  tooltip.style.position = '';
+  tooltip.style.top = '';
+  tooltip.style.left = '';
+  tooltip.style.right = '';
+  tooltip.style.marginTop = '';
+  tooltip.style.marginLeft = '';
+  tooltip.style.transform = '';
+
+  const btnRect = btn.getBoundingClientRect();
+  const windowWidth = window.innerWidth;
+  const tooltipWidth = 200;
+  const gap = 10;
+  const margin = 10;
+
+  const wouldOverflowLeft = btnRect.left - tooltipWidth - gap < margin;
+
+  if (!wouldOverflowLeft) return;
+
+  const wouldOverflowRight = btnRect.right + tooltipWidth + gap > windowWidth - margin;
+
+  if (!wouldOverflowRight) {
+    tooltip.classList.add('tooltip-align-right');
+    return;
+  }
+
+  tooltip.classList.add('tooltip-align-right', 'tooltip-fixed');
+  tooltip.style.position = 'fixed';
+  tooltip.style.top = `${btnRect.top + btnRect.height / 2 - 30}px`;
+  tooltip.style.left = `${margin}px`;
+  tooltip.style.right = 'auto';
+  tooltip.style.transform = 'none';
+  tooltip.style.marginLeft = '0';
+  tooltip.style.marginRight = '0';
 }
 
 // Update post data from sidebar

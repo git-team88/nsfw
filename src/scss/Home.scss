@@ -609,7 +609,7 @@ $border-med: rgba(22,17,34,0.2);
             height: 12px;
             font-size: 8px;
             font-weight: 800;
-            border-radius: 999px;
+            border-radius: 2px;
             background: $yellow;
             color: $ink;
             z-index: 10;
@@ -981,8 +981,7 @@ $border-med: rgba(22,17,34,0.2);
             justify-content: center;
             width: 24px;
             height: 24px;
-            border-radius: 999px;
-            border: 1px solid $ink;
+            border-radius: 4px;
             background: #fff;
             overflow: hidden;
 
@@ -994,10 +993,10 @@ $border-med: rgba(22,17,34,0.2);
             }
           }
 
-    span {
-      font-size: 12px;
-      font-weight: 800;
-      color: $ink;
+          span {
+            font-size: 12px;
+            font-weight: 800;
+            color: $ink;
           }
         }
       }

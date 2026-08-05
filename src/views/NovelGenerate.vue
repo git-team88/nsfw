@@ -986,6 +986,7 @@
             <div v-if="similarLoading" class="similar-list-loading">
               <div class="loading-spinner"></div>
             </div>
+
             <div v-for="item in similarList" :key="item.id" class="similar-item" @click="goToSimilarDetail(item)">
               <div class="similar-item-cover">
                 <img :src="item.cover || ''" alt="" />

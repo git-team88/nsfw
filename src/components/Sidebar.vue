@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: isInputting ? '200px' : '90px' }">
+      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: activeTab == 'comment' && isInputting ? '200px' : activeTab == 'comment' && !isInputting ? '90px' : '10px' }">
         <!-- Comments tab -->
         <div class="comments-tab" v-if="activeTab == 'comment'">
           <div class="comments-header">
@@ -2215,8 +2215,8 @@ function likeReply(id: string, liked: boolean) {
       position: absolute;
       top: 18px;
       right: 24px;
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2246,7 +2246,6 @@ function likeReply(id: string, liked: boolean) {
     scroll-behavior: smooth;
     display: flex;
     flex-direction: column;
-    padding-bottom: 90px;
 
     .detail-tab {
       flex: 1;
@@ -2364,6 +2363,7 @@ function likeReply(id: string, liked: boolean) {
 
     .comments-tab {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
 
@@ -2376,6 +2376,7 @@ function likeReply(id: string, liked: boolean) {
 
       .comments-list {
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
         padding: 0 24px;
 
@@ -3009,6 +3010,7 @@ function likeReply(id: string, liked: boolean) {
 
     .toc-tab {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
 
@@ -3038,6 +3040,7 @@ function likeReply(id: string, liked: boolean) {
 
       .toc-list {
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
         padding: 12px 24px 0;
 
@@ -3065,7 +3068,7 @@ function likeReply(id: string, liked: boolean) {
               display: flex;
               align-items: center;
               width: 100%;
-              min-height: 68px;
+              min-height: 50px;
 
               &.on{
                 .chapter-title {

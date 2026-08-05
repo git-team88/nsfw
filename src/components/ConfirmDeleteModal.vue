@@ -204,13 +204,13 @@ function getUpdatedText(): string {
       box-shadow: 2px 2px 0 #161122;
 
       &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 #161122;
+      }
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
+      }
     }
   }
 }

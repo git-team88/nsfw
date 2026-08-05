@@ -49,7 +49,7 @@ const emit = defineEmits<{
     box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
     width: 500px;
-    padding: 18px 30px 24px;
+    padding: 50px 30px 24px;
 
     .close-btn {
       background: #fff;
@@ -57,8 +57,8 @@ const emit = defineEmits<{
       border-radius: 999px;
       padding: 6px;
       position: absolute;
-      top: 12px;
-      right: 18px;
+      top: 10px;
+      right: 10px;
       width: 36px;
       height: 36px;
       cursor: pointer;
@@ -100,11 +100,15 @@ const emit = defineEmits<{
         border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
-        background: rgba(22, 17, 34, 0.06);
+        background: #FFFDF7;
         color: #5b5566;
+        border: 2px solid #161122;
+        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
         &:hover {
+          transform: translate(-1px, -1px);
           color: #FF4D8D;
+          border-color: #FF4D8D;
         }
       }
 
@@ -117,6 +121,8 @@ const emit = defineEmits<{
         cursor: pointer;
         background: #FF4D8D;
         color: #ffffff;
+        border: 3px solid #161122;
+        box-shadow: 2px 2px 0 #161122;
 
         &:hover:not(:disabled) {
           transform: translate(-1px, -1px);
