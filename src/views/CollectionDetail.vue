@@ -534,6 +534,36 @@ function navigateToChapter(chapter: Chapter) {
 function continueReading() {
   const history = collection.value?.history;
   if (!history) return;
+
+  if (isOwn.value) {
+    const uid = authorInfo.value.id;
+    router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
+    return;
+  }
+
+  if (collection.value?.is_nsfw == 1) {
+    pendingChapter.value = { id: history.post_id, title: history.title, status: 'published' as const };
+    const token = localStorage.getItem('token');
+    const notAdult = token
+      ? (!userInfo.value || userInfo.value.is_adult != 1)
+      : localStorage.getItem('is_adult') !== '1';
+    if (notAdult) {
+      showSensitiveContentAdultConfirmModal.value = true;
+      return;
+    }
+
+    if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
+      localStorage.setItem('allowSensitiveContent', '1');
+      pendingChapter.value = null;
+      const uid = authorInfo.value.id;
+      router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
+      return;
+    }
+
+    showSensitiveContentConfirmModal.value = true;
+    return;
+  }
+
   const uid = authorInfo.value.id;
   router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
 }
