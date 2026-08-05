@@ -137,11 +137,9 @@ $yellow: #FFD23F;
     align-items: center;
     justify-content: center;
     box-shadow: 2px 2px 0 $ink;
-    transition: transform 0.16s;
+    transition: transform .2s;
 
-    &:hover {
-      transform: scale(1.1);
-    }
+    &:hover { transform: scale(1.1) rotate(90deg); }
   }
 
   .modal-badge {

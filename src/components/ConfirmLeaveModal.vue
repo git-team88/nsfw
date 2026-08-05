@@ -46,23 +46,23 @@ const { t, locale } = useI18n();
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
 }
 .confirm-close {
-  background: #fff;
-  border: 2.5px solid #161122;
-  border-radius: 999px;
-  padding: 6px;
   position: absolute;
-  right: 18px;
-  top: 12px;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
+  right: 14px;
+  top: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #161122;
   box-shadow: 2px 2px 0 #161122;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  transition: transform .2s;
 
-  &:hover {
-    transform: scale(1.1);
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 .confirm-text {
   margin-bottom: 24px;

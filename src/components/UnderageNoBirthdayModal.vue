@@ -93,13 +93,23 @@ $yellow: #FFD23F;
 }
 
 .hm-close {
-  position: absolute; right: 14px; top: 14px;
-  width: 32px; height: 32px; border-radius: 999px;
-  background: #fff; border: 2px solid $ink; box-shadow: 2px 2px 0 $ink;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 6px;
-  transition: transform .16s;
-  &:hover { transform: scale(1.1); }
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #161122;
+  box-shadow: 2px 2px 0 #161122;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  transition: transform .2s;
+
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .hm-badge {

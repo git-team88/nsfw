@@ -94,13 +94,11 @@ const handleConfirm = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px;
     cursor: pointer;
-    transition: transform 0.16s;
+    padding: 6px;
+    transition: transform .2s;
 
-    &:hover {
-      transform: scale(1.1);
-    }
+    &:hover { transform: scale(1.1) rotate(90deg); }
   }
 
   .modal-header {

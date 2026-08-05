@@ -543,24 +543,22 @@ function formatSci(n: number | null) {
 }
 .modal-close {
   position: absolute;
-  right: 10px;
-  top: 10px;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  cursor: pointer;
+  right: 14px;
+  top: 14px;
   width: 32px;
   height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #161122;
+  box-shadow: 2px 2px 0 #161122;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 2px 2px 0 #161122;
-  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+  padding: 6px;
+  transition: transform .2s;
 
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 #161122;
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 .modal-close img {
   width: 16px;

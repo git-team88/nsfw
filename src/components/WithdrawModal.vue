@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-mask">
     <div class="modal withdraw-modal">
       <button class="modal-close" @click="$emit('close')">
-        <button class="close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
       <div class="modal-title">{{ t("user.revenue.totalWithdrawable") }}</div>
       <div class="modal-amount">{{ totalWithdrawable != null ? `${formatSci(totalWithdrawable)}` : "--" }}</div>
@@ -88,26 +88,28 @@ function openLink() {
 }
 
 .modal-close {
-  background: none;
-  border: none;
-  padding: 0;
   position: absolute;
   right: 14px;
-  top: 16px;
-  background: none;
-  border: none;
+  top: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #161122;
+  box-shadow: 2px 2px 0 #161122;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  z-index: 1;
+  padding: 6px;
+  transition: transform .2s;
 
-  img {
-    width: 20px;
-    height: 20px;
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .modal-title {
   font-size: 20px;
-  color: #9a93a4;
+  color: #364153;
   margin-bottom: 30px;
   font-weight: 600;
   text-align: center;
@@ -128,12 +130,13 @@ function openLink() {
   width: 240px;
   height: 48px;
   margin: 30px auto 12px;
-  border: none;
+  border: 2.5px solid #161122;
   border-radius: 8px;
   background: #FF4D8D;
   color: #ffffff;
   font-size: 14px;
   cursor: pointer;
+  box-shadow: 3px 3px 0 #161122;
 
   &:hover:not(:disabled) {
     transform: translate(-1px, -1px);
@@ -178,6 +181,7 @@ function openLink() {
     color: #FF4D8D;
     text-decoration: none;
     margin-left: 4px;
+    pointer-events: none;
   }
 }
 </style>

@@ -77,8 +77,9 @@ $yellow: #FFD23F;
   background: #fff; border: 2px solid $ink; box-shadow: 2px 2px 0 $ink;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 6px;
-  transition: transform .16s;
-  &:hover { transform: scale(1.1); }
+  transition: transform .2s;
+
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .hm-badge {
