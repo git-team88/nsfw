@@ -206,7 +206,6 @@ async function loadCreators() {
     const res = (await api.popularUserRank(1, 6, 'week', props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
     if ((res.code === 0 || res.code === 200) && res.data?.data) {
       creators.value = res.data.data.map((it: any, i: number) => {
-        // 创作者最新作（合集）信息：接口返回在 book 节点下（无 type，默认漫画 1）
         const lb = it.book || {};
         return {
           id: String(it.user_id),
@@ -228,6 +227,15 @@ async function loadCreators() {
   } catch (e) {
     console.error('popularUserRank', e);
     toast(t('fail'));
+  }
+  // 接口返回不足 6 个时补足，保证堆叠动效完整
+  const MIN_CREATORS = 6;
+  if (creators.value.length > 0 && creators.value.length < MIN_CREATORS) {
+    const existing = creators.value.slice();
+    for (let i = existing.length; i < MIN_CREATORS; i++) {
+      const src = existing[i % existing.length];
+      creators.value.push({ ...src, id: `${src.id}_pad${i}` });
+    }
   }
 }
 
