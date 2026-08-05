@@ -130,10 +130,7 @@ const skip = () => {
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   padding: 0;
 
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 3px 3px 0 #161122;
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .modal-body {

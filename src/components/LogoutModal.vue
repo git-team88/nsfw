@@ -88,10 +88,7 @@ function handleConfirm() {
       box-shadow: 3px 3px 0 #161122;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-      &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
+      &:hover { transform: scale(1.1) rotate(90deg); }
     }
 
     .modal-message {

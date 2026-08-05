@@ -78,9 +78,7 @@ function handleOverlayClick() {
        transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
        z-index: 10;
 
-       &:hover {
-         transform: scale(1.1);
-       }
+       &:hover { transform: scale(1.1) rotate(90deg); }
      }
 
     .modal-title {

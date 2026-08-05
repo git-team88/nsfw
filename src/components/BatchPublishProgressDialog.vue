@@ -137,13 +137,10 @@ $line: #F0EADF;
   justify-content: center;
   cursor: pointer;
   box-shadow: 3px 3px 0 $ink;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-  z-index: 1;
+  transition: transform .2s;
+  z-index: 10;
 
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 $ink;
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .dialog-header {

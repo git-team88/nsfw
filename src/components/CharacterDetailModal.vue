@@ -117,12 +117,10 @@ $sub: #5b5566;
   background: #fff;
   box-shadow: 2px 2px 0 $ink;
   padding: 6px;
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
   z-index: 10;
+  transition: transform .2s;
 
-  &:hover {
-    transform: scale(1.1);
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .modal-body {

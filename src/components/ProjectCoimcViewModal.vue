@@ -522,9 +522,7 @@ function nextPage() {
   justify-content: center;
   flex-shrink: 0;
 
-  &:hover {
-    transform: scale(1.1);
-  }
+  &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
 .right-body {

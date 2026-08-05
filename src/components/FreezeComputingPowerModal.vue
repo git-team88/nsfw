@@ -93,15 +93,23 @@ const handleConfirm = () => {
     overflow: hidden;
 
     .close-btn {
-      background: none;
-      border: none;
-      padding: 0;
       position: absolute;
-      right: 12px;
-      top: 16px;
-      width: 20px;
-      height: 20px;
+      right: 14px;
+      top: 14px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #fff;
+      border: 2px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      padding: 6px;
+      transition: transform .2s;
+
+      &:hover { transform: scale(1.1) rotate(90deg); }
     }
 
     .modal-title {

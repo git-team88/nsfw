@@ -456,9 +456,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     box-shadow: 2px 2px 0 #161122;
     transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    &:hover {
-      transform: scale(1.1);
-    }
+    &:hover { transform: scale(1.1) rotate(90deg); }
   }
 }
 
