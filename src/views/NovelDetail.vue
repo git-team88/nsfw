@@ -223,7 +223,7 @@
         <div class="action-btn share-btn" @click="shareContent">
           <img src="@/assets/images/detail/share.png" alt="Share" />
         </div>
-        <div class="gen-btn" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0" @click="goToHomePage" @mouseenter="adjustGenTooltipPosition">
+        <div class="gen-btn" v-if="(bookGenSwitch == '2' || !nextChapterId) && detail.book_id && Number(detail.book_id) > 0" @click="goToHomePage" @mouseenter="adjustGenTooltipPosition" @touchstart="adjustGenTooltipPosition">
           <img src="@/assets/images/detail/generate_icon.png" alt="Generate" />
           <div class="gen-tooltip">{{ t("detail.lock.lastChapterTip") }}</div>
         </div>
@@ -1915,12 +1915,12 @@ function goToHomePage() {
   router.push('/');
 }
 
-function adjustGenTooltipPosition(event: MouseEvent) {
+function adjustGenTooltipPosition(event: MouseEvent | TouchEvent) {
   const btn = event.currentTarget as HTMLElement;
   const tooltip = btn.querySelector('.gen-tooltip') as HTMLElement;
   if (!tooltip) return;
 
-  tooltip.classList.remove('tooltip-align-right', 'tooltip-fixed');
+  tooltip.classList.remove('tooltip-align-left', 'tooltip-fixed');
   tooltip.style.position = '';
   tooltip.style.top = '';
   tooltip.style.left = '';
@@ -1931,24 +1931,31 @@ function adjustGenTooltipPosition(event: MouseEvent) {
 
   const btnRect = btn.getBoundingClientRect();
   const windowWidth = window.innerWidth;
-  const tooltipWidth = 200;
   const gap = 10;
   const margin = 10;
 
-  const wouldOverflowLeft = btnRect.left - tooltipWidth - gap < margin;
+  tooltip.style.visibility = 'hidden';
+  tooltip.style.opacity = '0';
+  tooltip.style.display = 'block';
+  const tooltipWidth = tooltip.offsetWidth;
+  const tooltipHeight = tooltip.offsetHeight;
+  tooltip.style.visibility = '';
+  tooltip.style.opacity = '';
+  tooltip.style.display = '';
 
-  if (!wouldOverflowLeft) return;
+  const spaceRight = windowWidth - btnRect.right - gap;
+  const spaceLeft = btnRect.left - gap;
 
-  const wouldOverflowRight = btnRect.right + tooltipWidth + gap > windowWidth - margin;
+  if (spaceRight >= tooltipWidth + margin) return;
 
-  if (!wouldOverflowRight) {
-    tooltip.classList.add('tooltip-align-right');
+  if (spaceLeft >= tooltipWidth + margin) {
+    tooltip.classList.add('tooltip-align-left');
     return;
   }
 
-  tooltip.classList.add('tooltip-align-right', 'tooltip-fixed');
+  tooltip.classList.add('tooltip-align-left', 'tooltip-fixed');
   tooltip.style.position = 'fixed';
-  tooltip.style.top = `${btnRect.top + btnRect.height / 2 - 30}px`;
+  tooltip.style.top = `${btnRect.top + btnRect.height / 2 - tooltipHeight / 2}px`;
   tooltip.style.left = `${margin}px`;
   tooltip.style.right = 'auto';
   tooltip.style.transform = 'none';
