@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom: activeTab == 'comment' && isInputting ? '200px' : activeTab == 'comment' && !isInputting ? '90px' : '10px' }">
+      <div class="sidebar-content" ref="scrollContentRef" @scroll="handleScroll" :style="{ paddingBottom:activeTab == 'comment' ? (isInputting ? '200px' : '90px') : '10px' }">
         <!-- Comments tab -->
         <div class="comments-tab" v-if="activeTab == 'comment'">
           <div class="comments-header">
@@ -3168,7 +3168,7 @@ function likeReply(id: string, liked: boolean) {
 
 .no-more {
   text-align: center;
-  padding: 20px;
+  padding: 10px 14px;
   font-size: 14px;
   color: #9a93a4;
 }
