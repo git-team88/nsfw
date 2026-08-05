@@ -4520,7 +4520,9 @@ const refreshSimilar = () => {
 };
 
 const goToSimilarDetail = (item: any) => {
-  router.push(`/detail?id=${item.id}`);
+  const bookId = item.book_id;
+  const uid = item.author?.id || item.author_info?.id || '';
+  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
 };
 
 

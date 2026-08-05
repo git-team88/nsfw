@@ -33,7 +33,7 @@
             v-for="item in contentList"
             :key="item.id"
             ref="contentCardRefs"
-            @click="goToDetail(item.id, parseInt(item.type))"
+            @click="goToDetail(item)"
           >
             <div class="content-image">
                 <img :src="item.cover || defaultCover" alt="" />
@@ -271,6 +271,7 @@ async function loadData(fromLoadMore = false) {
       const newContent = data.map((item: any) => {
         return {
           id: item.id,
+          book_id: item.book_id,
           type: item.type || 0,
           title: item.title || '',
           description: item.description || '',
@@ -360,12 +361,10 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(contentId: string | number, type: number) {
-  if (type == 2) {
-    router.replace(`/detail?id=${contentId}&type=6`);
-  } else {
-    router.push(`/detail?id=${contentId}&type=6`);
-  }
+function goToDetail(item: any) {
+  const bookId = item.book_id || item.id;
+  const uid = item.author?.id || item.author_info?.id || '';
+  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
 }
 
 function goToUserHome(userId: number | undefined) {

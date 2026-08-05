@@ -31,24 +31,25 @@
               <div class="author-info">
                 <div class="title-row">
                   <h1 class="title">{{ collection.title }}</h1>
+                  <div class="type-badge" :class="`type-${collection.type || '1'}`">{{ getTypeLabel(collection.type) }}</div>
                 </div>
 
                 <div class="update-read-section">
+                  <div class="status-row">
+                    <span class="status">{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.statusOngoing') }}</span>
+                  </div>
                   <div class="update-chapter" v-if="Number(collection.latestChapterIndex) > 0">
                     <span class="label">{{ t('collectionDetail.lastUpdate') }}：</span>
                     <span class="chapter-value">
                       {{ t('home.chapterFormat', { chapter: collection.latestChapterIndex }) }}
                     </span>
-                  </div>
-                  <div class="read-info" v-if="collection.lastRead">
-                    <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
-                    <span class="value">{{ collection.lastRead }}</span>
-                  </div>
-                  <div class="update-info">
-                    <span class="status">{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.statusOngoing') }}</span>
                     <span class="time">{{ formatTimestamp(collection.lastUpdate) }}</span>
                   </div>
-
+                  <div class="read-info" v-if="collection.history">
+                    <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
+                    <span class="value">{{ collection.history.title }}</span>
+                  </div>
+                  <button class="continue-reading-btn" v-if="collection.history" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
                 </div>
               </div>
             </div>
@@ -104,14 +105,14 @@
 
           <!-- Description Section -->
           <div class="section">
-            <h2 class="section-title">{{ t('collectionDetail.description') }}</h2>
+            <h2 class="section-title">{{ getTypeLabel(collection.type) }}{{ t('collectionDetail.description') }}</h2>
             <div class="description-content">{{ collection.description || '' }}</div>
           </div>
 
           <!-- Table of Contents -->
           <div class="section-chapter">
             <div class="section-header">
-              <h2 class="section-title">{{ t('collectionDetail.tableOfContents') }}</h2>
+              <h2 class="section-title">{{ getTypeLabel(collection.type) }}{{ t('collectionDetail.tableOfContents') }}</h2>
 
               <!-- <button
                 v-if="isOwn"
@@ -125,6 +126,7 @@
                 v-for="(chapter, index) in collection.chapters"
                 :key="chapter.id"
                 class="chapter-item"
+                :class="{ 'is-read': collection.history && Number(collection.history.chapter_index) > 0 && (index + 1) <= Number(collection.history.chapter_index) }"
                 @click="goChapter(chapter)"
               >
                 <div class="chapter-left">
@@ -200,6 +202,13 @@ interface Chapter {
   status: 'published' | 'draft' | 'subscribed' | 'private';
 }
 
+interface CollectionHistory {
+  post_id: string;
+  chapter_index: string;
+  title: string;
+  cover: string;
+}
+
 interface Collection {
   id: string | number;
   title: string;
@@ -207,7 +216,6 @@ interface Collection {
   tags: string[];
   lastUpdate: string;
   lastRead: string;
-  lastReadTime: string;
   description: string;
   isOwn: boolean;
   authorId: string | number;
@@ -217,6 +225,7 @@ interface Collection {
   chapters: Chapter[];
   is_nsfw: number | string;
   chapter_count_private: number | string;
+  history: CollectionHistory | null;
 }
 
 interface BooksGroupItem {
@@ -287,6 +296,10 @@ function getChapterLabel(type: string): string {
   }
 }
 
+function getTypeLabel(type: string): string {
+  return t(`collectionDetail.type${type || '1'}`);
+}
+
 const currentChapter = ref<Chapter | null>(null);
 const isOwn = ref(false);
 const showDeleteChapterModal = ref(false);
@@ -353,7 +366,6 @@ async function fetchCollectionDetail() {
         tags: data.tags || [],
         lastUpdate: bookInfo.updated_at || bookInfo.latest_post_updated || '',
         lastRead: data.last_read || '',
-        lastReadTime: data.last_read_time || '',
         description: bookInfo.description || '',
         isOwn: isSelf,
         authorId: resolvedAuthorId || (bookInfo.user_id || ''),
@@ -367,7 +379,13 @@ async function fetchCollectionDetail() {
           title: chapter.title || '',
           subtitle: chapter.subtitle,
           status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
-        }))
+        })),
+        history: data.history && !Array.isArray(data.history) && data.history.post_id ? {
+          post_id: String(data.history.post_id || ''),
+          chapter_index: String(data.history.chapter_index || '0'),
+          title: data.history.title || '',
+          cover: data.history.cover || ''
+        } : null
       };
 
       if (resolvedAuthorId) {
@@ -511,6 +529,13 @@ function goChapter(chapter: Chapter) {
 function navigateToChapter(chapter: Chapter) {
   const uid = authorInfo.value.id;
   router.push(`/detail?id=${chapter.id}&type=4&uid=${uid}`);
+}
+
+function continueReading() {
+  const history = collection.value?.history;
+  if (!history) return;
+  const uid = authorInfo.value.id;
+  router.push(`/detail?id=${history.post_id}&type=4&uid=${uid}`);
 }
 
 function confirmSensitiveContent() {
@@ -826,12 +851,31 @@ onBeforeUnmount(() => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     min-width: 0;
 
     .title-row {
       display: flex;
       flex-direction: column;
+    }
+
+    .type-badge {
+      width: max-content;
+      border: 2px solid #161122;
+      border-radius: 4px;
+      padding: 4px 12px;
+      font-weight: 800;
+      font-size: 12px;
+      color: #161122;
+      background: #FFC24B;
+      margin-top: 18px;
+
+      &.type-2 {
+        background: #C9B6FF;
+      }
+
+      &.type-3 {
+        background: #7FD8E8;
+      }
     }
 
     .title {
@@ -876,12 +920,14 @@ onBeforeUnmount(() => {
       display: flex;
       flex-direction: column;
       gap: 10px;
+      margin-top: 14px;
       overflow: hidden;
     }
     .update-chapter{
       display: flex;
       align-items: center;
       color: #FF4D8D;
+      font-size: 16px;
 
       .chapter-value {
         flex: 1;
@@ -891,21 +937,20 @@ onBeforeUnmount(() => {
         white-space: nowrap;
         vertical-align: middle;
       }
+
+      .time {
+        color: #9a93a4;
+        margin-left: 8px;
+        flex-shrink: 0;
+      }
     }
 
-    .update-info {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .status-row {
       font-size: 16px;
 
       .status{
         font-weight: 500;
         color: #161122;
-      }
-
-      .time {
-        color: #9a93a4;
       }
     }
 
@@ -921,6 +966,28 @@ onBeforeUnmount(() => {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+    }
+
+    .continue-reading-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 136px;
+      height: 48px;
+      padding: 8px 20px;
+      border-radius: 12px;
+      border: 2px solid #161122;
+      background: #FF4D8D;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      align-self: flex-start;
+
+      &:hover {
+        opacity: 0.85;
       }
     }
   }
@@ -1226,6 +1293,10 @@ onBeforeUnmount(() => {
     }
   }
 
+  &.is-read .chapter-left .chapter-title {
+    color: #99A1AF;
+  }
+
   .chapter-right {
     display: flex;
     align-items: center;
@@ -1270,7 +1341,6 @@ onBeforeUnmount(() => {
   }
   .breadcrumb {
     margin-bottom: 1.3889vw;
-    font-size: 0.9722vw;
     .breadcrumb-arrow {
       margin: 0 0.6944vw;
     }
@@ -1313,13 +1383,22 @@ onBeforeUnmount(() => {
         }
       }
       .update-read-section {
-        gap: 0.6944vw;
+        gap: 8px;
       }
-      .update-info {
+      .status-row {
+        font-size: 1.1111vw;
+      }
+      .update-chapter {
         font-size: 1.1111vw;
       }
       .read-info {
         font-size: 1.1111vw;
+      }
+      .continue-reading-btn {
+        min-width: 9.4444vw;
+        height: 3.3333vw;
+        padding: 0.5556vw 1.3889vw;
+        font-size: 12px;
       }
     }
     .author-right {
@@ -1389,8 +1468,8 @@ onBeforeUnmount(() => {
     font-size: 0.9722vw;
   }
   .description-content {
-    font-size: 0.9722vw;
-    line-height: 1.6667vw;
+    font-size: 12px;
+    line-height: 20px;
   }
   .chapter-item {
     height: 5vw;
@@ -1469,11 +1548,20 @@ onBeforeUnmount(() => {
       .update-read-section {
         gap: 6px;
       }
-      .update-info {
+      .status-row {
+        font-size: 14px;
+      }
+      .update-chapter {
         font-size: 14px;
       }
       .read-info {
         font-size: 14px;
+      }
+      .continue-reading-btn {
+        min-width: 136px;
+        height: 48px;
+        padding: 6px 14px;
+        font-size: 12px;
       }
     }
     .author-right {

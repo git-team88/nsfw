@@ -66,7 +66,7 @@
               :key="post.id"
               ref="postCardRefs"
               :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
-              @click="goToDetail(post.id)"
+              @click="goToDetail(post)"
             >
               <div class="content-image">
                 <img :src="post.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
@@ -415,6 +415,7 @@ async function loadData(fromLoadMore = false) {
         const newPosts = (res.data?.data || []).map((item: any) => {
         return {
           id: item.id,
+          book_id: item.book_id,
           type: item.type || 0,
           title: item.title || '',
           description: item.description || '',
@@ -564,15 +565,11 @@ const layoutWaterfall = () => {
   // No need for absolute positioning calculations
 };
 
-function goToDetail(postId: string | number) {
-  // Save current post filter before navigating
+function goToDetail(post: any) {
   localStorage.setItem('searchPostFilter', postFilter.value.toString());
-  // if (type === 2) {
-  //   router.push(`/novel-detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
-  // } else {
-  //   router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
-  // }
-  router.push(`/detail?id=${postId}&type=5&keyword=${encodeURIComponent(searchKeyword.value || '')}`);
+  const bookId = post.book_id;
+  const uid = post.author?.id || '';
+  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
 }
 
 function goToUserHome(userId: number) {

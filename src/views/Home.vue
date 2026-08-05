@@ -972,10 +972,10 @@
                 :key="item.id"
                 class="content-item"
                 :ref="(el) => setContentCardRef(el, index)"
-                :href="detailHref(item.id)"
+                :href="`/collection/${item.book_id}`"
                 @mousemove="onCardTilt"
                 @mouseleave="onCardTiltReset"
-                @click.prevent="navigateToDetail(item.id, item.type)"
+                @click.prevent="navigateToDetail(item.book_id || item.id, item.type)"
               >
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
@@ -5320,7 +5320,7 @@ const formatNumber = (num: number) => {
 const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
 const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
-const navigateToDetail = (id: string, type?: string) => {
+const navigateToDetail = (bookId: string, type?: string) => {
   const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama"> = {
     '1': 'Comic',
     '2': 'Novel',
@@ -5329,16 +5329,18 @@ const navigateToDetail = (id: string, type?: string) => {
   if (type && typeCategoryMap[type]) {
     trackClickContentCover(typeCategoryMap[type]);
   }
-  const tabType = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  router.push({ path: '/detail', query: { id: id , type: tabType, contentType: activeContentType.value.toString() } });
+  const item = displayContent.value.find(i => (i.book_id || i.id) === bookId);
+  const uid = activeContentTab.value != 'suggested' ? (item?.author?.id) : (item?.author_info?.id);
+  router.push({ path: `/collection/${bookId}`, query: { uid: uid || '' } });
 };
 
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
-const detailHref = (id: string) => {
-  const tabType = activeContentTab.value == 'following' ? 2 : activeContentTab.value == 'subscriptions' ? 3 : 1;
-  return `/detail?id=${id}&type=${tabType}&contentType=${activeContentType.value}`;
+const detailHref = (bookId: string) => {
+  const item = displayContent.value.find(i => (i.book_id || i.id) === bookId);
+  const uid = activeContentTab.value != 'suggested' ? (item?.author?.id) : (item?.author_info?.id);
+  return `/collection/${bookId}${uid ? '?uid=' + uid : ''}`;
 };
 
 const navigateToUserHome = (userId: number) => {
