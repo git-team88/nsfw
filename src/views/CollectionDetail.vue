@@ -126,7 +126,7 @@
                 v-for="(chapter, index) in collection.chapters"
                 :key="chapter.id"
                 class="chapter-item"
-                :class="{ 'is-read': collection.history && Number(collection.history.chapter_index) > 0 && (index + 1) <= Number(collection.history.chapter_index) }"
+                :class="{ 'is-read': collection.readIndexes.includes(index + 1) }"
                 @click="goChapter(chapter)"
               >
                 <div class="chapter-left">
@@ -225,6 +225,7 @@ interface Collection {
   chapters: Chapter[];
   is_nsfw: number | string;
   chapter_count_private: number | string;
+  readIndexes: number[];
   history: CollectionHistory | null;
 }
 
@@ -374,6 +375,7 @@ async function fetchCollectionDetail() {
         status: bookInfo.status || '',
         is_nsfw: bookInfo.is_nsfw || 0,
         chapter_count_private: bookInfo.chapter_count_private || 0,
+        readIndexes: Array.isArray(data.indexs) ? data.indexs.map(Number) : [],
         chapters: chaptersData.map((chapter: any) => ({
           id: chapter.post_id || chapter.id,
           title: chapter.title || '',
@@ -527,15 +529,18 @@ function goChapter(chapter: Chapter) {
 }
 
 function navigateToChapter(chapter: Chapter) {
-  router.push(`/detail?id=${chapter.id}`);
+  const ct = collection.value?.type || '';
+  router.push(`/detail?id=${chapter.id}${ct ? `&tab=${ct}` : ''}`);
 }
 
 function continueReading() {
   const history = collection.value?.history;
   if (!history) return;
+  const ct = collection.value?.type || '';
+  const ctParam = ct ? `&tab=${ct}` : '';
 
   if (isOwn.value) {
-    router.push(`/detail?id=${history.post_id}`);
+    router.push(`/detail?id=${history.post_id}${ctParam}`);
     return;
   }
 
@@ -553,7 +558,7 @@ function continueReading() {
     if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
       localStorage.setItem('allowSensitiveContent', '1');
       pendingChapter.value = null;
-      router.push(`/detail?id=${history.post_id}`);
+      router.push(`/detail?id=${history.post_id}${ctParam}`);
       return;
     }
 
@@ -561,7 +566,7 @@ function continueReading() {
     return;
   }
 
-  router.push(`/detail?id=${history.post_id}`);
+  router.push(`/detail?id=${history.post_id}${ctParam}`);
 }
 
 function confirmSensitiveContent() {
@@ -857,6 +862,7 @@ onBeforeUnmount(() => {
       position: absolute;
       top: 10px;
       right: 10px;
+      min-width: 42px;
       height: 28px;
       background: rgba(16,24,40,0.7);
       border-radius: 14px;
@@ -1241,7 +1247,6 @@ onBeforeUnmount(() => {
   font-size: 20px;
   font-weight: 600;
   color: #161122;
-  margin-bottom: 12px;
 }
 
 .private-hint {
@@ -1261,6 +1266,7 @@ onBeforeUnmount(() => {
 }
 
 .description-content {
+  margin-top: 14px;
   font-size: 14px;
   color: #5b5566;
   line-height: 24px;
@@ -1384,14 +1390,6 @@ onBeforeUnmount(() => {
       width: 14.7222vw;
       height: 19.7222vw;
       border-radius: 0.8333vw;
-      .r18-overlay {
-        height: 28px;
-        border-radius: 14px;
-        padding: 0 0.6944vw;
-        .r18-text {
-          font-size: 1.1111vw;
-        }
-      }
     }
     .author-info {
       .title {
@@ -1483,7 +1481,6 @@ onBeforeUnmount(() => {
   }
   .section-title {
     font-size: 1.3889vw;
-    margin-bottom: 0.8333vw;
   }
   .private-hint {
     font-size: 0.9722vw;
@@ -1584,8 +1581,8 @@ onBeforeUnmount(() => {
         font-size: 14px;
       }
       .continue-reading-btn {
-        min-width: 136px;
-        height: 48px;
+        min-width: 9.4444vw;
+        height: 4.5vw;
         padding: 6px 14px;
         font-size: 12px;
       }
@@ -1596,7 +1593,7 @@ onBeforeUnmount(() => {
       border-left: none;
       border-top: 1px dashed rgba(22, 17, 34, 0.12);
       margin-top: 12px;
-      flex-direction: row;
+      gap: 12px;
       .avatar-top {
         flex-direction: row;
         gap: 8px;
@@ -1610,8 +1607,7 @@ onBeforeUnmount(() => {
         font-size: 14px;
       }
       .avatar-bottom {
-        flex-direction: row;
-        justify-content: flex-end;
+        gap: 10px;
       }
       .stats {
         margin-bottom: 0;
@@ -1658,7 +1654,6 @@ onBeforeUnmount(() => {
   }
   .section-title {
     font-size: 16px;
-    margin-bottom: 8px;
   }
   .private-hint {
     font-size: 12px;

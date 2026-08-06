@@ -1921,7 +1921,7 @@ $border-med: rgba(22,17,34,0.2);
       border: 2.5px solid $ink;
       background: $paper;
       border-radius: 13px;
-      padding: 4px 14px;
+      padding: 4px 3px 4px 14px;
       transition: border-color 0.2s;
 
       &:has(.search-input:focus) {

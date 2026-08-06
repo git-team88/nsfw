@@ -1,6 +1,6 @@
 <template>
   <div class="detail-view">
-    <div class="" v-if="detail.type == '1' || detail.type == '3'">
+    <div class="" v-if="!isNovelType">
       <div class="close-page-btn" @click="closePage()">
         <span></span>
       </div>
@@ -750,7 +750,7 @@
       </div>
     </div>
 
-    <div v-else-if="detail.type == '2'">
+    <div v-else-if="isNovelType">
       <NovelDetail
         :content-type="contentType"
         :show-nsfw="showNsfw"
@@ -847,7 +847,8 @@ const router = useRouter();
 
 // --- State ---
 const id = ref<number>(Number(route.query.id));
-const contentType = ref<string>(route.query.contentType as string || "");
+const contentType = ref<string>(route.query.tab as string || route.query.contentType as string || "");
+const isNovelType = computed(() => contentType.value === '2' || contentType.value === 'novel' || detail.value.type === '2');
 const isPlaying = ref(false);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
@@ -1922,7 +1923,7 @@ async function fetchDetail(newId: number) {
   // Get query parameters at the beginning
   const type = route.query.type as string || "";
   const cid = route.query.cid as string || "";
-  const contentType = route.query.contentType as string || "";
+  const contentType = route.query.tab as string || route.query.contentType as string || "";
   const language = locale.value == 'zh' ? 'cn' : locale.value;
   // 未登录用户确认满18岁后缓存的成年标识，随详情接口下发
   // 仅未登录且本地自声明满18岁（is_adult=1）时才传该参数；其余情况不传（JSON.stringify 会忽略 undefined）
@@ -4985,9 +4986,11 @@ onMounted(async () => {
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("contextmenu", handleContextMenu);
 
-  getCountry();
-  fetchBookGenSwitch();
-  fetchDetail(id.value);
+  if (!isNovelType.value) {
+    getCountry();
+    fetchBookGenSwitch();
+    fetchDetail(id.value);
+  }
 
   nextTick(() => {
     updateScrollContentPadding();
@@ -5037,8 +5040,11 @@ watch(
   async (newId) => {
     if (newId) {
       id.value = Number(newId);
+      contentType.value = route.query.tab as string || route.query.contentType as string || "";
       await getCountry();
-      fetchDetail(Number(newId));
+      if (!isNovelType.value) {
+        fetchDetail(Number(newId));
+      }
     }
   },
 );

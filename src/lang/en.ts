@@ -505,6 +505,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       fetchFailed: "Fetch failed",
       generationFailed: "Generation failed",
       generationFailedMessage: "Sorry, there was an exception during the current generation process",
+      copyrightRiskMessage: "The prompt or reference image may contain sensitive content or copyright risks. Please retry or modify the prompt",
       contactSupport: "If you still can't generate normally after clicking retry, please contact customer service and we will handle it for you as soon as possible",
       calcDeductRule: "Failed generation steps will not deduct computing power.",
       supportEmail: "Customer service email: support{'@'}moegen{'.'}co.jp",

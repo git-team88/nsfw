@@ -568,6 +568,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       fetchFailed: "获取失败",
       generationFailed: "生成失败",
       generationFailedMessage: "很抱歉当前生成过程出现异常",
+      copyrightRiskMessage: "提示词或参考图可能包含敏感信息或存在版权风险，请重试或修改提示词重新生成",
       contactSupport: "若点击重试依然不能正常生成，请联系客服，我们将在第一时间为您处理",
       calcDeductRule: "未生成成功的环节不会扣除算力",
       supportEmail: `客服邮箱：support{'@'}moegen{'.'}ai\nDiscord社群：<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>`,

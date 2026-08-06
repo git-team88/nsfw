@@ -337,7 +337,7 @@
             <div
               ref="photoEditableInputRef"
               :key="`photo-input-${photoInputKey}`"
-              :class="['input-textarea', { collapsed: isPhotoInputCollapsed }]"
+              :class="['input-textarea', { collapsed: isPhotoInputCollapsed, 'has-focus': isPhotoInputFocused }]"
               contenteditable="true"
               spellcheck="false"
               @input="handlePhotoInput"
@@ -469,7 +469,7 @@
             <template v-if="selectedVideoMultimodal == 'multimodal'">
               <div
                 ref="videoEditableInputRef"
-                :class="['input-textarea', { collapsed: isVideoInputCollapsed }]"
+                :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
                 contenteditable="true"
                 spellcheck="false"
                 :data-placeholder="videoPlaceholderDisplay"
@@ -1513,6 +1513,7 @@ const handlePhotoInputBlur = () => {
   isPhotoInputFocused.value = false;
   checkInputCollapse();
   if (!isPhotoInputCollapsed.value) {
+    photoPlaceholderDisplay.value = '';
     startPhotoTypewriter();
   }
 };
@@ -1535,6 +1536,7 @@ const handleVideoInputBlur = () => {
   isVideoInputFocused.value = false;
   checkInputCollapse();
   if (!isVideoInputCollapsed.value) {
+    videoPlaceholderDisplay.value = '';
     startVideoTypewriter();
   }
 };

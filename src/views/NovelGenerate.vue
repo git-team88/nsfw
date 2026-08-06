@@ -667,9 +667,16 @@
 
             <div class="failed-message">
               <p class="detail-line">{{ t('novel.insufficientBalanceNoDeduct') }}</p>
-              {{ t('novel.error.generationFailedMessage') }}<br />
-              {{ t('novel.error.contactSupport') }}<br />
-              <span v-html="t('novel.error.supportEmail').replace(/\n/g, '<br />')"></span>
+              <template v-if="isCopyrightRisk">
+                {{ t('novel.error.copyrightRiskMessage') }}<br />
+                {{ t('novel.error.contactSupport') }}<br />
+                <span v-html="t('novel.error.supportEmail').replace(/\n/g, '<br />')"></span>
+              </template>
+              <template v-else>
+                {{ t('novel.error.generationFailedMessage') }}<br />
+                {{ t('novel.error.contactSupport') }}<br />
+                <span v-html="t('novel.error.supportEmail').replace(/\n/g, '<br />')"></span>
+              </template>
             </div>
             <button class="retry-button" @click="handleRetry">
               {{ t('novel.retry') }}
@@ -1640,6 +1647,7 @@ const chapterCount = ref<number>(0);
 const hasFailed = ref<boolean>(false);
 const statusMessage = ref<string>('');
 const isInsufficientBalance = computed(() => hasFailed.value && statusMessage.value.includes('user credit is not enough'));
+const isCopyrightRisk = computed(() => hasFailed.value && statusMessage.value.toLowerCase().includes('related to copyright restrictions'));
 const outlineData = ref<any>(null);
 
 watch(() => outlineData.value, (newVal) => {

@@ -2618,6 +2618,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       fetchFailed: "取得に失敗しました",
       generationFailed: "生成に失敗しました",
       generationFailedMessage: "申し訳ありません。現在、生成処理で異常が発生しています",
+      copyrightRiskMessage: "プロンプトまたは参照画像にセンシティブな内容や著作権のリスクが含まれている可能性があります。プロンプトを変更して再試行してください",
       contactSupport: "再試行しても正常に生成できない場合は、カスタマーサポートまでご連絡ください。速やかに対応いたします。",
       calcDeductRule: "生成に失敗した工程については、コンピューティングパワーを消費しません。",
       supportEmail: "お問合せ先：support{'@'}moegen{'.'}co.jp",
