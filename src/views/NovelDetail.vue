@@ -1658,7 +1658,7 @@ async function enterCollectionMode(type: number) {
       }
     } else {
       if (localStorage.getItem('token')) {
-        if (chapters.value.length === 0) {
+        if (chapters.value.length == 0) {
           await loadChapters();
           setChapterNavigation();
         }

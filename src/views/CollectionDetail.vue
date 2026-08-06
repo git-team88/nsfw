@@ -49,8 +49,8 @@
                     <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
                     <span class="value">{{ collection.history.title }}</span>
                   </div>
-                  <button class="continue-reading-btn" v-if="collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
-                  <button class="continue-reading-btn" v-if="!collection.history || Array.isArray(collection.history)" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
+                  <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
+                  <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
                 </div>
               </div>
             </div>

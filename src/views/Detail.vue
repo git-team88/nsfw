@@ -1384,12 +1384,6 @@ async function goToNextChapter() {
     isRightPanelHidden.value = false;
     await loadChapters();
 
-    // Record view history before navigating to next chapter
-    // This is done before navigation to avoid losing state due to component reinitialization
-    if (detail.value.book_id && Number(detail.value.book_id) > 0 && chapterCount.value >= 1) {
-      await recordViewHistory();
-    }
-
     router.replace({
       path: '/detail',
       query: {
