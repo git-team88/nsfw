@@ -1874,6 +1874,9 @@ const handlePhotoFileChange = async (event: Event) => {
             itemTag.className = 'image-tag';
             itemTag.contentEditable = 'false';
             itemTag.dataset.itemId = newImageItem.id;
+            itemTag.dataset.src = newImageItem.image;
+            itemTag.dataset.type = 'image';
+            itemTag.dataset.name = `${t('home.img')}${imageIndex}`;
 
             const img = document.createElement('img');
             img.src = newImageItem.image;
@@ -1919,10 +1922,12 @@ const removePhotoImage = (id: string) => {
     const imageCount = { image: 0 };
     remainingImages.forEach(tag => {
       imageCount.image++;
+      const newName = `${t('home.img')}${imageCount.image}`;
       const textNode = tag.querySelector('img')?.nextSibling;
       if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-        textNode.textContent = `${t('home.img')}${imageCount.image}`;
+        textNode.textContent = newName;
       }
+      tag.dataset.name = newName;
     });
   }
 };

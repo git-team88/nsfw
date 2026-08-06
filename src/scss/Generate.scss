@@ -142,7 +142,7 @@ $highlight: #FFF3D6;
     height: 64px;
     background: $cream;
     border: 2.5px solid $ink;
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -194,8 +194,6 @@ $highlight: #FFF3D6;
   }
 
   .photo-desc {
-    display: flex;
-    align-items: center;
     font-size: 16px;
     font-weight: 800;
     color: $ink;
@@ -293,7 +291,8 @@ $highlight: #FFF3D6;
       }
 
       &.ratio-16-9 {
-        height: 111px;
+        width: 352px;
+        height: 198px;
       }
 
       &:hover {
@@ -312,18 +311,21 @@ $highlight: #FFF3D6;
         border-radius: 12px;
       }
 
+      .skeleton-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+
       .photo-item-overlay {
         position: absolute;
         top: 10px;
         right: 10px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 6px;
         opacity: 0;
-        transition: opacity 0.2s ease;
-        background: rgba(255, 253, 247, 0.5);
-        border-radius: 8px;
-        padding: 4px 6px;
       }
 
       .overlay-btn {
@@ -333,8 +335,8 @@ $highlight: #FFF3D6;
         cursor: pointer;
 
         img {
-          width: 16px;
-          height: 16px;
+          width: 32px;
+          height: 32px;
         }
       }
 
@@ -402,8 +404,8 @@ $highlight: #FFF3D6;
     width: 64px;
     height: 64px;
     background: $cream;
-    border: 2.5px solid $ink;
-    border-radius: 10px;
+    border: 2px solid $ink;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -559,6 +561,11 @@ $highlight: #FFF3D6;
   box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
   cursor: pointer;
 
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 rgba(22,17,34,0.14);
+  }
+
   .video-cover {
     width: 100%;
     height: 100%;
@@ -590,15 +597,11 @@ $highlight: #FFF3D6;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    border-radius: 8px;
-    background: rgba(255,253,247,0.5);
-    box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
     cursor: pointer;
 
     img {
-      width: 16px;
-      height: 16px;
+      width: 32px;
+      height: 32px;
     }
   }
 }
@@ -1138,8 +1141,9 @@ $highlight: #FFF3D6;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
+      border: 2px solid $ink;
       border-radius: 8px;
       flex-shrink: 0;
       background: $cream;
@@ -1165,7 +1169,7 @@ $highlight: #FFF3D6;
       .uploaded-image {
         max-width: 100%;
         width: auto;
-        height: 64px;
+        height: 60px;
         object-fit: contain;
         border-radius: 8px;
       }
@@ -1363,12 +1367,12 @@ $highlight: #FFF3D6;
         align-items: center;
         gap: 4px;
         padding: 4px;
-        background: rgba(22, 17, 34, 0.06);
-        border: 2px solid rgba(22, 17, 34, 0.12);
+        background: rgba(22, 17, 34, 0.1);
+        border: 2px solid rgba(22, 17, 34, 0.2);
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
-        color: #9a93a4;
+        color: #364153;
         margin: 0 6px;
         pointer-events: none;
         user-select: none;
@@ -2179,7 +2183,7 @@ $highlight: #FFF3D6;
       position: relative;
       width: 72px;
       height: 96px;
-      border-radius: 10px;
+      border-radius: 8px;
       background: $cream;
       border: 2.5px solid $ink;
       overflow: hidden;
@@ -2212,12 +2216,13 @@ $highlight: #FFF3D6;
 
         .frame-preview {
           position: absolute;
-          top: 0;
-          left: 0;
-          max-width: 100%;
+          top: 2px;
+          left: 2px;
+          max-width: calc(100% - 4px);
           width: auto;
-          height: 100%;
+          height: calc(100% - 4px);
           object-fit: contain;
+          border: 2px solid #161122;
           border-radius: 8px;
         }
       }
