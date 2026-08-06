@@ -366,17 +366,17 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
-                <div class="option-btn reference-btn" @click="triggerPhotoUpload">
+                <div class="option-btn reference-btn" @mousedown.prevent @click="triggerPhotoUpload">
                   <img src="@/assets/images/home/img_icon.png" alt="" />
                   <span>{{ t('home.option.reference') }}</span>
                 </div>
 
-                <div class="photo-settings-selector" @click="showPhotoSettings = !showPhotoSettings" :class="{ open: showPhotoSettings }">
+                <div class="photo-settings-selector" @mousedown.prevent @click="showPhotoSettings = !showPhotoSettings" :class="{ open: showPhotoSettings }">
                   <div class="selector-header">
                     <span>{{ selectedPhotoQuality }}</span>
                     <span class="settings-divider"></span>
@@ -593,12 +593,12 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
-                <div class="video-selector" @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown" :class="{ open: showVideoMultimodalDropdown }">
+                <div class="video-selector" @mousedown.prevent @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown" :class="{ open: showVideoMultimodalDropdown }">
                   <div class="selector-header">
                     <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
@@ -616,12 +616,12 @@
                   </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal == 'multimodal'" class="option-btn reference-btn" @click="triggerVideoUpload">
+                <div v-if="selectedVideoMultimodal == 'multimodal'" class="option-btn reference-btn" @mousedown.prevent @click="triggerVideoUpload">
                   <img src="@/assets/images/home/img_icon.png" alt="" />
                   <span>{{ t('home.option.reference') }}</span>
                 </div>
 
-                <div class="video-settings-selector" @click="showVideoSettings = !showVideoSettings" :class="{ open: showVideoSettings }">
+                <div class="video-settings-selector" @mousedown.prevent @click="showVideoSettings = !showVideoSettings" :class="{ open: showVideoSettings }">
                   <div class="selector-header">
                     <span>{{ selectedVideoQuality }}</span>
                     <span class="settings-divider"></span>
@@ -1511,11 +1511,17 @@ const handlePhotoInputFocus = () => {
 
 const handlePhotoInputBlur = () => {
   isPhotoInputFocused.value = false;
-  checkInputCollapse();
-  if (!isPhotoInputCollapsed.value) {
-    photoPlaceholderDisplay.value = '';
-    startPhotoTypewriter();
-  }
+  setTimeout(() => {
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
+      return;
+    }
+    checkInputCollapse();
+    if (!isPhotoInputCollapsed.value) {
+      photoPlaceholderDisplay.value = '';
+      startPhotoTypewriter();
+    }
+  }, 150);
 };
 
 const handleVideoInputFocus = () => {
@@ -1534,11 +1540,17 @@ const handleVideoInputFocus = () => {
 
 const handleVideoInputBlur = () => {
   isVideoInputFocused.value = false;
-  checkInputCollapse();
-  if (!isVideoInputCollapsed.value) {
-    videoPlaceholderDisplay.value = '';
-    startVideoTypewriter();
-  }
+  setTimeout(() => {
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
+      return;
+    }
+    checkInputCollapse();
+    if (!isVideoInputCollapsed.value) {
+      videoPlaceholderDisplay.value = '';
+      startVideoTypewriter();
+    }
+  }, 150);
 };
 
 const handlePhotoPaste = (event: ClipboardEvent) => {
