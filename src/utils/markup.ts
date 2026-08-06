@@ -269,6 +269,7 @@ export async function renderMarkedImageToBlob(
   image: HTMLImageElement,
   annotations: MarkupAnnotation[],
   errors: { canvas: string; export: string },
+  imageBox?: { width: number; height: number },
 ) {
   const width = Math.max(1, image.naturalWidth || image.width);
   const height = Math.max(1, image.naturalHeight || image.height);
@@ -281,7 +282,7 @@ export async function renderMarkedImageToBlob(
   const context = canvas.getContext('2d');
   if (!context) throw new Error(errors.canvas);
   context.drawImage(image, 0, 0, width, height);
-  annotations.forEach((annotation) => drawMarkupAnnotation(context, annotation, width, height, fontFamily));
+  annotations.forEach((annotation) => drawMarkupAnnotation(context, annotation, width, height, fontFamily, imageBox));
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
   if (!blob) throw new Error(errors.export);
   return blob;
@@ -293,14 +294,16 @@ export function drawMarkupAnnotation(
   width: number,
   height: number,
   fontFamily: string = 'sans-serif',
+  imageBox?: { width: number; height: number },
 ) {
   const toCanvasPoint = (point: MarkupPoint) => ({ x: (point.x / 100) * width, y: (point.y / 100) * height });
   const startPoint = toCanvasPoint(annotation.points[0]);
   const endPoint = toCanvasPoint(annotation.points[annotation.points.length - 1]);
+  const scaledStrokeWidth = (annotation.strokeWidth / 4 / 100) * height;
   context.save();
   context.lineCap = 'round';
   context.lineJoin = 'round';
-  context.lineWidth = annotation.strokeWidth;
+  context.lineWidth = scaledStrokeWidth;
   context.strokeStyle = annotation.color;
   context.fillStyle = annotation.color;
   if (annotation.tool === 'brush') {
@@ -321,7 +324,7 @@ export function drawMarkupAnnotation(
     context.stroke();
     if (annotation.tool === 'arrow') {
       const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
-      const size = Math.max(12, annotation.strokeWidth * 3.2);
+      const size = Math.max(height * 0.005, scaledStrokeWidth * 3.2);
       context.beginPath();
       context.moveTo(endPoint.x, endPoint.y);
       context.lineTo(endPoint.x - size * Math.cos(angle - Math.PI / 6), endPoint.y - size * Math.sin(angle - Math.PI / 6));
@@ -383,8 +386,11 @@ export function drawMarkupAnnotation(
     context.restore();
     return;
   }
-  const textSize = Math.max(12, (annotation.fontSize / 3 / 100) * height);
+  const displayHeight = imageBox?.height || height / 2;
+  const textSize = Math.max(12, annotation.fontSize * (height / displayHeight));
   context.font = `900 ${textSize}px ${fontFamily}`;
+  context.textAlign = annotation.points[0].x > 50 ? 'right' : 'start';
+  context.textBaseline = 'middle';
   context.lineWidth = Math.max(2, textSize * 0.12);
   context.lineJoin = 'round';
   context.strokeStyle = '#000000';

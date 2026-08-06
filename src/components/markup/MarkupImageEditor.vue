@@ -420,7 +420,7 @@ async function exportMarkedImage() {
   return renderMarkedImageToBlob(image, exportAnnotations.filter((a) => a.visible), {
     canvas: mt('markupErrorCanvas'),
     export: mt('markupErrorExport'),
-  });
+  }, imageBox.value);
 }
 
 async function sendMarkedImage() {
