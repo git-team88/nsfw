@@ -135,7 +135,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import PodiumCard from '@/components/ranking/PodiumCard.vue'
 import RankRow from '@/components/ranking/RankRow.vue'
@@ -174,6 +174,7 @@ interface RankedUser {
 
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 // 敏感内容地区判断：进入页面时拉一次，作品榜据此决定 show_nsfw
 const userRegion = ref(false)
@@ -353,13 +354,15 @@ const userPodiumOrder = computed(() => {
 
 // 切主 tab 后回到第一个 subtab
 watch(mode, (m) => {
+  if (m === 'work' && route.query.tab) {
+    router.replace({ path: route.path, query: {} })
+  }
   type.value = 'all'
   const prevUserTab = userTab.value
   userTab.value = 'popular'
   if (m === 'work') {
     loadWorkRank(true)
   } else if (m === 'user' && prevUserTab === 'popular') {
-    // userTab 未变化时 watch(userTab) 不会触发，这里手动首屏加载
     loadUserRank(true)
   }
 })
@@ -393,19 +396,20 @@ function onScroll() {
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  // 拉地区期间先置加载态，避免首屏闪现「无数据」
+  // 从首页「查看全部」进入时先同步切换 mode，避免首屏闪现「无数据」
   if (route.query.tab === 'user') {
+    mode.value = 'user'
     userLoading.value = true
   } else {
     workLoading.value = true
   }
   // 进入页面先拿地区，保证作品榜首屏请求带上正确的 show_nsfw
   await getCountry()
-  // 从首页「查看全部」进入时定位到用户榜（切换 mode 会触发 watch 自动加载）
-  if (route.query.tab === 'user') {
-    mode.value = 'user'
-  } else {
+  // mode 已提前设置，watch(mode) 不会重复触发（因为值未变），这里手动首屏加载
+  if (mode.value === 'work') {
     loadWorkRank(true)
+  } else {
+    loadUserRank(true)
   }
 })
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))

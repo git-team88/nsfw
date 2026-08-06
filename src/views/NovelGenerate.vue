@@ -2248,7 +2248,7 @@ async function openInsertMarkup(placeholder?: number) {
   }
   if (checkProjectOwnership()) return;
   const seg = contentSegments.value.find((s: any) => s.type === 'image' && s.placeholder === placeholder);
-  const url = seg?.url ? insertImageSrc(seg.url) : '';
+  const url = seg?.url || '';
   if (!url) return;
   markupType.value = 'insert';
   markupPlaceholder.value = placeholder;
