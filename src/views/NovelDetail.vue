@@ -443,7 +443,6 @@ const commentText = ref('');
 const showSidebar = ref(false);
 const isCollectionMode = ref(false);
 const activeTab = ref('detail');
-const pendingRecordHistory = ref(false);
 const currentCollectionIndex = ref(0);
 const isLoadingComments = ref(false);
 const currentPage = ref(1);
@@ -720,14 +719,10 @@ async function fetchDetail() {
       // Auto enter collection mode when book has chapters
       if (detail.value.book_id && Number(detail.value.book_id) > 0) {
         isCollectionMode.value = true;
-        if (localStorage.getItem('token')) {
-          pendingRecordHistory.value = true;
-        }
       }
 
       // Record view history if needed
-      if (pendingRecordHistory.value) {
-        pendingRecordHistory.value = false;
+      if (localStorage.getItem('token')) {
         await recordViewHistory();
       }
 
@@ -1443,9 +1438,6 @@ function doNavigateToChapter(chapter: any) {
 
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     isCollectionMode.value = true;
-    if (localStorage.getItem('token')) {
-      pendingRecordHistory.value = true;
-    }
   }
 }
 
@@ -1655,9 +1647,6 @@ async function enterCollectionMode(type: number) {
             id: targetChapterId
           }
         });
-        if (localStorage.getItem('token')) {
-          pendingRecordHistory.value = true;
-        }
       } else {
         if (localStorage.getItem('token')) {
           if (chapters.value.length === 0) {

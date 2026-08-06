@@ -3041,6 +3041,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     type2: "小説",
     type3: "アニメドラマ",
     continueReading: "続きを読む",
+    startReading: "読み始める",
     chapterCount: "全 {count} 章",
     description: "紹介",
     tableOfContents: "目次",

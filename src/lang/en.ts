@@ -2980,6 +2980,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     type2: "Novel",
     type3: "Drama",
     continueReading: "Continue Reading",
+    startReading: "Start Reading",
     chapterCount: "Total {count} Chapters",
     description: "Description",
     tableOfContents: "Table of Contents",

@@ -1242,7 +1242,6 @@ const activeTab = ref('detail');
 // Collection Mode
 const isCollectionMode = ref(false);
 const currentCollectionIndex = ref(0);
-const pendingRecordHistory = ref(false);
 
 // Collections
 const collections = ref<any[]>([]);
@@ -1353,10 +1352,6 @@ async function enterCollectionMode() {
   isRightPanelHidden.value = false;
 
   await loadChapters();
-  if (localStorage.getItem('token')) {
-    pendingRecordHistory.value = true;
-  }
-
 }
 
 // Enter current chapter
@@ -1378,9 +1373,6 @@ async function enterCurrentChapter() {
     activeTab.value = 'collection';
     isRightPanelHidden.value = false;
     await loadChapters();
-    if (localStorage.getItem('token')) {
-      pendingRecordHistory.value = true;
-    }
   }
 }
 
@@ -1394,7 +1386,7 @@ async function goToNextChapter() {
 
     // Record view history before navigating to next chapter
     // This is done before navigation to avoid losing state due to component reinitialization
-    if (detail.value.book_id && Number(detail.value.book_id) > 0 && chapterCount.value > 1) {
+    if (detail.value.book_id && Number(detail.value.book_id) > 0 && chapterCount.value >= 1) {
       await recordViewHistory();
     }
 
@@ -1453,9 +1445,6 @@ async function enterNextOrCurrentChapter() {
           id: targetChapterId
         }
       });
-      if (localStorage.getItem('token')) {
-        pendingRecordHistory.value = true;
-      }
     }
   }
 }
@@ -1538,9 +1527,6 @@ async function doNavigateToChapter(chapter: any) {
   isRightPanelHidden.value = false;
 
   await loadChapters();
-  if (localStorage.getItem('token')) {
-    pendingRecordHistory.value = true;
-  }
 }
 
 // Set chapter navigation
@@ -1627,12 +1613,18 @@ async function recordViewHistory() {
     return;
   }
 
-  if (!isCollectionMode.value || chapterCount.value <= 1) {
+  if (!isCollectionMode.value || chapterCount.value < 1) {
     return;
   }
 
   const bookId = detail.value.book_id;
-  const chapterIndex = currentCollectionIndex.value + 1;
+  const currentIndex = collections.value.findIndex(chapter => {
+    return chapter.post_id == detail.value.id;
+  });
+  if (currentIndex === -1) {
+    return;
+  }
+  const chapterIndex = currentIndex + 1;
 
   if (!bookId) {
     return;
@@ -2122,11 +2114,8 @@ async function fetchDetail(newId: number) {
         activeTab.value = 'collection';
         isRightPanelHidden.value = false;
 
-        if (localStorage.getItem('token') && pendingRecordHistory.value) {
-          pendingRecordHistory.value = false;
+        if (localStorage.getItem('token')) {
           await recordViewHistory();
-        } else if (localStorage.getItem('token')) {
-          pendingRecordHistory.value = true;
         }
       }
 

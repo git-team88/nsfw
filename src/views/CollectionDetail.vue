@@ -49,7 +49,8 @@
                     <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
                     <span class="value">{{ collection.history.title }}</span>
                   </div>
-                  <button class="continue-reading-btn" v-if="collection.history" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
+                  <button class="continue-reading-btn" v-if="collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
+                  <button class="continue-reading-btn" v-if="!collection.history || Array.isArray(collection.history)" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
                 </div>
               </div>
             </div>
@@ -531,6 +532,13 @@ function goChapter(chapter: Chapter) {
 function navigateToChapter(chapter: Chapter) {
   const ct = collection.value?.type || '';
   router.push(`/detail?id=${chapter.id}${ct ? `&tab=${ct}` : ''}`);
+}
+
+function startReading() {
+  const chapters = collection.value?.chapters;
+  if (!chapters || chapters.length === 0) return;
+  const firstChapter = chapters[0];
+  goChapter(firstChapter);
 }
 
 function continueReading() {

@@ -3089,6 +3089,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     type2: "小说",
     type3: "漫剧",
     continueReading: "继续阅读",
+    startReading: "开始阅读",
     chapterCount: "共 {count} 章",
     description: "简介",
     tableOfContents: "目录",
