@@ -202,6 +202,7 @@ onMounted(async () => {
 });
 
 async function loadCreators() {
+  await waitRegionReady();
   try {
     const res = (await api.popularUserRank(1, 6, 'week', props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
     if ((res.code === 0 || res.code === 200) && res.data?.data) {
@@ -219,7 +220,7 @@ async function loadCreators() {
           latestCover: lb.cover || '',
           latestPostId: String(lb.public_post_id ?? ''),
           latestPostIdNotNsfw: String(lb.public_post_id_not_nsfw ?? ''),
-          latestBookId: String(it.book_id ?? lb.id ?? ''),
+          latestBookId: String(lb.id ?? ''),
         };
       });
     } else {
@@ -436,9 +437,8 @@ function onCreMove(e: PointerEvent) {
 
 function goSprout() {
   const frontIdx = orderRef[0];
-
   const c = creators.value[frontIdx];
-  console.log(c);
+
   if (!c) return;
   if (c.latestBookId) router.push(`/collection/${c.latestBookId}?uid=${c.id}`);
 }

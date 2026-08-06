@@ -375,10 +375,37 @@ function numberDiameter(a: MarkupAnnotation) {
   return Math.max(14, (a.fontSize / 5 / 100) * scaleMin * 2);
 }
 function textLabelSize(a: MarkupAnnotation) {
-  return Math.max(10, (a.fontSize / 3 / 100) * imageBox.value.height);
+  return a.fontSize;
+}
+
+function textLabelClass(a: MarkupAnnotation) {
+  const x = a.points[0].x;
+  const textWidth = (a.text?.length || 0) * a.fontSize * 0.6;
+  const availableRight = ((100 - x) / 100) * imageBox.value.width;
+  const availableLeft = (x / 100) * imageBox.value.width;
+  if (x > 50 && textWidth > availableRight) {
+    if (textWidth <= availableLeft) return 'align-right';
+    return 'align-right wrap';
+  }
+  if (textWidth > availableRight && textWidth > availableLeft) return 'wrap';
+  return '';
+}
+
+function textLabelMaxWidth(a: MarkupAnnotation) {
+  const x = a.points[0].x;
+  const textWidth = (a.text?.length || 0) * a.fontSize * 0.6;
+  const availableRight = ((100 - x) / 100) * imageBox.value.width;
+  const availableLeft = (x / 100) * imageBox.value.width;
+  if (x > 50 && textWidth > availableRight) {
+    return `${x}%`;
+  }
+  if (textWidth > availableRight) {
+    return `${100 - x}%`;
+  }
+  return undefined;
 }
 // 文字输入框与确定后的文字标记保持同样的实际渲染尺寸（避免失焦后文字突然变大）
-const textInputFontSize = computed(() => Math.max(10, (fontSize.value / 3 / 100) * imageBox.value.height));
+const textInputFontSize = computed(() => fontSize.value);
 
 async function exportMarkedImage() {
   const image = imageRef.value;
@@ -599,10 +626,11 @@ const layerList = computed(() =>
                 <span
                   v-else
                   class="comic-markup-text-label"
-                  :class="{ selected: isSelected(a) }"
+                  :class="textLabelClass(a)"
                   :style="{
                     left: `${a.points[0].x}%`,
                     top: `${a.points[0].y}%`,
+                    maxWidth: textLabelMaxWidth(a),
                     color: a.color,
                     fontSize: `${textLabelSize(a)}px`,
                   }"
@@ -630,7 +658,8 @@ const layerList = computed(() =>
                 fontSize: `${textInputFontSize}px`,
                 left: `${textInput.point.x}%`,
                 top: `${textInput.point.y}%`,
-                transform: textInput.point.x > 55 ? 'translate(-100%, -50%)' : 'translateY(-50%)',
+                transform: textInput.point.x > 50 ? 'translate(-100%, -50%)' : 'translateY(-50%)',
+                maxWidth: textInput.point.x > 50 ? `${textInput.point.x}%` : `${100 - textInput.point.x}%`,
               }"
               @blur="handleTextInputBlur"
               @input="textInput && (textInput.value = ($event.target as HTMLInputElement).value)"
@@ -904,7 +933,7 @@ const layerList = computed(() =>
   background: #ffffff;
   box-shadow: 0.125rem 0.125rem 0 #161122;
 }
-.comic-markup-header button.comic-markup-close:hover { background: #ffffff; color: #161122; }
+.comic-markup-header button.comic-markup-close:hover { background: #FF4D8E; color: #FFFFFF; }
 
 .comic-markup-error {
   max-width: min(360px, 32vw);
@@ -1008,7 +1037,7 @@ const layerList = computed(() =>
   position: absolute;
   z-index: 2;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
   white-space: nowrap;
   pointer-events: none;
   transform: translateY(-50%);
@@ -1017,6 +1046,18 @@ const layerList = computed(() =>
   text-shadow:
     -1px -1px 0 #000, 1px -1px 0 #000,
     -1px 1px 0 #000, 1px 1px 0 #000;
+}
+.comic-markup-text-label.align-right {
+  text-align: right;
+  transform: translate(-100%, -50%);
+}
+.comic-markup-text-label.wrap {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.comic-markup-text-label.align-right {
+  text-align: right;
+  transform: translate(-100%, -50%);
 }
 .comic-markup-badge.selected { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #FF4D8E; }
 .comic-markup-text-label.selected { outline: 2px dashed #FF4D8E; outline-offset: 3px; }
@@ -1249,7 +1290,7 @@ const layerList = computed(() =>
   transition: transform 0.2s ease;
 }
 
-.comic-markup-direct-send:hover { transform: translate(-1px, -2px); }
+.comic-markup-direct-send:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #161122; }
 .comic-markup-direct-send:disabled { cursor: not-allowed; opacity: 0.42; box-shadow: none; transform: none; }
 
 .comic-markup-guide-backdrop {
@@ -1333,6 +1374,9 @@ const layerList = computed(() =>
   border-radius: 10px;
   background: #FFFDF7;
   box-shadow: 2px 2px 0 #161122;
+  transition: transform 0.16s;
+
+  &:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #161122; }
 }
 .comic-markup-guide-actions button:last-child { color: #ffffff; background: #FF4D8E; }
 

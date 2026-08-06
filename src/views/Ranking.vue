@@ -393,8 +393,12 @@ function onScroll() {
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  // 拉地区期间先置加载态，避免作品榜首屏闪现「无数据」
-  if (route.query.tab !== 'user') workLoading.value = true
+  // 拉地区期间先置加载态，避免首屏闪现「无数据」
+  if (route.query.tab === 'user') {
+    userLoading.value = true
+  } else {
+    workLoading.value = true
+  }
   // 进入页面先拿地区，保证作品榜首屏请求带上正确的 show_nsfw
   await getCountry()
   // 从首页「查看全部」进入时定位到用户榜（切换 mode 会触发 watch 自动加载）
