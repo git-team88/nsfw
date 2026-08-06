@@ -577,6 +577,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       cancelOperation: "Cancel Operation"
     },
     novelCover: "Novel Cover",
+    insertImageChapter: "Chapter {chapter} Illustration {index}",
     coverPlaceholder: "No cover yet",
     editCover: "Edit Cover",
     coverInputPlaceholder: "Please enter your cover revision comments",

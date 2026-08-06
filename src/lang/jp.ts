@@ -2690,6 +2690,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       cancelOperation: "操作を取消"
     },
     novelCover: "小説の表紙",
+    insertImageChapter: "第{chapter}章 挿絵{index}",
     coverPlaceholder: "まだ表紙がありません",
     editCover: "表紙を変更",
     coverInputPlaceholder: "表紙の修正意見を入力してください",

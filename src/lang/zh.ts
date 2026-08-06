@@ -640,6 +640,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       cancelOperation: "取消操作"
     },
     novelCover: "小说封面",
+    insertImageChapter: "第{chapter}章 配图{index}",
     coverPlaceholder: "暂无封面",
     editCover: "修改封面",
     coverInputPlaceholder: "请输入封面修改意见",

@@ -2253,7 +2253,9 @@ async function openInsertMarkup(placeholder?: number) {
   markupType.value = 'insert';
   markupPlaceholder.value = placeholder;
   markupImageUrl.value = url;
-  markupImageName.value = `${t('novel.novelCover')}`;
+  const chapterNum = currentChapter.value?.chapter ?? 1;
+  const imageIndex = (insertImages.value.findIndex((i: any) => Number(i.img_placeholder) === placeholder) + 1) || (placeholder + 1);
+  markupImageName.value = t('novel.insertImageChapter', { chapter: chapterNum, index: imageIndex });
   markupInstruction.value = '';
   markupOpen.value = true;
   openMarkupGuideIfNeeded();
