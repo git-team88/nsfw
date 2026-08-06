@@ -1927,7 +1927,7 @@ const removePhotoImage = (id: string) => {
       if (textNode && textNode.nodeType === Node.TEXT_NODE) {
         textNode.textContent = newName;
       }
-      tag.dataset.name = newName;
+      (tag as HTMLElement).dataset.name = newName;
     });
   }
 };
