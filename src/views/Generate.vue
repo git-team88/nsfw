@@ -42,7 +42,7 @@
         </div>
 
         <!-- Record List -->
-        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '280px' : '0' }">
+        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '360px' : '0' }">
           <div v-for="(record, index) in displayRecords"
             :key="record.session_id || record.id"
             class="record-item"

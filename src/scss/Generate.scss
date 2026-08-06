@@ -153,7 +153,7 @@ $highlight: #FFF3D6;
       left: 2px;
       width: 16px;
       height: 16px;
-      background: $highlight;
+      background: $yellow;
       border-radius: 2px;
       color: $ink;
       font-size: 12px;
@@ -252,8 +252,8 @@ $highlight: #FFF3D6;
 
     .meta-item {
       font-size: 14px;
-      font-weight: 600;
-      color: $muted;
+      font-weight: 500;
+      color: $pink;
     }
   }
 
@@ -434,7 +434,7 @@ $highlight: #FFF3D6;
       left: 2px;
       width: 16px;
       height: 16px;
-      background: $highlight;
+      background: $yellow;
       border-radius: 2px;
       color: $ink;
       font-size: 12px;
@@ -490,7 +490,7 @@ $highlight: #FFF3D6;
       gap: 4px;
       padding: 4px 8px;
       background: $highlight;
-      border-radius: 10px;
+      border-radius: 6px;
       font-size: 14px;
       font-weight: 700;
       line-height: 24px;
@@ -511,7 +511,7 @@ $highlight: #FFF3D6;
         width: auto;
         max-width: 24px;
         height: 24px;
-        border-radius: 8px;
+        border-radius: 6px;
         object-fit: contain;
       }
 
@@ -536,7 +536,7 @@ $highlight: #FFF3D6;
     .meta-item {
       font-size: 14px;
       font-weight: 600;
-      color: $muted;
+      color: $pink;
     }
   }
 
@@ -1062,7 +1062,7 @@ $highlight: #FFF3D6;
           font-size: 2px;
           font-weight: 800;
           border-radius: 2px;
-          background: $highlight;
+          background: $yellow;
           color: $ink;
           z-index: 10;
         }
@@ -1155,7 +1155,7 @@ $highlight: #FFF3D6;
         left: 2px;
         width: 16px;
         height: 16px;
-        background: $highlight;
+        background: $yellow;
         border-radius: 2px;
         color: $ink;
         font-size: 12px;
@@ -1389,7 +1389,7 @@ $highlight: #FFF3D6;
           width: auto;
           max-width: 24px;
           height: 24px;
-          border-radius: 8px;
+          border-radius: 6px;
           object-fit: cover;
           pointer-events: none;
           user-select: none;
