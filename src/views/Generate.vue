@@ -75,7 +75,7 @@
                     <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
                       <div class="optimize-prompt-section">
                         <span class="desc-label optimize-label">{{ t('home.option.optimizePrompt') }}:</span>
-                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.final_topic || '', record)"></p>
+                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.optimized_prompt || '', record)"></p>
                       </div>
                     </template>
                   </div>
@@ -231,7 +231,7 @@
                     <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
                       <div class="optimize-prompt-section">
                         <span class="desc-label optimize-label">{{ t('home.option.optimizePrompt') }}:</span>
-                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.optimize_prompt || '', record)"></p>
+                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.optimized_prompt || '', record)"></p>
                       </div>
                     </template>
                   </div>
@@ -410,7 +410,7 @@
                     <span class="settings-line"></span>
                     <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
                   </div>
-                  <div class="dropdown" v-if="showPhotoSettings" @click.stop>
+                  <div class="dropdown" v-if="showPhotoSettings" @click.stop @mousedown.stop>
                     <div class="settings-section">
                       <span class="settings-label">{{ t('home.photoSettings.quality') }}</span>
                       <div class="settings-options">
@@ -442,9 +442,9 @@
                      </div>
                    </div>
 
-                  <div class="optimize-prompt-switch" @mousedown.prevent @click="enableOptimizePrompt = !enableOptimizePrompt">
+                  <div class="optimize-prompt-switch" @mousedown.prevent @click.stop="enablePhotoOptimizePrompt = !enablePhotoOptimizePrompt">
                     {{ t('home.option.optimizePrompt') }}
-                    <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
+                    <img class="optimize-prompt-icon" :src="enablePhotoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                   </div>
                 </div>
 
@@ -634,7 +634,7 @@
                     <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
                   </div>
-                  <div class="dropdown" v-if="showVideoMultimodalDropdown">
+                  <div class="dropdown" v-if="showVideoMultimodalDropdown" @click.stop @mousedown.stop>
                     <div
                       v-for="option in videoMultimodalOptions"
                       :key="option.value"
@@ -662,7 +662,7 @@
                     <span class="settings-line"></span>
                     <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
                   </div>
-                  <div class="dropdown" v-if="showVideoSettings" @click.stop>
+                  <div class="dropdown" v-if="showVideoSettings" @click.stop @mousedown.stop>
                     <div class="settings-section">
                       <span class="settings-label">{{ t('home.videoSettings.quality') }}</span>
                       <div class="settings-options">
@@ -713,7 +713,7 @@
                           step="1"
                           :value="selectedVideoDuration"
                           @input="onVideoDurationChange"
-                          @mousedown="saveLastValidDuration"
+                          @mousedown.stop="saveLastValidDuration"
                           @mouseup="validateDurationAndRestore"
                           @click.stop
                           class="slider-input"
@@ -729,9 +729,9 @@
                    </div>
                 </div>
 
-                <div class="optimize-prompt-switch" @mousedown.prevent @click="enableOptimizePrompt = !enableOptimizePrompt">
+                <div class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
-                  <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
+                  <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
               </div>
 
@@ -860,7 +860,8 @@ const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
-const enableOptimizePrompt = ref(true);
+const enablePhotoOptimizePrompt = ref(true);
+const enableVideoOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageNoBirthdayModal = ref(false);
@@ -1642,6 +1643,9 @@ const handlePhotoInputFocus = () => {
 const handlePhotoInputBlur = () => {
   isPhotoInputFocused.value = false;
   setTimeout(() => {
+    if (showPhotoSettings.value) {
+      return;
+    }
     const activeEl = document.activeElement;
     if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
       return;
@@ -1671,6 +1675,9 @@ const handleVideoInputFocus = () => {
 const handleVideoInputBlur = () => {
   isVideoInputFocused.value = false;
   setTimeout(() => {
+    if (showVideoSettings.value || showVideoMultimodalDropdown.value) {
+      return;
+    }
     const activeEl = document.activeElement;
     if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
       return;
@@ -1757,15 +1764,6 @@ let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 let lastCollapseState: boolean | null = null;
 
 const checkInputCollapse = () => {
-  if (enableOptimizePrompt.value) {
-    if (lastCollapseState !== false) {
-      isPhotoInputCollapsed.value = false;
-      isVideoInputCollapsed.value = false;
-      lastCollapseState = false;
-    }
-    return;
-  }
-
   if (isPhotoInputFocused.value) {
     if (lastCollapseState !== false) {
       isPhotoInputCollapsed.value = false;
@@ -1928,6 +1926,8 @@ const resetVideoSettings = () => {
 
 const switchBottomTab = (tab: string) => {
   bottomActiveTab.value = tab;
+  enablePhotoOptimizePrompt.value = true;
+  enableVideoOptimizePrompt.value = true;
   setSeoMeta(tab);
   if (tab == 'photo') {
     resetPhotoSettings();
@@ -3475,7 +3475,7 @@ const estimatedPhotoPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 7;
   }
 
-  if (enableOptimizePrompt.value) {
+  if (enablePhotoOptimizePrompt.value) {
     cost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
   }
 
@@ -3506,7 +3506,7 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = costPerSecond * duration;
-  if (enableOptimizePrompt.value) {
+  if (enableVideoOptimizePrompt.value) {
     totalCost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
   }
   return Math.max(1, totalCost);
@@ -3542,8 +3542,11 @@ const pollTaskStatus = async (taskId: string) => {
           }
         }
 
-        if (taskData.result_async && taskData.result_async.optimize_prompt) {
-          updatedRecord.result_async.optimize_prompt = taskData.result_async.optimize_prompt;
+        if (taskData.result && taskData.result.optimized_prompt) {
+          if (!updatedRecord.result_async) {
+            updatedRecord.result_async = {};
+          }
+          updatedRecord.result_async.optimized_prompt = taskData.result.optimized_prompt;
         }
 
         if (taskData.status === 'SUCCESS') {
@@ -3615,7 +3618,7 @@ const formatContent = (content: string, record: any) => {
   const others = userSelected?.others || {};
   const list = others?.list || [];
 
-  const getTagContent = (index: string, tagType: string) => {
+  const getTagContent = (index: string, tagType: string, originalMatch: string) => {
     const refIndex = parseInt(index);
     const arrayIndex = refIndex - 1;
 
@@ -3661,28 +3664,28 @@ const formatContent = (content: string, record: any) => {
       return `<span class="${tagClass}" contenteditable="false" data-src="${imgUrl}" data-name="${imgName}" data-item-id="${item.id || ''}" data-type="${item.type}"><img src="${iconUrl}" class="${innerClass}" />${imgName}</span>`;
     }
 
-    return `<span class="image-tag" contenteditable="false" data-src="" data-name="" data-type="image"><span>&lt;${tagType}_${index}&gt;</span></span>`;
+    return originalMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   };
 
   let result = content;
 
-  result = result.replace(/<vid_(\d+)>/gi, (match, index) => getTagContent(index, 'vid'));
-  result = result.replace(/<vid_(\d+)><\/vid_\d+>/gi, (match, index) => getTagContent(index, 'vid'));
+  result = result.replace(/<vid_(\d+)>/gi, (match, index) => getTagContent(index, 'vid', match));
+  result = result.replace(/<vid_(\d+)><\/vid_\d+>/gi, (match, index) => getTagContent(index, 'vid', match));
 
-  result = result.replace(/<aud_(\d+)>/gi, (match, index) => getTagContent(index, 'aud'));
-  result = result.replace(/<aud_(\d+)><\/aud_\d+>/gi, (match, index) => getTagContent(index, 'aud'));
+  result = result.replace(/<aud_(\d+)>/gi, (match, index) => getTagContent(index, 'aud', match));
+  result = result.replace(/<aud_(\d+)><\/aud_\d+>/gi, (match, index) => getTagContent(index, 'aud', match));
 
-  result = result.replace(/<ref_(\d+)>/gi, (match, index) => getTagContent(index, 'ref'));
-  result = result.replace(/<ref_(\d+)><\/ref_\d+>/gi, (match, index) => getTagContent(index, 'ref'));
+  result = result.replace(/<ref_(\d+)>/gi, (match, index) => getTagContent(index, 'ref', match));
+  result = result.replace(/<ref_(\d+)><\/ref_\d+>/gi, (match, index) => getTagContent(index, 'ref', match));
 
-  result = result.replace(/&lt;vid_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'vid'));
-  result = result.replace(/&lt;vid_(\d+)&gt;&lt;\/vid_\d+&gt;/gi, (match, index) => getTagContent(index, 'vid'));
+  result = result.replace(/&lt;vid_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'vid', match));
+  result = result.replace(/&lt;vid_(\d+)&gt;&lt;\/vid_\d+&gt;/gi, (match, index) => getTagContent(index, 'vid', match));
 
-  result = result.replace(/&lt;aud_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'aud'));
-  result = result.replace(/&lt;aud_(\d+)&gt;&lt;\/aud_\d+&gt;/gi, (match, index) => getTagContent(index, 'aud'));
+  result = result.replace(/&lt;aud_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'aud', match));
+  result = result.replace(/&lt;aud_(\d+)&gt;&lt;\/aud_\d+&gt;/gi, (match, index) => getTagContent(index, 'aud', match));
 
-  result = result.replace(/&lt;ref_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'ref'));
-  result = result.replace(/&lt;ref_(\d+)&gt;&lt;\/ref_\d+&gt;/gi, (match, index) => getTagContent(index, 'ref'));
+  result = result.replace(/&lt;ref_(\d+)&gt;/gi, (match, index) => getTagContent(index, 'ref', match));
+  result = result.replace(/&lt;ref_(\d+)&gt;&lt;\/ref_\d+&gt;/gi, (match, index) => getTagContent(index, 'ref', match));
 
   return result;
 };
@@ -3864,6 +3867,8 @@ const generatePhoto = async () => {
 };
 
 const doGeneratePhoto = async () => {
+  const token = localStorage.getItem('token') || '';
+
   try {
     const balanceRes = await api.userBalance() as any;
     if (balanceRes.code == 200) {
@@ -3935,7 +3940,8 @@ const doGeneratePhoto = async () => {
         per_chapter_scene_count: 6,
         simple_image_resolution: selectedPhotoQuality.value,
         simple_video_resolution: '720p',
-        simple_video_generate_mode: 'multimodal'
+        simple_video_generate_mode: 'multimodal',
+        enable_optimize_prompt: enablePhotoOptimizePrompt.value
       }
     };
 
@@ -3966,7 +3972,7 @@ const doGeneratePhoto = async () => {
         list: uploadedPhotoImages.value
       },
       addition_characters: [],
-      enable_optimize_prompt: enableOptimizePrompt.value
+      enable_optimize_prompt: enablePhotoOptimizePrompt.value
     };
 
     if (currentPhotoMode.value == 'unlimited') {
@@ -4082,6 +4088,9 @@ const generateVideo = async () => {
 };
 
 const doGenerateVideo = async () => {
+  const token = localStorage.getItem('token') || '';
+  const videoContent = getVideoInputContent();
+
   try {
     const balanceRes = await api.userBalance() as any;
     if (balanceRes.code == 200) {
@@ -4172,7 +4181,8 @@ const doGenerateVideo = async () => {
         per_chapter_scene_count: 6,
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
-        simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : 'video_extension'
+        simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : 'video_extension',
+        enable_optimize_prompt: enableVideoOptimizePrompt.value
       }
     };
 
@@ -4223,7 +4233,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : 'video_extension',
       simple_video_duration: parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: enableOptimizePrompt.value
+      enable_optimize_prompt: enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4707,7 +4717,7 @@ const regenerateRecord = (record: any) => {
       currentPhotoMode.value = 'normal';
     }
 
-    enableOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
+    enablePhotoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
 
     photoInputKey.value++;
 
@@ -4768,7 +4778,7 @@ const regenerateRecord = (record: any) => {
       currentVideoMode.value = 'normal';
     }
 
-    enableOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
+    enableVideoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
       selectedVideoMultimodal.value = 'startEndFrames';
@@ -4902,7 +4912,7 @@ const editImage = (record: any, index: number) => {
       currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
     }
 
-    enableOptimizePrompt.value = record.user_selected.enable_optimize_prompt === true;
+    enablePhotoOptimizePrompt.value = record.user_selected.enable_optimize_prompt === true;
   }
 
   photoInputKey.value++;

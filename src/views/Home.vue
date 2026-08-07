@@ -389,9 +389,9 @@
                         </div>
                       </div>
 
-                      <div class="optimize-prompt-switch" @click="enableOptimizePrompt = !enableOptimizePrompt">
+                      <div class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
-                        <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
+                        <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
 
                     </div>
@@ -643,9 +643,9 @@
                         </div>
                       </div>
 
-                      <div class="optimize-prompt-switch" @click="enableOptimizePrompt = !enableOptimizePrompt">
+                      <div class="optimize-prompt-switch" @click="enablePhotoOptimizePrompt = !enablePhotoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
-                        <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
+                        <img class="optimize-prompt-icon" :src="enablePhotoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
                     </div>
 
@@ -1397,7 +1397,8 @@ const currentVideoMode = ref('normal');
 const currentComicMode = ref('normal');
 const currentDramaMode = ref('normal');
 const currentPhotoMode = ref('normal');
-const enableOptimizePrompt = ref(true);
+const enablePhotoOptimizePrompt = ref(true);
+const enableVideoOptimizePrompt = ref(true);
 
 // Photo settings
 const showPhotoSettings = ref(false);
@@ -2268,7 +2269,7 @@ const estimatedPhotoComputingPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 10;
   }
 
-  if (enableOptimizePrompt.value) {
+  if (enablePhotoOptimizePrompt.value) {
     cost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
   }
 
@@ -2299,7 +2300,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = costPerSecond * duration;
-  if (enableOptimizePrompt.value) {
+  if (enableVideoOptimizePrompt.value) {
     totalCost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
   }
   return Math.max(1, totalCost);
@@ -2842,6 +2843,9 @@ const selectContentType = (type: string) => {
   // Switch content type
   contentType.value = type;
 
+  enablePhotoOptimizePrompt.value = true;
+  enableVideoOptimizePrompt.value = true;
+
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
 
@@ -3037,6 +3041,15 @@ const doGenerateVideo = async () => {
   }
 
   try {
+    const token = localStorage.getItem('token') || '';
+
+    let inputContent = '';
+    if (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoExtend') {
+      inputContent = novelInput.value || '';
+    } else if (editableInputRef.value) {
+      inputContent = editableInputRef.value.textContent || '';
+    }
+
     // Default video settings
     const videoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value,
@@ -3171,7 +3184,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: enableOptimizePrompt.value
+      enable_optimize_prompt: enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3625,8 +3638,7 @@ const doGeneratePhoto = async () => {
 
   try {
     const sessionId = uuidv4();
-
-    // Photo settings
+    const token = localStorage.getItem('token') || '';
     const photoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value,
       aspectRatio: selectedPhotoRatio.value,
@@ -3651,7 +3663,7 @@ const doGeneratePhoto = async () => {
         list: combinedItemsPhoto.value
       },
       addition_characters: [],
-      enable_optimize_prompt: enableOptimizePrompt.value
+      enable_optimize_prompt: enablePhotoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
