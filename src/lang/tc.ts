@@ -1932,13 +1932,26 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       placeholderAt: `輸入{'@'}快速調用參考內容`
     },
     img: '圖片',
+    unreferencedFiles: {
+      title: '注意',
+      description: '有{files}，沒有在提示詞裡引用，會不生效。是否要增加@引用？',
+      descriptionPrefix: '有',
+      descriptionSuffix: '，沒有在提示詞裡引用，會不生效。是否要增加@引用？',
+      imageLabel: '參考圖片',
+      videoLabel: '參考影片',
+      audioLabel: '參考音頻',
+      skip: '放棄引用直接生成',
+      goBack: '返回補充文件引用'
+    },
     imageSizeExceed: '圖片大小不能超過10MB',
     option: {
       character: "角色",
       reference: "參考",
       script: "劇本",
       style: "風格",
-      settings: "設置"
+      settings: "設置",
+      optimizePrompt: "優化提示詞",
+      originalPrompt: "原提示詞"
     },
     photoSettings: {
       quality: "畫質",

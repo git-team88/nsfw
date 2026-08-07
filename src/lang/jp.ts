@@ -1662,13 +1662,26 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       placeholderAt: `{'@'}を入力して画像をクイック参照`
     },
     img: '画像',
+    unreferencedFiles: {
+      title: '注意',
+      description: '{files}がプロンプトで参照されていないため、反映されません。@参照を追加しますか？',
+      descriptionPrefix: '',
+      descriptionSuffix: 'がプロンプトで参照されていないため、反映されません。@参照を追加しますか？',
+      imageLabel: '参考画像',
+      videoLabel: '参考動画',
+      audioLabel: '参考音声',
+      skip: '参照せずに生成',
+      goBack: '戻って参照を追加'
+    },
     imageSizeExceed: '画像サイズは10MBを超えることはできません',
     option: {
       character: "キャラクター設定",
       reference: "参考",
       script: "脚本",
       style: "スタイル",
-      settings: "設定"
+      settings: "設定",
+      optimizePrompt: "プロンプト最適化",
+      originalPrompt: "元のプロンプト"
     },
     photoSettings: {
       quality: "品質",

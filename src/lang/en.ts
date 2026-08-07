@@ -1832,13 +1832,26 @@ If you have any questions, complaints, comments or suggestions regarding persona
       placeholderAt: `Type {'@'} to quickly reference content`
     },
     img: 'Image',
+    unreferencedFiles: {
+      title: 'Notice',
+      description: '{files} not referenced in the prompt and will not take effect. Add @reference?',
+      descriptionPrefix: '',
+      descriptionSuffix: ' not referenced in the prompt and will not take effect. Add @reference?',
+      imageLabel: 'Reference Image ',
+      videoLabel: 'Reference Video ',
+      audioLabel: 'Reference Audio ',
+      skip: 'Generate Without Reference',
+      goBack: 'Go Back to Add Reference'
+    },
     imageSizeExceed: 'Image size cannot exceed 10MB',
     option: {
       character: "Character",
       reference: "Reference",
       script: "Script",
       style: "Style",
-      settings: "Settings"
+      settings: "Settings",
+      optimizePrompt: "Optimize Prompt",
+      originalPrompt: "Original Prompt"
     },
     photoSettings: {
       quality: "Quality",

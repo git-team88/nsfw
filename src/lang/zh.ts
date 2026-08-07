@@ -1938,13 +1938,26 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderAt: `输入{'@'}快速调用参考内容`
     },
     img: '图片',
+    unreferencedFiles: {
+      title: '注意',
+      description: '有{files}，没有在提示词里引用，会不生效。是否要增加@引用？',
+      descriptionPrefix: '有',
+      descriptionSuffix: '，没有在提示词里引用，会不生效。是否要增加@引用？',
+      imageLabel: '参考图片',
+      videoLabel: '参考视频',
+      audioLabel: '参考音频',
+      skip: '放弃引用直接生成',
+      goBack: '返回补充文件引用'
+    },
     imageSizeExceed: '图片大小不能超过10MB',
     option: {
       character: "角色",
       reference: "参考",
       script: "剧本",
       style: "风格",
-      settings: "设置"
+      settings: "设置",
+      optimizePrompt: "优化提示词",
+      originalPrompt: "原提示词"
     },
     photoSettings: {
       quality: "画质",

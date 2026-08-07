@@ -533,6 +533,28 @@ $pinkopacity: rgba(255,77,142,0.12);
       }
     }
 
+    .optimize-prompt-switch {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      padding: 5px 10px;
+      border-radius: 11px;
+      border: 2px solid #161122;
+      background: #fff;
+      box-shadow: 2px 2px 0 #161122;
+      transition: background 0.15s, color 0.15s;
+
+      .optimize-prompt-icon {
+        width: 50px;
+        height: 26px;
+      }
+    }
+
     .input-area {
       position: relative;
       width: 100%;

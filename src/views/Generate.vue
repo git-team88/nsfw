@@ -66,7 +66,20 @@
                 </div>
 
                 <!-- 描述内容 - 只在有内容时显示 -->
-                <p v-if="record.description || record.formattedDescription" class="photo-desc" v-html="formatContent(record.description || '', record)"></p>
+                <template v-if="record.description || record.formattedDescription">
+                  <div class="photo-desc-wrapper" :class="{ 'has-optimize': record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status) }">
+                    <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
+                      <span class="desc-label original-label">{{ t('home.option.originalPrompt') }}:</span>
+                    </template>
+                    <p class="photo-desc" v-html="formatContent(record.description || '', record)"></p>
+                    <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
+                      <div class="optimize-prompt-section">
+                        <span class="desc-label optimize-label">{{ t('home.option.optimizePrompt') }}:</span>
+                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.final_topic || '', record)"></p>
+                      </div>
+                    </template>
+                  </div>
+                </template>
 
                 <!-- 底部：设置信息和时间 -->
                 <div class="photo-meta-row">
@@ -209,7 +222,20 @@
                 </template>
 
                 <!-- 中间：描述内容 -->
-                <p v-if="record.description || record.formattedDescription" class="video-desc" v-html="formatContent(record.description || '', record)"></p>
+                <template v-if="record.description || record.formattedDescription">
+                  <div class="video-desc-wrapper" :class="{ 'has-optimize': record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status) }">
+                    <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
+                      <span class="desc-label original-label">{{ t('home.option.originalPrompt') }}:</span>
+                    </template>
+                    <p class="video-desc" v-html="formatContent(record.description || '', record)"></p>
+                    <template v-if="record.user_selected?.enable_optimize_prompt && isTaskSuccess(record.step_status || record.status)">
+                      <div class="optimize-prompt-section">
+                        <span class="desc-label optimize-label">{{ t('home.option.optimizePrompt') }}:</span>
+                        <p class="optimize-prompt-content" v-html="formatContent(record.result_async?.optimize_prompt || '', record)"></p>
+                      </div>
+                    </template>
+                  </div>
+                </template>
 
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
@@ -411,11 +437,16 @@
                         >
                           {{ ratio.label }}
                         </div>
-                      </div>
-                    </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+
+                  <div class="optimize-prompt-switch" @mousedown.prevent @click="enableOptimizePrompt = !enableOptimizePrompt">
+                    {{ t('home.option.optimizePrompt') }}
+                    <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                   </div>
                 </div>
-              </div>
 
               <div class="generate-box">
                 <div class="generate-btn" :class="{ loading: isPhotoGenerating }" @click="generatePhoto">
@@ -693,9 +724,14 @@
                           <span>10s</span>
                           <span>15s</span>
                         </div> -->
-                      </div>
-                    </div>
-                  </div>
+                       </div>
+                     </div>
+                   </div>
+                </div>
+
+                <div class="optimize-prompt-switch" @mousedown.prevent @click="enableOptimizePrompt = !enableOptimizePrompt">
+                  {{ t('home.option.optimizePrompt') }}
+                  <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
               </div>
 
@@ -764,6 +800,14 @@
       @close="showUnderageNoBirthdayModal = false"
       @confirm="handleUnlimitedAgeConfirm"
     />
+
+    <!-- Unreferenced Files Modal -->
+    <UnreferencedFilesModal
+      v-if="showUnreferencedFilesModal"
+      :labels="unreferencedFileLabels"
+      @skip="handleUnreferencedSkip"
+      @goBack="handleUnreferencedGoBack"
+    />
   </div>
 </template>
 
@@ -784,10 +828,13 @@ import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
+import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import loadingGif916 from '@/assets/images/home/9_16.gif';
 import loadingGif169 from '@/assets/images/home/16_9.gif';
 import loadingGif11 from '@/assets/images/home/1_1.gif';
 import audioIcon from '@/assets/images/home/audio.png';
+import optimizePromptOn from "@/assets/images/project/opne.png";
+import optimizePromptOff from "@/assets/images/project/close.png";
 
 const { t, locale } = useI18n();
 
@@ -813,10 +860,93 @@ const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
+const enableOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageNoBirthdayModal = ref(false);
+const showUnreferencedFilesModal = ref(false);
+const unreferencedFileLabels = ref<string[]>([]);
+const pendingGenerateCallback = ref<(() => void) | null>(null);
 const isPositioningTarget = ref(false);
+
+const checkPhotoUnreferencedFiles = (): boolean => {
+  if (!photoEditableInputRef.value) return false;
+  const images = uploadedPhotoImages.value;
+  if (images.length === 0) return false;
+
+  const referencedIds = new Set<string>();
+  const spans = photoEditableInputRef.value.querySelectorAll('span.image-tag');
+  spans.forEach((span: Element) => {
+    const itemId = (span as HTMLElement).dataset.itemId;
+    if (itemId) referencedIds.add(itemId);
+  });
+
+  const unreferenced = images.filter((item: any) => !referencedIds.has(item.id));
+  if (unreferenced.length === 0) return false;
+
+  const labels: string[] = [];
+  for (const item of unreferenced) {
+    const idx = images.findIndex((img: any) => img.id === item.id) + 1;
+    if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
+  }
+  if (labels.length === 0) return false;
+  unreferencedFileLabels.value = labels;
+  return true;
+};
+
+const checkVideoUnreferencedFiles = (): boolean => {
+  if (selectedVideoMultimodal.value !== 'multimodal') return false;
+  if (!videoEditableInputRef.value) return false;
+  const refs = uploadedVideoRefs.value;
+  const fileItems = refs.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio');
+  if (fileItems.length === 0) return false;
+
+  const referencedIds = new Set<string>();
+  const spans = videoEditableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag');
+  spans.forEach((span: Element) => {
+    const itemId = (span as HTMLElement).dataset.itemId;
+    if (itemId) referencedIds.add(itemId);
+  });
+
+  const unreferenced = fileItems.filter((item: any) => !referencedIds.has(item.id));
+  if (unreferenced.length === 0) return false;
+
+  const labels: string[] = [];
+  for (const item of unreferenced) {
+    if (item.type === 'image') {
+      const idx = refs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
+    } else if (item.type === 'video') {
+      const idx = refs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.videoLabel') + idx);
+    } else if (item.type === 'audio') {
+      const idx = refs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.audioLabel') + idx);
+    }
+  }
+  if (labels.length === 0) return false;
+  unreferencedFileLabels.value = labels;
+  return true;
+};
+
+const handleUnreferencedSkip = () => {
+  showUnreferencedFilesModal.value = false;
+  if (pendingGenerateCallback.value) {
+    pendingGenerateCallback.value();
+    pendingGenerateCallback.value = null;
+  }
+};
+
+const handleUnreferencedGoBack = () => {
+  showUnreferencedFilesModal.value = false;
+  pendingGenerateCallback.value = null;
+  if (photoEditableInputRef.value) {
+    photoEditableInputRef.value.focus();
+  }
+  if (videoEditableInputRef.value) {
+    videoEditableInputRef.value.focus();
+  }
+};
 
 const typeOptions = ref([
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
@@ -1627,6 +1757,15 @@ let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 let lastCollapseState: boolean | null = null;
 
 const checkInputCollapse = () => {
+  if (enableOptimizePrompt.value) {
+    if (lastCollapseState !== false) {
+      isPhotoInputCollapsed.value = false;
+      isVideoInputCollapsed.value = false;
+      lastCollapseState = false;
+    }
+    return;
+  }
+
   if (isPhotoInputFocused.value) {
     if (lastCollapseState !== false) {
       isPhotoInputCollapsed.value = false;
@@ -3336,6 +3475,10 @@ const estimatedPhotoPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 7;
   }
 
+  if (enableOptimizePrompt.value) {
+    cost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
+  }
+
   return Math.max(1, cost);
 });
 
@@ -3362,7 +3505,10 @@ const estimatedVideoPower = computed(() => {
     }
   }
 
-  const totalCost = costPerSecond * duration;
+  let totalCost = costPerSecond * duration;
+  if (enableOptimizePrompt.value) {
+    totalCost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
+  }
   return Math.max(1, totalCost);
 });
 
@@ -3394,6 +3540,10 @@ const pollTaskStatus = async (taskId: string) => {
             updatedRecord.videoCover = firstVideo.video_cover_url;
             updatedRecord.video_cover_url = firstVideo.video_cover_url;
           }
+        }
+
+        if (taskData.result_async && taskData.result_async.optimize_prompt) {
+          updatedRecord.result_async.optimize_prompt = taskData.result_async.optimize_prompt;
         }
 
         if (taskData.status === 'SUCCESS') {
@@ -3703,6 +3853,17 @@ const generatePhoto = async () => {
     return;
   }
 
+  if (checkPhotoUnreferencedFiles()) {
+    isPhotoGenerating.value = false;
+    pendingGenerateCallback.value = () => { isPhotoGenerating.value = true; doGeneratePhoto(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGeneratePhoto();
+};
+
+const doGeneratePhoto = async () => {
   try {
     const balanceRes = await api.userBalance() as any;
     if (balanceRes.code == 200) {
@@ -3804,7 +3965,8 @@ const generatePhoto = async () => {
         content: getPhotoInputContent().trim(),
         list: uploadedPhotoImages.value
       },
-      addition_characters: []
+      addition_characters: [],
+      enable_optimize_prompt: enableOptimizePrompt.value
     };
 
     if (currentPhotoMode.value == 'unlimited') {
@@ -3905,9 +4067,21 @@ const generateVideo = async () => {
   // 首尾帧模式验证：首帧必须上传，尾帧可以不上传
   if (selectedVideoMultimodal.value === 'startEndFrames' && !startFrameImage.value) {
     toast(t('home.error.startFrameRequired'));
+    isVideoGenerating.value = false;
     return;
   }
 
+  if (checkVideoUnreferencedFiles()) {
+    isVideoGenerating.value = false;
+    pendingGenerateCallback.value = () => { isVideoGenerating.value = true; doGenerateVideo(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGenerateVideo();
+};
+
+const doGenerateVideo = async () => {
   try {
     const balanceRes = await api.userBalance() as any;
     if (balanceRes.code == 200) {
@@ -4048,7 +4222,8 @@ const generateVideo = async () => {
       simple_image_resolution: '1K',
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : 'video_extension',
-      simple_video_duration: parseInt(selectedVideoDuration.value)
+      simple_video_duration: parseInt(selectedVideoDuration.value),
+      enable_optimize_prompt: enableOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4532,6 +4707,8 @@ const regenerateRecord = (record: any) => {
       currentPhotoMode.value = 'normal';
     }
 
+    enableOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
+
     photoInputKey.value++;
 
     setTimeout(() => {
@@ -4590,6 +4767,8 @@ const regenerateRecord = (record: any) => {
     } else {
       currentVideoMode.value = 'normal';
     }
+
+    enableOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
       selectedVideoMultimodal.value = 'startEndFrames';
@@ -4722,6 +4901,8 @@ const editImage = (record: any, index: number) => {
       const mode = record.user_selected.story_mode == 'nsfw' ? 'unlimited' : record.user_selected.story_mode;
       currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
     }
+
+    enableOptimizePrompt.value = record.user_selected.enable_optimize_prompt === true;
   }
 
   photoInputKey.value++;

@@ -389,6 +389,11 @@
                         </div>
                       </div>
 
+                      <div class="optimize-prompt-switch" @click="enableOptimizePrompt = !enableOptimizePrompt">
+                        {{ t('home.option.optimizePrompt') }}
+                        <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
+                      </div>
+
                     </div>
 
                     <div class="generate-box">
@@ -636,6 +641,11 @@
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      <div class="optimize-prompt-switch" @click="enableOptimizePrompt = !enableOptimizePrompt">
+                        {{ t('home.option.optimizePrompt') }}
+                        <img class="optimize-prompt-icon" :src="enableOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
                     </div>
 
@@ -1182,6 +1192,14 @@
       @close="showTaskLimitExceededModal = false"
     />
 
+    <!-- Unreferenced Files Modal -->
+    <UnreferencedFilesModal
+      v-if="showUnreferencedFilesModal"
+      :labels="unreferencedFileLabels"
+      @skip="handleUnreferencedSkip"
+      @goBack="handleUnreferencedGoBack"
+    />
+
     <!-- Footer -->
     <Footer
       :total-pages="Math.ceil(totalPosts / pageSize)"
@@ -1224,6 +1242,7 @@ import Hero3DBackground from '@/components/Hero3DBackground.vue';
 import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
+import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
@@ -1237,6 +1256,8 @@ import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
 import audioIcon from "@/assets/images/home/audio.png";
+import optimizePromptOn from "@/assets/images/project/opne.png";
+import optimizePromptOff from "@/assets/images/project/close.png";
 
 const { t, locale } = useI18n();
 
@@ -1376,6 +1397,7 @@ const currentVideoMode = ref('normal');
 const currentComicMode = ref('normal');
 const currentDramaMode = ref('normal');
 const currentPhotoMode = ref('normal');
+const enableOptimizePrompt = ref(true);
 
 // Photo settings
 const showPhotoSettings = ref(false);
@@ -2146,6 +2168,64 @@ const insufficientBalanceEstimatedFrozen = ref(0);
 const insufficientBalanceAvailable = ref(0);
 const insufficientBalanceFrozen = ref(0);
 
+const showUnreferencedFilesModal = ref(false);
+const unreferencedFileLabels = ref<string[]>([]);
+const pendingGenerateCallback = ref<(() => void) | null>(null);
+
+const checkUnreferencedFiles = (): boolean => {
+  if (contentType.value === 'novel') return false;
+  if (!editableInputRef.value) return false;
+
+  const currentCombinedItems = getCombinedItems().value;
+  const fileItems = currentCombinedItems.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio');
+  if (fileItems.length === 0) return false;
+
+  const referencedItemIds = new Set<string>();
+  const spans = editableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag');
+  spans.forEach((span: Element) => {
+    const itemId = (span as HTMLElement).dataset.itemId;
+    if (itemId) referencedItemIds.add(itemId);
+  });
+
+  const unreferenced = fileItems.filter((item: any) => !referencedItemIds.has(item.id));
+  if (unreferenced.length === 0) return false;
+
+  const currentUploadedImages = getUploadedImages();
+  const labels: string[] = [];
+  for (const item of unreferenced) {
+    if (item.type === 'image') {
+      const idx = currentUploadedImages.value.findIndex((img: any) => img.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
+    } else if (item.type === 'video') {
+      const idx = uploadedVideosVideo.value.findIndex((v: any) => v.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.videoLabel') + idx);
+    } else if (item.type === 'audio') {
+      const idx = uploadedAudiosVideo.value.findIndex((a: any) => a.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.audioLabel') + idx);
+    }
+  }
+
+  if (labels.length === 0) return false;
+  unreferencedFileLabels.value = labels;
+  return true;
+};
+
+const handleUnreferencedSkip = () => {
+  showUnreferencedFilesModal.value = false;
+  if (pendingGenerateCallback.value) {
+    pendingGenerateCallback.value();
+    pendingGenerateCallback.value = null;
+  }
+};
+
+const handleUnreferencedGoBack = () => {
+  showUnreferencedFilesModal.value = false;
+  pendingGenerateCallback.value = null;
+  if (editableInputRef.value) {
+    editableInputRef.value.focus();
+  }
+};
+
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
 
@@ -2188,6 +2268,10 @@ const estimatedPhotoComputingPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 10;
   }
 
+  if (enableOptimizePrompt.value) {
+    cost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
+  }
+
   return Math.max(1, cost);
 });
 
@@ -2214,7 +2298,10 @@ const estimatedVideoComputingPower = computed(() => {
     }
   }
 
-  const totalCost = costPerSecond * duration;
+  let totalCost = costPerSecond * duration;
+  if (enableOptimizePrompt.value) {
+    totalCost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
+  }
   return Math.max(1, totalCost);
 });
 
@@ -2926,6 +3013,17 @@ const generateVideo = async () => {
     return;
   }
 
+  if (selectedVideoMultimodal.value === 'multimodal' && checkUnreferencedFiles()) {
+    isGeneratingVideo.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingVideo.value = true; doGenerateVideo(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGenerateVideo();
+};
+
+const doGenerateVideo = async () => {
   // Fetch latest balance before checking
   try {
     const balanceResponse = await api.userBalance() as any;
@@ -3072,7 +3170,8 @@ const generateVideo = async () => {
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: parseInt(selectedVideoDuration.value),
-      simple_video_generate_mode: videoGenerateMode
+      simple_video_generate_mode: videoGenerateMode,
+      enable_optimize_prompt: enableOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3484,6 +3583,17 @@ const generatePhoto = async () => {
     return;
   }
 
+  if (checkUnreferencedFiles()) {
+    isGeneratingPhoto.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingPhoto.value = true; doGeneratePhoto(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGeneratePhoto();
+};
+
+const doGeneratePhoto = async () => {
   // Fetch latest balance before checking
   try {
     const balanceResponse = await api.userBalance() as any;
@@ -3540,7 +3650,8 @@ const generatePhoto = async () => {
         content: contentWithRefTags,
         list: combinedItemsPhoto.value
       },
-      addition_characters: []
+      addition_characters: [],
+      enable_optimize_prompt: enableOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {

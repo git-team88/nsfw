@@ -194,12 +194,34 @@ $pinkopacity: rgba(255,77,142,0.12);
     }
   }
 
+  .photo-desc-wrapper {
+    &.has-optimize .photo-desc {
+      color: #99A1AF;
+    }
+  }
+
+  .desc-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+
+    &.original-label {
+      font-size: 16px;
+      color: #99A1AF;
+    }
+
+    &.optimize-label {
+      font-size: 16px;
+      color: $ink;
+    }
+  }
+
   .photo-desc {
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 500;
     color: $ink;
     line-height: 32px;
-    margin: 0 0 12px;
     white-space: pre-wrap;
 
     :deep(.image-tag) {
@@ -240,10 +262,24 @@ $pinkopacity: rgba(255,77,142,0.12);
     }
   }
 
+  .optimize-prompt-section {
+    margin-top: 10px;
+
+    .optimize-prompt-content {
+      font-size: 16px;
+      font-weight: 500;
+      color: $ink;
+      line-height: 32px;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  }
+
   .photo-meta-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-top: 12px;
   }
 
   .photo-meta {
@@ -475,13 +511,48 @@ $pinkopacity: rgba(255,77,142,0.12);
     }
   }
 
+  .video-desc-wrapper {
+    &.has-optimize .video-desc {
+      color: #99A1AF;
+    }
+  }
+
+  .desc-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+
+    &.original-label {
+      font-size: 16px;
+      color: #99A1AF;
+    }
+
+    &.optimize-label {
+      font-size: 16px;
+      color: $ink;
+    }
+  }
+
+  .optimize-prompt-section {
+    margin-top: 10px;
+
+    .optimize-prompt-content {
+      font-size: 16px;
+      font-weight: 500;
+      color: $ink;
+      line-height: 32px;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  }
+
   .video-desc {
     display: flex;
     align-items: center;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 500;
     color: $ink;
-    margin: 0 0 12px;
     white-space: pre-wrap;
 
     :deep(.image-tag), :deep(.video-tag), :deep(.audio-tag) {
@@ -525,6 +596,7 @@ $pinkopacity: rgba(255,77,142,0.12);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-top: 12px;
   }
 
   .video-meta {
@@ -997,6 +1069,28 @@ $pinkopacity: rgba(255,77,142,0.12);
       font-size: 13px;
       font-weight: 800;
       color: $ink;
+    }
+  }
+
+  .optimize-prompt-switch {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+    padding: 5px 10px;
+    border-radius: 11px;
+    border: 2px solid #161122;
+    background: #fff;
+    box-shadow: 2px 2px 0 #161122;
+    transition: background 0.15s, color 0.15s;
+
+    .optimize-prompt-icon {
+      width: 50px;
+      height: 26px;
     }
   }
 
@@ -1704,15 +1798,16 @@ $pinkopacity: rgba(255,77,142,0.12);
         min-width: 68px;
         height: 44px;
         padding: 0 16px;
-        background: $pink;
-        border: 2.5px solid $ink;
         border-radius: 13px;
-        box-shadow: 2px 2px 0 $ink;
+        background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+        border: 2px solid #161122;
+        box-shadow: 2px 2px 0 #161122;
         cursor: pointer;
         transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
         &:hover {
           transform: translate(-1px, -1px);
+          box-shadow: 3px 3px 0 #161122;
         }
 
         span {
@@ -1751,7 +1846,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       box-shadow: 2px 2px 0 $ink;
 
       span {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 800;
         color: $ink;
       }
@@ -1860,7 +1955,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       box-shadow: 2px 2px 0 $ink;
 
       span {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 800;
         color: $ink;
 
@@ -1961,7 +2056,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       box-shadow: 2px 2px 0 $ink;
 
       span {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 800;
         color: $ink;
 
