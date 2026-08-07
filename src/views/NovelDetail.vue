@@ -13,6 +13,7 @@
           <div class="header-left">
             <h1 class="chapter-title">{{ detail.title }}</h1>
             <div class="chapter-meta">
+              <span class="chapter-book-title" v-if="detail.book_title" :title="detail.book_title" @click="goToCollection">{{ detail.book_title }}</span>
               <span class="chapter-date">{{ detail.time }}</span>
               <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
                 <div class="more-btn" @click.stop="toggleHeaderMore">
@@ -94,6 +95,7 @@
           <div class="header-left">
             <h1 class="chapter-title">{{ detail.title }}</h1>
             <div class="chapter-meta">
+              <span class="chapter-book-title" v-if="detail.book_title" :title="detail.book_title" @click="goToCollection">{{ detail.book_title }}</span>
               <span class="chapter-date">{{ detail.time }}</span>
               <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
                 <div class="more-btn" @click.stop="toggleHeaderMore">
@@ -1864,6 +1866,12 @@ function goNext() {
         }
       });
     }
+  }
+}
+
+function goToCollection() {
+  if (detail.value.book_id && Number(detail.value.book_id) > 0) {
+    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author.id}`);
   }
 }
 

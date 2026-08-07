@@ -237,6 +237,20 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             font-size: 14px;
             color: $sub;
 
+            .chapter-book-title {
+              color: #6A7282;
+              max-width: 240px;
+              font-size: 16px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              cursor: pointer;
+
+              &:hover {
+                color: #FF6B9D;
+              }
+            }
+
             .chapter-date {
               color: $muted;
             }
@@ -928,6 +942,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             .chapter-meta {
               gap: 0.8333vw;
               font-size: 0.9722vw;
+
+              .chapter-book-title{
+                font-size: 1vw;
+              }
             }
           }
 
