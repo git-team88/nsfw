@@ -654,9 +654,7 @@
       position: fixed;
       bottom: 16px;
       left: 84px;
-      width: 30vw;
-      min-width: 320px;
-      max-width: 400px;
+      width: clamp(280px, 30vw, 400px);
       background-color: #FFFFFF;
       padding: 12px;
       border-top: 2px solid rgba(22, 17, 34, 0.1);
@@ -721,6 +719,7 @@
 
       .regenerate-settings {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 12px;
 
