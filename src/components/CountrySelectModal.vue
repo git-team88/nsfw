@@ -157,7 +157,6 @@ function flagPosition(code: string) {
   border: 3px solid #161122;
   box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
   border-radius: 14px;
-  padding: 24px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -191,9 +190,10 @@ function flagPosition(code: string) {
 
 .modal-title {
   font-weight: 800;
-  font-size: 19px;
+  font-size: 20px;
   color: #161122;
   margin: 0;
+  padding: 20px 0 0 20px;
 }
 
 .country-list {
@@ -203,19 +203,9 @@ function flagPosition(code: string) {
   padding-right: 4px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
   align-content: start;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(22, 17, 34, 0.15);
-    border-radius: 3px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  padding: 0 20px 20px
 }
 
 .country-item {
@@ -259,7 +249,7 @@ function flagPosition(code: string) {
   display: flex;
   justify-content: center;
   gap: 24px;
-  margin-top: 16px;
+  padding: 20px;
 }
 
 .btn-cancel {
