@@ -1129,6 +1129,9 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       accountRequiredMessage: "サブスク設定の前に、まず支払いアカウントを作成してください",
       accountFailedMessage: "支払いアカウントの審査に失敗しました。認証情報を修正して再審査を行ってください",
       goModify: "修正する",
+      selectCountryTitle: "お住まいの地域を選択してください",
+      searchCountry: "国を検索...",
+      noCountryFound: "国が見つかりません",
     },
     myFollowsSubs: {
       title: "フォローとサブスク",
@@ -1467,6 +1470,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     couponComingSoon: 'クーポン機能は近日公開予定',
     cancelCoupon: '使用をキャンセル',
     couponInfo: '注文追加後に支払わなかった場合、30分後にクーポンが返還されます',
+    walletTab: 'ウォレット支払い',
+    usdtTab: 'USDT支払い',
     subscriptionTab: 'サブスクリプション',
     creditsPackTab: 'クレジットパック',
     creditsPackTip: '月額サブスクリプションに加入後、クレジットパックを購入できます',

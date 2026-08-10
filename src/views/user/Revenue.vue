@@ -53,6 +53,8 @@
     />
 
     <UploadMask :visible="isLoading" :text="t('loading')" />
+
+    <CountrySelectModal :visible="showCountrySelectModal" @close="showCountrySelectModal = false" @select="handleCountrySelected" />
   </div>
 </template>
 
@@ -61,6 +63,7 @@ import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import WithdrawModal from "@/components/WithdrawModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import {toast} from "@/util/toast";
@@ -77,6 +80,7 @@ const isLoading = ref(false);
 
 // Withdraw modal state
 const showWithdrawModal = ref(false);
+const showCountrySelectModal = ref(false);
 
 async function fetchBalance() {
   try {
@@ -135,10 +139,19 @@ async function openWithdrawRecord() {
   }
 }
 
-async function handleCreateAccount() {
+function handleCreateAccount() {
+  showCountrySelectModal.value = true;
+}
+
+async function handleCountrySelected(country: string) {
+  showCountrySelectModal.value = false;
   try {
     isLoading.value = true;
-    const res = await api.createAccount();
+
+    var params = {
+      country: country
+    };
+    const res = await api.createAccount(params);
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {

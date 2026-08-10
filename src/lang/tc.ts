@@ -1505,6 +1505,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       accountRequiredMessage: "訂閱設置之前，請先創建收款賬戶",
       accountFailedMessage: "收款帳戶審核失敗，請先修改認證信息重新審核",
       goModify: "去修改",
+      selectCountryTitle: "請選擇您所在的地區",
+      searchCountry: "搜索國家/地區...",
+      noCountryFound: "未找到國家",
     },
     myFollowsSubs: {
       title: "我的關注與訂閱",
@@ -2742,6 +2745,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     couponComingSoon: '優惠券功能即將上線',
     cancelCoupon: '取消使用',
     couponInfo: '創建訂單後未支付，將在30分鐘後退還優惠券',
+    walletTab: '錢包支付',
+    usdtTab: 'USDT支付',
     subscriptionTab: '訂閱',
     creditsPackTab: '算力包',
     creditsPackTip: '訂閱月付方案後，才能購買算力包',

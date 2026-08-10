@@ -1401,6 +1401,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       accountRequiredMessage: "Please create a payment account before setting up subscription.",
       accountFailedMessage: "Payment account verification failed. Please modify your certification information and resubmit for review.",
       goModify: "Modify",
+      selectCountryTitle: "Select Your Region",
+      searchCountry: "Search country...",
+      noCountryFound: "No country found",
     },
     myFollowsSubs: {
       title: "My Follows and Subscriptions",
@@ -2428,6 +2431,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     couponComingSoon: 'Coupon feature coming soon',
     cancelCoupon: 'Cancel Use',
     couponInfo: 'If payment is not made after creating an order, the coupon will be refunded after 30 minutes',
+    walletTab: 'Wallet',
+    usdtTab: 'USDT',
     subscriptionTab: 'Subscription',
     creditsPackTab: 'Credits Pack',
     creditsPackTip: 'You need to subscribe to a monthly plan before purchasing Credits Pack',

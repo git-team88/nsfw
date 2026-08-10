@@ -1508,6 +1508,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       accountRequiredMessage: "订阅设置之前，请先创建收款账户",
       accountFailedMessage: "收款账户审核失败，请先修改认证信息重新审核",
       goModify: "去修改",
+      selectCountryTitle: "请选择您所在的地区",
+      searchCountry: "搜索国家/地区...",
+      noCountryFound: "未找到国家",
     },
     myFollowsSubs: {
       title: "我的关注与订阅",
@@ -2750,6 +2753,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     couponComingSoon: '优惠券功能即将上线',
     cancelCoupon: '取消使用',
     couponInfo: '创建订单后未支付，将在30分钟后退还优惠券',
+    walletTab: '钱包支付',
+    usdtTab: 'USDT支付',
     subscriptionTab: '订阅',
     creditsPackTab: '算力包',
     creditsPackTip: '订阅月付方案后，才能购买算力包',

@@ -84,6 +84,8 @@
   <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" @create="handleAccountRequiredCreate" />
 
   <AccountFailedModal :visible="showAccountFailedModal" @close="showAccountFailedModal = false" @modify="handleAccountFailedModify" />
+
+  <CountrySelectModal :visible="showCountrySelectModal" @close="showCountrySelectModal = false" @select="handleCountrySelected" />
 </template>
 
 <script setup lang="ts" name="UserSubscription">
@@ -94,6 +96,7 @@ import KycRequiredModal from "@/components/KycRequiredModal.vue";
 import KycReviewingModal from "@/components/KycReviewingModal.vue";
 import AccountRequiredModal from "@/components/AccountRequiredModal.vue";
 import AccountFailedModal from "@/components/AccountFailedModal.vue";
+import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import router from "@/router";
@@ -124,6 +127,8 @@ const showKycReviewingModal = ref(false);
 const kycStatusChecked = ref(false);
 const showAccountRequiredModal = ref(false);
 const showAccountFailedModal = ref(false);
+const showCountrySelectModal = ref(false);
+const selectedCountry = ref('');
 
 onMounted(async () => {
   await fetchSubscription();
@@ -223,11 +228,21 @@ async function handleEditClick() {
   }
 }
 
-async function handleCreateAccount() {
+function handleCreateAccount() {
   if (!checkLogin()) return;
+  showCountrySelectModal.value = true;
+}
+
+async function handleCountrySelected(country: string) {
+  showCountrySelectModal.value = false;
+  selectedCountry.value = country;
   try {
     isLoading.value = true;
-    const res = await api.createAccount();
+
+    var params = {
+      country: country
+    };
+    const res = await api.createAccount(params);
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {

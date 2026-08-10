@@ -229,10 +229,11 @@ export default {
       method: "POST",
     }),
 
-  createAccount: () =>
+  createAccount: (data: any) =>
     axios.request({
       url: "post/generateOnboardingUrl",
       method: "POST",
+      data: data,
     }),
 
   homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
