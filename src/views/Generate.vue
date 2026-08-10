@@ -1184,6 +1184,7 @@ const getPhotoInputContent = () => {
 
   let content = '';
   let imageIndex = 1;
+  const imageIndexMap = new Map<string, number>();
 
   const processNode = (node: Node) => {
     if (node.nodeType == Node.TEXT_NODE) {
@@ -1193,18 +1194,30 @@ const getPhotoInputContent = () => {
 
       if (element.classList.contains('image-tag')) {
         const src = element.dataset.src;
-        if (src) {
-          content += `<ref_${imageIndex}>`;
-          imageIndex++;
+        const itemId = element.dataset.itemId;
+        const key = itemId || src;
+        if (key) {
+          let currentIndex = imageIndexMap.get(key) ?? 0;
+          if (!currentIndex) {
+            currentIndex = imageIndex++;
+            imageIndexMap.set(key, currentIndex);
+          }
+          content += `<ref_${currentIndex}>`;
           return;
         }
       }
 
       if (element.classList.contains('ref-tag')) {
         const src = element.dataset.src;
-        if (src) {
-          content += `<ref_${imageIndex}>`;
-          imageIndex++;
+        const itemId = element.dataset.itemId;
+        const key = itemId || src;
+        if (key) {
+          let currentIndex = imageIndexMap.get(key) ?? 0;
+          if (!currentIndex) {
+            currentIndex = imageIndex++;
+            imageIndexMap.set(key, currentIndex);
+          }
+          content += `<ref_${currentIndex}>`;
           return;
         }
       }
@@ -2944,6 +2957,9 @@ const getVideoInputContent = () => {
   let imageIndex = 1;
   let videoIndex = 1;
   let audioIndex = 1;
+  const imageIndexMap = new Map<string, number>();
+  const videoIndexMap = new Map<string, number>();
+  const audioIndexMap = new Map<string, number>();
 
   const processNode = (node: Node) => {
     if (node.nodeType == Node.TEXT_NODE) {
@@ -2953,19 +2969,38 @@ const getVideoInputContent = () => {
 
       if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
         const src = element.dataset.src;
+        const itemId = element.dataset.itemId;
         const itemType = element.dataset.type;
-        if (src && itemType) {
+        const key = itemId || src;
+        if (key && itemType) {
           let tagPrefix = 'ref';
-          let currentIndex = imageIndex;
+          let indexMap = imageIndexMap;
+          let currentIndex: number;
+
           if (itemType === 'video') {
-            currentIndex = videoIndex++;
             tagPrefix = 'vid';
+            indexMap = videoIndexMap;
+            currentIndex = indexMap.get(key) ?? 0;
+            if (!currentIndex) {
+              currentIndex = videoIndex++;
+              indexMap.set(key, currentIndex);
+            }
           } else if (itemType === 'audio') {
-            currentIndex = audioIndex++;
             tagPrefix = 'aud';
+            indexMap = audioIndexMap;
+            currentIndex = indexMap.get(key) ?? 0;
+            if (!currentIndex) {
+              currentIndex = audioIndex++;
+              indexMap.set(key, currentIndex);
+            }
           } else {
-            currentIndex = imageIndex++;
+            currentIndex = indexMap.get(key) ?? 0;
+            if (!currentIndex) {
+              currentIndex = imageIndex++;
+              indexMap.set(key, currentIndex);
+            }
           }
+
           content += `<${tagPrefix}_${currentIndex}>`;
           return;
         }

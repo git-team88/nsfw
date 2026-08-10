@@ -1248,7 +1248,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   height: 66px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
 }
 
 .section-title {
@@ -1283,6 +1282,7 @@ onBeforeUnmount(() => {
 .chapter-list {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .chapter-item {
@@ -1290,8 +1290,17 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   height: 72px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  padding: 0 16px;
+  border: 2px solid rgba(22, 17, 34, 0.12);
+  border-radius: 12px;
   cursor: pointer;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+
+  &:hover {
+    border-color: #161122;
+    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.10);
+    transform: translateX(3px);
+  }
 
   .chapter-left {
     display: flex;
@@ -1339,7 +1348,7 @@ onBeforeUnmount(() => {
   .chapter-right {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 12px;
     flex-shrink: 0;
     padding-left: 10px;
 
@@ -1348,11 +1357,15 @@ onBeforeUnmount(() => {
       align-items: center;
       gap: 2px;
       padding: 6px 10px;
+      border: 2px solid #161122;
       border-radius: 6px;
+      background: #FFFFFF;
+      color: #161122;
       cursor: pointer;
 
-      &:hover{
-        background-color: rgba(22, 17, 34, 0.06);
+      &:first-child{
+        background: #FF4D8E;
+        color: #FFFFFF;
       }
 
       .action-icon {
@@ -1362,12 +1375,7 @@ onBeforeUnmount(() => {
 
       .action-text {
         font-size: 14px;
-        color: #161122;
         white-space: nowrap;
-      }
-
-      .action-text-danger {
-        color: #9a93a4;
       }
     }
   }
@@ -1504,6 +1512,8 @@ onBeforeUnmount(() => {
   }
   .chapter-item {
     height: 5vw;
+    padding: 0 1.2vw;
+
     .chapter-left {
       gap: 0.6944vw;
       .chapter-status {
@@ -1517,12 +1527,12 @@ onBeforeUnmount(() => {
       }
     }
     .chapter-right {
-      gap: 0.2778vw;
+      gap: 0.5vw;
       padding-left: 0.6944vw;
       .chapter-action {
         gap: 0.1389vw;
-        padding: 0.4167vw 0.6944vw;
-        border-radius: 0.4167vw;
+        padding: 0.5vw 0.8vw;
+        border-radius: 0.5vw;
         .action-icon {
           width: 1.1111vw;
           height: 1.1111vw;
@@ -1690,7 +1700,7 @@ onBeforeUnmount(() => {
       }
     }
     .chapter-right {
-      gap: 2px;
+      gap: 6px;
       padding-left: 6px;
       .chapter-action {
         gap: 2px;

@@ -250,6 +250,7 @@ function flagPosition(code: string) {
   justify-content: center;
   gap: 24px;
   padding: 20px;
+  border-top: 1px solid rgba(16,24,40,0.1);
 }
 
 .btn-cancel {
