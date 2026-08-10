@@ -238,7 +238,7 @@ interface RechargePlan {
 const rechargePlans = ref<RechargePlan[]>([]);
 const selectedPlan = ref<number | string>(0);
 const agreeTerms = ref(true);
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isPaying = ref(false);
 const showCouponModal = ref(false);
 const couponCode = ref('');
