@@ -221,7 +221,7 @@ $pinkopacity: rgba(255,77,142,0.12);
     font-size: 16px;
     font-weight: 500;
     color: $ink;
-    line-height: 32px;
+    line-height: 34px;
     white-space: pre-wrap;
 
     :deep(.image-tag) {
@@ -233,7 +233,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       border-radius: 4px;
       font-size: 14px;
       font-weight: 700;
-      line-height: 24px;
+      line-height: 20px;
       color: $pink;
       margin: 0 4px;
       pointer-events: auto;
@@ -269,7 +269,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       font-size: 16px;
       font-weight: 500;
       color: $ink;
-      line-height: 32px;
+      line-height: 30px;
       margin: 0;
       white-space: pre-wrap;
 
@@ -591,6 +591,7 @@ $pinkopacity: rgba(255,77,142,0.12);
         border-radius: 6px;
         font-size: 14px;
         font-weight: 500;
+        line-height: 24px;
         color: $pink;
         margin: 0 4px;
         pointer-events: auto;
@@ -625,6 +626,7 @@ $pinkopacity: rgba(255,77,142,0.12);
     font-weight: 500;
     color: $ink;
     white-space: pre-wrap;
+    line-height: 34px;
 
     :deep(.image-tag), :deep(.video-tag), :deep(.audio-tag) {
       display: inline-flex;
@@ -635,6 +637,7 @@ $pinkopacity: rgba(255,77,142,0.12);
       border-radius: 6px;
       font-size: 14px;
       font-weight: 500;
+      line-height: 20px;
       color: $pink;
       margin: 0 4px;
       pointer-events: auto;
