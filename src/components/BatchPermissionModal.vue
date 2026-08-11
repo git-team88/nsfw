@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts" name="BatchPermissionModal">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import select from '@/assets/images/publish/select.png';
 import selectActive from '@/assets/images/publish/select_active.png';
@@ -119,6 +119,23 @@ function selectPartialStart(ch: number) {
   partialStartChapter.value = ch;
   showPartialDropdown.value = false;
 }
+
+function handleOutsideClick(e: MouseEvent) {
+  if (!showPartialDropdown.value) return;
+  const dropdown = document.querySelector('.partial-chapter-dropdown');
+  const selectEl = document.querySelector('.partial-chapter-inline-select');
+  if (dropdown && !dropdown.contains(e.target as Node) && selectEl && !selectEl.contains(e.target as Node)) {
+    showPartialDropdown.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick);
+});
 
 function getAccessRightsPerm(chapter: any): string {
   const ar = chapter.accessRights;
@@ -337,6 +354,7 @@ function handleConfirm() {
         font-size: 14px;
         font-weight: 700;
         color: #161122;
+        text-align: center;
         opacity: 0.65;
         cursor: pointer;
         border-radius: 11px;
