@@ -122,12 +122,12 @@
               >{{ t('collectionDetail.publish') }}</button> -->
             </div>
 
-            <div class="chapter-list">
+            <div class="chapter-list" :class="{ 'is-own': isOwn }">
               <div
                 v-for="(chapter, index) in collection.chapters"
                 :key="chapter.id"
                 class="chapter-item"
-                :class="{ 'is-read': collection.readIndexes.includes(index + 1) }"
+                :class="{ 'is-read': collection.readIndexes.includes(index + 1), 'is-own': isOwn }"
                 @click="goChapter(chapter)"
               >
                 <div class="chapter-left">
@@ -1282,7 +1282,14 @@ onBeforeUnmount(() => {
 .chapter-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+
+  &:not(.is-own) {
+    gap: 0;
+  }
+
+  &.is-own {
+    gap: 10px;
+  }
 }
 
 .chapter-item {
@@ -1291,15 +1298,32 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 72px;
   padding: 0 16px;
-  border: 2px solid rgba(22, 17, 34, 0.12);
-  border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
 
-  &:hover {
-    border-color: #161122;
-    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.10);
-    transform: translateX(3px);
+  &:not(.is-own) {
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-radius: 0;
+    transition: none;
+
+    &:hover {
+      border-color: rgba(22, 17, 34, 0.12);
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+  &.is-own {
+    border: 2px solid rgba(22, 17, 34, 0.12);
+    border-radius: 12px;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+
+    &:hover {
+      border-color: #161122;
+      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.10);
+      transform: translateX(3px);
+    }
   }
 
   .chapter-left {
