@@ -770,6 +770,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  batchModifyPostAccessRights: (data: any) =>
+    axios.request({
+      url: "book/batchModifyPostAccessRights",
+      data: data,
+      method: "POST",
+    }),
   getCollectionDetail: (bookId: string | number) =>
     axios.request({
       url: "book/getBookDetailPublic?book_id=" + bookId,

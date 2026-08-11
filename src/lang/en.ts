@@ -575,6 +575,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       batchSettings: "Batch Settings",
       partialStart: "From chapter",
       partialEnd: "onwards, for subscribers only (first 1000 characters free for non-subscribers), other chapters fully public",
+      allPublic: "All Public",
+      allPrivate: "All Private",
       cancelOperation: "Cancel Operation"
     },
     novelCover: "Novel Cover",
@@ -591,6 +593,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     coverRenewLoadingTip: "Cover is being modified, please wait until it's done",
     insertImageRenewLoadingTip: "Modifying illustration in chapter {chapter}, please wait until it's done",
     generatingChapterTip: "Currently generating chapter {chapter}, please wait until it's done before operating",
+    taskOngoingTip: "A task is currently being generated in this project, please wait until it's done before operating",
     coverHistoryTitle: "Generation History",
     coverHistoryEmpty: "No cover history",
     editImage: "Edit",
@@ -3077,7 +3080,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
       updatedEpisode: "Updated {count} episodes",
       cancel: "Cancel",
       confirm: "Confirm"
-    }
+    },
+    batchPermission: "Batch Permission",
+    batchPermTitle: "Batch Edit Chapter Permissions",
+    batchPermTitleEpisode: "Batch Edit Episode Permissions",
+    batchPermSettings: "Permission Settings",
+    batchPermPreview: "Current Chapter Permissions Preview",
+    batchPermPreviewEpisode: "Current Episode Permissions Preview"
   },
   rank: {
     title: "Ranking",

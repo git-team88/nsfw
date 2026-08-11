@@ -2706,6 +2706,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       batchSettings: "一括設定",
       partialStart: "コレクションの第",
       partialEnd: "話から、サブスクライバー限定（未購読者は最初の1000文字まで公開）、その他の章は完全公開",
+      allPublic: "全部公開",
+      allPrivate: "全部非公開",
       cancelOperation: "操作を取消"
     },
     novelCover: "小説の表紙",
@@ -2722,6 +2724,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     coverRenewLoadingTip: "表紙を変更中です。生成が終わってから操作してください",
     insertImageRenewLoadingTip: "第{chapter}章の挿絵を変更中です。生成が終わってから操作してください",
     generatingChapterTip: "第{chapter}章を生成中です。生成が終わってから操作してください",
+    taskOngoingTip: "このプロジェクトでタスクを生成中です。生成が終わってから操作してください",
     coverHistoryTitle: "生成履歴",
     coverHistoryEmpty: "履歴がありません",
     editImage: "変更",
@@ -3138,7 +3141,13 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       updatedEpisode: "{count}話更新済み",
       cancel: "キャンセル",
       confirm: "確認"
-    }
+    },
+    batchPermission: "一括権限変更",
+    batchPermTitle: "章節権限の一括変更",
+    batchPermTitleEpisode: "エピソード権限の一括変更",
+    batchPermSettings: "権限設定",
+    batchPermPreview: "現在の章節権限プレビュー",
+    batchPermPreviewEpisode: "現在のエピソード権限プレビュー"
   },
   rank: {
     title: "ランキング",

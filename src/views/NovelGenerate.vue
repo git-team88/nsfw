@@ -554,7 +554,7 @@
                 </div>
           </div>
           <template v-else-if="currentChapter">
-            <div v-if="!isEditingChapter && taskStatus !== 'DOING' && !isChapterTyping && !isPreparing && !isLoading && renewingInsertImagePlaceholder === null" class="chapter-actions">
+            <div v-if="!isEditingChapter && !isChapterTyping && !isLoading && renewingInsertImagePlaceholder === null && !(taskStatus == 'DOING' && currentChapter && currentChapter.chapter == stepChapterIndex) && !(isPreparing && currentChapter && currentChapter.chapter == stepChapterIndex)" class="chapter-actions">
               <button v-if="hasFailed ? chapterHistoryCount >= 1 : chapterHistoryCount >= 2" class="chapter-history-btn" @click="handleChapterHistoryClick">{{ t('novel.chapterHistoryTitle') }}</button>
               <template v-if="!hasFailed">
               <button class="manual-edit-btn" @click="startEditChapter">{{ t('novel.manualEdit') }}</button>
@@ -4035,8 +4035,12 @@ const handleProjectNameBlur = () => {
 };
 
 // Start editing chapter
- const startEditChapter = async () => {
-   if (coverRenewFailed.value) {
+  const startEditChapter = async () => {
+    if (isPreparing.value || taskStatus.value == 'DOING') {
+      toast(t('novel.taskOngoingTip'));
+      return;
+    }
+    if (coverRenewFailed.value) {
      toast(t('novel.coverRenewFailedTip'));
      return;
    }
@@ -9389,9 +9393,8 @@ async function selectHistoryOutline(outlineObj: any) {
 }
 
 async function handleChapterHistoryClick() {
-  if (isPreparing.value || (taskStatus.value == 'DOING' && generatingChapter.value)) {
-    const chapterNum = generatingChapter.value || stepChapterIndex.value;
-    toast(t('novel.generatingChapterTip', { chapter: chapterNum }));
+  if (isPreparing.value || taskStatus.value == 'DOING') {
+    toast(t('novel.taskOngoingTip'));
     return;
   }
   if (checkProjectOwnership()) return;
@@ -9457,7 +9460,11 @@ async function selectHistoryChapter(chapterObj: any) {
 }
 
 const startAiEditChapter = async () => {
-  if (coverRenewFailed.value) {
+    if (isPreparing.value || taskStatus.value == 'DOING') {
+      toast(t('novel.taskOngoingTip'));
+      return;
+    }
+    if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
   }

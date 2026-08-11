@@ -23,6 +23,7 @@
                 :disabled="collection.status == '2'"
                 @click="handleFinish"
               >{{ collection.status == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.setFinish') }}</button>
+              <button v-if="collection.chatpers.length > 0" class="btn btn-batch-perm" @click="handleBatchPermission">{{ t('collectionSettings.batchPermission') }}</button>
               <button class="btn btn-edit" @click="goEditCollection">{{ t('collectionSettings.edit') }}</button>
             </div>
           </div>
@@ -97,6 +98,14 @@
       @close="showConfirmDelete = false"
       @confirm="confirmDelete"
     />
+
+    <BatchPermissionModal
+      :visible="showBatchPermission"
+      :collection-type="collection.type"
+      :chapters="batchChapters"
+      @close="showBatchPermission = false"
+      @confirm="confirmBatchPermission"
+    />
   </div>
 </template>
 
@@ -112,6 +121,7 @@ import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal.vue';
+import BatchPermissionModal from '@/components/BatchPermissionModal.vue';
 import defaultCover from '@/assets/images/base/cover.png';
 
 const { t, locale } = useI18n();
@@ -124,6 +134,8 @@ const showFinishNotice = ref(false);
 const showConfirmFinish = ref(false);
 const showDeleteNotice = ref(false);
 const showConfirmDelete = ref(false);
+const showBatchPermission = ref(false);
+const batchChapters = ref<Array<{ id: string | number; title: string; index: number; status?: string }>>([]);
 
 const collection = ref({
   id: '',
@@ -137,7 +149,8 @@ const collection = ref({
   chapter_count: '',
   chapter_count_private: 0,
   user_id: '',
-  is_nsfw: '0'
+  is_nsfw: '0',
+  chatpers: [] as any[]
 });
 
 const collectionInfo = computed(() => ({
@@ -174,6 +187,7 @@ onMounted(async () => {
           chapter_count_private: bookInfo.chapter_count_private || 0,
           user_id: bookInfo.user_id || '',
           is_nsfw: bookInfo.is_nsfw || '0',
+          chatpers: data.chatpers || [],
         };
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
@@ -283,6 +297,46 @@ async function confirmDelete() {
     toast(t('fail'));
   }
 }
+
+function handleBatchPermission() {
+  batchChapters.value = collection.value.chatpers.map((ch: any, index: number) => ({
+    id: ch.post_id || ch.id || index,
+    title: ch.title || '',
+    index: parseInt(ch.chapter_index) || index + 1,
+    accessRights: ch.access_rights || '1'
+  }));
+  showBatchPermission.value = true;
+}
+
+async function confirmBatchPermission(type: number, startChapter?: number) {
+  showBatchPermission.value = false;
+  try {
+    const data: any = {
+      book_id: collection.value.id,
+      type: type
+    };
+    if (type === 2 && startChapter !== undefined) {
+      data.chapter_index = String(startChapter);
+    }
+    const res = await api.batchModifyPostAccessRights(data) as any;
+    if (res.code == 0 || res.code == 200) {
+      toast(t('success'));
+      const detailRes = await api.getSelfCollectionDetail(collection.value.id) as any;
+      if (detailRes.code == 0 || detailRes.code == 200) {
+        const detailData = detailRes.data || {};
+        const bookInfo = detailData.book_info || {};
+        collection.value.chatpers = detailData.chatpers || [];
+        collection.value.chapter_count = bookInfo.chapter_count || '';
+        collection.value.chapter_count_private = bookInfo.chapter_count_private || 0;
+      }
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error(error);
+    toast(t('fail'));
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -363,14 +417,15 @@ async function confirmDelete() {
     transition: all 0.2s;
 
     &.btn-delete {
-      background: #FFFDF7;
-      color: #5b5566;
+      font-weight: 700;
+      background: #FFFFFF;
+      color: #161122;
       border: 2px solid #161122;
       box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
       &:hover {
-        color: #FF4D8D;
-        border-color: #FF4D8D;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
       }
     }
 
@@ -382,7 +437,7 @@ async function confirmDelete() {
 
       &:hover {
         transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: 3px 3px 0 #161122;
       }
 
       &:active {
@@ -399,6 +454,23 @@ async function confirmDelete() {
       }
     }
 
+    &.btn-batch-perm {
+      background: #C27AFF;
+      color: #FFFFFF;
+      border: 3px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
+
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 #161122;
+      }
+
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 2px 2px 0 #161122;
+      }
+    }
+
     &.btn-edit {
       background: #FF4D8D;
       color: #FFFFFF;
@@ -407,7 +479,7 @@ async function confirmDelete() {
 
       &:hover {
         transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: 3px 3px 0 #161122;
       }
 
       &:active {

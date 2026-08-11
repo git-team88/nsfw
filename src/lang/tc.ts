@@ -638,6 +638,8 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
       batchSettings: "批量設置",
       partialStart: "從合集的第",
       partialEnd: "集起，為訂閱用戶限定（未訂閱用戶前1000字公開），其他章節完全公開",
+      allPublic: "全部公開",
+      allPrivate: "全部私密",
       cancelOperation: "取消操作"
     },
     novelCover: "小說封面",
@@ -654,6 +656,7 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     coverRenewLoadingTip: "正在修改封面，請生成結束後再操作",
     insertImageRenewLoadingTip: "正在修改第{chapter}章配圖，請生成結束後再操作",
     generatingChapterTip: "正在生成第{chapter}章，請生成結束後再操作",
+    taskOngoingTip: "本項目有任務正在生成中，請生成結束後再操作",
     coverHistoryTitle: "歷史生成",
     coverHistoryEmpty: "暫無歷史封面",
     editImage: "修改",
@@ -3170,7 +3173,13 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       updatedEpisode: "已更新{count}集",
       cancel: "取消",
       confirm: "確定"
-    }
+    },
+    batchPermission: "批量修改權限",
+    batchPermTitle: "批量修改章節權限",
+    batchPermTitleEpisode: "批量修改集數權限",
+    batchPermSettings: "權限設置",
+    batchPermPreview: "當前章節權限預覽",
+    batchPermPreviewEpisode: "當前集數權限預覽"
   },
   rank: {
     title: "排行榜",
