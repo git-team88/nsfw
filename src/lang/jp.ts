@@ -3147,7 +3147,9 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     batchPermTitleEpisode: "エピソード権限の一括変更",
     batchPermSettings: "権限設定",
     batchPermPreview: "現在の章節権限プレビュー",
-    batchPermPreviewEpisode: "現在のエピソード権限プレビュー"
+    batchPermPreviewEpisode: "現在のエピソード権限プレビュー",
+    batchPermSuccess: "章節権限の変更に成功しました",
+    batchPermSuccessEpisode: "エピソード権限の変更に成功しました"
   },
   rank: {
     title: "ランキング",

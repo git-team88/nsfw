@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" v-if="visible" @click.self="handleClose">
+  <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
       <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
@@ -24,11 +24,12 @@
                     type="number"
                     class="partial-chapter-inline-input"
                     v-model.number="partialStartChapter"
-                    @click.stop
+                    @click.stop="selectedPerm = 'partial'"
+                    @focus="selectedPerm = 'partial'"
                     :min="1"
                     :max="chapters.length"
                   />
-                  <img src="@/assets/images/publish/arrow_icon.png" alt="Down" @click.stop="showPartialDropdown = !showPartialDropdown" />
+                  <img src="@/assets/images/publish/arrow_icon.png" alt="Down" @click.stop="selectedPerm = 'partial'; showPartialDropdown = !showPartialDropdown" />
                   <div v-if="showPartialDropdown" class="partial-chapter-dropdown">
                     <div
                       v-for="ch in chapterNumbers"
@@ -53,7 +54,7 @@
           <div class="chapter-list">
             <div class="chapter-item" v-for="chapter in chapters" :key="chapter.id">
               <span class="chapter-index">{{ isEpisode ? t('recordList.episode', { episode: chapter.index }) : t('chapter', { chapter: chapter.index }) }}</span>
-              <span class="chapter-perm" :class="{ 'perm-private': getAccessRightsPerm(chapter) === 'private' }">{{ getAccessRightsText(chapter) }}</span>
+              <span class="chapter-perm" :class="{ 'perm-partial': getAccessRightsPerm(chapter) == 'partial' }">{{ getAccessRightsText(chapter) }}</span>
             </div>
           </div>
         </div>
@@ -139,15 +140,15 @@ onUnmounted(() => {
 
 function getAccessRightsPerm(chapter: any): string {
   const ar = chapter.accessRights;
-  if (ar === '3') return 'private';
-  if (ar === '2') return 'partial';
+  if (ar == '3') return 'private';
+  if (ar == '2') return 'partial';
   return 'public';
 }
 
 function getAccessRightsText(chapter: any): string {
   const perm = getAccessRightsPerm(chapter);
-  if (perm === 'private') return t('submit.permPrivate');
-  if (perm === 'partial') return t('submit.permPartial');
+  if (perm == 'private') return t('submit.permPrivate');
+  if (perm == 'partial') return t('submit.permPartial');
   return t('submit.permPublic');
 }
 
@@ -219,7 +220,6 @@ function handleConfirm() {
   .modal-body {
     flex: 1;
     padding: 0 20px;
-    max-height: 460px;
     overflow-y: auto;
 
     &::-webkit-scrollbar {
@@ -383,9 +383,10 @@ function handleConfirm() {
   }
 
   .chapter-list {
+    max-height: 190px;
     border: 2px solid #161122;
     border-radius: 10px;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .chapter-item {
@@ -404,12 +405,8 @@ function handleConfirm() {
       font-size: 14px;
       color: #161122;
 
-      &.perm-private {
-        color: #FF4D8E;
-      }
-
       &.perm-partial {
-        color: #161122;
+        color: #FF4D8E;
       }
     }
   }

@@ -39,7 +39,7 @@
     transform: translate(-50%, -50%);
     padding: 12px 20px;
     font-size: 16px;
-    border-radius: 4px;
+    border-radius: 6px;
     background: rgba(0, 0, 0, .75);
     color: #ffffff;
     z-index: 2000;

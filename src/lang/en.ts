@@ -3086,7 +3086,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     batchPermTitleEpisode: "Batch Edit Episode Permissions",
     batchPermSettings: "Permission Settings",
     batchPermPreview: "Current Chapter Permissions Preview",
-    batchPermPreviewEpisode: "Current Episode Permissions Preview"
+    batchPermPreviewEpisode: "Current Episode Permissions Preview",
+    batchPermSuccess: "Chapter permissions updated successfully",
+    batchPermSuccessEpisode: "Episode permissions updated successfully"
   },
   rank: {
     title: "Ranking",

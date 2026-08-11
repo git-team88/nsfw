@@ -320,7 +320,9 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
     }
     const res = await api.batchModifyPostAccessRights(data) as any;
     if (res.code == 0 || res.code == 200) {
-      toast(t('success'));
+      toast(collection.value.type == '1' || collection.value.type == '3'
+        ? t('collectionSettings.batchPermSuccessEpisode')
+        : t('collectionSettings.batchPermSuccess'));
       const detailRes = await api.getSelfCollectionDetail(collection.value.id) as any;
       if (detailRes.code == 0 || detailRes.code == 200) {
         const detailData = detailRes.data || {};

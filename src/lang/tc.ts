@@ -3179,7 +3179,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     batchPermTitleEpisode: "批量修改集數權限",
     batchPermSettings: "權限設置",
     batchPermPreview: "當前章節權限預覽",
-    batchPermPreviewEpisode: "當前集數權限預覽"
+    batchPermPreviewEpisode: "當前集數權限預覽",
+    batchPermSuccess: "章節權限修改成功",
+    batchPermSuccessEpisode: "集數權限修改成功"
   },
   rank: {
     title: "排行榜",
