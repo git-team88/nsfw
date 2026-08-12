@@ -49,8 +49,15 @@
                     <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
                     <span class="value">{{ collection.history.title }}</span>
                   </div>
-                  <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
-                  <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
+                  <div class="btn-row">
+                    <button class="favorite-btn" :class="{ active: isLiked }" @click="toggleLike" v-if="!isOwn">
+                      <img v-if="!isLiked" src="@/assets/images/detail/collect.png" alt="" />
+                      <img v-else src="@/assets/images/detail/collect_active.png" alt="" />
+                      <span>{{ isLiked ? t('collectionDetail.favorited') : t('collectionDetail.favorite') }}</span>
+                    </button>
+                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
+                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -304,6 +311,7 @@ function getTypeLabel(type: string): string {
 
 const currentChapter = ref<Chapter | null>(null);
 const isOwn = ref(false);
+const isLiked = ref(false);
 const showDeleteChapterModal = ref(false);
 
 const tagColors = ['tag-pink', 'tag-yellow', 'tag-green'];
@@ -360,6 +368,7 @@ async function fetchCollectionDetail() {
       // 登录后判断是否为自己的作品：本地 uid 与 URL uid 或接口 book_info.user_id 任一匹配即为本人
       const backendAuthorId = bookInfo?.user_id || '';
       isOwn.value = !!localUid && (isSelf || String(localUid) === String(backendAuthorId));
+      isLiked.value = data.is_fav == 1;
 
       collection.value = {
         id: bookInfo.id || data.book_id || '',
@@ -615,6 +624,31 @@ async function toggleFollow() {
     }
   } catch (error) {
     console.error('Failed to toggle follow:', error);
+  }
+}
+
+async function toggleLike() {
+  if (!checkLogin()) return;
+  if (!collection.value.id) return;
+
+  try {
+    if (isLiked.value) {
+      const res = await api.unlikeBook({ book_id: collection.value.id }) as any;
+      if (res.code == 0 || res.code == 200) {
+        isLiked.value = false;
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      }
+    } else {
+      const res = await api.likeBook({ book_id: collection.value.id }) as any;
+      if (res.code == 0 || res.code == 200) {
+        isLiked.value = true;
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      }
+    }
+  } catch (error) {
+    toast(t('fail'));
   }
 }
 
@@ -1005,6 +1039,38 @@ onBeforeUnmount(() => {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+    }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .favorite-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 48px;
+      padding: 8px 20px;
+      border-radius: 12px;
+      border: 2px solid #161122;
+      background: #fff;
+      color: #161122;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      img {
+        width: 20px;
+        height: 20px;
+      }
+
+      &:hover {
+        box-shadow: 2px 2px 0 #161122;
       }
     }
 
@@ -1464,6 +1530,17 @@ onBeforeUnmount(() => {
         font-size: 12px;
         border-radius: 0.5556vw;
       }
+      .favorite-btn {
+        height: 3.3333vw;
+        padding: 0.5556vw 1.3889vw;
+        font-size: 12px;
+        border-radius: 0.5556vw;
+
+        img {
+          width: 1.3889vw;
+          height: 1.3889vw;
+        }
+      }
     }
     .author-right {
       width: 21.6667vw;
@@ -1627,6 +1704,16 @@ onBeforeUnmount(() => {
         height: 4.5vw;
         padding: 6px 14px;
         font-size: 12px;
+      }
+      .favorite-btn {
+        height: 4.5vw;
+        padding: 6px 14px;
+        font-size: 12px;
+
+        img {
+          width: 16px;
+          height: 16px;
+        }
       }
     }
     .author-right {

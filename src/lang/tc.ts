@@ -2076,7 +2076,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       video: "視頻",
       photo: "圖片",
       image: "圖片",
-      article: "文章"
+      article: "文章",
+      myFavorites: "我的收藏"
     },
     videoSettings: {
       title: "視頻設置",
@@ -2400,6 +2401,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     exitCollectionPlayMode: "退出合集播放模式",
     collapse: "收起",
     share: "分享",
+    collect: "收藏",
     comments: `共 {num} 條評論`,
     commentsDisabled: "評論已關閉",
     writePlaceholder: `#話題，{'@'}提及`,
@@ -2548,7 +2550,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     contentType: {
       novel: "小說",
       comic: "漫畫",
-      video: "漫劇"
+      video: "漫劇",
+      myFavorites: "我的收藏"
     },
     collection: {
       all: "全部",
@@ -3095,6 +3098,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     type3: "漫劇",
     continueReading: "繼續閱讀",
     startReading: "開始閱讀",
+    favorite: "收藏",
+    favorited: "已收藏",
     chapterCount: "共 {count} 章",
     description: "簡介",
     tableOfContents: "目錄",

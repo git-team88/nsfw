@@ -427,6 +427,23 @@ export default {
       url: "blogger/getBookListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  getLikedBookList: (page: number, limit: number) =>
+    axios.request({
+      url: "book/getLikedBookList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  likeBook: (data: any) =>
+    axios.request({
+      url: "book/likeBook",
+      method: "POST",
+      data,
+    }),
+  unlikeBook: (data: any) =>
+    axios.request({
+      url: "book/unlikeBook",
+      method: "POST",
+      data,
+    }),
   authorFollowList: (page: number, limit: number, author_id: number | string) =>
     axios.request({
       url: "follow/getUserFollowedListPublic?page=" + page + "&limit=" + limit + "&author_id=" + author_id,
@@ -659,6 +676,18 @@ export default {
   dislikePost: (data: any) =>
     axios.request({
       url: "post/dislike",
+      data: data,
+      method: "POST",
+    }),
+  likeBook: (data: any) =>
+    axios.request({
+      url: "book/likeBook",
+      data: data,
+      method: "POST",
+    }),
+  unlikeBook: (data: any) =>
+    axios.request({
+      url: "book/unlikeBook",
       data: data,
       method: "POST",
     }),

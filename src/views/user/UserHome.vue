@@ -110,7 +110,7 @@
             :class="{ active: viewMode === 'posts' && activeContentType == type.id }"
             @click="setActiveContentType(type.id)"
           >
-            {{ type.label }} ({{ type.count }})
+            {{ type.label }}<template v-if="!type.hideCount"> ({{ type.count }})</template>
           </div>
         </div>
         <div class="stats-nums">
@@ -141,11 +141,10 @@
         <!-- Posts View -->
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
-          <div class="filter-bar">
+          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites'">
             <div class="collection-header">
               <button
                 class="create-collection-btn"
-                v-if="isSelf"
                 @click="createCollection"
               >
                 <img class="plus-icon" src="@/assets/images/user/upload.png" alt="" />
@@ -188,20 +187,23 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                <div class="card-cover" @click="goCollectionDetail(collection.id)">
-                   <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
-                   <div class="r18-overlay" v-if="collection.is_nsfw == 1">
-                     <span class="r18-text">R18</span>
-                   </div>
-                   <div class="pinned-tag" v-if="collection.is_top === '1'">
-                     {{ t("userHome.collection.pinned") }}
-                   </div>
+                  <div class="card-cover" @click="goCollectionDetail(collection.id, collection.user_id)">
+                    <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
+                    <div class="r18-overlay" v-if="collection.is_nsfw == 1">
+                      <span class="r18-text">R18</span>
+                    </div>
+                    <div class="pinned-tag" v-if="collection.is_top === '1'">
+                      {{ t("userHome.collection.pinned") }}
+                    </div>
+                    <div class="type-icon" v-if="activeContentType === 'favorites' && collection.type">
+                      <span class="type-badge" :class="'type-' + collection.type">{{ collection.type == '1' ? t('collection.typeComic') : collection.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
+                    </div>
 
                   <div class="card-bottom">
                     <div class="update-badge" v-if="collection.chapter_count > 0">
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
-                    <div class="card-actions" v-if="isSelf">
+                    <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
                       <div
                         class="card-action-btn"
                         @click.stop="collection.is_top === '1' ? unpinCollection(collection) : pinCollection(collection)"
@@ -233,7 +235,7 @@
             <EmptyState v-else-if="collectionsInitialized && collections.length == 0 && userInfo.is_blacked != 1" />
 
             <!-- Load more indicator -->
-            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && hasMoreCollections">
+            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && (activeContentType === 'favorites' ? hasMoreLikedBooks : hasMoreCollections)">
               <div v-if="collectionsLoading" class="loading-spinner small"></div>
               <span v-else>{{ t("userHome.loadMore") }}</span>
             </div>
@@ -611,11 +613,12 @@ const contentTypes = computed(() => {
   return [
     { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0 },
     { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0 },
-    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0 }
+    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0 },
+    ...(isSelf.value ? [{ id: 'favorites' as const, label: t('userHome.contentType.myFavorites'), count: 0, hideCount: true as const }] : [])
   ];
 });
 
-const activeContentType = ref(2);
+const activeContentType = ref<number | string>(2);
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
@@ -768,6 +771,65 @@ async function fetchCollections(reset = false) {
     loading.value = false;
   } catch (error) {
     console.error('Error fetching collections:', error);
+    collectionsInitialized.value = true;
+    collectionsLoading.value = false;
+    loading.value = false;
+  }
+}
+
+const likedBooksPage = ref(1);
+const hasMoreLikedBooks = ref(true);
+
+async function fetchLikedBooks(reset = false) {
+  if (collectionsLoading.value && !reset) return;
+
+  try {
+    if (reset) {
+      collections.value = [];
+      likedBooksPage.value = 1;
+      hasMoreLikedBooks.value = true;
+      loading.value = true;
+      collectionsInitialized.value = false;
+      collectionTabs.value = [{ id: 0, label: t('userHome.collection.all') }];
+      currentCollectionPage.value = 1;
+    }
+    collectionsLoading.value = true;
+
+    const response = await api.getLikedBookList(likedBooksPage.value, 20) as any;
+
+    if (response.code == 0) {
+      const bookData = (response.data?.data || []).map((item: any) => ({
+        id: item.book_id || item.book_info?.id,
+        cover: item.book_info?.public_post_cover_not_nsfw || item.book_info?.public_post_cover || item.book_info?.cover,
+        title: item.book_info?.title,
+        description: item.book_info?.description,
+        type: item.book_info?.type,
+        is_nsfw: item.book_info?.is_nsfw,
+        is_top: '0',
+        chapter_count: 0,
+        latest_post_chapter_index: item.book_info?.latest_post_chapter_index,
+        session_id: item.book_info?.session_id,
+        user_id: item.book_info?.user_id,
+        isFavorite: true,
+      }));
+
+      if (reset) {
+        collections.value = bookData;
+      } else {
+        collections.value.push(...bookData);
+      }
+
+      if (bookData.length < 20) {
+        hasMoreLikedBooks.value = false;
+      } else {
+        likedBooksPage.value++;
+      }
+    }
+    collectionsInitialized.value = true;
+    collectionsLoading.value = false;
+    loading.value = false;
+  } catch (error) {
+    console.error('Error fetching liked books:', error);
     collectionsInitialized.value = true;
     collectionsLoading.value = false;
     loading.value = false;
@@ -1009,8 +1071,12 @@ onMounted(() => {
   observer = new IntersectionObserver(
     (entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && hasMoreCollections.value && !collectionsLoading.value && collectionsInitialized.value) {
-        fetchCollections();
+      if (entry.isIntersecting && !collectionsLoading.value && collectionsInitialized.value) {
+        if (activeContentType.value === 'favorites') {
+          if (hasMoreLikedBooks.value) fetchLikedBooks();
+        } else {
+          if (hasMoreCollections.value) fetchCollections();
+        }
       }
     },
     {
@@ -1142,8 +1208,11 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
 
 // Watch for language changes
 watch(() => locale.value, () => {
-  // Re-fetch collections to update translations
-  fetchCollections();
+  if (activeContentType.value === 'favorites') {
+    fetchLikedBooks();
+  } else {
+    fetchCollections();
+  }
   // Update SEO meta tags when language changes
   setSeoMeta();
 });
@@ -1174,11 +1243,16 @@ function getEndDate() {
 }
 
 // Set active content type
-function setActiveContentType(typeId: number) {
+function setActiveContentType(typeId: number | string) {
   viewMode.value = "posts";
   activeContentType.value = typeId;
   activeCollectionTab.value = 0;
-  fetchCollections(true);
+
+  if (typeId === 'favorites') {
+    fetchLikedBooks(true);
+  } else {
+    fetchCollections(true);
+  }
 
   const newQuery = { ...route.query };
   delete newQuery.tab;
@@ -1270,7 +1344,11 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   viewMode.value = "posts";
   currentTab.value = "all";
 
-  fetchCollections();
+  if (activeContentType.value === 'favorites') {
+    fetchLikedBooks();
+  } else {
+    fetchCollections();
+  }
 
   if (!fromRoute) {
     const newQuery = { ...route.query };
@@ -1774,10 +1852,17 @@ function createCollection() {
   router.push(`/create-collection?type=${activeContentType.value}`);
 }
 
-function goCollectionDetail(collectionId: number) {
-  const authorId = route.query.id;
-  const authorIdStr = Array.isArray(authorId) ? authorId[0] : authorId;
-  router.push(`/collection/${collectionId}?uid=${authorIdStr}`);
+function goCollectionDetail(collectionId: number, userId?: string | number) {
+  let uid: string | number | string[] | undefined;
+
+  if (activeContentType.value == 'favorites') {
+    uid = userId;
+  } else {
+    uid = route.query.id;
+  }
+
+  const uidStr = Array.isArray(uid) ? uid[0] : uid;
+  router.push(`/collection/${collectionId}${uidStr ? '?uid=' + uidStr : ''}`);
 }
 
 function goCollectionSettings(collectionId: number) {
@@ -2913,14 +2998,15 @@ async function unpinCollection(collection: any) {
     background: #FFFDF7;
     border: 3px solid #161122;
     border-radius: 16px;
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 4px 4px 0 rgba(22, 17, 34, .14);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+    animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
+    transition: transform .16s cubic-bezier(.34, 1.56, .64, 1), box-shadow .16s;
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 6px 6px 0 #161122;
+      transform: translateY(-4px) rotate(-.6deg);
+      box-shadow: 6px 7px 0 rgba(22,17,34,.2);
 
       .cover-img {
         transform: scale(1.06);
@@ -2990,6 +3076,32 @@ async function unpinCollection(collection: any) {
         font-size: 11px;
         font-weight: 800;
         box-shadow: 2px 2px 0 #161122;
+      }
+
+      .type-icon {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 1;
+
+        .type-badge {
+          display: inline-block;
+          border: 2px solid #161122;
+          border-radius: 999px;
+          padding: 4px 12px;
+          font-weight: 800;
+          font-size: 12px;
+          color: #161122;
+          background: #FFC24B;
+
+          &.type-2 {
+            background: #C9B6FF;
+          }
+
+          &.type-3 {
+            background: #7FD8E8;
+          }
+        }
       }
 
       .card-bottom{
@@ -3154,16 +3266,16 @@ async function unpinCollection(collection: any) {
 }
 
 .collection-card {
-  animation: cardIn 480ms cubic-bezier(0.16,1,0.3,1) backwards;
+  animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
 }
 
 .follow-card {
-  animation: cardIn 480ms cubic-bezier(0.16,1,0.3,1) backwards;
+  animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
 }
 
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes pfCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (max-width: 420px) {

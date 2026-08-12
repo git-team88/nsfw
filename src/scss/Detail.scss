@@ -1442,6 +1442,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
     .fake-input {
       flex: 1;
+      max-width: 200px;
       height: 50px;
       background: #fff;
       border: 2px solid $ink;
@@ -1495,6 +1496,31 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
             b {
               background: url("@/assets/images/detail/like_active.png") no-repeat;
+              background-size: 100% 100%;
+            }
+          }
+        }
+
+        &.footer-collect {
+          b {
+            background: url("@/assets/images/detail/collect.png") no-repeat;
+            background-size: 100% 100%;
+          }
+
+          &:hover {
+            color: #FBBC05;
+
+            b {
+              background: url("@/assets/images/detail/collect_hover.png") no-repeat;
+              background-size: 100% 100%;
+            }
+          }
+
+          &.active {
+            color: #FBBC05;
+
+            b {
+              background: url("@/assets/images/detail/collect_active.png") no-repeat;
               background-size: 100% 100%;
             }
           }
@@ -1743,7 +1769,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         background: url("@/assets/images/detail/cancel.png") no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
-        border-radius: 12px;
 
         &:hover {
           transform: translateY(-1px);
@@ -1756,11 +1781,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         background: url("@/assets/images/detail/send.png") no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
-        border-radius: 12px;
         transition: $transition-spring;
 
         &:hover {
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
       }
     }

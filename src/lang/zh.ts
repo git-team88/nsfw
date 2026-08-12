@@ -2082,7 +2082,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       video: "视频",
       photo: "图片",
       image: "图片",
-      article: "文章"
+      article: "文章",
+      myFavorites: "我的收藏"
     },
     videoSettings: {
       title: "视频设置",
@@ -2407,6 +2408,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     exitCollectionPlayMode: "退出合集播放模式",
     collapse: "收起",
     share: "分享",
+    collect: "收藏",
     comments: `共 {num} 条评论`,
     commentsDisabled: "评论已关闭",
     writePlaceholder: `#话题，{'@'}提及`,
@@ -2555,7 +2557,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     contentType: {
       novel: "小说",
       comic: "漫画",
-      video: "漫剧"
+      video: "漫剧",
+      myFavorites: "我的收藏"
     },
     collection: {
       all: "全部",
@@ -3111,6 +3114,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     type3: "漫剧",
     continueReading: "继续阅读",
     startReading: "开始阅读",
+    favorite: "收藏",
+    favorited: "已收藏",
     chapterCount: "共 {count} 章",
     description: "简介",
     tableOfContents: "目录",

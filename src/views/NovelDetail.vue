@@ -75,6 +75,10 @@
         <div class="action-btn toc-btn" @click="toggleToc">
           <img src="@/assets/images/detail/collection.png" alt="" />
         </div>
+        <div class="action-btn fav-btn" :class="{ active: isFav }" @click="toggleFav">
+          <img :src="isFav ? collectActiveIcon : collectIcon" alt="Collect" />
+          <span class="action-count">{{ favNum }}</span>
+        </div>
         <div class="action-btn like-btn" @click="toggleLike">
           <img :src="liked ? likeActiveIcon : likeIcon" alt="Like" />
           <span class="action-count">{{ likes }}</span>
@@ -209,6 +213,10 @@
         <div class="action-btn toc-btn" @click="toggleToc" v-if="isCollectionMode">
           <img src="@/assets/images/detail/collection.png" alt="" />
         </div>
+        <div class="action-btn fav-btn" :class="{ active: isFav }" @click="toggleFav">
+          <img :src="isFav ? collectActiveIcon : collectIcon" alt="Collect" />
+          <span class="action-count">{{ favNum }}</span>
+        </div>
         <div class="action-btn like-btn" @click="toggleLike">
           <img :src="liked ? likeActiveIcon : likeIcon" alt="Like" />
           <span class="action-count">{{ likes }}</span>
@@ -283,6 +291,8 @@ import { baseUrl } from '@/util/config';
 // Import images
 import likeIcon from '@/assets/images/detail/like.png';
 import likeActiveIcon from '@/assets/images/detail/like_active.png';
+import collectIcon from '@/assets/images/detail/collect.png';
+import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import { trackShare } from '@/utils/analytics';
 
@@ -363,6 +373,8 @@ const detail = ref({
   commentsEnabled: true,
   likes: 0,
   liked: false,
+  favNum: 0,
+  isFav: false,
   is_teenager: 1,
   is_nsfw: '0',
   book_is_nsfw: 0,
@@ -481,6 +493,8 @@ const lastRange = ref<Range | null>(null);
 // Likes
 const likes = ref(0);
 const liked = ref(false);
+const favNum = ref(0);
+const isFav = ref(false);
 
 // Sensitive content modals
 const showSensitiveContentAdultConfirmModal = ref(false);
@@ -691,6 +705,8 @@ async function fetchDetail() {
         commentsEnabled: data.comments_enabled !== false,
         likes: Number(data.like_count || data.likes || 0),
         liked: data.is_liked == 1 || data.is_liked === true,
+        favNum: Number(res.data.fav_num || 0),
+        isFav: res.data.is_fav == 1 || res.data.is_fav === true,
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
         book_is_nsfw: bookIsNsfw,
@@ -704,6 +720,8 @@ async function fetchDetail() {
 
       likes.value = detail.value.likes;
       liked.value = detail.value.liked;
+      favNum.value = detail.value.favNum;
+      isFav.value = detail.value.isFav;
 
       // Check if user is underage
       const userInfo = localStorage.getItem('userInfo');
@@ -867,6 +885,50 @@ async function toggleLike() {
     }
   } catch (error) {
     console.error('Error toggling like:', error);
+    toast(t('fail'));
+  }
+}
+
+async function toggleFav() {
+  if (!localStorage.getItem('token')) {
+    goAuth();
+    return;
+  }
+
+  if (!detail.value.book_id || Number(detail.value.book_id) == 0) return;
+
+  try {
+    const previousFavNum = favNum.value;
+
+    if (!isFav.value) {
+      const res = await api.likeBook({ book_id: detail.value.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = true;
+        detail.value.isFav = true;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+          detail.value.favNum = favNum.value;
+        } else {
+          favNum.value = previousFavNum + 1;
+          detail.value.favNum = favNum.value;
+        }
+      }
+    } else {
+      const res = await api.unlikeBook({ book_id: detail.value.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = false;
+        detail.value.isFav = false;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+          detail.value.favNum = favNum.value;
+        } else {
+          favNum.value = Math.max(0, previousFavNum - 1);
+          detail.value.favNum = favNum.value;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling fav:', error);
     toast(t('fail'));
   }
 }
@@ -1957,6 +2019,12 @@ function updatePostData(data: any) {
   }
   if (data.liked !== undefined) {
     liked.value = data.liked;
+  }
+  if (data.favNum !== undefined) {
+    favNum.value = data.favNum;
+  }
+  if (data.isFav !== undefined) {
+    isFav.value = data.isFav;
   }
   if (data.totalComments !== undefined) {
     totalComments.value = data.totalComments;

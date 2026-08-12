@@ -583,6 +583,10 @@
                     <b></b>
                     <span>{{ formatNumber(likes) }}</span>
                   </div>
+                  <div class="icon-action footer-collect" :class="{ active: isFav }" @click="toggleFav">
+                    <b></b>
+                    <span>{{ formatNumber(favNum) }}</span>
+                  </div>
                   <div class="icon-action footer-share" @click="share">
                     <b></b>
                     <span>{{ t("detail.share") }}</span>
@@ -1192,6 +1196,8 @@ interface DetailData {
   isLast: boolean;
   likes: number;
   liked: boolean;
+  favNum: number;
+  isFav: boolean;
   is_teenager: number;
   is_nsfw: string;
   book_is_nsfw: number;
@@ -1227,6 +1233,8 @@ const detail = ref<DetailData>({
   isLast: false,
   likes: 0,
   liked: false,
+  favNum: 0,
+  isFav: false,
   is_teenager: 1,
   is_nsfw: '0',
   book_is_nsfw: 0,
@@ -1794,6 +1802,8 @@ function handleCollectionScroll() {
 
 const likes = ref(0);
 const liked = ref(false);
+const favNum = ref(0);
+const isFav = ref(false);
 
 // Navigation arrows
 const hasPrev = ref(false);
@@ -2071,6 +2081,8 @@ async function fetchDetail(newId: number) {
         isLast: data.is_last || false,
         likes: Number(data.like_count || data.likes || 0),
         liked: data.is_liked == 1 || data.is_liked === true,
+        favNum: Number(res.data.fav_num || 0),
+        isFav: res.data.is_fav == 1 || res.data.is_fav === true,
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
         book_is_nsfw: bookIsNsfw,
@@ -2118,6 +2130,8 @@ async function fetchDetail(newId: number) {
       // Update local state
       likes.value = detail.value.likes;
       liked.value = detail.value.liked;
+      favNum.value = detail.value.favNum;
+      isFav.value = detail.value.isFav;
 
       // Preload cover image for faster display
       if (detail.value.cover) {
@@ -2166,6 +2180,8 @@ async function fetchDetail(newId: number) {
         isLast: false,
         likes: 0,
         liked: false,
+        favNum: 0,
+        isFav: false,
         is_teenager: 1,
         is_nsfw: '0',
         book_is_nsfw: 0,
@@ -2203,6 +2219,8 @@ async function fetchDetail(newId: number) {
       isLast: false,
       likes: 0,
       liked: false,
+      favNum: 0,
+      isFav: false,
       is_teenager: 1,
       is_nsfw: '0',
       book_is_nsfw: 0,
@@ -2213,6 +2231,8 @@ async function fetchDetail(newId: number) {
     };
     likes.value = 0;
     liked.value = false;
+    favNum.value = 0;
+    isFav.value = false;
     comments.value = [];
     totalComments.value = '';
   } finally {
@@ -4773,6 +4793,54 @@ async function toggleLike() {
         }
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      }
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
+}
+
+async function toggleFav() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    goAuth();
+    return;
+  }
+
+  if (!detail.value.book_id || Number(detail.value.book_id) == 0) return;
+
+  try {
+    const previousFavNum = favNum.value;
+
+    if (!isFav.value) {
+      const res = await api.likeBook({ book_id: detail.value.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = true;
+        detail.value.isFav = true;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+          detail.value.favNum = favNum.value;
+        } else {
+          favNum.value = previousFavNum + 1;
+          detail.value.favNum = favNum.value;
+        }
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      }
+    } else {
+      const res = await api.unlikeBook({ book_id: detail.value.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = false;
+        detail.value.isFav = false;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+          detail.value.favNum = favNum.value;
+        } else {
+          favNum.value = Math.max(0, previousFavNum - 1);
+          detail.value.favNum = favNum.value;
+        }
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }

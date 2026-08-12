@@ -1805,7 +1805,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       video: "動画",
       photo: "画像",
       image: "画像",
-      article: "テキスト"
+      article: "テキスト",
+      myFavorites: "お気に入り"
     },
     videoSettings: {
       title: "動画設定",
@@ -2129,6 +2130,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     exitCollectionPlayMode: "コレクション再生モードを終了",
     collapse: "閉じる",
     share: "シェア",
+    collect: "お気に入り",
     comments: "コメント {num} 件",
     commentsDisabled: "コメントは受け付けていません",
     writePlaceholder: "#トピック、@メンション",
@@ -2276,7 +2278,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     contentType: {
       novel: "小説",
       comic: "マンガ",
-      video: "動画"
+      video: "動画",
+      myFavorites: "お気に入り"
     },
     collection: {
       all: "すべて",
@@ -3063,6 +3066,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     type3: "アニメドラマ",
     continueReading: "続きを読む",
     startReading: "読み始める",
+    favorite: "お気に入り",
+    favorited: "お気に入り済み",
     chapterCount: "全 {count} 章",
     description: "紹介",
     tableOfContents: "目次",

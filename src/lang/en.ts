@@ -1977,7 +1977,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       video: "Video",
       photo: "Photo",
       image: "Image",
-      article: "Text"
+      article: "Text",
+      myFavorites: "My Favorites"
     },
     videoSettings: {
       title: "Video Settings",
@@ -2300,6 +2301,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     exitCollectionPlayMode: "Exit collection play mode",
     collapse: "Collapse",
     share: "Share",
+    collect: "Collect",
     comments: `Total {num} comments`,
     commentsDisabled: "Comments disabled",
     writePlaceholder: `#topic, {'@'}Mention`,
@@ -2579,7 +2581,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     contentType: {
       novel: "Novel",
       comic: "Comic",
-      video: "Drama"
+      video: "Drama",
+      myFavorites: "My Favorites"
     },
     collection: {
       all: "All",
@@ -3002,6 +3005,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     type3: "Drama",
     continueReading: "Continue Reading",
     startReading: "Start Reading",
+    favorite: "Favorite",
+    favorited: "Favorited",
     chapterCount: "Total {count} Chapters",
     description: "Description",
     tableOfContents: "Table of Contents",
