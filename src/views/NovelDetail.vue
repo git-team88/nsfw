@@ -882,6 +882,8 @@ async function toggleLike() {
     if (response.code === 0) {
       liked.value = !liked.value;
       likes.value += liked.value ? 1 : -1;
+      detail.value.liked = liked.value;
+      detail.value.likes = likes.value;
     }
   } catch (error) {
     console.error('Error toggling like:', error);

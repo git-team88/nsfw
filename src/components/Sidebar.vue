@@ -191,6 +191,10 @@
                   <b></b>
                   <span>{{ formatNumber(likes) }}</span>
                 </div>
+                <div class="icon-action footer-collect" :class="{ active: isFav }" @click="toggleFav">
+                  <b></b>
+                  <span>{{ formatNumber(favNum) }}</span>
+                </div>
                 <div class="icon-action footer-share" @click="share">
                   <b></b>
                   <span>{{ t("detail.share") }}</span>
@@ -425,17 +429,23 @@ const commentMoreRefs = ref<Map<number, HTMLElement>>(new Map());
 const commentToDelete = ref<string | number>('');
 const deleteModalVisible = ref(false);
 
-// Watch for changes in detail prop
-watch(() => props.detail, (newDetail) => {
-  if (newDetail) {
-    totalComments.value = newDetail.comment_total?.toString() || '0';
-  }
-}, { deep: true });
-
 // Comment form
 const isInputting = ref(false);
 const liked = ref(false);
 const likes = ref(0);
+const isFav = ref(false);
+const favNum = ref(0);
+
+// Watch for changes in detail prop
+watch(() => props.detail, (newDetail) => {
+  if (newDetail) {
+    totalComments.value = newDetail.comment_total?.toString() || '0';
+    liked.value = newDetail.liked || false;
+    likes.value = newDetail.likes || 0;
+    isFav.value = newDetail.isFav || false;
+    favNum.value = newDetail.favNum || 0;
+  }
+}, { deep: true, immediate: true });
 const replyingTo = ref<any>(null);
 const commentInputRef = ref<HTMLElement | null>(null);
 const isInputEmpty = ref(true);
@@ -1284,6 +1294,48 @@ function toggleLike() {
       console.error('Error toggling like:', error);
       toast(t('fail'));
     });
+}
+
+async function toggleFav() {
+  if (!localStorage.getItem('token')) {
+    goAuth();
+    return;
+  }
+  if (!props.detail.book_id || Number(props.detail.book_id) == 0) return;
+
+  try {
+    const previousFavNum = favNum.value;
+
+    if (!isFav.value) {
+      const res = await api.likeBook({ book_id: props.detail.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = true;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+        } else {
+          favNum.value = previousFavNum + 1;
+        }
+        emit('update-post-data', { isFav: true, favNum: favNum.value });
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      }
+    } else {
+      const res = await api.unlikeBook({ book_id: props.detail.book_id }) as any;
+      if (res.code === 0 || res.code === 200) {
+        isFav.value = false;
+        if (res.data && res.data.fav_num !== undefined) {
+          favNum.value = Number(res.data.fav_num);
+        } else {
+          favNum.value = Math.max(0, previousFavNum - 1);
+        }
+        emit('update-post-data', { isFav: false, favNum: favNum.value });
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      }
+    }
+  } catch (error) {
+    toast(t('fail'));
+  }
 }
 
 // Share function
@@ -2160,7 +2212,7 @@ function likeReply(id: string, liked: boolean) {
   position: fixed;
   top: 0;
   right: 0;
-  width: 600px;
+  width: 500px;
   height: 100vh;
   background-color: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
@@ -2693,7 +2745,7 @@ function likeReply(id: string, liked: boolean) {
         position: fixed;
         bottom: 0;
         right: 0;
-        width: 600px;
+        width: 500px;
         padding: 18px 24px;
         border-top: 1px solid rgba(22, 17, 34, 0.12);
         background: #ffffff;
@@ -2763,6 +2815,31 @@ function likeReply(id: string, liked: boolean) {
 
                   b {
                     background: url("@/assets/images/detail/like_active.png") no-repeat;
+                    background-size: 100% 100%;
+                  }
+                }
+              }
+
+              &.footer-collect {
+                b {
+                  background: url("@/assets/images/detail/collect.png") no-repeat;
+                  background-size: 100% 100%;
+                }
+
+                &:hover {
+                  color: #FBBC05;
+
+                  b {
+                    background: url("@/assets/images/detail/collect_hover.png") no-repeat;
+                    background-size: 100% 100%;
+                  }
+                }
+
+                &.active {
+                  color: #FBBC05;
+
+                  b {
+                    background: url("@/assets/images/detail/collect_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
                 }
@@ -3224,6 +3301,692 @@ function likeReply(id: string, liked: boolean) {
     padding: 5px 10px;
     font-size: 12px;
     color: #5b5566;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    align-items: flex-end;
+  }
+
+  .sidebar {
+    width: 100%;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+
+    .sidebar-header {
+      height: auto;
+      min-height: 64px;
+      padding: 12px 16px;
+
+      .header-tabs {
+        gap: 4px;
+        border-width: 2px;
+        border-radius: 12px;
+        padding: 4px;
+
+        .tab-item {
+          padding: 6px 14px;
+          font-size: 13px;
+          border-radius: 8px;
+        }
+      }
+
+      .close-btn {
+        top: 12px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+      }
+    }
+
+    .sidebar-content {
+      .detail-tab {
+        padding: 16px;
+
+        .detail-content {
+          .user-info {
+            gap: 10px;
+            margin-bottom: 16px;
+
+            .avatar {
+              width: 40px;
+              height: 40px;
+            }
+
+            .nickname {
+              font-size: 14px;
+            }
+          }
+
+          .post-info {
+            margin-bottom: 16px;
+
+            .post-title {
+              font-size: 16px;
+              margin-bottom: 12px;
+            }
+
+            .post-desc {
+              font-size: 13px;
+              line-height: 18px;
+            }
+          }
+
+          .header-actions {
+            .action-btns {
+              gap: 10px;
+
+              .action-btn {
+                padding: 6px 14px;
+                font-size: 13px;
+                border-radius: 16px;
+              }
+            }
+          }
+        }
+      }
+
+      .comments-tab {
+        .comments-header {
+          padding: 16px;
+          font-size: 13px;
+        }
+
+        .comments-list {
+          padding: 0 16px;
+
+          .comment-item {
+            margin-bottom: 10px;
+
+            .comment-main {
+              gap: 10px;
+              padding: 6px;
+              border-radius: 10px;
+            }
+
+            .c-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 8px;
+              border-width: 1.5px;
+            }
+
+            .c-header {
+              margin-bottom: 4px;
+
+              .c-author {
+                font-size: 13px;
+              }
+
+              .reply-to {
+                font-size: 11px;
+                margin-left: 8px;
+              }
+
+              .c-more-btn {
+                img {
+                  width: 18px;
+                  height: 18px;
+                }
+              }
+            }
+
+            .c-text {
+              font-size: 13px;
+              line-height: 18px;
+              margin-bottom: 4px;
+            }
+
+            .c-media {
+              .c-images {
+                gap: 6px;
+
+                .c-image {
+                  width: 88px;
+                  height: 88px;
+                  border-radius: 8px;
+
+                  img {
+                    height: 88px;
+                  }
+                }
+              }
+
+              .c-video {
+                max-width: 200px;
+
+                .c-video-player {
+                  max-height: 160px;
+                }
+              }
+            }
+
+            .c-footer {
+              .c-time {
+                font-size: 11px;
+              }
+
+              .c-actions {
+                gap: 12px;
+
+                .action-btn {
+                  font-size: 11px;
+
+                  b {
+                    width: 16px;
+                    height: 16px;
+                  }
+                }
+              }
+            }
+          }
+
+          .replies-list {
+            margin-left: 38px;
+
+            .reply-item {
+              gap: 6px;
+              padding: 6px;
+              border-radius: 8px;
+
+              .c-avatar {
+                width: 28px;
+                height: 28px;
+              }
+            }
+          }
+
+          .show-more-replies {
+            margin-left: 42px;
+            font-size: 11px;
+          }
+        }
+
+        .right-footer {
+          width: 100%;
+          padding: 12px 16px;
+          min-height: 72px;
+
+          .footer-default {
+            gap: 8px;
+
+            .fake-input {
+              height: 42px;
+              font-size: 13px;
+              padding: 8px 12px;
+            }
+
+            .footer-actions {
+              gap: 12px;
+
+              .icon-action {
+                font-size: 12px;
+                gap: 4px;
+
+                b {
+                  width: 20px;
+                  height: 20px;
+                }
+              }
+            }
+          }
+
+          .footer-input {
+            .input-wrapper {
+              min-height: 80px;
+              padding: 6px 10px 20px;
+              border-radius: 10px;
+
+              .real-input {
+                min-height: 48px;
+                max-height: 100px;
+                font-size: 13px;
+                line-height: 18px;
+              }
+
+              .char-count {
+                font-size: 11px;
+              }
+            }
+
+            .input-actions-top {
+              gap: 8px;
+
+              .action-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+
+                &.upload-btn {
+                  img {
+                    width: 14px;
+                    height: 14px;
+                  }
+                }
+              }
+            }
+
+            .input-footer {
+              .uploaded-files {
+                gap: 6px;
+
+                .file-item {
+                  width: 52px;
+                  height: 52px;
+
+                  img {
+                    height: 52px;
+                  }
+                }
+              }
+            }
+
+            .input-bottom {
+              .upload-btn-box {
+                gap: 8px;
+
+                img {
+                  width: 32px;
+                  height: 32px;
+                }
+              }
+
+              .input-actions {
+                .cancel-btn,
+                .send-btn {
+                  width: 34px;
+                  height: 34px;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .toc-tab {
+        .collection-name {
+          padding: 16px 16px 0;
+          font-size: 14px;
+          margin-bottom: 14px;
+        }
+
+        .toc-header {
+          padding: 0 16px 16px;
+          font-size: 13px;
+        }
+
+        .toc-list {
+          padding: 10px 16px 0;
+
+          .toc-item {
+            padding: 0 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+
+            .toc-info {
+              min-height: 42px;
+            }
+
+            .chapter-title {
+              font-size: 14px;
+              margin-right: 8px;
+            }
+
+            .subscribe-badge {
+              padding: 4px 10px;
+              font-size: 12px;
+              border-radius: 4px;
+            }
+
+            .chapter-actions {
+              padding-left: 10px;
+
+              .collection-views {
+                img {
+                  width: 14px;
+                  height: 14px;
+                  margin-right: 4px;
+                }
+
+                span {
+                  font-size: 12px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    .sidebar-header {
+      padding: 10px 12px;
+
+      .header-tabs {
+        gap: 3px;
+        border-radius: 10px;
+
+        .tab-item {
+          padding: 5px 10px;
+          font-size: 12px;
+          border-radius: 7px;
+        }
+      }
+
+      .close-btn {
+        width: 32px;
+        height: 32px;
+        top: 10px;
+        right: 12px;
+        border-radius: 8px;
+        border-width: 1.5px;
+        box-shadow: 1.5px 1.5px 0 #161122;
+
+        &:hover {
+          box-shadow: 3px 3px 0 #161122;
+        }
+      }
+    }
+
+    .sidebar-content {
+      .detail-tab {
+        padding: 12px;
+
+        .detail-content {
+          .user-info {
+            gap: 8px;
+            margin-bottom: 12px;
+
+            .avatar {
+              width: 36px;
+              height: 36px;
+            }
+
+            .nickname {
+              font-size: 13px;
+            }
+          }
+
+          .post-info {
+            margin-bottom: 12px;
+
+            .post-title {
+              font-size: 15px;
+              margin-bottom: 8px;
+            }
+
+            .post-desc {
+              font-size: 12px;
+              line-height: 17px;
+              margin-bottom: 10px;
+            }
+          }
+
+          .header-actions {
+            .action-btns {
+              gap: 8px;
+
+              .action-btn {
+                padding: 5px 10px;
+                font-size: 12px;
+
+                img {
+                  width: 14px;
+                  height: 14px;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .comments-tab {
+        .comments-header {
+          padding: 12px;
+          font-size: 12px;
+        }
+
+        .comments-list {
+          padding: 0 12px;
+
+          .comment-item {
+            margin-bottom: 8px;
+
+            .comment-main {
+              gap: 8px;
+              padding: 4px;
+            }
+
+            .c-avatar {
+              width: 28px;
+              height: 28px;
+            }
+
+            .c-header {
+              .c-author {
+                font-size: 12px;
+              }
+
+              .reply-to {
+                font-size: 10px;
+                margin-left: 6px;
+              }
+            }
+
+            .c-text {
+              font-size: 12px;
+              line-height: 17px;
+              margin-bottom: 3px;
+            }
+
+            .c-media {
+              .c-images {
+                gap: 4px;
+
+                .c-image {
+                  width: 72px;
+                  height: 72px;
+
+                  img {
+                    height: 72px;
+                  }
+                }
+              }
+
+              .c-video {
+                max-width: 160px;
+              }
+            }
+
+            .c-footer {
+              .c-time {
+                font-size: 10px;
+              }
+
+              .c-actions {
+                gap: 10px;
+
+                .action-btn {
+                  font-size: 10px;
+
+                  b {
+                    width: 14px;
+                    height: 14px;
+                  }
+                }
+              }
+            }
+          }
+
+          .replies-list {
+            margin-left: 32px;
+
+            .reply-item {
+              gap: 5px;
+              padding: 4px;
+
+              .c-avatar {
+                width: 24px;
+                height: 24px;
+              }
+            }
+          }
+
+          .show-more-replies {
+            margin-left: 36px;
+            font-size: 10px;
+          }
+        }
+
+        .right-footer {
+          width: 100%;
+          padding: 10px 12px;
+          min-height: 64px;
+
+          .footer-default {
+            flex-wrap: wrap;
+            gap: 6px;
+
+            .fake-input {
+              min-width: 0;
+              flex: 1 1 100%;
+              height: 38px;
+              font-size: 12px;
+              padding: 6px 10px;
+            }
+
+            .footer-actions {
+              width: 100%;
+              justify-content: flex-end;
+              gap: 10px;
+
+              .icon-action {
+                font-size: 11px;
+                gap: 3px;
+
+                b {
+                  width: 18px;
+                  height: 18px;
+                }
+              }
+            }
+          }
+
+          .footer-input {
+            .input-wrapper {
+              min-height: 70px;
+              padding: 5px 8px 18px;
+              border-radius: 8px;
+
+              .real-input {
+                min-height: 40px;
+                max-height: 80px;
+                font-size: 12px;
+                line-height: 17px;
+              }
+            }
+
+            .input-actions-top {
+              gap: 6px;
+
+              .action-btn {
+                padding: 3px 6px;
+                font-size: 10px;
+              }
+            }
+
+            .input-footer {
+              .uploaded-files {
+                .file-item {
+                  width: 44px;
+                  height: 44px;
+
+                  img {
+                    height: 44px;
+                  }
+                }
+              }
+            }
+
+            .input-bottom {
+              .upload-btn-box {
+                gap: 6px;
+
+                img {
+                  width: 28px;
+                  height: 28px;
+                }
+              }
+
+              .input-actions {
+                .cancel-btn,
+                .send-btn {
+                  width: 30px;
+                  height: 30px;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .toc-tab {
+        .collection-name {
+          padding: 12px 12px 0;
+          font-size: 13px;
+          margin-bottom: 10px;
+        }
+
+        .toc-header {
+          padding: 0 12px 12px;
+          font-size: 12px;
+          gap: 8px;
+        }
+
+        .toc-list {
+          padding: 8px 12px 0;
+
+          .toc-item {
+            padding: 0 8px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+
+            .toc-info {
+              min-height: 38px;
+            }
+
+            .chapter-title {
+              font-size: 13px;
+              margin-right: 6px;
+            }
+
+            .subscribe-badge {
+              padding: 3px 8px;
+              font-size: 11px;
+            }
+
+            .chapter-actions {
+              padding-left: 8px;
+
+              .collection-views {
+                img {
+                  width: 12px;
+                  height: 12px;
+                  margin-right: 3px;
+                }
+
+                span {
+                  font-size: 11px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 
