@@ -1057,6 +1057,11 @@ export default {
       url: "index/getAIRechargePlan" + (mode ? `?mode=${mode}` : ''),
       method: "GET",
     }),
+  getAIUPlanListPublic: (mode?: string) =>
+    axios.request({
+      url: "index/getAIUPlanListPublic" + (mode ? `?mode=${mode}` : ''),
+      method: "GET",
+    }),
   getFirstMonthDiscountStatus: () =>
     axios.request({
       url: "user/getFirstMonthDiscountStatus",
