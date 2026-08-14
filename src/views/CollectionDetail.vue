@@ -629,7 +629,7 @@ async function toggleFollow() {
 
 async function toggleLike() {
   if (!checkLogin()) return;
-  if (!collection.value.id) return;
+  if (!collection.value || !collection.value.id) return;
 
   try {
     if (isLiked.value) {

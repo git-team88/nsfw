@@ -715,7 +715,7 @@ async function fetchCollections(reset = false) {
 
     let response;
     // type: 1=comic, 2=novel, 3=video
-    const type = activeContentType.value;
+    const type = Number(activeContentType.value);
     const currentPage = currentCollectionsPage.value;
 
     if (isCurrentUser) {
@@ -1632,8 +1632,7 @@ async function loadPosts(reset = false) {
   await getCountry();
 
   try {
-    // Use activeContentType as API type
-    const type = activeContentType.value;
+    const type = Number(activeContentType.value);
 
     // Format date range if provided
     let start = '';
@@ -1858,7 +1857,7 @@ function goCollectionDetail(collectionId: number, userId?: string | number) {
   if (activeContentType.value == 'favorites') {
     uid = userId;
   } else {
-    uid = route.query.id;
+    uid = route.query.id as string | string[] | undefined;
   }
 
   const uidStr = Array.isArray(uid) ? uid[0] : uid;

@@ -679,18 +679,6 @@ export default {
       data: data,
       method: "POST",
     }),
-  likeBook: (data: any) =>
-    axios.request({
-      url: "book/likeBook",
-      data: data,
-      method: "POST",
-    }),
-  unlikeBook: (data: any) =>
-    axios.request({
-      url: "book/unlikeBook",
-      data: data,
-      method: "POST",
-    }),
 
   getUserId: (data: any) =>
     axios.request({
