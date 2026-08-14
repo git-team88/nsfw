@@ -374,7 +374,7 @@
                               </div>
                               <input
                                 type="range"
-                                :min="currentVideoMode == 'unlimited' ? 2 : 4"
+                                :min="currentVideoMode == 'unlimited' ? 2 : 5"
                                 max="30"
                                 step="1"
                                 :value="selectedVideoDuration"
@@ -1650,7 +1650,7 @@ async function handleVideoUpload(e: Event) {
         // 如果当前设置的时长小于等于视频时长，自动调整为视频时长+1或最小可选时长
         const currentDuration = parseInt(selectedVideoDuration.value);
         if (currentDuration <= duration) {
-          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
           const newDuration = Math.max(duration + 1, minDuration);
           // 确保不超过最大值30
           selectedVideoDuration.value = Math.min(newDuration, 30).toString();
@@ -1687,8 +1687,8 @@ function removeVideo() {
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const videoQualityOptions = ref([
   { value: '1080P', label: '1080P' },
   { value: '720P', label: '720P' }
@@ -1698,18 +1698,21 @@ const videoRatioOptions = ref([
   { value: '16:9', label: '16:9' }
 ]);
 const videoDurationOptions = computed(() => {
-  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
-  if (minDuration == 4) {
+  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
+  if (minDuration == 5) {
     return [
-      { value: '4', label: '4' },
+      { value: '5', label: '5' },
       { value: '10', label: '10' },
+      { value: '15', label: '15' },
       { value: '20', label: '20' },
       { value: '30', label: '30' }
     ];
   }
   return [
     { value: '2', label: '2' },
+    { value: '5', label: '5' },
     { value: '10', label: '10' },
+    { value: '15', label: '15' },
     { value: '20', label: '20' },
     { value: '30', label: '30' }
   ];
@@ -1743,7 +1746,7 @@ const validateDurationAndRestore = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
   const max = 30;
   const marks = [min, 10, 20, 30];
   return marks.map(value => ({
@@ -1753,7 +1756,7 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
   const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = (((value - min) / (max - min)) * 100);
@@ -2282,7 +2285,7 @@ const estimatedVideoComputingPower = computed(() => {
     return 1;
   }
 
-  const duration = parseInt(selectedVideoDuration.value) || 30;
+  const duration = parseInt(selectedVideoDuration.value) || 15;
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value === '720P') {
@@ -2834,7 +2837,7 @@ const selectContentType = (type: string) => {
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
