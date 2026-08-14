@@ -709,7 +709,7 @@
                         <input
                           type="range"
                           :min="currentVideoMode === 'unlimited' ? 2 : 4"
-                          max="15"
+                          max="30"
                           step="1"
                           :value="selectedVideoDuration"
                           @input="onVideoDurationChange"
@@ -1856,8 +1856,8 @@ const photoRatioOptions = ref([
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('15');
-const lastValidVideoDuration = ref('15');
+const selectedVideoDuration = ref('30');
+const lastValidVideoDuration = ref('30');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
@@ -1925,7 +1925,7 @@ const resetPhotoSettings = () => {
 const resetVideoSettings = () => {
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -3089,7 +3089,7 @@ const selectVideoMultimodal = (value: string) => {
 
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
 
   if (value === 'videoExtend' && uploadedVideoRefs.value.length > 0) {
     const videoItem = uploadedVideoRefs.value.find((item: any) => item.type === 'video');
@@ -3408,7 +3408,7 @@ const handleVideoUpload = async (event: Event) => {
           if (currentDuration <= duration) {
             const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
             const newDuration = Math.max(duration + 1, minDuration);
-            selectedVideoDuration.value = Math.min(newDuration, 15).toString();
+            selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
           }
 
@@ -3443,8 +3443,8 @@ const removeVideo = () => {
 
 const sliderMarks = computed(() => {
   const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
-  const max = 15;
-  const marks = [min, 5, 10, 15];
+  const max = 30;
+  const marks = [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -3454,7 +3454,7 @@ const sliderMarks = computed(() => {
 const getSliderValuePosition = () => {
   const value = parseInt(selectedVideoDuration.value);
   const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
-  const max = 15;
+  const max = 30;
   return `${((value - min) / (max - min)) * 100}%`;
 };
 
@@ -3523,7 +3523,7 @@ const estimatedVideoPower = computed(() => {
     return 1;
   }
 
-  const duration = parseInt(selectedVideoDuration.value) || 15;
+  const duration = parseInt(selectedVideoDuration.value) || 30;
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value == '720P') {
