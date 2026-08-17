@@ -1507,7 +1507,7 @@ async function toggleFollow() {
 
 function goSubscribe() {
   if (!checkLogin()) return;
-  router.push(`/subscription-payment?uid=${userInfo.value.id}`);
+  router.push(`/subscription-payment?id=${userInfo.value.id}`);
 }
 
 function goUserHome(userId: number) {

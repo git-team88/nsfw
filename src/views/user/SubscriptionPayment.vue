@@ -150,15 +150,15 @@ function checkLogin() {
 
 // Get author info from API
 async function fetchAuthorInfo() {
-  const uid = route.query.uid;
+  const uid = route.query.id;
   if (!uid) {
-    toast(t("error"));
+    toast(t("fail"));
     return;
   }
 
   const userId = Array.isArray(uid) ? uid[0] : uid;
   if (!userId) {
-    toast(t("error"));
+    toast(t("fail"));
     return;
   }
 
@@ -178,7 +178,7 @@ async function fetchAuthorInfo() {
     }
   } catch (error) {
     console.error("Fetch author info error:", error);
-    toast(t("error"));
+    toast(t("fail"));
   }
 }
 
@@ -198,15 +198,15 @@ async function handlePay() {
   try {
     isLoading.value = true;
 
-    const uid = route.query.uid;
+    const uid = route.query.id;
     if (!uid) {
-      toast(t("error"));
+      toast(t("fail"));
       return;
     }
 
     const userId = Array.isArray(uid) ? uid[0] : uid;
     if (!userId) {
-      toast(t("error"));
+      toast(t("fail"));
       return;
     }
 
@@ -218,7 +218,7 @@ async function handlePay() {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
     }
   } catch (error) {
-    toast(t("error"));
+    toast(t("fail"));
   } finally {
     isLoading.value = false;
   }

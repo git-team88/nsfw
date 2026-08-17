@@ -953,7 +953,7 @@ async function onSubscribe() {
         toast(t('detail.authorClosedSubscription'));
         return;
       }
-      router.push(`/subscription-payment?uid=${detail.value.author.id}`);
+      router.push(`/subscription-payment?id=${detail.value.author.id}`);
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }

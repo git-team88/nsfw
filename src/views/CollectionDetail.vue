@@ -667,7 +667,7 @@ function toggleSubscribe() {
   if (authorInfo.value.isSubscribe === 1) {
     toast(t('userHome.alreadySubscribed'));
   } else {
-    router.push(`/subscription-payment?uid=${authorInfo.value.id}`);
+    router.push(`/subscription-payment?id=${authorInfo.value.id}`);
   }
 }
 

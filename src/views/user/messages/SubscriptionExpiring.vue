@@ -35,7 +35,7 @@ const props = defineProps<{
 }>();
 
 function toSubscribe(userId: string | number) {
-  router.push(`/subscription-payment?uid=${userId}`);
+  router.push(`/subscription-payment?id=${userId}`);
 }
 
 function goUserHome(userId: string) {
