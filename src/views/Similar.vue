@@ -781,9 +781,9 @@ $line: #e7e1d8;
 
     .content-desc {
       font-weight: 800;
-      font-size: 17px;
+      font-size: 14px;
       color: $ink;
-      line-height: 1.35;
+      line-height: 20px;
       min-height: 46px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -796,7 +796,7 @@ $line: #e7e1d8;
       display: flex;
       align-items: center;
       gap: 9px;
-      margin-top: 11px;
+      margin-top: 12px;
 
       .author-info {
         display: flex;
