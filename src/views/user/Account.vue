@@ -517,7 +517,7 @@ function confirmUnbind() {
     })
     .catch((err: unknown) => {
       console.error(err);
-      toast("Error");
+      toast("fail");
     })
     .finally(() => {
       isShowLoad.value = false;
