@@ -329,7 +329,6 @@ async function fetchCollectionDetail() {
   try {
     loading.value = true;
     const bookId = route.query.book_id || route.params.id;
-    const authorIdFromUrl = route.query.uid;
 
     if (!bookId) {
       console.error('No book ID found');
@@ -343,65 +342,69 @@ async function fetchCollectionDetail() {
     }
 
     const localUid = localStorage.getItem('uid');
-    const urlUid = Array.isArray(authorIdFromUrl) ? authorIdFromUrl[0] : authorIdFromUrl;
-    const isSelf = String(localUid) === String(urlUid);
-
-    let response;
     const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
     const showNsfw = userRegion.value && allowSensitive ? 1 : 0;
 
-    if (isSelf) {
-      response = await api.getSelfCollectionDetail(id) as any;
-    } else {
-      response = await api.getCollectionDetail(id) as any;
-    }
+    // 先请求合集详情接口（公开接口）
+    let response = await api.getCollectionDetail(id) as any;
+
     if (response.code == 0) {
       const data = response.data;
-      // Prioritize author_id from URL, then from response
-      const resolvedAuthorId = authorIdFromUrl
-        ? (Array.isArray(authorIdFromUrl) ? authorIdFromUrl[0] : authorIdFromUrl)
-        : (data.author?.id || data.author_id || '');
-
       const bookInfo = data.book_info || data;
-      const chaptersData = data.chatpers || data.chapters || [];
 
-      // 登录后判断是否为自己的作品：本地 uid 与 URL uid 或接口 book_info.user_id 任一匹配即为本人
-      const backendAuthorId = bookInfo?.user_id || '';
-      isOwn.value = !!localUid && (isSelf || String(localUid) === String(backendAuthorId));
-      isLiked.value = data.is_fav == 1;
+      // 从 book_info 获取作者 ID
+      const resolvedAuthorId = bookInfo?.user_id || data.author?.id || data.author_id || '';
 
-      collection.value = {
-        id: bookInfo.id || data.book_id || '',
-        title: bookInfo.title || '',
-        cover: bookInfo.cover || defaultCover,
-        tags: data.tags || [],
-        lastUpdate: bookInfo.updated_at || bookInfo.latest_post_updated || '',
-        lastRead: data.last_read || '',
-        description: bookInfo.description || '',
-        isOwn: isSelf,
-        authorId: resolvedAuthorId || (bookInfo.user_id || ''),
-        latestChapterIndex: bookInfo.chapter_count || '',
-        type: bookInfo.type || '',
-        status: bookInfo.status || '',
-        is_nsfw: bookInfo.is_nsfw || 0,
-        chapter_count_private: bookInfo.chapter_count_private || 0,
-        readIndexes: Array.isArray(data.indexs) ? data.indexs.map(Number) : [],
-        chapters: chaptersData.map((chapter: any) => ({
-          id: chapter.post_id || chapter.id,
-          title: chapter.title || '',
-          subtitle: chapter.subtitle,
-          status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
-        })),
-        history: data.history && !Array.isArray(data.history) && data.history.post_id ? {
-          post_id: String(data.history.post_id || ''),
-          chapter_index: String(data.history.chapter_index || '0'),
-          title: data.history.title || '',
-          cover: data.history.cover || ''
-        } : null
-      };
+      // 如果是自己作品，用私密接口重新请求以获取完整章节数据
+      const isSelf = !!localUid && String(localUid) === String(resolvedAuthorId);
+      if (isSelf) {
+        response = await api.getSelfCollectionDetail(id) as any;
+      }
 
-      if (resolvedAuthorId) {
-        await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+      if (response.code == 0) {
+        const finalData = response.data;
+        const finalBookInfo = finalData.book_info || finalData;
+        const chaptersData = finalData.chatpers || finalData.chapters || [];
+
+        isOwn.value = isSelf;
+        isLiked.value = finalData.is_fav == 1;
+
+        collection.value = {
+          id: finalBookInfo.id || finalData.book_id || '',
+          title: finalBookInfo.title || '',
+          cover: finalBookInfo.cover || defaultCover,
+          tags: finalData.tags || [],
+          lastUpdate: finalBookInfo.updated_at || finalBookInfo.latest_post_updated || '',
+          lastRead: finalData.last_read || '',
+          description: finalBookInfo.description || '',
+          isOwn: isSelf,
+          authorId: resolvedAuthorId,
+          latestChapterIndex: finalBookInfo.chapter_count || '',
+          type: finalBookInfo.type || '',
+          status: finalBookInfo.status || '',
+          is_nsfw: finalBookInfo.is_nsfw || 0,
+          chapter_count_private: finalBookInfo.chapter_count_private || 0,
+          readIndexes: Array.isArray(finalData.indexs) ? finalData.indexs.map(Number) : [],
+          chapters: chaptersData.map((chapter: any) => ({
+            id: chapter.post_id || chapter.id,
+            title: chapter.title || '',
+            subtitle: chapter.subtitle,
+            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
+          })),
+          history: finalData.history && !Array.isArray(finalData.history) && finalData.history.post_id ? {
+            post_id: String(finalData.history.post_id || ''),
+            chapter_index: String(finalData.history.chapter_index || '0'),
+            title: finalData.history.title || '',
+            cover: finalData.history.cover || ''
+          } : null
+        };
+
+        // 从 book_info 获取作者后，请求博主详情接口
+        if (resolvedAuthorId) {
+          await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+        }
+      } else {
+        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
       }
     } else {
       toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
@@ -684,44 +687,45 @@ function editChapter(chapter: Chapter | null) {
 async function refreshChapters() {
   try {
     const bookId = route.query.book_id || route.params.id;
-    const authorIdFromUrl = route.query.uid;
     if (!bookId) return;
     const id = (Array.isArray(bookId) ? bookId[0] : bookId) as string;
     if (!id) return;
 
     const localUid = localStorage.getItem('uid');
-    const urlUid = Array.isArray(authorIdFromUrl) ? authorIdFromUrl[0] : authorIdFromUrl;
-    const isSelf = String(localUid) === String(urlUid);
-
-    let response;
     const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
     const showNsfw = userRegion.value && allowSensitive ? 1 : undefined;
-    if (isSelf) {
-      response = await api.getSelfCollectionDetail(id) as any;
-    } else {
-      response = await api.getCollectionDetail(id) as any;
-    }
+
+    // 先请求公开接口，从 book_info 获取作者后判断是否为自己作品
+    let response = await api.getCollectionDetail(id) as any;
 
     if (response.code === 0) {
       const data = response.data;
-      const chaptersData = data.chatpers || data.chapters || [];
       const bookInfo = data.book_info || data;
-      if (collection.value) {
-        collection.value.chapters = chaptersData.map((chapter: any) => ({
-          id: chapter.post_id || chapter.id,
-          title: chapter.title || '',
-          subtitle: chapter.subtitle,
-          status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
-        }));
-        collection.value.latestChapterIndex = bookInfo.chapter_count || '';
-        collection.value.lastUpdate = bookInfo.updated_at || bookInfo.latest_post_updated || '';
+      const resolvedAuthorId = bookInfo?.user_id || data.author?.id || data.author_id || '';
+
+      const isSelf = !!localUid && String(localUid) === String(resolvedAuthorId);
+      if (isSelf) {
+        response = await api.getSelfCollectionDetail(id) as any;
       }
 
-      const resolvedAuthorId = authorIdFromUrl
-        ? (Array.isArray(authorIdFromUrl) ? authorIdFromUrl[0] : authorIdFromUrl)
-        : (data.author?.id || data.author_id || '');
-      if (resolvedAuthorId) {
-        await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+      if (response.code === 0) {
+        const finalData = response.data;
+        const chaptersData = finalData.chatpers || finalData.chapters || [];
+        const finalBookInfo = finalData.book_info || finalData;
+        if (collection.value) {
+          collection.value.chapters = chaptersData.map((chapter: any) => ({
+            id: chapter.post_id || chapter.id,
+            title: chapter.title || '',
+            subtitle: chapter.subtitle,
+            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
+          }));
+          collection.value.latestChapterIndex = finalBookInfo.chapter_count || '';
+          collection.value.lastUpdate = finalBookInfo.updated_at || finalBookInfo.latest_post_updated || '';
+        }
+
+        if (resolvedAuthorId) {
+          await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+        }
       }
     }
   } catch (error) {

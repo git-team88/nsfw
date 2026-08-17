@@ -4722,8 +4722,7 @@ const refreshSimilar = () => {
 
 const goToSimilarDetail = (item: any) => {
   const bookId = item.book_id;
-  const uid = item.author?.id || item.author_info?.id || '';
-  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
+  router.push(`/collection/${bookId}`);
 };
 
 

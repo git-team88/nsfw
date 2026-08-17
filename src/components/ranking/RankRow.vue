@@ -72,8 +72,7 @@ const typeLabel = computed(() => t(badge.value.label))
 
 const router = useRouter()
 function goDetail() {
-  const uid = props.w.authorId || '';
-  router.push(`/collection/${props.w.id}${uid ? '?uid=' + uid : ''}`)
+  router.push(`/collection/${props.w.id}`)
 }
 
 // 点击作者头像/昵称跳转个人主页

@@ -284,8 +284,7 @@ function goUser(c: Creator) { router.push(`/user-home?id=${c.id}`); }
 function goRankUser() { router.push('/rank?tab=user'); }
 function goRankWork() { router.push('/rank'); }
 function goWork(w: Work) {
-  const uid = w.authorId || '';
-  router.push(`/collection/${w.id}${uid ? '?uid=' + uid : ''}`);
+  router.push(`/collection/${w.id}`);
 }
 
 async function toggleFollow(c: Creator) {
@@ -440,7 +439,7 @@ function goSprout() {
   const c = creators.value[frontIdx];
 
   if (!c) return;
-  if (c.latestBookId) router.push(`/collection/${c.latestBookId}?uid=${c.id}`);
+  if (c.latestBookId) router.push(`/collection/${c.latestBookId}`);
 }
 
 /* ---------- 右侧人气作品 3D 环形 ---------- */

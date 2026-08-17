@@ -2081,7 +2081,7 @@ function goToCollectionDetail() {
   if (props.detail.book_id && Number(props.detail.book_id) > 0) {
     emit('close');
 
-    router.push(`/collection/${props.detail.book_id}?uid=${props.detail.author.id}`);
+    router.push(`/collection/${props.detail.book_id}`);
   }
 }
 

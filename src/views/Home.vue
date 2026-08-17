@@ -5457,16 +5457,12 @@ const navigateToDetail = (bookId: string, type?: string) => {
   }
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  const item = displayContent.value.find(i => (i.book_id || i.id) === bookId);
-  const uid = activeContentTab.value != 'suggested' ? (item?.author?.id) : (item?.author_info?.id);
-  router.push({ path: `/collection/${bookId}`, query: { uid: uid || '' } });
+  router.push(`/collection/${bookId}`);
 };
 
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
 const detailHref = (bookId: string) => {
-  const item = displayContent.value.find(i => (i.book_id || i.id) === bookId);
-  const uid = activeContentTab.value != 'suggested' ? (item?.author?.id) : (item?.author_info?.id);
-  return `/collection/${bookId}${uid ? '?uid=' + uid : ''}`;
+  return `/collection/${bookId}`;
 };
 
 const navigateToUserHome = (userId: number) => {

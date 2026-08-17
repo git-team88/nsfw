@@ -1935,7 +1935,7 @@ function goNext() {
 
 function goToCollection() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author.id}`);
+    router.push(`/collection/${detail.value.book_id}`);
   }
 }
 

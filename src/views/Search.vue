@@ -570,8 +570,7 @@ const layoutWaterfall = () => {
 function goToDetail(post: any) {
   localStorage.setItem('searchPostFilter', postFilter.value.toString());
   const bookId = post.book_id;
-  const uid = post.author?.id || '';
-  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
+  router.push(`/collection/${bookId}`);
 }
 
 const onCardTilt = (e: MouseEvent) => {

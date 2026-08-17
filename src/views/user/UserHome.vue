@@ -187,7 +187,7 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" @click="goCollectionDetail(collection.id, collection.user_id)">
+                  <div class="card-cover" @click="goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
@@ -1851,17 +1851,8 @@ function createCollection() {
   router.push(`/create-collection?type=${activeContentType.value}`);
 }
 
-function goCollectionDetail(collectionId: number, userId?: string | number) {
-  let uid: string | number | string[] | undefined;
-
-  if (activeContentType.value == 'favorites') {
-    uid = userId;
-  } else {
-    uid = route.query.id as string | string[] | undefined;
-  }
-
-  const uidStr = Array.isArray(uid) ? uid[0] : uid;
-  router.push(`/collection/${collectionId}${uidStr ? '?uid=' + uidStr : ''}`);
+function goCollectionDetail(collectionId: number) {
+  router.push(`/collection/${collectionId}`);
 }
 
 function goCollectionSettings(collectionId: number) {
@@ -1872,9 +1863,7 @@ function goCollectionSettings(collectionId: number) {
 
 function goChapterManage(collectionId: number) {
   localStorage.setItem('userHomeContentType', activeContentType.value.toString());
-  const authorId = route.query.id;
-  const authorIdStr = Array.isArray(authorId) ? authorId[0] : authorId;
-  router.push(`/collection/${collectionId}?uid=${authorIdStr}`);
+  router.push(`/collection/${collectionId}`);
   activeCollectionMenuId.value = null;
 }
 

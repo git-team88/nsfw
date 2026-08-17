@@ -1405,7 +1405,7 @@ async function goToNextChapter() {
 // Go to collection detail page
 function goToCollectionDetail() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author?.id}`);
+    router.push(`/collection/${detail.value.book_id}`);
   }
 }
 
@@ -1585,7 +1585,7 @@ function onImageLoaded(totalImages: number) {
 // Exit collection mode
 function exitCollectionMode() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
-    router.push(`/collection/${detail.value.book_id}?uid=${detail.value.author?.id}`);
+    router.push(`/collection/${detail.value.book_id}`);
     return;
   }
   isCollectionMode.value = false;

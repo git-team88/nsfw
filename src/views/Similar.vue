@@ -365,8 +365,7 @@ const layoutWaterfall = () => {
 
 function goToDetail(item: any) {
   const bookId = item.book_id || item.id;
-  const uid = item.author?.id || item.author_info?.id || '';
-  router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
+  router.push(`/collection/${bookId}`);
 }
 
 const onCardTilt = (e: MouseEvent) => {
