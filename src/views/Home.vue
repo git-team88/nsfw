@@ -1031,7 +1031,7 @@
 
                 </div>
                 <div class="content-info">
-                  <div class="content-desc" v-if="item.title || item.description">{{ item.title ? item.title : item.description ? item.description : '' }}</div>
+                  <div class="content-desc" v-if="item.description || item.title">{{ item.description ? item.description : item.title ? item.title : '' }}</div>
                   <div class="content-meta">
                     <div class="author-info" v-if="activeContentTab != 'suggested'" @click.stop.prevent="navigateToUserHome(item.author?.id)">
                       <img :src="item.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />

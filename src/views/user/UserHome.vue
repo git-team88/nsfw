@@ -227,7 +227,7 @@
                 </div>
 
                 <div class="card-info">
-                  <div class="card-desc">{{ collection.title }}</div>
+                  <div class="card-desc">{{ collection.description ? collection.description : collection.title ? collection.title : '' }}</div>
                 </div>
               </div>
             </div>

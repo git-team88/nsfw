@@ -66,6 +66,8 @@
               :key="post.id"
               ref="postCardRefs"
               :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
+              @mousemove="onCardTilt"
+              @mouseleave="onCardTiltReset"
               @click="goToDetail(post)"
             >
               <div class="content-image">
@@ -106,7 +108,7 @@
                 </div>
               </div>
               <div class="content-info">
-                <div class="content-desc" v-if="post.title || post.description">{{ post.title ? post.title : post.description ? post.description : '' }}</div>
+                <div class="content-desc" v-if="post.description || post.title">{{ post.description ? post.description : post.title ? post.title : '' }}</div>
                 <div class="content-meta">
                   <div class="author-info" @click.stop="goToUserHome(post.author?.id)">
                     <img :src="post.author?.avatar || defaultAvatar" alt="" class="author-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
@@ -572,6 +574,17 @@ function goToDetail(post: any) {
   router.push(`/collection/${bookId}${uid ? '?uid=' + uid : ''}`);
 }
 
+const onCardTilt = (e: MouseEvent) => {
+  const el = e.currentTarget as HTMLElement;
+  const r = el.getBoundingClientRect();
+  const px = (e.clientX - r.left) / r.width - 0.5;
+  const py = (e.clientY - r.top) / r.height - 0.5;
+  el.style.transform = `perspective(900px) rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg) translateY(-3px)`;
+};
+const onCardTiltReset = (e: MouseEvent) => {
+  (e.currentTarget as HTMLElement).style.transform = '';
+};
+
 function goToUserHome(userId: number) {
   router.push(`/user-home?id=${userId}`);
 }
@@ -823,7 +836,7 @@ $line: #e7e1d8;
       background: #fff;
       border: 2px solid $ink;
       border-radius: 999px;
-      padding: 0 50px 0 36px;
+      padding: 0 50px 0 24px;
       font-family: inherit;
       font-weight: 700;
       font-size: 13px;
@@ -874,14 +887,14 @@ $line: #e7e1d8;
 
 .search-results {
   .results-header {
-    h2 {
-      font-weight: 800;
-      font-size: 30px;
+      h2 {
+      font-weight: 900;
+      font-size: 32px;
       color: $ink;
       margin-bottom: 16px;
       letter-spacing: 0.02em;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 14px;
       flex-wrap: wrap;
 
@@ -993,11 +1006,14 @@ $line: #e7e1d8;
   border-radius: 16px;
   box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 7px 8px 0 rgba(22,17,34,0.2);
+    .content-image img {
+      transform: scale(1.06);
+    }
   }
 
   .content-image {
@@ -1410,8 +1426,8 @@ $line: #e7e1d8;
   .search-panel, .content-item, .user-card {
     animation: none !important;
   }
-  .content-item:hover, .user-card:hover {
-    transform: none;
+  .content-item, .user-card {
+    transform: none !important;
     box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
   }
   .content-item .content-image img {
