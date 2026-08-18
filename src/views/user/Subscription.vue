@@ -11,33 +11,6 @@
 
           <div class="tip">{{ t("user.subscription.tip") }}</div>
 
-          <div class="account-section">
-            <div class="account-info">
-              <img src="@/assets/images/user/account.png" alt="" />
-              <div>
-                <div class="section-title">
-                  {{ t("user.subscription.accountTitle") }}
-                </div>
-                <div class="account-content">
-                  <div v-if="accountStatus == 'success'" class="account-status">
-                    <img src="@/assets/images/user/success.png" alt="" />
-                    {{ t("user.subscription.accountCreated") }}
-                  </div>
-                  <div v-else-if="accountStatus == 'failed'" class="account-status">
-                    <img src="@/assets/images/user/fail.png" alt="" />
-                    {{ t("user.subscription.accountFailed") }}
-                  </div>
-                  <span v-else>{{ t("user.subscription.accountContent") }}</span>
-                </div>
-              </div>
-            </div>
-
-            <span class="change-account-btn" v-if="accountStatus == 'success'" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
-            <span class="modify-account-btn" v-else-if="accountStatus == 'failed'" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
-            <button class="create-account-btn" v-else @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
-
-          </div>
-
           <div class="sections-wrap">
             <div class="section" v-if="!plan">
               <div class="disabled-box">
@@ -70,6 +43,52 @@
               </div>
             </div>
           </div>
+
+          <div class="account-title">{{ t("user.subscription.paymentAccountTitle") }}</div>
+          <div class="account-tip" v-html="t('user.subscription.accountTip')"></div>
+          <div class="account-section">
+            <div class="account-item">
+              <div class="account-info">
+                <img class="account-icon" src="@/assets/images/user/usdt.png" alt="" />
+                <div class="account-name">{{ t("user.subscription.tokenAccount") }}</div>
+              </div>
+              <div class="account-right">
+                <div class="account-status">
+                  <img src="@/assets/images/user/success.png" alt="" />
+                  {{ t("user.subscription.accountCreated") }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="account-section">
+            <div class="account-item">
+              <div class="account-info">
+                <img class="account-icon" src="@/assets/images/user/account.png" alt="" />
+                <div class="account-name">{{ t("user.subscription.cashAccount") }}</div>
+              </div>
+              <div class="account-right">
+                <template v-if="accountStatus == 'success'">
+                  <div class="account-status">
+                    <img src="@/assets/images/user/success.png" alt="" />
+                    {{ t("user.subscription.accountCreated") }}
+                  </div>
+                  <span class="change-account-btn" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+                </template>
+                <template v-else-if="accountStatus == 'failed'">
+                  <div class="account-status">
+                    <img src="@/assets/images/user/fail.png" alt="" />
+                    {{ t("user.subscription.accountFailed") }}
+                  </div>
+                  <span class="change-account-btn" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
+                </template>
+                <template v-else>
+                  <span class="account-status-text">{{ t("user.subscription.accountContent") }}</span>
+                  <button class="create-account-btn" @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
+                </template>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -396,39 +415,62 @@ async function handleAccountFailedModify() {
 }
 
 .account-section {
-  margin: 0 0 24px;
+  margin: 12px 0 0;
   padding: 16px;
   border: 2px solid #161122;
   border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   background: #FFFDF7;
 }
 
-.account-info {
-  flex: 1;
+.account-section:first-of-type {
+  margin-top: 0;
+}
+
+.account-title {
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
+  margin: 30px 0 8px;
+}
+
+.account-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-
-  img {
-    width: 44px;
-    height: 44px;
-  }
+  justify-content: space-between;
 }
 
-.section-title {
-  margin-bottom: 8px;
-  font-weight: 800;
-  font-size: 16px;
-  color: #161122;
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.account-content {
+.account-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.account-name {
+  font-weight: 700;
   font-size: 14px;
   color: #161122;
-  flex: 1;
+}
+
+.account-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-status-text {
+  font-size: 14px;
+  color: #161122;
+}
+
+.account-tip {
+  font-size: 14px;
+  color: #99A1AF;
+  line-height: 1.5;
 }
 
 .create-account-btn {
@@ -465,32 +507,6 @@ async function handleAccountFailedModify() {
   height: 48px;
   background: #FFFFFF;
   color: #161122;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
-  }
-}
-
-.modify-account-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 136px;
-  height: 48px;
-  background: #FF4D8D;
-  color: #FFFFFF;
   border: 2.5px solid #161122;
   border-radius: 13px;
   box-shadow: 3px 3px 0 #161122;
@@ -588,14 +604,13 @@ async function handleAccountFailedModify() {
   padding: 24px;
   margin-left: 0;
   }
-  .account-section {
+  .account-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
   }
   .create-account-btn,
-  .change-account-btn,
-  .modify-account-btn {
+  .change-account-btn {
     width: 100%;
     min-width: auto;
   }

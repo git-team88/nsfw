@@ -11,32 +11,6 @@
 
           <div class="tip">{{ t("user.subscription.tip") }}</div>
 
-          <div class="account-section">
-            <div class="account-info">
-              <img src="@/assets/images/user/account.png" alt="" />
-              <div>
-                <div class="section-title">
-                  {{ t("user.subscription.accountTitle") }}
-                </div>
-                <div class="account-content">
-                  <div v-if="accountStatus == 'success'" class="account-status">
-                    <img src="@/assets/images/user/success.png" alt="" />
-                    {{ t("user.subscription.accountCreated") }}
-                  </div>
-                  <div v-else-if="accountStatus == 'failed'" class="account-status">
-                    <img src="@/assets/images/user/fail.png" alt="" />
-                    {{ t("user.subscription.accountFailed") }}
-                  </div>
-                  <span v-else>{{ t("user.subscription.accountContent") }}</span>
-                </div>
-              </div>
-            </div>
-
-            <span class="change-account-btn" v-if="accountStatus == 'success'" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
-            <span class="change-account-btn" v-else-if="accountStatus == 'failed'" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
-            <button class="create-account-btn" v-else @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
-          </div>
-
           <div class="sections-wrap">
             <div class="section">
               <div class="label">
@@ -87,6 +61,52 @@
               </button>
             </div>
           </div>
+
+          <div class="account-title">{{ t("user.subscription.paymentAccountTitle") }}</div>
+          <div class="account-tip" v-html="t('user.subscription.accountTip')"></div>
+          <div class="account-section">
+            <div class="account-item">
+              <div class="account-info">
+                <img class="account-icon" src="@/assets/images/user/usdt.png" alt="" />
+                <div class="account-name">{{ t("user.subscription.tokenAccount") }}</div>
+              </div>
+              <div class="account-right">
+                <div class="account-status">
+                  <img src="@/assets/images/user/success.png" alt="" />
+                  {{ t("user.subscription.accountCreated") }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="account-section">
+            <div class="account-item">
+              <div class="account-info">
+                <img class="account-icon" src="@/assets/images/user/account.png" alt="" />
+                <div class="account-name">{{ t("user.subscription.cashAccount") }}</div>
+              </div>
+              <div class="account-right">
+                <template v-if="accountStatus == 'success'">
+                  <div class="account-status">
+                    <img src="@/assets/images/user/success.png" alt="" />
+                    {{ t("user.subscription.accountCreated") }}
+                  </div>
+                  <span class="change-account-btn" @click="handleChangeAccount">{{ t("user.subscription.changeAccount") }}</span>
+                </template>
+                <template v-else-if="accountStatus == 'failed'">
+                  <div class="account-status">
+                    <img src="@/assets/images/user/fail.png" alt="" />
+                    {{ t("user.subscription.accountFailed") }}
+                  </div>
+                  <span class="change-account-btn" @click="handleViewAccount">{{ t("user.subscription.viewAccount") }}</span>
+                </template>
+                <template v-else>
+                  <span class="account-status-text">{{ t("user.subscription.accountContent") }}</span>
+                  <button class="create-account-btn" @click="handleCreateAccount">{{ t("user.subscription.createAccount") }}</button>
+                </template>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -218,9 +238,34 @@ function onCancel() {
   router.push("/user-subscription");
 }
 
-function handleCreateAccount() {
+async function handleCreateAccount() {
   if (!checkLogin()) return;
-  showCountrySelectModal.value = true;
+  try {
+    const kycRes = (await api.kycDetail()) as any;
+    if (kycRes.code === 0 || kycRes.code === 200) {
+      const kycData = kycRes.data;
+
+      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
+
+      if (isDataEmpty) {
+        showKycRequiredModal.value = true;
+        return;
+      } else {
+        const status = kycData.status;
+        if (status == 0 || status == '0' || status == 2 || status == '2') {
+          showKycReviewingModal.value = true;
+          return;
+        }
+      }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+      return;
+    }
+
+    showCountrySelectModal.value = true;
+  } catch (error) {
+    toast(t("fail"));
+  }
 }
 
 async function handleCountrySelected(country: string) {
@@ -286,71 +331,36 @@ async function handleViewAccount() {
 
 async function onSave() {
   if (!checkLogin()) return;
+  saving.value = true;
   try {
-    const kycRes = (await api.kycDetail()) as any;
-    if (kycRes.code === 0 || kycRes.code === 200) {
-      const kycData = kycRes.data;
+    const onlyDescChanged = selectedId.value === originalSelectedId.value && benefits.value !== originalBenefits.value;
 
-      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
-
-      if (isDataEmpty) {
-        showKycRequiredModal.value = true;
-        return;
-      } else {
-        const status = kycData.status;
-        if (status == 0 || status == '0' || status == 2 || status == '2') {
-          showKycReviewingModal.value = true;
-          return;
-        }
-      }
+    let res;
+    if (onlyDescChanged) {
+      res = await api.modifySubscriptionDesc({ description: benefits.value });
     } else {
-      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+      const params = {
+        plan_id: selectedId.value,
+        description: benefits.value
+      };
+      res = await api.modifySubscription(params);
     }
 
-    if (accountStatus.value === 'failed') {
-      showAccountFailedModal.value = true;
-      return;
+    const data = res as any;
+
+    if (data.code === 200 || data.code === 0) {
+      toast(t('success'));
+      setTimeout(() => {
+        window.location.href = '/user-subscription';
+      }, 500);
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
-
-    if (accountStatus.value === 'none') {
-      showAccountRequiredModal.value = true;
-      return;
-    }
-
-    saving.value = true;
-    try {
-      const onlyDescChanged = selectedId.value === originalSelectedId.value && benefits.value !== originalBenefits.value;
-
-      let res;
-      if (onlyDescChanged) {
-        res = await api.modifySubscriptionDesc({ description: benefits.value });
-      } else {
-        const params = {
-          plan_id: selectedId.value,
-          description: benefits.value
-        };
-        res = await api.modifySubscription(params);
-      }
-
-      const data = res as any;
-
-      if (data.code === 200 || data.code === 0) {
-        toast(t('success'));
-        // Use window.location.href to ensure page refresh after save
-        setTimeout(() => {
-          window.location.href = '/user-subscription';
-        }, 500);
-      } else {
-        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
-      }
-    } catch (error) {
-      console.error(error);
-      toast(t("fail"));
-    } finally {
-      saving.value = false;
-    }
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
+    toast(t("fail"));
+  } finally {
+    saving.value = false;
   }
 }
 
@@ -427,41 +437,56 @@ async function handleAccountFailedModify() {
 }
 
 .account-section {
-  margin: 0 0 24px;
+  margin: 12px 0 0;
   padding: 16px;
   border: 2px solid #161122;
   border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   background: #FFFDF7;
 }
 
-.account-info {
-  flex: 1;
+.account-section:first-of-type {
+  margin-top: 0;
+}
+
+.account-title {
+  font-weight: 800;
+  font-size: 20px;
+  color: #161122;
+  margin: 30px 0 8px;
+}
+
+.account-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-
-  img {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 2px solid #161122;
-  }
+  justify-content: space-between;
 }
 
-.section-title {
-  margin-bottom: 8px;
-  font-weight: 800;
-  font-size: 16px;
-  color: #161122;
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.account-content {
+.account-right {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.account-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.account-name {
+  font-weight: 700;
   font-size: 14px;
   color: #161122;
-  flex: 1;
+}
+
+.account-status-text {
+  font-size: 14px;
+  color: #161122;
 }
 
 .create-account-btn {
@@ -528,6 +553,12 @@ async function handleAccountFailedModify() {
     width: 20px;
     height: 20px;
   }
+}
+
+.account-tip {
+  font-size: 14px;
+  color: #99A1AF;
+  line-height: 1.5;
 }
 .sections-wrap {
   padding: 16px;
@@ -670,10 +701,10 @@ async function handleAccountFailedModify() {
   padding: 24px;
   margin-left: 0;
   }
-  .account-section {
+  .account-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
   }
   .create-account-btn,
   .change-account-btn {
@@ -697,7 +728,7 @@ async function handleAccountFailedModify() {
     padding: 10px 12px;
   }
   .account-section {
-    margin: 0 0 24px;
+    margin: 0;
   }
   .sections-wrap {
     padding: 12px;

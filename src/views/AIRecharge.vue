@@ -214,6 +214,12 @@
       @close="handleCouponClose"
       @confirm="handleCouponConfirm"
     />
+
+    <WalletSelectModal
+      :visible="showWalletModal"
+      @close="showWalletModal = false"
+      @select="handleWalletSelect"
+    />
   </div>
 </template>
 
@@ -221,11 +227,16 @@
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import CouponModal from "@/components/CouponModal.vue";
+import WalletSelectModal from "@/components/WalletSelectModal.vue";
 import { ref, watch, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
+import Web3 from 'web3';
+import BigNumber from 'bignumber.js';
+import erc20Abi from "@/util/abi/erc20Abi.json";
+import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -270,6 +281,7 @@ const promotionContent = ref('');
 const activeTab = ref('subscription');
 const paymentTab = ref('wallet');
 const hasFirstMonthDiscount = ref(false);
+const showWalletModal = ref(false);
 
 const tabModeMap: Record<string, string> = {
   subscription: 'subscription',
@@ -503,6 +515,15 @@ async function handleRecharge() {
     toast(t('subscribe.agreeFirst'));
     return;
   }
+
+  if (paymentTab.value === 'usdt') {
+    if (!selectedPlan.value) {
+      return;
+    }
+    showWalletModal.value = true;
+    return;
+  }
+
   isPaying.value = true;
   try {
     if (!selectedPlan.value) {
@@ -528,6 +549,124 @@ async function handleRecharge() {
     toast(t('error'));
   } finally {
     isPaying.value = false;
+  }
+}
+
+async function handleWalletSelect(wallet: { id: string; name: string }) {
+  showWalletModal.value = false;
+
+  const walletProvider = getWalletProvider(wallet.id);
+  if (!walletProvider) {
+    toast(t('error'));
+    return;
+  }
+
+  isPaying.value = true;
+  try {
+    await switchChain(walletProvider);
+
+    const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) {
+      toast(t('error'));
+      return;
+    }
+
+    const account = accounts[0];
+
+    const res = await api.generateUAIOrder({ plan_id: selectedPlan.value, address: account });
+    const data = res as any;
+    if (data.code === 0 || data.code === 200) {
+      const orderId = data.data?.order_id || '';
+      const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
+      const usdtAmount = plan?.price || '';
+      if (usdtAmount && parseFloat(usdtAmount) > 0) {
+        const txHash = await transferUSDT(walletProvider, account, usdtAmount);
+        if (txHash && orderId) {
+          await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
+          router.push('/aitool-payment-success');
+          return;
+        } else {
+          router.push('/aitool-payment-fail');
+          return;
+        }
+      }
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'jp' ? data.msg_jp : data.msg);
+    }
+  } catch (error) {
+    console.error('Wallet pay error:', error);
+    toast(t('error'));
+    router.push('/aitool-payment-fail');
+  } finally {
+    isPaying.value = false;
+  }
+}
+
+async function transferUSDT(provider: any, fromAddress: string, amount: string): Promise<string | null> {
+  try {
+    const web3 = new Web3(provider);
+    const tokenContract = new web3.eth.Contract(erc20Abi as any, USDT_CONTRACT_ADDRESS);
+
+    const decimals: number = await tokenContract.methods.decimals().call();
+
+    // 余额检查
+    const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
+    const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    if (new BigNumber(balance).isLessThan(needAmount)) {
+      toast(locale.value === 'en' ? 'Insufficient USDT balance' : locale.value === 'zh' ? 'USDT余额不足' : locale.value === 'tc' ? 'USDT餘額不足' : 'USDT残高不足');
+      return null;
+    }
+
+    // 使用 Web3.js Contract 发起 transfer，与 MetaMask 兼容性最好
+    const receipt: any = await tokenContract.methods
+      .transfer(SUBSCRIPTION_RECEIVER_ADDRESS, needAmount.toFixed())
+      .send({ from: fromAddress });
+
+    const txHash = receipt?.transactionHash || receipt?.status?.transactionHash || null;
+    if (txHash) {
+      toast(t('success'));
+      return txHash;
+    } else {
+      toast(t('error'));
+      return null;
+    }
+  } catch (error: any) {
+    console.error('USDT transfer error:', error);
+    const errMsg = error?.data?.message || error?.message || '';
+    if (errMsg.toLowerCase().includes('insufficient')) {
+      toast(locale.value === 'en' ? 'Insufficient USDT or gas balance' : locale.value === 'zh' ? 'USDT或Gas余额不足' : locale.value === 'tc' ? 'USDT或Gas餘額不足' : 'USDTまたはガス残高不足');
+    } else if (errMsg) {
+      toast(errMsg);
+    } else {
+      toast(t('error'));
+    }
+    return null;
+  }
+}
+
+function getWalletProvider(walletId: string): any {
+  const w = window as any;
+  switch (walletId) {
+    case 'metamask':
+      return w.ethereum || null;
+    case 'okx':
+      return w.okxwallet || null;
+    case 'phantom':
+      return w.phantom?.ethereum || null;
+    case 'walletconnect':
+      return w.ethereum || null;
+    default:
+      return null;
+  }
+}
+
+async function switchChain(provider: any) {
+  const chainId = await provider.request({ method: 'eth_chainId' });
+  if (chainId !== BSC_TESTNET_CHAIN_ID) {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
+    });
   }
 }
 

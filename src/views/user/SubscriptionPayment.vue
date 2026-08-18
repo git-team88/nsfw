@@ -9,7 +9,7 @@
 
       <div class="content-box">
         <div class="page-title-tabs">
-          <div class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
           <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
         </div>
 
@@ -30,7 +30,7 @@
 
         <p v-if="subscriptionDescription" class="plan-desc">{{ subscriptionDescription }}</p>
 
-        <p class="desc">{{ t("subscribe.desc") }}</p>
+        <p class="desc">{{ paymentTab === 'usdt' ? t('subscribe.usdtNote') : t('subscribe.desc') }}</p>
 
         <!-- Agreements -->
         <div class="agreements">
@@ -53,7 +53,7 @@
         </button>
 
         <!-- Auto-renewal Note -->
-        <div class="auto-renewal-note">
+        <div v-if="paymentTab !== 'usdt'" class="auto-renewal-note">
           {{ t('subscribe.autoRenewalNote') }}
         </div>
       </div>
@@ -82,6 +82,9 @@ import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
+import Web3 from 'web3';
+import BigNumber from 'bignumber.js';
+import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, PAY_NETWORK, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 
 const router = useRouter();
@@ -129,6 +132,7 @@ const subscriptionPlans = ref<SubscriptionPlan | SubscriptionPlan[]>({
 });
 
 const paymentTab = ref<'cash' | 'usdt'>('cash');
+const bloggerStatus = ref<number>(0);
 const paymentAgree = ref(true);
 const isLoading = ref(false);
 const showWalletModal = ref(false);
@@ -193,6 +197,12 @@ async function fetchAuthorInfo() {
       };
 
       subscriptionPlans.value = data.data?.subscription_plans || [];
+
+      const status = data.data?.blogger_status ?? data.data?.user?.blogger_status;
+      bloggerStatus.value = Number(status) || 0;
+      if (bloggerStatus.value === 0) {
+        paymentTab.value = 'usdt';
+      }
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -286,17 +296,23 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
 
     const params = {
       blogger_id: userId,
+      address: account,
     };
 
     const res = await api.generateUBloggerSubOrder(params);
     const data = res as any;
-    if (data.code === 0 || data.code === 200) {
+    if (data.code == 0 || data.code == 200) {
       const orderId = data.data?.order_id || '';
       const usdtAmount = subscriptionWeb3Price.value;
       if (usdtAmount && parseFloat(usdtAmount) > 0) {
         const txHash = await transferUSDT(walletProvider, account, usdtAmount);
         if (txHash && orderId) {
-          await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash });
+          await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
+          router.push('/subscription-success');
+          return;
+        } else {
+          router.push('/subscription-fail');
+          return;
         }
       }
     } else {
@@ -304,6 +320,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
     }
   } catch (error) {
     toast(t("fail"));
+    router.push('/subscription-fail');
   } finally {
     isLoading.value = false;
   }
@@ -311,46 +328,25 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
 
 async function transferUSDT(provider: any, fromAddress: string, amount: string): Promise<string | null> {
   try {
-    const decimalsHex = await provider.request({
-      method: 'eth_call',
-      params: [{
-        to: USDT_CONTRACT_ADDRESS,
-        data: '0x313ce56b'
-      }, 'latest']
-    });
+    const web3 = new Web3(provider);
+    const tokenContract = new web3.eth.Contract(erc20Abi as any, USDT_CONTRACT_ADDRESS);
 
-    const decimalsNum = decimalsHex && decimalsHex !== '0x' ? parseInt(decimalsHex, 16) : 18;
+    const decimals: number = await tokenContract.methods.decimals().call();
 
-    const amountFloat = parseFloat(amount);
-    const multiplier = BigInt(10) ** BigInt(decimalsNum);
-    const intPart = BigInt(Math.floor(amountFloat));
-    const fracStr = (amountFloat % 1).toFixed(decimalsNum).replace('0.', '');
-    const fracPart = BigInt(fracStr);
-    const amountInWei = intPart * multiplier + fracPart;
-    const valueHex = amountInWei.toString(16);
+    // 余额检查
+    const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
+    const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    if (new BigNumber(balance).isLessThan(needAmount)) {
+      toast(locale.value === 'en' ? 'Insufficient USDT balance' : locale.value === 'zh' ? 'USDT余额不足' : locale.value === 'tc' ? 'USDT餘額不足' : 'USDT残高不足');
+      return null;
+    }
 
-    const toAddressPadded = SUBSCRIPTION_RECEIVER_ADDRESS.toLowerCase().replace('0x', '').padStart(64, '0');
-    const valuePadded = valueHex.padStart(64, '0');
-    const transferData = '0xa9059cbb' + toAddressPadded + valuePadded;
+    // 使用 Web3.js Contract 发起 transfer，与 MetaMask 兼容性最好
+    const receipt: any = await tokenContract.methods
+      .transfer(SUBSCRIPTION_RECEIVER_ADDRESS, needAmount.toFixed())
+      .send({ from: fromAddress });
 
-    console.log('USDT transfer params:', {
-      from: fromAddress,
-      to: USDT_CONTRACT_ADDRESS,
-      amount,
-      decimals: decimalsNum,
-      amountInWei: amountInWei.toString(),
-      data: transferData,
-    });
-
-    const txHash = await provider.request({
-      method: 'eth_sendTransaction',
-      params: [{
-        from: fromAddress,
-        to: USDT_CONTRACT_ADDRESS,
-        data: transferData,
-      }]
-    });
-
+    const txHash = receipt?.transactionHash || receipt?.status?.transactionHash || null;
     if (txHash) {
       toast(t('success'));
       return txHash;
@@ -358,9 +354,16 @@ async function transferUSDT(provider: any, fromAddress: string, amount: string):
       toast(t("fail"));
       return null;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('USDT transfer error:', error);
-    toast(t("fail"));
+    const errMsg = error?.data?.message || error?.message || '';
+    if (errMsg.toLowerCase().includes('insufficient')) {
+      toast(locale.value === 'en' ? 'Insufficient USDT or gas balance' : locale.value === 'zh' ? 'USDT或Gas余额不足' : locale.value === 'tc' ? 'USDT或Gas餘額不足' : 'USDTまたはガス残高不足');
+    } else if (errMsg) {
+      toast(errMsg);
+    } else {
+      toast(t("fail"));
+    }
     return null;
   }
 }

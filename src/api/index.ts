@@ -213,6 +213,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  generateUAIOrder: (data: any) =>
+    axios.request({
+      url: "order/generateUAIOrder",
+      data: data,
+      method: "POST",
+    }),
   webThreeCallbackUPaid: (data: any) =>
     axios.request({
       url: "webThreeCallback/uPaid",

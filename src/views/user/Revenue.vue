@@ -7,38 +7,66 @@
       <div class="main">
         <div class="panel-top">
           <div class="panel-title">{{ t("user.sidebar.revenue") }}</div>
+          <div class="panel-tip">
+            {{ t("user.revenue.withdrawTip") }}
+            <span class="pink">{{ t("user.revenue.communityRule") }}</span>
+            {{ t("user.revenue.withdrawTipEnd") }}
+          </div>
         </div>
+
         <div class="content">
-          <div class="metrics">
-            <div class="metric fans">
-              <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
-              <div class="metric-value pink">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)}` : "--" }}
+          <div class="token-section">
+            <div class="token-metrics">
+              <div class="metric token-withdrawable">
+                <div class="metric-label">{{ t("user.revenue.pending") }}</div>
+                <div class="metric-value">
+                  {{ availableJpy != null ? `${formatSci(availableJpy)}` : "--" }}
+                </div>
+                <img class="metric-icon" src="@/assets/images/user/withdraw_icon.png" alt="" />
+              </div>
+              <div class="metric token-withdrawing">
+                <div class="metric-label">{{ t("user.revenue.tokenWithdrawing") }}</div>
+                <div class="metric-value">
+                  {{ pendingJpy != null ? `${formatSci(pendingJpy)}` : "--" }}
+                </div>
               </div>
             </div>
-            <div class="metric comments">
-              <div class="metric-label">{{ t("user.revenue.pending") }}</div>
-              <div class="metric-value orange">
-                {{ (availableJpy != null) ? `${formatSci(availableJpy)}` : "--" }}
+            <div class="token-info">
+              <div class="info-tip">{{ t("user.revenue.tokenWithdrawTip") }}</div>
+              <div class="btn-group">
+                <button class="withdraw-btn secondary" @click="openWithdrawRecord">
+                  {{ t("user.revenue.withdrawRecord") }}
+                </button>
+                <button class="withdraw-btn primary" @click="openWithdrawModal">
+                  {{ t("user.revenue.withdraw") }}
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="withdraw-banner">
-            <div class="banner-left">
-              <div class="banner-tip">
-                {{ t("user.revenue.withdrawTip") }}
-                <span class="pink">{{ t("user.revenue.communityRule") }}</span>
-                {{ t("user.revenue.withdrawTipEnd") }}
+          <div class="cash-section">
+            <div class="cash-metrics">
+              <div class="metric cash-frozen">
+                <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
+                <div class="metric-value">
+                  {{ pendingJpy != null ? `${formatSci(pendingJpy)}` : "--" }}
+                </div>
+                <img class="metric-icon" src="@/assets/images/user/withdraw_icon.png" alt="" />
               </div>
             </div>
-            <div class="btn-group">
-              <button class="withdraw-btn secondary" @click="openWithdrawRecord">
-                {{ t("user.revenue.withdrawRecord") }}
+            <div class="cash-info">
+              <div class="info-tip">{{ t("user.revenue.cashWithdrawTip") }}</div>
+              <button class="withdraw-btn secondary cash-record-btn" @click="openWithdrawRecord">
+                {{ t("user.revenue.cashWithdrawRecord") }}
               </button>
-              <button class="withdraw-btn primary" @click="openWithdrawModal">
-                {{ t("user.revenue.withdraw") }}
-              </button>
+            </div>
+            <div class="cash-withdrawing-card">
+              <div class="metric cash-withdrawing">
+                <div class="metric-label">{{ t("user.revenue.cashWithdrawing") }}</div>
+                <div class="metric-value">
+                  {{ availableJpy != null ? `${formatSci(availableJpy)}` : "--" }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -224,151 +252,217 @@ function formatSci(n: number | null) {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
-  border-radius: 14px;
+  border: 3px solid #101828;
+  border-radius: 12px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
   margin-left: 238px;
+  background: #FEFDF8;
 }
 .panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 24px;
+  margin: 0 0 20px;
 }
 .panel-title {
-  font-weight: 800;
-  font-size: 20px;
-  color: #161122;
-  position: relative;
-  padding-bottom: 10px;
+  width: 56px;
+  height: 42px;
+  font-weight: 900;
+  font-size: 28px;
+  color: #101828;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  line-height: 42px;
 }
-.panel-title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 46px;
-  height: 4px;
-  border-radius: 2px;
-  background: #FF4D8D;
+.panel-tip {
+  font-size: 16px;
+  color: #99A1AF;
+  letter-spacing: -0.15px;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 24px;
+  margin-top: 13px;
+  .pink {
+    color: #FF4D8E;
+  }
 }
+
 .content {
 }
-.metrics {
+.token-section {
   display: flex;
-  gap: 30px;
-  margin: 0 0 24px;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  border: 2px solid #101828;
+  padding: 0;
+  margin-bottom: 14px;
+}
+.token-metrics {
+  display: flex;
+  gap: 14px;
 }
 .metric {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  min-height: 146px;
-  border: 2px solid #161122;
-  border-radius: 14px;
-  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #101828;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.metric.token-withdrawable {
+  width: 484px;
+  height: 134px;
+  margin: 20px 0 20px 20px;
   background: #FFFDF7;
 }
-.metric.fans {
-  border-top: 5px solid #FF4D8D;
-}
-.metric.comments {
-  border-top: 5px solid #FF9E45;
+.metric.token-withdrawing {
+  width: 484px;
+  height: 134px;
+  margin: 20px 0;
+  background: #FFFDF7;
 }
 .metric-label {
-  color: #161122;
-  font-size: 14px;
-  font-weight: 500;
+  color: #101828;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 24px;
 }
 .metric-value {
-  margin-top: 16px;
+  margin-top: 20px;
   font-weight: 700;
   font-size: 32px;
-  color: #161122;
+  color: #101828;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  line-height: 40px;
 }
-.metric-value.pink {
-  color: #FF4D8D;
-}
-.metric-value.orange {
-  color: #FF9E45;
+.metric-icon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 120px;
+  height: 120px;
 }
 
-.withdraw-banner {
-  .banner-left {
-    .banner-tip {
-      font-size: 12px;
-      color: #161122;
-      margin-bottom: 24px;
-      .pink {
-        color: #FF4D8D;
-      }
+.token-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 20px 20px 54px;
+  height: 134px;
+}
+.token-info .info-tip {
+  font-size: 16px;
+  color: #99A1AF;
+  letter-spacing: -0.15px;
+  font-weight: 500;
+  line-height: 24px;
+}
+.btn-group {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 18px;
+  margin-left: auto;
+}
+
+.cash-section {
+  display: flex;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 12px;
+  border: 2px solid #101828;
+  padding: 0;
+  margin-bottom: 14px;
+  position: relative;
+}
+.cash-metrics {
+  display: flex;
+  gap: 14px;
+}
+.metric.cash-frozen {
+  width: 484px;
+  height: 134px;
+  margin: 20px 0 20px 20px;
+  background: #FFFDF7;
+}
+.cash-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 20px 20px 0;
+  height: 114px;
+}
+.cash-info .info-tip {
+  font-size: 16px;
+  color: #99A1AF;
+  letter-spacing: -0.15px;
+  font-weight: 500;
+  line-height: 24px;
+}
+.cash-record-btn {
+  margin-left: auto;
+  margin-top: 18px;
+}
+.cash-withdrawing-card {
+  position: relative;
+}
+.metric.cash-withdrawing {
+  width: 484px;
+  height: 134px;
+  margin: 20px 20px 20px 0;
+  background: #FFFDF7;
+}
+
+.withdraw-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 136px;
+  height: 48px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  border-radius: 12px;
+
+  &.primary {
+    background: #FF4D8E;
+    border: 2px solid #101828;
+    color: #FFFFFF;
+
+    &:hover {
+      transform: translate(-1px, -1px);
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
     }
   }
 
-  .btn-group {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
+  &.secondary {
+    background: #FFFFFF;
+    border: 2px solid #101828;
+    color: #101828;
 
-  .withdraw-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: 136px;
-    height: 48px;
-    padding: 0 24px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-
-    img {
-      width: 24px;
-      height: 24px;
+    &:hover {
+      color: #FF4D8E;
     }
 
-    &.primary {
-      background: #FF4D8D;
-      border: 2.5px solid #161122;
-      border-radius: 13px;
-      color: #FFFFFF;
-      box-shadow: 3px 3px 0 #161122;
-
-      &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-
-      &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 2px 2px 0 #161122;
-      }
-    }
-
-    &.secondary {
-      background: #FFFDF7;
-      border: 2.5px solid #161122;
-      border-radius: 13px;
-      color: #161122;
-      box-shadow: 3px 3px 0 #161122;
-
-      &:hover {
-        color: #FF4D8D;
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-
-      &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 2px 2px 0 #161122;
-      }
+    &:active {
+      transform: translate(1px, 1px);
     }
   }
 }
@@ -378,20 +472,20 @@ function formatSci(n: number | null) {
   gap: 30px;
   padding: 0 36px 20px;
   position: relative;
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 2.5px solid #101828;
 }
 .tabs span {
   height: auto;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  color: #161122;
+  color: #101828;
   position: relative;
   padding: 6px 0;
 }
 .tabs span.on {
   font-weight: 700;
-  color: #161122;
+  color: #101828;
 }
 .tabs span.on::after {
   content: "";
@@ -404,7 +498,7 @@ function formatSci(n: number | null) {
   border-radius: 2px;
 }
 .block {
-  border: 2px solid #161122;
+  border: 2px solid #101828;
   border-radius: 13px;
   padding: 0;
   background: #FFFDF7;
@@ -416,10 +510,10 @@ function formatSci(n: number | null) {
   font-size: 14px;
   font-weight: 700;
   padding: 0 36px;
-  color: #161122;
+  color: #101828;
 }
 .block.overall {
-  border-color: #161122;
+  border-color: #101828;
 }
 .block.overall .block-title {
   color: #FF4D8D;
@@ -427,7 +521,7 @@ function formatSci(n: number | null) {
   border-bottom: 2.5px solid #FF4D8D;
 }
 .block.work {
-  border-color: #161122;
+  border-color: #101828;
 }
 .block.work .block-title {
   color: #00D3F2;
@@ -450,13 +544,13 @@ function formatSci(n: number | null) {
   height: 28px;
   border: none;
   outline: none;
-  color: #161122;
+  color: #101828;
   background: transparent;
 }
 .download {
   height: 40px;
   padding: 0 12px;
-  border: 2.5px solid #161122;
+  border: 2.5px solid #101828;
   border-radius: 13px;
   background: #00D3F2;
   color: #fff;
@@ -465,16 +559,16 @@ function formatSci(n: number | null) {
   gap: 6px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: 3px 3px 0 #101828;
   transition: transform 0.1s, box-shadow 0.1s;
 
   &:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 4px 4px 0 #101828;
   }
   &:active {
     transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: 2px 2px 0 #101828;
   }
 }
 .block.overall .download {
@@ -489,7 +583,7 @@ function formatSci(n: number | null) {
 }
 
 .table {
-  border: 2px solid #161122;
+  border: 2px solid #101828;
   border-radius: 13px;
   overflow: hidden;
   margin: 0 36px;
@@ -499,13 +593,13 @@ function formatSci(n: number | null) {
   display: grid;
 }
 .table.overall {
-  border-color: #161122;
+  border-color: #101828;
 }
 .table.work {
-  border-color: #161122;
+  border-color: #101828;
 }
 .table.record {
-  border-color: #161122;
+  border-color: #101828;
 }
 .table.overall .thead,
 .table.overall .tr {
@@ -550,7 +644,7 @@ function formatSci(n: number | null) {
   padding: 20px;
   border-radius: 18px;
   background: #FFFDF7;
-  border: 2px solid #161122;
+  border: 2px solid #101828;
   position: relative;
   text-align: center;
 }
@@ -562,8 +656,8 @@ function formatSci(n: number | null) {
   height: 32px;
   border-radius: 999px;
   background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  border: 2px solid #101828;
+  box-shadow: 2px 2px 0 #101828;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -579,7 +673,7 @@ function formatSci(n: number | null) {
 }
 .modal-title {
   font-size: 14px;
-  color: #161122;
+  color: #101828;
   margin-bottom: 10px;
   font-weight: 500;
 }
@@ -592,22 +686,22 @@ function formatSci(n: number | null) {
 .modal-confirm {
   height: 40px;
   padding: 0 16px;
-  border: 2.5px solid #161122;
+  border: 2.5px solid #101828;
   border-radius: 13px;
   background: #FF4D8D;
   color: #fff;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: 3px 3px 0 #101828;
   transition: transform 0.1s, box-shadow 0.1s;
 
   &:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 4px 4px 0 #101828;
   }
   &:active {
     transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: 2px 2px 0 #101828;
   }
 }
 .modal-confirm:disabled {
@@ -618,23 +712,23 @@ function formatSci(n: number | null) {
 
 .table.overall .thead,
 .table.overall .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 2.5px solid #101828;
 }
 .table.work .thead,
 .table.work .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 2.5px solid #101828;
 }
 .table.record .thead,
 .table.record .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 2.5px solid #101828;
 }
 .th {
-  color: #161122;
+  color: #101828;
   font-weight: 700;
   background: #FFF0F5;
 }
 td {
-  color: #161122;
+  color: #101828;
 }
 .table.overall .th {
   background: #FFF0F5;
@@ -667,18 +761,42 @@ td {
   padding: 24px;
   margin-left: 0;
   }
-  .metrics {
+  .token-section {
+    flex-direction: column;
+  }
+  .token-metrics {
     flex-direction: column;
     gap: 16px;
+    width: 100%;
   }
-  .metric {
-    min-height: auto;
-    padding: 20px;
+  .metric.token-withdrawable,
+  .metric.token-withdrawing {
+    width: auto;
+    margin: 0;
+  }
+  .token-info {
+    padding: 16px 20px 20px 0;
+    margin-left: 20px;
+  }
+  .cash-section {
+    flex-direction: column;
+  }
+  .metric.cash-frozen {
+    width: auto;
+    margin: 0;
+  }
+  .cash-info {
+    padding: 16px 20px 20px 0;
+    margin-left: 20px;
+  }
+  .metric.cash-withdrawing {
+    width: auto;
+    margin: 0;
   }
   .metric-value {
     font-size: 24px;
   }
-  .withdraw-banner .btn-group {
+  .btn-group {
     flex-wrap: wrap;
     gap: 12px;
   }
@@ -701,6 +819,14 @@ td {
   }
   .content {
     padding: 16px;
+  }
+  .panel-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .panel-tip {
+    white-space: normal;
   }
   .metric {
     padding: 16px;
