@@ -1,74 +1,49 @@
 <template>
-  <div class="subscription-success-page">
+  <div class="withdraw-success-page">
     <Header :cur="-1"></Header>
     <div class="container">
-      <!-- <div class="back" @click="router.back()">
-        <img src="@/assets/images/base/back.png" alt="" />
-      </div> -->
 
       <div class="content-box">
-        <h1 class="page-title">{{ t("subscribe.success.title") }}</h1>
+        <h1 class="page-title">{{ t("user.revenue.withdrawSuccessTitle") }}</h1>
 
-        <div class="error-message">
-          <p>{{ t("subscribe.success.line1") }}</p>
-          <p>{{ t("subscribe.success.line2") }}</p>
-          <p>
-            {{ t("subscribe.success.supportEmail") }}support@moegen.ai
-          </p>
-          <p>
-            {{ t("subscribe.success.discord") }}
-            <a class="contact-link" href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener">https://discord.gg/kWkuYjs9</a>
-          </p>
-        </div>
+        <p class="success-message">{{ t("user.revenue.withdrawSuccessDesc") }}</p>
 
-        <!-- Success Icon -->
         <div class="success-icon">
           <img src="@/assets/images/user/success_icon.png" alt="" />
         </div>
 
-        <!-- Back Button -->
-        <button class="back-btn" @click="backToCommunity">
-          {{ t("subscribe.success.back") }}
-        </button>
+        <div class="button-group">
+          <button class="back-home-btn" @click="backToHome">
+            {{ t("subscribe.success.backToHome") }}
+          </button>
+          <button class="back-btn" @click="backToRevenue">
+            {{ t("user.revenue.backToRevenue") }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts" name="SubscriptionSuccess">
+<script setup lang="ts" name="TokenWithdrawSuccess">
 import Header from "@/components/Header.vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { trackPurchase } from "@/utils/analytics";
 
 const router = useRouter();
-const route = useRoute();
 const { t } = useI18n();
 
-const amount = Number(route.query.amount || 0);
-if (amount > 0) {
-  trackPurchase({
-    paymentType: "1",
-    value: amount,
-    currency: (route.query.currency || "JPY") as string,
-  });
+function backToHome() {
+  router.replace('/');
 }
 
-function backToCommunity() {
-  const id = route.query.id;
-  if (id) {
-    router.replace({
-      path: "/user-home",
-      query: { id: id }
-    });
-  } else {
-    router.replace('/');
-  }
+function backToRevenue() {
+  router.replace('/user-revenue');
 }
 </script>
 
 <style scoped lang="scss">
-.subscription-success-page {
+.withdraw-success-page {
   width: 100%;
   min-height: 100vh;
   padding: 140px 0 0;
@@ -90,26 +65,15 @@ function backToCommunity() {
   .page-title {
     font-size: 20px;
     font-weight: 800;
-    color: #161122;
+    color: #101828;
   }
 
-  .error-message {
+  .success-message {
     font-size: 14px;
-    color: #161122;
+    color: #101828;
     text-align: center;
     line-height: 20px;
-    margin-top: 40px;
-    p {
-      margin: 0;
-    }
-  }
-
-  .contact-link {
-    color: #FF4D8E;
-    text-decoration: none;
-    &:hover {
-      text-decoration: underline;
-    }
+    margin-top: 20px;
   }
 
   .success-icon {
@@ -117,13 +81,13 @@ function backToCommunity() {
     height: 80px;
     margin: 40px 0 60px;
     background: #22c55e;
-    border: 3px solid #161122;
+    border: 3px solid #101828;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 4px 4px 0 rgba(16, 24, 40, 0.14);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     img {
@@ -142,22 +106,50 @@ function backToCommunity() {
     }
   }
 
+  .button-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .back-home-btn {
+    min-width: 240px;
+    height: 48px;
+    background: #FFFFFF;
+    color: #101828;
+    border: 2px solid #101828;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #101828;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+
+    &:hover {
+      border-color: #FF4D8E;
+      color: #FF4D8E;
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 0 #101828;
+    }
+  }
+
   .back-btn {
     min-width: 240px;
     height: 48px;
     background: linear-gradient(135deg, #FF4D8D, #FF7A45);
     color: #FFFFFF;
-    border: 2px solid #161122;
+    border: 2px solid #101828;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: 2px 2px 0 #101828;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: 3px 3px 0 #101828;
     }
   }
 }
@@ -168,7 +160,7 @@ function backToCommunity() {
 }
 
 @media (max-width: 768px) {
-  .subscription-success-page {
+  .withdraw-success-page {
     padding: 80px 0 0;
   }
   .container {
@@ -181,6 +173,10 @@ function backToCommunity() {
     .success-icon {
       margin: 30px 0 40px;
     }
+    .button-group {
+      gap: 16px;
+    }
+    .back-home-btn,
     .back-btn {
       min-width: 160px;
       height: 44px;
@@ -190,7 +186,7 @@ function backToCommunity() {
 }
 
 @media (max-width: 480px) {
-  .subscription-success-page {
+  .withdraw-success-page {
     padding: 70px 0 0;
   }
   .container {
@@ -203,6 +199,11 @@ function backToCommunity() {
     .success-icon {
       margin: 24px 0 30px;
     }
+    .button-group {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .back-home-btn,
     .back-btn {
       width: 100%;
       min-width: unset;

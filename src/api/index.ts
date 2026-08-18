@@ -247,6 +247,13 @@ export default {
       method: "POST",
     }),
 
+  applyWithdraw: (data: any) =>
+    axios.request({
+      url: "order/applyWithdraw",
+      method: "POST",
+      data: data,
+    }),
+
   createAccount: (data: any) =>
     axios.request({
       url: "post/generateOnboardingUrl",

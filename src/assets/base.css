@@ -5,7 +5,6 @@
   -moz-tap-highlight-color: rgba(0, 0, 0, 0);
   -ms-tap-highlight-color: rgba(0, 0, 0, 0);
   -o-tap-highlight-color: rgba(0, 0, 0, 0);
-  tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -106,7 +105,7 @@ body {
   font-size: 16px;
   font-weight: 400;
   background: #FFFBF4;
-  color: #101828;
+  color: #161122;
 }
 
 body.en,

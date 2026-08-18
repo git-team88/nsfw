@@ -192,6 +192,11 @@ const routes = [
     component: () => import("@/views/user/AIToolPaymentSuccess.vue"),
   },
   {
+    path: "/token-withdraw-success",
+    name: "TokenWithdrawSuccess",
+    component: () => import("@/views/user/TokenWithdrawSuccess.vue"),
+  },
+  {
     path: "/aitool-payment-fail",
     name: "AIToolPaymentFailed",
     component: () => import("@/views/user/AIToolPaymentFailed.vue"),

@@ -17,7 +17,7 @@
 
         <span>
           {{ t("subscribe.agree") }}
-          <a href="#" @click.prevent="openLink">{{ t("subscribe.paymentTerms") }}</a>
+          <a href="#">{{ t("subscribe.paymentTerms") }}</a>
         </span>
       </div>
     </div>
