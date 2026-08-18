@@ -242,7 +242,7 @@
                   <div class="video-meta">
                     <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
-                    <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
+                    <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ record.duration }}s</span>
                   </div>
                   <span class="video-time">{{ formatTimestamp(record.createTime) }}</span>
@@ -655,10 +655,8 @@
                 <div class="video-settings-selector" @mousedown.prevent @click="showVideoSettings = !showVideoSettings; showVideoMultimodalDropdown = false" :class="{ open: showVideoSettings }">
                   <div class="selector-header">
                     <span>{{ selectedVideoQuality }}</span>
-                    <template v-if="selectedVideoMultimodal != 'startEndFrames'">
-                      <span class="settings-divider"></span>
-                      <span>{{ selectedVideoRatio }}</span>
-                    </template>
+                    <span class="settings-divider"></span>
+                    <span>{{ selectedVideoMultimodal == 'startEndFrames' ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
                     <span class="settings-divider"></span>
                     <span>{{ selectedVideoDuration }}s</span>
                     <span class="settings-line"></span>
@@ -690,6 +688,14 @@
                           @click.stop="selectedVideoRatio = ratio.value"
                         >
                           {{ ratio.label }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="settings-section" v-else>
+                      <span class="settings-label">{{ t('home.videoSettings.ratio') }}</span>
+                      <div class="settings-options">
+                        <div class="dropdown-item active">
+                          {{ t('home.videoSettings.ratioAuto') }}
                         </div>
                       </div>
                     </div>
@@ -731,7 +737,7 @@
                    </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal == 'multimodal'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                <div class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
                   <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
@@ -2136,6 +2142,28 @@ const getMediaDuration = (file: File): Promise<number> => {
     } else {
       resolve(0);
     }
+  });
+};
+
+const detectImageRatio = (url: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const ratio = w / h;
+      if (ratio < 0.7) {
+        resolve('9:16');
+      } else if (ratio > 1.4) {
+        resolve('16:9');
+      } else {
+        resolve('1:1');
+      }
+    };
+    img.onerror = () => {
+      resolve('9:16');
+    };
+    img.src = url;
   });
 };
 
@@ -4183,6 +4211,11 @@ const doGenerateVideo = async () => {
   try {
     sessionId = uuidv4();
 
+    let detectedRatio = selectedVideoRatio.value;
+    if (selectedVideoMultimodal.value === 'startEndFrames' && startFrameImage.value) {
+      detectedRatio = await detectImageRatio(startFrameImage.value);
+    }
+
     let referenceImages: any[] = [];
 
     if (selectedVideoMultimodal.value === 'startEndFrames') {
@@ -4227,10 +4260,10 @@ const doGenerateVideo = async () => {
       user_id: 0,
       total_chapters: 1,
       resolution: selectedVideoQuality.value,
-      ratio: selectedVideoRatio.value,
+      ratio: detectedRatio,
       duration: selectedVideoDuration.value,
       user_selected: {
-        ratio: selectedVideoRatio.value,
+        ratio: detectedRatio,
         language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
         story_type: 'simple_video',
         story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
@@ -4259,7 +4292,7 @@ const doGenerateVideo = async () => {
 
     const videoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
-      aspectRatio: selectedVideoRatio.value,
+      aspectRatio: selectedVideoMultimodal.value === 'startEndFrames' ? '' : selectedVideoRatio.value,
       duration: selectedVideoDuration.value
     };
 

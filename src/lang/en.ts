@@ -1994,6 +1994,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       aspectRatio: "Aspect Ratio",
       quality: "Quality",
       ratio: "Ratio",
+      ratioAuto: "Auto",
       duration: "Duration",
       cancel: "Cancel",
       confirm: "Confirm",

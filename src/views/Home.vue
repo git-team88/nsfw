@@ -321,10 +321,8 @@
                       <div class="video-settings-selector" @click="showVideoSettings = !showVideoSettings; showVideoMultimodalDropdown = false" :class="{ open: showVideoSettings }">
                         <div class="selector-header">
                           <span>{{ selectedVideoQuality }}</span>
-                          <template v-if="selectedVideoMultimodal != 'startEndFrames'">
-                            <span class="settings-divider"></span>
-                            <span>{{ selectedVideoRatio }}</span>
-                          </template>
+                          <span class="settings-divider"></span>
+                          <span>{{ selectedVideoMultimodal == 'startEndFrames' ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
                           <span class="settings-divider"></span>
                           <span>{{ selectedVideoDuration }}s</span>
                           <span class="settings-line"></span>
@@ -356,6 +354,14 @@
                                 @click.stop="selectedVideoRatio = ratio.value"
                               >
                                 {{ ratio.label }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="settings-section" v-else>
+                            <span class="settings-label">{{ t('home.videoSettings.ratio') }}</span>
+                            <div class="settings-options">
+                              <div class="dropdown-item active">
+                                {{ t('home.videoSettings.ratioAuto') }}
                               </div>
                             </div>
                           </div>
@@ -391,7 +397,7 @@
                         </div>
                       </div>
 
-                      <div v-if="selectedVideoMultimodal == 'multimodal'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -3176,7 +3182,7 @@ const doGenerateVideo = async () => {
     }
 
     const params = {
-      ratio: selectedVideoRatio.value,
+      ratio: selectedVideoMultimodal.value === 'startEndFrames' ? '' : selectedVideoRatio.value,
       language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "simple_video",
       story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',

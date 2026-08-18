@@ -1822,6 +1822,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       aspectRatio: "比率",
       quality: "品質",
       ratio: "比率",
+      ratioAuto: "自動",
       duration: "期間",
       cancel: "キャンセル",
       confirm: "確認",

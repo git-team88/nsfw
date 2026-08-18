@@ -2099,6 +2099,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       aspectRatio: "比例",
       quality: "画质",
       ratio: "比例",
+      ratioAuto: "自动",
       duration: "时长",
       cancel: "取消",
       confirm: "确认",
