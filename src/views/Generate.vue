@@ -2329,18 +2329,18 @@ const handleVideoRefUpload = async (event: Event) => {
             input.value = '';
             return;
           }
-          if (!isUnlimited) {
-            const videoDuration = await getMediaDuration(file);
-            if (videoDuration < 2) {
-              toast(t('home.error.videoDurationTooShort', { min: 2 }));
-              input.value = '';
-              return;
-            }
-            if (videoDuration > 38) {
-              toast(t('home.error.videoDurationTooLong', { max: 38 }));
-              input.value = '';
-              return;
-            }
+          const videoDuration = await getMediaDuration(file);
+          const minVideoDuration = isUnlimited ? 1 : 2;
+          const maxVideoDuration = isUnlimited ? 30 : 38;
+          if (videoDuration < minVideoDuration) {
+            toast(t('home.error.videoDurationTooShort', { min: minVideoDuration }));
+            input.value = '';
+            return;
+          }
+          if (videoDuration > maxVideoDuration) {
+            toast(t('home.error.videoDurationTooLong', { max: maxVideoDuration }));
+            input.value = '';
+            return;
           }
         } else if (file.type.startsWith('audio/')) {
           if (isUnlimited) {

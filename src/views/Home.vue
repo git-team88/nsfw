@@ -4109,15 +4109,17 @@ const handleFileChange = async (event: Event) => {
               toast(t('home.error.maxVideoSize', { max: currentMode === 'unlimited' ? 100 : 200 }));
               return;
             }
-            // Check video duration (2-38 seconds) for multimodal normal mode
-            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && currentMode !== 'unlimited') {
+            // Check video duration for multimodal mode
+            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
               const videoDuration = await getMediaDuration(file);
-              if (videoDuration < 2) {
-                toast(t('home.error.videoDurationTooShort', { min: 2 }));
+              const minDuration = currentMode === 'unlimited' ? 1 : 2;
+              const maxDuration = currentMode === 'unlimited' ? 30 : 38;
+              if (videoDuration < minDuration) {
+                toast(t('home.error.videoDurationTooShort', { min: minDuration }));
                 return;
               }
-              if (videoDuration > 38) {
-                toast(t('home.error.videoDurationTooLong', { max: 38 }));
+              if (videoDuration > maxDuration) {
+                toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
                 return;
               }
             }
