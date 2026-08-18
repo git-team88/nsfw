@@ -139,10 +139,10 @@
               >
                 <div class="chapter-left">
                   <span
-                    v-if="chapter.status && (chapter.status == 'subscribed' || chapter.status == 'private')"
+                    v-if="chapter.accessRights && chapter.accessRights != '1' && (chapter.accessRights != '3' || isOwn)"
                     class="chapter-status"
-                    :class="getStatusClass(chapter.status)"
-                  >{{ getStatusText(chapter.status) }}</span>
+                    :class="getPermClass(chapter.accessRights)"
+                  >{{ getPermText(chapter.accessRights) }}</span>
                   <span class="chapter-title">{{ chapter.title }}</span>
                 </div>
                 <div class="chapter-right" v-if="isOwn && collection.status != '2'">
@@ -208,6 +208,7 @@ interface Chapter {
   title: string;
   subtitle?: string;
   status: 'published' | 'draft' | 'subscribed' | 'private';
+  accessRights?: '1' | '2' | '3';
 }
 
 interface CollectionHistory {
@@ -389,7 +390,8 @@ async function fetchCollectionDetail() {
             id: chapter.post_id || chapter.id,
             title: chapter.title || '',
             subtitle: chapter.subtitle,
-            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
+            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
+            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1'
           })),
           history: finalData.history && !Array.isArray(finalData.history) && finalData.history.post_id ? {
             post_id: String(finalData.history.post_id || ''),
@@ -775,6 +777,18 @@ function getStatusText(status: string): string {
     'private': t('collectionDetail.statusPrivate')
   };
   return statusMap[status] || status;
+}
+
+function getPermClass(accessRights?: string): string {
+  if (accessRights == '2') return 'status-subscribed';
+  if (accessRights == '3') return 'status-private';
+  return 'status-public';
+}
+
+function getPermText(accessRights?: string): string {
+  if (accessRights == '2') return t('collectionDetail.statusSubscribed');
+  if (accessRights == '3') return t('submit.permPrivate');
+  return t('submit.permPublic');
 }
 
 function onUserLoggedOut() {
@@ -1414,13 +1428,13 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
 
       &.status-subscribed {
-        background: rgba(255, 77, 141, 0.12);
-        color: #FF4D8D;
+        background: #FF4D8D;
+        color: #FFFFFF;
       }
 
       &.status-private {
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+        background: #161122;
+        color: #FFFFFF;
       }
     }
 

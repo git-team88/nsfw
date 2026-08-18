@@ -563,7 +563,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
     .info-label {
       font-weight: 600;
       font-size: 16px;
-      color: #9a93a4;
+      color: #99A1AF;
     }
 
     .info-value {
@@ -618,7 +618,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   .info-label {
     font-weight: 600;
     font-size: 16px;
-    color: #9a93a4;
+    color: #99A1AF;
   }
 
   .info-value {
@@ -627,8 +627,8 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
     color: #161122;
 
     .private-hint {
-      font-weight: normal;
-      color: #9a93a4;
+      font-weight: 500;
+      color: #99A1AF;
     }
   }
 }
