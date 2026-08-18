@@ -59,7 +59,7 @@
                   </button>
                 </div>
                 <div class="price-row">
-                  <span class="price">{{ price }} {{ t('aiRecharge.unit') }}</span>
+                  <span class="price">{{ price }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ web3Price }} USDT）</template></span>
                   <span class="per">{{ t("user.subscription.perMonth") }}</span>
                 </div>
               </div>
@@ -115,6 +115,7 @@ function checkLogin() {
 
 const sidebarKey = ref("subscription");
 const price = ref("");
+const web3Price = ref("");
 const description = ref("");
 const plan = ref<any>(null);
 const loading = ref(false);
@@ -185,6 +186,7 @@ async function fetchSubscription() {
     if (data.code === 200 || data.code === 0) {
       plan.value = data.data?.plan || null;
       price.value = data.data?.plan?.price || "0";
+      web3Price.value = data.data?.plan?.web3?.price || "";
       description.value = data.data?.plan?.description || t("user.subscription.benefitsText")
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)

@@ -61,7 +61,7 @@
                     <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.plan_id" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
-                  <span class="price-text">{{ option.price }} {{ t('aiRecharge.unit') }}</span>
+                  <span class="price-text">{{ option.price }} {{ t('aiRecharge.unit') }}（{{ option.web3?.price || '' }} USDT）</span>
                 </div>
               </div>
             </div>

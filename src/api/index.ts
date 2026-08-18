@@ -207,6 +207,18 @@ export default {
       data: data,
       method: "POST",
     }),
+  generateUBloggerSubOrder: (data: any) =>
+    axios.request({
+      url: "order/generateUBloggerSubOrder",
+      data: data,
+      method: "POST",
+    }),
+  webThreeCallbackUPaid: (data: any) =>
+    axios.request({
+      url: "webThreeCallback/uPaid",
+      data: data,
+      method: "POST",
+    }),
   cancelSubscribe: () =>
     axios.request({
       url: "post/getStripeCustomerPortalUrl",
