@@ -97,8 +97,8 @@
       @confirm="confirmCashWithdraw"
     />
 
-    <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
-    <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
+    <KycRequiredModal :visible="showKycRequiredModal" :message="t('user.revenue.kycRequiredMessage')" @close="showKycRequiredModal = false" />
+    <KycReviewingModal :visible="showKycReviewingModal" :message="t('user.revenue.kycReviewingMessage')" @close="showKycReviewingModal = false" />
 
     <UploadMask :visible="isLoading" :text="t('loading')" />
 

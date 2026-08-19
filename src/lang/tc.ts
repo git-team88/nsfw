@@ -1638,6 +1638,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       withdrawSuccessDesc: "30天內，將自動打款至指定錢包地址",
       backToRevenue: "返回收益",
       noProfit: "暫無可提現收益",
+      kycRequiredMessage: "提現之前，請先進行實名認證",
+      kycReviewingMessage: "審核通過之前，不能進行提現<br>請耐心等待審核，最長需要7個工作日",
       noData: "暫無數據",
       withdrawSuccess: "提現成功",
       csvFileName: "收益數據",

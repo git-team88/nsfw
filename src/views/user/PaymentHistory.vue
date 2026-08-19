@@ -166,7 +166,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ item.amount || item.price }}{{ t('aiRecharge.unit') }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? trimZeros(getWeb3Price(item)) : (item.amount || item.price) }} {{ isWeb3Order(item) ? getWeb3Currency(item) : t('aiRecharge.unit') }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -249,10 +249,22 @@ const { t, locale } = useI18n();
 
 function trimZeros(val: string | number): string {
   const s = String(val);
-  if (s === '' || s === '0') return s;
+  if (s == '' || s == '0') return s;
   const num = parseFloat(s);
   if (isNaN(num)) return s;
   return num.toString();
+}
+
+function isWeb3Order(item: any): boolean {
+  return (item.stripe_subscription_id || '').toLowerCase().startsWith('web3');
+}
+
+function getWeb3Price(item: any): string {
+  return item.web3?.price || '';
+}
+
+function getWeb3Currency(item: any): string {
+  return item.web3?.currency || 'USDT';
 }
 
 function getPlanDescLang() {
@@ -409,7 +421,7 @@ async function fetchProcessingData() {
           id: item.id,
           avatar: '',
           price: item.amount || 0,
-          web3Price: item.plan?.web3?.price || '',
+          web3Price: item.web3?.price || '',
           startTime: item.created_at || '',
           endTime: item.current_period_end || '',
           autoRenew: item.cancel_at_period_end == '1',
@@ -418,7 +430,7 @@ async function fetchProcessingData() {
             name: item.plan?.name || '',
             description: item.plan?.description || '',
             price: item.plan?.price || 0,
-            web3Price: item.plan?.web3?.price || '',
+            web3Price: item.web3?.price || '',
             billing_period: item.plan?.billing_period || '',
             plan_id: item.plan?.plan_id || 1
           },
@@ -886,9 +898,6 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
   margin-left: 238px;
-}
-
-.content {
 }
 
 .panel-top {

@@ -24,7 +24,10 @@
             <span class="col col-wallet">{{ item.walletAddress }}</span>
             <span class="col col-amount">{{ item.amount }}</span>
           </div>
-          <div class="no-data" v-if="records.length === 0">{{ t("user.revenue.noData") }}</div>
+          <div class="no-data" v-if="records.length === 0">
+            <img class="no-data-icon" src="@/assets/images/base/no_data.png" alt="" />
+            <span>{{ t("user.revenue.noData") }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -163,11 +166,18 @@ defineEmits<{
 }
 .no-data {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 120px;
+  height: 240px;
   font-size: 14px;
   color: #99A1AF;
+  gap: 12px;
+}
+.no-data-icon {
+  width: 120px;
+  height: 120px;
+  opacity: 0.6;
 }
 
 @media (max-width: 768px) {

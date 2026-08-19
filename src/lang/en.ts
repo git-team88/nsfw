@@ -1535,6 +1535,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       withdrawSuccessDesc: "Tokens will be automatically sent to the designated wallet address within 30 days",
       backToRevenue: "Back to Revenue",
       noProfit: "There is no withdrawable income temporarily.",
+      kycRequiredMessage: "Please complete identity verification before setting up withdrawal.",
+      kycReviewingMessage: "Withdrawal cannot be made until verification is approved.<br>Please wait for review, which takes up to 7 business days.",
       noData: "No data available",
       withdrawSuccess: "Withdrawal successful",
       csvFileName: "revenue-data",

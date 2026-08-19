@@ -1259,6 +1259,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       withdrawSuccessDesc: "30日以内に、指定されたウォレットアドレスに自動的に送金されます",
       backToRevenue: "収益に戻る",
       noProfit: "出金可能額はありません",
+      kycRequiredMessage: "出金設定の前に、本人確認を完了してください",
+      kycReviewingMessage: "審査通過まで出金できません<br>審査をお待ちください。最大7営業日かかります",
       noData: "データがありません",
       withdrawSuccess: "出金に成功しました",
       csvFileName: "収益データ",
