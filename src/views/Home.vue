@@ -4266,7 +4266,7 @@ const handleFileChange = async (event: Event) => {
             ? await uploadVideo(file)
             : fileType === 'audio'
             ? await uploadAudio(file)
-            : await uploadImage(file, currentVideoMode.value);
+            : await uploadImage(file, getCurrentVideoMode().value);
 
           const newItem = fileType === 'video' ? {
             id: Date.now() + index.toString(),
