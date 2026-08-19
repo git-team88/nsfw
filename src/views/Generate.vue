@@ -4292,7 +4292,7 @@ const doGenerateVideo = async () => {
 
     const videoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
-      aspectRatio: selectedVideoMultimodal.value === 'startEndFrames' ? '' : selectedVideoRatio.value,
+      aspectRatio: selectedVideoMultimodal.value === 'startEndFrames' ? '9:16' : selectedVideoRatio.value,
       duration: selectedVideoDuration.value
     };
 
