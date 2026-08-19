@@ -148,8 +148,6 @@ function goToAiPointsDetails() {
   border-radius: 2px;
   background: #FF4D8D;
 }
-.content {
-}
 
 .invite-link-section {
   margin-bottom: 24px;

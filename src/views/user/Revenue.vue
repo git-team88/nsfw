@@ -253,8 +253,7 @@ function formatSci(n: number | null) {
   border-radius: 2px;
   background: #FF4D8D;
 }
-.content {
-}
+
 .metrics {
   display: flex;
   gap: 30px;

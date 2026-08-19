@@ -2064,7 +2064,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       audioDurationTooLong: "单个音频时长不能超过{max}秒",
       audioTotalDurationLimit: "所有音频总时长不能超过30秒",
       startFrameRequired: "请上传首帧图片",
-      videoExtendDurationLimit: "上传视频应在2-5s",
+      videoExtendDurationLimit: "上传视频应在2-30s",
+      videoModifyDurationLimit: "上传视频应在4-30s",
+      videoModifyRequired: "请上传参考视频",
       videoExtendDurationExceed: "生成时长设置应大于待续写视频长度",
       unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容",
       unlimitedNoAudio: "无限制模式暂不支持上传音频",
@@ -2101,6 +2103,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       ratio: "比例",
       ratioAuto: "自动",
       duration: "时长",
+      durationAuto: "自动",
       cancel: "取消",
       confirm: "确认",
       confirmed: "视频设置已确认"
@@ -2108,7 +2111,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     videoMode: {
       multimodal: "多模态参考",
       startEndFrames: "首尾帧",
-      videoExtend: "视频续写"
+      videoExtend: "视频续写",
+      videoModify: "视频修改"
     },
     start: "首帧",
     end: "尾帧",

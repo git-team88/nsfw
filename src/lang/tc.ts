@@ -2058,7 +2058,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       audioDurationTooLong: "單個音頻時長不能超過{max}秒",
       audioTotalDurationLimit: "所有音頻總時長不能超過30秒",
       startFrameRequired: "請上傳首幀圖片",
-      videoExtendDurationLimit: "上傳視頻應在2-5s",
+      videoExtendDurationLimit: "上傳視頻應在2-30s",
+      videoModifyDurationLimit: "上傳視頻應在4-30s",
+      videoModifyRequired: "請上傳參考視頻",
       videoExtendDurationExceed: "生成時長設置應大於待續寫視頻長度",
       unlimitedModeRestricted: "由於年齡或地區限制，不支持使用無限制模式生成內容",
       unlimitedNoAudio: "無限制模式暫不支持上傳音頻",
@@ -2095,6 +2097,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       ratio: "比例",
       ratioAuto: "自動",
       duration: "時長",
+      durationAuto: "自動",
       cancel: "取消",
       confirm: "確認",
       confirmed: "視頻設置已確認"
@@ -2102,7 +2105,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     videoMode: {
       multimodal: "多模態參考",
       startEndFrames: "首尾幀",
-      videoExtend: "視頻續寫"
+      videoExtend: "視頻續寫",
+      videoModify: "視頻修改"
     },
     start: "首幀",
     end: "尾幀",

@@ -1787,7 +1787,9 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       audioDurationTooLong: "一つのオーディオの長さは{max}秒を超えることはできません",
       audioTotalDurationLimit: "すべてのオーディオの合計時間は30秒を超えることはできません",
       startFrameRequired: "開始フレームの画像をアップロードしてください",
-      videoExtendDurationLimit: "アップロードした動画は2-5秒の範囲である必要があります",
+      videoExtendDurationLimit: "アップロードした動画は2-30秒の範囲である必要があります",
+      videoModifyDurationLimit: "アップロードした動画は4-30秒の範囲である必要があります",
+      videoModifyRequired: "参照動画をアップロードしてください",
       videoExtendDurationExceed: "生成時間は、拡張する動画の長さより長くする必要があります",
       unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
       unlimitedNoAudio: "無制限モードでは音声のアップロードはサポートされていません",
@@ -1824,6 +1826,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       ratio: "比率",
       ratioAuto: "自動",
       duration: "期間",
+      durationAuto: "自動",
       cancel: "キャンセル",
       confirm: "確認",
       confirmed: "動画設定を確認しました"
@@ -1831,7 +1834,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     videoMode: {
       multimodal: "マルチモーダル参考画像",
       startEndFrames: "開始および終了フレーム",
-      videoExtend: "ビデオ拡張"
+      videoExtend: "ビデオ拡張",
+      videoModify: "ビデオ修正"
     },
     start: "開始",
     end: "終了",

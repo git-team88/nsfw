@@ -1958,7 +1958,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       audioDurationTooLong: "Single audio duration cannot exceed {max} seconds",
       audioTotalDurationLimit: "Total audio duration cannot exceed 30 seconds",
       startFrameRequired: "Please upload the start frame image",
-      videoExtendDurationLimit: "Uploaded video should be between 2-5s",
+      videoExtendDurationLimit: "Uploaded video should be between 2-30s",
+      videoModifyDurationLimit: "Uploaded video should be between 4-30s",
+      videoModifyRequired: "Please upload a reference video",
       videoExtendDurationExceed: "Generation duration should be greater than the video length to be extended",
       unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported",
       unlimitedNoAudio: "Audio upload is not supported in unlimited mode",
@@ -1996,6 +1998,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       ratio: "Ratio",
       ratioAuto: "Auto",
       duration: "Duration",
+      durationAuto: "Auto",
       cancel: "Cancel",
       confirm: "Confirm",
       confirmed: "Video settings confirmed"
@@ -2003,7 +2006,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     videoMode: {
       multimodal: "Multimodal Reference",
       startEndFrames: "Start and End Frames",
-      videoExtend: "Video Extend"
+      videoExtend: "Video Extend",
+      videoModify: "Video Modify"
     },
     start: "Start",
     end: "End",
