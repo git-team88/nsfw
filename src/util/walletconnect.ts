@@ -15,7 +15,7 @@ function createProviderOpts() {
   return {
     projectId: WALLETCONNECT_PROJECT_ID,
     chains: [BSC_TESTNET_CHAIN_ID_DECIMAL],
-    optionalChains: [BSC_TESTNET_CHAIN_ID_DECIMAL],
+    optionalChains: [BSC_TESTNET_CHAIN_ID_DECIMAL] as [number, ...number[]],
     methods: ['eth_sendTransaction', 'eth_sign', 'personal_sign', 'eth_signTypedData', 'eth_signTypedData_v4', 'eth_call', 'eth_estimateGas'],
     events: ['chainChanged', 'accountsChanged'],
     rpcMap: {

@@ -315,7 +315,7 @@ function handleUserInfoLoaded(userData: any) {
   }
 }
 
-function formatSci(n: number | null) {
+function formatSci(n: number | string | null) {
   if (n == null) return "";
   const num = Number(n);
   if (!Number.isInteger(num)) {

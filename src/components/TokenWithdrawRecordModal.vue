@@ -95,12 +95,12 @@ function formatWallet(address: string) {
   return address.slice(0, 6) + '...' + address.slice(-4);
 }
 
-function statusText(status: string) {
+function statusText(status: string | number) {
   if (status === 'success' || status === '1' || status === 1) return t('user.revenue.withdrawSuccess');
   return t('user.revenue.withdrawPending');
 }
 
-function statusClass(status: string) {
+function statusClass(status: string | number) {
   if (status === 'success' || status === '1' || status === 1) return 'success';
   return 'pending';
 }

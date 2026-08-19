@@ -122,7 +122,7 @@ const userInfo = ref({
 
 interface SubscriptionPlan {
   price: string;
-  web3?: string;
+  web3?: { price?: string };
   id?: number;
   name?: string;
   description?: string;
