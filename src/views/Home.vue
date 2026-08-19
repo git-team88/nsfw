@@ -3306,6 +3306,9 @@ const doGenerateVideo = async () => {
         combinedItemsVideo.value = [];
         inputContentVideo.value = '';
         inputHtmlVideo.value = '';
+        uploadedVideo.value = '';
+        uploadedVideoCover.value = '';
+        uploadedVideoDuration.value = 0;
       }
     } else {
       toast(response.message || t('fail'));
@@ -4177,7 +4180,7 @@ const handleFileChange = async (event: Event) => {
             // Check video duration for multimodal mode
             if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
               const videoDuration = await getMediaDuration(file);
-              const minDuration = currentMode === 'unlimited' ? 1 : 2;
+              const minDuration = 2;
               const maxDuration = currentMode === 'unlimited' ? 15 : 30;
               if (videoDuration < minDuration) {
                 toast(t('home.error.videoDurationTooShort', { min: minDuration }));
