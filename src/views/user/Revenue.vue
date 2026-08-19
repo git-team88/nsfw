@@ -17,15 +17,16 @@
         <div class="content">
           <div class="token-section">
             <div class="metric token-withdrawable">
+              <img class="metric-bg-icon" src="@/assets/images/user/usdt_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.pending") }}</div>
               <div class="metric-value">
-                {{ availableJpy != null ? `${formatSci(availableJpy)} USDT` : "--" }}
+                {{ tokenBalance != null ? `${formatSci(tokenBalance)} USDT` : "--" }}
               </div>
             </div>
             <div class="metric token-withdrawing">
               <div class="metric-label">{{ t("user.revenue.tokenWithdrawing") }}</div>
               <div class="metric-value">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)} USDT` : "--" }}
+                {{ tokenWithdrawing != null ? `${formatSci(tokenWithdrawing)} USDT` : "--" }}
               </div>
             </div>
             <div class="token-info">
@@ -46,13 +47,14 @@
 
           <div class="cash-section">
             <div class="metric cash-frozen">
+              <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
               <div class="metric-value">
                 {{ pendingJpy != null ? `${formatSci(pendingJpy)} 日元` : "--" }}
               </div>
             </div>
             <div class="metric cash-withdrawing">
-              <div class="metric-label">{{ t("user.revenue.cashWithdrawing") }}</div>
+              <div class="metric-label">{{ t("user.revenue.cashPending") }}</div>
               <div class="metric-value">
                 {{ availableJpy != null ? `${formatSci(availableJpy)} 日元` : "--" }}
               </div>
@@ -84,9 +86,8 @@
 
     <TokenWithdrawModal
       :visible="showTokenWithdrawModal"
-      :amount="availableJpy"
+      :amount="tokenBalance"
       @close="showTokenWithdrawModal = false"
-      @confirm="confirmTokenWithdraw"
     />
 
     <WithdrawModal
@@ -149,6 +150,9 @@ interface TokenWithdrawRecord {
 
 const tokenWithdrawRecords = ref<TokenWithdrawRecord[]>([]);
 
+const tokenBalance = ref<number | null>(null);
+const tokenWithdrawing = ref<number | null>(null);
+
 async function fetchBalance() {
   try {
     const res = await api.balance();
@@ -165,8 +169,23 @@ async function fetchBalance() {
   }
 }
 
+async function fetchTokenBalance() {
+  try {
+    const res = await api.tokenBalance();
+    const data = res as any;
+    if (data.code == 200 || data.code == 0) {
+      tokenBalance.value = data.data?.balance ?? data.data?.available ?? 0;
+      tokenWithdrawing.value = data.data?.pending ?? data.data?.withdrawing ?? 0;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  }
+}
+
 async function handleTokenWithdraw() {
-  if (!availableJpy.value || availableJpy.value <= 0) {
+  if (!tokenBalance.value || tokenBalance.value <= 0) {
     toast(t("user.revenue.noProfit"));
     return;
   }
@@ -202,11 +221,6 @@ async function fetchKycDetail() {
   } catch (e) {
     console.error(e);
   }
-}
-
-function confirmTokenWithdraw() {
-  showTokenWithdrawModal.value = false;
-  toast(t("user.revenue.withdrawSuccess"));
 }
 
 function openCashWithdrawModal() {
@@ -293,6 +307,7 @@ async function handleViewAccount() {
 
 onMounted(() => {
   fetchBalance();
+  fetchTokenBalance();
 });
 
 function handleUserInfoLoaded(userData: any) {
@@ -328,7 +343,7 @@ function formatSci(n: number | null) {
 }
 .main {
   flex: 1;
-  padding: 24px;
+  padding: 24px 16px;
   border: 3px solid #161122;
   border-radius: 12px;
   box-sizing: border-box;
@@ -365,11 +380,11 @@ function formatSci(n: number | null) {
 .token-section {
   display: flex;
   align-items: stretch;
-  gap: 14px;
-  background: #fff;
+  gap: 10px;
+  background: #FFFFFF;
   border-radius: 12px;
   border: 2px solid #161122;
-  padding: 20px;
+  padding: 14px;
   margin-bottom: 14px;
 }
 .metric {
@@ -384,11 +399,20 @@ function formatSci(n: number | null) {
   position: relative;
   overflow: hidden;
 }
+.metric-bg-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
 .metric.token-withdrawable {
-  background: #FFFDF7;
+  background: linear-gradient(90deg, rgba(27,162,122,0) 0%, #1BA27A 100%);
 }
 .metric.token-withdrawing {
-  background: #FFFDF7;
+  background: linear-gradient(90deg, rgba(27,162,122,0) 0%, #1BA27A 100%);
 }
 .metric-label {
   color: #161122;
@@ -438,19 +462,19 @@ function formatSci(n: number | null) {
 
 .cash-section {
   display: flex;
-  align-items: stretch;
-  gap: 14px;
-  background: #fff;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
   border-radius: 12px;
   border: 2px solid #161122;
-  padding: 20px;
+  padding: 14px;
   margin-bottom: 14px;
 }
 .metric.cash-frozen {
-  background: #FFFDF7;
+  background: linear-gradient(90deg, rgba(251,188,5,0) 0%, #FBBC05 100%);
 }
 .metric.cash-withdrawing {
-  background: #FFFDF7;
+  background: linear-gradient(90deg, rgba(251,188,5,0) 0%, #FBBC05 100%);
 }
 .cash-info {
   flex: 1;
@@ -821,11 +845,9 @@ td {
   }
   .token-section {
     flex-direction: column;
-    gap: 12px;
   }
   .cash-section {
     flex-direction: column;
-    gap: 12px;
   }
   .metric-value {
     font-size: 24px;

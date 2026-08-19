@@ -1221,6 +1221,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       total: "総収益",
       withdrawn: "凍結期間中の現金収益",
       pending: "出金可能なトークン収益",
+      cashPending: "出金可能額",
       withdraw: "トークン出金",
       withdrawRecord: "トークン出金記録",
       tokenWithdrawDetail: "トークン出金明細",
@@ -2254,6 +2255,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   },
   subscribe: {
     title: "サブスク",
+    insufficientUsdtBalance: "USDT残高不足",
+    insufficientUsdtOrGas: "USDTまたはガス残高不足",
     month: "月",
     desc: "サブスクに登録すると、利用規約に同意したものとみなされます。自動更新を有効にしている場合は、利用期間の終了時に、登録済みのお支払い方法で自動的に更新されます。解約はいつでも支払い履歴から行えます。",
     method: "支払方法を選択",

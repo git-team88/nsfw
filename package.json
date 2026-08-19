@@ -12,6 +12,8 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@walletconnect/ethereum-provider": "^2.23.10",
+    "@walletconnect/modal": "^2.7.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "next",
     "axios": "^1.8.1",

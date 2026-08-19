@@ -100,7 +100,7 @@ function backToCommunity() {
     line-height: 20px;
     margin-top: 40px;
     p {
-      margin: 0;
+      margin: 0 0 6px;
     }
   }
 

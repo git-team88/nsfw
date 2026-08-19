@@ -7,7 +7,7 @@
 
       <div class="modal-amount-row">
         <span class="amount-label">{{ t("user.revenue.withdrawAmount") }}</span>
-        <span class="amount-value">{{ formatSci(amount) }}</span>
+        <span class="amount-value">{{ formatSci(actualAmount) }}</span>
         <span class="amount-unit">USDT</span>
       </div>
       <div class="amount-note">{{ t("user.revenue.reserveFee", { fee: reserveFee }) }}</div>
@@ -79,9 +79,14 @@ const hasOkx = ref(false);
 const hasPhantom = ref(false);
 
 const reserveFee = computed(() => {
-  if (!props.amount || props.amount <= 0) return '1';
+  if (!props.amount || props.amount <= 0) return 1;
   const fee = props.amount * 0.01;
-  return Math.ceil(fee).toString();
+  return Math.ceil(fee);
+});
+
+const actualAmount = computed(() => {
+  if (!props.amount || props.amount <= 0) return 0;
+  return props.amount - reserveFee.value;
 });
 
 const wallets = [

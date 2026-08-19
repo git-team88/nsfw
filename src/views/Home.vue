@@ -3182,7 +3182,7 @@ const doGenerateVideo = async () => {
     }
 
     const params = {
-      ratio: selectedVideoMultimodal.value === 'startEndFrames' ? '' : selectedVideoRatio.value,
+      ratio: selectedVideoMultimodal.value === 'startEndFrames' ? '9:16' : selectedVideoRatio.value,
       language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "simple_video",
       story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',

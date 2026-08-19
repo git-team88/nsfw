@@ -74,6 +74,10 @@ function backToRevenue() {
     text-align: center;
     line-height: 20px;
     margin-top: 20px;
+
+    p {
+      margin: 0 0 6px;
+    }
   }
 
   .success-icon {

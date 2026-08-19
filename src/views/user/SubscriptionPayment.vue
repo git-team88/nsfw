@@ -86,6 +86,7 @@ import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, PAY_NETWORK, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
+import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 
 const router = useRouter();
 const route = useRoute();
@@ -260,27 +261,41 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
   if (!checkLogin()) return;
 
   try {
+    let walletProvider: any;
+    let account: string;
+
+    if (wallet.id === 'walletconnect') {
+      try {
+        const accounts = await connectWalletConnect();
+        if (!accounts || accounts.length === 0) {
+          return;
+        }
+        walletProvider = getWalletConnectProvider();
+        account = accounts[0];
+      } catch (error) {
+        return;
+      }
+    } else {
+      isLoading.value = true;
+      walletProvider = getWalletProvider(wallet.id);
+      if (!walletProvider) {
+        toast(t("fail"));
+        isLoading.value = false;
+        return;
+      }
+
+      await switchChain(walletProvider);
+
+      const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        toast(t("fail"));
+        isLoading.value = false;
+        return;
+      }
+      account = accounts[0];
+    }
+
     isLoading.value = true;
-
-    const walletProvider = getWalletProvider(wallet.id);
-    if (!walletProvider) {
-      toast(t("fail"));
-      isLoading.value = false;
-      return;
-    }
-
-    await switchChain(walletProvider);
-
-    const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
-    if (!accounts || accounts.length === 0) {
-      toast(t("fail"));
-      isLoading.value = false;
-      return;
-    }
-
-    const account = accounts[0];
-    console.log('Connected wallet address:', account);
-    // const sign = await walletProvider.request({ method: 'personal_sign', params: [WALLET_SIGN_MSG, account] });
 
     const uid = route.query.id;
     if (!uid) {
@@ -337,7 +352,7 @@ async function transferUSDT(provider: any, fromAddress: string, amount: string):
     const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
     const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
     if (new BigNumber(balance).isLessThan(needAmount)) {
-      toast(locale.value === 'en' ? 'Insufficient USDT balance' : locale.value === 'zh' ? 'USDT余额不足' : locale.value === 'tc' ? 'USDT餘額不足' : 'USDT残高不足');
+      toast(t('subscribe.insufficientUsdtBalance'));
       return null;
     }
 
@@ -358,7 +373,7 @@ async function transferUSDT(provider: any, fromAddress: string, amount: string):
     console.error('USDT transfer error:', error);
     const errMsg = error?.data?.message || error?.message || '';
     if (errMsg.toLowerCase().includes('insufficient')) {
-      toast(locale.value === 'en' ? 'Insufficient USDT or gas balance' : locale.value === 'zh' ? 'USDT或Gas余额不足' : locale.value === 'tc' ? 'USDT或Gas餘額不足' : 'USDTまたはガス残高不足');
+      toast(t('subscribe.insufficientUsdtOrGas'));
     } else if (errMsg) {
       toast(errMsg);
     } else {
@@ -377,8 +392,6 @@ function getWalletProvider(walletId: string): any {
       return w.okxwallet || null;
     case 'phantom':
       return w.phantom?.ethereum || null;
-    case 'walletconnect':
-      return w.ethereum || null;
     default:
       return null;
   }

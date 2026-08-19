@@ -1600,6 +1600,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       total: "總收益",
       withdrawn: "凍結期間現金收益",
       pending: "可提現代幣收益",
+      cashPending: "可提現收益",
       withdraw: "代幣提現",
       withdrawRecord: "代幣提現記錄",
       tokenWithdrawDetail: "代幣提現明細",
@@ -2525,6 +2526,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
   },
   subscribe: {
     title: "訂閱",
+    insufficientUsdtBalance: "USDT餘額不足",
+    insufficientUsdtOrGas: "USDT或Gas餘額不足",
     month: "月",
     desc: "訂閱即表示您同意我們的服務條款。如果您選擇自動續費，訂閱將在每個周期結束時使用保存的支付方式自動續費。您可以隨時從支付歷史中取消。",
     method: "選擇支付方式",

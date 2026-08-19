@@ -254,6 +254,12 @@ export default {
       data: data,
     }),
 
+  tokenBalance: () =>
+    axios.request({
+      url: "order/getMyBalance",
+      method: "GET",
+    }),
+
   createAccount: (data: any) =>
     axios.request({
       url: "post/generateOnboardingUrl",

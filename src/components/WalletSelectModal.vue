@@ -58,6 +58,7 @@ onMounted(() => {
 });
 
 function isInstalled(walletId: string): boolean {
+  if (walletId === 'walletconnect') return true;
   if (walletId === 'okx') return hasOkx.value;
   if (walletId === 'phantom') return hasPhantom.value;
   return true;
