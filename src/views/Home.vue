@@ -2340,7 +2340,12 @@ const estimatedVideoComputingPower = computed(() => {
     return 1;
   }
 
-  const duration = parseInt(selectedVideoDuration.value) || 15;
+  let duration: number;
+  if (selectedVideoMultimodal.value === 'videoModify') {
+    duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
+  } else {
+    duration = parseInt(selectedVideoDuration.value) || 30;
+  }
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value === '720P') {
@@ -2357,9 +2362,9 @@ const estimatedVideoComputingPower = computed(() => {
     }
   }
 
-  let totalCost = costPerSecond * duration;
+  let totalCost = Math.ceil(costPerSecond * duration);
   if (enableVideoOptimizePrompt.value) {
-    totalCost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
+    totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
 });
@@ -2901,7 +2906,7 @@ const selectContentType = (type: string) => {
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
@@ -3256,7 +3261,7 @@ const doGenerateVideo = async () => {
         list: combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? 30 : parseInt(selectedVideoDuration.value),
+      simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: enableVideoOptimizePrompt.value
     };

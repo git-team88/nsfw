@@ -102,56 +102,56 @@ function goBack() {
   width: 100%;
   min-height: 100vh;
   scroll-behavior: smooth;
-  padding: 14rem 0 0;
+  padding: 140px 0 0;
   background: #FFFFFF;
 
   .inner {
-    max-width: 144rem;
+    max-width: 1440px;
     width: 100%;
-    margin: 0 auto 2rem;
+    margin: 0 auto 20px;
 
     .terms-detail-back {
       position: fixed;
       left: 50%;
-      top: 12rem;
+      top: 120px;
       width: auto;
-      height: 4rem;
+      height: 40px;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      transform: translateX(-55rem);
+      gap: 6px;
+      transform: translateX(-550px);
       color: #fff;
       cursor: pointer;
       z-index: 10;
       border: 2px solid #fff;
-      border-radius: 1.3rem;
-      box-shadow: 0.3rem 0.3rem 0 #fff;
-      padding: 0 1rem;
+      border-radius: 13px;
+      box-shadow: 3px 3px 0 #fff;
+      padding: 0 10px;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
       .back-text {
-        font-size: 1.4rem;
+        font-size: 14px;
         font-weight: 500;
         white-space: nowrap;
       }
 
       &:hover {
-        transform: translateX(-55rem) translateY(-1px);
-        box-shadow: 0.4rem 0.4rem 0 #fff;
+        transform: translateX(-550px) translateY(-1px);
+        box-shadow: 4px 4px 0 #fff;
       }
     }
 
     .terms-detail {
-      max-width: 86rem;
-      margin: 0 auto 2rem;
-      font-size: 1.4rem;
-      line-height: 2.8rem;
+      max-width: 860px;
+      margin: 0 auto 20px;
+      font-size: 14px;
+      line-height: 28px;
       color: #364153;
 
       :deep(h1) {
         font-weight: bold;
-        font-size: 2.4rem;
-        margin: 0 0 1rem 0;
+        font-size: 24px;
+        margin: 0 0 10px 0;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(.sub) {
@@ -160,8 +160,8 @@ function goBack() {
       }
       :deep(.meta) {
         color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 2rem;
-        font-size: 1.4rem;
+        margin-bottom: 20px;
+        font-size: 14px;
       }
       :deep(.meta a) {
         color: #00ffff;
@@ -172,23 +172,23 @@ function goBack() {
       }
       :deep(h2) {
         font-weight: bold;
-        font-size: 2rem;
-        margin: 3rem 0;
+        font-size: 20px;
+        margin: 30px 0;
         border-left: 4px solid #00ffff;
-        padding-left: 0.6rem;
+        padding-left: 6px;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(h3) {
         font-weight: bold;
-        font-size: 1.75rem;
-        margin: 2.8rem 0;
+        font-size: 17.5px;
+        margin: 28px 0;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(p) {
-        margin: 1.5rem 0;
+        margin: 15px 0;
       }
       :deep(ul) {
-        padding-left: 1.8rem;
+        padding-left: 18px;
         list-style: disc;
       }
       :deep(li) {
@@ -196,19 +196,19 @@ function goBack() {
       }
       :deep(code) {
         background: rgba(0, 255, 255, 0.12);
-        padding: 0.7rem 0.9rem;
+        padding: 7px 9px;
         border-radius: 4px;
       }
       :deep(table) {
         width: 100%;
         border-collapse: collapse;
-        margin: 1.6rem 0;
-        font-size: 1.6rem;
+        margin: 16px 0;
+        font-size: 16px;
       }
       :deep(th),
       :deep(td) {
         border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 1.2rem 1.1rem;
+        padding: 12px 11px;
         vertical-align: top;
       }
       :deep(thead th) {
@@ -218,13 +218,13 @@ function goBack() {
       :deep(.notice) {
         background: rgba(0, 255, 255, 0.12);
         border: 1px solid #00ffff;
-        padding: 1.4rem 1.6rem;
+        padding: 14px 16px;
         border-radius: 8px;
       }
       :deep(footer) {
-        margin-top: 5rem;
+        margin-top: 50px;
         color: rgba(255, 255, 255, 0.3);
-        font-size: 1.4rem;
+        font-size: 14px;
       }
     }
   }
@@ -232,12 +232,12 @@ function goBack() {
 
 @media (max-width: 768px) {
   .terms {
-    padding: 10rem 0 0;
+    padding: 100px 0 0;
   }
   .inner .terms-detail-back {
     position: fixed;
-    left: 1rem;
-    top: 10rem;
+    left: 10px;
+    top: 100px;
     transform: none;
     &:hover {
       transform: translateY(-1px);
@@ -245,31 +245,31 @@ function goBack() {
   }
   .inner .terms-detail {
     max-width: 100%;
-    padding: 0 1rem;
-    font-size: 1.2rem;
-    line-height: 2.4rem;
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .terms {
-    padding: 8rem 0 0;
+    padding: 80px 0 0;
   }
   .inner .terms-detail-back {
-    left: 1rem;
-    top: 8rem;
+    left: 10px;
+    top: 80px;
   }
   .inner .terms-detail {
-    font-size: 1.1rem;
-    line-height: 2rem;
+    font-size: 11px;
+    line-height: 20px;
     :deep(h1) {
-      font-size: 1.8rem;
+      font-size: 18px;
     }
     :deep(h2) {
-      font-size: 1.5rem;
+      font-size: 15px;
     }
     :deep(h3) {
-      font-size: 1.3rem;
+      font-size: 13px;
     }
   }
 }

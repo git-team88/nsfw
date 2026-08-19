@@ -873,9 +873,6 @@ onBeforeUnmount(() => {
   margin-left: 238px;
 }
 
-.content {
-}
-
 .panel-top {
   display: flex;
   align-items: center;

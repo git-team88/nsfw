@@ -743,17 +743,17 @@ $green: #22A06B;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10rem 2rem 0;
+    padding: 100px 20px 0;
 
     img {
-      width: 12rem;
-      height: 12rem;
-      margin-bottom: 2rem;
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
       opacity: 0.6;
     }
 
     .plan-empty-text {
-      font-size: 1.4rem;
+      font-size: 14px;
       color: #99A1AF;
       font-weight: 300;
     }

@@ -1124,20 +1124,21 @@ function handleTitleInput() {
 
 .close-btn {
   position: absolute;
-  right: 14px;
-  top: 14px;
-  width: 32px;
-  height: 32px;
+  right: 18px;
+  top: 12px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   background: #fff;
-  border: 2px solid #161122;
+  border: 2.5px solid #161122;
   box-shadow: 2px 2px 0 #161122;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 6px;
-  transition: transform .2s;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
 
   &:hover { transform: scale(1.1) rotate(90deg); }
 }
@@ -1589,14 +1590,23 @@ function handleTitleInput() {
   .reupload-btn {
     min-width: 136px;
     height: 48px;
-    border: 1px solid #FF4D8D;
-    border-radius: 8px;
+    border: 2.5px solid #161122;
+    border-radius: 10px;
     font-size: 14px;
-    color: #FF4D8D;
-    background: none;
+    font-weight: 700;
+    color: #161122;
+    background: #FFFDF7;
     cursor: pointer;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, color 0.2s;
     &:hover {
-      background: rgba(251,100,182,0.12);
+      color: #FF4D8D;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 
@@ -1613,21 +1623,24 @@ function handleTitleInput() {
   .btn.confirm {
     background: #FF4D8D;
     color: #ffffff;
-    border: none;
+    border: 2.5px solid #161122;
     min-width: 136px;
     height: 48px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
+    box-shadow: 3px 3px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #161122;
+    }
+    &:active {
+      transform: translate(0, 0);
+      box-shadow: 2px 2px 0 #161122;
+    }
 
     &:disabled {
       background: #f8d7e8;
@@ -1659,16 +1672,19 @@ function handleTitleInput() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 520px;
-    background-color: #ffffff;
+    width: 500px;
+    background-color: #FFFDF7;
+    border: 3px solid #161122;
+    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
     border-radius: 12px;
-    padding: 54px 24px 24px;
+    padding: 56px 30px 28px;
 
     .modal-message {
       font-size: 14px;
-      color: #5b5566;
+      color: #161122;
       margin-bottom: 12px;
       text-align: center;
+      line-height: 20px;
     }
 
     .modal-actions {
@@ -1680,28 +1696,39 @@ function handleTitleInput() {
       .modal-cancel-btn {
         min-width: 136px;
         height: 48px;
-        border: none;
-        border-radius: 8px;
+        border: 2.5px solid #161122;
+        border-radius: 10px;
         font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+        background: #FFFDF7;
+        color: #161122;
+        box-shadow: 3px 3px 0 #161122;
+        transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, color 0.2s;
 
         &:hover {
           color: #FF4D8D;
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 4px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
 
       .modal-retry-btn {
         min-width: 136px;
         height: 48px;
-        border: none;
-        border-radius: 8px;
+        border: 2.5px solid #161122;
+        border-radius: 10px;
         font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
-        border: none;
         background: #FF4D8D;
         color: #ffffff;
+        box-shadow: 3px 3px 0 #161122;
+        transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
         &:hover:not(:disabled) {
           transform: translate(-1px, -1px);
