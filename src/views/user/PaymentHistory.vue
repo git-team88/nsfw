@@ -108,7 +108,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.isWeb3 ? trimZeros(item.plan_info?.web3Price) : item.plan_info?.price }} {{ item.isWeb3 ? 'USDT' : t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
+                      <div class="price">{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? 'USDT' : t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
                     </div>
 
@@ -146,7 +146,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}</div>
+                      <div class="price">{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? item.currency : t('aiRecharge.unit') }}</div>
                     </div>
                   </div>
                 </div>
@@ -166,7 +166,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ isWeb3Order(item) ? trimZeros(getWeb3Price(item)) : (item.amount || item.price) }} {{ isWeb3Order(item) ? getWeb3Currency(item) : t('aiRecharge.unit') }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : item.amount }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : t('aiRecharge.unit') }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -256,15 +256,7 @@ function trimZeros(val: string | number): string {
 }
 
 function isWeb3Order(item: any): boolean {
-  return (item.stripe_subscription_id || '').toLowerCase().startsWith('web3');
-}
-
-function getWeb3Price(item: any): string {
-  return item.web3?.price || '';
-}
-
-function getWeb3Currency(item: any): string {
-  return item.web3?.currency || 'USDT';
+  return (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3');
 }
 
 function getPlanDescLang() {
@@ -451,7 +443,10 @@ async function fetchProcessingData() {
           name: item.plan_desc?.[0]?.name || item.plan?.name || '',
           description: item.plan_desc?.[0]?.description || item.plan?.description || '',
           price: item.amount || item.plan?.price || 0,
+          web3Price: item.web3?.price || '',
+          currency: item.web3?.currency || 'USDT',
           pay_time: item.pay_time || item.created_at || '',
+          isWeb3: (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3'),
           plan_info: {
             name: item.plan_desc?.[0]?.name || item.plan?.name || '',
             description: item.plan_desc?.[0]?.description || item.plan?.description || '',

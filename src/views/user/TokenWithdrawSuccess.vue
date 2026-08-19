@@ -65,12 +65,12 @@ function backToRevenue() {
   .page-title {
     font-size: 20px;
     font-weight: 800;
-    color: #101828;
+    color: #161122;
   }
 
   .success-message {
     font-size: 14px;
-    color: #101828;
+    color: #161122;
     text-align: center;
     line-height: 20px;
     margin-top: 20px;
@@ -85,7 +85,7 @@ function backToRevenue() {
     height: 80px;
     margin: 40px 0 60px;
     background: #22c55e;
-    border: 3px solid #101828;
+    border: 3px solid #161122;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -121,20 +121,20 @@ function backToRevenue() {
     min-width: 240px;
     height: 48px;
     background: #FFFFFF;
-    color: #101828;
-    border: 2px solid #101828;
+    color: #161122;
+    border: 2px solid #161122;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #101828;
+    box-shadow: 2px 2px 0 #161122;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
       border-color: #FF4D8E;
       color: #FF4D8E;
       transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #101828;
+      box-shadow: 3px 3px 0 #161122;
     }
   }
 
@@ -143,17 +143,17 @@ function backToRevenue() {
     height: 48px;
     background: linear-gradient(135deg, #FF4D8D, #FF7A45);
     color: #FFFFFF;
-    border: 2px solid #101828;
+    border: 2px solid #161122;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #101828;
+    box-shadow: 2px 2px 0 #161122;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #101828;
+      box-shadow: 3px 3px 0 #161122;
     }
   }
 }

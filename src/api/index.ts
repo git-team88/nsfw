@@ -260,6 +260,12 @@ export default {
       method: "GET",
     }),
 
+  getCoinWithdrawList: (page: number, limit: number) =>
+    axios.request({
+      url: "order/getCoinWithdrawList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+
   createAccount: (data: any) =>
     axios.request({
       url: "post/generateOnboardingUrl",

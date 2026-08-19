@@ -80,7 +80,6 @@
 
     <TokenWithdrawRecordModal
       :visible="showTokenWithdrawRecordModal"
-      :records="tokenWithdrawRecords"
       @close="showTokenWithdrawRecordModal = false"
     />
 
@@ -139,19 +138,8 @@ const showCountrySelectModal = ref(false);
 
 const kycStatusChecked = ref(false);
 
-interface TokenWithdrawRecord {
-  status: string;
-  statusText: string;
-  applyTime: string;
-  successTime: string;
-  walletAddress: string;
-  amount: string;
-}
-
-const tokenWithdrawRecords = ref<TokenWithdrawRecord[]>([]);
-
-const tokenBalance = ref<number | null>(null);
-const tokenWithdrawing = ref<number | null>(null);
+const tokenBalance = ref<number | string | null>(null);
+const tokenWithdrawing = ref<number | string | null>(null);
 
 async function fetchBalance() {
   try {
@@ -185,8 +173,13 @@ async function fetchTokenBalance() {
 }
 
 async function handleTokenWithdraw() {
-  if (!tokenBalance.value || tokenBalance.value <= 0) {
+  if (!tokenBalance.value || Number(tokenBalance.value) <= 0) {
     toast(t("user.revenue.noProfit"));
+    return;
+  }
+
+  if (Number(tokenBalance.value) < 2) {
+    toast(t("user.revenue.withdrawMinTip"));
     return;
   }
 
@@ -399,7 +392,7 @@ function formatSci(n: number | null) {
   justify-content: space-between;
   border-radius: 12px;
   border: 2px solid #161122;
-  padding: 20px;
+  padding: 14px;
   position: relative;
   overflow: hidden;
 }
@@ -448,6 +441,7 @@ function formatSci(n: number | null) {
   color: #99A1AF;
   font-weight: 500;
   line-height: 24px;
+  white-space: pre-line;
 }
 .info-icon {
   flex-shrink: 0;
@@ -517,38 +511,38 @@ function formatSci(n: number | null) {
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
   border-radius: 12px;
-  box-shadow: 3px 3px 0 #101828;
+  box-shadow: 3px 3px 0 #161122;
 
   &.primary {
     background: #FF4D8E;
-    border: 2px solid #101828;
+    border: 2px solid #161122;
     color: #FFFFFF;
 
     &:hover {
       transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0 #101828;
+      box-shadow: 5px 5px 0 #161122;
     }
 
     &:active {
       transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 #101828;
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 
   &.secondary {
     background: #FFFFFF;
-    border: 2px solid #101828;
-    color: #101828;
+    border: 2px solid #161122;
+    color: #161122;
 
     &:hover {
       color: #FF4D8E;
       transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0 #101828;
+      box-shadow: 5px 5px 0 #161122;
     }
 
     &:active {
       transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 #101828;
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 }
@@ -887,9 +881,6 @@ td {
   }
   .panel-tip {
     white-space: normal;
-  }
-  .metric {
-    padding: 16px;
   }
   .metric-value {
     font-size: 20px;

@@ -7,10 +7,10 @@
 
       <div class="modal-amount-row">
         <span class="amount-label">{{ t("user.revenue.withdrawAmount") }}</span>
-        <span class="amount-value">{{ formatSci(actualAmount) }}</span>
+        <span class="amount-value">{{ formatSci(props.amount) }}</span>
         <span class="amount-unit">USDT</span>
       </div>
-      <div class="amount-note">{{ t("user.revenue.reserveFee", { fee: reserveFee }) }}</div>
+      <div class="amount-note">{{ t("user.revenue.feeNote", { fee: reserveFee, actual: actualAmount }) }}</div>
 
       <div class="wallet-header">
         <span class="wallet-label">{{ t("user.revenue.selectWallet") }}</span>
@@ -26,9 +26,6 @@
         >
           <img class="wallet-icon" :src="wallet.icon" :alt="wallet.name" />
           <span class="wallet-name">{{ isInstalled(wallet.id) ? wallet.name : `${wallet.name}` }}</span>
-          <span v-if="selectedWallet === wallet.id" class="wallet-check">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4D8E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </span>
         </div>
       </div>
 
@@ -54,6 +51,8 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
+import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
+import { BSC_TESTNET_CHAIN_ID } from "@/util/config";
 import okxIcon from '@/assets/images/wallet/okx.png';
 import metamaskIcon from '@/assets/images/wallet/metamask.png';
 import phantomIcon from '@/assets/images/wallet/phantom.png';
@@ -64,7 +63,7 @@ const router = useRouter();
 
 const props = defineProps<{
   visible: boolean;
-  amount: number | null;
+  amount: number | string | null;
 }>();
 
 const emit = defineEmits<{
@@ -79,14 +78,18 @@ const hasOkx = ref(false);
 const hasPhantom = ref(false);
 
 const reserveFee = computed(() => {
-  if (!props.amount || props.amount <= 0) return 1;
-  const fee = props.amount * 0.01;
-  return Math.ceil(fee);
+  const amt = Number(props.amount);
+  if (!amt || amt <= 0) return '1.00';
+  const fee = amt * 0.01;
+  const rounded = Math.round(fee * 100) / 100;
+  return rounded < 1 ? '1.00' : rounded.toFixed(2);
 });
 
 const actualAmount = computed(() => {
-  if (!props.amount || props.amount <= 0) return 0;
-  return props.amount - reserveFee.value;
+  const amt = Number(props.amount);
+  if (!amt || amt <= 0) return '0.00';
+  const actual = amt - Number(reserveFee.value);
+  return actual.toFixed(2);
 });
 
 const wallets = [
@@ -119,8 +122,41 @@ async function handleConfirm() {
   if (!agreeTerms.value || !selectedWallet.value || !props.amount || submitting.value) return;
   submitting.value = true;
   try {
+    let walletProvider: any;
+    let account: string;
+
+    if (selectedWallet.value === 'walletconnect') {
+      try {
+        const accounts = await connectWalletConnect();
+        if (!accounts || accounts.length === 0) {
+          submitting.value = false;
+          return;
+        }
+        walletProvider = getWalletConnectProvider();
+        account = accounts[0];
+      } catch (error) {
+        submitting.value = false;
+        return;
+      }
+    } else {
+      walletProvider = getWalletProvider(selectedWallet.value);
+      if (!walletProvider) {
+        toast(t("fail"));
+        submitting.value = false;
+        return;
+      }
+      await switchChain(walletProvider);
+      const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        toast(t("fail"));
+        submitting.value = false;
+        return;
+      }
+      account = accounts[0];
+    }
+
     const res = await api.applyWithdraw({
-      to_wallet: selectedWallet.value,
+      to_wallet: account,
       amount: props.amount,
     });
     const data = res as any;
@@ -137,14 +173,43 @@ async function handleConfirm() {
   }
 }
 
+function getWalletProvider(walletId: string): any {
+  const w = window as any;
+  switch (walletId) {
+    case 'metamask':
+      return w.ethereum || null;
+    case 'okx':
+      return w.okxwallet || null;
+    case 'phantom':
+      return w.phantom?.ethereum || null;
+    default:
+      return null;
+  }
+}
+
+async function switchChain(provider: any) {
+  const chainId = await provider.request({ method: 'eth_chainId' });
+  if (chainId !== BSC_TESTNET_CHAIN_ID) {
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
+      });
+    } catch (switchError: any) {
+      console.error('Switch chain error:', switchError);
+      throw switchError;
+    }
+  }
+}
+
 function openTerms() {
   localStorage.setItem("isBack", "1");
   window.open("/payment-terms", "_blank");
 }
 
-function formatSci(n: number | null) {
+function formatSci(n: number | string | null) {
   if (n == null) return "0";
-  return Number(n).toLocaleString();
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 6 });
 }
 </script>
 
@@ -267,10 +332,6 @@ function formatSci(n: number | null) {
   font-size: 14px;
   font-weight: 600;
   color: #161122;
-}
-.wallet-check {
-  display: flex;
-  align-items: center;
 }
 
 .agree-row {
