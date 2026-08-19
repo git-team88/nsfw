@@ -1598,7 +1598,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
     revenue: {
       total: "總收益",
-      withdrawn: "凍結期間現金收益",
+      withdrawn: "凍結期現金收益",
       pending: "可提現代幣收益",
       cashPending: "可提現收益",
       withdraw: "代幣提現",

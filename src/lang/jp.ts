@@ -1219,7 +1219,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     },
     revenue: {
       total: "総収益",
-      withdrawn: "凍結期間中の現金収益",
+      withdrawn: "凍結期間現金収益",
       pending: "出金可能なトークン収益",
       cashPending: "出金可能額",
       withdraw: "トークン出金",

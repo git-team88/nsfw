@@ -53,7 +53,7 @@
                 </div>
                 <div class="right">
                   <div class="price-info">
-                    <div class="price">${{ item.price }}/Month</div>
+                    <div class="price">${{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }}{{ item.isWeb3 ? ' USDT' : '' }}/Month</div>
                     <div class="date">
                       {{
                         t("user.myFollowsSubs.validDate", {
@@ -112,6 +112,15 @@ import api from "@/api/index";
 import { formatTimestamp } from "@/util/utils";
 
 const { t, locale } = useI18n();
+
+function trimZeros(val: string | number): string {
+  const s = String(val);
+  if (s === '' || s === '0') return s;
+  const num = parseFloat(s);
+  if (isNaN(num)) return s;
+  return num.toString();
+}
+
 const router = useRouter();
 const sidebarKey = ref("myfollows-subs");
 const activeTab = ref(0);
@@ -195,9 +204,11 @@ async function fetchData() {
             name: item.author?.nickname || '',
             avatar: item.author?.avatar || '',
             price: item.plan?.price || 0,
+            web3Price: item.plan?.web3?.price || '',
             startTime: formatTimestamp(item.created_at) || '',
             endTime: formatTimestamp(item.expire_at) || '',
             autoRenew: item.auto_renew || false,
+            isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
           };
         }
       });

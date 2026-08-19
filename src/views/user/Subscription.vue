@@ -32,7 +32,7 @@
                   </button>
                 </div>
                 <div class="price-row">
-                  <span class="price">{{ price }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ web3Price }} USDT）</template></span>
+                  <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ trimZeros(web3Price) }} USDT）</template></span>
                   <span class="per">{{ t("user.subscription.perMonth") }}</span>
                 </div>
               </div>
@@ -122,6 +122,14 @@ import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
+
+function trimZeros(val: string | number): string {
+  const s = String(val);
+  if (s === '' || s === '0') return s;
+  const num = parseFloat(s);
+  if (isNaN(num)) return s;
+  return num.toString();
+}
 
 function checkLogin() {
   const token = localStorage.getItem('token');

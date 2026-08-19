@@ -35,7 +35,7 @@
                     <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.plan_id" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
-                  <span class="price-text">{{ option.price }} {{ t('aiRecharge.unit') }}（{{ option.web3?.price || '' }} USDT）</span>
+                  <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}（{{ trimZeros(option.web3?.price || '') }} USDT）</span>
                 </div>
               </div>
             </div>
@@ -140,6 +140,14 @@ import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 const { t, locale } = useI18n();
+
+function trimZeros(val: string | number): string {
+  const s = String(val);
+  if (s === '' || s === '0') return s;
+  const num = parseFloat(s);
+  if (isNaN(num)) return s;
+  return num.toString();
+}
 
 function checkLogin() {
   const token = localStorage.getItem('token');

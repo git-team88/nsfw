@@ -1601,7 +1601,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     revenue: {
       total: "总收益",
-      withdrawn: "冻结期间现金收益",
+      withdrawn: "冻结期现金收益",
       pending: "可提现代币收益",
       cashPending: "可提现收益",
       withdraw: "代币提现",

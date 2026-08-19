@@ -174,8 +174,8 @@ async function fetchTokenBalance() {
     const res = await api.tokenBalance();
     const data = res as any;
     if (data.code == 200 || data.code == 0) {
-      tokenBalance.value = data.data?.balance ?? data.data?.available ?? 0;
-      tokenWithdrawing.value = data.data?.pending ?? data.data?.withdrawing ?? 0;
+      tokenBalance.value = data.data?.balanceInfo?.balance_available ?? 0;
+      tokenWithdrawing.value = data.data?.balanceInfo?.balance_frozen ?? 0;
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -324,7 +324,11 @@ function handleUserInfoLoaded(userData: any) {
 
 function formatSci(n: number | null) {
   if (n == null) return "";
-  return Number(n).toLocaleString();
+  const num = Number(n);
+  if (!Number.isInteger(num)) {
+    return parseFloat(num.toFixed(8)).toLocaleString();
+  }
+  return num.toLocaleString();
 }
 </script>
 

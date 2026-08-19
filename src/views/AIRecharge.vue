@@ -738,7 +738,10 @@ function getValidityText(expiryMonths: number | undefined) {
 
 function formatPrice(price: string | number): string {
   const cleanPrice = String(price).replace(/[^0-9.]/g, '');
-  const parts = cleanPrice.split('.');
+  const num = parseFloat(cleanPrice);
+  if (isNaN(num)) return cleanPrice;
+  const trimmed = parseFloat(num.toFixed(8)).toString();
+  const parts = trimmed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return parts.join('.');
 }
