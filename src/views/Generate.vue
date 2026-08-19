@@ -1569,8 +1569,9 @@ const findAtSymbolBeforeCursor = (element: HTMLElement, selection: Selection): {
       }
     }
     return false;
-};
+  };
 
+  calcPosition(element, range.startContainer, range.startOffset);
 
   // 查找光标前的 @ 符号
   let atNode: Node | null = null;
