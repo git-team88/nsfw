@@ -1,5 +1,5 @@
 <template>
-  <div class="unlimited-mode-modal-overlay" @click.self="handleClose">
+  <div class="unlimited-mode-modal-overlay">
     <div class="unlimited-mode-modal">
       <div class="modal-corner-deco"></div>
 

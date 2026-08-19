@@ -788,7 +788,7 @@
                         <input
                           type="range"
                           :min="currentVideoMode === 'unlimited' ? 2 : 5"
-                          :max="currentVideoMode === 'unlimited' ? 15 : 30"
+                          :max="30"
                           step="1"
                           :value="selectedVideoDuration"
                           @input="onVideoDurationChange"
@@ -5407,7 +5407,6 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
-      if (parseInt(selectedVideoDuration.value) > 15) selectedVideoDuration.value = '15';
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
         videoInput.value = '';
@@ -5434,7 +5433,6 @@ const switchVideoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
     currentVideoMode.value = 'unlimited';
-    if (parseInt(selectedVideoDuration.value) > 15) selectedVideoDuration.value = '15';
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
       videoInput.value = '';

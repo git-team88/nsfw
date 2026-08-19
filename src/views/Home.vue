@@ -421,7 +421,7 @@
                               <input
                                 type="range"
                                 :min="currentVideoMode == 'unlimited' ? 2 : 5"
-                                 :max="currentVideoMode == 'unlimited' ? 15 : 30"
+                                  :max="30"
                                 step="1"
                                 :value="selectedVideoDuration"
                                 @input="onVideoDurationChange"
@@ -1805,8 +1805,8 @@ const validateDurationAndRestore = () => {
 
 const sliderMarks = computed(() => {
   const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
-  const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
-  const marks = currentVideoMode.value === 'unlimited' ? [min, 5, 10, 15] : [min, 10, 20, 30];
+  const max = 30;
+  const marks = currentVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -1815,7 +1815,7 @@ const sliderMarks = computed(() => {
 
 const getSliderValuePosition = () => {
   const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
-  const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
+  const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
   return `${percentage}%`;
@@ -2593,7 +2593,6 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
-      if (parseInt(selectedVideoDuration.value) > 15) selectedVideoDuration.value = '15';
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
         resetVideoInputs();
@@ -2715,7 +2714,6 @@ const switchPhotoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
-    if (parseInt(selectedVideoDuration.value) > 15) selectedVideoDuration.value = '15';
   } else if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
   } else if (contentType.value === 'novel') {
@@ -4071,7 +4069,7 @@ const handleFileChange = async (event: Event) => {
         }
       }
 
-      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
+      const maxTotalVideoDuration = 30;
       const maxTotalAudioDuration = isUnlimited ? 15 : 30;
 
       if (totalVideoDuration > maxTotalVideoDuration) {
