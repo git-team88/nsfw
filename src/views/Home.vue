@@ -261,7 +261,8 @@
                         />
                         <div class="upload-area" @click="uploadedVideo && !isUploading ? playUploadedVideo({ url: uploadedVideo, cover: uploadedVideoCover }) : triggerVideoUpload()">
                           <template v-if="uploadedVideo">
-                            <img :src="uploadedVideoCover || uploadedVideo" class="preview-video" />
+                            <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
+                            <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
                             <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                             <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                           </template>
@@ -296,7 +297,8 @@
                         />
                         <div class="upload-area" @click="uploadedVideo && !isUploading ? playUploadedVideo({ url: uploadedVideo, cover: uploadedVideoCover }) : triggerVideoUpload()">
                           <template v-if="uploadedVideo">
-                            <img :src="uploadedVideoCover || uploadedVideo" class="preview-video" />
+                            <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
+                            <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
                             <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                             <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                           </template>
@@ -3232,6 +3234,10 @@ const doGenerateVideo = async () => {
       }
       if (endFrameImage.value) {
         reference_images.push({ type: "last_frame", url: endFrameImage.value });
+      }
+    } else if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
+      if (uploadedVideoCover.value) {
+        reference_images.push(uploadedVideoCover.value);
       }
     } else {
       reference_images = combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image);

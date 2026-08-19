@@ -183,8 +183,8 @@
                   </div>
                 </template>
                 <!-- 预览图列表 - 视频续写模式显示第一个视频 -->
-                <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_extension' && record.user_selected?.others?.list?.length > 0">
-                  <div class="video-thumbnail-list">
+                <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_extension'">
+                  <div class="video-thumbnail-list" v-if="record.user_selected?.others?.list?.filter((i: any) => i.type === 'video').length > 0">
                     <div
                       v-for="(item, imgIndex) in record.user_selected.others.list.filter((i: any) => i.type === 'video').slice(0, 1)"
                       :key="imgIndex"
@@ -193,6 +193,39 @@
                       <span class="image-index">1</span>
                       <div class="video-thumbnail-item" @click="playVideoItem(item)">
                         <img :src="item.cover || item.image || item.url" alt="preview" class="thumbnail-image" />
+                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                      </div>
+                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
+                    </div>
+                  </div>
+                  <div class="video-thumbnail-list" v-else-if="record.user_selected?.reference_videos?.length > 0">
+                    <div
+                      v-for="(videoItem, vIndex) in record.user_selected.reference_videos.slice(0, 1)"
+                      :key="vIndex"
+                      class="video-thumbnail"
+                    >
+                      <span class="image-index">1</span>
+                      <div class="video-thumbnail-item" @click="playVideoItem({ image: typeof videoItem === 'string' ? videoItem : videoItem.url, type: 'video' })">
+                        <img v-if="getVideoCoverFromRefImages(record)" :src="getVideoCoverFromRefImages(record)" alt="preview" class="thumbnail-image" />
+                        <video v-else :src="typeof videoItem === 'string' ? videoItem : videoItem.url" class="thumbnail-image" muted preload="metadata"></video>
+                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                      </div>
+                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
+                    </div>
+                  </div>
+                </template>
+                <!-- 预览图列表 - 视频修改模式显示参考视频 -->
+                <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_edit' && record.user_selected?.reference_videos?.length > 0">
+                  <div class="video-thumbnail-list">
+                    <div
+                      v-for="(videoItem, vIndex) in record.user_selected.reference_videos.slice(0, 1)"
+                      :key="vIndex"
+                      class="video-thumbnail"
+                    >
+                      <span class="image-index">1</span>
+                      <div class="video-thumbnail-item" @click="playVideoItem({ image: typeof videoItem === 'string' ? videoItem : videoItem.url, type: 'video' })">
+                        <img v-if="getVideoCoverFromRefImages(record)" :src="getVideoCoverFromRefImages(record)" alt="preview" class="thumbnail-image" />
+                        <video v-else :src="typeof videoItem === 'string' ? videoItem : videoItem.url" class="thumbnail-image" muted preload="metadata"></video>
                         <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                       </div>
                       <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
@@ -599,7 +632,8 @@
                   />
                   <div class="upload-area" @click="uploadedVideo && !isUploading ? playVideo({ videoUrl: uploadedVideo, videoCover: uploadedVideoCover }) : triggerExtendVideoUpload()">
                     <template v-if="uploadedVideo">
-                      <img :src="uploadedVideoCover || uploadedVideo" class="preview-video" />
+                      <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
+                      <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                       <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                     </template>
@@ -635,7 +669,8 @@
                   />
                   <div class="upload-area" @click="uploadedVideo && !isUploading ? playVideo({ videoUrl: uploadedVideo, videoCover: uploadedVideoCover }) : triggerExtendVideoUpload()">
                     <template v-if="uploadedVideo">
-                      <img :src="uploadedVideoCover || uploadedVideo" class="preview-video" />
+                      <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
+                      <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                       <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                     </template>
@@ -4279,12 +4314,34 @@ const doGenerateVideo = async () => {
       if (endFrameImage.value) {
         referenceImages.push({ type: "last_frame", url: endFrameImage.value });
       }
+    } else if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
+      if (uploadedVideoCover.value) {
+        referenceImages.push(uploadedVideoCover.value);
+      }
     } else {
       referenceImages = uploadedVideoRefs.value
         .filter(ref => ref.type === 'image')
         .map(ref => ref.image);
-      if (uploadedVideo.value) referenceImages.push(uploadedVideo.value);
     }
+
+    let referenceVideos: any[] = [];
+    let referenceVideosForDisplay: any[] = [];
+    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
+      if (uploadedVideo.value) {
+        referenceVideos = [uploadedVideo.value];
+        referenceVideosForDisplay = [{ url: uploadedVideo.value, cover: uploadedVideoCover.value || '' }];
+      }
+    } else {
+      referenceVideos = uploadedVideoRefs.value
+        .filter((ref: any) => ref.type === 'video')
+        .map((ref: any) => ref.image);
+      referenceVideosForDisplay = uploadedVideoRefs.value
+        .filter((ref: any) => ref.type === 'video')
+        .map((ref: any) => ({ url: ref.image, cover: ref.cover || '' }));
+    }
+    const referenceAudios = uploadedVideoRefs.value
+      .filter((ref: any) => ref.type === 'audio')
+      .map((ref: any) => ref.image);
 
     const skeletonRecord = {
       id: Date.now(),
@@ -4323,6 +4380,7 @@ const doGenerateVideo = async () => {
         story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
         reference_images: referenceImages,
+        reference_videos: referenceVideosForDisplay,
         emotion: '',
         others: {
           content: videoContent,
@@ -4349,20 +4407,6 @@ const doGenerateVideo = async () => {
       aspectRatio: (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? '9:16' : selectedVideoRatio.value,
       duration: selectedVideoDuration.value
     };
-
-    let referenceVideos: any[] = [];
-    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      if (uploadedVideo.value) {
-        referenceVideos = [uploadedVideo.value];
-      }
-    } else {
-      referenceVideos = uploadedVideoRefs.value
-        .filter((ref: any) => ref.type === 'video')
-        .map((ref: any) => ref.image);
-    }
-    const referenceAudios = uploadedVideoRefs.value
-      .filter((ref: any) => ref.type === 'audio')
-      .map((ref: any) => ref.image);
 
     const params = {
       ratio: videoSettings.aspectRatio,
@@ -4774,6 +4818,15 @@ const closeVideoModal = () => {
   playingVideoUrl.value = '';
 };
 
+const getVideoCoverFromRefImages = (record: any) => {
+  const refImages = record.user_selected?.reference_images;
+  if (!refImages || refImages.length === 0) return '';
+  const coverItem = refImages.find((i: any) => typeof i === 'object' && i.type === 'video_cover');
+  if (coverItem) return coverItem.url;
+  const strItem = refImages.find((i: any) => typeof i === 'string' && !i.match(/\.(mp4|mov|avi|webm)/i));
+  return strItem || '';
+};
+
 const viewMoreImages = (record: any) => {
   // TODO: 查看更多图片
 };
@@ -4958,6 +5011,20 @@ const regenerateRecord = (record: any) => {
         }
       }
 
+      if (!uploadedVideo.value && userSelected.reference_videos?.length > 0) {
+        const refVideo = userSelected.reference_videos[0];
+        uploadedVideo.value = typeof refVideo === 'string' ? refVideo : refVideo.url;
+      }
+
+      const refImages = userSelected.reference_images || [];
+      const coverRef = refImages.find((i: any) => typeof i === 'object' && i.type === 'video_cover');
+      const coverStr = refImages.find((i: any) => typeof i === 'string' && !i.match(/\.(mp4|mov|avi|webm)/i));
+      if (coverRef) {
+        uploadedVideoCover.value = coverRef.url;
+      } else if (coverStr) {
+        uploadedVideoCover.value = coverStr;
+      }
+
       videoInput.value = content;
     } else if (isVideoExtensionMode) {
       selectedVideoMultimodal.value = 'videoExtend';
@@ -4974,6 +5041,20 @@ const regenerateRecord = (record: any) => {
         }
       }
 
+      if (!uploadedVideo.value && userSelected.reference_videos?.length > 0) {
+        const refVideo = userSelected.reference_videos[0];
+        uploadedVideo.value = typeof refVideo === 'string' ? refVideo : refVideo.url;
+      }
+
+      const extRefImages = userSelected.reference_images || [];
+      const extCoverRef = extRefImages.find((i: any) => typeof i === 'object' && i.type === 'video_cover');
+      const extCoverStr = extRefImages.find((i: any) => typeof i === 'string' && !i.match(/\.(mp4|mov|avi|webm)/i));
+      if (extCoverRef) {
+        uploadedVideoCover.value = extCoverRef.url;
+      } else if (extCoverStr) {
+        uploadedVideoCover.value = extCoverStr;
+      }
+
       videoInput.value = content;
     } else {
       selectedVideoMultimodal.value = 'multimodal';
@@ -4985,9 +5066,6 @@ const regenerateRecord = (record: any) => {
       }, 100);
     }
 
-    if (selectedVideoMultimodal.value !== 'multimodal') {
-      enableVideoOptimizePrompt.value = false;
-    }
   }
 };
 
