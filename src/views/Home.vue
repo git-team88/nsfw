@@ -358,6 +358,7 @@
                       <div class="video-settings-selector" @click="showVideoSettings = !showVideoSettings; showVideoMultimodalDropdown = false" :class="{ open: showVideoSettings }">
                         <div class="selector-header">
                           <span>{{ selectedVideoQuality }}</span>
+
                           <span class="settings-divider"></span>
                           <span>{{ (selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
                           <span class="settings-divider"></span>
@@ -4186,8 +4187,8 @@ const handleFileChange = async (event: Event) => {
             // Check video duration for multimodal mode
             if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
               const videoDuration = await getMediaDuration(file);
-              const minDuration = 2;
-              const maxDuration = currentMode === 'unlimited' ? 15 : 30;
+              const minDuration = currentMode === 'unlimited' ? 1 : 2;
+              const maxDuration = currentMode === 'unlimited' ? 30 : 38;
               if (videoDuration < minDuration) {
                 toast(t('home.error.videoDurationTooShort', { min: minDuration }));
                 return;

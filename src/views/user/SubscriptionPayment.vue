@@ -8,7 +8,10 @@
       </div>
 
       <div class="content-box">
-        <h1 class="page-title">{{ t("subscribe.title") }}</h1>
+        <div class="page-title-tabs">
+          <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
+        </div>
 
         <!-- Creator Info -->
         <div class="creator-info">
@@ -16,37 +19,18 @@
             <img :src="userInfo.avatar" class="avatar" />
             <div class="meta">
               <div class="nickname">{{ userInfo.nickname }}</div>
-              <!-- <div class="id">ID: {{ userInfo.id }}</div> -->
             </div>
           </div>
-          <div class="price-tag"><span>{{ subscriptionPrice }} {{t('aiRecharge.unit')}}</span>/{{ t("subscribe.month") }}</div>
+          <div class="price-tag">
+            <span v-if="paymentTab === 'usdt'">{{ subscriptionWeb3Price }} USDT</span>
+            <span v-else>{{ subscriptionPrice }} {{t('aiRecharge.unit')}}</span>
+            /{{ t("subscribe.month") }}
+          </div>
         </div>
 
         <p v-if="subscriptionDescription" class="plan-desc">{{ subscriptionDescription }}</p>
 
-        <p class="desc">{{ t("subscribe.desc") }}</p>
-
-        <!-- Payment Methods -->
-        <!-- <div class="section-title">{{ t("subscribe.method") }}</div>
-        <div class="payment-methods">
-          <div
-            v-for="method in paymentMethods"
-            :key="method.id"
-            class="method-item"
-            @click="selectedMethod = method.id"
-          >
-            <div class="radio">
-              <img
-                v-if="selectedMethod == method.id"
-                src="@/assets/images/header/check_active.png"
-                alt=""
-              />
-              <img v-else src="@/assets/images/header/check.png" alt="" />
-            </div>
-
-            <span>{{ method.name }}</span>
-          </div>
-        </div> -->
+        <p class="desc">{{ paymentTab === 'usdt' ? t('subscribe.usdtNote') : t('subscribe.desc') }}</p>
 
         <!-- Agreements -->
         <div class="agreements">
@@ -69,7 +53,7 @@
         </button>
 
         <!-- Auto-renewal Note -->
-        <div class="auto-renewal-note">
+        <div v-if="paymentTab !== 'usdt'" class="auto-renewal-note">
           {{ t('subscribe.autoRenewalNote') }}
         </div>
       </div>
@@ -77,24 +61,59 @@
 
     <!-- Loading Mask -->
     <UploadMask :visible="isLoading" :text="t('loading')" />
+
+    <!-- Wallet Select Modal -->
+    <WalletSelectModal
+      :visible="showWalletModal"
+      @close="showWalletModal = false"
+      @select="handleWalletSelect"
+      @noWallet="handleNoWallet"
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="SubscriptionPayment">
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
+import WalletSelectModal from "@/components/WalletSelectModal.vue";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
+import Web3 from 'web3';
+import BigNumber from 'bignumber.js';
+import erc20Abi from "@/util/abi/erc20Abi.json";
+import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, PAY_NETWORK, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
+import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 
 const router = useRouter();
 const route = useRoute();
 const { t, locale } = useI18n();
 
-// User info
+const WALLET_SIGN_MSG = 'Welcome to our dApp! Please sign this message to prove ownership of your wallet.';
+
+const USDT_ABI = [
+  {
+    constant: false,
+    inputs: [
+      { name: '_to', type: 'address' },
+      { name: '_value', type: 'uint256' }
+    ],
+    name: 'transfer',
+    outputs: [{ name: '', type: 'bool' }],
+    type: 'function'
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', type: 'uint8' }],
+    type: 'function'
+  }
+];
+
 const userInfo = ref({
   id: "",
   nickname: "",
@@ -103,6 +122,7 @@ const userInfo = ref({
 
 interface SubscriptionPlan {
   price: string;
+  web3?: string;
   id?: number;
   name?: string;
   description?: string;
@@ -112,14 +132,11 @@ const subscriptionPlans = ref<SubscriptionPlan | SubscriptionPlan[]>({
   price: ''
 });
 
-const paymentMethods = ref([
-  { id: "A", name: "Paypal" }
-]);
-
-const selectedMethod = ref("A");
-const autoRenewAgree = ref(true);
+const paymentTab = ref<'cash' | 'usdt'>('cash');
+const bloggerStatus = ref<number>(0);
 const paymentAgree = ref(true);
 const isLoading = ref(false);
+const showWalletModal = ref(false);
 
 const subscriptionDescription = computed(() => {
   const plans = subscriptionPlans.value;
@@ -139,6 +156,15 @@ const subscriptionPrice = computed(() => {
   }
 });
 
+const subscriptionWeb3Price = computed(() => {
+  const plans = subscriptionPlans.value;
+  if (Array.isArray(plans)) {
+    return plans.length > 0 ? plans[0].web3?.price || '' : '';
+  } else {
+    return plans.web3?.price || '';
+  }
+});
+
 function checkLogin() {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -148,7 +174,6 @@ function checkLogin() {
   return true;
 }
 
-// Get author info from API
 async function fetchAuthorInfo() {
   const uid = route.query.id;
   if (!uid) {
@@ -173,6 +198,12 @@ async function fetchAuthorInfo() {
       };
 
       subscriptionPlans.value = data.data?.subscription_plans || [];
+
+      const status = data.data?.blogger_status ?? data.data?.user?.blogger_status;
+      bloggerStatus.value = Number(status) || 0;
+      if (bloggerStatus.value === 0) {
+        paymentTab.value = 'usdt';
+      }
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -182,16 +213,16 @@ async function fetchAuthorInfo() {
   }
 }
 
-function openLink() {
-  localStorage.setItem("isBack", "1");
-  window.open("/payment-terms", "_blank");
-}
-
 async function handlePay() {
   if (!checkLogin()) return;
 
   if (!paymentAgree.value) {
     toast(t("subscribe.agreeFirst"));
+    return;
+  }
+
+  if (paymentTab.value === 'usdt') {
+    showWalletModal.value = true;
     return;
   }
 
@@ -224,7 +255,167 @@ async function handlePay() {
   }
 }
 
-// Lifecycle hook
+async function handleWalletSelect(wallet: { id: string; name: string }) {
+  showWalletModal.value = false;
+
+  if (!checkLogin()) return;
+
+  try {
+    let walletProvider: any;
+    let account: string;
+
+    if (wallet.id === 'walletconnect') {
+      try {
+        const accounts = await connectWalletConnect();
+        if (!accounts || accounts.length === 0) {
+          return;
+        }
+        walletProvider = getWalletConnectProvider();
+        account = accounts[0];
+      } catch (error) {
+        return;
+      }
+    } else {
+      isLoading.value = true;
+      walletProvider = getWalletProvider(wallet.id);
+      if (!walletProvider) {
+        toast(t("fail"));
+        isLoading.value = false;
+        return;
+      }
+
+      await switchChain(walletProvider);
+
+      const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        toast(t("fail"));
+        isLoading.value = false;
+        return;
+      }
+      account = accounts[0];
+    }
+
+    isLoading.value = true;
+
+    const uid = route.query.id;
+    if (!uid) {
+      toast(t("fail"));
+      return;
+    }
+
+    const userId = Array.isArray(uid) ? uid[0] : uid;
+    if (!userId) {
+      toast(t("fail"));
+      return;
+    }
+
+    const params = {
+      blogger_id: userId,
+      address: account,
+    };
+
+    const res = await api.generateUBloggerSubOrder(params);
+    const data = res as any;
+    if (data.code == 0 || data.code == 200) {
+      const orderId = data.data?.order_id || '';
+      const usdtAmount = subscriptionWeb3Price.value;
+      if (usdtAmount && parseFloat(usdtAmount) > 0) {
+        const txHash = await transferUSDT(walletProvider, account, usdtAmount);
+        if (txHash && orderId) {
+          await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
+          router.push('/subscription-success');
+          return;
+        } else {
+          router.push('/subscription-fail');
+          return;
+        }
+      }
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+    router.push('/subscription-fail');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function transferUSDT(provider: any, fromAddress: string, amount: string): Promise<string | null> {
+  try {
+    const web3 = new Web3(provider);
+    const tokenContract = new web3.eth.Contract(erc20Abi as any, USDT_CONTRACT_ADDRESS);
+
+    const decimals: number = await tokenContract.methods.decimals().call();
+
+    // 余额检查
+    const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
+    const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    if (new BigNumber(balance).isLessThan(needAmount)) {
+      toast(t('subscribe.insufficientUsdtBalance'));
+      return null;
+    }
+
+    // 使用 Web3.js Contract 发起 transfer，与 MetaMask 兼容性最好
+    const receipt: any = await tokenContract.methods
+      .transfer(SUBSCRIPTION_RECEIVER_ADDRESS, needAmount.toFixed())
+      .send({ from: fromAddress });
+
+    const txHash = receipt?.transactionHash || receipt?.status?.transactionHash || null;
+    if (txHash) {
+      toast(t('success'));
+      return txHash;
+    } else {
+      toast(t("fail"));
+      return null;
+    }
+  } catch (error: any) {
+    console.error('USDT transfer error:', error);
+    const errMsg = error?.data?.message || error?.message || '';
+    if (errMsg.toLowerCase().includes('insufficient')) {
+      toast(t('subscribe.insufficientUsdtOrGas'));
+    } else if (errMsg) {
+      toast(errMsg);
+    } else {
+      toast(t("fail"));
+    }
+    return null;
+  }
+}
+
+function getWalletProvider(walletId: string): any {
+  const w = window as any;
+  switch (walletId) {
+    case 'metamask':
+      return w.ethereum || null;
+    case 'okx':
+      return w.okxwallet || null;
+    case 'phantom':
+      return w.phantom?.ethereum || null;
+    default:
+      return null;
+  }
+}
+
+async function switchChain(provider: any) {
+  const chainId = await provider.request({ method: 'eth_chainId' });
+  if (chainId !== BSC_TESTNET_CHAIN_ID) {
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
+      });
+    } catch (switchError: any) {
+      console.error('Switch chain error:', switchError);
+      throw switchError;
+    }
+  }
+}
+
+function handleNoWallet() {
+  window.open('https://ethereum.org/en/wallets/', '_blank');
+}
+
 onMounted(() => {
   if (!checkLogin()) return;
   fetchAuthorInfo();
@@ -281,11 +472,36 @@ onMounted(() => {
   padding: 24px;
   background: #FFFDF7;
 
-  .page-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #161122;
+  .page-title-tabs {
+    width: max-content;
+    display: flex;
+    border: 2.5px solid #161122;
+    border-radius: 14px;
+    padding: 5px;
     margin-bottom: 24px;
+
+    .tab-item {
+      display: flex;
+      align-items: center;
+      height: 36px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #161122;
+      cursor: pointer;
+      padding: 0 20px;
+      border-radius: 10px;
+      transition: background-color 0.16s, color 0.16s;
+      background: transparent;
+
+      &.active {
+        background: #161122;
+        color: #fff;
+      }
+
+      &:hover:not(.active) {
+        background: #FFFDF7;
+      }
+    }
   }
 
   .creator-info {
@@ -358,51 +574,6 @@ onMounted(() => {
     margin-bottom: 24px;
   }
 
-  .section-title {
-    font-size: 16px;
-    font-weight: 800;
-    color: #161122;
-    margin-bottom: 12px;
-  }
-
-  .payment-methods {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
-
-    .method-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 18px;
-      background: #FFFDF7;
-      border-radius: 6px;
-      cursor: pointer;
-      border: 2.5px solid #161122;
-      box-shadow: 3px 3px 0 #161122;
-
-      .radio {
-        width: 22px;
-        height: 22px;
-        border: 2.5px solid #161122;
-        border-radius: 3px;
-        background: #FFFDF7;
-
-        img {
-          width: 100%;
-          height: 100%;
-        }
-      }
-
-      span {
-        font-size: 14px;
-        color: #161122;
-        font-weight: 800;
-      }
-    }
-  }
-
   .agreements {
     display: flex;
     flex-direction: column;
@@ -473,10 +644,9 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .container {
-    margin: 100px 20px 20px;
+    margin: 140px 20px 20px;
   }
   .creator-info {
-    flex-direction: column;
     gap: 12px;
     align-items: flex-start;
   }
@@ -487,7 +657,7 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .container {
-    margin: 80px 12px 16px;
+    margin: 120px 12px 16px;
   }
   .content-box .page-title {
     font-size: 18px;

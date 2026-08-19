@@ -117,7 +117,7 @@ function goToAiPointsDetails() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 2.5px solid #161122;
+  border: 3px solid #161122;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);

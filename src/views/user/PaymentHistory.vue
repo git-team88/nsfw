@@ -66,13 +66,13 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}{{ t('user.paymentHistory.month') }}</div>
+                      <div class="price">{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? 'USDT' : t('aiRecharge.unit') }}{{ t('user.paymentHistory.month') }}</div>
                       <div class="date">
                         {{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}
                       </div>
                     </div>
 
-                    <div class="operate-box">
+                    <div class="operate-box" v-if="!item.isWeb3">
                       <div class="more-box" v-if="!item.autoRenew">
                         <img
                           class="more-icon"
@@ -108,11 +108,11 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.plan_info?.price }} {{ t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
+                      <div class="price">{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? 'USDT' : t('aiRecharge.unit') }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
                     </div>
 
-                    <div class="operate-box">
+                    <div class="operate-box" v-if="!item.isWeb3">
                       <div class="more-box" v-if="!item.autoRenew">
                         <img
                           class="more-icon"
@@ -146,7 +146,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.price }} {{ t('aiRecharge.unit') }}</div>
+                      <div class="price">{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? item.currency : t('aiRecharge.unit') }}</div>
                     </div>
                   </div>
                 </div>
@@ -166,7 +166,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ item.amount || item.price }}{{ t('aiRecharge.unit') }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : item.amount }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : t('aiRecharge.unit') }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -246,6 +246,18 @@ import { formatTimestamp } from "@/util/utils";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
+
+function trimZeros(val: string | number): string {
+  const s = String(val);
+  if (s == '' || s == '0') return s;
+  const num = parseFloat(s);
+  if (isNaN(num)) return s;
+  return num.toString();
+}
+
+function isWeb3Order(item: any): boolean {
+  return (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3');
+}
 
 function getPlanDescLang() {
   if (locale.value === 'zh') return 'cn';
@@ -382,9 +394,12 @@ async function fetchProcessingData() {
           name: item.author?.nickname || '',
           avatar: item.author?.avatar || '',
           price: item.plan?.price || 0,
+          web3Price: item.plan?.web3?.price || '',
           startTime: item.start_at || item.created_at || '',
           endTime: item.expire_at || '',
-          autoRenew: item.cancel_at_period_end == '1'
+          autoRenew: item.cancel_at_period_end == '1',
+          stripeSubscriptionId: item.stripe_subscription_id || '',
+          isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
         }));
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
@@ -398,6 +413,7 @@ async function fetchProcessingData() {
           id: item.id,
           avatar: '',
           price: item.amount || 0,
+          web3Price: item.web3?.price || '',
           startTime: item.created_at || '',
           endTime: item.current_period_end || '',
           autoRenew: item.cancel_at_period_end == '1',
@@ -406,9 +422,12 @@ async function fetchProcessingData() {
             name: item.plan?.name || '',
             description: item.plan?.description || '',
             price: item.plan?.price || 0,
+            web3Price: item.web3?.price || '',
             billing_period: item.plan?.billing_period || '',
             plan_id: item.plan?.plan_id || 1
-          }
+          },
+          stripeSubscriptionId: item.stripe_subscription_id || '',
+          isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
         }));
 
         total.value = res.data?.allnums || 0;
@@ -424,7 +443,10 @@ async function fetchProcessingData() {
           name: item.plan_desc?.[0]?.name || item.plan?.name || '',
           description: item.plan_desc?.[0]?.description || item.plan?.description || '',
           price: item.amount || item.plan?.price || 0,
+          web3Price: item.web3?.price || '',
+          currency: item.web3?.currency || 'USDT',
           pay_time: item.pay_time || item.created_at || '',
+          isWeb3: (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3'),
           plan_info: {
             name: item.plan_desc?.[0]?.name || item.plan?.name || '',
             description: item.plan_desc?.[0]?.description || item.plan?.description || '',

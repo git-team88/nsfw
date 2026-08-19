@@ -7,50 +7,97 @@
       <div class="main">
         <div class="panel-top">
           <div class="panel-title">{{ t("user.sidebar.revenue") }}</div>
+          <div class="panel-tip">
+            {{ t("user.revenue.withdrawTip") }}
+            <span class="pink">{{ t("user.revenue.communityRule") }}</span>
+            {{ t("user.revenue.withdrawTipEnd") }}
+          </div>
         </div>
+
         <div class="content">
-          <div class="metrics">
-            <div class="metric fans">
-              <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
-              <div class="metric-value pink">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)}` : "--" }}
+          <div class="token-section">
+            <div class="metric token-withdrawable">
+              <img class="metric-bg-icon" src="@/assets/images/user/usdt_icon.png" alt="" />
+              <div class="metric-label">{{ t("user.revenue.pending") }}</div>
+              <div class="metric-value">
+                {{ tokenBalance != null ? `${formatSci(tokenBalance)} USDT` : "--" }}
               </div>
             </div>
-            <div class="metric comments">
-              <div class="metric-label">{{ t("user.revenue.pending") }}</div>
-              <div class="metric-value orange">
-                {{ (availableJpy != null) ? `${formatSci(availableJpy)}` : "--" }}
+            <div class="metric token-withdrawing">
+              <div class="metric-label">{{ t("user.revenue.tokenWithdrawing") }}</div>
+              <div class="metric-value">
+                {{ tokenWithdrawing != null ? `${formatSci(tokenWithdrawing)} USDT` : "--" }}
+              </div>
+            </div>
+            <div class="token-info">
+              <div class="info-tip">
+                <img class="info-icon" src="@/assets/images/user/info.png" alt="" />
+                {{ t("user.revenue.tokenWithdrawTip") }}
+              </div>
+              <div class="btn-group">
+                <button class="withdraw-btn secondary" @click="showTokenWithdrawRecordModal = true">
+                  {{ t("user.revenue.withdrawRecord") }}
+                </button>
+                <button class="withdraw-btn primary" @click="handleTokenWithdraw">
+                  {{ t("user.revenue.withdraw") }}
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="withdraw-banner">
-            <div class="banner-left">
-              <div class="banner-tip">
-                {{ t("user.revenue.withdrawTip") }}
-                <span class="pink">{{ t("user.revenue.communityRule") }}</span>
-                {{ t("user.revenue.withdrawTipEnd") }}
+          <div class="cash-section">
+            <div class="metric cash-frozen">
+              <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
+              <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
+              <div class="metric-value">
+                {{ pendingJpy != null ? `${formatSci(pendingJpy)} 日元` : "--" }}
               </div>
             </div>
-            <div class="btn-group">
-              <button class="withdraw-btn secondary" @click="openWithdrawRecord">
-                {{ t("user.revenue.withdrawRecord") }}
-              </button>
-              <button class="withdraw-btn primary" @click="openWithdrawModal">
-                {{ t("user.revenue.withdraw") }}
-              </button>
+            <div class="metric cash-withdrawing">
+              <div class="metric-label">{{ t("user.revenue.cashPending") }}</div>
+              <div class="metric-value">
+                {{ availableJpy != null ? `${formatSci(availableJpy)} 日元` : "--" }}
+              </div>
+            </div>
+            <div class="cash-info">
+              <div class="info-tip">
+                <img class="info-icon" src="@/assets/images/user/info.png" alt="" />
+                {{ t("user.revenue.cashWithdrawTip") }}
+              </div>
+              <div class="cash-btn-group">
+                <button class="withdraw-btn secondary" @click="openWithdrawRecord">
+                  {{ t("user.revenue.cashWithdrawRecord") }}
+                </button>
+                <button class="withdraw-btn primary" @click="openCashWithdrawModal">
+                  {{ t("user.revenue.cashWithdraw") }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <WithdrawModal
-      :visible="showWithdrawModal"
-      :total-withdrawable="availableJpy"
-      @close="closeWithdrawModal"
-      @confirm="confirmWithdraw"
+    <TokenWithdrawRecordModal
+      :visible="showTokenWithdrawRecordModal"
+      @close="showTokenWithdrawRecordModal = false"
     />
+
+    <TokenWithdrawModal
+      :visible="showTokenWithdrawModal"
+      :amount="tokenBalance"
+      @close="showTokenWithdrawModal = false"
+    />
+
+    <WithdrawModal
+      :visible="showCashWithdrawModal"
+      :total-withdrawable="availableJpy"
+      @close="showCashWithdrawModal = false"
+      @confirm="confirmCashWithdraw"
+    />
+
+    <KycRequiredModal :visible="showKycRequiredModal" :message="t('user.revenue.kycRequiredMessage')" @close="showKycRequiredModal = false" />
+    <KycReviewingModal :visible="showKycReviewingModal" :message="t('user.revenue.kycReviewingMessage')" @close="showKycReviewingModal = false" />
 
     <UploadMask :visible="isLoading" :text="t('loading')" />
 
@@ -61,7 +108,11 @@
 <script setup lang="ts" name="UserRevenue">
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
+import TokenWithdrawModal from "@/components/TokenWithdrawModal.vue";
+import TokenWithdrawRecordModal from "@/components/TokenWithdrawRecordModal.vue";
 import WithdrawModal from "@/components/WithdrawModal.vue";
+import KycRequiredModal from "@/components/KycRequiredModal.vue";
+import KycReviewingModal from "@/components/KycReviewingModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, onMounted } from "vue";
@@ -78,9 +129,17 @@ const pendingJpy = ref<number | null>(null);
 const accountStatus = ref('');
 const isLoading = ref(false);
 
-// Withdraw modal state
-const showWithdrawModal = ref(false);
+const showTokenWithdrawModal = ref(false);
+const showTokenWithdrawRecordModal = ref(false);
+const showCashWithdrawModal = ref(false);
+const showKycRequiredModal = ref(false);
+const showKycReviewingModal = ref(false);
 const showCountrySelectModal = ref(false);
+
+const kycStatusChecked = ref(false);
+
+const tokenBalance = ref<number | string | null>(null);
+const tokenWithdrawing = ref<number | string | null>(null);
 
 async function fetchBalance() {
   try {
@@ -98,20 +157,75 @@ async function fetchBalance() {
   }
 }
 
-function openWithdrawModal() {
+async function fetchTokenBalance() {
+  try {
+    const res = await api.tokenBalance();
+    const data = res as any;
+    if (data.code == 200 || data.code == 0) {
+      tokenBalance.value = data.data?.balanceInfo?.balance_available ?? 0;
+      tokenWithdrawing.value = data.data?.balanceInfo?.balance_frozen ?? 0;
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    }
+  } catch (error) {
+    toast(t("fail"));
+  }
+}
+
+async function handleTokenWithdraw() {
+  if (!tokenBalance.value || Number(tokenBalance.value) <= 0) {
+    toast(t("user.revenue.noProfit"));
+    return;
+  }
+
+  if (Number(tokenBalance.value) < 2) {
+    toast(t("user.revenue.withdrawMinTip"));
+    return;
+  }
+
+  if (!kycStatusChecked.value) {
+    await fetchKycDetail();
+    if (!kycStatusChecked.value) return;
+  }
+
+  showTokenWithdrawModal.value = true;
+}
+
+async function fetchKycDetail() {
+  try {
+    const kycRes = (await api.kycDetail()) as any;
+    if (kycRes.code === 0 || kycRes.code === 200) {
+      const kycData = kycRes.data;
+      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
+
+      if (isDataEmpty) {
+        showKycRequiredModal.value = true;
+      } else {
+        const status = kycData.status;
+        if (status == 0 || status == '0' || status == 2 || status == '2') {
+          showKycReviewingModal.value = true;
+        } else {
+          kycStatusChecked.value = true;
+        }
+      }
+    } else {
+      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function openCashWithdrawModal() {
   if (availableJpy.value && availableJpy.value > 0) {
-    showWithdrawModal.value = true;
+    showCashWithdrawModal.value = true;
   } else {
     toast(t("user.revenue.noProfit"));
   }
 }
 
-function closeWithdrawModal() {
-  showWithdrawModal.value = false;
-}
-
-function confirmWithdraw() {
-  closeWithdrawModal();
+function confirmCashWithdraw() {
+  showCashWithdrawModal.value = false;
   openWithdrawRecord();
 }
 
@@ -186,6 +300,7 @@ async function handleViewAccount() {
 
 onMounted(() => {
   fetchBalance();
+  fetchTokenBalance();
 });
 
 function handleUserInfoLoaded(userData: any) {
@@ -202,10 +317,12 @@ function handleUserInfoLoaded(userData: any) {
 
 function formatSci(n: number | null) {
   if (n == null) return "";
-  return Number(n).toLocaleString();
+  const num = Number(n);
+  if (!Number.isInteger(num)) {
+    return parseFloat(num.toFixed(8)).toLocaleString();
+  }
+  return num.toLocaleString();
 }
-
-
 </script>
 
 <style scoped lang="scss">
@@ -223,41 +340,49 @@ function formatSci(n: number | null) {
 }
 .main {
   flex: 1;
-  padding: 24px;
+  padding: 24px 16px;
   border: 3px solid #161122;
-  border-radius: 14px;
+  border-radius: 12px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
   margin-left: 238px;
+  background: #FEFDF8;
 }
 .panel-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 24px;
+  align-items: baseline;
+  margin: 0 0 20px;
+  gap: 20px;
 }
 .panel-title {
-  font-weight: 800;
-  font-size: 20px;
+  width: 56px;
+  height: 42px;
+  font-weight: 900;
+  font-size: 28px;
   color: #161122;
-  position: relative;
-  padding-bottom: 10px;
+  white-space: nowrap;
+  line-height: 42px;
 }
-.panel-title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 46px;
-  height: 4px;
-  border-radius: 2px;
-  background: #FF4D8D;
+.panel-tip {
+  font-size: 16px;
+  color: #99A1AF;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 24px;
+  .pink {
+    color: #FF4D8E;
+  }
 }
 
-.metrics {
+.token-section {
   display: flex;
-  gap: 30px;
-  margin: 0 0 24px;
+  align-items: stretch;
+  gap: 10px;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 2px solid #161122;
+  padding: 14px;
+  margin-bottom: 14px;
 }
 .metric {
   flex: 1;
@@ -265,109 +390,159 @@ function formatSci(n: number | null) {
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  min-height: 146px;
+  border-radius: 12px;
   border: 2px solid #161122;
-  border-radius: 14px;
-  padding: 24px;
-  background: #FFFDF7;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
 }
-.metric.fans {
-  border-top: 5px solid #FF4D8D;
+.metric-bg-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
-.metric.comments {
-  border-top: 5px solid #FF9E45;
+.metric.token-withdrawable {
+  background: linear-gradient(90deg, rgba(27,162,122,0) 0%, #1BA27A 100%);
+}
+.metric.token-withdrawing {
+  background: linear-gradient(90deg, rgba(27,162,122,0) 0%, #1BA27A 100%);
 }
 .metric-label {
   color: #161122;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 24px;
 }
 .metric-value {
   margin-top: 16px;
   font-weight: 700;
-  font-size: 32px;
+  font-size: 28px;
   color: #161122;
-}
-.metric-value.pink {
-  color: #FF4D8D;
-}
-.metric-value.orange {
-  color: #FF9E45;
+  white-space: nowrap;
+  line-height: 36px;
 }
 
-.withdraw-banner {
-  .banner-left {
-    .banner-tip {
-      font-size: 12px;
-      color: #161122;
-      margin-bottom: 24px;
-      .pink {
-        color: #FF4D8D;
-      }
+.token-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.token-info .info-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #99A1AF;
+  font-weight: 500;
+  line-height: 24px;
+  white-space: pre-line;
+}
+.info-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.btn-group {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 18px;
+  margin-left: auto;
+}
+
+.cash-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 2px solid #161122;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.metric.cash-frozen {
+  background: linear-gradient(90deg, rgba(251,188,5,0) 0%, #FBBC05 100%);
+}
+.metric.cash-withdrawing {
+  background: linear-gradient(90deg, rgba(251,188,5,0) 0%, #FBBC05 100%);
+}
+.cash-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cash-info .info-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  color: #99A1AF;
+  font-weight: 500;
+  line-height: 24px;
+}
+.cash-btn-group {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 18px;
+  margin-left: auto;
+}
+
+.withdraw-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 136px;
+  height: 48px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 #161122;
+
+  &.primary {
+    background: #FF4D8E;
+    border: 2px solid #161122;
+    color: #FFFFFF;
+
+    &:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 #161122;
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 
-  .btn-group {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
+  &.secondary {
+    background: #FFFFFF;
+    border: 2px solid #161122;
+    color: #161122;
 
-  .withdraw-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: 136px;
-    height: 48px;
-    padding: 0 24px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-
-    img {
-      width: 24px;
-      height: 24px;
+    &:hover {
+      color: #FF4D8E;
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 #161122;
     }
 
-    &.primary {
-      background: #FF4D8D;
-      border: 2.5px solid #161122;
-      border-radius: 13px;
-      color: #FFFFFF;
-      box-shadow: 3px 3px 0 #161122;
-
-      &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-
-      &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 2px 2px 0 #161122;
-      }
-    }
-
-    &.secondary {
-      background: #FFFDF7;
-      border: 2.5px solid #161122;
-      border-radius: 13px;
-      color: #161122;
-      box-shadow: 3px 3px 0 #161122;
-
-      &:hover {
-        color: #FF4D8D;
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
-      }
-
-      &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 2px 2px 0 #161122;
-      }
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #161122;
     }
   }
 }
@@ -666,18 +841,16 @@ td {
   padding: 24px;
   margin-left: 0;
   }
-  .metrics {
+  .token-section {
     flex-direction: column;
-    gap: 16px;
   }
-  .metric {
-    min-height: auto;
-    padding: 20px;
+  .cash-section {
+    flex-direction: column;
   }
   .metric-value {
     font-size: 24px;
   }
-  .withdraw-banner .btn-group {
+  .btn-group {
     flex-wrap: wrap;
     gap: 12px;
   }
@@ -701,8 +874,13 @@ td {
   .content {
     padding: 16px;
   }
-  .metric {
-    padding: 16px;
+  .panel-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .panel-tip {
+    white-space: normal;
   }
   .metric-value {
     font-size: 20px;

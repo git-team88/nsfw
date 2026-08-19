@@ -1569,8 +1569,8 @@ const findAtSymbolBeforeCursor = (element: HTMLElement, selection: Selection): {
       }
     }
     return false;
-  };
-  calcPosition(element, range.startContainer, range.startOffset);
+};
+
 
   // 查找光标前的 @ 符号
   let atNode: Node | null = null;
@@ -2373,6 +2373,7 @@ const handleVideoRefUpload = async (event: Event) => {
         }
       }
 
+      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
       const maxTotalAudioDuration = isUnlimited ? 15 : 30;
 
       // Check video duration limit
@@ -2401,8 +2402,8 @@ const handleVideoRefUpload = async (event: Event) => {
             return;
           }
           const videoDuration = await getMediaDuration(file);
-          const minVideoDuration = 2;
-          const maxVideoDuration = isUnlimited ? 15 : 30;
+          const minVideoDuration = isUnlimited ? 1 : 2;
+          const maxVideoDuration = isUnlimited ? 30 : 38;
           if (videoDuration < minVideoDuration) {
             toast(t('home.error.videoDurationTooShort', { min: minVideoDuration }));
             input.value = '';
@@ -2414,6 +2415,11 @@ const handleVideoRefUpload = async (event: Event) => {
             return;
           }
         } else if (file.type.startsWith('audio/')) {
+          if (isUnlimited) {
+            toast(t('home.error.unlimitedNoAudio'));
+            input.value = '';
+            return;
+          }
           if (file.size > maxAudioSizeBytes) {
             toast(t('home.error.maxAudioSize', { max: 15 }));
             input.value = '';

@@ -1,35 +1,23 @@
 <template>
-  <div class="subscription-success-page">
+  <div class="withdraw-success-page">
     <Header :cur="-1"></Header>
     <div class="container">
 
       <div class="content-box">
-        <h1 class="page-title">{{ t("subscribe.success.title") }}</h1>
+        <h1 class="page-title">{{ t("user.revenue.withdrawSuccessTitle") }}</h1>
 
-        <div class="error-message">
-          <p>{{ t("subscribe.success.line1") }}</p>
-          <p>{{ t("subscribe.success.line2") }}</p>
-          <p>
-            {{ t("subscribe.success.supportEmail") }}support@moegen.ai
-          </p>
-          <p>
-            {{ t("subscribe.success.discord") }}
-            <a class="contact-link" href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener">https://discord.gg/kWkuYjs9</a>
-          </p>
-        </div>
+        <p class="success-message">{{ t("user.revenue.withdrawSuccessDesc") }}</p>
 
-        <!-- Success Icon -->
         <div class="success-icon">
           <img src="@/assets/images/user/success_icon.png" alt="" />
         </div>
 
-        <!-- Back Buttons -->
         <div class="button-group">
           <button class="back-home-btn" @click="backToHome">
             {{ t("subscribe.success.backToHome") }}
           </button>
-          <button class="back-btn" @click="backToMyProjects">
-            {{ t("subscribe.success.backToMyProjects") }}
+          <button class="back-btn" @click="backToRevenue">
+            {{ t("user.revenue.backToRevenue") }}
           </button>
         </div>
       </div>
@@ -37,38 +25,25 @@
   </div>
 </template>
 
-<script setup lang="ts" name="AIToolPaymentSuccess">
+<script setup lang="ts" name="TokenWithdrawSuccess">
 import Header from "@/components/Header.vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { trackPurchase } from "@/utils/analytics";
 
 const router = useRouter();
-const route = useRoute();
 const { t } = useI18n();
-
-const amount = Number(route.query.amount || 0);
-if (amount > 0) {
-  const mode = (route.query.mode || "") as string;
-  const paymentType = mode === "subscription" ? "2" : mode === "payment" ? "3" : "2";
-  trackPurchase({
-    paymentType,
-    value: amount,
-    currency: (route.query.currency || "JPY") as string,
-  });
-}
 
 function backToHome() {
   router.replace('/');
 }
 
-function backToMyProjects() {
-  router.replace('/my-projects');
+function backToRevenue() {
+  router.replace('/user-revenue');
 }
 </script>
 
 <style scoped lang="scss">
-.subscription-success-page {
+.withdraw-success-page {
   width: 100%;
   min-height: 100vh;
   padding: 140px 0 0;
@@ -93,22 +68,15 @@ function backToMyProjects() {
     color: #161122;
   }
 
-  .error-message {
+  .success-message {
     font-size: 14px;
     color: #161122;
     text-align: center;
     line-height: 20px;
-    margin-top: 40px;
+    margin-top: 20px;
+
     p {
       margin: 0 0 6px;
-    }
-  }
-
-  .contact-link {
-    color: #FF4D8E;
-    text-decoration: none;
-    &:hover {
-      text-decoration: underline;
     }
   }
 
@@ -123,7 +91,7 @@ function backToMyProjects() {
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 4px 4px 0 rgba(16, 24, 40, 0.14);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     img {
@@ -196,7 +164,7 @@ function backToMyProjects() {
 }
 
 @media (max-width: 768px) {
-  .subscription-success-page {
+  .withdraw-success-page {
     padding: 80px 0 0;
   }
   .container {
@@ -222,7 +190,7 @@ function backToMyProjects() {
 }
 
 @media (max-width: 480px) {
-  .subscription-success-page {
+  .withdraw-success-page {
     padding: 70px 0 0;
   }
   .container {

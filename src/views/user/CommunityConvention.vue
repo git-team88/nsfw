@@ -102,31 +102,31 @@ function goBack() {
   width: 100%;
   min-height: 100vh;
   scroll-behavior: smooth;
-  padding: 140px 0 0;
+  padding: 224px 0 0;
   background: #FFFFFF;
 
   .inner {
-    max-width: 1440px;
+    max-width: 1152px;
     width: 100%;
-    margin: 0 auto 20px;
+    margin: 0 auto 32px;
 
     .terms-detail-back {
       position: fixed;
       left: 50%;
-      top: 120px;
+      top: 192px;
       width: auto;
-      height: 40px;
+      height: 64px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transform: translateX(-550px);
+      gap: 10px;
+      transform: translateX(-880px);
       color: #fff;
       cursor: pointer;
       z-index: 10;
       border: 2px solid #fff;
-      border-radius: 13px;
-      box-shadow: 3px 3px 0 #fff;
-      padding: 0 10px;
+      border-radius: 21px;
+      box-shadow: 5px 5px 0 #fff;
+      padding: 0 16px;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
       .back-text {
@@ -136,14 +136,14 @@ function goBack() {
       }
 
       &:hover {
-        transform: translateX(-550px) translateY(-1px);
-        box-shadow: 4px 4px 0 #fff;
+        transform: translateX(-880px) translateY(-1px);
+        box-shadow: 6px 6px 0 #fff;
       }
     }
 
     .terms-detail {
-      max-width: 860px;
-      margin: 0 auto 20px;
+      max-width: 688px;
+      margin: 0 auto 32px;
       font-size: 14px;
       line-height: 28px;
       color: #364153;
@@ -151,7 +151,7 @@ function goBack() {
       :deep(h1) {
         font-weight: bold;
         font-size: 24px;
-        margin: 0 0 10px 0;
+        margin: 0 0 16px 0;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(.sub) {
@@ -160,7 +160,7 @@ function goBack() {
       }
       :deep(.meta) {
         color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 20px;
+        margin-bottom: 32px;
         font-size: 14px;
       }
       :deep(.meta a) {
@@ -173,22 +173,22 @@ function goBack() {
       :deep(h2) {
         font-weight: bold;
         font-size: 20px;
-        margin: 30px 0;
+        margin: 48px 0;
         border-left: 4px solid #00ffff;
-        padding-left: 6px;
+        padding-left: 10px;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(h3) {
         font-weight: bold;
-        font-size: 17.5px;
-        margin: 28px 0;
+        font-size: 18px;
+        margin: 45px 0;
         color: rgba(255, 255, 255, 0.9);
       }
       :deep(p) {
-        margin: 15px 0;
+        margin: 24px 0;
       }
       :deep(ul) {
-        padding-left: 18px;
+        padding-left: 29px;
         list-style: disc;
       }
       :deep(li) {
@@ -196,19 +196,19 @@ function goBack() {
       }
       :deep(code) {
         background: rgba(0, 255, 255, 0.12);
-        padding: 7px 9px;
+        padding: 11px 14px;
         border-radius: 4px;
       }
       :deep(table) {
         width: 100%;
         border-collapse: collapse;
-        margin: 16px 0;
+        margin: 26px 0;
         font-size: 16px;
       }
       :deep(th),
       :deep(td) {
         border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 12px 11px;
+        padding: 19px 18px;
         vertical-align: top;
       }
       :deep(thead th) {
@@ -218,11 +218,11 @@ function goBack() {
       :deep(.notice) {
         background: rgba(0, 255, 255, 0.12);
         border: 1px solid #00ffff;
-        padding: 14px 16px;
+        padding: 22px 26px;
         border-radius: 8px;
       }
       :deep(footer) {
-        margin-top: 50px;
+        margin-top: 80px;
         color: rgba(255, 255, 255, 0.3);
         font-size: 14px;
       }
@@ -232,12 +232,12 @@ function goBack() {
 
 @media (max-width: 768px) {
   .terms {
-    padding: 100px 0 0;
+    padding: 160px 0 0;
   }
   .inner .terms-detail-back {
     position: fixed;
-    left: 10px;
-    top: 100px;
+    left: 16px;
+    top: 160px;
     transform: none;
     &:hover {
       transform: translateY(-1px);
@@ -245,7 +245,7 @@ function goBack() {
   }
   .inner .terms-detail {
     max-width: 100%;
-    padding: 0 10px;
+    padding: 0 16px;
     font-size: 12px;
     line-height: 24px;
   }
@@ -253,11 +253,11 @@ function goBack() {
 
 @media (max-width: 480px) {
   .terms {
-    padding: 80px 0 0;
+    padding: 128px 0 0;
   }
   .inner .terms-detail-back {
-    left: 10px;
-    top: 80px;
+    left: 16px;
+    top: 128px;
   }
   .inner .terms-detail {
     font-size: 11px;

@@ -11,20 +11,39 @@
         <h1 class="page-title">{{ t('aiRecharge.title') }}</h1>
 
         <div class="tab-box">
-          <div class="tab-group">
-            <div
-              class="tab-item"
-              :class="{ active: activeTab === 'subscription' }"
-              @click="switchTab('subscription')"
-            >
-              {{ t('aiRecharge.subscriptionTab') }}
+          <div class="tab-left">
+            <div class="tab-group payment-tab-group">
+              <div
+                class="tab-item"
+                :class="{ active: paymentTab === 'wallet' }"
+                @click="switchPaymentTab('wallet')"
+              >
+                {{ t('aiRecharge.walletTab') }}
+              </div>
+              <div
+                class="tab-item"
+                :class="{ active: paymentTab === 'usdt' }"
+                @click="switchPaymentTab('usdt')"
+              >
+                {{ t('aiRecharge.usdtTab') }}
+              </div>
             </div>
-            <div
-              class="tab-item"
-              :class="{ active: activeTab === 'credits_pack' }"
-              @click="switchTab('credits_pack')"
-            >
-              {{ t('aiRecharge.creditsPackTab') }}
+
+            <div class="type-tab-list">
+              <div
+                class="type-tab-item"
+                :class="{ active: activeTab === 'subscription' }"
+                @click="switchTab('subscription')"
+              >
+                {{ t('aiRecharge.subscriptionTab') }}
+              </div>
+              <div
+                class="type-tab-item"
+                :class="{ active: activeTab === 'credits_pack' }"
+                @click="switchTab('credits_pack')"
+              >
+                {{ t('aiRecharge.creditsPackTab') }}
+              </div>
             </div>
           </div>
 
@@ -67,27 +86,27 @@
               <img v-if="selectedPlan != plan.plan_id" class="plan-bg" src="@/assets/images/recharge/bg.png" alt="" />
 
               <div class="plan-card-inner" :class="{ active: selectedPlan == plan.plan_id, 'discount-card': activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan), 'credits-card': activeTab == 'credits_pack' }">
-                <span class="plan-mode" v-if="getPlanTitle(plan) !== t('aiRecharge.unknownPlan')">{{ getPlanTitle(plan) }}</span>
+                <span class="plan-mode" v-if="!(paymentTab === 'usdt' && activeTab === 'subscription') && getPlanTitle(plan) !== t('aiRecharge.unknownPlan')">{{ getPlanTitle(plan) }}</span>
 
                 <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan)" class="plan-price-section">
                   <div class="plan-discount-price">
                     <span class="price-num">{{ formatPrice(getFirstMonthPrice(plan)) }}</span>
-                    <span class="price-unit">{{ t('aiRecharge.unit') }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
+                    <span class="price-unit">{{ priceUnit }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
-                  <div class="plan-original-price">{{ formatPrice(plan.price) }}{{ t('aiRecharge.unit') }}</div>
+                  <div class="plan-original-price">{{ formatPrice(getPlanPrice(plan)) }}{{ priceUnit }}</div>
                   <div class="plan-price-desc">
                     <span class="desc-highlight">{{ t('aiRecharge.firstMonth30Off') }}，</span><br>
-                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: formatPrice(plan.price), unit: t('aiRecharge.unit') }) }}。</span>
+                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: formatPrice(getPlanPrice(plan)), unit: priceUnit }) }}。</span>
                   </div>
                 </div>
 
                 <div v-else class="plan-price-section">
                   <div class="plan-price-value">
-                    <span class="price-num">{{ formatPrice(plan.price) }}</span>
-                    <span class="price-unit">{{ t('aiRecharge.unit') }}{{ activeTab == 'credits_pack' ? '' : getBillingPeriodText(plan.billing_period || '1') }}</span>
+                    <span class="price-num">{{ formatPrice(getPlanPrice(plan)) }}</span>
+                    <span class="price-unit">{{ priceUnit }}{{ activeTab == 'credits_pack' ? '' : getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
                   <div v-if="activeTab === 'credits_pack' && plan.original_price" class="plan-strikethrough-price">
-                    <span>{{ formatPrice(plan.original_price) }}{{ t('aiRecharge.unit') }}</span>
+                    <span>{{ formatPrice(plan.original_price) }}{{ priceUnit }}</span>
                   </div>
                 </div>
 
@@ -102,6 +121,7 @@
                     <span class="bonus-value">{{ formatCredits(plan.bonus_credits) }} {{ t('aiRecharge.compute') }}</span>
                   </div>
                   <div class="plan-credits-valid" v-if="activeTab === 'credits_pack'">{{ t('aiRecharge.permanentValid') }}</div>
+                  <div class="plan-credits-valid" v-else-if="paymentTab === 'usdt' && plan.valid_days">{{ t('aiRecharge.validityPeriod', { months: Math.ceil(Number(plan.valid_days) / 30) }) }}</div>
                   <div class="plan-credits-valid" v-else>{{ getValidityText(plan.expiry_months) }}</div>
                 </div>
 
@@ -133,12 +153,12 @@
         <div v-if="rechargePlans.length > 0" class="bottom-bar">
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.originalPrice') }}</div>
-            <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></div>
+            <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
           </div>
 
-          <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" class="bottom-bar-divider"></div>
+          <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" v-show="paymentTab !== 'usdt'" class="bottom-bar-divider"></div>
 
-          <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" class="bottom-block">
+          <div v-if="(activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)) && paymentTab !== 'usdt'" class="bottom-block">
             <div class="block-label">
               {{ t('aiRecharge.coupon') }}
               <div class="coupon-info-icon">
@@ -150,7 +170,7 @@
             </div>
             <div class="block-value" v-if="couponCode">
               <button class="cancel-coupon-btn" @click="cancelCoupon">{{ t('aiRecharge.cancelCoupon') }}</button>
-              <span class="discount-amount">-<span class="price-num">{{ formatPrice(discountAmount.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></span>
+              <span class="discount-amount">-<span class="price-num">{{ formatPrice(discountAmount.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></span>
             </div>
             <div class="block-value" v-else>
               <span class="coupon-link" @click="goToCoupon">{{ t('aiRecharge.addCoupon') }}></span>
@@ -161,7 +181,7 @@
 
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.actualAmount') }}</div>
-            <div class="block-value total-value"><span class="price-num">{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ t('aiRecharge.yen') }}</span></div>
+            <div class="block-value total-value"><span class="price-num">{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
           </div>
 
           <div class="bottom-bar-divider"></div>
@@ -194,6 +214,12 @@
       @close="handleCouponClose"
       @confirm="handleCouponConfirm"
     />
+
+    <WalletSelectModal
+      :visible="showWalletModal"
+      @close="showWalletModal = false"
+      @select="handleWalletSelect"
+    />
   </div>
 </template>
 
@@ -201,11 +227,17 @@
 import Header from "@/components/Header.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import CouponModal from "@/components/CouponModal.vue";
+import WalletSelectModal from "@/components/WalletSelectModal.vue";
 import { ref, watch, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
+import Web3 from 'web3';
+import BigNumber from 'bignumber.js';
+import erc20Abi from "@/util/abi/erc20Abi.json";
+import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
+import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -220,9 +252,14 @@ interface RechargePlan {
     promotion_content?: string;
   }>;
   price: string;
+  web3?: {
+    price: string;
+    currency: string;
+  };
   period: string;
   credits: string;
   expiry_months?: number;
+  valid_days?: string;
   billing_period?: string;
   bonus_credits?: string;
   discount_desc?: any[];
@@ -247,7 +284,9 @@ const isUserNew = ref(false);
 const promotionTitle = ref('');
 const promotionContent = ref('');
 const activeTab = ref('subscription');
+const paymentTab = ref('wallet');
 const hasFirstMonthDiscount = ref(false);
+const showWalletModal = ref(false);
 
 const tabModeMap: Record<string, string> = {
   subscription: 'subscription',
@@ -260,10 +299,13 @@ const currentPlanHasDiscount = computed(() => {
   return planHasDiscount(plan);
 });
 
+const priceUnit = computed(() => paymentTab.value === 'usdt' ? 'USDT' : t('aiRecharge.unit'));
+const priceYen = computed(() => paymentTab.value === 'usdt' ? 'USDT' : t('aiRecharge.yen'));
+
 const planOriginalPrice = computed(() => {
   const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
   if (!plan) return 0;
-  return parseFloat(plan.price);
+  return parseFloat(paymentTab.value === 'usdt' && plan.web3?.price ? plan.web3.price : plan.price);
 });
 
 const originalPrice = computed(() => {
@@ -272,7 +314,7 @@ const originalPrice = computed(() => {
   if (activeTab.value == 'subscription' && hasFirstMonthDiscount.value && planHasDiscount(plan)) {
     return getFirstMonthPrice(plan);
   }
-  return parseFloat(plan.price);
+  return parseFloat(getPlanPrice(plan));
 });
 
 const discountAmount = computed(() => {
@@ -371,38 +413,43 @@ function getList() {
   const mode = tabModeMap[activeTab.value] || activeTab.value;
   api.aIRechargePlan(mode).then((res: any) => {
     if (res.code == 0) {
-      if (res.data && Array.isArray(res.data)) {
-        rechargePlans.value = res.data.map((plan: any) => {
-          return {
-            plan_id: plan.plan_id || plan.id || Math.random(),
-            info: plan.info || [],
-            price: plan.price || '0',
-            period: plan.period || '',
-            credits: plan.credits || '0',
-            expiry_months: plan.expiry_months,
-            billing_period: plan.billing_period,
-            bonus_credits: plan.bonus_credits,
-            discount_desc: plan.discount_desc || [],
-            discount_price: plan.discount_price || '0',
-            original_price: plan.original_price || '',
-            estimated_novel_chapters: plan.estimated_novel_chapters || '0',
-            estimated_comic_episodes: plan.estimated_comic_episodes || '0',
-            estimated_short_drama_episodes: plan.estimated_short_drama_episodes || '0',
-            estimated_images: plan.estimated_images || '0',
-            estimated_video: plan.estimated_video || '0'
-          };
-        });
-        if (rechargePlans.value.length > 0) {
-          selectedPlan.value = rechargePlans.value[0].plan_id;
+      if (res.data) {
+        const planList = res.data;
+        if (Array.isArray(planList)) {
+          rechargePlans.value = planList.map((plan: any) => {
+            return {
+              plan_id: plan.plan_id || plan.id || Math.random(),
+              info: plan.info || [],
+              price: plan.price || '0',
+              web3: plan.web3 || null,
+              period: plan.period || '',
+              credits: plan.credits || '0',
+              expiry_months: plan.expiry_months,
+              valid_days: plan.valid_days,
+              billing_period: plan.billing_period,
+              bonus_credits: plan.bonus_credits,
+              discount_desc: plan.discount_desc || [],
+              discount_price: plan.discount_price || '0',
+              original_price: plan.original_price || '',
+              estimated_novel_chapters: plan.estimated_novel_chapters || '0',
+              estimated_comic_episodes: plan.estimated_comic_episodes || '0',
+              estimated_short_drama_episodes: plan.estimated_short_drama_episodes || '0',
+              estimated_images: plan.estimated_images || '0',
+              estimated_video: plan.estimated_video || '0'
+            };
+          });
+          if (rechargePlans.value.length > 0) {
+            selectedPlan.value = rechargePlans.value[0].plan_id;
 
-          if (isUserNew.value) {
-            const firstPlan = rechargePlans.value[0];
-            if (firstPlan.info && Array.isArray(firstPlan.info)) {
-              const currentLang = locale.value == 'zh' ? 'cn' : locale.value;
-              const infoItem = firstPlan.info.find((item: any) => item.language == currentLang);
-              if (infoItem) {
-                promotionTitle.value = infoItem.promotion_title || '';
-                promotionContent.value = infoItem.promotion_content || '';
+            if (isUserNew.value) {
+              const firstPlan = rechargePlans.value[0];
+              if (firstPlan.info && Array.isArray(firstPlan.info)) {
+                const currentLang = locale.value == 'zh' ? 'cn' : locale.value;
+                const infoItem = firstPlan.info.find((item: any) => item.language == currentLang);
+                if (infoItem) {
+                  promotionTitle.value = infoItem.promotion_title || '';
+                  promotionContent.value = infoItem.promotion_content || '';
+                }
               }
             }
           }
@@ -428,6 +475,17 @@ function switchTab(tab: string) {
   getList();
 }
 
+function switchPaymentTab(tab: string) {
+  if (paymentTab.value === tab) return;
+  paymentTab.value = tab;
+  activeTab.value = 'subscription';
+  selectedPlan.value = 0;
+  couponCode.value = '';
+  couponInfo.value = null;
+  rechargePlans.value = [];
+  getList();
+}
+
 function selectPlan(planId: number | string) {
   selectedPlan.value = planId;
   if (couponCode.value) {
@@ -446,7 +504,7 @@ function getFirstMonthPrice(plan: RechargePlan): number {
   if (plan.discount_price) {
     return parseInt(plan.discount_price) || 0;
   }
-  const price = parseFloat(plan.price);
+  const price = parseFloat(getPlanPrice(plan));
   const discount = (plan.discount_desc && plan.discount_desc[0]) || 0;
   return Math.round(price * (1 - discount / 100));
 }
@@ -462,6 +520,15 @@ async function handleRecharge() {
     toast(t('subscribe.agreeFirst'));
     return;
   }
+
+  if (paymentTab.value === 'usdt') {
+    if (!selectedPlan.value) {
+      return;
+    }
+    showWalletModal.value = true;
+    return;
+  }
+
   isPaying.value = true;
   try {
     if (!selectedPlan.value) {
@@ -487,6 +554,146 @@ async function handleRecharge() {
     toast(t('error'));
   } finally {
     isPaying.value = false;
+  }
+}
+
+async function handleWalletSelect(wallet: { id: string; name: string }) {
+  showWalletModal.value = false;
+
+  let walletProvider: any;
+  let account: string;
+
+  if (wallet.id === 'walletconnect') {
+    try {
+      const accounts = await connectWalletConnect();
+      if (!accounts || accounts.length === 0) {
+        return;
+      }
+      walletProvider = getWalletConnectProvider();
+      account = accounts[0];
+    } catch (error) {
+      return;
+    }
+  } else {
+    walletProvider = getWalletProvider(wallet.id);
+    if (!walletProvider) {
+      toast(t('error'));
+      return;
+    }
+
+    isPaying.value = true;
+    try {
+      await switchChain(walletProvider);
+
+      const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        toast(t('error'));
+        isPaying.value = false;
+        return;
+      }
+      account = accounts[0];
+    } catch (error) {
+      console.error('Wallet connect error:', error);
+      toast(t('error'));
+      isPaying.value = false;
+      return;
+    }
+  }
+
+  isPaying.value = true;
+  try {
+    const res = await api.generateUAIOrder({ plan_id: selectedPlan.value, address: account });
+    const data = res as any;
+    if (data.code === 0 || data.code === 200) {
+      const orderId = data.data?.order_id || '';
+      const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
+      const usdtAmount = plan?.web3?.price || plan?.price || '';
+      if (usdtAmount && parseFloat(usdtAmount) > 0) {
+        const txHash = await transferUSDT(walletProvider, account, usdtAmount);
+        if (txHash && orderId) {
+          await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
+          router.push('/aitool-payment-success');
+          return;
+        } else {
+          router.push('/aitool-payment-fail');
+          return;
+        }
+      }
+    } else {
+      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'jp' ? data.msg_jp : data.msg);
+    }
+  } catch (error) {
+    console.error('Wallet pay error:', error);
+    toast(t('error'));
+    router.push('/aitool-payment-fail');
+  } finally {
+    isPaying.value = false;
+  }
+}
+
+async function transferUSDT(provider: any, fromAddress: string, amount: string): Promise<string | null> {
+  try {
+    const web3 = new Web3(provider);
+    const tokenContract = new web3.eth.Contract(erc20Abi as any, USDT_CONTRACT_ADDRESS);
+
+    const decimals: number = await tokenContract.methods.decimals().call();
+
+    // 余额检查
+    const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
+    const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    if (new BigNumber(balance).isLessThan(needAmount)) {
+      toast(t('subscribe.insufficientUsdtBalance'));
+      return null;
+    }
+
+    // 使用 Web3.js Contract 发起 transfer，与 MetaMask 兼容性最好
+    const receipt: any = await tokenContract.methods
+      .transfer(SUBSCRIPTION_RECEIVER_ADDRESS, needAmount.toFixed())
+      .send({ from: fromAddress });
+
+    const txHash = receipt?.transactionHash || receipt?.status?.transactionHash || null;
+    if (txHash) {
+      toast(t('success'));
+      return txHash;
+    } else {
+      toast(t('error'));
+      return null;
+    }
+  } catch (error: any) {
+    console.error('USDT transfer error:', error);
+    const errMsg = error?.data?.message || error?.message || '';
+    if (errMsg.toLowerCase().includes('insufficient')) {
+      toast(t('subscribe.insufficientUsdtOrGas'));
+    } else if (errMsg) {
+      toast(errMsg);
+    } else {
+      toast(t('error'));
+    }
+    return null;
+  }
+}
+
+function getWalletProvider(walletId: string): any {
+  const w = window as any;
+  switch (walletId) {
+    case 'metamask':
+      return w.ethereum || null;
+    case 'okx':
+      return w.okxwallet || null;
+    case 'phantom':
+      return w.phantom?.ethereum || null;
+    default:
+      return null;
+  }
+}
+
+async function switchChain(provider: any) {
+  const chainId = await provider.request({ method: 'eth_chainId' });
+  if (chainId !== BSC_TESTNET_CHAIN_ID) {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
+    });
   }
 }
 
@@ -535,9 +742,16 @@ function getValidityText(expiryMonths: number | undefined) {
 
 function formatPrice(price: string | number): string {
   const cleanPrice = String(price).replace(/[^0-9.]/g, '');
-  const parts = cleanPrice.split('.');
+  const num = parseFloat(cleanPrice);
+  if (isNaN(num)) return cleanPrice;
+  const trimmed = parseFloat(num.toFixed(8)).toString();
+  const parts = trimmed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return parts.join('.');
+}
+
+function getPlanPrice(plan: RechargePlan): string {
+  return paymentTab.value === 'usdt' && plan.web3?.price ? plan.web3.price : plan.price;
 }
 
 function openLink() {
@@ -638,9 +852,15 @@ $green: #22A06B;
   .tab-box {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     gap: 10px;
+
+    .tab-left {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
 
     .tab-group {
       display: flex;
@@ -672,9 +892,37 @@ $green: #22A06B;
       }
     }
 
+    .type-tab-list {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .type-tab-item {
+      display: flex;
+      align-items: center;
+      height: 36px;
+      font-size: 14px;
+      font-weight: 800;
+      color: $ink;
+      cursor: pointer;
+      padding: 0 20px;
+      border-radius: 10px;
+      border: 2.5px solid $ink;
+      transition: background-color 0.16s, color 0.16s;
+      background: transparent;
+
+      &.active {
+        background: $ink;
+        color: #fff;
+      }
+
+      &:hover:not(.active) {
+        background: $paper;
+      }
+    }
+
     .rules-links {
-      position: absolute;
-      right: 0;
       display: flex;
       align-items: center;
       gap: 10px;

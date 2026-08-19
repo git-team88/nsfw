@@ -9,7 +9,17 @@
       <div class="content-box">
         <h1 class="page-title">{{ t("subscribe.success.title") }}</h1>
 
-        <p class="error-message">{{ t("subscribe.success.message") }}</p>
+        <div class="error-message">
+          <p>{{ t("subscribe.success.line1") }}</p>
+          <p>{{ t("subscribe.success.line2") }}</p>
+          <p>
+            {{ t("subscribe.success.supportEmail") }}support@moegen.ai
+          </p>
+          <p>
+            {{ t("subscribe.success.discord") }}
+            <a class="contact-link" href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener">https://discord.gg/kWkuYjs9</a>
+          </p>
+        </div>
 
         <!-- Success Icon -->
         <div class="success-icon">
@@ -88,6 +98,18 @@ function backToCommunity() {
     color: #161122;
     text-align: center;
     line-height: 20px;
+    margin-top: 40px;
+    p {
+      margin: 0 0 6px;
+    }
+  }
+
+  .contact-link {
+    color: #FF4D8E;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .success-icon {

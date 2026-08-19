@@ -207,6 +207,24 @@ export default {
       data: data,
       method: "POST",
     }),
+  generateUBloggerSubOrder: (data: any) =>
+    axios.request({
+      url: "order/generateUBloggerSubOrder",
+      data: data,
+      method: "POST",
+    }),
+  generateUAIOrder: (data: any) =>
+    axios.request({
+      url: "order/generateUAIOrder",
+      data: data,
+      method: "POST",
+    }),
+  webThreeCallbackUPaid: (data: any) =>
+    axios.request({
+      url: "webThreeCallback/uPaid",
+      data: data,
+      method: "POST",
+    }),
   cancelSubscribe: () =>
     axios.request({
       url: "post/getStripeCustomerPortalUrl",
@@ -227,6 +245,25 @@ export default {
     axios.request({
       url: "post/getBloggerBalance",
       method: "POST",
+    }),
+
+  applyWithdraw: (data: any) =>
+    axios.request({
+      url: "order/applyWithdraw",
+      method: "POST",
+      data: data,
+    }),
+
+  tokenBalance: () =>
+    axios.request({
+      url: "order/getMyBalance",
+      method: "GET",
+    }),
+
+  getCoinWithdrawList: (page: number, limit: number) =>
+    axios.request({
+      url: "order/getCoinWithdrawList?page=" + page + "&limit=" + limit,
+      method: "GET",
     }),
 
   createAccount: (data: any) =>
