@@ -1,5 +1,5 @@
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
-import { WALLETCONNECT_PROJECT_ID, BSC_TESTNET_CHAIN_ID_DECIMAL, BSC_TESTNET_RPC_URL } from '@/util/config';
+import { WALLETCONNECT_PROJECT_ID, ACTIVE_CHAIN_ID_DECIMAL, ACTIVE_RPC_URL } from '@/util/config';
 
 let wcProvider: InstanceType<typeof EthereumProvider> | null = null;
 
@@ -14,12 +14,12 @@ async function destroyProvider() {
 function createProviderOpts() {
   return {
     projectId: WALLETCONNECT_PROJECT_ID,
-    chains: [BSC_TESTNET_CHAIN_ID_DECIMAL],
-    optionalChains: [BSC_TESTNET_CHAIN_ID_DECIMAL] as [number, ...number[]],
+    chains: [ACTIVE_CHAIN_ID_DECIMAL],
+    optionalChains: [ACTIVE_CHAIN_ID_DECIMAL] as [number, ...number[]],
     methods: ['eth_sendTransaction', 'eth_sign', 'personal_sign', 'eth_signTypedData', 'eth_signTypedData_v4', 'eth_call', 'eth_estimateGas'],
     events: ['chainChanged', 'accountsChanged'],
     rpcMap: {
-      [BSC_TESTNET_CHAIN_ID_DECIMAL]: BSC_TESTNET_RPC_URL,
+      [ACTIVE_CHAIN_ID_DECIMAL]: ACTIVE_RPC_URL,
     },
     showQrModal: true,
     metadata: {
@@ -39,7 +39,7 @@ export async function connectWalletConnect(): Promise<string[]> {
 
   try {
     await provider.connect({
-      chains: [BSC_TESTNET_CHAIN_ID_DECIMAL],
+      chains: [ACTIVE_CHAIN_ID_DECIMAL],
     });
     const accounts = await provider.request<string[]>({ method: 'eth_requestAccounts' });
     return accounts;

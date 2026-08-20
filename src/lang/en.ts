@@ -2574,8 +2574,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
   `,
   subscribe: {
     title: "Subscribe",
-    insufficientUsdtBalance: "Insufficient USDT balance",
+    insufficientUsdtBalance: "{network}, insufficient USDT balance",
     insufficientUsdtOrGas: "Insufficient USDT or gas balance",
+    switchingChain: "Switching to {network}...",
+    switchChainFailed: "Failed to switch chain. Please switch manually in your wallet.",
+    addChainFailed: "Failed to add chain to wallet. Please add {network} manually.",
+    chainSwitchRejected: "Chain switch was rejected. Please approve to continue.",
     month: "Month",
     desc: "By subscribing, you agree to our terms and conditions. If you choose automatic renewal, the subscription will auto-renew at the end of each period using the saved payment method. You can cancel anytime from your payment history.",
     method: "Select Payment Method",

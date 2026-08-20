@@ -663,6 +663,7 @@ $pinkopacity: rgba(255,77,142,0.12);
               height: 100%;
               background: linear-gradient(0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
               z-index: 2;
+              pointer-events: none;
             }
 
             .uploaded-item-wrapper {
@@ -924,48 +925,66 @@ $pinkopacity: rgba(255,77,142,0.12);
         :deep(.video-tag) {
           display: inline-flex;
           align-items: center;
-          align-self: center;
           gap: 4px;
           padding: 4px;
-          background: $bg-tag;
-          border: 2px solid $border-light;
-          border-radius: 6px;
+          background: $pinkopacity;
+          border-radius: 4px;
           font-size: 12px;
           font-weight: 800;
-          color: $muted;
+          color: $pink;
           margin: 0 6px;
+          pointer-events: none;
+          user-select: none;
+          cursor: default;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          position: relative;
           vertical-align: middle;
+          line-height: 14px;
+          z-index: -1;
 
           .video-tag-img {
             width: auto;
             max-width: 20px;
             height: 20px;
-            border-radius: 4px;
+            border-radius: 2px;
             object-fit: cover;
+            pointer-events: none;
+            user-select: none;
           }
         }
 
         :deep(.audio-tag) {
           display: inline-flex;
           align-items: center;
-          align-self: center;
           gap: 4px;
           padding: 4px;
-          background: $bg-tag;
-          border: 2px solid $border-light;
-          border-radius: 6px;
+          background: $pinkopacity;
+          border-radius: 4px;
           font-size: 12px;
           font-weight: 800;
-          color: $muted;
+          color: $pink;
           margin: 0 6px;
+          pointer-events: none;
+          user-select: none;
+          cursor: default;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          position: relative;
           vertical-align: middle;
+          line-height: 14px;
+          z-index: -1;
 
           .audio-tag-img {
             width: auto;
             max-width: 20px;
             height: 20px;
-            border-radius: 4px;
+            border-radius: 2px;
             object-fit: cover;
+            pointer-events: none;
+            user-select: none;
           }
         }
       }
@@ -2771,6 +2790,46 @@ $pinkopacity: rgba(255,77,142,0.12);
 
     &::placeholder {
       color: $muted;
+    }
+  }
+}
+
+.cover-zoom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+
+  .cover-zoom-content {
+    position: relative;
+    height: 640px;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .close-zoom-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .zoomed-cover-image {
+      height: 100%;
+      width: auto;
+      max-width: 100%;
+      border-radius: 12px;
+      object-fit: contain;
     }
   }
 }

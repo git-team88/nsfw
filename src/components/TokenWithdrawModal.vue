@@ -52,7 +52,7 @@ import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
-import { BSC_TESTNET_CHAIN_ID } from "@/util/config";
+import { getWalletProvider, ensureChain } from "@/util/wallet";
 import okxIcon from '@/assets/images/wallet/okx.png';
 import metamaskIcon from '@/assets/images/wallet/metamask.png';
 import phantomIcon from '@/assets/images/wallet/phantom.png';
@@ -145,7 +145,11 @@ async function handleConfirm() {
         submitting.value = false;
         return;
       }
-      await switchChain(walletProvider);
+      const chainOk = await ensureChain(walletProvider);
+      if (!chainOk) {
+        submitting.value = false;
+        return;
+      }
       const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
       if (!accounts || accounts.length === 0) {
         toast(t("fail"));
@@ -170,35 +174,6 @@ async function handleConfirm() {
     toast(t("fail"));
   } finally {
     submitting.value = false;
-  }
-}
-
-function getWalletProvider(walletId: string): any {
-  const w = window as any;
-  switch (walletId) {
-    case 'metamask':
-      return w.ethereum || null;
-    case 'okx':
-      return w.okxwallet || null;
-    case 'phantom':
-      return w.phantom?.ethereum || null;
-    default:
-      return null;
-  }
-}
-
-async function switchChain(provider: any) {
-  const chainId = await provider.request({ method: 'eth_chainId' });
-  if (chainId !== BSC_TESTNET_CHAIN_ID) {
-    try {
-      await provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
-      });
-    } catch (switchError: any) {
-      console.error('Switch chain error:', switchError);
-      throw switchError;
-    }
   }
 }
 

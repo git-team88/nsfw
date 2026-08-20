@@ -2272,8 +2272,12 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   },
   subscribe: {
     title: "サブスク",
-    insufficientUsdtBalance: "USDT残高不足",
+    insufficientUsdtBalance: "{network}チェーン、USDT残高不足",
     insufficientUsdtOrGas: "USDTまたはガス残高不足",
+    switchingChain: "{network}に切り替え中...",
+    switchChainFailed: "チェーンの切り替えに失敗しました。ウォレットで手動切り替えしてください。",
+    addChainFailed: "チェーンの追加に失敗しました。{network}を手動で追加してください。",
+    chainSwitchRejected: "チェーンの切り替えがキャンセルされました。続行には承認が必要です。",
     month: "月",
     desc: "サブスクに登録すると、利用規約に同意したものとみなされます。自動更新を有効にしている場合は、利用期間の終了時に、登録済みのお支払い方法で自動的に更新されます。解約はいつでも支払い履歴から行えます。",
     method: "支払方法を選択",

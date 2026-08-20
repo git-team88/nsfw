@@ -2550,8 +2550,12 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   },
   subscribe: {
     title: "订阅",
-    insufficientUsdtBalance: "USDT余额不足",
+    insufficientUsdtBalance: "{network}链，USDT余额不足",
     insufficientUsdtOrGas: "USDT或Gas余额不足",
+    switchingChain: "正在切换到{network}...",
+    switchChainFailed: "切换链失败，请在钱包中手动切换。",
+    addChainFailed: "添加链失败，请手动添加{network}。",
+    chainSwitchRejected: "已取消切换链，请确认以继续。",
     month: "月",
     desc: "订阅即表示您同意我们的服务条款。如果您选择自动续费，订阅将在每个周期结束时使用保存的支付方式自动续费。您可以随时从支付历史中取消。",
     method: "选择支付方式",

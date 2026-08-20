@@ -2543,8 +2543,12 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
   },
   subscribe: {
     title: "訂閱",
-    insufficientUsdtBalance: "USDT餘額不足",
+    insufficientUsdtBalance: "{network}鏈，USDT餘額不足",
     insufficientUsdtOrGas: "USDT或Gas餘額不足",
+    switchingChain: "正在切換到{network}...",
+    switchChainFailed: "切換鏈失敗，請在錢包中手動切換。",
+    addChainFailed: "新增鏈失敗，請手動新增{network}。",
+    chainSwitchRejected: "已取消切換鏈，請確認以繼續。",
     month: "月",
     desc: "訂閱即表示您同意我們的服務條款。如果您選擇自動續費，訂閱將在每個周期結束時使用保存的支付方式自動續費。您可以隨時從支付歷史中取消。",
     method: "選擇支付方式",

@@ -119,6 +119,7 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
@@ -126,7 +127,7 @@
                         <div class="image-box">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
-                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box" @click="playUploadedVideo(item)">
+                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
                               <img :src="item.cover || item.image" :alt="item.name" class="uploaded-image" />
                               <div class="play-overlay-small">
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
@@ -141,7 +142,7 @@
                         <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
 
@@ -254,6 +255,7 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
@@ -261,7 +263,7 @@
                         <div class="image-box">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
-                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box" @click="playUploadedVideo(item)">
+                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
                               <img :src="item.cover || item.image" :alt="item.name" class="uploaded-image" />
                               <div class="play-overlay-small">
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
@@ -276,7 +278,7 @@
                         <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
 
@@ -341,7 +343,7 @@
                             <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                           </div>
                           <span v-if="item.type === 'character'">{{ item.name }}</span>
-                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 1 }}</span>
+                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 2 }}</span>
                           <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id == item.id) + 1 }}</span>
                           <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         </div>
@@ -356,6 +358,7 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
@@ -363,7 +366,7 @@
                         <div class="image-box">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
-                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box" @click="playUploadedVideo(item)">
+                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
                               <img :src="item.cover || item.image" :alt="item.name" class="uploaded-image" />
                               <div class="play-overlay-small">
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
@@ -378,7 +381,7 @@
                         <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
 
@@ -443,7 +446,7 @@
                             <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                           </div>
                           <span v-if="item.type === 'character'">{{ item.name }}</span>
-                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 1 }}</span>
+                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 2 }}</span>
                           <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id == item.id) + 1 }}</span>
                           <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         </div>
@@ -481,7 +484,7 @@
                       </div>
 
                       <!-- Reference Button - Only show in multimodal mode -->
-                      <div v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
+                      <div v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) { if ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && !uploadedVideo) { toast(t('home.error.videoModifyRequired')); return; } triggerFileUpload() } }">
                         <img src="@/assets/images/home/img_icon.png" alt="" />
                         <span>{{ t('home.option.reference') }}</span>
                       </div>
@@ -610,6 +613,7 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <div class="image-box">
@@ -618,7 +622,7 @@
                       </div>
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
                       <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
 
@@ -720,6 +724,7 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <div class="image-box">
@@ -728,7 +733,7 @@
                       </div>
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
                       <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
 
@@ -864,6 +869,7 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
 
@@ -875,7 +881,7 @@
 
                       <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
                       <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
 
@@ -1400,6 +1406,14 @@
         <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline></video>
       </div>
     </div>
+
+    <!-- Image Zoom Modal -->
+    <div v-if="showImageZoomModal" class="cover-zoom-modal" @click="closeImageZoomModal">
+      <div class="cover-zoom-content">
+        <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click.stop="closeImageZoomModal" />
+        <img :src="zoomedImageUrl" alt="" class="zoomed-cover-image" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1551,6 +1565,19 @@ const playUploadedVideo = (item: any) => {
 const closeVideoModal = () => {
   showVideoModal.value = false;
   playingVideoUrl.value = '';
+};
+
+const showImageZoomModal = ref(false);
+const zoomedImageUrl = ref('');
+
+const openImageViewer = (imageUrl: string) => {
+  zoomedImageUrl.value = imageUrl;
+  showImageZoomModal.value = true;
+};
+
+const closeImageZoomModal = () => {
+  showImageZoomModal.value = false;
+  zoomedImageUrl.value = '';
 };
 
 // State for comic tab
@@ -2426,7 +2453,8 @@ const checkUnreferencedFiles = (): boolean => {
       const idx = currentUploadedImages.value.findIndex((img: any) => img.id === item.id) + 1;
       if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
     } else if (item.type === 'video') {
-      const idx = uploadedVideosVideo.value.findIndex((v: any) => v.id === item.id) + 1;
+      const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+      const idx = uploadedVideosVideo.value.findIndex((v: any) => v.id === item.id) + (isVideoExtendOrModify ? 2 : 1);
       if (idx > 0) labels.push(t('home.unreferencedFiles.videoLabel') + idx);
     } else if (item.type === 'audio') {
       const idx = uploadedAudiosVideo.value.findIndex((a: any) => a.id === item.id) + 1;
@@ -3354,7 +3382,10 @@ const doGenerateVideo = async () => {
           } else if (element.classList.contains('video-tag')) {
             // 处理视频标签
             const imgElement = element.querySelector('img');
-            if (imgElement) {
+            const itemId = (element as HTMLElement).dataset.itemId;
+            if (itemId === 'uploaded-video' && isVideoExtendOrModify && uploadedVideo.value) {
+              processedContent += `<vid_1>`;
+            } else if (imgElement) {
               const video = combinedItemsVideo.value.find(item =>
                 item.type === 'video' && (item.image === imgElement.src || imgElement.src.includes(item.image))
               );
@@ -4104,6 +4135,9 @@ const isImageCorrupted = (file: File): Promise<boolean> => {
       URL.revokeObjectURL(url);
       resolve(true);
     };
+    img.src = url;
+  });
+};
 
 const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
@@ -4146,10 +4180,6 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
     }
   }
   return true;
-};
-
-    img.src = url;
-  });
 };
 
 const getMediaDuration = (file: File): Promise<number> => {
@@ -4530,8 +4560,10 @@ const handleFileChange = async (event: Event) => {
             cover: coverUrl
           };
 
-          // Add to appropriate array based on type (only for video mode multimodal)
-          if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+          // Add to appropriate array based on type (only for video mode)
+          const isVideoMode = contentType.value === 'video';
+          const isVideoRefMode = isVideoMode && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend');
+          if (isVideoRefMode) {
             if (fileType === 'image') {
               uploadedImagesVideo.value.push(newItem);
             } else if (fileType === 'video') {
@@ -4591,7 +4623,8 @@ const handleFileChange = async (event: Event) => {
               itemIndex = currentUploadedImages.value.length;
               typeLabel = t('home.img');
             } else if (fileType === 'video') {
-              itemIndex = uploadedVideosVideo.value.length;
+              const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+              itemIndex = uploadedVideosVideo.value.length + (isVideoExtendOrModify ? 1 : 0);
               typeLabel = t('home.video');
             } else if (fileType === 'audio') {
               itemIndex = uploadedAudiosVideo.value.length;
@@ -4846,16 +4879,25 @@ const removeUploadedImage = (id: string) => {
         // Update video tags
         const videoTags = editableInputRef.value.querySelectorAll('.video-tag');
         videoTags.forEach(tag => {
-          const video = tag.querySelector('video');
-          if (video) {
-            const videoItem = uploadedVideosVideo.value.find(item =>
-              item.image === video.src || video.src.includes(item.image)
-            );
-            if (videoItem) {
-              const videoIndex = uploadedVideosVideo.value.findIndex(item => item.id === videoItem.id) + 1;
+          const img = tag.querySelector('img');
+          if (img) {
+            const itemId = (tag as HTMLElement).dataset.itemId;
+            if (itemId === 'uploaded-video') {
               const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
               if (textNode) {
-                textNode.textContent = `${t('home.video')}${videoIndex}`;
+                textNode.textContent = `${t('home.video')}1`;
+              }
+            } else {
+              const videoItem = uploadedVideosVideo.value.find(item =>
+                item.type === 'video' && (item.cover === img.src || item.image === img.src || img.src.includes(item.image || item.cover || ''))
+              );
+              if (videoItem) {
+                const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+                const videoIndex = uploadedVideosVideo.value.findIndex(item => item.id === videoItem.id) + (isVideoExtendOrModify ? 2 : 1);
+                const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
+                if (textNode) {
+                  textNode.textContent = `${t('home.video')}${videoIndex}`;
+                }
               }
             }
           }
@@ -5016,16 +5058,20 @@ const handleInput = (event: Event) => {
   const currentUploadedImages = getUploadedImages();
   const currentCombinedItems = getCombinedItems();
 
-  // Check if there are any items to show in dropdown (including videos and audios for video tab)
-  const hasItems = currentCombinedItems.value.length > 0;
+  const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+  const uploadedVideoItem = isVideoExtendOrModify && uploadedVideo.value
+    ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideoCover.value || uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
+    : [];
+  const dropdownSourceItems = [...uploadedVideoItem, ...currentCombinedItems.value];
+
+  const hasItems = dropdownSourceItems.length > 0;
 
   if (atIndex !== -1 &&
       atIndex === textBeforeCursor.length - 1 &&
       hasItems) {
 
     showAtDropdown.value = true;
-    // Use the existing combinedItems array
-    atDropdownItems.value = currentCombinedItems.value;
+    atDropdownItems.value = dropdownSourceItems;
 
     // Calculate dropdown position based on @ symbol position
     nextTick(() => {
@@ -5229,18 +5275,19 @@ const handleInputClick = () => {
     const currentUploadedImages = getUploadedImages();
     const currentCombinedItems = getCombinedItems();
 
-    // Only show dropdown if:
-    // 1. There's an @ symbol
-    // 2. @ is the last character before cursor (just typed)
-    // 3. There are any items (images, videos, audios, characters)
-    const hasItems = currentCombinedItems.value.length > 0;
+    const isVideoExtendOrModify2 = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+    const uploadedVideoItem2 = isVideoExtendOrModify2 && uploadedVideo.value
+      ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideoCover.value || uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
+      : [];
+    const dropdownSourceItems2 = [...uploadedVideoItem2, ...currentCombinedItems.value];
+
+    const hasItems = dropdownSourceItems2.length > 0;
 
     if (atIndex !== -1 &&
         atIndex === textBeforeCursor.length - 1 &&
         hasItems) {
       showAtDropdown.value = true;
-      // Use the existing combinedItems array
-      atDropdownItems.value = currentCombinedItems.value;
+      atDropdownItems.value = dropdownSourceItems2;
 
       // Calculate dropdown position based on @ symbol position
       nextTick(() => {
@@ -5425,11 +5472,12 @@ const selectAtItem = (item: any) => {
 
     // Create video element
     const img = document.createElement('img');
-    img.src = item.cover;
+    img.src = item.cover || item.image;
     img.className = 'video-tag-img';
     itemTag.appendChild(img);
 
-    const videoIndex = uploadedVideosVideo.value.findIndex(v => v.id === item.id) + 1;
+    const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+    const videoIndex = uploadedVideosVideo.value.findIndex(v => v.id === item.id) + (isVideoExtendOrModify ? 2 : 1);
     textNode = document.createTextNode(`${t('home.video')}${videoIndex}`);
   } else if (item.type === 'audio') {
     // Create audio tag

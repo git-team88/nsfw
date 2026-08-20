@@ -85,8 +85,9 @@ import api from "@/api/index";
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 import erc20Abi from "@/util/abi/erc20Abi.json";
-import { USDT_CONTRACT_ADDRESS, BSC_TESTNET_CHAIN_ID, PAY_NETWORK, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
+import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
+import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
 
 const router = useRouter();
 const route = useRoute();
@@ -284,7 +285,11 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
         return;
       }
 
-      await switchChain(walletProvider);
+      const chainOk = await ensureChain(walletProvider);
+      if (!chainOk) {
+        isLoading.value = false;
+        return;
+      }
 
       const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
       if (!accounts || accounts.length === 0) {
@@ -296,6 +301,21 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
     }
 
     isLoading.value = true;
+
+    const usdtAmount = subscriptionWeb3Price.value;
+    console.log('[SubscriptionPayment] usdtAmount:', usdtAmount);
+
+    if (!usdtAmount || parseFloat(usdtAmount) <= 0) {
+      toast(t("fail"));
+      isLoading.value = false;
+      return;
+    }
+
+    const balanceOk = await checkUsdtBalance(walletProvider, account, usdtAmount);
+    if (!balanceOk) {
+      isLoading.value = false;
+      return;
+    }
 
     const uid = route.query.id;
     if (!uid) {
@@ -318,7 +338,6 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
     const data = res as any;
     if (data.code == 0 || data.code == 200) {
       const orderId = data.data?.order_id || '';
-      const usdtAmount = subscriptionWeb3Price.value;
       if (usdtAmount && parseFloat(usdtAmount) > 0) {
         const txHash = await transferUSDT(walletProvider, account, usdtAmount);
         if (txHash && orderId) {
@@ -347,16 +366,8 @@ async function transferUSDT(provider: any, fromAddress: string, amount: string):
     const tokenContract = new web3.eth.Contract(erc20Abi as any, USDT_CONTRACT_ADDRESS);
 
     const decimals: number = await tokenContract.methods.decimals().call();
-
-    // 余额检查
-    const balance: string = await tokenContract.methods.balanceOf(fromAddress).call();
     const needAmount = new BigNumber(amount).times(new BigNumber(10).pow(decimals));
-    if (new BigNumber(balance).isLessThan(needAmount)) {
-      toast(t('subscribe.insufficientUsdtBalance'));
-      return null;
-    }
 
-    // 使用 Web3.js Contract 发起 transfer，与 MetaMask 兼容性最好
     const receipt: any = await tokenContract.methods
       .transfer(SUBSCRIPTION_RECEIVER_ADDRESS, needAmount.toFixed())
       .send({ from: fromAddress });
@@ -380,35 +391,6 @@ async function transferUSDT(provider: any, fromAddress: string, amount: string):
       toast(t("fail"));
     }
     return null;
-  }
-}
-
-function getWalletProvider(walletId: string): any {
-  const w = window as any;
-  switch (walletId) {
-    case 'metamask':
-      return w.ethereum || null;
-    case 'okx':
-      return w.okxwallet || null;
-    case 'phantom':
-      return w.phantom?.ethereum || null;
-    default:
-      return null;
-  }
-}
-
-async function switchChain(provider: any) {
-  const chainId = await provider.request({ method: 'eth_chainId' });
-  if (chainId !== BSC_TESTNET_CHAIN_ID) {
-    try {
-      await provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BSC_TESTNET_CHAIN_ID }],
-      });
-    } catch (switchError: any) {
-      console.error('Switch chain error:', switchError);
-      throw switchError;
-    }
   }
 }
 
