@@ -4629,7 +4629,7 @@ const doGenerateVideo = async () => {
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-        enable_optimize_prompt: enableVideoOptimizePrompt.value
+        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
       }
     };
 
@@ -4668,7 +4668,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
       simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {

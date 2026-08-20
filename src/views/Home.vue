@@ -3515,7 +3515,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
