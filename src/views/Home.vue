@@ -119,12 +119,11 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -138,9 +137,9 @@
                           <span class="img-bg"></span>
                         </div>
                         <span class="tooltip-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                        <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                        <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
@@ -255,12 +254,11 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -274,9 +272,9 @@
                           <span class="img-bg"></span>
                         </div>
                         <span class="tooltip-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                        <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                        <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
@@ -358,12 +356,11 @@
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
                         :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                        @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)"
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -377,9 +374,9 @@
                           <span class="img-bg"></span>
                         </div>
                         <span class="tooltip-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                        <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                        <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                        <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
@@ -613,15 +610,14 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                      <div class="image-box">
+                      <div class="image-box" @click="openImageViewer(item.image)">
                         <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                         <span class="img-bg"></span>
                       </div>
-                      <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                      <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
@@ -724,15 +720,14 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
-                      <div class="image-box">
+                      <div class="image-box" @click="openImageViewer(item.image)">
                         <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                         <span class="img-bg"></span>
                       </div>
-                      <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                      <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>
@@ -869,18 +864,17 @@
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
                       :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
-                      @click="openImageViewer(item.image)"
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
 
-                      <div class="image-box">
+                      <div class="image-box" @click="openImageViewer(item.image)">
                         <img :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
 
                         <span class="img-bg"></span>
                       </div>
 
-                      <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
-                      <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                      <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
+                      <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                     </div>
                   </div>

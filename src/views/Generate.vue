@@ -380,8 +380,8 @@
               >
                 <span class="image-index">{{ index + 1 }}</span>
                 <img :src="image.image" class="uploaded-image" @click="openImageViewer(image.image)" />
-                <span class="image-name">{{ t('recordList.image') }}{{ index + 1 }}</span>
-                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removePhotoImage(image.id)" />
+                <span class="image-name" @click="openImageViewer(image.image)">{{ t('recordList.image') }}{{ index + 1 }}</span>
+                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removePhotoImage(image.id)" />
               </div>
             </div>
 
@@ -514,10 +514,10 @@
                   <img v-else-if="ref.type == 'audio'" src="@/assets/images/home/audio.png" class="uploaded-image audio-icon" />
                 </div>
                 <span class="tooltip-name">{{ ref.name }}</span>
-                <span class="image-name">
+                <span class="image-name" @click="ref.type == 'video' ? playUploadedVideo(ref) : ref.type == 'image' ? openImageViewer(ref.image) : undefined">
                   {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}
                 </span>
-                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeVideoRef(ref.id)" />
+                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideoRef(ref.id)" />
               </div>
             </div>
 
@@ -660,7 +660,7 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1)) }}</span>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
                     <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
                     <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
                   </div>
@@ -717,7 +717,7 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1)) }}</span>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
                     <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
                     <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
                   </div>
@@ -2355,6 +2355,10 @@ const isImageCorrupted = (file: File): Promise<boolean> => {
       resolve(true);
     };
 
+    img.src = url;
+  });
+};
+
 const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -2396,10 +2400,6 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
     }
   }
   return true;
-};
-
-    img.src = url;
-  });
 };
 
 const captureVideoFirstFrame = (file: File): Promise<string> => {
