@@ -5427,6 +5427,7 @@ const switchVideoMode = (mode: string, index: number) => {
       uploadedVideoCover.value = '';
       uploadedVideoRefs.value = [];
     }
+    if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
   }
 };
 
