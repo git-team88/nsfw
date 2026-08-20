@@ -2022,8 +2022,8 @@ const photoRatioOptions = ref([
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('15');
-const lastValidVideoDuration = ref('15');
+const selectedVideoDuration = ref('30');
+const lastValidVideoDuration = ref('30');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
@@ -3706,30 +3706,29 @@ const handleVideoUpload = async (event: Event) => {
       return;
     }
 
-    // 视频续写模式下，验证时长在2-5秒之间
-    if (selectedVideoMultimodal.value == 'videoExtend') {
-      if (duration < 2 || duration > 30) {
-        toast(t('home.error.videoExtendDurationLimit'));
-        target.value = '';
-        return;
-      }
-    } else if (selectedVideoMultimodal.value == 'videoModify') {
+    if (selectedVideoMultimodal.value === 'videoModify') {
+      // 视频修改：4-30s
       if (duration < 4 || duration > 30) {
         toast(t('home.error.videoModifyDurationLimit'));
         target.value = '';
         return;
       }
-    } else {
-      // 其他模式下的时长验证
-      const minDuration = 2;
+    } else if (selectedVideoMultimodal.value === 'videoExtend') {
+      // 视频续写：2-30s
+      if (duration < 2 || duration > 30) {
+        toast(t('home.error.videoExtendDurationLimit'));
+        target.value = '';
+        return;
+      }
+    } else if (selectedVideoMultimodal.value === 'multimodal') {
+      // 多模态参考：普通模式 2-30s，无限制模式 1-15s
+      const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
       const maxDuration = currentVideoMode.value === 'unlimited' ? 15 : 30;
-
       if (duration < minDuration) {
         toast(t('home.error.videoDurationTooShort', { min: minDuration }));
         target.value = '';
         return;
       }
-
       if (duration > maxDuration) {
         toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
         target.value = '';
@@ -3738,9 +3737,9 @@ const handleVideoUpload = async (event: Event) => {
     }
 
     // Video file size validation
-    const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+    const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
     if (file.size > maxVideoSizeBytes) {
-      toast(t('home.error.maxVideoSize', { max: currentVideoMode.value === 'unlimited' ? 100 : 50 }));
+      toast(t('home.error.maxVideoSize', { max: currentVideoMode.value === 'unlimited' ? 100 : 200 }));
       target.value = '';
       return;
     }
@@ -3803,8 +3802,8 @@ const removeVideo = () => {
 
 const sliderMarks = computed(() => {
   const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
-  const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
-  const marks = currentVideoMode.value === 'unlimited' ? [min, 5, 10, 15] : [min, 10, 20, 30];
+  const max = 30;
+  const marks = currentVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -3812,10 +3811,11 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const value = parseInt(selectedVideoDuration.value);
   const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
-  const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
-  return `${((value - min) / (max - min)) * 100}%`;
+  const max = 30;
+  const value = parseInt(selectedVideoDuration.value);
+  const percentage = ((value - min) / (max - min)) * 100;
+  return `${percentage}%`;
 };
 
 const saveLastValidDuration = () => {
@@ -3828,19 +3828,21 @@ const onVideoDurationChange = (event: Event) => {
 };
 
 const validateDurationAndRestore = () => {
-  // 只有在视频续写模式且有上传视频时才验证
-  if (selectedVideoMultimodal.value === 'videoExtend' && uploadedVideoDuration.value > 0) {
+  if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+    let totalVideoDuration = 0;
+    for (const item of uploadedVideoRefs.value) {
+      if (item.type === 'video' && item.duration) {
+        totalVideoDuration += item.duration;
+      }
+    }
     const newDuration = parseInt(selectedVideoDuration.value);
-    // 如果生成时长小于等于上传视频时长，恢复之前的值并提示
-    if (newDuration <= uploadedVideoDuration.value) {
+    if (totalVideoDuration > 0 && newDuration < totalVideoDuration) {
       selectedVideoDuration.value = lastValidVideoDuration.value;
       toast(t('home.error.videoExtendDurationExceed'));
     } else {
-      // 验证通过，更新lastValidVideoDuration
       lastValidVideoDuration.value = selectedVideoDuration.value;
     }
   } else {
-    // 不在验证模式，更新lastValidVideoDuration
     lastValidVideoDuration.value = selectedVideoDuration.value;
   }
 };
@@ -4606,7 +4608,7 @@ const doGenerateVideo = async () => {
       duration: selectedVideoDuration.value,
       user_selected: {
         ratio: detectedRatio,
-        language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+        language: locale.value == 'zh' ? 'cn' : locale.value,
         story_type: 'simple_video',
         story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
@@ -4636,7 +4638,7 @@ const doGenerateVideo = async () => {
     displayRecords.value = records.value;
 
     const videoSettings = {
-      language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
+      language: locale.value == 'zh' ? 'cn' : locale.value,
       aspectRatio: (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? '9:16' : selectedVideoRatio.value,
       duration: selectedVideoDuration.value
     };

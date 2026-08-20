@@ -1903,17 +1903,34 @@ async function handleVideoUpload(e: Event) {
       return;
     }
 
-    const isVideoModify = selectedVideoMultimodal.value === 'videoModify';
-    const minDuration = isVideoModify ? 4 : 2;
-    const maxDuration = 30;
-    if (duration < minDuration || duration > maxDuration) {
-      if (isVideoModify) {
+    if (selectedVideoMultimodal.value === 'videoModify') {
+      // 视频修改：4-30s
+      if (duration < 4 || duration > 30) {
         toast(t('home.error.videoModifyDurationLimit'));
-      } else {
-        toast(t('home.error.videoExtendDurationLimit'));
+        target.value = '';
+        return;
       }
-      target.value = '';
-      return;
+    } else if (selectedVideoMultimodal.value === 'videoExtend') {
+      // 视频续写：2-30s
+      if (duration < 2 || duration > 30) {
+        toast(t('home.error.videoExtendDurationLimit'));
+        target.value = '';
+        return;
+      }
+    } else if (selectedVideoMultimodal.value === 'multimodal') {
+      // 多模态参考：普通模式 2-30s，无限制模式 1-15s
+      const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
+      const maxDuration = currentVideoMode.value === 'unlimited' ? 15 : 30;
+      if (duration < minDuration) {
+        toast(t('home.error.videoDurationTooShort', { min: minDuration }));
+        target.value = '';
+        return;
+      }
+      if (duration > maxDuration) {
+        toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
+        target.value = '';
+        return;
+      }
     }
 
     isUploading.value = true;
@@ -2005,19 +2022,21 @@ const onVideoDurationChange = (e: Event) => {
 };
 
 const validateDurationAndRestore = () => {
-  // 只有在视频续写模式且有上传视频时才验证
-  if (selectedVideoMultimodal.value === 'videoExtend' && uploadedVideoDuration.value > 0) {
+  if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+    let totalVideoDuration = 0;
+    for (const item of combinedItemsVideo.value) {
+      if (item.type === 'video' && item.duration) {
+        totalVideoDuration += item.duration;
+      }
+    }
     const newDuration = parseInt(selectedVideoDuration.value);
-    // 如果生成时长小于等于上传视频时长，恢复之前的值并提示
-    if (newDuration <= uploadedVideoDuration.value) {
+    if (totalVideoDuration > 0 && newDuration < totalVideoDuration) {
       selectedVideoDuration.value = lastValidVideoDuration.value;
-      toast('生成时长设置应大于待续写视频长度');
+      toast(t('home.error.videoExtendDurationExceed'));
     } else {
-      // 验证通过，更新lastValidVideoDuration
       lastValidVideoDuration.value = selectedVideoDuration.value;
     }
   } else {
-    // 不在验证模式，更新lastValidVideoDuration
     lastValidVideoDuration.value = selectedVideoDuration.value;
   }
 };
