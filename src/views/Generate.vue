@@ -182,53 +182,45 @@
                     </div>
                   </div>
                 </template>
-                <!-- 预览图列表 - 视频续写模式显示第一个视频 -->
+                <!-- 预览图列表 - 视频续写模式 -->
                 <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_extension'">
-                  <div class="video-thumbnail-list" v-if="record.user_selected?.others?.list?.filter((i: any) => i.type === 'video').length > 0">
+                  <div class="video-thumbnail-list" v-if="record.user_selected?.others?.list?.length > 0">
                     <div
-                      v-for="(item, imgIndex) in record.user_selected.others.list.filter((i: any) => i.type === 'video').slice(0, 1)"
+                      v-for="(item, imgIndex) in record.user_selected.others.list.slice(0, 4)"
                       :key="imgIndex"
                       class="video-thumbnail"
                     >
-                      <span class="image-index">1</span>
-                      <div class="video-thumbnail-item" @click="playVideoItem(item)">
-                        <img :src="item.cover || item.image || item.url" alt="preview" class="thumbnail-image" />
-                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
-                      </div>
-                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
-                    </div>
-                  </div>
-                  <div class="video-thumbnail-list" v-else-if="record.user_selected?.reference_videos?.length > 0">
-                    <div
-                      v-for="(videoItem, vIndex) in record.user_selected.reference_videos.slice(0, 1)"
-                      :key="vIndex"
-                      class="video-thumbnail"
-                    >
-                      <span class="image-index">1</span>
-                      <div class="video-thumbnail-item" @click="playVideoItem({ image: typeof videoItem === 'string' ? videoItem : videoItem.url, type: 'video' })">
-                        <img v-if="getVideoCoverFromRefImages(record)" :src="getVideoCoverFromRefImages(record)" alt="preview" class="thumbnail-image" />
-                        <video v-else :src="typeof videoItem === 'string' ? videoItem : videoItem.url" class="thumbnail-image" muted preload="metadata"></video>
-                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
-                      </div>
-                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
+                      <span class="image-index">{{ record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 1 }}</span>
+                      <template v-if="item.type === 'video'">
+                        <div class="video-thumbnail-item" @click="playVideoItem(item)">
+                          <img :src="item.cover || item.image || item.url" alt="preview" class="thumbnail-image" />
+                          <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                        </div>
+                      </template>
+                      <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                      <img v-else :src="item.image || item.url" alt="preview" class="thumbnail-image" />
+                      <span class="thumbnail-title">{{ item.type === 'audio' ? t('recordList.audio') : item.type === 'video' ? t('recordList.video') : t('recordList.image') }}{{ record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 1 }}</span>
                     </div>
                   </div>
                 </template>
-                <!-- 预览图列表 - 视频修改模式显示参考视频 -->
-                <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_edit' && record.user_selected?.reference_videos?.length > 0">
-                  <div class="video-thumbnail-list">
+                <!-- 预览图列表 - 视频修改模式 -->
+                <template v-else-if="record.user_selected?.simple_video_generate_mode == 'video_edit'">
+                  <div class="video-thumbnail-list" v-if="record.user_selected?.others?.list?.length > 0">
                     <div
-                      v-for="(videoItem, vIndex) in record.user_selected.reference_videos.slice(0, 1)"
-                      :key="vIndex"
+                      v-for="(item, imgIndex) in record.user_selected.others.list.slice(0, 4)"
+                      :key="imgIndex"
                       class="video-thumbnail"
                     >
-                      <span class="image-index">1</span>
-                      <div class="video-thumbnail-item" @click="playVideoItem({ image: typeof videoItem === 'string' ? videoItem : videoItem.url, type: 'video' })">
-                        <img v-if="getVideoCoverFromRefImages(record)" :src="getVideoCoverFromRefImages(record)" alt="preview" class="thumbnail-image" />
-                        <video v-else :src="typeof videoItem === 'string' ? videoItem : videoItem.url" class="thumbnail-image" muted preload="metadata"></video>
-                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
-                      </div>
-                      <span class="thumbnail-title">{{ t('recordList.video') }}1</span>
+                      <span class="image-index">{{ record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 1 }}</span>
+                      <template v-if="item.type === 'video'">
+                        <div class="video-thumbnail-item" @click="playVideoItem(item)">
+                          <img :src="item.cover || item.image || item.url" alt="preview" class="thumbnail-image" />
+                          <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                        </div>
+                      </template>
+                      <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                      <img v-else :src="item.image || item.url" alt="preview" class="thumbnail-image" />
+                      <span class="thumbnail-title">{{ item.type === 'audio' ? t('recordList.audio') : item.type === 'video' ? t('recordList.video') : t('recordList.image') }}{{ record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 1 }}</span>
                     </div>
                   </div>
                 </template>
@@ -506,13 +498,13 @@
           />
           <div :class="['input-inner', { collapsed: isVideoInputCollapsed }]">
             <!-- Uploaded Reference Files Preview - Only show in multimodal mode -->
-            <div v-if="selectedVideoMultimodal == 'multimodal' && uploadedVideoRefs.length > 0" class="uploaded-images">
+            <div v-if="(selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideoRefs.length > 0" class="uploaded-images">
               <div
                 v-for="(ref, index) in uploadedVideoRefs"
                 :key="ref.id"
                 class="uploaded-image-item"
               >
-                <span class="image-index">{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + 1 }}</span>
+                <span class="image-index">{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}</span>
                 <div class="uploaded-item-wrapper">
                   <div v-if="ref.type == 'video'" class="video-thumbnail-wrapper" @click="playUploadedVideo(ref)">
                     <img :src="ref.cover" class="uploaded-image" />
@@ -523,7 +515,7 @@
                 </div>
                 <span class="tooltip-name">{{ ref.name }}</span>
                 <span class="image-name">
-                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + 1 }}
+                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}
                 </span>
                 <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeVideoRef(ref.id)" />
               </div>
@@ -644,15 +636,35 @@
                   </div>
                 </div>
 
-                <textarea
-                  :class="['video-textarea', { collapsed: isVideoInputCollapsed }]"
-                  :placeholder="t('home.input.placeholder')"
-                  v-model="videoInput"
+                <div
+                  ref="videoEditableInputRef"
+                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
+                  contenteditable="true"
                   spellcheck="false"
-                  @input="handleVideoTextareaInput"
+                  :data-placeholder="videoPlaceholderDisplay"
+                  @input="handleVideoInput"
+                  @keydown="handleVideoKeydown"
+                  @click="handleVideoInputClick"
                   @focus="handleVideoInputFocus"
                   @blur="handleVideoInputBlur"
-                ></textarea>
+                  @paste="handleVideoPaste"
+                ></div>
+
+                <div v-if="showVideoRefDropdown" class="at-dropdown">
+                  <div
+                    v-for="(item, index) in videoRefDropdownItems"
+                    :key="item.id"
+                    class="dropdown-item"
+                    @mousedown.prevent="selectVideoRefItem(item)"
+                  >
+                    <div class="dropdown-img">
+                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                    </div>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
+                  </div>
+                </div>
               </div>
             </template>
 
@@ -681,15 +693,35 @@
                   </div>
                 </div>
 
-                <textarea
-                  :class="['video-textarea', { collapsed: isVideoInputCollapsed }]"
-                  :placeholder="t('home.input.placeholder')"
-                  v-model="videoInput"
+                <div
+                  ref="videoEditableInputRef"
+                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
+                  contenteditable="true"
                   spellcheck="false"
-                  @input="handleVideoTextareaInput"
+                  :data-placeholder="videoPlaceholderDisplay"
+                  @input="handleVideoInput"
+                  @keydown="handleVideoKeydown"
+                  @click="handleVideoInputClick"
                   @focus="handleVideoInputFocus"
                   @blur="handleVideoInputBlur"
-                ></textarea>
+                  @paste="handleVideoPaste"
+                ></div>
+
+                <div v-if="showVideoRefDropdown" class="at-dropdown">
+                  <div
+                    v-for="(item, index) in videoRefDropdownItems"
+                    :key="item.id"
+                    class="dropdown-item"
+                    @mousedown.prevent="selectVideoRefItem(item)"
+                  >
+                    <div class="dropdown-img">
+                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                    </div>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
+                  </div>
+                </div>
               </div>
             </template>
 
@@ -718,7 +750,7 @@
                   </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal == 'multimodal'" class="option-btn reference-btn" @mousedown.prevent @click="triggerVideoUpload">
+                <div v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="option-btn reference-btn" @mousedown.prevent @click="triggerVideoUpload">
                   <img src="@/assets/images/home/img_icon.png" alt="" />
                   <span>{{ t('home.option.reference') }}</span>
                 </div>
@@ -808,7 +840,7 @@
                    </div>
                 </div>
 
-                <div class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
                   <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
@@ -975,7 +1007,7 @@ const checkPhotoUnreferencedFiles = (): boolean => {
 };
 
 const checkVideoUnreferencedFiles = (): boolean => {
-  if (selectedVideoMultimodal.value !== 'multimodal') return false;
+  if (selectedVideoMultimodal.value !== 'multimodal' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') return false;
   if (!videoEditableInputRef.value) return false;
   const refs = uploadedVideoRefs.value;
   const fileItems = refs.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio');
@@ -1319,6 +1351,25 @@ const handlePhotoInput = (event: Event) => {
 
   const target = photoEditableInputRef.value;
 
+  // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
+  const divs = target.querySelectorAll('div');
+  divs.forEach(div => {
+    while (div.firstChild) {
+      target.insertBefore(div.firstChild, div);
+    }
+    target.removeChild(div);
+  });
+  const brs = target.querySelectorAll('br');
+  brs.forEach(br => {
+    const prev = br.previousSibling;
+    const next = br.nextSibling;
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
+    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
+    if (isBetweenTextAndTag || isBetweenTagAndText) {
+      br.remove();
+    }
+  });
+
   const maxLimit = getPhotoMaxInputLimit();
   const currentCharCount = getInputCharCount(target);
   if (currentCharCount > maxLimit) {
@@ -1445,6 +1496,10 @@ const selectPhotoRefItem = (item: any) => {
     // 没有选中区域，直接在末尾添加
     const itemTag = createPhotoItemTag(item);
     target.appendChild(itemTag);
+    const prevSibling = itemTag.previousSibling;
+    if (prevSibling && prevSibling.nodeName === 'BR') {
+      prevSibling.remove();
+    }
     target.appendChild(document.createTextNode(' '));
     target.focus();
     showPhotoRefDropdown.value = false;
@@ -2065,8 +2120,8 @@ const handlePhotoFileChange = async (event: Event) => {
     const files = Array.from(input.files);
 
     // Photo upload limits based on mode
-    const maxPhotos = currentPhotoMode.value === 'unlimited' ? 3 : 7;
-    const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 20 : 30;
+    const maxPhotos = currentPhotoMode.value === 'unlimited' ? 10 : 7;
+    const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 30 : 30;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -2094,6 +2149,12 @@ const handlePhotoFileChange = async (event: Event) => {
       const isCorrupted = await isImageCorrupted(file);
       if (isCorrupted) {
         toast(t('home.error.corruptedImage'));
+        input.value = '';
+        return;
+      }
+      // Check image dimensions (ratio and size)
+      const validDimensions = await validateImageDimensions(file);
+      if (!validDimensions) {
         input.value = '';
         return;
       }
@@ -2185,6 +2246,35 @@ const triggerVideoUpload = () => {
   }
 };
 
+const validateVideoDimensions = async (file: File): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    const url = URL.createObjectURL(file);
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      if (width === 0 || height === 0) { resolve(true); return; }
+      const ratio = width / height;
+      if (ratio < 0.4 || ratio > 2.5) {
+        toast(t('home.error.videoRatioLimit'));
+        resolve(false); return;
+      }
+      if (width < 300 || width > 6000 || height < 300 || height > 6000) {
+        toast(t('home.error.videoDimensionLimit'));
+        resolve(false); return;
+      }
+      resolve(true);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+    video.src = url;
+  });
+};
+
 const getMediaDuration = (file: File): Promise<number> => {
   return new Promise((resolve) => {
     if (file.type.startsWith('video/')) {
@@ -2260,6 +2350,49 @@ const isImageCorrupted = (file: File): Promise<boolean> => {
       resolve(true);
     };
 
+const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: 0, height: 0 });
+    };
+    img.src = url;
+  });
+};
+
+const validateImageDimensions = async (file: File): Promise<boolean> => {
+  const { width, height } = await getImageDimensions(file);
+  if (width === 0 || height === 0) return false;
+  const ratio = width / height;
+  const isPhotoUnlimited = bottomActiveTab.value === 'photo' && currentPhotoMode.value === 'unlimited';
+  if (isPhotoUnlimited) {
+    if (ratio < 1 / 16 || ratio > 16) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 14 || height < 14) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
+  } else {
+    if (ratio < 0.4 || ratio > 2.5) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 300 || width > 6000 || height < 300 || height > 6000) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
+  }
+  return true;
+};
+
     img.src = url;
   });
 };
@@ -2310,7 +2443,7 @@ const captureVideoFirstFrame = (file: File): Promise<string> => {
     video.onerror = () => {
       if (!hasResolved) {
         URL.revokeObjectURL(video.src);
-        reject(new Error('视频加载失败'));
+        reject(new Error(t('home.error.videoLoadFailed')));
       }
     };
 
@@ -2350,9 +2483,13 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
     // Check video and audio total duration limits (15 seconds each) for video multimodal mode
-    if (selectedVideoMultimodal.value == 'multimodal') {
+    if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
       let totalVideoDuration = 0;
       let totalAudioDuration = 0;
+
+      if ((selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') && uploadedVideoDuration.value > 0) {
+        totalVideoDuration += uploadedVideoDuration.value;
+      }
 
       // Add duration of existing uploaded videos
       for (const item of uploadedVideoRefs.value) {
@@ -2393,12 +2530,17 @@ const handleVideoRefUpload = async (event: Event) => {
     }
 
     // Check file size limits for multimodal mode
-    if (selectedVideoMultimodal.value == 'multimodal') {
+    if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
       const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       for (const file of files) {
         if (file.type.startsWith('video/')) {
           if (file.size > maxVideoSizeBytes) {
             toast(t('home.error.maxVideoSize', { max: isUnlimited ? 100 : 200 }));
+            input.value = '';
+            return;
+          }
+          const validVideoDimensions = await validateVideoDimensions(file);
+          if (!validVideoDimensions) {
             input.value = '';
             return;
           }
@@ -2453,6 +2595,11 @@ const handleVideoRefUpload = async (event: Event) => {
           const isCorrupted = await isImageCorrupted(file);
           if (isCorrupted) {
             toast(t('home.error.corruptedImage'));
+            input.value = '';
+            return;
+          }
+          const validDimensions = await validateImageDimensions(file);
+          if (!validDimensions) {
             input.value = '';
             return;
           }
@@ -2625,6 +2772,10 @@ const insertVideoRefTag = (item: any, index: number) => {
   }
 
   target.appendChild(itemTag);
+  const prevSibling = itemTag.previousSibling;
+  if (prevSibling && prevSibling.nodeName === 'BR') {
+    prevSibling.remove();
+  }
   target.appendChild(document.createTextNode(' '));
 };
 
@@ -2635,6 +2786,25 @@ const handleVideoInput = () => {
   if (!videoEditableInputRef.value) return;
 
   const target = videoEditableInputRef.value;
+
+  // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
+  const divs = target.querySelectorAll('div');
+  divs.forEach(div => {
+    while (div.firstChild) {
+      target.insertBefore(div.firstChild, div);
+    }
+    target.removeChild(div);
+  });
+  const brs = target.querySelectorAll('br');
+  brs.forEach(br => {
+    const prev = br.previousSibling;
+    const next = br.nextSibling;
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
+    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
+    if (isBetweenTextAndTag || isBetweenTagAndText) {
+      br.remove();
+    }
+  });
 
   const maxLimit = getVideoMaxInputLimit();
   const currentCharCount = getInputCharCount(target);
@@ -2883,7 +3053,7 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
     while (previousSibling) {
       if (previousSibling.nodeType === 1) {
         const element = previousSibling as HTMLElement;
-        if (element.classList.contains('image-tag')) {
+        if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
           let hasTextBetween = false;
           let currentNode: Node | null = range.startContainer;
 
@@ -2932,7 +3102,7 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
 
       if (nextSibling.nodeType === 1) {
         const element = nextSibling as HTMLElement;
-        if (element.classList.contains('image-tag')) {
+        if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
           element.remove();
           event.preventDefault();
           break;
@@ -2958,6 +3128,10 @@ const selectVideoRefItem = (item: any) => {
     // 没有选中区域，直接在末尾添加
     const itemTag = createVideoItemTag(item);
     target.appendChild(itemTag);
+    const prevSibling = itemTag.previousSibling;
+    if (prevSibling && prevSibling.nodeName === 'BR') {
+      prevSibling.remove();
+    }
     target.appendChild(document.createTextNode(' '));
     target.focus();
     showVideoRefDropdown.value = false;
@@ -3081,7 +3255,7 @@ const createVideoItemTag = (item: any): HTMLElement => {
 };
 
 const getVideoInputContent = () => {
-  if (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
+  if (selectedVideoMultimodal.value === 'startEndFrames') {
     return videoInput.value || '';
   }
 
@@ -3094,6 +3268,10 @@ const getVideoInputContent = () => {
   const imageIndexMap = new Map<string, number>();
   const videoIndexMap = new Map<string, number>();
   const audioIndexMap = new Map<string, number>();
+
+  if ((selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value) {
+    videoIndex = 2;
+  }
 
   const processNode = (node: Node) => {
     if (node.nodeType == Node.TEXT_NODE) {
@@ -3480,6 +3658,13 @@ const handleVideoUpload = async (event: Event) => {
     // Video duration validation
     const duration = await getVideoDuration(file);
 
+    // Video dimensions validation
+    const validVideoDimensions = await validateVideoDimensions(file);
+    if (!validVideoDimensions) {
+      target.value = '';
+      return;
+    }
+
     // 视频续写模式下，验证时长在2-5秒之间
     if (selectedVideoMultimodal.value == 'videoExtend') {
       if (duration < 2 || duration > 5) {
@@ -3691,7 +3876,7 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value) {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -4252,6 +4437,7 @@ const generateVideo = async () => {
   const videoContent = getVideoInputContent();
   if (!videoContent.trim()) {
     toast(t('home.error.emptyInput'));
+    isVideoGenerating.value = false;
     return;
   }
 
@@ -4325,6 +4511,7 @@ const doGenerateVideo = async () => {
       if (uploadedVideoCover.value) {
         referenceImages.push(uploadedVideoCover.value);
       }
+      referenceImages = referenceImages.concat(uploadedVideoRefs.value.filter(ref => ref.type === 'image').map(ref => ref.image));
     } else {
       referenceImages = uploadedVideoRefs.value
         .filter(ref => ref.type === 'image')
@@ -4338,6 +4525,8 @@ const doGenerateVideo = async () => {
         referenceVideos = [uploadedVideo.value];
         referenceVideosForDisplay = [{ url: uploadedVideo.value, cover: uploadedVideoCover.value || '' }];
       }
+      referenceVideos = referenceVideos.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ref.image));
+      referenceVideosForDisplay = referenceVideosForDisplay.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ({ url: ref.image, cover: ref.cover || '' })));
     } else {
       referenceVideos = uploadedVideoRefs.value
         .filter((ref: any) => ref.type === 'video')
@@ -4391,7 +4580,9 @@ const doGenerateVideo = async () => {
         emotion: '',
         others: {
           content: videoContent,
-          list: uploadedVideoRefs.value
+          list: (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value
+            ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }, ...uploadedVideoRefs.value]
+            : uploadedVideoRefs.value
         },
         addition_characters: [],
         total_words: 10,
@@ -4427,7 +4618,9 @@ const doGenerateVideo = async () => {
       emotion: "",
       others: {
         content: videoContent,
-        list: uploadedVideoRefs.value
+        list: (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value
+          ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }, ...uploadedVideoRefs.value]
+          : uploadedVideoRefs.value
       },
       addition_characters: [],
       total_words: 10,
@@ -4486,6 +4679,12 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
+      selectedVideoDuration.value = '30';
+      selectedVideoRatio.value = '9:16';
+      selectedVideoQuality.value = '1080P';
+      selectedVideoMultimodal.value = 'multimodal';
+      currentVideoMode.value = 'normal';
+      enableVideoOptimizePrompt.value = true;
 
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
@@ -5005,7 +5204,6 @@ const regenerateRecord = (record: any) => {
       videoInput.value = content;
     } else if (isVideoModifyMode) {
       selectedVideoMultimodal.value = 'videoModify';
-      uploadedVideoRefs.value = [];
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
 
@@ -5032,10 +5230,21 @@ const regenerateRecord = (record: any) => {
         uploadedVideoCover.value = coverStr;
       }
 
-      videoInput.value = content;
+      uploadedVideoRefs.value = list.filter((item: any) => item.id !== 'uploaded-video' && item.type !== 'video').map((item: any, index: number) => ({
+        id: item.id || Date.now() + index.toString(),
+        name: item.name || `file${index + 1}`,
+        image: item.image || item.url || '',
+        type: item.type || 'image',
+        cover: item.cover || ''
+      }));
+
+      setTimeout(() => {
+        if (videoEditableInputRef.value) {
+          videoEditableInputRef.value.innerHTML = formatContent(content, record);
+        }
+      }, 100);
     } else if (isVideoExtensionMode) {
       selectedVideoMultimodal.value = 'videoExtend';
-      uploadedVideoRefs.value = [];
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
 
@@ -5062,7 +5271,19 @@ const regenerateRecord = (record: any) => {
         uploadedVideoCover.value = extCoverStr;
       }
 
-      videoInput.value = content;
+      uploadedVideoRefs.value = list.filter((item: any) => item.id !== 'uploaded-video' && item.type !== 'video').map((item: any, index: number) => ({
+        id: item.id || Date.now() + index.toString(),
+        name: item.name || `file${index + 1}`,
+        image: item.image || item.url || '',
+        type: item.type || 'image',
+        cover: item.cover || ''
+      }));
+
+      setTimeout(() => {
+        if (videoEditableInputRef.value) {
+          videoEditableInputRef.value.innerHTML = formatContent(content, record);
+        }
+      }, 100);
     } else {
       selectedVideoMultimodal.value = 'multimodal';
 

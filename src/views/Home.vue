@@ -249,6 +249,37 @@
 
                   <!-- Video Modify Mode -->
                   <template v-else-if="selectedVideoMultimodal == 'videoModify'">
+                    <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
+                      <div
+                        v-for="(item, index) in combinedItems"
+                        :key="item.id"
+                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      >
+                        <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <div class="image-box">
+                          <div class="uploaded-item-wrapper">
+                            <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
+                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box" @click="playUploadedVideo(item)">
+                              <img :src="item.cover || item.image" :alt="item.name" class="uploaded-image" />
+                              <div class="play-overlay-small">
+                                <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                              </div>
+                            </div>
+                            <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                          </div>
+                          <span class="img-bg"></span>
+                        </div>
+                        <span class="tooltip-name">{{ item.name }}</span>
+                        <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                        <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                      </div>
+                    </div>
+
                     <div class="video-extend-input">
                       <div class="video-upload" :class="{ uploaded: uploadedVideo }">
                         <input
@@ -273,18 +304,84 @@
                         </div>
                       </div>
 
-                      <textarea
-                        class="video-textarea"
-                        :placeholder="typedPlaceholder"
-                        v-model="novelInput"
+                      <div
+                        ref="editableInputRef"
+                        :key="`input-${inputKey}`"
+                        class="input-textarea"
+                        contenteditable="true"
                         spellcheck="false"
-                        @input="handleTextareaInput"
-                      ></textarea>
+                        autocorrect="off"
+                        autocapitalize="none"
+                        @input="handleInput"
+                        @keydown="handleKeydown"
+                        @click="handleInputClick"
+                        @blur="handleInputBlur"
+                        @paste="handlePaste"
+                        @focus="handleInputFocus"
+                        :data-placeholder="typedPlaceholder"
+                      ></div>
+
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        :accept="'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
+                        class="file-input"
+                        style="display: none;"
+                        @change="handleFileChange"
+                      />
+
+                      <div v-if="showAtDropdown" class="at-dropdown">
+                        <div
+                          v-for="(item, index) in atDropdownItems"
+                          :key="index"
+                          class="dropdown-item"
+                          @mousedown.prevent="selectAtItem(item)"
+                        >
+                          <div class="dropdown-img">
+                            <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                          </div>
+                          <span v-if="item.type === 'character'">{{ item.name }}</span>
+                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 1 }}</span>
+                          <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id == item.id) + 1 }}</span>
+                          <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        </div>
+                      </div>
                     </div>
                   </template>
 
                   <!-- Video Extend Mode - Show video upload -->
                   <template v-else-if="selectedVideoMultimodal == 'videoExtend'">
+                    <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
+                      <div
+                        v-for="(item, index) in combinedItems"
+                        :key="item.id"
+                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      >
+                        <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <div class="image-box">
+                          <div class="uploaded-item-wrapper">
+                            <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
+                            <div v-else-if="item.type === 'video'" class="video-thumbnail-box" @click="playUploadedVideo(item)">
+                              <img :src="item.cover || item.image" :alt="item.name" class="uploaded-image" />
+                              <div class="play-overlay-small">
+                                <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                              </div>
+                            </div>
+                            <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                          </div>
+                          <span class="img-bg"></span>
+                        </div>
+                        <span class="tooltip-name">{{ item.name }}</span>
+                        <span v-if="item.type === 'character'" class="character-name">{{ item.name }}</span>
+                        <span v-if="item.type === 'image'" class="image-name">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'video'" class="image-name">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
+                        <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
+                      </div>
+                    </div>
+
                     <div class="video-extend-input">
                       <div class="video-upload" :class="{ uploaded: uploadedVideo }">
                         <input
@@ -309,13 +406,48 @@
                         </div>
                       </div>
 
-                      <textarea
-                        class="video-textarea"
-                        :placeholder="typedPlaceholder"
-                        v-model="novelInput"
+                      <div
+                        ref="editableInputRef"
+                        :key="`input-${inputKey}`"
+                        class="input-textarea"
+                        contenteditable="true"
                         spellcheck="false"
-                        @input="handleTextareaInput"
-                      ></textarea>
+                        autocorrect="off"
+                        autocapitalize="none"
+                        @input="handleInput"
+                        @keydown="handleKeydown"
+                        @click="handleInputClick"
+                        @blur="handleInputBlur"
+                        @paste="handlePaste"
+                        @focus="handleInputFocus"
+                        :data-placeholder="typedPlaceholder"
+                      ></div>
+
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        :accept="'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
+                        class="file-input"
+                        style="display: none;"
+                        @change="handleFileChange"
+                      />
+
+                      <div v-if="showAtDropdown" class="at-dropdown">
+                        <div
+                          v-for="(item, index) in atDropdownItems"
+                          :key="index"
+                          class="dropdown-item"
+                          @mousedown.prevent="selectAtItem(item)"
+                        >
+                          <div class="dropdown-img">
+                            <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                          </div>
+                          <span v-if="item.type === 'character'">{{ item.name }}</span>
+                          <span v-else-if="item.type === 'video'">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id == item.id) + 1 }}</span>
+                          <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id == item.id) + 1 }}</span>
+                          <span v-else>{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
+                        </div>
+                      </div>
                     </div>
                   </template>
 
@@ -349,7 +481,7 @@
                       </div>
 
                       <!-- Reference Button - Only show in multimodal mode -->
-                      <div v-if="selectedVideoMultimodal == 'multimodal'" class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
+                      <div v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="option-btn reference-btn" @click="() => { if (checkLogin() && checkItemLimit()) triggerFileUpload() }">
                         <img src="@/assets/images/home/img_icon.png" alt="" />
                         <span>{{ t('home.option.reference') }}</span>
                       </div>
@@ -443,7 +575,7 @@
                         </div>
                       </div>
 
-                      <div class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -1632,6 +1764,35 @@ function swapFrames() {
 }
 
 // Video Extend upload handlers
+const validateVideoDimensions = async (file: File): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    const url = URL.createObjectURL(file);
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      if (width === 0 || height === 0) { resolve(true); return; }
+      const ratio = width / height;
+      if (ratio < 0.4 || ratio > 2.5) {
+        toast(t('home.error.videoRatioLimit'));
+        resolve(false); return;
+      }
+      if (width < 300 || width > 6000 || height < 300 || height > 6000) {
+        toast(t('home.error.videoDimensionLimit'));
+        resolve(false); return;
+      }
+      resolve(true);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(true);
+    };
+    video.src = url;
+  });
+};
+
 function getVideoDuration(file: File): Promise<number> {
   return new Promise((resolve) => {
     const video = document.createElement('video');
@@ -1670,6 +1831,12 @@ async function handleVideoUpload(e: Event) {
       return;
     }
     const duration = await getVideoDuration(file);
+
+    const validDimensions = await validateVideoDimensions(file);
+    if (!validDimensions) {
+      target.value = '';
+      return;
+    }
 
     const isVideoModify = selectedVideoMultimodal.value === 'videoModify';
     const minDuration = isVideoModify ? 4 : 2;
@@ -2366,7 +2533,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value) {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -3066,7 +3233,7 @@ const generateVideo = async () => {
 
   let inputContent = '';
 
-  if (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoExtend') {
+  if (selectedVideoMultimodal.value === 'startEndFrames') {
     inputContent = novelInput.value || '';
   } else {
     if (!editableInputRef.value) {
@@ -3096,7 +3263,7 @@ const generateVideo = async () => {
     return;
   }
 
-  if (selectedVideoMultimodal.value === 'multimodal' && checkUnreferencedFiles()) {
+  if ((selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && checkUnreferencedFiles()) {
     isGeneratingVideo.value = false;
     pendingGenerateCallback.value = () => { isGeneratingVideo.value = true; doGenerateVideo(); };
     showUnreferencedFilesModal.value = true;
@@ -3123,7 +3290,7 @@ const doGenerateVideo = async () => {
     const token = localStorage.getItem('token') || '';
 
     let inputContent = '';
-    if (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoExtend') {
+    if (selectedVideoMultimodal.value === 'startEndFrames') {
       inputContent = novelInput.value || '';
     } else if (editableInputRef.value) {
       inputContent = editableInputRef.value.textContent || '';
@@ -3143,6 +3310,11 @@ const doGenerateVideo = async () => {
     let imageCount = 0;
     let videoCount = 0;
     let audioCount = 0;
+
+    const isVideoExtendOrModify = selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify';
+    if (isVideoExtendOrModify && uploadedVideo.value) {
+      videoCount = 1;
+    }
 
     // 按类型单独计数
     combinedItemsVideo.value.forEach((item) => {
@@ -3238,15 +3410,17 @@ const doGenerateVideo = async () => {
       if (uploadedVideoCover.value) {
         reference_images.push(uploadedVideoCover.value);
       }
+      reference_images = reference_images.concat(combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image));
     } else {
       reference_images = combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image);
     }
 
     let reference_videos: any[] = [];
-    if (selectedVideoMultimodal.value === 'videoExtend') {
+    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       if (uploadedVideo.value) {
         reference_videos = [uploadedVideo.value];
       }
+      reference_videos = reference_videos.concat(combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.image));
     } else {
       reference_videos = combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.image);
     }
@@ -3263,7 +3437,9 @@ const doGenerateVideo = async () => {
       emotion: "",
       others: {
         content: processedContent,
-        list: combinedItemsVideo.value
+        list: (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value
+          ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }, ...combinedItemsVideo.value]
+          : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
@@ -3929,6 +4105,49 @@ const isImageCorrupted = (file: File): Promise<boolean> => {
       resolve(true);
     };
 
+const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: 0, height: 0 });
+    };
+    img.src = url;
+  });
+};
+
+const validateImageDimensions = async (file: File): Promise<boolean> => {
+  const { width, height } = await getImageDimensions(file);
+  if (width === 0 || height === 0) return false;
+  const ratio = width / height;
+  const isPhotoUnlimited = contentType.value === 'photo' && currentPhotoMode.value === 'unlimited';
+  if (isPhotoUnlimited) {
+    if (ratio < 1 / 16 || ratio > 16) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 14 || height < 14) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
+  } else {
+    if (ratio < 0.4 || ratio > 2.5) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 300 || width > 6000 || height < 300 || height > 6000) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
+  }
+  return true;
+};
+
     img.src = url;
   });
 };
@@ -4010,7 +4229,7 @@ const captureVideoFirstFrame = (file: File): Promise<string> => {
     video.onerror = () => {
       if (!hasResolved) {
         URL.revokeObjectURL(video.src);
-        reject(new Error('视频加载失败'));
+        reject(new Error(t('home.error.videoLoadFailed')));
       }
     };
 
@@ -4046,10 +4265,14 @@ const handleFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
     // Check video/audio total duration limit for video multimodal mode
-    if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+    if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
       const isUnlimited = currentVideoMode.value === 'unlimited';
       let totalVideoDuration = 0;
       let totalAudioDuration = 0;
+
+      if ((selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && uploadedVideoDuration.value > 0) {
+        totalVideoDuration += uploadedVideoDuration.value;
+      }
 
       for (const item of combinedItemsVideo.value) {
         if (item.type === 'video' && item.duration) {
@@ -4111,6 +4334,11 @@ const handleFileChange = async (event: Event) => {
     let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
     let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 30;
 
+    if (contentType.value === 'photo' && currentMode === 'unlimited') {
+      maxFileSizeBytes = 30 * 1024 * 1024;
+      maxFileSizeMB = 30;
+    }
+
     // Comic and Drama modes have 10MB image size limit
     if (contentType.value === 'comic' || contentType.value === 'drama') {
       maxFileSizeBytes = 10 * 1024 * 1024;
@@ -4157,6 +4385,14 @@ const handleFileChange = async (event: Event) => {
           input.value = '';
           return;
         }
+        // Check image dimensions (ratio and size) - not for comic/drama
+        if (contentType.value !== 'comic' && contentType.value !== 'drama') {
+          const validDimensions = await validateImageDimensions(file);
+          if (!validDimensions) {
+            input.value = '';
+            return;
+          }
+        }
       }
     }
 
@@ -4182,11 +4418,16 @@ const handleFileChange = async (event: Event) => {
               toast(t('home.error.maxVideoSize', { max: currentMode === 'unlimited' ? 100 : 200 }));
               return;
             }
+            // Check video dimensions (ratio and size)
+            const validVideoDimensions = await validateVideoDimensions(file);
+            if (!validVideoDimensions) {
+              return;
+            }
             // Check video duration for multimodal mode
             if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
               const videoDuration = await getMediaDuration(file);
-              const minDuration = currentMode === 'unlimited' ? 1 : 2;
-              const maxDuration = currentMode === 'unlimited' ? 30 : 38;
+              const minDuration = 2;
+              const maxDuration = currentMode === 'unlimited' ? 15 : 30;
               if (videoDuration < minDuration) {
                 toast(t('home.error.videoDurationTooShort', { min: minDuration }));
                 return;
@@ -4363,6 +4604,19 @@ const handleFileChange = async (event: Event) => {
 
             // Append tag to the end
         target.appendChild(itemTag);
+
+        // 清理标签前可能产生的 br 或 div 换行
+        const prevSibling = itemTag.previousSibling;
+        if (prevSibling && prevSibling.nodeName === 'BR') {
+          prevSibling.remove();
+        }
+        const parentDiv = itemTag.parentElement;
+        if (parentDiv && parentDiv !== target && parentDiv.nodeName === 'DIV') {
+          while (parentDiv.firstChild) {
+            target.insertBefore(parentDiv.firstChild, parentDiv);
+          }
+          target.removeChild(parentDiv);
+        }
 
         // Focus the input to ensure cursor is visible
         target.focus();
@@ -4700,6 +4954,26 @@ const getMaxInputLimit = (): number => {
 const handleInput = (event: Event) => {
   const target = event.target as HTMLElement;
 
+  // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
+  const divs = target.querySelectorAll('div');
+  divs.forEach(div => {
+    while (div.firstChild) {
+      target.insertBefore(div.firstChild, div);
+    }
+    target.removeChild(div);
+  });
+  // 清理标签前后的多余 br
+  const brs = target.querySelectorAll('br');
+  brs.forEach(br => {
+    const prev = br.previousSibling;
+    const next = br.nextSibling;
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && (next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag'));
+    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && (prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag'));
+    if (isBetweenTextAndTag || isBetweenTagAndText) {
+      br.remove();
+    }
+  });
+
   const maxLimit = getMaxInputLimit();
   const currentCharCount = getInputCharCount(target);
   if (currentCharCount > maxLimit) {
@@ -4892,7 +5166,7 @@ const handleKeydown = (event: KeyboardEvent) => {
         while (previousSibling) {
           if (previousSibling.nodeType === 1) { // Element node
             const element = previousSibling as HTMLElement;
-            if (element.classList.contains('character-tag-input') || element.classList.contains('image-tag')) {
+            if (element.classList.contains('character-tag-input') || element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
               // Check if there's any non-whitespace text between the cursor and the tag
               let hasTextBetween = false;
               let currentNode: Node | null = range.startContainer;
