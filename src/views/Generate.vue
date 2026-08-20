@@ -661,7 +661,7 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1)) }}</span>
+                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
                     <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
                     <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
                   </div>
