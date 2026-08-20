@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="batch-progress-overlay" @click.self="$emit('close')">
+  <div v-if="visible" class="batch-progress-overlay">
     <div class="batch-progress-dialog">
       <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 

@@ -414,7 +414,7 @@
     </div>
 
     <!-- エラーモーダル -->
-    <div class="error-modal-overlay" v-if="showKycErrorModal" @click.self="showKycErrorModal = false">
+    <div class="error-modal-overlay" v-if="showKycErrorModal">
       <div class="error-modal">
         <div class="error-modal-header">
           <div class="error-modal-title">{{ t("user.materialProvider.errorListTitle") }}</div>

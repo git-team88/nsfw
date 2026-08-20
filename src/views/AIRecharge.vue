@@ -256,6 +256,7 @@ interface RechargePlan {
   web3?: {
     price: string;
     currency: string;
+    discount_price?: string;
   };
   period: string;
   credits: string;
@@ -502,6 +503,9 @@ function planHasDiscount(plan: RechargePlan): boolean {
 }
 
 function getFirstMonthPrice(plan: RechargePlan): number {
+  if (paymentTab.value === 'usdt' && plan.web3?.discount_price) {
+    return parseFloat(plan.web3.discount_price) || 0;
+  }
   if (plan.discount_price) {
     return parseInt(plan.discount_price) || 0;
   }
@@ -608,7 +612,12 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
   isPaying.value = true;
   try {
     const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
-    const usdtAmount = plan?.web3?.price || '';
+    let usdtAmount = '';
+    if (activeTab.value === 'subscription' && hasFirstMonthDiscount.value && planHasDiscount(plan!) && plan?.web3?.discount_price) {
+      usdtAmount = plan.web3.discount_price;
+    } else {
+      usdtAmount = plan?.web3?.price || '';
+    }
 
     console.log('[AIRecharge] usdtAmount:', usdtAmount, 'plan.web3:', plan?.web3);
 

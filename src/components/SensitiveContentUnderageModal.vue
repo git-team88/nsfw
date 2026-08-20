@@ -1,5 +1,5 @@
 <template>
-  <div class="mg-hm-ovl" @click.self="handleClose" role="dialog" aria-modal="true">
+  <div class="mg-hm-ovl" role="dialog" aria-modal="true">
     <div class="mg-hm-panel">
       <div class="hm-decal" aria-hidden="true"></div>
 

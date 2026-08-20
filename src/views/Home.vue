@@ -294,6 +294,7 @@
                           <template v-if="uploadedVideo">
                             <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
                             <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
+                            <span class="image-name">{{ t('home.video') }}1</span>
                             <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                             <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                           </template>
@@ -396,6 +397,7 @@
                           <template v-if="uploadedVideo">
                             <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
                             <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
+                            <span class="image-name">{{ t('home.video') }}1</span>
                             <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                             <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                           </template>

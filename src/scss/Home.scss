@@ -2935,6 +2935,24 @@ $pinkopacity: rgba(255,77,142,0.12);
         border-radius: 8px;
       }
 
+      .image-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 3px;
+        font-size: 12px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-radius: 0 0 4px 4px;
+        background: linear-gradient(180deg, rgba(16, 24, 40, 0) 0%, #161122 100%);
+        color: #ffffff;
+        z-index: 5;
+        pointer-events: none;
+      }
+
       .preview-video-placeholder {
         position: absolute;
         top: 0;

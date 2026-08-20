@@ -626,6 +626,7 @@
                     <template v-if="uploadedVideo">
                       <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
                       <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
+                      <span class="image-name">{{ t('home.video') }}1</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                       <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                     </template>
@@ -660,7 +661,7 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1)) }}</span>
                     <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
                     <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
                   </div>
@@ -683,6 +684,7 @@
                     <template v-if="uploadedVideo">
                       <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
                       <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
+                      <span class="image-name">{{ t('home.video') }}1</span>
                       <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
                       <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
                     </template>
