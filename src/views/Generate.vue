@@ -787,7 +787,7 @@
                         </div>
                         <input
                           type="range"
-                          :min="currentVideoMode === 'unlimited' ? 2 : 5"
+                          :min="currentVideoMode === 'unlimited' ? 2 : 4"
                           :max="30"
                           step="1"
                           :value="selectedVideoDuration"
@@ -1964,10 +1964,10 @@ const videoRatioOptions = ref([
   { value: '16:9', label: '16:9' }
 ]);
 const videoDurationOptions = computed(() => {
-  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
-  if (minDuration === 5) {
+  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  if (minDuration === 4) {
     return [
-      { value: '5', label: '5s' },
+      { value: '4', label: '4s' },
       { value: '10', label: '10s' },
       { value: '15', label: '15s' },
       { value: '20', label: '20s' },
@@ -3551,7 +3551,7 @@ const handleVideoUpload = async (event: Event) => {
           // 如果当前设置的时长小于等于视频时长，自动调整
           const currentDuration = parseInt(selectedVideoDuration.value);
           if (currentDuration <= duration) {
-            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
+            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
             const newDuration = Math.max(duration + 1, minDuration);
             selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
@@ -3587,7 +3587,7 @@ const removeVideo = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
   const marks = currentVideoMode.value === 'unlimited' ? [min, 5, 10, 15] : [min, 10, 20, 30];
   return marks.map(value => ({
@@ -3598,7 +3598,7 @@ const sliderMarks = computed(() => {
 
 const getSliderValuePosition = () => {
   const value = parseInt(selectedVideoDuration.value);
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = currentVideoMode.value === 'unlimited' ? 15 : 30;
   return `${((value - min) / (max - min)) * 100}%`;
 };

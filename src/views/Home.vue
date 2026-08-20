@@ -420,7 +420,7 @@
                               </div>
                               <input
                                 type="range"
-                                :min="currentVideoMode == 'unlimited' ? 2 : 5"
+                                :min="currentVideoMode == 'unlimited' ? 2 : 4"
                                   :max="30"
                                 step="1"
                                 :value="selectedVideoDuration"
@@ -1710,7 +1710,7 @@ async function handleVideoUpload(e: Event) {
         // 如果当前设置的时长小于等于视频时长，自动调整为视频时长+1或最小可选时长
         const currentDuration = parseInt(selectedVideoDuration.value);
         if (currentDuration <= duration) {
-          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
+          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
           const newDuration = Math.max(duration + 1, minDuration);
           // 确保不超过最大值30
           selectedVideoDuration.value = Math.min(newDuration, 30).toString();
@@ -1758,10 +1758,10 @@ const videoRatioOptions = ref([
   { value: '16:9', label: '16:9' }
 ]);
 const videoDurationOptions = computed(() => {
-  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 5;
-  if (minDuration == 5) {
+  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  if (minDuration == 4) {
     return [
-      { value: '5', label: '5' },
+      { value: '4', label: '4' },
       { value: '10', label: '10' },
       { value: '15', label: '15' },
       { value: '20', label: '20' },
@@ -1804,7 +1804,7 @@ const validateDurationAndRestore = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
   const marks = currentVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
@@ -1814,7 +1814,7 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 5;
+  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
@@ -2608,7 +2608,7 @@ const switchVideoMode = (mode: string, index: number) => {
       selectedVideoMultimodal.value = 'multimodal';
       resetVideoInputs();
     }
-    if (parseInt(selectedVideoDuration.value) < 5) selectedVideoDuration.value = '5';
+    if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
   }
 };
 
