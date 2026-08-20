@@ -585,7 +585,10 @@ function getSubscriptionPrice() {
   const plans = userInfo.value.subscription_plans;
   if (!plans) return '0';
 
-  return (plans as SubscriptionPlan).price || '0';
+  const raw = (plans as SubscriptionPlan).price || '0';
+  const num = parseFloat(raw);
+  if (isNaN(num)) return raw;
+  return parseFloat(num.toFixed(8)).toString();
 }
 
 const moreMenuRef = ref<HTMLElement | null>(null);

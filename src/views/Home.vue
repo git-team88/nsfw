@@ -123,7 +123,7 @@
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : item.type === 'audio' ? playAudio(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -132,7 +132,12 @@
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                               </div>
                             </div>
-                            <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                            <div v-else-if="item.type === 'audio'" class="audio-thumbnail-box">
+                              <img src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                              <div class="play-overlay-small">
+                                <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                              </div>
+                            </div>
                           </div>
                           <span class="img-bg"></span>
                         </div>
@@ -140,7 +145,7 @@
                         <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
                         <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
-                        <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'audio'" class="image-name" @click="playAudio(item)">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
@@ -258,7 +263,7 @@
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : item.type === 'audio' ? playAudio(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -267,7 +272,12 @@
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                               </div>
                             </div>
-                            <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                            <div v-else-if="item.type === 'audio'" class="audio-thumbnail-box">
+                              <img src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                              <div class="play-overlay-small">
+                                <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                              </div>
+                            </div>
                           </div>
                           <span class="img-bg"></span>
                         </div>
@@ -275,7 +285,7 @@
                         <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
                         <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
-                        <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'audio'" class="image-name" @click="playAudio(item)">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
@@ -361,7 +371,7 @@
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
                         <span class="image-index" v-if="item.type == 'audio'">{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
-                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : openImageViewer(item.image)">
+                        <div class="image-box" @click="item.type === 'video' ? playUploadedVideo(item) : item.type === 'audio' ? playAudio(item) : openImageViewer(item.image)">
                           <div class="uploaded-item-wrapper">
                             <img v-if="item.type === 'image'" :src="item.image" :alt="item.name" :class="item.type === 'character' ? 'character-avatar' : 'uploaded-image'" />
                             <div v-else-if="item.type === 'video'" class="video-thumbnail-box">
@@ -370,7 +380,12 @@
                                 <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                               </div>
                             </div>
-                            <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                            <div v-else-if="item.type === 'audio'" class="audio-thumbnail-box">
+                              <img src="@/assets/images/home/audio.png" :alt="item.name" class="uploaded-image audio-icon" />
+                              <div class="play-overlay-small">
+                                <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                              </div>
+                            </div>
                           </div>
                           <span class="img-bg"></span>
                         </div>
@@ -378,7 +393,7 @@
                         <span v-if="item.type === 'character'" class="character-name" @click="openImageViewer(item.image)">{{ item.name }}</span>
                         <span v-if="item.type === 'image'" class="image-name" @click="openImageViewer(item.image)">{{ t('home.img') }}{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span v-if="item.type === 'video'" class="image-name" @click="playUploadedVideo(item)">{{ t('home.video') }}{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
-                        <span v-if="item.type === 'audio'" class="image-name">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
+                        <span v-if="item.type === 'audio'" class="image-name" @click="playAudio(item)">{{ t('home.audio') }}{{ uploadedAudiosVideo.findIndex(a => a.id === item.id) + 1 }}</span>
                         <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="item.type === 'character' ? removeCharacter(item) : removeUploadedImage(item.id)" />
                       </div>
                     </div>
@@ -1398,15 +1413,26 @@
     <!-- Video Player Modal -->
     <div v-if="showVideoModal" class="video-modal">
       <div class="video-modal-content">
-        <img class="close-video-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeVideoModal" />
+        <button class="close-btn" @click="closeVideoModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline></video>
+      </div>
+    </div>
+
+    <!-- Audio Player Modal -->
+    <div v-if="showAudioModal" class="video-modal audio-modal">
+      <div class="audio-modal-content">
+        <div class="audio-modal-inner">
+          <button class="close-btn" @click="closeAudioModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+          <img src="@/assets/images/home/audio.png" alt="audio" class="audio-modal-icon" />
+          <audio :src="playingAudioUrl" controls autoplay class="audio-player"></audio>
+        </div>
       </div>
     </div>
 
     <!-- Image Zoom Modal -->
     <div v-if="showImageZoomModal" class="cover-zoom-modal" @click="closeImageZoomModal">
       <div class="cover-zoom-content">
-        <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click.stop="closeImageZoomModal" />
+        <button class="close-btn" @click.stop="closeImageZoomModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <img :src="zoomedImageUrl" alt="" class="zoomed-cover-image" />
       </div>
     </div>
@@ -1549,8 +1575,8 @@ const showVideoModal = ref(false);
 const playingVideoUrl = ref('');
 
 const playUploadedVideo = (item: any) => {
-  if (item.type === 'video' && (item.videoUrl || item.image)) {
-    playingVideoUrl.value = item.videoUrl || item.image;
+  if (item.type === 'video' && (item.url || item.videoUrl || item.image)) {
+    playingVideoUrl.value = item.url || item.videoUrl || item.image;
     showVideoModal.value = true;
   } else if (item.url) {
     playingVideoUrl.value = item.url;
@@ -1561,6 +1587,21 @@ const playUploadedVideo = (item: any) => {
 const closeVideoModal = () => {
   showVideoModal.value = false;
   playingVideoUrl.value = '';
+};
+
+const showAudioModal = ref(false);
+const playingAudioUrl = ref('');
+
+const playAudio = (item: any) => {
+  if (item.image || item.url) {
+    playingAudioUrl.value = item.image || item.url;
+    showAudioModal.value = true;
+  }
+};
+
+const closeAudioModal = () => {
+  showAudioModal.value = false;
+  playingAudioUrl.value = '';
 };
 
 const showImageZoomModal = ref(false);
@@ -1657,6 +1698,7 @@ function resetVideoInputs() {
   uploadedVideo.value = null;
   uploadedVideoCover.value = null;
   uploadedVideoDuration.value = 0;
+  combinedItemsVideo.value = [];
   novelInput.value = '';
   inputKey.value++;
 }
@@ -1906,16 +1948,6 @@ async function handleVideoUpload(e: Event) {
           selectedVideoDuration.value = Math.min(newDuration, 30).toString();
           lastValidVideoDuration.value = selectedVideoDuration.value;
         }
-
-        if (selectedVideoMultimodal.value === 'videoExtend') {
-          combinedItemsVideo.value.push({
-            id: Date.now().toString(),
-            name: file.name,
-            image: uploadedUrl,
-            type: 'video',
-            cover: coverUrl
-          });
-        }
       }
     } catch (error) {
       toast(t('fail'));
@@ -1929,9 +1961,6 @@ function removeVideo() {
   uploadedVideo.value = null;
   uploadedVideoCover.value = null;
   uploadedVideoDuration.value = 0;
-  if (selectedVideoMultimodal.value === 'videoExtend') {
-    combinedItemsVideo.value = combinedItemsVideo.value.filter(item => item.type !== 'video');
-  }
 }
 
 const showVideoSettings = ref(false);
@@ -2786,8 +2815,8 @@ const switchVideoMode = (mode: string, index: number) => {
       currentVideoMode.value = 'unlimited';
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
-        resetVideoInputs();
       }
+      resetVideoInputs();
       showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
@@ -2797,8 +2826,8 @@ const switchVideoMode = (mode: string, index: number) => {
     showVideoModeDropdown.value = false;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
-      resetVideoInputs();
     }
+    resetVideoInputs();
     if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
   }
 };
@@ -3391,11 +3420,10 @@ const doGenerateVideo = async () => {
               }
             }
           } else if (element.classList.contains('audio-tag')) {
-            // 处理音频标签
-            const imgElement = element.querySelector('img');
-            if (imgElement) {
+            const itemId = (element as HTMLElement).dataset.itemId;
+            if (itemId) {
               const audio = combinedItemsVideo.value.find(item =>
-                item.type === 'audio' && (item.image === imgElement.src || imgElement.src.includes(item.image))
+                item.type === 'audio' && item.id === itemId
               );
               if (audio) {
                 const audioIndex = audioMap[audio.id] || 1;
@@ -3434,10 +3462,7 @@ const doGenerateVideo = async () => {
         reference_images.push({ type: "last_frame", url: endFrameImage.value });
       }
     } else if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      if (uploadedVideoCover.value) {
-        reference_images.push(uploadedVideoCover.value);
-      }
-      reference_images = reference_images.concat(combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image));
+      reference_images = combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image);
     } else {
       reference_images = combinedItemsVideo.value.filter(item => item.type === 'image').map(item => item.image);
     }
@@ -3447,9 +3472,9 @@ const doGenerateVideo = async () => {
       if (uploadedVideo.value) {
         reference_videos = [uploadedVideo.value];
       }
-      reference_videos = reference_videos.concat(combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.image));
+      reference_videos = reference_videos.concat(combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.url || item.videoUrl || item.image));
     } else {
-      reference_videos = combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.image);
+      reference_videos = combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.url || item.videoUrl || item.image);
     }
 
     const params = {
@@ -4290,49 +4315,6 @@ const handleFileChange = async (event: Event) => {
 
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
-    // Check video/audio total duration limit for video multimodal mode
-    if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
-      const isUnlimited = currentVideoMode.value === 'unlimited';
-      let totalVideoDuration = 0;
-      let totalAudioDuration = 0;
-
-      if ((selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && uploadedVideoDuration.value > 0) {
-        totalVideoDuration += uploadedVideoDuration.value;
-      }
-
-      for (const item of combinedItemsVideo.value) {
-        if (item.type === 'video' && item.duration) {
-          totalVideoDuration += item.duration;
-        } else if (item.type === 'audio' && item.duration) {
-          totalAudioDuration += item.duration;
-        }
-      }
-
-      for (const file of Array.from(input.files)) {
-        if (file.type.startsWith('video/')) {
-          const duration = await getMediaDuration(file);
-          totalVideoDuration += duration;
-        } else if (file.type.startsWith('audio/')) {
-          const duration = await getMediaDuration(file);
-          totalAudioDuration += duration;
-        }
-      }
-
-      const maxTotalVideoDuration = 30;
-      const maxTotalAudioDuration = isUnlimited ? 15 : 30;
-
-      if (totalVideoDuration > maxTotalVideoDuration) {
-        toast(t('home.error.videoDurationLimit', { max: maxTotalVideoDuration }));
-        input.value = '';
-        return;
-      }
-
-      if (totalAudioDuration > maxTotalAudioDuration) {
-        toast(t('home.error.audioTotalDurationLimit'));
-        input.value = '';
-        return;
-      }
-    }
 
     // Check total count before uploading new images
     // Get current mode based on content type
@@ -4422,6 +4404,76 @@ const handleFileChange = async (event: Event) => {
       }
     }
 
+    // Check individual video/audio duration for video multimodal mode
+    if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
+      const isUnlimited = currentVideoMode.value === 'unlimited';
+      for (const file of Array.from(input.files)) {
+        if (file.type.startsWith('video/')) {
+          const duration = await getMediaDuration(file);
+          const minDuration = isUnlimited ? 1 : 2;
+          const maxDuration = isUnlimited ? 15 : 30;
+          if (duration < minDuration || duration > maxDuration) {
+            toast(t('home.error.videoUploadedDuration', { min: minDuration, max: maxDuration }));
+            input.value = '';
+            return;
+          }
+        } else if (file.type.startsWith('audio/')) {
+          const duration = await getMediaDuration(file);
+          const audioMinDuration = isUnlimited ? 1 : 2;
+          const audioMaxDuration = isUnlimited ? 15 : 30;
+          if (duration < audioMinDuration || duration > audioMaxDuration) {
+            toast(t('home.error.audioUploadedDuration', { min: audioMinDuration, max: audioMaxDuration }));
+            input.value = '';
+            return;
+          }
+        }
+      }
+    }
+
+    // Check video/audio total duration limit for video multimodal mode
+    if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
+      const isUnlimited = currentVideoMode.value === 'unlimited';
+      let totalVideoDuration = 0;
+      let totalAudioDuration = 0;
+
+      if ((selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && uploadedVideoDuration.value > 0) {
+        totalVideoDuration += uploadedVideoDuration.value;
+      }
+
+      for (const item of combinedItemsVideo.value) {
+        if (item.type === 'video' && item.duration) {
+          totalVideoDuration += item.duration;
+        } else if (item.type === 'audio' && item.duration) {
+          totalAudioDuration += item.duration;
+        }
+      }
+
+      for (const file of Array.from(input.files)) {
+        if (file.type.startsWith('video/')) {
+          const duration = await getMediaDuration(file);
+          totalVideoDuration += duration;
+        } else if (file.type.startsWith('audio/')) {
+          const duration = await getMediaDuration(file);
+          totalAudioDuration += duration;
+        }
+      }
+
+      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
+      const maxTotalAudioDuration = isUnlimited ? 15 : 30;
+
+      if (totalVideoDuration > maxTotalVideoDuration) {
+        toast(t('home.error.videoDurationLimit', { max: maxTotalVideoDuration }));
+        input.value = '';
+        return;
+      }
+
+      if (totalAudioDuration > maxTotalAudioDuration) {
+        toast(t('home.error.audioTotalDurationLimit', { max: maxTotalAudioDuration }));
+        input.value = '';
+        return;
+      }
+    }
+
     isUploading.value = true;
 
     try {
@@ -4449,22 +4501,18 @@ const handleFileChange = async (event: Event) => {
             if (!validVideoDimensions) {
               return;
             }
-            // Check video duration for multimodal mode
-            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+            // Check video duration for video reference modes
+            if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
               const videoDuration = await getMediaDuration(file);
-              const minDuration = 2;
+              const minDuration = currentMode === 'unlimited' ? 1 : 2;
               const maxDuration = currentMode === 'unlimited' ? 15 : 30;
-              if (videoDuration < minDuration) {
-                toast(t('home.error.videoDurationTooShort', { min: minDuration }));
-                return;
-              }
-              if (videoDuration > maxDuration) {
-                toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
+              if (videoDuration < minDuration || videoDuration > maxDuration) {
+                toast(t('home.error.videoUploadedDuration', { min: minDuration, max: maxDuration }));
                 return;
               }
             }
-            // Check video count limit for multimodal mode
-            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+            // Check video count limit for video reference modes
+            if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
               const existingVideos = uploadedVideosVideo.value.length;
               const newVideos = files.filter(f => f.type.startsWith('video/')).length;
               if (existingVideos + newVideos > (currentMode === 'unlimited' ? 5 : 10)) {
@@ -4488,15 +4536,11 @@ const handleFileChange = async (event: Event) => {
             const isUnlimitedVideo = contentType.value === 'video' && currentMode === 'unlimited';
             const audioMinDuration = isUnlimitedVideo ? 1 : 2;
             const audioMaxDuration = isUnlimitedVideo ? 15 : 30;
-            if (audioDuration < audioMinDuration) {
-              toast(t('home.error.audioDurationTooShort', { min: audioMinDuration }));
+            if (audioDuration < audioMinDuration || audioDuration > audioMaxDuration) {
+              toast(t('home.error.audioUploadedDuration', { min: audioMinDuration, max: audioMaxDuration }));
               return;
             }
-            if (audioDuration > audioMaxDuration) {
-              toast(t('home.error.audioDurationTooLong', { max: audioMaxDuration }));
-              return;
-            }
-            if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+            if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
               const maxAudioCount = currentMode === 'unlimited' ? 5 : 10;
               const existingAudios = uploadedAudiosVideo.value.length;
               const newAudios = files.filter(f => f.type.startsWith('audio/')).length;
@@ -4536,11 +4580,11 @@ const handleFileChange = async (event: Event) => {
           const newItem = fileType === 'video' ? {
             id: Date.now() + index.toString(),
             name: file.name,
-            image: coverUrl,           // 视频类型：image存封面
-            videoUrl: uploadedUrl,     // 视频地址单独存
+            image: coverUrl,
+            url: uploadedUrl,
             type: fileType,
-            cover: coverUrl,           // 保持cover字段兼容
-            duration: mediaDuration    // 保存视频时长
+            cover: coverUrl,
+            duration: mediaDuration
           } : fileType === 'audio' ? {
             id: Date.now() + index.toString(),
             name: file.name,
@@ -5005,9 +5049,12 @@ const handleInput = (event: Event) => {
   brs.forEach(br => {
     const prev = br.previousSibling;
     const next = br.nextSibling;
-    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && (next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag'));
-    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && (prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag'));
-    if (isBetweenTextAndTag || isBetweenTagAndText) {
+    const isBeforeTag = (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('character-tag-input') || (next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
+    const isAfterTag = (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('character-tag-input') || (prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
+    const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
+    const isLeadingBr = !prev && isBeforeTag;
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
       br.remove();
     }
   });
@@ -5056,7 +5103,7 @@ const handleInput = (event: Event) => {
 
   const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
   const uploadedVideoItem = isVideoExtendOrModify && uploadedVideo.value
-    ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideoCover.value || uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
+    ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
     : [];
   const dropdownSourceItems = [...uploadedVideoItem, ...currentCombinedItems.value];
 
@@ -5273,7 +5320,7 @@ const handleInputClick = () => {
 
     const isVideoExtendOrModify2 = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
     const uploadedVideoItem2 = isVideoExtendOrModify2 && uploadedVideo.value
-      ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideoCover.value || uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
+      ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
       : [];
     const dropdownSourceItems2 = [...uploadedVideoItem2, ...currentCombinedItems.value];
 

@@ -197,7 +197,10 @@
                           <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                         </div>
                       </template>
-                      <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                      <div v-else-if="item.type === 'audio'" class="audio-thumbnail-item" @click="playAudio(item)">
+                        <img src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                      </div>
                       <img v-else :src="item.image || item.url" alt="preview" class="thumbnail-image" @click="openImageViewer(item.image || item.url)" />
                       <span class="thumbnail-title">{{ item.type === 'audio' ? t('recordList.audio') : item.type === 'video' ? t('recordList.video') : t('recordList.image') }}{{ item.id === 'uploaded-video' ? 1 : item.type === 'video' ? record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 2 : record.user_selected.others.list.filter((i: any) => i.type === item.type).indexOf(item) + 1 }}</span>
                     </div>
@@ -218,7 +221,10 @@
                           <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                         </div>
                       </template>
-                      <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                      <div v-else-if="item.type === 'audio'" class="audio-thumbnail-item" @click="playAudio(item)">
+                        <img src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                      </div>
                       <img v-else :src="item.image || item.url" alt="preview" class="thumbnail-image" @click="openImageViewer(item.image || item.url)" />
                       <span class="thumbnail-title">{{ item.type === 'audio' ? t('recordList.audio') : item.type === 'video' ? t('recordList.video') : t('recordList.image') }}{{ item.id === 'uploaded-video' ? 1 : item.type === 'video' ? record.user_selected.others.list.filter((i: any) => i.type === item.type && i.id !== 'uploaded-video').indexOf(item) + 2 : record.user_selected.others.list.filter((i: any) => i.type === item.type).indexOf(item) + 1 }}</span>
                     </div>
@@ -239,7 +245,10 @@
                           <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                         </div>
                       </template>
-                      <img v-else-if="item.type === 'audio'" src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                      <div v-else-if="item.type === 'audio'" class="audio-thumbnail-item" @click="playAudio(item)">
+                        <img src="@/assets/images/home/audio.png" alt="audio" class="thumbnail-image audio-thumbnail" />
+                        <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                      </div>
                       <img v-else :src="item.image || item.url" alt="preview" class="thumbnail-image" @click="openImageViewer(item.image || item.url)" />
                       <span class="thumbnail-title">{{ item.type === 'audio' ? t('recordList.audio') : item.type === 'video' ? t('recordList.video') : t('recordList.image') }}{{ record.user_selected.others.list.slice(0, imgIndex).filter((i: any) => i.type === item.type).length + 1 }}</span>
                     </div>
@@ -511,10 +520,13 @@
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
                   </div>
                   <img v-else-if="ref.type == 'image'" :src="ref.image" class="uploaded-image" @click="openImageViewer(ref.image)" />
-                  <img v-else-if="ref.type == 'audio'" src="@/assets/images/home/audio.png" class="uploaded-image audio-icon" />
+                  <div v-else-if="ref.type == 'audio'" class="audio-thumbnail-wrapper" @click="playAudio(ref)">
+                    <img src="@/assets/images/home/audio.png" class="uploaded-image audio-icon" />
+                    <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
+                  </div>
                 </div>
                 <span class="tooltip-name">{{ ref.name }}</span>
-                <span class="image-name" @click="ref.type == 'video' ? playUploadedVideo(ref) : ref.type == 'image' ? openImageViewer(ref.image) : undefined">
+                <span class="image-name" @click="ref.type == 'video' ? playUploadedVideo(ref) : ref.type == 'audio' ? playAudio(ref) : ref.type == 'image' ? openImageViewer(ref.image) : undefined">
                   {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}
                 </span>
                 <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideoRef(ref.id)" />
@@ -887,7 +899,7 @@
     <!-- Cover Zoom Modal -->
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
       <div class="cover-zoom-content" @click.stop>
-        <img class="close-zoom-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeCoverZoomModal" />
+        <button class="close-btn" @click="closeCoverZoomModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <img :src="zoomedCoverImage + '?imageMogr2/format/webp/quality/60'" alt="" class="zoomed-cover-image" />
       </div>
     </div>
@@ -895,8 +907,19 @@
     <!-- Video Player Modal -->
     <div v-if="showVideoModal" class="video-modal">
       <div class="video-modal-content" :class="{ 'portrait': playingVideoRatio == '9:16' }">
-        <img class="close-video-btn" src="@/assets/images/novel/close.png" alt="Close" @click="closeVideoModal" />
+        <button class="close-btn" @click="closeVideoModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline :controlsList="playingVideoIsUnlimited ? 'nodownload' : undefined"></video>
+      </div>
+    </div>
+
+    <!-- Audio Player Modal -->
+    <div v-if="showAudioModal" class="video-modal audio-modal">
+      <div class="audio-modal-content">
+        <div class="audio-modal-inner">
+          <button class="close-btn" @click="closeAudioModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+          <img src="@/assets/images/home/audio.png" alt="audio" class="audio-modal-icon" />
+          <audio :src="playingAudioUrl" controls autoplay class="audio-player"></audio>
+        </div>
       </div>
     </div>
 
@@ -968,6 +991,8 @@ const showVideoModal = ref(false);
 const playingVideoUrl = ref('');
 const playingVideoRatio = ref('16:9');
 const playingVideoIsUnlimited = ref(false);
+const showAudioModal = ref(false);
+const playingAudioUrl = ref('');
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
@@ -1366,9 +1391,12 @@ const handlePhotoInput = (event: Event) => {
   brs.forEach(br => {
     const prev = br.previousSibling;
     const next = br.nextSibling;
-    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
-    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
-    if (isBetweenTextAndTag || isBetweenTagAndText) {
+    const isBeforeTag = (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
+    const isAfterTag = (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
+    const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
+    const isLeadingBr = !prev && isBeforeTag;
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
       br.remove();
     }
   });
@@ -2243,7 +2271,7 @@ const removePhotoImage = (id: string) => {
   }
 };
 
-const triggerVideoUpload = () => {
+ const triggerVideoUpload = () => {
   if ((selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && !uploadedVideo.value) {
     toast(t('home.error.videoModifyRequired'));
     return;
@@ -2489,53 +2517,6 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxVideoSizeBytes = isUnlimited ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
-    // Check video and audio total duration limits (15 seconds each) for video multimodal mode
-    if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
-      let totalVideoDuration = 0;
-      let totalAudioDuration = 0;
-
-      if ((selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') && uploadedVideoDuration.value > 0) {
-        totalVideoDuration += uploadedVideoDuration.value;
-      }
-
-      // Add duration of existing uploaded videos
-      for (const item of uploadedVideoRefs.value) {
-        if (item.type === 'video' && item.duration) {
-          totalVideoDuration += item.duration;
-        } else if (item.type === 'audio' && item.duration) {
-          totalAudioDuration += item.duration;
-        }
-      }
-
-      // Add duration of new files
-      for (const file of files) {
-        if (file.type.startsWith('video/')) {
-          const duration = await getMediaDuration(file);
-          totalVideoDuration += duration;
-        } else if (file.type.startsWith('audio/')) {
-          const duration = await getMediaDuration(file);
-          totalAudioDuration += duration;
-        }
-      }
-
-      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
-      const maxTotalAudioDuration = isUnlimited ? 15 : 30;
-
-      // Check video duration limit
-      if (totalVideoDuration > maxTotalVideoDuration) {
-        toast(t('home.error.videoDurationLimit', { max: maxTotalVideoDuration }));
-        input.value = '';
-        return;
-      }
-
-      // Check audio duration limit
-      if (totalAudioDuration > maxTotalAudioDuration) {
-        toast(t('home.error.audioTotalDurationLimit'));
-        input.value = '';
-        return;
-      }
-    }
-
     // Check file size limits for multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
       const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -2553,23 +2534,13 @@ const handleVideoRefUpload = async (event: Event) => {
           }
           const videoDuration = await getMediaDuration(file);
           const minVideoDuration = isUnlimited ? 1 : 2;
-          const maxVideoDuration = isUnlimited ? 30 : 38;
-          if (videoDuration < minVideoDuration) {
-            toast(t('home.error.videoDurationTooShort', { min: minVideoDuration }));
-            input.value = '';
-            return;
-          }
-          if (videoDuration > maxVideoDuration) {
-            toast(t('home.error.videoDurationTooLong', { max: maxVideoDuration }));
+          const maxVideoDuration = isUnlimited ? 15 : 30;
+          if (videoDuration < minVideoDuration || videoDuration > maxVideoDuration) {
+            toast(t('home.error.videoUploadedDuration', { min: minVideoDuration, max: maxVideoDuration }));
             input.value = '';
             return;
           }
         } else if (file.type.startsWith('audio/')) {
-          if (isUnlimited) {
-            toast(t('home.error.unlimitedNoAudio'));
-            input.value = '';
-            return;
-          }
           if (file.size > maxAudioSizeBytes) {
             toast(t('home.error.maxAudioSize', { max: 15 }));
             input.value = '';
@@ -2578,13 +2549,8 @@ const handleVideoRefUpload = async (event: Event) => {
           const duration = await getMediaDuration(file);
           const audioMinDuration = isUnlimited ? 1 : 2;
           const audioMaxDuration = isUnlimited ? 15 : 30;
-          if (duration < audioMinDuration) {
-            toast(t('home.error.audioDurationTooShort', { min: audioMinDuration }));
-            input.value = '';
-            return;
-          }
-          if (duration > audioMaxDuration) {
-            toast(t('home.error.audioDurationTooLong', { max: audioMaxDuration }));
+          if (duration < audioMinDuration || duration > audioMaxDuration) {
+            toast(t('home.error.audioUploadedDuration', { min: audioMinDuration, max: audioMaxDuration }));
             input.value = '';
             return;
           }
@@ -2650,6 +2616,49 @@ const handleVideoRefUpload = async (event: Event) => {
       }
     }
 
+    // Check video/audio total duration limit for video multimodal mode
+    if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
+      let totalVideoDuration = 0;
+      let totalAudioDuration = 0;
+
+      if ((selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') && uploadedVideoDuration.value > 0) {
+        totalVideoDuration += uploadedVideoDuration.value;
+      }
+
+      for (const item of uploadedVideoRefs.value) {
+        if (item.type === 'video' && item.duration) {
+          totalVideoDuration += item.duration;
+        } else if (item.type === 'audio' && item.duration) {
+          totalAudioDuration += item.duration;
+        }
+      }
+
+      for (const file of files) {
+        if (file.type.startsWith('video/')) {
+          const duration = await getMediaDuration(file);
+          totalVideoDuration += duration;
+        } else if (file.type.startsWith('audio/')) {
+          const duration = await getMediaDuration(file);
+          totalAudioDuration += duration;
+        }
+      }
+
+      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
+      const maxTotalAudioDuration = isUnlimited ? 15 : 30;
+
+      if (totalVideoDuration > maxTotalVideoDuration) {
+        toast(t('home.error.videoDurationLimit', { max: maxTotalVideoDuration }));
+        input.value = '';
+        return;
+      }
+
+      if (totalAudioDuration > maxTotalAudioDuration) {
+        toast(t('home.error.audioTotalDurationLimit', { max: maxTotalAudioDuration }));
+        input.value = '';
+        return;
+      }
+    }
+
     isUploading.value = true;
 
     try {
@@ -2693,7 +2702,15 @@ const handleVideoRefUpload = async (event: Event) => {
           : await uploadImage(file, 'normal');
 
         if (uploadedUrl) {
-          const newItem = {
+          const newItem = fileType === 'video' ? {
+            id: Date.now() + i.toString(),
+            name: file.name,
+            image: coverUrl,
+            url: uploadedUrl,
+            type: fileType,
+            cover: coverUrl,
+            duration: duration
+          } : {
             id: Date.now() + i.toString(),
             name: file.name,
             image: uploadedUrl,
@@ -2718,7 +2735,7 @@ const handleVideoRefUpload = async (event: Event) => {
 };
 
 const insertVideoRefTag = (item: any, index: number) => {
-  if (selectedVideoMultimodal.value !== 'multimodal') {
+  if (selectedVideoMultimodal.value !== 'multimodal' && selectedVideoMultimodal.value !== 'videoExtend' && selectedVideoMultimodal.value !== 'videoModify') {
     return;
   }
 
@@ -2806,9 +2823,12 @@ const handleVideoInput = () => {
   brs.forEach(br => {
     const prev = br.previousSibling;
     const next = br.nextSibling;
-    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
-    const isBetweenTagAndText = (next && next.nodeType === 3) && (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
-    if (isBetweenTextAndTag || isBetweenTagAndText) {
+    const isBeforeTag = (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag') || (next as HTMLElement).classList.contains('video-tag') || (next as HTMLElement).classList.contains('audio-tag')));
+    const isAfterTag = (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag') || (prev as HTMLElement).classList.contains('video-tag') || (prev as HTMLElement).classList.contains('audio-tag')));
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
+    const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
+    const isLeadingBr = !prev && isBeforeTag;
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
       br.remove();
     }
   });
@@ -2848,7 +2868,7 @@ const handleVideoInput = () => {
 
   const isVideoExtendOrModify = selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify';
   const uploadedVideoItem = isVideoExtendOrModify && uploadedVideo.value
-    ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideoCover.value || uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
+    ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }]
     : [];
   const dropdownSourceItems = [...uploadedVideoItem, ...uploadedVideoRefs.value];
 
@@ -3431,14 +3451,6 @@ const selectVideoMultimodal = (value: string) => {
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
   selectedVideoDuration.value = '30';
-
-  if (value === 'videoExtend' && uploadedVideoRefs.value.length > 0) {
-    const videoItem = uploadedVideoRefs.value.find((item: any) => item.type === 'video');
-    if (videoItem) {
-      uploadedVideo.value = videoItem.url;
-      uploadedVideoCover.value = videoItem.cover || '';
-    }
-  }
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -3696,7 +3708,7 @@ const handleVideoUpload = async (event: Event) => {
 
     // 视频续写模式下，验证时长在2-5秒之间
     if (selectedVideoMultimodal.value == 'videoExtend') {
-      if (duration < 2 || duration > 5) {
+      if (duration < 2 || duration > 30) {
         toast(t('home.error.videoExtendDurationLimit'));
         target.value = '';
         return;
@@ -3770,14 +3782,6 @@ const handleVideoUpload = async (event: Event) => {
             selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
           }
-
-          uploadedVideoRefs.value.push({
-            id: Date.now().toString(),
-            name: file.name,
-            url: uploadedUrl,
-            type: 'video',
-            cover: coverUrl
-          });
         }
       }
     } catch (error) {
@@ -3792,9 +3796,6 @@ const removeVideo = () => {
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
   uploadedVideoDuration.value = 0;
-  if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-    uploadedVideoRefs.value = uploadedVideoRefs.value.filter((item: any) => item.type !== 'video');
-  }
   if (videoInputRef.value) {
     videoInputRef.value.value = '';
   }
@@ -4483,6 +4484,14 @@ const generateVideo = async () => {
     return;
   }
 
+  if (selectedVideoMultimodal.value === 'videoExtend') {
+    if (!uploadedVideo.value) {
+      toast(t('home.error.videoModifyRequired'));
+      isVideoGenerating.value = false;
+      return;
+    }
+  }
+
   if (checkVideoUnreferencedFiles()) {
     isVideoGenerating.value = false;
     pendingGenerateCallback.value = () => { isVideoGenerating.value = true; doGenerateVideo(); };
@@ -4537,10 +4546,7 @@ const doGenerateVideo = async () => {
         referenceImages.push({ type: "last_frame", url: endFrameImage.value });
       }
     } else if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      if (uploadedVideoCover.value) {
-        referenceImages.push(uploadedVideoCover.value);
-      }
-      referenceImages = referenceImages.concat(uploadedVideoRefs.value.filter(ref => ref.type === 'image').map(ref => ref.image));
+      referenceImages = uploadedVideoRefs.value.filter(ref => ref.type === 'image').map(ref => ref.image);
     } else {
       referenceImages = uploadedVideoRefs.value
         .filter(ref => ref.type === 'image')
@@ -4554,15 +4560,15 @@ const doGenerateVideo = async () => {
         referenceVideos = [uploadedVideo.value];
         referenceVideosForDisplay = [{ url: uploadedVideo.value, cover: uploadedVideoCover.value || '' }];
       }
-      referenceVideos = referenceVideos.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ref.image));
-      referenceVideosForDisplay = referenceVideosForDisplay.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ({ url: ref.image, cover: ref.cover || '' })));
+      referenceVideos = referenceVideos.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ref.url || ref.videoUrl || ref.image));
+      referenceVideosForDisplay = referenceVideosForDisplay.concat(uploadedVideoRefs.value.filter((ref: any) => ref.type === 'video').map((ref: any) => ({ url: ref.url || ref.videoUrl || ref.image, cover: ref.cover || '' })));
     } else {
       referenceVideos = uploadedVideoRefs.value
         .filter((ref: any) => ref.type === 'video')
-        .map((ref: any) => ref.image);
+        .map((ref: any) => ref.url || ref.videoUrl || ref.image);
       referenceVideosForDisplay = uploadedVideoRefs.value
         .filter((ref: any) => ref.type === 'video')
-        .map((ref: any) => ({ url: ref.image, cover: ref.cover || '' }));
+        .map((ref: any) => ({ url: ref.url || ref.videoUrl || ref.image, cover: ref.cover || '' }));
     }
     const referenceAudios = uploadedVideoRefs.value
       .filter((ref: any) => ref.type === 'audio')
@@ -5053,6 +5059,18 @@ const closeVideoModal = () => {
   playingVideoUrl.value = '';
 };
 
+const playAudio = (item: any) => {
+  if (item.image || item.url) {
+    playingAudioUrl.value = item.image || item.url;
+    showAudioModal.value = true;
+  }
+};
+
+const closeAudioModal = () => {
+  showAudioModal.value = false;
+  playingAudioUrl.value = '';
+};
+
 const getVideoCoverFromRefImages = (record: any) => {
   const refImages = record.user_selected?.reference_images;
   if (!refImages || refImages.length === 0) return '';
@@ -5087,11 +5105,11 @@ const playVideo = (record: any) => {
 };
 
 const playVideoItem = (item: any) => {
-  if (item.type === 'video' && item.image) {
-    playingVideoUrl.value = item.image;
+  if (item.type === 'video' && (item.url || item.videoUrl || item.image)) {
+    playingVideoUrl.value = item.url || item.videoUrl || item.image;
     showVideoModal.value = true;
   } else {
-    console.log('[playVideoItem] not a video or no image:', item.type, item.image);
+    console.log('[playVideoItem] not a video or no url:', item.type, item.url, item.image);
   }
 };
 
@@ -5120,8 +5138,8 @@ const shareVideo = (record: any) => {
 };
 
 const playUploadedVideo = (ref: any) => {
-  if (ref.type === 'video' && (ref.videoUrl || ref.image)) {
-    playingVideoUrl.value = ref.videoUrl || ref.image;
+  if (ref.type === 'video' && (ref.url || ref.videoUrl || ref.image)) {
+    playingVideoUrl.value = ref.url || ref.videoUrl || ref.image;
     showVideoModal.value = true;
   }
 };
@@ -5198,13 +5216,26 @@ const regenerateRecord = (record: any) => {
 
     const list = others.list || [];
 
-    uploadedVideoRefs.value = list.map((item: any, index: number) => ({
-      id: item.id || Date.now() + index.toString(),
-      name: item.name || `file${index + 1}`,
-      image: item.image || item.url || '',
-      type: item.type || 'image',
-      cover: item.cover || ''
-    }));
+    const refVideoList = (userSelected.reference_videos || []);
+    const videoIndices: number[] = [];
+    list.forEach((item: any, idx: number) => { if (item.type === 'video') videoIndices.push(idx); });
+    uploadedVideoRefs.value = list.map((item: any, index: number) => {
+      let url = '';
+      if (item.type === 'video') {
+        const videoIdx = videoIndices.indexOf(index);
+        const refVideo = refVideoList[videoIdx];
+        url = item.url || (refVideo ? (typeof refVideo === 'string' ? refVideo : refVideo.url) : '') || item.image;
+      }
+      return {
+        id: item.id || Date.now() + index.toString(),
+        name: item.name || `file${index + 1}`,
+        image: item.image || item.url || '',
+        url: url,
+        type: item.type || 'image',
+        cover: item.cover || '',
+        duration: item.duration || 0
+      };
+    });
 
     if (userSelected.ratio) {
       selectedVideoRatio.value = userSelected.ratio;
@@ -5259,13 +5290,30 @@ const regenerateRecord = (record: any) => {
         uploadedVideoCover.value = coverStr;
       }
 
-      uploadedVideoRefs.value = list.filter((item: any) => item.id !== 'uploaded-video').map((item: any, index: number) => ({
-        id: item.id || Date.now() + index.toString(),
-        name: item.name || `file${index + 1}`,
-        image: item.image || item.url || '',
-        type: item.type || 'image',
-        cover: item.cover || ''
-      }));
+      const filteredList = list.filter((item: any) => item.id !== 'uploaded-video');
+      const refVideoList = (userSelected.reference_videos || []).filter((v: any) => {
+        const vUrl = typeof v === 'string' ? v : v.url;
+        return vUrl !== uploadedVideo.value;
+      });
+      const videoIndices: number[] = [];
+      filteredList.forEach((item: any, idx: number) => { if (item.type === 'video') videoIndices.push(idx); });
+      uploadedVideoRefs.value = filteredList.map((item: any, index: number) => {
+        let url = '';
+        if (item.type === 'video') {
+          const videoIdx = videoIndices.indexOf(index);
+          const refVideo = refVideoList[videoIdx];
+          url = item.url || (refVideo ? (typeof refVideo === 'string' ? refVideo : refVideo.url) : '') || item.image;
+        }
+        return {
+          id: item.id || Date.now() + index.toString(),
+          name: item.name || `file${index + 1}`,
+          image: item.image || item.url || '',
+          url: url,
+          type: item.type || 'image',
+          cover: item.cover || '',
+          duration: item.duration || 0
+        };
+      });
 
       setTimeout(() => {
         if (videoEditableInputRef.value) {
@@ -5300,13 +5348,30 @@ const regenerateRecord = (record: any) => {
         uploadedVideoCover.value = extCoverStr;
       }
 
-      uploadedVideoRefs.value = list.filter((item: any) => item.id !== 'uploaded-video').map((item: any, index: number) => ({
-        id: item.id || Date.now() + index.toString(),
-        name: item.name || `file${index + 1}`,
-        image: item.image || item.url || '',
-        type: item.type || 'image',
-        cover: item.cover || ''
-      }));
+      const extFilteredList = list.filter((item: any) => item.id !== 'uploaded-video');
+      const extRefVideoList = (userSelected.reference_videos || []).filter((v: any) => {
+        const vUrl = typeof v === 'string' ? v : v.url;
+        return vUrl !== uploadedVideo.value;
+      });
+      const extVideoIndices: number[] = [];
+      extFilteredList.forEach((item: any, idx: number) => { if (item.type === 'video') extVideoIndices.push(idx); });
+      uploadedVideoRefs.value = extFilteredList.map((item: any, index: number) => {
+        let url = '';
+        if (item.type === 'video') {
+          const videoIdx = extVideoIndices.indexOf(index);
+          const refVideo = extRefVideoList[videoIdx];
+          url = item.url || (refVideo ? (typeof refVideo === 'string' ? refVideo : refVideo.url) : '') || item.image;
+        }
+        return {
+          id: item.id || Date.now() + index.toString(),
+          name: item.name || `file${index + 1}`,
+          image: item.image || item.url || '',
+          url: url,
+          type: item.type || 'image',
+          cover: item.cover || '',
+          duration: item.duration || 0
+        };
+      });
 
       setTimeout(() => {
         if (videoEditableInputRef.value) {
@@ -5659,11 +5724,11 @@ const switchVideoMode = (mode: string, index: number) => {
       currentVideoMode.value = 'unlimited';
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
-        videoInput.value = '';
-        uploadedVideo.value = '';
-        uploadedVideoCover.value = '';
-        uploadedVideoRefs.value = [];
       }
+      videoInput.value = '';
+      uploadedVideo.value = '';
+      uploadedVideoCover.value = '';
+      uploadedVideoRefs.value = [];
     } else {
       pendingModeType.value = 'video';
       showUnlimitedModal.value = true;
@@ -5672,11 +5737,11 @@ const switchVideoMode = (mode: string, index: number) => {
     currentVideoMode.value = 'normal';
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
-      videoInput.value = '';
-      uploadedVideo.value = '';
-      uploadedVideoCover.value = '';
-      uploadedVideoRefs.value = [];
     }
+    videoInput.value = '';
+    uploadedVideo.value = '';
+    uploadedVideoCover.value = '';
+    uploadedVideoRefs.value = [];
     if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
   }
 };

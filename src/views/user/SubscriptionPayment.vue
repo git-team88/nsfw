@@ -150,20 +150,26 @@ const subscriptionDescription = computed(() => {
 
 const subscriptionPrice = computed(() => {
   const plans = subscriptionPlans.value;
-  if (Array.isArray(plans)) {
-    return plans.length > 0 ? plans[0].price : '';
-  } else {
-    return plans.price || '';
-  }
+  const raw = Array.isArray(plans) ? (plans.length > 0 ? plans[0].price : '') : (plans.price || '');
+  if (!raw) return '';
+  const num = parseFloat(raw);
+  if (isNaN(num)) return raw;
+  const trimmed = parseFloat(num.toFixed(8)).toString();
+  const parts = trimmed.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
 });
 
 const subscriptionWeb3Price = computed(() => {
   const plans = subscriptionPlans.value;
-  if (Array.isArray(plans)) {
-    return plans.length > 0 ? plans[0].web3?.price || '' : '';
-  } else {
-    return plans.web3?.price || '';
-  }
+  const raw = Array.isArray(plans) ? (plans.length > 0 ? plans[0].web3?.price || '' : '') : (plans.web3?.price || '');
+  if (!raw) return '';
+  const num = parseFloat(raw);
+  if (isNaN(num)) return raw;
+  const trimmed = parseFloat(num.toFixed(8)).toString();
+  const parts = trimmed.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
 });
 
 function checkLogin() {
