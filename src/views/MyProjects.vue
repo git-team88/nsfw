@@ -190,7 +190,7 @@
               <!-- Video Tab - 视频类型 -->
               <div v-else-if="activeMainTab == 'video'">
                 <div class="card-cover video-cover">
-                  <img :src="project.result_async?.final_videos[0].video_cover_url ? processImageUrl(project.result_async.final_videos[0].video_cover_url) : pic" alt="" class="cover-img" />
+                  <img :src="project.result_async?.final_videos?.[0]?.video_cover_url ? processImageUrl(project.result_async.final_videos[0].video_cover_url) : (project.cover ? processImageUrl(project.cover) : pic)" alt="" class="cover-img" />
 
                   <div class="video-edit-btn" @click="goToGenerate(project)">{{ t('myProjects.buttons.edit') }}</div>
                 </div>
@@ -579,10 +579,19 @@ async function loadProjects(reset = false) {
           // Save story_mode for display logic (nsfw -> single image, otherwise 4-grid)
           processedProject.story_mode = us?.story_mode ?? ra?.user_selected?.story_mode ?? project.story_mode;
         } else if (activeMainTab.value == 'video') {
+          // result_async may be an object or a JSON string
+          let ra = project.result_async;
+          if (typeof ra === 'string') {
+            try { ra = JSON.parse(ra); } catch (e) { ra = null; }
+          }
+          processedProject.result_async = ra;
           // Extract video info for video projects
-          if (project.result_async?.final_video_output) {
-            processedProject.videoUrl = project.result_async.final_video_output.video_url;
-            processedProject.cover = project.result_async.final_video_output.video_cover_url || project.cover;
+          if (ra?.final_video_output) {
+            processedProject.videoUrl = ra.final_video_output.video_url;
+            processedProject.cover = ra.final_video_output.video_cover_url || project.cover;
+          } else if (ra?.final_videos?.[0]) {
+            processedProject.videoUrl = ra.final_videos[0].video_url;
+            processedProject.cover = ra.final_videos[0].video_cover_url || project.cover;
           }
         }
 
