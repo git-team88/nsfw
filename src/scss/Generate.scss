@@ -438,6 +438,7 @@ $pinkopacity: rgba(255,77,142,0.12);
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 10px;
 
   .photo-more{
     position: relative;
@@ -789,6 +790,7 @@ $pinkopacity: rgba(255,77,142,0.12);
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-top: 10px;
 
   .video-more {
     position: relative;
@@ -1221,9 +1223,26 @@ $pinkopacity: rgba(255,77,142,0.12);
         display: flex;
         align-items: center;
         gap: 16px;
+        overflow: hidden;
 
         .start-end-frames-input, .video-extend-input {
           flex: 1;
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .uploaded-images {
+          flex-wrap: nowrap;
+          margin-bottom: 0;
+          flex-shrink: 0;
+        }
+
+        .video-extend-input {
+          .input-textarea {
+            height: 28px;
+            min-height: 28px;
+            overflow: hidden;
+          }
         }
       }
     }
@@ -2429,7 +2448,6 @@ $pinkopacity: rgba(255,77,142,0.12);
           width: auto;
           height: calc(100% - 4px);
           object-fit: contain;
-          border: 2px solid #161122;
           border-radius: 8px;
         }
       }
