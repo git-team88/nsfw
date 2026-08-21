@@ -274,7 +274,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
