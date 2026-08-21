@@ -1841,7 +1841,7 @@ async function confirmReplacePin() {
     pendingPinCollection.value = null;
     selectedReplaceId.value = null;
 
-    await fetchCollections();
+    await fetchCollections(true);
     showToast(t("userHome.collection.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -2935,6 +2935,7 @@ async function unpinCollection(collection: any) {
           position: relative;
           width: 100%;
           margin-bottom: 12px;
+          aspect-ratio: 3/4;
           overflow: hidden;
           border-radius: 8px;
           transition: all 0.2s;
