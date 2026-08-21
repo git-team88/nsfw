@@ -1831,6 +1831,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       videoModifyDurationLimit: "アップロードした動画は4-30秒の範囲である必要があります",
       videoModifyRequired: "参照動画をアップロードしてください",
       videoExtendDurationExceed: "生成時間は、拡張する動画の長さより長くする必要があります",
+      videoDurationSumExceed: "生成動画の長さと参考動画の長さの合計は30秒を超えることはできません",
       unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
       unlimitedNoAudio: "無制限モードでは音声のアップロードはサポートされていません",
       maxInputLimit: "最大入力制限{max}文字に達しました"

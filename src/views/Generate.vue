@@ -277,7 +277,7 @@
                     <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
-                    <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
+                    <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
                   </div>
                   <span class="video-time">{{ formatTimestamp(record.createTime) }}</span>
                 </div>
@@ -775,7 +775,7 @@
                     <span class="settings-divider"></span>
                     <span>{{ (selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
                     <span class="settings-divider"></span>
-                    <span>{{ selectedVideoMultimodal == 'videoModify' ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
+                    <span>{{ (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
                     <span class="settings-line"></span>
                     <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
                   </div>
@@ -816,7 +816,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="settings-section" v-if="selectedVideoMultimodal != 'videoModify'">
+                    <div class="settings-section" v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'">
                       <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
                       <div class="duration-slider">
                         <div class="slider-track"></div>
@@ -843,14 +843,16 @@
                           @click.stop
                           class="slider-input"
                         />
-                        <!-- <div class="slider-labels">
-                          <span>{{ currentVideoMode === 'unlimited' ? '4s' : '2s' }}</span>
-                          <span>5s</span>
-                          <span>10s</span>
-                          <span>15s</span>
-                        </div> -->
                        </div>
                      </div>
+                    <div class="settings-section" v-else>
+                      <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
+                      <div class="settings-options">
+                        <div class="dropdown-item active">
+                          {{ t('home.videoSettings.durationAuto') }}
+                        </div>
+                      </div>
+                    </div>
                    </div>
                 </div>
 
@@ -3861,9 +3863,11 @@ const validateDurationAndRestore = () => {
       }
     }
     const newDuration = parseInt(selectedVideoDuration.value);
-    if (totalVideoDuration > 0 && newDuration < totalVideoDuration) {
-      selectedVideoDuration.value = lastValidVideoDuration.value;
-      toast(t('home.error.videoExtendDurationExceed'));
+    const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
+    if (totalVideoDuration > 0 && newDuration > maxDuration) {
+      selectedVideoDuration.value = maxDuration.toString();
+      lastValidVideoDuration.value = maxDuration.toString();
+      toast(t('home.error.videoDurationSumExceed'));
     } else {
       lastValidVideoDuration.value = selectedVideoDuration.value;
     }
@@ -3913,6 +3917,8 @@ const estimatedVideoPower = computed(() => {
   let duration: number;
   if (selectedVideoMultimodal.value === 'videoModify') {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
+  } else if (selectedVideoMultimodal.value === 'videoExtend') {
+    duration = 30;
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
   }
@@ -4703,7 +4709,7 @@ const doGenerateVideo = async () => {
       simple_image_resolution: '1K',
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-      simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };
 
@@ -5423,6 +5429,25 @@ const regenerateRecord = (record: any) => {
       }, 100);
     } else {
       selectedVideoMultimodal.value = 'multimodal';
+
+      // nsfw multimodal 模式回显：如果生成时长 + 上传视频总时长超过 30s，弹回到最大可生成时长
+      if (currentVideoMode.value === 'unlimited') {
+        let totalVideoDuration = 0;
+        for (const item of uploadedVideoRefs.value) {
+          if (item.type === 'video' && item.duration) {
+            totalVideoDuration += item.duration;
+          }
+        }
+        if (totalVideoDuration > 0) {
+          const maxDuration = Math.floor(30 - totalVideoDuration);
+          const currentDuration = parseInt(selectedVideoDuration.value);
+          if (currentDuration > maxDuration && maxDuration > 0) {
+            selectedVideoDuration.value = maxDuration.toString();
+            lastValidVideoDuration.value = maxDuration.toString();
+            toast(t('home.error.videoDurationSumExceed'));
+          }
+        }
+      }
 
       setTimeout(() => {
         if (videoEditableInputRef.value) {

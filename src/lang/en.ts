@@ -2002,6 +2002,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       videoModifyDurationLimit: "Uploaded video should be between 4-30s",
       videoModifyRequired: "Please upload a reference video",
       videoExtendDurationExceed: "Generation duration should be greater than the video length to be extended",
+      videoDurationSumExceed: "The total duration of generated video and reference video cannot exceed 30s",
       unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported",
       unlimitedNoAudio: "Audio upload is not supported in unlimited mode",
       maxInputLimit: "Maximum input limit of {max} characters reached"

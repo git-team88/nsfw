@@ -511,7 +511,7 @@
                           <span class="settings-divider"></span>
                           <span>{{ (selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
                           <span class="settings-divider"></span>
-                          <span>{{ selectedVideoMultimodal == 'videoModify' ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
+                          <span>{{ (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
                           <span class="settings-line"></span>
                           <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
                         </div>
@@ -552,7 +552,7 @@
                               </div>
                             </div>
                           </div>
-                          <div class="settings-section" v-if="selectedVideoMultimodal != 'videoModify'">
+                          <div class="settings-section" v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'">
                             <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
                             <div class="duration-slider">
                               <div class="slider-track"></div>
@@ -2045,9 +2045,11 @@ const validateDurationAndRestore = () => {
       }
     }
     const newDuration = parseInt(selectedVideoDuration.value);
-    if (totalVideoDuration > 0 && newDuration < totalVideoDuration) {
-      selectedVideoDuration.value = lastValidVideoDuration.value;
-      toast(t('home.error.videoExtendDurationExceed'));
+    const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
+    if (totalVideoDuration > 0 && newDuration > maxDuration) {
+      selectedVideoDuration.value = maxDuration.toString();
+      lastValidVideoDuration.value = maxDuration.toString();
+      toast(t('home.error.videoDurationSumExceed'));
     } else {
       lastValidVideoDuration.value = selectedVideoDuration.value;
     }
@@ -2600,6 +2602,8 @@ const estimatedVideoComputingPower = computed(() => {
   let duration: number;
   if (selectedVideoMultimodal.value === 'videoModify') {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
+  } else if (selectedVideoMultimodal.value === 'videoExtend') {
+    duration = 30;
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
   }
@@ -3534,7 +3538,7 @@ const doGenerateVideo = async () => {
           : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: selectedVideoMultimodal.value === 'videoModify' ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };

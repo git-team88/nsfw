@@ -2102,6 +2102,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       videoModifyDurationLimit: "上傳視頻應在4-30s",
       videoModifyRequired: "請上傳參考視頻",
       videoExtendDurationExceed: "生成時長設置應大於待續寫視頻長度",
+      videoDurationSumExceed: "生成視頻時長與參考視頻時長總和不能超過30秒",
       unlimitedModeRestricted: "由於年齡或地區限制，不支持使用無限制模式生成內容",
       unlimitedNoAudio: "無限制模式暫不支持上傳音頻",
       maxInputLimit: "已達最大輸入限制{max}字"
