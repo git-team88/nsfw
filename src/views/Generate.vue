@@ -1311,11 +1311,11 @@ const getInputCharCount = (element: HTMLElement): number => {
 };
 
 const getPhotoMaxInputLimit = (): number => {
-  return 5000;
+  return currentPhotoMode.value === 'unlimited' ? 1000 : 5000;
 };
 
 const getVideoMaxInputLimit = (): number => {
-  return currentVideoMode.value === 'normal' ? 1000 : 5000;
+  return currentVideoMode.value === 'normal' ? 1000 : 20000;
 };
 
 const getPhotoInputContent = () => {
@@ -2292,13 +2292,26 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       const height = video.videoHeight;
       if (width === 0 || height === 0) { resolve(true); return; }
       const ratio = width / height;
-      if (ratio < 0.4 || ratio > 2.5) {
-        toast(t('home.error.videoRatioLimit'));
-        resolve(false); return;
-      }
-      if (width < 300 || width > 6000 || height < 300 || height > 6000) {
-        toast(t('home.error.videoDimensionLimit'));
-        resolve(false); return;
+      if (currentVideoMode.value === 'unlimited') {
+        // 无限制模式：宽高比 1:8~8:1，像素 [240, 4096]
+        if (ratio < 1/8 || ratio > 8) {
+          toast(t('home.error.videoRatioLimit'));
+          resolve(false); return;
+        }
+        if (width < 240 || width > 4096 || height < 240 || height > 4096) {
+          toast(t('home.error.videoDimensionLimit'));
+          resolve(false); return;
+        }
+      } else {
+        // 普通模式：宽高比 [0.4, 2.5]，像素 [300, 6000]
+        if (ratio < 0.4 || ratio > 2.5) {
+          toast(t('home.error.videoRatioLimit'));
+          resolve(false); return;
+        }
+        if (width < 300 || width > 6000 || height < 300 || height > 6000) {
+          toast(t('home.error.videoDimensionLimit'));
+          resolve(false); return;
+        }
       }
       resolve(true);
     };
@@ -2410,12 +2423,23 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
   if (width === 0 || height === 0) return false;
   const ratio = width / height;
   const isPhotoUnlimited = bottomActiveTab.value === 'photo' && currentPhotoMode.value === 'unlimited';
+  const isVideoUnlimited = bottomActiveTab.value === 'video' && currentVideoMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
       toast(t('home.error.imageRatioLimit'));
       return false;
     }
     if (width < 14 || height < 14) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
+  } else if (isVideoUnlimited) {
+    // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
+    if (ratio < 1 / 8 || ratio > 8) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 240 || width > 8000 || height < 240 || height > 8000) {
       toast(t('home.error.imageDimensionLimit'));
       return false;
     }
