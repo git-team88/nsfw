@@ -3350,6 +3350,12 @@ const generateVideo = async () => {
     return;
   }
 
+  if (selectedVideoMultimodal.value === 'videoExtend' && !uploadedVideo.value) {
+    toast(t('home.error.videoModifyRequired'));
+    isGeneratingVideo.value = false;
+    return;
+  }
+
   if ((selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && checkUnreferencedFiles()) {
     isGeneratingVideo.value = false;
     pendingGenerateCallback.value = () => { isGeneratingVideo.value = true; doGenerateVideo(); };

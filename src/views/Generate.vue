@@ -3470,6 +3470,7 @@ const selectVideoMultimodal = (value: string) => {
   endFrameImage.value = '';
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
+  uploadedVideoDuration.value = 0;
   uploadedVideoRefs.value = [];
 
   selectedVideoQuality.value = '1080P';
