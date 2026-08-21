@@ -20,13 +20,13 @@
               >
                 {{ t('aiRecharge.walletTab') }}
               </div>
-              <div
+              <!-- <div
                 class="tab-item"
                 :class="{ active: paymentTab === 'usdt' }"
                 @click="switchPaymentTab('usdt')"
               >
                 {{ t('aiRecharge.usdtTab') }}
-              </div>
+              </div> -->
             </div>
 
             <div class="type-tab-list">

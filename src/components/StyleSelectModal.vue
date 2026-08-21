@@ -386,17 +386,24 @@ onMounted(() => {
       justify-content: center;
       min-width: 136px;
       height: 48px;
-      border: none;
-      border-radius: 8px;
+      border: 2.5px solid #161122;
+      border-radius: 13px;
       font-size: 14px;
       cursor: pointer;
+      box-shadow: 2px 2px 0 #161122;
 
       &.cancel {
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+        background: #FFFFFF;
+        color: #161122;
 
         &:hover {
           color: #FF4D8D;
+          transform: translate(-1px, -1px);
+          box-shadow: 3px 3px 0 #161122;
+        }
+        &:active {
+          transform: translate(0, 0);
+          box-shadow: 2px 2px 0 #161122;
         }
       }
 
@@ -406,7 +413,7 @@ onMounted(() => {
 
         &:hover:not(:disabled) {
           transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 3px 3px 0 #161122;
         }
         &:active {
           transform: translate(0, 0);

@@ -32,7 +32,8 @@
                   </button>
                 </div>
                 <div class="price-row">
-                  <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ trimZeros(web3Price) }} USDT）</template></span>
+                  <!-- <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ trimZeros(web3Price) }} USDT）</template></span> -->
+                   <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}</span>
                   <span class="per">{{ t("user.subscription.perMonth") }}</span>
                 </div>
               </div>

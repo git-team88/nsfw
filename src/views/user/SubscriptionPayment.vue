@@ -10,7 +10,7 @@
       <div class="content-box">
         <div class="page-title-tabs">
           <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
-          <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
+          <!-- <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div> -->
         </div>
 
         <!-- Creator Info -->

@@ -1568,7 +1568,7 @@ $pinkopacity: rgba(255,77,142,0.12);
         pointer-events: none;
       }
 
-      &:not(.has-focus)::after {
+      &:not(.has-focus):empty::after {
         content: '';
         display: inline-block;
         width: 2px;

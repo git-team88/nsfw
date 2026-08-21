@@ -15,7 +15,7 @@
         </div>
 
         <div class="content">
-          <div class="token-section">
+          <!-- <div class="token-section">
             <div class="metric token-withdrawable">
               <img class="metric-bg-icon" src="@/assets/images/user/usdt_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.pending") }}</div>
@@ -43,7 +43,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <div class="cash-section">
             <div class="metric cash-frozen">

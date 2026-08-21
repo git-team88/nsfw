@@ -118,7 +118,7 @@
                         'ratio-16-9': record.ratio === '16:9'
                       }"
                     >
-                      <img :src="image" alt="generated" class="grid-image" @click="openImageViewer(image)" />
+                      <img :src="processImageUrl(image)" alt="generated" class="grid-image" @click="openImageViewer(image)" />
                       <!-- 图片操作按钮 - 仅在任务成功后显示 -->
                       <div v-if="isTaskSuccess(record.step_status || record.status)" class="photo-item-overlay">
                         <div v-if="record.user_selected?.story_mode != 'nsfw'" class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
@@ -297,7 +297,7 @@
                   @click="playVideo(record)"
                   :style="getVideoPlayerStyle(record.ratio)"
                 >
-                  <img :src="record.videoCover" alt="video cover" class="video-cover" />
+                  <img :src="processImageUrl(record.videoCover)" alt="video cover" class="video-cover" />
                   <div class="play-overlay">
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon" />
                   </div>
@@ -673,7 +673,7 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
+                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
                     <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
                     <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
                   </div>
@@ -900,7 +900,7 @@
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
       <div class="cover-zoom-content" @click.stop>
         <button class="close-btn" @click="closeCoverZoomModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
-        <img :src="zoomedCoverImage + '?imageMogr2/format/webp/quality/60'" alt="" class="zoomed-cover-image" />
+        <img :src="processImageUrl(zoomedCoverImage)" alt="" class="zoomed-cover-image" />
       </div>
     </div>
 
@@ -953,7 +953,7 @@ import { useI18n } from 'vue-i18n';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
-import { formatTimestamp } from '@/util/utils';
+import { formatTimestamp, processImageUrl } from '@/util/utils';
 import Header from '@/components/Header.vue';
 import arrowIcon from '@/assets/images/publish/arrow_icon.png';
 import router from "@/router";
@@ -3983,6 +3983,10 @@ const pollTaskStatus = async (taskId: string) => {
         if (taskData.status === 'FAIL' || taskData.status === 'FAILED') {
           updatedRecord.step_status = 'FAILED';
           updatedRecord.fail_reason = t('recordList.generateFailed');
+          const statusMsg = (taskData.status_message || '').toLowerCase();
+          if (statusMsg.includes('credit is not enough') || statusMsg.includes('recharge')) {
+            showInsufficientBalanceModal.value = true;
+          }
         }
 
         records.value[recordIndex] = { ...updatedRecord };
@@ -4313,6 +4317,7 @@ const doGeneratePhoto = async () => {
 
     if (requiredBalance > userBalance) {
       showInsufficientBalanceModal.value = true;
+      isPhotoGenerating.value = false;
       return;
     }
   }
@@ -4470,7 +4475,12 @@ const doGeneratePhoto = async () => {
       if (index !== -1) {
         records.value.splice(index, 1);
       }
-      toast(response.message);
+      const errMsg = response.message || '';
+      if (errMsg.toLowerCase().includes('credit is not enough') || errMsg.toLowerCase().includes('recharge')) {
+        showInsufficientBalanceModal.value = true;
+      } else {
+        toast(errMsg);
+      }
     }
   } catch (error) {
     console.error('Error generating photo:', error);
@@ -4550,6 +4560,7 @@ const doGenerateVideo = async () => {
 
     if (requiredBalance > userBalance) {
       showInsufficientBalanceModal.value = true;
+      isVideoGenerating.value = false;
       return;
     }
   }
@@ -4763,7 +4774,12 @@ const doGenerateVideo = async () => {
       if (idx !== -1) {
         records.value.splice(idx, 1);
       }
-      toast(generateResponse.message || t('fail'));
+      const errMsg = generateResponse.message || '';
+      if (errMsg.toLowerCase().includes('credit is not enough') || errMsg.toLowerCase().includes('recharge')) {
+        showInsufficientBalanceModal.value = true;
+      } else {
+        toast(errMsg || t('fail'));
+      }
     }
   } catch (error) {
     console.error('Error generating video:', error);

@@ -35,7 +35,8 @@
                     <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.plan_id" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
-                  <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}（{{ trimZeros(option.web3?.price || '') }} USDT）</span>
+                  <!-- <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}（{{ trimZeros(option.web3?.price || '') }} USDT）</span> -->
+                  <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}</span>
                 </div>
               </div>
             </div>
