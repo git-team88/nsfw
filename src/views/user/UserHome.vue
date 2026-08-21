@@ -326,11 +326,9 @@
     <!-- Pin Limit Modal -->
     <div class="pin-modal-overlay" v-if="showPinLimitModal">
       <div class="pin-modal">
-        <img
-          src="@/assets/images/base/close.png"
-          class="close-icon"
-          @click="showPinLimitModal = false"
-        />
+        <div class="close-icon" @click="showPinLimitModal = false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        </div>
 
         <div class="modal-header">
           <div class="title">{{ t("userHome.card.limitTitle") }}</div>
@@ -345,8 +343,10 @@
             :class="{ selected: selectedReplaceId === item.id }"
             @click="selectedReplaceId = item.id"
           >
-            <img :src="item.cover" class="item-cover" />
-            <div class="item-title">{{ item.title }}</div>
+            <div class="item-cover-wrap">
+              <img :src="item.cover" class="item-cover" />
+            </div>
+            <div class="item-title">{{ item.description || item.title }}</div>
           </div>
         </div>
 
@@ -1900,7 +1900,7 @@ async function pinCollection(collection: any) {
 
   try {
     await api.postCollection({ book_id: collection.id });
-    await fetchCollections();
+    await fetchCollections(true);
     showToast(t("userHome.collection.pinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -1912,7 +1912,7 @@ async function unpinCollection(collection: any) {
   activeCollectionMenuId.value = null;
   try {
     await api.postUnCollection({ book_id: collection.id });
-    await fetchCollections();
+    await fetchCollections(true);
     showToast(t("userHome.collection.unpinnedSuccess"));
   } catch (error) {
     console.error(error);
@@ -2879,20 +2879,31 @@ async function unpinCollection(collection: any) {
 
     .close-icon {
       position: absolute;
-      top: 18px;
-      right: 18px;
-      width: 20px;
-      height: 20px;
+      right: 14px;
+      top: 14px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #fff;
+      border: 2px solid #161122;
+      box-shadow: 2px 2px 0 #161122;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      padding: 6px;
+      transition: transform .2s;
+      z-index: 10;
+
+      &:hover { transform: scale(1.1) rotate(90deg); }
     }
 
     .modal-header {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 0 24px 18px;
-      margin-bottom: 18px;
-      border-bottom: 2.5px solid #161122;
+      padding: 0 24px;
+      margin-bottom: 20px;
 
       .title {
         font-size: 16px;
@@ -2911,37 +2922,49 @@ async function unpinCollection(collection: any) {
     .pinned-list {
       display: flex;
       gap: 12px;
-      margin-bottom: 18px;
-      padding: 0 24px 24px;
-      border-bottom: 2.5px solid #161122;
+      padding: 0 24px;
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
 
       .pinned-item {
         flex: 1;
+        min-width: 0;
         cursor: pointer;
+
+        .item-cover-wrap {
+          position: relative;
+          width: 100%;
+          margin-bottom: 12px;
+          overflow: hidden;
+          border-radius: 8px;
+          transition: all 0.2s;
+          border: 2px solid #161122;
+        }
 
         .item-cover {
           width: 100%;
-          margin-bottom: 12px;
-          aspect-ratio: 3/4;
+          height: 100%;
           object-fit: cover;
-          border: 2.5px solid #161122;
-          border-radius: 8px;
-          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.15);
-          transition: all 0.2s;
+          display: block;
         }
 
         .item-title {
+          font-weight: 600;
           font-size: 14px;
           color: #161122;
-          white-space: nowrap;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
           text-overflow: ellipsis;
+          line-height: 1.4;
+          word-break: break-word;
         }
 
         &.selected {
-          .item-cover {
+          .item-cover-wrap {
             border-color: #FF4D8D;
-            box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.3);
           }
 
           .item-title {
@@ -2955,22 +2978,23 @@ async function unpinCollection(collection: any) {
       align-self: center;
       width: 240px;
       height: 48px;
+      margin-top: 18px;
       background: #FF4D8D;
       color: #FFFFFF;
       border: 2.5px solid #161122;
       border-radius: 13px;
-      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+      box-shadow: 2px 2px 0 #161122;
       font-size: 14px;
       cursor: pointer;
 
       &:disabled {
         background: rgba(255, 77, 141, 0.5);
         cursor: not-allowed;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
       }
 
       &:hover:not(:disabled) {
-        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+        box-shadow: 3px 3px 0 #161122;
       }
     }
   }
@@ -3536,15 +3560,15 @@ async function unpinCollection(collection: any) {
       padding: 14px 0;
 
       .close-icon {
-        top: 14px;
-        right: 14px;
-        width: 16px;
-        height: 16px;
+        top: 10px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
       }
 
       .modal-header {
-        padding: 0 16px 14px;
-        margin-bottom: 14px;
+        padding: 0 16px;
+        margin-bottom: 20px;
 
         .title {
           font-size: 14px;
@@ -3559,7 +3583,7 @@ async function unpinCollection(collection: any) {
 
       .pinned-list {
         gap: 8px;
-        padding: 0 16px 16px;
+        padding: 0 16px;
         flex-wrap: wrap;
 
         .pinned-item {
