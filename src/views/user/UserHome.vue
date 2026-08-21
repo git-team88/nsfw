@@ -344,7 +344,7 @@
             @click="selectedReplaceId = item.id"
           >
             <div class="item-cover-wrap">
-              <img :src="item.cover" class="item-cover" />
+              <img :src="processImageUrl(item.cover)" class="item-cover" />
             </div>
             <div class="item-title">{{ item.description || item.title }}</div>
           </div>
@@ -1835,14 +1835,18 @@ async function confirmReplacePin() {
     const newCollection = pendingPinCollection.value;
     const replaceId = selectedReplaceId.value;
 
-    await api.postCollection({ book_id: newCollection.id, alter_id: replaceId?.toString() || '' });
+    const res = await api.postCollection({ book_id: newCollection.id, alter_id: replaceId?.toString() || '' }) as any;
 
-    showPinLimitModal.value = false;
-    pendingPinCollection.value = null;
-    selectedReplaceId.value = null;
+    if (res.code == 0) {
+      showPinLimitModal.value = false;
+      pendingPinCollection.value = null;
+      selectedReplaceId.value = null;
 
-    await fetchCollections(true);
-    showToast(t("userHome.collection.pinnedSuccess"));
+      await fetchCollections(true);
+      showToast(t("userHome.collection.pinnedSuccess"));
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
   } catch (error) {
     console.error(error);
     toast(t('fail'));
@@ -1899,9 +1903,13 @@ async function pinCollection(collection: any) {
   }
 
   try {
-    await api.postCollection({ book_id: collection.id });
-    await fetchCollections(true);
-    showToast(t("userHome.collection.pinnedSuccess"));
+    const res = await api.postCollection({ book_id: collection.id }) as any;
+    if (res.code == 0) {
+      await fetchCollections(true);
+      showToast(t("userHome.collection.pinnedSuccess"));
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
   } catch (error) {
     console.error(error);
     toast(t('fail'));
@@ -1911,9 +1919,13 @@ async function pinCollection(collection: any) {
 async function unpinCollection(collection: any) {
   activeCollectionMenuId.value = null;
   try {
-    await api.postUnCollection({ book_id: collection.id });
-    await fetchCollections(true);
-    showToast(t("userHome.collection.unpinnedSuccess"));
+    const res = await api.postUnCollection({ book_id: collection.id }) as any;
+    if (res.code == 0) {
+      await fetchCollections(true);
+      showToast(t("userHome.collection.unpinnedSuccess"));
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
   } catch (error) {
     console.error(error);
     toast(t('fail'));
