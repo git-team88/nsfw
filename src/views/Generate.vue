@@ -146,6 +146,9 @@
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
                 </div>
+                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
+                  <img src="@/assets/images/home/send.png" alt="publish" />
+                </div>
 
                 <div class="photo-more">
                   <img class="more-dots" src="@/assets/images/detail/menu.png" alt="more" @click.stop="showPhotoMoreOptions(record, $event)" />
@@ -317,6 +320,9 @@
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
+                </div>
+                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
+                  <img src="@/assets/images/home/send.png" alt="publish" />
                 </div>
 
                 <div class="video-more">
@@ -1398,7 +1404,10 @@ const handlePhotoInput = (event: Event) => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+    const isTrailingBr = !next;
+    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
+    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
       br.remove();
     }
   });
@@ -1723,11 +1732,30 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
       return;
     }
 
+    // 如果光标在文本节点中间且有实际文字，让默认删除
     if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
       const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
       if (textBeforeCursor.trim() !== '') {
         return;
       }
+    }
+
+    // 检查光标前面是否有 BR，如果有则删除 BR 并阻止默认行为（避免换行/误删 span）
+    let checkNode: Node | null = range.startContainer;
+    if (range.startOffset > 0 && checkNode.nodeType === 3) {
+      const textBeforeCursor = checkNode.textContent?.substring(0, range.startOffset) || '';
+      if (textBeforeCursor.trim() === '') {
+        checkNode = checkNode.previousSibling;
+      }
+    } else if (range.startOffset === 0) {
+      checkNode = checkNode?.previousSibling || null;
+    }
+
+    if (checkNode && checkNode.nodeType === 1 && (checkNode as HTMLElement).tagName === 'BR') {
+      (checkNode as HTMLElement).remove();
+      event.preventDefault();
+      previousPhotoInputHtml.value = target.innerHTML;
+      return;
     }
 
     let previousSibling: Node | null = range.startContainer;
@@ -1745,6 +1773,11 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
     }
 
     while (previousSibling) {
+      // 跳过 BR
+      if (previousSibling.nodeType === 1 && (previousSibling as HTMLElement).tagName === 'BR') {
+        previousSibling = previousSibling.previousSibling;
+        continue;
+      }
       if (previousSibling.nodeType === 1) {
         const element = previousSibling as HTMLElement;
         if (element.classList.contains('image-tag')) {
@@ -2024,8 +2057,8 @@ const photoRatioOptions = ref([
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
@@ -2096,7 +2129,7 @@ const resetPhotoSettings = () => {
 const resetVideoSettings = () => {
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -2854,7 +2887,10 @@ const handleVideoInput = () => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+    const isTrailingBr = !next;
+    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
+    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
       br.remove();
     }
   });
@@ -3088,11 +3124,30 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
       return;
     }
 
+    // 如果光标在文本节点中间且有实际文字，让默认删除
     if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
       const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
       if (textBeforeCursor.trim() !== '') {
         return;
       }
+    }
+
+    // 检查光标前面是否有 BR，如果有则删除 BR 并阻止默认行为（避免换行/误删 span）
+    let checkNode: Node | null = range.startContainer;
+    if (range.startOffset > 0 && checkNode.nodeType === 3) {
+      const textBeforeCursor = checkNode.textContent?.substring(0, range.startOffset) || '';
+      if (textBeforeCursor.trim() === '') {
+        checkNode = checkNode.previousSibling;
+      }
+    } else if (range.startOffset === 0) {
+      checkNode = checkNode?.previousSibling || null;
+    }
+
+    if (checkNode && checkNode.nodeType === 1 && (checkNode as HTMLElement).tagName === 'BR') {
+      (checkNode as HTMLElement).remove();
+      event.preventDefault();
+      previousVideoInputHtml.value = target.innerHTML;
+      return;
     }
 
     let previousSibling: Node | null = range.startContainer;
@@ -3110,6 +3165,11 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
     }
 
     while (previousSibling) {
+      // 跳过 BR
+      if (previousSibling.nodeType === 1 && (previousSibling as HTMLElement).tagName === 'BR') {
+        previousSibling = previousSibling.previousSibling;
+        continue;
+      }
       if (previousSibling.nodeType === 1) {
         const element = previousSibling as HTMLElement;
         if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
@@ -3477,7 +3537,7 @@ const selectVideoMultimodal = (value: string) => {
 
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -4758,7 +4818,7 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '30';
+      selectedVideoDuration.value = '15';
       selectedVideoRatio.value = '9:16';
       selectedVideoQuality.value = '1080P';
       selectedVideoMultimodal.value = 'multimodal';
@@ -5191,6 +5251,30 @@ const playUploadedVideo = (ref: any) => {
     playingVideoUrl.value = ref.url || ref.videoUrl || ref.image;
     showVideoModal.value = true;
   }
+};
+
+const publishPhoto = (record: any) => {
+  const images = (record.images || []).filter(Boolean);
+  const cover = images[0] || record.cover || '';
+  router.push({
+    path: '/publish/image',
+    query: {
+      session_id: record.session_id,
+      image_urls: images.join(','),
+      cover
+    }
+  });
+};
+
+const publishVideo = (record: any) => {
+  router.push({
+    path: '/publish/generate-video',
+    query: {
+      session_id: record.session_id,
+      video_url: record.videoUrl || record.video_url || '',
+      cover: record.videoCover || ''
+    }
+  });
 };
 
 const regenerateRecord = (record: any) => {

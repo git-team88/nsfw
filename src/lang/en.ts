@@ -885,6 +885,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     type2: "Drama",
     type3: "Comic",
     type4: "Novel",
+    type5: "Image",
+    type6: "Video",
     aiTip: `You don't have any generated works yet. Please go generate them first.`,
     login: "Sign in",
     logout: "Sign out",

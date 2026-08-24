@@ -1996,8 +1996,8 @@ function removeVideo() {
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const videoQualityOptions = ref([
   { value: '1080P', label: '1080P' },
   { value: '720P', label: '720P' }
@@ -3165,7 +3165,7 @@ const selectContentType = (type: string) => {
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';

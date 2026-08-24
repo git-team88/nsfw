@@ -462,6 +462,17 @@ $pinkopacity: rgba(255,77,142,0.12);
   }
 }
 
+.publish-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 /* 视频类型样式 */
 .video-record-content {
   padding: 20px;
