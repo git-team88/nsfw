@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts" name="TokenWithdrawModal">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
@@ -102,6 +102,14 @@ const wallets = [
 onMounted(() => {
   hasOkx.value = typeof (window as any).okxwallet !== 'undefined';
   hasPhantom.value = typeof (window as any).phantom !== 'undefined';
+});
+
+watch(() => props.visible, (val) => {
+  if (!val) {
+    selectedWallet.value = '';
+    agreeTerms.value = true;
+    submitting.value = false;
+  }
 });
 
 function isInstalled(walletId: string): boolean {
