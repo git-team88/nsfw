@@ -856,7 +856,7 @@
                    </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && currentVideoMode != 'unlimited'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
                   <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
@@ -939,13 +939,6 @@
       @confirm="handleUnlimitedAgeConfirm"
     />
 
-    <!-- Unreferenced Files Modal -->
-    <UnreferencedFilesModal
-      v-if="showUnreferencedFilesModal"
-      :labels="unreferencedFileLabels"
-      @skip="handleUnreferencedSkip"
-      @goBack="handleUnreferencedGoBack"
-    />
   </div>
 </template>
 
@@ -966,7 +959,6 @@ import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
-import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import loadingGif916 from '@/assets/images/home/9_16.gif';
 import loadingGif169 from '@/assets/images/home/16_9.gif';
 import loadingGif11 from '@/assets/images/home/1_1.gif';
@@ -1005,90 +997,8 @@ const enableVideoOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageNoBirthdayModal = ref(false);
-const showUnreferencedFilesModal = ref(false);
-const unreferencedFileLabels = ref<string[]>([]);
-const pendingGenerateCallback = ref<(() => void) | null>(null);
 const isPositioningTarget = ref(false);
 
-const checkPhotoUnreferencedFiles = (): boolean => {
-  if (!photoEditableInputRef.value) return false;
-  const images = uploadedPhotoImages.value;
-  if (images.length === 0) return false;
-
-  const referencedIds = new Set<string>();
-  const spans = photoEditableInputRef.value.querySelectorAll('span.image-tag');
-  spans.forEach((span: Element) => {
-    const itemId = (span as HTMLElement).dataset.itemId;
-    if (itemId) referencedIds.add(itemId);
-  });
-
-  const unreferenced = images.filter((item: any) => !referencedIds.has(item.id));
-  if (unreferenced.length === 0) return false;
-
-  const labels: string[] = [];
-  for (const item of unreferenced) {
-    const idx = images.findIndex((img: any) => img.id === item.id) + 1;
-    if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
-  }
-  if (labels.length === 0) return false;
-  unreferencedFileLabels.value = labels;
-  return true;
-};
-
-const checkVideoUnreferencedFiles = (): boolean => {
-  if (selectedVideoMultimodal.value !== 'multimodal' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') return false;
-  if (!videoEditableInputRef.value) return false;
-  const refs = uploadedVideoRefs.value;
-  const fileItems = refs.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio');
-  if (fileItems.length === 0) return false;
-
-  const referencedIds = new Set<string>();
-  const spans = videoEditableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag');
-  spans.forEach((span: Element) => {
-    const itemId = (span as HTMLElement).dataset.itemId;
-    if (itemId) referencedIds.add(itemId);
-  });
-
-  const unreferenced = fileItems.filter((item: any) => !referencedIds.has(item.id));
-  if (unreferenced.length === 0) return false;
-
-  const labels: string[] = [];
-  for (const item of unreferenced) {
-    if (item.type === 'image') {
-      const idx = refs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1;
-      if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
-    } else if (item.type === 'video') {
-      const isVideoExtendOrModify = selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify';
-      const idx = refs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + (isVideoExtendOrModify ? 2 : 1);
-      if (idx > 0) labels.push(t('home.unreferencedFiles.videoLabel') + idx);
-    } else if (item.type === 'audio') {
-      const idx = refs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1;
-      if (idx > 0) labels.push(t('home.unreferencedFiles.audioLabel') + idx);
-    }
-  }
-  if (labels.length === 0) return false;
-  unreferencedFileLabels.value = labels;
-  return true;
-};
-
-const handleUnreferencedSkip = () => {
-  showUnreferencedFilesModal.value = false;
-  if (pendingGenerateCallback.value) {
-    pendingGenerateCallback.value();
-    pendingGenerateCallback.value = null;
-  }
-};
-
-const handleUnreferencedGoBack = () => {
-  showUnreferencedFilesModal.value = false;
-  pendingGenerateCallback.value = null;
-  if (photoEditableInputRef.value) {
-    photoEditableInputRef.value.focus();
-  }
-  if (videoEditableInputRef.value) {
-    videoEditableInputRef.value.focus();
-  }
-};
 
 const typeOptions = ref([
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
@@ -3943,7 +3853,7 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && currentVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -4297,13 +4207,6 @@ const generatePhoto = async () => {
     return;
   }
 
-  if (checkPhotoUnreferencedFiles()) {
-    isPhotoGenerating.value = false;
-    pendingGenerateCallback.value = () => { isPhotoGenerating.value = true; doGeneratePhoto(); };
-    showUnreferencedFilesModal.value = true;
-    return;
-  }
-
   doGeneratePhoto();
 };
 
@@ -4539,13 +4442,6 @@ const generateVideo = async () => {
     }
   }
 
-  if (checkVideoUnreferencedFiles()) {
-    isVideoGenerating.value = false;
-    pendingGenerateCallback.value = () => { isVideoGenerating.value = true; doGenerateVideo(); };
-    showUnreferencedFilesModal.value = true;
-    return;
-  }
-
   doGenerateVideo();
 };
 
@@ -4675,7 +4571,7 @@ const doGenerateVideo = async () => {
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
+        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
       }
     };
 
@@ -4714,7 +4610,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5307,7 +5203,7 @@ const regenerateRecord = (record: any) => {
       currentVideoMode.value = 'normal';
     }
 
-    enableVideoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
+    enableVideoOptimizePrompt.value = currentVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
       selectedVideoMultimodal.value = 'startEndFrames';
@@ -5794,6 +5690,7 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
+      enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
       }
@@ -5807,6 +5704,7 @@ const switchVideoMode = (mode: string, index: number) => {
     }
   } else {
     currentVideoMode.value = 'normal';
+    enableVideoOptimizePrompt.value = true;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
     }
@@ -5821,6 +5719,7 @@ const switchVideoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
     currentVideoMode.value = 'unlimited';
+    enableVideoOptimizePrompt.value = false;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
       videoInput.value = '';

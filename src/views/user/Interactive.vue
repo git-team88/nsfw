@@ -679,6 +679,7 @@ async function downloadSingleWorkData() {
   font-size: 32px;
   color: #161122;
   font-weight: 700;
+  word-break: break-word;
 }
 
 .tabs {

@@ -423,7 +423,8 @@ function formatSci(n: number | string | null) {
   font-weight: 700;
   font-size: 28px;
   color: #161122;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   line-height: 36px;
 }
 

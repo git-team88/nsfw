@@ -592,7 +592,7 @@
                         </div>
                       </div>
 
-                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && currentVideoMode != 'unlimited'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -1395,13 +1395,6 @@
       @close="showTaskLimitExceededModal = false"
     />
 
-    <!-- Unreferenced Files Modal -->
-    <UnreferencedFilesModal
-      v-if="showUnreferencedFilesModal"
-      :labels="unreferencedFileLabels"
-      @skip="handleUnreferencedSkip"
-      @goBack="handleUnreferencedGoBack"
-    />
 
     <!-- Footer -->
     <Footer
@@ -1464,7 +1457,6 @@ import Hero3DBackground from '@/components/Hero3DBackground.vue';
 import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
-import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
@@ -2485,66 +2477,6 @@ const insufficientBalanceEstimatedFrozen = ref(0);
 const insufficientBalanceAvailable = ref(0);
 const insufficientBalanceFrozen = ref(0);
 
-const showUnreferencedFilesModal = ref(false);
-const unreferencedFileLabels = ref<string[]>([]);
-const pendingGenerateCallback = ref<(() => void) | null>(null);
-
-const checkUnreferencedFiles = (): boolean => {
-  if (contentType.value === 'novel') return false;
-  if (!editableInputRef.value) return false;
-
-  const currentCombinedItems = getCombinedItems().value;
-  const checkItems = currentCombinedItems.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'character');
-  if (checkItems.length === 0) return false;
-
-  const referencedItemIds = new Set<string>();
-  const spans = editableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag, span.character-tag-input');
-  spans.forEach((span: Element) => {
-    const itemId = (span as HTMLElement).dataset.itemId;
-    if (itemId) referencedItemIds.add(itemId);
-  });
-
-  const unreferenced = checkItems.filter((item: any) => !referencedItemIds.has(item.id));
-  if (unreferenced.length === 0) return false;
-
-  const currentUploadedImages = getUploadedImages();
-  const labels: string[] = [];
-  for (const item of unreferenced) {
-    if (item.type === 'character') {
-      labels.push(t('home.unreferencedFiles.characterLabel') + item.name);
-    } else if (item.type === 'image') {
-      const idx = currentUploadedImages.value.findIndex((img: any) => img.id === item.id) + 1;
-      if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
-    } else if (item.type === 'video') {
-      const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
-      const idx = uploadedVideosVideo.value.findIndex((v: any) => v.id === item.id) + (isVideoExtendOrModify ? 2 : 1);
-      if (idx > 0) labels.push(t('home.unreferencedFiles.videoLabel') + idx);
-    } else if (item.type === 'audio') {
-      const idx = uploadedAudiosVideo.value.findIndex((a: any) => a.id === item.id) + 1;
-      if (idx > 0) labels.push(t('home.unreferencedFiles.audioLabel') + idx);
-    }
-  }
-
-  if (labels.length === 0) return false;
-  unreferencedFileLabels.value = labels;
-  return true;
-};
-
-const handleUnreferencedSkip = () => {
-  showUnreferencedFilesModal.value = false;
-  if (pendingGenerateCallback.value) {
-    pendingGenerateCallback.value();
-    pendingGenerateCallback.value = null;
-  }
-};
-
-const handleUnreferencedGoBack = () => {
-  showUnreferencedFilesModal.value = false;
-  pendingGenerateCallback.value = null;
-  if (editableInputRef.value) {
-    editableInputRef.value.focus();
-  }
-};
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -2626,7 +2558,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && currentVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -2853,6 +2785,7 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
+      enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
       }
@@ -2863,6 +2796,7 @@ const switchVideoMode = (mode: string, index: number) => {
     }
   } else {
     currentVideoMode.value = 'normal';
+    enableVideoOptimizePrompt.value = true;
     showVideoModeDropdown.value = false;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
@@ -2974,6 +2908,7 @@ const switchPhotoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
+    enableVideoOptimizePrompt.value = false;
   } else if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
   } else if (contentType.value === 'novel') {
@@ -3362,13 +3297,6 @@ const generateVideo = async () => {
     return;
   }
 
-  if ((selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') && checkUnreferencedFiles()) {
-    isGeneratingVideo.value = false;
-    pendingGenerateCallback.value = () => { isGeneratingVideo.value = true; doGenerateVideo(); };
-    showUnreferencedFilesModal.value = true;
-    return;
-  }
-
   doGenerateVideo();
 };
 
@@ -3542,7 +3470,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3622,13 +3550,6 @@ const generateComic = async () => {
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
     isGeneratingComic.value = false;
-    return;
-  }
-
-  if (checkUnreferencedFiles()) {
-    isGeneratingComic.value = false;
-    pendingGenerateCallback.value = () => { isGeneratingComic.value = true; doGenerateComic(); };
-    showUnreferencedFilesModal.value = true;
     return;
   }
 
@@ -3788,13 +3709,6 @@ const generateDrama = async () => {
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
     isGeneratingDrama.value = false;
-    return;
-  }
-
-  if (checkUnreferencedFiles()) {
-    isGeneratingDrama.value = false;
-    pendingGenerateCallback.value = () => { isGeneratingDrama.value = true; doGenerateDrama(); };
-    showUnreferencedFilesModal.value = true;
     return;
   }
 
@@ -3976,13 +3890,6 @@ const generatePhoto = async () => {
   if (!inputContent.trim()) {
     toast(t('home.error.emptyInput'));
     isGeneratingPhoto.value = false;
-    return;
-  }
-
-  if (checkUnreferencedFiles()) {
-    isGeneratingPhoto.value = false;
-    pendingGenerateCallback.value = () => { isGeneratingPhoto.value = true; doGeneratePhoto(); };
-    showUnreferencedFilesModal.value = true;
     return;
   }
 

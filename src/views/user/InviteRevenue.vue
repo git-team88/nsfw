@@ -241,6 +241,7 @@ function goToAiPointsDetails() {
   font-weight: 700;
   font-size: 32px;
   color: #161122;
+  word-break: break-word;
 }
 
 .metrics-footer {
