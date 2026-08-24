@@ -617,6 +617,8 @@ const contentTypes = computed(() => {
     { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0 },
     { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0 },
     { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0 },
+    { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0 },
+    { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0 },
     ...(isSelf.value ? [{ id: 'favorites' as const, label: t('userHome.contentType.myFavorites'), count: 0, hideCount: true as const }] : [])
   ];
 });

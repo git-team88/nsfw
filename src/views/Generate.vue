@@ -143,11 +143,11 @@
 
               <!-- 底部操作 - 仅在任务完成后显示 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="photo-footer">
+                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
+                  <img src="@/assets/images/project/publish.png" alt="publish" />
+                </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
-                </div>
-                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
-                  <img src="@/assets/images/home/send.png" alt="publish" />
                 </div>
 
                 <div class="photo-more">
@@ -318,11 +318,11 @@
 
               <!-- 视频底部操作 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
+                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
+                  <img src="@/assets/images/project/publish.png" alt="publish" />
+                </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
-                </div>
-                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
-                  <img src="@/assets/images/home/send.png" alt="publish" />
                 </div>
 
                 <div class="video-more">
@@ -5254,25 +5254,22 @@ const playUploadedVideo = (ref: any) => {
 };
 
 const publishPhoto = (record: any) => {
-  const images = (record.images || []).filter(Boolean);
-  const cover = images[0] || record.cover || '';
   router.push({
     path: '/publish/image',
     query: {
-      session_id: record.session_id,
-      image_urls: images.join(','),
-      cover
+      session_id: record.session_id
     }
   });
 };
 
 const publishVideo = (record: any) => {
   router.push({
-    path: '/publish/generate-video',
+    path: '/publish/clip',
     query: {
-      session_id: record.session_id,
-      video_url: record.videoUrl || record.video_url || '',
-      cover: record.videoCover || ''
+      session_id: record.session_id
+    }
+  });
+};
     }
   });
 };

@@ -2190,7 +2190,11 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   },
   submit: {
     tabs: {
-      video: "漫剧",
+      novel: "小说",
+      manhua: "漫画",
+      manju: "漫剧",
+      photo: "图片",
+      video: "视频",
       image: "漫画",
       article: "小说",
     },

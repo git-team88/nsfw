@@ -2184,7 +2184,11 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
   },
   submit: {
     tabs: {
-      video: "漫劇",
+      novel: "小說",
+      manhua: "漫畫",
+      manju: "漫劇",
+      photo: "圖片",
+      video: "影片",
       image: "漫畫",
       article: "小說",
     },

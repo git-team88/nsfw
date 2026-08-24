@@ -367,7 +367,7 @@ const typeList = ref([
   },
   {
     name: t("header.type6"),
-    path: "/publish/video",
+    path: "/publish/clip",
   },
 ]);
 

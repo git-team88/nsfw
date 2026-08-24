@@ -2085,7 +2085,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   submit: {
     tabs: {
-      video: "Drama",
+      novel: "Novel",
+      manhua: "Comic",
+      manju: "Drama",
+      photo: "Photo",
+      video: "Video",
       image: "Comic",
       article: "Novel",
     },

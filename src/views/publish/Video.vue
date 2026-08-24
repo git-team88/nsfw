@@ -947,16 +947,24 @@ watch(uploadOption, (newOption) => {
 // Tab list
 const tabList = [
   {
-    name: t("submit.tabs.article"),
+    name: t("submit.tabs.novel"),
     path: "/publish/novel",
   },
   {
-    name: t("submit.tabs.image"),
+    name: t("submit.tabs.manhua"),
     path: "/publish/comic",
   },
   {
-    name: t("submit.tabs.video"),
+    name: t("submit.tabs.manju"),
     path: "/publish/video",
+  },
+  {
+    name: t("submit.tabs.photo"),
+    path: "/publish/image",
+  },
+  {
+    name: t("submit.tabs.video"),
+    path: "/publish/clip",
   }
 ];
 

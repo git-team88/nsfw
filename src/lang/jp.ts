@@ -1914,7 +1914,11 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
 
   submit: {
     tabs: {
-      video: "アニメドラマ",
+      novel: "小説",
+      manhua: "マンガ",
+      manju: "アニメドラマ",
+      photo: "画像",
+      video: "動画",
       image: "マンガ",
       article: "小説",
     },
