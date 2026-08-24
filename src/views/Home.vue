@@ -1395,6 +1395,14 @@
       @close="showTaskLimitExceededModal = false"
     />
 
+    <!-- Unreferenced Files Modal -->
+    <UnreferencedFilesModal
+      v-if="showUnreferencedFilesModal"
+      :labels="unreferencedFileLabels"
+      @skip="handleUnreferencedSkip"
+      @goBack="handleUnreferencedGoBack"
+    />
+
 
     <!-- Footer -->
     <Footer
@@ -1457,6 +1465,7 @@ import Hero3DBackground from '@/components/Hero3DBackground.vue';
 import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
+import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
@@ -2477,6 +2486,61 @@ const insufficientBalanceEstimatedFrozen = ref(0);
 const insufficientBalanceAvailable = ref(0);
 const insufficientBalanceFrozen = ref(0);
 
+
+const showUnreferencedFilesModal = ref(false);
+const unreferencedFileLabels = ref<string[]>([]);
+const pendingGenerateCallback = ref<(() => void) | null>(null);
+
+const checkUnreferencedFiles = (): boolean => {
+  // Only check for comic and drama types
+  if (contentType.value !== 'comic' && contentType.value !== 'drama') return false;
+  if (!editableInputRef.value) return false;
+
+  const currentCombinedItems = getCombinedItems().value;
+  const checkItems = currentCombinedItems.filter((item: any) => item.type === 'image' || item.type === 'character');
+  if (checkItems.length === 0) return false;
+
+  const referencedItemIds = new Set<string>();
+  const spans = editableInputRef.value.querySelectorAll('span.image-tag, span.character-tag-input');
+  spans.forEach((span: Element) => {
+    const itemId = (span as HTMLElement).dataset.itemId;
+    if (itemId) referencedItemIds.add(itemId);
+  });
+
+  const unreferenced = checkItems.filter((item: any) => !referencedItemIds.has(item.id));
+  if (unreferenced.length === 0) return false;
+
+  const currentUploadedImages = getUploadedImages();
+  const labels: string[] = [];
+  for (const item of unreferenced) {
+    if (item.type === 'character') {
+      labels.push(t('home.unreferencedFiles.characterLabel') + item.name);
+    } else if (item.type === 'image') {
+      const idx = currentUploadedImages.value.findIndex((img: any) => img.id === item.id) + 1;
+      if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
+    }
+  }
+
+  if (labels.length === 0) return false;
+  unreferencedFileLabels.value = labels;
+  return true;
+};
+
+const handleUnreferencedSkip = () => {
+  showUnreferencedFilesModal.value = false;
+  if (pendingGenerateCallback.value) {
+    pendingGenerateCallback.value();
+    pendingGenerateCallback.value = null;
+  }
+};
+
+const handleUnreferencedGoBack = () => {
+  showUnreferencedFilesModal.value = false;
+  pendingGenerateCallback.value = null;
+  if (editableInputRef.value) {
+    editableInputRef.value.focus();
+  }
+};
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const userInfo = ref<any>(null);
@@ -3553,11 +3617,19 @@ const generateComic = async () => {
     return;
   }
 
+  if (checkUnreferencedFiles()) {
+    isGeneratingComic.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingComic.value = true; doGenerateComic(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
   doGenerateComic();
 };
 
 const doGenerateComic = async () => {
   try {
+    const token = localStorage.getItem('token') || '';
     const sessionId = uuidv4();
 
     // 生成角色和图片的索引映射
@@ -3620,8 +3692,6 @@ const doGenerateComic = async () => {
       for (let i = 0; i < editableInputRef.value.childNodes.length; i++) {
         processNode(editableInputRef.value.childNodes[i]);
       }
-    } else {
-      processedContent = (editableInputRef.value?.textContent || '').trim();
     }
 
     const params = {
@@ -3712,11 +3782,19 @@ const generateDrama = async () => {
     return;
   }
 
+  if (checkUnreferencedFiles()) {
+    isGeneratingDrama.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingDrama.value = true; doGenerateDrama(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
   doGenerateDrama();
 };
 
 const doGenerateDrama = async () => {
   try {
+    const token = localStorage.getItem('token') || '';
     const sessionId = uuidv4();
 
     const characterMap: Record<string, number> = {};
