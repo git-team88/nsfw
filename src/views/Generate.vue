@@ -1769,8 +1769,12 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
             }
             element.remove();
             event.preventDefault();
-            break;
+            return;
           }
+        }
+      } else if (previousSibling.nodeType === 3) {
+        if (previousSibling.textContent?.trim() !== '') {
+          return;
         }
       }
       previousSibling = previousSibling.previousSibling;
@@ -2024,8 +2028,8 @@ const photoRatioOptions = ref([
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
@@ -2096,7 +2100,7 @@ const resetPhotoSettings = () => {
 const resetVideoSettings = () => {
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -3477,7 +3481,7 @@ const selectVideoMultimodal = (value: string) => {
 
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -4758,7 +4762,7 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
       selectedVideoRatio.value = '9:16';
       selectedVideoQuality.value = '1080P';
       selectedVideoMultimodal.value = 'multimodal';

@@ -1996,8 +1996,8 @@ function removeVideo() {
 const showVideoSettings = ref(false);
 const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+const selectedVideoDuration = ref('15');
+const lastValidVideoDuration = ref('15');
 const videoQualityOptions = ref([
   { value: '1080P', label: '1080P' },
   { value: '720P', label: '720P' }
@@ -2494,23 +2494,25 @@ const checkUnreferencedFiles = (): boolean => {
   if (!editableInputRef.value) return false;
 
   const currentCombinedItems = getCombinedItems().value;
-  const fileItems = currentCombinedItems.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio');
-  if (fileItems.length === 0) return false;
+  const checkItems = currentCombinedItems.filter((item: any) => item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'character');
+  if (checkItems.length === 0) return false;
 
   const referencedItemIds = new Set<string>();
-  const spans = editableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag');
+  const spans = editableInputRef.value.querySelectorAll('span.image-tag, span.video-tag, span.audio-tag, span.character-tag-input');
   spans.forEach((span: Element) => {
     const itemId = (span as HTMLElement).dataset.itemId;
     if (itemId) referencedItemIds.add(itemId);
   });
 
-  const unreferenced = fileItems.filter((item: any) => !referencedItemIds.has(item.id));
+  const unreferenced = checkItems.filter((item: any) => !referencedItemIds.has(item.id));
   if (unreferenced.length === 0) return false;
 
   const currentUploadedImages = getUploadedImages();
   const labels: string[] = [];
   for (const item of unreferenced) {
-    if (item.type === 'image') {
+    if (item.type === 'character') {
+      labels.push(t('home.unreferencedFiles.characterLabel') + item.name);
+    } else if (item.type === 'image') {
       const idx = currentUploadedImages.value.findIndex((img: any) => img.id === item.id) + 1;
       if (idx > 0) labels.push(t('home.unreferencedFiles.imageLabel') + idx);
     } else if (item.type === 'video') {
@@ -3165,7 +3167,7 @@ const selectContentType = (type: string) => {
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
+  selectedVideoDuration.value = '15';
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
@@ -3623,6 +3625,17 @@ const generateComic = async () => {
     return;
   }
 
+  if (checkUnreferencedFiles()) {
+    isGeneratingComic.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingComic.value = true; doGenerateComic(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGenerateComic();
+};
+
+const doGenerateComic = async () => {
   try {
     const sessionId = uuidv4();
 
@@ -3687,7 +3700,7 @@ const generateComic = async () => {
         processNode(editableInputRef.value.childNodes[i]);
       }
     } else {
-      processedContent = inputContent.trim();
+      processedContent = (editableInputRef.value?.textContent || '').trim();
     }
 
     const params = {
@@ -3778,6 +3791,17 @@ const generateDrama = async () => {
     return;
   }
 
+  if (checkUnreferencedFiles()) {
+    isGeneratingDrama.value = false;
+    pendingGenerateCallback.value = () => { isGeneratingDrama.value = true; doGenerateDrama(); };
+    showUnreferencedFilesModal.value = true;
+    return;
+  }
+
+  doGenerateDrama();
+};
+
+const doGenerateDrama = async () => {
   try {
     const sessionId = uuidv4();
 

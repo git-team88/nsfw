@@ -1984,6 +1984,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       imageLabel: '参考图片',
       videoLabel: '参考视频',
       audioLabel: '参考音频',
+      characterLabel: '参考角色',
       skip: '放弃引用直接生成',
       goBack: '返回补充文件引用'
     },

@@ -1978,6 +1978,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       imageLabel: '參考圖片',
       videoLabel: '參考影片',
       audioLabel: '參考音頻',
+      characterLabel: '參考角色',
       skip: '放棄引用直接生成',
       goBack: '返回補充文件引用'
     },

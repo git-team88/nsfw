@@ -1878,6 +1878,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       imageLabel: 'Reference Image ',
       videoLabel: 'Reference Video ',
       audioLabel: 'Reference Audio ',
+      characterLabel: 'Reference Character ',
       skip: 'Generate Without Reference',
       goBack: 'Go Back to Add Reference'
     },

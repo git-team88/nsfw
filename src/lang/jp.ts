@@ -1707,6 +1707,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       imageLabel: '参考画像',
       videoLabel: '参考動画',
       audioLabel: '参考音声',
+      characterLabel: '参考キャラクター',
       skip: '参照せずに生成',
       goBack: '戻って参照を追加'
     },
