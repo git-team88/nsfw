@@ -54,7 +54,7 @@ export function trackShare(params: {
   });
 }
 
-export function trackClickContentCover(category: "Novel" | "Comic" | "Drama") {
+export function trackClickContentCover(category: "Novel" | "Comic" | "Drama" | "Image" | "Video") {
   gtag("event", "click_content_cover", { category });
 }
 
