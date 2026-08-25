@@ -1041,9 +1041,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  singleTaskList: (page: number, limit: number, type: string) =>
+  singleTaskList: (page: number, limit: number, type: string, isFilterFailed?: boolean) =>
     axios.request({
-      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}`,
+      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}${isFilterFailed ? '&is_filter_failed=true' : ''}`,
       method: "GET",
       baseURL: aiUrl,
     }),

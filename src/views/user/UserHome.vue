@@ -102,37 +102,52 @@
 
       <!-- Stats Bar -->
       <div class="stats-bar">
-        <div class="posts-title">
+        <div class="tabs-row">
+          <div class="main-tabs">
+            <div
+              class="main-tab"
+              :class="{ active: topTab === 'works' }"
+              @click="topTab = 'works'"
+            >{{ t('userHome.contentType.myWorks') }}</div>
+            <div
+              v-if="isSelf"
+              class="main-tab"
+              :class="{ active: topTab === 'favorites' }"
+              @click="topTab = 'favorites'"
+            >{{ t('userHome.contentType.myFavorites') }}</div>
+          </div>
+          <div class="stats-nums">
+            <div
+              class="stat-item"
+              :class="{ active: viewMode === 'follow' && followTab === 'following' }"
+              @click="showFollowList('following')"
+            >
+              <span class="label">{{ t("userHome.following") }}:</span>
+              <span class="val">{{ formatNumber(userInfo.following) }}</span>
+            </div>
+            <div
+              class="stat-item"
+              :class="{ active: viewMode === 'follow' && followTab === 'fans' }"
+              @click="showFollowList('fans')"
+            >
+              <span class="label">{{ t("userHome.fans") }}:</span>
+              <span class="val">{{ formatNumber(userInfo.fans) }}</span>
+            </div>
+            <div class="stat-item" style="cursor: default">
+              <span class="label">{{ t("userHome.likes") }}:</span>
+              <span class="val">{{ formatNumber(userInfo.likes) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="sub-tabs" v-if="topTab === 'works'">
           <div
-            v-for="type in contentTypes"
+            v-for="type in workContentTypes"
             :key="type.id"
-            class="type-item"
-            :class="{ active: viewMode === 'posts' && activeContentType == type.id }"
+            class="sub-tab-item"
+            :class="{ active: activeContentType == type.id }"
             @click="setActiveContentType(type.id)"
           >
             {{ type.label }}<template v-if="!type.hideCount"> ({{ type.count }})</template>
-          </div>
-        </div>
-        <div class="stats-nums">
-          <div
-            class="stat-item"
-            :class="{ active: viewMode === 'follow' && followTab === 'following' }"
-            @click="showFollowList('following')"
-          >
-            <span class="label">{{ t("userHome.following") }}:</span>
-            <span class="val">{{ formatNumber(userInfo.following) }}</span>
-          </div>
-          <div
-            class="stat-item"
-            :class="{ active: viewMode === 'follow' && followTab === 'fans' }"
-            @click="showFollowList('fans')"
-          >
-            <span class="label">{{ t("userHome.fans") }}:</span>
-            <span class="val">{{ formatNumber(userInfo.fans) }}</span>
-          </div>
-          <div class="stat-item" style="cursor: default">
-            <span class="label">{{ t("userHome.likes") }}:</span>
-            <span class="val">{{ formatNumber(userInfo.likes) }}</span>
           </div>
         </div>
       </div>
@@ -141,7 +156,7 @@
         <!-- Posts View -->
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
-          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites'">
+          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites' && activeContentType !== 4 && activeContentType !== 5">
             <div class="collection-header">
               <button
                 class="create-collection-btn"
@@ -187,7 +202,7 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" @click="goCollectionDetail(collection.id)">
+                  <div class="card-cover" @click="(activeContentType == 4 || activeContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
@@ -210,18 +225,31 @@
                       >
                         <img src="@/assets/images/user/top.png" alt="" />
                       </div>
-                      <div
-                        class="card-action-btn"
-                        @click.stop="goCollectionSettings(collection.id)"
-                      >
-                        <img src="@/assets/images/user/set.png" alt="" />
-                      </div>
-                      <div
-                        class="card-action-btn"
-                        @click.stop="goChapterManage(collection.id)"
-                      >
-                        <img src="@/assets/images/user/chapter.png" alt="" />
-                      </div>
+                      <template v-if="activeContentType == 4 || activeContentType == 5">
+                        <div class="card-action-btn" @click.stop="toggleCardDropdown(collection.id, $event)">
+                          <img src="@/assets/images/user/set.png" alt="" />
+                        </div>
+                        <Teleport to="body">
+                          <div class="card-dropdown-menu" v-if="activeCardDropdownId === collection.id" :style="cardDropdownStyle">
+                            <div class="card-dropdown-item" @click.stop="goEditPost(collection)">{{ t('userHome.card.edit') }}</div>
+                            <div class="card-dropdown-item card-dropdown-item-danger" @click.stop="deletePost(collection)">{{ t('userHome.card.delete') }}</div>
+                          </div>
+                        </Teleport>
+                      </template>
+                      <template v-else>
+                        <div
+                          class="card-action-btn"
+                          @click.stop="goCollectionSettings(collection.id)"
+                        >
+                          <img src="@/assets/images/user/set.png" alt="" />
+                        </div>
+                        <div
+                          class="card-action-btn"
+                          @click.stop="goChapterManage(collection.id)"
+                        >
+                          <img src="@/assets/images/user/chapter.png" alt="" />
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -487,6 +515,8 @@ interface UserInfo {
   total_posts_1?: number;
   total_posts_2?: number;
   total_posts_3?: number;
+  total_posts_4?: number;
+  total_posts_5?: number;
   kyc_status?: number | string;
 }
 
@@ -517,6 +547,8 @@ interface UserInfo {
   total_posts_1?: number;
   total_posts_2?: number;
   total_posts_3?: number;
+  total_posts_4?: number;
+  total_posts_5?: number;
   kyc_status?: number | string;
   books_group?: BooksGroupItem[];
 }
@@ -544,6 +576,8 @@ const userInfo = ref<UserInfo>({
   total_posts_1: 0,
   total_posts_2: 0,
   total_posts_3: 0,
+  total_posts_4: 0,
+  total_posts_5: 0,
   books_group: []
 });
 
@@ -597,15 +631,16 @@ const collectionMenuRef = ref<HTMLElement | null>(null);
 
 const isSelf = computed(() => {
   const localUid = localStorage.getItem("uid");
-  return localUid === userInfo.value.id;
+  return localUid !== null && String(localUid) === String(userInfo.value.id);
 });
 
 const currentTab = ref("all");
+const topTab = ref<"works" | "favorites">("works");
 const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
 // Content types - read count from books_group
-const contentTypes = computed(() => {
+const workContentTypes = computed(() => {
   const booksGroup = userInfo.value.books_group || [];
 
   const getCountByType = (type: string) => {
@@ -614,13 +649,24 @@ const contentTypes = computed(() => {
   };
 
   return [
-    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0 },
-    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0 },
-    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0 },
-    { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0 },
-    { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0 },
-    ...(isSelf.value ? [{ id: 'favorites' as const, label: t('userHome.contentType.myFavorites'), count: 0, hideCount: true as const }] : [])
+    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
+    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
+    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0, hideCount: false },
+    { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0, hideCount: false },
+    { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0, hideCount: false },
   ];
+});
+
+watch(topTab, (val) => {
+  if (val === 'favorites') {
+    activeContentType.value = 'favorites';
+    fetchLikedBooks(true);
+  } else {
+    if (activeContentType.value === 'favorites') {
+      activeContentType.value = 2;
+    }
+    fetchCollections(true);
+  }
 });
 
 const activeContentType = ref<number | string>(2);
@@ -716,28 +762,24 @@ async function fetchCollections(reset = false) {
     }
 
     const localUid = localStorage.getItem('uid');
-    const isCurrentUser = localUid == authorId;
+    const isCurrentUser = localUid !== null && String(localUid) === String(authorId);
 
     let response;
-    // type: 1=comic, 2=novel, 3=video
     const type = Number(activeContentType.value);
     const currentPage = currentCollectionsPage.value;
 
     if (isCurrentUser) {
-      // Fetch own collections
       response = await api.authorSelfCollection(type, currentPage, 20) as any;
     } else {
-      // Fetch other author's collections
       if (!authorId) {
         collectionsLoading.value = false;
         return;
       }
-      // 敏感开关（未登录也以本地 allowSensitiveContent 为准）
       const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
       response = await api.authorCollection(type, currentPage, 20, authorId, showNsfw) as any;
     }
-    if (response.code == 0) {
-      const collectionData = response.data?.data || [];
+    if (response.code == 0 || response.code == 200) {
+      let collectionData = response.data?.data || [];
 
       if (reset) {
         collections.value = collectionData;
@@ -848,6 +890,8 @@ const collectionCardRefs = ref<HTMLElement[]>([]);
 const activeCollectionMenuId = ref<string | number | null>(null);
 const collectionMenuRefs = new Map<string | number, HTMLElement>();
 const dropdownPos = ref("bottom");
+const activeCardDropdownId = ref<string | number | null>(null);
+const cardDropdownStyle = ref<Record<string, string>>({});
 
 const reportModalVisible = ref(false);
 const userReportOptions = computed(() => [
@@ -932,6 +976,8 @@ async function fetchUserInfo() {
         total_posts_1: parseInt(data.data?.total_posts_1 || '0'),
         total_posts_2: parseInt(data.data?.total_posts_2 || '0'),
         total_posts_3: parseInt(data.data?.total_posts_3 || '0'),
+        total_posts_4: parseInt(data.data?.total_posts_4 || '0'),
+        total_posts_5: parseInt(data.data?.total_posts_5 || '0'),
         kyc_status: data.data?.kyc_status || 0,
         books_group: data.data?.books_group || [],
       };
@@ -1043,7 +1089,7 @@ onMounted(async () => {
     const typeParam = route.query.type;
     if (typeParam) {
       const typeNum = parseInt(typeParam as string);
-      if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+      if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
         activeContentType.value = typeNum;
       }
     }
@@ -1160,7 +1206,7 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
     const typeParam = newType;
     if (typeParam) {
       const typeNum = parseInt(typeParam as string);
-      if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+      if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
         activeContentType.value = typeNum;
       }
     }
@@ -1186,7 +1232,7 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
 
   else if (typeChanged && newType) {
     const typeNum = parseInt(newType as string);
-    if (!isNaN(typeNum) && [1, 2, 3].includes(typeNum)) {
+    if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
       setActiveContentType(typeNum);
     }
   }
@@ -1250,6 +1296,7 @@ function getEndDate() {
 // Set active content type
 function setActiveContentType(typeId: number | string) {
   viewMode.value = "posts";
+  topTab.value = "works";
   activeContentType.value = typeId;
   activeCollectionTab.value = 0;
 
@@ -1738,35 +1785,14 @@ async function loadPosts(reset = false) {
   }
 }
 
-function goDetail(id: number) {
-  // Save current content type before navigating
+function goDetail(id: number | string, authorId?: number | string) {
   localStorage.setItem('userHomeContentType', activeContentType.value.toString());
+  const type = Number(activeContentType.value);
   const queryParams: any = {
     id: id,
-    type: 4,
-    uid: route.query.id || ''
+    type: type,
+    uid: authorId || route.query.id || ''
   };
-
-  // if (searchKeyword.value) {
-  //   queryParams.keyword = searchKeyword.value;
-  // }
-
-  // if (dateRange.value && dateRange.value.start && dateRange.value.end) {
-  //   queryParams.start_day = dateRange.value.start;
-  //   queryParams.end_day = dateRange.value.end;
-  // }
-
-  // if (activeContentType.value == 2) {
-  //   router.push({
-  //     path: '/novel-detail',
-  //     query: queryParams
-  //   });
-  // } else {
-  //   router.push({
-  //     path: '/detail',
-  //     query: queryParams
-  //   });
-  // }
 
   router.push({
     path: '/detail',
@@ -1793,6 +1819,11 @@ function handleClickOutside(e: MouseEvent) {
     if (el && !el.contains(target)) {
       activeCollectionMenuId.value = null;
     }
+  }
+
+  // Card dropdown (edit/delete for types 4/5)
+  if (activeCardDropdownId.value !== null) {
+    activeCardDropdownId.value = null;
   }
 }
 
@@ -1876,6 +1907,70 @@ function goChapterManage(collectionId: number) {
   activeCollectionMenuId.value = null;
 }
 
+function toggleCardDropdown(id: string | number, event: Event) {
+  if (activeCardDropdownId.value === id) {
+    activeCardDropdownId.value = null;
+    return;
+  }
+  activeCardDropdownId.value = id;
+
+  nextTick(() => {
+    const btn = (event as MouseEvent).currentTarget as HTMLElement;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuW = 80;
+    const menuH = 60;
+    let top = rect.bottom + 4;
+    let left = rect.right - menuW;
+
+    if (left < 8) {
+      left = 8;
+    }
+    if (top + menuH > window.innerHeight - 8) {
+      top = rect.top - menuH - 4;
+    }
+    if (top < 8) {
+      top = 8;
+    }
+
+    cardDropdownStyle.value = {
+      position: 'fixed',
+      top: `${top}px`,
+      left: `${left}px`,
+    };
+  });
+}
+
+function goEditPost(collection: any) {
+  activeCardDropdownId.value = null;
+  const type = Number(activeContentType.value);
+  if (type === 4) {
+    router.push(`/publish/image?post_id=${collection.id}`);
+  } else if (type === 5) {
+    router.push(`/publish/clip?post_id=${collection.id}`);
+  }
+}
+
+async function deletePost(collection: any) {
+  activeCardDropdownId.value = null;
+  try {
+    const res = await api.deletePost({ post_id: collection.id }) as any;
+    if (res.code == 0 || res.code == 200) {
+      toast(t('success'));
+      if (activeContentType.value === 'favorites') {
+        fetchLikedBooks(true);
+      } else {
+        fetchCollections(true);
+      }
+    } else {
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    toast(t('fail'));
+  }
+}
+
 function setCollectionMenuRef(el: any, id: string | number) {
   if (el && 'tagName' in el) {
     collectionMenuRefs.set(id, el as HTMLElement);
@@ -1905,7 +2000,13 @@ async function pinCollection(collection: any) {
   }
 
   try {
-    const res = await api.postCollection({ book_id: collection.id }) as any;
+    const type = Number(activeContentType.value);
+    let res;
+    if (type === 4 || type === 5) {
+      res = await api.postPin({ post_id: collection.id }) as any;
+    } else {
+      res = await api.postCollection({ book_id: collection.id }) as any;
+    }
     if (res.code == 0) {
       await fetchCollections(true);
       showToast(t("userHome.collection.pinnedSuccess"));
@@ -1921,7 +2022,13 @@ async function pinCollection(collection: any) {
 async function unpinCollection(collection: any) {
   activeCollectionMenuId.value = null;
   try {
-    const res = await api.postUnCollection({ book_id: collection.id }) as any;
+    const type = Number(activeContentType.value);
+    let res;
+    if (type === 4 || type === 5) {
+      res = await api.postUnpin({ post_id: collection.id }) as any;
+    } else {
+      res = await api.postUnCollection({ book_id: collection.id }) as any;
+    }
     if (res.code == 0) {
       await fetchCollections(true);
       showToast(t("userHome.collection.unpinnedSuccess"));
@@ -2262,13 +2369,41 @@ async function unpinCollection(collection: any) {
 }
 
 .stats-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
   margin-bottom: 24px;
-  border-bottom: 1px solid #f2f4f7;
 
-  .posts-title {
+  .tabs-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .main-tabs {
+      display: flex;
+      gap: 6px;
+      border: 2.5px solid #161122;
+      border-radius: 14px;
+      padding: 5px;
+      background: #FFFDF7;
+
+      .main-tab {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #161122;
+        cursor: pointer;
+        background: transparent;
+        transition: background-color 0.2s, color 0.2s;
+
+        &.active {
+          background: #161122;
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .sub-tabs {
     display: flex;
     gap: 6px;
     border: 2.5px solid #161122;
@@ -2276,16 +2411,15 @@ async function unpinCollection(collection: any) {
     padding: 5px;
     background: #FFFDF7;
 
-    .type-item {
-      padding: 10px 22px;
+    .sub-tab-item {
+      padding: 8px 16px;
       border-radius: 10px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       color: #161122;
       cursor: pointer;
       background: transparent;
       transition: background-color 0.2s, color 0.2s;
-
 
       &.active {
         background: #161122;
@@ -2772,7 +2906,7 @@ async function unpinCollection(collection: any) {
         .fans-count {
           font-size: 12px;
           font-weight: 800;
-          color: #9a93a4;
+          color: #99A1AF;
         }
       }
     }
@@ -2824,7 +2958,7 @@ async function unpinCollection(collection: any) {
 
         &.followed {
           background: #FFFDF7;
-          color: #9a93a4;
+          color: #99A1AF;
 
           &:hover {
             color: #FF4D8D;
@@ -3051,7 +3185,6 @@ async function unpinCollection(collection: any) {
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      overflow: hidden;
 
       img.cover-img {
         width: 100%;
@@ -3377,6 +3510,7 @@ async function unpinCollection(collection: any) {
     height: 40px;
     gap: 6px;
     padding: 0 20px;
+    font-weight: 600;
     background: #FFFDF7;
     color: #161122;
     border: 2.5px solid #161122;
@@ -3883,6 +4017,39 @@ async function unpinCollection(collection: any) {
             box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
           }
         }
+      }
+    }
+  }
+}
+</style>
+
+<style lang="scss">
+.card-dropdown-menu {
+  position: fixed;
+  z-index: 3000;
+  border-radius: 6px;
+  border: 2.5px solid #161122;
+  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+  padding: 6px 0;
+  min-width: 80px;
+  background: #FFFDF7;
+  white-space: nowrap;
+
+  .card-dropdown-item {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #161122;
+    cursor: pointer;
+    text-align: center;
+
+    &:hover {
+      font-weight: 800;
+      color: #FF4D8D;
+    }
+
+    &.card-dropdown-item-danger {
+      &:hover {
+        color: #FF4D8D;
       }
     }
   }

@@ -143,7 +143,8 @@
 
               <!-- 底部操作 - 仅在任务完成后显示 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="photo-footer">
-                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
+                <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
+                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
                   <img src="@/assets/images/project/publish.png" alt="publish" />
                 </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
@@ -318,7 +319,8 @@
 
               <!-- 视频底部操作 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
-                <div class="publish-btn" v-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
+                <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
+                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
                   <img src="@/assets/images/project/publish.png" alt="publish" />
                 </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
@@ -5267,9 +5269,6 @@ const publishVideo = (record: any) => {
     path: '/publish/clip',
     query: {
       session_id: record.session_id
-    }
-  });
-};
     }
   });
 };

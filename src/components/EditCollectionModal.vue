@@ -73,7 +73,7 @@
         <!-- Description Section -->
         <div class="form-group">
           <div class="form-label-inner">
-            <label class="form-label" style="margin-bottom: 0;">
+            <label class="form-label">
               <span>{{ t('collectionSettings.description') }}</span>
               <span class="char-counter">({{ description.length }}/1000)</span>
             </label>
@@ -94,6 +94,26 @@
             maxlength="1000"
             spellcheck="false"
           ></textarea>
+        </div>
+
+        <!-- Language Section -->
+        <div class="form-group">
+          <label class="form-label"><b>*</b>{{ t('submit.language') }}</label>
+          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+              <span>{{ currentLangLabel }}</span>
+              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+              <div
+                class="lang-dropdown-item"
+                v-for="opt in langOptions"
+                :key="opt.key"
+                :class="{ active: selectedLanguage === opt.key }"
+                @click="selectedLanguage = opt.key; langDropdownOpen = false"
+              >{{ t(opt.labelKey) }}</div>
+            </div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -126,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -136,7 +156,7 @@ import SensitiveConfirmModal from './SensitiveConfirmModal.vue';
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
@@ -149,12 +169,46 @@ const props = defineProps<{
   isNsfw?: string | number;
   sessionId?: string;
   storySummary?: string;
+  language?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }): void;
+  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string }): void;
 }>();
+
+const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
+
+const langOptions = [
+  { key: "en", labelKey: "submit.langEn" },
+  { key: "jp", labelKey: "submit.langJp" },
+  { key: "cn", labelKey: "submit.langZh" },
+  { key: "tc", labelKey: "submit.langTc" },
+];
+
+const langDropdownOpen = ref(false);
+const langDropdownUp = ref(false);
+const langDropdownRef = ref<HTMLElement | null>(null);
+const selectedLanguage = ref(props.language || defaultLang);
+
+const currentLangLabel = computed(() => {
+  const opt = langOptions.find((o) => o.key === selectedLanguage.value);
+  return opt ? t(opt.labelKey) : "";
+});
+
+function toggleLangDropdown() {
+  if (langDropdownOpen.value) {
+    langDropdownOpen.value = false;
+    return;
+  }
+  const el = langDropdownRef.value;
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    langDropdownUp.value = spaceBelow < 200;
+  }
+  langDropdownOpen.value = true;
+}
 
 const collectionName = ref(props.collectionName || '');
 const coverUrl = ref(props.coverUrl || '');
@@ -175,6 +229,7 @@ watch(() => props.visible, async (newVal) => {
   if (newVal) {
     errorMessage.value = '';
     isLoading.value = false;
+    selectedLanguage.value = props.language || defaultLang;
     if (!props.isEdit) {
       collectionName.value = props.collectionName || '';
       coverUrl.value = props.coverUrl || '';
@@ -344,7 +399,8 @@ async function handleSave() {
           name: collectionName.value.trim(),
           cover: coverUrl.value,
           description: description.value.trim(),
-          is_nsfw: isNsfw.value
+          is_nsfw: isNsfw.value,
+          language: selectedLanguage.value
         });
         handleCancel();
       } else {
@@ -360,7 +416,8 @@ async function handleSave() {
         title: collectionName.value.trim(),
         description: description.value.trim() || t('collection.defaultDescription'),
         cover: coverUrl.value,
-        is_nsfw: isNsfw.value
+        is_nsfw: isNsfw.value,
+        language: selectedLanguage.value
       };
 
       const response = await api.addCollection(params) as any;
@@ -370,7 +427,8 @@ async function handleSave() {
           name: collectionName.value.trim(),
           cover: coverUrl.value,
           description: description.value.trim(),
-          is_nsfw: isNsfw.value
+          is_nsfw: isNsfw.value,
+          language: selectedLanguage.value
         });
         handleCancel();
       } else {
@@ -475,8 +533,6 @@ function handleModalKeydown(e: KeyboardEvent) {
     font-size: 16px;
     font-weight: 600;
     color: #161122;
-    margin-bottom: 12px;
-    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -484,14 +540,16 @@ function handleModalKeydown(e: KeyboardEvent) {
     }
 
     .char-counter {
+      margin-left: 10px;
       font-size: 14px;
-      color: #9a93a4;
+      color: #99A1AF;
     }
   }
 
   .form-input {
     width: 100%;
     height: 50px;
+    margin-top: 12px;
     padding: 10px;
     border: 2px solid #161122;
     border-radius: 8px;
@@ -503,7 +561,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
-      color: #9a93a4;
+      color: #99A1AF;
     }
 
     &:focus {
@@ -515,6 +573,7 @@ function handleModalKeydown(e: KeyboardEvent) {
   .form-textarea {
     width: 100%;
     height: 200px;
+    margin-top: 12px;
     padding: 10px;
     border: 2px solid #161122;
     border-radius: 8px;
@@ -529,7 +588,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
-      color: #9a93a4;
+      color: #99A1AF;
     }
 
     &:focus {
@@ -606,7 +665,7 @@ function handleModalKeydown(e: KeyboardEvent) {
   .tooltip-content {
     font-size: 12px;
     line-height: 20px;
-    color: #9a93a4;
+    color: #99A1AF;
 
     :deep(span) {
       color: #161122;
@@ -656,7 +715,6 @@ function handleModalKeydown(e: KeyboardEvent) {
       font-weight: 600;
       color: #161122;
       margin-bottom: 12px;
-      gap: 10px;
 
       .required {
         font-weight: normal;
@@ -713,6 +771,84 @@ function handleModalKeydown(e: KeyboardEvent) {
       &:hover {
         text-decoration: underline;
       }
+    }
+  }
+}
+
+.lang-dropdown {
+  position: relative;
+  flex: 1;
+  margin-top: 12px;
+
+  .lang-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    height: 36px;
+    padding: 0 12px;
+    border: 2px solid #161122;
+    border-radius: 10px;
+    background: #FFFFFF;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    span {
+      font-size: 14px;
+      font-weight: 700;
+      color: #161122;
+    }
+
+    .lang-arrow {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  &.open .lang-dropdown-trigger {
+    border-color: #FF4D8E;
+    box-shadow: 2px 2px 0 #FF4D8E;
+  }
+
+  &.up .lang-dropdown-menu {
+    bottom: calc(100% + 6px);
+    top: auto;
+  }
+
+  .lang-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    border: 2px solid #161122;
+    border-radius: 10px;
+    background: #FFFFFF;
+    box-shadow: 2px 2px 0 #161122;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .lang-dropdown-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #161122;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #FFF5F9;
+    }
+
+    &.active {
+      background: #FFEFF5;
+      color: #FF4D8E;
     }
   }
 }

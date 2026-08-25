@@ -1881,6 +1881,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     seeMore: "查看更多",
     viewAll: "查看全部",
     latestWork: "最新作",
+    published: "已發佈",
     readMore: "＼ 檢視更多新作！ ／",
     viewList: "列表",
     viewRing: "環形",
@@ -2115,19 +2116,20 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
     loading: "加載中...",
     noMore: "沒有更多內容了",
-    loadMore: "加載更多",
-    contentType: {
-      all: "全部",
-      drama: "漫劇",
-      comic: "漫畫",
-      novel: "小說",
-      video: "視頻",
-      photo: "圖片",
-      image: "圖片",
-      article: "文章",
-      myFavorites: "我的收藏"
-    },
-    videoSettings: {
+     loadMore: "加載更多",
+     contentType: {
+       all: "全部",
+       drama: "漫劇",
+       comic: "漫畫",
+       novel: "小說",
+       video: "視頻",
+       article: "文章",
+       myFavorites: "我的收藏",
+       myWorks: "我的作品",
+       image: "圖片",
+       photo: "視頻"
+     },
+     videoSettings: {
       title: "視頻設置",
       language: "語言",
       languages: {
@@ -2226,6 +2228,11 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     contentSettings: "是否含敏感內容？",
     yes: "是",
     no: "否",
+    language: "語言",
+    langEn: "英語",
+    langJp: "日語",
+    langZh: "簡體中文",
+    langTc: "繁體中文",
     interactiveSettings: "互動設置",
     allowComments: "允許評論",
     allowRepost: "允許轉發",
@@ -2348,6 +2355,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       uploadFormatError: "請上傳圖片文件(PNG/JPG/Webp)",
       uploadTip: "上傳的圖片大小不能超過10MB！",
       multiSelectError: "僅支持選擇一張圖片",
+      maxSelectTip: "最多只能選擇12張圖片",
+      setting: "設置",
       specFormat: "圖片格式：",
       formatInfo: "PNG/JPG/Webp",
       specSize: "圖片大小：",
@@ -2619,7 +2628,10 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       novel: "小說",
       comic: "漫畫",
       video: "漫劇",
-      myFavorites: "我的收藏"
+      myFavorites: "我的收藏",
+      myWorks: "我的作品",
+      image: "圖片",
+      photo: "視頻"
     },
     collection: {
       all: "全部",
@@ -2930,6 +2942,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     typeComic: "漫畫",
     typeNovel: "小說",
     typeVideo: "漫劇",
+    typeImage: "圖片",
+    typePhoto: "視頻",
     cover: "封面",
     uploadCover: "上傳封面",
     setCover: "設置封面",

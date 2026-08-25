@@ -74,7 +74,7 @@
         <!-- Description Section -->
         <div class="form-group">
           <div class="form-label-inner">
-            <label class="form-label" style="margin-bottom: 0;">
+            <label class="form-label">
               <span>{{ t('collectionSettings.description') }}</span>
               <span class="char-counter">({{ description.length }}/1000)</span>
             </label>
@@ -93,7 +93,28 @@
             class="form-textarea"
             :placeholder="t('collection.descriptionPlaceholder')"
             maxlength="1000"
+            spellcheck="false"
           ></textarea>
+        </div>
+
+        <!-- Language Section -->
+        <div class="form-group">
+          <label class="form-label"><b class="required">*</b>{{ t('submit.language') }}</label>
+          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+              <span>{{ currentLangLabel }}</span>
+              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+              <div
+                class="lang-dropdown-item"
+                v-for="opt in langOptions"
+                :key="opt.key"
+                :class="{ active: selectedLanguage === opt.key }"
+                @click="selectedLanguage = opt.key; langDropdownOpen = false"
+              >{{ t(opt.labelKey) }}</div>
+            </div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -125,7 +146,7 @@
 </template>
 
 <script setup lang="ts" name="CreateCollection">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -157,6 +178,41 @@ const descriptionModified = ref(false);
 const isNsfwModified = ref(false);
 const isNsfwSelected = ref(true);
 const originalName = ref('');
+
+const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
+
+const langOptions = [
+  { key: "en", labelKey: "submit.langEn" },
+  { key: "jp", labelKey: "submit.langJp" },
+  { key: "cn", labelKey: "submit.langZh" },
+  { key: "tc", labelKey: "submit.langTc" },
+];
+
+const langDropdownOpen = ref(false);
+const langDropdownUp = ref(false);
+const langDropdownRef = ref<HTMLElement | null>(null);
+const selectedLanguage = ref(defaultLang);
+const languageModified = ref(false);
+const originalLanguage = ref(defaultLang);
+
+const currentLangLabel = computed(() => {
+  const opt = langOptions.find((o) => o.key === selectedLanguage.value);
+  return opt ? t(opt.labelKey) : "";
+});
+
+function toggleLangDropdown() {
+  if (langDropdownOpen.value) {
+    langDropdownOpen.value = false;
+    return;
+  }
+  const el = langDropdownRef.value;
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    langDropdownUp.value = spaceBelow < 200;
+  }
+  langDropdownOpen.value = true;
+}
 const originalDescription = ref('');
 const originalCover = ref('');
 const originalIsNsfw = ref(0);
@@ -241,6 +297,10 @@ async function loadCollection(id: string) {
       originalDescription.value = bookInfo.description || '';
       originalCover.value = bookInfo.cover || '';
       originalIsNsfw.value = bookInfo.is_nsfw == 1 ? 1 : 0;
+      if (bookInfo.language) {
+        selectedLanguage.value = bookInfo.language;
+        originalLanguage.value = bookInfo.language;
+      }
     }
   } catch (error) {
     console.error('Failed to load collection:', error);
@@ -285,11 +345,16 @@ async function handleSave() {
       if (isNsfw.value !== originalIsNsfw.value) {
         params.is_nsfw = isNsfw.value;
       }
+
+      if (selectedLanguage.value !== originalLanguage.value) {
+        params.language = selectedLanguage.value;
+      }
     } else {
       params.title = collectionName.value.trim();
       params.description = description.value.trim();
       params.cover = coverUrl.value;
       params.is_nsfw = isNsfw.value;
+      params.language = selectedLanguage.value;
     }
 
     let response;
@@ -397,8 +462,6 @@ function goBack() {
     font-size: 16px;
     font-weight: 600;
     color: #161122;
-    margin-bottom: 12px;
-    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -406,8 +469,9 @@ function goBack() {
     }
 
     .char-counter {
+      margin-left: 12px;
       font-size: 14px;
-      color: #9a93a4;
+      color: #99A1AF;
     }
   }
 
@@ -424,7 +488,7 @@ function goBack() {
     box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
-      color: #9a93a4;
+      color: #99A1AF;
     }
 
     &:focus{
@@ -449,7 +513,7 @@ function goBack() {
     box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
 
     &::placeholder {
-      color: #9a93a4;
+      color: #99A1AF;
     }
 
     &:focus{
@@ -475,6 +539,7 @@ function goBack() {
   position: relative;
   display: inline-flex;
   align-items: center;
+  margin-left: 10px;
   cursor: pointer;
   overflow: visible;
   z-index: 30;
@@ -526,7 +591,7 @@ function goBack() {
   .tooltip-content {
     font-size: 12px;
     line-height: 20px;
-    color: #9a93a4;
+    color: #99A1AF;
 
     :deep(span) {
       color: #161122;
@@ -567,6 +632,84 @@ function goBack() {
   }
 }
 
+.lang-dropdown {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  margin-top: 12px;
+
+  .lang-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 2px solid #161122;
+    border-radius: 10px;
+    background: #FFFFFF;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    span {
+      font-size: 14px;
+      font-weight: 700;
+      color: #161122;
+    }
+
+    .lang-arrow {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  &.open .lang-dropdown-trigger {
+    border-color: #FF4D8E;
+    box-shadow: 2px 2px 0 #FF4D8E;
+  }
+
+  &.up .lang-dropdown-menu {
+    bottom: calc(100% + 6px);
+    top: auto;
+  }
+
+  .lang-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    border: 2px solid #161122;
+    border-radius: 10px;
+    background: #FFFFFF;
+    box-shadow: 2px 2px 0 #161122;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .lang-dropdown-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #161122;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #FFF5F9;
+    }
+
+    &.active {
+      background: #FFEFF5;
+      color: #FF4D8E;
+    }
+  }
+}
+
 .cover-wrapper {
   .cover-label {
     display: flex;
@@ -574,8 +717,6 @@ function goBack() {
     font-size: 16px;
     font-weight: 600;
     color: #161122;
-    margin-bottom: 12px;
-    gap: 10px;
 
     .required {
       font-weight: normal;
@@ -587,6 +728,7 @@ function goBack() {
     display: flex;
     align-items: flex-end;
     gap: 12px;
+    margin-top: 12px;
   }
 
   .cover-upload {
@@ -620,13 +762,15 @@ function goBack() {
       }
 
       span {
+        font-weight: 600;
         font-size: 16px;
-        color: #5b5566;
+        color: #161222;
       }
     }
   }
 
   .set-cover {
+    font-weight: 600;
     font-size: 16px;
     color: #FF4D8D;
     cursor: pointer;
@@ -658,7 +802,7 @@ function goBack() {
     background: #FFFDF7;
     color: #5b5566;
     border: 2px solid #161122;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    box-shadow: 2px 2px 0 #161122;
 
     &:hover {
       color: #FF4D8D;
@@ -670,11 +814,11 @@ function goBack() {
     background: #FF4D8D;
     color: #FFFDF7;
     border: 3px solid #161122;
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 2px 2px 0 #161122;
 
     &:hover:not(:disabled) {
       transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 3px 3px 0 #161122;
     }
 
     &:active:not(:disabled) {
@@ -702,8 +846,6 @@ function goBack() {
     margin-bottom: 20px;
     .form-label {
       font-size: 16px;
-      margin-bottom: 12px;
-      gap: 10px;
       .char-counter {
         font-size: 14px;
       }
@@ -713,10 +855,12 @@ function goBack() {
       padding: 10px;
       border-radius: 8px;
       font-size: 16px;
+      margin-top: 12px;
     }
     .form-textarea {
       height: 200px;
       min-height: 200px;
+      margin-top: 12px;
       padding: 10px;
       border-radius: 8px;
       font-size: 16px;
@@ -763,8 +907,6 @@ function goBack() {
   .cover-wrapper {
     .cover-label {
       font-size: 16px;
-      margin-bottom: 12px;
-      gap: 10px;
     }
     .cover-upload-box {
       gap: 12px;
@@ -814,8 +956,6 @@ function goBack() {
     margin-bottom: 16px;
     .form-label {
       font-size: 14px;
-      margin-bottom: 8px;
-      gap: 6px;
       .char-counter {
         font-size: 12px;
       }
@@ -875,8 +1015,6 @@ function goBack() {
   .cover-wrapper {
     .cover-label {
       font-size: 14px;
-      margin-bottom: 8px;
-      gap: 6px;
     }
     .cover-upload-box {
       gap: 8px;

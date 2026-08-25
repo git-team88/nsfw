@@ -2,7 +2,7 @@ $ink: #161122;
 $paper: #FFFDF7;
 $cream: #FFFBF4;
 $pink: #FF4D8D;
-$muted: #9a93a4;
+$muted: #99A1AF;
 $sub: #5b5566;
 $line: #e7e1d8;
 $yellow: #FFD23F;
@@ -2389,6 +2389,14 @@ $pinkopacity: rgba(255,77,142,0.12);
 
             &.type-3 {
               background: #7FD8E8;
+            }
+
+            &.type-4 {
+              background: #FF4D8E;
+            }
+
+            &.type-5 {
+              background: #22C55E;
             }
           }
         }

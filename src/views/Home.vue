@@ -1199,7 +1199,7 @@
 
                   <!-- Type Icon -->
                   <div class="type-icon" v-if="item.type">
-                    <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
+                    <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : item.type == '3' ? t('collection.typeVideo') : item.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                   </div>
                   <!-- Video Play Icon -->
                   <div v-if="item.type == '3'" class="play-icon">

@@ -2,7 +2,7 @@ $ink: #161122;
 $paper: #FFFDF7;
 $cream: #FFFBF4;
 $pink: #FF4D8D;
-$muted: #9a93a4;
+$muted: #99A1AF;
 $sub: #5b5566;
 $line: #e7e1d8;
 $yellow: #FFD23F;
@@ -471,6 +471,14 @@ $pinkopacity: rgba(255,77,142,0.12);
     width: 20px;
     height: 20px;
   }
+}
+
+.published-text {
+  color: #99A1AF;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  user-select: none;
 }
 
 /* 视频类型样式 */

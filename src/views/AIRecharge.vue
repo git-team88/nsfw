@@ -786,7 +786,7 @@ $ink: #161122;
 $paper: #FFFDF7;
 $cream: #FFFBF4;
 $pink: #FF4D8D;
-$muted: #9a93a4;
+$muted: #99A1AF;
 $sub: #5b5566;
 $line: #e7e1d8;
 $yellow: #FFD23F;
