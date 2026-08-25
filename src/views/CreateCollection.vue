@@ -24,7 +24,7 @@
                   <span>{{ t('collection.uploadCover') }}</span>
                 </div>
               </div>
-              <span class="set-cover" @click="openCoverModal">{{ t('submit.cover.set') }}</span>
+              <img class="set-cover" src="@/assets/images/publish/set.png" alt="" @click="openCoverModal" />
             </div>
           </div>
         </div>
@@ -643,7 +643,7 @@ function goBack() {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: 36px;
+    height: 40px;
     padding: 0 12px;
     border: 2px solid #161122;
     border-radius: 10px;
@@ -770,10 +770,15 @@ function goBack() {
   }
 
   .set-cover {
-    font-weight: 600;
-    font-size: 16px;
-    color: #FF4D8D;
+    width: 28px;
+    height: 28px;
     cursor: pointer;
+    align-self: flex-end;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 
@@ -927,7 +932,8 @@ function goBack() {
       }
     }
     .set-cover {
-      font-size: 16px;
+      width: 28px;
+      height: 28px;
     }
   }
   .action-buttons {
@@ -1035,7 +1041,8 @@ function goBack() {
       }
     }
     .set-cover {
-      font-size: 14px;
+      width: 24px;
+      height: 24px;
     }
   }
   .action-buttons {

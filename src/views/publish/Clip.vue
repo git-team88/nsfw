@@ -1784,10 +1784,6 @@ async function onSubmit() {
       access_rights: accessRights.value,
       video_url: videoUrl.value,
       language: form.value.language,
-      book_id: 0,
-      chapter_index: 0,
-      cover_color: "",
-      cover_title: "",
       ...(sessionId.value ? { session_id: sessionId.value } : {}),
     };
 

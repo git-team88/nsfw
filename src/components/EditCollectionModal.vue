@@ -22,7 +22,7 @@
                   <span>{{ t('collection.uploadCover') }}</span>
                 </div>
               </div>
-              <span class="set-cover" @click="openCoverModal">{{ coverUrl ? t('collection.changeCover') : t('collection.setCover') }}</span>
+              <img class="set-cover" src="@/assets/images/publish/set.png" alt="" @click="openCoverModal" />
             </div>
           </div>
         </div>
@@ -224,6 +224,7 @@ const initialCollectionName = ref(props.collectionName || '');
 const initialCoverUrl = ref(props.coverUrl || '');
 const initialDescription = ref(props.isEdit ? (props.description || '') : (props.description || t('collection.defaultDescription')));
 const initialIsNsfw = ref(props.isNsfw == 1 ? 1 : 0);
+const initialLanguage = ref(props.language || defaultLang);
 
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
@@ -390,6 +391,9 @@ async function handleSave() {
       }
       if (isNsfw.value !== initialIsNsfw.value) {
         params.is_nsfw = isNsfw.value;
+      }
+      if (selectedLanguage.value !== initialLanguage.value) {
+        params.language = selectedLanguage.value;
       }
 
       const response = await api.modifyCollection(params) as any;
@@ -764,12 +768,14 @@ function handleModalKeydown(e: KeyboardEvent) {
     }
 
     .set-cover {
-      font-size: 16px;
-      color: #FF4D8D;
+      width: 28px;
+      height: 28px;
       cursor: pointer;
+      align-self: flex-end;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
 
       &:hover {
-        text-decoration: underline;
+        transform: scale(1.1);
       }
     }
   }
@@ -786,7 +792,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     justify-content: space-between;
     width: 100%;
     max-width: 400px;
-    height: 36px;
+    height: 40px;
     padding: 0 12px;
     border: 2px solid #161122;
     border-radius: 10px;

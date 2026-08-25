@@ -72,7 +72,7 @@
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
                 @click="selectProject(project)"
               >
-                <img :src="project.result_async.generate_manju_cover" alt="" class="project-image" />
+                <img :src="processImageUrl(project.result_async.generate_manju_cover)" alt="" class="project-image" />
                 <div class="view-icon" @click.stop="openViewModal(project)">
                   <img src="@/assets/images/publish/play.png" alt="Play" />
                 </div>
@@ -363,8 +363,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
-                     <div class="collection-info" v-else>
+                    <div class="collection-info" v-else>
                       <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
                     </div>
                   </div>
@@ -535,6 +534,7 @@
                         </div>
                       </div>
                     </div>
+                  </div>
                   <div class="collection-info" v-else>
                     <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
                   </div>
