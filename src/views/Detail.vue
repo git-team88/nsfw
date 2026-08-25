@@ -83,7 +83,7 @@
                   @ended="onVideoEnded"
                 ></video>
 
-                <div class="subtitle-overlay" v-if="currentSubtitleText && selectedSubtitleLang" v-html="currentSubtitleText.replace(/\n/g, '<br/>')"></div>
+                <div class="subtitle-overlay" v-if="currentSubtitleText && selectedSubtitleLang && !isStandaloneType" v-html="currentSubtitleText.replace(/\n/g, '<br/>')"></div>
 
                 <div class="custom-video-controls" v-show="(isVideoHovered || !isPlaying || isDraggingProgress) && !isVideoLoading" @click.stop>
                   <div ref="progressBarRef" class="progress-bar" @click="onProgressClick" @mousedown="onProgressDragStart">
@@ -101,7 +101,7 @@
                       <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
                     </div>
                     <div class="controls-right">
-                      <div class="subtitle-control" v-if="subtitles.length > 0" @click.stop="showSubtitleMenu = !showSubtitleMenu">
+                      <div class="subtitle-control" v-if="subtitles.length > 0 && !isStandaloneType" @click.stop="showSubtitleMenu = !showSubtitleMenu">
                           <span class="subtitle-label">{{ t('detail.subtitle') }}：{{ selectedSubtitleLang ? t(subtitleLangMap[selectedSubtitleLang] || '') : t('detail.subtitleNone') }}</span>
                         <svg class="subtitle-arrow" viewBox="0 0 12 12" width="10" height="10"><path d="M3 5l3 3 3-3" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <div class="subtitle-menu" v-show="showSubtitleMenu" @click.stop>
@@ -226,7 +226,7 @@
             <!-- Collection Info Bar -->
             <div
               class="collection-info-bar"
-              v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode && !isSensitiveContentLocked"
+              v-if="detail.book_id != '' && Number(detail.book_id) > 0 && !isCollectionMode && !isSensitiveContentLocked && !isStandaloneType"
             >
 
               <div class="collection-info" @click="enterCurrentChapter">
@@ -255,7 +255,7 @@
             </div>
 
             <!-- Collection Mode Info Bar -->
-            <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0 && isCollectionMode">
+            <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0 && isCollectionMode && !isStandaloneType">
               <div class="current-episode">
                 <span class="episode-number">第{{ currentCollectionIndex + 1 }}集</span>
                 <span class="episode-line"></span>
@@ -316,7 +316,7 @@
                 class="tab-item"
                 :class="{ active: activeTab == 'collection' }"
                 @click="activeTab = 'collection'; loadCollections()"
-                v-if="detail.book_id && Number(detail.book_id) > 0"
+                v-if="detail.book_id && Number(detail.book_id) > 0 && !isStandaloneType"
               >
                 {{ t('detail.collection') }}
               </div>
@@ -325,7 +325,7 @@
           </div>
 
           <!-- Collection Info Bar (only shows in collection tab) -->
-          <div class="collection-info-section" v-if="activeTab == 'collection' && detail.book_id !== '' && Number(detail.book_id) > 0">
+          <div class="collection-info-section" v-if="activeTab == 'collection' && detail.book_id !== '' && Number(detail.book_id) > 0 && !isStandaloneType">
             <div class="collection-info-row">
               <div class="collection-title">{{ detail.book_title }}</div>
             </div>
@@ -689,7 +689,7 @@
           </div>
 
           <!-- Collection Tab Content -->
-          <div v-else-if="activeTab === 'collection'">
+          <div v-else-if="activeTab === 'collection' && !isStandaloneType">
             <div class="collection-list" ref="collectionListRef" @scroll="handleCollectionScroll">
               <!-- Loading State -->
               <div v-if="isLoadingCollections" class="loading-more">
@@ -853,6 +853,7 @@ const router = useRouter();
 const id = ref<number>(Number(route.query.id));
 const contentType = ref<string>(route.query.tab as string || route.query.contentType as string || "");
 const isNovelType = computed(() => contentType.value === '2' || contentType.value === 'novel' || detail.value.type === '2');
+const isStandaloneType = computed(() => detail.value.type === '4' || detail.value.type === '5');
 const isPlaying = ref(false);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
@@ -2037,7 +2038,7 @@ async function fetchDetail(newId: number) {
       body: data
     }).then(r => r.json());
 
-    const subtitlePromise = api.getSubtitlesPublic({ post_id: newId }).catch(() => null);
+    const subtitlePromise = isStandaloneType.value ? Promise.resolve(null) : api.getSubtitlesPublic({ post_id: newId }).catch(() => null);
 
     const [res, subRes] = await Promise.all([detailPromise, subtitlePromise]);
 
@@ -2112,7 +2113,7 @@ async function fetchDetail(newId: number) {
       }
 
       // Load chapters if it's part of a collection
-      if (detail.value.book_id != '' && Number(detail.value.book_id) > 0) {
+      if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
         await loadChapters();
 
         // Auto enter collection mode when book has chapters

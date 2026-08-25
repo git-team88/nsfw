@@ -132,6 +132,16 @@ const routes = [
     component: () => import("@/views/publish/Success.vue"),
   },
   {
+    path: "/publish/image",
+    name: "PublishImage",
+    component: () => import("@/views/publish/Image.vue"),
+  },
+  {
+    path: "/publish/clip",
+    name: "PublishClip",
+    component: () => import("@/views/publish/Clip.vue"),
+  },
+  {
     path: "/detail",
     name: "Detail",
     component: () => import("@/views/Detail.vue"),

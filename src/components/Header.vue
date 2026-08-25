@@ -361,6 +361,14 @@ const typeList = ref([
     name: t("header.type2"),
     path: "/publish/video",
   },
+  {
+    name: t("header.type5"),
+    path: "/publish/image",
+  },
+  {
+    name: t("header.type6"),
+    path: "/publish/clip",
+  },
 ]);
 
 const props = defineProps<{
@@ -414,6 +422,14 @@ watch(locale, () => {
     },
     {
       name: t("header.type2"),
+      path: "/publish/video",
+    },
+    {
+      name: t("header.type5"),
+      path: "/publish/image",
+    },
+    {
+      name: t("header.type6"),
       path: "/publish/video",
     },
   ];
@@ -1222,7 +1238,7 @@ defineExpose({
 
           span {
             width: 100%;
-            padding: 11px 12px;
+            padding: 6px 12px;
             margin: 0;
             cursor: pointer;
             opacity: 0.65;

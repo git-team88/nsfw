@@ -77,7 +77,7 @@
                 </div>
                 <!-- Type Icon -->
                 <div class="type-icon" v-if="post.type">
-                  <span class="type-badge" :class="'type-' + post.type">{{ post.type == '1' ? t('collection.typeComic') : post.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
+                  <span class="type-badge" :class="'type-' + post.type">{{ post.type == '1' ? t('collection.typeComic') : post.type == '2' ? t('collection.typeNovel') : post.type == '3' ? t('collection.typeVideo') : post.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                 </div>
                 <!-- Video Play Icon -->
                 <div v-if="post.type == '3'" class="play-icon">
@@ -1073,6 +1073,14 @@ $line: #e7e1d8;
 
         &.type-3 {
           background: #7FD8E8;
+        }
+
+        &.type-4 {
+          background: #FF4D8E;
+        }
+
+        &.type-5 {
+          background: #22C55E;
         }
       }
     }

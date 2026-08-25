@@ -72,7 +72,7 @@
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
                 @click="selectProject(project)"
               >
-                <img :src="project.result_async.generate_manju_cover" alt="" class="project-image" />
+                <img :src="processImageUrl(project.result_async.generate_manju_cover)" alt="" class="project-image" />
                 <div class="view-icon" @click.stop="openViewModal(project)">
                   <img src="@/assets/images/publish/play.png" alt="Play" />
                 </div>
@@ -343,6 +343,24 @@
                           </div>
                           <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
+                        <div class="content-language">
+                          <label class="form-label">{{ t('submit.language') }}</label>
+                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                              <span>{{ currentLangLabel }}</span>
+                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                              <div
+                                class="lang-dropdown-item"
+                                v-for="opt in langOptions"
+                                :key="opt.key"
+                                :class="{ active: collectionLanguage === opt.key }"
+                                @click="handleCollectionLanguageChange(opt.key)"
+                              >{{ t(opt.labelKey) }}</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div class="collection-info" v-else>
@@ -496,6 +514,24 @@
                           />
                         </div>
                         <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                      </div>
+                      <div class="content-language">
+                        <label class="form-label">{{ t('submit.language') }}</label>
+                        <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                          <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                            <span>{{ currentLangLabel }}</span>
+                            <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                          </div>
+                          <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                            <div
+                              class="lang-dropdown-item"
+                              v-for="opt in langOptions"
+                              :key="opt.key"
+                              :class="{ active: collectionLanguage === opt.key }"
+                              @click="handleCollectionLanguageChange(opt.key)"
+                            >{{ t(opt.labelKey) }}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -705,6 +741,7 @@
       :type="3"
       :session-id="selectedProject?.session_id || route.query.session_id || sessionId || ''"
       :story-summary="selectedProject?.result_async?.generate_manju_outline?.synopsis || ''"
+      :language="collectionLanguage"
       @close="handleCloseEditCollectionModal"
       @save="handleSaveCollection"
     />
@@ -880,6 +917,54 @@ const form = ref({
   content: "no",
 });
 
+const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
+
+const langOptions = [
+  { key: "en", labelKey: "submit.langEn" },
+  { key: "jp", labelKey: "submit.langJp" },
+  { key: "cn", labelKey: "submit.langZh" },
+  { key: "tc", labelKey: "submit.langTc" },
+];
+
+const langDropdownOpen = ref(false);
+const langDropdownUp = ref(false);
+const langDropdownRef = ref<HTMLElement | null>(null);
+const collectionLanguage = ref(defaultLang);
+
+function toggleLangDropdown() {
+  if (langDropdownOpen.value) {
+    langDropdownOpen.value = false;
+    return;
+  }
+  const el = langDropdownRef.value;
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    langDropdownUp.value = spaceBelow < 200;
+  }
+  langDropdownOpen.value = true;
+}
+
+const currentLangLabel = computed(() => {
+  const opt = langOptions.find((o) => o.key === collectionLanguage.value);
+  return opt ? t(opt.labelKey) : "";
+});
+
+async function handleCollectionLanguageChange(key: string) {
+  langDropdownOpen.value = false;
+  if (key === collectionLanguage.value) return;
+  const prevLang = collectionLanguage.value;
+  collectionLanguage.value = key;
+  if (selectedCollection.value) {
+    try {
+      await api.modifyCollection({ book_id: selectedCollection.value.id, language: key });
+    } catch (e) {
+      collectionLanguage.value = prevLang;
+      toast(t('fail'));
+    }
+  }
+}
+
 const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
   { key: "partial", labelKey: "submit.permPartial" },
@@ -947,16 +1032,24 @@ watch(uploadOption, (newOption) => {
 // Tab list
 const tabList = [
   {
-    name: t("submit.tabs.article"),
+    name: t("submit.tabs.novel"),
     path: "/publish/novel",
   },
   {
-    name: t("submit.tabs.image"),
+    name: t("submit.tabs.manhua"),
     path: "/publish/comic",
   },
   {
-    name: t("submit.tabs.video"),
+    name: t("submit.tabs.manju"),
     path: "/publish/video",
+  },
+  {
+    name: t("submit.tabs.photo"),
+    path: "/publish/image",
+  },
+  {
+    name: t("submit.tabs.video"),
+    path: "/publish/clip",
   }
 ];
 

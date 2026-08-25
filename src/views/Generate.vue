@@ -143,6 +143,10 @@
 
               <!-- 底部操作 - 仅在任务完成后显示 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="photo-footer">
+                <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
+                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
+                  <img src="@/assets/images/project/publish.png" alt="publish" />
+                </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
                 </div>
@@ -315,6 +319,10 @@
 
               <!-- 视频底部操作 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
+                <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
+                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
+                  <img src="@/assets/images/project/publish.png" alt="publish" />
+                </div>
                 <div class="regenerate-btn" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
                 </div>
@@ -1308,7 +1316,10 @@ const handlePhotoInput = (event: Event) => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+    const isTrailingBr = !next;
+    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
+    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
       br.remove();
     }
   });
@@ -1633,11 +1644,30 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
       return;
     }
 
+    // 如果光标在文本节点中间且有实际文字，让默认删除
     if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
       const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
       if (textBeforeCursor.trim() !== '') {
         return;
       }
+    }
+
+    // 检查光标前面是否有 BR，如果有则删除 BR 并阻止默认行为（避免换行/误删 span）
+    let checkNode: Node | null = range.startContainer;
+    if (range.startOffset > 0 && checkNode.nodeType === 3) {
+      const textBeforeCursor = checkNode.textContent?.substring(0, range.startOffset) || '';
+      if (textBeforeCursor.trim() === '') {
+        checkNode = checkNode.previousSibling;
+      }
+    } else if (range.startOffset === 0) {
+      checkNode = checkNode?.previousSibling || null;
+    }
+
+    if (checkNode && checkNode.nodeType === 1 && (checkNode as HTMLElement).tagName === 'BR') {
+      (checkNode as HTMLElement).remove();
+      event.preventDefault();
+      previousPhotoInputHtml.value = target.innerHTML;
+      return;
     }
 
     let previousSibling: Node | null = range.startContainer;
@@ -1655,6 +1685,11 @@ const handlePhotoKeydown = (event: KeyboardEvent) => {
     }
 
     while (previousSibling) {
+      // 跳过 BR
+      if (previousSibling.nodeType === 1 && (previousSibling as HTMLElement).tagName === 'BR') {
+        previousSibling = previousSibling.previousSibling;
+        continue;
+      }
       if (previousSibling.nodeType === 1) {
         const element = previousSibling as HTMLElement;
         if (element.classList.contains('image-tag')) {
@@ -2768,7 +2803,10 @@ const handleVideoInput = () => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+    const isTrailingBr = !next;
+    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
+    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
       br.remove();
     }
   });
@@ -3002,11 +3040,30 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
       return;
     }
 
+    // 如果光标在文本节点中间且有实际文字，让默认删除
     if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
       const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
       if (textBeforeCursor.trim() !== '') {
         return;
       }
+    }
+
+    // 检查光标前面是否有 BR，如果有则删除 BR 并阻止默认行为（避免换行/误删 span）
+    let checkNode: Node | null = range.startContainer;
+    if (range.startOffset > 0 && checkNode.nodeType === 3) {
+      const textBeforeCursor = checkNode.textContent?.substring(0, range.startOffset) || '';
+      if (textBeforeCursor.trim() === '') {
+        checkNode = checkNode.previousSibling;
+      }
+    } else if (range.startOffset === 0) {
+      checkNode = checkNode?.previousSibling || null;
+    }
+
+    if (checkNode && checkNode.nodeType === 1 && (checkNode as HTMLElement).tagName === 'BR') {
+      (checkNode as HTMLElement).remove();
+      event.preventDefault();
+      previousVideoInputHtml.value = target.innerHTML;
+      return;
     }
 
     let previousSibling: Node | null = range.startContainer;
@@ -3024,6 +3081,11 @@ const handleVideoKeydown = (event: KeyboardEvent) => {
     }
 
     while (previousSibling) {
+      // 跳过 BR
+      if (previousSibling.nodeType === 1 && (previousSibling as HTMLElement).tagName === 'BR') {
+        previousSibling = previousSibling.previousSibling;
+        continue;
+      }
       if (previousSibling.nodeType === 1) {
         const element = previousSibling as HTMLElement;
         if (element.classList.contains('image-tag') || element.classList.contains('video-tag') || element.classList.contains('audio-tag')) {
@@ -4658,7 +4720,7 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
-  selectedVideoDuration.value = '15';
+      selectedVideoDuration.value = '15';
       selectedVideoRatio.value = '9:16';
       selectedVideoQuality.value = '1080P';
       selectedVideoMultimodal.value = 'multimodal';
@@ -5091,6 +5153,24 @@ const playUploadedVideo = (ref: any) => {
     playingVideoUrl.value = ref.url || ref.videoUrl || ref.image;
     showVideoModal.value = true;
   }
+};
+
+const publishPhoto = (record: any) => {
+  router.push({
+    path: '/publish/image',
+    query: {
+      session_id: record.session_id
+    }
+  });
+};
+
+const publishVideo = (record: any) => {
+  router.push({
+    path: '/publish/clip',
+    query: {
+      session_id: record.session_id
+    }
+  });
 };
 
 const regenerateRecord = (record: any) => {

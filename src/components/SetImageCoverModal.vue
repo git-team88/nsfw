@@ -549,33 +549,26 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   padding: 0 24px;
 
   .tabs {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    height: 100%;
+    display: inline-flex;
+    gap: 0;
+    border: 2px solid #161122;
+    border-radius: 20px;
+    padding: 3px;
+    background: rgba(22, 17, 34, 0.04);
 
     span {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      font-size: 16px;
+      padding: 6px 16px;
+      font-size: 14px;
       color: #667085;
       cursor: pointer;
-      position: relative;
+      border-radius: 16px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
 
       &.active {
-        color: #161122;
+        color: #ffffff;
+        background: #161122;
         font-weight: 600;
-
-        &::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 2px;
-          background: #FF4D8D;
-        }
       }
     }
   }
@@ -808,21 +801,25 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   .btn.confirm {
     background: #FF4D8D;
     color: #ffffff;
-    border: none;
+    border: 2px solid #161122;
     min-width: 136px;
     height: 48px;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
+    box-shadow: 2px 2px 0 #161122;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-        }
-        &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
-        }
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 0 #161122;
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 2px 2px 0 #161122;
+    }
 
     &:disabled {
       background: #f8d7e8;
