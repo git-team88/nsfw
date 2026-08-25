@@ -453,6 +453,32 @@
             border-radius: 12px;
             object-fit: contain;
           }
+
+          .image-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 5;
+            opacity: 0;
+
+            .reload {
+              position: relative;
+              margin-bottom: 6px;
+              cursor: pointer;
+            }
+
+            img {
+              width: 28px;
+              height: 28px;
+              cursor: pointer;
+            }
+          }
+
+          &:hover {
+            .image-btn {
+              opacity: 1;
+            }
+          }
         }
       }
     }
@@ -484,7 +510,6 @@
         width: 120px;
         height: 160px;
         border-radius: 12px;
-        cursor: pointer;
         overflow: hidden;
         background: rgba(22, 17, 34, 0.06);
 

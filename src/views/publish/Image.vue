@@ -169,9 +169,33 @@
               class="image-item"
             >
               <img class="image" :src="processImageUrl(url)" alt="" />
+              <div class="image-btn">
+                <div class="reload">
+                  <img
+                    src="@/assets/images/publish/reload.png"
+                    alt=""
+                    @click.stop="reloadImage(index)"
+                  />
+                </div>
+                <img
+                  src="@/assets/images/publish/delete.png"
+                  alt=""
+                  @click="removeImage(index)"
+                  v-if="imageUrls.length > 1"
+                />
+              </div>
             </div>
           </div>
         </div>
+
+        <input
+          ref="reuploadInputRef"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          class="hidden-file"
+          style="display: none;"
+          @change="onReuploadPicked"
+        />
 
         <!-- Permission -->
         <div class="inline-perm-row">
@@ -198,7 +222,7 @@
           <span><b>*</b>{{ t('submit.coverLabel') }}</span>
         </div>
         <div class="cover-row">
-          <div class="cover-upload" @click="openCoverModal">
+          <div class="cover-upload">
             <img v-if="coverPreview" :src="processImageUrl(coverPreview)" alt="" class="cover-preview" />
             <div v-else class="cover-placeholder">
               <img src="@/assets/images/user/upload.png" alt="" />
@@ -354,6 +378,8 @@
       @cancel="closeSubscriptionModal"
       @go-to-settings="goToSubscriptionSettings"
     />
+
+    <UploadMask :visible="isUploadingImages" />
   </div>
 </template>
 
@@ -371,6 +397,7 @@ import Pagination from "@/components/Pagination.vue";
 import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import UploadMask from "@/components/UploadMask.vue";
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -465,6 +492,9 @@ const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
 
 const isLoadingDetail = ref(false);
+const isUploadingImages = ref(false);
+const reuploadInputRef = ref<HTMLInputElement | null>(null);
+const reuploadIndex = ref<number | null>(null);
 
 // History list state
 const projects = ref<any[]>([]);
@@ -507,21 +537,38 @@ function onAddImagesPicked(e: Event) {
   const input = e.target as HTMLInputElement;
   const files = Array.from(input.files ?? []);
   input.value = "";
-  for (const f of files) {
-    if (imageUrls.value.length >= 15) {
-      toast(t("submit.image.maxSelectTip"));
-      break;
-    }
-    uploadImageForAdd(f);
+
+  const maxCount = 12;
+  if (imageUrls.value.length + files.length > maxCount) {
+    toast(t("submit.image.maxSelectTip"));
+    return;
   }
+
+  const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const validFiles: File[] = [];
+  for (const f of files) {
+    if (!validTypes.includes(f.type)) {
+      toast(t("submit.image.uploadFormatError"));
+      continue;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      toast(t("submit.image.uploadTip"));
+      continue;
+    }
+    validFiles.push(f);
+  }
+
+  if (validFiles.length === 0) return;
+
+  isUploadingImages.value = true;
+  Promise.all(validFiles.map(f => uploadImageForAdd(f))).finally(() => {
+    isUploadingImages.value = false;
+  });
 }
 
 async function uploadImageForAdd(file: File) {
   const token = localStorage.getItem("token");
   if (!token) { router.push("/login"); return; }
-  const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  if (!validTypes.includes(file.type)) { toast(t("submit.image.uploadFormatError")); return; }
-  if (file.size > 10 * 1024 * 1024) { toast(t("submit.image.uploadTip")); return; }
   const formData = new FormData();
   formData.append("file", file);
   const authHeaders = (window as any).AntiCrawler.generateAuthParams(token);
@@ -541,6 +588,71 @@ async function uploadImageForAdd(file: File) {
     }
   } catch (error) {
     console.error("Upload error:", error);
+  }
+}
+
+function reloadImage(idx: number) {
+  reuploadIndex.value = idx;
+  reuploadInputRef.value?.click();
+}
+
+function removeImage(idx: number) {
+  const removedUrl = imageUrls.value[idx];
+  imageUrls.value.splice(idx, 1);
+  imageSessionMap.value.delete(removedUrl);
+  if (coverPreview.value === removedUrl) {
+    coverPreview.value = imageUrls.value[0] || "";
+  }
+}
+
+async function onReuploadPicked(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (reuploadIndex.value === null || !file) return;
+
+  const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  if (!validTypes.includes(file.type)) {
+    toast(t("submit.image.uploadFormatError"));
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    toast(t("submit.image.uploadTip"));
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) { router.push("/login"); return; }
+
+  isUploadingImages.value = true;
+  const formData = new FormData();
+  formData.append("file", file);
+  const authHeaders = (window as any).AntiCrawler.generateAuthParams(token);
+  try {
+    const res = await fetch(baseUrl + "user/uploadImage", {
+      method: "POST",
+      headers: { token, Platform: "web", ...authHeaders },
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.code === 0 || data.code === 200) {
+      const url = (data?.data && (data.data.url || data.data)) || data?.url;
+      if (typeof url === "string" && url) {
+        const idx = reuploadIndex.value;
+        const oldUrl = imageUrls.value[idx];
+        imageUrls.value.splice(idx, 1, url);
+        imageSessionMap.value.delete(oldUrl);
+        imageSessionMap.value.set(url, session_id.value || "");
+        if (coverPreview.value === oldUrl) {
+          coverPreview.value = url;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Reupload error:", error);
+  } finally {
+    isUploadingImages.value = false;
+    reuploadIndex.value = null;
   }
 }
 

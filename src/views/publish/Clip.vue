@@ -208,7 +208,7 @@
             <span><b>*</b>{{ t('submit.coverLabel') }}</span>
           </div>
           <div class="cover-row">
-            <div class="cover-upload" @click="openCoverModal">
+            <div class="cover-upload">
               <img v-if="coverUrl" :src="processImageUrl(coverUrl)" alt="" class="cover-preview" />
               <div v-else class="cover-placeholder">
                 <img src="@/assets/images/user/upload.png" alt="" />
