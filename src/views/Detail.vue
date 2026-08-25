@@ -8,7 +8,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '4' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' || detail?.type == '4' }" @wheel="handleLeftPanelWheel">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -53,7 +53,7 @@
               </div>
             </template>
 
-            <div v-if="detail.type == '3'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+            <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
               <div v-if="!isVideoLocked && !isLoading" @click="togglePlay">
                 <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
                   <img :src="currentVideoPoster" alt="Cover" draggable="false" />
@@ -159,7 +159,7 @@
               </div>
             </div>
 
-            <template v-else-if="detail.type == '1' && !isCollectionMode">
+            <template v-else-if="(detail.type == '1' || detail.type == '4') && !isCollectionMode">
               <!-- 敏感内容：面板独立于 image-stack，占满整个区域 -->
               <SensitiveNsfwPanel
                 v-if="isSensitiveContentLocked"
@@ -269,10 +269,11 @@
             <button class="nav-btn down" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId"></button>
           </div>
 
-          <div class="nav-arrows" v-else>
+          <div class="nav-arrows" v-if="!isCollectionMode && !isStandaloneType">
             <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
             <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
           </div>
+          <div class="nav-arrows" v-else-if="!isCollectionMode && isStandaloneType"></div>
         </div>
 
         <!-- Right Side: Info & Comments -->
@@ -1290,7 +1291,7 @@ watch(currentVideoSrc, () => {
 
 watch([currentVideoSrc, videoRef], () => {
   if (!currentVideoSrc.value || !videoRef.value) return;
-  if (detail.value.type !== '3') return;
+  if (detail.value.type !== '3' && detail.value.type !== '5') return;
 
   nextTick(() => {
     tryAutoPlay();
@@ -1711,8 +1712,8 @@ function handleLeftPanelWheel(event: WheelEvent) {
   // Only in non-collection mode and for video type
   if (isCollectionMode.value) return;
   // For image type (1) and comic type (2), don't handle wheel - use right scrollbar instead
-  if (detail.value.type === '1' || detail.value.type === '2') return;
-  if (detail.value.type !== '3') return;
+  if (detail.value.type === '1' || detail.value.type === '2' || detail.value.type === '4') return;
+  if (detail.value.type !== '3' && detail.value.type !== '5') return;
 
   // Debounce to prevent rapid switching
   if (wheelDebounceTimer) return;
@@ -2487,17 +2488,15 @@ async function loadCollections(append: boolean = false) {
 
 async function searchByMention(mention: string) {
   try {
-    // Extract username from mention (remove all @ symbols)
     const username = mention.replace(/@/g, '');
 
-    // Call getUserId API to get user ID
     const res = await api.getUserId({ nickname: username }) as any;
 
     if (res.code === 0 || res.code === 200) {
-      const userId = res.data?.user_id
+      const userId = res.data?.user_id;
       if (userId) {
-        // Navigate to user home page
-        const url = router.push({ path: "/user-home", query: { id: userId } });
+        localStorage.removeItem('userHomeContentType');
+        router.push({ path: "/user-home", query: { id: userId } });
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
@@ -4810,13 +4809,17 @@ async function toggleFav() {
     return;
   }
 
-  if (!detail.value.book_id || Number(detail.value.book_id) == 0) return;
+  const isStandalone = detail.value.type === '4' || detail.value.type === '5';
+
+  if (!isStandalone && (!detail.value.book_id || Number(detail.value.book_id) == 0)) return;
 
   try {
     const previousFavNum = favNum.value;
 
     if (!isFav.value) {
-      const res = await api.likeBook({ book_id: detail.value.book_id }) as any;
+      const res = isStandalone
+        ? await api.bookLikePost({ post_id: detail.value.id }) as any
+        : await api.likeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
         isFav.value = true;
         detail.value.isFav = true;
@@ -4831,7 +4834,9 @@ async function toggleFav() {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
-      const res = await api.unlikeBook({ book_id: detail.value.book_id }) as any;
+      const res = isStandalone
+        ? await api.bookUnlikePost({ post_id: detail.value.id }) as any
+        : await api.unlikeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
         isFav.value = false;
         detail.value.isFav = false;

@@ -1185,10 +1185,10 @@
                 :key="item.id"
                 class="content-item"
                 :ref="(el) => setContentCardRef(el, index)"
-                :href="`/collection/${item.book_id}`"
+                :href="detailHref(item.book_id || item.id, item.type, item.id)"
                 @mousemove="onCardTilt"
                 @mouseleave="onCardTiltReset"
-                @click.prevent="navigateToDetail(item.book_id || item.id, item.type)"
+                @click.prevent="navigateToDetail(item.book_id || item.id, item.type, item.id)"
               >
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
@@ -1202,7 +1202,7 @@
                     <span class="type-badge" :class="'type-' + item.type">{{ item.type == '1' ? t('collection.typeComic') : item.type == '2' ? t('collection.typeNovel') : item.type == '3' ? t('collection.typeVideo') : item.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                   </div>
                   <!-- Video Play Icon -->
-                  <div v-if="item.type == '3'" class="play-icon">
+                  <div v-if="item.type == '3' || item.type == '5'" class="play-icon">
                     <img src="@/assets/images/detail/play.png" alt="" />
                   </div>
 
@@ -2440,7 +2440,9 @@ const contentTypes = ref([
   { id: 0, label: 'all' },
   { id: 2, label: 'novel' },
   { id: 1, label: 'comic' },
-  { id: 3, label: 'drama' }
+  { id: 3, label: 'drama' },
+  { id: 4, label: 'image' },
+  { id: 5, label: 'video' }
 ]);
 
 // Sort Options
@@ -5893,13 +5895,25 @@ const loadContent = async (page = 1) => {
 
     switch (currentActiveTab) {
       case 'suggested':
-        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+        if (currentContentType === 4 || currentContentType === 5) {
+          res = await api.homeRecommendPostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+        } else {
+          res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+        }
         break;
       case 'following':
-        res = await api.homeFollowList(page, pageSize.value, currentContentType, showNsfw) as any;
+        if (currentContentType === 4 || currentContentType === 5) {
+          res = await api.homeFollowPostList(page, pageSize.value, currentContentType, showNsfw) as any;
+        } else {
+          res = await api.homeFollowList(page, pageSize.value, currentContentType, showNsfw) as any;
+        }
         break;
       case 'subscriptions':
-        res = await api.homeSubscriptionList(page, pageSize.value, currentContentType, showNsfw) as any;
+        if (currentContentType === 4 || currentContentType === 5) {
+          res = await api.homeSubscriptionPostList(page, pageSize.value, currentContentType, showNsfw) as any;
+        } else {
+          res = await api.homeSubscriptionList(page, pageSize.value, currentContentType, showNsfw) as any;
+        }
         break;
       default:
         res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
@@ -5985,22 +5999,31 @@ const formatNumber = (num: number) => {
 const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
 const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
-const navigateToDetail = (bookId: string, type?: string) => {
-  const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama"> = {
+const navigateToDetail = (bookId: string, type?: string, postId?: string | number) => {
+  const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama" | "Image" | "Video"> = {
     '1': 'Comic',
     '2': 'Novel',
-    '3': 'Drama'
+    '3': 'Drama',
+    '4': 'Image',
+    '5': 'Video'
   };
   if (type && typeCategoryMap[type]) {
     trackClickContentCover(typeCategoryMap[type]);
   }
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  router.push(`/collection/${bookId}`);
+  if (type === '4' || type === '5') {
+    router.push({ path: '/detail', query: { id: postId || bookId, tab: activeContentTab.value } });
+  } else {
+    router.push(`/collection/${bookId}`);
+  }
 };
 
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
-const detailHref = (bookId: string) => {
+const detailHref = (bookId: string, type?: string, postId?: string | number) => {
+  if (type === '4' || type === '5') {
+    return `/detail?id=${postId || bookId}&tab=${activeContentTab.value}`;
+  }
   return `/collection/${bookId}`;
 };
 

@@ -452,8 +452,10 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     hours: "hours",
     tenMinutes: "10 minutes",
     maxCoverImages: "Maximum {max} images allowed",
-    maxCoverSize: "Image size exceeds limit, maximum supported is 10MB",
+    maxCoverSize: "Image size exceeds limit, maximum supported is {max}MB",
     invalidCoverImageType: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
+    imageDimensionError: "Image width and height must be greater than 14 pixels",
+    imageAspectRatioError: "Image aspect ratio out of range (width/height should be between 1/16 and 16)",
     uploadFormat: "Supported formats: jpg, jpeg, png, webp, up to 10MB each",
     role: {
       novelExpert: "Novel Writing Expert",
@@ -2028,9 +2030,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
        article: "Text",
        myFavorites: "My Favorites",
        myWorks: "My Works",
-       image: "Image",
-       photo: "Clip"
-     },
+        image: "Image",
+        photo: "Clip"
+      },
     videoSettings: {
       title: "Video Settings",
       language: "Language",
@@ -2663,7 +2665,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       myFavorites: "My Favorites",
       myWorks: "My Works",
       image: "Image",
-      photo: "Clip"
+      photo: "Video"
     },
     collection: {
       all: "All",
@@ -2842,8 +2844,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     typeComic: "Comic",
     typeNovel: "Novel",
     typeVideo: "Video",
-    typeImage: "Image",
-    typePhoto: "Clip",
+      typeImage: "Image",
+      typePhoto: "Video",
     cover: "Cover",
     uploadCover: "Upload Cover",
     setCover: "Set Cover",

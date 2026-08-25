@@ -21,7 +21,13 @@
       </div>
 
       <!-- Upload Tabs -->
-      <div class="upload-tabs" v-if="!showFullContent">
+      <!-- Loading Detail State -->
+      <div v-if="isLoadingDetail" class="loading-detail-state">
+        <div class="loading-spinner"></div>
+        <span class="loading-text">{{ t('loading') }}</span>
+      </div>
+
+      <div class="upload-tabs" v-else-if="!showFullContent">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.video.videoLabel") }}</span>
         </div>
@@ -202,22 +208,14 @@
             <span><b>*</b>{{ t('submit.coverLabel') }}</span>
           </div>
           <div class="cover-row">
-            <div class="cover-upload" @click="pickCover">
-              <img v-if="coverUrl" :src="coverUrl" alt="" class="cover-preview" />
+            <div class="cover-upload" @click="openCoverModal">
+              <img v-if="coverUrl" :src="processImageUrl(coverUrl)" alt="" class="cover-preview" />
               <div v-else class="cover-placeholder">
                 <img src="@/assets/images/user/upload.png" alt="" />
                 <span>{{ t('collection.uploadCover') }}</span>
               </div>
             </div>
-            <button class="set-cover-btn" @click="pickCover">{{ t('submit.image.setting') }}</button>
-            <input
-              ref="coverInputRef"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              class="hidden-file"
-              title=""
-              @change="onCoverPicked"
-            />
+            <button class="set-cover-btn" @click="openCoverModal">{{ t('submit.image.setting') }}</button>
           </div>
         </div>
 
@@ -362,6 +360,15 @@
       :url="previewMediaUrl"
     />
 
+    <!-- Cover Selection Modal -->
+    <SetImageCoverModal
+      v-model:visible="showCoverModal"
+      :images="coverImages"
+      :cover-image="coverUrl"
+      :hide-strip="true"
+      @confirm="onCoverConfirmed"
+    />
+
     <!-- Subscription Prompt Modal -->
     <SubscriptionPromptModal
       :visible="showSubscriptionModal"
@@ -384,6 +391,7 @@ import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
@@ -480,6 +488,8 @@ watch(uploadOption, (newOption) => {
   }
 });
 
+const isLoadingDetail = ref(false);
+
 // Project list (history)
 const projects = ref<any[]>([]);
 const selectedProjectId = ref<string | number>("");
@@ -494,14 +504,16 @@ const pageSize = 10;
 const showFullContent = ref(false);
 const videoUrl = ref("");
 const coverUrl = ref("");
+const coverImages = ref<string[]>([]);
+const showCoverModal = ref(false);
 const sessionId = ref("");
 const isUpload = ref(false);
+const editPostId = ref("");
 const uploadProgress = ref(0);
 
   // Local upload file input
   const videoInputRef = ref<HTMLInputElement | null>(null);
   const reuploadInputRef = ref<HTMLInputElement | null>(null);
-  const coverInputRef = ref<HTMLInputElement | null>(null);
 
 const captionRef = ref<HTMLDivElement | null>(null);
 const captionLength = ref(0);
@@ -1421,6 +1433,10 @@ async function confirmSelectedProject() {
   const cover = projectFirstVideo.video_cover_url || projectRa.cover_url || projectRa.cover || project?.cover || "";
   coverUrl.value = cover;
 
+  coverImages.value = projectFinalVideos
+    .map((v: any) => v.video_cover_url)
+    .filter(Boolean);
+
   const currentSessionId: string =
     (project?.session_id as string) || (route.query.session_id as string) || "";
   if (currentSessionId) {
@@ -1445,6 +1461,11 @@ async function confirmSelectedProject() {
         }
         if (!cover && resultAsync?.final_videos?.length > 0) {
           coverUrl.value = resultAsync.final_videos[0].video_cover_url || "";
+        }
+        if (resultAsync?.final_videos?.length > 0) {
+          coverImages.value = resultAsync.final_videos
+            .map((v: any) => v.video_cover_url)
+            .filter(Boolean);
         }
         if (chapterRes.data.title) {
           form.value.title = chapterRes.data.title;
@@ -1707,42 +1728,21 @@ async function mockUploadCover(dataUrl: string) {
     const data = await res.json();
     if (data && (data.code === 0 || data.code === 200) && data.data?.url) {
       coverUrl.value = data.data.url;
+      if (!coverImages.value.includes(data.data.url)) {
+        coverImages.value.unshift(data.data.url);
+      }
     }
   } catch (error) {
     console.error("Error uploading cover:", error);
   }
 }
 
-function pickCover() {
-  coverInputRef.value?.click();
+function openCoverModal() {
+  showCoverModal.value = true;
 }
 
-function onCoverPicked(e: Event) {
-  const target = e.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-
-  const validTypes = ["image/png", "image/jpeg", "image/webp"];
-  if (!validTypes.includes(file.type)) {
-    toast(t("submit.image.uploadFormatError"));
-    target.value = "";
-    return;
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    toast(t("submit.image.uploadTip"));
-    target.value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const dataUrl = reader.result as string;
-    mockUploadCover(dataUrl);
-  };
-  reader.readAsDataURL(file);
-
-  target.value = "";
+function onCoverConfirmed(url: string) {
+  coverUrl.value = url;
 }
 
 // Publish submit
@@ -1775,6 +1775,7 @@ async function onSubmit() {
   isUpload.value = true;
 
   try {
+    const isEditMode = !!editPostId.value;
     const payload = {
       type: 5,
       title: form.value.title.trim(),
@@ -1785,6 +1786,7 @@ async function onSubmit() {
       video_url: videoUrl.value,
       language: form.value.language,
       ...(sessionId.value ? { session_id: sessionId.value } : {}),
+      ...(isEditMode && { post_id: editPostId.value }),
     };
 
     const headers = new Headers();
@@ -1803,7 +1805,9 @@ async function onSubmit() {
       body: data,
     };
 
-    const url = `${baseUrl}post/addPostFive`;
+    const url = isEditMode
+      ? `${baseUrl}post/modifyPostFive`
+      : `${baseUrl}post/addPostFive`;
     const response = await fetch(url, requestOptions);
     const result = await response.text();
     const res = JSON.parse(result);
@@ -1820,6 +1824,57 @@ async function onSubmit() {
   }
 }
 
+function renderCaptionContent() {
+  if (!captionRef.value) return;
+  const content = form.value.description || "";
+  captionRef.value.innerHTML = '';
+
+  const regex = /\[mention:(\d+)\|([^\]]+)\]|(?<=^|\s)(#[^\s]+)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const textBefore = content.substring(lastIndex, match.index);
+      captionRef.value!.appendChild(document.createTextNode(textBefore));
+    }
+
+    if (match[1] !== undefined) {
+      const value = parseInt(match[1]);
+      const username = match[2];
+
+      if (value > 0) {
+        const span = document.createElement('span');
+        span.className = 'tag mention';
+        span.style.color = '#00d3f2';
+        span.style.marginRight = '4px';
+        span.contentEditable = 'false';
+        span.textContent = username;
+        captionRef.value!.appendChild(span);
+      } else {
+        captionRef.value!.appendChild(document.createTextNode(username));
+      }
+    } else if (match[3] !== undefined) {
+      const span = document.createElement('span');
+      span.className = 'tag topic';
+      span.style.color = '#00d3f2';
+      span.style.marginRight = '4px';
+      span.contentEditable = 'false';
+      span.textContent = match[3];
+      captionRef.value!.appendChild(span);
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < content.length) {
+    const textAfter = content.substring(lastIndex);
+    captionRef.value!.appendChild(document.createTextNode(textAfter));
+  }
+
+  captionLength.value = captionRef.value.innerText.length;
+}
+
 // URL jump entry
 onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
@@ -1828,39 +1883,61 @@ onMounted(async () => {
   const sid = route.query.session_id as string;
   const postId = route.query.post_id as string;
 
+  if (postId || sid) {
+    isLoadingDetail.value = true;
+  }
+
   if (postId) {
+    editPostId.value = postId;
     try {
-      const postRes = await api.postDetail({ post_id: Number(postId) }) as any;
+      const postRes = await api.modifyPostDetail(postId) as any;
       if ((postRes.code === 200 || postRes.code === 0) && postRes.data) {
         const post = postRes.data.post || postRes.data;
-        if (post.title) form.value.title = post.title;
-        if (post.content) {
-          form.value.description = post.content;
-          if (captionRef.value) {
-            captionRef.value.innerText = post.content;
-            captionLength.value = post.content.length;
-          }
-        }
-        if (post.is_nsfw === 1) form.value.content = "yes";
-        if (post.access_rights === 2) form.value.permission = "partial";
-        if (post.access_rights === 3) form.value.permission = "private";
+        form.value.title = post.title || "";
+        const rawContent = post.content_replace || post.content || "";
+        form.value.description = rawContent;
+        if (post.is_nsfw == 1 || post.is_nsfw == '1') form.value.content = "yes";
+        if (post.access_rights == 2 || post.access_rights == '2') form.value.permission = "partial";
+        if (post.access_rights == 3 || post.access_rights == '3') form.value.permission = "private";
         if (post.language) form.value.language = post.language;
         if (post.cover) coverUrl.value = post.cover;
         if (post.video_url) videoUrl.value = post.video_url;
         if (post.session_id) sessionId.value = post.session_id;
+        if (videoUrl.value && sessionId.value) {
+          try {
+            const detailRes = await api.detailProject(sessionId.value) as any;
+            if (detailRes.code === 200 && detailRes.data) {
+              const dRa = typeof detailRes.data.result_async === 'string'
+                ? (() => { try { return JSON.parse(detailRes.data.result_async || '{}'); } catch { return {}; } })()
+                : (detailRes.data.result_async || {});
+              const dFv = dRa.final_videos || [];
+              if (dFv.length > 0) {
+                coverImages.value = dFv.map((v: any) => v.video_cover_url).filter(Boolean);
+              }
+            }
+          } catch {}
+        }
         if (videoUrl.value) {
+          isLoadingDetail.value = false;
           showFullContent.value = true;
+          await nextTick();
+          renderCaptionContent();
           return;
         }
+        isLoadingDetail.value = false;
+        showFullContent.value = true;
+        await nextTick();
+        renderCaptionContent();
+        return;
       }
     } catch (error) {
       console.error("Error fetching post detail:", error);
     }
+    isLoadingDetail.value = false;
   }
 
   if (sid) {
     sessionId.value = sid;
-    // 通过 session_id 请求详情接口获取视频数据
     try {
       const detailRes = await api.detailProject(sid) as any;
       if (detailRes.code === 200 && detailRes.data) {
@@ -1874,6 +1951,10 @@ onMounted(async () => {
         if (vUrl) {
           videoUrl.value = vUrl;
           coverUrl.value = vCover;
+          coverImages.value = finalVideos
+            .map((v: any) => v.video_cover_url)
+            .filter(Boolean);
+          isLoadingDetail.value = false;
           showFullContent.value = true;
           return;
         }
@@ -1881,6 +1962,7 @@ onMounted(async () => {
     } catch (error) {
       console.error("Error fetching project detail:", error);
     }
+    isLoadingDetail.value = false;
   }
 
   // default to history tab

@@ -3808,6 +3808,12 @@ async function selectProject(project: any) {
   selectedChapters.value = [];
   showProjectDropdown.value = false;
 
+  if (project.user_selected?.language) {
+    collectionLanguage.value = project.user_selected.language;
+  } else {
+    collectionLanguage.value = defaultLang;
+  }
+
   // Mark as editing mode when selecting from history
   isEditingWork.value = true;
 

@@ -4,7 +4,7 @@
       <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
-        <div class="tabs">
+        <div class="modal-tabs">
           <span v-if="coverImage" :class="{ active: activeTab === 'select' }" @click="changeTab('select')">
             {{ t("collection.selectCover") }}
           </span>
@@ -609,14 +609,12 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 .modal-header {
-  height: 60px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 20px 24px;
 
-  .tabs {
+  .modal-tabs {
     display: inline-flex;
     gap: 6px;
     background: #FFFDF7;
@@ -732,7 +730,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .upload-mode {
   height: 100%;
-  padding: 30px 0;
 
   .upload-area {
     width: 100%;
@@ -817,7 +814,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-footer {
   padding: 20px 24px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   justify-content: flex-end;
   gap: 12px;

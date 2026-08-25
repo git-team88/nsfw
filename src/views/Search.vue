@@ -80,10 +80,10 @@
                   <span class="type-badge" :class="'type-' + post.type">{{ post.type == '1' ? t('collection.typeComic') : post.type == '2' ? t('collection.typeNovel') : post.type == '3' ? t('collection.typeVideo') : post.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                 </div>
                 <!-- Video Play Icon -->
-                <div v-if="post.type == '3'" class="play-icon">
+                <div v-if="post.type == '3' || post.type == '5'" class="play-icon">
                   <img src="@/assets/images/detail/play.png" alt="" />
                 </div>
-                <div class="content-bottom">
+                <div class="content-bottom" v-if="post.type != '4' && post.type != '5'">
                   <!-- Update Time and Chapter Count -->
                   <div class="update-info">
                     <template v-if="post.status == 2">
@@ -256,7 +256,9 @@ const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 2, label: t('home.contentType.novel') },
   { id: 1, label: t('home.contentType.comic') },
-  { id: 3, label: t('home.contentType.drama') }
+  { id: 3, label: t('home.contentType.drama') },
+  { id: 4, label: t('home.contentType.image') },
+  { id: 5, label: t('home.contentType.video') }
 ]);
 
 // Refs for waterfall layout
@@ -293,7 +295,9 @@ watch(() => locale.value, () => {
     { id: 0, label: t('home.contentType.all') },
     { id: 2, label: t('home.contentType.novel') },
     { id: 1, label: t('home.contentType.comic') },
-    { id: 3, label: t('home.contentType.drama') }
+    { id: 3, label: t('home.contentType.drama') },
+    { id: 4, label: t('home.contentType.image') },
+    { id: 5, label: t('home.contentType.video') }
   ]
 
   // Re-trigger search when language changes
@@ -390,14 +394,23 @@ async function loadData(fromLoadMore = false) {
   try {
     if (activeTab.value == 'posts') {
       const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
-      const res = await api.searchPost({
-        keyword: searchKeyword.value,
-        type: postFilter.value,
-        page: postsPage.value,
-        limit: postsLimit.value,
-        language: locale.value == 'zh' ? 'cn' : locale.value,
-        show_nsfw: showNsfw,
-      }) as any;
+      const isStandalone = postFilter.value === 4 || postFilter.value === 5;
+      const res = isStandalone
+        ? await api.searchPostsPublic({
+            keyword: searchKeyword.value,
+            type: postFilter.value,
+            page: postsPage.value,
+            limit: postsLimit.value,
+            show_nsfw: showNsfw,
+          }) as any
+        : await api.searchPost({
+            keyword: searchKeyword.value,
+            type: postFilter.value,
+            page: postsPage.value,
+            limit: postsLimit.value,
+            language: locale.value == 'zh' ? 'cn' : locale.value,
+            show_nsfw: showNsfw,
+          }) as any;
 
       // Check if this request is still the latest one
       if (requestId !== currentRequestId.value) {
@@ -1134,7 +1147,7 @@ $line: #e7e1d8;
       font-weight: 800;
       font-size: 14px;
       color: $ink;
-      line-height: 20px;
+      line-height: 22px;
       min-height: 46px;
       display: -webkit-box;
       -webkit-line-clamp: 2;

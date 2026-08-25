@@ -211,7 +211,7 @@
                       {{ t("userHome.collection.pinned") }}
                     </div>
                     <div class="type-icon" v-if="activeContentType === 'favorites' && collection.type">
-                      <span class="type-badge" :class="'type-' + collection.type">{{ collection.type == '1' ? t('collection.typeComic') : collection.type == '2' ? t('collection.typeNovel') : t('collection.typeVideo') }}</span>
+                      <span class="type-badge" :class="'type-' + collection.type">{{ collection.type == '1' ? t('collection.typeComic') : collection.type == '2' ? t('collection.typeNovel') : collection.type == '3' ? t('collection.typeVideo') : collection.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                     </div>
 
                   <div class="card-bottom">
@@ -769,17 +769,32 @@ async function fetchCollections(reset = false) {
     const currentPage = currentCollectionsPage.value;
 
     if (isCurrentUser) {
-      response = await api.authorSelfCollection(type, currentPage, 20) as any;
+      if (type === 4 || type === 5) {
+        response = await api.authorSelfPostList(type, currentPage, 20) as any;
+      } else {
+        response = await api.authorSelfCollection(type, currentPage, 20) as any;
+      }
     } else {
       if (!authorId) {
         collectionsLoading.value = false;
         return;
       }
       const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
-      response = await api.authorCollection(type, currentPage, 20, authorId, showNsfw) as any;
+      if (type === 4 || type === 5) {
+        response = await api.authorPostList(type, currentPage, 20, authorId, showNsfw) as any;
+      } else {
+        response = await api.authorCollection(type, currentPage, 20, authorId, showNsfw) as any;
+      }
     }
     if (response.code == 0 || response.code == 200) {
       let collectionData = response.data?.data || [];
+
+      if (type === 4 || type === 5) {
+        collectionData = collectionData.map((item: any) => ({
+          ...item,
+          is_top: String(item.is_post_top ?? item.is_top ?? '0'),
+        }));
+      }
 
       if (reset) {
         collections.value = collectionData;
@@ -1790,9 +1805,13 @@ function goDetail(id: number | string, authorId?: number | string) {
   const type = Number(activeContentType.value);
   const queryParams: any = {
     id: id,
-    type: type,
-    uid: authorId || route.query.id || ''
+    tab: activeContentType.value,
   };
+
+  if (type !== 4 && type !== 5) {
+    queryParams.type = type;
+    queryParams.uid = authorId || route.query.id || '';
+  }
 
   router.push({
     path: '/detail',
@@ -2396,7 +2415,7 @@ async function unpinCollection(collection: any) {
         transition: background-color 0.2s, color 0.2s;
 
         &.active {
-          background: #161122;
+          background: #FF4D8D;
           color: #fff;
         }
       }
@@ -2404,6 +2423,7 @@ async function unpinCollection(collection: any) {
   }
 
   .sub-tabs {
+    width: max-content;
     display: flex;
     gap: 6px;
     border: 2.5px solid #161122;
@@ -3262,6 +3282,14 @@ async function unpinCollection(collection: any) {
           }
 
           &.type-3 {
+            background: #7FD8E8;
+          }
+
+          &.type-4 {
+            background: #FF9EC6;
+          }
+
+          &.type-5 {
             background: #7FD8E8;
           }
         }

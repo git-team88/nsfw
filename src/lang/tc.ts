@@ -516,8 +516,10 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     hours: "小時",
     tenMinutes: "10分鐘",
     maxCoverImages: "最多可上傳{max}張圖片",
-    maxCoverSize: "圖片大小超過限制，最大支援10MB",
+    maxCoverSize: "圖片大小超過限制，最大支援{max}MB",
     invalidCoverImageType: "不支援的圖片格式，請上傳 JPG、PNG 或 WEBP 格式圖片",
+    imageDimensionError: "圖片寬高需大於14像素",
+    imageAspectRatioError: "圖片寬高比超出限制（寬/高應在1/16到16之間）",
     uploadFormat: "支援格式：jpg, jpeg, png, webp，每張不超過10MB",
     role: {
       novelExpert: "小說創作專家",
@@ -2127,9 +2129,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
        article: "文章",
        myFavorites: "我的收藏",
        myWorks: "我的作品",
-       image: "圖片",
-       photo: "視頻"
-     },
+         image: "圖片",
+          photo: "圖片"
+      },
      videoSettings: {
       title: "視頻設置",
       language: "語言",

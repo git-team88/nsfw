@@ -35,16 +35,7 @@
             </div>
           </div>
 
-          <div class="images-strip">
-            <!-- Cover Image -->
-            <div
-              v-if="coverImage"
-              class="image-cell"
-              :class="{ selected: selectedIndex == -1 }"
-              @click="onCoverClick"
-            >
-              <img :src="coverImage" alt="Cover" />
-            </div>
+          <div class="images-strip" v-if="!hideStrip">
             <!-- Regular Images -->
             <div
               v-for="(image, index) in images"
@@ -53,7 +44,7 @@
               :class="{ selected: selectedIndex == index }"
               @click="onImageClick(index)"
             >
-              <img :src="image" alt="" />
+              <img :src="processImageUrl(image)" alt="" />
             </div>
           </div>
         </div>
@@ -129,12 +120,14 @@ import { useI18n } from "vue-i18n";
 import UploadMask from "./UploadMask.vue";
 import api from "@/api/index";
 import { baseUrl } from "@/util/config";
+import { processImageUrl } from "@/util/utils";
 
 const props = defineProps<{
   visible: boolean;
   images: string[];
   coverImage?: string;
   isCanvasGenerated?: boolean;
+  hideStrip?: boolean;
 }>();
 
 const emit = defineEmits(["update:visible", "confirm"]);
@@ -183,19 +176,21 @@ watch(
 
       // Check if cover is canvas-generated (not from uploaded images)
       if (props.isCanvasGenerated) {
-        // For canvas-generated covers, don't select it, let user choose from images
         selectedImage.value = '';
         selectedIndex.value = -1;
       } else if (props.coverImage) {
-        // For uploaded/URL covers, select the cover image
-        selectedImage.value = props.coverImage;
-        selectedIndex.value = -1;
+        const matchIdx = props.images.findIndex(img => img === props.coverImage);
+        if (matchIdx >= 0) {
+          selectedImage.value = props.images[matchIdx];
+          selectedIndex.value = matchIdx;
+        } else {
+          selectedImage.value = props.coverImage;
+          selectedIndex.value = -1;
+        }
       } else if (props.images.length > 0 && !selectedImage.value) {
-        // Select first image from the list
         selectedImage.value = props.images[0];
         selectedIndex.value = 0;
       } else {
-        // Reset selection
         selectedImage.value = '';
         selectedIndex.value = -1;
       }
@@ -225,13 +220,6 @@ function changeTab(tab: string) {
 function onImageClick(index: number) {
   selectedImage.value = props.images[index];
   selectedIndex.value = index;
-}
-
-function onCoverClick() {
-  if (props.coverImage) {
-    selectedImage.value = props.coverImage;
-    selectedIndex.value = -1;
-  }
 }
 
 function triggerUpload() {
@@ -541,18 +529,16 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 }
 
 .modal-header {
-  height: 60px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 16px 24px;
 
   .tabs {
     display: inline-flex;
     gap: 0;
     border: 2px solid #161122;
-    border-radius: 20px;
+    border-radius: 10px;
     padding: 3px;
     background: rgba(22, 17, 34, 0.04);
 
@@ -561,7 +547,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       font-size: 14px;
       color: #667085;
       cursor: pointer;
-      border-radius: 16px;
+      border-radius: 8px;
       transition: all 0.15s ease;
       white-space: nowrap;
 
@@ -683,7 +669,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .upload-mode {
   height: 100%;
-  padding: 30px 0;
 
   .upload-area {
     width: 100%;
@@ -765,7 +750,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
 .modal-footer {
   padding: 18px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
   display: flex;
   justify-content: flex-end;
   gap: 12px;

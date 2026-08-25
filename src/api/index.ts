@@ -278,6 +278,11 @@ export default {
       url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  homeRecommendPostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
+    axios.request({
+      url: "index/getRecommendPostPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET",
+    }),
   // 首页人气创作者榜（public）period: day|week|month
   popularUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number) =>
     axios.request({
@@ -326,9 +331,19 @@ export default {
       url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
+  homeFollowPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
+    axios.request({
+      url: "post/getMyFollowPostList?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET",
+    }),
   homeSubscriptionList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
       url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET",
+    }),
+  homeSubscriptionPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
+    axios.request({
+      url: "post/getMySubscriptionPostList?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   searchTopic: (data: any) =>
@@ -352,6 +367,12 @@ export default {
   searchPost: (data: any) =>
     axios.request({
       url: "post/searchBookKeywordsPublic",
+      data: data,
+      method: "POST",
+    }),
+  searchPostsPublic: (data: any) =>
+    axios.request({
+      url: "post/searchPostsPublic",
       data: data,
       method: "POST",
     }),
@@ -449,6 +470,11 @@ export default {
       url: "my/getBookList?type=" + type+ "&page="+ + page + "&limit=" + limit,
       method: "GET",
     }),
+  authorSelfPostList: (type: number, page: number, limit: number) =>
+    axios.request({
+      url: "my/getPostList?type=" + type + "&page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
   authorInfo: (author_id: number | string, showNsfw?: number) =>
     axios.request({
       url: "blogger/getBloggerInfoPublic?author_id=" + author_id + (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : ''),
@@ -462,6 +488,11 @@ export default {
   authorCollection: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number) =>
     axios.request({
       url: "blogger/getBookListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      method: "GET",
+    }),
+  authorPostList: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number) =>
+    axios.request({
+      url: "blogger/getPostListPublic?type=" + type + "&page=" + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   getLikedBookList: (page: number, limit: number) =>
@@ -478,6 +509,18 @@ export default {
   unlikeBook: (data: any) =>
     axios.request({
       url: "book/unlikeBook",
+      method: "POST",
+      data,
+    }),
+  bookLikePost: (data: any) =>
+    axios.request({
+      url: "book/likePost",
+      method: "POST",
+      data,
+    }),
+  bookUnlikePost: (data: any) =>
+    axios.request({
+      url: "book/unlikePost",
       method: "POST",
       data,
     }),

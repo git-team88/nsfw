@@ -453,7 +453,7 @@
             />
 
             <div class="insert-image-edit-footer">
-              <button class="insert-image-upload-btn" @click="() => { if (checkLogin()) triggerInsertImageFileUpload() }">
+              <button class="insert-image-upload-btn" @click="() => { if (checkLogin() && checkInsertImageItemLimit()) triggerInsertImageFileUpload() }">
                 <img src="@/assets/images/novel/upload.png" alt="" />
               </button>
               <button class="insert-image-edit-send-btn" :class="{ loading: isRenewingInsertImage }" @click="generateInsertImage">
@@ -2443,6 +2443,15 @@ const triggerInsertImageFileUpload = () => {
   insertImageFileInputRef.value?.click();
 };
 
+const checkInsertImageItemLimit = () => {
+  const maxImages = 10;
+  if (insertImageRefImages.value.length >= maxImages) {
+    toast(t('novel.maxCoverImages', { max: maxImages }));
+    return false;
+  }
+  return true;
+};
+
 const removeInsertImageRefImage = (imageId: number) => {
   insertImageRefImages.value = insertImageRefImages.value.filter(img => img.id !== imageId);
   // Remove any @-mention chips referencing this image from the prompt input
@@ -2459,8 +2468,8 @@ const handleInsertImageFileChange = async (event: Event) => {
   if (!files || files.length == 0) return;
   const file = files[0];
 
-  const maxImages = 3;
-  const maxSizeMB = 10;
+  const maxImages = 10;
+  const maxSizeMB = 30;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   if (insertImageRefImages.value.length >= maxImages) {
@@ -2484,16 +2493,38 @@ const handleInsertImageFileChange = async (event: Event) => {
 
   isUploading.value = true;
 
-  const imageCorrupted = await new Promise<boolean>((resolve) => {
+  const imageValidation = await new Promise<{ valid: boolean; error?: string }>((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img.width === 0 || img.height === 0); };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(true); };
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      if (img.width === 0 || img.height === 0) {
+        resolve({ valid: false, error: 'corrupted' });
+        return;
+      }
+      if (img.width <= 14 || img.height <= 14) {
+        resolve({ valid: false, error: 'dimension' });
+        return;
+      }
+      const ratio = img.width / img.height;
+      if (ratio < 1 / 16 || ratio > 16) {
+        resolve({ valid: false, error: 'aspectRatio' });
+        return;
+      }
+      resolve({ valid: true });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve({ valid: false, error: 'corrupted' }); };
     img.src = url;
   });
 
-  if (imageCorrupted) {
-    toast(t('home.error.corruptedImage'));
+  if (!imageValidation.valid) {
+    if (imageValidation.error === 'corrupted') {
+      toast(t('home.error.corruptedImage'));
+    } else if (imageValidation.error === 'dimension') {
+      toast(t('novel.imageDimensionError'));
+    } else if (imageValidation.error === 'aspectRatio') {
+      toast(t('novel.imageAspectRatioError'));
+    }
     input.value = '';
     isUploading.value = false;
     return;
@@ -2501,11 +2532,13 @@ const handleInsertImageFileChange = async (event: Event) => {
 
   try {
     const uploadedUrl = await uploadCoverImage(file);
+    const imageId = Date.now();
     insertImageRefImages.value.push({
-      id: Date.now(),
+      id: imageId,
       image: uploadedUrl,
       file
     });
+    insertImageRefTagAuto(imageId, uploadedUrl);
   } catch (error) {
     console.error('Insert image reference upload error', error);
     toast(t('fail'));
@@ -2516,7 +2549,55 @@ const handleInsertImageFileChange = async (event: Event) => {
   input.value = '';
 };
 
-// ===== Insert image prompt @-mention (contenteditable) — mirrors the cover input =====
+const insertImageRefTagAuto = (imageId: number, imageUrl: string) => {
+  if (!insertImageInputRef.value) return;
+  const target = insertImageInputRef.value;
+  const savedHtml = target.innerHTML;
+
+  if (target.textContent?.trim() === '') {
+    target.innerHTML = '';
+  }
+
+  const itemTag = document.createElement('span');
+  itemTag.className = 'image-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = String(imageId);
+
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = '';
+  img.className = 'image-tag-img';
+  itemTag.appendChild(img);
+
+  const imageIndex = insertImageRefImages.value.findIndex(imgItem => imgItem.id === imageId) + 1;
+  const labelText = `${t('home.img')}${imageIndex}`;
+  itemTag.appendChild(document.createTextNode(labelText));
+
+  target.appendChild(itemTag);
+  target.appendChild(document.createTextNode(' '));
+
+  if (getInsertImageInputCharCount(target) > INSERT_IMAGE_PROMPT_MAX) {
+    target.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+    return;
+  }
+
+  previousInsertImageInputHtml.value = target.innerHTML;
+  target.focus();
+
+  const space = target.lastChild;
+  if (space) {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = document.createRange();
+      range.setStartAfter(space);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+};
+
 const INSERT_IMAGE_PROMPT_MAX = 5000;
 
 const getInsertImageInputCharCount = (element: HTMLElement): number => {
@@ -2650,6 +2731,29 @@ const handleInsertImageInput = () => {
   if (!insertImageInputRef.value) return;
   const target = insertImageInputRef.value;
 
+  // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
+  const divs = target.querySelectorAll('div');
+  divs.forEach(div => {
+    while (div.firstChild) {
+      target.insertBefore(div.firstChild, div);
+    }
+    target.removeChild(div);
+  });
+  // 清理标签前后的多余 br
+  const brs = target.querySelectorAll('br');
+  brs.forEach(br => {
+    const prev = br.previousSibling;
+    const next = br.nextSibling;
+    const isBeforeTag = (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag')));
+    const isAfterTag = (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag')));
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
+    const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
+    const isLeadingBr = !prev && isBeforeTag;
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+      br.remove();
+    }
+  });
+
   if (getInsertImageInputCharCount(target) > INSERT_IMAGE_PROMPT_MAX) {
     target.innerHTML = previousInsertImageInputHtml.value;
     limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
@@ -2672,6 +2776,79 @@ const handleInsertImageKeydown = (event: KeyboardEvent) => {
     if (currentCharCount >= INSERT_IMAGE_PROMPT_MAX && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
       limitToast(t('home.error.maxInputLimit', { max: INSERT_IMAGE_PROMPT_MAX }));
+      return;
+    }
+  }
+
+  if (event.key === 'Backspace' && insertImageInputRef.value) {
+    const target = insertImageInputRef.value;
+    const selection = window.getSelection();
+
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+
+      if (range.startOffset === 0 && range.startContainer === target.firstChild) {
+        return;
+      }
+
+      if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
+        const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
+        if (textBeforeCursor.trim() !== '') {
+          return;
+        }
+      }
+
+      let previousSibling: Node | null = range.startContainer;
+      if (range.startOffset > 0) {
+        if (previousSibling && previousSibling.nodeType === 3) {
+          const textBeforeCursor = previousSibling.textContent?.substring(0, range.startOffset) || '';
+          if (textBeforeCursor.trim() === '') {
+            previousSibling = previousSibling.previousSibling;
+          } else {
+            return;
+          }
+        }
+      } else {
+        previousSibling = previousSibling?.previousSibling || null;
+      }
+
+      while (previousSibling) {
+        if (previousSibling.nodeType === 1) {
+          const element = previousSibling as HTMLElement;
+          if (element.classList.contains('image-tag')) {
+            let hasTextBetween = false;
+            let currentNode: Node | null = range.startContainer;
+
+            while (currentNode && currentNode !== element) {
+              if (currentNode.nodeType === 3) {
+                const text = currentNode.textContent || '';
+                if (text.trim() !== '') {
+                  hasTextBetween = true;
+                  break;
+                }
+              }
+              currentNode = currentNode.previousSibling;
+            }
+
+            if (!hasTextBetween) {
+              const whitespaceNode = element.previousSibling;
+              if (whitespaceNode && whitespaceNode.nodeType === 3 && whitespaceNode.textContent?.trim() === '') {
+                whitespaceNode.remove();
+              }
+              element.remove();
+              event.preventDefault();
+              return;
+            } else {
+              return;
+            }
+          }
+        } else if (previousSibling.nodeType === 3) {
+          if (previousSibling.textContent?.trim() !== '') {
+            return;
+          }
+        }
+        previousSibling = previousSibling.previousSibling;
+      }
     }
   }
 };
@@ -9722,6 +9899,29 @@ function handleCoverInput() {
 
   const target = coverInputRef.value;
 
+  // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
+  const divs = target.querySelectorAll('div');
+  divs.forEach(div => {
+    while (div.firstChild) {
+      target.insertBefore(div.firstChild, div);
+    }
+    target.removeChild(div);
+  });
+  // 清理标签前后的多余 br
+  const brs = target.querySelectorAll('br');
+  brs.forEach(br => {
+    const prev = br.previousSibling;
+    const next = br.nextSibling;
+    const isBeforeTag = (next && next.nodeType === 1 && ((next as HTMLElement).classList.contains('image-tag')));
+    const isAfterTag = (prev && prev.nodeType === 1 && ((prev as HTMLElement).classList.contains('image-tag')));
+    const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
+    const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
+    const isLeadingBr = !prev && isBeforeTag;
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
+      br.remove();
+    }
+  });
+
   const maxLimit = 5000;
   const currentCharCount = getCoverInputCharCount(target);
   if (currentCharCount > maxLimit) {
@@ -9879,6 +10079,78 @@ function handleCoverKeydown(event: KeyboardEvent) {
       event.preventDefault();
       limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
       return;
+    }
+  }
+
+  if (event.key === 'Backspace' && coverInputRef.value) {
+    const target = coverInputRef.value;
+    const selection = window.getSelection();
+
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+
+      if (range.startOffset === 0 && range.startContainer === target.firstChild) {
+        return;
+      }
+
+      if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
+        const textBeforeCursor = range.startContainer.textContent?.substring(0, range.startOffset) || '';
+        if (textBeforeCursor.trim() !== '') {
+          return;
+        }
+      }
+
+      let previousSibling: Node | null = range.startContainer;
+      if (range.startOffset > 0) {
+        if (previousSibling && previousSibling.nodeType === 3) {
+          const textBeforeCursor = previousSibling.textContent?.substring(0, range.startOffset) || '';
+          if (textBeforeCursor.trim() === '') {
+            previousSibling = previousSibling.previousSibling;
+          } else {
+            return;
+          }
+        }
+      } else {
+        previousSibling = previousSibling?.previousSibling || null;
+      }
+
+      while (previousSibling) {
+        if (previousSibling.nodeType === 1) {
+          const element = previousSibling as HTMLElement;
+          if (element.classList.contains('image-tag')) {
+            let hasTextBetween = false;
+            let currentNode: Node | null = range.startContainer;
+
+            while (currentNode && currentNode !== element) {
+              if (currentNode.nodeType === 3) {
+                const text = currentNode.textContent || '';
+                if (text.trim() !== '') {
+                  hasTextBetween = true;
+                  break;
+                }
+              }
+              currentNode = currentNode.previousSibling;
+            }
+
+            if (!hasTextBetween) {
+              const whitespaceNode = element.previousSibling;
+              if (whitespaceNode && whitespaceNode.nodeType === 3 && whitespaceNode.textContent?.trim() === '') {
+                whitespaceNode.remove();
+              }
+              element.remove();
+              event.preventDefault();
+              return;
+            } else {
+              return;
+            }
+          }
+        } else if (previousSibling.nodeType === 3) {
+          if (previousSibling.textContent?.trim() !== '') {
+            return;
+          }
+        }
+        previousSibling = previousSibling.previousSibling;
+      }
     }
   }
 }
@@ -10046,8 +10318,8 @@ async function handleCoverFileChange(event: Event) {
   // Default to normal mode limits if mode is not available
   // Unlimited (NSFW) mode is determined from the current project settings
   const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
-  const maxImages = isUnlimitedMode ? 3 : 7;
-  const maxSizeMB = 10;
+  const maxImages = isUnlimitedMode ? 10 : 7;
+  const maxSizeMB = isUnlimitedMode ? 30 : 10;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   // Check maximum count limit
@@ -10074,23 +10346,44 @@ async function handleCoverFileChange(event: Event) {
 
   isUploading.value = true;
 
-  // Check if image is corrupted
-  const imageCorrupted = await new Promise<boolean>((resolve) => {
+  // Validate image: corruption, dimension, and aspect ratio
+  const imageValidation = await new Promise<{ valid: boolean; error?: string }>((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      resolve(img.width === 0 || img.height === 0);
+      if (img.width === 0 || img.height === 0) {
+        resolve({ valid: false, error: 'corrupted' });
+        return;
+      }
+      if (isUnlimitedMode) {
+        if (img.width <= 14 || img.height <= 14) {
+          resolve({ valid: false, error: 'dimension' });
+          return;
+        }
+        const ratio = img.width / img.height;
+        if (ratio < 1 / 16 || ratio > 16) {
+          resolve({ valid: false, error: 'aspectRatio' });
+          return;
+        }
+      }
+      resolve({ valid: true });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve(true);
+      resolve({ valid: false, error: 'corrupted' });
     };
     img.src = url;
   });
 
-  if (imageCorrupted) {
-    toast(t('home.error.corruptedImage'));
+  if (!imageValidation.valid) {
+    if (imageValidation.error === 'corrupted') {
+      toast(t('home.error.corruptedImage'));
+    } else if (imageValidation.error === 'dimension') {
+      toast(t('novel.imageDimensionError'));
+    } else if (imageValidation.error === 'aspectRatio') {
+      toast(t('novel.imageAspectRatioError'));
+    }
     input.value = '';
     isUploading.value = false;
     return;
@@ -10114,6 +10407,8 @@ async function handleCoverFileChange(event: Event) {
     });
     // Update dropdown items immediately after upload
     updateCoverAtDropdownItems();
+    // Auto-insert image tag into the cover input
+    insertCoverImageTagAuto(imageId, uploadedUrl, newImage.name);
   } catch (error) {
     console.error('Upload error for file', error);
     toast(t('fail'));
@@ -10127,6 +10422,56 @@ async function handleCoverFileChange(event: Event) {
 
 function triggerCoverFileUpload() {
   coverFileInputRef.value?.click();
+}
+
+function insertCoverImageTagAuto(imageId: number, imageUrl: string, imageName: string) {
+  if (!coverInputRef.value) return;
+  const target = coverInputRef.value;
+  const savedHtml = target.innerHTML;
+
+  if (target.textContent?.trim() === '') {
+    target.innerHTML = '';
+  }
+
+  const itemTag = document.createElement('span');
+  itemTag.className = 'image-tag';
+  itemTag.contentEditable = 'false';
+  itemTag.dataset.itemId = String(imageId);
+
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = imageName;
+  img.className = 'image-tag-img';
+  itemTag.appendChild(img);
+
+  const imageIndex = uploadedCoverImages.value.findIndex(imgItem => imgItem.id === imageId) + 1;
+  const labelText = `${t('home.img')}${imageIndex}`;
+  itemTag.appendChild(document.createTextNode(labelText));
+
+  target.appendChild(itemTag);
+  target.appendChild(document.createTextNode(' '));
+
+  const maxLimit = 5000;
+  if (getCoverInputCharCount(target) > maxLimit) {
+    target.innerHTML = savedHtml;
+    limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
+    return;
+  }
+
+  previousCoverInputHtml.value = target.innerHTML;
+  target.focus();
+
+  const space = target.lastChild;
+  if (space) {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = document.createRange();
+      range.setStartAfter(space);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
 }
 
 function removeUploadedCoverImage(imageId: number) {
@@ -10291,7 +10636,7 @@ function checkLogin() {
 function checkCoverItemLimit() {
   // Unlimited (NSFW) mode is determined from the current project settings
   const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
-  const maxImages = isUnlimitedMode ? 3 : 7;
+  const maxImages = isUnlimitedMode ? 10 : 7;
   if (combinedCoverItems.value.length >= maxImages) {
     toast(t('novel.maxCoverImages', { max: maxImages }));
     return false;

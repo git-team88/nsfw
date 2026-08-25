@@ -516,8 +516,10 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     hours: "小时",
     tenMinutes: "10分钟",
     maxCoverImages: "最多可上传{max}张图片",
-    maxCoverSize: "图片大小超过限制，最大支持10MB",
+    maxCoverSize: "图片大小超过限制，最大支持{max}MB",
     invalidCoverImageType: "不支持的图片格式，请上传 JPG、PNG 或 WEBP 格式图片",
+    imageDimensionError: "图片宽高需大于14像素",
+    imageAspectRatioError: "图片宽高比超出限制（宽/高应在1/16到16之间）",
     uploadFormat: "支持格式：jpg, jpeg, png, webp，每张不超过10MB",
     role: {
       novelExpert: "小说创作专家",
@@ -2133,9 +2135,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
        article: "文章",
        myFavorites: "我的收藏",
        myWorks: "我的作品",
-       image: "图片",
-       photo: "视频"
-     },
+         image: "图片",
+          photo: "图片"
+      },
      videoSettings: {
       title: "视频设置",
       language: "语言",

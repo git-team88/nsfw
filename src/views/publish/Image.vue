@@ -21,8 +21,14 @@
         </span>
       </div>
 
+      <!-- Loading Detail State -->
+      <div v-if="isLoadingDetail" class="loading-detail-state">
+        <div class="loading-spinner"></div>
+        <span class="loading-text">{{ t('loading') }}</span>
+      </div>
+
       <!-- Upload Method Section (hidden once images are chosen) -->
-      <div class="upload-tabs" v-if="!showFullContent">
+      <div class="upload-tabs" v-else-if="!showFullContent">
         <div class="form-label-box">
           <span><b>*</b>{{ t("submit.image.imageLabel") }}</span>
         </div>
@@ -449,6 +455,7 @@ const showCoverModal = ref(false);
 const showFullContent = ref(false);
 const isUploading = ref(false);
 const isUpload = ref(false);
+const editPostId = ref("");
 const previewImageUrl = ref("");
 const showPreviewMedia = ref(false);
 const previewMediaType = ref<'image' | 'video'>('image');
@@ -456,6 +463,8 @@ const previewMediaUrl = ref("");
 
 const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
+
+const isLoadingDetail = ref(false);
 
 // History list state
 const projects = ref<any[]>([]);
@@ -1394,23 +1403,25 @@ async function onSubmit() {
 
   isUploading.value = true;
 
-  const imageUrlsPayload: string[] = finalUrls.map((url: string) => {
-    const sid = imageSessionMap.value.get(url) || session_id.value || "";
-    return sid ? `${sid}|${url}` : url;
-  });
-
-  const payload = {
-    type: 4,
-    title: form.value.title.trim(),
-    cover: finalCover,
-    content: form.value.description.trim(),
-    is_nsfw: form.value.content === "yes" ? 1 : 0,
-    access_rights: form.value.permission === "partial" ? 2 : form.value.permission === "private" ? 3 : 1,
-    image_urls: imageUrlsPayload,
-    language: form.value.language,
-  };
-
   try {
+    const imageUrlsPayload: string[] = finalUrls.map((url: string) => {
+      const sid = imageSessionMap.value.get(url) || session_id.value || "";
+      return sid ? `${sid}|${url}` : url;
+    });
+
+    const isEditMode = !!editPostId.value;
+    const payload = {
+      type: 4,
+      title: form.value.title.trim(),
+      cover: finalCover,
+      content: form.value.description.trim(),
+      is_nsfw: form.value.content === "yes" ? 1 : 0,
+      access_rights: form.value.permission === "partial" ? 2 : form.value.permission === "private" ? 3 : 1,
+      image_urls: imageUrlsPayload,
+      language: form.value.language,
+      ...(isEditMode && { post_id: editPostId.value }),
+    };
+
     const headers = new Headers();
     const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
     headers.append("token", token);
@@ -1426,7 +1437,9 @@ async function onSubmit() {
       body: data,
     };
 
-    const url = `${baseUrl}post/addPostFour`;
+    const url = isEditMode
+      ? `${baseUrl}post/modifyPostFour`
+      : `${baseUrl}post/addPostFour`;
     const response = await fetch(url, requestOptions);
     const result = await response.text();
     const res = JSON.parse(result);
@@ -1445,6 +1458,57 @@ async function onSubmit() {
   }
 }
 
+function renderCaptionContent() {
+  if (!captionRef.value) return;
+  const content = form.value.description || "";
+  captionRef.value.innerHTML = '';
+
+  const regex = /\[mention:(\d+)\|([^\]]+)\]|(?<=^|\s)(#[^\s]+)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const textBefore = content.substring(lastIndex, match.index);
+      captionRef.value!.appendChild(document.createTextNode(textBefore));
+    }
+
+    if (match[1] !== undefined) {
+      const value = parseInt(match[1]);
+      const username = match[2];
+
+      if (value > 0) {
+        const span = document.createElement('span');
+        span.className = 'tag mention';
+        span.style.color = '#00d3f2';
+        span.style.marginRight = '4px';
+        span.contentEditable = 'false';
+        span.textContent = username;
+        captionRef.value!.appendChild(span);
+      } else {
+        captionRef.value!.appendChild(document.createTextNode(username));
+      }
+    } else if (match[3] !== undefined) {
+      const span = document.createElement('span');
+      span.className = 'tag topic';
+      span.style.color = '#00d3f2';
+      span.style.marginRight = '4px';
+      span.contentEditable = 'false';
+      span.textContent = match[3];
+      captionRef.value!.appendChild(span);
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < content.length) {
+    const textAfter = content.substring(lastIndex);
+    captionRef.value!.appendChild(document.createTextNode(textAfter));
+  }
+
+  captionLength.value = captionRef.value.innerText.length;
+}
+
 // --- URL jump entry ---
 onMounted(async () => {
   tabList.value = buildTabList();
@@ -1453,22 +1517,22 @@ onMounted(async () => {
   const sessionId = route.query.session_id as string;
   const postId = route.query.post_id as string;
 
+  if (postId || sessionId) {
+    isLoadingDetail.value = true;
+  }
+
   if (postId) {
+    editPostId.value = postId;
     try {
-      const postRes = await api.postDetail({ post_id: Number(postId) }) as any;
+      const postRes = await api.modifyPostDetail(postId) as any;
       if ((postRes.code === 200 || postRes.code === 0) && postRes.data) {
         const post = postRes.data.post || postRes.data;
-        if (post.title) form.value.title = post.title;
-        if (post.content) {
-          form.value.description = post.content;
-          if (captionRef.value) {
-            captionRef.value.innerText = post.content;
-            captionLength.value = post.content.length;
-          }
-        }
-        if (post.is_nsfw === 1) form.value.content = "yes";
-        if (post.access_rights === 2) form.value.permission = "partial";
-        if (post.access_rights === 3) form.value.permission = "private";
+        form.value.title = post.title || "";
+        const rawContent = post.content_replace || post.content || "";
+        form.value.description = rawContent;
+        if (post.is_nsfw == 1 || post.is_nsfw == '1') form.value.content = "yes";
+        if (post.access_rights == 2 || post.access_rights == '2') form.value.permission = "partial";
+        if (post.access_rights == 3 || post.access_rights == '3') form.value.permission = "private";
         if (post.language) form.value.language = post.language;
         if (post.cover) coverPreview.value = post.cover;
         if (post.image_urls && Array.isArray(post.image_urls) && post.image_urls.length > 0) {
@@ -1476,17 +1540,32 @@ onMounted(async () => {
           for (const u of imageUrls.value) {
             imageSessionMap.value.set(u, post.session_id || "");
           }
-          if (!coverPreview.value && imageUrls.value.length > 0) coverPreview.value = imageUrls.value[0];
+        } else if (post.images && Array.isArray(post.images) && post.images.length > 0) {
+          imageUrls.value = post.images.map((img: any) => img.image_url || img).filter(Boolean).slice(0, 15);
+          for (const u of imageUrls.value) {
+            imageSessionMap.value.set(u, post.session_id || "");
+          }
+        } else {
+          const dataImages = postRes.data.images;
+          if (dataImages && Array.isArray(dataImages) && dataImages.length > 0) {
+            imageUrls.value = dataImages.map((img: any) => img.image_url || img).filter(Boolean).slice(0, 15);
+            for (const u of imageUrls.value) {
+              imageSessionMap.value.set(u, post.session_id || "");
+            }
+          }
         }
+        if (!coverPreview.value && imageUrls.value.length > 0) coverPreview.value = imageUrls.value[0];
         if (post.session_id) session_id.value = post.session_id;
-        if (imageUrls.value.length > 0) {
-          showFullContent.value = true;
-          return;
-        }
+        isLoadingDetail.value = false;
+        showFullContent.value = true;
+        await nextTick();
+        renderCaptionContent();
+        return;
       }
     } catch (error) {
       console.error("Error fetching post detail:", error);
     }
+    isLoadingDetail.value = false;
   }
 
   if (sessionId) {
@@ -1512,6 +1591,7 @@ onMounted(async () => {
             imageSessionMap.value.set(u, sessionId);
           }
           coverPreview.value = urls[0];
+          isLoadingDetail.value = false;
           showFullContent.value = true;
           return;
         }
@@ -1519,6 +1599,7 @@ onMounted(async () => {
     } catch (error) {
       console.error("Error fetching project detail:", error);
     }
+    isLoadingDetail.value = false;
   }
 
   // Otherwise load history list

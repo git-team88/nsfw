@@ -16,7 +16,7 @@
 
             <div class="cover-upload-box">
               <div class="cover-upload" @click="openCoverModal">
-                <img v-if="coverUrl" :src="coverUrl" alt="" class="cover-preview" />
+                <img v-if="coverUrl" :src="processImageUrl(coverUrl)" alt="" class="cover-preview" />
                 <div v-else class="cover-placeholder">
                   <img src="@/assets/images/user/upload.png" alt="" />
                   <span>{{ t('collection.uploadCover') }}</span>
@@ -150,6 +150,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { processImageUrl } from '@/util/utils';
 import CollectionCoverModal from './CollectionCoverModal.vue';
 import SensitiveConfirmModal from './SensitiveConfirmModal.vue';
 
