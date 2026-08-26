@@ -1097,9 +1097,7 @@ const layerList = computed(() =>
   font-weight: 700;
   border-left: 2px solid #161122;
 }
-/* 与 canvas-frontend 的 comic-markup-range 保持一致：原生滑块 + accent-color。
-   social 的全局 base.css 对 input 设了 appearance:none，这里用 appearance:auto 打消，
-   让浏览器恢复原生渲染，accent-color 即可得到粉色进度填充效果。 */
+
 .comic-markup-range input {
   width: 116px;
   cursor: pointer;
