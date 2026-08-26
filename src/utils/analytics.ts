@@ -13,7 +13,7 @@ const GA_ID =
 
 const isDebug =
   typeof window !== "undefined" &&
-  !window.location.hostname.endsWith("moegen.ai");
+  !window.location.hostname.endsWith("wwwfansfans.ai");
 
 function gtag(...args: unknown[]) {
   if (typeof window !== "undefined" && window.gtag) {

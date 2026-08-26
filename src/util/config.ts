@@ -1,5 +1,5 @@
 export const baseUrl = "https://test.addaiaroot.com/";
-export const redirectUrl = "https://testapp.addaiaroot.com";
+export const redirectUrl = "https://wwwtest.fansfans.ai";
 export const aiUrl = "https://testapi.addaiaroot.com/";
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 

@@ -69,7 +69,7 @@ export default {
   back: "返回",
   agreeTitle: "用户协议",
   closedBetaAgreementTitle: "封闭β测试协议",
-  closedBetaAgreement: `目前，MoeGen 处于封闭 β 测试期间，因此暂未刊登正式的使用条款。<br />
+  closedBetaAgreement: `目前，FansFans 处于封闭 β 测试期间，因此暂未刊登正式的使用条款。<br />
 <br />
 参加本次测试时，请遵守各负责人，或 CrowdWorks 等招募平台上所说明的内容与指示。<br />
 <br />
@@ -268,13 +268,13 @@ export default {
 请您仔细阅读本协议内容，尤其是字体加粗部分。如您对本协议内容或页面提示信息有疑问，请勿进行下一步操作。您可通过官方沟通渠道（详见第十六条）进行咨询，以便我们为您解释和说明。您通过页面点击或直接开始使用平台AI产品及相关服务等方式即视为表示您已同意本协议。<br /><br />
 
 一、导言<br />
-1.1 《用户服务协议》(以下简称“本协议”)是Moegen与您(以下亦称“用户”、“您”)之间就您访问、注册、登录、使用相关产品及服务所订立的协议。<br />
+1.1 《用户服务协议》(以下简称“本协议”)是FansFans与您(以下亦称“用户”、“您”)之间就您访问、注册、登录、使用相关产品及服务所订立的协议。<br />
 1.2 我们已经发布、后续可能发布的、不时修改的其他全部相关协议、活动规则、公告、说明、站内信通知等（合称“平台规则”）均属于本协议不可分割的组成部分，与本协议具有同等法律效力。<br />
 1.3 您在开始使用之前，请仔细阅读并充分理解本协议。如您对本协议内容或页面提示信息有疑问，请勿进行下一步操作。您可通过官方沟通渠道进行咨询，以便我们为您解释和说明。您通过页面点击或直接开始使用产品及相关服务等其他方式确认即表示您已同意本协议。<br />
 1.4 如您是未满18周岁的未成年人或其他法定情况等而不具有完全民事行为能力，请您在监护人的指导和陪同下阅读本协议及其他相关协议，并特别注意未成年人使用相关条款，且征得监护人的同意后使用产品及相关服务。<br />
 1.5 若您是未满16周岁的未成年人的监护人，在使用及相关服务前，应为您的被监护人阅读并同意本协议。<br />
 1.6 特别注意的是，在未征得监护人明示同意的情况下，请您不要使用提供的充值消费相关服务，也请监护人切实履行监护职责。<br />
-1.7 如对本协议内容有任何疑问、意见或建议，您可通过的用户反馈入口或发送邮件至support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系。<br /><br />
+1.7 如对本协议内容有任何疑问、意见或建议，您可通过的用户反馈入口或发送邮件至support{'@'}fansfans{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系。<br /><br />
 
 二、协议的适用范围<br />
 2.1 本协议适用于您访问和使用产品服务网站、客户端所提供的功能与服务。<br />
@@ -573,7 +573,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
       copyrightRiskMessage: "提示词或参考图可能包含敏感信息或存在版权风险，请重试或修改提示词重新生成",
       contactSupport: "若点击重试依然不能正常生成，请联系客服，我们将在第一时间为您处理",
       calcDeductRule: "未生成成功的环节不会扣除算力",
-      supportEmail: `客服邮箱：support{'@'}moegen{'.'}ai\nDiscord社群：<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>`,
+      supportEmail: `客服邮箱：support{'@'}fansfans{'.'}ai\nDiscord社群：<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>`,
       emptyProjectName: "请输入项目名称",
       emptyRegenerateContent: "请输入创意描述",
       estimateFailed: "算力预估失败，请稍后重试",
@@ -759,7 +759,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
   },
   privacy: `隐私政策<br />
   欢迎使用产品及相关服务！ 请您仔细阅读、理解并遵守《隐私政策》。<br />
-指Moegen（以下简称“我们”或“公司”）合法拥有并运营的、标注名称为的官方网站、APP。在平台中，我们向您提供AI内容生成（文生成、图生成、音视频生成）、发布到社区等服务。<br />
+指FansFans（以下简称“我们”或“公司”）合法拥有并运营的、标注名称为的官方网站、APP。在平台中，我们向您提供AI内容生成（文生成、图生成、音视频生成）、发布到社区等服务。<br />
 我们作为的运营者，深知个人信息对您的重要性，您的信任对我们非常重要，我们将按照法律法规的规定并参照行业最佳实践保护您的个人信息及隐私安全。我们制定本隐私政策并特别提示：希望您在使用产品及相关服务（以下统称“本服务”）前仔细阅读并理解本隐私政策，以便做出适当的选择。<br />
 本隐私政策将帮助您了解：<br />
 我们会遵循隐私政策收集、使用您的信息，不会仅因您同意本隐私政策而采用强制捆绑的方式一揽子收集个人信息。<br />
@@ -943,16 +943,16 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
 我们非常重视您对个人信息的管理，并尽全力保护您对于您个人信息的查阅、复制、更正、补充、删除、撤回同意授权、注销账号、投诉举报以及设置隐私功能等权利，以使您有能力保障您的隐私和信息安全。<br />
 请您理解，特定的业务功能和服务将需要您的信息才能得以完成，当您撤回同意或授权后，我们无法继续为您提供撤回同意或授权所对应的功能和服务，也不再处理您相应的个人信息。但您撤回同意或授权的决定，不会影响我们此前基于您的授权而开展的个人信息处理。<br />
 7.1 您的个人信息权利<br />
-如果您或其他有权主体对相关法律法规赋予的个人信息权利的行使，有任何主张、要求或者疑问，您可以通过发送邮件至support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系，我们将尽快审核所涉问题。<br />
+如果您或其他有权主体对相关法律法规赋予的个人信息权利的行使，有任何主张、要求或者疑问，您可以通过发送邮件至support{'@'}fansfans{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系，我们将尽快审核所涉问题。<br />
 7.2 系统权限管理<br />
 您可以直接进入设备系统的设置功能对位置、通讯录、麦克风、相机、相册、日历、储存、电话状态等权限 (不同设备的系统权服的名称有所不同，以您所使用设备的系统权限名称为准）进行管理，以改变授权范围或撤回您的授权。<br />
 7.3 注销账号<br />
-您可以通过邮箱support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系申请注销您本人的账号。<br />
+您可以通过邮箱support{'@'}fansfans{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>与我们联系申请注销您本人的账号。<br />
 我们将会在收到您的申请后及时进行处理，并在法律法规要求的时限内回复您的请求。在您注销账号前，我们将验证您的个人身份、安全状态、设备信息等。<br />
 您知悉并理解，注销账号是不可逆的行为，当您注销账号后，我们将删除有关您的相关信息或进行匿名化处理，但法律法规另有规定的除外。<br />
 账号注销后，您将无法使用该账号登录平台，也无法找回账号相关的任何内容或信息。账号注销后，您仍应对您在注销账号前使用平台的行为承担相应责任。<br />
 7.4 意见反馈和投诉举报<br />
-您可以按照我们公示的制度进行投诉或举报。如果您有任何意见或您认为您的个人信息权利可能受到侵害，或者发现侵害个人信息权利的线索，您可以在平台用户反馈页面提交线索，或主动通过邮箱联系本平台，邮箱地址为support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>。<br />
+您可以按照我们公示的制度进行投诉或举报。如果您有任何意见或您认为您的个人信息权利可能受到侵害，或者发现侵害个人信息权利的线索，您可以在平台用户反馈页面提交线索，或主动通过邮箱联系本平台，邮箱地址为support{'@'}fansfans{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>。<br />
 7.5 停止运营并向您告知<br />
 如我们停止运营，我们将及时停止收集您个人信息的活动，将停止运营的通知以逐一送达或公告的形式通知您，并对我们所持有的与已关停的产品或服务相关的您的个人信息进行删除或匿名化处理。<br />
 7.6 逝者账号权益<br />
@@ -971,7 +971,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
 9.3 我们也可能通过功能更新，帮助您更好地管理您的个人信息，请您留意相关的功能说明。<br />
 
 10. 联系我们<br />
-如您对个人信息保护相关事宜及AI生成服务有任何疑问、投诉、意见或建议，您可以通过邮箱support{'@'}moegen{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>联系我们。`,
+如您对个人信息保护相关事宜及AI生成服务有任何疑问、投诉、意见或建议，您可以通过邮箱support{'@'}fansfans{'.'}ai或加入Discord社群<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>联系我们。`,
   agreeTip: "请完整阅读本协议",
   agreeBtn: "同意",
   pleaseAgreeAgreement: "请同意用户协议",
@@ -1053,7 +1053,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     terms: "用户协议",
     privacy: "隐私政策",
     login: {
-      badge: "欢迎来到MoeGen",
+      badge: "欢迎来到FansFans",
       brandTitle: "欢迎回来。\n继续你的创作。",
       brandCopy: "昨天的草稿，还有尚未谋面的下一话。你的世界正在这里等你。",
       perk: "",
@@ -1065,7 +1065,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       toRegister: "注册",
     },
     register: {
-      badge: "欢迎来到MoeGen",
+      badge: "欢迎来到FansFans",
       brandTitle: "一句话，\n就能成为故事。",
       brandCopy: "几十秒完成一话分镜。今天，让你脑海中的世界第一次抵达他人。",
       perk1: "◆ 注册免费赠送算力",
@@ -1101,7 +1101,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       title: "素材提供仪表板",
       howItWorks: "素材提供机制",
       introTitle: "素材提供注册申请表单",
-      introDesc: "本表单用于收集希望在MoeGen提供素材的用户的身份验证、权利确认及联系方式信息。提交的信息仅用于审核。",
+      introDesc: "本表单用于收集希望在FansFans提供素材的用户的身份验证、权利确认及联系方式信息。提交的信息仅用于审核。",
       personalInfoSection: "本人信息",
       personalInfoNote: "※请填写与所提交身份证明文件相同的内容",
       fullName: "姓名",
@@ -1310,14 +1310,14 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     inviteRevenue: {
       title: "邀请赚钱",
-      inviteText: `来MoeGen，AI 一键生视频，分享视频还能赚钱！注册点我→【<a href="{link}">{link}</a>】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
+      inviteText: `来FansFans，AI 一键生视频，分享视频还能赚钱！注册点我→【<a href="{link}">{link}</a>】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
       copy: "复制邀请链接",
-      copyText: `来MoeGen，AI 一键生视频，分享视频还能赚钱！注册点我→【{link}】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
+      copyText: `来FansFans，AI 一键生视频，分享视频还能赚钱！注册点我→【{link}】，填邀请码【{code}】，邀请新用户立得奖励，轻松变现！`,
       firstPurchaseStars: "累计注册并首充（人数）",
       totalRevenue: "邀请累计奖励（算力）",
       credits: " 算力",
       rulesTitle: "推广规则：",
-      rule: `若他人通过您分享的推广码注册【MoeGen】，您将获得佣金奖励。<br />
+      rule: `若他人通过您分享的推广码注册【FansFans】，您将获得佣金奖励。<br />
       佣金奖励为：被邀请的用户注册并完成首充算邀请成功，每邀请成功1人奖励首充的3%算力。<br />
       本规则会依据具体情况不定期地进行调整，变更后的规则在生效前会通过官方网站发布公告通知，请您及时关注最新规则。<br />
       若您在本规则内容生效后仍继续使用，则表明您已充分阅读、理解并接受、遵守修改后的规则内容。`,
@@ -1862,8 +1862,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       dontShow: "今后不再显示此通知",
     },
     guide: {
-      label: "MOEGEN 指南",
-      step1Title: "欢迎来到 MoeGen！",
+      label: "FANSFANS 指南",
+      step1Title: "欢迎来到 FansFans！",
       step1Body: "这是一个可以创作漫画、小说和动画的创意平台，30 秒内即可指导您使用方法！",
       step2Title: "首先，输入一句话",
       step2Body: "只需输入想创作的故事内容，然后点击「生成」即可。还可从小说、漫画、漫剧、图片、视频中选择模式。",
@@ -2717,15 +2717,15 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   paymentTerms: {
     title: "基于《特定商交易法》的说明",
     content: `<h2>1. 经营者信息</h2>
-<p>销售经营者：Moegen</p>
+<p>销售经营者：FansFans</p>
 <p>运营负责人：代表董事　青木　一世</p>
 <p>地址：〒113-0033 东京都文京区本郷6-20-11 Green Hills 泰明 1号室</p>
 <p>电话号码：+81-7484-0659</p>
-<p>邮箱地址：support{'@'}moegen{'.'}ai</p>
+<p>邮箱地址：support{'@'}fansfans{'.'}ai</p>
 <p>服务URL：<a href="" target="_blank">（暂定）</a></p>
 
 <h2>2. 本说明适用范围</h2>
-<p>本说明适用于本公司（Moegen）提供的以下服务：</p>
+<p>本说明适用于本公司（FansFans）提供的以下服务：</p>
 <p>・AI工具的付费功能（订阅）</p>
 <p>・用于AI生成等的点数（Credit）销售</p>
 <p>・加入创作者粉丝俱乐部（月度订阅）（由本公司提供的会员服务）</p>
@@ -2949,7 +2949,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     newCollection: "新建合集",
     modifyCollection: "修改合集信息",
     description: "简介",
-    defaultDescription: "新作品出炉，欢迎大家来Moegen阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力讲好每个故事！",
+    defaultDescription: "新作品出炉，欢迎大家来FansFans阅读我的作品，希望大家能够喜欢，你们的关注是我写作的动力，我会努力讲好每个故事！",
     type: "类型",
     typeComic: "漫画",
     typeNovel: "小说",
@@ -3015,7 +3015,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     heroEyebrow: "Creative Partner Program",
     heroTitle1: "让你的创作，",
     heroTitle2: "走得更远。",
-    heroSub1: "与MoeGen同行的、被选中的创作者。",
+    heroSub1: "与FansFans同行的、被选中的创作者。",
     heroSub2: "提供新功能抢先体验・专属价格方案・专属支持。",
     ctaButton: "立即申请",
     // === LP 数据栏 ===
@@ -3030,17 +3030,17 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     benefit2Title: "合作伙伴专属价格",
     benefit2Desc: "所有AI算力方案均可享受合作伙伴专属特别价格。",
     benefit3Title: "专属团队直接支持",
-    benefit3Desc: "从使用咨询到技术问题，MoeGen团队优先为合作伙伴提供支持。",
+    benefit3Desc: "从使用咨询到技术问题，FansFans团队优先为合作伙伴提供支持。",
     benefit4Title: "最快获取内部消息",
     benefit4Desc: "新功能・活动・路线图信息比任何人都先送达。助力您的内容策略。",
     // === LP 交换区 ===
     exchangeTitle: "致所有创作者",
-    exchangeDesc1: "只需将您用MoeGen制作的作品分享到社交媒体即可。",
+    exchangeDesc1: "只需将您用FansFans制作的作品分享到社交媒体即可。",
     exchangeDesc2: "平台不限。",
     exchangeHashtagNote: "请添加标签进行发布。",
     // === LP 流程 ===
     flowTitle: "录用流程",
-    flowStep1Title: "STEP 1", flowStep1Desc: "注册MoeGen账号",
+    flowStep1Title: "STEP 1", flowStep1Desc: "注册FansFans账号",
     flowStep2Title: "STEP 2", flowStep2Desc: "填写并提交下方申请表",
     flowStep3Title: "STEP 3", flowStep3Desc: "一次审核（7个工作日内通过邮件通知）",
     flowStep4Title: "STEP 4", flowStep4Desc: "获得奖励积分，创作作品并发布到社交媒体",
@@ -3049,8 +3049,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     // === LP 表单 ===
     formTitle: "一次审核 — 申请表",
     formSubtitle: "请填写以下表格并提交您的申请。",
-    moegenId: "MoeGen ID",
-    moegenIdPlaceholder: "请输入您的MoeGen ID",
+    moegenId: "FansFans ID",
+    moegenIdPlaceholder: "请输入您的FansFans ID",
     snsLinks: "社交媒体链接（可多个）",
     snsLinksPlaceholder: "每行输入一个社交媒体链接",
     message: "留言",
@@ -3108,83 +3108,83 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       privacyPolicy: "隐私政策",
       paidServices: "付费服务"
     },
-    copyright: "© 2026 MoeGen 保留所有权利."
+    copyright: "© 2026 FansFans 保留所有权利."
   },
   seo: {
     home: {
-      title: "MoeGen 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,MoeGen,萌創,AI同人創作",
-      keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,MoeGen,萌創,AI同人創作",
-      description: "MoeGen 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
+      title: "FansFans 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,FansFans,萌創,AI同人創作",
+      keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,FansFans,萌創,AI同人創作",
+      description: "FansFans 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
       novel: {
-        title: "AI 小说生成器线上免费｜一句话写出 30K 长篇网文 - MoeGen",
+        title: "AI 小说生成器线上免费｜一句话写出 30K 长篇网文 - FansFans",
         keywords: "AI小说生成器,AI写小说,AI网文,免费AI小说,长篇小说生成,网文写作AI,小说大纲AI,二次元小说AI",
-        description: "MoeGen AI 小说生成器，输入一句创意即可自动生成 30K 字长篇网文，支持玄幻、言情、BL、异世界等多题材，台港日创作者首选。"
+        description: "FansFans AI 小说生成器，输入一句创意即可自动生成 30K 字长篇网文，支持玄幻、言情、BL、异世界等多题材，台港日创作者首选。"
       },
       comic: {
-        title: "AI 漫画生成器线上免费｜文字一键生成二次元漫画 - MoeGen",
+        title: "AI 漫画生成器线上免费｜文字一键生成二次元漫画 - FansFans",
         keywords: "AI漫画生成器,一键生成漫画,AI漫画分镜,二次元AI绘画,日漫风AI,条漫生成,角色一致性",
-        description: "MoeGen AI 漫画生成器，文字一键转漫画，自动分镜、角色一致性保证，支持日漫、条漫、Q版等多种二次元画风。"
+        description: "FansFans AI 漫画生成器，文字一键转漫画，自动分镜、角色一致性保证，支持日漫、条漫、Q版等多种二次元画风。"
       },
       drama: {
-        title: "AI 漫剧生成器｜一句话生成二次元动画短剧 - MoeGen",
+        title: "AI 漫剧生成器｜一句话生成二次元动画短剧 - FansFans",
         keywords: "AI漫剧生成,AI动画短剧,二次元动画AI,AI动漫剧本,AI短剧,动画剧生成,Anime Drama AI",
-        description: "MoeGen AI 漫剧生成器，将小说 / 创意一句话转换为二次元动画短剧，自动生成分镜、对白、配音与动态画面，动画创作者的 AI 神器。"
+        description: "FansFans AI 漫剧生成器，将小说 / 创意一句话转换为二次元动画短剧，自动生成分镜、对白、配音与动态画面，动画创作者的 AI 神器。"
       },
       photo: {
-        title: "AI 图片与插画生成器 MoeGen 萌创｜一键生成高质量二次元角色立绘",
-        keywords: "AI图片生成, AI插画, 二次元立绘, 角色设计 AI, MoeGen, 萌创",
-        description: "MoeGen AI 图片生成工具，专注于二次元美学。输入描述词即可快速生成专业级的动漫插画、角色设计与精美立绘，让您的想象力化为现实。"
+        title: "AI 图片与插画生成器 FansFans 萌创｜一键生成高质量二次元角色立绘",
+        keywords: "AI图片生成, AI插画, 二次元立绘, 角色设计 AI, FansFans, 萌创",
+        description: "FansFans AI 图片生成工具，专注于二次元美学。输入描述词即可快速生成专业级的动漫插画、角色设计与精美立绘，让您的想象力化为现实。"
       },
       video: {
-        title: "AI 视频生成器 MoeGen 萌创｜图文快速转换二次元动态视频",
-        keywords: "AI视频生成, 图生视频, 文生视频, 二次元短视频, MoeGen, 萌创",
-        description: "使用 MoeGen AI 视频生成工具，轻松将静态插画或文字描述转换为流畅的二次元动态视频。为您的社交媒体创作吸睛的短视频内容。"
+        title: "AI 视频生成器 FansFans 萌创｜图文快速转换二次元动态视频",
+        keywords: "AI视频生成, 图生视频, 文生视频, 二次元短视频, FansFans, 萌创",
+        description: "使用 FansFans AI 视频生成工具，轻松将静态插画或文字描述转换为流畅的二次元动态视频。为您的社交媒体创作吸睛的短视频内容。"
       }
     },
     detail: {
-      title: `[[title]] - MoeGen 二次元 AI 創作`,
+      title: `[[title]] - FansFans 二次元 AI 創作`,
       keywords: `[[title]],AI[[type]],二次元[[type]]`,
       description: `[[title]] - [[description]]`
     },
     communityConvention: {
-      title: "社區準則 - MoeGen 萌創創作公約",
-      keywords: "社區準則,創作規範,MoeGen公約,內容审核,内容平台,公約",
-      description: "MoeGen 社區準則旨在打造健康、友善、富有創造力的二次元創作環境，與所有用戶共同守護創作社區。"
+      title: "社區準則 - FansFans 萌創創作公約",
+      keywords: "社區準則,創作規範,FansFans公約,內容审核,内容平台,公約",
+      description: "FansFans 社區準則旨在打造健康、友善、富有創造力的二次元創作環境，與所有用戶共同守護創作社區。"
     },
     terms: {
-      title: "服務條款 - MoeGen 萌創用戶協議",
+      title: "服務條款 - FansFans 萌創用戶協議",
       keywords: "服務條款,用戶協議,使用協議,法律事項,服務協議,法律聲明",
-      description: "查看 MoeGen 萌創的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
+      description: "查看 FansFans 萌創的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
     },
     privacy: {
-      title: "隱私政策 - MoeGen 萌創個人資料保護",
+      title: "隱私政策 - FansFans 萌創個人資料保護",
       keywords: "隱私政策,個人資料保護,資料安全,Cookie政策,GDPR",
-      description: "MoeGen 萌創重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
+      description: "FansFans 萌創重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
     },
     login: {
-      title: "登入 - MoeGen 萌創｜AI 創作平台",
-      keywords: "MoeGen登入,帳號登入,AI創作登入,登入",
-      description: "登入你的 MoeGen 帳號，繼續創作你的 AI 小說、漫畫、漫劇創作之旅。"
+      title: "登入 - FansFans 萌創｜AI 創作平台",
+      keywords: "FansFans登入,帳號登入,AI創作登入,登入",
+      description: "登入你的 FansFans 帳號，繼續創作你的 AI 小說、漫畫、漫劇創作之旅。"
     },
     signup: {
-      title: "免費註冊 - 開啟你的 AI 創作之旅｜MoeGen 萌創",
-      keywords: "MoeGen註冊,免費AI創作,AI創作平台,二次元創作,註冊",
-      description: "免費註冊 MoeGen 萌創，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
+      title: "免費註冊 - 開啟你的 AI 創作之旅｜FansFans 萌創",
+      keywords: "FansFans註冊,免費AI創作,AI創作平台,二次元創作,註冊",
+      description: "免費註冊 FansFans 萌創，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
     },
     characterLibrary: {
-      title: "AI 角色庫 - 創建專屬漫畫角色｜MoeGen 萌創",
+      title: "AI 角色庫 - 創建專屬漫畫角色｜FansFans 萌創",
       keywords: "AI角色生成,角色庫,二次元角色,漫畫角色,AI人物創作,角色設計",
-      description: "MoeGen AI 角色庫提供豐富的官方角色與自定義角色，助你輕鬆創建獨特的二次元漫畫角色。"
+      description: "FansFans AI 角色庫提供豐富的官方角色與自定義角色，助你輕鬆創建獨特的二次元漫畫角色。"
     },
     userHome: {
-      title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇｜MoeGen 萌創",
-      keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,MoeGen",
-      description: "在 MoeGen 萌創中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
+      title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇｜FansFans 萌創",
+      keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
+      description: "在 FansFans 萌創中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
     },
     novelGenerate: {
-      title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - MoeGen",
+      title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - FansFans",
       keywords: "AI小說生成,線上小說,AI小說,AI寫小說,AI故事,小說生成器,二次創作,小說AI",
-      description: "MoeGen AI 小說生成器，言情、BL、耽美、輕小說等多題材，自動生成 30K 字作品輕鬆。"
+      description: "FansFans AI 小說生成器，言情、BL、耽美、輕小說等多題材，自動生成 30K 字作品輕鬆。"
     }
   },
   collectionDetail: {

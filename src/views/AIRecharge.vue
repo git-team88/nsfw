@@ -83,8 +83,6 @@
             >
               <div v-if="index == 0 && isUserNew && promotionTitle" class="zero-plan-badge">{{ promotionTitle }}</div>
 
-              <img v-if="selectedPlan != plan.plan_id" class="plan-bg" src="@/assets/images/recharge/bg.png" alt="" />
-
               <div class="plan-card-inner" :class="{ active: selectedPlan == plan.plan_id, 'discount-card': activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan), 'credits-card': activeTab == 'credits_pack' }">
                 <span class="plan-mode" v-if="!(paymentTab === 'usdt' && activeTab === 'subscription') && getPlanTitle(plan) !== t('aiRecharge.unknownPlan')">{{ getPlanTitle(plan) }}</span>
 
@@ -1034,15 +1032,6 @@ $green: #22A06B;
         position: relative;
         animation: projCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 
-        .plan-bg {
-          position: absolute;
-          right: 0;
-          top: 0;
-          width: 120px;
-          pointer-events: none;
-          z-index: 10;
-        }
-
         .plan-card-inner {
           position: relative;
           display: flex;
@@ -1057,12 +1046,6 @@ $green: #22A06B;
           padding: 24px 20px;
           z-index: 5;
           overflow: hidden;
-          transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
-
-          &:hover {
-             transform: translateY(-5px);
-             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-          }
 
           &.discount-card {
              background: rgba(255,255,255,0.06);
@@ -1075,11 +1058,7 @@ $green: #22A06B;
           &.active {
              background: rgba(255,255,255,0.06);
              border-color: #ff4f9a;
-             box-shadow: 0 0 18px rgba(255,60,140,0.35);
-
-             &:hover {
-               box-shadow: 0 0 22px rgba(255,60,140,0.45);
-             }
+              box-shadow: 0 0 18px rgba(255,60,140,0.35);
 
              .plan-credits-box {
                background: rgba(255,79,154,0.12);
@@ -1483,35 +1462,32 @@ $green: #22A06B;
     width: 100%;
     max-width: 200px;
     height: 44px;
-    background: linear-gradient(135deg, $pink, #FF7A45);
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
     color: #ffffff;
-     border: 1px solid #3d3d3d;
-     border-radius: 13px;
-     font-size: 14px;
-     font-weight: 800;
-     cursor: pointer;
-     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-     transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+    border: 2px solid #ff9aca;
+    border-radius: 18px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 23px rgba(255, 50, 140, .65);
+    transition: filter 0.15s;
 
-     &:hover {
-       transform: translate(-2px, -2px);
-       box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-     }
+    &:hover {
+      filter: brightness(1.08);
+    }
 
-     &:active {
-       transform: translate(0, 0);
-       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-     }
+    &:active {
+      transform: scale(0.95);
+    }
 
-     &:disabled {
-       opacity: 0.5;
-       cursor: not-allowed;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
 
-       &:hover {
-         transform: none;
-         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-       }
-     }
+      &:hover {
+        filter: none;
+      }
+    }
 
     &.loading {
       span::before {

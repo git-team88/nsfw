@@ -3251,6 +3251,7 @@ async function unpinCollection(collection: any) {
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      overflow: hidden;
 
       img.cover-img {
         width: 100%;

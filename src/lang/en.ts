@@ -69,7 +69,7 @@ export default {
   back: "Back",
   agreeTitle: "Terms of Use",
   closedBetaAgreementTitle: "Closed Beta Agreement",
-  closedBetaAgreement: `MoeGen is currently in a closed beta testing period, and the official Terms of Service have not yet been published.<br />
+  closedBetaAgreement: `FansFans is currently in a closed beta testing period, and the official Terms of Service have not yet been published.<br />
 <br />
 By participating in this test, please follow the instructions and guidance provided by the relevant person in charge or through the recruitment platform, such as CrowdWorks.<br />
 <br />
@@ -266,13 +266,13 @@ Please note that some products and services on this platform are generated based
 ● It is strictly prohibited to use the platform’s AI technology to infringe upon the legitimate rights and interests of othersDo not use AI technology to disseminate content that violates laws and regulations or infringes upon the legitimate rights and interests of other users or third parties. You shall not use AI technology to fabricate or spread rumors, maliciously slander others, infringe upon others’ privacy, intellectual property rights, or disseminate illegal information. Otherwise, you shall bear all consequences arising therefrom.<br />
 Please read this Agreement carefully, especially the bolded parts. If you have any questions about the content of this Agreement or the prompts on the page, please do not proceed to the next step. You may consult us through the official communication channels (see Article 16 for details) so that we can explain and clarify it for you. Your clicking on the page or directly starting to use the platform’s AI products and related services shall be deemed as your acceptance of this Agreement.<br />
 I. Introduction<br />
-1.1 This User Service Agreement (hereinafter referred to as “this Agreement”) is an agreement concluded between Moegen Co., Ltd. and you (hereinafter also referred to as “User” or “you”) regarding your access, registration, login, and use of related products and services.<br />
+1.1 This User Service Agreement (hereinafter referred to as “this Agreement”) is an agreement concluded between FansFans Co., Ltd. and you (hereinafter also referred to as “User” or “you”) regarding your access, registration, login, and use of related products and services.<br />
 1.2 All other relevant agreements, activity rules, announcements, instructions, in-site notifications, etc. that we have issued, may subsequently issue, and revise from time to time (collectively referred to as “Platform Rules”) are integral parts of this Agreement and shall have the same legal effect as this Agreement.<br />
 1.3 Before you start using the services, please read and fully understand this Agreement carefully. If you have any questions about the content of this Agreement or the prompts on the page, please do not proceed to the next step. You may consult us through the official communication channels so that we can explain and clarify it for you. Your confirmation by clicking on the page or directly starting to use the products and related services shall indicate your acceptance of this Agreement.<br />
 1.4 If you are a minor under the age of 18 or lack full capacity for civil conduct due to other statutory circumstances, please read this Agreement and other relevant agreements under the guidance and accompaniment of your guardian, pay special attention to the provisions applicable to minors, and use the products and related services only with the consent of your guardian.<br />
 1.5 If you are the guardian of a minor under the age of 16, you shall read and agree to this Agreement on behalf of your ward before using the related services.<br />
 1.6 It is particularly noted that you shall not use the recharge and consumption-related services provided without the explicit consent of your guardian, and guardians shall earnestly perform their guardianship duties.<br />
-1.7 If you have any questions, comments or suggestions regarding the content of this Agreement, you may contact us through the user feedback entrance or by sending an email to support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br /><br />
+1.7 If you have any questions, comments or suggestions regarding the content of this Agreement, you may contact us through the user feedback entrance or by sending an email to support{'@'}fansfans{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br /><br />
 
 II. Scope of Application of the Agreement<br />
 2.1 This Agreement applies to your access to and use of the functions and services provided by the product service website and client.<br />
@@ -510,7 +510,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       copyrightRiskMessage: "The prompt or reference image may contain sensitive content or copyright risks. Please retry or modify the prompt",
       contactSupport: "If you still can't generate normally after clicking retry, please contact customer service and we will handle it for you as soon as possible",
       calcDeductRule: "Failed generation steps will not deduct computing power.",
-      supportEmail: "Customer service email: support{'@'}moegen{'.'}co.jp",
+      supportEmail: "Customer service email: support{'@'}fansfans{'.'}co.jp",
       emptyProjectName: "Please enter project name",
       emptyRegenerateContent: "Please enter creative description",
       estimateFailed: "Failed to estimate computing power, please try again later",
@@ -840,16 +840,16 @@ To provide you with rich and diverse products and services and ensure the safe o
 We attach great importance to your management of personal information and do our utmost to protect your rights to access, copy, correct, supplement, delete, withdraw consent and authorization, cancel accounts, file complaints and reports, and set privacy functions, so that you can protect your privacy and information security.<br />
 Please understand that specific business functions and services require your information to be completed. When you withdraw consent or authorization, we will no longer be able to provide you with the corresponding functions and services or process your relevant personal information. However, your decision to withdraw consent or authorization will not affect our previous personal information processing based on your authorization.<br />
 7.1 Your Rights to Personal Information<br />
-If you or other eligible subjects have any claims, requests or questions regarding the exercise of personal information rights conferred by relevant laws and regulations, you may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>. We will review the relevant issues as soon as possible.
+If you or other eligible subjects have any claims, requests or questions regarding the exercise of personal information rights conferred by relevant laws and regulations, you may contact us via email at support{'@'}fansfans{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>. We will review the relevant issues as soon as possible.
 7.2 System Permission Management<br />
 You may directly access the settings function of your device system to manage permissions including location, contacts, microphone, camera, album, calendar, storage, phone status (permission names vary on different devices, subject to the system permission names of your device) to change the scope of authorization or withdraw your authorization.<br />
 7.3 Account Cancellation<br />
-You may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a> to apply for cancellation of your account.<br />
+You may contact us via email at support{'@'}fansfans{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a> to apply for cancellation of your account.<br />
 We will process your application in a timely manner upon receipt and respond to your request within the time limit required by laws and regulations. Before you cancel your account, we will verify your personal identity, security status, device information, etc.<br />
 You acknowledge and understand that account cancellation is irreversible. After you cancel your account, we will delete or anonymize your relevant information unless otherwise stipulated by laws and regulations.<br />
 After account cancellation, you will no longer be able to log in to the Platform with such account or retrieve any content or information related to the account. You will still be responsible for your use of the Platform before account cancellation.<br />
 7.4 Feedback, Complaints and Reports<br />
-You may file complaints or reports in accordance with our publicized rules. If you have any comments, believe your personal information rights may have been infringed, or discover clues of infringement, you may submit clues on the Platform's user feedback page or actively contact the Platform via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br />
+You may file complaints or reports in accordance with our publicized rules. If you have any comments, believe your personal information rights may have been infringed, or discover clues of infringement, you may submit clues on the Platform's user feedback page or actively contact the Platform via email at support{'@'}fansfans{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.<br />
 7.5 Operation Termination Notice<br />
 If we cease operations, we will promptly stop collecting your personal information, notify you of the termination via individual delivery or announcement, and delete or anonymize your personal information related to the terminated products or services.<br />
 7.6 Rights of Deceased Users’ Accounts<br />
@@ -865,7 +865,7 @@ We attach great importance to the protection of minors’ personal information.<
 9.2 After this Privacy Policy is updated, we will publish the updated version on the Platform website or remind you of the updated content through announcements or other appropriate methods before the updated terms take effect, so that you can timely understand the latest version of this Privacy Policy.<br />
 9.3 We may also help you better manage your personal information through function updates. Please pay attention to relevant function instructions.<br />
 10. Contact Us<br />
-If you have any questions, complaints, comments or suggestions regarding personal information protection and AI generation services, you may contact us via email at support{'@'}moegen{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.`,
+If you have any questions, complaints, comments or suggestions regarding personal information protection and AI generation services, you may contact us via email at support{'@'}fansfans{'.'}ai or join Discord community <a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>.`,
   agreeTip: "Please read these Terms to the end.",
   agreeBtn: "Agree",
   pleaseAgreeAgreement: "Please agree to the user agreement",
@@ -947,7 +947,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     terms: "Terms of Service",
     privacy: "Privacy Policy",
     login: {
-      badge: "WELCOME TO MOEGEN",
+      badge: "WELCOME TO FansFans",
       brandTitle: "Welcome back.\nKeep on drawing.",
       brandCopy: "Yesterday's draft, and the next episode you've yet to see—your world is waiting right here.",
       perk: "",
@@ -959,7 +959,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       toRegister: "Sign up",
     },
     register: {
-      badge: "WELCOME TO MOEGEN",
+      badge: "WELCOME TO FansFans",
       brandTitle: "Where a single line\nbecomes a story.",
       brandCopy: "A full episode's storyboard in seconds. Today, the world in your head reaches someone for the very first time.",
       perk1: "◆ Free sign up with computing power",
@@ -995,7 +995,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       title: "Material Provider Dashboard",
       howItWorks: "How Material Provider Works",
       introTitle: "Material Provider Registration Form",
-      introDesc: "This form collects identity verification, rights confirmation, and contact information for users who wish to provide materials on MoeGen. Submitted information is used for review purposes only.",
+      introDesc: "This form collects identity verification, rights confirmation, and contact information for users who wish to provide materials on FansFans. Submitted information is used for review purposes only.",
       personalInfoSection: "Personal Information",
       personalInfoNote: "Please enter the same information as your submitted identity document.",
       fullName: "Full Name",
@@ -1204,14 +1204,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
     inviteRevenue: {
       title: "Earn & Invite",
-      inviteText: `Join MoeGen, generate videos with one click using AI, and earn money by sharing videos! Register here → [<a href="{link}">{link}</a>], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
+      inviteText: `Join FansFans, generate videos with one click using AI, and earn money by sharing videos! Register here → [<a href="{link}">{link}</a>], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
       copy: "Copy Invite Link",
-      copyText: `Join MoeGen, generate videos with one click using AI, and earn money by sharing videos! Register here → [{link}], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
+      copyText: `Join FansFans, generate videos with one click using AI, and earn money by sharing videos! Register here → [{link}], enter invitation code [{code}]. Invite new users and get rewards instantly!`,
       firstPurchaseStars: "Total Registered & First-Time Recharge (Users)",
       totalRevenue: "Total Invitation Rewards (Computing Power)",
       credits: " Credits",
       rulesTitle: "Promotion Rules:",
-      rule: `When others register for MoeGen using your invitation code, you will receive a commission reward.<br />
+      rule: `When others register for FansFans using your invitation code, you will receive a commission reward.<br />
       Commission rule: A successful invitation is counted when the invited user registers and completes their first purchase. You will receive 3% of the first purchase credits for each successful invitation.<br />
       These rules may be updated periodically. The revised rules will be announced on the official website before taking effect.<br />
       Continuing to use the service after the updated rules take effect means you have read, understood, and accepted the revised rules.`,
@@ -1756,8 +1756,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       dontShow: "Don't show this again",
     },
     guide: {
-      label: "MOEGEN GUIDE",
-      step1Title: "Welcome to MoeGen!",
+      label: "FansFans GUIDE",
+      step1Title: "Welcome to FansFans!",
       step1Body: "A creative platform for making manga, novels, and animation—we'll show you how in 30 seconds!",
       step2Title: "First, type one line",
       step2Body: "Just enter the story you want to create and tap Generate. You can also choose a mode: novel, comic, drama, image, or video.",
@@ -2740,15 +2740,15 @@ If you have any questions, complaints, comments or suggestions regarding persona
   paymentTerms: {
     title: "Statement under the Specified Commercial Transactions Act",
     content: `<h2>1. Business Operator Information</h2>
-<p>Sales Business Operator: Moegen Co., Ltd.</p>
+<p>Sales Business Operator: FansFans Co., Ltd.</p>
 <p>Responsible Operator: Ichisei Aoki, Representative Director</p>
 <p>Address: 1st Floor, Green Hills Taimei, 6-20-11 Hongo, Bunkyo-ku, Tokyo 113-0033, Japan</p>
 <p>Telephone Number: +81-7484-0659</p>
-<p>Email Address: support{'@'}moegen{'.'}ai</p>
+<p>Email Address: support{'@'}fansfans{'.'}ai</p>
 <p>Service URL: <a href="" target="_blank">(tentative)</a></p>
 
 <h2>2. Scope of Application of This Statement</h2>
-<p>This statement applies to the following services provided by our company (Moegen Co., Ltd.):</p>
+<p>This statement applies to the following services provided by our company (FansFans Co., Ltd.):</p>
 <p>・Paid features of AI tools (subscription)</p>
 <p>・Sale of Credits used for AI generation, etc.</p>
 <p>・Joining creator fan clubs (monthly subscription) (membership service provided by our company)</p>
@@ -2840,7 +2840,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     newCollection: "New Collection",
     modifyCollection: "Modify Collection Info",
     description: "Description",
-    defaultDescription: "New work released! Welcome to read my works on Moegen. Hope you enjoy them! Your support is my motivation to write. I will strive to tell every story well!",
+    defaultDescription: "New work released! Welcome to read my works on FansFans. Hope you enjoy them! Your support is my motivation to write. I will strive to tell every story well!",
     type: "Type",
     typeComic: "Comic",
     typeNovel: "Novel",
@@ -2906,7 +2906,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     heroEyebrow: "Creative Partner Program",
     heroTitle1: "Take your creativity",
     heroTitle2: "even further.",
-    heroSub1: "For selected creators who walk alongside MoeGen.",
+    heroSub1: "For selected creators who walk alongside FansFans.",
     heroSub2: "Early access to new features, exclusive pricing, and dedicated support.",
     ctaButton: "Apply Now",
     // === LP Stats ===
@@ -2921,17 +2921,17 @@ If you have any questions, complaints, comments or suggestions regarding persona
     benefit2Title: "Exclusive Partner Pricing",
     benefit2Desc: "All AI computing power plans are available at a special price exclusively for partners.",
     benefit3Title: "Dedicated team support",
-    benefit3Desc: "From usage advice to technical questions, the MoeGen team provides priority support for partners.",
+    benefit3Desc: "From usage advice to technical questions, the FansFans team provides priority support for partners.",
     benefit4Title: "Insider info, delivered first",
     benefit4Desc: "Get updates on new features, events, and roadmap before anyone else. A powerful asset for your content strategy.",
     // === LP Exchange ===
     exchangeTitle: "For All Creators",
-    exchangeDesc1: "Simply share your MoeGen creations on social media.",
+    exchangeDesc1: "Simply share your FansFans creations on social media.",
     exchangeDesc2: "Any platform works.",
     exchangeHashtagNote: "Just add the tag to your posts.",
     // === LP Flow ===
     flowTitle: "How It Works",
-    flowStep1Title: "STEP 1", flowStep1Desc: "Register on MoeGen",
+    flowStep1Title: "STEP 1", flowStep1Desc: "Register on FansFans",
     flowStep2Title: "STEP 2", flowStep2Desc: "Fill out and submit the application form below",
     flowStep3Title: "STEP 3", flowStep3Desc: "1st Review (notified by email within 7 business days)",
     flowStep4Title: "STEP 4", flowStep4Desc: "Receive bonus credits, create works, and post on SNS",
@@ -2940,8 +2940,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     // === LP Form ===
     formTitle: "1st Review — Application Form",
     formSubtitle: "Please fill out the form below and submit your application.",
-    moegenId: "MoeGen ID",
-    moegenIdPlaceholder: "Enter your MoeGen ID",
+    moegenId: "FansFans ID",
+    moegenIdPlaceholder: "Enter your FansFans ID",
     snsLinks: "SNS Links (multiple allowed)",
     snsLinksPlaceholder: "Enter one SNS link per line",
     message: "Message",
@@ -2999,81 +2999,81 @@ If you have any questions, complaints, comments or suggestions regarding persona
       privacyPolicy: "Privacy Policy",
       paidServices: "Paid Services"
     },
-    copyright: "© 2026 MoeGen All Rights Reserved."
+    copyright: "© 2026 FansFans All Rights Reserved."
   },
   seo: {
     home: {
-      title: "MoeGen - AI Novel, Comic & Anime Drama Generator | One Line, Infinite Stories",
-      keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, MoeGen, AI writing tool",
-      description: "MoeGen turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start.",
+      title: "FansFans - AI Novel, Comic & Anime Drama Generator | One Line, Infinite Stories",
+      keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, FansFans, AI writing tool",
+      description: "FansFans turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start.",
       novel: {
-        title: "AI Novel Generator Online Free | Write 30K Long-Form Web Novels in One Line - MoeGen",
+        title: "AI Novel Generator Online Free | Write 30K Long-Form Web Novels in One Line - FansFans",
         keywords: "AI novel generator,AI write novels,AI web novels,free AI novel,long-form novel generator,web novel AI,novel outline AI,anime novel AI",
-        description: "MoeGen AI Novel Generator — input one creative line to auto-generate a 30K-word long-form web novel. Supports xianxia, romance, BL, isekai & more. Top choice for TW/HK/JP creators."
+        description: "FansFans AI Novel Generator — input one creative line to auto-generate a 30K-word long-form web novel. Supports xianxia, romance, BL, isekai & more. Top choice for TW/HK/JP creators."
       },
       comic: {
-        title: "AI Comic Generator | Text to Manga, Webtoon & Panels - MoeGen",
+        title: "AI Comic Generator | Text to Manga, Webtoon & Panels - FansFans",
         keywords: "AI comic generator, text to comic, AI manga generator, webtoon AI, AI comic panels, character consistency",
-        description: "Turn text into comics & manga with MoeGen. Auto-paneling, consistent characters, multi-style: manga, webtoon, chibi."
+        description: "Turn text into comics & manga with FansFans. Auto-paneling, consistent characters, multi-style: manga, webtoon, chibi."
       },
       drama: {
-        title: "AI Anime Drama Generator | One Line to Animated Short - MoeGen",
+        title: "AI Anime Drama Generator | One Line to Animated Short - FansFans",
         keywords: "AI anime drama, AI animated short, anime script AI, AI short anime, vertical anime AI",
         description: "Turn one line into a 1-3 min anime drama short. Auto storyboard, dialogue, voice, BGM. Built for anime creators."
       },
       photo: {
-        title: "AI Anime Image & Art Generator by MoeGen",
-        keywords: "AI anime art generator, AI image creator, anime character design, MoeGen",
-        description: "Generate breathtaking anime art, character designs, and illustrations with MoeGen's AI image generator. Just type your prompt and get high-quality anime photos instantly."
+        title: "AI Anime Image & Art Generator by FansFans",
+        keywords: "AI anime art generator, AI image creator, anime character design, FansFans",
+        description: "Generate breathtaking anime art, character designs, and illustrations with FansFans's AI image generator. Just type your prompt and get high-quality anime photos instantly."
       },
       video: {
-        title: "AI Video Generator by MoeGen",
-        keywords: "AI video generator, image to video, text to video, anime short video, MoeGen",
-        description: "Create smooth, dynamic anime videos from text prompts or static images with MoeGen's AI video generator. Perfect for creating engaging short-form content for social media."
+        title: "AI Video Generator by FansFans",
+        keywords: "AI video generator, image to video, text to video, anime short video, FansFans",
+        description: "Create smooth, dynamic anime videos from text prompts or static images with FansFans's AI video generator. Perfect for creating engaging short-form content for social media."
       }
     },
     detail: {
-      title: "[[title]] - MoeGen AI Anime Creation",
+      title: "[[title]] - FansFans AI Anime Creation",
       keywords: "[[title]],AI [[type]],anime [[type]]",
       description: "[[title]] - [[description]]"
     },
     communityConvention: {
-      title: "Community Guidelines — MoeGen Creator Code of Conduct",
+      title: "Community Guidelines — FansFans Creator Code of Conduct",
       keywords: "community guidelines, creator rules, content policy, community policy",
-      description: "Read MoeGen's community guidelines to keep our AI creator community safe and inspiring."
+      description: "Read FansFans's community guidelines to keep our AI creator community safe and inspiring."
     },
     terms: {
-      title: "Terms of Service — MoeGen User Agreement",
+      title: "Terms of Service — FansFans User Agreement",
       keywords: "terms of service, user agreement, user agreement, legal terms",
-      description: "Read MoeGen's Terms of Service to understand your rights, responsibilities, and AI content ownership."
+      description: "Read FansFans's Terms of Service to understand your rights, responsibilities, and AI content ownership."
     },
     privacy: {
-      title: "Privacy Policy — How MoeGen Protects Your Data",
+      title: "Privacy Policy — How FansFans Protects Your Data",
       keywords: "privacy policy, data protection, personal information, cookie policy",
-      description: "MoeGen respects your personal information and creative privacy."
+      description: "FansFans respects your personal information and creative privacy."
     },
     login: {
-      title: "Log In — Continue Your AI Story | MoeGen",
-      keywords: "MoeGen login, account login, sign in, log in",
-      description: "Log in to your MoeGen account and continue creating AI-powered novels, comics, and anime dramas."
+      title: "Log In — Continue Your AI Story | FansFans",
+      keywords: "FansFans login, account login, sign in, log in",
+      description: "Log in to your FansFans account and continue creating AI-powered novels, comics, and anime dramas."
     },
     signup: {
-      title: "Sign Up Free — Start Your AI Story Today | MoeGen",
-      keywords: "MoeGen sign up, free AI creation, AI writing account, register",
+      title: "Sign Up Free — Start Your AI Story Today | FansFans",
+      keywords: "FansFans sign up, free AI creation, AI writing account, register",
       description: "Sign up free and instantly get 30K creation words + full AI novel, comic & anime drama tools."
     },
     characterLibrary: {
-      title: "AI Character Library — Create Custom Manga Characters | MoeGen",
+      title: "AI Character Library — Create Custom Manga Characters | FansFans",
       keywords: "AI character generator, character library, anime characters, manga characters, AI character creation",
-      description: "MoeGen AI Character Library offers official and custom characters to help you create unique 2D manga characters."
+      description: "FansFans AI Character Library offers official and custom characters to help you create unique 2D manga characters."
     },
     userHome: {
-      title: "My Works — Manage Your AI Novels, Comics & Anime Drama | MoeGen",
+      title: "My Works — Manage Your AI Novels, Comics & Anime Drama | FansFans",
       keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
-      description: "Manage your AI-generated novels, comics, and anime dramas on MoeGen. Track fans, subscriptions, and engagement data."
+      description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data."
     },
     novelGenerate: {
-      title: "AI Novel Generator Online Free | Write 30K Stories in One Click - MoeGen",
+      title: "AI Novel Generator Online Free | Write 30K Stories in One Click - FansFans",
       keywords: "AI novel generator, long-form story generator, textai, AI story maker, AI novel AI, write novel AI, AI novel tool",
       description: "Generate full 30K+ word novels from one line. Multiple genres: romance, BL, school romance, sci-fi, fantasy. Built for global writers."
     }
@@ -3137,7 +3137,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     privateChapterHint: "({count} ch only visible to you)",
     unitChapter: "ch",
     sampleTitle: "Cultivation Journey Cultivation Journey Cultivation Journey",
-    sampleDescription: "New release! Welcome to read my works on Moegen. I hope you enjoy them. Your follows are my motivation for writing, and I will strive to write every story well!",
+    sampleDescription: "New release! Welcome to read my works on FansFans. I hope you enjoy them. Your follows are my motivation for writing, and I will strive to write every story well!",
     finishSuccess: "Successfully marked as completed",
     deleteSuccess: "Deleted successfully",
     finishNotice: {

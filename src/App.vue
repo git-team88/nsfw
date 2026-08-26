@@ -40,13 +40,13 @@ const htmlLangMap: Record<string, string> = {
 };
 
 // 站点地址（canonical 用）始终用当前实际访问地址（含协议/端口/域名）；
-// 移动端域名仍按正式/测试区分：正式站(*.moegen.ai)→ m.moegen.ai，其它 → m.addaiaroot.com。
+// 移动端域名仍按正式/测试区分：正式站(*.fansfans.ai)→ m.fansfans.ai，其它 → mtest.fansfans.ai。
 function resolveOrigins() {
   const host = window.location.hostname;
-  const isProd = host.endsWith('moegen.ai');
+  const isProd = host.endsWith('fansfans.ai');
   return {
     site: window.location.origin,
-    mobile: isProd ? 'https://m.moegen.ai' : 'https://m.addaiaroot.com',
+    mobile: isProd ? 'https://m.fansfans.ai' : 'https://mtest.fansfans.ai',
   };
 }
 

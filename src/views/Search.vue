@@ -66,8 +66,6 @@
               :key="post.id"
               ref="postCardRefs"
               :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
-              @mousemove="onCardTilt"
-              @mouseleave="onCardTiltReset"
               @click="goToDetail(post)"
             >
               <div class="content-image">
@@ -584,16 +582,6 @@ function goToDetail(post: any) {
   router.push(`/collection/${bookId}`);
 }
 
-const onCardTilt = (e: MouseEvent) => {
-  const el = e.currentTarget as HTMLElement;
-  const r = el.getBoundingClientRect();
-  const px = (e.clientX - r.left) / r.width - 0.5;
-  const py = (e.clientY - r.top) / r.height - 0.5;
-  el.style.transform = `perspective(900px) rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg) translateY(-3px)`;
-};
-const onCardTiltReset = (e: MouseEvent) => {
-  (e.currentTarget as HTMLElement).style.transform = '';
-};
 
 function goToUserHome(userId: number) {
   router.push(`/user-home?id=${userId}`);
@@ -823,10 +811,11 @@ $line: #2c2c2c;
 }
 
 .search-panel {
-  background: $paper;
+  background: transparent;
   border-radius: 6px;
   padding: 0 18px;
   animation: sePanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+  box-shadow: none;
 
   @media (min-width: 768px) {
     padding: 0 40px;
@@ -886,6 +875,7 @@ $line: #2c2c2c;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      filter: brightness(0) invert(1);
 
       img {
         width: 18px;
@@ -930,61 +920,83 @@ $line: #2c2c2c;
 
     .result-tabs {
       display: flex;
-      gap: 6px;
+      gap: 31px;
       flex-wrap: wrap;
-      background: #1a1a1a;
-      border: 1px solid #3d3d3d;
-      border-radius: 14px;
-      padding: 5px;
+      padding: 0;
+      padding-bottom: 15px;
+      background: transparent;
       margin-bottom: 26px;
+      border-bottom: 1px solid #303030;
 
       .tab-item {
-        font-weight: 800;
-        font-size: 15px;
-        padding: 10px 20px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: background-color 0.16s, color 0.16s;
-        color: $ink;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 51px;
+        padding: 0 8px;
+        font-weight: 900;
+        font-size: 21px;
+        color: #555;
+        border: 0;
+        border-radius: 0;
         background: transparent;
+        cursor: pointer;
+        transition: color 0.15s;
 
         &.active {
-          background: linear-gradient(135deg, $pink, #ff7a45);
-          color: #fff;
-          box-shadow: 0 4px 15px rgba(255,79,154,0.35);
+          color: #e7e7e7;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 8px;
+            bottom: -16px;
+            left: 8px;
+            height: 4px;
+            border-radius: 4px 4px 0 0;
+            background: #ff4f9a;
+          }
         }
 
         &:hover:not(.active) {
-          background: $paper;
+          color: #aaa;
         }
       }
     }
 
     .post-filters {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       flex-wrap: wrap;
+      padding: 0;
+      background: transparent;
       margin: 0 0 20px;
 
       .filter-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 46px;
+        padding: 0 18px;
         font-weight: 800;
-        font-size: 13px;
-        padding: 8px 16px;
-        border-radius: 999px;
-        border: 1px solid #3d3d3d;
+        font-size: 15px;
+        border-radius: 25px;
         cursor: pointer;
-        transition: all 0.16s;
+        transition: all 0.15s;
+        color: #f5f5f5;
+        border: 1px solid #404040;
         background: #1a1a1a;
-        color: $ink;
 
         &.active {
-          background: linear-gradient(135deg, $pink, #ff7a45);
           color: #fff;
-          box-shadow: 0 4px 15px rgba(255,79,154,0.35);
+          border: 1px solid #ff9aca;
+          background: linear-gradient(145deg, #ff65ab, #f02c80);
+          box-shadow: 0 0 23px rgba(255, 50, 140, .65);
         }
 
         &:hover:not(.active) {
-          background: $paper;
+          border-color: #888;
         }
       }
     }
@@ -1018,9 +1030,6 @@ $line: #2c2c2c;
   border-radius: 16px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
-  transform-style: preserve-3d;
-  will-change: transform;
-  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
 
   &:hover {
     .content-image img {
@@ -1072,7 +1081,7 @@ $line: #2c2c2c;
 
       .type-badge {
         display: inline-block;
-        border: 1px solid #3d3d3d;
+        border: none;
         border-radius: 999px;
         padding: 4px 12px;
         font-weight: 800;
@@ -1121,7 +1130,6 @@ $line: #2c2c2c;
       align-items: flex-end;
       justify-content: space-between;
       padding: 0 10px 10px;
-      border-radius: 0 0 16px 16px;
       background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
     }
 
@@ -1240,11 +1248,6 @@ $line: #2c2c2c;
   cursor: pointer;
   box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
-
-  &:hover {
-    box-shadow: 0 20px 45px rgba(0,0,0,0.6);
-  }
 
   .user-avatar {
     width: 78px;

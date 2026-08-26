@@ -23,8 +23,8 @@ function createProviderOpts() {
     },
     showQrModal: true,
     metadata: {
-      name: 'Moegen',
-      description: 'Moegen Platform',
+      name: 'FansFans',
+      description: 'FansFans Platform',
       url: window.location.origin,
       icons: [window.location.origin + '/favicon.ico'],
     },

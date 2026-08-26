@@ -10,7 +10,7 @@
           <p>{{ t("subscribe.success.line1") }}</p>
           <p>{{ t("subscribe.success.line2") }}</p>
           <p>
-            {{ t("subscribe.success.supportEmail") }}support@moegen.ai
+            {{ t("subscribe.success.supportEmail") }}support@fansfans.ai
           </p>
           <p>
             {{ t("subscribe.success.discord") }}

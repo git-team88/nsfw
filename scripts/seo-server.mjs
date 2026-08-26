@@ -17,16 +17,16 @@ const WAIT_AFTER_LOAD = 3000
 // 混合策略的「同步等待窗口」：缓存未命中时最多同步等这么久拿完整正文，
 // 超时则先返回骨架、同一次渲染转后台跑完写缓存。需小于 nginx/爬虫的超时阈值。
 const SYNC_RENDER_TIMEOUT = parseInt(process.env.SYNC_RENDER_TIMEOUT || '9000', 10)
-const SITE_NAME = 'MoeGen 萌創'
+const SITE_NAME = 'FansFans 萌創'
 const SITE_URL = 'https://www.moegen.ai'
 
 const LANG_MAP = { ja: 'ja', en: 'en', 'zh-cn': 'zh-CN', 'zh-tw': 'zh-TW' }
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
 
 const SEO_TITLES = {
-  detail: { ja: '作品詳細 - MoeGen 萌創', en: 'Work Detail - MoeGen', 'zh-cn': '作品详情 - MoeGen 萌创', 'zh-tw': '作品詳情 - MoeGen 萌創' },
-  collection: { ja: 'コレクション - MoeGen 萌創', en: 'Collection - MoeGen', 'zh-cn': '合集 - MoeGen 萌创', 'zh-tw': '合集 - MoeGen 萌創' },
-  novel: { ja: 'AI小説生成 - MoeGen 萌創', en: 'AI Novel Generator - MoeGen', 'zh-cn': 'AI小说生成 - MoeGen 萌创', 'zh-tw': 'AI小說生成 - MoeGen 萌創' },
+  detail: { ja: '作品詳細 - FansFans 萌創', en: 'Work Detail - FansFans', 'zh-cn': '作品详情 - FansFans 萌创', 'zh-tw': '作品詳情 - FansFans 萌創' },
+  collection: { ja: 'コレクション - FansFans 萌創', en: 'Collection - FansFans', 'zh-cn': '合集 - FansFans 萌创', 'zh-tw': '合集 - FansFans 萌創' },
+  novel: { ja: 'AI小説生成 - FansFans 萌創', en: 'AI Novel Generator - FansFans', 'zh-cn': 'AI小说生成 - FansFans 萌创', 'zh-tw': 'AI小說生成 - FansFans 萌創' },
 }
 
 function detectLang(url) {
@@ -46,8 +46,8 @@ function generateSkeleton(url, query = {}) {
   const htmlLang = LANG_MAP[lang] || 'ja'
   const pageType = detectPageType(url)
   const titles = pageType ? SEO_TITLES[pageType] : null
-  const title = titles ? (titles[lang] || titles.ja) : 'MoeGen 萌創'
-  const description = 'MoeGen 萌創は二次元AI創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。'
+  const title = titles ? (titles[lang] || titles.ja) : 'FansFans 萌創'
+  const description = 'FansFans 萌創は二次元AI創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。'
 
   return `<!DOCTYPE html>
 <html lang="${htmlLang}">
@@ -161,7 +161,7 @@ async function renderPage(url) {
   const page = await b.newPage()
   try {
     await page.setViewport({ width: 1440, height: 900 })
-    await page.setUserAgent('Mozilla/5.0 (compatible; MoeGen-SEO-Bot/1.0)')
+    await page.setUserAgent('Mozilla/5.0 (compatible; FansFans-SEO-Bot/1.0)')
     // 注入 SEO 预渲染标记：Home.vue 据此按 URL 显示对应内容类型并保留地址，
     // 而不是像真实用户那样重置为默认内容类型 / 只保留域名。
     // 同时抹掉 navigator.webdriver（配合 --disable-blink-features=AutomationControlled），

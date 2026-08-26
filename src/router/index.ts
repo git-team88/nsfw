@@ -326,15 +326,20 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // 如果是导航到首页，滚动到顶部
     if (to.name === 'Home') {
       return { top: 0, behavior: 'auto' };
     }
-    // 如果有保存的滚动位置，恢复它
     if (savedPosition) {
       return savedPosition;
     }
-    // 默认滚动到顶部
+    const homeNames = new Set([
+      'Home', ...Object.values(LANG_URL_TO_I18N).map(l => `Home_${l}`),
+      ...CONTENT_TYPES.map(t => `Home_${t}`),
+      ...Object.entries(LANG_URL_TO_I18N).flatMap(([, l]) => CONTENT_TYPES.map(t => `Home_${l}_${t}`)),
+    ]);
+    if (homeNames.has(String(from.name)) && homeNames.has(String(to.name))) {
+      return false;
+    }
     return { top: 0, behavior: 'auto' };
   },
 });

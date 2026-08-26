@@ -741,7 +741,6 @@ $line: #2c2c2c;
       align-items: flex-end;
       justify-content: space-between;
       padding: 0 10px 10px;
-      border-radius: 0 0 16px 16px;
       background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
     }
 

@@ -69,7 +69,7 @@ export default {
   back: "戻る",
   agreeTitle: "利用規約",
   closedBetaAgreementTitle: "クローズドβテスト同意書",
-  closedBetaAgreement: `現在、MoeGenはクローズドβテスト期間中のため、正式な利用規約は掲載しておりません。<br />
+  closedBetaAgreement: `現在、FansFansはクローズドβテスト期間中のため、正式な利用規約は掲載しておりません。<br />
 <br />
 本テストへの参加にあたっては、各ご担当者、またはクラウドワークス等の募集プラットフォーム上で案内された内容・指示に従ってください。<br />
 <br />
@@ -268,13 +268,13 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
 本契約の内容、特に太字の部分をよくお読みください。本契約の内容またはページの案内情報に疑問がある場合は、次の操作を行わないでください。公式コミュニケーションチャネル（第十六条を参照）を通じてお問い合わせいただくことができますので、説明と説明をさせていただきます。ページのクリックまたはプラットフォームのAI製品及び関連サービスの使用を直接開始するなどの方法により、本契約に同意したことを示すものとみなされます。<br /><br />
 
 一、序文<br />
-1.1 《ユーザーサービス契約》（以下「本契約」といいます）は、Moegenとあなた（以下「ユーザー」、「あなた」ともいいます）との間で、あなたが関連製品及びサービスにアクセス、登録、ログイン、使用することに関して締結された契約です。<br />
+1.1 《ユーザーサービス契約》（以下「本契約」といいます）は、FansFansとあなた（以下「ユーザー」、「あなた」ともいいます）との間で、あなたが関連製品及びサービスにアクセス、登録、ログイン、使用することに関して締結された契約です。<br />
 1.2 私たちが既に発表し、今後発表する可能性のある、随時修正されるその他の全ての関連契約、活動ルール、公告、説明、站内信通知等（以下「プラットフォームルール」といいます）は、本契約の不可分の構成部分であり、本契約と同等の法的効力を有します。<br />
 1.3 ご使用を開始する前に、本契約をよくお読みいただき、十分に理解してください。本契約の内容またはページの案内情報に疑問がある場合は、次の操作を行わないでください。公式コミュニケーションチャネルを通じてお問い合わせいただくことができますので、説明と説明をさせていただきます。ページのクリックまたは製品及び関連サービスの使用を直接開始するなどの他の方法により、本契約に同意したことを示すものとみなされます。<br />
 1.4 満18歳未満の未成年者またはその他の法定事由により完全な民事行為能力を有しない場合は、保護者の指導と同行の下で本契約をお読みいただき、保護者の同意を得た上で製品及び関連サービスを使用してください。<br />
 1.5 満16歳未満の未成年者の保護者である場合、使用及び関連サービスを使用する前に、被後見人のために本契約をお読みいただき、同意する必要があります。<br />
 1.6 特に注意すべき点は、保護者の明示的な同意を得ない限り、提供されるクレジット消費関連サービスを使用しないでください、また保護者は確実に監護責任を果たしてください。<br />
-1.7 本契約の内容に質問、意見または提案がある場合は、ユーザーフィードバックエントリーを通じて、またはsupport{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してお問い合わせいただくことができます。<br /><br />
+1.7 本契約の内容に質問、意見または提案がある場合は、ユーザーフィードバックエントリーを通じて、またはsupport{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してお問い合わせいただくことができます。<br /><br />
 
 二、契約の適用範囲<br />
 2.1 本契約は、製品サービスウェブサイト、クライアントが提供する機能とサービスにアクセスして使用する際に適用されます。<br />
@@ -421,7 +421,7 @@ AI技術を利用して法令に違反する内容、他のユーザーまたは
 
   privacy: `プライバシーポリシー<br />
 本製品および関連サービスをご利用いただき、ありがとうございます。事前に「プライバシーポリシー」をよくお読みいただき、内容をご理解・ご同意のうえご利用ください。<br />
-ここにいう「当プラットフォーム」とは、Moegen（以下「当社」または「私たち」）が適法に所有・運営する、「Moegen」を名称とする公式 Web サイトおよびアプリケーションを指します。当プラットフォームでは、AI コンテンツ生成（文章生成・画像生成・音声・動画生成）、コミュニティへの投稿などのサービスを提供しています。<br />
+ここにいう「当プラットフォーム」とは、FansFans（以下「当社」または「私たち」）が適法に所有・運営する、「FansFans」を名称とする公式 Web サイトおよびアプリケーションを指します。当プラットフォームでは、AI コンテンツ生成（文章生成・画像生成・音声・動画生成）、コミュニティへの投稿などのサービスを提供しています。<br />
 当社は、当プラットフォームの運営者として、お客さまのプロフィールの重要性を深く認識しており、お客さまの信頼は私たちにとって非常に重要です。法令を遵守し、業界における最良の実践に基づき、お客さまのプロフィールおよびプライバシーの安全を保護します。当社は本プライバシーポリシーを定め、特に以下をお知らせします。製品および関連サービス（以下総称して「本サービス」）をご利用になる前に、本ポリシーをよくお読みいただき、ご理解のうえで適切な選択をしてください。<br />
 本プライバシーポリシーは、以下をご理解いただくためのものです。<br />
 私たちは本ポリシーに基づきプロフィールを収集・利用します。本ポリシーへの同意をもって、強制的な一括バンドル方式でプロフィールを収集することはありません。<br />
@@ -567,14 +567,14 @@ AI API サービス購入時、本人確認・サービス提供のため、氏�
 プロフィールの管理を重視し、閲覧・複写・訂正・削除・同意の撤回・アカウント削除・苦情申立てなどの権利を保護します。<br />
 特定の機能は情報が必要なため、同意を撤回した場合、該当サービスを提供できなくなります。撤回前の情報取扱いには影響しません。<br />
 7.1 プロフィールに関する権利<br />
-プロフィールの権利行使に関するご質問・ご要望は、support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡ください。<br />
+プロフィールの権利行使に関するご質問・ご要望は、support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡ください。<br />
 7.2 システム権限の管理<br />
 端末の設定画面から、位置・連絡先・マイク・カメラ・アルバム・ストレージ・電話状態などの権限を管理・撤回できます。<br />
 7.3 アカウント削除<br />
-support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡いただくことで、アカウント削除を申請できます。受領後速やかに処理し、法令の期間内に回答します。削除前に本人確認・安全状況・端末情報を確認します。<br />
+support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡いただくことで、アカウント削除を申請できます。受領後速やかに処理し、法令の期間内に回答します。削除前に本人確認・安全状況・端末情報を確認します。<br />
 アカウント削除は取り消せません。削除後は、法令で定める場合を除き、情報を削除または匿名化します。ログイン・データの復旧はできなくなり、削除前の行為に対する責任は継続します。<br />
 7.4 苦情・相談<br />
-ユーザーフィードバックページ、またはメール support{'@'}moegen{'.'}aiまたはDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>から苦情・相談を受け付けます。<br />
+ユーザーフィードバックページ、またはメール support{'@'}fansfans{'.'}aiまたはDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>から苦情・相談を受け付けます。<br />
 7.5 サービス終了の通知<br />
 サービスを終了する場合、プロフィールの収集を速やかに停止し、通知を行い、情報を削除または匿名化します。<br />
 7.6 死亡したユーザーのアカウント<br />
@@ -586,7 +586,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
 9.1 サービス向上のため、本ポリシーを改定することがあります。明確な同意なく、権利を削減することはありません。<br />
 9.2 改定後は Web サイトで公開し、または告知により内容を通知します。9.3 機能更新により、プロフィールの管理を支援する場合があります。<br />
 10. お問い合わせ<br />
-プロフィール保護・AI 生成サービスに関するご質問・苦情・ご意見は、support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡ください。
+プロフィール保護・AI 生成サービスに関するご質問・苦情・ご意見は、support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニティ<a href="https://discord.gg/kWkuYjs9" target="_blank" rel="noopener noreferrer">https://discord.gg/kWkuYjs9</a>に参加してご連絡ください。
 `,
   agreeTip: "本規約を最後までお読みください。",
   agreeBtn: "同意する",
@@ -669,7 +669,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     terms: "利用規約",
     privacy: "プライバシーポリシー",
     login: {
-      badge: "MoeGenへようこそ",
+      badge: "FansFansへようこそ",
       brandTitle: "おかえりなさい。\nつづきを描こう。",
       brandCopy: "きのうの下書きも、まだ見ぬ次の一話も。あなたの世界はここで待っている。",
       perk: "",
@@ -681,7 +681,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       toRegister: "新規登録",
     },
     register: {
-      badge: "MoeGenへようこそ",
+      badge: "FansFansへようこそ",
       brandTitle: "ひとことが、\n物語になる場所へ。",
       brandCopy: "数十秒で1話分のネームが完成。今日、あなたの頭の中の世界がはじめて誰かに届く。",
       perk1: "◆ 登録無料算力プレゼント",
@@ -717,7 +717,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       title: "素材提供ダッシュボード",
       howItWorks: "素材提供の仕組み",
       introTitle: "素材提供申請フォーム",
-      introDesc: "本フォームは、MoeGenで素材を提供したいユーザーの本人確認、権利確認、連絡先情報を収集するためのものです。提出された情報は審査のみに使用されます。",
+      introDesc: "本フォームは、FansFansで素材を提供したいユーザーの本人確認、権利確認、連絡先情報を収集するためのものです。提出された情報は審査のみに使用されます。",
       personalInfoSection: "本人情報",
       personalInfoNote: "※提出される本人確認書類と同一の内容をご記入ください",
       fullName: "姓名",
@@ -892,14 +892,14 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     },
     inviteRevenue: {
       title: "招待してクレジットを得る",
-      inviteText: "MoeGenで、AIワンクリック動画生成。動画をシェアして収益化も可能！登録はこちら→【<a href=\"{link}\">{link}</a>】。招待コード【{code}】を入力すると、新規登録特典としてxx円分のクレジットを贈呈！",
+      inviteText: "FansFansで、AIワンクリック動画生成。動画をシェアして収益化も可能！登録はこちら→【<a href=\"{link}\">{link}</a>】。招待コード【{code}】を入力すると、新規登録特典としてxx円分のクレジットを贈呈！",
       copy: "招待リンクをコピー",
-      copyText: "MoeGen AIで作品を生成し、投稿しよう！フォロワークラブで収益化も可能！登録はこちら→【{link}】。招待コード【{code}】を入力すると、新規登録特典としてxx円分のクレジットを贈呈！",
+      copyText: "FansFans AIで作品を生成し、投稿しよう！フォロワークラブで収益化も可能！登録はこちら→【{link}】。招待コード【{code}】を入力すると、新規登録特典としてxx円分のクレジットを贈呈！",
       firstPurchaseStars: "累計登録＋初回クレジット完了人数",
       totalReward: "招待報酬 合計（クレジット）",
       credits: " クレジット",
       rulesTitle: "プロモーションルール：",
-      rule: `他のユーザーがあなたの共有した招待コードを通じて【MoeGen】に登録し、初回購入が完了すると招待特典が付与されます。<br />
+      rule: `他のユーザーがあなたの共有した招待コードを通じて【FansFans】に登録し、初回購入が完了すると招待特典が付与されます。<br />
       1人招待成功するごとに初回購入の3%クレジットを付与します。<br />
       本キャンペーンは、状況に応じて不定期に変更される場合がございます。変更後のルールは、効力発生前に公式サイトで告知しますので、最新のルールをご確認ください。<br />
       本ルールの変更後も引き続き利用した場合、変更後の内容を十分に読み、理解し、同意のうえ遵守したものとみなされます。`,
@@ -1583,8 +1583,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       dontShow: "今後このお知らせを表示しない",
     },
     guide: {
-      label: "MOEGEN ガイド",
-      step1Title: "ようこそ、MoeGen へ！",
+      label: "FansFans ガイド",
+      step1Title: "ようこそ、FansFans へ！",
       step1Body: "ひとことで漫画・小説・アニメが作れる創作プラットフォームです。30秒で使い方をご案内します！",
       step2Title: "まずは、ひとこと入力",
       step2Body: "作りたい物語をひとこと打ち込んで「生成する」を押すだけ。小説・マンガ・アニメドラマ・画像・動画からモードも選べます。",
@@ -2435,15 +2435,15 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
   paymentTerms: {
     title: "特定商取引法に基づく表記",
     content: `<h2>1. 事業者情報</h2>
-<p>販売事業者：Moegen</p>
+<p>販売事業者：FansFans</p>
 <p>運営責任者：代表取締役　青木　一世</p>
 <p>所在地：〒113-0033 東京都文京区本郷6-20-11 Green Hills 泰明 1号室</p>
 <p>電話番号：+81-7484-0659</p>
-<p>メールアドレス：support{'@'}moegen{'.'}ai</p>
+<p>メールアドレス：support{'@'}fansfans{'.'}ai</p>
 <p>サービスURL：<a href="" target="_blank">（暫定）</a></p>
 
 <h2>2. 本表示の適用範囲</h2>
-<p>本表示は、当社（Moegen）が提供する以下のサービスに適用されます。</p>
+<p>本表示は、当社（FansFans）が提供する以下のサービスに適用されます。</p>
 <p>・AIツールの有料機能（サブスクリプション）</p>
 <p>・AI生成等に利用するポイント（クレジット）の販売</p>
 <p>・クリエイターのフォロワークラブ（月額サブスクリプション）への加入（当社が提供する会員サービス）</p>
@@ -2535,7 +2535,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     newCollection: "新規コレクション",
     modifyCollection: "コレクション情報を変更",
     description: "紹介",
-    defaultDescription: "新しい作品が公開されました！Moegenで私の作品を読んでください。皆様に気に入っていただければ幸いです。皆様の応援が私の執筆の原動力です。毎回の物語をしっかりと語るために努力します！",
+    defaultDescription: "新しい作品が公開されました！FansFansで私の作品を読んでください。皆様に気に入っていただければ幸いです。皆様の応援が私の執筆の原動力です。毎回の物語をしっかりと語るために努力します！",
     type: "タイプ",
     typeComic: "漫画",
     typeNovel: "小説",
@@ -2728,7 +2728,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       copyrightRiskMessage: "プロンプトまたは参照画像にセンシティブな内容や著作権のリスクが含まれている可能性があります。プロンプトを変更して再試行してください",
       contactSupport: "再試行しても正常に生成できない場合は、カスタマーサポートまでご連絡ください。速やかに対応いたします。",
       calcDeductRule: "生成に失敗した工程については、コンピューティングパワーを消費しません。",
-      supportEmail: "お問合せ先：support{'@'}moegen{'.'}co.jp",
+      supportEmail: "お問合せ先：support{'@'}fansfans{'.'}co.jp",
       emptyProjectName: "プロジェクト名を入力してください",
       emptyRegenerateContent: "アイデアの説明を入力してください",
       estimateFailed: "コンピューティングパワーの見積もりに失敗しました。後でもう一度お試しください",
@@ -2967,7 +2967,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     heroEyebrow: "Creative Partner Program",
     heroTitle1: "あなたの創作を、",
     heroTitle2: "もっと遠くへ。",
-    heroSub1: "MoeGenと共に歩む、選ばれたクリエイターへ。",
+    heroSub1: "FansFansと共に歩む、選ばれたクリエイターへ。",
     heroSub2: "新機能の先行体験・特別価格プラン・専任サポートを提供します。",
     ctaButton: "今すぐ応募する",
     // === LP スタッツ ===
@@ -2982,17 +2982,17 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     benefit2Title: "パートナー限定の特別価格",
     benefit2Desc: "すべてのAIコンピューティングパワープランをパートナー様だけの特別価格でご利用いただけます。",
     benefit3Title: "専任チームが直接サポート",
-    benefit3Desc: "使い方の相談から技術的な質問まで、MoeGenチームがパートナー様を優先的にサポートします。",
+    benefit3Desc: "使い方の相談から技術的な質問まで、FansFansチームがパートナー様を優先的にサポートします。",
     benefit4Title: "インサイダー情報を最速で",
     benefit4Desc: "新機能・イベント・ロードマップ情報をどこよりも早くお届け。あなたのコンテンツ戦略を一歩先へ。",
     // === LP 交換セクション ===
     exchangeTitle: "全てのクリエイターへ",
-    exchangeDesc1: "MoeGenで制作した作品をSNSでシェアしていただくだけでOKです。",
+    exchangeDesc1: "FansFansで制作した作品をSNSでシェアしていただくだけでOKです。",
     exchangeDesc2: "プラットフォームの種類は問いません。",
     exchangeHashtagNote: "タグを付けて投稿してください。",
     // === LP フロー ===
     flowTitle: "採用までの流れ",
-    flowStep1Title: "STEP 1", flowStep1Desc: "MoeGenにご登録",
+    flowStep1Title: "STEP 1", flowStep1Desc: "FansFansにご登録",
     flowStep2Title: "STEP 2", flowStep2Desc: "下記の申請フォームに記入・提出",
     flowStep3Title: "STEP 3", flowStep3Desc: "1次審査（7営業日以内にメールでご連絡）",
     flowStep4Title: "STEP 4", flowStep4Desc: "合格者に特典クレジット付与、作品を制作・SNSに投稿",
@@ -3001,8 +3001,8 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
     // === LP フォーム ===
     formTitle: "1次審査 — 申請フォーム",
     formSubtitle: "以下のフォームにご記入のうえ、ご提出ください。",
-    moegenId: "MoeGen ID",
-    moegenIdPlaceholder: "MoeGen IDを入力してください",
+    moegenId: "FansFans ID",
+    moegenIdPlaceholder: "FansFans IDを入力してください",
     snsLinks: "SNSリンク（複数可）",
     snsLinksPlaceholder: "1行に1つのSNSリンクを入力してください",
     message: "メッセージ",
@@ -3060,83 +3060,83 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       privacyPolicy: "プライバシーポリシー",
       paidServices: "有料サービス"
     },
-    copyright: "© 2026 MoeGen All Rights Reserved."
+    copyright: "© 2026 FansFans All Rights Reserved."
   },
   seo: {
     home: {
-      title: "MoeGen - AI小説・漫画・アニメドラマ生成｜ことばと物語",
-      keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,MoeGen,萌創,AI同人創作",
-      description: "MoeGen 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
+      title: "FansFans - AI小説・漫画・アニメドラマ生成｜ことばと物語",
+      keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,FansFans,萌創,AI同人創作",
+      description: "FansFans 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
       novel: {
-        title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - MoeGen",
+        title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - FansFans",
         keywords: "AI小説生成器,AI小説執筆,AI Web小説,無料AI小説,長編小説生成,Web小説AI,小説プロットAI,二次元小説AI",
-        description: "MoeGen AI小説ジェネレーター、ひと言のアイデアから30K文字の長編Web小説を自動生成。玄幻・恋愛・BL・異世界など多ジャンル対応。台湾・香港・日本のクリエイターに選ばれる。"
+        description: "FansFans AI小説ジェネレーター、ひと言のアイデアから30K文字の長編Web小説を自動生成。玄幻・恋愛・BL・異世界など多ジャンル対応。台湾・香港・日本のクリエイターに選ばれる。"
       },
       comic: {
-        title: "AI 漫画ジェネレーター｜テキストから漫画・コマ割り自動生成 - MoeGen",
+        title: "AI 漫画ジェネレーター｜テキストから漫画・コマ割り自動生成 - FansFans",
         keywords: "AI漫画,AI漫画生成,AI manga,テキストから漫画,自動コマ割り,キャラ一貫性,二次元AI絵",
-        description: "MoeGen AI 漫画ジェネレーターは、テキストを漫画に自動変換。コマ割り・キャラクター一貫性を AI が担保、少年漫画・少女漫画・チビキャラ対応。"
+        description: "FansFans AI 漫画ジェネレーターは、テキストを漫画に自動変換。コマ割り・キャラクター一貫性を AI が担保、少年漫画・少女漫画・チビキャラ対応。"
       },
       drama: {
-        title: "AI アニメドラマ生成｜ひとことで二次元アニメショート - MoeGen",
+        title: "AI アニメドラマ生成｜ひとことで二次元アニメショート - FansFans",
         keywords: "AIアニメドラマ,AIアニメ短編,アニメ脚本AI,アニメ自動生成,ショートアニメAI,AI 声優",
-        description: "MoeGen の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
+        description: "FansFans の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
       },
       photo: {
-        title: "AIイラスト・画像生成ツール MoeGen 萌創｜高品質な二次元キャラクターを作成",
-        keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, MoeGen, 萌創",
-        description: "MoeGenのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
+        title: "AIイラスト・画像生成ツール FansFans 萌創｜高品質な二次元キャラクターを作成",
+        keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, FansFans, 萌創",
+        description: "FansFansのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
       },
       video: {
-        title: "AI動画生成ツール MoeGen 萌創｜イラストやテキストから二次元ビデオを作成",
-        keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, MoeGen, 萌創",
-        description: "MoeGenのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
+        title: "AI動画生成ツール FansFans 萌創｜イラストやテキストから二次元ビデオを作成",
+        keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, FansFans, 萌創",
+        description: "FansFansのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
       }
     },
     detail: {
-      title: "[[title]] - MoeGen 二次元 AI クリエイション",
+      title: "[[title]] - FansFans 二次元 AI クリエイション",
       keywords: "[[title]],AI[[type]],二次元[[type]]",
       description: "[[title]] - [[description]]"
     },
     communityConvention: {
-      title: "コミュニティガイドライン - MoeGen クリエイター行動規範",
+      title: "コミュニティガイドライン - FansFans クリエイター行動規範",
       keywords: "コミュニティガイドライン,行動規範,クリエイタールール",
-      description: "MoeGenのコミュニティガイドラインを読んで、健全で創造的なコミュニティを共に作りましょう。"
+      description: "FansFansのコミュニティガイドラインを読んで、健全で創造的なコミュニティを共に作りましょう。"
     },
     terms: {
-      title: "利用規約 - MoeGen ユーザー契約",
+      title: "利用規約 - FansFans ユーザー契約",
       keywords: "利用規約,ユーザー契約,法的事項",
-      description: "MoeGenの利用規約とユーザー契約を確認し、あなたの権利、義務、AIコンテンツの著作権を理解してください。"
+      description: "FansFansの利用規約とユーザー契約を確認し、あなたの権利、義務、AIコンテンツの著作権を理解してください。"
     },
     privacy: {
-      title: "プライバシーポリシー - MoeGen プロフィール保護",
+      title: "プライバシーポリシー - FansFans プロフィール保護",
       keywords: "プライバシーポリシー,プロフィール保護,データ保護,Cookie",
-      description: "MoeGenはユーザーのプロフィールと創作のプライバシーを尊重し保護します。"
+      description: "FansFansはユーザーのプロフィールと創作のプライバシーを尊重し保護します。"
     },
     login: {
-      title: "ログイン - MoeGen 萌｜AI 創作アカウント",
-      keywords: "MoeGenログイン,アカウントログイン,サインイン",
-      description: "MoeGenアカウントにログインして、AI小説・漫画・アニメドラマの創作を続けましょう。"
+      title: "ログイン - FansFans 萌｜AI 創作アカウント",
+      keywords: "FansFansログイン,アカウントログイン,サインイン",
+      description: "FansFansアカウントにログインして、AI小説・漫画・アニメドラマの創作を続けましょう。"
     },
     signup: {
-      title: "無料登録 - AI 創作の旅を始める｜MoeGen 萌創",
-      keywords: "MoeGen登録,無料AI創作,AI創作プラットフォーム",
-      description: "MoeGen萌創に無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
+      title: "無料登録 - AI 創作の旅を始める｜FansFans 萌創",
+      keywords: "FansFans登録,無料AI創作,AI創作プラットフォーム",
+      description: "FansFans萌創に無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
     },
     characterLibrary: {
-      title: "AIキャラクター設定ライブラリー - 独自のキャラクター設定を追加｜MoeGen",
+      title: "AIキャラクター設定ライブラリー - 独自のキャラクター設定を追加｜FansFans",
       keywords: "AIキャラクター設定生成,キャラクター設定ライブラリー,アニメキャラクター設定,漫画キャラクター設定",
-      description: "MoeGenのAIキャラクター設定ライブラリーは、公式キャラクター設定とカスタムキャラクター設定を提供し、独自の二次元キャラクター設定の追加を支援します。"
+      description: "FansFansのAIキャラクター設定ライブラリーは、公式キャラクター設定とカスタムキャラクター設定を提供し、独自の二次元キャラクター設定の追加を支援します。"
     },
     userHome: {
-      title: "マイ作品 - AI小説・漫画・アニメドラマを管理｜MoeGen",
+      title: "マイ作品 - AI小説・漫画・アニメドラマを管理｜FansFans",
       keywords: "マイ作品,AI小説,漫画,アニメドラマ,作品管理,クリエイターダッシュボード",
-      description: "MoeGenでAI小説、漫画、アニメドラマを管理し、フォロワー、メンバーシップ者、エンゲージメントデータを追跡します。"
+      description: "FansFansでAI小説、漫画、アニメドラマを管理し、フォロワー、メンバーシップ者、エンゲージメントデータを追跡します。"
     },
     novelGenerate: {
-      title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成｜MoeGen",
+      title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成｜FansFans",
       keywords: "AI小説生成,AI小説,長編小説,AI執筆,AI物語,小説作成AI,二次創作",
-      description: "MoeGenのAI小説ジェネレーターは、ロマンス、BL、学園もの、SF、ファンタジーなど多ジャンルに対応。30K文字の作品を簡単に作成できます。"
+      description: "FansFansのAI小説ジェネレーターは、ロマンス、BL、学園もの、SF、ファンタジーなど多ジャンルに対応。30K文字の作品を簡単に作成できます。"
     }
   },
   collectionDetail: {

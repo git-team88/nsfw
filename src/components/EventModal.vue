@@ -56,7 +56,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const STORAGE_KEY = 'moegen_event_hide';
+const STORAGE_KEY = 'fansfans_event_hide';
 const OPEN_DELAY_MS = 900;
 const CLOSE_ANIM_MS = 190;
 
