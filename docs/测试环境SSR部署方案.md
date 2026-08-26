@@ -18,7 +18,7 @@
 | 端口 3001 | **无监听** |
 | puppeteer / 系统 Chromium | **均未安装**（`/root/.cache/puppeteer` 不存在，无系统 chromium） |
 | nginx | 源码编译版，主配 `/usr/local/nginx/conf/nginx.conf`，测试站 vhost `/usr/local/nginx/conf/vhost/testapp.addaiaroot.com.conf` |
-| 测试站移动域名 | **`m.addaiaroot.com`**（vhost 里有移动 UA 301 跳转），**不是** `m.moegen.ai` |
+| 测试站移动域名 | **`m.addaiaroot.com`**（vhost 里有移动 UA 301 跳转），**不是** `m.fansfans.ai` |
 
 **结论：测试环境从未部署过 SSR 服务，需要从零搭建，而不是「改配置」。**
 
@@ -26,17 +26,17 @@
 
 ## 二、测试环境 与 正式环境 的差异（务必注意）
 
-| 项 | 正式（www.moegen.ai） | 测试（testapp.addaiaroot.com） |
+| 项 | 正式（www.fansfans.ai） | 测试（testapp.addaiaroot.com） |
 |---|---|---|
-| 部署目录 | `/data/wwwroot/www.moegen.ai` | `/data/wwwroot/testapp.addaiaroot.com` |
+| 部署目录 | `/data/wwwroot/www.fansfans.ai` | `/data/wwwroot/testapp.addaiaroot.com` |
 | `docs/ecosystem.config.js` 的 `cwd`/`SPA_URL` | 已按正式写死 | 需改成测试路径/域名 |
-| 移动端域名 | `m.moegen.ai` | `m.addaiaroot.com` |
+| 移动端域名 | `m.fansfans.ai` | `m.addaiaroot.com` |
 | nginx 爬虫转发 | `docs/nginx-seo.conf` | 尚无，需新增 |
 
 ### ⚠️ 两个已知坑
 
-1. **A/C 标签里的移动端域名**：本次改的 `src/App.vue` 里 `MOBILE_ORIGIN` 写死为 `https://m.moegen.ai`。`index.html` 里有段内联脚本会在非正式站把 `m.moegen.ai` 替换成 `m.addaiaroot.com`，但**那段脚本只改 index.html 里静态那条，不会改 App.vue 运行时注入的 link**。因此测试环境上 App.vue 注入的 alternate 仍指向 `m.moegen.ai`。
-   - 影响：测试环境验证「标签是否按页面正确生成」没问题；但域名会是 `m.moegen.ai`。若测试环境也要域名正确，需让 `App.vue` 的 `MOBILE_ORIGIN` 按 `location.hostname` 动态取值（见第六节）。
+1. **A/C 标签里的移动端域名**：本次改的 `src/App.vue` 里 `MOBILE_ORIGIN` 写死为 `https://m.fansfans.ai`。`index.html` 里有段内联脚本会在非正式站把 `m.fansfans.ai` 替换成 `m.addaiaroot.com`，但**那段脚本只改 index.html 里静态那条，不会改 App.vue 运行时注入的 link**。因此测试环境上 App.vue 注入的 alternate 仍指向 `m.fansfans.ai`。
+   - 影响：测试环境验证「标签是否按页面正确生成」没问题；但域名会是 `m.fansfans.ai`。若测试环境也要域名正确，需让 `App.vue` 的 `MOBILE_ORIGIN` 按 `location.hostname` 动态取值（见第六节）。
 
 2. **测试站 vhost 已有移动 UA 跳转**：
    ```nginx
@@ -231,7 +231,7 @@ nginx 每次改动务必：**先备份 → `nginx -t` → 再 `nginx -s reload`*
 
 ## 六、可选优化（本次不一定做）
 
-1. **A/C 移动域名按环境动态取值**：把 `src/App.vue` 的 `MOBILE_ORIGIN` 改成按 `location.hostname` 判断——正式站用 `m.moegen.ai`，测试站用 `m.addaiaroot.com`（与 index.html 内联脚本一致）。这样测试环境标签域名也正确。
+1. **A/C 移动域名按环境动态取值**：把 `src/App.vue` 的 `MOBILE_ORIGIN` 改成按 `location.hostname` 判断——正式站用 `m.fansfans.ai`，测试站用 `m.addaiaroot.com`（与 index.html 内联脚本一致）。这样测试环境标签域名也正确。
 2. **`seo-server.mjs` 参数化站点信息**：把 `SITE_URL`/`SITE_NAME` 改为读环境变量，彻底复用同一份脚本跑测试/正式。
 3. **缓存预热**：参考 `scripts/warm-cache.sh`，把 `SITE` 改成 `https://testapp.addaiaroot.com`，部署后预热热门详情页。
 

@@ -6,7 +6,7 @@ import crypto from 'node:crypto'
 
 const app = express()
 const PORT = process.env.SEO_PORT || 3001
-const SPA_URL = process.env.SPA_URL || 'https://www.moegen.ai'
+const SPA_URL = process.env.SPA_URL || 'https://www.fansfans.ai'
 const CACHE_DIR = process.env.CACHE_DIR || '/data/seo-cache'
 const CACHE_TTL = parseInt(process.env.CACHE_TTL || '86400', 10)
 
@@ -18,7 +18,7 @@ const WAIT_AFTER_LOAD = 3000
 // 超时则先返回骨架、同一次渲染转后台跑完写缓存。需小于 nginx/爬虫的超时阈值。
 const SYNC_RENDER_TIMEOUT = parseInt(process.env.SYNC_RENDER_TIMEOUT || '9000', 10)
 const SITE_NAME = 'FansFans 萌創'
-const SITE_URL = 'https://www.moegen.ai'
+const SITE_URL = 'https://www.fansfans.ai'
 
 const LANG_MAP = { ja: 'ja', en: 'en', 'zh-cn': 'zh-CN', 'zh-tw': 'zh-TW' }
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
@@ -119,7 +119,7 @@ async function getBrowser() {
     // ⚠️ 仅正式环境（站点在 Cloudflare 后面）需要：源站 IP 走公网访问会被 Cloudflare 按 IP 拦截，
     // 所以把站点域名解析到本机源站绕过 CF（本机需有 127.0.0.1:443 回环反代 → :80）。
     // 通过环境变量 SEO_RESOLVER_RULES 开启；测试环境不设此变量 → 直接联网渲染，无需回环反代。
-    // 例: SEO_RESOLVER_RULES="MAP www.moegen.ai 127.0.0.1,MAP api.moegen.ai 127.0.0.1"
+    // 例: SEO_RESOLVER_RULES="MAP www.fansfans.ai 127.0.0.1,MAP api.moegen.ai 127.0.0.1"
     if (process.env.SEO_RESOLVER_RULES) {
       launchArgs.push(`--host-resolver-rules=${process.env.SEO_RESOLVER_RULES}`)
       launchArgs.push('--ignore-certificate-errors') // 回环反代用的是自签证书

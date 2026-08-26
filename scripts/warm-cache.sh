@@ -6,7 +6,7 @@
 # ============================================
 
 SEO_SERVICE="http://127.0.0.1:3001"
-SITE="https://www.moegen.ai"
+SITE="https://www.fansfans.ai"
 LANGS=("ja" "en" "zh-cn" "zh-tw")
 TYPES=("novel" "comic" "drama" "photo" "video")
 

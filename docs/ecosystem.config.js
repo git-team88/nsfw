@@ -2,10 +2,10 @@ module.exports = {
   apps: [{
     name: 'seo-render',
     script: 'scripts/seo-server.mjs',
-    cwd: '/data/wwwroot/www.moegen.ai',
+    cwd: '/data/wwwroot/www.fansfans.ai',
     env: {
       SEO_PORT: 3001,
-      SPA_URL: 'https://www.moegen.ai',
+      SPA_URL: 'https://www.fansfans.ai',
       CACHE_DIR: '/data/seo-cache',
       CACHE_TTL: 86400
     },
