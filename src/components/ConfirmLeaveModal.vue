@@ -1,7 +1,7 @@
 <template>
   <div class="confirm-mask" v-if="show">
     <div class="confirm-modal">
-      <button class="confirm-close" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="confirm-close" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       <p class="confirm-text">{{ t("submit.confirm.leaveTip") }}</p>
       <div class="confirm-actions">
         <button class="confirm-btn secondary" @click="$emit('cancel')">
@@ -31,19 +31,17 @@ const { t, locale } = useI18n();
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   z-index: 500;
 }
 .confirm-modal {
   position: relative;
   width: 500px;
   padding: 44px 20px 24px;
-  border-radius: 14px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .confirm-close {
   position: absolute;
@@ -52,9 +50,9 @@ const { t, locale } = useI18n();
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,7 +67,7 @@ const { t, locale } = useI18n();
   font-size: 14px;
   line-height: 20px;
   text-align: center;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 700;
 }
 .confirm-actions {
@@ -85,28 +83,28 @@ const { t, locale } = useI18n();
   font-size: 14px;
   cursor: pointer;
   &.secondary {
-    background: #ffffff;
-    color: #161122;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     font-weight: 800;
 
     &:hover {
-      border-color: #FF4D8E;
-      color: #FF4D8E;
+      border-color: #ff4f9a;
+      color: #ff4f9a;
     }
   }
   &.primary {
-    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
     color: #ffffff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    border: 1px solid #ff9aca;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     font-weight: 800;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
   }
 }

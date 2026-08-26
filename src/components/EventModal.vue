@@ -22,7 +22,7 @@
 
       <!-- close -->
       <span class="mg-ev-close" role="button" tabindex="0" @click="dismiss" @keydown.enter.space.prevent="dismiss">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="3" stroke-linecap="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="3" stroke-linecap="round">
           <path d="M18 6 6 18" /><path d="m6 6 12 12" />
         </svg>
       </span>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="ev-check" role="checkbox" :aria-checked="dontShow" tabindex="0" @click="dontShow = !dontShow" @keydown.enter.space.prevent="dontShow = !dontShow">
-          <span class="mg-ev-cb" :data-checked="dontShow ? '1' : '0'" :style="{ background: dontShow ? '#FF4D8D' : '#fff' }">{{ dontShow ? '✓' : '' }}</span>
+          <span class="mg-ev-cb" :data-checked="dontShow ? '1' : '0'" :style="{ background: dontShow ? '#ff4f9a' : '#1a1a1a' }">{{ dontShow ? '✓' : '' }}</span>
           <span class="ev-check-label">{{ t('home.eventModal.dontShow') }}</span>
         </div>
       </div>
@@ -96,12 +96,10 @@ function openDetail() {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$pink: #FF4D8D;
 
 .mg-evovl {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(22, 17, 34, 0.58);
+  background: rgba(0, 0, 0, 0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 28px; overflow: hidden;
   animation: mgEvOverlayIn .22s ease-out both;
@@ -122,10 +120,10 @@ $pink: #FF4D8D;
   position: relative;
   width: min(540px, 92vw);
   max-height: calc(100vh - 80px);
-  background: #fff;
-  border: 4px solid $ink;
-  border-radius: 8px;
-  box-shadow: 12px 12px 0 rgba(22, 17, 34, 0.85);
+  background: #1a1a1a;
+  border: 1px solid #ff9aca;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   padding: 20px 20px 22px;
   animation: mgEvPanelIn .52s cubic-bezier(.2,1.1,.32,1) both;
   transform: rotate(-1.2deg);
@@ -135,7 +133,7 @@ $pink: #FF4D8D;
 .ev-decal {
   position: absolute; right: 0; top: 0; width: 150px; height: 150px;
   pointer-events: none; border-radius: 0 4px 0 0;
-  background-image: radial-gradient(#161122 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1.2px, transparent 1.2px);
   background-size: 9px 9px; opacity: .1;
   -webkit-mask-image: radial-gradient(circle at 100% 0%, #000 0 45%, transparent 72%);
   mask-image: radial-gradient(circle at 100% 0%, #000 0 45%, transparent 72%);
@@ -144,27 +142,27 @@ $pink: #FF4D8D;
 .ev-tab {
   position: absolute; top: -20px; left: -14px;
   transform: rotate(-3.5deg);
-  background: #FFD23F; border: 3px solid $ink; border-radius: 6px;
-  box-shadow: 4px 4px 0 $ink; padding: 8px 20px;
-  font-size: 21px; font-weight: 800; color: $ink; letter-spacing: .03em; white-space: nowrap;
+  background: #FFD23F; border: 1px solid #ff9aca; border-radius: 6px;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5); padding: 8px 20px;
+  font-size: 21px; font-weight: 800; color: #1a1a1a; letter-spacing: .03em; white-space: nowrap;
 }
 
 .mg-ev-close {
   position: absolute; top: -16px; right: -16px;
   width: 40px; height: 40px; border-radius: 999px;
-  background: #fff; border: 3px solid $ink; box-shadow: 3px 3px 0 $ink;
+  background: #1a1a1a; border: 1px solid #ff9aca; box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   display: grid; place-items: center; cursor: pointer; z-index: 2;
   transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
-  &:hover { transform: rotate(90deg) scale(1.08); box-shadow: 3px 3px 0 $ink; }
-  &:active { transform: rotate(90deg) scale(.92); box-shadow: 1px 1px 0 $ink; }
+  &:hover { transform: rotate(90deg) scale(1.08); box-shadow: 0 0 20px rgba(255, 50, 140, 0.5); }
+  &:active { transform: rotate(90deg) scale(.92); box-shadow: 0 0 20px rgba(255, 50, 140, 0.5); }
 }
 
 .mg-ev-scroll { max-height: calc(100vh - 130px); overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; }
 
 .ev-band {
-  margin-top: 20px; border: 3px solid $ink; border-radius: 6px;
+  margin-top: 20px; border: 1px solid #ff9aca; border-radius: 6px;
   overflow: hidden; position: relative; height: clamp(150px, 26vh, 230px);
-  background-image: radial-gradient(rgba(255,255,255,.5) 1.5px, transparent 1.5px), linear-gradient(120deg,#FF4D8D 0%,#FF9E45 55%,#FFD23F 100%);
+  background-image: radial-gradient(rgba(255,255,255,.5) 1.5px, transparent 1.5px), linear-gradient(120deg,#ff4f9a 0%,#FF9E45 55%,#FFD23F 100%);
   background-size: 15px 15px, 100% 100%;
 }
 .mg-ev-shimmer {
@@ -174,31 +172,31 @@ $pink: #FF4D8D;
 }
 .ev-badge {
   position: absolute; left: 10px; top: 10px; padding: 5px 12px; border-radius: 999px;
-  background: $pink; border: 2px solid $ink; color: #fff; font-weight: 800; font-size: 12px; box-shadow: 2px 2px 0 $ink;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f); border: 1px solid #ff9aca; color: #f5f5f5; font-weight: 800; font-size: 12px; box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 }
 
-.ev-title { margin-top: 14px; font-size: 19px; font-weight: 800; color: $ink; letter-spacing: .02em; line-height: 1.4; }
-.ev-body { margin: 8px 0 0; font-weight: 700; font-size: 13.5px; line-height: 1.75; color: $ink; opacity: .82; }
+.ev-title { margin-top: 14px; font-size: 19px; font-weight: 800; color: #f5f5f5; letter-spacing: .02em; line-height: 1.4; }
+.ev-body { margin: 8px 0 0; font-weight: 700; font-size: 13.5px; line-height: 1.75; color: #f5f5f5; opacity: .82; }
 
 .ev-actions { display: flex; gap: 10px; margin-top: 16px; }
 .mg-ev-btn {
-  padding: 13px 10px; border-radius: 999px; border: 3px solid $ink;
-  font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 3px 3px 0 $ink;
-  transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
-  &:hover { transform: translate(-1px,-2px); box-shadow: 4px 5px 0 $ink; }
-  &:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 $ink; }
+  padding: 13px 10px; border-radius: 999px; border: 1px solid #ff9aca;
+  font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+  transition: box-shadow 0.15s ease-out;
+  &:hover { box-shadow: 0 0 28px rgba(255, 50, 140, 0.65); }
+  &:active { box-shadow: 0 0 20px rgba(255, 50, 140, 0.5); }
 }
-.ev-primary { flex: 1; background: $pink; color: #fff; }
-.ev-ghost { flex: none; padding: 13px 20px; background: #fff; color: $ink; }
+.ev-primary { flex: 1; background: linear-gradient(135deg, #ff4f9a, #ff2d7f); color: #f5f5f5; }
+.ev-ghost { flex: none; padding: 13px 20px; background: #1a1a1a; color: #f5f5f5; }
 
 .ev-check { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 13px; cursor: pointer; user-select: none; }
 .mg-ev-cb {
-  width: 18px; height: 18px; border: 2px solid $ink; border-radius: 5px;
-  display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 12px; flex: none;
+  width: 18px; height: 18px; border: 1px solid #ff9aca; border-radius: 5px;
+  display: grid; place-items: center; color: #f5f5f5; font-weight: 900; font-size: 12px; flex: none;
   transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .15s ease-out;
   &[data-checked="1"] { transform: scale(1.12); }
 }
-.ev-check-label { font-weight: 700; font-size: 12.5px; color: $ink; opacity: .66; }
+.ev-check-label { font-weight: 700; font-size: 12.5px; color: #f5f5f5; opacity: .66; }
 
 @keyframes mgEvOverlayIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mgEvOverlayOut { from { opacity: 1; } to { opacity: 0; } }

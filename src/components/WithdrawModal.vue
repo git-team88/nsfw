@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-mask">
     <div class="modal withdraw-modal">
       <button class="modal-close" @click="$emit('close')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
       <div class="modal-title">{{ t("user.revenue.totalWithdrawable") }}</div>
       <div class="modal-amount">{{ totalWithdrawable != null ? `${formatSci(totalWithdrawable)}` : "--" }}</div>
@@ -70,7 +70,7 @@ function openLink() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,10 +80,10 @@ function openLink() {
 .modal {
   width: 500px;
   padding: 18px;
-  border-radius: 12px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   position: relative;
 }
 
@@ -94,9 +94,9 @@ function openLink() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +109,7 @@ function openLink() {
 
 .modal-title {
   font-size: 20px;
-  color: #364153;
+  color: #aaa;
   margin-bottom: 30px;
   font-weight: 600;
   text-align: center;
@@ -117,7 +117,7 @@ function openLink() {
 
 .modal-amount {
   font-size: 32px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 600;
   text-align: center;
 }
@@ -130,21 +130,19 @@ function openLink() {
   width: 240px;
   height: 48px;
   margin: 30px auto 12px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 8px;
-  background: #FF4D8D;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #ffffff;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 
   &:hover:not(:disabled) {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
   &:active {
-    transform: translate(0, 0);
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: 0 0 20px rgba(255, 50,140, 0.5);
   }
 }
 
@@ -158,7 +156,7 @@ function openLink() {
   align-items: center;
   gap: 6px;
   justify-content: center;
-  color: #9a93a4;
+  color: #777;
   font-size: 14px;
 }
 
@@ -178,7 +176,7 @@ function openLink() {
 
 .modal-agree span {
   a {
-    color: #FF4D8D;
+    color: #ff4f9a;
     text-decoration: none;
     margin-left: 4px;
     pointer-events: none;

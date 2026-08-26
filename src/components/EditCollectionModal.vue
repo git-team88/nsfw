@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ isEdit ? t('userHome.collection.editName') : t('collection.createCollection') }}</h3>
-        <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
 
       <div class="modal-body">
@@ -474,7 +474,7 @@ function handleModalKeydown(e: KeyboardEvent) {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -484,10 +484,10 @@ function handleModalKeydown(e: KeyboardEvent) {
 .modal-content {
   width: 840px;
   max-height: 90vh;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -498,25 +498,25 @@ function handleModalKeydown(e: KeyboardEvent) {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 
   h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .close-btn {
-    background: #fff;
-    border: 2.5px solid #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
     padding: 6px;
     width: 36px;
     height: 36px;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover { transform: scale(1.1) rotate(90deg); }
@@ -537,7 +537,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     align-items: center;
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
 
     .required {
       font-weight: normal;
@@ -547,7 +547,7 @@ function handleModalKeydown(e: KeyboardEvent) {
     .char-counter {
       margin-left: 10px;
       font-size: 14px;
-      color: #99A1AF;
+      color: #777;
     }
   }
 
@@ -556,22 +556,22 @@ function handleModalKeydown(e: KeyboardEvent) {
     height: 50px;
     margin-top: 12px;
     padding: 10px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 16px;
-    color: #161122;
-    background: #FFFDF7;
+    color: #f5f5f5;
+    background: #1a1a1a;
     outline: none;
     box-sizing: border-box;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    box-shadow: none;
 
     &::placeholder {
-      color: #99A1AF;
+      color: #777;
     }
 
     &:focus {
-      border-color: #FF4D8D;
-      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+      border-color: #ff4f9a;
+      box-shadow: none;
     }
   }
 
@@ -580,25 +580,25 @@ function handleModalKeydown(e: KeyboardEvent) {
     height: 200px;
     margin-top: 12px;
     padding: 10px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
     min-height: 200px;
     resize: none;
     outline: none;
     line-height: 24px;
-    background: #FFFDF7;
+    background: #1a1a1a;
     box-sizing: border-box;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    box-shadow: none;
 
     &::placeholder {
-      color: #99A1AF;
+      color: #777;
     }
 
     &:focus {
-      border-color: #FF4D8D;
-      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+      border-color: #ff4f9a;
+      box-shadow: none;
     }
   }
 
@@ -635,10 +635,11 @@ function handleModalKeydown(e: KeyboardEvent) {
   left: 100%;
   transform: translateY(-50%);
   margin-left: 8px;
-  width: 12px;
-  height: 33px;
-  background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
-  background-size: contain;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #3d3d3d;
   flex-shrink: 0;
   display: block;
   z-index: 101;
@@ -655,9 +656,9 @@ function handleModalKeydown(e: KeyboardEvent) {
   margin-left: 20px;
   padding: 18px;
   width: 280px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   font-size: 12px;
   line-height: 16px;
   border-radius: 8px;
@@ -670,10 +671,10 @@ function handleModalKeydown(e: KeyboardEvent) {
   .tooltip-content {
     font-size: 12px;
     line-height: 20px;
-    color: #99A1AF;
+    color: #777;
 
     :deep(span) {
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 }
@@ -706,7 +707,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 
     span {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 }
@@ -718,7 +719,7 @@ function handleModalKeydown(e: KeyboardEvent) {
       align-items: center;
       font-size: 16px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 12px;
 
       .required {
@@ -739,10 +740,10 @@ function handleModalKeydown(e: KeyboardEvent) {
       justify-content: center;
       width: 180px;
       height: 240px;
-      border-radius: 12px;
+      border-radius: 18px;
       cursor: pointer;
       overflow: hidden;
-      background: rgba(22, 17, 34, 0.06);
+      background: rgba(255, 255, 255, 0.06);
 
       .cover-preview {
         width: 100%;
@@ -763,7 +764,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 
         span {
           font-size: 16px;
-          color: #5b5566;
+          color: #aaa;
         }
       }
     }
@@ -795,17 +796,17 @@ function handleModalKeydown(e: KeyboardEvent) {
     max-width: 400px;
     height: 40px;
     padding: 0 12px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
-    background: #FFFFFF;
+    background: #1a1a1a;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     span {
       font-size: 14px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
     }
 
     .lang-arrow {
@@ -819,8 +820,8 @@ function handleModalKeydown(e: KeyboardEvent) {
   }
 
   &.open .lang-dropdown-trigger {
-    border-color: #FF4D8E;
-    box-shadow: 2px 2px 0 #FF4D8E;
+    border-color: #ff4f9a;
+    box-shadow: none;
   }
 
   &.up .lang-dropdown-menu {
@@ -833,10 +834,10 @@ function handleModalKeydown(e: KeyboardEvent) {
     top: calc(100% + 6px);
     left: 0;
     width: 100%;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
-    background: #FFFFFF;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    box-shadow: none;
     z-index: 100;
     overflow: hidden;
   }
@@ -845,17 +846,17 @@ function handleModalKeydown(e: KeyboardEvent) {
     padding: 8px 12px;
     font-size: 14px;
     font-weight: 700;
-    color: #161122;
+    color: #f5f5f5;
     cursor: pointer;
     transition: background 0.15s;
 
     &:hover {
-      background: #FFF5F9;
+      background: rgba(255,255,255,0.06);
     }
 
     &.active {
-      background: #FFEFF5;
-      color: #FF4D8E;
+      background: rgba(255,79,154,0.12);
+      color: #ff4f9a;
     }
   }
 }
@@ -886,29 +887,29 @@ function handleModalKeydown(e: KeyboardEvent) {
   transition: all 0.2s;
 
   &.btn-cancel {
-    background: #ffffff;
-    color: #161122;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     font-weight: 800;
 
     &:hover {
-      border-color: #FF4D8E;
-      color: #FF4D8E;
+      border-color: #ff4f9a;
+      color: #ff4f9a;
     }
   }
 
   &.btn-save {
-    border: 2px solid #161122;
-    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
-    color: #ffffff;
-    box-shadow: 2px 2px 0 #161122;
+    border: 1px solid #3d3d3d;
+    background: linear-gradient(145deg, #ff74b3, #f73382);
+    color: #f5f5f5;
+    box-shadow: none;
     font-weight: 800;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: none;
     }
 
     &:disabled {

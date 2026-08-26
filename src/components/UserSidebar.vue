@@ -92,14 +92,15 @@ function cancelLogout() {
   top: 100px;
   height: calc(100vh - 124px);
   overflow: auto;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
+  background: #1a1a1a;
 }
 .title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   padding: 0 14px 8px;
   letter-spacing: 0.01em;
 }
@@ -122,15 +123,15 @@ function cancelLogout() {
   font-weight: 800;
   font-size: 13.5px;
   cursor: pointer;
-  color: #161122;
+  color: #f5f5f5;
   transition: background 0.15s;
 }
 .item:hover {
-  background: #F3EFE7;
+  background: rgba(255,255,255,0.06);
 }
 .item.on {
-  background: #161122;
-  color: #fff;
+  background: rgba(255,79,154,0.12);
+  color: #ff4f9a;
 }
 .item.on::after {
   content: '';
@@ -138,7 +139,7 @@ function cancelLogout() {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #FF4D8D;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   animation: stDot 2.6s ease-in-out infinite;
 }
 @keyframes stDot {

@@ -209,14 +209,13 @@ const types = [
   { id: 'all', label: 'rank.all' },
   { id: 'novel', label: 'rank.novel' },
   { id: 'manga', label: 'rank.manga' },
-  { id: 'anime', label: 'rank.anime' },
 ]
 
 // ---------- 作品排行（真实数据，分页 + 下拉加载） ----------
-// 类型筛选 -> 接口 type 参数：0全部 / 1漫话 / 2小说 / 3漫剧
-const TYPE_PARAM: Record<string, number> = { all: 0, manga: 1, novel: 2, anime: 3 }
+// 类型筛选 -> 接口 type 参数：0全部 / 1漫话 / 2小说
+const TYPE_PARAM: Record<string, number> = { all: 0, manga: 1, novel: 2 }
 // 接口 type 数值 -> 卡片类型标签 key
-const TYPE_KEY: Record<string, string> = { '1': 'manga', '2': 'novel', '3': 'anime' }
+const TYPE_KEY: Record<string, string> = { '1': 'manga', '2': 'novel' }
 
 const workItems = ref<RankedWork[]>([])
 const workLoading = ref(false)      // 首屏加载
@@ -238,7 +237,7 @@ async function loadWorkRank(reset = false) {
   const page = workPage.value
   const reqType = type.value
   try {
-    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0)) as any
+    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, 1)) as any
     // 请求期间切换了筛选类型则丢弃本次结果
     if (reqType !== type.value || mode.value !== 'work') return
     const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []
@@ -309,7 +308,7 @@ async function loadUserRank(reset = false) {
   try {
     // 人气作者榜 / 新锐作者榜，均使用 period=week
     const period = 'week'
-    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0
+    const showNsfw = 1
     const res = (reqUserTab === 'rising'
       ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw)
       : await api.popularUserRank(page, USER_LIMIT, period, showNsfw)) as any

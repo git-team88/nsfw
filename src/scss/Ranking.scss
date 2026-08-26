@@ -3,8 +3,8 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: #FFFBF4;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   -webkit-font-smoothing: antialiased;
   line-height: 1.7;
 }
@@ -12,7 +12,7 @@
 .ranking-shell {
   flex: 1;
   width: 100%;
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 100px 16px 24px;
 
@@ -23,14 +23,14 @@
 
 .ranking-panel {
   min-height: calc(100vh - 126px);
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  box-shadow: 6px 6px 0 #161122;
-  padding: 24px 18px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 
   @media (min-width: 768px) {
-    padding: 34px 40px 24px;
+    padding: 0;
   }
 }
 
@@ -67,7 +67,7 @@
 .ranking-sub {
   font-weight: 600;
   font-size: 13px;
-  color: #99A1AF;
+  color: #777;
   margin: 4px 0 0;
 }
 
@@ -85,7 +85,7 @@
   gap: 2px;
   font-weight: 600;
   font-size: 12px;
-  color: #99A1AF;
+  color: #777;
   line-height: 1.5;
 }
 
@@ -120,9 +120,9 @@
 .seg-group {
   display: inline-flex;
   gap: 6px;
-  background: #fff;
-  border: 2.5px solid #161122;
-  border-radius: 14px;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 25px;
   padding: 5px;
 }
 
@@ -135,12 +135,15 @@
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
   background: transparent;
-  color: #161122;
+  color: #888;
   border: none;
 
   &.active {
-    background: #161122;
     color: #fff;
+    border: 1px solid #ff9aca;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    box-shadow: 0 0 23px rgba(255, 50, 140, .65);
   }
 }
 
@@ -151,21 +154,23 @@
 }
 
 .type-pill {
-  border: 2px solid #161122;
-  border-radius: 8px;
+  border: 1px solid #404040;
+  border-radius: 25px;
   padding: 8px 18px;
   font-weight: 800;
   font-size: 14px;
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #888;
 
   &.active {
-    border: 2px solid #FF4D8D;
-    background: #FF4D8D;
     color: #fff;
+    border: 1px solid #ff9aca;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    box-shadow: 0 0 23px rgba(255, 50, 140, .65);
   }
 }
 
@@ -189,7 +194,7 @@
   padding: 64px 0;
   text-align: center;
   font-weight: 700;
-  color: #99A1AF;
+  color: #777;
 }
 
 .ranking-loading {
@@ -201,7 +206,7 @@
 
   .loading-text {
     font-size: 13px;
-    color: #99A1AF;
+    color: #777;
   }
 }
 
@@ -209,14 +214,14 @@
   padding: 14px 0;
   text-align: center;
   font-size: 13px;
-  color: #99A1AF;
+  color: #777;
 }
 
 .loading-spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(22, 17, 34, 0.12);
-  border-top-color: #FF4D8D;
+  border: 3px solid #2c2c2c;
+  border-top-color: #ff4f9a;
   border-radius: 50%;
   animation: rkSpin 0.8s linear infinite;
 }
@@ -226,43 +231,20 @@
 }
 
 .mg-rk-pod {
-  animation: rkPod 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: border-color 0.15s;
   &:hover {
-    transform: translateY(-5px);
-    // 悬浮时保留各名次的彩色阴影，不覆盖成灰色
+    border-color: #ff4f9a;
   }
 }
 
 .mg-rk-row {
-  animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  transition: transform 0.12s ease-out, box-shadow 0.12s;
+  transition: border-color 0.15s;
   &:hover {
-    transform: translateX(4px);
-    box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14) !important;
+    border-color: #ff4f9a;
   }
-}
-
-.mg-rk-cover-bg {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.mg-rk-pod:hover .mg-rk-cover-bg {
-  transform: scale(1.05);
-}
-
-@keyframes rkPod {
-  from { opacity: 0; transform: translateY(26px) scale(0.94); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes rkRow {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mg-rk-pod, .mg-rk-row { animation: none; }
-  .mg-rk-pod:hover, .mg-rk-row:hover { transform: none; }
   .mg-rk-cover-bg { transition: none; }
 }

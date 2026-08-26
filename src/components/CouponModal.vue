@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="coupon-modal-overlay">
     <div class="coupon-modal">
-      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <span class="modal-title">{{ t('coupon.addCoupon') }}</span>
@@ -87,12 +87,6 @@ async function handleConfirm() {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
 
 .coupon-modal-overlay {
   position: fixed;
@@ -100,7 +94,7 @@ $sub: #5b5566;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,15 +104,15 @@ $sub: #5b5566;
 .coupon-modal {
   position: relative;
   width: 520px;
-  background: $paper;
-  border: 3px solid $ink;
-  border-radius: 16px;
-  box-shadow: 6px 6px 0 $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 
   @media (max-width: 640px) {
     width: 90%;
-    border-radius: 14px;
-    box-shadow: 4px 4px 0 $ink;
+    border-radius: 18px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   }
 
   .close-btn {
@@ -128,9 +122,9 @@ $sub: #5b5566;
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #fff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,23 +137,23 @@ $sub: #5b5566;
 
   .modal-header {
     padding: 18px 24px;
-    border-bottom: 2.5px solid $ink;
+    border-bottom: 1px solid #3d3d3d;
 
     .modal-title {
       font-size: 18px;
       font-weight: 800;
-      color: $ink;
+      color: #f5f5f5;
     }
   }
 
   .modal-body {
     padding: 24px;
-    border-bottom: 2.5px solid $ink;
+    border-bottom: 1px solid #3d3d3d;
 
     .input-label {
       font-size: 14px;
       font-weight: 800;
-      color: $sub;
+      color: #aaa;
       margin-bottom: 12px;
     }
 
@@ -167,24 +161,24 @@ $sub: #5b5566;
       width: 100%;
       height: 48px;
       padding: 0 16px;
-      border: 2.5px solid $ink;
-      border-radius: 12px;
+      border: 1px solid #3d3d3d;
+      border-radius: 18px;
       font-size: 14px;
       font-weight: 700;
-      color: $ink;
+      color: #f5f5f5;
       outline: none;
-      background: $cream;
-      box-shadow: 2px 2px 0 $ink;
+      background: #1a1a1a;
+      box-shadow: none;
       transition: border-color 0.15s, box-shadow 0.15s;
 
       &::placeholder {
-        color: $muted;
+        color: #777;
         font-weight: 600;
       }
 
       &:focus {
-        border-color: $pink;
-        box-shadow: 2px 2px 0 $pink;
+        border-color: #ff4f9a;
+        box-shadow: none;
       }
     }
 
@@ -192,7 +186,7 @@ $sub: #5b5566;
       margin-top: 12px;
       font-size: 12px;
       font-weight: 700;
-      color: $pink;
+      color: #ff4f9a;
     }
   }
 
@@ -205,24 +199,22 @@ $sub: #5b5566;
       width: 100%;
       max-width: 240px;
       height: 48px;
-      background: $pink;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
-      border: 2.5px solid $ink;
+      border: 1px solid #3d3d3d;
       border-radius: 13px;
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 3px 3px 0 $ink;
+      box-shadow: none;
       transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
       &:hover:not(:disabled) {
-        transform: translate(-2px, -2px);
-        box-shadow: 5px 5px 0 $ink;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
 
       &:active:not(:disabled) {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 $ink;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
 
       &:disabled {

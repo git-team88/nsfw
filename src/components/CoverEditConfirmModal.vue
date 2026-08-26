@@ -30,7 +30,7 @@ const { t } = useI18n();
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,8 +42,10 @@ const { t } = useI18n();
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    background-color: #ffffff;
-    border-radius: 12px;
+    background-color: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    border-radius: 18px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     padding: 24px;
 
     .modal-body {
@@ -53,7 +55,7 @@ const { t } = useI18n();
         text-align: center;
         font-size: 14px;
         line-height: 1.5;
-        color: #5b5566;
+        color: #aaa;
         margin: 0;
       }
     }
@@ -66,40 +68,36 @@ const { t } = useI18n();
       .cancel-btn, .exit-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
         transition: all 0.3s;
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: none;
       }
 
       .cancel-btn {
-        background: #FFFFFF;
-        color: #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
 
         &:hover {
-          color: #FF4D8D;
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          color: #ff4f9a;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
 
       .exit-btn {
-        background: #FF4D8D;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         color: #ffffff;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

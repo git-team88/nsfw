@@ -1,7 +1,7 @@
 <template>
   <div class="sensitive-content-confirm-modal-overlay">
     <div class="sensitive-content-confirm-modal">
-      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3>{{ t('home.sensitiveContentConfirm.title') }}</h3>
@@ -64,7 +64,7 @@ const handleConfirm = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,10 +73,10 @@ const handleConfirm = () => {
 
 .sensitive-content-confirm-modal {
   position: relative;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  border-radius: 18px;
   width: 500px;
   padding: 20px 36px;
   overflow: hidden;
@@ -88,9 +88,9 @@ const handleConfirm = () => {
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #fff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -109,7 +109,7 @@ const handleConfirm = () => {
     h3 {
       font-size: 16px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0;
     }
   }
@@ -120,7 +120,7 @@ const handleConfirm = () => {
 
     p {
       font-size: 14px;
-      color: #5b5566;
+      color: #aaa;
       line-height: 24px;
       margin: 0;
     }
@@ -138,35 +138,34 @@ const handleConfirm = () => {
       justify-content: center;
       min-width: 136px;
       height: 48px;
-      border: 2px solid #161122;
-      border-radius: 12px;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #3d3d3d;
+      border-radius: 18px;
+      box-shadow: none;
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
 
       &:hover {
-        transform: translate(-1px, -2px);
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
 
       &:active {
-        transform: translate(1px, 1px);
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
 
       &.cancel {
-        background: #fff;
-        color: #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
 
         &:hover {
-          color: #FF4D8D;
+          color: #ff4f9a;
         }
       }
 
       &.confirm {
-        background: #FF4D8D;
-        color: #ffffff;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
       }
     }
   }
@@ -185,7 +184,7 @@ const handleConfirm = () => {
     }
     span {
       font-size: 14px;
-      color: #5b5566;
+      color: #aaa;
     }
   }
 }

@@ -486,16 +486,16 @@ function goToPaymentHistory() {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 $yellow: #FFD23F;
 $green: #22A06B;
-$highlight: #FFF3D6;
+$highlight: rgba(255,255,255,0.06);
 
 .ai-recharge-details {
   width: 100%;
@@ -517,13 +517,13 @@ $highlight: #FFF3D6;
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #161122;
+    color: #f5f5f5;
     cursor: pointer;
     z-index: 10;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 13px;
-    background: #FFFDF7;
-    box-shadow: 3px 3px 0 #161122;
+    background: #1a1a1a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     padding: 0 10px;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
@@ -534,8 +534,7 @@ $highlight: #FFF3D6;
     }
 
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
     }
   }
 }
@@ -557,9 +556,9 @@ $highlight: #FFF3D6;
     margin: 0 0 24px;
     padding: 24px;
     background: $paper;
-    border: 3px solid $ink;
+    border: 1px solid #3d3d3d;
     border-radius: 14px;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
     flex-wrap: wrap;
     gap: 16px;
@@ -608,41 +607,37 @@ $highlight: #FFF3D6;
         font-size: 14px;
         font-weight: 800;
         cursor: pointer;
-        border: 2.5px solid $ink;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
-        transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+        transition: box-shadow 0.16s;
       }
 
       .recharge-btn {
-        background: $pink;
+        background: linear-gradient(145deg, #ff74b3, #f73382);
         color: #ffffff;
-        box-shadow: 3px 3px 0 $ink;
+        box-shadow: 0 0 18px rgba(255,60,140,0.45), 0 4px 12px rgba(0,0,0,0.3);
 
         &:hover {
-          transform: translate(-2px, -2px);
-          box-shadow: 5px 5px 0 $ink;
+          box-shadow: 0 0 24px rgba(255,60,140,0.55), 0 6px 16px rgba(0,0,0,0.4);
         }
 
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 $ink;
+          box-shadow: 0 0 12px rgba(255,60,140,0.35), 0 2px 8px rgba(0,0,0,0.3);
         }
       }
 
       .payment-history-btn {
         background: $paper;
         color: $sub;
-        box-shadow: 3px 3px 0 $ink;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 
         &:hover {
-          transform: translate(-2px, -2px);
-          box-shadow: 5px 5px 0 $ink;
+          box-shadow: 0 6px 16px rgba(0,0,0,0.4);
           color: $ink;
         }
 
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 $ink;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
       }
     }
@@ -706,10 +701,10 @@ $highlight: #FFF3D6;
         width: 360px;
         padding: 12px 16px;
         transform: translateX(-50%);
-        background: $paper;
-        border: 2.5px solid $ink;
+        background: #222;
+        border: 1px solid #3d3d3d;
         border-radius: 10px;
-        box-shadow: 3px 3px 0 $ink;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         z-index: 100;
 
         &::before {
@@ -722,7 +717,7 @@ $highlight: #FFF3D6;
           transform: translateX(-50%);
           border-left: 8px solid transparent;
           border-right: 8px solid transparent;
-          border-bottom: 8px solid $ink;
+          border-bottom: 8px solid #3d3d3d;
         }
         &::after {
           content: '';
@@ -734,7 +729,7 @@ $highlight: #FFF3D6;
           transform: translateX(-50%);
           border-left: 7px solid transparent;
           border-right: 7px solid transparent;
-          border-bottom: 7px solid $paper;
+          border-bottom: 7px solid #222;
         }
 
         .tooltip-title {
@@ -756,37 +751,47 @@ $highlight: #FFF3D6;
 
   .filter-section {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: 24px;
+    border-bottom: 1px solid #303030;
+    padding-bottom: 12px;
 
     .tabs {
-      display: inline-flex;
-      gap: 6px;
-      background: #fff;
-      border: 2.5px solid $ink;
-      border-radius: 14px;
-      padding: 5px;
+      display: flex;
+      align-items: flex-end;
+      gap: 28px;
 
       .tab {
+        position: relative;
         display: flex;
         align-items: center;
-        height: 36px;
-        font-size: 15px;
-        font-weight: 800;
-        color: #161122;
+        height: 40px;
+        font-size: 16px;
+        font-weight: 900;
+        color: #555;
         cursor: pointer;
-        padding: 0 24px;
-        border-radius: 10px;
-        transition: background-color 0.15s, color 0.15s;
+        padding: 0 6px;
+        border-radius: 0;
         background: transparent;
+        transition: color 0.15s;
 
         &:hover:not(.active) {
-          background: $paper;
+          color: #aaa;
         }
 
         &.active {
-          background: $pink;
-          color: #fff;
+          color: #e7e7e7;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 6px;
+            bottom: -13px;
+            left: 6px;
+            height: 4px;
+            border-radius: 4px 4px 0 0;
+            background: #ff4f9a;
+          }
         }
       }
     }
@@ -796,33 +801,34 @@ $highlight: #FFF3D6;
     margin-bottom: 16px;
 
     .subnav-tabs {
-      display: inline-flex;
-      gap: 6px;
-      background: $paper;
-      border: 2.5px solid $ink;
-      border-radius: 14px;
-      padding: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
 
       .subtab {
         display: flex;
         align-items: center;
         height: 36px;
-        padding: 0 22px;
-        font-size: 15px;
+        padding: 0 20px;
+        font-size: 14px;
         font-weight: 800;
-        color: #161122;
+        color: $ink;
         cursor: pointer;
         border-radius: 10px;
-        transition: background-color 0.15s, color 0.15s;
+        border: 1px solid #3d3d3d;
+        transition: background-color 0.15s, color 0.15s, border-color 0.15s;
         background: transparent;
 
         &:hover:not(.active) {
-          background: rgba(255,77,141,0.06);
+          border-color: #ff4f9a;
+          color: #fff;
         }
 
         &.active {
-          background: #161122;
+          background: linear-gradient(145deg, #ff74b3, #f73382);
           color: #fff;
+          border-color: transparent;
+          box-shadow: 0 0 18px rgba(255,60,140,0.45);
         }
       }
     }
@@ -842,7 +848,7 @@ $highlight: #FFF3D6;
       .loading-spinner {
         width: 40px;
         height: 40px;
-        border: 4px solid $highlight;
+        border: 4px solid rgba(255,255,255,0.1);
         border-top: 4px solid $ink;
         border-radius: 50%;
         animation: spin 1s ease-in-out infinite;
@@ -876,16 +882,15 @@ $highlight: #FFF3D6;
       gap: 20px;
       padding: 18px;
       border-radius: 13px;
-      border: 2.5px solid $ink;
+      border: 1px solid #3d3d3d;
       background: $paper;
       margin-bottom: 8px;
-      box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-      transition: transform 0.12s ease-out, box-shadow 0.12s;
+      transition: box-shadow 0.12s;
 
       &:hover {
-        transform: translateX(4px);
-        box-shadow: 5px 3px 0 rgba(22,17,34,0.14);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
       }
 
       &:last-child {
@@ -992,7 +997,7 @@ $highlight: #FFF3D6;
         width: 24px;
         height: 24px;
         border-radius: 6px;
-        border: 2px solid $ink;
+        border: 1px solid #3d3d3d;
         object-fit: cover;
       }
 
@@ -1036,7 +1041,6 @@ $highlight: #FFF3D6;
   .recharge-btn:hover,
   .payment-history-btn:hover,
   .seg-btn:hover {
-    transform: none;
   }
 }
 </style>

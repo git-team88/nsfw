@@ -408,7 +408,7 @@ function goBack() {
 <style lang="scss" scoped>
 .create-collection {
   min-height: 100vh;
-  background-color: #FFFDF7;
+  background-color: #1a1a1a;
 }
 
 .content-container {
@@ -425,18 +425,18 @@ function goBack() {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   padding: 0 10px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 
   .back-text {
@@ -447,9 +447,9 @@ function goBack() {
 }
 
 .main-content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 24px;
 }
@@ -462,7 +462,7 @@ function goBack() {
     align-items: center;
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
 
     .required {
       font-weight: normal;
@@ -472,7 +472,7 @@ function goBack() {
     .char-counter {
       margin-left: 12px;
       font-size: 14px;
-      color: #99A1AF;
+      color: #777;
     }
   }
 
@@ -480,21 +480,21 @@ function goBack() {
     width: 100%;
     height: 50px;
     padding: 10px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 16px;
-    color: #161122;
-    background: #FFFDF7;
+    color: #f5f5f5;
+    background: #222;
     outline: none;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
     &::placeholder {
-      color: #99A1AF;
+      color: #777;
     }
 
     &:focus{
-      border-color: #FF4D8D;
-      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+      border-color: #ff4f9a;
+      box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
     }
   }
 
@@ -502,24 +502,24 @@ function goBack() {
     width: 100%;
     height: 200px;
     padding: 10px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
     min-height: 200px;
     resize: none;
     outline: none;
     line-height: 24px;
-    background: #FFFDF7;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    background: #222;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
     &::placeholder {
-      color: #99A1AF;
+      color: #777;
     }
 
     &:focus{
-      border-color: #FF4D8D;
-      box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+      border-color: #ff4f9a;
+      box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
     }
   }
 
@@ -557,10 +557,11 @@ function goBack() {
   left: 100%;
   transform: translateY(-50%);
   margin-left: 8px;
-  width: 12px;
-  height: 33px;
-  background: url('@/assets/images/publish/intro_arrow.png') no-repeat center center;
-  background-size: contain;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #3d3d3d;
   flex-shrink: 0;
   display: block;
   z-index: 101;
@@ -577,13 +578,13 @@ function goBack() {
   margin-left: 20px;
   padding: 18px;
   width: 280px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   font-size: 12px;
   line-height: 16px;
   border-radius: 8px;
   white-space: normal;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   z-index: 100;
   opacity: 0;
   visibility: hidden;
@@ -592,10 +593,10 @@ function goBack() {
   .tooltip-content {
     font-size: 12px;
     line-height: 20px;
-    color: #99A1AF;
+    color: #777;
 
     :deep(span) {
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 }
@@ -628,7 +629,7 @@ function goBack() {
 
     span {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 }
@@ -646,17 +647,17 @@ function goBack() {
     width: 100%;
     height: 40px;
     padding: 0 12px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
-    background: #FFFFFF;
+    background: #222;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     span {
       font-size: 14px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
     }
 
     .lang-arrow {
@@ -670,8 +671,8 @@ function goBack() {
   }
 
   &.open .lang-dropdown-trigger {
-    border-color: #FF4D8E;
-    box-shadow: 2px 2px 0 #FF4D8E;
+    border-color: #ff4f9a;
+    box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
   }
 
   &.up .lang-dropdown-menu {
@@ -684,10 +685,10 @@ function goBack() {
     top: calc(100% + 6px);
     left: 0;
     width: 100%;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
-    background: #FFFFFF;
-    box-shadow: 2px 2px 0 #161122;
+    background: #222;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 100;
     overflow: hidden;
   }
@@ -696,17 +697,17 @@ function goBack() {
     padding: 8px 12px;
     font-size: 14px;
     font-weight: 700;
-    color: #161122;
+    color: #f5f5f5;
     cursor: pointer;
     transition: background 0.15s;
 
     &:hover {
-      background: #FFF5F9;
+      background: #2c2c2c;
     }
 
     &.active {
-      background: #FFEFF5;
-      color: #FF4D8E;
+      background: rgba(255, 79, 154, 0.15);
+      color: #ff4f9a;
     }
   }
 }
@@ -717,7 +718,7 @@ function goBack() {
     align-items: center;
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
 
     .required {
       font-weight: normal;
@@ -741,9 +742,9 @@ function goBack() {
     border-radius: 12px;
     cursor: pointer;
     overflow: hidden;
-    background: #FFFDF7;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    background: #222;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
     .cover-preview {
       width: 100%;
@@ -765,7 +766,7 @@ function goBack() {
       span {
         font-weight: 600;
         font-size: 16px;
-        color: #161222;
+        color: #f5f5f5;
       }
     }
   }
@@ -805,31 +806,31 @@ function goBack() {
   transition: all 0.2s;
 
   &.btn-cancel {
-    background: #FFFDF7;
-    color: #5b5566;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    color: #aaa;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     &:hover {
-      color: #FF4D8D;
-      border-color: #FF4D8D;
+      color: #ff4f9a;
+      border-color: #ff4f9a;
     }
   }
 
   &.btn-save {
-    background: #FF4D8D;
-    color: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: linear-gradient(135deg, #ff4f9a, #e03e87);
+    color: #f5f5f5;
+    border: 1px solid #ff4f9a;
+    box-shadow: 0 0 12px rgba(255, 79, 154, 0.4);
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 3px 3px 0 #161122;
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(255, 79, 154, 0.6);
     }
 
     &:active:not(:disabled) {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      transform: translateY(0);
+      box-shadow: 0 0 8px rgba(255, 79, 154, 0.3);
     }
 
     &:disabled {

@@ -832,7 +832,7 @@ defineExpose({
 
 .role-name {
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .step-description-container {
@@ -845,11 +845,11 @@ defineExpose({
 .step-description {
   font-size: 14px;
   line-height: 18px;
-  color: #161122;
+  color: #f5f5f5;
   padding: 12px;
-  border: 2px solid rgba(255,77,142,0.12);
+  border: 1px solid rgba(255,79,154,0.15);
   border-radius: 8px;
-  background: rgba(255,77,142,0.12);
+  background: rgba(255,79,154,0.08);
   position: relative;
   display: flex;
   align-items: center;
@@ -868,7 +868,7 @@ defineExpose({
   top: 0;
   left: 0;
   height: 100%;
-  background: rgba(255,77,142,0.12);
+  background: rgba(255,79,154,0.08);
   border-radius: 8px;
   transition: width 0.2s ease;
   z-index: 0;
@@ -884,7 +884,7 @@ defineExpose({
 
 .progress-percentage {
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
   white-space: nowrap;
   z-index: 1;
 }
@@ -923,11 +923,11 @@ defineExpose({
 
   .team-username {
     margin-right: 10px;
-    color: #FF4D8D;
+    color: #ff4f9a;
   }
 
   .team-action {
-    color: #9a93a4;
+    color: #777;
   }
 
   .team-target {
@@ -941,7 +941,7 @@ defineExpose({
     }
 
     .team-target-username {
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 }

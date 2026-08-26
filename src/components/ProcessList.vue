@@ -121,7 +121,6 @@ const isDropdownOpen = ref(false);
 const categoryIndices = ref<{ [key: string]: number }>({
   novel: 0,
   manhua: 0,
-  manju: 0,
   image: 0,
   video: 0
 });
@@ -152,13 +151,6 @@ const categories = computed(() => {
       itemLabel: t('process.comic') + '-' + t('process.script'),
       items: processData.value.manhua_list || [],
       currentIndex: categoryIndices.value.manhua
-    },
-    {
-      type: 'manju',
-      label: t('process.manju'),
-      itemLabel: t('process.manju'),
-      items: processData.value.manju_list || [],
-      currentIndex: categoryIndices.value.manju
     },
     {
       type: 'image',
@@ -195,8 +187,6 @@ const getQueueCount = (type: string) => {
     return processData.value.novel_doing_count || 0;
   } else if (type == 'manhua') {
     return processData.value.manhua_doing_count || 0;
-  } else if (type == 'manju') {
-    return processData.value.manju_doing_count || 0;
   } else if (type == 'image') {
     return processData.value.simple_image_doing_count || 0;
   } else if (type == 'video') {
@@ -307,8 +297,7 @@ const fetchProcessData = async () => {
       if (res.data) {
         const allTasks = [
           ...(res.data.novel_list || []),
-          ...(res.data.manhua_list || []),
-          ...(res.data.manju_list || [])
+          ...(res.data.manhua_list || [])
         ];
 
         allTasks.forEach(task => {
@@ -332,13 +321,6 @@ const fetchProcessData = async () => {
       // Filter manhua_list
       if (Array.isArray(filteredData.manhua_list)) {
         filteredData.manhua_list = filteredData.manhua_list.filter((task: any) =>
-          task && task.session_id && task.step_status
-        );
-      }
-
-      // Filter manju_list
-      if (Array.isArray(filteredData.manju_list)) {
-        filteredData.manju_list = filteredData.manju_list.filter((task: any) =>
           task && task.session_id && task.step_status
         );
       }
@@ -402,63 +384,40 @@ const getItemLabel = (type: string, item: any) => {
   if (item.step_name == 'outline') {
     if (type == 'novel') return t('process.novel') + '-' + t('process.outline');
     if (type == 'manhua') return t('process.comic') + '-' + t('process.outline');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.outline');
   } else if (item.step_name == 'character') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.character');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.character');
   } else if (item.step_name == 'cover') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.cover');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.cover');
   } else if (item.step_name == 'renew_novel_cover') {
     if (type == 'novel') return t('process.novel') + '-' + t('process.coverChange');
   } else if (item.step_name == 'renew_manhua_cover') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.coverChange');
   } else if (item.step_name == 'renew_manhua_scene') {
     return t('process.comic') + '-' + t('process.sceneEdit');
-  } else if (item.step_name == 'renew_manju_scene') {
-    return t('process.manju') + '-' + t('process.storyboardEdit');
   } else if (item.step_name == 'renew_manhua_character') {
     return t('process.comic') + '-' + t('process.characterEdit');
-  } else if (item.step_name == 'renew_manju_character') {
-    return t('process.manju') + '-' + t('process.characterEdit');
   } else if (item.step_name == 'edit_single_scene_image' || item.step_name == 'edit_single_daoju_image') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.renewGlobalAssets');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.renewGlobalAssets');
   } else if (item.step_name == 'global_assets') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.globalAssets');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.globalAssets');
   } else if (item.step_name == 'renew_global_assets') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.renewGlobalAssets');
-    if (type == 'manju') return t('process.manju') + '-' + t('process.renewGlobalAssets');
-  } else if (item.step_name == 'renew_manju_cover') {
-    if (type == 'manju') return t('process.manju') + '-' + t('process.coverChange');
-  } else if (item.step_name == 'merge_videos') {
-    if (type == 'manju') return t('process.manju') + '-' + t('process.mergeVideos');
   } else if (item.step_name == 'refresh_manhua_scene') {
     if (type == 'manhua') return t('process.comic') + '-' + t('process.sceneRefresh');
-  } else if (item.step_name == 'refresh_manju_scene') {
-    if (type == 'manju') return t('process.manju') + '-' + t('process.storyboardRefresh');
   } else if (item.step_name == 'chapter') {
-    // Handle chapter step differently based on status and type
     if (item.step_status == 'DOING' && item.is_batch_chapter != 1) {
       if (type == 'novel') return t('process.novel') + '-' + t('novel.newChapter');
       if (type == 'manhua') return t('process.comic') + '-' + t('novel.newChapter');
-      if (type == 'manju') return t('process.manju') + '-' + t('novel.newChapter');
     } else if (item.step_status == 'SUCCESS' && item.step_chapter_index) {
-      // SUCCESS status: show chapter/episode number
       const chapterIndex = item.step_chapter_index;
       if (type == 'novel') {
         return t('process.novel') + '-' + t('novel.chapter', { chapter: chapterIndex });
       } else if (type == 'manhua') {
         return t('process.comic') + '-' + t('submit.image.episode', { episode: chapterIndex });
-      } else if (type == 'manju') {
-        return t('process.manju') + '-' + t('submit.image.episode', { episode: chapterIndex });
       }
     } else {
-      // Default chapter label
       if (type == 'novel') return t('process.novel') + '-' + t('novel.newChapter');
       if (type == 'manhua') return t('process.comic') + '-' + t('novel.newChapter');
-      if (type == 'manju') return t('process.manju') + '-' + t('novel.newChapter');
     }
   }
 
@@ -467,13 +426,9 @@ const getItemLabel = (type: string, item: any) => {
     return t('process.novel') + '-' + t('process.outline');
   } else if (type == 'manhua') {
     return t('process.comic') + '-' + t('process.script');
-  } else if (type == 'manju') {
-    return t('process.manju');
   } else if (type == 'image') {
-    // 处理图片类型，显示 topic 内容并替换标签
     return formatTopicContent(item.topic);
   } else if (type == 'video') {
-    // 处理视频类型，显示 topic 内容并替换标签
     return formatTopicContent(item.topic);
   }
   return '';
@@ -521,8 +476,6 @@ const navigateToItem = async (item: any, type: string) => {
     router.push(`/novel/${item.session_id}`);
   } else if (type == 'manhua') {
     window.location.href = `/tools/comic/${item.session_id}`;
-  } else if (type == 'manju') {
-    window.location.href = `/tools/video/${item.session_id}`;
   } else if (type == 'image') {
     await api.detailProject(item.session_id);
     localStorage.setItem('targetSessionId', item.session_id);
@@ -605,12 +558,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$paper: #FFFDF7;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #F0EADF;
+
 
 .process-container {
   position: fixed;
@@ -630,34 +578,32 @@ $line: #F0EADF;
     align-items: center;
     padding: 10px 12px;
     cursor: pointer;
-    background: $paper;
-    border: 3px solid $ink;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
-    box-shadow: 4px 4px 0 $ink;
+    box-shadow: none;
     z-index: 101;
     transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
 
     &:hover {
-      transform: translate(-1px, -2px);
-      box-shadow: 5px 6px 0 $ink;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
 
     &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 $ink;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &.has-success {
-      background: $pink;
-      color: #fff;
-      border-color: $ink;
-      box-shadow: 4px 4px 0 $ink;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+      color: #f5f5f5;
+      border-color: #3d3d3d;
+      box-shadow: none;
 
       .process-title {
-        color: #fff;
+        color: #f5f5f5;
 
         .status-icon {
-          background: #fff;
+          background: #1a1a1a;
           animation: tdPulse 1.8s ease-out infinite;
         }
       }
@@ -673,14 +619,14 @@ $line: #F0EADF;
       gap: 6px;
       font-weight: 800;
       font-size: 13.5px;
-      color: $ink;
+      color: #f5f5f5;
 
       .status-icon {
         width: 10px;
         height: 10px;
         border-radius: 999px;
-        border: 1.5px solid $ink;
-        background: #cfc9d6;
+        border: 1px solid #3d3d3d;
+        background: rgba(255,255,255,0.1);
       }
     }
 
@@ -698,10 +644,10 @@ $line: #F0EADF;
 
   .process-content {
     margin-bottom: 12px;
-    background: $paper;
-    border: 3px solid $ink;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 16px;
-    box-shadow: 6px 6px 0 $ink;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     max-height: calc(100vh - 200px);
     overflow-y: auto;
     animation: tdPanelIn .3s cubic-bezier(.16,1,.3,1) both;
@@ -722,7 +668,7 @@ $line: #F0EADF;
         .category-name {
           font-weight: 700;
           font-size: 12px;
-          color: $sub;
+          color: #aaa;
         }
 
         .category-nav {
@@ -733,15 +679,14 @@ $line: #F0EADF;
             width: 20px;
             height: 20px;
             cursor: pointer;
-            border: 2px solid $ink;
+            border: 1px solid #3d3d3d;
             border-radius: 6px;
-            background: #fff;
-            box-shadow: 2px 2px 0 $ink;
+            background: #1a1a1a;
+            box-shadow: none;
             transition: transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s ease-out;
 
             &:hover {
-              transform: translate(-1px, -1px);
-              box-shadow: 3px 3px 0 $ink;
+              box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
             }
           }
         }
@@ -749,15 +694,15 @@ $line: #F0EADF;
 
       .category-item {
         padding: 10px;
-        background: #fff;
-        border: 2px solid $ink;
+        background: #1a1a1a;
+        border: 1px solid #3d3d3d;
         border-radius: 12px;
         cursor: pointer;
         transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
 
         &:hover {
           transform: translateY(-2px);
-          box-shadow: 3px 3px 0 $ink;
+          box-shadow: none;
         }
 
         .item-top {
@@ -772,9 +717,9 @@ $line: #F0EADF;
           display: grid;
           place-items: center;
           border-radius: 8px;
-          border: 2px solid $ink;
-          background: #FFF3D6;
-          color: $ink;
+          border: 1px solid #3d3d3d;
+          background: rgba(255,210,63,0.1);
+          color: #f5f5f5;
           flex-shrink: 0;
 
           img {
@@ -794,7 +739,7 @@ $line: #F0EADF;
           .item-type {
             font-weight: 800;
             font-size: 12.5px;
-            color: $ink;
+            color: #f5f5f5;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -804,7 +749,7 @@ $line: #F0EADF;
             margin-top: 2px;
             font-weight: 800;
             font-size: 11px;
-            color: $ink;
+            color: #f5f5f5;
             opacity: 0.55;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -822,9 +767,9 @@ $line: #F0EADF;
           .progress-bar {
             flex: 1;
             height: 8px;
-            background: $line;
+            background: #2c2c2c;
             border-radius: 999px;
-            border: 1.5px solid $ink;
+            border: 1px solid #3d3d3d;
             overflow: hidden;
 
             .progress-fill {
@@ -837,7 +782,7 @@ $line: #F0EADF;
               }
 
               &.doing {
-                background: linear-gradient(90deg, $pink, #FF9E45);
+                background: linear-gradient(90deg, #ff4f9a, #FF9E45);
               }
             }
           }
@@ -848,7 +793,7 @@ $line: #F0EADF;
             text-overflow: ellipsis;
             font-weight: 800;
             font-size: 11px;
-            color: $ink;
+            color: #f5f5f5;
           }
         }
 
@@ -860,7 +805,7 @@ $line: #F0EADF;
           .waiting-text {
             font-weight: 600;
             font-size: 11px;
-            color: $sub;
+            color: #aaa;
           }
         }
 
@@ -879,18 +824,17 @@ $line: #F0EADF;
           .clear-task {
             font-weight: 800;
             font-size: 11.5px;
-            color: $ink;
-            background: #fff;
-            border: 2px solid $ink;
+            color: #f5f5f5;
+            background: #1a1a1a;
+            border: 1px solid #3d3d3d;
             border-radius: 999px;
             padding: 3px 10px;
             cursor: pointer;
-            box-shadow: 2px 2px 0 $ink;
+            box-shadow: none;
             transition: transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s ease-out;
 
             &:hover {
-              transform: translate(-1px, -1px);
-              box-shadow: 3px 3px 0 $ink;
+              box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
             }
           }
         }
@@ -901,7 +845,7 @@ $line: #F0EADF;
           .queue-text {
             font-weight: 600;
             font-size: 11px;
-            color: $sub;
+            color: #aaa;
           }
         }
       }
@@ -912,13 +856,13 @@ $line: #F0EADF;
       align-items: center;
       justify-content: center;
       padding: 12px 0;
-      border-top: 2px solid rgba(22,17,34,.12);
+      border-top: 1px solid #2c2c2c;
       cursor: pointer;
 
       .clear-text {
         font-weight: 800;
         font-size: 12px;
-        color: $ink;
+        color: #f5f5f5;
         text-align: center;
       }
     }

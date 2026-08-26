@@ -4,7 +4,7 @@
       <div class="modal-header">
         <span class="modal-title">{{ t("user.revenue.tokenWithdrawDetail") }}</span>
         <button class="modal-close" @click="$emit('close')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -139,7 +139,7 @@ watch(page, () => {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,10 +150,10 @@ watch(page, () => {
   max-width: calc(100vw - 32px);
   max-height: 90vh;
   overflow: hidden;
-  border-radius: 12px;
-  background: #FFFFFF;
-  border: 2px solid #161122;
-  box-shadow: 3px 3px 0 #161122;
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   position: relative;
 }
 .modal-header {
@@ -165,7 +165,7 @@ watch(page, () => {
 .modal-title {
   font-size: 20px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: -0.3px;
   white-space: nowrap;
   line-height: 30px;
@@ -174,9 +174,9 @@ watch(page, () => {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -189,15 +189,15 @@ watch(page, () => {
 
 .record-table {
   margin: 20px;
-  border: 2px solid #161122;
-  border-radius: 12px;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
   overflow: hidden;
 }
 .record-thead {
   display: flex;
   align-items: center;
   min-height: 56px;
-  background: rgba(255, 77, 142, 0.3);
+  background: rgba(255, 79, 154, 0.15);
 }
 .record-tbody {
   max-height: 400px;
@@ -207,12 +207,12 @@ watch(page, () => {
   display: flex;
   align-items: center;
   min-height: 56px;
-  border-top: 1px solid rgba(16, 24, 40, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 .col {
   font-size: 16px;
   font-weight: 500;
-  color: #161122;
+  color: #f5f5f5;
   white-space: nowrap;
   line-height: 24px;
   padding: 0 4px;
@@ -225,7 +225,7 @@ watch(page, () => {
   flex: 0 0 100px;
   padding-left: 14px;
   &.pending {
-    color: #161122;
+    color: #f5f5f5;
   }
   &.success {
     color: #34A853;
@@ -255,12 +255,12 @@ watch(page, () => {
 .real-amount-value {
   font-size: 16px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
 }
 .real-amount-header-fee {
   font-size: 12px;
   font-weight: 500;
-  color: #161122;
+  color: #f5f5f5;
 }
 .col-apply-time {
   flex: 1;
@@ -279,7 +279,7 @@ watch(page, () => {
   justify-content: center;
   height: 240px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #777;
   gap: 12px;
 }
 .no-data-icon {
@@ -297,8 +297,8 @@ watch(page, () => {
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid rgba(22, 17, 34, 0.12);
-    border-top: 4px solid #161122;
+    border: 4px solid rgba(255, 255, 255, 0.08);
+    border-top: 4px solid #f5f5f5;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 20px;
@@ -306,7 +306,7 @@ watch(page, () => {
 
   .loading-text {
     font-size: 14px;
-    color: #99A1AF;
+    color: #777;
     font-weight: 600;
   }
 }

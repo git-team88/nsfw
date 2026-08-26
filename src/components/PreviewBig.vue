@@ -1,11 +1,11 @@
 <template>
   <div class="preview-modal" v-if="visible">
     <div class="preview-content">
-      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="preview-header">
         <span class="title">{{ t("submit.video.previewTitle") }}</span>
-        <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
       <div class="video-player">
         <video :src="videoUrl"
@@ -59,8 +59,8 @@ const closeModal = () => {
   }
 
   .close-btn {
-    background: #fff;
-    border: 2.5px solid #161122;
+    background: rgba(26, 26, 26, 0.85);
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
     padding: 6px;
     position: absolute;
@@ -69,7 +69,6 @@ const closeModal = () => {
     width: 36px;
     height: 36px;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
     transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 10;
 

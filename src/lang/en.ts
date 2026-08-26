@@ -1498,6 +1498,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
 
     },
     revenue: {
+      yen: "JPY",
       total: "Total Revenue",
       withdrawn: "Frozen Cash Earnings",
       pending: "Withdrawable Token Earnings",

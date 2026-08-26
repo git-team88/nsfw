@@ -855,8 +855,8 @@ const layerList = computed(() =>
   min-height: 0;
   overflow: hidden;
   grid-template-rows: 58px minmax(0, 1fr);
-  color: #161122;
-  background: #FFFBF4;
+  color: #f5f5f5;
+  background: #1a1a1a;
 }
 
 .comic-markup-header {
@@ -864,8 +864,8 @@ const layerList = computed(() =>
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  border-bottom: 2px solid #161122;
-  background: #FFFBF4;
+  border-bottom: 1px solid #2c2c2c;
+  background: #1a1a1a;
 }
 
 .comic-markup-title {
@@ -875,11 +875,11 @@ const layerList = computed(() =>
   gap: 12px;
 }
 
-.comic-markup-title strong { font-size: 16px; font-weight: 800; color: #161122; }
+.comic-markup-title strong { font-size: 16px; font-weight: 800; color: #f5f5f5; }
 .comic-markup-title span {
   max-width: 36vw;
   overflow: hidden;
-  color: #6A7282;
+  color: #777;
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -903,12 +903,12 @@ const layerList = computed(() =>
   width: 34px;
   height: 34px;
   padding: 0;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 8px;
-  background: #FFFDF7;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
   transition: 0.12s ease;
 }
 
@@ -917,7 +917,7 @@ const layerList = computed(() =>
 .comic-markup-toolbar-actions button:hover,
 .comic-markup-tool-buttons button.active {
   color: #ffffff;
-  background: #FF4D8E;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
 }
 
 .comic-markup-header button:disabled,
@@ -928,12 +928,12 @@ const layerList = computed(() =>
 .comic-markup-header button.comic-markup-close {
   width: 2.25rem;
   height: 2.25rem;
-  border: 0.15625rem solid #161122;
+  border: 0.15625rem solid #3d3d3d;
   border-radius: 999px;
-  background: #ffffff;
-  box-shadow: 0.125rem 0.125rem 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
 }
-.comic-markup-header button.comic-markup-close:hover { background: #FF4D8E; color: #FFFFFF; }
+.comic-markup-header button.comic-markup-close:hover { background: linear-gradient(135deg, #ff4f9a, #ff2d7f); color: #FFFFFF; }
 
 .comic-markup-error {
   max-width: min(360px, 32vw);
@@ -963,9 +963,9 @@ const layerList = computed(() =>
   touch-action: none;
   user-select: none;
   border-radius: 8px;
-  border: 2px solid #161122;
-  background: #FFFDF7;
-  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.16);
+  border: 1px solid #3d3d3d;
+  background: #1a1a1a;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 
 .comic-markup-stage img {
@@ -985,7 +985,7 @@ const layerList = computed(() =>
   position: absolute;
   z-index: 3;
   pointer-events: none;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
   background: rgba(255, 77, 142, 0.2);
   box-shadow: 0 0 0 1px rgba(255, 77, 142, 0.95);
@@ -993,13 +993,13 @@ const layerList = computed(() =>
 }
 .comic-markup-mosaic-preview {
   fill: rgba(255, 77, 142, 0.16);
-  stroke: #FF4D8E;
+  stroke: #ff4f9a;
   stroke-dasharray: 1.4 1.2;
   stroke-width: 0.35;
 }
 .comic-markup-selection {
   fill: none;
-  stroke: #FF4D8E;
+  stroke: #ff4f9a;
   stroke-dasharray: 1.3 1;
   stroke-width: 0.3;
 }
@@ -1011,13 +1011,13 @@ const layerList = computed(() =>
   padding: 5px 8px;
   font-weight: 800;
   outline: none;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
-  background: #FFFDF7;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
   transform: translateY(-50%);
 }
-.comic-markup-text-input::placeholder { color: #99A1AF; }
+.comic-markup-text-input::placeholder { color: #777; }
 
 /* 数字标记 / 文字 的 HTML 叠加层（不受 SVG 非等比缩放影响） */
 .comic-markup-badge {
@@ -1059,8 +1059,8 @@ const layerList = computed(() =>
   text-align: right;
   transform: translate(-100%, -50%);
 }
-.comic-markup-badge.selected { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #FF4D8E; }
-.comic-markup-text-label.selected { outline: 2px dashed #FF4D8E; outline-offset: 3px; }
+.comic-markup-badge.selected { box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px #ff4f9a; }
+.comic-markup-text-label.selected { outline: 2px dashed #ff4f9a; outline-offset: 3px; }
 
 .comic-markup-toolbar {
   display: flex;
@@ -1071,20 +1071,20 @@ const layerList = computed(() =>
   gap: 14px;
   padding: 0 18px;
   overflow-x: auto;
-  border-top: 2px solid #161122;
-  background: #FFFBF4;
+  border-top: 1px solid #2c2c2c;
+  background: #1a1a1a;
 }
 
-.comic-markup-colors { padding-left: 14px; border-left: 2px solid #161122; }
+.comic-markup-colors { padding-left: 14px; border-left: 1px solid #2c2c2c; }
 .comic-markup-colors button {
   width: 22px;
   height: 22px;
   padding: 0;
   cursor: pointer;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
 }
-.comic-markup-colors button.active { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #161122; }
+.comic-markup-colors button.active { box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px #3d3d3d; }
 
 .comic-markup-range {
   display: inline-flex;
@@ -1092,16 +1092,16 @@ const layerList = computed(() =>
   flex: 0 0 auto;
   gap: 10px;
   padding-left: 14px;
-  color: #6A7282;
+  color: #777;
   font-size: 12px;
   font-weight: 700;
-  border-left: 2px solid #161122;
+  border-left: 1px solid #2c2c2c;
 }
 
 .comic-markup-range input {
   width: 116px;
   cursor: pointer;
-  accent-color: #FF4D8E;
+  accent-color: #ff4f9a;
   -webkit-appearance: auto;
   appearance: auto;
   height: auto;
@@ -1109,20 +1109,20 @@ const layerList = computed(() =>
   border: 0;
   background: none;
 }
-.comic-markup-range strong { min-width: 34px; color: #161122; }
-.comic-markup-toolbar-actions { margin-left: auto; padding-left: 14px; border-left: 2px solid #161122; }
+.comic-markup-range strong { min-width: 34px; color: #f5f5f5; }
+.comic-markup-toolbar-actions { margin-left: auto; padding-left: 14px; border-left: 1px solid #2c2c2c; }
 
 .comic-markup-layers {
   display: grid;
   min-height: 0;
   padding: 18px 16px 24px;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
-  border-left: 2px solid #161122;
-  background: #FFFBF4;
+  border-left: 1px solid #2c2c2c;
+  background: #1a1a1a;
 }
 .comic-markup-mobile-tabs { display: none; }
 .comic-markup-layers header { display: flex; align-items: center; justify-content: space-between; }
-.comic-markup-layers header strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: #161122; }
+.comic-markup-layers header strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: #f5f5f5; }
 .comic-markup-layers header strong span {
   display: inline-flex;
   align-items: center;
@@ -1134,7 +1134,7 @@ const layerList = computed(() =>
   font-weight: 800;
   color: #ffffff;
   border-radius: 999px;
-  background: #FF4D8E;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
 }
 
 .comic-markup-layers header button,
@@ -1145,23 +1145,23 @@ const layerList = computed(() =>
   width: 28px;
   height: 28px;
   padding: 0;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 7px;
-  background: #FFFDF7;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
 }
-.comic-markup-layers > p { margin: 14px 0 18px; color: #6A7282; font-size: 12px; line-height: 1.6; }
+.comic-markup-layers > p { margin: 14px 0 18px; color: #777; font-size: 12px; line-height: 1.6; }
 .comic-markup-empty {
   align-self: center;
   display: grid;
   justify-items: center;
   gap: 8px;
-  color: #99A1AF;
+  color: #777;
   text-align: center;
 }
-.comic-markup-empty strong { color: #6A7282; }
+.comic-markup-empty strong { color: #777; }
 .comic-markup-layers ul {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1181,15 +1181,15 @@ const layerList = computed(() =>
   height: 40px;
   gap: 10px;
   padding: 7px 10px;
-  color: #161122;
+  color: #f5f5f5;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 10px;
 }
 .comic-markup-layers li:hover,
-.comic-markup-layers li.selected { border-color: #161122; background: rgba(255, 77, 142, 0.12); padding-right: 116px; }
+.comic-markup-layers li.selected { border-color: #3d3d3d; background: rgba(255, 79, 154, 0.12); padding-right: 116px; }
 .comic-markup-layers li.muted { opacity: 0.46; }
 .comic-markup-layer-icon { width: 20px; font-size: 18px; font-weight: 900; line-height: 1; }
 .comic-markup-layers li > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1209,7 +1209,7 @@ const layerList = computed(() =>
 .comic-markup-layer-actions button:hover:not(:disabled),
 .comic-markup-layers header button:hover:not(:disabled) {
   color: #ffffff;
-  background: #FF4D8E;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
 }
 
 .comic-markup-send-panel {
@@ -1217,7 +1217,7 @@ const layerList = computed(() =>
   gap: 9px;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 2px solid #161122;
+    border-top: 1px solid #2c2c2c;
 }
 
 .comic-markup-send-title {
@@ -1226,30 +1226,30 @@ const layerList = computed(() =>
   justify-content: space-between;
 }
 
-.comic-markup-send-title strong { color: #161122; font-size: 13px; }
-.comic-markup-send-title span { color: #99A1AF; font-size: 10px; }
+.comic-markup-send-title strong { color: #f5f5f5; font-size: 13px; }
+.comic-markup-send-title span { color: #777; font-size: 10px; }
 
 .comic-markup-send-panel textarea {
   width: 100%;
   min-height: 96px;
   padding: 10px;
-  color: #161122;
+  color: #f5f5f5;
   font-family: inherit;
   font-size: 12px;
   line-height: 1.55;
   resize: vertical;
   outline: none;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 9px;
-  background: #FFFDF7;
+  background: #1a1a1a;
 }
 
 .comic-markup-send-panel textarea:focus {
-  border-color: #FF4D8E;
+  border-color: #ff4f9a;
 }
 
-.comic-markup-send-panel textarea::placeholder { color: #99A1AF; }
-.comic-markup-send-panel > p { margin: 0; color: #6A7282; font-size: 10px; line-height: 1.5; }
+.comic-markup-send-panel textarea::placeholder { color: #777; }
+.comic-markup-send-panel > p { margin: 0; color: #777; font-size: 10px; line-height: 1.5; }
 
 .comic-markup-send-cost {
   display: inline-flex;
@@ -1281,14 +1281,14 @@ const layerList = computed(() =>
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 9px;
-  background: linear-gradient(135deg, rgb(255, 77, 142), rgb(255, 122, 69));
-  box-shadow: 2px 2px 0 #161122;
+  background: linear-gradient(145deg, #ff74b3, #f73382);
+  box-shadow: none;
   transition: transform 0.2s ease;
 }
 
-.comic-markup-direct-send:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #161122; }
+.comic-markup-direct-send:hover { transform: translate(-1px, -1px); }
 .comic-markup-direct-send:disabled { cursor: not-allowed; opacity: 0.42; box-shadow: none; transform: none; }
 
 .comic-markup-guide-backdrop {
@@ -1299,7 +1299,7 @@ const layerList = computed(() =>
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(22, 17, 34, 0.55);
+  background: rgba(0, 0, 0, 0.55);
 }
 .comic-markup-guide-card {
   display: grid;
@@ -1307,11 +1307,11 @@ const layerList = computed(() =>
   grid-template-columns: 0.9fr 1.1fr;
   gap: 18px;
   padding: 22px;
-  color: #161122;
-  border: 2px solid #161122;
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
   border-radius: 18px;
-  background: #FFFBF4;
-  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.16);
+  background: #1a1a1a;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .comic-markup-guide-copy { display: flex; flex-direction: column; justify-content: center; padding: 8px; }
 .comic-markup-guide-copy > span {
@@ -1321,17 +1321,17 @@ const layerList = computed(() =>
   font-size: 12px;
   font-weight: 800;
   border-radius: 999px;
-  background: #FF4D8E;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
 }
-.comic-markup-guide-copy h2 { margin: 16px 0 10px; font-size: 24px; line-height: 1.25; color: #161122; }
-.comic-markup-guide-copy p { margin: 0; color: #6A7282; font-size: 14px; line-height: 1.75; }
+.comic-markup-guide-copy h2 { margin: 16px 0 10px; font-size: 24px; line-height: 1.25; color: #f5f5f5; }
+.comic-markup-guide-copy p { margin: 0; color: #777; font-size: 14px; line-height: 1.75; }
 .comic-markup-guide-example > div {
   position: relative;
   height: 360px;
   overflow: hidden;
   border-radius: 12px;
-  border: 2px solid #161122;
-  background: #FFFDF7;
+  border: 1px solid #3d3d3d;
+  background: #1a1a1a;
 }
 .comic-markup-guide-example img { width: 100%; height: 100%; object-fit: cover; }
 .comic-markup-guide-circle {
@@ -1340,7 +1340,7 @@ const layerList = computed(() =>
   left: 22%;
   width: 44%;
   height: 30%;
-  border: 5px solid #FF4D8E;
+  border: 5px solid #ff4f9a;
   border-radius: 50%;
   transform: rotate(-10deg);
 }
@@ -1353,9 +1353,10 @@ const layerList = computed(() =>
   font-size: 13px;
   font-weight: 800;
   border-radius: 7px;
-  border: 2px solid #161122;
-  background: #FF4D8E;
-  box-shadow: 2px 2px 0 #161122;
+  border: 1px solid #3d3d3d;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+  box-shadow: none
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 }
 .comic-markup-guide-actions {
   display: grid;
@@ -1366,17 +1367,17 @@ const layerList = computed(() =>
 .comic-markup-guide-actions button {
   min-height: 42px;
   cursor: pointer;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 800;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  background: #FFFDF7;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
   transition: transform 0.16s;
 
-  &:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #161122; }
+  &:hover { transform: translate(-1px, -1px); }
 }
-.comic-markup-guide-actions button:last-child { color: #ffffff; background: #FF4D8E; }
+.comic-markup-guide-actions button:last-child { color: #ffffff; background: linear-gradient(135deg, #ff4f9a, #ff2d7f); }
 
 @media (max-width: 980px) {
   .comic-markup-main { grid-template-columns: minmax(0, 1fr) 240px; }
@@ -1444,9 +1445,9 @@ const layerList = computed(() =>
     gap: 9px 8px;
     padding: 8px;
     overflow: hidden;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 12px 12px 0 0;
-    background: #FFFBF4;
+    background: #1a1a1a;
   }
 
   .comic-markup-tool-buttons {
@@ -1494,7 +1495,7 @@ const layerList = computed(() =>
     display: grid;
     min-height: 320px;
     padding: 12px 12px calc(14px + env(safe-area-inset-bottom, 0));
-    border-top: 2px solid #161122;
+  border-top: 1px solid #2c2c2c;
     border-left: 0;
   }
 
@@ -1504,9 +1505,9 @@ const layerList = computed(() =>
     gap: 6px;
     padding: 4px;
     margin-bottom: 10px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 11px;
-    background: #FFFDF7;
+    background: #1a1a1a;
   }
 
   .comic-markup-mobile-tabs button {
@@ -1517,7 +1518,7 @@ const layerList = computed(() =>
     min-height: 40px;
     gap: 6px;
     padding: 0 8px;
-    color: #6A7282;
+    color: #777;
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -1528,7 +1529,7 @@ const layerList = computed(() =>
 
   .comic-markup-mobile-tabs button.active {
     color: #ffffff;
-    background: #FF4D8E;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   }
 
   .comic-markup-mobile-tabs button > span {
@@ -1540,7 +1541,7 @@ const layerList = computed(() =>
     padding: 0 5px;
     font-size: 10px;
     border-radius: 999px;
-    background: rgba(22, 17, 34, 0.16);
+    background: rgba(255, 255, 255, 0.06);
   }
 
   .comic-markup-layers[data-mobile-tab='layers'] {
@@ -1600,7 +1601,7 @@ const layerList = computed(() =>
   .comic-markup-guide-copy h2 { margin: 10px 0 7px; font-size: 20px; }
   .comic-markup-guide-copy p { font-size: 12px; line-height: 1.6; }
   .comic-markup-guide-example > div { height: min(230px, 34dvh); }
-  .comic-markup-guide-actions { position: sticky; bottom: 0; gap: 8px; padding-top: 4px; background: #FFFBF4; }
+  .comic-markup-guide-actions { position: sticky; bottom: 0; gap: 8px; padding-top: 4px; background: #1a1a1a; }
 }
 
 @media (max-width: 420px) {

@@ -112,7 +112,7 @@ function toggle(key: string) {
 .user-privacy {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -124,7 +124,7 @@ function toggle(key: string) {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -136,7 +136,7 @@ function toggle(key: string) {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -148,7 +148,7 @@ function toggle(key: string) {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .content {
   min-height: 380px;
@@ -159,7 +159,7 @@ function toggle(key: string) {
   align-items: center;
   gap: 14px;
   padding: 15px 0;
-  border-top: 2px solid rgba(22,17,34,.08);
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 .item:first-child {
   border-top: none;
@@ -168,7 +168,7 @@ function toggle(key: string) {
 .label {
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   flex: 1;
   min-width: 0;
 }
@@ -176,8 +176,8 @@ function toggle(key: string) {
   width: 48px;
   height: 28px;
   border-radius: 999px;
-  border: 2.5px solid #161122;
-  background: #fff;
+  border: 1px solid #3d3d3d;
+  background: #1a1a1a;
   position: relative;
   cursor: pointer;
   flex: none;
@@ -191,7 +191,7 @@ function toggle(key: string) {
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: #161122;
+  background: #f5f5f5;
   transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
 }
 .toggle.on {

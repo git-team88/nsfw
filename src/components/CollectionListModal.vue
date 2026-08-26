@@ -4,7 +4,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ t('collection.selectCollection') }}</h3>
-        <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
 
       <div class="new-collection-row" @click="handleCreateNew">
@@ -184,17 +184,17 @@ watch(() => props.modelValue, (newVal) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
 }
 
 .modal-content {
   position: relative;
   width: 840px;
   max-height: 700px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -205,19 +205,19 @@ watch(() => props.modelValue, (newVal) => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid #2c2c2c;
   flex-shrink: 0;
 
   h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .close-btn {
-    background: #fff;
-    border: 2.5px solid #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
     padding: 0;
     width: 36px;
@@ -226,7 +226,7 @@ watch(() => props.modelValue, (newVal) => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover { transform: scale(1.1) rotate(90deg); }
@@ -253,9 +253,9 @@ watch(() => props.modelValue, (newVal) => {
     width: 100%;
     height: 94px;
     border-radius: 8px;
-    color: #9a93a4;
+    color: #777;
     font-size: 14px;
-    background-color: #F9FAFB;
+    background-color: rgba(255,255,255,0.06);
 
     img {
       width: 24px;
@@ -277,10 +277,10 @@ watch(() => props.modelValue, (newVal) => {
   border-radius: 8px;
   cursor: pointer;
   position: relative;
-  background: #F9FAFB;
+  background: rgba(255,255,255,0.06);
 
   &.selected {
-    border-color: #FF4D8D;
+    border-color: #ff4f9a;
   }
 
   .card-cover {
@@ -289,7 +289,7 @@ watch(() => props.modelValue, (newVal) => {
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
-    background: rgba(22, 17, 34, 0.06);
+    background: rgba(255,255,255,0.06);
 
     img {
       width: 100%;
@@ -300,7 +300,7 @@ watch(() => props.modelValue, (newVal) => {
     .cover-placeholder {
       width: 100%;
       height: 100%;
-      background: rgba(22, 17, 34, 0.06);
+      background: rgba(255,255,255,0.06);
     }
   }
 
@@ -315,7 +315,7 @@ watch(() => props.modelValue, (newVal) => {
 
   .card-title {
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
@@ -327,7 +327,7 @@ watch(() => props.modelValue, (newVal) => {
 
   .card-desc {
     font-size: 12px;
-    color: #9a93a4;
+    color: #777;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
@@ -345,13 +345,13 @@ watch(() => props.modelValue, (newVal) => {
   gap: 8px;
   padding: 20px;
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 
   .loading-spinner {
     width: 20px;
     height: 20px;
-    border: 2px solid rgba(22, 17, 34, 0.12);
-    border-top: 2px solid #5b5566;
+    border: 2px solid #2c2c2c;
+    border-top: 2px solid #aaa;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -366,14 +366,14 @@ watch(() => props.modelValue, (newVal) => {
   text-align: center;
   padding: 10px;
   font-size: 12px;
-  color: #9a93a4;
+  color: #777;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 }
 
 .modal-footer {
@@ -381,42 +381,42 @@ watch(() => props.modelValue, (newVal) => {
   justify-content: center;
   gap: 24px;
   padding: 20px 24px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
+  border-top: 1px solid #2c2c2c;
   flex-shrink: 0;
 
   .btn {
     min-width: 136px;
     height: 48px;
     padding: 0 48px;
-    border-radius: 14px;
+    border-radius: 18px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
 
     &.btn-cancel {
-      background: #ffffff;
-      color: #161122;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      background: #1a1a1a;
+      color: #f5f5f5;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
       font-weight: 800;
 
       &:hover {
-        border-color: #FF4D8E;
-        color: #FF4D8E;
+        border-color: #ff4f9a;
+        color: #ff4f9a;
       }
     }
 
     &.btn-confirm {
-      border: 2px solid #161122;
-      background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+      border: 1px solid #ff9aca;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
       color: #ffffff;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       font-weight: 800;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
       &:hover {
         transform: translateY(-1px);
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
     }
   }

@@ -479,7 +479,7 @@ function closeCoverZoomModal() {
 .user-personal {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -491,7 +491,7 @@ function closeCoverZoomModal() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -507,7 +507,7 @@ function closeCoverZoomModal() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -519,7 +519,7 @@ function closeCoverZoomModal() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .section {
@@ -536,53 +536,52 @@ function closeCoverZoomModal() {
 .label {
   font-weight: 800;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: 0.02em;
 }
 .edit-link {
   display: inline-block;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   white-space: nowrap;
 }
 .edit-link:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 
 .username-box {
   margin-top: 12px;
   font-weight: 800;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .avatar-img {
   width: 112px;
   height: 112px;
   border-radius: 50%;
-  border: 4px solid #161122;
+  border: 1px solid #3d3d3d;
   object-fit: cover;
   margin-top: 12px;
-  box-shadow: 4px 4px 0 rgba(22,17,34,.2);
+  box-shadow: none;
 }
 .birth-box {
   margin-top: 12px;
   font-weight: 800;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .kyc-section {
   margin-top: 36px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   padding: 20px;
 }
@@ -598,7 +597,7 @@ function closeCoverZoomModal() {
 .kyc-label {
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .kyc-status {
   display: flex;
@@ -610,23 +609,23 @@ function closeCoverZoomModal() {
   font-size: 12px;
   padding: 6px 13px;
   border-radius: 999px;
-  border: 2px solid #161122;
-  color: #161122;
+  border: 1px solid #3d3d3d;
+  color: #f5f5f5;
 }
 .status-text.status-0 {
-  background: #EDEDED;
+  background: rgba(255,255,255,0.06);
 }
 .status-text.status-1 {
-  background: #FFF3D6;
+  background: rgba(255,255,255,0.06);
   animation: stChipPulse 2.4s ease-in-out infinite;
 }
 .status-text.status-2 {
-  background: #FDECEC;
+  background: rgba(255,255,255,0.03);
   border-color: #E5484D;
   color: #E5484D;
 }
 .status-text.status-3 {
-  background: #E7F8EE;
+  background: rgba(255,255,255,0.03);
   border-color: #9be0bd;
   color: #1B8f5a;
 }
@@ -644,35 +643,36 @@ function closeCoverZoomModal() {
 .rejection-label {
   font-weight: 800;
   font-size: 12px;
-  color: rgba(22,17,34,.55);
+  color: rgba(255,255,255,0.5);
 }
 .rejection-text {
   font-weight: 600;
   font-size: 12px;
-  color: rgba(22,17,34,.55);
+  color: rgba(255,255,255,0.5);
 }
 
 .kyc-btn {
-  border: 2.5px solid #161122;
+  border: 2px solid #ff9aca;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 20px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.14s;
   white-space: nowrap;
 }
 .kyc-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 
 .kyc-info {
   margin: 20px 0 0;
-  background: #FFFDF7;
+  background: #1a1a1a;
 }
 .kyc-info-header {
   display: flex;
@@ -683,32 +683,33 @@ function closeCoverZoomModal() {
 .kyc-info-tip {
   font-weight: 600;
   font-size: 12px;
-  color: rgba(22,17,34,.55);
+  color: rgba(255,255,255,0.5);
   margin-bottom: 16px;
 }
 
 .kyc-edit-btn {
-  border: 2.5px solid #161122;
+  border: 2px solid #ff9aca;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 20px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.14s;
   white-space: nowrap;
 }
 .kyc-edit-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 
 .kyc-info-title {
   font-weight: 800;
   font-size: 18px;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 16px;
 }
 
@@ -721,7 +722,7 @@ function closeCoverZoomModal() {
   align-items: center;
   gap: 14px;
   height: 64px;
-  border-top: 2px solid rgba(22,17,34,.08);
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 .kyc-info-item:first-child {
   border-top: none;
@@ -731,13 +732,13 @@ function closeCoverZoomModal() {
   font-weight: 600;
   font-size: 12px;
   opacity: 0.55;
-  color: #161122;
+  color: #f5f5f5;
 }
 .kyc-info-value {
   flex: 1;
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .kyc-info-value-row {
   display: flex;
@@ -746,14 +747,14 @@ function closeCoverZoomModal() {
   flex: 1;
 }
 .edit-email-btn {
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  background: #fff;
+  background: #1a1a1a;
   font-weight: 800;
   font-size: 12px;
   padding: 7px 14px;
   cursor: pointer;
-  color: #161122;
+  color: #f5f5f5;
   transition: background 0.15s;
 }
 .edit-email-btn:hover {
@@ -766,7 +767,7 @@ function closeCoverZoomModal() {
   object-fit: contain;
   border-radius: 4px;
   cursor: pointer;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
 }
 .kyc-top-box {
   display: flex;
@@ -781,13 +782,13 @@ function closeCoverZoomModal() {
 .kyc-top-title {
   font-weight: 800;
   font-size: 18px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .kyc-top-info {
   font-weight: 600;
   font-size: 12px;
   opacity: 0.55;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .kyc-base-section, .kyc-docs-section, .kyc-photo-section {
@@ -799,7 +800,7 @@ function closeCoverZoomModal() {
   height: 64px;
   font-weight: 800;
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .cover-zoom-modal {
@@ -808,7 +809,7 @@ function closeCoverZoomModal() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(22,17,34,.5);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -344,7 +344,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 <style lang="scss" scoped>
 .collection-settings {
   min-height: 100vh;
-  background-color: #FFFDF7;
+  background-color: #111111;
 }
 
 .content-container {
@@ -361,18 +361,18 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   align-items: center;
   gap: 6px;
   margin-bottom: 20px;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   padding: 0 10px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 4px 4px 0 #161122;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
   .back-text {
@@ -390,12 +390,12 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 
   .page-title {
     font-size: 20px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
   }
 
@@ -420,73 +420,66 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 
     &.btn-delete {
       font-weight: 700;
-      background: #FFFFFF;
-      color: #161122;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+      background: #1a1a1a;
+      color: #f5f5f5;
+      border: 1px solid #3d3d3d;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
     }
 
     &.btn-finish {
       background: #00D3F2;
       color: #FFFFFF;
-      border: 3px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #3d3d3d;
+      box-shadow: 0 2px 8px rgba(0,211,242,0.2);
 
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 4px 12px rgba(0,211,242,0.3);
       }
 
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 2px 8px rgba(0,211,242,0.2);
       }
 
       &.disabled {
-        background: rgba(22, 17, 34, 0.06);
-        color: #5b5566;
+        background: rgba(255,255,255,0.06);
+        color: #aaa;
         cursor: not-allowed;
-        border: 2px solid #161122;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+        border: 1px solid #3d3d3d;
+        box-shadow: none;
       }
     }
 
     &.btn-batch-perm {
       background: #C27AFF;
       color: #FFFFFF;
-      border: 3px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #3d3d3d;
+      box-shadow: 0 2px 8px rgba(194,122,255,0.2);
 
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 4px 12px rgba(194,122,255,0.3);
       }
 
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 2px 8px rgba(194,122,255,0.2);
       }
     }
 
     &.btn-edit {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #FFFFFF;
-      border: 3px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: none;
+      box-shadow: 0 2px 12px rgba(255,79,154,0.3);
 
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 4px 16px rgba(255,79,154,0.4);
       }
 
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 2px 8px rgba(255,79,154,0.3);
       }
     }
   }
@@ -499,16 +492,16 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 }
 
 .section {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
   border-radius: 12px;
   padding: 20px;
 
   .section-title {
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0 0 20px 0;
   }
 }
@@ -526,8 +519,8 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
     height: 240px;
     object-fit: cover;
     border-radius: 12px;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
 
   .r18-overlay {
@@ -563,12 +556,12 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
     .info-label {
       font-weight: 600;
       font-size: 16px;
-      color: #99A1AF;
+      color: #777;
     }
 
     .info-value {
       font-size: 16px;
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 500;
 
       &.description {
@@ -583,8 +576,8 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 
       .tag {
         padding: 4px 10px;
-        background: #f0f0f0;
-        color: #666;
+        background: #2c2c2c;
+        color: #aaa;
         border-radius: 4px;
         font-size: 12px;
       }
@@ -618,17 +611,17 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   .info-label {
     font-weight: 600;
     font-size: 16px;
-    color: #99A1AF;
+    color: #777;
   }
 
   .info-value {
     font-size: 16px;
     font-weight: 500;
-    color: #161122;
+    color: #f5f5f5;
 
     .private-hint {
       font-weight: 500;
-      color: #99A1AF;
+      color: #777;
     }
   }
 }
@@ -645,7 +638,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   .page-header {
     margin-bottom: 1.3889vw;
     padding-bottom: 1.3889vw;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     .page-title {
       font-size: 1.3889vw;
     }
@@ -739,7 +732,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   .page-header {
     margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     .page-title {
       font-size: 20px;
     }
@@ -840,7 +833,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
   .page-header {
     margin-bottom: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     flex-wrap: wrap;
     gap: 8px;
     .page-title {

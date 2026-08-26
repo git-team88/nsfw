@@ -60,7 +60,7 @@ function confirmReset() {
 .reset-page {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
   padding-top: 80px;
 
   .auth-single {
@@ -70,18 +70,19 @@ function confirmReset() {
   }
 
   .auth-card {
-    border: 3px solid #161122;
-    border-radius: 6px;
-    background: #FFFDF7;
+    border: 1px solid #2c2c2c;
+    border-radius: 20px;
+    background: #1a1a1a;
     padding: 44px 46px 38px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.45);
 
     h1 {
       font-size: 27px;
       font-weight: 400;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0 0 22px;
     }
   }
@@ -91,11 +92,11 @@ function confirmReset() {
     height: 64px;
     margin: 0 auto 16px;
     border-radius: 50%;
-    border: 3px solid #161122;
-    background: #DFF5E9;
+    border: 1px solid #3d3d3d;
+    background: #1a1a1a;
     display: grid;
     place-items: center;
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: none;
   }
 
   .info-block {
@@ -107,7 +108,7 @@ function confirmReset() {
       font-size: 14px;
       font-weight: 600;
       line-height: 1.7;
-      color: #5b5566;
+      color: #aaa;
 
       &:last-child {
         margin: 0;
@@ -117,25 +118,23 @@ function confirmReset() {
 
   .auth-submit {
     width: 100%;
-    border: 2.5px solid #161122;
-    border-radius: 13px;
-    background: #FF4D8D;
+    border: 2px solid #ff9aca;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
     color: #fff;
     font-size: 16px;
     font-weight: 800;
     padding: 15px;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+    box-shadow: 0 0 23px rgba(255,50,140,0.65);
+    transition: filter 0.15s;
 
     &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      filter: brightness(1.08);
     }
 
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      transform: scale(0.95);
     }
   }
 
@@ -143,12 +142,11 @@ function confirmReset() {
     margin-top: 16px;
     font-size: 13px;
     font-weight: 700;
-    color: #161122;
-    opacity: 0.55;
+    color: #aaa;
     cursor: pointer;
 
     &:hover {
-      opacity: 1;
+      color: #ff4f9a;
     }
   }
 }

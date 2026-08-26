@@ -91,18 +91,16 @@ function fmtK(n: number): string {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-
 .rank-row {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   gap: 15px;
   padding: 12px 15px;
   margin-bottom: 11px;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
+  box-shadow: none;
   cursor: pointer;
   will-change: transform;
 }
@@ -123,18 +121,18 @@ $ink: #161122;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid rgba(16,24,40,0.06);
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   font-weight: 600;
   font-size: 18px;
-  color: #99A1AF;
+  color: #777;
 }
 
 .rank-cover {
   width: 46px;
   height: 62px;
   flex: none;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 8px;
   background-size: cover;
   background-position: center;
@@ -148,6 +146,7 @@ $ink: #161122;
 .rank-title {
   font-weight: 800;
   font-size: 15px;
+  color: #f5f5f5;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -166,13 +165,13 @@ $ink: #161122;
 }
 
 .type-badge {
-  border: 1.5px solid $ink;
+  border: 1px solid #3d3d3d;
   font-weight: 800;
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 8px;
   flex-shrink: 0;
-  color: $ink;
+  color: #f5f5f5;
 }
 
 .rank-right{
@@ -205,13 +204,14 @@ $ink: #161122;
   height: 32px;
   flex: none;
   border-radius: 50%;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   object-fit: cover;
 }
 
 .rank-author-name {
   font-weight: 600;
   font-size: 16px;
+  color: #f5f5f5;
   opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
@@ -230,11 +230,11 @@ $ink: #161122;
   gap: 4px;
   font-weight: 800;
   font-size: 14px;
-  color: $ink;
+  color: #f5f5f5;
   white-space: nowrap;
 
   &.stat-pink {
-    color: #FF4D8D;
+    color: #ff4f9a;
     opacity: 1;
   }
 

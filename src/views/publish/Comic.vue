@@ -8,16 +8,16 @@
         <span class="back-text">{{ t('back') }}</span>
       </div>
 
-      <div class="tabs" :class="(imageFiles.length > 0 || isBatchPublish) ? 'on' : ''">
-        <span
-          :class="tabIndex == index ? 'on' : ''"
+      <div class="main-tabs">
+        <div
+          class="main-tab"
+          :class="{ active: tabIndex == index }"
           v-for="(tab, index) in tabList"
           :key="index"
           @click="changeTab(tab, index)"
         >
           {{ tab.name }}
-          <b></b>
-        </span>
+        </div>
       </div>
 
       <!-- Upload Tabs -->
@@ -283,7 +283,7 @@
             <div class="form-label-inner">
               <label class="form-label">{{ t("submit.permission") }}</label>
               <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <div class="info-tooltip">
                   <div class="tooltip-content">
                     <div v-html="t('submit.permissionInfo')"></div>
@@ -296,6 +296,7 @@
             <div class="perm-options">
               <div
                 class="perm-option"
+                :class="{ active: form.permission === opt.key }"
                 v-for="(opt, index) in permOptions"
                 :key="opt.key"
                 @click="handlePermissionChange(opt.key, index)"
@@ -317,7 +318,7 @@
                     <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
                     <div class="info-icon" @mouseover="adjustTooltipPosition">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                       <div class="info-tooltip">
                         <div class="tooltip-content">
                           <div v-html="t('submit.collectionInfo')"></div>
@@ -342,12 +343,12 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive">
+                        <div class="content-sensitive" v-if="false">
                           <div class="sensitive-left">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                             <div class="info-icon" @mouseover="adjustTooltipPosition">
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                               <div class="info-tooltip">
                                 <div class="tooltip-content">
                                   <div v-html="t('submit.sensitiveContent')"></div>
@@ -399,6 +400,7 @@
             <div class="batch-perm-options">
               <div
                 class="perm-option"
+                :class="{ active: batchPermission === opt.key }"
                 v-for="(opt, index) in batchPermOptions"
                 :key="opt.key"
                 @click="handleBatchPermissionChange(opt.key, index)"
@@ -492,7 +494,7 @@
                   <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
 
                   <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     <div class="info-tooltip">
                       <div class="tooltip-content">
                         <div v-html="t('submit.collectionInfo')"></div>
@@ -515,12 +517,12 @@
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
-                      <div class="content-sensitive">
+                      <div class="content-sensitive" v-if="false">
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                           <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                             <div class="info-tooltip">
                               <div class="tooltip-content">
                                 <div v-html="t('submit.sensitiveContent')"></div>
@@ -947,10 +949,6 @@ const tabList = ref([
     path: "/publish/comic",
   },
   {
-    name: t("submit.tabs.manju"),
-    path: "/publish/video",
-  },
-  {
     name: t("submit.tabs.photo"),
     path: "/publish/image",
   },
@@ -967,7 +965,7 @@ const form = ref({
   title: "",
   description: "",
   permission: "public",
-  content: "no",
+  content: "yes",
   allowRepost: false,
 });
 
@@ -2094,10 +2092,6 @@ watch(locale, () => {
     {
       name: t("submit.tabs.manhua"),
       path: "/publish/comic",
-    },
-    {
-      name: t("submit.tabs.manju"),
-      path: "/publish/video",
     },
     {
       name: t("submit.tabs.photo"),

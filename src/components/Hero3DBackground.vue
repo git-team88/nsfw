@@ -32,7 +32,7 @@ const DESIGN_IMAGES = Object.values(
 
 /** 漫画分格的粗黑外框 */
 function drawPanelFrame(g: CanvasRenderingContext2D) {
-  g.strokeStyle = '#161122';
+  g.strokeStyle = '#f5f5f5';
   g.lineWidth = 12;
   g.strokeRect(6, 6, 244, 328);
 }
@@ -53,7 +53,7 @@ function makeImagePanel(): PanelTex {
   cv.width = 256;
   cv.height = 340;
   const g = cv.getContext('2d')!;
-  g.fillStyle = '#e9e9ef';
+  g.fillStyle = '#2c2c2c';
   g.fillRect(0, 0, 256, 340);
   drawPanelFrame(g);
 
@@ -112,7 +112,7 @@ function makePanelTexture(c1: string, c2: string): THREE.CanvasTexture {
     g.stroke();
   }
 
-  g.strokeStyle = '#161122';
+  g.strokeStyle = '#f5f5f5';
   g.lineWidth = 12;
   g.strokeRect(6, 6, 244, 328);
 

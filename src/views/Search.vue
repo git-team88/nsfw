@@ -256,7 +256,6 @@ const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 2, label: t('home.contentType.novel') },
   { id: 1, label: t('home.contentType.comic') },
-  { id: 3, label: t('home.contentType.drama') },
   { id: 4, label: t('home.contentType.image') },
   { id: 5, label: t('home.contentType.video') }
 ]);
@@ -295,7 +294,6 @@ watch(() => locale.value, () => {
     { id: 0, label: t('home.contentType.all') },
     { id: 2, label: t('home.contentType.novel') },
     { id: 1, label: t('home.contentType.comic') },
-    { id: 3, label: t('home.contentType.drama') },
     { id: 4, label: t('home.contentType.image') },
     { id: 5, label: t('home.contentType.video') }
   ]
@@ -393,7 +391,7 @@ async function loadData(fromLoadMore = false) {
 
   try {
     if (activeTab.value == 'posts') {
-      const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+      const showNsfw = 1;
       const isStandalone = postFilter.value === 4 || postFilter.value === 5;
       const res = isStandalone
         ? await api.searchPostsPublic({
@@ -799,13 +797,13 @@ watch(postList, () => {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 
 .search-page {
   width: 100%;
@@ -845,8 +843,8 @@ $line: #e7e1d8;
     .search-input {
       width: 100%;
       height: 44px;
-      background: #fff;
-      border: 2px solid $ink;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 999px;
       padding: 0 50px 0 24px;
       font-family: inherit;
@@ -862,7 +860,7 @@ $line: #e7e1d8;
       }
 
       &:focus {
-        box-shadow: 0 0 0 4px rgba(255,77,141,0.25);
+        box-shadow: 0 0 0 4px rgba(255,79,154,0.25);
       }
     }
 
@@ -912,12 +910,12 @@ $line: #e7e1d8;
 
       span {
         font-weight: 800;
-        background: #FFEFF5;
-        border: 2.5px solid $ink;
+        background: #222;
+        border: 1px solid #3d3d3d;
         border-radius: 999px;
         padding: 4px 15px;
         font-size: 15px;
-        box-shadow: 2px 2px 0 $ink;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         animation: seChipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
       }
     }
@@ -934,8 +932,8 @@ $line: #e7e1d8;
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      background: #fff;
-      border: 2.5px solid $ink;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 14px;
       padding: 5px;
       margin-bottom: 26px;
@@ -951,8 +949,9 @@ $line: #e7e1d8;
         background: transparent;
 
         &.active {
-          background: $ink;
+          background: linear-gradient(135deg, $pink, #ff7a45);
           color: #fff;
+          box-shadow: 0 4px 15px rgba(255,79,154,0.35);
         }
 
         &:hover:not(.active) {
@@ -972,15 +971,16 @@ $line: #e7e1d8;
         font-size: 13px;
         padding: 8px 16px;
         border-radius: 999px;
-        border: 2px solid $ink;
+        border: 1px solid #3d3d3d;
         cursor: pointer;
         transition: all 0.16s;
-        background: #fff;
+        background: #1a1a1a;
         color: $ink;
 
         &.active {
-          background: $ink;
+          background: linear-gradient(135deg, $pink, #ff7a45);
           color: #fff;
+          box-shadow: 0 4px 15px rgba(255,79,154,0.35);
         }
 
         &:hover:not(.active) {
@@ -1013,10 +1013,10 @@ $line: #e7e1d8;
   cursor: pointer;
   overflow: hidden;
   break-inside: avoid;
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 16px;
-  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
   transform-style: preserve-3d;
   will-change: transform;
@@ -1072,7 +1072,7 @@ $line: #e7e1d8;
 
       .type-badge {
         display: inline-block;
-        border: 2px solid $ink;
+        border: 1px solid #3d3d3d;
         border-radius: 999px;
         padding: 4px 12px;
         font-weight: 800;
@@ -1089,7 +1089,7 @@ $line: #e7e1d8;
         }
 
         &.type-4 {
-          background: #FF4D8E;
+          background: #ff4f9a;
         }
 
         &.type-5 {
@@ -1174,7 +1174,7 @@ $line: #e7e1d8;
           height: 30px;
           flex-shrink: 0;
           border-radius: 999px;
-          border: 2px solid $ink;
+          border: 1px solid #3d3d3d;
           object-fit: cover;
         }
 
@@ -1232,29 +1232,29 @@ $line: #e7e1d8;
 }
 
 .user-card {
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 16px;
   padding: 22px 18px;
   text-align: center;
   cursor: pointer;
-  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 6px 8px 0 rgba(22,17,34,0.16);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.6);
   }
 
   .user-avatar {
     width: 78px;
     height: 78px;
     border-radius: 999px;
-    border: 2.5px solid $ink;
+    border: 1px solid #3d3d3d;
     margin: 0 auto 12px;
     object-fit: cover;
-    box-shadow: 3px 3px 0 rgba(22,17,34,0.14);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   }
 
   .nickname {
@@ -1297,7 +1297,7 @@ $line: #e7e1d8;
     background: linear-gradient(135deg, $pink, #FF7A45);
     color: #ffffff;
     border: none;
-    box-shadow: 3px 3px 0 $ink;
+    box-shadow: 0 4px 15px rgba(255,79,154,0.4);
     transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
     position: relative;
     overflow: hidden;
@@ -1305,12 +1305,12 @@ $line: #e7e1d8;
 
     &:hover {
       transform: translate(-2px, -2px);
-      box-shadow: 5px 5px 0 $ink;
+      box-shadow: 0 6px 20px rgba(255,79,154,0.5);
     }
 
     &:active {
       transform: translate(0, 0);
-      box-shadow: 2px 2px 0 $ink;
+      box-shadow: 0 2px 8px rgba(255,79,154,0.3);
     }
 
     .hover-text {
@@ -1318,15 +1318,15 @@ $line: #e7e1d8;
     }
 
     &.followed {
-      background: #fff;
+      background: #1a1a1a;
       color: $muted;
-      border: 2.5px solid $ink;
-      box-shadow: 2px 2px 0 $ink;
+      border: 1px solid #3d3d3d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 
       &:hover {
         color: $pink;
         transform: translate(-2px, -2px);
-        box-shadow: 4px 4px 0 $ink;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
 
         .btn-text {
           display: none;
@@ -1448,7 +1448,7 @@ $line: #e7e1d8;
   }
   .content-item, .user-card {
     transform: none !important;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   }
   .content-item .content-image img {
     transition: none;

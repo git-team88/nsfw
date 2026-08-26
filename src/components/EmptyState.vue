@@ -18,9 +18,6 @@ const { t } = useI18n()
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$pink: #FF4D8D;
-$muted: #9a93a4;
 
 .empty-state {
   display: flex;
@@ -39,13 +36,13 @@ $muted: #9a93a4;
 
 .empty-text {
   font-size: 14px;
-  color: $ink;
+  color: #ccc;
   font-weight: 500;
 }
 
 .empty-hint {
   font-size: 13px;
-  color: $muted;
+  color: #777;
   font-weight: 600;
   max-width: 320px;
   line-height: 1.6;

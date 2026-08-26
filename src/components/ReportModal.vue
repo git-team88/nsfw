@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3>{{ title || t("report.title") }}</h3>
@@ -254,7 +254,7 @@ async function submit() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,10 +264,10 @@ async function submit() {
 .modal-content {
   position: relative;
   width: 420px;
-  background: #FFFFFF;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -283,10 +283,10 @@ async function submit() {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #fff;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 
@@ -298,12 +298,12 @@ async function submit() {
   justify-content: space-between;
   align-items: center;
   padding: 18px 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
   }
 }
@@ -330,21 +330,21 @@ async function submit() {
   justify-content: space-between;
   align-items: center;
   padding: 0 14px;
-  border: 2px solid rgba(22, 17, 34, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   cursor: pointer;
-  color: #5b5566;
+  color: #aaa;
   transition: border-color 0.15s, color 0.15s;
 
   &:hover {
-    color: #161122;
-    border-color: rgba(22, 17, 34, 0.35);
+    color: #f5f5f5;
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   &.active {
-    border-color: #161122;
+    border-color: #3d3d3d;
     .label-text {
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 700;
     }
   }
@@ -368,7 +368,7 @@ async function submit() {
   margin-bottom: 24px;
   font-size: 16px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .form-item {
@@ -384,11 +384,11 @@ async function submit() {
     margin-bottom: 12px;
     .label {
       font-size: 14px;
-      color: #5b5566;
+      color: #aaa;
     }
     .count {
       font-size: 12px;
-      color: #9a93a4;
+      color: #777;
     }
   }
 }
@@ -397,24 +397,24 @@ async function submit() {
   width: 100%;
   height: 136px;
   padding: 10px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+  box-shadow: none;
   resize: none;
   font-family: inherit;
   font-size: 14px;
-  background: #FFFDF7;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &::placeholder {
-    color: #9a93a4;
+    color: #777;
   }
 
   &:focus {
     outline: none;
-    border-color: #FF4D8D;
-    box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+    border-color: #ff4f9a;
+    box-shadow: none;
   }
 }
 
@@ -459,19 +459,19 @@ async function submit() {
 .upload-btn {
   width: 100px;
   height: 100px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FFFDF7;
+  background: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
-    border-color: #FF4D8D;
-    box-shadow: 2px 2px 0 rgba(255, 77, 141, 0.2);
+    border-color: #ff4f9a;
+    box-shadow: none;
   }
 
   &.uploading {
@@ -490,7 +490,7 @@ async function submit() {
   width: 24px;
   height: 24px;
   border: 2px solid rgba(251, 100, 182, 0.3);
-  border-top: 2px solid #FF4D8D;
+  border-top: 2px solid #ff4f9a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -502,7 +502,7 @@ async function submit() {
 
 .modal-footer {
   padding: 18px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: center;
 
@@ -513,29 +513,27 @@ async function submit() {
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   }
 
   .next-btn,
   .submit-btn {
-    background: #FF4D8D;
-    color: #ffffff;
-    box-shadow: 3px 3px 0 #161122;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
+    box-shadow: none;
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
 
     &:active:not(:disabled) {
-      transform: translate(1px, 1px);
-      box-shadow: 1px 1px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &:disabled {
-      background: #F3C6D6;
-      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.35);
+      background: rgba(255,79,154,0.3);
+      box-shadow: none;
       cursor: not-allowed;
     }
   }

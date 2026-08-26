@@ -2,7 +2,7 @@
   <div class="wallet-modal-mask" v-if="visible">
     <div class="wallet-modal">
       <button class="modal-close" @click="handleClose">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
       <div class="modal-header">
         <div class="modal-title">{{ t('subscribe.selectWallet') }}</div>
@@ -99,10 +99,10 @@ function handleNoWallet() {
   position: relative;
   width: 700px;
   max-width: 90vw;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   padding: 24px;
 }
 
@@ -113,9 +113,9 @@ function handleNoWallet() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,7 +134,7 @@ function handleNoWallet() {
 .modal-title {
   font-size: 18px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .wallet-list {
@@ -149,15 +149,15 @@ function handleNoWallet() {
   gap: 16px;
   width: calc(50% - 6px);
   padding: 16px;
-  background: #FFFDF7;
-  border: 2.5px solid rgba(22, 17, 34, 0.2);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   cursor: pointer;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.14s;
 
   &:hover {
     transform: translate(-1px, -1px);
-    border-color: #161122;
+    border-color: #ff4f9a;
   }
 
   &:active {
@@ -175,14 +175,14 @@ function handleNoWallet() {
 .wallet-name {
   font-size: 16px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .wallet-footer {
   margin-top: 20px;
   text-align: center;
   font-size: 14px;
-  color: #FF4D8D;
+  color: #ff4f9a;
   font-weight: 800;
   cursor: pointer;
   text-decoration: underline;

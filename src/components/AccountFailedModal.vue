@@ -1,7 +1,7 @@
 <template>
   <div class="account-required-modal-mask" v-if="visible">
     <div class="account-required-modal">
-      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       <div class="modal-content">
         <p class="modal-message">{{ t('user.subscription.accountFailedMessage') }}</p>
       </div>
@@ -44,7 +44,7 @@ function handleModify() {
 .account-required-modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,10 +53,10 @@ function handleModify() {
 
 .account-required-modal {
   width: 480px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   padding: 32px;
   position: relative;
 
@@ -67,9 +67,9 @@ function handleModify() {
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #fff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,7 +87,7 @@ function handleModify() {
 
   .modal-message {
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
   }
 
@@ -107,25 +107,23 @@ function handleModify() {
     }
 
     .btn-cancel {
-      background: rgba(22, 17, 34, 0.06);
-      color: #5b5566;
+      background: rgba(255,255,255,0.06);
+      color: #aaa;
 
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
     .btn-create {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
 
       &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
     }
   }

@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-mask">
     <div class="modal">
       <button class="modal-close" @click="handleClose">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
 
       <div class="modal-message" v-html="message || t('user.subscription.kycReviewingMessage')"></div>
@@ -47,7 +47,7 @@ function handleViewKyc() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,11 +57,11 @@ function handleViewKyc() {
   width: 420px;
   max-width: calc(100vw - 32px);
   padding: 24px;
-  border-radius: 13px;
-  background: #FEFDF8;
-  border: 2.5px solid #161122;
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   position: relative;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .modal-close {
   position: absolute;
@@ -70,9 +70,8 @@ function handleViewKyc() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,7 +84,7 @@ function handleViewKyc() {
 .modal-message {
   font-size: 14px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 24px;
   text-align: center;
   line-height: 22px;
@@ -103,40 +102,28 @@ function handleViewKyc() {
   min-width: 136px;
   height: 48px;
   padding: 0 24px;
-  border-radius: 13px;
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s;
 }
 .btn-cancel {
-  background: #FFFFFF;
-  color: #161122;
-  border: 2.5px solid #161122;
-  box-shadow: 3px 3px 0 #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
+    background: rgba(255,255,255,0.06);
   }
 }
 .btn-confirm {
-  background: #FF4D8D;
-  color: #FFFDF7;
-  border: 2.5px solid #161122;
-  box-shadow: 3px 3px 0 #161122;
+  background: linear-gradient(145deg, #ff74b3, #f73382);
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
+    transform: translateY(-1px);
   }
 }
 </style>

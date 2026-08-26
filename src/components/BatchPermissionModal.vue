@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
-      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ isEpisode ? t('collectionSettings.batchPermTitleEpisode') : t('collectionSettings.batchPermTitle') }}</h3>
 
@@ -171,7 +171,7 @@ function handleConfirm() {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.5);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,10 +179,10 @@ function handleConfirm() {
 }
 
 .modal-content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   width: 520px;
   display: flex;
   flex-direction: column;
@@ -195,9 +195,9 @@ function handleConfirm() {
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #fff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -212,7 +212,7 @@ function handleConfirm() {
   .modal-title {
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
     padding: 18px 20px;
   }
@@ -226,7 +226,7 @@ function handleConfirm() {
       width: 6px;
     }
     &::-webkit-scrollbar-thumb {
-      background: rgba(22, 17, 34, 0.15);
+      background: rgba(255,255,255,0.15);
       border-radius: 3px;
     }
   }
@@ -237,11 +237,11 @@ function handleConfirm() {
     .section-label {
       font-size: 14px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 12px;
 
       .required {
-        color: #FF4D8D;
+        color: #ff4f9a;
         margin-right: 4px;
       }
     }
@@ -259,12 +259,12 @@ function handleConfirm() {
     gap: 10px;
     cursor: pointer;
     padding: 14px;
-    border: 2px solid rgba(22, 17, 34, 0.12);
+    border: 1px solid #2c2c2c;
     border-radius: 12px;
     transition: border-color 0.2s;
 
     &.selected {
-      border-color: #161122;
+      border-color: #3d3d3d;
     }
 
     > img {
@@ -276,7 +276,7 @@ function handleConfirm() {
     span {
       font-size: 12px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
       line-height: 30px;
     }
 
@@ -285,7 +285,7 @@ function handleConfirm() {
       align-items: center;
       font-size: 12px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
       line-height: 30px;
     }
 
@@ -298,17 +298,17 @@ function handleConfirm() {
       display: inline-flex;
       align-items: center;
       justify-content: space-between;
-      background-color: #FFFFFF;
+      background-color: #1a1a1a;
       border-radius: 11px;
       width: 100px;
       height: 40px;
-      border: 2px solid #161122;
+      border: 1px solid #3d3d3d;
       margin-left: 4px;
       padding: 0 8px 0 14px;
       cursor: pointer;
       position: relative;
       vertical-align: middle;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
 
       .partial-chapter-inline-input {
         width: 100%;
@@ -317,7 +317,7 @@ function handleConfirm() {
         background: transparent;
         font-size: 14px;
         font-weight: 700;
-        color: #161122;
+        color: #f5f5f5;
         line-height: 22px;
 
         &::-webkit-inner-spin-button,
@@ -340,10 +340,10 @@ function handleConfirm() {
       left: 0;
       right: 0;
       margin-top: 8px;
-      background: #FFFFFF;
+      background: #1a1a1a;
       border-radius: 6px;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #3d3d3d;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
       z-index: 100;
       max-height: 200px;
       overflow-y: auto;
@@ -353,7 +353,7 @@ function handleConfirm() {
         padding: 6px 4px;
         font-size: 14px;
         font-weight: 700;
-        color: #161122;
+        color: #f5f5f5;
         text-align: center;
         opacity: 0.65;
         cursor: pointer;
@@ -362,7 +362,7 @@ function handleConfirm() {
 
         &:hover {
           opacity: 1;
-          background: #FFEFF5;
+          background: rgba(255,79,154,0.12);
         }
 
         &.selected {
@@ -377,14 +377,14 @@ function handleConfirm() {
     .section-label {
       font-size: 14px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 12px;
     }
   }
 
   .chapter-list {
     max-height: 190px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
     overflow-y: auto;
   }
@@ -398,15 +398,15 @@ function handleConfirm() {
 
     .chapter-index {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
     }
 
     .chapter-perm {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
 
       &.perm-partial {
-        color: #FF4D8E;
+        color: #ff4f9a;
       }
     }
   }
@@ -424,41 +424,40 @@ function handleConfirm() {
       justify-content: center;
       min-width: 136px;
       height: 48px;
-      border: 3px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
 
       &.cancel {
-        background: #FFFDF7;
-        color: #5b5566;
-        box-shadow: 2px 2px 0 #161122;
+        background: #1a1a1a;
+        color: #aaa;
+        box-shadow: none;
 
         &:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          color: #ff4f9a;
+          border-color: #ff4f9a;
+          box-shadow: none;
         }
 
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: none;
         }
       }
 
       &.confirm {
-        background: #FF4D8E;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         color: #ffffff;
-        box-shadow: 2px 2px 0 #161122;
+        border: 1px solid #ff9aca;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
         &:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
 
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

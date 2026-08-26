@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible" @click="handleOverlayClick">
     <div class="modal-content" @click.stop>
-      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3 class="modal-title">{{ t('collectionSettings.confirmDelete.title') }}</h3>
@@ -66,7 +66,7 @@ function getUpdatedText(): string {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,16 +79,16 @@ function getUpdatedText(): string {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 500px;
-  background-color: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   padding: 32px;
   text-align: center;
 
   .close-btn {
-    background: #fff;
-    border: 2.5px solid #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
     padding: 6px;
     position: absolute;
@@ -97,7 +97,7 @@ function getUpdatedText(): string {
     width: 36px;
     height: 36px;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 10;
 
@@ -113,7 +113,7 @@ function getUpdatedText(): string {
     .modal-title {
       font-size: 18px;
       font-weight: bold;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0;
     }
   }
@@ -123,7 +123,7 @@ function getUpdatedText(): string {
 
     .confirm-text {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       line-height: 20px;
       margin-bottom: 20px;
       text-align: left;
@@ -131,16 +131,16 @@ function getUpdatedText(): string {
 
     .collection-preview {
       display: flex;
-      background: rgba(22, 17, 34, 0.06);
-      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 18px;
 
       .cover-image {
         width: 122px;
         height: 164px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #161122;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+        border: 1px solid #3d3d3d;
+        box-shadow: none;
       }
 
       .collection-info {
@@ -154,7 +154,7 @@ function getUpdatedText(): string {
         .collection-title {
           font-size: 14px;
           font-weight: 600;
-          color: #161122;
+          color: #f5f5f5;
           max-width: 100%;
           word-break: break-all;
           white-space: normal;
@@ -162,12 +162,11 @@ function getUpdatedText(): string {
 
         .collection-status {
           font-size: 14px;
-          color: #5b5566;
+          color: #aaa;
         }
       }
     }
   }
-
 
   .modal-footer {
     display: flex;
@@ -184,30 +183,28 @@ function getUpdatedText(): string {
     }
 
     .btn-cancel {
-      background: #FFFDF7;
-      color: #5b5566;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+      background: #1a1a1a;
+      color: #aaa;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
 
       &:hover {
-        color: #FF4D8D;
-        border-color: #FF4D8D;
+        color: #ff4f9a;
+        border-color: #ff4f9a;
       }
     }
 
     .btn-danger {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
-      border: 3px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #ff9aca;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
       &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
     }
   }

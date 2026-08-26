@@ -1,7 +1,7 @@
 <template>
   <div class="mg-rk-pod user-podium-card" :class="`rank-${u.rank}`" :style="{ animationDelay: `${delay}ms` }" @click="goUser">
     <div class="user-podium-top" :style="{ paddingTop: `${26 + lift}px` }">
-      <svg v-if="u.rank === 1" class="podium-crown" width="34" height="26" viewBox="0 0 24 20" fill="#FFD23F" stroke="#161122" stroke-width="1.8" stroke-linejoin="round">
+      <svg v-if="u.rank === 1" class="podium-crown" width="34" height="26" viewBox="0 0 24 20" fill="#FFD23F" stroke="#f5f5f5" stroke-width="1.8" stroke-linejoin="round">
         <path d="M2 6l4.5 4L12 2l5.5 8L22 6l-1.8 11H3.8z" />
       </svg>
       <span class="podium-badge" :style="{ background: badgeColor }">{{ u.rank }}</span>
@@ -65,7 +65,7 @@ const isSelf = computed(() => {
   return !!uid && String(props.u.id) === String(uid)
 })
 
-const badgeColor = computed(() => PODIUM_COLORS[props.u.rank - 1] ?? '#fff')
+const badgeColor = computed(() => PODIUM_COLORS[props.u.rank - 1] ?? '#1a1a1a')
 const delay = computed(() => props.u.rank === 1 ? 180 : props.u.rank === 2 ? 60 : 120)
 // 领奖台错落：第1名卡片最高，第2名稍高，第3名正常（通过增加卡片自身高度实现）
 const lift = computed(() => props.u.rank === 1 ? 44 : props.u.rank === 2 ? 22 : 0)
@@ -126,22 +126,19 @@ function fmtK(n: number): string {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-
 .user-podium-card {
   display: block;
-  background: #fff;
-  border: 3px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   will-change: transform;
 
-  // 黑色边框 + 名次色阴影（金/银/铜），与作品榜一致
-  &.rank-1 { box-shadow: 6px 6px 0 #FFD347; }
-  &.rank-2 { box-shadow: 6px 6px 0 #C9D4E5; }
-  &.rank-3 { box-shadow: 6px 6px 0 #E8A87C; }
+  &.rank-1 { box-shadow: 0 8px 20px rgba(255,211,71,0.25); }
+  &.rank-2 { box-shadow: 0 8px 20px rgba(201,212,229,0.2); }
+  &.rank-3 { box-shadow: 0 8px 20px rgba(232,168,124,0.2); }
 }
 
 .user-podium-top {
@@ -157,7 +154,7 @@ $ink: #161122;
   transform: translateX(-50%);
   top: 6px;
   z-index: 2;
-  filter: drop-shadow(1px 2px 0 rgba(22, 17, 34, 0.3));
+  filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, 0.3));
 }
 
 .podium-badge {
@@ -169,7 +166,7 @@ $ink: #161122;
   display: grid;
   place-items: center;
   border-radius: 8px;
-  border: 2.5px solid $ink;
+  border: 1px solid #3d3d3d;
   font-weight: 900;
   font-size: 18px;
 }
@@ -178,9 +175,9 @@ $ink: #161122;
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  border: 3px solid $ink;
+  border: 1px solid #3d3d3d;
   overflow: hidden;
-  background: #e7e1d8;
+  background: #2c2c2c;
 
   img {
     width: 100%;
@@ -198,6 +195,7 @@ $ink: #161122;
 .user-podium-name {
   font-weight: 800;
   font-size: 15px;
+  color: #f5f5f5;
   line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
@@ -225,34 +223,34 @@ $ink: #161122;
   font-size: 16px;
   line-height: 1;
 
-  &.stat-pink { color: #FF4D8D; }
+  &.stat-pink { color: #ff4f9a; }
   &.stat-blue { color: #3B82F6; }
 }
 
 .stat-label {
   font-weight: 600;
   font-size: 12px;
-  color: #6A7282;
+  color: #777;
 }
 
 .stat-divider {
   width: 1px;
   height: 30px;
-  background: rgba(22, 17, 34, 0.12);
+  background: #2c2c2c;
   flex: none;
 }
 
 .user-follow-btn {
   width: 100%;
   height: 48px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  background: #FF4D8D;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 $ink;
+  box-shadow: none;
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
 
   .hover-text { display: none; }
@@ -264,28 +262,26 @@ $ink: #161122;
   }
 
   &.following {
-    background: #fff;
-    color: $ink;
+    background: #1a1a1a;
+    color: #f5f5f5;
   }
 
   // 已关注时悬浮显示「取消关注」
   &.following:hover {
-    background: #FFECEF;
-    color: #FF4D8D;
-    border-color: #FF4D8D;
+    background: rgba(255,79,154,0.12);
+    color: #ff4f9a;
+    border-color: #ff4f9a;
 
     .btn-text { display: none; }
     .hover-text { display: inline; }
   }
 
   &:hover {
-    transform: translate(-1px, -2px);
-    box-shadow: 4px 5px 0 $ink;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
 
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 $ink;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   }
 }
 </style>

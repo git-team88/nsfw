@@ -169,7 +169,7 @@ function onSave() {
 .user-profile-edit {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -181,7 +181,7 @@ function onSave() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -196,7 +196,7 @@ function onSave() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -208,7 +208,7 @@ function onSave() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .content {
   min-height: 380px;
@@ -217,7 +217,7 @@ function onSave() {
   margin-bottom: 7px;
   font-weight: 800;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: 0.02em;
 }
 .content .label-row {
@@ -233,40 +233,39 @@ function onSave() {
   box-sizing: border-box;
   min-height: 100px;
   padding: 13px 15px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #fff;
+  background: #1a1a1a;
   font-weight: 600;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
   resize: vertical;
   line-height: 1.7;
   transition: box-shadow 0.18s;
 }
 .textarea:focus {
-  box-shadow: 3px 3px 0 rgba(255,77,141,.42);
+  box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
 }
 .textarea::placeholder {
-  color: #bdb7c4;
+  color: #777;
 }
 .reupload {
   display: inline-block;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   white-space: nowrap;
 }
 .reupload:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .header-wrap {
   position: relative;
@@ -277,7 +276,7 @@ function onSave() {
   height: 180px;
   object-fit: cover;
   border-radius: 6px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
 }
 .hidden-file {
   position: absolute;
@@ -288,7 +287,7 @@ function onSave() {
 .hint {
   font-weight: 600;
   font-size: 13px;
-  color: #bdb7c4;
+  color: #777;
   margin-top: 12px;
 }
 .actions {
@@ -299,44 +298,44 @@ function onSave() {
   margin-top: 18px;
 }
 .btn-cancel {
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   white-space: nowrap;
 }
 .btn-cancel:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .btn-save {
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 2px solid #ff9aca;
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 20px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.14s;
   white-space: nowrap;
 }
 .btn-save:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .btn-save:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 }
 @media (max-width: 900px) {
   .container {

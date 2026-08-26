@@ -349,7 +349,7 @@ function googleLogin() {
 .login-page {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
   padding-top: 80px;
 
   .auth-grid {
@@ -367,9 +367,9 @@ function googleLogin() {
     position: relative;
     overflow: hidden;
     min-width: 0;
-    border: 3px solid #161122;
-    border-radius: 6px;
-    background: radial-gradient(ellipse 96% 92% at 28% 18%, #FFF6D6 0%, #FFE885 26%, #FFD23F 52%, #FF9E45 76%, #FF7AAE 100%);
+    border: 1px solid #2c2c2c;
+    border-radius: 20px;
+    background: radial-gradient(circle at 90% 85%, rgba(255,50,140,.08), transparent 25%), linear-gradient(145deg, #202225, #17191c);
     padding: 52px 48px;
     display: flex;
     flex-direction: column;
@@ -377,27 +377,11 @@ function googleLogin() {
     min-height: 620px;
 
     .brand-glow {
-      position: absolute;
-      width: 280px;
-      height: 280px;
-      left: -50px;
-      top: -70px;
-      z-index: 0;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.65), transparent 70%);
-      filter: blur(6px);
-      opacity: 0.8;
-      pointer-events: none;
+      display: none;
     }
 
     .brand-dots {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image: radial-gradient(rgba(22, 17, 34, 0.16) 1.4px, transparent 1.4px);
-      background-size: 15px 15px;
-      -webkit-mask-image: linear-gradient(150deg, #000, transparent 66%);
-      mask-image: linear-gradient(150deg, #000, transparent 66%);
+      display: none;
     }
 
     .brand-badge {
@@ -407,10 +391,11 @@ function googleLogin() {
       font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.14em;
-      background: #161122;
-      color: #FFD23F;
+      background: #1a1a1a;
+      color: #ff4f9a;
       padding: 7px 14px;
       border-radius: 999px;
+      border: 1px solid #3d3d3d;
       width: fit-content;
     }
 
@@ -422,7 +407,7 @@ function googleLogin() {
         font-size: 40px;
         font-weight: 400;
         line-height: 1.28;
-        color: #161122;
+        color: #f5f5f5;
         margin: 0;
         letter-spacing: 0.01em;
         white-space: pre-line;
@@ -434,8 +419,7 @@ function googleLogin() {
       font-size: 14.5px;
       font-weight: 700;
       line-height: 1.9;
-      color: #161122;
-      opacity: 0.72;
+      color: #aaa;
       max-width: 320px;
     }
 
@@ -447,15 +431,16 @@ function googleLogin() {
       flex-wrap: wrap;
       font-size: 12.5px;
       font-weight: 800;
-      color: #161122;
+      color: #f5f5f5;
       opacity: 0.75;
     }
   }
 
   .auth-card {
-    border: 3px solid #161122;
-    border-radius: 6px;
-    background: #FFFDF7;
+    border: 1px solid #2c2c2c;
+    border-radius: 20px;
+    background: #1a1a1a;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.45);
     min-width: 0;
     padding: 44px 46px 38px;
     display: flex;
@@ -464,7 +449,7 @@ function googleLogin() {
     h1 {
       font-size: 27px;
       font-weight: 400;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0 0 5px;
     }
 
@@ -473,8 +458,7 @@ function googleLogin() {
       font-size: 13.5px;
       font-weight: 600;
       line-height: 1.7;
-      opacity: 0.55;
-      color: #161122;
+      color: #aaa;
     }
   }
 
@@ -487,7 +471,7 @@ function googleLogin() {
     label {
       font-size: 13px;
       font-weight: 800;
-      color: #161122;
+      color: #ddd;
       letter-spacing: 0.02em;
     }
   }
@@ -495,22 +479,22 @@ function googleLogin() {
   .auth-input {
     width: 100%;
     box-sizing: border-box;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 12px;
-    background: #fff;
+    background: #1a1a1a;
     padding: 13px 15px;
     font-size: 15px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     outline: none;
-    transition: box-shadow 0.18s;
+    transition: border-color 0.15s;
 
     &::placeholder {
-      color: #bdb7c4;
+      color: #555;
     }
 
     &:focus {
-      box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+      border-color: #ff4f9a;
     }
   }
 
@@ -550,8 +534,7 @@ function googleLogin() {
     font-size: 11.5px;
     font-weight: 600;
     line-height: 1.5;
-    opacity: 0.55;
-    color: #161122;
+    color: #777;
 
     &.auth-hint-ng {
       color: #E5484D;
@@ -567,7 +550,7 @@ function googleLogin() {
   }
 
   .auth-link {
-    color: #FF4D8D;
+    color: #ff4f9a;
     font-weight: 800;
     cursor: pointer;
     text-decoration: none;
@@ -589,25 +572,22 @@ function googleLogin() {
     gap: 11px;
     width: 100%;
     box-sizing: border-box;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 12px;
-    background: #fff;
+    background: #1a1a1a;
     padding: 13px;
     font-size: 14.5px;
     font-weight: 800;
-    color: #161122;
+    color: #ddd;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s;
+    box-shadow: none;
+    transition: border-color 0.15s;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 4px 5px 0 #161122;
+      border-color: #555;
     }
 
     &:active {
-      transform: translateY(0);
-      box-shadow: 2px 2px 0 #161122;
     }
 
     img {
@@ -621,7 +601,7 @@ function googleLogin() {
     align-items: center;
     gap: 12px;
     margin: 20px 0;
-    color: #bdb7c4;
+    color: #555;
     font-size: 12px;
     font-weight: 700;
 
@@ -630,22 +610,22 @@ function googleLogin() {
       content: '';
       flex: 1;
       height: 2px;
-      background: rgba(22, 17, 34, 0.12);
+      background: #2c2c2c;
     }
   }
 
   .auth-submit {
-    border: 2.5px solid #161122;
-    border-radius: 13px;
-    background: #FF4D8D;
+    border: 2px solid #ff9aca;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
     color: #fff;
     font-size: 16px;
     font-weight: 800;
     padding: 15px;
     width: 100%;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, opacity 0.2s;
+    box-shadow: 0 0 23px rgba(255,50,140,0.65);
+    transition: filter 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -655,20 +635,17 @@ function googleLogin() {
       cursor: not-allowed;
 
       &:hover {
-        transform: none;
-        box-shadow: 3px 3px 0 #161122;
+        filter: none;
       }
     }
 
     &.active {
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        filter: brightness(1.08);
       }
 
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        transform: scale(0.95);
       }
     }
 
@@ -676,8 +653,7 @@ function googleLogin() {
       cursor: not-allowed;
 
       &:hover {
-        transform: none;
-        box-shadow: 3px 3px 0 #161122;
+        filter: none;
       }
     }
 
@@ -698,20 +674,19 @@ function googleLogin() {
     text-align: center;
     font-size: 13px;
     font-weight: 600;
-    opacity: 0.65;
-    color: #161122;
+    color: #888;
   }
 
   .auth-tip {
     margin: 16px 0 0;
     font-size: 12px;
     text-align: center;
-    color: #9a93a4;
+    color: #777;
     line-height: 1.6;
   }
 
   .auth-terms {
-    color: #FF4D8D;
+    color: #ff4f9a;
     font-weight: 800;
     cursor: default;
   }

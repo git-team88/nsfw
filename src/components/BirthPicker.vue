@@ -242,7 +242,7 @@ onUnmounted(() => {
   flex: 1;
   width: 100px;
   height: 48px;
-  border: 1px solid rgba(22, 17, 34, 0.12);
+  border: 1px solid #2c2c2c;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -250,28 +250,28 @@ onUnmounted(() => {
   padding: 0 12px;
   position: relative;
   cursor: pointer;
-  background: rgba(22, 17, 34, 0.06);
+  background: rgba(255,255,255,0.06);
 
   &.edit{
-    background: #FFFFFF;
+    background: #1a1a1a;
   }
 }
 
 .select-box.active {
-  border-color: #FF4D8D;
+  border-color: #ff4f9a;
 }
 
 .selected {
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 }
 
 .selected.on {
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .date-text {
-  color: #5b5566;
+  color: #aaa;
   font-size: 14px;
 }
 
@@ -293,11 +293,10 @@ onUnmounted(() => {
   max-height: 204px;
   padding: 6px 0;
   overflow-y: auto;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.06);
-  border-radius: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 11px;
   margin-top: 8px;
   z-index: 10;
 }
@@ -308,16 +307,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #5b5566;
+  color: #aaa;
   cursor: pointer;
 }
 
 .opt:hover {
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .opt.on {
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
 }
 </style>

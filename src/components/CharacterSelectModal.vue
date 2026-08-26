@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay">
     <div class="modal-content">
-      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="modal-close" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('home.characterSelect.title') }}</h3>
 
@@ -176,8 +176,6 @@ const toggleCharacterSelection = (character: {
   }
 };
 
-
-
 const handleClose = () => {
   selectedCharacters.value = [];
   emit('close');
@@ -292,15 +290,15 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   z-index: 500;
 }
 
 .modal-content {
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   width: 480px;
   display: flex;
   flex-direction: column;
@@ -314,9 +312,9 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,10 +328,10 @@ onBeforeUnmount(() => {
 .modal-title {
   font-size: 16px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
   margin: 0;
   padding: 18px 20px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid #2c2c2c;
 }
 
 .tab-navigation {
@@ -347,23 +345,23 @@ onBeforeUnmount(() => {
     height: 32px;
     text-align: center;
     padding: 0 16px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 800;
-    background: #fff;
-    color: #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
     cursor: pointer;
     position: relative;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
-      color: #FF4D8D;
+      color: #ff4f9a;
     }
 
     &.active {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #fff;
 
       &:hover {
@@ -389,13 +387,13 @@ onBeforeUnmount(() => {
 .character-item {
   display: flex;
   cursor: pointer;
-  border: 2px solid rgba(22, 17, 34, 0.12);
+  border: 2px solid #2c2c2c;
   border-radius: 8px;
   padding: 12px;
-  background: rgba(22, 17, 34, 0.06);
+  background: rgba(255,255,255,0.06);
 
   &.selected {
-    border-color: #FF4D8D;
+    border-color: #ff4f9a;
   }
 }
 
@@ -407,7 +405,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin-right: 16px;
   flex-shrink: 0;
-  background: #FFFFFF;
+  background: #1a1a1a;
 
   img {
     width: 100%;
@@ -429,7 +427,7 @@ onBeforeUnmount(() => {
   .character-name {
     font-weight: 600;
     font-size: 16px;
-    color: #0A0A0A;
+    color: #f5f5f5;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -437,13 +435,13 @@ onBeforeUnmount(() => {
 
   .character-cost {
     font-size: 12px;
-    color: #FF4D8D;
+    color: #ff4f9a;
     white-space: nowrap;
   }
 
   .character-description {
     font-size: 12px;
-    color: #161122;
+    color: #f5f5f5;
     line-height: 18px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -460,7 +458,7 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: 24px;
   padding: 18px 24px ;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
+  border-top: 1px solid #2c2c2c;
 
   .modal-btn {
     display: flex;
@@ -468,42 +466,40 @@ onBeforeUnmount(() => {
     justify-content: center;
     min-width: 136px;
     height: 48px;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
 
     &:active:not(:disabled) {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &.cancel {
-      background: #fff;
-      color: #161122;
+      background: #1a1a1a;
+      color: #f5f5f5;
 
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
     &.confirm {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
 
       &:disabled {
-        background: #f8d7e8;
+        background: rgba(255,79,154,0.3);
         color: white;
         cursor: not-allowed;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.3);
+        box-shadow: none;
       }
     }
   }
@@ -512,7 +508,7 @@ onBeforeUnmount(() => {
 .no-characters{
   text-align: center;
   font-size: 14px;
-  color: #5b5566;
+  color: #aaa;
 }
 
 .loading-more {
@@ -530,7 +526,7 @@ onBeforeUnmount(() => {
 
   span {
     font-size: 14px;
-    color: #5b5566;
+    color: #aaa;
   }
 }
 

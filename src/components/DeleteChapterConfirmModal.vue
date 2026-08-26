@@ -2,7 +2,7 @@
   <div class="delete-chapter-confirm-modal">
     <div class="modal-overlay"></div>
     <div class="modal-content">
-      <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="handleCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3 class="modal-title">{{ t('collectionDetail.deleteChapterConfirm.title') }}</h3>
@@ -62,7 +62,7 @@ function handleConfirm() {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(22, 17, 34, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .modal-content {
@@ -71,8 +71,8 @@ function handleConfirm() {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    background-color: #ffffff;
-    border-radius: 12px;
+    background-color: #1a1a1a;
+    border-radius: 18px;
     padding: 18px 24px;
     text-align: center;
 
@@ -83,9 +83,9 @@ function handleConfirm() {
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: #fff;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -102,7 +102,7 @@ function handleConfirm() {
       .modal-title {
         font-size: 18px;
         font-weight: bold;
-        color: #161122;
+        color: #f5f5f5;
         margin: 0;
       }
     }
@@ -113,14 +113,14 @@ function handleConfirm() {
 
       .confirm-text {
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         line-height: 20px;
         margin-bottom: 10px;
       }
 
       .note-text {
         font-size: 14px;
-        color: #5b5566;
+        color: #aaa;
         line-height: 20px;
       }
     }
@@ -133,39 +133,35 @@ function handleConfirm() {
       button {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: none;
       }
 
       .btn-cancel {
-        background: #FFFFFF;
-        color: #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
 
         &:hover {
-          color: #FF4D8D;
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          color: #ff4f9a;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
 
       .btn-danger {
-        background: #FF4D8D;
-        color: #ffffff;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

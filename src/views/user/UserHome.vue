@@ -299,7 +299,7 @@
 
               <div v-else>
                 <div class="follow-list" v-if="followList.length > 0">
-                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" @click="goUserHome(user.id)" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms`, boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }">
+                  <div class="follow-card" v-for="(user, index) in followList" :key="user.id" @click="goUserHome(user.id)" :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }">
                     <div class="card-body">
                       <div class="card-top">
                         <img :src="user.avatar || defaultAvatar" class="user-avatar" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
@@ -355,7 +355,7 @@
     <div class="pin-modal-overlay" v-if="showPinLimitModal">
       <div class="pin-modal">
         <div class="close-icon" @click="showPinLimitModal = false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"           stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
         </div>
 
         <div class="modal-header">
@@ -651,7 +651,6 @@ const workContentTypes = computed(() => {
   return [
     { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
     { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
-    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0, hideCount: false },
     { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0, hideCount: false },
     { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0, hideCount: false },
   ];
@@ -779,7 +778,7 @@ async function fetchCollections(reset = false) {
         collectionsLoading.value = false;
         return;
       }
-      const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+      const showNsfw = 1;
       if (type === 4 || type === 5) {
         response = await api.authorPostList(type, currentPage, 20, authorId, showNsfw) as any;
       } else {
@@ -961,8 +960,7 @@ async function fetchUserInfo() {
       res = await api.authorSelfInfo();
     } else {
       if (!authorId) return;
-      const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-      const showNsfw = userRegion.value && allowSensitive ? 1 : 0;
+      const showNsfw = 1;
       res = await api.authorInfo(authorId, showNsfw);
     }
 
@@ -1292,7 +1290,7 @@ function formatNumber(num: number) {
 }
 
 // Colorful shadow palette for follow user cards
-const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
+const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#ff4f9a', '#F97316'];
 const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
 // Get start date (6 days ago)
@@ -1714,7 +1712,7 @@ async function loadPosts(reset = false) {
 
     let res;
 
-    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : undefined;
+    const showNsfw = 1;
     if (isSelf.value) {
       res = await api.authorSelfCollection(
         type,
@@ -2064,7 +2062,7 @@ async function unpinCollection(collection: any) {
 <style scoped lang="scss">
 .user-homepage {
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
   padding: 100px 16px 40px;
 
   @media (max-width: 768px) {
@@ -2083,7 +2081,7 @@ async function unpinCollection(collection: any) {
   margin: 0 auto;
   height: 180px;
   border-radius: 6px;
-  border: 2px solid #161122;
+  border: 0;
   overflow: hidden;
 
   &::after {
@@ -2093,7 +2091,7 @@ async function unpinCollection(collection: any) {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, rgba(255, 253, 247, 0) 0%, #FFFDF7 100%);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0) 0%, #1a1a1a 100%);
   }
 
   img {
@@ -2129,8 +2127,8 @@ async function unpinCollection(collection: any) {
       width: 108px;
       height: 108px;
       border-radius: 50%;
-      border: 4px solid #161122;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
+      border: 2px solid #2c2c2c;
+      box-shadow: none;
       object-fit: cover;
     }
   }
@@ -2150,7 +2148,7 @@ async function unpinCollection(collection: any) {
           .nickname {
             font-size: 26px;
             font-weight: 800;
-            color: #161122;
+            color: #f5f5f5;
           }
         }
         .kyc-row {
@@ -2165,15 +2163,15 @@ async function unpinCollection(collection: any) {
             margin-top: 8px;
             padding: 0 10px;
             border-radius: 6px;
-            border: 2px solid #FF4D8D;
+            border: 2px solid #ff4f9a;
             font-size: 12px;
-            background: rgba(255, 77, 141, 0.12);
-            color: #FF4D8D;
+            background: rgba(255, 79, 154, 0.12);
+            color: #ff4f9a;
           }
         }
         .id-row {
           font-size: 14px;
-          color: #161122;
+          color: #ccc;
         }
       }
 
@@ -2192,28 +2190,28 @@ async function unpinCollection(collection: any) {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          border: 2.5px solid #161122;
+          border: 1px solid #3d3d3d;
 
           &.edit {
-            background: #FFFFFF;
-            color: #161122;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            background: #1a1a1a;
+            color: #f5f5f5;
 
             &:hover{
-              background: #FFFDF7;
-              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+              color: #ff4f9a;
             }
           }
 
           &.follow {
-            background: #FF4D8D;
-            color: #FFFFFF;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            background: linear-gradient(145deg, #ff65ab, #f02c80);
+            color: #fff;
+            border: 2px solid #ff9aca;
+            box-shadow: 0 0 18px rgba(255,60,140,0.45);
             position: relative;
             overflow: hidden;
 
             &:hover {
-              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+              box-shadow: 0 0 24px rgba(255,60,140,0.6);
+              filter: brightness(1.06);
             }
 
             .hover-text {
@@ -2222,12 +2220,14 @@ async function unpinCollection(collection: any) {
 
             &.followed {
               position: relative;
-              background: #FFFDF7;
-              color: #161122;
+              background: #1a1a1a;
+              color: #f5f5f5;
+              border: 1px solid #3d3d3d;
+              box-shadow: none;
 
               &:hover {
-                color: #FF4D8D;
-                box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+                color: #ff4f9a;
+                border-color: #ff4f9a;
 
                 .btn-text {
                   display: none;
@@ -2240,24 +2240,25 @@ async function unpinCollection(collection: any) {
           }
 
           &.subscribe {
-            background: #FF4D8D;
-            color: #FFFFFF;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            background: linear-gradient(145deg, #ff65ab, #f02c80);
+            color: #fff;
             padding: 0 20px;
+            border: 2px solid #ff9aca;
 
             &:hover {
-              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+              filter: brightness(1.06);
             }
 
             &.subscribed {
               position: relative;
-              background: #FFFDF7;
-              color: #161122;
+              background: #1a1a1a;
+              color: #777;
+              border: 1px solid #3d3d3d;
               cursor: not-allowed;
-              box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+              box-shadow: none;
 
               &:hover {
-                box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+                box-shadow: none;
               }
             }
 
@@ -2266,27 +2267,29 @@ async function unpinCollection(collection: any) {
             }
           }
           &.share {
-            background: #FFFFFF;
-            color: #161122;
+            background: #1a1a1a;
+            color: #f5f5f5;
             padding: 0 16px;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            border: 1px solid #3d3d3d;
 
-            .share-icon {
-              display: inline-block;
-              width: 24px;
-              height: 24px;
-              background-image: url('@/assets/images/user/share.png');
-              background-size: cover;
-            }
+  .share-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background-image: url('@/assets/images/user/share.png');
+    background-size: cover;
+    filter: brightness(0) invert(1);
+  }
 
-            &:hover {
-              color: #FF4D8D;
-              box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+  &:hover {
+  color: #ff4f9a;
+  border-color: #ff4f9a;
 
-              .share-icon {
-                background-image: url('@/assets/images/user/share_hover.png');
-              }
-            }
+  .share-icon {
+    background-image: url('@/assets/images/user/share_hover.png');
+    filter: none;
+  }
+}
           }
           &.more {
             background: transparent;
@@ -2312,12 +2315,12 @@ async function unpinCollection(collection: any) {
             position: absolute;
             right: 0;
             border-radius: 6px;
-            border: 2.5px solid #161122;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            border: 1px solid #3d3d3d;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             padding: 6px 0;
             z-index: 10;
             min-width: 100px;
-            background: #FFFDF7;
+            background: #1a1a1a;
 
             &.bottom {
               top: 100%;
@@ -2331,17 +2334,17 @@ async function unpinCollection(collection: any) {
             .menu-item {
               padding: 6px 0;
               font-size: 14px;
-              color: #161122;
+              color: #ddd;
               cursor: pointer;
               text-align: center;
               &:hover {
                 font-weight: 800;
-                color: #FF4D8D;
+                color: #ff4f9a;
               }
 
               &.block-item {
                 &.blocked {
-                  color: #FF4D8D;
+                  color: #ff4f9a;
                 }
               }
             }
@@ -2356,7 +2359,7 @@ async function unpinCollection(collection: any) {
 
       .desc-text {
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         line-height: 20px;
         &.collapsed {
           display: -webkit-box;
@@ -2372,11 +2375,11 @@ async function unpinCollection(collection: any) {
         gap: 6px;
         margin-top: 10px;
         cursor: pointer;
-        color: #FF4D8D;
+        color: #ff4f9a;
         font-size: 14px;
 
         &.hide {
-          color: #161122;
+          color: #ccc;
         }
         img {
           width: 20px;
@@ -2390,88 +2393,129 @@ async function unpinCollection(collection: any) {
 .stats-bar {
   margin-bottom: 24px;
 
-  .tabs-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
+    .tabs-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #303030;
 
     .main-tabs {
       display: flex;
-      gap: 6px;
-      border: 2.5px solid #161122;
-      border-radius: 14px;
-      padding: 5px;
-      background: #FFFDF7;
+      align-items: flex-end;
+      gap: 31px;
+      padding: 0;
+      background: transparent;
 
       .main-tab {
-        padding: 10px 22px;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 800;
-        color: #161122;
-        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 8px;
+        font-size: 17px;
+        font-weight: 900;
+        color: #555;
+        border: 0;
+        border-radius: 0;
         background: transparent;
-        transition: background-color 0.2s, color 0.2s;
+        cursor: pointer;
+        transition: color 0.15s;
 
         &.active {
-          background: #FF4D8D;
-          color: #fff;
+          color: #e7e7e7;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 8px;
+            bottom: -13px;
+            left: 8px;
+            height: 4px;
+            border-radius: 4px 4px 0 0;
+            background: #ff4f9a;
+          }
+        }
+
+        &:hover:not(.active) {
+          color: #aaa;
         }
       }
     }
   }
 
   .sub-tabs {
-    width: max-content;
     display: flex;
-    gap: 6px;
-    border: 2.5px solid #161122;
-    border-radius: 14px;
-    padding: 5px;
-    background: #FFFDF7;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    margin-top: 20px;
 
     .sub-tab-item {
-      padding: 8px 16px;
-      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      padding: 0 18px;
       font-size: 14px;
       font-weight: 800;
-      color: #161122;
+      color: #f5f5f5;
+      border: 1px solid #404040;
+      border-radius: 25px;
+      background: #1a1a1a;
       cursor: pointer;
-      background: transparent;
-      transition: background-color 0.2s, color 0.2s;
+      transition: all 0.15s;
 
       &.active {
-        background: #161122;
         color: #fff;
+        border: 1px solid #ff9aca;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
+        box-shadow: 0 0 23px rgba(255, 50, 140, .65);
+      }
+
+      &:hover:not(.active) {
+        border-color: #888;
       }
     }
   }
 
   .stats-nums {
     display: flex;
-    gap: 6px;
-    border: 2.5px solid #161122;
-    border-radius: 14px;
-    padding: 5px;
-    background: #FFFDF7;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
 
     .stat-item {
-      padding: 10px 16px;
-      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      padding: 0 18px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
+      border: 1px solid #404040;
+      border-radius: 25px;
+      background: #1a1a1a;
       cursor: pointer;
-      background: transparent;
-      transition: background-color 0.2s, color 0.2s;
+      transition: all 0.15s;
 
       &.active {
-        background: #161122;
         color: #fff;
+        border: 1px solid #ff9aca;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
+        box-shadow: 0 0 23px rgba(255, 50, 140, .65);
 
         .val {
           color: #fff;
         }
+      }
+
+      &:hover:not(.active) {
+        border-color: #888;
       }
 
       .label {
@@ -2539,19 +2583,21 @@ async function unpinCollection(collection: any) {
         flex-shrink: 0;
         width: 148px;
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         cursor: pointer;
         position: relative;
         padding: 8px 16px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 6px;
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
-        background: #FFFDF7;
+        box-shadow: none;
+        background: #1a1a1a;
         white-space: nowrap;
 
         &.active {
-          background: #FFFFFF;
-          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+          background: linear-gradient(145deg, #ff65ab, #f02c80);
+          border: 2px solid #ff9aca;
+          color: #fff;
+          box-shadow: 0 0 18px rgba(255,60,140,0.45);
         }
 
         .tab-title {
@@ -2564,7 +2610,7 @@ async function unpinCollection(collection: any) {
         .tab-count {
           margin-left: 4px;
           font-size: 12px;
-          color: #161122;
+          color: #ccc;
         }
       }
     }
@@ -2602,13 +2648,13 @@ async function unpinCollection(collection: any) {
         position: absolute;
         right: 0;
         border-radius: 6px;
-        border: 2.5px solid #161122;
-        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+        border: 1px solid #3d3d3d;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         padding: 12px 8px;
         z-index: 10;
         min-width: 100px;
         width: max-content;
-        background: #FFFDF7;
+        background: #1a1a1a;
 
         &.bottom {
           top: 100%;
@@ -2622,7 +2668,7 @@ async function unpinCollection(collection: any) {
         .menu-item {
           margin-bottom: 12px;
           font-size: 14px;
-          color: #161122;
+          color: #ddd;
           cursor: pointer;
           text-align: center;
 
@@ -2631,7 +2677,7 @@ async function unpinCollection(collection: any) {
           }
 
           &:hover {
-            color: #FF4D8D;
+            color: #ff4f9a;
           }
         }
       }
@@ -2666,8 +2712,8 @@ async function unpinCollection(collection: any) {
         display: block;
         height: 344px;
         border-radius: 16px;
-        border: 2.5px solid #161122;
-        box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
+        border: 1px solid #2c2c2c;
+        box-shadow: none;
         object-fit: cover;
       }
 
@@ -2686,11 +2732,11 @@ async function unpinCollection(collection: any) {
         position: absolute;
         top: 8px;
         left: 8px;
-        background: #FFFFFF;
-        color: #161122;
+        background: #222;
+        color: #f5f5f5;
         padding: 7px 10px;
         border-radius: 6px;
-        border: 2px solid #161122;
+        border: 1px solid #3d3d3d;
         font-size: 12px;
         font-weight: 800;
       }
@@ -2701,7 +2747,7 @@ async function unpinCollection(collection: any) {
 
       .card-desc {
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         margin-bottom: 12px;
         line-height: 20px;
         display: -webkit-box;
@@ -2720,7 +2766,7 @@ async function unpinCollection(collection: any) {
 
         .time {
           font-size: 12px;
-          color: #161122;
+          color: #ccc;
         }
 
         .more-btn-wrap {
@@ -2735,12 +2781,12 @@ async function unpinCollection(collection: any) {
             position: absolute;
             right: 0;
             border-radius: 6px;
-            border: 2.5px solid #161122;
-            box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+            border: 1px solid #3d3d3d;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             padding: 6px 0;
             z-index: 10;
             min-width: 100px;
-            background: #FFFDF7;
+            background: #1a1a1a;
 
             &.bottom {
               top: 100%;
@@ -2754,12 +2800,12 @@ async function unpinCollection(collection: any) {
             .menu-item {
               padding: 6px 0;
               font-size: 14px;
-              color: #161122;
+              color: #ddd;
               cursor: pointer;
               text-align: center;
               &:hover {
                 font-weight: 800;
-                color: #FF4D8D;
+                color: #ff4f9a;
               }
             }
           }
@@ -2774,7 +2820,7 @@ async function unpinCollection(collection: any) {
 
   .no-data {
     text-align: center;
-    color: #161122;
+    color: #f5f5f5;
     font-size: 14px;
     padding: 40px 0;
   }
@@ -2790,8 +2836,8 @@ async function unpinCollection(collection: any) {
   .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e7e1d8;
-    border-top: 3px solid #161122;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #ff4f9a;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 16px;
@@ -2799,7 +2845,7 @@ async function unpinCollection(collection: any) {
 
   .loading-text {
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   @keyframes spin {
@@ -2813,10 +2859,10 @@ async function unpinCollection(collection: any) {
 }
 
 .follow-container {
-  background: #FFFDF7;
+  background: #1a1a1a;
   border-radius: 16px;
-  border: 2.5px solid #161122;
-  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.2);
+  border: 1px solid #2c2c2c;
+  box-shadow: none;
   padding: 0 0 24px;
   min-height: 400px;
 
@@ -2831,8 +2877,8 @@ async function unpinCollection(collection: any) {
   .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e7e1d8;
-    border-top: 3px solid #161122;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #ff4f9a;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 16px;
@@ -2840,7 +2886,7 @@ async function unpinCollection(collection: any) {
 
   .loading-text {
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   @keyframes spin {
@@ -2866,7 +2912,7 @@ async function unpinCollection(collection: any) {
     p {
       font-weight: 800;
       font-size: 16px;
-      color: #161122;
+      color: #f5f5f5;
     }
   }
 
@@ -2880,15 +2926,15 @@ async function unpinCollection(collection: any) {
 .follow-card {
       display: flex;
       flex-direction: column;
-      border-radius: 16px;
-      border: 3px solid #161122;
-      background: #FFFDF7;
+      border-radius: 12px;
+      border: 1px solid #2c2c2c;
+      background: #1a1a1a;
       overflow: hidden;
       cursor: pointer;
-      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      transition: border-color 0.15s;
 
       &:hover {
-        transform: translate(-2px, -2px);
+        border-color: #ff4f9a;
       }
 
     .card-body {
@@ -2907,7 +2953,7 @@ async function unpinCollection(collection: any) {
         width: 56px;
         height: 56px;
         border-radius: 50%;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         object-fit: cover;
         flex-shrink: 0;
       }
@@ -2917,7 +2963,7 @@ async function unpinCollection(collection: any) {
         .nickname {
           font-size: 16px;
           font-weight: 800;
-          color: #161122;
+          color: #f5f5f5;
           margin-bottom: 6px;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2926,7 +2972,7 @@ async function unpinCollection(collection: any) {
         .fans-count {
           font-size: 12px;
           font-weight: 800;
-          color: #99A1AF;
+          color: #777;
         }
       }
     }
@@ -2940,7 +2986,7 @@ async function unpinCollection(collection: any) {
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      color: #5b5566;
+      color: #aaa;
     }
 
     .card-footer {
@@ -2951,25 +2997,24 @@ async function unpinCollection(collection: any) {
         height: 40px;
         padding: 0 16px;
         border-radius: 13px;
-        border: 2.5px solid #161122;
         font-size: 14px;
         font-weight: 800;
         cursor: pointer;
-        background: #FF4D8D;
-        color: #FFFFFF;
-        box-shadow: 2px 2px 0 #161122;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        color: #fff;
+        border: 2px solid #ff9aca;
+        box-shadow: none;
         position: relative;
         overflow: hidden;
-        transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s ease-out;
+        transition: filter 0.15s;
 
         &:hover {
-          transform: translate(-1px, -2px);
-          box-shadow: 4px 5px 0 #161122;
+          box-shadow: none;
+          filter: brightness(1.06);
         }
 
         &:active {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #161122;
+          filter: brightness(0.95);
         }
 
         .hover-text {
@@ -2977,12 +3022,14 @@ async function unpinCollection(collection: any) {
         }
 
         &.followed {
-          background: #FFFDF7;
-          color: #99A1AF;
+          background: #1a1a1a;
+          color: #777;
+          border: 1px solid #3d3d3d;
+          box-shadow: none;
 
           &:hover {
-            color: #FF4D8D;
-            border-color: #FF4D8D;
+            color: #ff4f9a;
+            border-color: #ff4f9a;
 
             .btn-text {
               display: none;
@@ -3005,17 +3052,17 @@ async function unpinCollection(collection: any) {
       .el-pager li {
         background: transparent;
         &.is-active {
-          color: #FF4D8D;
+          color: #ff4f9a;
           font-weight: 800;
         }
         &:hover {
-          color: #FF4D8D;
+          color: #ff4f9a;
         }
       }
       button {
         background: transparent;
         &:hover {
-          color: #FF4D8D;
+          color: #ff4f9a;
         }
       }
     }
@@ -3028,7 +3075,7 @@ async function unpinCollection(collection: any) {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(22, 17, 34, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 999;
   display: flex;
   justify-content: center;
@@ -3037,10 +3084,10 @@ async function unpinCollection(collection: any) {
   .pin-modal {
     position: relative;
     width: 700px;
-    background: #FFFDF7;
+    background: #1a1a1a;
     border-radius: 16px;
-    border: 2.5px solid #161122;
-    box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.2);
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     padding: 18px 0;
     display: flex;
     flex-direction: column;
@@ -3052,9 +3099,9 @@ async function unpinCollection(collection: any) {
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: #fff;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      background: #222;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3076,14 +3123,14 @@ async function unpinCollection(collection: any) {
       .title {
         font-size: 16px;
         font-weight: 800;
-        color: #161122;
+        color: #f5f5f5;
       }
     }
 
     .modal-desc {
       padding: 0 24px;
       font-size: 14px;
-      color: #161122;
+      color: #ccc;
       margin-bottom: 18px;
     }
 
@@ -3107,7 +3154,7 @@ async function unpinCollection(collection: any) {
           overflow: hidden;
           border-radius: 8px;
           transition: all 0.2s;
-          border: 2px solid #161122;
+          border: 1px solid #2c2c2c;
         }
 
         .item-cover {
@@ -3120,7 +3167,7 @@ async function unpinCollection(collection: any) {
         .item-title {
           font-weight: 600;
           font-size: 14px;
-          color: #161122;
+          color: #f5f5f5;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           line-clamp: 2;
@@ -3133,11 +3180,11 @@ async function unpinCollection(collection: any) {
 
         &.selected {
           .item-cover-wrap {
-            border-color: #FF4D8D;
+            border-color: #ff4f9a;
           }
 
           .item-title {
-            color: #FF4D8D;
+            color: #ff4f9a;
           }
         }
       }
@@ -3148,22 +3195,23 @@ async function unpinCollection(collection: any) {
       width: 240px;
       height: 48px;
       margin-top: 18px;
-      background: #FF4D8D;
-      color: #FFFFFF;
-      border: 2.5px solid #161122;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      color: #fff;
+      border: 2px solid #ff9aca;
       border-radius: 13px;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 16px rgba(255, 61, 134, .3);
       font-size: 14px;
       cursor: pointer;
 
       &:disabled {
-        background: rgba(255, 77, 141, 0.5);
+        background: rgba(255, 79, 154, 0.5);
         cursor: not-allowed;
-        box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
+        box-shadow: none;
       }
 
       &:hover:not(:disabled) {
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: 0 0 24px rgba(255,60,140,0.6);
+        filter: brightness(1.06);
       }
     }
   }
@@ -3179,18 +3227,16 @@ async function unpinCollection(collection: any) {
   }
 
   .collection-card {
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    border-radius: 16px;
-    box-shadow: 4px 4px 0 rgba(22, 17, 34, .14);
+    background: #1a1a1a;
+    border: 1px solid #2c2c2c;
+    border-radius: 12px;
+    box-shadow: none;
     overflow: hidden;
     cursor: pointer;
-    animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
-    transition: transform .16s cubic-bezier(.34, 1.56, .64, 1), box-shadow .16s;
+    transition: border-color 0.15s;
 
     &:hover {
-      transform: translateY(-4px) rotate(-.6deg);
-      box-shadow: 6px 7px 0 rgba(22,17,34,.2);
+      border-color: #ff4f9a;
 
       .cover-img {
         transform: scale(1.06);
@@ -3243,7 +3289,7 @@ async function unpinCollection(collection: any) {
         .r18-text {
           font-size: 14px;
           font-weight: 500;
-          color: #FFFFFF;
+          color: #fff;
         }
       }
 
@@ -3252,13 +3298,13 @@ async function unpinCollection(collection: any) {
         top: 10px;
         left: 10px;
         background: #FFD23F;
-        color: #161122;
+        color: #1a1a1a;
         padding: 3px 10px;
         border-radius: 999px;
-        border: 2px solid #161122;
+        border: 1px solid #3d3d3d;
         font-size: 11px;
         font-weight: 800;
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: none;
       }
 
       .type-icon {
@@ -3269,12 +3315,12 @@ async function unpinCollection(collection: any) {
 
         .type-badge {
           display: inline-block;
-          border: 2px solid #161122;
+          border: 1px solid #3d3d3d;
           border-radius: 999px;
           padding: 4px 12px;
           font-weight: 800;
           font-size: 12px;
-          color: #161122;
+          color: #1a1a1a;
           background: #FFC24B;
 
           &.type-2 {
@@ -3304,14 +3350,14 @@ async function unpinCollection(collection: any) {
         align-items: flex-end;
         padding: 0 12px 12px;
         border-radius: 0 0 0 0;
-        background: linear-gradient(0deg, rgba(22, 17, 34, 0.2) 0%, rgba(22, 17, 34, 0) 100%);
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
       }
 
       .update-badge{
         font-size: 11px;
-        color: #FFFFFF;
+        color: #fff;
         font-weight: 700;
-        text-shadow: 0 1px 3px rgba(22, 17, 34, 0.3);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
       }
 
       .card-actions {
@@ -3324,17 +3370,17 @@ async function unpinCollection(collection: any) {
           width: 28px;
           height: 28px;
           border-radius: 50%;
-          border: 2px solid #161122;
-          background: rgba(255, 253, 247, 0.9);
-          box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
+          border: 1px solid #3d3d3d;
+          background: rgba(26, 26, 26, 0.9);
+          box-shadow: none;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+          transition: border-color 0.15s;
 
           &:hover {
-            transform: scale(1.1);
+            border-color: #ff4f9a;
           }
 
           img {
@@ -3351,7 +3397,7 @@ async function unpinCollection(collection: any) {
       .card-desc {
         font-size: 14px;
         font-weight: 800;
-        color: #161122;
+        color: #f5f5f5;
         margin-bottom: 0;
         line-height: 20px;
         display: -webkit-box;
@@ -3377,8 +3423,8 @@ async function unpinCollection(collection: any) {
 .loading-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #e7e1d8;
-  border-top: 3px solid #161122;
+  border: 3px solid #2c2c2c;
+  border-top: 3px solid #ff4f9a;
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 16px;
@@ -3393,7 +3439,7 @@ async function unpinCollection(collection: any) {
 
 .loading-text {
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .block-tip {
@@ -3403,11 +3449,11 @@ async function unpinCollection(collection: any) {
   left: auto;
   margin-top: 6px;
   padding: 10px;
-  background: #161122;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.3);
-  color: #FFFDF7;
+  background: #2c2c2c;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  color: #f5f5f5;
   border-radius: 6px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   font-size: 12px;
   line-height: 16px;
   z-index: 10;
@@ -3434,7 +3480,7 @@ async function unpinCollection(collection: any) {
 
   p {
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     line-height: 16px;
   }
 }
@@ -3443,7 +3489,7 @@ async function unpinCollection(collection: any) {
   display: flex;
   justify-content: center;
   padding: 24px 0;
-  color: #161122;
+  color: #f5f5f5;
   font-size: 14px;
 }
 
@@ -3457,16 +3503,9 @@ async function unpinCollection(collection: any) {
 }
 
 .collection-card {
-  animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
 }
 
 .follow-card {
-  animation: pfCardIn .5s cubic-bezier(.16, 1, .3, 1) backwards;
-}
-
-@keyframes pfCardIn {
-  from { opacity: 0; transform: translateY(16px) scale(.97); }
-  to { opacity: 1; transform: none; }
 }
 
 @media (max-width: 420px) {
@@ -3506,7 +3545,6 @@ async function unpinCollection(collection: any) {
       font-size: 13px;
     }
     .stats-nums .stat-item {
-      padding: 8px 12px;
       font-size: 13px;
     }
   }
@@ -3539,22 +3577,23 @@ async function unpinCollection(collection: any) {
     gap: 6px;
     padding: 0 20px;
     font-weight: 600;
-    background: #FFFDF7;
-    color: #161122;
-    border: 2.5px solid #161122;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    color: #fff;
+    border: 2px solid #ff9aca;
     border-radius: 13px;
-    box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
     font-size: 14px;
     cursor: pointer;
 
     &:hover{
-      color: #FF4D8D;
-      box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+      box-shadow: 0 0 24px rgba(255,60,140,0.6);
+      filter: brightness(1.06);
     }
 
     .plus-icon {
       width: 20px;
       height: 20px;
+      filter: brightness(0) invert(1);
     }
   }
 }
@@ -3650,11 +3689,10 @@ async function unpinCollection(collection: any) {
     .stats-nums {
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4px;
-      padding: 4px;
+      gap: 16px;
+      padding: 0;
 
       .stat-item {
-        padding: 8px 10px;
         font-size: 13px;
       }
     }
@@ -3861,7 +3899,6 @@ async function unpinCollection(collection: any) {
 
     .stats-nums {
       .stat-item {
-        padding: 6px 8px;
         font-size: 12px;
       }
     }
@@ -3958,7 +3995,7 @@ async function unpinCollection(collection: any) {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(22, 17, 34, 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .modal-content {
@@ -3968,10 +4005,10 @@ async function unpinCollection(collection: any) {
     transform: translate(-50%, -50%);
     width: 500px;
     max-width: calc(100vw - 32px);
-    background-color: #FFFDF7;
+    background-color: #1a1a1a;
     border-radius: 16px;
-    border: 2.5px solid #161122;
-    box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.2);
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     padding: 18px 24px 24px;
     text-align: center;
 
@@ -3982,9 +4019,9 @@ async function unpinCollection(collection: any) {
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: #fff;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      background: #222;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3998,13 +4035,13 @@ async function unpinCollection(collection: any) {
     .modal-title {
       font-size: 18px;
       font-weight: 800;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 16px;
     }
 
     .modal-message {
       font-size: 14px;
-      color: #161122;
+      color: #ccc;
       line-height: 16px;
       margin-bottom: 24px;
     }
@@ -4023,26 +4060,28 @@ async function unpinCollection(collection: any) {
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
 
         &.btn-cancel {
-          background: #FFFDF7;
-          color: #161122;
-          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+          background: #1a1a1a;
+          color: #f5f5f5;
+          box-shadow: none;
 
           &:hover {
-            color: #FF4D8D;
-            box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+            color: #ff4f9a;
+            border-color: #ff4f9a;
           }
         }
 
         &.btn-confirm {
-          background: #FF4D8D;
-          color: #FFFFFF;
-          box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+          background: linear-gradient(145deg, #ff65ab, #f02c80);
+          color: #fff;
+          border: 2px solid #ff9aca;
+          box-shadow: 0 0 16px rgba(255, 61, 134, .3);
 
           &:hover {
-            box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.25);
+            box-shadow: 0 0 22px rgba(255, 61, 134, .35);
+            filter: brightness(1.06);
           }
         }
       }
@@ -4056,28 +4095,28 @@ async function unpinCollection(collection: any) {
   position: fixed;
   z-index: 3000;
   border-radius: 6px;
-  border: 2.5px solid #161122;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.2);
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   padding: 6px 0;
   min-width: 80px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   white-space: nowrap;
 
   .card-dropdown-item {
     padding: 6px 14px;
     font-size: 13px;
-    color: #161122;
+    color: #ddd;
     cursor: pointer;
     text-align: center;
 
     &:hover {
       font-weight: 800;
-      color: #FF4D8D;
+      color: #ff4f9a;
     }
 
     &.card-dropdown-item-danger {
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
   }

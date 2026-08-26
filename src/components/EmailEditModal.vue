@@ -1,7 +1,7 @@
 <template>
   <div class="exit-confirm-modal" v-if="visible">
     <div class="modal-content">
-      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="closeModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       <h3 class="modal-title">{{ t("user.personal.changeEmailTitle") }}</h3>
       <div class="modal-form">
         <div class="form-item">
@@ -257,7 +257,7 @@ function saveEmail() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,15 +269,15 @@ function saveEmail() {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 6px 6px 0 #161122;
-    border-radius: 12px;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    border-radius: 18px;
     padding: 18px 24px 24px;
 
     .close-btn {
-      background: #fff;
-      border: 2.5px solid #161122;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 999px;
       padding: 6px;
       position: absolute;
@@ -286,7 +286,7 @@ function saveEmail() {
       width: 36px;
       height: 36px;
       cursor: pointer;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
       transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
       z-index: 10;
 
@@ -296,7 +296,7 @@ function saveEmail() {
     .modal-title {
       font-size: 18px;
       font-weight: 800;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 24px;
       text-align: center;
     }
@@ -314,38 +314,38 @@ function saveEmail() {
       margin-bottom: 8px;
       font-size: 14px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
 
       &.required::before {
         content: "*";
-        color: #FF4D8D;
+        color: #ff4f9a;
         margin-right: 4px;
       }
     }
 
     .required-asterisk {
-      color: #FF4D8D;
+      color: #ff4f9a;
     }
 
     .form-input {
       width: 100%;
       height: 50px;
       padding: 12px 16px;
-      border: 2.5px solid #161122;
-      border-radius: 12px;
+      border: 1px solid #3d3d3d;
+      border-radius: 18px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       outline: none;
-      background: #FFFDF7;
+      background: #1a1a1a;
       box-sizing: border-box;
       transition: box-shadow 0.2s, border-color 0.2s;
 
       &:focus {
-        box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+        box-shadow: none;
       }
 
       &::placeholder {
-        color: #161122;
+        color: #f5f5f5;
         opacity: 0.4;
       }
     }
@@ -359,20 +359,20 @@ function saveEmail() {
         height: 50px;
         padding: 12px 16px;
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         outline: none;
-        background: #FFFDF7;
-        border: 2.5px solid #161122;
-        border-radius: 12px;
+        background: #1a1a1a;
+        border: 1px solid #3d3d3d;
+        border-radius: 18px;
         box-sizing: border-box;
         transition: box-shadow 0.2s;
 
         &:focus {
-          box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+          box-shadow: none;
         }
 
         &::placeholder {
-          color: #161122;
+          color: #f5f5f5;
           opacity: 0.4;
         }
       }
@@ -383,29 +383,27 @@ function saveEmail() {
         padding: 0 16px;
         font-size: 14px;
         font-weight: 700;
-        background: #FFFDF7;
-        color: #FF4D8D;
+        background: #1a1a1a;
+        color: #ff4f9a;
         cursor: pointer;
-        border: 2.5px solid #161122;
-        border-radius: 12px;
-        box-shadow: 3px 3px 0 #161122;
+        border: 1px solid #3d3d3d;
+        border-radius: 18px;
+        box-shadow: none;
         transition: transform 0.1s, box-shadow 0.1s;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active:not(:disabled) {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
 
         &:disabled, &.disabled {
-          color: #161122;
+          color: #f5f5f5;
           opacity: 0.4;
           cursor: not-allowed;
           transform: none;
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: none;
         }
       }
     }
@@ -418,14 +416,14 @@ function saveEmail() {
       .modal-confirm-btn {
         min-width: 240px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         font-weight: 800;
         cursor: pointer;
-        background: #FF4D8D;
-        color: #FFFFFF;
-        box-shadow: 3px 3px 0 #161122;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
+        box-shadow: none;
         transition: transform 0.1s, box-shadow 0.1s;
 
         &:disabled {
@@ -434,12 +432,10 @@ function saveEmail() {
         }
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active:not(:disabled) {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

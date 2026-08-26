@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="batch-publish-overlay">
     <div class="batch-publish-dialog">
-      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="dialog-header">
         <span class="dialog-title">{{ t('novel.batchPublish.selectChapters') }}</span>
@@ -167,11 +167,6 @@ watch(() => props.visible, (newVal) => {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$cream: #FFFBF4;
 
 .batch-publish-overlay {
   position: fixed;
@@ -179,7 +174,7 @@ $cream: #FFFBF4;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,10 +182,10 @@ $cream: #FFFBF4;
 }
 
 .batch-publish-dialog {
-  background-color: #ffffff;
-  border: 2px solid $ink;
-  border-radius: 14px;
-  box-shadow: 6px 6px 0 $ink;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   position: relative;
   width: 500px;
   max-height: 596px;
@@ -200,8 +195,8 @@ $cream: #FFFBF4;
 }
 
 .close-btn {
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
   padding: 0;
   position: absolute;
@@ -213,7 +208,7 @@ $cream: #FFFBF4;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 3px 3px 0 $ink;
+  box-shadow: none;
   transition: transform .2s;
   cursor: pointer;
   z-index: 10;
@@ -230,7 +225,7 @@ $cream: #FFFBF4;
   flex-shrink: 0;
 
   .dialog-title {
-    color: $ink;
+    color: #f5f5f5;
     font-size: 16px;
     font-weight: 800;
     line-height: 24px;
@@ -247,9 +242,9 @@ $cream: #FFFBF4;
 .checkbox {
   width: 22px;
   height: 22px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
-  background: #fff;
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -257,16 +252,16 @@ $cream: #FFFBF4;
   transition: all 0.14s ease;
 
   &.active {
-    background: $pink;
-    border-color: $ink;
-    box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.15);
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    border-color: #f5f5f5;
+    box-shadow: none;
   }
 }
 
 .unpublished-section {
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  background-color: $cream;
+  background-color: #1a1a1a;
   padding: 12px;
 
   .unpublished-header {
@@ -277,7 +272,7 @@ $cream: #FFFBF4;
     margin-bottom: 10px;
 
     .unpublished-label {
-      color: $ink;
+      color: #f5f5f5;
       font-size: 14px;
       font-weight: 700;
       line-height: 22px;
@@ -290,7 +285,7 @@ $cream: #FFFBF4;
       cursor: pointer;
 
       .select-all-text {
-        color: $muted;
+        color: #777;
         font-size: 14px;
         line-height: 20px;
       }
@@ -308,14 +303,13 @@ $cream: #FFFBF4;
       justify-content: space-between;
       cursor: pointer;
       padding: 8px 10px;
-      background: #fff;
-      border: 1.5px solid rgba(22, 17, 34, 0.12);
+      background: #1a1a1a;
+      border: 1.5px solid #2c2c2c;
       border-radius: 8px;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
       &:hover {
-        transform: translateY(-1px);
-        box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.1);
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
 
       &:last-child {
@@ -324,7 +318,7 @@ $cream: #FFFBF4;
 
       .chapter-name {
         flex: 1;
-        color: $ink;
+        color: #f5f5f5;
         font-size: 14px;
         font-weight: 600;
         white-space: nowrap;
@@ -339,7 +333,7 @@ $cream: #FFFBF4;
       }
 
       .chapter-status-unpublish {
-        color: $muted;
+        color: #777;
         font-size: 13px;
         font-weight: 600;
       }
@@ -357,21 +351,21 @@ $cream: #FFFBF4;
     padding: 0 12px;
 
     .published-label {
-      color: $ink;
+      color: #f5f5f5;
       font-size: 14px;
       font-weight: 700;
     }
 
     .published-count {
-      color: $muted;
+      color: #777;
       font-size: 14px;
       line-height: 20px;
     }
   }
 
   .published-list {
-    background-color: $cream;
-    border: 2px solid rgba(22, 17, 34, 0.15);
+    background-color: #1a1a1a;
+    border: 2px solid rgba(255,255,255,0.15);
     border-radius: 10px;
     max-height: 224px;
     overflow-y: auto;
@@ -384,8 +378,8 @@ $cream: #FFFBF4;
       align-items: center;
       justify-content: space-between;
       padding: 8px 10px;
-      background: #fff;
-      border: 1.5px solid rgba(22, 17, 34, 0.08);
+      background: #1a1a1a;
+      border: 1.5px solid rgba(255,255,255,0.08);
       border-radius: 8px;
 
       &:last-child {
@@ -394,7 +388,7 @@ $cream: #FFFBF4;
 
       .chapter-name {
         flex: 1;
-        color: $ink;
+        color: #f5f5f5;
         font-size: 14px;
         font-weight: 600;
         white-space: nowrap;
@@ -403,7 +397,7 @@ $cream: #FFFBF4;
       }
 
       .chapter-status-published {
-        color: $sub;
+        color: #aaa;
         font-size: 13px;
         font-weight: 600;
       }
@@ -418,8 +412,9 @@ $cream: #FFFBF4;
   flex-shrink: 0;
 
   .next-step-btn {
-    background: $pink;
-    border: 2.5px solid $ink;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    border: 1px solid #3d3d3d
+    border: 1px solid #ff9aca;
     border-radius: 13px;
     height: 48px;
     min-width: 136px;
@@ -429,23 +424,21 @@ $cream: #FFFBF4;
     justify-content: center;
     gap: 6px;
     font-weight: 800;
-    box-shadow: 3px 3px 0 $ink;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(.disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 $ink;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
 
     &:active:not(.disabled) {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 $ink;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &.disabled {
-      background: rgba(255, 77, 141, 0.5);
+      background: rgba(255,79,154,0.5);
       cursor: not-allowed;
-      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.15);
+      box-shadow: none;
     }
 
     .next-step-text {

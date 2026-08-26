@@ -59,7 +59,7 @@ function close() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,10 +67,10 @@ function close() {
 }
 .modal {
   width: 520px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   padding: 18px 0;
   position: relative;
 }
@@ -81,9 +81,9 @@ function close() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,20 +96,20 @@ function close() {
 .title {
   font-size: 16px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 18px;
   margin-left: 18px;
 }
 .date-picker {
   margin-bottom: 18px;
   padding: 18px 32px;
-  border-top: 1px solid rgba(251, 100, 182, 0.2);
-  border-bottom: 1px solid rgba(251, 100, 182, 0.2);
+  border-top: 1px solid rgba(255,79,154,0.2);
+  border-bottom: 1px solid rgba(255,79,154,0.2);
 }
 
 .label {
   font-size: 14px;
-  color: #4a5565;
+  color: #aaa;
   margin-bottom: 12px;
   span {
     color: #E5484D;
@@ -123,7 +123,7 @@ function close() {
   width: 240px;
   height: 48px;
   margin: 0 auto;
-  background: #FF4D8D;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   border-radius: 8px;
   color: #ffffff;
   font-size: 14px;
@@ -141,7 +141,7 @@ function close() {
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(0,0,0,0.5);
     z-index: 1;
   }
 }

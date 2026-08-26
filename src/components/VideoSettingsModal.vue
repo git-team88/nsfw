@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
-      <button class="modal-close" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="modal-close" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('home.videoSettings.title') }}</h3>
 
@@ -139,17 +139,17 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 500;
 }
 
 .modal-content {
   position: relative;
   width: 520px;
-  border-radius: 12px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 
 .modal-close {
@@ -159,9 +159,9 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,10 +175,10 @@ onMounted(() => {
 .modal-title {
   font-size: 16px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
   margin: 0;
   padding: 18px 20px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid #2c2c2c;
 }
 
 .modal-body {
@@ -194,7 +194,7 @@ onMounted(() => {
   .setting-label {
     font-weight: normal;
     font-size: 14px;
-    color: #9a93a4;
+    color: #777;
     margin-bottom: 14px;
   }
 }
@@ -219,7 +219,7 @@ onMounted(() => {
 
   .radio-label {
     font-size: 14px;
-    color: #5b5566;
+    color: #aaa;
   }
 }
 
@@ -229,7 +229,7 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 24px;
   padding: 18px 24px ;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
+  border-top: 1px solid #2c2c2c;
 
   .modal-btn {
     display: flex;
@@ -243,29 +243,27 @@ onMounted(() => {
     cursor: pointer;
 
     &.cancel {
-      background: rgba(22, 17, 34, 0.06);
-      color: #5b5566;
+      background: rgba(255,255,255,0.06);
+      color: #aaa;
 
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
     &.confirm {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
 
       &:hover:not(:disabled) {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 0 20px rgba(255, 50,140, 0.5);
       }
 
       &:disabled {
-        background: #f8d7e8;
+        background: rgba(255,79,154,0.3);
         color: white;
         cursor: not-allowed;
       }

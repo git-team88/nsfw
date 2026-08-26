@@ -103,7 +103,7 @@ function goBack() {
   min-height: 100vh;
   scroll-behavior: smooth;
   padding: 224px 0 0;
-  background: #FFFFFF;
+  background: #1a1a1a;
 
   .inner {
     max-width: 1152px;
@@ -120,12 +120,12 @@ function goBack() {
       align-items: center;
       gap: 10px;
       transform: translateX(-880px);
-      color: #fff;
+      color: #f5f5f5;
       cursor: pointer;
       z-index: 10;
-      border: 2px solid #fff;
+      border: 1px solid #3d3d3d;
       border-radius: 21px;
-      box-shadow: 5px 5px 0 #fff;
+      box-shadow: none;
       padding: 0 16px;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
@@ -136,8 +136,7 @@ function goBack() {
       }
 
       &:hover {
-        transform: translateX(-880px) translateY(-1px);
-        box-shadow: 6px 6px 0 #fff;
+        box-shadow: none;
       }
     }
 
@@ -146,7 +145,7 @@ function goBack() {
       margin: 0 auto 32px;
       font-size: 14px;
       line-height: 28px;
-      color: #364153;
+      color: #aaa;
 
       :deep(h1) {
         font-weight: bold;
@@ -240,7 +239,7 @@ function goBack() {
     top: 160px;
     transform: none;
     &:hover {
-      transform: translateY(-1px);
+      
     }
   }
   .inner .terms-detail {

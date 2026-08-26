@@ -115,18 +115,16 @@ function fmtK(n: number): string {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-
 .user-rank-row {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   gap: 14px;
   padding: 10px 20px;
   margin-bottom: 10px;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.1);
+  box-shadow: none;
   cursor: pointer;
   will-change: transform;
 }
@@ -138,21 +136,21 @@ $ink: #161122;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid rgba(16, 24, 40, 0.06);
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   font-weight: 600;
   font-size: 18px;
-  color: #99A1AF;
+  color: #777;
 }
 
 .user-rank-avatar {
   width: 54px;
   height: 54px;
   flex: none;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 8px;
   overflow: hidden;
-  background: #e7e1d8;
+  background: #2c2c2c;
 
   img {
     width: 100%;
@@ -171,6 +169,7 @@ $ink: #161122;
   width: 100%;
   font-weight: 800;
   font-size: 15px;
+  color: #f5f5f5;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -197,14 +196,14 @@ $ink: #161122;
   .stat-label {
     font-weight: 600;
     font-size: 13px;
-    color: #6A7282;
+    color: #777;
   }
 
   .stat-num {
     font-weight: 800;
     font-size: 14px;
 
-    &.stat-pink { color: #FF4D8D; }
+    &.stat-pink { color: #ff4f9a; }
     &.stat-blue { color: #3B82F6; }
   }
 }
@@ -214,14 +213,14 @@ $ink: #161122;
   min-width: 88px;
   height: 40px;
   padding: 0 18px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  background: #FF4D8D;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #fff;
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 $ink;
+  box-shadow: none;
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
 
   .hover-text { display: none; }
@@ -233,28 +232,26 @@ $ink: #161122;
   }
 
   &.following {
-    background: #fff;
-    color: $ink;
+    background: #1a1a1a;
+    color: #f5f5f5;
   }
 
   // 已关注时悬浮显示「取消关注」
   &.following:hover {
-    background: #FFECEF;
-    color: #FF4D8D;
-    border-color: #FF4D8D;
+    background: rgba(255,79,154,0.12);
+    color: #ff4f9a;
+    border-color: #ff4f9a;
 
     .btn-text { display: none; }
     .hover-text { display: inline; }
   }
 
   &:hover {
-    transform: translate(-1px, -2px);
-    box-shadow: 4px 5px 0 $ink;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
 
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 $ink;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   }
 }
 </style>

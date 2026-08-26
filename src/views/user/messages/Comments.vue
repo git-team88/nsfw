@@ -75,15 +75,15 @@ function goUserHome(userId: string) {
   display: flex;
   justify-content: space-between;
   padding: 14px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 19px;
   will-change: transform;
-  transition: transform 0.12s ease-out, box-shadow 0.12s;
+  transition: transform 0.12s ease-out;
   cursor: pointer;
 }
 .msg-item:hover {
   transform: translateX(4px);
-  box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
+  background: rgba(255,255,255,0.06);
 }
 .left-info {
   min-width: 0;
@@ -105,24 +105,24 @@ function goUserHome(userId: string) {
 }
 .username {
   font-size: 14px;
-  color: #6A7282;
+  color: #aaa;
 }
 .desc {
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .content {
   max-width: 704px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #161122;
+  color: #f5f5f5;
 }
 .time {
   font-size: 12px;
-  color: #99A1AF;
+  color: #777;
   font-weight: 300;
 }
 
@@ -136,7 +136,7 @@ function goUserHome(userId: string) {
   .line {
     width: 1px;
     height: 64px;
-    background: #161122;
+    background: #2c2c2c;
   }
 }
 
@@ -157,7 +157,7 @@ function goUserHome(userId: string) {
   font-weight: 500;
   font-size: 14px;
   line-height: 20px;
-  color: #161122;
+  color: #f5f5f5;
   word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 3;

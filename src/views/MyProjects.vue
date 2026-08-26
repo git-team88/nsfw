@@ -309,7 +309,6 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 const mainTabs = ref([
   { value: 'novel' },
   { value: 'manhua' },
-  { value: 'manju' },
   { value: 'photo' },
   { value: 'video' }
 ]);
@@ -739,26 +738,26 @@ function handleScroll() {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 $yellow: #FFD23F;
 
 .my-projects {
   width: 100%;
   min-height: 100vh;
-  background: $cream;
+  background: #1a1a1a;
   scroll-behavior: smooth;
   overflow-y: auto;
   max-height: 100vh;
 }
 
 .container {
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto 20px;
   padding: 100px 12px 20px;
 
@@ -795,16 +794,19 @@ $yellow: #FFD23F;
       font-weight: 800;
       font-size: 13px;
       padding: 8px 16px;
-      border-radius: 999px;
-      border: 2px solid $ink;
+      border-radius: 25px;
+      border: 1px solid #404040;
       cursor: pointer;
       transition: all 0.16s;
-      background: #fff;
-      color: $ink;
+      background: #1a1a1a;
+      color: #888;
 
       &.active {
-        background: $ink;
         color: #fff;
+        border: 1px solid #ff9aca;
+        border-radius: 18px;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        box-shadow: 0 0 23px rgba(255, 50, 140, .65);
       }
 
       &:hover:not(.active) {
@@ -866,22 +868,20 @@ $yellow: #FFD23F;
   .project-card {
     position: relative;
     break-inside: avoid;
-    background: #fff;
-    border: 3px solid $ink;
-    border-radius: 16px;
-    box-shadow: 4px 4px 0 $ink;
+    background: #1a1a1a;
+    border: 1px solid #2c2c2c;
+    border-radius: 12px;
+    box-shadow: none;
     cursor: pointer;
     overflow: visible;
-    animation: projCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
+    transition: border-color 0.15s;
 
     &.menu-open {
       z-index: 100;
     }
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 6px 6px 0 $ink;
+      border-color: #ff4f9a;
     }
 
     .publish-btn {
@@ -891,22 +891,21 @@ $yellow: #FFD23F;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #fff;
-      border: 2px solid $ink;
-      color: $ink;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
+      color: #ddd;
       font-weight: 800;
       font-size: 11px;
       padding: 3px 10px;
       border-radius: 999px;
       cursor: pointer;
       z-index: 10;
-      box-shadow: 2px 2px 0 $ink;
-      transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: none;
       opacity: 0;
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 3px 3px 0 $ink;
+        border-color: #ff4f9a;
+        color: #fff;
       }
     }
 
@@ -915,7 +914,7 @@ $yellow: #FFD23F;
       width: 100%;
       height: 260px;
       overflow: hidden;
-      border-radius: 13px 13px 0 0;
+      border-radius: 11px 11px 0 0;
 
       .cover-img {
         width: 100%;
@@ -968,10 +967,10 @@ $yellow: #FFD23F;
       padding: 70px 30px 0;
     font-size: 26px;
       line-height: 30px;
-      background: linear-gradient(135deg, #FFC24B, #FF7AAE);
-      color: $ink;
+      background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+      color: #f5f5f5;
       overflow: hidden;
-      border-radius: 13px 13px 0 0;
+      border-radius: 11px 11px 0 0;
 
       &:hover {
         .edit-btn {
@@ -985,7 +984,7 @@ $yellow: #FFD23F;
         top: 40px;
         font-weight: 800;
         font-size: 48px;
-        color: $ink;
+        color: #f5f5f5;
       }
 
       span {
@@ -1016,7 +1015,7 @@ $yellow: #FFD23F;
       transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
       &:hover {
-        transform: translateX(-50%) translateY(-2px);
+        transform: translateX(-50%);
       }
     }
 
@@ -1106,7 +1105,7 @@ $yellow: #FFD23F;
       transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
       &:hover {
-        transform: translateX(-50%) translateY(-2px);
+        transform: translateX(-50%);
       }
     }
 
@@ -1153,7 +1152,7 @@ $yellow: #FFD23F;
       transition: opacity 0.3s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
 
       &:hover {
-        transform: translateX(-50%) translateY(-2px);
+        transform: translateX(-50%);
       }
     }
 
@@ -1175,7 +1174,7 @@ $yellow: #FFD23F;
       .card-desc {
         font-size: 14px;
         font-weight: 800;
-        color: $ink;
+        color: #f5f5f5;
         margin-bottom: 8px;
         line-height: 20px;
         display: -webkit-box;
@@ -1194,7 +1193,7 @@ $yellow: #FFD23F;
 
         .time {
           font-size: 12px;
-          color: $muted;
+          color: #777;
           font-weight: 600;
         }
 
@@ -1205,18 +1204,19 @@ $yellow: #FFD23F;
             width: 18px;
             height: 18px;
             cursor: pointer;
+            filter: brightness(0) invert(1);
           }
 
           .dropdown-menu {
             position: absolute;
             right: 0;
-            border: 2px solid $ink;
+            border: 1px solid #3d3d3d;
             border-radius: 10px;
             padding: 4px 0;
             z-index: 9999;
             min-width: 100px;
-            background: #FFFFFF;
-            box-shadow: 3px 3px 0 $ink;
+            background: #1a1a1a;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 
             &.bottom {
               top: 100%;
@@ -1231,12 +1231,12 @@ $yellow: #FFD23F;
               padding: 6px 12px;
               font-size: 13px;
               font-weight: 700;
-              color: $sub;
+              color: #ddd;
               cursor: pointer;
               text-align: center;
 
               &:hover {
-                color: $ink;
+                color: #fff;
               }
 
               &.delete {
@@ -1252,7 +1252,7 @@ $yellow: #FFD23F;
   .loading-trigger {
     text-align: center;
     padding: 20px 0;
-    color: $muted;
+    color: #777;
     font-size: 14px;
     font-weight: 600;
   }
@@ -1270,8 +1270,8 @@ $yellow: #FFD23F;
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid $line;
-    border-top: 4px solid $ink;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #ff4f9a;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 20px;
@@ -1279,22 +1279,13 @@ $yellow: #FFD23F;
 
   .loading-text {
     font-size: 14px;
-    color: $muted;
+    color: #777;
     font-weight: 600;
   }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes projCardIn {
-  from { opacity: 0; transform: translateY(18px) scale(0.95); }
-  to { opacity: 1; transform: none; }
 }
 
 /* Responsive */
@@ -1321,10 +1312,6 @@ $yellow: #FFD23F;
 @media (prefers-reduced-motion: reduce) {
   .project-card {
     animation: none !important;
-  }
-  .project-card:hover {
-    transform: none;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
   }
 }
 </style>

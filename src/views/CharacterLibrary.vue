@@ -273,13 +273,13 @@ watch(() => locale.value, () => {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 $yellow: #FFD23F;
 
 $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
@@ -287,11 +287,11 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 .character-library {
   width: 100%;
   min-height: 100vh;
-  background: $cream;
+  background: #1a1a1a;
 }
 
 .container {
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto 20px;
   padding: 100px 20px 20px;
 
@@ -318,11 +318,11 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 .count-badge {
   font-weight: 800;
   font-size: 13px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
   padding: 4px 14px;
-  background: #fff;
-  box-shadow: 2px 2px 0 $ink;
+  background: #1a1a1a;
+  box-shadow: none;
   margin-left: auto;
 }
 
@@ -336,20 +336,24 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     font-weight: 800;
     font-size: 13px;
     padding: 8px 16px;
-    border-radius: 999px;
-    border: 2px solid $ink;
+    border-radius: 25px;
+    border: 1px solid #404040;
     cursor: pointer;
     transition: all 0.16s;
-    background: #fff;
-    color: $ink;
+    background: #1a1a1a;
+    color: #888;
 
     &.active {
-      background: $ink;
       color: #fff;
+      border: 1px solid #ff9aca;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      box-shadow: 0 0 23px rgba(255, 50, 140, .65);
     }
 
     &:hover:not(.active) {
-      color: $ink;
+      color: #ccc;
+      border-color: #555;
     }
   }
 }
@@ -372,23 +376,20 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   justify-content: center;
   min-height: 220px;
   border-radius: 16px;
-  border: 3px dashed rgba(22,17,34,0.3);
-  background: rgba(255,255,255,0.5);
+  border: 1px dashed #404040;
+  background: #1a1a1a;
   padding: 30px 20px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
 
   &:hover {
-    transform: translateY(-4px);
-    border-style: solid;
-    border-color: $ink;
-    background: #fff;
-    box-shadow: 6px 6px 0 $ink;
+    border-color: #ff4f9a;
+    border-style: dashed;
 
     .create-new-icon {
       transform: rotate(12deg);
       border-style: solid;
-      border-color: $ink;
+      border-color: #ff4f9a;
       background: $pink;
       color: #fff;
     }
@@ -401,11 +402,10 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    border: 3px dashed rgba(22,17,34,0.4);
+    border: 2px dashed #404040;
     background: transparent;
-    color: $ink;
+    color: #888;
     transition: all 0.42s cubic-bezier(0.34,1.56,0.64,1);
-    animation: charBreathe 4.4s ease-in-out infinite;
 
     img {
       width: 100%;
@@ -414,40 +414,26 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     }
   }
 
-  &:hover .create-new-icon {
-    animation-play-state: paused;
-  }
-
   .create-new-text {
     font-weight: 800;
     font-size: 14px;
-    color: $ink;
+    color: #888;
     margin-top: 12px;
   }
 }
 
 .character-card {
   position: relative;
-  background: #fff;
-  border: 3px solid $ink;
-  border-radius: 16px;
-  box-shadow: 4px 4px 0 $ink;
+  background: #1a1a1a;
+  border: 1px solid #2c2c2c;
+  border-radius: 12px;
+  box-shadow: none;
   cursor: pointer;
   overflow: visible;
-  animation: charCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s;
+  transition: border-color 0.15s;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 6px 6px 0 $ink;
-
-    .char-sheen {
-      transform: translateX(140%);
-    }
-
-    .character-power {
-      transform: translateY(-2px) rotate(-3deg);
-    }
+    border-color: #ff4f9a;
   }
 
   .character-img-wrap {
@@ -464,22 +450,13 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
       object-position: center top;
     }
 
-    .char-sheen {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      transform: translateX(-140%) rotate(6deg);
-      transition: transform 900ms cubic-bezier(0.16,1,0.3,1);
-      background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%);
-    }
-
     .halftone {
       position: absolute;
       inset: 0;
       pointer-events: none;
       opacity: 0.16;
       mix-blend-mode: overlay;
-      background-image: radial-gradient($ink 1px, transparent 1.4px);
+      background-image: radial-gradient(#000 1px, transparent 1.4px);
       background-size: 9px 9px;
     }
   }
@@ -489,7 +466,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     padding: 8px 14px 12px;
     font-weight: 800;
     font-size: 15px;
-    color: $ink;
+    color: #f5f5f5;
     line-height: 1.4;
     text-align: center;
     white-space: nowrap;
@@ -504,20 +481,23 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: $yellow;
-    border: 2px solid $ink;
-    color: $ink;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    color: #ccc;
     padding: 3px 10px;
     border-radius: 999px;
     font-weight: 800;
     font-size: 11px;
     z-index: 1;
-    box-shadow: 2px 2px 0 $ink;
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: none;
 
     .power-icon {
       width: 12px;
       height: 12px;
+
+      img {
+        filter: brightness(0) invert(1);
+      }
     }
   }
 }
@@ -538,8 +518,8 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid $line;
-    border-top: 4px solid $ink;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #ff4f9a;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 20px;
@@ -547,7 +527,7 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
   .loading-text {
     font-size: 14px;
-    color: $muted;
+    color: #777;
     font-weight: 600;
   }
 }
@@ -585,23 +565,11 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
   border-radius: 14px;
   padding: 10px 24px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 $ink;
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
+  box-shadow: none;
 
   &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 $ink;
+    filter: brightness(1.08);
   }
-}
-
-@keyframes charCardIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.94); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes charBreathe {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,141,0); }
-  50% { box-shadow: 0 0 0 7px rgba(255,77,141,0.14); }
 }
 
 /* Responsive */
@@ -623,17 +591,10 @@ $role-accents: #FFC24B, #C9B6FF, #7FD8E8, #FF9EC4, #A3E635, #FFD23F;
 
 @media (prefers-reduced-motion: reduce) {
   .character-card {
-    animation: none !important;
-  }
-  .character-card:hover {
-    transform: none;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
-  }
-  .create-new-card:hover {
-    transform: none;
+    transition: none !important;
   }
   .create-new-icon {
-    animation: none !important;
+    transition: none !important;
   }
 }
 </style>

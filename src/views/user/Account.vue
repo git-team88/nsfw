@@ -59,7 +59,7 @@
 
     <div class="modal-mask" v-if="showEmailModal">
       <div class="modal">
-        <button class="close-btn" @click="closeEmailModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="closeEmailModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <div class="modal-header">
           <div class="modal-title">{{ t("user.account.changeEmail") }}</div>
         </div>
@@ -152,7 +152,7 @@
 
     <div class="modal-mask" v-if="showUnbindModal">
       <div class="unbind-modal">
-        <button class="close-btn" @click="closeUnbindModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="closeUnbindModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <div class="unbind-body">
           <div class="unbind-title">{{ t("user.account.unbindConfirm") }}</div>
         </div>
@@ -529,7 +529,7 @@ function confirmUnbind() {
 .user-account {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -541,7 +541,7 @@ function confirmUnbind() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -556,7 +556,7 @@ function confirmUnbind() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -568,7 +568,7 @@ function confirmUnbind() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .content {
@@ -579,11 +579,11 @@ function confirmUnbind() {
   align-items: center;
   gap: 14px;
   padding: 15px 16px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
+  background: rgba(255,255,255,0.06);
   margin-bottom: 10px;
-  box-shadow: 3px 3px 0 rgba(22,17,34,.10);
+  box-shadow: none;
 }
 .item:last-child {
   margin-bottom: 0;
@@ -606,13 +606,13 @@ function confirmUnbind() {
 .label {
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   white-space: nowrap;
 }
 .value {
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -628,21 +628,22 @@ function confirmUnbind() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 2px solid #ff9aca;
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 20px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.14s;
   white-space: nowrap;
 }
 .action-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .unbind-btn {
   font-weight: 800;
@@ -662,14 +663,15 @@ function confirmUnbind() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(22,17,34,.5);
+  background: rgba(0,0,0,.5);
 }
 .modal {
   width: min(520px, 94%);
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 18px;
   padding: 24px 26px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .modal {
   position: relative;
@@ -680,7 +682,7 @@ function confirmUnbind() {
 .modal-title {
   font-weight: 800;
   font-size: 19px;
-  color: #161122;
+  color: #f5f5f5;
   margin: 0;
 }
 .close-btn {
@@ -693,10 +695,10 @@ function confirmUnbind() {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
-  background: #fff;
-  box-shadow: 2px 2px 0 #161122;
+  background: rgba(255,255,255,0.06);
+  box-shadow: none;
   padding: 6px;
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1);
   z-index: 10;
@@ -718,7 +720,7 @@ function confirmUnbind() {
 .email-item-title {
   font-weight: 800;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: 0.02em;
 }
 .email-item {
@@ -733,40 +735,40 @@ function confirmUnbind() {
   box-sizing: border-box;
   height: 44px;
   padding: 13px 15px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #fff;
+  background: #1a1a1a;
   font-weight: 600;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
   transition: box-shadow 0.18s;
 }
 .email-ipt:focus {
-  box-shadow: 3px 3px 0 rgba(255,77,141,.42);
+  box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
 }
 .email-ipt::placeholder {
-  color: #bdb7c4;
+  color: #777;
 }
 .email-code {
   width: 100%;
   box-sizing: border-box;
   height: 44px;
   padding: 13px 15px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #fff;
+  background: #1a1a1a;
   font-weight: 600;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
   transition: box-shadow 0.18s;
 }
 .email-code:focus {
-  box-shadow: 3px 3px 0 rgba(255,77,141,.42);
+  box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
 }
 .email-code::placeholder {
-  color: #bdb7c4;
+  color: #777;
 }
 .email-txt {
   position: absolute;
@@ -777,13 +779,13 @@ function confirmUnbind() {
   justify-content: center;
   height: 44px;
   background: none;
-  color: #FF4D8D;
+  color: #ff4f9a;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
 }
 .email-txt.on {
-  color: rgba(22,17,34,.55);
+  color: #777;
   cursor: not-allowed;
 }
 .email-error {
@@ -805,7 +807,7 @@ function confirmUnbind() {
   padding: 6px;
   font-size: 14px;
   border-radius: 4px;
-  background: rgba(16, 13, 48, 0.96);
+  background: rgba(0,0,0,0.8);
   color: rgba(255, 255, 255, 0.7);
   z-index: 10;
 }
@@ -814,54 +816,56 @@ function confirmUnbind() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 13px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   margin: 18px auto 0;
   min-width: 240px;
 }
 .confirm-btn:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
 }
 .confirm-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 }
 .tip {
   text-align: center;
   font-weight: 600;
   font-size: 12px;
   opacity: 0.55;
-  color: #161122;
+  color: #777;
   margin: 12px 0 0;
 }
 .tip a {
-  color: #FF4D8D;
+  color: #ff4f9a;
 }
 
 .unbind-modal {
   width: min(440px, 94%);
   position: relative;
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 18px;
   padding: 24px 26px;
   text-align: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .unbind-title {
   font-weight: 800;
   font-size: 19px;
-  color: #161122;
+  color: #f5f5f5;
   margin: 0 0 20px;
 }
 .unbind-actions {
@@ -870,24 +874,23 @@ function confirmUnbind() {
   justify-content: center;
 }
 .cancel-btn {
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
-  color: #161122;
+  background: rgba(255,255,255,0.06);
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   padding: 13px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   min-width: 136px;
 }
 .cancel-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .confirm-unbind-btn {
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   background: #E5484D;
   color: #fff;
@@ -895,13 +898,12 @@ function confirmUnbind() {
   font-size: 14px;
   padding: 13px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   min-width: 136px;
 }
 .confirm-unbind-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 
 .load {
@@ -914,7 +916,7 @@ function confirmUnbind() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(22,17,34,.4);
+  background: rgba(0,0,0,.5);
   z-index: 800;
 }
 .load img {

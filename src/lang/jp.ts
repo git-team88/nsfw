@@ -1220,6 +1220,7 @@ support{'@'}moegen{'.'}aiまでメールを送信するかDiscordコミュニテ
       },
     },
     revenue: {
+      yen: "円",
       total: "総収益",
       withdrawn: "凍結期間現金収益",
       pending: "出金可能なトークン収益",

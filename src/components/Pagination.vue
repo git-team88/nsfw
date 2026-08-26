@@ -101,37 +101,36 @@ function go() {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border: 2.5px solid #161122;
-  border-radius: 10px;
-  background: #fff;
-  color: #161122;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #3d3d3d;
+  border-radius: 25px;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.12);
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s;
+  box-shadow: none;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .pg-btn:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
+  border-color: #ff4f9a;
+  color: #ff4f9a;
 }
 
 .pg-btn:active:not(:disabled) {
-  transform: translate(0, 0);
-  box-shadow: 2px 2px 0 rgba(22, 17, 34, 0.12);
+  border-color: #ff4f9a;
 }
 
 .pg-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.06);
+  box-shadow: none;
 }
 
 .pg-btn:focus-visible {
-  outline: 2.5px solid #FF4D8D;
+  outline: 2px solid #ff4f9a;
   outline-offset: 2px;
 }
 
@@ -147,28 +146,27 @@ function go() {
 }
 
 .pg-num {
-  height: 32px;
-  min-width: 32px;
+  height: 36px;
+  min-width: 36px;
   padding: 0 8px;
-  border: 2.5px solid #161122;
-  border-radius: 10px;
-  background: #fff;
-  color: #5b5566;
+  border: 1px solid #3d3d3d;
+  border-radius: 50%;
+  background: #1a1a1a;
+  color: #aaa;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s, background 0.16s, color 0.16s;
+  box-shadow: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .pg-num:hover:not(.on) {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.14);
-  color: #161122;
+  border-color: #ff4f9a;
+  color: #f5f5f5;
 }
 
 .pg-num:focus-visible {
-  outline: 2.5px solid #FF4D8D;
+  outline: 2px solid #ff4f9a;
   outline-offset: 2px;
 }
 
@@ -176,9 +174,9 @@ function go() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  width: 36px;
   font-weight: 800;
-  color: #9a93a4;
+  color: #777;
 }
 
 .pg-go {
@@ -187,73 +185,74 @@ function go() {
   gap: 6px;
   font-weight: 700;
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 }
 
 .pg-input {
   width: 50px;
-  height: 32px;
+  height: 36px;
   padding: 0 8px;
-  border: 2.5px solid #161122;
-  border-radius: 10px;
+  border: 1px solid #3d3d3d;
+  border-radius: 8px;
   text-align: center;
-  background: #FFFCF6;
+  background: #1a1a1a;
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .pg-input:focus {
-  outline: 2.5px solid #FF4D8D;
+  outline: 2px solid #ff4f9a;
   outline-offset: 2px;
 }
 
 .pg-go-btn {
-  height: 32px;
+  height: 36px;
   padding: 0 12px;
-  border: 2.5px solid #161122;
-  border-radius: 10px;
-  background: #fff;
+  border: 1px solid #3d3d3d;
+  border-radius: 8px;
+  background: #1a1a1a;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.12);
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s, background 0.16s;
+  box-shadow: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .pg-go-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 rgba(22, 17, 34, 0.18);
+  border-color: #ff4f9a;
+  color: #ff4f9a;
 }
 
 .pg-go-btn:focus-visible {
-  outline: 2.5px solid #FF4D8D;
+  outline: 2px solid #ff4f9a;
   outline-offset: 2px;
 }
 
 .theme-pink .pg-num.on,
 .theme-pink .pg-num.on:hover {
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
   color: #fff;
-  border-color: #161122;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.22);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 10px rgba(255, 61, 134, .25);
   transform: none;
 }
 
 .theme-pink .pg-go-btn {
-  color: #FF4D8D;
+  color: #ff4f9a;
 }
 
 .theme-pink .pg-go-btn:hover {
-  background: #FFE1EC;
+  border-color: #ff4f9a;
+  background: rgba(255,79,154,0.12);
 }
 
 .theme-blue .pg-num.on,
 .theme-blue .pg-num.on:hover {
-  background: #161122;
-  color: #00D3F2;
-  border-color: #161122;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.22);
+  background: #f5f5f5;
+  color: #1a1a1a;
+  border-color: #3d3d3d;
+  box-shadow: none;
   transform: none;
 }
 
@@ -262,6 +261,7 @@ function go() {
 }
 
 .theme-blue .pg-go-btn:hover {
+  border-color: #00D3F2;
   background: rgba(0, 211, 242, 0.12);
 }
 
@@ -270,11 +270,6 @@ function go() {
   .pg-num,
   .pg-go-btn {
     transition: none !important;
-  }
-  .pg-btn:hover:not(:disabled),
-  .pg-num:hover:not(.on),
-  .pg-go-btn:hover {
-    transform: none !important;
   }
 }
 </style>

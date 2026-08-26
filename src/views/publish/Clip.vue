@@ -8,16 +8,16 @@
         <span class="back-text">{{ t('back') }}</span>
       </div>
 
-      <div class="tabs" :class="showFullContent ? 'on' : ''">
-        <span
-          :class="tabIndex == index ? 'on' : ''"
+      <div class="main-tabs">
+        <div
+          class="main-tab"
+          :class="{ active: tabIndex == index }"
           v-for="(tab, index) in tabList"
           :key="index"
           @click="changeTab(tab, index)"
         >
           {{ tab.name }}
-          <b></b>
-        </span>
+        </div>
       </div>
 
       <!-- Upload Tabs -->
@@ -191,6 +191,7 @@
             <div class="perm-options">
               <div
                 class="perm-option"
+                :class="{ active: form.permission === opt.key }"
                 v-for="opt in permOptions"
                 :key="opt.key"
                 @click="handlePermissionChange(opt.key)"
@@ -302,12 +303,13 @@
           </div>
 
           <!-- Content Settings -->
-          <div class="inline-perm-row">
+          <div class="inline-perm-row" v-if="false">
             <div class="perm-group">
               <span class="perm-label">{{ t('submit.contentSettings') }}</span>
               <div class="perm-options">
                 <div
                   class="perm-option"
+                  :class="{ active: form.content === opt.key }"
                   v-for="opt in contentOptions"
                   :key="opt.key"
                   @click="form.content = opt.key"
@@ -409,7 +411,7 @@ const form = ref({
   title: "",
   description: "",
   permission: "public",
-  content: "no",
+  content: "yes",
   language: defaultLang,
 });
 
@@ -458,11 +460,10 @@ const currentLangLabel = computed(() => {
 const tabList = [
   { name: t("submit.tabs.novel"), path: "/publish/novel" },
   { name: t("submit.tabs.manhua"), path: "/publish/comic" },
-  { name: t("submit.tabs.manju"), path: "/publish/video" },
   { name: t("submit.tabs.photo"), path: "/publish/image" },
   { name: t("submit.tabs.video"), path: "/publish/clip" },
 ];
-const tabIndex = ref(4);
+const tabIndex = ref(3);
 
 function changeTab(tab: { name: string; path: string }, _index: number) {
   if (tab.path === route.path) return;

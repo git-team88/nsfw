@@ -31,7 +31,7 @@
             </div>
             <div class="token-info">
               <div class="info-tip">
-                <img class="info-icon" src="@/assets/images/user/info.png" alt="" />
+                <img class="info-icon" src="@/assets/images/publish/info.png" alt="" />
                 {{ t("user.revenue.tokenWithdrawTip") }}
               </div>
               <div class="btn-group">
@@ -50,18 +50,18 @@
               <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
               <div class="metric-value">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)} 日元` : "--" }}
+                {{ pendingJpy != null ? `${formatSci(pendingJpy)} ${t('user.revenue.yen')}` : "--" }}
               </div>
             </div>
             <div class="metric cash-withdrawing">
               <div class="metric-label">{{ t("user.revenue.cashPending") }}</div>
               <div class="metric-value">
-                {{ availableJpy != null ? `${formatSci(availableJpy)} 日元` : "--" }}
+                {{ availableJpy != null ? `${formatSci(availableJpy)} ${t('user.revenue.yen')}` : "--" }}
               </div>
             </div>
             <div class="cash-info">
               <div class="info-tip">
-                <img class="info-icon" src="@/assets/images/user/info.png" alt="" />
+                <img class="info-icon" src="@/assets/images/publish/info.png" alt="" />
                 {{ t("user.revenue.cashWithdrawTip") }}
               </div>
               <div class="cash-btn-group">
@@ -329,7 +329,7 @@ function formatSci(n: number | string | null) {
 .user-revenue {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -341,12 +341,12 @@ function formatSci(n: number | string | null) {
 .main {
   flex: 1;
   padding: 24px 16px;
-  border: 3px solid #161122;
-  border-radius: 12px;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
   margin-left: 238px;
-  background: #FEFDF8;
+  background: #1a1a1a;
 }
 .panel-top {
   display: flex;
@@ -359,18 +359,18 @@ function formatSci(n: number | string | null) {
   height: 42px;
   font-weight: 900;
   font-size: 28px;
-  color: #161122;
+  color: #f5f5f5;
   white-space: nowrap;
   line-height: 42px;
 }
 .panel-tip {
   font-size: 16px;
-  color: #99A1AF;
+  color: #777;
   font-weight: 500;
   white-space: nowrap;
   line-height: 24px;
   .pink {
-    color: #FF4D8E;
+    color: #ff4f9a;
   }
 }
 
@@ -378,9 +378,9 @@ function formatSci(n: number | string | null) {
   display: flex;
   align-items: stretch;
   gap: 10px;
-  background: #FFFFFF;
-  border-radius: 12px;
-  border: 2px solid #161122;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  border: 1px solid #3d3d3d;
   padding: 14px;
   margin-bottom: 14px;
 }
@@ -390,8 +390,8 @@ function formatSci(n: number | string | null) {
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  border-radius: 12px;
-  border: 2px solid #161122;
+  border-radius: 14px;
+  border: 1px solid #3d3d3d;
   padding: 14px;
   position: relative;
   overflow: hidden;
@@ -412,7 +412,7 @@ function formatSci(n: number | string | null) {
   background: linear-gradient(90deg, rgba(27,162,122,0) 0%, #1BA27A 100%);
 }
 .metric-label {
-  color: #161122;
+  color: #f5f5f5;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -422,7 +422,7 @@ function formatSci(n: number | string | null) {
   margin-top: 16px;
   font-weight: 700;
   font-size: 28px;
-  color: #161122;
+  color: #f5f5f5;
   white-space: normal;
   word-break: break-word;
   line-height: 36px;
@@ -439,7 +439,7 @@ function formatSci(n: number | string | null) {
   align-items: flex-start;
   gap: 10px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #777;
   font-weight: 500;
   line-height: 24px;
   white-space: pre-line;
@@ -463,9 +463,9 @@ function formatSci(n: number | string | null) {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #FFFFFF;
-  border-radius: 12px;
-  border: 2px solid #161122;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  border: 1px solid #3d3d3d;
   padding: 14px;
   margin-bottom: 14px;
 }
@@ -486,7 +486,7 @@ function formatSci(n: number | string | null) {
   align-items: flex-start;
   gap: 6px;
   font-size: 14px;
-  color: #99A1AF;
+  color: #777;
   font-weight: 500;
   line-height: 24px;
 }
@@ -510,79 +510,73 @@ function formatSci(n: number | string | null) {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
-  border-radius: 12px;
-  box-shadow: 3px 3px 0 #161122;
+  transition: transform 0.1s;
+  border-radius: 14px;
+  box-shadow: none;
 
   &.primary {
-    background: #FF4D8E;
-    border: 2px solid #161122;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    border: 2px solid #ff9aca;
     color: #FFFFFF;
-
-    &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0 #161122;
-    }
-
-    &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 #161122;
-    }
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   }
 
   &.secondary {
-    background: #FFFFFF;
-    border: 2px solid #161122;
-    color: #161122;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid #3d3d3d;
+    color: #f5f5f5;
 
     &:hover {
-      color: #FF4D8E;
-      transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0 #161122;
-    }
-
-    &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 #161122;
+      color: #ff4f9a;
     }
   }
 }
 
 .tabs {
   display: flex;
-  gap: 30px;
-  padding: 0 36px 20px;
-  position: relative;
-  border-bottom: 2.5px solid #161122;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid #303030;
+  padding: 0;
+  background: transparent;
 }
 .tabs span {
-  height: auto;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #161122;
   position: relative;
-  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #555;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s;
 }
 .tabs span.on {
-  font-weight: 700;
-  color: #161122;
+  color: #e7e7e7;
 }
 .tabs span.on::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -20px;
+  right: 8px;
+  bottom: -1px;
+  left: 8px;
   height: 4px;
-  background: #FF4D8D;
-  border-radius: 2px;
+  border-radius: 4px 4px 0 0;
+  background: #ff4f9a;
+}
+.tabs span:hover:not(.on) {
+  color: #aaa;
 }
 .block {
-  border: 2px solid #161122;
-  border-radius: 13px;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
   padding: 0;
-  background: #FFFDF7;
+  background: #1a1a1a;
 }
 .block-title {
   display: flex;
@@ -591,23 +585,23 @@ function formatSci(n: number | string | null) {
   font-size: 14px;
   font-weight: 700;
   padding: 0 36px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .block.overall {
-  border-color: #161122;
+  border-color: #3d3d3d;
 }
 .block.overall .block-title {
-  color: #FF4D8D;
-  background: #FFF0F5;
-  border-bottom: 2.5px solid #FF4D8D;
+  color: #ff4f9a;
+  background: rgba(255,79,154,0.12);
+  border-bottom: 1px solid #ff4f9a;
 }
 .block.work {
-  border-color: #161122;
+  border-color: #3d3d3d;
 }
 .block.work .block-title {
   color: #00D3F2;
-  background: #F0FFFE;
-  border-bottom: 2.5px solid #00D3F2;
+  background: rgba(0,211,242,0.12);
+  border-bottom: 1px solid #00D3F2;
 }
 .block-tools {
   display: flex;
@@ -625,14 +619,14 @@ function formatSci(n: number | string | null) {
   height: 28px;
   border: none;
   outline: none;
-  color: #161122;
+  color: #f5f5f5;
   background: transparent;
 }
 .download {
   height: 40px;
   padding: 0 12px;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
   background: #00D3F2;
   color: #fff;
   display: flex;
@@ -640,20 +634,20 @@ function formatSci(n: number | string | null) {
   gap: 6px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: none;
+  transition: transform 0.1s;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+
   }
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 #161122;
+
   }
 }
 .block.overall .download {
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
 }
 .block.work .download {
   background: #00D3F2;
@@ -664,8 +658,8 @@ function formatSci(n: number | string | null) {
 }
 
 .table {
-  border: 2px solid #161122;
-  border-radius: 13px;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
   overflow: hidden;
   margin: 0 36px;
 }
@@ -674,13 +668,13 @@ function formatSci(n: number | string | null) {
   display: grid;
 }
 .table.overall {
-  border-color: #161122;
+  border-color: #3d3d3d;
 }
 .table.work {
-  border-color: #161122;
+  border-color: #3d3d3d;
 }
 .table.record {
-  border-color: #161122;
+  border-color: #3d3d3d;
 }
 .table.overall .thead,
 .table.overall .tr {
@@ -714,7 +708,7 @@ function formatSci(n: number | string | null) {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -724,8 +718,9 @@ function formatSci(n: number | string | null) {
   width: 360px;
   padding: 20px;
   border-radius: 18px;
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   position: relative;
   text-align: center;
 }
@@ -736,9 +731,9 @@ function formatSci(n: number | string | null) {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -754,7 +749,7 @@ function formatSci(n: number | string | null) {
 }
 .modal-title {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 10px;
   font-weight: 500;
 }
@@ -767,23 +762,16 @@ function formatSci(n: number | string | null) {
 .modal-confirm {
   height: 40px;
   padding: 0 16px;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  background: #FF4D8D;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 2px solid #ff9aca;
   color: #fff;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.1s, box-shadow 0.1s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 #161122;
-  }
+  box-shadow: 0 0 10px rgba(255, 61, 134, .25);
+  transition: box-shadow 0.1s;
 }
 .modal-confirm:disabled {
   opacity: 0.5;
@@ -793,41 +781,41 @@ function formatSci(n: number | string | null) {
 
 .table.overall .thead,
 .table.overall .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 1px solid #2c2c2c;
 }
 .table.work .thead,
 .table.work .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 1px solid #2c2c2c;
 }
 .table.record .thead,
 .table.record .tr {
-  border-bottom: 2.5px solid #161122;
+  border-bottom: 1px solid #2c2c2c;
 }
 .th {
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 700;
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.12);
 }
 td {
-  color: #161122;
+  color: #f5f5f5;
 }
 .table.overall .th {
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.12);
 }
 .table.work .th {
-  background: #F0FFFE;
+  background: rgba(0,211,242,0.12);
 }
 .table.record .th {
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.12);
 }
 .table.overall .tbody .tr:hover {
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.06);
 }
 .table.work .tbody .tr:hover {
-  background: #F0FFFE;
+  background: rgba(0,211,242,0.06);
 }
 .table.record .tbody .tr:hover {
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.06);
 }
 .block .pagination {
   margin: 24px 0;
@@ -839,8 +827,8 @@ td {
     padding: 80px 20px 24px;
   }
   .main {
-  padding: 24px;
-  margin-left: 0;
+    padding: 24px;
+    margin-left: 0;
   }
   .token-section {
     flex-direction: column;
@@ -891,8 +879,11 @@ td {
     min-width: auto;
   }
   .tabs {
-    padding: 0 16px 16px;
+    flex-wrap: wrap;
     gap: 16px;
+  }
+  .tabs span {
+    font-size: 13px;
   }
   .th, .td {
     padding: 0 10px;

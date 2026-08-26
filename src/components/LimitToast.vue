@@ -36,16 +36,15 @@ defineExpose({ show })
 
   .limit-toast-content {
     max-width: 250px;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-    border-radius: 4px;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    border-radius: 14px;
     padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 0px 0px 32px 0px rgba(0, 0, 0, 0.2);
 
     &::before {
       content: "";
@@ -54,8 +53,8 @@ defineExpose({ show })
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(250, 45, 71, 0.06);
-      border-radius: 4px;
+      background: rgba(229, 72, 77, 0.08);
+      border-radius: 14px;
     }
 
     .limit-toast-msg {

@@ -38,7 +38,7 @@
                 {{ t('user.paymentHistory.viewAll') }}
               </button>
               <div class="info-icon" @mouseenter="showInfo = true" @mouseleave="showInfo = false">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <div class="info-tooltip" v-if="showInfo">
                   {{ t('user.paymentHistory.infoTooltip') }}
                 </div>
@@ -691,8 +691,8 @@ onBeforeUnmount(() => {
   width: min(800px, 100%);
   max-width: 100%;
   max-height: 90vh;
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
   padding: 24px;
   overflow-y: auto;
@@ -706,11 +706,11 @@ onBeforeUnmount(() => {
 
     .btn-download-pdf {
       padding: 8px 16px;
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
       color: #fff;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 13px;
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: none;
       cursor: pointer;
       font-size: 14px;
       font-weight: 700;
@@ -727,11 +727,11 @@ onBeforeUnmount(() => {
 .invoice-paper {
   width: 100%;
   min-height: 800px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   padding: 40px 30px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  color: #161122;
+  color: #f5f5f5;
   font-family: Arial, sans-serif;
 
   .invoice-header {
@@ -747,25 +747,26 @@ onBeforeUnmount(() => {
       .logo-icon {
         width: 20px;
         height: 20px;
-        background: #FF4D8D;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        box-shadow: 0 0 16px rgba(255, 61, 134, .3);
         border-radius: 50%;
-        border: 2px solid #161122;
+        border: 1px solid #3d3d3d;
       }
       .logo-text {
         font-size: 20px;
-        color: #161122;
+        color: #f5f5f5;
         b {
           font-weight: 800;
         }
         span {
-          color: #FF4D8D;
+          color: #ff4f9a;
         }
       }
     }
 
     .invoice-title {
       font-size: 30px;
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 800;
     }
   }
@@ -791,7 +792,7 @@ onBeforeUnmount(() => {
         margin-bottom: 4px;
         font-size: 12px;
         .label {
-          color: #161122;
+          color: #f5f5f5;
           margin-right: 6px;
         }
         .value {
@@ -805,7 +806,7 @@ onBeforeUnmount(() => {
     margin-bottom: 30px;
     .section-label {
       font-size: 12px;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 3px;
     }
     .bill-email {
@@ -822,8 +823,8 @@ onBeforeUnmount(() => {
     th {
       text-align: left;
       padding: 8px 0;
-      border-bottom: 2.5px solid #161122;
-      color: #161122;
+      border-bottom: 1px solid #3d3d3d;
+      color: #f5f5f5;
       font-size: 12px;
       font-weight: 700;
     }
@@ -831,7 +832,7 @@ onBeforeUnmount(() => {
     td {
       padding: 12px 0;
       font-size: 12px;
-      color: #161122;
+      color: #f5f5f5;
     }
 
     .center {
@@ -857,7 +858,7 @@ onBeforeUnmount(() => {
         padding-top: 8px;
         font-weight: 800;
         font-size: 14px;
-        border-top: 2.5px solid #161122;
+        border-top: 1px solid #3d3d3d;
       }
 
       &.paid {
@@ -869,14 +870,14 @@ onBeforeUnmount(() => {
   .invoice-footer {
     margin-top: 60px;
     font-size: 11px;
-    color: #161122;
+    color: #f5f5f5;
   }
 }
 
 .user-payment-history {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -888,7 +889,7 @@ onBeforeUnmount(() => {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -904,7 +905,7 @@ onBeforeUnmount(() => {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -916,36 +917,56 @@ onBeforeUnmount(() => {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .tabs-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #303030;
 }
 .tabs {
-  display: inline-flex;
-  gap: 6px;
-  border: 2px solid #161122;
-  border-radius: 14px;
-  padding: 5px;
+  display: flex;
+  align-items: flex-end;
+  gap: 31px;
+  background: transparent;
 }
 .tab-item {
-  font-size: 16px;
-  color: #161122;
-  padding: 8px 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #555;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  border-radius: 10px;
-  font-weight: 500;
-  transition: all 0.15s ease;
+  transition: color 0.15s;
 
   &.active {
-    background: #161122;
-    color: #fff;
-    border-radius: 10px;
-    font-weight: 800;
+    color: #e7e7e7;
+
+    &::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      bottom: -13px;
+      left: 8px;
+      height: 4px;
+      border-radius: 4px 4px 0 0;
+      background: #ff4f9a;
+    }
+  }
+
+  &:hover:not(.active) {
+    color: #aaa;
   }
 }
 
@@ -962,22 +983,17 @@ onBeforeUnmount(() => {
   gap: 6px;
   min-width: 136px;
   height: 44px;
-  background: #FF4D8D;
-  color: #fff;
-  border: 2.5px solid #161122;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
   border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
   padding: 0 18px;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+  transition: box-shadow 0.14s;
   white-space: nowrap;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
+  color: #FFFFFF;
 }
 
 .info-icon {
@@ -995,37 +1011,37 @@ onBeforeUnmount(() => {
     right: 0;
     margin-top: 10px;
     padding: 10px 14px;
-    background: #FFFDF7;
-    color: #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
     font-size: 12px;
     font-weight: 600;
     line-height: 1.7;
-    border-radius: 10px;
-    border: 2px solid #161122;
+    border-radius: 12px;
+    border: 1px solid #3d3d3d;
     white-space: nowrap;
     z-index: 100;
 
     &::before {
       content: "";
       position: absolute;
-      top: -8px;
-      right: 2px;
+      top: -7px;
+      right: 10px;
       width: 0;
       height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 8px solid #161122;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid #3d3d3d;
     }
     &::after {
       content: "";
       position: absolute;
       top: -5px;
-      right: 2px;
+      right: 11px;
       width: 0;
       height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-bottom: 7px solid #FFFDF7;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid #1a1a1a;
     }
   }
 }
@@ -1034,15 +1050,15 @@ onBeforeUnmount(() => {
   min-height: 400px;
 }
 .tbody {
-  border-top: 2px solid #161122;
+  border-top: 1px solid #3d3d3d;
 }
 .tr {
   display: flex;
   align-items: center;
   padding: 14px 20px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   cursor: pointer;
   margin-bottom: 8px;
   animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -1050,21 +1066,20 @@ onBeforeUnmount(() => {
   transition: transform 0.12s ease-out, box-shadow 0.12s;
 
   &:hover {
-    transform: translateX(4px);
-    box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
+    box-shadow: none;
 
     .btn-view {
-      background: #FFFDF7;
+      background: #1a1a1a;
     }
   }
 }
 .td {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .time {
   width: 170px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .info {
   flex: 1;
@@ -1072,7 +1087,7 @@ onBeforeUnmount(() => {
 .quantity {
   width: 130px;
   text-align: center;
-  color: #161122;
+  color: #f5f5f5;
 }
 .amount {
   width: 130px;
@@ -1088,20 +1103,16 @@ onBeforeUnmount(() => {
 .btn-invoice {
   min-width: 136px;
   height: 40px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
   border-radius: 13px;
-  border: 2.5px solid #161122;
+  border: 2px solid #ff9aca;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.14s;
 }
 
 .btn-view {
@@ -1110,35 +1121,35 @@ onBeforeUnmount(() => {
   border-radius: 13px;
   font-size: 14px;
   font-weight: 700;
-  background: #FFF3D6;
-  color: #161122;
-  border: 2.5px solid #161122;
+  background: rgba(255,255,255,0.06);
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 
   &:hover {
-    box-shadow: 1px 1px 0 #161122;
-    transform: translate(2px, 2px);
-    background: #FFFDF7;
+    box-shadow: none;
+    background: #1a1a1a;
   }
 }
 
 .btn-download {
   min-width: 136px;
   height: 40px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
   border-radius: 13px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+
+    box-shadow: none;
   }
 }
 
@@ -1159,8 +1170,8 @@ onBeforeUnmount(() => {
   .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e7e1d8;
-    border-top: 3px solid #161122;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #f5f5f5;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     box-sizing: border-box;
@@ -1168,7 +1179,7 @@ onBeforeUnmount(() => {
 
   .loading-text {
     font-size: 16px;
-    color: #161122;
+    color: #f5f5f5;
     font-weight: 700;
   }
 }
@@ -1195,16 +1206,15 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   padding: 18px 24px 18px 18px;
   border-radius: 13px;
-  border: 2px solid #161122;
-  background: #FFFDF7;
+  border: 1px solid #3d3d3d;
+  background: #1a1a1a;
   cursor: pointer;
   animation: rkRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   will-change: transform;
   transition: transform 0.12s ease-out, box-shadow 0.12s;
 
   &:hover {
-    transform: translateX(4px);
-    box-shadow: 5px 3px 0 rgba(22, 17, 34, 0.14);
+    box-shadow: none;
   }
   .left {
     flex: 1;
@@ -1215,7 +1225,7 @@ onBeforeUnmount(() => {
       width: 52px;
       height: 52px;
       border-radius: 12px;
-      border: 2px solid #161122;
+      border: 1px solid #3d3d3d;
       object-fit: cover;
     }
     .info {
@@ -1226,12 +1236,12 @@ onBeforeUnmount(() => {
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: 16px;
-        color: #161122;
+        color: #f5f5f5;
         font-weight: 700;
       }
       .id {
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         margin-top: 8px;
       }
     }
@@ -1240,13 +1250,13 @@ onBeforeUnmount(() => {
     }
     .plan-name {
       font-size: 16px;
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 700;
       margin-bottom: 8px;
     }
     .compute-info {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
     }
   }
   .right {
@@ -1257,12 +1267,12 @@ onBeforeUnmount(() => {
       text-align: right;
       .price {
         font-size: 16px;
-        color: #161122;
+        color: #f5f5f5;
         font-weight: 700;
       }
       .date {
         font-size: 14px;
-        color: #161122;
+        color: #f5f5f5;
         margin-top: 6px;
       }
     }
@@ -1285,8 +1295,8 @@ onBeforeUnmount(() => {
            width: auto;
            min-width: 160px;
            border-radius: 6px;
-           background: #FFFDF7;
-   border: 2px solid #161122;
+           background: #1a1a1a;
+   border: 1px solid #3d3d3d;
            z-index: 10;
 
           .menu-item {
@@ -1295,11 +1305,11 @@ onBeforeUnmount(() => {
             font-size: 12px;
             font-weight: 700;
             text-align: center;
-            color: #161122;
+            color: #f5f5f5;
             cursor: pointer;
 
             &:hover {
-              background: #FFF3D6;
+              background: rgba(255,255,255,0.06);
             }
           }
         }
@@ -1310,13 +1320,13 @@ onBeforeUnmount(() => {
         align-items: center;
         gap: 24px;
         font-size: 14px;
-        color: #FF4D8D;
+        color: #ff4f9a;
         font-weight: 700;
 
         b {
           width: 2px;
           height: 24px;
-          background: #161122;
+          background: rgba(255,255,255,0.08);
         }
       }
     }
@@ -1328,10 +1338,10 @@ onBeforeUnmount(() => {
     }
     .auto-renew {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       &.auto-renewal {
         color: #1B8f5a;
-        background: #E7F8EE;
+        background: rgba(255,255,255,0.03);
         border: 1.5px solid #9be0bd;
         border-radius: 999px;
         padding: 2px 8px;
@@ -1339,26 +1349,28 @@ onBeforeUnmount(() => {
     }
     .auto-renew-btn {
       padding: 4px 12px;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 999px;
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      border: 2px solid #ff9aca;
+      box-shadow: 0 0 16px rgba(255, 61, 134, .3);
       color: #fff;
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: none;
     }
     .more-options {
       position: relative;
     }
     .more-btn {
       font-size: 16px;
-      color: #161122;
+      color: #f5f5f5;
       cursor: pointer;
       padding: 0 8px;
       font-weight: 700;
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
     .more-menu {
@@ -1370,20 +1382,20 @@ onBeforeUnmount(() => {
        width: auto;
        min-width: 160px;
        border-radius: 6px;
-       background: #FFFDF7;
-       border: 2px solid #161122;
+       background: #1a1a1a;
+       border: 1px solid #3d3d3d;
        z-index: 10;
 
       .menu-item {
         width: 100%;
         padding: 8px 10px;
         font-size: 12px;
-        color: #161122;
+        color: #f5f5f5;
         font-weight: 700;
         cursor: pointer;
 
         &:hover {
-          background: #FFF3D6;
+          background: rgba(255,255,255,0.06);
         }
       }
     }
@@ -1402,13 +1414,13 @@ onBeforeUnmount(() => {
         align-items: center;
         gap: 24px;
         font-size: 14px;
-        color: #FF4D8D;
+        color: #ff4f9a;
         font-weight: 700;
 
         b {
           width: 2px;
           height: 24px;
-          background: #161122;
+          background: rgba(255,255,255,0.08);
         }
       }
     }
@@ -1418,7 +1430,7 @@ onBeforeUnmount(() => {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1426,9 +1438,9 @@ onBeforeUnmount(() => {
 }
 .modal {
   width: min(520px, calc(100vw - 32px));
-  background: #FFFDF7;
-  border-radius: 6px;
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border-radius: 18px;
+  border: 1px solid #3d3d3d;
   padding: 18px 0;
   position: relative;
 
@@ -1439,9 +1451,9 @@ onBeforeUnmount(() => {
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #fff;
-    border: 2px solid #161122;
-    box-shadow: 2px 2px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1454,45 +1466,45 @@ onBeforeUnmount(() => {
   .modal-title {
     font-size: 30px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
     padding: 0 24px 18px;
-    border-bottom: 2.5px solid #161122;
+    border-bottom: 1px solid #3d3d3d;
   }
   .modal-tip {
     margin: 18px 24px;
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     border-radius: 6px;
   }
   .form-item {
     margin-bottom: 18px;
     padding: 0 24px 18px;
-    border-bottom: 2.5px solid #161122;
+    border-bottom: 1px solid #3d3d3d;
 
     label {
       display: block;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 700;
       margin-bottom: 12px;
     }
     input {
       width: 100%;
       height: 50px;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 13px;
       padding: 0 16px;
       font-size: 14px;
-      background: #FFFDF7;
-      color: #161122;
+      background: #1a1a1a;
+      color: #f5f5f5;
       outline: none;
       &::placeholder {
-        color: #161122;
+        color: #f5f5f5;
         opacity: 0.4;
       }
       &:focus {
-        border-color: #FF4D8D;
-        box-shadow: 3px 3px 0 rgba(255,77,141,.42);
+        border-color: #ff4f9a;
+        box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
       }
     }
   }
@@ -1503,31 +1515,30 @@ onBeforeUnmount(() => {
     button {
       min-width: 136px;
       height: 48px;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 13px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: none;
     }
     .btn-cancel {
-      border: 2.5px solid #161122;
-      background: #FFFDF7;
-      color: #161122;
+      border: 1px solid #3d3d3d;
+      background: #1a1a1a;
+      color: #f5f5f5;
 
       &:hover {
-        background: #FFF3D6;
-        box-shadow: 1px 1px 0 #161122;
-        transform: translate(2px, 2px);
+        background: rgba(255,255,255,0.06);
+        box-shadow: none;
       }
     }
     .btn-confirm {
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      border: 2px solid #ff9aca;
       color: #fff;
 
       &:hover {
-        box-shadow: 1px 1px 0 #161122;
-        transform: translate(2px, 2px);
+        box-shadow: none;
       }
     }
   }
@@ -1588,11 +1599,12 @@ onBeforeUnmount(() => {
   }
   .tabs {
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 8px;
   }
   .tab-item {
+    height: 34px;
+    padding: 0 14px;
     font-size: 13px;
-    padding: 6px 12px;
   }
   .actions-right {
     width: 100%;

@@ -12,11 +12,11 @@
     <div class="guide-bubble">
       <div class="guide-halftone" aria-hidden="true"></div>
       <svg class="guide-mascot" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-        <circle cx="24" cy="25" r="18.5" fill="#fff" stroke="#161122" stroke-width="2.6" />
-        <path d="M9 19 Q24 5 39 19" stroke="#161122" stroke-width="2.6" fill="none" stroke-linecap="round" />
-        <circle cx="18" cy="24" r="2.4" fill="#161122" />
-        <circle cx="30" cy="24" r="2.4" fill="#161122" />
-        <path d="M19 31 Q24 35.5 29 31" stroke="#161122" stroke-width="2.4" fill="none" stroke-linecap="round" />
+        <circle cx="24" cy="25" r="18.5" fill="#1a1a1a" stroke="#f5f5f5" stroke-width="2.6" />
+        <path d="M9 19 Q24 5 39 19" stroke="#f5f5f5" stroke-width="2.6" fill="none" stroke-linecap="round" />
+        <circle cx="18" cy="24" r="2.4" fill="#f5f5f5" />
+        <circle cx="30" cy="24" r="2.4" fill="#f5f5f5" />
+        <path d="M19 31 Q24 35.5 29 31" stroke="#f5f5f5" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <circle cx="13.5" cy="29" r="2" fill="#FF7AAE" />
         <circle cx="34.5" cy="29" r="2" fill="#FF7AAE" />
       </svg>
@@ -137,8 +137,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$pink: #FF4D8D;
 
 .guide-root { position: fixed; inset: 0; z-index: 1000; }
 
@@ -150,8 +148,8 @@ $pink: #FF4D8D;
   position: fixed;
   z-index: 1001;
   border: 3px solid #fff;
-  border-radius: 14px;
-  box-shadow: 0 0 0 9999px rgba(22, 17, 34, .62);
+  border-radius: 18px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   opacity: 0;
   transition:
@@ -165,7 +163,7 @@ $pink: #FF4D8D;
 /* 无目标步骤的全屏暗色 */
 .guide-dim {
   position: fixed; inset: 0; z-index: 1001;
-  background: rgba(22, 17, 34, .62);
+  background: rgba(0, 0, 0, 0.5);
   pointer-events: none;
   animation: guideFade .3s ease-out both;
 }
@@ -178,10 +176,10 @@ $pink: #FF4D8D;
   transform: translateX(-50%);
   z-index: 1002;
   width: min(560px, 92vw);
-  background: #fff;
-  border: 4px solid $ink;
-  border-radius: 20px;
-  box-shadow: 9px 9px 0 rgba(22, 17, 34, .5);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   padding: 20px 26px 18px;
   display: flex;
   gap: 18px;
@@ -193,7 +191,7 @@ $pink: #FF4D8D;
 .guide-halftone {
   position: absolute; right: -10px; bottom: -10px;
   width: 130px; height: 100px; pointer-events: none;
-  background: radial-gradient(#161122 1.4px, transparent 1.4px);
+  background: radial-gradient(rgba(255,255,255,0.03) 1.4px, transparent 1.4px);
   background-size: 10px 10px; opacity: .08;
   -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0 46%, transparent 74%);
   mask-image: radial-gradient(circle at 100% 100%, #000 0 46%, transparent 74%);
@@ -203,26 +201,26 @@ $pink: #FF4D8D;
 
 .guide-content { flex: 1; min-width: 0; position: relative; }
 
-.guide-tag { font-weight: 800; font-size: 11px; letter-spacing: .12em; color: $pink; }
-.guide-title { margin: 5px 0 6px; font-size: 21px; font-weight: 900; color: $ink; }
-.guide-body { margin: 0; font-size: 14px; line-height: 1.85; color: $ink; opacity: .85; }
+.guide-tag { font-weight: 800; font-size: 11px; letter-spacing: .12em; color: #ff4f9a; }
+.guide-title { margin: 5px 0 6px; font-size: 21px; font-weight: 900; color: #f5f5f5; }
+.guide-body { margin: 0; font-size: 14px; line-height: 1.85; color: #f5f5f5; opacity: .85; }
 
 .guide-actions { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
 .flex-1 { flex: 1; }
 .guide-skip {
-  font-weight: 700; font-size: 13px; color: $ink; opacity: .5;
+  font-weight: 700; font-size: 13px; color: #f5f5f5; opacity: .5;
   cursor: pointer; user-select: none; transition: opacity .15s;
   &:hover { opacity: 1; }
 }
 .guide-btn {
-  padding: 9px 16px; border-radius: 12px; border: 2px solid $ink;
+  padding: 9px 16px; border-radius: 14px; border: 1px solid #3d3d3d;
   font-weight: 800; font-size: 13px; cursor: pointer;
-  box-shadow: 2px 2px 0 $ink;
+  box-shadow: none;
   transition: transform .15s cubic-bezier(.34, 1.56, .64, 1), box-shadow .15s ease-out;
-  &:hover { transform: translate(-1px, -2px); box-shadow: 4px 5px 0 rgba(22, 17, 34, .4); }
-  &:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(22, 17, 34, .4); }
-  &.line { background: #fff; color: $ink; }
-  &.fill { background: $pink; color: #fff; }
+  &:hover { transform: translate(-1px, -2px); box-shadow: none; }
+  &:active { transform: translate(1px, 1px); box-shadow: none; }
+  &.line { background: #1a1a1a; color: #f5f5f5; }
+  &.fill { background: linear-gradient(135deg, #ff4f9a, #ff2d7f); color: #f5f5f5; }
 }
 
 @keyframes guideFade { from { opacity: 0; } to { opacity: 1; } }

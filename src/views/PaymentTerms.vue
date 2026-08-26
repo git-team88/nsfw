@@ -75,7 +75,7 @@ function goBack() {
   min-height: 100vh;
   scroll-behavior: smooth;
   padding: 140px 0 0;
-  background: #FFFDF7;
+  background: #111111;
 
   .inner {
     max-width: 840px;
@@ -92,13 +92,13 @@ function goBack() {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #161122;
+      color: #f5f5f5;
       cursor: pointer;
       z-index: 10;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 13px;
-      background: #FFFDF7;
-      box-shadow: 3px 3px 0 #161122;
+      background: #1a1a1a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       padding: 0 10px;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
@@ -110,7 +110,7 @@ function goBack() {
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 5px 5px 0 #161122;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       }
     }
 
@@ -118,13 +118,13 @@ function goBack() {
       margin: 0 auto 20px;
       font-size: 14px;
       line-height: 28px;
-      color: #364153;
+      color: #aaa;
 
       :deep(h1) {
         font-weight: bold;
         font-size: 24px;
         margin: 0 0 20px 0;
-        color: #161122;
+        color: #f5f5f5;
         text-align: center;
       }
 
@@ -133,18 +133,18 @@ function goBack() {
         font-size: 18px;
         margin: 20px 0;
         padding-left: 6px;
-        color: #161122;
+        color: #f5f5f5;
       }
 
       :deep(h3) {
         font-weight: bold;
         font-size: 16px;
         margin: 28px 0;
-        color: #161122;
+        color: #f5f5f5;
       }
 
       :deep(a) {
-        color: #FF4D8D;
+        color: #ff4f9a;
         text-decoration: underline;
       }
     }

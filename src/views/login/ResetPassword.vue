@@ -143,7 +143,7 @@ function goSendEmail() {
 .reset-page {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
   padding-top: 80px;
 
   .auth-single {
@@ -153,9 +153,10 @@ function goSendEmail() {
   }
 
   .auth-card {
-    border: 3px solid #161122;
-    border-radius: 6px;
-    background: #FFFDF7;
+    border: 1px solid #2c2c2c;
+    border-radius: 20px;
+    background: #1a1a1a;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.45);
     padding: 44px 46px 38px;
     display: flex;
     flex-direction: column;
@@ -163,7 +164,7 @@ function goSendEmail() {
     h1 {
       font-size: 27px;
       font-weight: 400;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0 0 5px;
     }
 
@@ -172,8 +173,7 @@ function goSendEmail() {
       font-size: 13.5px;
       font-weight: 600;
       line-height: 1.7;
-      opacity: 0.55;
-      color: #161122;
+      color: #aaa;
     }
   }
 
@@ -186,7 +186,7 @@ function goSendEmail() {
     label {
       font-size: 13px;
       font-weight: 800;
-      color: #161122;
+      color: #ddd;
       letter-spacing: 0.02em;
     }
   }
@@ -194,50 +194,48 @@ function goSendEmail() {
   .auth-input {
     width: 100%;
     box-sizing: border-box;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 12px;
-    background: #fff;
+    background: #1a1a1a;
     padding: 13px 15px;
     font-size: 15px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     outline: none;
-    transition: box-shadow 0.18s;
+    transition: border-color 0.15s;
 
     &::placeholder {
-      color: #bdb7c4;
+      color: #555;
     }
 
     &:focus {
-      box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+      border-color: #ff4f9a;
     }
   }
 
   .auth-submit {
-    border: 2.5px solid #161122;
-    border-radius: 13px;
-    background: rgba(255, 77, 141, 0.4);
+    border: 2px solid #ff9aca;
+    border-radius: 18px;
+    background: rgba(255,50,140,0.3);
     color: #fff;
     font-size: 16px;
     font-weight: 800;
     padding: 15px;
     width: 100%;
     cursor: not-allowed;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, background 0.2s;
+    box-shadow: 0 0 23px rgba(255,50,140,0.65);
+    transition: filter 0.15s;
 
     &.active {
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
       cursor: pointer;
 
       &:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #161122;
+        filter: brightness(1.08);
       }
 
       &:active {
-        transform: translate(0, 0);
-        box-shadow: 2px 2px 0 #161122;
+        transform: scale(0.95);
       }
     }
   }

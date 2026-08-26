@@ -47,7 +47,7 @@ function backToRevenue() {
   width: 100%;
   min-height: 100vh;
   padding: 140px 0 0;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 
 .container {
@@ -65,12 +65,12 @@ function backToRevenue() {
   .page-title {
     font-size: 20px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .success-message {
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     text-align: center;
     line-height: 20px;
     margin-top: 20px;
@@ -85,13 +85,13 @@ function backToRevenue() {
     height: 80px;
     margin: 40px 0 60px;
     background: #22c55e;
-    border: 3px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 4px 4px 0 rgba(16, 24, 40, 0.14);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     img {
@@ -102,7 +102,7 @@ function backToRevenue() {
       content: '';
       width: 20px;
       height: 36px;
-      border: solid #FFFDF7;
+      border: solid #1a1a1a;
       border-width: 0 5px 5px 0;
       transform: rotate(45deg);
       position: relative;
@@ -120,41 +120,36 @@ function backToRevenue() {
   .back-home-btn {
     min-width: 240px;
     height: 48px;
-    background: #FFFFFF;
-    color: #161122;
-    border: 2px solid #161122;
+    background: rgba(255,255,255,0.06);
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+    box-shadow: none;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      border-color: #FF4D8E;
-      color: #FF4D8E;
-      transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      border-color: #ff4f9a;
+      color: #ff4f9a;
+      
     }
   }
 
   .back-btn {
     min-width: 240px;
     height: 48px;
-    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
     color: #FFFFFF;
-    border: 2px solid #161122;
+    border: 2px solid #ff9aca;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
-    }
+    box-shadow: 0 0 22px rgba(255, 61, 134, .35);
+    transition: box-shadow 0.14s;
   }
 }
 

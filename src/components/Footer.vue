@@ -60,8 +60,8 @@ const navigateTo = (path: string) => {
   width: 100%;
   height: 34px;
   padding: 0 40px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
-  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid #2b2b2b;
+  background: #111;
   z-index: 30;
 }
 
@@ -79,12 +79,12 @@ const navigateTo = (path: string) => {
 }
 
 .policy-item {
-  color: #9a93a4;
+  color: #777;
   font-size: 12px;
 }
 
 .footer-copyright {
-  color: #9a93a4;
+  color: #777;
   font-size: 12px;
 }
 </style>

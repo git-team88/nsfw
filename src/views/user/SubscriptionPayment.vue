@@ -413,7 +413,6 @@ onMounted(() => {
 <style scoped lang="scss">
 .subscription-page {
   width: 100%;
-  background: #FFFDF7;
 }
 
 .container {
@@ -430,15 +429,15 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #161122;
+    color: #f5f5f5;
     cursor: pointer;
     z-index: 10;
-    border: 2.5px solid #161122;
-    border-radius: 13px;
-    box-shadow: 3px 3px 0 #161122;
-    background: #FFFDF7;
+    border: 1px solid #3d3d3d;
+    border-radius: 14px;
+    box-shadow: none;
+    background: #1a1a1a;
     padding: 0 10px;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     .back-text {
       font-size: 14px;
@@ -447,47 +446,51 @@ onMounted(() => {
     }
 
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 4px 4px 0 #161122;
+      
+      background: rgba(255,255,255,0.06);
     }
   }
 }
 
 .content-box {
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   padding: 24px;
-  background: #FFFDF7;
+  background: #1a1a1a;
 
   .page-title-tabs {
-    width: max-content;
     display: flex;
-    border: 2.5px solid #161122;
-    border-radius: 14px;
-    padding: 5px;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
     margin-bottom: 24px;
 
     .tab-item {
       display: flex;
       align-items: center;
-      height: 36px;
+      justify-content: center;
+      height: 38px;
+      padding: 0 18px;
       font-size: 14px;
       font-weight: 800;
-      color: #161122;
+      color: #f5f5f5;
+      border: 1px solid #404040;
+      border-radius: 25px;
+      background: #1a1a1a;
       cursor: pointer;
-      padding: 0 20px;
-      border-radius: 10px;
-      transition: background-color 0.16s, color 0.16s;
-      background: transparent;
+      transition: all 0.15s;
 
       &.active {
-        background: #161122;
         color: #fff;
+        border: 1px solid #ff9aca;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
+        box-shadow: 0 0 23px rgba(255, 50, 140, .65);
       }
 
       &:hover:not(.active) {
-        background: #FFFDF7;
+        border-color: #888;
       }
     }
   }
@@ -510,20 +513,20 @@ onMounted(() => {
         height: 48px;
         border-radius: 6px;
         object-fit: cover;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
       }
 
       .meta {
         .nickname {
           font-size: 16px;
           font-weight: 800;
-          color: #161122;
+          color: #f5f5f5;
           margin-bottom: 4px;
         }
 
         .id {
           font-size: 14px;
-          color: #161122;
+          color: #f5f5f5;
         }
       }
     }
@@ -540,7 +543,7 @@ onMounted(() => {
       border-radius: 6px;
       font-weight: 800;
       font-size: 14px;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
 
       span {
         font-size: 18px;
@@ -550,14 +553,14 @@ onMounted(() => {
 
   .plan-desc {
     font-size: 14px;
-    color: #161122;
+    color: #ccc;
     line-height: 20px;
     margin-bottom: 12px;
   }
 
   .desc {
     font-size: 14px;
-    color: #161122;
+    color: #aaa;
     line-height: 20px;
     margin-bottom: 24px;
   }
@@ -573,7 +576,7 @@ onMounted(() => {
       align-items: center;
       gap: 6px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
 
       .checkbox {
         width: 22px;
@@ -589,7 +592,7 @@ onMounted(() => {
       }
 
       .agreement-text {
-        color: #FF4D8D;
+        color: #ff4f9a;
         font-weight: 800;
         margin-left: 4px;
       }
@@ -599,33 +602,33 @@ onMounted(() => {
   .pay-btn {
     width: 100%;
     height: 48px;
-    background: #FF4D8D;
-    color: #FFFDF7;
-    border: 2.5px solid #161122;
-    border-radius: 13px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    border: 2px solid #ff9aca;
+    border-radius: 14px;
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+    color: #fff;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
-    transition: transform 0.1s, box-shadow 0.1s;
+    transition: box-shadow 0.15s, filter 0.15s;
 
     &:hover {
-      box-shadow: 1px 1px 0 #161122;
-      transform: translate(2px, 2px);
+      box-shadow: 0 0 22px rgba(255, 61, 134, .35);
+      filter: brightness(1.06);
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       box-shadow: none;
-      transform: none;
+      filter: none;
     }
   }
 
   .auto-renewal-note {
     margin-top: 12px;
     font-size: 12px;
-    color: #161122;
+    color: #777;
     line-height: 18px;
   }
 }

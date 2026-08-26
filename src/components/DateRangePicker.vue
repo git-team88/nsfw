@@ -236,12 +236,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$paper: #FFFDF7;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
 
 .drp {
   position: relative;
@@ -253,22 +247,20 @@ $line: #e7e1d8;
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 2.5px solid $ink;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: $paper;
-  color: $ink;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-  box-shadow: 2px 2px 0 $ink;
+  box-shadow: none;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 $ink;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
   &:active {
-    transform: translate(0, 0);
-    box-shadow: 1px 1px 0 $ink;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   }
 }
 
@@ -279,7 +271,7 @@ $line: #e7e1d8;
 
 .drp-trigger .text {
   font-size: 14px;
-  color: $ink;
+  color: #f5f5f5;
 }
 
 .drp-trigger .arrow {
@@ -297,17 +289,17 @@ $line: #e7e1d8;
   top: 50px;
   width: 360px;
   padding: 20px;
-  border-radius: 14px;
-  background: $paper;
-  border: 3px solid $ink;
-  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.14);
+  border-radius: 18px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   z-index: 500;
 }
 
 .field label {
   display: block;
   font-size: 14px;
-  color: $ink;
+  color: #f5f5f5;
   font-weight: 800;
   margin-bottom: 7px;
 }
@@ -328,7 +320,7 @@ $line: #e7e1d8;
   justify-content: center;
   border: none;
   background: transparent;
-  color: $muted;
+  color: #777;
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
@@ -337,7 +329,7 @@ $line: #e7e1d8;
   z-index: 10;
 
   &:hover {
-    color: $ink;
+    color: #f5f5f5;
   }
 }
 
@@ -360,35 +352,31 @@ $line: #e7e1d8;
 }
 
 .btn.cancel {
-  background: $paper;
-  border: 2.5px solid $ink;
-  color: $ink;
-  box-shadow: 2px 2px 0 $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  color: #f5f5f5;
+  box-shadow: none;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 $ink;
-    color: $pink;
-    border-color: $pink;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+    color: #ff4f9a;
+    border-color: #ff4f9a;
   }
   &:active {
-    transform: translate(0, 0);
-    box-shadow: 1px 1px 0 $ink;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   }
 }
 
 .btn.apply {
-  border: 2.5px solid $ink;
-  color: #ffffff;
-  box-shadow: 3px 3px 0 $ink;
+  border: 1px solid #3d3d3d;
+  color: #f5f5f5;
+  box-shadow: none;
 
   &:hover:not(:disabled) {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 $ink;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
   &:active {
-    transform: translate(0, 0);
-    box-shadow: 2px 2px 0 $ink;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   }
 }
 
@@ -407,9 +395,9 @@ $line: #e7e1d8;
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 2.5px solid $ink !important;
+    border: 1px solid #3d3d3d !important;
     border-radius: 12px !important;
-    background: #fff !important;
+    background: #1a1a1a !important;
     box-shadow: none !important;
   }
   :deep(.el-input__wrapper:hover) {
@@ -417,10 +405,10 @@ $line: #e7e1d8;
   }
   :deep(.el-input__wrapper.is-focus) {
     border-color: #00d3f2 !important;
-    box-shadow: 3px 3px 0 rgba(0, 211, 242, 0.42) !important;
+    box-shadow: none !important;
   }
   :deep(.el-input__inner) {
-    color: $ink !important;
+    color: #f5f5f5 !important;
     font-size: 14px !important;
     font-weight: 600 !important;
   }
@@ -437,7 +425,7 @@ $line: #e7e1d8;
 
 .theme-pink .drp-trigger {
   &:hover {
-    border-color: $pink;
+    border-color: #ff4f9a;
   }
 }
 
@@ -450,29 +438,29 @@ $line: #e7e1d8;
   }
   :deep(.el-input__wrapper) {
     height: 40px;
-    border: 2.5px solid $ink !important;
+    border: 1px solid #3d3d3d !important;
     border-radius: 12px !important;
-    background: #fff !important;
+    background: #1a1a1a !important;
     box-shadow: none !important;
   }
 
   :deep(.el-input__wrapper.is-focus) {
-    border-color: $pink !important;
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42) !important;
+    border-color: #ff4f9a !important;
+    box-shadow: none !important;
   }
   :deep(.el-input__inner) {
-    color: $ink !important;
+    color: #f5f5f5 !important;
     font-size: 14px !important;
     font-weight: 600 !important;
   }
 }
 
 .theme-pink .btn.cancel:hover {
-  color: $pink;
-  border-color: $pink;
+  color: #ff4f9a;
+  border-color: #ff4f9a;
 }
 
 .theme-pink .btn.apply {
-  background: $pink;
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
 }
 </style>

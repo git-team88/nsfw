@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible">
     <div class="modal-content">
-      <button class="close-btn" @click="handleOverlayClick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="handleOverlayClick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <h3 class="modal-title">{{ t('myProjects.renameModal.title') }}</h3>
@@ -87,7 +87,7 @@ function handleOverlayClick() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,8 +96,8 @@ function handleOverlayClick() {
 
 .modal-content {
   position: relative;
-  background-color: #ffffff;
-  border-radius: 12px;
+  background-color: #1a1a1a;
+  border-radius: 18px;
   width: 520px;
   padding: 18px 0;
 }
@@ -109,9 +109,9 @@ function handleOverlayClick() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,12 +126,12 @@ function handleOverlayClick() {
   display: flex;
   align-items: center;
   padding: 0 20px 18px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
   }
 }
@@ -139,7 +139,7 @@ function handleOverlayClick() {
 .modal-body {
   margin-bottom: 18px;
   padding: 18px 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   .form-group {
       display: flex;
@@ -152,14 +152,14 @@ function handleOverlayClick() {
 
         label {
           font-size: 14px;
-          color: #161122;
+          color: #f5f5f5;
           margin: 0;
         }
 
         .char-counter {
           margin-left: 6px;
           font-size: 12px;
-          color: #9a93a4;
+          color: #777;
         }
       }
 
@@ -170,19 +170,19 @@ function handleOverlayClick() {
           width: 100%;
           height: 50px;
           padding: 14px 10px;
-          border: 1px solid rgba(22, 17, 34, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 8px;
           font-size: 14px;
-          color: #161122;
+          color: #f5f5f5;
           outline: none;
-          background: rgba(22, 17, 34, 0.06);
+          background: rgba(255, 255, 255, 0.06);
 
           &:focus {
-            border-color: #FF4D8D;
+            border-color: #ff4f9a;
           }
 
           &::placeholder {
-            color: #9a93a4;
+            color: #777;
           }
         }
       }
@@ -204,25 +204,23 @@ function handleOverlayClick() {
   }
 
   .cancel-btn {
-    background: rgba(22, 17, 34, 0.06);
-    color: #5b5566;
+    background: rgba(255, 255, 255, 0.06);
+    color: #aaa;
 
     &:hover {
-      color: #FF4D8D;
+      color: #ff4f9a;
     }
   }
   .confirm-btn {
     border: none;
-    background: #FF4D8D;
-    color: #ffffff;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
   }
 }

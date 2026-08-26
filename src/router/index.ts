@@ -20,7 +20,7 @@ const LANG_URL_TO_HTML: Record<string, string> = {
   'zh-tw': 'zh-TW',
 };
 
-const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video'];
+const CONTENT_TYPES = ['novel', 'comic', 'photo', 'video'];
 
 // SEO 预渲染会生成 `dist/{lang}/{type}/index.html` 静态文件。
 // 通过 alias 让 `/zh-cn/novel/index.html` 这类直接打开的地址也能命中同一路由，
@@ -359,7 +359,6 @@ router.beforeEach((to, from, next) => {
   const subdomainMap: Record<string, string> = {
     'novel': 'novel',
     'comic': 'comic',
-    'drama': 'drama',
     'photo': 'photo',
     'video': 'video'
   };

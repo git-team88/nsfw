@@ -2,7 +2,7 @@
   <div class="mg-rk-pod podium-card" :class="`rank-${w.rank}`" :style="{ animationDelay: `${delay}ms` }" @click="goDetail">
     <div class="podium-cover">
       <div class="mg-rk-cover-bg podium-cover-bg" :style="{ background: w.cover }"></div>
-      <svg v-if="w.rank === 1" class="podium-crown" width="30" height="24" viewBox="0 0 24 20" fill="#FFD23F" stroke="#161122" stroke-width="1.8" stroke-linejoin="round">
+      <svg v-if="w.rank === 1" class="podium-crown" width="30" height="24" viewBox="0 0 24 20" fill="#FFD23F" stroke="#f5f5f5" stroke-width="1.8" stroke-linejoin="round">
         <path d="M2 6l4.5 4L12 2l5.5 8L22 6l-1.8 11H3.8z" />
       </svg>
       <span class="podium-badge" :style="{ background: badgeColor }">{{ w.rank }}</span>
@@ -84,7 +84,7 @@ function onAvatarErr(e: Event) {
   if (el) el.src = defaultAvatar
 }
 
-const badgeColor = computed(() => PODIUM_COLORS[props.w.rank - 1] ?? '#fff')
+const badgeColor = computed(() => PODIUM_COLORS[props.w.rank - 1] ?? '#1a1a1a')
 const typeInfo = computed(() => TYPE_BADGE[props.w.type] ?? { label: 'rank.all', bg: '#eee' })
 const typeBg = computed(() => typeInfo.value.bg)
 const typeLabel = computed(() => t(typeInfo.value.label))
@@ -96,23 +96,20 @@ function fmtK(n: number): string {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-
 .podium-card {
   display: flex;
   gap: 12px;
-  background: #fff;
-  border: 3px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 6px 6px 0 rgba(22, 17, 34, 0.16);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   will-change: transform;
 
-  // 黑色边框 + 名次色阴影
-  &.rank-1 { box-shadow: 6px 6px 0 #FFD347; }
-  &.rank-2 { box-shadow: 6px 6px 0 #C9D4E5; }
-  &.rank-3 { box-shadow: 6px 6px 0 #E8A87C; }
+  &.rank-1 { box-shadow: 0 8px 20px rgba(255,211,71,0.25); }
+  &.rank-2 { box-shadow: 0 8px 20px rgba(201,212,229,0.2); }
+  &.rank-3 { box-shadow: 0 8px 20px rgba(232,168,124,0.2); }
 }
 
 // 前 3 名封面尺寸错落（名次越高越大）
@@ -143,7 +140,7 @@ $ink: #161122;
   transform: translateX(-50%);
   top: 4px;
   z-index: 2;
-  filter: drop-shadow(1px 2px 0 rgba(22, 17, 34, 0.3));
+  filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, 0.3));
 }
 
 .podium-badge {
@@ -155,7 +152,7 @@ $ink: #161122;
   display: grid;
   place-items: center;
   border-radius: 8px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   font-weight: 900;
   font-size: 18px;
 }
@@ -191,13 +188,14 @@ $ink: #161122;
   height: 32px;
   flex: none;
   border-radius: 50%;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   object-fit: cover;
 }
 
 .podium-author-name {
   font-weight: 600;
   font-size: 12px;
+  color: #f5f5f5;
   opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
@@ -207,6 +205,7 @@ $ink: #161122;
 .podium-title {
   font-weight: bold;
   font-size: 16px;
+  color: #f5f5f5;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -227,12 +226,12 @@ $ink: #161122;
   align-items: center;
   justify-content: center;
   height: 28px;
-  border: 2px solid $ink;
+  border: 1px solid #3d3d3d;
   font-weight: 600;
   font-size: 12px;
   padding: 3px 12px;
   border-radius: 8px;
-  color: $ink;
+  color: #f5f5f5;
   line-height: 1;
 }
 
@@ -248,11 +247,11 @@ $ink: #161122;
   gap: 4px;
   font-weight: 800;
   font-size: 14px;
-  color: $ink;
+  color: #f5f5f5;
   white-space: nowrap;
 
   &.stat-pink {
-    color: #FF4D8D;
+    color: #ff4f9a;
     opacity: 1;
   }
 

@@ -72,7 +72,7 @@ function backToMyProjects() {
   width: 100%;
   min-height: 100vh;
   padding: 140px 0 0;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 
 .container {
@@ -90,12 +90,12 @@ function backToMyProjects() {
   .page-title {
     font-size: 20px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .error-message {
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     text-align: center;
     line-height: 20px;
     margin-top: 40px;
@@ -105,7 +105,7 @@ function backToMyProjects() {
   }
 
   .contact-link {
-    color: #FF4D8E;
+    color: #ff4f9a;
     text-decoration: none;
     &:hover {
       text-decoration: underline;
@@ -117,13 +117,13 @@ function backToMyProjects() {
     height: 80px;
     margin: 40px 0 60px;
     background: #22c55e;
-    border: 3px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
 
     img {
@@ -134,7 +134,7 @@ function backToMyProjects() {
       content: '';
       width: 20px;
       height: 36px;
-      border: solid #FFFDF7;
+      border: solid #f5f5f5;
       border-width: 0 5px 5px 0;
       transform: rotate(45deg);
       position: relative;
@@ -152,40 +152,41 @@ function backToMyProjects() {
   .back-home-btn {
     min-width: 240px;
     height: 48px;
-    background: #FFFFFF;
-    color: #161122;
-    border: 2px solid #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
-      border-color: #FF4D8E;
-      color: #FF4D8E;
-      transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      border-color: #ff4f9a;
+      color: #ff4f9a;
+      
+      box-shadow: none;
     }
   }
 
   .back-btn {
     min-width: 240px;
     height: 48px;
-    background: linear-gradient(135deg, #FF4D8D, #FF7A45);
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
     color: #FFFFFF;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 14px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      
+      box-shadow: none;
     }
   }
 }

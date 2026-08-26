@@ -2,7 +2,7 @@
   <div v-if="visible" class="comic-modal-overlay">
     <div class="view-modal">
       <div class="modal-content">
-        <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
         <!-- 左侧部分 -->
         <div class="left-section">
@@ -285,7 +285,7 @@ function nextPage() {
 .comic-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,12 +297,12 @@ function nextPage() {
   width: 980px;
   height: calc(100vh - 340px);
   max-height: 560px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   border-radius: 14px;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   overflow: hidden;
 }
 
@@ -316,8 +316,8 @@ function nextPage() {
   width: 372px;
   height: 100%;
   padding: 20px 36px;
-  background: #FFEFF5;
-  border-right: 2px solid #161122;
+  background: rgba(255,79,154,0.08);
+  border-right: 1px solid #3d3d3d;
   display: flex;
   flex-direction: column;
 }
@@ -325,7 +325,7 @@ function nextPage() {
 .project-name {
   font-size: 16px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 20px;
   white-space: nowrap;
   overflow: hidden;
@@ -343,35 +343,34 @@ function nextPage() {
 .publish-btn {
   width: 100%;
   height: 48px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   font-size: 16px;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF4D8D, #FF7A45);
-  color: white;
+  background: linear-gradient(145deg, #ff74b3, #f73382);
+  color: #f5f5f5;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
   }
 
   &.published {
-    background: rgba(255, 77, 142, 0.4);
-    color: #161122;
+    background: rgba(255,79,154,0.15);
+    color: #f5f5f5;
     cursor: not-allowed;
 
     &:hover {
       transform: none;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
     }
   }
 
   &:disabled {
-    background: rgba(255, 77, 142, 0.4);
-    color: #161122;
+    background: rgba(255,79,154,0.15);
+    color: #f5f5f5;
     cursor: not-allowed;
   }
 }
@@ -383,7 +382,7 @@ function nextPage() {
   flex-direction: column;
   height: 100%;
   padding: 20px 24px 20px 24px;
-  background: #ffffff;
+  background: #1a1a1a;
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -397,7 +396,7 @@ function nextPage() {
 .detail-title {
   font-size: 14px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
   flex-shrink: 0;
 }
 
@@ -420,14 +419,14 @@ function nextPage() {
   position: relative;
   min-width: 40px;
   height: 40px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 4px 4px 0 rgba(22, 17, 34, 0.16);
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  border: 1px solid #3d3d3d;
   border-radius: 11px;
   cursor: pointer;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.65;
   flex-shrink: 0;
   display: flex;
@@ -435,13 +434,13 @@ function nextPage() {
   justify-content: center;
 
   &.active {
-    background: #FF4D8E;
-    color: #ffffff;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
     opacity: 1;
   }
 
   &:hover:not(.active) {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 1;
   }
 
@@ -465,7 +464,7 @@ function nextPage() {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.4;
 
   .published-dot {
@@ -481,10 +480,10 @@ function nextPage() {
 .nav-btn {
   width: 40px;
   height: 40px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border: 2px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border: 1px solid #3d3d3d;
   border-radius: 11px;
   cursor: pointer;
   display: flex;
@@ -504,8 +503,8 @@ function nextPage() {
 }
 
 .close-btn {
-  background: #fff;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
   padding: 6px;
   position: absolute;
@@ -514,7 +513,7 @@ function nextPage() {
   width: 36px;
   height: 36px;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: none;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
   display: flex;
@@ -533,14 +532,14 @@ function nextPage() {
 
 .episode-title {
   font-size: 12px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.4;
   margin-bottom: 10px;
 }
 
 .episode-desc {
   font-size: 12px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.65;
   line-height: 18px;
   margin-bottom: 10px;
@@ -567,8 +566,8 @@ function nextPage() {
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #F3EFE7;
-  border-top: 4px solid #161122;
+  border: 4px solid #3d3d3d;
+  border-top: 4px solid #f5f5f5;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -576,7 +575,7 @@ function nextPage() {
 
 .loading-text {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.65;
 }
 

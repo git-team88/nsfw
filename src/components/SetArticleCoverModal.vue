@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <div class="tabs">
@@ -69,7 +69,7 @@
                 class="background-cell"
                 :class="{ selected: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) }"
                 @click="selectImage(img)"
-                :style="{ backgroundColor: 'rgba(22,17,34,0.06)', border: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) ? '1px solid #FF4D8D' : '1px solid transparent' }"
+                :style="{ backgroundColor: 'rgba(255, 255, 255, 0.06)', border: selectedBackground && (selectedBackground == img || (selectedBackground.color == img.color && selectedBackground.isImage)) ? '1px solid #ff4f9a' : '1px solid transparent' }"
               >
                 <div class="bg-preview-img" v-if="img.isLoading">
                   <div class="loading-placeholder"></div>
@@ -318,7 +318,7 @@ watch(() => props.visible, (newVal) => {
         // Check if current cover is already in imageOptions
         const existingIndex = imageOptions.value.findIndex(img => img.color == props.currentCover);
         if (existingIndex == -1) {
-          const currentCoverOption = { color: props.currentCover, isImage: true, backgroundColor: "#F5F5F5" };
+          const currentCoverOption = { color: props.currentCover, isImage: true, backgroundColor: "#2c2c2c" };
           imageOptions.value.unshift(currentCoverOption);
           selectedBackground.value = currentCoverOption;
         } else {
@@ -334,7 +334,7 @@ watch(() => props.visible, (newVal) => {
       const projectCoverIndex = imageOptions.value.findIndex(img => img.color == props.projectCover);
       if (projectCoverIndex == -1) {
         // Add project cover to the beginning of imageOptions
-        const projectCoverOption = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+        const projectCoverOption = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
         imageOptions.value.unshift(projectCoverOption);
       }
     }
@@ -353,7 +353,7 @@ watch(() => props.projectCover, (newVal) => {
     const projectCoverIndex = imageOptions.value.findIndex(img => img.color == newVal);
     if (projectCoverIndex == -1) {
       // Add project cover to the beginning of imageOptions
-      const projectCoverOption = { color: newVal, isImage: true, backgroundColor: "#F5F5F5" };
+      const projectCoverOption = { color: newVal, isImage: true, backgroundColor: "#2c2c2c" };
       imageOptions.value.unshift(projectCoverOption);
     }
   }
@@ -487,7 +487,7 @@ async function handleGeneration(prompt: string) {
     currentPrompt.value = prompt;
 
     // Add loading placeholder to image options
-    const loadingPlaceholder = { color: "", isImage: true, isLoading: true, backgroundColor: "#F5F5F5" };
+    const loadingPlaceholder = { color: "", isImage: true, isLoading: true, backgroundColor: "#2c2c2c" };
     imageOptions.value.unshift(loadingPlaceholder);
     // Select the loading placeholder
     selectedBackground.value = loadingPlaceholder;
@@ -503,7 +503,7 @@ async function handleGeneration(prompt: string) {
       if (index !== -1) { imageOptions.value.splice(index, 1);
         if (selectedBackground.value?.isLoading) {
           if (props.projectCover) {
-            const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+            const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
             selectedBackground.value = projectCoverObj;
           } else {
             selectedBackground.value = null;
@@ -522,7 +522,7 @@ async function handleGeneration(prompt: string) {
         imageOptions.value.splice(index, 1);
         if (selectedBackground.value?.isLoading) {
           if (props.projectCover) {
-            const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+            const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
             selectedBackground.value = projectCoverObj;
           } else {
             selectedBackground.value = null;
@@ -539,7 +539,7 @@ async function handleGeneration(prompt: string) {
     // Step 3: Update UI with generated cover
     const index = imageOptions.value.findIndex(img => img.isLoading);
     if (index !== -1) {
-      const newImage = { color: coverUrl, isImage: true, backgroundColor: "#F5F5F5" };
+      const newImage = { color: coverUrl, isImage: true, backgroundColor: "#2c2c2c" };
       imageOptions.value[index] = newImage;
       selectedBackground.value = newImage;
     }
@@ -556,7 +556,7 @@ async function handleGeneration(prompt: string) {
       imageOptions.value.splice(index, 1);
       if (selectedBackground.value?.isLoading) {
         if (props.projectCover) {
-          const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+          const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
           selectedBackground.value = projectCoverObj;
         } else {
           selectedBackground.value = null;
@@ -962,14 +962,14 @@ async function generateCover(backgroundColor: string, title: string): Promise<st
 
   // Draw quote mark
   ctx.font = "200px Arial";
-  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#58474C";
+  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#aaa";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillText('"', 100, 80);
 
   // Draw title
   ctx.font = "60px Arial";
-  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#58474C";
+  ctx.fillStyle = backgroundColor == "#494949" ? "#FFF7C6" : "#aaa";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
@@ -1031,7 +1031,7 @@ function handleFailureClose() {
   showFailureModal.value = false;
   // Select project cover if available
   if (props.projectCover) {
-    const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+    const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
     selectedBackground.value = projectCoverObj;
   } else if (props.coverColor) {
     // If no project cover, use coverColor if provided
@@ -1056,7 +1056,7 @@ function handleTimeoutClose() {
   showTimeoutModal.value = false;
   // Select project cover if available
   if (props.projectCover) {
-    const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#F5F5F5" };
+    const projectCoverObj = { color: props.projectCover, isImage: true, backgroundColor: "#2c2c2c" };
     selectedBackground.value = projectCoverObj;
   } else if (props.coverColor) {
     // If no project cover, use coverColor if provided
@@ -1102,7 +1102,7 @@ function handleTitleInput() {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1113,10 +1113,10 @@ function handleTitleInput() {
 .modal-content {
   position: relative;
   width: 520px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1129,9 +1129,9 @@ function handleTitleInput() {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: #fff;
-  border: 2.5px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1145,7 +1145,7 @@ function handleTitleInput() {
 
 .modal-header {
   height: 60px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1162,12 +1162,12 @@ function handleTitleInput() {
       display: flex;
       align-items: center;
       font-size: 16px;
-      color: #667085;
+      color: #aaa;
       cursor: pointer;
       position: relative;
 
       &.active {
-        color: #161122;
+        color: #f5f5f5;
         font-weight: 600;
 
         &::after {
@@ -1177,7 +1177,7 @@ function handleTitleInput() {
           left: 0;
           width: 100%;
           height: 2px;
-          background: #FF4D8D;
+          background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         }
       }
     }
@@ -1206,10 +1206,10 @@ function handleTitleInput() {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: rgba(22, 17, 34, 0.06);
+    background: rgba(255, 255, 255, 0.06);
 
     &.ai-generating {
-      background: linear-gradient( 29deg, #F0F0F0 0%, #F5F5F5 25%, #F0F0F0 50%, #F5F5F5 75%, #F0F0F0 100%), #FCCEE8;
+      background: linear-gradient(29deg, #2c2c2c 0%, #3d3d3d 25%, #2c2c2c 50%, #3d3d3d 75%, #2c2c2c 100%), #FCCEE8;
       animation: loading-pulse 1.5s infinite;
     }
   }
@@ -1237,7 +1237,7 @@ function handleTitleInput() {
   .skeleton {
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background: linear-gradient(90deg, #2c2c2c 25%, #3d3d3d 50%, #2c2c2c 75%);
     background-size: 200% 100%;
     border-radius: 8px;
     animation: skeleton-loading 1.5s infinite;
@@ -1261,7 +1261,7 @@ function handleTitleInput() {
     justify-content: center;
     border-radius: 8px;
     background: linear-gradient( 90deg, rgba(194, 122, 255, 0.07) 0%, rgba(255, 127, 250, 0.07) 50%, rgba(251, 100, 243, 0.07) 100%);
-    box-shadow: 0px 0px 12px 0px rgba(251,100,182,0.12);
+    box-shadow: 0px 0px 12px 0px rgba(255,79,154,0.12);
     overflow: hidden;
     z-index: 1;
     cursor: pointer;
@@ -1335,7 +1335,7 @@ function handleTitleInput() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background: linear-gradient(90deg, #2c2c2c 25%, #3d3d3d 50%, #2c2c2c 75%);
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
   }
@@ -1343,7 +1343,7 @@ function handleTitleInput() {
   .loading-spinner {
     width: 20px;
     height: 20px;
-    border: 2px solid #FF4D8D;
+    border: 1px solid #ff4f9a;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -1391,7 +1391,7 @@ function handleTitleInput() {
   .quote-mark {
     font-weight: 600;
     font-size: 40px;
-    color: #58474c;
+    color: #aaa;
     position: absolute;
     top: 16px;
     left: 18px;
@@ -1409,7 +1409,7 @@ function handleTitleInput() {
   .title-text {
     font-weight: 600;
     font-size: 14px;
-    color: #58474c;
+    color: #aaa;
     text-align: center;
     background: transparent;
     border: none;
@@ -1427,7 +1427,7 @@ function handleTitleInput() {
   }
 
   .placeholder {
-    color: #9a93a4;
+    color: #777;
     font-size: 14px;
   }
 
@@ -1444,7 +1444,7 @@ function handleTitleInput() {
 
     .section-title {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 10px;
       font-weight: 600;
     }
@@ -1470,7 +1470,7 @@ function handleTitleInput() {
       }
 
       &.selected {
-        border-color: #FF4D8D;
+        border-color: #ff4f9a;
       }
 
       .bg-preview {
@@ -1486,7 +1486,7 @@ function handleTitleInput() {
       .mini-title {
         font-weight: 600;
         font-size: 24px;
-        color: #444550;
+        color: #aaa;
         text-align: center;
         z-index: 1;
       }
@@ -1515,16 +1515,16 @@ function handleTitleInput() {
     .modal-text {
       margin: 24px 0 12px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
 
       :deep(span){
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
     .modal-tip {
       font-size: 12px;
-      color: #9a93a4;
+      color: #777;
     }
   }
 
@@ -1564,8 +1564,8 @@ function handleTitleInput() {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        border: 1px solid #FF4D8D;
-        box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
+        border: 1px solid #ff4f9a;
+        box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.5);
         pointer-events: none;
         z-index: 5;
         display: flex;
@@ -1578,7 +1578,7 @@ function handleTitleInput() {
 
 .modal-footer {
   padding: 18px;
-  border-top: 1px solid rgba(22, 17, 34, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -1590,23 +1590,21 @@ function handleTitleInput() {
   .reupload-btn {
     min-width: 136px;
     height: 48px;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
-    color: #161122;
-    background: #FFFDF7;
+    color: #f5f5f5;
+    background: #1a1a1a;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, color 0.2s;
     &:hover {
-      color: #FF4D8D;
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      color: #ff4f9a;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
   }
 
@@ -1621,29 +1619,27 @@ function handleTitleInput() {
   }
 
   .btn.confirm {
-    background: #FF4D8D;
-    color: #ffffff;
-    border: 2.5px solid #161122;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
     min-width: 136px;
     height: 48px;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &:disabled {
-      background: #f8d7e8;
+      background: rgba(255,79,154,0.3);
       cursor: not-allowed;
     }
   }
@@ -1661,7 +1657,7 @@ function handleTitleInput() {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1673,15 +1669,15 @@ function handleTitleInput() {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    background-color: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-    border-radius: 12px;
+    background-color: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: none;
+    border-radius: 18px;
     padding: 56px 30px 28px;
 
     .modal-message {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 12px;
       text-align: center;
       line-height: 20px;
@@ -1696,47 +1692,43 @@ function handleTitleInput() {
       .modal-cancel-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 10px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        background: #FFFDF7;
-        color: #161122;
-        box-shadow: 3px 3px 0 #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
+        box-shadow: none;
         transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s, color 0.2s;
 
         &:hover {
-          color: #FF4D8D;
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          color: #ff4f9a;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
 
       .modal-retry-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 10px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        background: #FF4D8D;
-        color: #ffffff;
-        box-shadow: 3px 3px 0 #161122;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
+        box-shadow: none;
         transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

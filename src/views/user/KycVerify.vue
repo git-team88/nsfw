@@ -432,7 +432,7 @@
     <!-- 戻る確認モーダル -->
     <div v-if="showBackConfirmModal" class="exit-confirm-modal" @click="cancelGoBack">
       <div class="modal-content" @click.stop>
-        <button class="close-btn" @click="cancelGoBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="cancelGoBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <h3 class="modal-title">{{ t("user.materialProvider.backConfirmTitle") }}</h3>
         <p class="modal-message">{{ t("user.materialProvider.backConfirmText") }}</p>
         <div class="modal-actions">
@@ -1419,7 +1419,7 @@ function openTermsOfService() {
 .user-kyc {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -1431,8 +1431,8 @@ function openTermsOfService() {
 .main {
   position: relative;
   flex: 1;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   padding: 24px 36px;
   margin-top: 0;
@@ -1447,13 +1447,13 @@ function openTermsOfService() {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
   z-index: 10;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FFFDF7;
-  box-shadow: 3px 3px 0 #161122;
+  background: #1a1a1a;
+  box-shadow: none;
   padding: 0 10px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
@@ -1464,8 +1464,8 @@ function openTermsOfService() {
   }
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 4px 4px 0 #161122;
+    
+    box-shadow: none;
   }
 }
 
@@ -1477,7 +1477,7 @@ function openTermsOfService() {
 
   span {
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
   }
 }
 
@@ -1485,17 +1485,17 @@ function openTermsOfService() {
   margin: 0;
   font-weight: 700;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .warning-banner {
   padding: 12px 20px;
-  border: 2px solid #F4C34B;
+  border: 2px solid #FFD23F;
   border-radius: 6px;
   font-size: 16px;
   line-height: 32px;
-  background: #FFF8E6;
-  color: #8a6d16;
+  background: rgba(255,255,255,0.03);
+  color: #aaa;
 }
 
 .step-nav {
@@ -1512,13 +1512,15 @@ function openTermsOfService() {
   left: calc(16.666% + 15px);
   right: calc(16.666% + 15px);
   height: 4px;
-  background: #161122;
+  background: rgba(255,255,255,0.08);
   border-radius: 2px;
   overflow: hidden;
 
   .rail-fill {
     height: 100%;
-    background: #FF4D8D;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    border: 2px solid #ff9aca;
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
     border-radius: 2px;
     transition: width 0.4s ease;
   }
@@ -1532,26 +1534,28 @@ function openTermsOfService() {
 
   &.active {
     .step-num {
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      border: 2px solid #ff9aca;
       color: #FFFFFF;
       box-shadow: 0 0 0 3px rgba(255, 77, 141, 0.42), 0 0 12px 2px rgba(255, 77, 141, 0.3);
       animation: pulse-dot 1.6s ease-in-out infinite;
     }
     .step-label {
-      color: #FF4D8D;
+      color: #ff4f9a;
       font-weight: 700;
     }
   }
 
   &.completed {
     .step-num {
-      background: #FF4D8D;
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      border: 2px solid #ff9aca;
       color: #FFFFFF;
       box-shadow: none;
       animation: none;
     }
     .step-label {
-      color: #161122;
+      color: #f5f5f5;
       font-weight: 600;
     }
   }
@@ -1574,12 +1578,12 @@ function openTermsOfService() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
   font-size: 14px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 8px;
   position: relative;
   z-index: 2;
@@ -1592,7 +1596,7 @@ function openTermsOfService() {
 }
 .step-label {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 600;
 }
 
@@ -1620,8 +1624,9 @@ function openTermsOfService() {
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: #FF4D8D;
-  border: 2.5px solid #161122;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 700;
@@ -1630,11 +1635,11 @@ function openTermsOfService() {
 .section-title {
   font-weight: 700;
   font-size: 18px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .section-hint {
   font-size: 14px;
-  color: #FF4D8D;
+  color: #ff4f9a;
   font-weight: 600;
 }
 
@@ -1665,11 +1670,11 @@ function openTermsOfService() {
   margin-bottom: 10px;
   font-weight: 700;
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
 
   &.required::before {
     content: "*";
-    color: #FF4D8D;
+    color: #ff4f9a;
     margin-right: 4px;
   }
 }
@@ -1677,33 +1682,33 @@ function openTermsOfService() {
   width: 100%;
   height: 50px;
   padding: 12px 16px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
-  background: #FFFDF7;
+  background: #1a1a1a;
   transition: box-shadow 0.2s, border-color 0.2s;
 
   &::placeholder {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 0.4;
   }
 
   &:focus {
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 
   &.select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23161122' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
 
   &.error {
     border-color: #DC2626;
-    box-shadow: 3px 3px 0 rgba(220, 38, 38, 0.42);
+    box-shadow: 0 0 0 2px rgba(220,38,38,0.3);
   }
 }
 .code-input-group {
@@ -1711,12 +1716,12 @@ function openTermsOfService() {
   padding-right: 16px;
   border-radius: 12px;
   gap: 10px;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   transition: box-shadow 0.2s;
 
   &:has(.code-input:focus) {
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 
   .code-input {
@@ -1724,12 +1729,12 @@ function openTermsOfService() {
     height: 50px;
     padding: 12px 16px;
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     outline: none;
     background: transparent;
 
     &::placeholder {
-      color: #161122;
+      color: #f5f5f5;
       opacity: 0.4;
     }
 
@@ -1740,19 +1745,19 @@ function openTermsOfService() {
 
   &.error {
     border-color: #DC2626;
-    box-shadow: 3px 3px 0 rgba(220, 38, 38, 0.42);
+    box-shadow: 0 0 0 2px rgba(220,38,38,0.3);
   }
 }
 .send-code-btn {
   font-size: 14px;
   font-weight: 700;
   background: none;
-  color: #FF4D8D;
+  color: #ff4f9a;
   cursor: pointer;
   padding: 4px 8px;
 
   &.disabled {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 0.4;
     cursor: not-allowed;
   }
@@ -1760,7 +1765,7 @@ function openTermsOfService() {
 .email-hint {
   margin-top: 8px;
   font-size: 12px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.6;
   line-height: 1.6;
 }
@@ -1788,8 +1793,9 @@ function openTermsOfService() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FF4D8D;
-  border: 2.5px solid #161122;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 1px solid #3d3d3d;
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 700;
@@ -1798,26 +1804,26 @@ function openTermsOfService() {
 .step-2-title {
   font-size: 18px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
 }
 .step-2-desc {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.5;
 }
 
 .acceptance-box {
   margin-bottom: 20px;
   padding: 24px 30px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 }
 .acceptance-title {
   font-weight: 700;
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 10px;
 }
 .acceptance-list {
@@ -1830,13 +1836,13 @@ function openTermsOfService() {
   align-items: flex-start;
   gap: 6px;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 500;
   line-height: 1.6;
   width: calc(50% - 20px);
 }
 .acceptance-item .bullet {
-  color: #FF4D8D;
+  color: #ff4f9a;
   font-size: 13px;
   flex-shrink: 0;
 }
@@ -1844,14 +1850,14 @@ function openTermsOfService() {
 .requirements-box {
   margin-bottom: 24px;
   padding: 16px;
-  background: #FFF8E6;
-  border: 2px solid #F4C34B;
+  background: rgba(255,255,255,0.03);
+  border: 2px solid #FFD23F;
   border-radius: 6px;
 }
 .requirements-title {
   font-weight: 700;
   font-size: 13px;
-  color: #8a6d16;
+  color: #aaa;
   margin-bottom: 12px;
 }
 .requirements-grid {
@@ -1861,7 +1867,7 @@ function openTermsOfService() {
 }
 .requirement-item {
   font-size: 12px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.7;
   line-height: 1.6;
 }
@@ -1877,11 +1883,11 @@ function openTermsOfService() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
   cursor: pointer;
   position: relative;
-  background: #FFFDF7;
+  background: #1a1a1a;
   transition: box-shadow 0.2s, background 0.2s;
 
   input {
@@ -1889,13 +1895,13 @@ function openTermsOfService() {
   }
 
   &:hover {
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 
   &.active {
-    background: #FFFDF7;
-    border-color: #FF4D8D;
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    background: #1a1a1a;
+    border-color: #ff4f9a;
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 }
 .doc-icon {
@@ -1906,7 +1912,7 @@ function openTermsOfService() {
 }
 .doc-type-label {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 600;
 }
 .selected-indicator {
@@ -1915,8 +1921,9 @@ function openTermsOfService() {
   right: 12px;
   width: 16px;
   height: 16px;
-  background: #FF4D8D;
-  border: 2.5px solid #161122;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
 }
 
@@ -1927,15 +1934,15 @@ function openTermsOfService() {
   align-items: center;
   justify-content: center;
   height: 210px;
-  border: 2.5px dashed #161122;
+  border: 1px dashed #3d3d3d;
   border-radius: 12px;
   cursor: pointer;
-  background: #FFFDF7;
+  background: #1a1a1a;
   transition: border-style 0.2s, box-shadow 0.2s;
 
   &:hover {
     border-style: solid;
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 }
 .upload-icon-img {
@@ -1948,18 +1955,18 @@ function openTermsOfService() {
   margin-bottom: 10px;
 }
 .upload-icon {
-  color: #161122;
+  color: #f5f5f5;
 }
 .upload-text {
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
   margin-bottom: 10px;
   font-weight: 700;
 }
 .upload-format {
   font-weight: 600;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.5;
 }
 .preview-image {
@@ -1968,7 +1975,7 @@ function openTermsOfService() {
   height: 210px;
   object-fit: contain;
   border-radius: 12px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
 }
 .remove-image-btn {
   position: absolute;
@@ -1979,11 +1986,11 @@ function openTermsOfService() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
-  background: #FFFDF7;
+  background: #1a1a1a;
   font-size: 16px;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
 }
 .mynumber-notice {
@@ -1992,8 +1999,8 @@ function openTermsOfService() {
   gap: 10px;
   margin: 12px 0 30px;
   padding: 12px 20px;
-  background: #FFF8E6;
-  border: 2px solid #F4C34B;
+  background: rgba(255,255,255,0.03);
+  border: 2px solid #FFD23F;
   border-radius: 6px;
 }
 .notice-icon {
@@ -2003,7 +2010,7 @@ function openTermsOfService() {
 }
 .notice-text {
   font-size: 16px;
-  color: #8a6d16;
+  color: #aaa;
   font-weight: 500;
 }
 
@@ -2018,19 +2025,19 @@ function openTermsOfService() {
   align-items: center;
   gap: 12px;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 500;
 
   .checkbox {
     width: 22px;
     height: 22px;
-    border: 2.5px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #FFFDF7;
+    background: #1a1a1a;
     transition: background 0.15s;
 
     img {
@@ -2041,7 +2048,7 @@ function openTermsOfService() {
 
   .link-text {
     font-weight: 700;
-    color: #FF4D8D;
+    color: #ff4f9a;
   }
 }
 
@@ -2059,7 +2066,7 @@ function openTermsOfService() {
   min-width: 136px;
   height: 48px;
   padding: 0 10px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   font-size: 14px;
   font-weight: 700;
@@ -2073,34 +2080,34 @@ function openTermsOfService() {
   }
 
   &:hover:not(:disabled) {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    
+    box-shadow: none;
   }
 
   &:active:not(:disabled) {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
+    
+    box-shadow: none;
   }
 
   &-secondary {
-    background: #FFFDF7;
-    color: #161122;
-    box-shadow: 3px 3px 0 #161122;
+    background: #1a1a1a;
+    color: #f5f5f5;
+    box-shadow: none;
 
     &:hover:not(:disabled) {
-      color: #FF4D8D;
-      box-shadow: 4px 4px 0 #161122;
+      color: #ff4f9a;
+      box-shadow: none;
     }
   }
 
   &-primary {
-    background: #FF4D8D;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
     color: #FFFFFF;
-    box-shadow: 3px 3px 0 #161122;
-    border: 2.5px solid #161122;
+    box-shadow: none;
+    border: 1px solid #3d3d3d;
 
     &:hover:not(:disabled) {
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: none;
     }
 
     &-wide {
@@ -2138,7 +2145,7 @@ function openTermsOfService() {
 .error-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.6);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2147,10 +2154,10 @@ function openTermsOfService() {
 .error-modal {
   width: 400px;
   padding: 24px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  border-radius: 6px;
-  box-shadow: 6px 6px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 .error-modal-header {
   display: flex;
@@ -2169,41 +2176,43 @@ function openTermsOfService() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 6px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   font-size: 18px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
 }
 .error-modal-list {
   margin: 0 0 20px;
   padding-left: 16px;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   line-height: 1.8;
 }
 .error-modal-ok {
   width: 100%;
   padding: 12px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   font-size: 14px;
   font-weight: 700;
   color: #FFFFFF;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.1s, box-shadow 0.1s;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    
+    box-shadow: none;
   }
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
+    
+    box-shadow: none;
   }
 }
 
@@ -2213,7 +2222,7 @@ function openTermsOfService() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(22, 17, 34, 0.6);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2222,15 +2231,15 @@ function openTermsOfService() {
   .modal-content {
     position: relative;
     width: 500px;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    border-radius: 6px;
-    box-shadow: 6px 6px 0 #161122;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    border-radius: 18px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     padding: 18px 24px 24px;
 
     .close-btn {
-      background: #fff;
-      border: 2.5px solid #161122;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 999px;
       padding: 6px;
       position: absolute;
@@ -2239,7 +2248,7 @@ function openTermsOfService() {
       width: 36px;
       height: 36px;
       cursor: pointer;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
       transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
       z-index: 10;
 
@@ -2249,14 +2258,14 @@ function openTermsOfService() {
     .modal-title {
       font-size: 16px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 36px;
       text-align: center;
     }
 
     .modal-message {
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       opacity: 0.7;
       margin-bottom: 34px;
       text-align: center;
@@ -2270,47 +2279,48 @@ function openTermsOfService() {
       .modal-cancel-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        background: #FFFDF7;
-        color: #161122;
-        box-shadow: 3px 3px 0 #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
+        box-shadow: none;
         transition: transform 0.1s, box-shadow 0.1s;
 
         &:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
-          color: #FF4D8D;
+          
+          box-shadow: none;
+          color: #ff4f9a;
         }
         &:active {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #161122;
+          
+          box-shadow: none;
         }
       }
 
       .modal-exit-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        background: #FF4D8D;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
         color: #FFFFFF;
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: none;
         transition: transform 0.1s, box-shadow 0.1s;
 
         &:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 4px 4px 0 #161122;
+          
+          box-shadow: none;
         }
         &:active {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #161122;
+          
+          box-shadow: none;
         }
       }
     }
@@ -2321,24 +2331,24 @@ function openTermsOfService() {
   position: relative;
   width: 100%;
   height: 48px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #FFFDF7;
+  background: #1a1a1a;
   cursor: pointer;
   transition: box-shadow 0.2s;
 
   &:hover {
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
   }
 
   &.active {
-    box-shadow: 3px 3px 0 rgba(255, 77, 141, 0.42);
-    border-color: #161122;
+    box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
+    border-color: #f5f5f5;
   }
 
   &.error {
     border-color: #DC2626;
-    box-shadow: 3px 3px 0 rgba(220, 38, 38, 0.42);
+    box-shadow: 0 0 0 2px rgba(220,38,38,0.3);
   }
 }
 
@@ -2348,14 +2358,14 @@ function openTermsOfService() {
   height: 100%;
   padding: 0 40px 0 16px;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
   .custom-select.hasValue & {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 1;
   }
 }
@@ -2374,12 +2384,12 @@ function openTermsOfService() {
   border: none;
   background: transparent;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
   cursor: pointer;
 
   &::placeholder {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 0.4;
   }
 }
@@ -2407,17 +2417,17 @@ function openTermsOfService() {
   max-height: 240px;
   padding: 8px 12px;
   overflow-y: auto;
-  background: #FFFDF7;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   z-index: 100;
 }
 
 .custom-select-option {
   padding: 6px 0;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.7;
   cursor: pointer;
   font-weight: 500;
@@ -2427,13 +2437,13 @@ function openTermsOfService() {
   }
 
   &:hover {
-    color: #161122;
+    color: #f5f5f5;
     opacity: 1;
     background: rgba(255, 77, 141, 0.08);
   }
 
   &.selected {
-    color: #FF4D8D;
+    color: #ff4f9a;
     opacity: 1;
     font-weight: 700;
   }
@@ -2442,7 +2452,7 @@ function openTermsOfService() {
 .custom-select-empty {
   padding: 6px 0;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.4;
   text-align: center;
 }

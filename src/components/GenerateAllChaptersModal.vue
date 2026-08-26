@@ -34,7 +34,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,22 +42,22 @@ const emit = defineEmits<{
 
   .modal-content {
     position: relative;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-    border-radius: 12px;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    border-radius: 18px;
     width: 500px;
     padding: 18px 30px 24px;
 
     .modal-message {
       font-size: 14px;
-      color: #5b5566;
+      color: #aaa;
       margin-bottom: 24px;
       text-align: center;
       line-height: 1.6;
 
       :deep(span) {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
@@ -69,43 +69,39 @@ const emit = defineEmits<{
       .modal-cancel-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        background: #FFFFFF;
-        color: #161122;
-        box-shadow: 2px 2px 0 #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
+        box-shadow: none;
 
         &:hover {
-          color: #FF4D8D;
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          color: #ff4f9a;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
 
       .modal-confirm-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        background: #FF4D8D;
-        color: #ffffff;
-        box-shadow: 2px 2px 0 #161122;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
+        box-shadow: none;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

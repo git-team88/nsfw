@@ -1,19 +1,19 @@
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
 $orange: #FF7A45;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 $yellow: #FFD23F;
-$bg-tag: rgba(22,17,34,0.06);
-$border-light: rgba(22,17,34,0.12);
-$border-med: rgba(22,17,34,0.2);
-$shadow-hard: 2px 2px 0 $ink;
-$shadow-hard-lg: 6px 6px 0 $ink;
-$shadow-hard-sm: 2px 2px 0 $ink;
-$shadow-soft: 8px 8px 0 rgba(22,17,34,0.16);
+$bg-tag: rgba(255,255,255,0.06);
+$border-light: rgba(255,255,255,0.12);
+$border-med: rgba(255,255,255,0.2);
+$shadow-hard: 2px 2px 0 #000;
+$shadow-hard-lg: 6px 6px 0 #000;
+$shadow-hard-sm: 2px 2px 0 #000;
+$shadow-soft: 8px 8px 0 rgba(0,0,0,0.4);
 $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
 .novel-detail {

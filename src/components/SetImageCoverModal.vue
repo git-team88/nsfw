@@ -1,7 +1,7 @@
 <template>
   <div class="modal-mask" v-if="visible">
     <div class="modal-content">
-      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
         <div class="tabs">
@@ -489,7 +489,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -499,10 +499,10 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 .modal-content {
   position: relative;
   width: 520px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -515,9 +515,9 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #fff;
-  border: 2px solid #161122;
-  box-shadow: 2px 2px 0 #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -537,23 +537,23 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   .tabs {
     display: inline-flex;
     gap: 0;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     border-radius: 10px;
     padding: 3px;
-    background: rgba(22, 17, 34, 0.04);
+    background: rgba(255, 255, 255, 0.04);
 
     span {
       padding: 6px 16px;
       font-size: 14px;
-      color: #667085;
+      color: #aaa;
       cursor: pointer;
       border-radius: 8px;
       transition: all 0.15s ease;
       white-space: nowrap;
 
       &.active {
-        color: #ffffff;
-        background: #161122;
+        color: #f5f5f5;
+        background: #1a1a1a;
         font-weight: 600;
       }
     }
@@ -599,7 +599,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.5);
     pointer-events: none;
     z-index: 5;
     display: flex;
@@ -615,7 +615,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   }
 
   .placeholder {
-    color: #ffffff;
+    color: #f5f5f5;
     font-size: 12px;
     text-align: center;
   }
@@ -636,11 +636,11 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
       position: relative;
 
       &:hover {
-        border-color: #FF4D8D;
+        border-color: #ff4f9a;
       }
 
       &.selected {
-        border-color: #FF4D8D;
+        border-color: #ff4f9a;
       }
 
       img {
@@ -655,7 +655,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         left: 0;
         right: 0;
         background: rgba(0, 0, 0, 0.6);
-        color: #ffffff;
+        color: #f5f5f5;
         font-size: 10px;
         text-align: center;
         padding: 2px;
@@ -687,17 +687,17 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     .modal-text {
       margin: 24px 0 12px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
 
       :deep(span){
-        color: #FF4D8D;
+        color: #ff4f9a;
         cursor: pointer;
       }
     }
 
     .modal-tip {
       font-size: 12px;
-      color: #9a93a4;
+      color: #777;
     }
   }
 
@@ -737,7 +737,7 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        box-shadow: 0 0 0 999px rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.5);
         pointer-events: none;
         z-index: 5;
         display: flex;
@@ -761,14 +761,14 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   .reupload-btn {
     min-width: 136px;
     height: 48px;
-    border: 1px solid #FF4D8D;
+    border: 1px solid #ff4f9a;
     border-radius: 8px;
     font-size: 14px;
-    color: #FF4D8D;
+    color: #ff4f9a;
     background: none;
     cursor: pointer;
     &:hover {
-      background: rgba(251,100,182,0.12);
+      background: rgba(255,79,154,0.12);
     }
   }
 
@@ -783,30 +783,29 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
   }
 
   .btn.confirm {
-    background: #FF4D8D;
-    color: #ffffff;
-    border: 2px solid #161122;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
     min-width: 136px;
     height: 48px;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #161122;
+    box-shadow: none;
     transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
     &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 3px 3px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
 
     &:active {
-      transform: translateY(0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+      box-shadow: none;
     }
 
     &:disabled {
-      background: #f8d7e8;
+      background: rgba(255,79,154,0.3);
       cursor: not-allowed;
     }
   }

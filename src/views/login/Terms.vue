@@ -103,7 +103,7 @@ function goBack() {
   min-height: 100vh;
   scroll-behavior: smooth;
   padding: 140px 0 0;
-  background: #FFFDF7;
+  background: #1a1a1a;
 
   .inner {
     max-width: 840px;
@@ -120,15 +120,14 @@ function goBack() {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #161122;
+      color: #ddd;
       cursor: pointer;
       z-index: 10;
-      border: 2.5px solid #161122;
-      border-radius: 13px;
-      background: #FFFDF7;
-      box-shadow: 3px 3px 0 #161122;
+      border: 1px solid #3d3d3d;
+      border-radius: 12px;
+      background: #1a1a1a;
       padding: 0 10px;
-      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+      transition: border-color 0.15s, color 0.15s;
 
       .back-text {
         font-size: 14px;
@@ -137,8 +136,8 @@ function goBack() {
       }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 5px 5px 0 #161122;
+        border-color: #ff4f9a;
+        color: #fff;
       }
     }
 
@@ -146,25 +145,25 @@ function goBack() {
       margin: 0 auto 20px;
       font-size: 14px;
       line-height: 28px;
-      color: #364153;
+      color: #ccc;
 
       :deep(h1) {
         font-weight: bold;
         font-size: 24px;
         margin: 0 0 10px 0;
-        color: #161122;
+        color: #f5f5f5;
       }
       :deep(.sub) {
-        color: #9a93a4;
+        color: #777;
         margin-top: 0;
       }
       :deep(.meta) {
-        color: #5b5566;
+        color: #aaa;
         margin-bottom: 20px;
         font-size: 14px;
       }
       :deep(.meta a) {
-        color: #FF4D8D;
+        color: #ff4f9a;
         text-decoration: none;
       }
       :deep(.meta a:hover) {
@@ -174,15 +173,15 @@ function goBack() {
         font-weight: bold;
         font-size: 20px;
         margin: 30px 0;
-        border-left: 4px solid #FF4D8D;
+        border-left: 4px solid #ff4f9a;
         padding-left: 6px;
-        color: #161122;
+        color: #f5f5f5;
       }
       :deep(h3) {
         font-weight: bold;
         font-size: 17.5px;
         margin: 28px 0;
-        color: #161122;
+        color: #f5f5f5;
       }
       :deep(p) {
         margin: 15px 0;
@@ -195,7 +194,7 @@ function goBack() {
         list-style: disc;
       }
       :deep(code) {
-        background: rgba(255,77,141,0.08);
+        background: rgba(255,79,154,0.12);
         padding: 7px 9px;
         border-radius: 4px;
       }
@@ -207,27 +206,27 @@ function goBack() {
       }
       :deep(th),
       :deep(td) {
-        border: 1px solid rgba(22,17,34,0.12);
+        border: 1px solid #2c2c2c;
         padding: 12px 11px;
         vertical-align: top;
       }
       :deep(thead th) {
-        background: rgba(22,17,34,0.04);
+        background: rgba(255,255,255,0.04);
         text-align: left;
       }
       :deep(.notice) {
-        background: rgba(255,77,141,0.08);
-        border: 1px solid #FF4D8D;
+        background: rgba(255,79,154,0.12);
+        border: 1px solid #ff4f9a;
         padding: 14px 16px;
         border-radius: 8px;
       }
       :deep(footer) {
         margin-top: 50px;
-        color: #9a93a4;
+        color: #777;
         font-size: 14px;
       }
       :deep(a) {
-        color: #FF4D8D;
+        color: #ff4f9a;
         text-decoration: underline;
       }
     }

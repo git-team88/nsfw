@@ -65,7 +65,7 @@ function goEdit() {
 .user-profile {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -77,7 +77,7 @@ function goEdit() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -92,7 +92,7 @@ function goEdit() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -104,7 +104,7 @@ function goEdit() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .content {
   min-height: 380px;
@@ -123,32 +123,31 @@ function goEdit() {
 .label {
   font-weight: 800;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: 0.02em;
 }
 .edit-link {
   display: inline-block;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
   font-weight: 800;
   font-size: 14px;
   padding: 11px 18px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
   white-space: nowrap;
 }
 .edit-link:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .bio {
   margin-top: 12px;
   font-weight: 800;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   line-height: 1.8;
 }
 .header-img {
@@ -157,7 +156,7 @@ function goEdit() {
   margin-top: 12px;
   object-fit: cover;
   border-radius: 6px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
 }
 @media (max-width: 900px) {
   .container {

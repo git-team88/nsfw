@@ -3,7 +3,7 @@
     <div class="ai-generate-content">
       <div class="ai-generate-header">
         <h3>{{ t('submit.cover.aiGenerateTitle') }}</h3>
-        <button class="ai-generate-close" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="ai-generate-close" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
       </div>
       <div class="ai-generate-body">
         <div class="input-container">
@@ -85,7 +85,7 @@ async function startGeneration() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,10 +95,10 @@ async function startGeneration() {
 .ai-generate-content {
   position: relative;
   width: 520px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   overflow: hidden;
 }
 
@@ -107,12 +107,12 @@ async function startGeneration() {
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid #2c2c2c;
 
   h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #161122;
+    color: #f5f5f5;
     margin: 0;
   }
 
@@ -128,33 +128,33 @@ async function startGeneration() {
 
 .ai-generate-body {
   padding: 18px 24px;
-  border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+  border-bottom: 1px solid #2c2c2c;
 
   .input-container {
     position: relative;
     height: 120px;
     padding: 10px;
     border-radius: 8px;
-    background: rgba(22, 17, 34, 0.06);
+    background: rgba(255,255,255,0.06);
 
     .ai-generate-input {
       width: 100%;
       height: 80px;
       font-size: 14px;
-      color: #161122;
+      color: #f5f5f5;
       resize: none;
       outline: none;
       background: none;
 
       &::placeholder {
-        color: #9a93a4;
+        color: #777;
       }
     }
 
     .word-count {
       text-align: right;
       font-size: 12px;
-      color: #9a93a4;
+      color: #777;
     }
   }
 }
@@ -167,7 +167,7 @@ async function startGeneration() {
   .ai-generate-btn-large {
     min-width: 240px;
     height: 48px;
-    background: #FF4D8D;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
     color: #FFFFFF;
     border: none;
     border-radius: 8px;
@@ -175,16 +175,14 @@ async function startGeneration() {
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
+      box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
     }
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
     }
 
     &:disabled {
-      background: #f8d7e8;
+      background: rgba(255,79,154,0.3);
       cursor: not-allowed;
     }
   }

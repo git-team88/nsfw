@@ -64,7 +64,7 @@
         <h2 class="panel-title">{{ t('home.popularBook') }}</h2>
         <button class="head-more" @click="goRankWork">{{ t('home.seeMore') }} →</button>
         <button class="view-toggle" @click="view = view === 'ring' ? 'rows' : 'ring'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
           {{ view === 'ring' ? t('home.viewList') : t('home.viewRing') }}
         </button>
         <div class="flex-1"></div>
@@ -339,7 +339,7 @@ function creLayout() {
     el.style.zIndex = String(100 - depth);
     el.style.filter = depth ? `brightness(${(1 - depth * 0.07).toFixed(2)})` : 'none';
     // 阴影为每张卡片各自的封面强调色（实心硬投影），与 moegen-web-main 首页一致
-    el.style.boxShadow = `7px 7px 0 ${creators.value[idx]?.cover ?? '#161122'}`;
+    el.style.boxShadow = `7px 7px 0 ${creators.value[idx]?.cover ?? '#3d3d3d'}`;
   });
 }
 
@@ -550,8 +550,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$pink: #FF4D8D;
 
 .mg-split {
   position: relative;
@@ -568,13 +566,13 @@ $pink: #FF4D8D;
 .cre-panel, .pop-panel {
   position: relative;
   overflow: hidden;
-  border: 3px solid $ink;
-  border-radius: 6px;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
   padding: 34px 44px 40px;
   isolation: isolate;
 }
-.cre-panel { background: #EAF2FF; }
-.pop-panel { background: #FFEFF5; }
+.cre-panel { background: #1a1a1a; }
+.pop-panel { background: rgba(255,255,255,0.04); }
 
 .panel-head {
   display: flex;
@@ -583,17 +581,17 @@ $pink: #FF4D8D;
   gap: 8px 12px;
   margin-bottom: 6px;
 
-  .panel-title { font-size: 26px; font-weight: 900; color: $ink; margin: 0; white-space: nowrap; }
+  .panel-title { font-size: 26px; font-weight: 900; color: #f5f5f5; margin: 0; white-space: nowrap; }
   .flex-1 { flex: 1; }
   .head-more {
     background: none; border: none; padding: 0; cursor: pointer;
-    font-size: 13px; font-weight: 800; color: $pink; white-space: nowrap;
+    font-size: 13px; font-weight: 800; color: #ff4f9a; white-space: nowrap;
   }
   .view-toggle {
     display: inline-flex; align-items: center; gap: 6px;
-    background: #fff; border: 2px solid $ink; border-radius: 999px;
-    font-size: 12px; font-weight: 800; color: $ink; cursor: pointer;
-    padding: 5px 12px; box-shadow: 2px 2px 0 $ink;
+    background: #1a1a1a; border: 1px solid #3d3d3d; border-radius: 999px;
+    font-size: 12px; font-weight: 800; color: #f5f5f5; cursor: pointer;
+    padding: 5px 12px; box-shadow: none;
   }
 }
 .panel-sub { margin: 0 0 6px; font-size: 13px; font-weight: 600; opacity: 0.5; }
@@ -605,7 +603,7 @@ $pink: #FF4D8D;
   z-index: 0; pointer-events: none;
   opacity: var(--op, 0.9);
   transform: rotate(var(--rot, 0deg));
-  filter: drop-shadow(0 5px 12px rgba(22, 17, 34, 0.16));
+  filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.3));
   animation: mgSecAppear 1s cubic-bezier(.16,1,.3,1) var(--adelay, 0s) both,
              mgFloat var(--fdur, 8s) ease-in-out var(--fdelay, 0s) infinite;
 }
@@ -623,22 +621,22 @@ $pink: #FF4D8D;
 .cre-card {
   position: absolute; left: 50%; top: 52%;
   display: flex; flex-direction: column; justify-content: center; text-align: center;
-  background: #fff; border: 3px solid $ink;
+  background: #1a1a1a; border: 1px solid #3d3d3d;
   width: 248px; transform: translate(-50%, -50%);
-  border-radius: 22px; padding: 28px 24px; min-height: 363px;
+  border-radius: 18px; padding: 28px 24px; min-height: 363px;
   cursor: pointer; will-change: transform, opacity;
 
   .cre-avatar {
     width: 88px; height: 88px; margin: 0 auto 12px;
-    border-radius: 999px; border: 3px solid $ink; overflow: hidden;
+    border-radius: 999px; border: 1px solid #3d3d3d; overflow: hidden;
     img { width: 100%; height: 100%; object-fit: cover; }
   }
-  .cre-name { font-size: 19px; font-weight: 800; color: $ink; }
+  .cre-name { font-size: 19px; font-weight: 800; color: #f5f5f5; }
   .cre-meta { font-size: 12px; font-weight: 600; opacity: 0.55; margin: 3px 0 14px; }
   .cre-follow {
-    width: 100%; padding: 10px; border: none; border-radius: 12px;
-    background: $ink; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer;
-    &.following { background: #FFD23F; color: $ink; border: 2px solid $ink; padding: 8px; }
+    width: 100%; padding: 10px; border: none; border-radius: 18px;
+    background: #3d3d3d; color: #f5f5f5; font-size: 14px; font-weight: 800; cursor: pointer;
+    &.following { background: #FFD23F; color: #1a1a1a; border: 1px solid #3d3d3d; padding: 8px; }
   }
 }
 
@@ -648,7 +646,7 @@ $pink: #FF4D8D;
   width: 248px; height: 331px;
   transform: translate(-50%, -50%) scale(.4);
   transform-origin: 50% 50%;
-  border: 3px solid $ink; border-radius: 22px; overflow: hidden;
+  border: 1px solid #3d3d3d; border-radius: 18px; overflow: hidden;
   opacity: 0; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
   will-change: transform, opacity; pointer-events: none; z-index: 99;
   padding: 0; cursor: pointer;
@@ -656,8 +654,8 @@ $pink: #FF4D8D;
   .sprout-cover { position: absolute; inset: 0; }
   .sprout-badge {
     position: absolute; left: 8px; top: 8px;
-    background: #FFD23F; color: $ink; font-size: 10px; font-weight: 800;
-    padding: 2px 8px; border-radius: 999px; border: 2px solid $ink;
+    background: #FFD23F; color: #1a1a1a; font-size: 10px; font-weight: 800;
+    padding: 2px 8px; border-radius: 999px; border: 1px solid #3d3d3d;
   }
 }
 
@@ -667,7 +665,7 @@ $pink: #FF4D8D;
   position: absolute; left: 50%; top: 52%;
   width: 600px; aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%);
-  border: 8px solid $ink; border-radius: 48px; overflow: hidden;
+  border: 1px solid #3d3d3d; border-radius: 18px; overflow: hidden;
   box-shadow: 0 28px 60px rgba(0, 0, 0, 0.22);
   cursor: pointer; will-change: transform;
 }
@@ -677,15 +675,15 @@ $pink: #FF4D8D;
 .ring-card .card-foot .foot-text { font-size: 32px; }
 .rank-badge {
   position: absolute; left: 9px; top: 9px;
-  border: 2px solid $ink; border-radius: 999px;
-  font-size: 11px; font-weight: 800; color: $ink;
+  border: 1px solid #3d3d3d; border-radius: 999px;
+  font-size: 11px; font-weight: 800; color: #f5f5f5;
   padding: 3px 9px; z-index: 2;
   &.gold { background: #FFD23F; }
   &.sm { left: 6px; top: 6px; padding: 2px 8px; }
 }
 .card-foot {
   position: absolute; inset-inline: 0; bottom: 0;
-  padding: 30px 12px 12px; color: #fff;
+  padding: 30px 12px 12px; color: #f5f5f5;
   background: linear-gradient(transparent, rgba(11, 11, 18, 0.85));
   &.sm { padding: 16px 8px 7px; }
   .foot-text { font-size: 11px; font-weight: 600; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -707,8 +705,8 @@ $pink: #FF4D8D;
 @keyframes mgMarqR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 .marquee-card {
   position: relative; flex: none; width: 132px; aspect-ratio: 3 / 4;
-  margin-right: 14px; border: 2.5px solid $ink; border-radius: 12px; overflow: hidden;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.16); cursor: pointer;
+  margin-right: 14px; border: 1px solid #3d3d3d; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5); cursor: pointer;
 }
 
 /* 底部查看更多新作（弹跳） */
@@ -721,17 +719,17 @@ $pink: #FF4D8D;
 
   .readmore-pill {
     position: relative;
-    background: #FFD23F; color: $ink;
+    background: #FFD23F; color: #1a1a1a;
     font-size: 19px; font-weight: 900; letter-spacing: .5px;
     white-space: nowrap;
-    border: 3px solid $ink; border-radius: 6px;
+    border: 1px solid #3d3d3d; border-radius: 18px;
     padding: 13px 30px;
-    box-shadow: 5px 5px 0 $ink;
+    box-shadow: none;
   }
   .readmore-arrow {
     font: 900 26px sans-serif;
     color: #FFD23F;
-    -webkit-text-stroke: 2px $ink;
+    -webkit-text-stroke: 2px #3d3d3d;
     margin-top: 1px;
   }
 }

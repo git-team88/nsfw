@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="batch-progress-overlay">
     <div class="batch-progress-dialog">
-      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="dialog-header">
         <span class="dialog-title">{{ t('novel.batchPublish.publishProgress') }}</span>
@@ -91,12 +91,6 @@ const progressPercent = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$cream: #FFFBF4;
-$line: #F0EADF;
 
 .batch-progress-overlay {
   position: fixed;
@@ -104,7 +98,7 @@ $line: #F0EADF;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,10 +106,10 @@ $line: #F0EADF;
 }
 
 .batch-progress-dialog {
-  background-color: #ffffff;
-  border: 2px solid $ink;
-  border-radius: 14px;
-  box-shadow: 6px 6px 0 $ink;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   width: 500px;
   padding: 18px 24px 24px;
   position: relative;
@@ -123,8 +117,8 @@ $line: #F0EADF;
 }
 
 .close-btn {
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 50%;
   padding: 0;
   position: absolute;
@@ -136,7 +130,7 @@ $line: #F0EADF;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 3px 3px 0 $ink;
+  box-shadow: none;
   transition: transform .2s;
   z-index: 10;
 
@@ -153,7 +147,7 @@ $line: #F0EADF;
   .dialog-title {
     font-size: 16px;
     font-weight: 800;
-    color: $ink;
+    color: #f5f5f5;
     text-align: center;
     line-height: 24px;
   }
@@ -165,7 +159,7 @@ $line: #F0EADF;
   .message-text {
     font-size: 14px;
     font-weight: 600;
-    color: $ink;
+    color: #f5f5f5;
     line-height: 20px;
   }
 }
@@ -176,21 +170,21 @@ $line: #F0EADF;
   .progress-label {
     font-size: 14px;
     font-weight: 700;
-    color: $sub;
+    color: #aaa;
     line-height: 20px;
   }
 }
 
 .progress-bar-track {
   margin-top: 10px;
-  background-color: $line;
-  border: 1.5px solid $ink;
+  background-color: #2c2c2c;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
   height: 10px;
   width: 100%;
 
   .progress-bar-fill {
-    background: linear-gradient(90deg, $pink, #FF9E45);
+    background: linear-gradient(90deg, #ff4f9a, #FF9E45);
     border-radius: 999px;
     height: 100%;
     transition: width 0.3s cubic-bezier(.16,1,.3,1);
@@ -199,10 +193,10 @@ $line: #F0EADF;
 
 .chapter-progress-list {
   margin-top: 16px;
-  background-color: $cream;
-  border: 2px solid $ink;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 10px;
-  box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.08);
+  box-shadow: none;
   padding: 12px;
   max-height: 200px;
   overflow-y: auto;
@@ -215,8 +209,8 @@ $line: #F0EADF;
   height: 28px;
   margin-bottom: 6px;
   padding: 4px 8px;
-  background: #fff;
-  border: 1.5px solid rgba(22, 17, 34, 0.1);
+  background: #1a1a1a;
+  border: 1.5px solid rgba(255,255,255,0.1);
   border-radius: 8px;
 
   &:last-child {
@@ -226,7 +220,7 @@ $line: #F0EADF;
   .chapter-name {
     font-size: 14px;
     font-weight: 700;
-    color: $ink;
+    color: #f5f5f5;
     line-height: 22px;
   }
 
@@ -259,11 +253,11 @@ $line: #F0EADF;
       }
 
       &.publishing {
-        color: $pink;
+        color: #ff4f9a;
       }
 
       &.waiting {
-        color: $muted;
+        color: #777;
       }
 
       &.unpublished {

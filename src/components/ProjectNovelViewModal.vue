@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="novel-modal-overlay">
     <div class="modal-content">
-      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="handleClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-body">
         <div class="modal-left">
@@ -244,7 +244,7 @@ watch(() => props.project, (newProject) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,10 +253,10 @@ watch(() => props.project, (newProject) => {
 
 .modal-content {
   position: relative;
-  background-color: #FFFFFF;
+  background-color: #1a1a1a;
   border-radius: 14px;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   width: 980px;
   height: calc(100vh - 260px);
   max-height: 640px;
@@ -265,8 +265,8 @@ watch(() => props.project, (newProject) => {
 }
 
 .close-btn{
-  background: #fff;
-  border: 2.5px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 999px;
   padding: 6px;
   position: absolute;
@@ -275,7 +275,7 @@ watch(() => props.project, (newProject) => {
   width: 36px;
   height: 36px;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: none;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
 
@@ -299,8 +299,8 @@ watch(() => props.project, (newProject) => {
   height: 100%;
   padding: 20px;
   border-radius: 14px 0 0 14px;
-  background: #FFEFF5;
-  border-right: 2px solid #161122;
+  background: rgba(255,79,154,0.08);
+  border-right: 1px solid #3d3d3d;
 
   .modal-title{
     font-weight: 800;
@@ -308,7 +308,7 @@ watch(() => props.project, (newProject) => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #161122;
+    color: #f5f5f5;
   }
 }
 
@@ -319,7 +319,7 @@ watch(() => props.project, (newProject) => {
   .chapter-item {
     margin-bottom: 16px;
     font-size: 14px;
-    color: #161122;
+    color: #f5f5f5;
     opacity: 0.65;
     cursor: pointer;
     display: flex;
@@ -327,12 +327,12 @@ watch(() => props.project, (newProject) => {
     align-items: center;
 
     &:hover {
-      color: #161122;
+      color: #f5f5f5;
       opacity: 1;
     }
 
     &.active {
-      color: #161122;
+      color: #f5f5f5;
       opacity: 1;
     }
 
@@ -341,7 +341,7 @@ watch(() => props.project, (newProject) => {
     }
 
     .chapter-status {
-      color: #161122;
+      color: #f5f5f5;
       opacity: 0.4;
       font-size: 12px;
       margin-left: 10px;
@@ -367,7 +367,7 @@ watch(() => props.project, (newProject) => {
     padding: 16px 0 20px;
     font-size: 16px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .content-text {
@@ -377,7 +377,7 @@ watch(() => props.project, (newProject) => {
     font-size: 14px;
     font-weight: 700;
     line-height: 18px;
-    color: #161122;
+    color: #f5f5f5;
     white-space: pre-wrap;
   }
 }
@@ -395,42 +395,42 @@ watch(() => props.project, (newProject) => {
   border: none;
   border-radius: 0.8rem;
   font-size: 1.6rem;
-  background: #F5F5F5;
-  color: #6A7282;
+  background: rgba(255,255,255,0.06);
+  color: #aaa;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    color: #FB64B6;
+    color: #ff4f9a;
   }
 }
 
 .publish-btn {
   min-width: 300px;
   height: 56px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   font-size: 16px;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF4D8D, #FF7A45);
-  color: #ffffff;
+  background: linear-gradient(145deg, #ff74b3, #f73382);
+  color: #f5f5f5;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 3px 3px 0 #161122;
+    box-shadow: none;
   }
 
   &.published {
-    background: rgba(255, 77, 142, 0.4);
-    color: #161122;
+    background: rgba(255,79,154,0.15);
+    color: #f5f5f5;
     cursor: not-allowed;
 
     &:hover {
       transform: none;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
     }
   }
 }

@@ -4,7 +4,7 @@
       <div class="modal-corner-deco"></div>
 
       <button class="modal-close" @click="handleClose">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
 
       <div class="modal-badge">
@@ -63,14 +63,6 @@ const handleConfirm = () => {
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$paper: #FFFDF7;
-$pink: #FF4D8D;
-$sub: #5b5566;
-$muted: #9a93a4;
-$line: #e7e1d8;
-$yellow: #FFD23F;
-
 @keyframes modalFade {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -87,7 +79,7 @@ $yellow: #FFD23F;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(22, 17, 34, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,9 +89,9 @@ $yellow: #FFD23F;
 
 .unlimited-mode-modal {
   position: relative;
-  background: $paper;
-  border: 3px solid $ink;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.18);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   border-radius: 18px;
   width: min(400px, 92%);
   padding: 22px 24px;
@@ -115,7 +107,7 @@ $yellow: #FFD23F;
     height: 120px;
     pointer-events: none;
     border-radius: 0 14px 0 0;
-    background-image: radial-gradient($ink 1px, transparent 1px);
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
     background-size: 8px 8px;
     opacity: 0.07;
     -webkit-mask-image: radial-gradient(circle at 100% 0%, #000 0 40%, transparent 68%);
@@ -123,8 +115,8 @@ $yellow: #FFD23F;
   }
 
   .modal-close {
-    background: #fff;
-    border: 2px solid $ink;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
     padding: 6px;
     position: absolute;
@@ -136,7 +128,7 @@ $yellow: #FFD23F;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 2px 2px 0 $ink;
+    box-shadow: none;
     transition: transform .2s;
 
     &:hover { transform: scale(1.1) rotate(90deg); }
@@ -150,9 +142,9 @@ $yellow: #FFD23F;
     font-size: 11px;
     border-radius: 999px;
     padding: 3px 12px;
-    background: $yellow;
-    color: $ink;
-    border: 2px solid $ink;
+    background: #FFD23F;
+    color: #1a1a1a;
+    border: 1px solid #3d3d3d;
     letter-spacing: 0.06em;
     margin-bottom: 12px;
 
@@ -165,7 +157,7 @@ $yellow: #FFD23F;
     h3 {
       font-size: 19px;
       font-weight: 800;
-      color: $ink;
+      color: #f5f5f5;
       margin: 0;
     }
   }
@@ -175,7 +167,7 @@ $yellow: #FFD23F;
     p {
       font-size: 13px;
       font-weight: 600;
-      color: $ink;
+      color: #f5f5f5;
       line-height: 1.75;
       margin: 0;
       opacity: 0.7;
@@ -206,7 +198,7 @@ $yellow: #FFD23F;
     span {
       font-size: 12.5px;
       font-weight: 800;
-      color: $ink;
+      color: #f5f5f5;
       opacity: 0.65;
     }
   }
@@ -223,9 +215,9 @@ $yellow: #FFD23F;
       align-items: center;
       justify-content: center;
       height: auto;
-      border: 2px solid $ink;
+      border: 1px solid #3d3d3d;
       border-radius: 12px;
-      box-shadow: 2px 2px 0 $ink;
+      box-shadow: none;
       font-weight: 800;
       font-size: 14px;
       padding: 11px 10px;
@@ -233,30 +225,28 @@ $yellow: #FFD23F;
       transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
 
       &:hover {
-        transform: translate(-1px, -2px);
-        box-shadow: 4px 5px 0 rgba(22, 17, 34, 0.4);
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
 
       &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 1px 1px 0 rgba(22, 17, 34, 0.4);
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
 
       &.cancel {
-        background: #fff;
-        color: $ink;
+        background: #1a1a1a;
+        color: #f5f5f5;
 
         &:hover {
-          color: $pink;
+          color: #ff4f9a;
         }
       }
 
       &.confirm {
-        background: $pink;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         color: #fff;
 
         &:disabled {
-          background: #f8d7e8;
+          background: rgba(255,79,154,0.3);
           cursor: not-allowed;
         }
       }

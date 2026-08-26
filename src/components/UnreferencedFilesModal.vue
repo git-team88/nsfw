@@ -3,7 +3,7 @@
     <div class="unreferenced-files-modal">
       <div class="modal-header">
         <div class="modal-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4f9a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <h3>{{ t('home.unreferencedFiles.title') }}</h3>
       </div>
@@ -46,7 +46,7 @@ const message = computed(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(22, 17, 34, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,10 +55,10 @@ const message = computed(() => {
 
 .unreferenced-files-modal {
   position: relative;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  border-radius: 16px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  border-radius: 18px;
   width: 480px;
   padding: 32px 36px 28px;
 
@@ -75,7 +75,7 @@ const message = computed(() => {
     h3 {
       font-size: 18px;
       font-weight: 700;
-      color: #161122;
+      color: #f5f5f5;
       margin: 0;
     }
   }
@@ -83,13 +83,13 @@ const message = computed(() => {
   .modal-content {
     margin: 20px 0 28px;
     padding: 16px;
-    background: rgba(255, 77, 141, 0.06);
+    background: rgba(255, 79, 154, 0.12);
     border-radius: 10px;
-    border: 1.5px solid rgba(255, 77, 141, 0.15);
+    border: 1px solid rgba(255, 79, 154, 0.25);
 
     p {
       font-size: 14px;
-      color: #3d3650;
+      color: #aaa;
       line-height: 22px;
       margin: 0;
     }
@@ -114,33 +114,33 @@ const message = computed(() => {
       transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease-out;
 
       &:hover {
-        transform: translate(-1px, -2px);
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
 
       &:active {
-        transform: translate(1px, 1px);
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
       }
     }
 
     .skip {
-      background: #fff;
-      color: #5b5566;
-      border: 2px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      background: #1a1a1a;
+      color: #aaa;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
 
       &:hover {
-        color: #FF4D8D;
+        color: #ff4f9a;
       }
     }
 
     .go-back {
-      background: #FF4D8D;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #ffffff;
-      border: 2.5px solid #161122;
-      box-shadow: 2px 2px 0 #161122;
+      border: 1px solid #3d3d3d;
+      box-shadow: none;
 
       &:hover {
-        box-shadow: 3px 3px 0 #161122;
+        box-shadow: none;
       }
     }
   }

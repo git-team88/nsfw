@@ -5016,10 +5016,14 @@ function handleFullscreenChange() {
     if (navArrows) {
       navArrows.style.zIndex = '10';
     }
-    // 退出全屏时，如果是图片类型，恢复右侧面板显示
-    if (detail.value.type === '1') {
+    // 退出全屏时，恢复右侧面板显示
+    if (!isCollectionMode.value) {
+      // 非合集模式：退出全屏后恢复右侧面板（覆盖 type 1/3/4/5）
       isRightPanelHidden.value = false;
-      activeTab.value = isCollectionMode.value ? 'collection' : 'detail';
+    } else if (detail.value.type === '1') {
+      // 合集模式 + 图片类型：恢复并切到合集 tab
+      isRightPanelHidden.value = false;
+      activeTab.value = 'collection';
     }
   }
 }

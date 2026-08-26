@@ -242,7 +242,7 @@ async function fetchData() {
 .user-messages {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -254,7 +254,7 @@ async function fetchData() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -271,7 +271,7 @@ async function fetchData() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -283,44 +283,66 @@ async function fetchData() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .tabs {
-  display: inline-flex;
-  gap: 6px;
-  border: 2px solid #161122;
-  border-radius: 14px;
-  padding: 5px;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid #303030;
+  padding: 0 0 14px;
   margin-bottom: 24px;
 }
 .tab-item {
-  font-size: 16px;
-  color: #161122;
-  padding: 8px 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #555;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  border-radius: 10px;
-  font-weight: 500;
-  transition: all 0.15s ease;
+  transition: color 0.15s;
 }
 .tab-item.active {
-  background: #161122;
-  color: #fff;
-  border-radius: 10px;
-  font-weight: 800;
+  color: #e7e7e7;
+  font-weight: 900;
+}
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: -15px;
+  left: 8px;
+  height: 4px;
+  border-radius: 4px 4px 0 0;
+  background: #ff4f9a;
+}
+.tab-item:hover:not(.active) {
+  color: #aaa;
 }
 .tab-item .count-dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 9px;
-  height: 9px;
+  min-width: 18px;
+  height: 18px;
+  width: auto;
   margin-left: 6px;
-  padding: 2px 6px;
-  background: #FF4D8D;
+  padding: 0 5px;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: none;
+  box-shadow: 0 0 8px rgba(255, 61, 134, .4);
   color: #ffffff;
-  border-radius: 50%;
-  font-size: 12px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 800;
+  line-height: 1;
   animation: pulse 1.5s ease-in-out infinite;
 }
 .content-area {
@@ -333,12 +355,12 @@ async function fetchData() {
   justify-content: center;
   height: 400px;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
   .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e7e1d8;
-    border-top: 3px solid #161122;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #f5f5f5;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 12px;
@@ -375,11 +397,10 @@ async function fetchData() {
   }
   .tabs {
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 16px;
   }
   .tab-item {
-    font-size: 14px;
-    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 </style>

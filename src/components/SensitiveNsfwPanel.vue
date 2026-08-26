@@ -35,9 +35,6 @@ const emit = defineEmits<{ enable: []; confirmAdult: [] }>();
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$paper: #FFFDF7;
-$pink: #FF4D8D;
 $yellow: #FFD23F;
 
 .mg-nsfw-panel {
@@ -70,18 +67,18 @@ $yellow: #FFD23F;
     width: 100%;
     max-width: 460px;
     padding: 32px 28px;
-    background: $paper;
-    border: 3px solid $ink;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 18px;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.18);
+    box-shadow: none;
     box-sizing: border-box;
   }
 
   .nsfw-badge {
     display: inline-flex; align-items: center; justify-content: center;
     width: 48px; height: 48px; margin-bottom: 14px;
-    border-radius: 999px; background: $yellow; border: 2px solid $ink;
-    box-shadow: 2px 2px 0 $ink;
+    border-radius: 999px; background: $yellow; color: #1a1a1a; border: 1px solid #3d3d3d;
+    box-shadow: none;
     .badge-icon { font-size: 22px; }
   }
 
@@ -89,14 +86,14 @@ $yellow: #FFD23F;
     margin: 0 0 12px;
     font-size: 18px;
     font-weight: 900;
-    color: $ink;
+    color: #f5f5f5;
   }
 
   .nsfw-desc {
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: $ink;
+    color: #f5f5f5;
     line-height: 1.7;
   }
 
@@ -104,17 +101,17 @@ $yellow: #FFD23F;
     margin-top: 20px;
     min-width: 220px;
     padding: 12px 24px;
-    background: $pink;
-    color: #fff;
-    border: 2px solid $ink;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+    color: #f5f5f5;
+    border: 1px solid #3d3d3d;
+    border-radius: 18px;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 4px 4px 0 $ink;
+    box-shadow: none;
     transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
-    &:hover { transform: translate(-1px,-2px); box-shadow: 6px 7px 0 rgba(22,17,34,.4); }
-    &:active { transform: translate(1px,1px); box-shadow: 2px 2px 0 rgba(22,17,34,.4); }
+    &:hover { transform: translate(-1px,-2px); box-shadow: none; }
+    &:active { transform: translate(1px,1px); box-shadow: none; }
   }
 }
 

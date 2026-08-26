@@ -590,7 +590,7 @@ async function downloadSingleWorkData() {
 .user-interactive {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -602,7 +602,7 @@ async function downloadSingleWorkData() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -618,7 +618,7 @@ async function downloadSingleWorkData() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -630,7 +630,7 @@ async function downloadSingleWorkData() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .metrics {
@@ -646,8 +646,8 @@ async function downloadSingleWorkData() {
   justify-content: space-between;
   height: 146px;
   padding: 24px;
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -661,7 +661,7 @@ async function downloadSingleWorkData() {
   height: 6px;
 }
 .metric:nth-child(1)::before {
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .metric:nth-child(2)::before {
   background: #FFD23F;
@@ -670,41 +670,58 @@ async function downloadSingleWorkData() {
   background: #7FD8E8;
 }
 .metric-label {
-  color: #161122;
+  color: #aaa;
   font-size: 14px;
   font-weight: 600;
   padding-top: 6px;
 }
 .metric-value {
   font-size: 32px;
-  color: #161122;
+  color: #f5f5f5;
   font-weight: 700;
   word-break: break-word;
 }
 
 .tabs {
-  display: inline-flex;
-  gap: 0;
-  padding: 5px;
-  border: 2px solid #161122;
-  border-radius: 14px;
-  background: #FFFDF7;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 0;
+  border-bottom: 1px solid #303030;
+  background: transparent;
   margin-bottom: 24px;
 }
 .tabs span {
-  height: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
   cursor: pointer;
-  font-size: 14px;
-  color: #161122;
-  padding: 8px 20px;
-  border-radius: 10px;
-  transition: all 0.15s ease;
+  font-size: 15px;
+  font-weight: 900;
+  color: #555;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: color 0.15s;
 }
 .tabs span.on {
-  font-weight: 700;
-  color: #FFFDF7;
-  background: #161122;
-  border-radius: 10px;
+  color: #e7e7e7;
+}
+.tabs span.on::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: -1px;
+  left: 8px;
+  height: 4px;
+  border-radius: 4px 4px 0 0;
+  background: #ff4f9a;
+}
+.tabs span:hover:not(.on) {
+  color: #aaa;
 }
 
 .block-title {
@@ -714,10 +731,10 @@ async function downloadSingleWorkData() {
   font-size: 14px;
   font-weight: 700;
   padding: 0 36px;
-  color: #161122;
+  color: #f5f5f5;
 }
 .block.overall .block-title {
-  color: #FF4D8D;
+  color: #ff4f9a;
 }
 .block.work .block-title {
   color: #7FD8E8;
@@ -737,33 +754,29 @@ async function downloadSingleWorkData() {
   height: 28px;
   border: none;
   outline: none;
-  color: #161122;
+  color: #f5f5f5;
 }
 .download {
   height: 40px;
   padding: 0 12px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #FF4D8D;
-  color: #FFFDF7;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 2px solid #ff9aca;
+  color: #f5f5f5;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.download:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
-}
-.download:active {
-  transform: translate(1px, 1px);
-  box-shadow: 2px 2px 0 #161122;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.1s ease;
 }
 .block.overall .download {
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  border: 2px solid #ff9aca;
 }
 .block.work .download {
   background: #7FD8E8;
@@ -773,11 +786,11 @@ async function downloadSingleWorkData() {
   height: 16px;
 }
 .table {
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   overflow: hidden;
   margin: 0 0 24px;
-  background: #FFFDF7;
+  background: #1a1a1a;
 }
 .thead,
 .tr {
@@ -810,27 +823,27 @@ async function downloadSingleWorkData() {
 
 .table.overall .thead,
 .table.overall .tr {
-  border-bottom: 1px solid #161122;
+  border-bottom: 1px solid #2c2c2c;
 }
 .table.work .thead,
 .table.work .tr {
-  border-bottom: 1px solid #161122;
+  border-bottom: 1px solid #2c2c2c;
 }
 .thead {
-  background: #161122;
+  background: rgba(255,255,255,0.06);
 }
 .th {
-  color: #FFFDF7;
+  color: #f5f5f5;
   font-weight: 700;
 }
 .td {
-  color: #161122;
+  color: #aaa;
 }
 .table.overall .tbody .tr:hover {
-  background: #FFF0F5;
+  background: rgba(255,79,154,0.12);
 }
 .table.work .tbody .tr:hover {
-  background: #F0F8FF;
+  background: rgba(255,255,255,0.06);
 }
 .table.work .tbody .td.info {
   display: flex;
@@ -841,7 +854,7 @@ async function downloadSingleWorkData() {
     width: 40px;
     height: 40px;
     border-radius: 6px;
-    border: 2px solid #161122;
+    border: 1px solid #3d3d3d;
     object-fit: cover;
   }
 
@@ -872,15 +885,15 @@ async function downloadSingleWorkData() {
   .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e7e1d8;
-    border-top: 3px solid #161122;
+    border: 3px solid #3d3d3d;
+    border-top: 3px solid #f5f5f5;
     border-radius: 50%;
     animation: spin 1s ease-in-out infinite;
     box-sizing: border-box;
   }
   span {
     font-size: 16px;
-    color: #161122;
+    color: #aaa;
     font-weight: 600;
   }
 }
@@ -945,7 +958,6 @@ async function downloadSingleWorkData() {
     padding: 16px;
   }
   .tabs span {
-    padding: 8px 16px;
     font-size: 13px;
   }
   .block-title {

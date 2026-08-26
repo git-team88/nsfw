@@ -387,7 +387,7 @@ async function handleAccountFailedModify() {
 .user-subscription-edit {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 
 .container {
@@ -400,8 +400,8 @@ async function handleAccountFailedModify() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
-  border-radius: 14px;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
   margin-left: 238px;
@@ -416,7 +416,7 @@ async function handleAccountFailedModify() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -428,7 +428,7 @@ async function handleAccountFailedModify() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 .tip {
   display: flex;
@@ -436,20 +436,20 @@ async function handleAccountFailedModify() {
   height: 54px;
   margin: 0 0 12px;
   padding: 10px 16px;
-  border: 2px solid #161122;
-  border-radius: 13px;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 800;
-  background: #FFFDF7;
-  color: #161122;
+  background: rgba(255,255,255,0.06);
+  color: #f5f5f5;
 }
 
 .account-section {
   margin: 12px 0 0;
   padding: 16px;
-  border: 2px solid #161122;
-  border-radius: 13px;
-  background: #FFFDF7;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.06);
 }
 
 .account-section:first-of-type {
@@ -459,7 +459,7 @@ async function handleAccountFailedModify() {
 .account-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   margin: 30px 0 8px;
 }
 
@@ -489,12 +489,12 @@ async function handleAccountFailedModify() {
 .account-name {
   font-weight: 700;
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .account-status-text {
   font-size: 14px;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .create-account-btn {
@@ -503,24 +503,15 @@ async function handleAccountFailedModify() {
   justify-content: center;
   min-width: 136px;
   height: 48px;
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
   color: #FFFFFF;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
+  border: 2px solid #ff9aca;
+  border-radius: 14px;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
-  }
+  transition: box-shadow 0.15s;
 }
 
 .change-account-btn {
@@ -529,23 +520,21 @@ async function handleAccountFailedModify() {
   justify-content: center;
   min-width: 136px;
   height: 48px;
-  background: #FFFFFF;
-  color: #161122;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  box-shadow: 3px 3px 0 #161122;
+  background: rgba(255,255,255,0.06);
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  box-shadow: none;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
+    
   }
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
+    
   }
 }
 
@@ -554,7 +543,7 @@ async function handleAccountFailedModify() {
   align-items: center;
   font-size: 14px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
   gap: 4px;
 
   img {
@@ -565,14 +554,14 @@ async function handleAccountFailedModify() {
 
 .account-tip {
   font-size: 14px;
-  color: #99A1AF;
+  color: #777;
   line-height: 1.5;
 }
 .sections-wrap {
   padding: 16px;
-  border: 2px solid #161122;
-  border-radius: 13px;
-  background: #FFFDF7;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.06);
 }
 .section {
   margin-bottom: 24px;
@@ -580,7 +569,7 @@ async function handleAccountFailedModify() {
 .label {
   font-size: 14px;
   font-weight: 800;
-  color: #161122;
+  color: #f5f5f5;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -588,13 +577,13 @@ async function handleAccountFailedModify() {
   .count {
     font-size: 12px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .info {
     font-size: 12px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 }
 .price-options {
@@ -623,7 +612,7 @@ async function handleAccountFailedModify() {
   .price-text {
     font-size: 16px;
     font-weight: 800;
-    color: #161122;
+    color: #f5f5f5;
   }
 }
 .textarea {
@@ -632,18 +621,18 @@ async function handleAccountFailedModify() {
   margin-top: 16px;
   padding: 18px 16px;
   font-family: inherit;
-  border: 2.5px solid #161122;
-  border-radius: 13px;
-  background: #FFFFFF;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  background: #111;
   outline: none;
-  color: #161122;
+  color: #f5f5f5;
 }
 .textarea:focus {
-  border-color: #FF4D8D;
-  box-shadow: 3px 3px 0 #FF4D8D;
+  border-color: #ff4f9a;
+  box-shadow: 0 0 0 2px rgba(255,79,154,0.25);
 }
 .textarea::placeholder {
-  color: #161122;
+  color: #f5f5f5;
   opacity: 0.4;
 }
 .actions {
@@ -656,48 +645,30 @@ async function handleAccountFailedModify() {
   height: 48px;
   min-width: 136px;
   padding: 0 16px;
-  border-radius: 13px;
+  border-radius: 14px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 800;
   position: relative;
 }
 .btn-cancel {
-  background: #FFFFFF;
-  color: #161122;
-  border: 2.5px solid #161122;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.15s, box-shadow 0.15s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
-  }
+  background: rgba(255,255,255,0.06);
+  color: #f5f5f5;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  transition: box-shadow 0.15s;
 }
 .btn-save {
-  background: #FF4D8D;
-  border: 2.5px solid #161122;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
   color: #FFFFFF;
-  box-shadow: 3px 3px 0 #161122;
-  transition: transform 0.15s, box-shadow 0.15s;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 #161122;
-  }
-  &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #161122;
-  }
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+  transition: box-shadow 0.15s;
 }
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
-  box-shadow: 1px 1px 0 #161122;
+  box-shadow: none;
   transform: none;
 }
 @media (max-width: 900px) {
@@ -706,8 +677,8 @@ async function handleAccountFailedModify() {
     padding: 80px 20px 24px;
   }
   .main {
-  padding: 24px;
-  margin-left: 0;
+    padding: 24px;
+    margin-left: 0;
   }
   .account-item {
     flex-direction: column;

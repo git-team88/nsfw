@@ -69,10 +69,8 @@ const props = defineProps<{
   .toast-content {
     position: relative;
     max-width: 250px;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-    border: 1px solid transparent;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
     border-radius: 4px;
     padding: 12px 16px;
     display: flex;

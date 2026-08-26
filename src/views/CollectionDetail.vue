@@ -818,7 +818,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .collection-detail {
   min-height: 100vh;
-  background-color: #FFFDF7;
+  background-color: #111111;
   padding-bottom: 40px;
 }
 
@@ -837,8 +837,8 @@ onBeforeUnmount(() => {
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #e0e0e0;
-    border-top-color: #FF4D8D;
+    border: 3px solid #3d3d3d;
+    border-top-color: #ff4f9a;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -855,18 +855,18 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-bottom: 20px;
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 
   .breadcrumb-item {
     cursor: pointer;
     flex-shrink: 0;
 
     &:hover {
-      color: #FF4D8D;
+      color: #ff4f9a;
     }
 
     &.active {
-      color: #161122;
+      color: #f5f5f5;
       cursor: default;
       flex: 1;
       min-width: 0;
@@ -878,7 +878,7 @@ onBeforeUnmount(() => {
 
   .breadcrumb-arrow {
     margin: 0 10px;
-    color: #ddd;
+    color: #3d3d3d;
     flex-shrink: 0;
   }
 }
@@ -893,8 +893,8 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   padding: 20px 0 20px 20px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
 
   .author-left {
@@ -952,12 +952,12 @@ onBeforeUnmount(() => {
 
     .type-badge {
       width: max-content;
-      border: 2px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 4px;
       padding: 4px 12px;
       font-weight: 800;
       font-size: 12px;
-      color: #161122;
+      color: #f5f5f5;
       background: #FFC24B;
       margin-top: 18px;
 
@@ -973,7 +973,7 @@ onBeforeUnmount(() => {
     .title {
       font-size: 24px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 0;
       line-height: 36px;
       display: -webkit-box;
@@ -1017,7 +1017,7 @@ onBeforeUnmount(() => {
     .update-chapter{
       display: flex;
       align-items: center;
-      color: #FF4D8D;
+      color: #ff4f9a;
       font-size: 16px;
 
       .chapter-value {
@@ -1030,7 +1030,7 @@ onBeforeUnmount(() => {
       }
 
       .time {
-        color: #9a93a4;
+        color: #777;
         margin-left: 8px;
         flex-shrink: 0;
       }
@@ -1041,13 +1041,13 @@ onBeforeUnmount(() => {
 
       .status{
         font-weight: 500;
-        color: #161122;
+        color: #f5f5f5;
       }
     }
 
     .read-info {
       font-size: 16px;
-      color: #5b5566;
+      color: #aaa;
       display: flex;
       align-items: center;
 
@@ -1074,9 +1074,9 @@ onBeforeUnmount(() => {
       height: 48px;
       padding: 8px 20px;
       border-radius: 12px;
-      border: 2px solid #161122;
-      background: #fff;
-      color: #161122;
+      border: 1px solid #3d3d3d;
+      background: #1a1a1a;
+      color: #f5f5f5;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -1088,7 +1088,7 @@ onBeforeUnmount(() => {
       }
 
       &:hover {
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       }
     }
 
@@ -1100,17 +1100,18 @@ onBeforeUnmount(() => {
       height: 48px;
       padding: 8px 20px;
       border-radius: 12px;
-      border: 2px solid #161122;
-      background: #FF4D8D;
+      border: 1px solid #ff9aca;
+      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
       color: #fff;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s;
       align-self: flex-start;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
       &:hover {
-        box-shadow: 2px 2px 0 #161122;
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
     }
   }
@@ -1122,7 +1123,7 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     width: 312px;
     padding: 0 30px;
-    border-left: 1px dashed rgba(22, 17, 34, 0.12);
+    border-left: 1px dashed rgba(255, 255, 255, 0.12);
 
     .avatar-top{
       display: flex;
@@ -1149,7 +1150,7 @@ onBeforeUnmount(() => {
     .author-name {
       font-size: 16px;
       font-weight: 500;
-      color: #161122;
+      color: #f5f5f5;
       cursor: pointer;
     }
 
@@ -1169,7 +1170,7 @@ onBeforeUnmount(() => {
         width: 1px;
         height: 20px;
         margin: 0 40px;
-        background: rgba(22, 17, 34, 0.12);
+        background: rgba(255, 255, 255, 0.12);
       }
 
       .stat-item {
@@ -1180,12 +1181,12 @@ onBeforeUnmount(() => {
         .stat-value {
           font-size: 16px;
           font-weight: 500;
-          color: #161122;
+          color: #f5f5f5;
         }
 
         .stat-label {
           font-size: 14px;
-          color: #5b5566;
+          color: #aaa;
           margin-bottom: 8px;
         }
       }
@@ -1213,19 +1214,17 @@ onBeforeUnmount(() => {
         overflow: hidden;
 
         &.btn-follow {
-          background: #FF4D8D;
+          background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
           color: #ffffff;
-          border: 3px solid #161122;
-          box-shadow: 2px 2px 0 #161122;
+          border: 1px solid #3d3d3d;
+          box-shadow: 0 2px 12px rgba(255,79,154,0.3);
 
           &:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 3px 3px 0 #161122;
+            box-shadow: 0 4px 16px rgba(255,79,154,0.4);
           }
 
           &:active {
-            transform: translate(0, 0);
-            box-shadow: 2px 2px 0 #161122;
+            box-shadow: 0 2px 8px rgba(255,79,154,0.3);
           }
 
           .hover-text {
@@ -1233,15 +1232,14 @@ onBeforeUnmount(() => {
           }
 
           &.followed {
-            background: rgba(22, 17, 34, 0.06);
-            color: #5b5566;
-            border: 3px solid #161122;
-            box-shadow: 2px 2px 0 #161122;
+            background: rgba(255,255,255,0.06);
+            color: #aaa;
+            border: 1px solid #3d3d3d;
+            box-shadow: none;
 
             &:hover {
-              color: #FF4D8D;
-              transform: translate(-1px, -1px);
-              box-shadow: 3px 3px 0 #161122;
+              color: #ff4f9a;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 
               .btn-text {
                 display: none;
@@ -1253,8 +1251,7 @@ onBeforeUnmount(() => {
             }
 
             &:active {
-              transform: translate(0, 0);
-              box-shadow: 2px 2px 0 #161122;
+              box-shadow: none;
             }
           }
         }
@@ -1263,24 +1260,22 @@ onBeforeUnmount(() => {
           background: #00d3f2;
           color: #ffffff;
           padding: 0 10px;
-          border: 3px solid #161122;
-          box-shadow: 2px 2px 0 #161122;
+          border: 1px solid #3d3d3d;
+          box-shadow: 0 2px 8px rgba(0,211,242,0.2);
 
           &:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 3px 3px 0 #161122;
+            box-shadow: 0 4px 12px rgba(0,211,242,0.3);
           }
 
           &:active {
-            transform: translate(0, 0);
-            box-shadow: 2px 2px 0 #161122;
+            box-shadow: 0 2px 8px rgba(0,211,242,0.2);
           }
 
           &.subscribed {
-            background: rgba(22, 17, 34, 0.06);
-            color: #5b5566;
-            border: 3px solid #161122;
-            box-shadow: 2px 2px 0 #161122;
+            background: rgba(255,255,255,0.06);
+            color: #aaa;
+            border: 1px solid #3d3d3d;
+            box-shadow: none;
             cursor: not-allowed;
           }
         }
@@ -1290,7 +1285,7 @@ onBeforeUnmount(() => {
     .subscribe-tip {
       margin-top: 10px;
       font-size: 14px;
-      color: #9a93a4;
+      color: #777;
       text-align: center;
     }
   }
@@ -1315,15 +1310,15 @@ onBeforeUnmount(() => {
 
 .section {
   padding: 20px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
 }
 
 .section-chapter{
   padding: 0 20px 20px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
 }
 
@@ -1337,17 +1332,17 @@ onBeforeUnmount(() => {
 .section-title {
   font-size: 20px;
   font-weight: 600;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .private-hint {
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 }
 
 .publish-btn {
   padding: 8px 20px;
-  background: #FF4D8D;
+  background: #ff4f9a;
   color: #FFFFFF;
   border: none;
   border-radius: 6px;
@@ -1359,7 +1354,7 @@ onBeforeUnmount(() => {
 .description-content {
   margin-top: 14px;
   font-size: 14px;
-  color: #5b5566;
+  color: #aaa;
   line-height: 24px;
 }
 
@@ -1387,26 +1382,25 @@ onBeforeUnmount(() => {
   &:not(.is-own) {
     padding: 0;
     border: none;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0;
     transition: none;
 
     &:hover {
-      border-color: rgba(22, 17, 34, 0.12);
+      border-color: rgba(255, 255, 255, 0.12);
       box-shadow: none;
       transform: none;
     }
   }
 
   &.is-own {
-    border: 2px solid rgba(22, 17, 34, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
-    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+    transition: border-color 0.25s, box-shadow 0.25s;
 
     &:hover {
-      border-color: #161122;
-      box-shadow: 3px 3px 0 rgba(22, 17, 34, 0.10);
-      transform: translateX(3px);
+      border-color: #3d3d3d;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
   }
 
@@ -1428,12 +1422,12 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
 
       &.status-subscribed {
-        background: #FF4D8D;
+        background: #ff4f9a;
         color: #FFFFFF;
       }
 
       &.status-private {
-        background: #161122;
+        background: #222;
         color: #FFFFFF;
       }
     }
@@ -1443,14 +1437,14 @@ onBeforeUnmount(() => {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: #161122;
+      color: #f5f5f5;
       flex-shrink: 1;
       min-width: 0;
     }
   }
 
   &.is-read .chapter-left .chapter-title {
-    color: #99A1AF;
+    color: #777;
   }
 
   .chapter-right {
@@ -1465,14 +1459,14 @@ onBeforeUnmount(() => {
       align-items: center;
       gap: 2px;
       padding: 6px 10px;
-      border: 2px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 6px;
-      background: #FFFFFF;
-      color: #161122;
+      background: #1a1a1a;
+      color: #f5f5f5;
       cursor: pointer;
 
       &:first-child{
-        background: #FF4D8E;
+        background: #ff4f9a;
         color: #FFFFFF;
       }
 
@@ -1738,7 +1732,7 @@ onBeforeUnmount(() => {
       width: 100%;
       padding: 16px 0;
       border-left: none;
-      border-top: 1px dashed rgba(22, 17, 34, 0.12);
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
       margin-top: 12px;
       gap: 12px;
       .avatar-top {

@@ -19,7 +19,7 @@
           </div>
         </div>
         <div class="close-btn" @click="close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
         </div>
       </div>
 
@@ -1149,7 +1149,7 @@ async function loadCommentDetail(commentId: string) {
         showingReplies: true,
         isMentioned: true,
         // Only add background color if there's no rid parameter
-        backgroundColor: rid ? '' : '#F5F5F5'
+        backgroundColor: rid ? '' : '#2c2c2c'
       };
 
       // Check if there are children (replies) and process them
@@ -1253,7 +1253,7 @@ async function loadCommentToReplyList(rid: string) {
           liked: commentData.is_liked == 1 || false,
           replyTo: commentData.replyTo || commentData.reply_to || commentData.target_user || "",
           reply_to_user_nickname: commentData.reply_to_user_nickname || "",
-          backgroundColor: '#F5F5F5',
+          backgroundColor: '#2c2c2c',
           isRidComment: true
         };
 
@@ -2201,7 +2201,7 @@ function likeReply(id: string, liked: boolean) {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -2214,8 +2214,8 @@ function likeReply(id: string, liked: boolean) {
   right: 0;
   width: 500px;
   height: 100vh;
-  background-color: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  background-color: #1a1a1a;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
   z-index: 1001;
   display: flex;
   flex-direction: column;
@@ -2227,16 +2227,16 @@ function likeReply(id: string, liked: boolean) {
     align-items: center;
     height: 84px;
     padding: 0 24px;
-    border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
     .header-tabs {
       display: flex;
       align-items: center;
       gap: 6px;
-      border: 2.5px solid #161122;
+      border: 1px solid #3d3d3d;
       border-radius: 14px;
       padding: 5px;
-      background: #fff;
+      background: #1a1a1a;
       width: fit-content;
 
       .tab-item {
@@ -2246,19 +2246,19 @@ function likeReply(id: string, liked: boolean) {
         padding: 8px 22px;
         font-size: 15px;
         font-weight: 800;
-        color: #161122;
+        color: #f5f5f5;
         background: transparent;
         border-radius: 10px;
         cursor: pointer;
         transition: color 0.15s, background-color 0.15s;
 
         &:hover:not(.active) {
-          background: rgba(22, 17, 34, 0.06);
+          background: rgba(255, 255, 255, 0.06);
         }
 
         &.active {
-          background: #161122;
-          color: #fff;
+          background: #1a1a1a;
+          color: #f5f5f5;
         }
       }
     }
@@ -2274,15 +2274,15 @@ function likeReply(id: string, liked: boolean) {
       justify-content: center;
       padding: 0;
       cursor: pointer;
-      background: #FFFDF7;
-      border: 2px solid #161122;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 12px;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
       transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 4px 4px 0 #161122;
+        box-shadow: none;
       }
 
       img {
@@ -2320,7 +2320,7 @@ function likeReply(id: string, liked: boolean) {
 
           .nickname {
             font-size: 16px;
-            color: #161122;
+            color: #f5f5f5;
             font-weight: 600;
           }
         }
@@ -2330,14 +2330,14 @@ function likeReply(id: string, liked: boolean) {
 
           .post-title {
             font-size: 20px;
-            color: #161122;
+            color: #f5f5f5;
             font-weight: 600;
             margin-bottom: 16px;
           }
 
           .post-desc {
             font-size: 14px;
-            color: #5b5566;
+            color: #aaa;
             line-height: 20px;
             margin-bottom: 16px;
           }
@@ -2345,7 +2345,7 @@ function likeReply(id: string, liked: boolean) {
           .post-time-box {
             .post-time {
               font-size: 12px;
-              color: #9a93a4;
+              color: #777;
             }
           }
         }
@@ -2366,7 +2366,7 @@ function likeReply(id: string, liked: boolean) {
 
               &.follow-btn {
                 background-color: #ff6b6b;
-                color: white;
+                color: #f5f5f5;
                 position: relative;
 
                 img {
@@ -2398,12 +2398,12 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &.followed {
-                  background-color: #f0f0f0;
-                  color: #5b5566;
+                  background-color: #f5f5f5;
+                  color: #aaa;
 
                   .hover-text {
-                    background-color: #e0e0e0;
-                    color: #5b5566;
+                    background-color: #3d3d3d;
+                    color: #aaa;
                   }
                 }
               }
@@ -2423,7 +2423,7 @@ function likeReply(id: string, liked: boolean) {
         padding: 24px;
         font-size: 14px;
         font-weight: 800;
-        color: #161122;
+        color: #f5f5f5;
       }
 
       .comments-list {
@@ -2435,7 +2435,7 @@ function likeReply(id: string, liked: boolean) {
         .loading-more {
           text-align: center;
           padding: 20px 0;
-          color: #9a93a4;
+          color: #777;
           font-size: 14px;
           display: flex;
           flex-direction: column;
@@ -2445,15 +2445,15 @@ function likeReply(id: string, liked: boolean) {
           .loading-spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(22, 17, 34, 0.12);
-            border-top: 4px solid #5b5566;
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top: 4px solid #aaa;
             border-radius: 50%;
             animation: spin 1s ease-in-out infinite;
           }
 
           p {
             font-size: 14px;
-            color: #9a93a4;
+            color: #777;
           }
 
           @keyframes spin {
@@ -2479,7 +2479,7 @@ function likeReply(id: string, liked: boolean) {
           transition: border-color 0.2s ease;
 
           &:hover {
-            border-color: #e7e1d8;
+            border-color: #3d3d3d;
           }
         }
 
@@ -2487,7 +2487,7 @@ function likeReply(id: string, liked: boolean) {
           width: 40px;
           height: 40px;
           border-radius: 10px;
-          border: 2px solid #161122;
+          border: 1px solid #3d3d3d;
           object-fit: cover;
           flex-shrink: 0;
         }
@@ -2512,11 +2512,11 @@ function likeReply(id: string, liked: boolean) {
           .c-author {
             font-size: 14px;
             font-weight: 800;
-            color: #161122;
+            color: #f5f5f5;
           }
 
           .reply-to {
-            color: #FF4D8D;
+            color: #ff4f9a;
             margin-left: 12px;
             font-size: 12px;
             font-weight: 700;
@@ -2544,7 +2544,7 @@ function likeReply(id: string, liked: boolean) {
 
         .c-text {
           font-size: 14px;
-          color: #161122;
+          color: #f5f5f5;
           font-weight: 600;
           line-height: 20px;
           margin-bottom: 6px;
@@ -2556,7 +2556,7 @@ function likeReply(id: string, liked: boolean) {
             gap: 4px;
             font-size: 14px;
             font-weight: 600;
-            color: #9a93a4;
+            color: #777;
 
             .hidden-icon {
               width: 20px;
@@ -2583,8 +2583,8 @@ function likeReply(id: string, liked: boolean) {
               width: 108px;
               height: 108px;
               border-radius: 10px;
-              border: 2px solid #161122;
-              background: #FFFDF7;
+              border: 1px solid #3d3d3d;
+              background: #1a1a1a;
               cursor: pointer;
 
               img{
@@ -2601,7 +2601,7 @@ function likeReply(id: string, liked: boolean) {
             position: relative;
             max-width: 240px;
             border-radius: 12px;
-            border: 2px solid #161122;
+            border: 1px solid #3d3d3d;
             .c-video-player {
               width: 100%;
               max-height: 200px;
@@ -2629,7 +2629,7 @@ function likeReply(id: string, liked: boolean) {
           .c-time {
             font-size: 12px;
             font-weight: 600;
-            color: #9a93a4;
+            color: #777;
           }
 
           .c-actions {
@@ -2641,7 +2641,7 @@ function likeReply(id: string, liked: boolean) {
               align-items: center;
               gap: 6px;
               cursor: pointer;
-              color: #9a93a4;
+              color: #777;
               font-size: 12px;
               font-weight: 700;
 
@@ -2657,7 +2657,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &:hover {
-                  color: #FF4D8D;
+                  color: #ff4f9a;
                   b {
                     background: url("@/assets/images/detail/like_hover.png") no-repeat;
                     background-size: 100% 100%;
@@ -2665,7 +2665,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &.active {
-                  color: #FF4D8D;
+                  color: #ff4f9a;
                   b {
                     background: url("@/assets/images/detail/like_active.png") no-repeat;
                     background-size: 100% 100%;
@@ -2680,7 +2680,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &:hover {
-                  color: #161122;
+                  color: #f5f5f5;
                   b {
                     background: url("@/assets/images/detail/reply_hover.png") no-repeat;
                     background-size: 100% 100%;
@@ -2688,7 +2688,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &.active {
-                  color: #161122;
+                  color: #f5f5f5;
                   b {
                     background: url("@/assets/images/detail/reply_active.png") no-repeat;
                     background-size: 100% 100%;
@@ -2714,7 +2714,7 @@ function likeReply(id: string, liked: boolean) {
           transition: border-color 0.2s ease;
 
           &:hover {
-            border-color: #e7e1d8;
+            border-color: #3d3d3d;
           }
 
           &:last-child {
@@ -2747,8 +2747,8 @@ function likeReply(id: string, liked: boolean) {
         right: 0;
         width: 500px;
         padding: 18px 24px;
-        border-top: 1px solid rgba(22, 17, 34, 0.12);
-        background: #ffffff;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: #1a1a1a;
         min-height: 86px;
         display: flex;
         align-items: center;
@@ -2767,12 +2767,12 @@ function likeReply(id: string, liked: boolean) {
           .fake-input {
             flex: 1;
             height: 50px;
-            background: rgba(22, 17, 34, 0.06);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 8px;
             padding: 12px;
             display: flex;
             align-items: center;
-            color: #9a93a4;
+            color: #777;
             font-size: 14px;
             cursor: text;
           }
@@ -2787,7 +2787,7 @@ function likeReply(id: string, liked: boolean) {
               align-items: center;
               gap: 6px;
               cursor: pointer;
-              color: #5b5566;
+              color: #aaa;
               font-size: 14px;
 
               b {
@@ -2802,7 +2802,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &:hover {
-                  color: #FF4D8D;
+                  color: #ff4f9a;
 
                   b {
                     background: url("@/assets/images/detail/like_hover.png") no-repeat;
@@ -2811,7 +2811,7 @@ function likeReply(id: string, liked: boolean) {
                 }
 
                 &.active {
-                  color: #FF4D8D;
+                  color: #ff4f9a;
 
                   b {
                     background: url("@/assets/images/detail/like_active.png") no-repeat;
@@ -2881,12 +2881,12 @@ function likeReply(id: string, liked: boolean) {
             .reply-author {
               font-size: 12px;
               margin-bottom: 6px;
-              color: #9a93a4;
+              color: #777;
             }
             .reply-text {
               font-size: 14px;
               line-height: 20px;
-              color: #5b5566;
+              color: #aaa;
             }
           }
 
@@ -2896,14 +2896,14 @@ function likeReply(id: string, liked: boolean) {
             min-height: 100px;
             margin-bottom: 12px;
             padding: 8px 12px 24px;
-            border: 2px solid #161122;
+            border: 1px solid #3d3d3d;
             border-radius: 12px;
-            background: #fff;
+            background: #1a1a1a;
             transition: border 0.2s ease, box-shadow 0.2s ease;
 
             &:focus-within {
-              border: 2px solid #FF4D8D;
-              box-shadow: 0 0 0 4px rgba(255, 77, 141, 0.2);
+              border: 1px solid #ff4f9a;
+              box-shadow: 0 0 0 4px rgba(255, 79, 154, 0.2);
             }
 
             .real-input{
@@ -2915,7 +2915,7 @@ function likeReply(id: string, liked: boolean) {
               overflow-y: auto;
               font-size: 14px;
               line-height: 20px;
-              color: #161122;
+              color: #f5f5f5;
               white-space: pre-wrap;
               word-break: break-word;
               position: relative;
@@ -2925,7 +2925,7 @@ function likeReply(id: string, liked: boolean) {
                 position: absolute;
                 top: 0;
                 left: 0;
-                color: #9a93a4;
+                color: #777;
                 pointer-events: none;
               }
 
@@ -2941,7 +2941,7 @@ function likeReply(id: string, liked: boolean) {
               right: 12px;
               bottom: 8px;
               font-size: 12px;
-              color: #9a93a4;
+              color: #777;
 
               &.over-limit {
                 color: #E5484D;
@@ -2958,10 +2958,10 @@ function likeReply(id: string, liked: boolean) {
           .action-btn {
             padding: 5px 10px;
             border: none;
-            background: rgba(22, 17, 34, 0.06);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 6px;
             font-size: 12px;
-            color: #5b5566;
+            color: #aaa;
             cursor: pointer;
 
             &.upload-btn {
@@ -2990,9 +2990,9 @@ function likeReply(id: string, liked: boolean) {
               width: 64px;
               height: 64px;
               border-radius: 4px;
-              background: #FFFDF7;
-              border: 3px solid #161122;
-              box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
+              background: #1a1a1a;
+              border: 1px solid #3d3d3d;
+              box-shadow: none;
               overflow: hidden;
 
               img {
@@ -3097,7 +3097,7 @@ function likeReply(id: string, liked: boolean) {
         font-size: 16px;
         font-weight: 600;
         line-height: 32px;
-        color: #161122;
+        color: #f5f5f5;
       }
 
       .toc-header {
@@ -3105,12 +3105,12 @@ function likeReply(id: string, liked: boolean) {
         align-items: center;
         gap: 12px;
         padding: 0 24px 24px;
-        border-bottom: 1px solid rgba(22, 17, 34, 0.12);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         font-size: 14px;
-        color: #5b5566;
+        color: #aaa;
 
         .view-collection-info{
-          color: #FF4D8D;
+          color: #ff4f9a;
           cursor: pointer;
         }
       }
@@ -3129,16 +3129,16 @@ function likeReply(id: string, liked: boolean) {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 2px solid rgba(22, 17, 34, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.06);
             border-radius: 14px;
             transition: border-color 0.2s ease;
 
             &:hover {
-              border-color: #9a93a4;
+              border-color: #777;
             }
 
             &.active {
-              border-color: #161122;
+              border-color: #3d3d3d;
             }
 
             .toc-info{
@@ -3149,7 +3149,7 @@ function likeReply(id: string, liked: boolean) {
 
               &.on{
                 .chapter-title {
-                  color: #9a93a4;
+                  color: #777;
                 }
               }
             }
@@ -3159,7 +3159,7 @@ function likeReply(id: string, liked: boolean) {
               min-width: 0;
               font-size: 16px;
               font-weight: 700;
-              color: #161122;
+              color: #f5f5f5;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
@@ -3169,8 +3169,8 @@ function likeReply(id: string, liked: boolean) {
             .subscribe-badge {
               flex-shrink: 0;
               padding: 6px 16px;
-              background-color: rgba(22, 17, 34, 0.06);
-              color: #5b5566;
+              background-color: rgba(255, 255, 255, 0.06);
+              color: #aaa;
               border-radius: 6px;
               font-size: 14px;
             }
@@ -3197,7 +3197,7 @@ function likeReply(id: string, liked: boolean) {
 
                 span {
                   font-size: 14px;
-                  color: #5b5566;
+                  color: #aaa;
                 }
               }
             }
@@ -3214,7 +3214,7 @@ function likeReply(id: string, liked: boolean) {
           .loading-spinner {
             width: 24px;
             height: 24px;
-            border: 3px solid #f3f3f3;
+            border: 3px solid rgba(255, 255, 255, 0.08);
             border-top: 3px solid #ff6b6b;
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -3223,7 +3223,7 @@ function likeReply(id: string, liked: boolean) {
 
           p {
             font-size: 14px;
-            color: #9a93a4;
+            color: #777;
           }
 
           @keyframes spin {
@@ -3247,7 +3247,7 @@ function likeReply(id: string, liked: boolean) {
   text-align: center;
   padding: 10px 14px;
   font-size: 14px;
-  color: #9a93a4;
+  color: #777;
 }
 
 /* Hidden file inputs */
@@ -3285,10 +3285,10 @@ function likeReply(id: string, liked: boolean) {
   top: 100%;
   margin-top: 2px;
   border-radius: 6px;
-  background: #FFFDF7;
-  border: 3px solid #161122;
-  box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-  box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.08);
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  box-shadow: none;
+  box-shadow: 0px 0px 15px -3px rgba(0,0,0,0.3);
   z-index: 100;
   cursor: pointer;
 
@@ -3300,7 +3300,7 @@ function likeReply(id: string, liked: boolean) {
     height: 28px;
     padding: 5px 10px;
     font-size: 12px;
-    color: #5b5566;
+    color: #aaa;
   }
 }
 
@@ -3311,7 +3311,7 @@ function likeReply(id: string, liked: boolean) {
 
   .sidebar {
     width: 100%;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 
     .sidebar-header {
       height: auto;
@@ -3683,10 +3683,10 @@ function likeReply(id: string, liked: boolean) {
         right: 12px;
         border-radius: 8px;
         border-width: 1.5px;
-        box-shadow: 1.5px 1.5px 0 #161122;
+        box-shadow: 1.5px 1.5px 0 #f5f5f5;
 
         &:hover {
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: none;
         }
       }
     }

@@ -364,7 +364,7 @@ function onSave() {
 .user-personal-edit {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -376,7 +376,7 @@ function onSave() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -391,7 +391,7 @@ function onSave() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   position: relative;
   padding-bottom: 10px;
 }
@@ -403,14 +403,14 @@ function onSave() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .content .label {
   margin-bottom: 16px;
   font-weight: 800;
   font-size: 13px;
-  color: #161122;
+  color: #f5f5f5;
   letter-spacing: 0.02em;
 }
 .content .label span {
@@ -425,7 +425,7 @@ function onSave() {
   font-weight: 600;
   font-size: 12px;
   opacity: 0.55;
-  color: #161122;
+  color: #f5f5f5;
   margin-left: 10px;
 }
 
@@ -442,16 +442,16 @@ function onSave() {
   width: 112px;
   height: 112px;
   border-radius: 50%;
-  border: 4px solid #161122;
+  border: 1px solid #3d3d3d;
   object-fit: cover;
-  box-shadow: 4px 4px 0 rgba(22,17,34,.2);
+  box-shadow: none;
 }
 .reupload-box {
   position: relative;
   cursor: pointer;
 }
 .reupload {
-  color: #FF4D8D;
+  color: #ff4f9a;
   font-weight: 800;
   font-size: 14px;
   background: none;
@@ -474,37 +474,37 @@ function onSave() {
   box-sizing: border-box;
   height: 48px;
   padding: 13px 15px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #fff;
+  background: #1a1a1a;
   font-weight: 600;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   outline: none;
   transition: box-shadow 0.18s;
 }
 .input-text:focus {
-  box-shadow: 3px 3px 0 rgba(255,77,141,.42);
+  box-shadow: 0 0 0 2px rgba(255,79,154,0.3);
 }
 .input-text::placeholder {
-  color: #bdb7c4;
+  color: #777;
 }
 
 .birthday-tip {
   font-weight: 600;
   font-size: 12px;
   opacity: 0.55;
-  color: #161122;
+  color: #f5f5f5;
   margin-left: 4px;
 }
 .birth-box {
   font-weight: 800;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   padding: 13px 15px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 12px;
-  background: #fff;
+  background: #1a1a1a;
 }
 
 .age-options {
@@ -518,7 +518,7 @@ function onSave() {
   gap: 8px;
   font-weight: 800;
   font-size: 15px;
-  color: #161122;
+  color: #f5f5f5;
   cursor: pointer;
 }
 .radio-icon {
@@ -537,31 +537,32 @@ function onSave() {
   height: 48px;
   min-width: 136px;
   padding: 13px 18px;
-  border: 2.5px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   cursor: pointer;
   font-weight: 800;
   font-size: 14px;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 }
 .btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #161122;
+  box-shadow: none;
 }
 .btn-cancel {
-  background: #fff;
-  color: #161122;
+  background: #1a1a1a;
+  color: #f5f5f5;
 }
 .btn-save {
-  background: #FF4D8D;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  border: 2px solid #ff9aca;
+  box-shadow: 0 0 16px rgba(255, 61, 134, .3);
   color: #fff;
 }
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 3px 3px 0 #161122;
+  box-shadow: none;
 }
 
 @media (max-width: 900px) {

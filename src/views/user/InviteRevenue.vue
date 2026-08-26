@@ -105,7 +105,7 @@ function goToAiPointsDetails() {
 .invite-revenue {
   width: 100%;
   min-height: 100vh;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container {
   max-width: 1160px;
@@ -117,7 +117,7 @@ function goToAiPointsDetails() {
 .main {
   flex: 1;
   padding: 24px;
-  border: 3px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 14px;
   box-sizing: border-box;
   min-height: calc(100vh - 124px);
@@ -132,7 +132,7 @@ function goToAiPointsDetails() {
 .panel-title {
   font-weight: 800;
   font-size: 20px;
-  color: #161122;
+  color: #f5f5f5;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: relative;
@@ -146,7 +146,7 @@ function goToAiPointsDetails() {
   width: 46px;
   height: 4px;
   border-radius: 2px;
-  background: #FF4D8D;
+  background: #ff4f9a;
 }
 
 .invite-link-section {
@@ -156,8 +156,8 @@ function goToAiPointsDetails() {
 .withdraw-banner {
   margin: 0 0 24px;
   padding: 28px 26px;
-  background: radial-gradient(ellipse at 30% 15%, #FFE885, #FF9E45 58%, #FF5FA2);
-  border: 2px solid #161122;
+  background: radial-gradient(ellipse at 30% 15%, #FFE885, #FF9E45 58%, #ff4f9a);
+  border: 1px solid #3d3d3d;
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -168,12 +168,12 @@ function goToAiPointsDetails() {
     max-width: 720px;
     .banner-tip {
       font-size: 14px;
-      color: #161122;
+      color: #1a1a1a;
       line-height: 24px;
       word-break: break-word;
 
       :deep(a) {
-        color: #161122;
+        color: #1a1a1a;
         font-weight: 600;
 
         &:hover {
@@ -190,26 +190,15 @@ function goToAiPointsDetails() {
     min-width: 136px;
     height: 48px;
     padding: 0 24px;
-    background: #FF4D8D;
-  border: 3px solid #161122;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    border: 2px solid #ff9aca;
     border-radius: 12px;
-    box-shadow: 3px 3px 0 #161122;
-    color: #FFFDF7;
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+    color: #f5f5f5;
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-
-    &:hover {
-      color: #FFFDF7;
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #161122;
-    }
-
-    &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 1px 1px 0 #161122;
-    }
+    transition: box-shadow 0.1s;
   }
 }
 
@@ -225,14 +214,14 @@ function goToAiPointsDetails() {
   align-items: flex-start;
   justify-content: space-between;
   height: 146px;
-  border: 2px solid #161122;
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   padding: 24px;
-  background: #FFFDF7;
+  background: rgba(255,255,255,0.06);
 }
 
 .metric-label {
-  color: #161122;
+  color: #aaa;
   font-size: 14px;
   font-weight: 600;
 }
@@ -240,7 +229,7 @@ function goToAiPointsDetails() {
   margin-top: 16px;
   font-weight: 700;
   font-size: 32px;
-  color: #161122;
+  color: #f5f5f5;
   word-break: break-word;
 }
 
@@ -250,7 +239,7 @@ function goToAiPointsDetails() {
   margin: 0 0 24px;
   font-size: 14px;
   font-weight: 600;
-  color: #FF4D8D;
+  color: #ff4f9a;
   cursor: pointer;
 }
 
@@ -258,15 +247,15 @@ function goToAiPointsDetails() {
   margin-bottom: 12px;
   font-size: 14px;
   font-weight: 700;
-  color: #161122;
+  color: #f5f5f5;
 }
 
 .rules-content {
   font-size: 14px;
-  color: #161122;
+  color: #aaa;
   line-height: 24px;
-  background: #FFFDF7;
-  border: 2px solid #161122;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #3d3d3d;
   border-radius: 13px;
   padding: 20px;
 }

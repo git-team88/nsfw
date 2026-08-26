@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="insufficient-balance-modal">
     <div class="modal-content">
-      <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('novel.insufficientBalance') }}</h3>
       <p class="modal-message">
@@ -46,7 +46,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(22, 17, 34, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,16 +54,16 @@ const emit = defineEmits<{
 
   .modal-content {
     position: relative;
-    background: #FFFDF7;
-    border: 3px solid #161122;
-    box-shadow: 8px 8px 0 rgba(22, 17, 34, 0.16);
-    border-radius: 12px;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    border-radius: 18px;
     width: 500px;
     padding: 18px 30px 24px;
 
     .close-btn {
-      background: #fff;
-      border: 2.5px solid #161122;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
       border-radius: 999px;
       padding: 6px;
       position: absolute;
@@ -72,7 +72,7 @@ const emit = defineEmits<{
       width: 36px;
       height: 36px;
       cursor: pointer;
-      box-shadow: 2px 2px 0 #161122;
+      box-shadow: none;
       transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
       z-index: 10;
 
@@ -82,14 +82,14 @@ const emit = defineEmits<{
     .modal-title {
       font-size: 16px;
       font-weight: 600;
-      color: #161122;
+      color: #f5f5f5;
       margin-bottom: 36px;
       text-align: center;
     }
 
     .modal-message {
       font-size: 14px;
-      color: #5b5566;
+      color: #aaa;
       margin-bottom: 34px;
       text-align: center;
       line-height: 1.6;
@@ -107,43 +107,39 @@ const emit = defineEmits<{
       .modal-cancel-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        background: #FFFFFF;
-        color: #161122;
-        box-shadow: 2px 2px 0 #161122;
+        background: #1a1a1a;
+        color: #f5f5f5;
+        box-shadow: none;
 
         &:hover:not(:disabled) {
-          color: #FF4D8D;
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          color: #ff4f9a;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
 
       .modal-recharge-btn {
         min-width: 136px;
         height: 48px;
-        border: 2.5px solid #161122;
+        border: 1px solid #3d3d3d;
         border-radius: 13px;
         font-size: 14px;
         cursor: pointer;
-        background: #FF4D8D;
-        color: #ffffff;
-        box-shadow: 2px 2px 0 #161122;
+        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        color: #f5f5f5;
+        box-shadow: none;
 
         &:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 #161122;
+          box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
         }
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 2px 2px 0 #161122;
+          box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         }
       }
     }

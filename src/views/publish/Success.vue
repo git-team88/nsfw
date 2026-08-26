@@ -52,7 +52,7 @@ function postAnother() {
   width: 100%;
   min-height: 100vh;
   padding: 140px 0 0;
-  background: #FFFBF4;
+  background: #1a1a1a;
 }
 .container{
   position: relative;
@@ -66,7 +66,7 @@ function postAnother() {
     font-weight: 800;
     font-size: 20px;
     text-align: center;
-    color: #161122;
+    color: #f5f5f5;
   }
   .icon{
     display: flex;
@@ -83,32 +83,31 @@ function postAnother() {
     .btn{
       min-width: 240px;
       height: 48px;
-      border: 2px solid #161122;
-      border-radius: 14px;
+      border: 1px solid #3d3d3d;
+      border-radius: 12px;
       font-weight: 800;
       font-size: 16px;
       cursor: pointer;
-      box-shadow: 2px 2px 0 #161122;
-      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+      box-shadow: none;
+      transition: border-color 0.15s;
 
       &.secondary{
-        background: #FFFFFF;
-        color: #161122;
+        background: #1a1a1a;
+        color: #ddd;
 
         &:hover {
-          border-color: #FF4D8E;
-          color: #FF4D8E;
-          transform: translateY(-1px);
-          box-shadow: 3px 3px 0 #161122;
+          border-color: #ff4f9a;
+          color: #ff4f9a;
         }
       }
       &.primary{
-        background: linear-gradient(135deg, #FF4D8D, #FF7A45);
-        color: #FFFFFF;
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
+        color: #ffffff;
+        box-shadow: 0 0 23px rgba(255,50,140,0.65);
 
         &:hover {
-          transform: translateY(-1px);
-          box-shadow: 3px 3px 0 #161122;
+          filter: brightness(1.08);
         }
       }
     }

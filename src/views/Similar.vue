@@ -177,8 +177,7 @@ const hasFetchedRegion = ref(false);
 const typeFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 2, label: t('home.contentType.novel') },
-  { id: 1, label: t('home.contentType.comic') },
-  { id: 3, label: t('home.contentType.drama') }
+  { id: 1, label: t('home.contentType.comic') }
 ]);
 
 // Refs for waterfall layout
@@ -197,8 +196,7 @@ watch(() => locale.value, () => {
   typeFilters.value = [
     { id: 0, label: t('home.contentType.all') },
     { id: 2, label: t('home.contentType.novel') },
-    { id: 1, label: t('home.contentType.comic') },
-    { id: 3, label: t('home.contentType.drama') }
+    { id: 1, label: t('home.contentType.comic') }
   ]
 
   // Re-trigger load when language changes
@@ -241,7 +239,7 @@ async function loadData(fromLoadMore = false) {
     const urlLang = route.query.lang as string;
     const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
 
-    const showNsfw = userRegion.value ? (localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0) : 0;
+    const showNsfw = 1;
     const urlSessionId = route.query.session_id as string;
     const urlCat = route.query.type ? parseInt(route.query.type as string) : 0;
     const res = await api.getRelativeByTopicPublic({
@@ -546,13 +544,13 @@ watch(contentList, () => {
 </script>
 
 <style lang="scss" scoped>
-$ink: #161122;
-$paper: #FFFDF7;
-$cream: #FFFBF4;
-$pink: #FF4D8D;
-$muted: #9a93a4;
-$sub: #5b5566;
-$line: #e7e1d8;
+$ink: #f5f5f5;
+$paper: #1a1a1a;
+$cream: #111111;
+$pink: #ff4f9a;
+$muted: #777;
+$sub: #aaa;
+$line: #2c2c2c;
 
 .similar-page {
   width: 100%;
@@ -592,15 +590,16 @@ $line: #e7e1d8;
       font-size: 13px;
       padding: 8px 16px;
       border-radius: 999px;
-      border: 2px solid $ink;
+      border: 1px solid #3d3d3d;
       cursor: pointer;
       transition: all 0.16s;
-      background: #fff;
+      background: #1a1a1a;
       color: $ink;
 
       &.active {
-        background: $ink;
+        background: linear-gradient(135deg, $pink, #ff7a45);
         color: #fff;
+        box-shadow: 0 4px 15px rgba(255,79,154,0.35);
       }
 
       &:hover:not(.active) {
@@ -632,10 +631,10 @@ $line: #e7e1d8;
   cursor: pointer;
   overflow: hidden;
   break-inside: avoid;
-  background: #fff;
-  border: 2.5px solid $ink;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
   border-radius: 16px;
-  box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   animation: seCardIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards;
   transform-style: preserve-3d;
   will-change: transform;
@@ -692,7 +691,7 @@ $line: #e7e1d8;
 
       .type-badge {
         display: inline-block;
-        border: 2px solid $ink;
+        border: 1px solid #3d3d3d;
         border-radius: 999px;
         padding: 4px 12px;
         font-weight: 800;
@@ -709,7 +708,7 @@ $line: #e7e1d8;
         }
 
         &.type-4 {
-          background: #FF4D8E;
+          background: #ff4f9a;
         }
 
         &.type-5 {
@@ -818,7 +817,7 @@ $line: #e7e1d8;
           height: 30px;
           flex-shrink: 0;
           border-radius: 999px;
-          border: 2px solid $ink;
+          border: 1px solid #3d3d3d;
           object-fit: cover;
         }
 
@@ -931,7 +930,7 @@ $line: #e7e1d8;
   }
   .content-item {
     transform: none !important;
-    box-shadow: 4px 4px 0 rgba(22,17,34,0.14);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   }
   .content-item .content-image img {
     transition: none;

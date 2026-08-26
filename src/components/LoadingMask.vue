@@ -24,16 +24,13 @@ const emit = defineEmits<{
 </script>
 
 <style scoped lang="scss">
-$ink: #161122;
-$pink: #FF4D8D;
-
 .loading-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(22, 17, 34, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,8 +40,8 @@ $pink: #FF4D8D;
   .loading-spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid #F3EFE7;
-    border-top: 4px solid $ink;
+    border: 4px solid #3d3d3d;
+    border-top: 4px solid #f5f5f5;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -54,24 +51,21 @@ $pink: #FF4D8D;
     height: 48px;
     margin-top: 32px;
     padding: 0 16px;
-    background: #fff;
-    border: 2.5px solid $ink;
-    border-radius: 13px;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    border-radius: 14px;
     font-size: 14px;
     font-weight: 800;
-    color: $ink;
+    color: #f5f5f5;
     cursor: pointer;
-    box-shadow: 3px 3px 0 $ink;
-    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 $ink;
+      background: rgba(255,255,255,0.06);
     }
 
     &:active {
       transform: translate(0, 0);
-      box-shadow: 2px 2px 0 $ink;
     }
   }
 }

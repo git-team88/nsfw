@@ -28,42 +28,8 @@
 
       <!-- Hero Section -->
       <div class="hero-section">
-        <!-- 3D 漂浮漫画卡片背景动效 -->
-        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
-        <!-- 中间白色柔光层（对齐 moegen，让中间内容更清晰） -->
-        <div class="hero-glow" aria-hidden="true"></div>
-        <!-- 边上飘的拟声词装饰 -->
-        <div class="hero-parts" aria-hidden="true" ref="heroPartsRef">
-          <img
-            v-for="(p, i) in heroParts"
-            :key="p.before"
-            class="hero-part"
-            :src="`/onomatopoeia/${heroPartSrc[i]}.png`"
-            alt=""
-            :style="heroPartStyle(p, i)"
-          />
-        </div>
-
-        <!-- 左下：说明按钮 -->
-        <a class="hero-howto" href="/guide.html" target="_blank" rel="noopener noreferrer">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
-          {{ t('home.howto') }}
-        </a>
-
-        <!-- 右下：暂停/播放背景动画 -->
-        <button class="hero-pause-btn" :title="t('home.pauseAnim')" :aria-label="t('home.pauseAnim')" @click="heroPaused = !heroPaused">
-          <svg v-if="heroPaused" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z" /></svg>
-          <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.6" stroke-linecap="round"><path d="M9 5v14" /><path d="M15 5v14" /></svg>
-        </button>
-
         <div class="hero-content" style="position: relative; z-index: 20;">
           <div class="hero-title-wrap">
-            <span class="hero-speedlines left" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </span>
-            <span class="hero-speedlines right" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </span>
             <h1 class="hero-title">{{ t('home.hero.title') }}</h1>
           </div>
           <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
@@ -80,7 +46,7 @@
                   :class="{ active: contentType == type.value }"
                   @click="selectContentType(type.value)"
                 >
-                  <span>{{ t(type.label) }}</span>
+                  <span>{{ type.label }}</span>
                 </div>
               </div>
 
@@ -471,7 +437,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                      <div v-if="false" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -793,7 +759,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                      <div v-if="false" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -941,7 +907,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <div v-if="userRegion" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                      <div v-if="false" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' && !isTeenager}">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -979,14 +945,14 @@
                     v-model="novelInput"
                     spellcheck="false"
                     @input="handleTextareaInput"
-                    @focus="isInputFocused = true; popHeroParts()"
+                    @focus="isInputFocused = true"
                     @blur="isInputFocused = false"
                     @click="handleNovelTextareaClick"
                   ></textarea>
 
                   <div class="input-box">
                     <div class="input-options novel-input-options">
-                      <div v-if="userRegion" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
+                      <div v-if="false" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' && !isTeenager }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -1072,7 +1038,7 @@
       <ProcessList />
 
       <!-- 推荐创作者 + 人气作品（3D 动效 Showcase，移植自 moegen-web） -->
-      <HomeShowcase :user-region="userRegion" :region-ready="hasFetchedRegion" :allow-sensitive="allowSensitiveContent" />
+      <!-- HomeShowcase removed -->
 
       <!-- Content Section -->
       <div id="feed" class="content-section">
@@ -1136,7 +1102,7 @@
             </span>
           </div>
 
-          <div class="sensitive-content-toggle" v-if="userRegion && activeContentTab != 'suggested' && viewMode == 'user'">
+          <div class="sensitive-content-toggle" v-if="false">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1158,7 +1124,7 @@
           </div>
 
           <!-- Sensitive Content Toggle -->
-          <div class="sensitive-content-toggle" v-if="userRegion && (activeContentTab == 'suggested' || viewMode == 'content')">
+          <div class="sensitive-content-toggle" v-if="false">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1193,7 +1159,7 @@
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
 
-                  <div class="r18-overlay" v-if="item.is_nsfw == 1">
+                  <div class="r18-overlay" v-if="false">
                     <span class="r18-text">R18</span>
                   </div>
 
@@ -1461,8 +1427,6 @@ import GuideModal from '@/components/GuideModal.vue';
 // import EventModal from '@/components/EventModal.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
-import Hero3DBackground from '@/components/Hero3DBackground.vue';
-import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
@@ -1485,7 +1449,7 @@ import optimizePromptOff from "@/assets/images/project/close.png";
 const { t, locale } = useI18n();
 
 // State
-const currentNovelMode = ref('normal');
+const currentNovelMode = ref('unlimited');
 const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
@@ -1644,10 +1608,10 @@ const inputContentPhoto = ref('');
 const inputHtmlPhoto = ref('');
 
 // Mode states - separate for video, comic, drama and photo
-const currentVideoMode = ref('normal');
-const currentComicMode = ref('normal');
-const currentDramaMode = ref('normal');
-const currentPhotoMode = ref('normal');
+const currentVideoMode = ref('unlimited');
+const currentComicMode = ref('unlimited');
+const currentDramaMode = ref('unlimited');
+const currentPhotoMode = ref('unlimited');
 const enablePhotoOptimizePrompt = ref(true);
 const enableVideoOptimizePrompt = ref(true);
 
@@ -2116,131 +2080,21 @@ let typeTimer: ReturnType<typeof setTimeout> | undefined;
 
 const runTypewriter = () => {
   if (typeTimer) clearTimeout(typeTimer);
-  const full = currentPlaceholder.value || '';
-  // 聚焦或已有输入时，直接显示完整占位（不打字），避免干扰
-  if (isInputFocused.value || !isInputEmpty.value) {
-    typedPlaceholder.value = full;
-    return;
-  }
-  let i = 0;
-  let phase: 'typing' | 'holding' | 'deleting' = 'typing';
-  const TYPE_MS = 55;      // 打字速度
-  const DELETE_MS = 30;    // 删除速度
-  const HOLD_FULL_MS = 1600; // 打完停留
-  const HOLD_EMPTY_MS = 500; // 删完停留
-
-  const step = () => {
-    // 中途聚焦/有输入则停止循环，直接显示完整占位
-    if (isInputFocused.value || !isInputEmpty.value) { typedPlaceholder.value = full; return; }
-    // 目标文案变了（切 tab），重启
-    const cur = currentPlaceholder.value || '';
-    if (cur !== full) { runTypewriter(); return; }
-
-    if (phase === 'typing') {
-      typedPlaceholder.value = full.slice(0, i);
-      if (i >= full.length) { phase = 'holding'; typeTimer = setTimeout(() => { phase = 'deleting'; step(); }, HOLD_FULL_MS); return; }
-      i += 1;
-      typeTimer = setTimeout(step, TYPE_MS);
-    } else if (phase === 'deleting') {
-      typedPlaceholder.value = full.slice(0, i);
-      if (i <= 0) { phase = 'typing'; typeTimer = setTimeout(step, HOLD_EMPTY_MS); return; }
-      i -= 1;
-      typeTimer = setTimeout(step, DELETE_MS);
-    }
-  };
-  typedPlaceholder.value = '';
-  step();
+  typedPlaceholder.value = currentPlaceholder.value || '';
 };
 
 // 占位文字打字机的 watch 在 onMounted 里注册（此处 contentType 等尚未声明，
 // 直接 watch computed 会在 setup 阶段立即求值触发 TDZ 错误）
 
 // Content type
-const contentType = ref('novel'); // video, comic, novel
+const contentType = ref('photo'); // video, comic, novel, photo
 const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
-  { value: 'novel', label: 'home.contentType.novel' },
-  { value: 'comic', label: 'home.contentType.comic' },
-  { value: 'drama', label: 'home.contentType.drama' },
-  { value: 'photo', label: 'home.contentType.photo' },
-  { value: 'video', label: 'home.contentType.video' }
+  { value: 'photo', label: '18x' + ' ' + t('home.contentType.photo') },
+  { value: 'video', label: '18x' + ' ' + t('home.contentType.video') },
+  { value: 'novel', label: '18x' + ' ' + t('home.contentType.novel') },
+  { value: 'comic', label: '18x' + ' ' + t('home.contentType.comic') },
 ]);
-
-// hero 背景动画暂停/播放
-const heroPaused = ref(false);
-// hero 编辑态：聚焦输入框后 3D 漫画卡片背景散开并消失
-const heroEditing = ref(false);
-
-// hero 边上飘的拟声词（对齐 moegen PARTS，浮动装饰 + 点击炸开变换）
-const heroParts = [
-  { before: 'doon', after: 'gokuri', left: '1%', top: '4%', w: 19, rot: -6 },
-  { before: 'left_cloud', after: 'hirameki', left: '12%', top: '45%', w: 8, rot: 0, afterScale: 0.7, afterRot: -30 },
-  { before: 'exclamation', after: 'excl_white', left: '1.5%', top: '33%', w: 9, rot: -4 },
-  { before: 'fk_input', after: 'story_bubble', left: '2.5%', top: '58%', w: 13, rot: 2 },
-  { before: 'zuba', after: 'gogogo', left: '22%', top: '87%', w: 10, rot: -3 },
-  { before: 'fk_oneword', after: 'imagination', left: '84%', top: '4%', w: 12.5, rot: 3 },
-  { before: 'dogaan', after: 'zawazawa', left: '81.5%', top: '27.5%', w: 10, rot: 0 },
-  { before: 'right_cloud', after: 'dokidoki', left: '91.5%', top: '47%', w: 7.5, rot: 0 },
-  { before: 'fk_imagine', after: 'yokan', left: '85%', top: '61%', w: 12.5, rot: -2 },
-  { before: 'bashitsu', after: 'su', left: '62%', top: '87.5%', w: 9, rot: 4 },
-] as { before: string; after: string; left: string; top: string; w: number; rot: number; afterScale?: number; afterRot?: number }[];
-// 每个 part 当前显示的图（点击后从 before 换成 after）
-const heroPartSrc = ref<string[]>(heroParts.map((p) => p.before));
-const heroPartsPopped = ref(false);
-const heroPartStyle = (p: typeof heroParts[number], i: number) => ({
-  left: p.left,
-  top: p.top,
-  '--w': p.w,
-  '--rot': `${p.rot}deg`,
-  '--fdur': `${(6.4 + (i % 5) * 0.9).toFixed(2)}s`,
-  '--fdelay': `${(-(i * 0.83)).toFixed(2)}s`,
-  '--fdx': `${(7 + (i % 3) * 4).toFixed(0)}px`,
-  '--fdy': `${(9 + (i % 4) * 4).toFixed(0)}px`,
-  '--frot': `${(1.6 + (i % 3) * 0.7).toFixed(2)}deg`,
-}) as any;
-
-// 点击输入框时拟声词"炸开"变换（对齐 moegen popParts）
-const heroPartsRef = ref<HTMLDivElement>();
-
-// 挂载时逐个淡入拟声词，再加 mg-parts-live 启动浮动动画（对齐 moegen）
-const initHeroParts = () => {
-  const box = heroPartsRef.value;
-  if (!box) return;
-  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
-  items.forEach((im, i) => {
-    window.setTimeout(() => { im.style.opacity = '1'; }, 140 + i * 70);
-  });
-  box.classList.add('mg-parts-live');
-};
-
-const popHeroParts = () => {
-  if (heroPartsPopped.value) return;
-  heroPartsPopped.value = true;
-  // 触发 3D 漫画卡片背景散开并消失
-  heroEditing.value = true;
-  const box = heroPartsRef.value;
-  if (!box) return;
-  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
-  items.forEach((im, i) => {
-    const p = heroParts[i];
-    // 先停浮动动画、缩小消失
-    im.style.animation = 'none';
-    im.style.transformOrigin = '50% 50%';
-    const d = (i * 0.04).toFixed(2);
-    im.style.transition = `transform .5s cubic-bezier(.5,0,.75,0) ${d}s, opacity .5s cubic-bezier(.5,0,.75,0) ${d}s`;
-    im.style.transform = `translate(0,0) scale(.06) rotate(${p.rot}deg)`;
-    im.style.opacity = '0';
-    // 换图后放大弹回
-    window.setTimeout(() => {
-      heroPartSrc.value[i] = p.after;
-      const aSc = p.afterScale ?? 1;
-      const aRot = p.afterRot ?? p.rot;
-      im.style.transition = 'transform 1s cubic-bezier(.34,1.56,.64,1), opacity .5s cubic-bezier(.16,1,.3,1)';
-      im.style.transform = `translate(0,0) scale(${aSc}) rotate(${aRot}deg)`;
-      im.style.opacity = '1';
-    }, 520 + i * 40);
-  });
-};
 
 // Word count and language settings
 const selectedWordCount = ref('30K');
@@ -2440,7 +2294,6 @@ const contentTypes = ref([
   { id: 0, label: 'all' },
   { id: 2, label: 'novel' },
   { id: 1, label: 'comic' },
-  { id: 3, label: 'drama' },
   { id: 4, label: 'image' },
   { id: 5, label: 'video' }
 ]);
@@ -3157,11 +3010,11 @@ const selectContentType = (type: string) => {
   inputHtmlPhoto.value = '';
 
   // Reset modes to default
-  currentVideoMode.value = 'normal';
-  currentComicMode.value = 'normal';
-  currentDramaMode.value = 'normal';
-  currentNovelMode.value = 'normal';
-  currentPhotoMode.value = 'normal';
+  currentVideoMode.value = 'unlimited';
+  currentComicMode.value = 'unlimited';
+  currentDramaMode.value = 'unlimited';
+  currentNovelMode.value = 'unlimited';
+  currentPhotoMode.value = 'unlimited';
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
   previousInputHtml.value = '';
 
@@ -3177,8 +3030,8 @@ const selectContentType = (type: string) => {
   // Switch content type
   contentType.value = type;
 
-  enablePhotoOptimizePrompt.value = true;
-  enableVideoOptimizePrompt.value = true;
+  enablePhotoOptimizePrompt.value = false;
+  enableVideoOptimizePrompt.value = false;
 
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
@@ -5465,7 +5318,6 @@ const handleInputClick = () => {
 
 // Handle input focus
 const handleInputFocus = () => {
-  popHeroParts();
   checkLogin();
   isInputFocused.value = true;
   if (editableInputRef.value) {
@@ -5891,7 +5743,7 @@ const loadContent = async (page = 1) => {
   try {
     let res;
 
-    const showNsfw = userRegion.value ? (allowSensitiveContent.value ? 1 : 0) : undefined;
+    const showNsfw = 1;
 
     switch (currentActiveTab) {
       case 'suggested':
@@ -6264,9 +6116,6 @@ onMounted(async () => {
   watch(currentPlaceholder, () => runTypewriter());
   watch(isInputFocused, (f) => { if (f) { if (typeTimer) clearTimeout(typeTimer); typedPlaceholder.value = currentPlaceholder.value; } else runTypewriter(); });
 
-  // 启动 hero 拟声词淡入 + 浮动
-  nextTick(() => initHeroParts());
-
   // 初始化语言设置
   await initLanguage();
 
@@ -6282,7 +6131,7 @@ onMounted(async () => {
     .replace(/\/index\.html$/, '')
     .split('/')
     .filter(Boolean);
-  const validTypes = ['novel', 'comic', 'drama', 'photo', 'video'];
+  const validTypes = ['novel', 'comic', 'photo', 'video'];
   const pathContentType = pathSegments.length > 0 && validTypes.includes(pathSegments[0]) ? pathSegments[0] : '';
 
   const detectedContentType = routeContentType || pathContentType || null;

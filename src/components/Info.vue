@@ -224,7 +224,7 @@ function modifyInfo() {
       size: 24px;
     }
     line-height: 36px;
-    color: #161122;
+    color: #f5f5f5;
   }
 
   .form {
@@ -238,7 +238,7 @@ function modifyInfo() {
         text-align: right;
         margin: 0 20px 0 0;
         font-size: 14px;
-        color: #4a5565;
+        color: #777;
       }
 
       .name-ipt {
@@ -246,14 +246,14 @@ function modifyInfo() {
         height: 50px;
         padding: 10px;
         font-size: 16px;
-        border: 1px solid #fccee8;
+        border: 1px solid #3d3d3d;
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #161122;
+        background: rgba(255, 255, 255, 0.06);
+        color: #f5f5f5;
 
         &:hover,
         &:focus {
-          border: 1px solid #FF4D8D;
+          border: 1px solid #ff4f9a;
         }
       }
 
@@ -265,7 +265,7 @@ function modifyInfo() {
           width: 80px;
           height: 80px;
           margin-right: 10px;
-          border: 1px solid #FF4D8D;
+          border: 1px solid #ff4f9a;
           border-radius: 8px;
           object-fit: cover;
         }
@@ -276,7 +276,7 @@ function modifyInfo() {
 
           span {
             font-size: 14px;
-            color: #FF4D8D;
+            color: #ff4f9a;
           }
 
           .avatar-ipt {
@@ -313,7 +313,7 @@ function modifyInfo() {
 
           span {
             font-size: 16px;
-            color: #161122;
+            color: #f5f5f5;
           }
         }
       }
@@ -327,8 +327,8 @@ function modifyInfo() {
       height: 48px;
       font-size: 16px;
       border-radius: 8px;
-      background: linear-gradient(45deg, #FF4D8D 0%, #ff94ce 50%, #FF4D8D 100%);
-      color: #ffffff;
+      background: linear-gradient(145deg, #ff74b3, #f73382);
+      color: #f5f5f5;
       cursor: pointer;
     }
   }
@@ -358,7 +358,7 @@ function modifyInfo() {
       size: 18px;
       weight: 500;
     }
-    color: #ffffff;
+    color: #f5f5f5;
   }
 }
 </style>
