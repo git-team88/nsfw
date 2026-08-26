@@ -127,8 +127,9 @@ function close() {
   border-radius: 8px;
   color: #ffffff;
   font-size: 14px;
-  border: none;
+  border: 1px solid #ff9aca;
   cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   font-weight: 600;
 }
 .confirm-btn:disabled {

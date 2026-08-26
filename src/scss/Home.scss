@@ -2017,11 +2017,7 @@ $pinkopacity: rgba(255,79,154,0.12);
     border-radius: 16px;
     background: #1a1a1a;
     overflow: hidden;
-    transition: transform 0.16s, border-color 0.16s;
-
-    &:hover {
-      transform: translate(-2px, -2px);
-    }
+    transition: border-color 0.16s;
 
     .card-body {
       flex: 1;

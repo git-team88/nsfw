@@ -701,7 +701,6 @@ onUnmounted(() => {
         transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
 
         &:hover {
-          transform: translateY(-2px);
           box-shadow: none;
         }
 

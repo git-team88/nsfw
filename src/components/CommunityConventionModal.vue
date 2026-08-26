@@ -142,7 +142,6 @@ const emit = defineEmits(['cancel', 'confirm']);
       font-weight: 800;
 
       &:hover {
-        transform: translateY(-1px);
         box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
       }
     }

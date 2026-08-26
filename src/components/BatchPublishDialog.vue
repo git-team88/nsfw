@@ -413,7 +413,7 @@ watch(() => props.visible, (newVal) => {
 
   .next-step-btn {
     background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
-    border: 1px solid #3d3d3d
+    border: 1px solid #3d3d3d;
     border: 1px solid #ff9aca;
     border-radius: 13px;
     height: 48px;

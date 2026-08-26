@@ -1355,7 +1355,7 @@ const layerList = computed(() =>
   border-radius: 7px;
   border: 1px solid #3d3d3d;
   background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
-  box-shadow: none
+  box-shadow: none;
   box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 }
 .comic-markup-guide-actions {

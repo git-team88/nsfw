@@ -156,12 +156,11 @@ function handleNoWallet() {
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.14s;
 
   &:hover {
-    transform: translate(-1px, -1px);
     border-color: #ff4f9a;
   }
 
   &:active {
-    transform: translate(1px, 1px);
+    border-color: #ff4f9a;
   }
 }
 

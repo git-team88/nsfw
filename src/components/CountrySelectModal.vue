@@ -286,9 +286,9 @@ function flagPosition(code: string) {
   height: 48px;
   background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #FFFFFF;
-  border: 1px solid #3d3d3d;
+  border: 1px solid #ff9aca;
   border-radius: 13px;
-  box-shadow: none;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;

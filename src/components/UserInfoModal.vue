@@ -343,7 +343,7 @@ function close() {
 
 .confirm-btn {
   width: 100%;
-  border: 1px solid #3d3d3d;
+  border: 1px solid #ff9aca;
   border-radius: 13px;
   background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #ffffff;
@@ -351,7 +351,7 @@ function close() {
   font-weight: 800;
   padding: 14px;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {

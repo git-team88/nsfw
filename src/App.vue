@@ -52,14 +52,14 @@ function resolveOrigins() {
 
 function updateBodyFontClass() {
   const lang = locale.value;
-  const fontClass = languageFontMap[lang] || 'ja';
+  const fontClass = languageFontMap[lang] || 'en';
 
   document.body.classList.remove('en', 'ja', 'cn', 'tc');
   document.body.classList.add(fontClass);
 }
 
 function updateHtmlLang() {
-  document.documentElement.lang = htmlLangMap[locale.value] || 'ja';
+  document.documentElement.lang = htmlLangMap[locale.value] || 'en';
 }
 
 function updateHreflang() {

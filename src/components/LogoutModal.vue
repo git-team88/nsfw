@@ -126,12 +126,11 @@ function handleConfirm() {
         }
       }
       .btn-confirm {
+        border: 1px solid #ff9aca;
         background: linear-gradient(145deg, #ff74b3, #f73382);
         color: #f5f5f5;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
-        &:hover:not(:disabled) {
-          transform: translateY(-1px);
-        }
         &:active {
           transform: translate(0, 0);
         }

@@ -82,7 +82,6 @@ function goUserHome(userId: string) {
   cursor: pointer;
 }
 .msg-item:hover {
-  transform: translateX(4px);
   background: rgba(255,255,255,0.06);
 }
 .left-info {

@@ -260,8 +260,7 @@ async function fetchData() {
   min-height: calc(100vh - 124px);
   margin-left: 238px;
 }
-.content {
-}
+
 .panel-top {
   display: flex;
   align-items: center;

@@ -1203,9 +1203,6 @@ defineExpose({
           color: #ffffff;
           cursor: pointer;
           transition: background 0.14s;
-
-          &:hover {
-          }
         }
 
         .header-contribution-info {
@@ -1815,9 +1812,6 @@ defineExpose({
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.2s;
-
-      &:hover { }
-      &:active { }
     }
   }
 

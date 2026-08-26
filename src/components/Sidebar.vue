@@ -2281,7 +2281,6 @@ function likeReply(id: string, liked: boolean) {
       transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
 
       &:hover {
-        transform: translateY(-2px);
         box-shadow: none;
       }
 

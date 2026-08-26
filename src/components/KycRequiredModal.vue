@@ -120,10 +120,9 @@ function handleGoKyc() {
 .btn-confirm {
   background: linear-gradient(145deg, #ff74b3, #f73382);
   color: #f5f5f5;
-  border: 1px solid #3d3d3d;
+  border: 1px solid #ff9aca;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
-  &:hover {
-    transform: translateY(-1px);
-  }
+
 }
 </style>

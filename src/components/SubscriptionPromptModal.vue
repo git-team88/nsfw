@@ -116,7 +116,6 @@ const emit = defineEmits(['cancel', 'goToSettings']);
   font-weight: 800;
 
   &:hover {
-    transform: translateY(-1px);
     box-shadow: none;
   }
 }

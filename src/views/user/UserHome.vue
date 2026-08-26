@@ -106,14 +106,14 @@
           <div class="main-tabs">
             <div
               class="main-tab"
-              :class="{ active: topTab === 'works' }"
-              @click="topTab = 'works'"
+              :class="{ active: topTab === 'works' && viewMode === 'posts' }"
+              @click="setActiveContentType(2)"
             >{{ t('userHome.contentType.myWorks') }}</div>
             <div
               v-if="isSelf"
               class="main-tab"
-              :class="{ active: topTab === 'favorites' }"
-              @click="topTab = 'favorites'"
+              :class="{ active: topTab === 'favorites' && viewMode === 'posts' }"
+              @click="topTab = 'favorites'; viewMode = 'posts'"
             >{{ t('userHome.contentType.myFavorites') }}</div>
           </div>
           <div class="stats-nums">
@@ -139,7 +139,7 @@
             </div>
           </div>
         </div>
-        <div class="sub-tabs" v-if="topTab === 'works'">
+        <div class="sub-tabs" v-if="topTab === 'works' && viewMode === 'posts'">
           <div
             v-for="type in workContentTypes"
             :key="type.id"
@@ -3500,12 +3500,6 @@ async function unpinCollection(collection: any) {
   to {
     transform: rotate(360deg);
   }
-}
-
-.collection-card {
-}
-
-.follow-card {
 }
 
 @media (max-width: 420px) {

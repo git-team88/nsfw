@@ -212,9 +212,10 @@ function handleOverlayClick() {
     }
   }
   .confirm-btn {
-    border: none;
+    border: 1px solid #ff9aca;
     background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
     color: #f5f5f5;
+    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
     &:hover:not(:disabled) {
       box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);

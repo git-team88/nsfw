@@ -1243,7 +1243,6 @@ $line: #2c2c2c;
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s;
 
   &:hover {
-    transform: translateY(-4px);
     box-shadow: 0 20px 45px rgba(0,0,0,0.6);
   }
 
@@ -1303,14 +1302,8 @@ $line: #2c2c2c;
     overflow: hidden;
     margin-top: 9px;
 
-    &:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 0 6px 20px rgba(255,79,154,0.5);
-    }
-
     &:active {
-      transform: translate(0, 0);
-      box-shadow: 0 2px 8px rgba(255,79,154,0.3);
+      box-shadow: 0 2px 8px rgba(255,79,154,0.5);
     }
 
     .hover-text {

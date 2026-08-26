@@ -119,8 +119,8 @@ const emit = defineEmits<{
         cursor: pointer;
         background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         color: #ffffff;
-        border: 1px solid #3d3d3d;
-        box-shadow: none;
+        border: 1px solid #ff9aca;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
 
         &:hover:not(:disabled) {
           box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);

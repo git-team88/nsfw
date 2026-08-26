@@ -136,7 +136,6 @@ const handleConfirm = () => {
   font-weight: 800; font-size: 14px; cursor: pointer;
   box-shadow: none;
   transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease-out;
-  &:hover { transform: translate(-1px,-2px); }
   &:active { transform: translate(1px,1px); }
 }
 .mg-hm-btn.ghost { background: #1a1a1a; color: #f5f5f5; &:hover { color: #ff4f9a; } }

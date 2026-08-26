@@ -636,13 +636,6 @@ function formatSci(n: number | string | null) {
   font-weight: 600;
   box-shadow: none;
   transition: transform 0.1s;
-
-  &:hover {
-
-  }
-  &:active {
-
-  }
 }
 .block.overall .download {
   background: linear-gradient(145deg, #ff65ab, #f02c80);

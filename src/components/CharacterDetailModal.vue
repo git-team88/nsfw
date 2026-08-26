@@ -182,12 +182,10 @@ function castCharacter(type: string) {
   transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
 
   &:hover {
-    transform: translate(-2px, -2px);
     box-shadow: none;
   }
 
   &:active {
-    transform: translate(0, 0);
     box-shadow: none;
   }
 

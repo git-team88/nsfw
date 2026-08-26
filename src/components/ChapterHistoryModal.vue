@@ -315,7 +315,6 @@ function handleUse() {
           &:hover {
             color: #ff4f9a;
             box-shadow: none;
-            transform: translateY(-1px);
           }
         }
 

@@ -416,14 +416,14 @@ function saveEmail() {
       .modal-confirm-btn {
         min-width: 240px;
         height: 48px;
-        border: 1px solid #3d3d3d;
+        border: 1px solid #ff9aca;
         border-radius: 13px;
         font-size: 14px;
         font-weight: 800;
         cursor: pointer;
         background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
         color: #f5f5f5;
-        box-shadow: none;
+        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
         transition: transform 0.1s, box-shadow 0.1s;
 
         &:disabled {

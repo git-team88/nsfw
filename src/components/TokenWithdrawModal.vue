@@ -347,14 +347,14 @@ function formatSci(n: number | string | null) {
   height: 48px;
   padding: 0 24px;
   margin: 0 auto;
-  border: 1px solid #3d3d3d;
+  border: 1px solid #ff9aca;
   border-radius: 18px;
   background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
   color: #f5f5f5;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
   transition: transform 0.1s, box-shadow 0.1s;
 
   &:hover:not(:disabled) {

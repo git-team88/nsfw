@@ -419,7 +419,6 @@ watch(() => props.project, (newProject) => {
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
   &:hover {
-    transform: translateY(-1px);
     box-shadow: none;
   }
 

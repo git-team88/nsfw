@@ -1242,7 +1242,6 @@
                 v-for="(user, index) in followUserList"
                 :key="user.id"
                 class="follow-card"
-                :style="{ boxShadow: `4px 4px 0 ${getFollowCardShadowColor(index)}` }"
               >
                 <div class="card-body" @click="navigateToUserHome(user.id)">
                   <div class="card-top">
@@ -5846,10 +5845,6 @@ const formatNumber = (num: number) => {
   }
   return num.toLocaleString();
 };
-
-// Colorful shadow palette for follow user cards
-const followCardShadowColors = ['#FFD23F', '#3B82F6', '#4ADE80', '#EC4899', '#22D3EE', '#F59E0B', '#6C5CE7', '#14B8A6', '#FF4D8D', '#F97316'];
-const getFollowCardShadowColor = (index: number) => followCardShadowColors[index % followCardShadowColors.length];
 
 const navigateToDetail = (bookId: string, type?: string, postId?: string | number) => {
   const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama" | "Image" | "Video"> = {
