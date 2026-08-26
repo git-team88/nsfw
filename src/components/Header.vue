@@ -338,10 +338,6 @@ const navList = ref([
     name: t("header.title5"),
     path: "/user-home",
   },
-  {
-    name: t("header.title7"),
-    path: "/activity/list.html",
-  },
 ]);
 
 const typeList = ref([
@@ -396,10 +392,6 @@ watch(locale, () => {
     {
       name: t("header.title5"),
       path: "/user-home",
-    },
-    {
-      name: t("header.title7"),
-      path: "/activity/list.html",
     },
   ];
 
