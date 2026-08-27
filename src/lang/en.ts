@@ -2255,7 +2255,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     mention: "Tag people",
     image: {
       imageLabel: "Image",
-      uploadCta: "Click to upload or drag images here. Max 10 images.",
+      uploadCta: "Click to upload or drag images here. Max 12 images.",
       uploadBtn: "Upload Image",
       uploadFormatError: "Please upload image files (PNG/JPG/Webp).",
       uploadTip: "The uploaded image size must not exceed 10MB!",

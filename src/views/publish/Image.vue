@@ -857,7 +857,7 @@ function goToSubscriptionSettings() {
 // --- Local upload helpers ---
 function pickImages() {
   if (imageFiles.value.length >= 12) {
-    toast(t("submit.image.uploadTip"));
+    toast(t("submit.image.maxSelectTip"));
     return;
   }
   imageInputRef.value?.click();
@@ -913,7 +913,7 @@ async function appendFiles(files: File[]) {
 
   for (const f of files) {
     if (imageFiles.value.length >= maxCount) {
-      toast(t("submit.image.uploadTip"));
+      toast(t("submit.image.maxSelectTip"));
       break;
     }
     if (!validImageTypes.includes(f.type)) {
@@ -921,7 +921,7 @@ async function appendFiles(files: File[]) {
       continue;
     }
     if (f.size > maxSize) {
-      toast(t("submit.image.uploadTip"));
+      toast(t("home.error.maxPhotoSize", { max: 10 }));
       continue;
     }
 

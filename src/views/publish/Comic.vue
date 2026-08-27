@@ -2182,7 +2182,7 @@ function openCommunityConvention() {
 
 function pickImages() {
   if (imageFiles.value.length >= 12) {
-    toast(t("submit.image.uploadTip"));
+    toast(t("submit.image.maxSelectTip"));
     return;
   }
   if (imageAddRef.value) {
@@ -2251,7 +2251,7 @@ async function appendFiles(files: File[]) {
 
   for (const f of files) {
     if (imageFiles.value.length >= maxCount) {
-      toast(t("submit.image.uploadTip"));
+      toast(t("submit.image.maxSelectTip"));
       break;
     }
     if (!validImageTypes.includes(f.type)) {
@@ -3431,6 +3431,10 @@ async function onSubmit() {
 
   if (!imageFiles.value.length) {
     toast(t("submit.image.uploadFirst"));
+    return;
+  }
+  if (imageFiles.value.length > 12) {
+    toast(t("submit.image.maxSelectTip"));
     return;
   }
   if (!coverPreview.value) {

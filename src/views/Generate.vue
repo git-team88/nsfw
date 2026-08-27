@@ -3402,6 +3402,7 @@ const triggerExtendVideoUpload = () => {
 const selectVideoMultimodal = (value: string) => {
   selectedVideoMultimodal.value = value;
   showVideoMultimodalDropdown.value = false;
+  enableVideoOptimizePrompt.value = true;
   videoInput.value = '';
   startFrameImage.value = '';
   endFrameImage.value = '';
@@ -3409,10 +3410,14 @@ const selectVideoMultimodal = (value: string) => {
   uploadedVideoCover.value = '';
   uploadedVideoDuration.value = 0;
   uploadedVideoRefs.value = [];
+  if (videoEditableInputRef.value) {
+    videoEditableInputRef.value.innerHTML = '';
+  }
 
   selectedVideoQuality.value = '1080P';
   selectedVideoRatio.value = '9:16';
   selectedVideoDuration.value = '15';
+  lastValidVideoDuration.value = '15';
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -5746,6 +5751,8 @@ const switchVideoMode = (mode: string, index: number) => {
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
       uploadedVideoRefs.value = [];
+      selectedVideoDuration.value = '2';
+      lastValidVideoDuration.value = '2';
     } else {
       pendingModeType.value = 'video';
       showUnlimitedModal.value = true;
@@ -5760,7 +5767,8 @@ const switchVideoMode = (mode: string, index: number) => {
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';
     uploadedVideoRefs.value = [];
-    if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
+    selectedVideoDuration.value = '2';
+    lastValidVideoDuration.value = '2';
   }
 };
 
@@ -5775,6 +5783,8 @@ const confirmUnlimitedMode = () => {
       uploadedVideoCover.value = '';
       uploadedVideoRefs.value = [];
     }
+    selectedVideoDuration.value = '2';
+    lastValidVideoDuration.value = '2';
   } else if (pendingModeType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';
   }

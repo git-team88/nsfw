@@ -1664,6 +1664,8 @@ function resetVideoInputs() {
   uploadedVideoDuration.value = 0;
   combinedItemsVideo.value = [];
   novelInput.value = '';
+  selectedVideoDuration.value = '15';
+  lastValidVideoDuration.value = '15';
   inputKey.value++;
 }
 
@@ -2715,6 +2717,8 @@ const switchVideoMode = (mode: string, index: number) => {
         selectedVideoMultimodal.value = 'multimodal';
       }
       resetVideoInputs();
+      selectedVideoDuration.value = '2';
+      lastValidVideoDuration.value = '2';
       showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
@@ -2727,7 +2731,10 @@ const switchVideoMode = (mode: string, index: number) => {
       selectedVideoMultimodal.value = 'multimodal';
     }
     resetVideoInputs();
-    if (parseInt(selectedVideoDuration.value) < 4) selectedVideoDuration.value = '4';
+    if (parseInt(selectedVideoDuration.value) < 4) {
+      selectedVideoDuration.value = '4';
+      lastValidVideoDuration.value = '4';
+    }
   }
 };
 
@@ -2834,6 +2841,8 @@ const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = false;
+    selectedVideoDuration.value = '2';
+    lastValidVideoDuration.value = '2';
   } else if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
   } else if (contentType.value === 'novel') {
