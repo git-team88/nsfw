@@ -346,20 +346,20 @@ const typeList = ref([
   //   path: "/ai",
   // },
   {
-    name: t("header.type4"),
-    path: "/publish/novel",
-  },
-  {
-    name: t("header.type3"),
-    path: "/publish/comic",
-  },
-  {
     name: t("header.type5"),
     path: "/publish/image",
   },
   {
     name: t("header.type6"),
     path: "/publish/clip",
+  },
+  {
+    name: t("header.type4"),
+    path: "/publish/novel",
+  },
+  {
+    name: t("header.type3"),
+    path: "/publish/comic",
   },
 ]);
 
@@ -401,20 +401,20 @@ watch(locale, () => {
     //   path: "/ai",
     // },
     {
-      name: t("header.type4"),
-      path: "/publish/novel",
-    },
-    {
-      name: t("header.type3"),
-      path: "/publish/comic",
-    },
-    {
       name: t("header.type5"),
       path: "/publish/image",
     },
     {
       name: t("header.type6"),
       path: "/publish/clip",
+    },
+    {
+      name: t("header.type4"),
+      path: "/publish/novel",
+    },
+    {
+      name: t("header.type3"),
+      path: "/publish/comic",
     },
   ];
 });

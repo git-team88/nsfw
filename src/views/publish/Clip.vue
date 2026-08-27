@@ -458,12 +458,12 @@ const currentLangLabel = computed(() => {
 
 // Top navigation tabs (5)
 const tabList = [
-  { name: t("submit.tabs.novel"), path: "/publish/novel" },
-  { name: t("submit.tabs.manhua"), path: "/publish/comic" },
   { name: t("submit.tabs.photo"), path: "/publish/image" },
   { name: t("submit.tabs.video"), path: "/publish/clip" },
+  { name: t("submit.tabs.novel"), path: "/publish/novel" },
+  { name: t("submit.tabs.manhua"), path: "/publish/comic" },
 ];
-const tabIndex = ref(3);
+const tabIndex = ref(1);
 
 function changeTab(tab: { name: string; path: string }, _index: number) {
   if (tab.path === route.path) return;

@@ -252,10 +252,10 @@ const tabs = ref([
 
 const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
-  { id: 2, label: t('home.contentType.novel') },
-  { id: 1, label: t('home.contentType.comic') },
   { id: 4, label: t('home.contentType.image') },
-  { id: 5, label: t('home.contentType.video') }
+  { id: 5, label: t('home.contentType.video') },
+  { id: 2, label: t('home.contentType.novel') },
+  { id: 1, label: t('home.contentType.comic') }
 ]);
 
 // Refs for waterfall layout
@@ -290,10 +290,10 @@ watch(() => locale.value, () => {
 
   postFilters.value = [
     { id: 0, label: t('home.contentType.all') },
-    { id: 2, label: t('home.contentType.novel') },
-    { id: 1, label: t('home.contentType.comic') },
     { id: 4, label: t('home.contentType.image') },
-    { id: 5, label: t('home.contentType.video') }
+    { id: 5, label: t('home.contentType.video') },
+    { id: 2, label: t('home.contentType.novel') },
+    { id: 1, label: t('home.contentType.comic') }
   ]
 
   // Re-trigger search when language changes
@@ -579,7 +579,11 @@ const layoutWaterfall = () => {
 function goToDetail(post: any) {
   localStorage.setItem('searchPostFilter', postFilter.value.toString());
   const bookId = post.book_id;
-  router.push(`/collection/${bookId}`);
+  if (String(post.type) === '4' || String(post.type) === '5') {
+    router.push({ path: '/detail', query: { id: post.id, tab: postFilter.value.toString() } });
+  } else {
+    router.push(`/collection/${bookId}`);
+  }
 }
 
 

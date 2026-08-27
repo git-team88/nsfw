@@ -649,10 +649,10 @@ const workContentTypes = computed(() => {
   };
 
   return [
-    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
-    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
     { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0, hideCount: false },
     { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0, hideCount: false },
+    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
+    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
   ];
 });
 
@@ -668,7 +668,7 @@ watch(topTab, (val) => {
   }
 });
 
-const activeContentType = ref<number | string>(2);
+const activeContentType = ref<number | string>(4);
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);

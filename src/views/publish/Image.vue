@@ -458,7 +458,7 @@ interface TabItem {
 }
 
 const tabList = ref<TabItem[]>([]);
-const tabIndex = ref(2);
+const tabIndex = ref(0);
 
 const uploadOption = ref("history");
 const uploadOptions = [
@@ -660,10 +660,10 @@ async function onReuploadPicked(e: Event) {
 
 function buildTabList(): TabItem[] {
   return [
-    { name: t("submit.tabs.novel"), path: "/publish/novel" },
-    { name: t("submit.tabs.manhua"), path: "/publish/comic" },
     { name: t("submit.tabs.photo"), path: "/publish/image" },
     { name: t("submit.tabs.video"), path: "/publish/clip" },
+    { name: t("submit.tabs.novel"), path: "/publish/novel" },
+    { name: t("submit.tabs.manhua"), path: "/publish/comic" },
   ];
 }
 

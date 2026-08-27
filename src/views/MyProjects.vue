@@ -276,7 +276,7 @@ const { t, locale } = useI18n();
 const route = useRoute();
 
 // State
-const activeMainTab = ref('novel');
+const activeMainTab = ref('photo');
 const activeStatusTab = ref('unpublished');
 const projects = ref<any[]>([]);
 const loading = ref(false);
@@ -307,10 +307,10 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
 const mainTabs = ref([
-  { value: 'novel' },
-  { value: 'manhua' },
   { value: 'photo' },
-  { value: 'video' }
+  { value: 'video' },
+  { value: 'novel' },
+  { value: 'manhua' }
 ]);
 
 const statusTabs = ref([

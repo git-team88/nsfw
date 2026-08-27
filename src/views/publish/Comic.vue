@@ -941,23 +941,23 @@ const DESC_MAX = 4000;
 
 const tabList = ref([
   {
-    name: t("submit.tabs.novel"),
-    path: "/publish/novel",
-  },
-  {
-    name: t("submit.tabs.manhua"),
-    path: "/publish/comic",
-  },
-  {
     name: t("submit.tabs.photo"),
     path: "/publish/image",
   },
   {
     name: t("submit.tabs.video"),
     path: "/publish/clip",
+  },
+  {
+    name: t("submit.tabs.novel"),
+    path: "/publish/novel",
+  },
+  {
+    name: t("submit.tabs.manhua"),
+    path: "/publish/comic",
   }
 ]);
-const tabIndex = ref(1);
+const tabIndex = ref(3);
 const pendingRoute = ref<{ path: string } | null>(null);
 const isShowConfirm = ref(false);
 
@@ -2086,20 +2086,20 @@ watch(uploadOption, (newOption) => {
 watch(locale, () => {
   tabList.value = [
     {
-      name: t("submit.tabs.novel"),
-      path: "/publish/novel",
-    },
-    {
-      name: t("submit.tabs.manhua"),
-      path: "/publish/comic",
-    },
-    {
       name: t("submit.tabs.photo"),
       path: "/publish/image",
     },
     {
       name: t("submit.tabs.video"),
       path: "/publish/clip",
+    },
+    {
+      name: t("submit.tabs.novel"),
+      path: "/publish/novel",
+    },
+    {
+      name: t("submit.tabs.manhua"),
+      path: "/publish/comic",
     }
   ];
 });

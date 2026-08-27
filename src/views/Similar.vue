@@ -176,6 +176,8 @@ const hasFetchedRegion = ref(false);
 // Type filters data
 const typeFilters = ref([
   { id: 0, label: t('home.contentType.all') },
+  { id: 4, label: t('home.contentType.image') },
+  { id: 5, label: t('home.contentType.video') },
   { id: 2, label: t('home.contentType.novel') },
   { id: 1, label: t('home.contentType.comic') }
 ]);
@@ -195,6 +197,8 @@ const currentRequestId = ref(0);
 watch(() => locale.value, () => {
   typeFilters.value = [
     { id: 0, label: t('home.contentType.all') },
+    { id: 4, label: t('home.contentType.image') },
+    { id: 5, label: t('home.contentType.video') },
     { id: 2, label: t('home.contentType.novel') },
     { id: 1, label: t('home.contentType.comic') }
   ]
@@ -364,7 +368,11 @@ const layoutWaterfall = () => {
 
 function goToDetail(item: any) {
   const bookId = item.book_id || item.id;
-  router.push(`/collection/${bookId}`);
+  if (String(item.type) === '4' || String(item.type) === '5') {
+    router.push({ path: '/detail', query: { id: item.id, tab: 'similar' } });
+  } else {
+    router.push(`/collection/${bookId}`);
+  }
 }
 
 const onCardTilt = (e: MouseEvent) => {

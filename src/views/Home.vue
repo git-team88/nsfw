@@ -28,8 +28,42 @@
 
       <!-- Hero Section -->
       <div class="hero-section">
+        <!-- 3D 漂浮漫画卡片背景动效 -->
+        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
+        <!-- 中间柔光层（让中间内容更清晰） -->
+        <div class="hero-glow" aria-hidden="true"></div>
+        <!-- 边上飘的拟声词装饰 -->
+        <div class="hero-parts" aria-hidden="true" ref="heroPartsRef">
+          <img
+            v-for="(p, i) in heroParts"
+            :key="p.before"
+            class="hero-part"
+            :src="`/onomatopoeia/${heroPartSrc[i]}.png`"
+            alt=""
+            :style="heroPartStyle(p, i)"
+          />
+        </div>
+
+        <!-- 左下：说明按钮（暂时隐藏） -->
+        <a v-if="false" class="hero-howto" href="/guide.html" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+          {{ t('home.howto') }}
+        </a>
+
+        <!-- 右下：暂停/播放背景动画 -->
+        <button class="hero-pause-btn" :title="t('home.pauseAnim')" :aria-label="t('home.pauseAnim')" @click="heroPaused = !heroPaused">
+          <svg v-if="heroPaused" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z" /></svg>
+          <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.6" stroke-linecap="round"><path d="M9 5v14" /><path d="M15 5v14" /></svg>
+        </button>
+
         <div class="hero-content" style="position: relative; z-index: 20;">
           <div class="hero-title-wrap">
+            <span class="hero-speedlines left" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="hero-speedlines right" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
             <h1 class="hero-title">{{ t('home.hero.title') }}</h1>
           </div>
           <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
@@ -945,7 +979,7 @@
                     v-model="novelInput"
                     spellcheck="false"
                     @input="handleTextareaInput"
-                    @focus="isInputFocused = true"
+                    @focus="isInputFocused = true; popHeroParts()"
                     @blur="isInputFocused = false"
                     @click="handleNovelTextareaClick"
                   ></textarea>
@@ -1038,7 +1072,9 @@
       <ProcessList />
 
       <!-- 推荐创作者 + 人气作品（3D 动效 Showcase，移植自 moegen-web） -->
-      <!-- HomeShowcase removed -->
+      <div v-if="false">
+        <HomeShowcase :user-region="userRegion" :region-ready="hasFetchedRegion" :allow-sensitive="allowSensitiveContent" />
+      </div>
 
       <!-- Content Section -->
       <div id="feed" class="content-section">
@@ -1426,6 +1462,8 @@ import GuideModal from '@/components/GuideModal.vue';
 // import EventModal from '@/components/EventModal.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
+import Hero3DBackground from '@/components/Hero3DBackground.vue';
+import HomeShowcase from '@/components/HomeShowcase.vue';
 import TaskLimitExceededModal from '@/components/TaskLimitExceededModal.vue';
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
@@ -1457,6 +1495,76 @@ const activeContentType = ref(0);
 const isSearchFocused = ref(false);
 
 const uid = localStorage.getItem('uid');
+
+// hero 背景动画暂停/播放
+const heroPaused = ref(false);
+// hero 编辑态：聚焦输入框后 3D 漫画卡片背景散开并消失
+const heroEditing = ref(false);
+
+// hero 边上飘的拟声词（对齐 moegen PARTS，浮动装饰 + 点击炸开变换）
+const heroParts = [
+  { before: 'doon', after: 'gokuri', left: '1%', top: '4%', w: 19, rot: -6 },
+  { before: 'left_cloud', after: 'hirameki', left: '12%', top: '45%', w: 8, rot: 0, afterScale: 0.7, afterRot: -30 },
+  { before: 'exclamation', after: 'excl_white', left: '1.5%', top: '33%', w: 9, rot: -4 },
+  { before: 'fk_input', after: 'story_bubble', left: '2.5%', top: '58%', w: 13, rot: 2 },
+  { before: 'zuba', after: 'gogogo', left: '22%', top: '87%', w: 10, rot: -3 },
+  { before: 'fk_oneword', after: 'imagination', left: '84%', top: '4%', w: 12.5, rot: 3 },
+  { before: 'dogaan', after: 'zawazawa', left: '81.5%', top: '27.5%', w: 10, rot: 0 },
+  { before: 'right_cloud', after: 'dokidoki', left: '91.5%', top: '47%', w: 7.5, rot: 0 },
+  { before: 'fk_imagine', after: 'yokan', left: '85%', top: '61%', w: 12.5, rot: -2 },
+  { before: 'bashitsu', after: 'su', left: '62%', top: '87.5%', w: 9, rot: 4 },
+] as { before: string; after: string; left: string; top: string; w: number; rot: number; afterScale?: number; afterRot?: number }[];
+const heroPartSrc = ref<string[]>(heroParts.map((p) => p.before));
+const heroPartsPopped = ref(false);
+const heroPartStyle = (p: typeof heroParts[number], i: number) => ({
+  left: p.left,
+  top: p.top,
+  '--w': p.w,
+  '--rot': `${p.rot}deg`,
+  '--fdur': `${(6.4 + (i % 5) * 0.9).toFixed(2)}s`,
+  '--fdelay': `${(-(i * 0.83)).toFixed(2)}s`,
+  '--fdx': `${(7 + (i % 3) * 4).toFixed(0)}px`,
+  '--fdy': `${(9 + (i % 4) * 4).toFixed(0)}px`,
+  '--frot': `${(1.6 + (i % 3) * 0.7).toFixed(2)}deg`,
+}) as any;
+
+const heroPartsRef = ref<HTMLDivElement>();
+
+const initHeroParts = () => {
+  const box = heroPartsRef.value;
+  if (!box) return;
+  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
+  items.forEach((im, i) => {
+    window.setTimeout(() => { im.style.opacity = '1'; }, 140 + i * 70);
+  });
+  box.classList.add('mg-parts-live');
+};
+
+const popHeroParts = () => {
+  if (heroPartsPopped.value) return;
+  heroPartsPopped.value = true;
+  heroEditing.value = true;
+  const box = heroPartsRef.value;
+  if (!box) return;
+  const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
+  items.forEach((im, i) => {
+    const p = heroParts[i];
+    im.style.animation = 'none';
+    im.style.transformOrigin = '50% 50%';
+    const d = (i * 0.04).toFixed(2);
+    im.style.transition = `transform .5s cubic-bezier(.5,0,.75,0) ${d}s, opacity .5s cubic-bezier(.5,0,.75,0) ${d}s`;
+    im.style.transform = `translate(0,0) scale(.06) rotate(${p.rot}deg)`;
+    im.style.opacity = '0';
+    window.setTimeout(() => {
+      heroPartSrc.value[i] = p.after;
+      const aSc = p.afterScale ?? 1;
+      const aRot = p.afterRot ?? p.rot;
+      im.style.transition = 'transform 1s cubic-bezier(.34,1.56,.64,1), opacity .5s cubic-bezier(.16,1,.3,1)';
+      im.style.transform = `translate(0,0) scale(${aSc}) rotate(${aRot}deg)`;
+      im.style.opacity = '1';
+    }, 520 + i * 40);
+  });
+};
 
 // Banner data
 const banners = ref<any[]>([]);
@@ -2298,10 +2406,10 @@ const onCardTiltReset = (e: MouseEvent) => {
 // Content Types
 const contentTypes = ref([
   { id: 0, label: 'all' },
-  { id: 2, label: 'novel' },
-  { id: 1, label: 'comic' },
   { id: 4, label: 'image' },
-  { id: 5, label: 'video' }
+  { id: 5, label: 'video' },
+  { id: 2, label: 'novel' },
+  { id: 1, label: 'comic' }
 ]);
 
 // Sort Options
@@ -5347,6 +5455,7 @@ const handleInputClick = () => {
 
 // Handle input focus
 const handleInputFocus = () => {
+  popHeroParts();
   checkLogin();
   isInputFocused.value = true;
   if (editableInputRef.value) {
@@ -5889,7 +5998,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
   }
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  if (type === '4' || type === '5') {
+  if (String(type) === '4' || String(type) === '5') {
     router.push({ path: '/detail', query: { id: postId || bookId, tab: activeContentTab.value } });
   } else {
     router.push(`/collection/${bookId}`);
@@ -5898,7 +6007,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
 
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
 const detailHref = (bookId: string, type?: string, postId?: string | number) => {
-  if (type === '4' || type === '5') {
+  if (String(type) === '4' || String(type) === '5') {
     return `/detail?id=${postId || bookId}&tab=${activeContentTab.value}`;
   }
   return `/collection/${bookId}`;
@@ -6143,6 +6252,9 @@ onMounted(async () => {
 
   // 初始化语言设置
   await initLanguage();
+
+  // 启动 hero 拟声词淡入 + 浮动
+  nextTick(() => initHeroParts());
 
   nextTick(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
