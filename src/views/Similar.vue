@@ -247,6 +247,7 @@ async function loadData(fromLoadMore = false) {
       cat: urlCat,
       lang: requestLang,
       show_nsfw: showNsfw,
+      channel: 1,
       page: currentPage.value,
       page_size: pageSize.value,
     }) as any;

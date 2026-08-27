@@ -192,7 +192,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       width: 100%;
       height: calc(100vh - 80px);
       background-color: $paper;
-      border: 3px solid $ink;
+      border: 1px solid #3d3d3d;
       box-shadow: none;
       border-radius: 12px;
       overflow-y: auto;
@@ -211,7 +211,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        border-bottom: 2px solid $ink;
+        border-bottom: 1px solid #3d3d3d;
         gap: 16px;
         z-index: 10;
 
@@ -327,7 +327,7 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
             &.followed {
               background: $bg-tag;
               color: $sub;
-              border: 3px solid $ink;
+      border: 1px solid $ink;
               box-shadow: $shadow-hard;
 
               &:hover {
@@ -788,28 +788,34 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         height: 56px;
         border-radius: 50%;
         background-color: $paper;
-        border: 2px solid $ink;
-        box-shadow: $shadow-hard-sm;
+        border: 1px solid #3d3d3d;
+        box-shadow: none;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: $transition-spring;
+        transition: none;
 
         &:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 $ink;
+          transform: none;
+          box-shadow: none;
         }
 
         &:active {
-          transform: translate(0, 0);
-          box-shadow: 1px 1px 0 $ink;
+          transform: none;
+          box-shadow: none;
         }
 
         img {
           width: 24px;
           height: 24px;
+          filter: brightness(0) invert(1);
+        }
+
+        &.fav-btn.active img,
+        &.like-btn.active img {
+          filter: none;
         }
 
         .action-count {
@@ -931,7 +937,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
         .chapter-header {
           padding: 1.3889vw 1.6667vw;
-          border-bottom: 2px solid $ink;
 
           .header-left {
             .chapter-title {
@@ -1175,7 +1180,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 
         .chapter-header {
           padding: 16px;
-          border-bottom: 2px solid $ink;
 
           .header-left {
             .chapter-title {

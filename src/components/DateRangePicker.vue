@@ -257,10 +257,10 @@ onBeforeUnmount(() => {
   box-shadow: none;
 
   &:hover {
-    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+    box-shadow: none;
   }
   &:active {
-    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+    box-shadow: none;
   }
 }
 
@@ -358,25 +358,25 @@ onBeforeUnmount(() => {
   box-shadow: none;
 
   &:hover {
-    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+    box-shadow: none;
     color: #ff4f9a;
     border-color: #ff4f9a;
   }
   &:active {
-    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+    box-shadow: none;
   }
 }
 
 .btn.apply {
-  border: 1px solid #3d3d3d;
-  color: #f5f5f5;
+  border: none;
+  color: #000;
   box-shadow: none;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+    box-shadow: none;
   }
   &:active {
-    box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+    box-shadow: none;
   }
 }
 

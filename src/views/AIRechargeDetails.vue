@@ -692,6 +692,7 @@ $highlight: rgba(255,255,255,0.06);
       .info-icon {
         width: 20px;
         height: 20px;
+        filter: brightness(0) invert(1);
       }
 
       .tooltip-content {
@@ -947,6 +948,7 @@ $highlight: rgba(255,255,255,0.06);
         img {
           width: 22px;
           height: 22px;
+          filter: brightness(0) invert(1);
         }
       }
 

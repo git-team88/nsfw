@@ -2232,33 +2232,32 @@ function likeReply(id: string, liked: boolean) {
     .header-tabs {
       display: flex;
       align-items: center;
-      gap: 6px;
-      border: 1px solid #3d3d3d;
-      border-radius: 14px;
-      padding: 5px;
-      background: #1a1a1a;
-      width: fit-content;
+      gap: 8px;
 
       .tab-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        padding: 8px 22px;
-        font-size: 15px;
+        height: 36px;
+        padding: 0 20px;
+        font-size: 14px;
         font-weight: 800;
-        color: #f5f5f5;
-        background: transparent;
-        border-radius: 10px;
+        border: 1px solid #404040;
+        border-radius: 25px;
+        background: #1a1a1a;
         cursor: pointer;
-        transition: color 0.15s, background-color 0.15s;
+        transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+        background: transparent;
 
         &:hover:not(.active) {
-          background: rgba(255, 255, 255, 0.06);
+          border-color: #ff4f9a;
+          color: #fff;
         }
 
         &.active {
-          background: #1a1a1a;
-          color: #f5f5f5;
+          background: linear-gradient(145deg, #ff74b3, #f73382);
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 0 18px rgba(255,60,140,0.45);
         }
       }
     }
@@ -2647,6 +2646,7 @@ function likeReply(id: string, liked: boolean) {
               b {
                 width: 18px;
                 height: 18px;
+                filter: brightness(0) invert(1);
               }
 
               &.like-btn {
@@ -2658,6 +2658,7 @@ function likeReply(id: string, liked: boolean) {
                 &:hover {
                   color: #ff4f9a;
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/like_hover.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2666,6 +2667,7 @@ function likeReply(id: string, liked: boolean) {
                 &.active {
                   color: #ff4f9a;
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/like_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2681,6 +2683,7 @@ function likeReply(id: string, liked: boolean) {
                 &:hover {
                   color: #f5f5f5;
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/reply_hover.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2689,6 +2692,7 @@ function likeReply(id: string, liked: boolean) {
                 &.active {
                   color: #f5f5f5;
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/reply_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2792,6 +2796,7 @@ function likeReply(id: string, liked: boolean) {
               b {
                 width: 24px;
                 height: 24px;
+                filter: brightness(0) invert(1);
               }
 
               &.footer-like {
@@ -2804,6 +2809,7 @@ function likeReply(id: string, liked: boolean) {
                   color: #ff4f9a;
 
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/like_hover.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2813,6 +2819,7 @@ function likeReply(id: string, liked: boolean) {
                   color: #ff4f9a;
 
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/like_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2829,6 +2836,7 @@ function likeReply(id: string, liked: boolean) {
                   color: #FBBC05;
 
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/collect_hover.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2838,6 +2846,7 @@ function likeReply(id: string, liked: boolean) {
                   color: #FBBC05;
 
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/collect_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2854,6 +2863,7 @@ function likeReply(id: string, liked: boolean) {
                   color: #00d3f2;
 
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/share_hover.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -2861,6 +2871,7 @@ function likeReply(id: string, liked: boolean) {
 
                 &.active {
                   b {
+                    filter: none;
                     background: url("@/assets/images/detail/share_active.png") no-repeat;
                     background-size: 100% 100%;
                   }
@@ -3069,6 +3080,7 @@ function likeReply(id: string, liked: boolean) {
               background: url("@/assets/images/detail/cancel.png") no-repeat;
               background-size: 100% 100%;
               cursor: pointer;
+              filter: brightness(0) invert(1) opacity(0.5);
             }
 
             .send-btn {
@@ -3128,7 +3140,7 @@ function likeReply(id: string, liked: boolean) {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 2px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid #3d3d3d;
             border-radius: 14px;
             transition: border-color 0.2s ease;
 
@@ -3188,15 +3200,18 @@ function likeReply(id: string, liked: boolean) {
                   width: 16px;
                   height: 16px;
                   margin-right: 8px;
-
-                  &.active {
-                    filter: invert(50%) sepia(100%) saturate(500%) hue-rotate(300deg) brightness(100%) contrast(100%);
-                  }
+                  filter: brightness(0) invert(1);
                 }
 
                 span {
                   font-size: 14px;
                   color: #aaa;
+                }
+
+                &.active {
+                  img {
+                    filter: none;
+                  }
                 }
               }
             }
@@ -3318,15 +3333,11 @@ function likeReply(id: string, liked: boolean) {
       padding: 12px 16px;
 
       .header-tabs {
-        gap: 4px;
-        border-width: 2px;
-        border-radius: 12px;
-        padding: 4px;
+        gap: 6px;
 
         .tab-item {
-          padding: 6px 14px;
+          padding: 0 14px;
           font-size: 13px;
-          border-radius: 8px;
         }
       }
 

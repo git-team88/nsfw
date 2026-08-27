@@ -625,7 +625,7 @@ function formatSci(n: number | string | null) {
 .download {
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #3d3d3d;
+  border: 2px solid #00D3F2;
   border-radius: 14px;
   background: #00D3F2;
   color: #fff;
@@ -634,7 +634,7 @@ function formatSci(n: number | string | null) {
   gap: 6px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: none;
+  box-shadow: 0 0 16px rgba(0, 211, 242, .3);
   transition: transform 0.1s;
 }
 .block.overall .download {
@@ -644,6 +644,8 @@ function formatSci(n: number | string | null) {
 }
 .block.work .download {
   background: #00D3F2;
+  border: 2px solid #00D3F2;
+  box-shadow: 0 0 16px rgba(0, 211, 242, .3);
 }
 .dl-icon {
   width: 16px;

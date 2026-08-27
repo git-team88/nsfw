@@ -1087,6 +1087,10 @@ onBeforeUnmount(() => {
         height: 20px;
       }
 
+      &:not(.active) img {
+        filter: brightness(0) invert(1);
+      }
+
       &:hover {
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       }
@@ -1468,6 +1472,12 @@ onBeforeUnmount(() => {
       &:first-child{
         background: #ff4f9a;
         color: #FFFFFF;
+      }
+
+      &:nth-child(2){
+        .action-icon {
+          filter: brightness(0) invert(1);
+        }
       }
 
       .action-icon {

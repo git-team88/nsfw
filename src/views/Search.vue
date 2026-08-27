@@ -1086,7 +1086,7 @@ $line: #2c2c2c;
         padding: 4px 12px;
         font-weight: 800;
         font-size: 12px;
-        color: $ink;
+        color: #000;
         background: #FFC24B;
 
         &.type-2 {

@@ -4875,6 +4875,7 @@ const fetchSimilarList = async (page: number = 1) => {
       cat: 2,
       lang: lang,
       show_nsfw: showNsfw,
+      channel: 1,
       page: page,
       page_size: 7,
     }) as any;

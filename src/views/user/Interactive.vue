@@ -730,7 +730,7 @@ async function downloadSingleWorkData() {
   height: 40px;
   font-size: 14px;
   font-weight: 700;
-  padding: 0 36px;
+  padding: 0;
   color: #f5f5f5;
 }
 .block.overall .block-title {
@@ -961,7 +961,7 @@ async function downloadSingleWorkData() {
     font-size: 13px;
   }
   .block-title {
-    padding: 0 16px;
+    padding: 0;
   }
   .th, .td {
     padding: 0 10px;
