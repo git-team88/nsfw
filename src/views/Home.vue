@@ -2885,7 +2885,8 @@ const selectCharacter = (characters: any[]) => {
         const characterTag = document.createElement('span');
         characterTag.className = 'character-tag-input';
         characterTag.contentEditable = 'false'; // Make the character tag non-editable
-        characterTag.dataset.characterId = newChar.id; // Add character ID for easier removal
+        characterTag.dataset.characterId = newChar.id;
+        characterTag.dataset.itemId = newChar.id;
 
         // Create image element
         const img = document.createElement('img');
@@ -6241,6 +6242,8 @@ onMounted(async () => {
             const characterTag = document.createElement('span');
             characterTag.className = 'character-tag-input';
             characterTag.contentEditable = 'false';
+            characterTag.dataset.characterId = character.id;
+            characterTag.dataset.itemId = character.id;
 
             const img = document.createElement('img');
             img.src = character.image;
