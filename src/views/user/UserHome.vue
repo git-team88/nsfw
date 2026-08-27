@@ -3387,6 +3387,7 @@ async function unpinCollection(collection: any) {
           img {
             width: 14px;
             height: 14px;
+            filter: brightness(0) invert(1);
           }
         }
       }
@@ -3937,6 +3938,7 @@ async function unpinCollection(collection: any) {
               img {
                 width: 12px;
                 height: 12px;
+                filter: brightness(0) invert(1);
               }
             }
           }
