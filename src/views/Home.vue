@@ -2000,14 +2000,19 @@ const onVideoDurationChange = (e: Event) => {
   selectedVideoDuration.value = target.value;
 };
 
+const getUploadedVideoDurationCeil = () => {
+  const videoItems = combinedItemsVideo.value.filter((item: any) => item.type === 'video' && item.duration);
+  if (videoItems.length === 1) {
+    return Math.ceil(videoItems[0].duration);
+  } else if (videoItems.length > 1) {
+    return Math.ceil(videoItems.reduce((sum: number, item: any) => sum + item.duration, 0));
+  }
+  return 0;
+};
+
 const validateDurationAndRestore = () => {
   if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-    let totalVideoDuration = 0;
-    for (const item of combinedItemsVideo.value) {
-      if (item.type === 'video' && item.duration) {
-        totalVideoDuration += item.duration;
-      }
-    }
+    const totalVideoDuration = getUploadedVideoDurationCeil();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
     if (totalVideoDuration > 0 && newDuration > maxDuration) {
@@ -2456,6 +2461,8 @@ const estimatedVideoComputingPower = computed(() => {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = 30;
+  } else if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+    duration = (parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationCeil();
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
   }
@@ -3386,7 +3393,7 @@ const doGenerateVideo = async () => {
           : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? parseInt(selectedVideoDuration.value) + getUploadedVideoDurationCeil() : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
@@ -4358,22 +4365,35 @@ const handleFileChange = async (event: Event) => {
         totalVideoDuration += uploadedVideoDuration.value;
       }
 
+      const existingVideoDurations: number[] = [];
       for (const item of combinedItemsVideo.value) {
         if (item.type === 'video' && item.duration) {
-          totalVideoDuration += item.duration;
+          existingVideoDurations.push(item.duration);
         } else if (item.type === 'audio' && item.duration) {
           totalAudioDuration += item.duration;
         }
       }
 
+      const newFileVideoDurations: number[] = [];
       for (const file of Array.from(input.files)) {
         if (file.type.startsWith('video/')) {
           const duration = await getMediaDuration(file);
-          totalVideoDuration += duration;
+          newFileVideoDurations.push(duration);
         } else if (file.type.startsWith('audio/')) {
           const duration = await getMediaDuration(file);
           totalAudioDuration += duration;
         }
+      }
+
+      if (isUnlimited && selectedVideoMultimodal.value === 'multimodal') {
+        const allVideoDurations = [...existingVideoDurations, ...newFileVideoDurations];
+        if (allVideoDurations.length === 1) {
+          totalVideoDuration += Math.ceil(allVideoDurations[0]);
+        } else if (allVideoDurations.length > 1) {
+          totalVideoDuration += Math.ceil(allVideoDurations.reduce((sum, d) => sum + d, 0));
+        }
+      } else {
+        totalVideoDuration += existingVideoDurations.reduce((sum, d) => sum + d, 0) + newFileVideoDurations.reduce((sum, d) => sum + d, 0);
       }
 
       const maxTotalVideoDuration = isUnlimited ? 15 : 30;
