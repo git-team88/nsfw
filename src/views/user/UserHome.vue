@@ -3316,7 +3316,7 @@ async function unpinCollection(collection: any) {
 
         .type-badge {
           display: inline-block;
-          border: 1px solid #3d3d3d;
+          border: none;
           border-radius: 999px;
           padding: 4px 12px;
           font-weight: 800;
