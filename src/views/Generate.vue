@@ -84,7 +84,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="photo-meta-row">
                   <div class="photo-meta">
-                    <span class="meta-item type-label">{{ t('recordList.photoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.photoGenerate') }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ record.ratio }}</span>
                   </div>
@@ -278,7 +278,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
@@ -314,7 +314,7 @@
               <!-- 失败提示 -->
               <div v-if="isTaskFailed(record.step_status || record.status)" class="record-failed">
                 <img src="@/assets/images/home/intro.png" alt="warning" class="failed-icon" />
-                <span class="failed-text">{{ t('recordList.generateFailed') }}</span>
+                <span class="failed-text">{{ record.fail_reason || t('recordList.generateFailed') }}</span>
               </div>
 
               <!-- 视频底部操作 -->
@@ -361,7 +361,7 @@
               @click="switchBottomTab('photo')"
             >
               <div class="type-text">
-                <span>{{ t('home.contentType.photo') }}</span>
+                <span>18x {{ t('home.contentType.photo') }}</span>
               </div>
             </div>
             <div
@@ -369,7 +369,7 @@
               @click="switchBottomTab('video')"
             >
               <div class="type-text">
-                <span>{{ t('home.contentType.video') }}</span>
+                <span>18x {{ t('home.contentType.video') }}</span>
               </div>
             </div>
           </div>
@@ -434,7 +434,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="false" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -749,7 +749,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="userRegion" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="false" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -998,8 +998,8 @@ const playingAudioUrl = ref('');
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
-const currentPhotoMode = ref('normal');
-const currentVideoMode = ref('normal');
+const currentPhotoMode = ref('unlimited');
+const currentVideoMode = ref('unlimited');
 const enablePhotoOptimizePrompt = ref(true);
 const enableVideoOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
@@ -1134,34 +1134,7 @@ const startPhotoTypewriter = () => {
     clearTimeout(photoTypewriterTimer);
     photoTypewriterTimer = null;
   }
-  if (prefersReducedMotion.value || isPhotoInputFocused.value) {
-    photoPlaceholderDisplay.value = photoPlaceholderFull.value;
-    return;
-  }
-  photoTypewriterState.value = { charIndex: 0, deleting: false };
-  const tick = () => {
-    const s = photoTypewriterState.value;
-    if (!s.deleting) {
-      s.charIndex++;
-      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, s.charIndex);
-      if (s.charIndex >= photoPlaceholderFull.value.length) {
-        s.deleting = true;
-        photoTypewriterTimer = setTimeout(tick, 1500);
-        return;
-      }
-      photoTypewriterTimer = setTimeout(tick, 85);
-    } else {
-      s.charIndex--;
-      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
-      if (s.charIndex <= 0) {
-        s.deleting = false;
-        photoTypewriterTimer = setTimeout(tick, 380);
-        return;
-      }
-      photoTypewriterTimer = setTimeout(tick, 42);
-    }
-  };
-  photoTypewriterTimer = setTimeout(tick, 700);
+  photoPlaceholderDisplay.value = photoPlaceholderFull.value;
 };
 
 const startVideoTypewriter = () => {
@@ -1169,34 +1142,7 @@ const startVideoTypewriter = () => {
     clearTimeout(videoTypewriterTimer);
     videoTypewriterTimer = null;
   }
-  if (prefersReducedMotion.value || isVideoInputFocused.value) {
-    videoPlaceholderDisplay.value = videoPlaceholderFull.value;
-    return;
-  }
-  videoTypewriterState.value = { charIndex: 0, deleting: false };
-  const tick = () => {
-    const s = videoTypewriterState.value;
-    if (!s.deleting) {
-      s.charIndex++;
-      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, s.charIndex);
-      if (s.charIndex >= videoPlaceholderFull.value.length) {
-        s.deleting = true;
-        videoTypewriterTimer = setTimeout(tick, 1500);
-        return;
-      }
-      videoTypewriterTimer = setTimeout(tick, 85);
-    } else {
-      s.charIndex--;
-      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
-      if (s.charIndex <= 0) {
-        s.deleting = false;
-        videoTypewriterTimer = setTimeout(tick, 380);
-        return;
-      }
-      videoTypewriterTimer = setTimeout(tick, 42);
-    }
-  };
-  videoTypewriterTimer = setTimeout(tick, 700);
+  videoPlaceholderDisplay.value = videoPlaceholderFull.value;
 };
 
 const getInputCharCount = (element: HTMLElement): number => {
@@ -2039,7 +1985,7 @@ const resetPhotoSettings = () => {
   selectedPhotoQuality.value = '1K';
   selectedPhotoRatio.value = '9:16';
   // Reset unlimited mode when switching tabs
-  currentPhotoMode.value = 'normal';
+  currentPhotoMode.value = 'unlimited';
 };
 
 const resetVideoSettings = () => {
@@ -2054,7 +2000,7 @@ const resetVideoSettings = () => {
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
   // Reset unlimited mode when switching tabs
-  currentVideoMode.value = 'normal';
+  currentVideoMode.value = 'unlimited';
 };
 
 const switchBottomTab = (tab: string) => {
@@ -3964,10 +3910,12 @@ const pollTaskStatus = async (taskId: string) => {
 
         if (taskData.status === 'FAIL' || taskData.status === 'FAILED') {
           updatedRecord.step_status = 'FAILED';
-          updatedRecord.fail_reason = t('recordList.generateFailed');
           const statusMsg = (taskData.status_message || '').toLowerCase();
           if (statusMsg.includes('credit is not enough') || statusMsg.includes('recharge')) {
+            updatedRecord.fail_reason = t('recordList.generateFailed') + '。' + t('home.insufficientBalance');
             showInsufficientBalanceModal.value = true;
+          } else {
+            updatedRecord.fail_reason = t('recordList.generateFailed');
           }
         }
 
@@ -4724,7 +4672,7 @@ const doGenerateVideo = async () => {
       selectedVideoRatio.value = '9:16';
       selectedVideoQuality.value = '1080P';
       selectedVideoMultimodal.value = 'multimodal';
-      currentVideoMode.value = 'normal';
+      currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = true;
 
       startPolling(sessionId);
@@ -5205,7 +5153,7 @@ const regenerateRecord = (record: any) => {
       // If user is teenager, cannot use unlimited mode
       currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
     } else {
-      currentPhotoMode.value = 'normal';
+  currentPhotoMode.value = 'unlimited';
     }
 
     enablePhotoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
@@ -5280,7 +5228,7 @@ const regenerateRecord = (record: any) => {
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
       currentVideoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
     } else {
-      currentVideoMode.value = 'normal';
+      currentVideoMode.value = 'unlimited';
     }
 
     enableVideoOptimizePrompt.value = currentVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
@@ -5751,7 +5699,7 @@ const switchPhotoMode = (mode: string, index: number) => {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentPhotoMode.value = 'normal';
+    currentPhotoMode.value = 'unlimited';
   }
 };
 
@@ -5783,7 +5731,7 @@ const switchVideoMode = (mode: string, index: number) => {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentVideoMode.value = 'normal';
+    currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = true;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';

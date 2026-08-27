@@ -510,7 +510,8 @@ function goEmailRegister() {
       password: password.value,
       code: code.value,
       invite_code: inviteCode.value,
-      "g-recaptcha-response": emailToken.value
+      "g-recaptcha-response": emailToken.value,
+      channel: 1,
   };
 
     api
@@ -553,7 +554,8 @@ function googleRegister() {
 
   const googleData = {
     code: googleCode,
-    invite_code: invite_code
+    invite_code: invite_code,
+    channel: 1,
   };
 
   api

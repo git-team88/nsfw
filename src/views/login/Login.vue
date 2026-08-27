@@ -276,6 +276,7 @@ function goEmailLogin() {
   const data = {
     email: email.value,
     password: password.value,
+    channel: 1,
   };
 
   api
@@ -314,6 +315,7 @@ function googleLogin() {
   const googleData = {
     code: googleCode,
     from_m: 0,
+    channel: 1,
   };
 
   api

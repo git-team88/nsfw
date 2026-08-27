@@ -224,14 +224,6 @@ const handleConfirm = () => {
       cursor: pointer;
       transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
 
-      &:hover {
-        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
-      }
-
-      &:active {
-        box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
-      }
-
       &.cancel {
         background: #1a1a1a;
         color: #f5f5f5;

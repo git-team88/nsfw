@@ -9,7 +9,7 @@ declare global {
 const GA_ID =
   typeof window !== "undefined" && window.GA_ID
     ? window.GA_ID
-    : "G-82ZH65FHJS";
+    : "G-VNJ9YW8YN6";
 
 const isDebug =
   typeof window !== "undefined" &&
