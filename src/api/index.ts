@@ -904,7 +904,7 @@ export default {
 
   getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number ) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter,
+      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter + '&is_nsfw=3',
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -1028,9 +1028,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  totalProcess: (verbose: boolean) =>
+  totalProcess: (verbose: boolean, isNsfw?: number) =>
     axios.request({
-      url: `app/progress/display?verbose=` + verbose,
+      url: `app/progress/display?verbose=` + verbose + (isNsfw !== undefined ? '&is_nsfw=' + isNsfw : ''),
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -1086,7 +1086,7 @@ export default {
     }),
   singleTaskList: (page: number, limit: number, type: string, isFilterFailed?: boolean) =>
     axios.request({
-      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}${isFilterFailed ? '&is_filter_failed=true' : ''}`,
+      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}&is_nsfw=3${isFilterFailed ? '&is_filter_failed=true' : ''}`,
       method: "GET",
       baseURL: aiUrl,
     }),

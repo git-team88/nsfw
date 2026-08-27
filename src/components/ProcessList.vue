@@ -291,7 +291,7 @@ const getProgress = (item: any) => {
 const fetchProcessData = async () => {
   try {
     // 真实API调用
-    const res = await api.totalProcess(true) as any;
+    const res = await api.totalProcess(true, 3) as any;
     if (res.code == 200) {
       // Clear start times for completed or failed tasks
       if (res.data) {
