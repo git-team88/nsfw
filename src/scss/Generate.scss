@@ -2397,7 +2397,6 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .frames-upload-section {
       display: flex;
-      align-items: center;
       gap: 12px;
       flex-shrink: 0;
     }
@@ -2464,8 +2463,8 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .frames-textarea {
       flex: 1;
-      min-height: 10px;
-      max-height: 220px;
+      min-height: 220px;
+      max-height: 275px;
       font-family: inherit;
       font-size: 14px;
       line-height: 28px;
