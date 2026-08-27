@@ -152,7 +152,6 @@ function castCharacter(type: string) {
   border-radius: 16px;
 
   background: #1a1a1a;
-  border: 1px solid #3d3d3d;
 
   box-shadow: none;
   overflow: hidden;
@@ -178,16 +177,7 @@ function castCharacter(type: string) {
   border-radius: 14px;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.16s;
-
-  &:hover {
-    box-shadow: none;
-  }
-
-  &:active {
-    box-shadow: none;
-  }
+  box-shadow: 0 0 14px rgba(255, 50, 140, 0.5);
 
   span {
     margin-left: 6px;
