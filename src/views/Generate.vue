@@ -121,7 +121,7 @@
                       <img :src="processImageUrl(image)" alt="generated" class="grid-image" @click="openImageViewer(image)" />
                       <!-- 图片操作按钮 - 仅在任务成功后显示 -->
                       <div v-if="isTaskSuccess(record.step_status || record.status)" class="photo-item-overlay">
-                        <div v-if="record.user_selected?.story_mode != 'nsfw'" class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
+                        <div class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
                           <img src="@/assets/images/home/download.png" alt="download" />
                         </div>
 
@@ -305,7 +305,7 @@
                   <div class="play-overlay">
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon" />
                   </div>
-                  <div v-if="record.user_selected?.story_mode != 'nsfw'" class="download-btn" @click.stop="downloadVideo(record)">
+                  <div class="download-btn" @click.stop="downloadVideo(record)">
                     <img src="@/assets/images/home/download.png" alt="download" />
                   </div>
                 </div>
@@ -434,7 +434,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="false" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="true" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -749,7 +749,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="false" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="true" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -998,8 +998,8 @@ const playingAudioUrl = ref('');
 const userRegion = ref(false);
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
-const currentPhotoMode = ref('unlimited');
-const currentVideoMode = ref('unlimited');
+const currentPhotoMode = ref('normal');
+const currentVideoMode = ref('normal');
 const enablePhotoOptimizePrompt = ref(true);
 const enableVideoOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
@@ -1134,7 +1134,34 @@ const startPhotoTypewriter = () => {
     clearTimeout(photoTypewriterTimer);
     photoTypewriterTimer = null;
   }
-  photoPlaceholderDisplay.value = photoPlaceholderFull.value;
+  if (prefersReducedMotion.value || isPhotoInputFocused.value) {
+    photoPlaceholderDisplay.value = photoPlaceholderFull.value;
+    return;
+  }
+  photoTypewriterState.value = { charIndex: 0, deleting: false };
+  const tick = () => {
+    const s = photoTypewriterState.value;
+    if (!s.deleting) {
+      s.charIndex++;
+      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, s.charIndex);
+      if (s.charIndex >= photoPlaceholderFull.value.length) {
+        s.deleting = true;
+        photoTypewriterTimer = setTimeout(tick, 1500);
+        return;
+      }
+      photoTypewriterTimer = setTimeout(tick, 85);
+    } else {
+      s.charIndex--;
+      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
+      if (s.charIndex <= 0) {
+        s.deleting = false;
+        photoTypewriterTimer = setTimeout(tick, 380);
+        return;
+      }
+      photoTypewriterTimer = setTimeout(tick, 42);
+    }
+  };
+  photoTypewriterTimer = setTimeout(tick, 700);
 };
 
 const startVideoTypewriter = () => {
@@ -1142,7 +1169,34 @@ const startVideoTypewriter = () => {
     clearTimeout(videoTypewriterTimer);
     videoTypewriterTimer = null;
   }
-  videoPlaceholderDisplay.value = videoPlaceholderFull.value;
+  if (prefersReducedMotion.value || isVideoInputFocused.value) {
+    videoPlaceholderDisplay.value = videoPlaceholderFull.value;
+    return;
+  }
+  videoTypewriterState.value = { charIndex: 0, deleting: false };
+  const tick = () => {
+    const s = videoTypewriterState.value;
+    if (!s.deleting) {
+      s.charIndex++;
+      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, s.charIndex);
+      if (s.charIndex >= videoPlaceholderFull.value.length) {
+        s.deleting = true;
+        videoTypewriterTimer = setTimeout(tick, 1500);
+        return;
+      }
+      videoTypewriterTimer = setTimeout(tick, 85);
+    } else {
+      s.charIndex--;
+      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
+      if (s.charIndex <= 0) {
+        s.deleting = false;
+        videoTypewriterTimer = setTimeout(tick, 380);
+        return;
+      }
+      videoTypewriterTimer = setTimeout(tick, 42);
+    }
+  };
+  videoTypewriterTimer = setTimeout(tick, 700);
 };
 
 const getInputCharCount = (element: HTMLElement): number => {
@@ -1985,7 +2039,7 @@ const resetPhotoSettings = () => {
   selectedPhotoQuality.value = '1K';
   selectedPhotoRatio.value = '9:16';
   // Reset unlimited mode when switching tabs
-  currentPhotoMode.value = 'unlimited';
+  currentPhotoMode.value = 'normal';
 };
 
 const resetVideoSettings = () => {
@@ -2000,7 +2054,7 @@ const resetVideoSettings = () => {
   uploadedVideo.value = '';
   uploadedVideoCover.value = '';
   // Reset unlimited mode when switching tabs
-  currentVideoMode.value = 'unlimited';
+  currentVideoMode.value = 'normal';
 };
 
 const switchBottomTab = (tab: string) => {
@@ -4697,7 +4751,7 @@ const doGenerateVideo = async () => {
       selectedVideoRatio.value = '9:16';
       selectedVideoQuality.value = '1080P';
       selectedVideoMultimodal.value = 'multimodal';
-      currentVideoMode.value = 'unlimited';
+      currentVideoMode.value = 'normal';
       enableVideoOptimizePrompt.value = true;
 
       startPolling(sessionId);
@@ -5175,10 +5229,9 @@ const regenerateRecord = (record: any) => {
     if (userSelected.story_mode) {
       // Map nsfw to unlimited mode, but check if user is teenager
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
-      // If user is teenager, cannot use unlimited mode
-      currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+      currentPhotoMode.value = mode;
     } else {
-  currentPhotoMode.value = 'unlimited';
+  currentPhotoMode.value = 'normal';
     }
 
     enablePhotoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
@@ -5200,7 +5253,7 @@ const regenerateRecord = (record: any) => {
     const usedUnlimitedMode = (storyMode == 'nsfw' || storyMode == 'unlimited') && (isVideoExtensionMode || isVideoModifyMode);
 
     // 检查限制条件
-    const hasUnlimitedModeRestriction = !userRegion.value || isTeenager.value;
+    const hasUnlimitedModeRestriction = false;
 
     if (usedUnlimitedMode && hasUnlimitedModeRestriction) {
       toast(t('home.error.unlimitedModeRestricted'));
@@ -5251,9 +5304,9 @@ const regenerateRecord = (record: any) => {
     // 回显时读取记录中的模式
     if (userSelected.story_mode) {
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
-      currentVideoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+      currentVideoMode.value = mode;
     } else {
-      currentVideoMode.value = 'unlimited';
+      currentVideoMode.value = 'normal';
     }
 
     enableVideoOptimizePrompt.value = currentVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
@@ -5506,8 +5559,8 @@ const editImage = (record: any, index: number) => {
       selectedPhotoQuality.value = record.user_selected.resolution || record.user_selected.simple_image_resolution;
     }
     if (record.user_selected.story_mode) {
-      const mode = record.user_selected.story_mode == 'nsfw' ? 'unlimited' : record.user_selected.story_mode;
-      currentPhotoMode.value = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+    const mode = record.user_selected.story_mode == 'nsfw' ? 'unlimited' : record.user_selected.story_mode;
+    currentPhotoMode.value = mode;
     }
 
     enablePhotoOptimizePrompt.value = record.user_selected.enable_optimize_prompt === true;
@@ -5665,17 +5718,6 @@ const getPositionInText = (element: HTMLElement, range: Range): number => {
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
-  if (!userInfo.value) {
-    return false;
-  }
-
-  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
-  if (isTeenager.value) {
-    pendingModeType.value = modeType;
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
   return false;
 };
 
@@ -5718,13 +5760,13 @@ const switchPhotoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentPhotoMode.value = 'unlimited';
+      currentPhotoMode.value = 'normal';
     } else {
       pendingModeType.value = 'photo';
       showUnlimitedModal.value = true;
     }
   } else {
-    currentPhotoMode.value = 'unlimited';
+    currentPhotoMode.value = 'normal';
   }
 };
 
@@ -5742,7 +5784,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'unlimited';
+      currentVideoMode.value = 'normal';
       enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
@@ -5758,7 +5800,7 @@ const switchVideoMode = (mode: string, index: number) => {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentVideoMode.value = 'unlimited';
+    currentVideoMode.value = 'normal';
     enableVideoOptimizePrompt.value = true;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
@@ -5774,7 +5816,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
-    currentVideoMode.value = 'unlimited';
+    currentVideoMode.value = 'normal';
     enableVideoOptimizePrompt.value = false;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
@@ -5786,7 +5828,7 @@ const confirmUnlimitedMode = () => {
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
   } else if (pendingModeType.value === 'photo') {
-    currentPhotoMode.value = 'unlimited';
+    currentPhotoMode.value = 'normal';
   }
   showUnlimitedModal.value = false;
 };

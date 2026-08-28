@@ -7,7 +7,7 @@
     <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
     <!-- Underage content warning -->
-    <div class="main-container" v-if="!isLoading && isSensitiveContent && (isUnderage || !isAllowSensitiveContent || isChinaRegion) && detail.author.id !== uid">
+    <div class="main-container" v-if="false">
       <div class="novel-content">
         <div class="chapter-header">
           <div class="header-left">
@@ -509,7 +509,7 @@ const isSensitiveContent = computed(() => {
   }
   return detail.value.is_nsfw === '1';
 });
-const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') == '1');
+const isAllowSensitiveContent = ref(true);
 const uid = localStorage.getItem('uid') || '';
 
 // Report modal
@@ -1462,30 +1462,7 @@ function navigateToChapter(chapter: any) {
     if (detail.value.author.id && detail.value.author.id === uid) {
       // author bypass
     } else {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          const parsedUserInfo = JSON.parse(userInfoStr);
-          // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
-          if (parsedUserInfo.is_adult != 1) {
-            pendingChapter.value = chapter;
-            showSensitiveContentAdultConfirmModal.value = true;
-            return;
-          }
-        }
-        if (localStorage.getItem('allowSensitiveContent') !== '1') {
-          // 已勾选「不再提示」则直接开启，不再弹「允许敏感？」
-          if (localStorage.getItem('sensitiveContentDontAsk') == '1') {
-            localStorage.setItem('allowSensitiveContent', '1');
-            isAllowSensitiveContent.value = true;
-          } else {
-            pendingChapter.value = chapter;
-            showSensitiveContentConfirmModal.value = true;
-            return;
-          }
-        }
-      }
+      // nsfw content - allow directly without age/sensitive checks
     }
   }
 

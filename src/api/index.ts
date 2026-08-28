@@ -275,7 +275,7 @@ export default {
 
   homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
     axios.request({
-      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : '') + '&channel=1',
+      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   homeRecommendPostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
@@ -328,7 +328,7 @@ export default {
   //   }),
   homeFollowList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
-      url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : '') + '&channel=1',
+      url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   homeFollowPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
@@ -338,7 +338,7 @@ export default {
     }),
   homeSubscriptionList: (page: number, limit: number, type: number, showNsfw?: number) =>
     axios.request({
-      url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : '') + '&channel=1',
+      url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
       method: "GET",
     }),
   homeSubscriptionPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
@@ -367,7 +367,7 @@ export default {
   searchPost: (data: any) =>
     axios.request({
       url: "post/searchBookKeywordsPublic",
-      data: { ...data, channel: 1 },
+      data: { ...data },
       method: "POST",
     }),
   searchPostsPublic: (data: any) =>
@@ -497,7 +497,7 @@ export default {
     }),
   getLikedBookList: (page: number, limit: number) =>
     axios.request({
-      url: "book/getLikedBookList?page=" + page + "&limit=" + limit + '&channel=1',
+      url: "book/getLikedBookList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
   likeBook: (data: any) =>
@@ -1137,7 +1137,7 @@ export default {
     }),
   getBanner: () =>
     axios.request({
-      url: "index/getIndexBannerPublic?channel=1",
+      url: "index/getIndexBannerPublic",
       method: "GET",
     }),
   getRelativeByTopicPublic: (data: any) =>

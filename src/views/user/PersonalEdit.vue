@@ -287,11 +287,8 @@ function onSave() {
   const hasAdultChanged = isAdult.value !== null;
 
   // 同步首页敏感内容开关的缓存字段（allowSensitiveContent），不请求 modifyShowNsfw
-  // 满18岁（是）：打开；未满18岁（否）：关闭
   if (isAdult.value === true) {
     localStorage.setItem('allowSensitiveContent', '1');
-  } else if (isAdult.value === false) {
-    localStorage.setItem('allowSensitiveContent', '0');
   }
 
   const operations: Array<() => Promise<void>> = [];

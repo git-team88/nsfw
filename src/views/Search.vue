@@ -389,7 +389,7 @@ async function loadData(fromLoadMore = false) {
 
   try {
     if (activeTab.value == 'posts') {
-      const showNsfw = 1;
+      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
       const isStandalone = postFilter.value === 4 || postFilter.value === 5;
       const res = isStandalone
         ? await api.searchPostsPublic({

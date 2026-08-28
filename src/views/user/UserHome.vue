@@ -778,7 +778,7 @@ async function fetchCollections(reset = false) {
         collectionsLoading.value = false;
         return;
       }
-      const showNsfw = 1;
+      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
       if (type === 4 || type === 5) {
         response = await api.authorPostList(type, currentPage, 20, authorId, showNsfw) as any;
       } else {
@@ -960,7 +960,7 @@ async function fetchUserInfo() {
       res = await api.authorSelfInfo();
     } else {
       if (!authorId) return;
-      const showNsfw = 1;
+      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
       res = await api.authorInfo(authorId, showNsfw);
     }
 
@@ -1712,7 +1712,7 @@ async function loadPosts(reset = false) {
 
     let res;
 
-    const showNsfw = 1;
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
     if (isSelf.value) {
       res = await api.authorSelfCollection(
         type,

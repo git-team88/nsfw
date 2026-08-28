@@ -64,7 +64,6 @@ function confirmLogout() {
   localStorage.removeItem("token");
   localStorage.removeItem("connect");
   localStorage.removeItem("uid");
-  localStorage.removeItem("allowSensitiveContent");
 
   isShowLogoutModal.value = false;
 

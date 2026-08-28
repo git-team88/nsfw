@@ -471,8 +471,8 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
-                      <div v-if="false" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' && !isTeenager }">
+                      <div v-if="true" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                        <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -683,7 +683,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic Video - only show if not a teenager -->
-                      <!-- <div v-if="userRegion" class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchDramaMode(currentDramaMode == 'normal' ? 'unlimited' : 'normal', currentDramaMode == 'normal' ? 2 : 1)">
+                      <div class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchDramaMode(currentDramaMode == 'normal' ? 'unlimited' : 'normal', currentDramaMode == 'normal' ? 2 : 1)">
                         <img
                           v-if="isTeenager"
                           src="@/assets/images/home/not_allow.png"
@@ -703,7 +703,7 @@
                           class="unlimited-icon"
                         />
                         <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                      </div> -->
+                      </div>
 
                       <div class="option-btn character-btn" @click="() => { if (checkLogin() && checkItemLimit()) showCharacterModal = true }">
                         <img src="@/assets/images/home/role_icon.png" alt="" />
@@ -793,8 +793,8 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
-                      <div v-if="false" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' && !isTeenager }">
+                      <div v-if="true" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                        <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -941,8 +941,8 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <div v-if="false" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' && !isTeenager}">
+                      <div v-if="true" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                        <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -986,8 +986,8 @@
 
                   <div class="input-box">
                     <div class="input-options novel-input-options">
-                      <div v-if="false" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' && !isTeenager }">
+                      <div v-if="true" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
+                        <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
@@ -1138,7 +1138,7 @@
             </span>
           </div>
 
-          <div class="sensitive-content-toggle" v-if="false">
+          <div class="sensitive-content-toggle" v-if="true">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1160,7 +1160,7 @@
           </div>
 
           <!-- Sensitive Content Toggle -->
-          <div class="sensitive-content-toggle" v-if="false">
+          <div class="sensitive-content-toggle" v-if="true">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1195,7 +1195,7 @@
                 <div class="content-image">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
 
-                  <div class="r18-overlay" v-if="false">
+                  <div class="r18-overlay" v-if="item.is_nsfw == 1">
                     <span class="r18-text">R18</span>
                   </div>
 
@@ -1486,7 +1486,7 @@ import optimizePromptOff from "@/assets/images/project/close.png";
 const { t, locale } = useI18n();
 
 // State
-const currentNovelMode = ref('unlimited');
+const currentNovelMode = ref('normal');
 const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
@@ -1715,10 +1715,10 @@ const inputContentPhoto = ref('');
 const inputHtmlPhoto = ref('');
 
 // Mode states - separate for video, comic, drama and photo
-const currentVideoMode = ref('unlimited');
-const currentComicMode = ref('unlimited');
-const currentDramaMode = ref('unlimited');
-const currentPhotoMode = ref('unlimited');
+const currentVideoMode = ref('normal');
+const currentComicMode = ref('normal');
+const currentDramaMode = ref('normal');
+const currentPhotoMode = ref('normal');
 const enablePhotoOptimizePrompt = ref(true);
 const enableVideoOptimizePrompt = ref(true);
 
@@ -2194,7 +2194,37 @@ let typeTimer: ReturnType<typeof setTimeout> | undefined;
 
 const runTypewriter = () => {
   if (typeTimer) clearTimeout(typeTimer);
-  typedPlaceholder.value = currentPlaceholder.value || '';
+  const full = currentPlaceholder.value || '';
+  if (isInputFocused.value || !isInputEmpty.value) {
+    typedPlaceholder.value = full;
+    return;
+  }
+  let i = 0;
+  let phase: 'typing' | 'holding' | 'deleting' = 'typing';
+  const TYPE_MS = 55;
+  const DELETE_MS = 30;
+  const HOLD_FULL_MS = 1600;
+  const HOLD_EMPTY_MS = 500;
+
+  const step = () => {
+    if (isInputFocused.value || !isInputEmpty.value) { typedPlaceholder.value = full; return; }
+    const cur = currentPlaceholder.value || '';
+    if (cur !== full) { runTypewriter(); return; }
+
+    if (phase === 'typing') {
+      typedPlaceholder.value = full.slice(0, i);
+      if (i >= full.length) { phase = 'holding'; typeTimer = setTimeout(() => { phase = 'deleting'; step(); }, HOLD_FULL_MS); return; }
+      i += 1;
+      typeTimer = setTimeout(step, TYPE_MS);
+    } else if (phase === 'deleting') {
+      typedPlaceholder.value = full.slice(0, i);
+      if (i <= 0) { phase = 'typing'; typeTimer = setTimeout(step, HOLD_EMPTY_MS); return; }
+      i -= 1;
+      typeTimer = setTimeout(step, DELETE_MS);
+    }
+  };
+  typedPlaceholder.value = '';
+  step();
 };
 
 // 占位文字打字机的 watch 在 onMounted 里注册（此处 contentType 等尚未声明，
@@ -2436,7 +2466,7 @@ const showUnderageNoBirthdayModal = ref(false);
 const pendingModeType = ref('video');
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
-const allowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') == '1');
+const allowSensitiveContent = ref(false);
 const showCharacterModal = ref(false);
 const showStyleModal = ref(false);
 const showVideoSettingsModal = ref(false);
@@ -2687,21 +2717,7 @@ const displayContent = computed(() => {
 // Methods
 
 const checkAgeForSensitiveContent = (): boolean => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    // 已登录：以后端 is_adult 为准（is_adult != 1 需先弹「我确认已满18岁」）
-    if (isTeenager.value) {
-      showSensitiveContentAdultConfirmModal.value = true;
-      return true;
-    }
-    return false;
-  }
-  // 未登录：以本地自声明为准，已声明满18岁（is_adult=1）则放行，否则弹窗
-  if (localStorage.getItem('is_adult') == '1') {
-    return false;
-  }
-  showSensitiveContentAdultConfirmModal.value = true;
-  return true;
+  return false;
 };
 
 const handleSensitiveContentToggle = () => {
@@ -2766,17 +2782,6 @@ const handleSensitiveContentAgeConfirm = async (isAdult: boolean) => {
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
-  if (!userInfo.value) {
-    return false;
-  }
-
-  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
-  if (isTeenager.value) {
-    pendingModeType.value = modeType;
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
   return false;
 };
 
@@ -2819,7 +2824,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'unlimited';
+      currentVideoMode.value = 'normal';
       enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
@@ -2860,7 +2865,7 @@ const switchNovelMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentNovelMode.value = 'unlimited';
+      currentNovelMode.value = 'normal';
       showModeDropdown.value = false;
       // 进入无限制模式，默认选中 4 张配图
       selectedInsertImage.value = 4;
@@ -2890,7 +2895,7 @@ const switchComicMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentComicMode.value = 'unlimited';
+      currentComicMode.value = 'normal';
     } else {
       showUnlimitedModal.value = true;
     }
@@ -2913,7 +2918,7 @@ const switchDramaMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentDramaMode.value = 'unlimited';
+      currentDramaMode.value = 'normal';
     } else {
       showUnlimitedModal.value = true;
     }
@@ -2936,7 +2941,7 @@ const switchPhotoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentPhotoMode.value = 'unlimited';
+      currentPhotoMode.value = 'normal';
     } else {
       showUnlimitedModal.value = true;
     }
@@ -2947,20 +2952,20 @@ const switchPhotoMode = (mode: string, index: number) => {
 
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
-    currentVideoMode.value = 'unlimited';
+    currentVideoMode.value = 'normal';
     enableVideoOptimizePrompt.value = false;
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
   } else if (contentType.value === 'comic') {
-    currentComicMode.value = 'unlimited';
+    currentComicMode.value = 'normal';
   } else if (contentType.value === 'novel') {
-    currentNovelMode.value = 'unlimited';
+    currentNovelMode.value = 'normal';
     // 进入无限制模式，默认选中 4 张配图
     selectedInsertImage.value = 4;
   } else if (contentType.value === 'drama') {
-    currentDramaMode.value = 'unlimited';
+    currentDramaMode.value = 'normal';
   } else if (contentType.value === 'photo') {
-    currentPhotoMode.value = 'unlimited';
+    currentPhotoMode.value = 'normal';
   }
   showUnlimitedModal.value = false;
 };
@@ -3134,11 +3139,11 @@ const selectContentType = (type: string) => {
   inputHtmlPhoto.value = '';
 
   // Reset modes to default
-  currentVideoMode.value = 'unlimited';
-  currentComicMode.value = 'unlimited';
-  currentDramaMode.value = 'unlimited';
-  currentNovelMode.value = 'unlimited';
-  currentPhotoMode.value = 'unlimited';
+  currentVideoMode.value = 'normal';
+  currentComicMode.value = 'normal';
+  currentDramaMode.value = 'normal';
+  currentNovelMode.value = 'normal';
+  currentPhotoMode.value = 'normal';
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
   previousInputHtml.value = '';
 
@@ -5881,7 +5886,7 @@ const loadContent = async (page = 1) => {
   try {
     let res;
 
-    const showNsfw = 1;
+    const showNsfw = allowSensitiveContent.value ? 1 : 0;
 
     switch (currentActiveTab) {
       case 'suggested':

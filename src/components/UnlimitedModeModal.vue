@@ -234,7 +234,9 @@ const handleConfirm = () => {
       }
 
       &.confirm {
-        background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+        background: linear-gradient(145deg, #ff65ab, #f02c80);
+        border: 2px solid #ff9aca;
+        box-shadow: 0 0 14px rgba(255,79,154,0.35);
         color: #fff;
 
         &:disabled {

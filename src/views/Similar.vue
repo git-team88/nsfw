@@ -243,7 +243,7 @@ async function loadData(fromLoadMore = false) {
     const urlLang = route.query.lang as string;
     const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
 
-    const showNsfw = 1;
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
     const urlSessionId = route.query.session_id as string;
     const urlCat = route.query.type ? parseInt(route.query.type as string) : 0;
     const res = await api.getRelativeByTopicPublic({
@@ -251,7 +251,6 @@ async function loadData(fromLoadMore = false) {
       cat: urlCat,
       lang: requestLang,
       show_nsfw: showNsfw,
-      channel: 1,
       page: currentPage.value,
       page_size: pageSize.value,
     }) as any;

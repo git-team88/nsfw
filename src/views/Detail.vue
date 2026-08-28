@@ -1060,7 +1060,7 @@ const headerMoreRef = ref<HTMLElement | null>(null);
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
 const pendingChapter = ref<any>(null);
-const isAllowSensitiveContent = ref(localStorage.getItem('allowSensitiveContent') == '1');
+const isAllowSensitiveContent = ref(true);
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
 
@@ -1337,7 +1337,7 @@ const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 // userRegion.value = true means NOT in China, false means IN China
 // Pass show_nsfw only when NOT in China (userRegion.value = true)
 const showNsfw = computed(() => {
-  return userRegion.value ? (isAllowSensitiveContent.value ? 1 : 0) : undefined;
+  return localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
 });
 
 // Enter collection mode
@@ -2969,20 +2969,7 @@ const isSensitiveContent = computed(() => {
 });
 
 const isSensitiveContentLocked = computed(() => {
-  if (isLoading.value) return false;
-  if (isPaidContentLocked.value) return false;
-
-  // If it's the author's own work, don't lock
-  if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
-
-  // Check if user is teenager or content is sensitive
-  const isTeenager = detail.value.is_teenager == 1;
-
-  if (!isSensitiveContent.value) return false;
-  // 中国大陆用户：敏感内容始终锁定，不可开启
-  if (isChinaRegion.value) return true;
-  if (isTeenager) return true;
-  return !isAllowSensitiveContent.value;
+  return false;
 });
 
 const isVideoLocked = computed(() => {

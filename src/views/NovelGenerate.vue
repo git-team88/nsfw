@@ -3924,16 +3924,6 @@ const toggleRegenerateNsfw = () => {
 
 // Age check before enabling NSFW/unlimited mode
 const checkAgeForUnlimitedMode = (): boolean => {
-  if (!userInfo.value) {
-    return false;
-  }
-
-  // 未满18岁（详情接口 is_adult != 1）：弹出「是否满18岁」问询
-  if (isTeenager.value) {
-    showUnderageNoBirthdayModal.value = true;
-    return true;
-  }
-
   return false;
 };
 
@@ -4875,7 +4865,6 @@ const fetchSimilarList = async (page: number = 1) => {
       cat: 2,
       lang: lang,
       show_nsfw: showNsfw,
-      channel: 1,
       page: page,
       page_size: 7,
     }) as any;

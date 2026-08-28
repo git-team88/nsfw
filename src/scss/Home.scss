@@ -44,7 +44,6 @@ $pinkopacity: rgba(255,79,154,0.12);
   min-height: 62vh;
   background: radial-gradient(ellipse 95% 100% at 50% 40%,
     #2a1a2e 0%, #1f1528 26%, #1a1025 50%, #15101e 72%, #1a0a1a 100%);
-  overflow: hidden;
 
   .hero-3d-layer {
     position: absolute;
@@ -502,7 +501,7 @@ $pinkopacity: rgba(255,79,154,0.12);
         user-select: none;
         padding: 8px 14px;
         background: #1a1a1a;
-        color: #888;
+        color: #fff;
         transition: border-color 0.15s, color 0.15s;
 
         &.on {

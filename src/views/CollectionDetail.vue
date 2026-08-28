@@ -343,8 +343,7 @@ async function fetchCollectionDetail() {
     }
 
     const localUid = localStorage.getItem('uid');
-    const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-    const showNsfw = userRegion.value && allowSensitive ? 1 : 0;
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
 
     // 先请求合集详情接口（公开接口）
     let response = await api.getCollectionDetail(id) as any;
@@ -517,27 +516,7 @@ function goChapter(chapter: Chapter) {
   }
 
   if (collection.value?.is_nsfw == 1) {
-    pendingChapter.value = chapter;
-    // 与首页敏感开关一致的年龄判断：已登录看后端 is_adult，未登录看本地 is_adult 自声明
-    const token = localStorage.getItem('token');
-    const notAdult = token
-      ? (!userInfo.value || userInfo.value.is_adult != 1)
-      : localStorage.getItem('is_adult') !== '1';
-    if (notAdult) {
-      showSensitiveContentAdultConfirmModal.value = true;
-      return;
-    }
-
-    // 已满18岁：已允许敏感 或 已勾选「不再提示」→ 直接进入；否则弹「允许敏感？」
-    if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
-      localStorage.setItem('allowSensitiveContent', '1');
-      pendingChapter.value = null;
-      navigateToChapter(chapter);
-      return;
-    }
-
-    showSensitiveContentConfirmModal.value = true;
-    return;
+    // nsfw content - allow directly without age/sensitive checks
   }
 
   navigateToChapter(chapter);
@@ -567,25 +546,7 @@ function continueReading() {
   }
 
   if (collection.value?.is_nsfw == 1) {
-    pendingChapter.value = { id: history.post_id, title: history.title, status: 'published' as const };
-    const token = localStorage.getItem('token');
-    const notAdult = token
-      ? (!userInfo.value || userInfo.value.is_adult != 1)
-      : localStorage.getItem('is_adult') !== '1';
-    if (notAdult) {
-      showSensitiveContentAdultConfirmModal.value = true;
-      return;
-    }
-
-    if (localStorage.getItem('allowSensitiveContent') == '1' || localStorage.getItem('sensitiveContentDontAsk') == '1') {
-      localStorage.setItem('allowSensitiveContent', '1');
-      pendingChapter.value = null;
-      router.push(`/detail?id=${history.post_id}${ctParam}`);
-      return;
-    }
-
-    showSensitiveContentConfirmModal.value = true;
-    return;
+    // nsfw content - allow directly without age/sensitive checks
   }
 
   router.push(`/detail?id=${history.post_id}${ctParam}`);
@@ -694,8 +655,7 @@ async function refreshChapters() {
     if (!id) return;
 
     const localUid = localStorage.getItem('uid');
-    const allowSensitive = localStorage.getItem('allowSensitiveContent') == '1';
-    const showNsfw = userRegion.value && allowSensitive ? 1 : undefined;
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
 
     // 先请求公开接口，从 book_info 获取作者后判断是否为自己作品
     let response = await api.getCollectionDetail(id) as any;

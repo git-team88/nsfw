@@ -77,7 +77,6 @@ class Request {
         localStorage.removeItem('token')
         localStorage.removeItem('uid')
         localStorage.removeItem('userInfo')
-        localStorage.removeItem('allowSensitiveContent')
 
         const logoutEvent = new Event('userLogout');
         window.dispatchEvent(logoutEvent);
@@ -94,7 +93,6 @@ class Request {
         localStorage.removeItem('token')
         localStorage.removeItem('uid')
         localStorage.removeItem('userInfo')
-        localStorage.removeItem('allowSensitiveContent')
 
         const logoutEvent = new Event('userLogout');
         window.dispatchEvent(logoutEvent);

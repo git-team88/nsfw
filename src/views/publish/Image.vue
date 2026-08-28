@@ -310,7 +310,7 @@
         </div>
 
         <!-- Content Settings -->
-        <div class="inline-perm-row" v-if="false">
+        <div class="inline-perm-row" v-if="true">
           <div class="perm-group">
             <span class="perm-label">{{ t('submit.contentSettings') }}</span>
             <div class="perm-options">

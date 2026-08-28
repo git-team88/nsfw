@@ -308,7 +308,7 @@ async function loadUserRank(reset = false) {
   try {
     // 人气作者榜 / 新锐作者榜，均使用 period=week
     const period = 'week'
-    const showNsfw = 1
+    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0
     const res = (reqUserTab === 'rising'
       ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw)
       : await api.popularUserRank(page, USER_LIMIT, period, showNsfw)) as any

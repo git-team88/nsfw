@@ -611,9 +611,7 @@ function getUserInfo() {
       if (data.code === 0) {
         // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
         localStorage.removeItem('is_adult');
-        // 后端判定未成年（is_adult != 1）：清除敏感内容开关缓存，避免旧账号登录后残留展示敏感内容
         if (data.data.is_adult != 1) {
-          localStorage.removeItem('allowSensitiveContent');
         }
         userInfo.value = data.data;
         subscribeCount.value = data.data.sub_count;
@@ -655,9 +653,7 @@ function getLoginUserInfo() {
       if (data.code === 0) {
         // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
         localStorage.removeItem('is_adult');
-        // 后端判定未成年（is_adult != 1）：清除敏感内容开关缓存，避免旧账号登录后残留展示敏感内容
         if (data.data.is_adult != 1) {
-          localStorage.removeItem('allowSensitiveContent');
         }
         userInfo.value = data.data;
 
@@ -742,7 +738,6 @@ function confirmLogout() {
   localStorage.removeItem("token");
   localStorage.removeItem("connect");
   localStorage.removeItem("uid");
-  localStorage.removeItem("allowSensitiveContent");
 
   clearUserId();
   provider.value = null;
