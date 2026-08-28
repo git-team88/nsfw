@@ -5760,13 +5760,27 @@ const switchPhotoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentPhotoMode.value = 'normal';
+      currentPhotoMode.value = 'unlimited';
+      uploadedPhotoImages.value = [];
+      photoInputKey.value++;
+      if (photoEditableInputRef.value) {
+        photoEditableInputRef.value.innerHTML = '';
+      }
+      previousPhotoInputHtml.value = '';
+      nextTick(() => startPhotoTypewriter());
     } else {
       pendingModeType.value = 'photo';
       showUnlimitedModal.value = true;
     }
   } else {
     currentPhotoMode.value = 'normal';
+    uploadedPhotoImages.value = [];
+    photoInputKey.value++;
+    if (photoEditableInputRef.value) {
+      photoEditableInputRef.value.innerHTML = '';
+    }
+    previousPhotoInputHtml.value = '';
+    nextTick(() => startPhotoTypewriter());
   }
 };
 
@@ -5784,7 +5798,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'normal';
+      currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
@@ -5795,6 +5809,7 @@ const switchVideoMode = (mode: string, index: number) => {
       uploadedVideoRefs.value = [];
       selectedVideoDuration.value = '2';
       lastValidVideoDuration.value = '2';
+      nextTick(() => startVideoTypewriter());
     } else {
       pendingModeType.value = 'video';
       showUnlimitedModal.value = true;
@@ -5811,24 +5826,33 @@ const switchVideoMode = (mode: string, index: number) => {
     uploadedVideoRefs.value = [];
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
+    nextTick(() => startVideoTypewriter());
   }
 };
 
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
-    currentVideoMode.value = 'normal';
+    currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = false;
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       selectedVideoMultimodal.value = 'multimodal';
-      videoInput.value = '';
-      uploadedVideo.value = '';
-      uploadedVideoCover.value = '';
-      uploadedVideoRefs.value = [];
     }
+    videoInput.value = '';
+    uploadedVideo.value = '';
+    uploadedVideoCover.value = '';
+    uploadedVideoRefs.value = [];
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
+    nextTick(() => startVideoTypewriter());
   } else if (pendingModeType.value === 'photo') {
-    currentPhotoMode.value = 'normal';
+    currentPhotoMode.value = 'unlimited';
+    uploadedPhotoImages.value = [];
+    photoInputKey.value++;
+    if (photoEditableInputRef.value) {
+      photoEditableInputRef.value.innerHTML = '';
+    }
+    previousPhotoInputHtml.value = '';
+    nextTick(() => startPhotoTypewriter());
   }
   showUnlimitedModal.value = false;
 };

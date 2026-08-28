@@ -1772,9 +1772,20 @@ function resetVideoInputs() {
   uploadedVideoDuration.value = 0;
   combinedItemsVideo.value = [];
   novelInput.value = '';
+  selectedCharactersVideo.value = [];
+  uploadedImagesVideo.value = [];
+  inputContentVideo.value = '';
+  inputHtmlVideo.value = '';
   selectedVideoDuration.value = '15';
   lastValidVideoDuration.value = '15';
   inputKey.value++;
+  nextTick(() => {
+    if (editableInputRef.value) {
+      editableInputRef.value.innerHTML = '';
+    }
+    isInputEmpty.value = true;
+    runTypewriter();
+  });
 }
 
 // Start/End Frames upload handlers
@@ -2824,7 +2835,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'normal';
+      currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = false;
       if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
         selectedVideoMultimodal.value = 'multimodal';
@@ -2865,19 +2876,23 @@ const switchNovelMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentNovelMode.value = 'normal';
+      currentNovelMode.value = 'unlimited';
       showModeDropdown.value = false;
-      // 进入无限制模式，默认选中 4 张配图
       selectedInsertImage.value = 4;
+      novelInput.value = '';
+      inputKey.value++;
+      nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentNovelMode.value = 'normal';
     showModeDropdown.value = false;
-    // Reset illustration setting when leaving unlimited mode
     selectedInsertImage.value = 0;
     showInsertImageDropdown.value = false;
+    novelInput.value = '';
+    inputKey.value++;
+    nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
   }
 };
 
@@ -2895,12 +2910,26 @@ const switchComicMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentComicMode.value = 'normal';
+      currentComicMode.value = 'unlimited';
+      selectedCharactersComic.value = [];
+      uploadedImagesComic.value = [];
+      combinedItemsComic.value = [];
+      inputContentComic.value = '';
+      inputHtmlComic.value = '';
+      inputKey.value++;
+      nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentComicMode.value = 'normal';
+    selectedCharactersComic.value = [];
+    uploadedImagesComic.value = [];
+    combinedItemsComic.value = [];
+    inputContentComic.value = '';
+    inputHtmlComic.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   }
 };
 
@@ -2918,12 +2947,26 @@ const switchDramaMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentDramaMode.value = 'normal';
+      currentDramaMode.value = 'unlimited';
+      selectedCharactersDrama.value = [];
+      uploadedImagesDrama.value = [];
+      combinedItemsDrama.value = [];
+      inputContentDrama.value = '';
+      inputHtmlDrama.value = '';
+      inputKey.value++;
+      nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentDramaMode.value = 'normal';
+    selectedCharactersDrama.value = [];
+    uploadedImagesDrama.value = [];
+    combinedItemsDrama.value = [];
+    inputContentDrama.value = '';
+    inputHtmlDrama.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   }
 };
 
@@ -2941,31 +2984,66 @@ const switchPhotoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentPhotoMode.value = 'normal';
+      currentPhotoMode.value = 'unlimited';
+      uploadedImagesPhoto.value = [];
+      combinedItemsPhoto.value = [];
+      inputContentPhoto.value = '';
+      inputHtmlPhoto.value = '';
+      inputKey.value++;
+      nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentPhotoMode.value = 'normal';
+    uploadedImagesPhoto.value = [];
+    combinedItemsPhoto.value = [];
+    inputContentPhoto.value = '';
+    inputHtmlPhoto.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   }
 };
 
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
-    currentVideoMode.value = 'normal';
+    currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = false;
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
+    resetVideoInputs();
   } else if (contentType.value === 'comic') {
-    currentComicMode.value = 'normal';
+    currentComicMode.value = 'unlimited';
+    selectedCharactersComic.value = [];
+    uploadedImagesComic.value = [];
+    combinedItemsComic.value = [];
+    inputContentComic.value = '';
+    inputHtmlComic.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   } else if (contentType.value === 'novel') {
-    currentNovelMode.value = 'normal';
-    // 进入无限制模式，默认选中 4 张配图
+    currentNovelMode.value = 'unlimited';
     selectedInsertImage.value = 4;
+    novelInput.value = '';
+    inputKey.value++;
+    nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
   } else if (contentType.value === 'drama') {
-    currentDramaMode.value = 'normal';
+    currentDramaMode.value = 'unlimited';
+    selectedCharactersDrama.value = [];
+    uploadedImagesDrama.value = [];
+    combinedItemsDrama.value = [];
+    inputContentDrama.value = '';
+    inputHtmlDrama.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   } else if (contentType.value === 'photo') {
-    currentPhotoMode.value = 'normal';
+    currentPhotoMode.value = 'unlimited';
+    uploadedImagesPhoto.value = [];
+    combinedItemsPhoto.value = [];
+    inputContentPhoto.value = '';
+    inputHtmlPhoto.value = '';
+    inputKey.value++;
+    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   }
   showUnlimitedModal.value = false;
 };
@@ -3045,6 +3123,8 @@ const selectCharacter = (characters: any[]) => {
 
         // Update input empty state (Vue will handle placeholder)
         isInputEmpty.value = false;
+
+        previousInputHtml.value = target.innerHTML;
       }
     }
   });
@@ -5370,9 +5450,29 @@ const handleInputClick = () => {
   // Only handle @ dropdown logic, don't update isInputEmpty
   if (editableInputRef.value) {
     const target = editableInputRef.value;
-    const text = target.textContent || '';
+
+    let actualText = '';
+    const textNodes = Array.from(target.childNodes).filter(node => {
+      if (node.nodeType === 3) {
+        let parent = node.parentElement;
+        let isInNonEditable = false;
+        while (parent) {
+          if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
+            isInNonEditable = true;
+            break;
+          }
+          parent = parent.parentElement;
+        }
+        return !isInNonEditable;
+      }
+      return false;
+    });
+    textNodes.forEach(node => {
+      actualText += node.textContent || '';
+    });
+
     const cursorPosition = getCursorPosition(target);
-    const textBeforeCursor = text.substring(0, cursorPosition);
+    const textBeforeCursor = actualText.substring(0, cursorPosition);
     const atIndex = textBeforeCursor.lastIndexOf('@');
 
     const currentSelectedCharacters = getSelectedCharacters();
@@ -5405,6 +5505,10 @@ const handleInputClick = () => {
             // 遍历所有子节点查找 @ 符号
             const findAtSymbol = (node: Node): boolean => {
               if (node.nodeType === 3) { // TEXT_NODE
+                if (node.parentElement?.hasAttribute('contenteditable') && node.parentElement.contentEditable === 'false') {
+                  return false;
+                }
+
                 const nodeText = node.textContent || '';
                 const nodeLength = nodeText.length;
 
@@ -5416,6 +5520,10 @@ const handleInputClick = () => {
                 }
                 currentPos += nodeLength;
               } else if (node.nodeType === 1) { // ELEMENT_NODE
+                if ((node as HTMLElement).hasAttribute('contenteditable') && (node as HTMLElement).contentEditable === 'false') {
+                  return false;
+                }
+
                 for (let i = 0; i < node.childNodes.length; i++) {
                   if (findAtSymbol(node.childNodes[i])) {
                     return true;
@@ -6383,18 +6491,23 @@ onMounted(async () => {
 
             target.appendChild(characterTag);
 
+            const spaceNode = document.createTextNode(' ');
+            target.appendChild(spaceNode);
+
             target.focus();
 
             const selection = window.getSelection();
             if (selection) {
               const range = document.createRange();
-              range.setStartAfter(characterTag);
+              range.setStartAfter(spaceNode);
               range.collapse(true);
               selection.removeAllRanges();
               selection.addRange(range);
             }
 
             isInputEmpty.value = false;
+
+            previousInputHtml.value = target.innerHTML;
           }
 
           localStorage.removeItem('castedCharacter');
