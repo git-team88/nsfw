@@ -966,6 +966,9 @@ async function fetchUserInfo() {
 
     const data = res as any;
     if (data.code === 200 || data.code === 0) {
+      const following = parseInt(data.data?.user?.following_count ?? data.data?.user?.follow_count ?? data.data?.following_count ?? data.data?.follow_count ?? '0');
+      const fans = parseInt(data.data?.user?.follower_count ?? data.data?.user?.fans_count ?? data.data?.follower_count ?? data.data?.fans_count ?? '0');
+
       const subPrice = data.data?.sub_price || '';
       userInfo.value = {
         id: data.data?.user?.id || data.data?.id || '',
@@ -978,8 +981,8 @@ async function fetchUserInfo() {
         subscribe_price: data.data?.subscribe_price || '',
         subscription_plans: data.data?.subscription_plans || null,
         description: data.data?.user_page?.page_desc || data.data?.page_desc || '',
-        following: parseInt(data.data?.user?.following_count || data.data?.following_count || '0'),
-        fans: parseInt(data.data?.user?.follower_count || data.data?.follower_count || '0'),
+        following,
+        fans,
         likes: parseInt(data.data?.total_like_count || '0'),
         posts: parseInt(data.data?.total_posts || '0'),
         subPrice: subPrice,
@@ -1003,6 +1006,32 @@ async function fetchUserInfo() {
     toast(t('fail'));
   } finally {
     loadingUserInfo.value = false;
+  }
+}
+
+// Refresh only the following and follower counts after a follow action
+async function fetchUserStats() {
+  let authorId = route.query.id;
+  if (Array.isArray(authorId)) authorId = authorId[0];
+
+  const localUid = localStorage.getItem('uid');
+  try {
+    let res;
+    if (localUid == authorId) {
+      res = await api.authorSelfInfo();
+    } else {
+      if (!authorId) return;
+      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+      res = await api.authorInfo(authorId, showNsfw);
+    }
+
+    const data = res as any;
+    if (data.code === 200 || data.code === 0) {
+      userInfo.value.following = parseInt(data.data?.user?.following_count ?? data.data?.user?.follow_count ?? data.data?.following_count ?? data.data?.follow_count ?? '0');
+      userInfo.value.fans = parseInt(data.data?.user?.follower_count ?? data.data?.user?.fans_count ?? data.data?.follower_count ?? data.data?.fans_count ?? '0');
+    }
+  } catch (error) {
+    console.error('Error refreshing user stats:', error);
   }
 }
 
@@ -1543,6 +1572,7 @@ async function toggleFollow() {
       const res = await api.unfollow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 0;
+        await fetchUserStats();
 
         if (headerRef.value) {
           headerRef.value.getUserInfo();
@@ -1555,6 +1585,7 @@ async function toggleFollow() {
       const res = await api.follow(data) as any;
       if (res.code == 0 || res.code == 200) {
         userInfo.value.is_follow = 1;
+        await fetchUserStats();
 
         if (headerRef.value) {
           headerRef.value.getUserInfo();
