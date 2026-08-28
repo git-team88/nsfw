@@ -95,6 +95,7 @@ export default {
   banner: () =>
     axios.request({
       url: "index/getIndexBannerPublic",
+      params: { channel: 1 },
       method: "GET",
     }),
 
@@ -1138,6 +1139,7 @@ export default {
   getBanner: () =>
     axios.request({
       url: "index/getIndexBannerPublic",
+      params: { channel: 1 },
       method: "GET",
     }),
   getRelativeByTopicPublic: (data: any) =>

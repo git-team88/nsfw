@@ -50,7 +50,7 @@ const emit = defineEmits<{
 const selectedImage = ref<string>('');
 const loadedImages = ref<Record<number, boolean>>({});
 
-const reversedImageList = computed(() => [...props.imageList].reverse());
+const reversedImageList = computed(() => props.imageList);
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {

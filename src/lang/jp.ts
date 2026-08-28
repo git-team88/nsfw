@@ -2803,6 +2803,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     insertImageChapter: "第{chapter}章 挿絵{index}",
     coverPlaceholder: "まだ表紙がありません",
     editCover: "表紙を変更",
+    modifyImage: "画像を変更",
     coverInputPlaceholder: "表紙の修正意見を入力してください",
     coverInputEmpty: "表紙の説明を入力してください",
     coverGenerated: "表紙の生成に成功しました",

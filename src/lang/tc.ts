@@ -648,6 +648,7 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     insertImageChapter: "第{chapter}章 配圖{index}",
     coverPlaceholder: "暫無封面",
     editCover: "修改封面",
+    modifyImage: "修改圖片",
     coverInputPlaceholder: "請輸入封面修改意見",
     coverInputEmpty: "請輸入封面描述",
     coverGenerated: "封面生成成功",

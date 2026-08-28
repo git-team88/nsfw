@@ -316,24 +316,23 @@
               <!-- Input Area -->
               <div class="input-area">
                 <div class="input-inner">
-                  <!-- Combined Characters and Images List -->
+                  <!-- Uploaded reference images, including the current cover as the protected first item -->
                   <div class="selected-items" v-if="combinedCoverItems.length > 0">
-                    <!-- Combined Items -->
                     <div
                       v-for="(item, index) in combinedCoverItems"
                       :key="item.id"
                       :class="['item-tag', 'uploaded-image-item']"
                     >
-                      <span class="image-index">{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+                      <span class="image-index">{{ index + 1 }}</span>
 
-                      <span class="image-name">{{ t('novel.image') }}{{ uploadedCoverImages.findIndex(img => img.id == item.id) + 1 }}</span>
+                      <span class="image-name" @click.stop="zoomCoverImage(item.image)">{{ t('novel.image') }}{{ index + 1 }}</span>
 
-                      <div class="image-box">
-                        <img :src="item.image" :alt="item.name" class="uploaded-image" />
+                      <div class="image-box" @click.stop="zoomCoverImage(item.image)">
+                        <img :src="item.id === -1 ? toWebpImageUrl(item.image) : item.image" :alt="item.name" class="uploaded-image" />
                         <span class="img-bg"></span>
                       </div>
 
-                      <button class="remove-btn" @click="removeUploadedCoverImage(item.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
+                      <button v-if="item.id !== -1" class="remove-btn" @click="removeUploadedCoverImage(item.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
                     </div>
                   </div>
 
@@ -402,11 +401,12 @@
           </div>
 
           <div class="insert-image-edit-content">
-            <!-- Uploaded reference images -->
+            <!-- Uploaded reference images, including the protected current illustration -->
             <div class="insert-image-ref-list" v-if="insertImageRefImages.length > 0">
-              <div v-for="img in insertImageRefImages" :key="img.id" class="insert-image-ref-item">
-                <img :src="img.image" alt="" class="insert-image-ref-thumb" />
-                <button class="insert-image-ref-remove" @click="removeInsertImageRefImage(img.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
+              <div v-for="(img, index) in insertImageRefImages" :key="img.id" :class="['insert-image-ref-item']">
+                <img @click.stop="zoomCoverImage(img.image)" :src="img.id === -1 ? toWebpImageUrl(img.image) : img.image" alt="" class="insert-image-ref-thumb" />
+                <span class="insert-image-ref-name" @click.stop="zoomCoverImage(img.image)">{{ t('novel.image') }}{{ index + 1 }}</span>
+                <button v-if="img.id !== -1" class="insert-image-ref-remove" @click="removeInsertImageRefImage(img.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
               </div>
             </div>
 
@@ -2229,6 +2229,7 @@ async function openCoverMarkup() {
   markupImageUrl.value = coverImage.value;
   markupImageName.value = t('novel.novelCover');
   markupInstruction.value = '';
+  isEditingCover.value = false;
   markupOpen.value = true;
   openMarkupGuideIfNeeded();
   // 拉取封面预估算力，展示在发送按钮上
@@ -2265,6 +2266,7 @@ async function openInsertMarkup(placeholder?: number) {
   const imageIndex = (insertImages.value.findIndex((i: any) => Number(i.img_placeholder) === placeholder) + 1) || (placeholder + 1);
   markupImageName.value = t('novel.insertImageChapter', { chapter: chapterNum, index: imageIndex });
   markupInstruction.value = '';
+  showInsertImageEdit.value = false;
   markupOpen.value = true;
   openMarkupGuideIfNeeded();
   // 拉取插图预估算力，展示在发送按钮上
@@ -2402,6 +2404,11 @@ const getInsertImageUrl = (placeholder: number | null): string => {
   return insertImages.value.find(i => Number(i.img_placeholder) === placeholder)?.url || '';
 };
 
+const toWebpImageUrl = (url: string): string => {
+  if (!url) return '';
+  return url.includes('?') ? url : `${url}?imageMogr2/format/webp/quality/60`;
+};
+
 // Open the edit input box for a specific illustration
 const openInsertImageEdit = (placeholder?: number) => {
   if (placeholder == null) return;
@@ -2412,7 +2419,9 @@ const openInsertImageEdit = (placeholder?: number) => {
   if (checkProjectOwnership()) return;
   editingInsertImagePlaceholder.value = placeholder;
   insertImagePrompt.value = '';
-  insertImageRefImages.value = [];
+  const currentImageUrl = getInsertImageUrl(placeholder);
+  insertImageRefImages.value = currentImageUrl ? [{ id: -1, image: currentImageUrl, name: 'current' }] : [];
+  insertImageAtDropdownItems.value = insertImageRefImages.value;
   showInsertImageAtDropdown.value = false;
   showInsertImageHistoryModal.value = false;
   showInsertImageEdit.value = true;
@@ -3030,7 +3039,7 @@ const generateInsertImage = async () => {
         session_id: sessionId.value,
         chapter: currentChapter.value?.chapter,
         image_index: placeholder,
-        prompt: prompt,
+        prompt: `${t('novel.modifyImage')}1，${prompt}`,
         new_reference_images: insertImageRefImages.value.map(img => img.image)
       })
     });
@@ -9827,8 +9836,15 @@ async function toggleCoverEdit() {
   }
 
   if (isEditingCover.value) {
-    combinedCoverItems.value = [];
-    uploadedCoverImages.value = [];
+    const currentCoverImage = coverImage.value;
+    const currentCoverItem = currentCoverImage ? {
+      id: -1,
+      image: currentCoverImage,
+      name: 'current'
+    } : null;
+    uploadedCoverImages.value = currentCoverItem ? [currentCoverItem] : [];
+    combinedCoverItems.value = currentCoverItem ? [currentCoverItem] : [];
+    coverAtDropdownItems.value = combinedCoverItems.value;
     coverInputKey.value++;
 
     if (!hasFailed.value) {
@@ -10661,11 +10677,6 @@ function processCoverPrompt() {
 
 // Zoom cover image
 function zoomCoverImage(imageUrl: string) {
-  // Close the insert image edit box when opening the large-image view,
-  // so it does not reappear after the zoom modal is closed
-  if (showInsertImageEdit.value) {
-    cancelInsertImageEdit();
-  }
   zoomedCoverImage.value = imageUrl;
   showCoverZoomModal.value = true;
 }
@@ -10910,7 +10921,7 @@ async function doGenerateNovelCover() {
       },
       body: JSON.stringify({
         session_id: sessionId.value,
-        prompt: prompt,
+        prompt: `${t('novel.modifyImage')}1，${prompt}`,
         new_reference_images: newReferenceImages
       }),
       signal: coverAbortController.value.signal

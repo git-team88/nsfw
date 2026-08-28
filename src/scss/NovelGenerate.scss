@@ -2488,6 +2488,7 @@
             width: 14px;
             height: 14px;
             transition: transform 0.2s;
+            filter: brightness(0) invert(1);
 
             &.collapsed {
               transform: rotate(180deg);
@@ -2553,7 +2554,6 @@
 
             .type-badge {
               display: inline-block;
-              border: 1px solid #3d3d3d;
               border-radius: 999px;
               padding: 4px 12px;
               font-weight: 800;
@@ -3203,7 +3203,6 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: linear-gradient( 0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
                 z-index: 2;
               }
 
@@ -3228,6 +3227,7 @@
               max-height: 60px;
               object-fit: contain;
               border-radius: 4px;
+              cursor: pointer;
             }
 
             .image-name {
@@ -3237,13 +3237,14 @@
               right: 0;
               padding: 3px;
               font-size: 12px;
-              color: #f5f5f5;
+              color: #161211;
               text-align: center;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              background: linear-gradient(0deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+              background: linear-gradient(0deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%);
               z-index: 5;
+              cursor: pointer;
             }
 
              .remove-btn {
@@ -3593,9 +3594,10 @@
   position: fixed;
   bottom: 16px;
   left: 84px;
-    width: 30vw;
-    min-width: 320px;
-    max-width: 400px;
+  width: clamp(280px, 30vw, 400px);
+  max-height: calc(100vh - 32px);
+  box-sizing: border-box;
+  overflow-y: auto;
   background-color: #1a1a1a;
   border-top: 1px solid rgba(255,255,255,0.1);
   border-bottom-right-radius: 12px;
@@ -3649,6 +3651,23 @@
           height: 100%;
           object-fit: cover;
           border-radius: 6px;
+          cursor: pointer;
+        }
+
+        .insert-image-ref-name {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          padding: 2px;
+          overflow: hidden;
+          color: #161211;
+          font-size: 10px;
+          text-align: center;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          background: linear-gradient(0deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+          cursor: pointer;
         }
 
         .insert-image-ref-remove {

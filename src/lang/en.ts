@@ -585,6 +585,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     insertImageChapter: "Chapter {chapter} Illustration {index}",
     coverPlaceholder: "No cover yet",
     editCover: "Edit Cover",
+    modifyImage: "Edit Image",
     coverInputPlaceholder: "Please enter your cover revision comments",
     coverInputEmpty: "Please enter cover description",
     coverGenerated: "Cover generated successfully",
