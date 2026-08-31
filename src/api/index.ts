@@ -148,14 +148,9 @@ export default {
       method: "GET",
     }),
   getContentSwitchPublic: () =>
-    Promise.resolve({
-      code: 0,
-      msg: "succ",
-      data: {
-        id: "1",
-        switch_no: "2",
-        updated_at: "2026-08-28 17:10:43",
-      },
+    axios.request({
+      url: "index/getContentSwitchPublic",
+      method: "GET",
     }),
   setAdult: (data: any) =>
     axios.request({
