@@ -278,6 +278,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import UploadMask from '@/components/UploadMask.vue';
 import ReportModal from '@/components/ReportModal.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -555,7 +556,7 @@ const reportOptions = computed(() => {
   ];
 });
 
-// Fetch novel detail
+const contentSwitch = useContentSwitchStore();
 async function fetchDetail() {
   const id = route.query.id as string;
   if (!id) return;
@@ -575,6 +576,7 @@ async function fetchDetail() {
   loadText.value = t('loading');
 
   try {
+    await contentSwitch.ensureLoaded();
     let requestData = null;
 
     if (type == "1") {
@@ -585,7 +587,7 @@ async function fetchDetail() {
           "tab": "hot",
           "type": contentType,
           "language": language,
-          "show_nsfw": props.showNsfw
+          "show_nsfw": contentSwitch.showNsfw
         }
       });
     } else if (type == "2") {
@@ -596,7 +598,7 @@ async function fetchDetail() {
           test: 1,
           "type": contentType,
           "language": language,
-          "show_nsfw": props.showNsfw
+          "show_nsfw": contentSwitch.showNsfw
         }
       });
     } else if (type == "3") {
@@ -607,7 +609,7 @@ async function fetchDetail() {
           test: 1,
           "type": contentType,
           "language": language,
-          "show_nsfw": props.showNsfw
+          "show_nsfw": contentSwitch.showNsfw
         }
       });
     } else if (type == "4") {
@@ -626,7 +628,7 @@ async function fetchDetail() {
           end_day: endDay,
           "type": contentType,
           "language": language,
-          "show_nsfw": props.showNsfw
+          "show_nsfw": contentSwitch.showNsfw
         }
       });
     } else if (type == "5") {
@@ -638,7 +640,7 @@ async function fetchDetail() {
           keywords: searchKeyword,
           "type": contentType,
           "language": language,
-          "show_nsfw": props.showNsfw
+          "show_nsfw": contentSwitch.showNsfw
         }
       });
     } else {
@@ -647,9 +649,13 @@ async function fetchDetail() {
         is_adult: isAdult,
         "type": contentType,
         "language": language,
-        "show_nsfw": props.showNsfw
+        "show_nsfw": contentSwitch.showNsfw
       });
     }
+
+    const contentPayload = JSON.parse(requestData);
+    if (contentSwitch.channel !== undefined) contentPayload.channel = contentSwitch.channel;
+    requestData = JSON.stringify(contentPayload);
 
     const token = localStorage.getItem('token');
     const headers: HeadersInit = {};

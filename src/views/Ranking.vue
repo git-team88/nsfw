@@ -143,6 +143,7 @@ import UserPodiumCard from '@/components/ranking/UserPodiumCard.vue'
 import UserRankRow from '@/components/ranking/UserRankRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import api from '@/api/index'
+import { useContentSwitchStore } from '@/stores/contentSwitch'
 import { toast } from '@/util/toast'
 
 interface RankedWork {
@@ -173,6 +174,7 @@ interface RankedUser {
 }
 
 const { t, locale } = useI18n()
+const contentSwitch = useContentSwitchStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -237,7 +239,8 @@ async function loadWorkRank(reset = false) {
   const page = workPage.value
   const reqType = type.value
   try {
-    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, 1)) as any
+    await contentSwitch.ensureLoaded()
+    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, contentSwitch.showNsfw, contentSwitch.channel)) as any
     // 请求期间切换了筛选类型则丢弃本次结果
     if (reqType !== type.value || mode.value !== 'work') return
     const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []
@@ -306,12 +309,13 @@ async function loadUserRank(reset = false) {
   const page = userPage.value
   const reqUserTab = userTab.value
   try {
+    await contentSwitch.ensureLoaded()
     // 人气作者榜 / 新锐作者榜，均使用 period=week
     const period = 'week'
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0
+    const showNsfw = contentSwitch.showNsfw
     const res = (reqUserTab === 'rising'
-      ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw)
-      : await api.popularUserRank(page, USER_LIMIT, period, showNsfw)) as any
+      ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw, contentSwitch.channel)
+      : await api.popularUserRank(page, USER_LIMIT, period, showNsfw, contentSwitch.channel)) as any
     // 请求期间切换了子榜/主榜则丢弃本次结果
     if (reqUserTab !== userTab.value || mode.value !== 'user') return
     if (res.code !== 0 && res.code !== 200) {

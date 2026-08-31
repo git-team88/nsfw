@@ -115,6 +115,7 @@ import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { formatUpdateTime, initLanguage } from '@/util/utils';
 
@@ -137,7 +138,7 @@ import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
 
-// Types
+const contentSwitch = useContentSwitchStore();
 interface Content {
   id: number;
   type: string;
@@ -235,7 +236,7 @@ async function loadData(fromLoadMore = false) {
     isLoading.value = true;
   }
 
-  // Ensure we have the latest country info before making the request
+  await contentSwitch.ensureLoaded();
   await getCountry();
 
   try {
@@ -243,7 +244,7 @@ async function loadData(fromLoadMore = false) {
     const urlLang = route.query.lang as string;
     const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
 
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    const showNsfw = contentSwitch.showNsfw;
     const urlSessionId = route.query.session_id as string;
     const urlCat = route.query.type ? parseInt(route.query.type as string) : 0;
     const res = await api.getRelativeByTopicPublic({

@@ -1577,6 +1577,7 @@ import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
 import { toast, limitToast } from '@/util/toast';
 import { trackClickPublishButton } from '@/utils/analytics';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { aiUrl, baseUrl } from '@/util/config';
 import { parseToUnixTimestamp } from '@/util/utils';
 
@@ -1605,7 +1606,7 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
-// Get session id from route params (ref instead of computed)
+const contentSwitch = useContentSwitchStore();
 const sessionId = ref<string>('');
 
 // State
@@ -4868,7 +4869,8 @@ const fetchSimilarList = async (page: number = 1) => {
   similarLoading.value = true;
   try {
     const lang = selectedLanguage.value;
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    await contentSwitch.ensureLoaded();
+    const showNsfw = contentSwitch.showNsfw;
     const res = await api.getRelativeByTopicPublic({
       session_id: sessionId.value || '',
       cat: 2,

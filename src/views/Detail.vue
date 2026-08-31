@@ -833,6 +833,7 @@ import { formatTimestamp, initLanguage, processImageUrl } from "@/util/utils";
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -1333,12 +1334,10 @@ function getCountry(){
 // 是否中国大陆用户（地区接口已返回且非海外）
 const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
-// Show nsfw parameter based on user region
+const contentSwitch = useContentSwitchStore();
 // userRegion.value = true means NOT in China, false means IN China
 // Pass show_nsfw only when NOT in China (userRegion.value = true)
-const showNsfw = computed(() => {
-  return localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
-});
+const showNsfw = computed(() => contentSwitch.showNsfw);
 
 // Enter collection mode
 async function enterCollectionMode() {
@@ -1918,6 +1917,7 @@ async function fetchSubtitles(postId: number) {
 }
 
 async function fetchDetail(newId: number) {
+  await contentSwitch.ensureLoaded();
   // Get query parameters at the beginning
   const type = route.query.type as string || "";
   const cid = route.query.cid as string || "";
@@ -2018,6 +2018,10 @@ async function fetchDetail(newId: number) {
         "show_nsfw": showNsfw.value
       })
     }
+
+    const contentPayload = JSON.parse(data);
+    if (contentSwitch.channel !== undefined) contentPayload.channel = contentSwitch.channel;
+    data = JSON.stringify(contentPayload);
 
     const token = localStorage.getItem('token');
 

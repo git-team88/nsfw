@@ -1138,7 +1138,7 @@
             </span>
           </div>
 
-          <div class="sensitive-content-toggle" v-if="true">
+          <div class="sensitive-content-toggle" v-if="contentSwitch.showSensitiveToggle">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1160,7 +1160,7 @@
           </div>
 
           <!-- Sensitive Content Toggle -->
-          <div class="sensitive-content-toggle" v-if="true">
+          <div class="sensitive-content-toggle" v-if="contentSwitch.showSensitiveToggle">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1471,6 +1471,7 @@ import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
 import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
@@ -2465,6 +2466,7 @@ const modeOptions = ref([
   { id: 'unlimited', label: 'home.mode.unlimited', name: 'unlimited' }
 ]);
 
+const contentSwitch = useContentSwitchStore();
 const userRegion = ref(false);
 const hasFetchedRegion = ref(false);
 const isFetchingRegion = ref(false);
@@ -2477,7 +2479,10 @@ const showUnderageNoBirthdayModal = ref(false);
 const pendingModeType = ref('video');
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
-const allowSensitiveContent = ref(false);
+const allowSensitiveContent = computed({
+  get: () => contentSwitch.showNsfw === 1,
+  set: (value: boolean) => contentSwitch.setUserAllowsSensitive(value),
+});
 const showCharacterModal = ref(false);
 const showStyleModal = ref(false);
 const showVideoSettingsModal = ref(false);
@@ -2732,6 +2737,7 @@ const checkAgeForSensitiveContent = (): boolean => {
 };
 
 const handleSensitiveContentToggle = () => {
+  if (!contentSwitch.showSensitiveToggle) return;
   if (allowSensitiveContent.value) {
     allowSensitiveContent.value = false;
     localStorage.setItem('allowSensitiveContent', '0');
@@ -5988,38 +5994,39 @@ const loadContent = async (page = 1) => {
     loadingMoreContent.value = true;
   }
 
-  // Ensure we have region info (cached after first fetch)
+  await contentSwitch.ensureLoaded();
   await getCountry();
 
   try {
     let res;
 
-    const showNsfw = allowSensitiveContent.value ? 1 : 0;
+    const showNsfw = contentSwitch.showNsfw;
+    const channel = contentSwitch.channel;
 
     switch (currentActiveTab) {
       case 'suggested':
         if (currentContentType === 4 || currentContentType === 5) {
-          res = await api.homeRecommendPostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+          res = await api.homeRecommendPostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
         } else {
-          res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+          res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
         }
         break;
       case 'following':
         if (currentContentType === 4 || currentContentType === 5) {
-          res = await api.homeFollowPostList(page, pageSize.value, currentContentType, showNsfw) as any;
+          res = await api.homeFollowPostList(page, pageSize.value, currentContentType, showNsfw, channel) as any;
         } else {
-          res = await api.homeFollowList(page, pageSize.value, currentContentType, showNsfw) as any;
+          res = await api.homeFollowList(page, pageSize.value, currentContentType, showNsfw, channel) as any;
         }
         break;
       case 'subscriptions':
         if (currentContentType === 4 || currentContentType === 5) {
-          res = await api.homeSubscriptionPostList(page, pageSize.value, currentContentType, showNsfw) as any;
+          res = await api.homeSubscriptionPostList(page, pageSize.value, currentContentType, showNsfw, channel) as any;
         } else {
-          res = await api.homeSubscriptionList(page, pageSize.value, currentContentType, showNsfw) as any;
+          res = await api.homeSubscriptionList(page, pageSize.value, currentContentType, showNsfw, channel) as any;
         }
         break;
       default:
-        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw) as any;
+        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
     }
 
     // Check if this request is still the latest one

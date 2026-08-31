@@ -192,6 +192,7 @@ import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vu
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
@@ -200,6 +201,7 @@ import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -343,7 +345,8 @@ async function fetchCollectionDetail() {
     }
 
     const localUid = localStorage.getItem('uid');
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    await contentSwitch.ensureLoaded();
+    const showNsfw = contentSwitch.showNsfw;
 
     // 先请求合集详情接口（公开接口）
     let response = await api.getCollectionDetail(id) as any;
@@ -655,7 +658,8 @@ async function refreshChapters() {
     if (!id) return;
 
     const localUid = localStorage.getItem('uid');
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    await contentSwitch.ensureLoaded();
+    const showNsfw = contentSwitch.showNsfw;
 
     // 先请求公开接口，从 book_info 获取作者后判断是否为自己作品
     let response = await api.getCollectionDetail(id) as any;

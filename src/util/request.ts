@@ -23,8 +23,16 @@ class Request {
   }
   setInterceptor = (instance: any) => {
     instance.interceptors.request.use((config: {
-      url: string, method: string; paramsSerializer: (params: any) => string; header: any; data: string; headers: { token?: any; "Content-Type"?: string; };
-}) => {
+      url: string; method: string; paramsSerializer: (params: any) => string; header: any; data: any; headers: { token?: any; "Content-Type"?: string; channel?: number };
+    }) => {
+      const contentSwitchMode = localStorage.getItem('contentSwitchMode');
+      const shouldAppendChannel = contentSwitchMode === '2';
+      if (shouldAppendChannel && config.url?.includes('show_nsfw=') && !config.url.includes('channel=')) {
+        config.url += '&channel=2';
+      }
+      if (shouldAppendChannel && config.data && typeof config.data === 'object' && 'show_nsfw' in config.data && !('channel' in config.data)) {
+        config.data.channel = 2;
+      }
       if (config.method == 'GET') {
         config.paramsSerializer = function (params) {
           return qs.stringify({

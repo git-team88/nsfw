@@ -5,9 +5,12 @@
 <script setup lang="ts">
 import { watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
 
+const contentSwitch = useContentSwitchStore();
 const { locale } = useI18n();
+
 const route = useRoute();
 const router = useRouter();
 
@@ -152,6 +155,7 @@ function updateAltAndCanonical() {
 }
 
 onMounted(() => {
+  void contentSwitch.ensureLoaded();
   updateBodyFontClass();
   updateHtmlLang();
   updateHreflang();

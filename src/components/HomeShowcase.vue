@@ -146,11 +146,13 @@ import { ref, reactive, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 
 const { t, locale } = useI18n();
 const router = useRouter();
+const contentSwitch = useContentSwitchStore();
 
 // 敏感内容地区由首页(Home.vue)统一请求后通过 props 传入，避免在此重复请求 getCode
 const props = defineProps<{ userRegion?: boolean; regionReady?: boolean; allowSensitive?: boolean }>();
@@ -202,9 +204,10 @@ onMounted(async () => {
 });
 
 async function loadCreators() {
+  await contentSwitch.ensureLoaded();
   await waitRegionReady();
   try {
-    const res = (await api.popularUserRank(1, 6, 'week', props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
+    const res = (await api.popularUserRank(1, 6, 'week', contentSwitch.showNsfw, contentSwitch.channel)) as any;
     if ((res.code === 0 || res.code === 200) && res.data?.data) {
       creators.value = res.data.data.map((it: any, i: number) => {
         const lb = it.book || {};
@@ -243,9 +246,10 @@ async function loadCreators() {
 
 // 人气作品榜取数（敏感开关/语言变化时重新请求，与推荐列表逻辑一致）
 async function loadBooks() {
+  await contentSwitch.ensureLoaded();
   await waitRegionReady();
   try {
-    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, props.userRegion ? (props.allowSensitive ? 1 : 0) : 0)) as any;
+    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, contentSwitch.showNsfw, contentSwitch.channel)) as any;
     const list = ((bookRes.code === 0 || bookRes.code === 200) && (bookRes.data?.data || bookRes.data)) || [];
     books.value = (Array.isArray(list) && list.length)
       ? list.map((it: any) => {

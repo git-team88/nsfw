@@ -1,6 +1,9 @@
 import axios from "../util/request";
 import { aiUrl } from "../util/config";
 
+const appendContentChannel = (showNsfw: number | undefined, channel?: number) =>
+  (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : '') + (channel !== undefined ? '&channel=' + channel : '');
+
 export default {
   messageList: (data: any) =>
     axios.request({
@@ -139,6 +142,11 @@ export default {
       url: "index/getBookGenSwitchPublic",
       method: "GET",
     }),
+  getContentSwitchPublic: () =>
+    axios.request({
+      url: "index/getContentSwitchPublic",
+      method: "GET",
+    }),
   setAdult: (data: any) =>
     axios.request({
       url: "user/setAdult",
@@ -274,26 +282,26 @@ export default {
       data: data,
     }),
 
-  homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
+  homePostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "index/getRecommendBookPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  homeRecommendPostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number) =>
+  homeRecommendPostList: (page: number, limit: number, type: number, language?: string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "index/getRecommendPostPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "index/getRecommendPostPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   // 首页人气创作者榜（public）period: day|week|month
-  popularUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number) =>
+  popularUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
+      url: "index/getPopularUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   // 新锐创作者榜（public）period: day|week|month
-  risingUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number) =>
+  risingUserRank: (page: number, limit: number, period: string = 'week', showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "index/getRisingUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
+      url: "index/getRisingUserRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   // 首页作品人气榜（public）
@@ -303,9 +311,9 @@ export default {
       method: "GET",
     }),
   // 作品人气榜（public）period: day|week|month, type: 0全部|1漫话|2小说|3漫剧
-  popularBookRank: (page: number, limit: number, period: string = 'week', type: number = 0, language?: string, showNsfw?: number) =>
+  popularBookRank: (page: number, limit: number, period: string = 'week', type: number = 0, language?: string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "index/getPopularBookRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + "&type=" + type + (language ? "&language=" + language : "") + (showNsfw != null ? "&show_nsfw=" + showNsfw : ""),
+      url: "index/getPopularBookRankPublic?page=" + page + "&limit=" + limit + "&period=" + period + "&type=" + type + (language ? "&language=" + language : "") + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   // 上报个人主页浏览（public）
@@ -327,24 +335,24 @@ export default {
   //     url: "index/getRecommendStreamPublic?page=" + page + "&limit=" + limit + '&type=' + type + (language ? '&language=' + language : '') + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
   //     method: "GET",
   //   }),
-  homeFollowList: (page: number, limit: number, type: number, showNsfw?: number) =>
+  homeFollowList: (page: number, limit: number, type: number, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "post/getMyFollowListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  homeFollowPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
+  homeFollowPostList: (page: number, limit: number, type: number, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "post/getMyFollowPostList?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "post/getMyFollowPostList?page=" + page + "&limit=" + limit + '&type=' + type + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  homeSubscriptionList: (page: number, limit: number, type: number, showNsfw?: number) =>
+  homeSubscriptionList: (page: number, limit: number, type: number, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "post/getMySubscriptionListOfBook?page=" + page + "&limit=" + limit + '&type=' + type + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  homeSubscriptionPostList: (page: number, limit: number, type: number, showNsfw?: number) =>
+  homeSubscriptionPostList: (page: number, limit: number, type: number, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "post/getMySubscriptionPostList?page=" + page + "&limit=" + limit + '&type=' + type + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "post/getMySubscriptionPostList?page=" + page + "&limit=" + limit + '&type=' + type + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   searchTopic: (data: any) =>
@@ -476,24 +484,24 @@ export default {
       url: "my/getPostList?type=" + type + "&page=" + page + "&limit=" + limit,
       method: "GET",
     }),
-  authorInfo: (author_id: number | string, showNsfw?: number) =>
+  authorInfo: (author_id: number | string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "blogger/getBloggerInfoPublic?author_id=" + author_id + (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : ''),
+      url: "blogger/getBloggerInfoPublic?author_id=" + author_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number, showNsfw?: number) =>
+  authorHome: (type: number, page: number, limit: number, author_id: number | string, keywords: string, start: string, end: string, sort: string, book_id: string | number, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "blogger/getPostListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + "&keywords=" + keywords + "&start_day=" + start + "&end_day=" + end + "&sort=" + sort + "&book_id=" + book_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  authorCollection: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number) =>
+  authorCollection: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "blogger/getBookListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "blogger/getBookListPublic?type=" + type+ "&page="+ + page + "&limit=" + limit + "&author_id=" + author_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  authorPostList: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number) =>
+  authorPostList: (type: number, page: number, limit: number, author_id: number | string, showNsfw?: number, channel?: number) =>
     axios.request({
-      url: "blogger/getPostListPublic?type=" + type + "&page=" + page + "&limit=" + limit + "&author_id=" + author_id + (showNsfw ? '&show_nsfw=' + showNsfw : ''),
+      url: "blogger/getPostListPublic?type=" + type + "&page=" + page + "&limit=" + limit + "&author_id=" + author_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
   getLikedBookList: (page: number, limit: number) =>

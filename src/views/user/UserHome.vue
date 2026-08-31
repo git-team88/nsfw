@@ -453,6 +453,7 @@ import { toast } from "@/util/toast";
 import { processImageUrl, initLanguage, formatTimestamp } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { eventBus } from "@/utils/eventBus";
 import { trackHomeView } from "@/util/viewTracker";
 
@@ -469,6 +470,8 @@ function checkLogin() {
 const { t, locale } = useI18n();
 const router = useRouter();
 const route = useRoute();
+
+const contentSwitch = useContentSwitchStore();
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 const uid = localStorage.getItem('uid');
@@ -778,7 +781,7 @@ async function fetchCollections(reset = false) {
         collectionsLoading.value = false;
         return;
       }
-      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+      const showNsfw = contentSwitch.showNsfw;
       if (type === 4 || type === 5) {
         response = await api.authorPostList(type, currentPage, 20, authorId, showNsfw) as any;
       } else {
@@ -960,7 +963,7 @@ async function fetchUserInfo() {
       res = await api.authorSelfInfo();
     } else {
       if (!authorId) return;
-      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+      const showNsfw = contentSwitch.showNsfw;
       res = await api.authorInfo(authorId, showNsfw);
     }
 
@@ -1021,7 +1024,7 @@ async function fetchUserStats() {
       res = await api.authorSelfInfo();
     } else {
       if (!authorId) return;
-      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+      const showNsfw = contentSwitch.showNsfw;
       res = await api.authorInfo(authorId, showNsfw);
     }
 
@@ -1104,7 +1107,7 @@ onMounted(async () => {
   window.scrollTo(0, 0);
 
   await initLanguage();
-  // 先拿到地区结果，保证后续 fetchUserInfo/合集请求能正确带上 show_nsfw
+  await contentSwitch.ensureLoaded();
   await getCountry();
   setSeoMeta();
 
@@ -1743,7 +1746,7 @@ async function loadPosts(reset = false) {
 
     let res;
 
-    const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+    const showNsfw = contentSwitch.showNsfw;
     if (isSelf.value) {
       res = await api.authorSelfCollection(
         type,

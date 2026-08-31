@@ -190,6 +190,7 @@ import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
 
@@ -213,6 +214,7 @@ import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
+const contentSwitch = useContentSwitchStore();
 
 // Types
 interface Post {
@@ -384,12 +386,12 @@ async function loadData(fromLoadMore = false) {
     isLoading.value = true;
   }
 
-  // Ensure we have region info (cached after first fetch)
+  await contentSwitch.ensureLoaded();
   await getCountry();
 
   try {
     if (activeTab.value == 'posts') {
-      const showNsfw = localStorage.getItem('allowSensitiveContent') == '1' ? 1 : 0;
+      const showNsfw = contentSwitch.showNsfw;
       const isStandalone = postFilter.value === 4 || postFilter.value === 5;
       const res = isStandalone
         ? await api.searchPostsPublic({
