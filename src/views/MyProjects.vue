@@ -268,11 +268,14 @@ import ProcessList from '@/components/ProcessList.vue';
 import { aiUrl } from '@/util/config';
 import pic from '@/assets/images/base/cover.png'
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import router from '@/router';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
+
 const route = useRoute();
 
 // State
@@ -535,13 +538,15 @@ async function loadProjects(reset = false) {
   const currentStatus = activeStatusTab.value;
 
   try {
+    await contentSwitch.ensureLoaded();
+    const projectNsfw = contentSwitch.projectNsfwFilter;
     let response;
     if (activeMainTab.value == 'photo') {
-      response = await api.getProject(0, 'simple_image', currentPage.value, itemsPerPage.value, 0) as any;
+      response = await api.getProject(0, 'simple_image', currentPage.value, itemsPerPage.value, 0, projectNsfw) as any;
     } else if (activeMainTab.value === 'video') {
-      response = await api.getProject(0, 'simple_video', currentPage.value, itemsPerPage.value, 0) as any;
+      response = await api.getProject(0, 'simple_video', currentPage.value, itemsPerPage.value, 0, projectNsfw) as any;
     } else {
-      response = await api.getProject(0, activeMainTab.value, currentPage.value, itemsPerPage.value, 0) as any;
+      response = await api.getProject(0, activeMainTab.value, currentPage.value, itemsPerPage.value, 0, projectNsfw) as any;
     }
 
     // Check if this request is still the latest one

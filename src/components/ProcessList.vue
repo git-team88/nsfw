@@ -104,6 +104,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { parseToUnixTimestamp } from '@/util/utils';
 import prevIcon from '@/assets/images/process/prev.png';
 import nextIcon from '@/assets/images/process/next.png';
@@ -114,6 +115,8 @@ import failIcon from '@/assets/images/process/fail.png';
 import waitIcon from '@/assets/images/process/wait.png';
 
 const { t } = useI18n();
+const contentSwitch = useContentSwitchStore();
+
 const router = useRouter();
 
 const processData = ref<any>(null);
@@ -290,8 +293,9 @@ const getProgress = (item: any) => {
 
 const fetchProcessData = async () => {
   try {
+    await contentSwitch.ensureLoaded();
     // 真实API调用
-    const res = await api.totalProcess(true, 3) as any;
+    const res = await api.totalProcess(true, contentSwitch.projectNsfwFilter) as any;
     if (res.code == 200) {
       // Clear start times for completed or failed tasks
       if (res.data) {

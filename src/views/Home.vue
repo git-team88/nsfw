@@ -471,7 +471,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Video - only show if not a teenager -->
-                      <div v-if="true" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -490,7 +490,7 @@
                             :key="option.value"
                             class="dropdown-item"
                             :class="{ active: selectedVideoMultimodal == option.value }"
-                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = true; resetVideoInputs()"
+                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = currentVideoMode === 'normal' && option.value !== 'videoModify' && option.value !== 'videoExtend'; resetVideoInputs()"
                           >
                             <span>{{ option.label }}</span>
                           </div>
@@ -793,7 +793,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
-                      <div v-if="true" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -941,7 +941,7 @@
                   <div class="input-box">
                     <div class="input-options">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <div v-if="true" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -986,7 +986,7 @@
 
                   <div class="input-box">
                     <div class="input-options novel-input-options">
-                      <div v-if="true" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -1031,8 +1031,8 @@
                         </div>
                       </div>
 
-                      <!-- Insert Image Selector - only show when unlimited mode is on -->
-                      <div v-if="currentNovelMode == 'unlimited'" class="novel-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                      <!-- Insert Image Selector -->
+                      <div v-if="showNovelInsertImageSelector" class="novel-selector" @click="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
                         <div class="selector-header">
                           <span>{{ t('home.insertImage') }}：{{ selectedInsertImageText }}</span>
                           <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
@@ -1138,7 +1138,7 @@
             </span>
           </div>
 
-          <div class="sensitive-content-toggle" v-if="contentSwitch.showSensitiveToggle">
+          <div class="sensitive-content-toggle" v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1160,7 +1160,7 @@
           </div>
 
           <!-- Sensitive Content Toggle -->
-          <div class="sensitive-content-toggle" v-if="contentSwitch.showSensitiveToggle">
+          <div class="sensitive-content-toggle" v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -1727,15 +1727,20 @@ const enableVideoOptimizePrompt = ref(true);
 const showPhotoSettings = ref(false);
 const selectedPhotoQuality = ref('1K');
 const selectedPhotoRatio = ref('9:16');
-const photoQualityOptions = ref([
-  { value: '1K', label: '1K' },
-  { value: '2K', label: '2K' }
-]);
-const photoRatioOptions = ref([
-  { value: '9:16', label: '9:16' },
-  { value: '16:9', label: '16:9' },
-  { value: '1:1', label: '1:1' }
-]);
+const photoQualityOptions = computed(() => {
+  const optionsByMode = {
+    normal: [{ value: '1K', label: '1K' }, { value: '2K', label: '2K' }],
+    unlimited: [{ value: '1K', label: '1K' }, { value: '2K', label: '2K' }],
+  };
+  return optionsByMode[currentPhotoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+});
+const photoRatioOptions = computed(() => {
+  const optionsByMode = {
+    normal: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '1:1', label: '1:1' }],
+    unlimited: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '1:1', label: '1:1' }],
+  };
+  return optionsByMode[currentPhotoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+});
 
 // Video settings
 const showVideoMultimodalDropdown = ref(false);
@@ -1745,7 +1750,7 @@ const videoMultimodalOptions = computed(() => {
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
-  if (currentVideoMode.value === 'normal') {
+  if (contentSwitch.loaded && contentSwitch.mode !== 2 && currentVideoMode.value === 'normal') {
     options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
     options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
   }
@@ -2084,14 +2089,20 @@ const selectedVideoQuality = ref('1080P');
 const selectedVideoRatio = ref('9:16');
 const selectedVideoDuration = ref('15');
 const lastValidVideoDuration = ref('15');
-const videoQualityOptions = ref([
-  { value: '1080P', label: '1080P' },
-  { value: '720P', label: '720P' }
-]);
-const videoRatioOptions = ref([
-  { value: '9:16', label: '9:16' },
-  { value: '16:9', label: '16:9' }
-]);
+const videoQualityOptions = computed(() => {
+  const optionsByMode = {
+    normal: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
+    unlimited: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
+  };
+  return optionsByMode[currentVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+});
+const videoRatioOptions = computed(() => {
+  const optionsByMode = {
+    normal: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }],
+    unlimited: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }],
+  };
+  return optionsByMode[currentVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+});
 const videoDurationOptions = computed(() => {
   const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
   if (minDuration == 4) {
@@ -2284,12 +2295,14 @@ const selectedLanguageText = computed(() => {
 });
 
 // Insert image (illustration) settings
-const selectedInsertImage = ref(0);
+const selectedInsertImage = ref(4);
 const showInsertImageDropdown = ref(false);
 const insertImageOptions = computed(() => [
   { value: 0, label: t('home.insertImageNone') },
   { value: 4, label: t('home.insertImage4') },
 ]);
+
+const showNovelInsertImageSelector = computed(() => currentNovelMode.value === 'unlimited' || contentSwitch.mode === 2);
 
 const selectedInsertImageText = computed(() => {
   const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
@@ -2354,7 +2367,7 @@ const navigateToNovelGenerate = async () => {
       ratio: "9:16",
       language: selectedLanguage.value,
       story_type: "novel",
-      story_mode: currentNovelMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      story_mode: (contentSwitch.mode === 2 || currentNovelMode.value == 'unlimited') ? 'nsfw' : 'normal',
       story_style: "",
       reference_images: [],
       emotion: "",
@@ -2363,7 +2376,7 @@ const navigateToNovelGenerate = async () => {
       },
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
-      insert_image_count: selectedInsertImage.value,
+      insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -2461,9 +2474,11 @@ const sortOptions = ref([
 ]);
 
 // Mode Options
-const modeOptions = ref([
+const modeOptions = computed(() => contentSwitch.showSensitiveToggle ? [
   { id: 'normal', label: 'home.mode.normal', name: 'normal' },
   { id: 'unlimited', label: 'home.mode.unlimited', name: 'unlimited' }
+] : [
+  { id: 'normal', label: 'home.mode.normal', name: 'normal' }
 ]);
 
 const contentSwitch = useContentSwitchStore();
@@ -2599,7 +2614,7 @@ const estimatedPhotoComputingPower = computed(() => {
     cost = Number(balanceInfo.value.single_image_cost_2k) || 10;
   }
 
-  if (enablePhotoOptimizePrompt.value) {
+  if (enablePhotoOptimizePrompt.value && currentPhotoMode.value !== 'unlimited') {
     cost += Number(balanceInfo.value.additional_optimize_prompt_cost) || 0;
   }
 
@@ -2991,6 +3006,7 @@ const switchPhotoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentPhotoMode.value = 'unlimited';
+      enablePhotoOptimizePrompt.value = false;
       uploadedImagesPhoto.value = [];
       combinedItemsPhoto.value = [];
       inputContentPhoto.value = '';
@@ -3002,6 +3018,7 @@ const switchPhotoMode = (mode: string, index: number) => {
     }
   } else {
     currentPhotoMode.value = 'normal';
+    enablePhotoOptimizePrompt.value = true;
     uploadedImagesPhoto.value = [];
     combinedItemsPhoto.value = [];
     inputContentPhoto.value = '';
@@ -3044,6 +3061,7 @@ const confirmUnlimitedMode = () => {
     nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
   } else if (contentType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';
+    enablePhotoOptimizePrompt.value = false;
     uploadedImagesPhoto.value = [];
     combinedItemsPhoto.value = [];
     inputContentPhoto.value = '';
@@ -3228,10 +3246,10 @@ const selectContentType = (type: string) => {
   currentVideoMode.value = 'normal';
   currentComicMode.value = 'normal';
   currentDramaMode.value = 'normal';
-  currentNovelMode.value = 'normal';
+  currentNovelMode.value = contentSwitch.mode === 2 ? 'unlimited' : 'normal';
   currentPhotoMode.value = 'normal';
+  selectedInsertImage.value = contentSwitch.mode === 2 ? 4 : 0;
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
-  previousInputHtml.value = '';
 
   // Reset video settings to default
   selectedVideoQuality.value = '1080P';
@@ -3245,8 +3263,8 @@ const selectContentType = (type: string) => {
   // Switch content type
   contentType.value = type;
 
-  enablePhotoOptimizePrompt.value = false;
-  enableVideoOptimizePrompt.value = false;
+  enablePhotoOptimizePrompt.value = true;
+  enableVideoOptimizePrompt.value = true;
 
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
@@ -4101,7 +4119,7 @@ const doGeneratePhoto = async () => {
         list: combinedItemsPhoto.value
       },
       addition_characters: [],
-      enable_optimize_prompt: enablePhotoOptimizePrompt.value
+      enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -6363,6 +6381,11 @@ watch(() => locale.value, (newLocale) => {
 });
 
 onMounted(async () => {
+  await contentSwitch.ensureLoaded();
+  if (contentSwitch.mode === 2) {
+    currentNovelMode.value = 'unlimited';
+    selectedInsertImage.value = 4;
+  }
   window.addEventListener('scroll', handleScrollToBottom);
 
   // 启动占位打字机 + 注册相关 watch（此时所有依赖 ref 已声明）

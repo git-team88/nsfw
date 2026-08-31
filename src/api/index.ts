@@ -4,6 +4,11 @@ import { aiUrl } from "../util/config";
 const appendContentChannel = (showNsfw: number | undefined, channel?: number) =>
   (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : '') + (channel !== undefined ? '&channel=' + channel : '');
 
+const getProjectNsfwFilter = () => {
+  const mode = localStorage.getItem('contentSwitchMode');
+  return mode === '0' ? 2 : mode === '2' ? 3 : 1;
+};
+
 export default {
   messageList: (data: any) =>
     axios.request({
@@ -143,9 +148,14 @@ export default {
       method: "GET",
     }),
   getContentSwitchPublic: () =>
-    axios.request({
-      url: "index/getContentSwitchPublic",
-      method: "GET",
+    Promise.resolve({
+      code: 0,
+      msg: "succ",
+      data: {
+        id: "1",
+        switch_no: "2",
+        updated_at: "2026-08-28 17:10:43",
+      },
     }),
   setAdult: (data: any) =>
     axios.request({
@@ -911,9 +921,9 @@ export default {
       method: "POST",
     }),
 
-  getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number ) =>
+  getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number, isNsfw?: number) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter + '&is_nsfw=3',
+      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter + '&is_nsfw=' + (isNsfw ?? getProjectNsfwFilter()),
       method: "GET",
       baseURL: aiUrl,
     }),
@@ -1093,9 +1103,9 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  singleTaskList: (page: number, limit: number, type: string, isFilterFailed?: boolean) =>
+  singleTaskList: (page: number, limit: number, type: string, isFilterFailed?: boolean, isNsfw?: number) =>
     axios.request({
-      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}&is_nsfw=3${isFilterFailed ? '&is_filter_failed=true' : ''}`,
+      url: `app/progress/simple-task-list?page=${page}&limit=${limit}&story_type=${type}&is_nsfw=${isNsfw ?? getProjectNsfwFilter()}${isFilterFailed ? '&is_filter_failed=true' : ''}`,
       method: "GET",
       baseURL: aiUrl,
     }),

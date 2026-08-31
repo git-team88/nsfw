@@ -4,8 +4,8 @@ import api from '@/api/index'
 export type ContentSwitchMode = 0 | 1 | 2
 
 function readMode(value: unknown): ContentSwitchMode | null {
-  if (typeof value === 'number' && (value === 0 || value === 1 || value === 2)) return value
-  if (typeof value === 'string' && /^[012]$/.test(value)) return Number(value) as ContentSwitchMode
+  if (typeof value == 'number' && (value == 0 || value == 1 || value == 2)) return value
+  if (typeof value == 'string' && /^[012]$/.test(value)) return Number(value) as ContentSwitchMode
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
   for (const key of ['switch_no', 'content_switch', 'contentSwitch', 'show_nsfw', 'showNsfw', 'channel', 'value', 'status', 'data']) {
@@ -18,14 +18,15 @@ function readMode(value: unknown): ContentSwitchMode | null {
 export const useContentSwitchStore = defineStore('contentSwitch', {
   state: () => ({
     mode: (readMode(localStorage.getItem('contentSwitchMode')) ?? 1) as ContentSwitchMode,
-    userAllowsSensitive: localStorage.getItem('allowSensitiveContent') === '1',
+    userAllowsSensitive: localStorage.getItem('allowSensitiveContent') == '1',
     loaded: false,
     loading: null as Promise<void> | null,
   }),
   getters: {
-    showNsfw: (state): number => state.mode === 0 ? 0 : state.mode === 2 ? 1 : state.userAllowsSensitive ? 1 : 0,
-    showSensitiveToggle: (state): boolean => state.mode === 1,
-    channel: (state): number | undefined => state.mode === 2 ? 1 : undefined,
+    showNsfw: (state): number => state.mode == 0 ? 0 : state.mode == 2 ? 1 : state.userAllowsSensitive ? 1 : 0,
+    showSensitiveToggle: (state): boolean => state.mode == 1,
+    channel: (state): number | undefined => state.mode == 2 ? 1 : undefined,
+    projectNsfwFilter: (state): number => state.mode == 0 ? 2 : state.mode == 2 ? 3 : 1,
   },
   actions: {
     async ensureLoaded() {
@@ -34,7 +35,7 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
       this.loading = api.getContentSwitchPublic().then((response: any) => {
         const mode = readMode(response)
         this.mode = mode ?? 1
-        this.userAllowsSensitive = this.mode === 2 || (this.mode === 1 && (localStorage.getItem('allowSensitiveContent') === '1'))
+        this.userAllowsSensitive = this.mode == 2 || (this.mode == 1 && (localStorage.getItem('allowSensitiveContent') == '1'))
         localStorage.setItem('contentSwitchMode', String(this.mode))
         localStorage.setItem('allowSensitiveContent', this.userAllowsSensitive ? '1' : '0')
         this.loaded = true

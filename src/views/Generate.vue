@@ -434,7 +434,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="true" class="unlimited-switch" :class="{ active: currentPhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" :class="{ active: effectivePhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -749,7 +749,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="true" class="unlimited-switch" :class="{ active: currentVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" :class="{ active: effectiveVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -961,6 +961,7 @@ import Header from '@/components/Header.vue';
 import arrowIcon from '@/assets/images/publish/arrow_icon.png';
 import router from "@/router";
 import api from "@/api/index";
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { eventBus } from "@/utils/eventBus";
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
@@ -975,6 +976,7 @@ import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
 
 const selectedType = ref('all');
 const showTypeDropdown = ref(false);
@@ -1000,6 +1002,8 @@ const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
+const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
+const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
 const enablePhotoOptimizePrompt = ref(true);
 const enableVideoOptimizePrompt = ref(true);
 const showUnlimitedModal = ref(false);
@@ -1986,7 +1990,7 @@ const videoMultimodalOptions = computed(() => {
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
-  if (currentVideoMode.value === 'normal') {
+  if (effectiveVideoMode.value === 'normal') {
     options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
     options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
   }
@@ -2001,7 +2005,7 @@ const videoRatioOptions = ref([
   { value: '16:9', label: '16:9' }
 ]);
 const videoDurationOptions = computed(() => {
-  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   if (minDuration === 4) {
     return [
       { value: '4', label: '4s' },
@@ -2243,7 +2247,7 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       const height = video.videoHeight;
       if (width === 0 || height === 0) { resolve(true); return; }
       const ratio = width / height;
-      if (currentVideoMode.value === 'unlimited') {
+      if (effectiveVideoMode.value === 'unlimited') {
         // 无限制模式：宽高比 1:8~8:1，像素 [240, 4096]
         if (ratio < 1/8 || ratio > 8) {
           toast(t('home.error.videoRatioLimit'));
@@ -2374,7 +2378,7 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
   if (width === 0 || height === 0) return false;
   const ratio = width / height;
   const isPhotoUnlimited = bottomActiveTab.value === 'photo' && currentPhotoMode.value === 'unlimited';
-  const isVideoUnlimited = bottomActiveTab.value === 'video' && currentVideoMode.value === 'unlimited';
+  const isVideoUnlimited = bottomActiveTab.value === 'video' && effectiveVideoMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
       toast(t('home.error.imageRatioLimit'));
@@ -2487,7 +2491,7 @@ const handleVideoRefUpload = async (event: Event) => {
     const files = Array.from(input.files);
 
     // Get upload limits based on mode
-    const isUnlimited = currentVideoMode.value === 'unlimited';
+    const isUnlimited = effectiveVideoMode.value === 'unlimited';
     let maxFileSizeBytes = isUnlimited ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
     const maxVideoSizeBytes = isUnlimited ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
@@ -3456,7 +3460,8 @@ const triggerExtendVideoUpload = () => {
 const selectVideoMultimodal = (value: string) => {
   selectedVideoMultimodal.value = value;
   showVideoMultimodalDropdown.value = false;
-  enableVideoOptimizePrompt.value = true;
+  enableVideoOptimizePrompt.value = effectiveVideoMode.value === 'normal' && value !== 'videoModify' && value !== 'videoExtend';
+  clearGenerateFileInputs();
   videoInput.value = '';
   startFrameImage.value = '';
   endFrameImage.value = '';
@@ -3600,6 +3605,11 @@ const startFrameInput = ref<HTMLInputElement | null>(null);
 const endFrameInput = ref<HTMLInputElement | null>(null);
 const videoInputRef = ref<HTMLInputElement | null>(null);
 
+const clearGenerateFileInputs = () => {
+  [photoFileInput.value, videoRefInput.value, startFrameInput.value, endFrameInput.value, videoInputRef.value].forEach((input) => {
+    if (input) input.value = '';
+  });
+};
 const triggerStartFrameUpload = () => {
   startFrameInput.value?.click();
 };
@@ -3619,8 +3629,8 @@ const handleStartFrameChange = async (event: Event) => {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -3658,8 +3668,8 @@ const handleEndFrameChange = async (event: Event) => {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -3743,8 +3753,8 @@ const handleVideoUpload = async (event: Event) => {
       }
     } else if (selectedVideoMultimodal.value === 'multimodal') {
       // 多模态参考：普通模式 2-30s，无限制模式 1-15s
-      const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
-      const maxDuration = currentVideoMode.value === 'unlimited' ? 15 : 30;
+      const minDuration = effectiveVideoMode.value === 'unlimited' ? 1 : 2;
+      const maxDuration = effectiveVideoMode.value === 'unlimited' ? 15 : 30;
       if (duration < minDuration) {
         toast(t('home.error.videoDurationTooShort', { min: minDuration }));
         target.value = '';
@@ -3758,9 +3768,9 @@ const handleVideoUpload = async (event: Event) => {
     }
 
     // Video file size validation
-    const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
+    const maxVideoSizeBytes = effectiveVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
     if (file.size > maxVideoSizeBytes) {
-      toast(t('home.error.maxVideoSize', { max: currentVideoMode.value === 'unlimited' ? 100 : 200 }));
+      toast(t('home.error.maxVideoSize', { max: effectiveVideoMode.value === 'unlimited' ? 100 : 200 }));
       target.value = '';
       return;
     }
@@ -3797,7 +3807,7 @@ const handleVideoUpload = async (event: Event) => {
           // 如果当前设置的时长小于等于视频时长，自动调整
           const currentDuration = parseInt(selectedVideoDuration.value);
           if (currentDuration <= duration) {
-            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+            const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
             const newDuration = Math.max(duration + 1, minDuration);
             selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
@@ -3822,9 +3832,9 @@ const removeVideo = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
-  const marks = currentVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
+  const marks = effectiveVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -3832,7 +3842,7 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
@@ -3859,7 +3869,7 @@ const getUploadedVideoDurationCeil = () => {
 };
 
 const validateDurationAndRestore = () => {
-  if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     const totalVideoDuration = getUploadedVideoDurationCeil();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
@@ -3918,7 +3928,7 @@ const estimatedVideoPower = computed(() => {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = 30;
-  } else if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     duration = (parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationCeil();
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
@@ -3926,13 +3936,13 @@ const estimatedVideoPower = computed(() => {
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value == '720P') {
-    if (currentVideoMode.value === 'unlimited') {
+    if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
     }
   } else if (selectedVideoQuality.value == '1080P') {
-    if (currentVideoMode.value === 'unlimited') {
+    if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
     } else {
       costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second);
@@ -3940,7 +3950,7 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && currentVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -4196,7 +4206,7 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '', tar
   try {
       const storyType = selectedType.value == 'all' ? '' : selectedType.value;
       const loadSize = targetSessionId ? 1000 : pageSize.value;
-      const response = await api.singleTaskList(currentPage.value, loadSize, storyType) as any;
+      const response = await api.singleTaskList(currentPage.value, loadSize, storyType, undefined, contentSwitch.projectNsfwFilter) as any;
       if (response.code == 200) {
         const dataList = response.data.data_list || response.data.list || [];
 
@@ -4359,7 +4369,7 @@ const doGeneratePhoto = async () => {
         ratio: selectedPhotoRatio.value,
         language: locale.value == 'zh' ? 'cn' : locale.value == 'jp' ? 'jp' : 'en',
         story_type: 'simple_image',
-        story_mode: currentPhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+        story_mode: effectivePhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
         reference_images: uploadedPhotoImages.value.map(img => img.image),
         emotion: '',
@@ -4375,7 +4385,7 @@ const doGeneratePhoto = async () => {
         simple_image_resolution: selectedPhotoQuality.value,
         simple_video_resolution: '720p',
         simple_video_generate_mode: 'multimodal',
-        enable_optimize_prompt: enablePhotoOptimizePrompt.value
+        enable_optimize_prompt: effectivePhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value
       }
     };
 
@@ -4397,7 +4407,7 @@ const doGeneratePhoto = async () => {
       language: photoSettings.language,
       story_type: "simple_image",
       simple_image_resolution: photoSettings.resolution,
-      story_mode: currentPhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      story_mode: effectivePhotoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
       reference_images: uploadedPhotoImages.value.map(img => img.image),
       emotion: "",
@@ -4406,7 +4416,7 @@ const doGeneratePhoto = async () => {
         list: uploadedPhotoImages.value
       },
       addition_characters: [],
-      enable_optimize_prompt: enablePhotoOptimizePrompt.value
+      enable_optimize_prompt: effectivePhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value
     };
 
     if (currentPhotoMode.value == 'unlimited') {
@@ -4641,7 +4651,7 @@ const doGenerateVideo = async () => {
         ratio: detectedRatio,
         language: locale.value == 'zh' ? 'cn' : locale.value,
         story_type: 'simple_video',
-        story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+        story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         story_style: '',
         reference_images: referenceImages,
         reference_videos: referenceVideosForDisplay,
@@ -4660,7 +4670,7 @@ const doGenerateVideo = async () => {
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
       }
     };
 
@@ -4682,7 +4692,7 @@ const doGenerateVideo = async () => {
       ratio: videoSettings.aspectRatio,
       language: videoSettings.language,
       story_type: "simple_video",
-      story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       story_style: "",
       reference_images: referenceImages,
       reference_videos: referenceVideos,
@@ -4702,8 +4712,8 @@ const doGenerateVideo = async () => {
       simple_image_resolution: '1K',
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? parseInt(selectedVideoDuration.value) + getUploadedVideoDurationCeil() : parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? parseInt(selectedVideoDuration.value) + getUploadedVideoDurationCeil() : parseInt(selectedVideoDuration.value),
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4795,7 +4805,7 @@ const loadNewerRecords = async () => {
   isLoadingNewer.value = true;
   try {
     const storyType = selectedType.value == 'all' ? '' : selectedType.value;
-    const response = await api.singleTaskList(1, pageSize.value, storyType) as any;
+    const response = await api.singleTaskList(1, pageSize.value, storyType, undefined, contentSwitch.projectNsfwFilter) as any;
     if (response.code == 200) {
       const dataList = response.data.data_list || response.data.list || [];
       const fetched = dataList.map(normalizeSimpleRecord);
@@ -4992,7 +5002,13 @@ const getUserInfo = () => {
   });
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await contentSwitch.ensureLoaded();
+  if (contentSwitch.mode === 2) {
+    currentPhotoMode.value = 'unlimited';
+    currentVideoMode.value = 'unlimited';
+    enablePhotoOptimizePrompt.value = false;
+  }
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/');
@@ -5325,7 +5341,7 @@ const regenerateRecord = (record: any) => {
       currentVideoMode.value = 'normal';
     }
 
-    enableVideoOptimizePrompt.value = currentVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
+    enableVideoOptimizePrompt.value = effectiveVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
       selectedVideoMultimodal.value = 'startEndFrames';
@@ -5453,7 +5469,7 @@ const regenerateRecord = (record: any) => {
       selectedVideoMultimodal.value = 'multimodal';
 
       // nsfw multimodal 模式回显：如果生成时长 + 上传视频总时长超过 30s，弹回到最大可生成时长
-      if (currentVideoMode.value === 'unlimited') {
+      if (effectiveVideoMode.value === 'unlimited') {
         let totalVideoDuration = 0;
         for (const item of uploadedVideoRefs.value) {
           if (item.type === 'video' && item.duration) {
@@ -5835,8 +5851,8 @@ const switchVideoMode = (mode: string, index: number) => {
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';
     uploadedVideoRefs.value = [];
-    selectedVideoDuration.value = '2';
-    lastValidVideoDuration.value = '2';
+    selectedVideoDuration.value = '4';
+    lastValidVideoDuration.value = '4';
     nextTick(() => startVideoTypewriter());
   }
 };
@@ -5854,6 +5870,7 @@ const confirmUnlimitedMode = () => {
     uploadedVideoRefs.value = [];
     selectedVideoDuration.value = '2';
     lastValidVideoDuration.value = '2';
+    clearGenerateFileInputs();
     nextTick(() => startVideoTypewriter());
   } else if (pendingModeType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';

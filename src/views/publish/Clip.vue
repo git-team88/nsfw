@@ -388,6 +388,7 @@ import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { processImageUrl } from "@/util/utils";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -398,6 +399,8 @@ import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
+
 const route = useRoute();
 
 const TITLE_MAX = 60;
@@ -1380,7 +1383,7 @@ function getI18nMsg(res: any): string {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = (await api.singleTaskList(currentPage.value, 10, "simple_video", true)) as any;
+    const response = (await api.singleTaskList(currentPage.value, 10, "simple_video", true, contentSwitch.projectNsfwFilter)) as any;
     if (response.code != 200) {
       toast(t("fail"));
       return;
@@ -1878,6 +1881,7 @@ function renderCaptionContent() {
 
 // URL jump entry
 onMounted(async () => {
+  await contentSwitch.ensureLoaded();
   document.addEventListener("click", handleClickOutside);
   checkSubscriptionStatus();
 

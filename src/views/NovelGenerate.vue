@@ -231,7 +231,7 @@
             <div class="regenerate-footer">
               <div class="regenerate-settings">
                 <!-- NSFW Toggle - only shown when region allows -->
-                <div v-if="userRegion" class="nsfw-toggle" @click="toggleRegenerateNsfw">
+                <div v-if="showRegenerateNsfwToggle" class="nsfw-toggle" @click="toggleRegenerateNsfw">
                   <span class="nsfw-btn" :class="{ on: regenerateNsfwMode }">
                     <span class="nsfw-dot"></span>
                     NSFW
@@ -275,8 +275,9 @@
                 </div>
 
                 <!-- Insert Image Selector - only show when region allows and NSFW mode is on -->
-                <div v-if="userRegion && regenerateNsfwMode" class="novel-selector icon-selector" @click.stop="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
+                <div v-if="showRegenerateInsertImage" class="novel-selector icon-selector" @click.stop="toggleInsertImageDropdown" :class="{ open: showInsertImageDropdown }">
                   <div class="selector-header">
+                    <span class="selector-value">{{ selectedInsertImageText }}</span>
                     <img class="selector-icon" src="@/assets/images/novel/pic.png" alt="" />
                   </div>
                   <div class="dropdown" v-if="showInsertImageDropdown">
@@ -1735,6 +1736,9 @@ const selectedInsertImageText = computed(() => {
   const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
   return option ? option.label : '';
 });
+const effectiveRegenerateNsfw = computed(() => contentSwitch.mode === 2 || (contentSwitch.mode === 1 && regenerateNsfwMode.value));
+const showRegenerateNsfwToggle = computed(() => contentSwitch.loaded && contentSwitch.mode === 1 && userRegion.value);
+const showRegenerateInsertImage = computed(() => contentSwitch.loaded && effectiveRegenerateNsfw.value);
 
 const currentChapter = ref<any>(null);
 
@@ -3586,8 +3590,9 @@ const shouldShowGenerateButtons = computed(() => {
   // Don't show buttons when in preparation state
   if (isPreparing.value) return false;
 
-  // Don't show buttons if step_name is chapter when viewing outline
+  // For outline page, only show the initial generation action before any chapter exists
   if (!currentChapter.value) {
+    if (chapters.value.length > 0) return false;
     if (currentStepName.value == 'chapter' || ((currentStepName.value == 'renew_novel_cover' || currentStepName.value == 'refresh_novel_cover') && coverRenewLoading.value)) return false;
     if (stepChapterIndex.value >= chapterCount.value && chapterCount.value > 0) return false;
   }
@@ -3823,12 +3828,18 @@ const regenerateOutline = async () => {
     selectedLanguage.value = userSelectedSettings.value.language;
   }
 
-  // Set NSFW mode & illustration setting from user settings (default to 4)
-  regenerateNsfwMode.value = userSelectedSettings.value?.story_mode === 'nsfw';
+  // Set NSFW mode & illustration setting from global content policy and user settings
+  regenerateNsfwMode.value = contentSwitch.mode === 2
+    ? true
+    : contentSwitch.mode === 0
+      ? false
+      : userSelectedSettings.value?.story_mode === 'nsfw';
   const rawInsertCount = userSelectedSettings.value?.insert_image_count;
-  selectedInsertImage.value = (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '')
-    ? Number(rawInsertCount)
-    : 4;
+  selectedInsertImage.value = contentSwitch.mode === 2
+    ? 4
+    : contentSwitch.mode === 0
+      ? 0
+      : (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4);
   showInsertImageDropdown.value = false;
 };
 
@@ -3906,6 +3917,17 @@ function getCountry(): Promise<void> {
 }
 
 const toggleRegenerateNsfw = () => {
+  if (contentSwitch.mode === 2) {
+    regenerateNsfwMode.value = true;
+    selectedInsertImage.value = 4;
+    return;
+  }
+  if (contentSwitch.mode === 0) {
+    regenerateNsfwMode.value = false;
+    selectedInsertImage.value = 0;
+    return;
+  }
+
   if (!regenerateNsfwMode.value) {
     // Turning NSFW ON — run age check + confirmation flow (consistent with Home)
     const token = localStorage.getItem('token');
@@ -4034,9 +4056,8 @@ const sendRegenerateRequest = async () => {
     const previousSettings = userSelectedSettings.value || {};
     const previousOthers = previousSettings.others || {};
 
-    // When the NSFW switch is hidden (region not allowed), force normal mode + 0 images,
-    // even if the previous setting was NSFW/unlimited.
-    const effectiveNsfw = userRegion.value && regenerateNsfwMode.value;
+    await contentSwitch.ensureLoaded();
+    const effectiveNsfw = contentSwitch.mode === 2 || (contentSwitch.mode === 1 && userRegion.value && regenerateNsfwMode.value);
 
     // Build request data based on previous settings, only updating modified fields
     const requestData = {
@@ -4044,7 +4065,7 @@ const sendRegenerateRequest = async () => {
       session_id: sessionId.value,
       language: selectedLanguage.value,
       story_mode: effectiveNsfw ? 'nsfw' : 'normal',
-      insert_image_count: effectiveNsfw ? selectedInsertImage.value : 0,
+      insert_image_count: effectiveNsfw ? (contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value) : 0,
       others: {
         ...previousOthers,
         content: regenerateContent.value.trim(),
@@ -7645,7 +7666,7 @@ const fetchNovelOutline = async () => {
     if (detailProjectRes.data?.chapters) {
       chapters.value = detailProjectRes.data.chapters;
       // Update chapterCount based on chapters length
-      chapterCount.value = detailProjectRes.data.chapters.length;
+      // chapterCount.value = detailProjectRes.data.chapters.length;
     }
 
     // Get step_name from detailProject response
@@ -8972,6 +8993,7 @@ function setSeoMeta() {
 
 // Lifecycle
 onMounted(async () => {
+  await contentSwitch.ensureLoaded();
   const token = localStorage.getItem('token');
   if (!token) {
     router.push('/');
@@ -8987,7 +9009,7 @@ onMounted(async () => {
 
   fetchUserInfo();
   fetchUserBalance();
-  getCountry();
+  await getCountry();
   await fetchNovelOutline();
 
   // Don't fetch points estimate here as it's already called in handleStructuredData

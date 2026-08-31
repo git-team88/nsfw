@@ -320,18 +320,18 @@
       .confirm-btn {
         min-width: 240px;
         height: 48px;
-        border: 1px solid #3d3d3d;
+        border: 1px solid #ff9aca;
         border-radius: 14px;
         font-size: 16px;
         font-weight: 800;
         background: linear-gradient(145deg, #ff65ab, #f02c80);
-        color: #1a1a1a;
+        color: #fff;
         cursor: pointer;
         box-shadow: none;
-        transition: border-color 0.15s;
+        transition: filter 0.15s;
 
         &:hover:not(:disabled) {
-          box-shadow: none;
+          filter: brightness(1.08);
         }
 
         &:disabled {

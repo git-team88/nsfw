@@ -393,6 +393,7 @@ import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { processImageUrl } from "@/util/utils";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -404,6 +405,7 @@ import UploadMask from "@/components/UploadMask.vue";
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
+const contentSwitch = useContentSwitchStore();
 const { t, locale } = useI18n();
 const route = useRoute();
 
@@ -709,7 +711,7 @@ function changeTab(item: TabItem, index: number) {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.singleTaskList(currentPage.value, pageSize, "simple_image", true) as any;
+    const response = await api.singleTaskList(currentPage.value, pageSize, "simple_image", true, contentSwitch.projectNsfwFilter) as any;
     if (response.code !== 200) {
       toast(t("fail"));
       return;
@@ -1624,6 +1626,7 @@ function renderCaptionContent() {
 
 // --- URL jump entry ---
 onMounted(async () => {
+  await contentSwitch.ensureLoaded();
   tabList.value = buildTabList();
   checkSubscriptionStatus();
 
