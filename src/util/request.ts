@@ -28,10 +28,10 @@ class Request {
       const contentSwitchMode = localStorage.getItem('contentSwitchMode');
       const shouldAppendChannel = contentSwitchMode === '2';
       if (shouldAppendChannel && config.url?.includes('show_nsfw=') && !config.url.includes('channel=')) {
-        config.url += '&channel=2';
+        config.url += '&channel=1';
       }
       if (shouldAppendChannel && config.data && typeof config.data === 'object' && 'show_nsfw' in config.data && !('channel' in config.data)) {
-        config.data.channel = 2;
+        config.data.channel = 1;
       }
       if (config.method == 'GET') {
         config.paramsSerializer = function (params) {

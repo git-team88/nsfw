@@ -25,7 +25,7 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
   getters: {
     showNsfw: (state): number => state.mode === 0 ? 0 : state.mode === 2 ? 1 : state.userAllowsSensitive ? 1 : 0,
     showSensitiveToggle: (state): boolean => state.mode === 1,
-    channel: (state): number | undefined => state.mode === 2 ? 2 : undefined,
+    channel: (state): number | undefined => state.mode === 2 ? 1 : undefined,
   },
   actions: {
     async ensureLoaded() {

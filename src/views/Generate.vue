@@ -4668,6 +4668,10 @@ const doGenerateVideo = async () => {
 
     displayRecords.value = records.value;
 
+    nextTick(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+
     const videoSettings = {
       language: locale.value == 'zh' ? 'cn' : locale.value,
       aspectRatio: (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? '9:16' : selectedVideoRatio.value,
@@ -4756,14 +4760,6 @@ const doGenerateVideo = async () => {
 
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
-
-      // Scroll to bottom, considering the fixed bottom input area
-      nextTick(() => {
-        const bottomInputArea = document.querySelector('.bottom-input-area') as HTMLElement | null;
-        const bottomOffset = bottomInputArea ? bottomInputArea.offsetHeight : 120;
-        const scrollPosition = Math.max(0, document.body.scrollHeight - window.innerHeight - bottomOffset + 20);
-        window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-      });
     } else {
       const idx = records.value.findIndex(r => r.session_id == sessionId);
       if (idx !== -1) {
@@ -5151,20 +5147,40 @@ const playVideoItem = (item: any) => {
   }
 };
 
-const downloadVideo = (record: any) => {
+const getDownloadUrl = async (url: string): Promise<string> => {
+  return url;
+};
+
+const getDownloadFilename = (url: string, fallback: string): string => {
+  try {
+    const pathname = new URL(url, window.location.href).pathname;
+    const filename = decodeURIComponent(pathname.split('/').pop() || '');
+    return filename || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const triggerDownload = (url: string, filename: string) => {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};
+
+const downloadVideo = async (record: any) => {
   try {
     const videoUrl = record.result_async?.final_videos?.[0]?.video_url || record.result_async?.final_video || record.video_url;
     if (!videoUrl) {
       toast(t('fail'));
       return;
     }
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.download = `video_${Date.now()}.mp4`;
-    a.target = '_self';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    const downloadUrl = await getDownloadUrl(videoUrl);
+    triggerDownload(downloadUrl, getDownloadFilename(videoUrl, 'video.mp4'));
   } catch (error) {
     console.error('Error downloading video:', error);
     toast(t('fail'));
@@ -5576,15 +5592,10 @@ const editImage = (record: any, index: number) => {
   });
 };
 
-const downloadSingleImage = (imageUrl: string) => {
+const downloadSingleImage = async (imageUrl: string) => {
   try {
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = `image_${Date.now()}.png`;
-    a.target = '_self';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const downloadUrl = await getDownloadUrl(imageUrl);
+    triggerDownload(downloadUrl, getDownloadFilename(imageUrl, 'image.png'));
   } catch (error) {
     console.error('Error downloading image:', error);
     toast(t('fail'));
