@@ -46,7 +46,7 @@
         </div>
 
         <!-- Sensitive Content Section -->
-        <div class="form-group">
+        <div class="form-group" v-if="contentSwitch.showSensitiveToggle">
           <div class="form-label-inner">
             <label class="form-label" style="margin-bottom: 0;"><b class="required">*</b>{{ t("submit.contentSettings") }}</label>
             <div class="info-icon" @mouseover="adjustTooltipPosition">
@@ -151,6 +151,7 @@ import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { processImageUrl } from '@/util/utils';
 import { baseUrl } from '@/util/config';
@@ -161,6 +162,13 @@ import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return isNsfw.value;
+});
 const route = useRoute();
 const router = useRouter();
 
@@ -274,6 +282,7 @@ function adjustTooltipPosition(event: MouseEvent) {
 }
 
 onMounted(async () => {
+  await contentSwitch.ensureLoaded();
   const id = route.query.id;
   if (id) {
     editId.value = id as string;
@@ -343,8 +352,8 @@ async function handleSave() {
         params.cover = coverUrl.value;
       }
 
-      if (isNsfw.value !== originalIsNsfw.value) {
-        params.is_nsfw = isNsfw.value;
+      if (computedIsNsfw.value !== originalIsNsfw.value) {
+        params.is_nsfw = computedIsNsfw.value;
       }
 
       if (selectedLanguage.value !== originalLanguage.value) {
@@ -354,7 +363,7 @@ async function handleSave() {
       params.title = collectionName.value.trim();
       params.description = description.value.trim();
       params.cover = coverUrl.value;
-      params.is_nsfw = isNsfw.value;
+      params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
     }
 

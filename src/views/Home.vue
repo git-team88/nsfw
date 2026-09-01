@@ -2360,7 +2360,7 @@ const runTypewriter = () => {
 // 直接 watch computed 会在 setup 阶段立即求值触发 TDZ 错误）
 
 // Content type
-const contentType = ref('photo'); // video, comic, novel, photo
+const contentType = ref('video'); // video, comic, novel, photo
 const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
   { value: 'video', label: '18x' + ' ' + t('home.contentType.video') },

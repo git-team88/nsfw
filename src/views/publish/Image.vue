@@ -310,7 +310,7 @@
         </div>
 
         <!-- Content Settings -->
-        <div class="inline-perm-row" v-if="true">
+        <div class="inline-perm-row" v-if="contentSwitch.showSensitiveToggle">
           <div class="perm-group">
             <span class="perm-label">{{ t('submit.contentSettings') }}</span>
             <div class="perm-options">
@@ -407,6 +407,12 @@ import selectActive from "@/assets/images/publish/select_active.png";
 
 const contentSwitch = useContentSwitchStore();
 const { t, locale } = useI18n();
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return form.value.content === "yes" ? 1 : 0;
+});
 const route = useRoute();
 
 const TITLE_MAX = 60;
@@ -587,7 +593,7 @@ async function uploadImageForAdd(file: File) {
       const url = (data?.data && (data.data.url || data.data)) || data?.url;
       if (typeof url === "string" && url) {
         imageUrls.value.push(url);
-        imageSessionMap.value.set(url, session_id.value || "");
+        imageSessionMap.value.set(url, "");
       }
     }
   } catch (error) {
@@ -646,7 +652,7 @@ async function onReuploadPicked(e: Event) {
         const oldUrl = imageUrls.value[idx];
         imageUrls.value.splice(idx, 1, url);
         imageSessionMap.value.delete(oldUrl);
-        imageSessionMap.value.set(url, session_id.value || "");
+        imageSessionMap.value.set(url, "");
         if (coverPreview.value === oldUrl) {
           coverPreview.value = url;
         }
@@ -1520,7 +1526,7 @@ async function onSubmit() {
 
   try {
     const imageUrlsPayload: string[] = finalUrls.map((url: string) => {
-      const sid = imageSessionMap.value.get(url) || session_id.value || "";
+      const sid = imageSessionMap.value.get(url) ?? '';
       return `${sid}|${url}`;
     });
 
@@ -1530,7 +1536,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: finalCover,
       content: form.value.description.trim(),
-      is_nsfw: form.value.content === "yes" ? 1 : 0,
+      is_nsfw: computedIsNsfw.value,
       access_rights: form.value.permission === "partial" ? 2 : form.value.permission === "private" ? 3 : 1,
       image_urls: imageUrlsPayload,
       language: form.value.language,

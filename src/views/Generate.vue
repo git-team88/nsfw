@@ -357,19 +357,19 @@
         <div class="input-type-box">
           <div class="content-type-selector">
             <div
-              :class="['type-btn', { active: bottomActiveTab == 'photo' }]"
-              @click="switchBottomTab('photo')"
-            >
-              <div class="type-text">
-                <span>18x {{ t('home.contentType.photo') }}</span>
-              </div>
-            </div>
-            <div
               :class="['type-btn', { active: bottomActiveTab == 'video' }]"
               @click="switchBottomTab('video')"
             >
               <div class="type-text">
                 <span>18x {{ t('home.contentType.video') }}</span>
+              </div>
+            </div>
+            <div
+              :class="['type-btn', { active: bottomActiveTab == 'photo' }]"
+              @click="switchBottomTab('photo')"
+            >
+              <div class="type-text">
+                <span>18x {{ t('home.contentType.photo') }}</span>
               </div>
             </div>
           </div>
@@ -1014,8 +1014,8 @@ const isPositioningTarget = ref(false);
 
 const typeOptions = ref([
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
-  { value: 'simple_image', label: t('recordList.photo') },
   { value: 'simple_video', label: t('recordList.video') },
+  { value: 'simple_image', label: t('recordList.photo') },
 ]);
 
 const selectedTypeLabel = computed(() => {
@@ -2037,7 +2037,7 @@ const handleVideoTextareaInput = () => {
 };
 
 // Bottom generator active tab
-const bottomActiveTab = ref('photo');
+const bottomActiveTab = ref('video');
 
 const resetPhotoSettings = () => {
   selectedPhotoQuality.value = '1K';

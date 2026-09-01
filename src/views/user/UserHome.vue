@@ -671,7 +671,7 @@ watch(topTab, (val) => {
   }
 });
 
-const activeContentType = ref<number | string>(4);
+const activeContentType = ref<number | string>(5);
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);

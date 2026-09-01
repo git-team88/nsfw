@@ -343,7 +343,7 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive" v-if="true">
+                        <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                           <div class="sensitive-left">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -517,7 +517,7 @@
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
-                      <div class="content-sensitive" v-if="true">
+                      <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -820,11 +820,13 @@ import Pagination from "@/components/Pagination.vue";
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
 import { toast } from "@/util/toast";
 import { trackClickPublishButton } from "@/utils/analytics";
 import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { processImageUrl } from "@/util/utils";
 
 import select from "@/assets/images/publish/select.png";
@@ -989,6 +991,12 @@ const showSubscriptionModal = ref(false);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return selectedCollection.value?.is_nsfw ?? 0;
+});
 const editingCollectionId = ref<string | number | null>(null);
 const showEditCollectionModal = ref(false);
 const isCollectionHovered = ref(false);
@@ -1151,7 +1159,7 @@ async function handlePublishFromSelection() {
               type: 1,
               cover: targetProject.result_async.generate_manhua_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
 
             if (createRes.code == 0 && createRes.data?.book_id) {
@@ -1160,7 +1168,7 @@ async function handlePublishFromSelection() {
                 name: targetProject.name,
                 cover: targetProject.result_async.generate_manhua_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1383,7 +1391,7 @@ async function runBatchPublishLoop() {
         type: 1,
         title: title.substring(0, 60),
         cover: coverPreview.value || (selectedCollection.value?.cover || ''),
-        is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+        is_nsfw: computedIsNsfw.value,
         access_rights: accessRights,
         book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
         chapter_index: collectionChapterIndex,
@@ -3466,7 +3474,7 @@ async function onSubmit() {
     title: form.value.title.trim(),
     cover: coverPreview.value,
     content: form.value.description.trim(),
-    is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+    is_nsfw: computedIsNsfw.value,
     access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
     image_urls: imageFiles.value.filter(f => f._url).map((f) => f._url!),
     book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
@@ -3661,7 +3669,7 @@ async function handleCollectionFromProjectName(projectName: string, sessionId?: 
           type: 1,
           cover: coverPreview.value || '',
           description: t('collectionSettings.sampleDescription'),
-          is_nsfw: 0
+          is_nsfw: contentSwitch.mode === 2 ? 1 : 0
         }) as any;
 
         if (createRes.code === 0 && createRes.data?.book_id) {
@@ -3671,7 +3679,7 @@ async function handleCollectionFromProjectName(projectName: string, sessionId?: 
             name: projectName,
             cover: coverPreview.value || '',
             description: t('collectionSettings.sampleDescription'),
-            is_nsfw: 0
+            is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           };
           isNoCollection.value = false;
         }
@@ -3963,7 +3971,7 @@ async function handlePublish(publishData?: any) {
             type: 1,
             cover: project.result_async.generate_manhua_cover || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
-            is_nsfw: 0
+            is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0) {
@@ -3972,7 +3980,7 @@ async function handlePublish(publishData?: any) {
               name: project.name,
               cover: project.result_async.generate_manhua_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             };
             isNoCollection.value = false;
           }
@@ -4372,7 +4380,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                 type: 1,
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
               }) as any;
 
               if (createRes.code == 0 && createRes.data?.book_id) {
@@ -4381,7 +4389,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                   name: title,
                   cover: coverPreview.value || '',
                   description: storySummary || t('collectionSettings.sampleDescription'),
-                  is_nsfw: 0
+                  is_nsfw: contentSwitch.mode === 2 ? 1 : 0
                 };
                 selectedEpisodeNumber.value = '1';
                 isNoCollection.value = false;
@@ -4509,7 +4517,7 @@ async function initBatchPublish(session_id: string) {
             type: 1,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
-            is_nsfw: 0
+            is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
@@ -4518,7 +4526,7 @@ async function initBatchPublish(session_id: string) {
               name: projectTitle,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -4562,6 +4570,7 @@ async function initBatchPublish(session_id: string) {
 
 // Lifecycle hooks
 onMounted(async () => {
+    await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
     getCountry();
     await checkSubscriptionStatus();

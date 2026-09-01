@@ -375,7 +375,7 @@
                       <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
                     </div>
 
-                    <div class="content-sensitive" v-if="true">
+                    <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                       <div class="sensitive-left">
                         <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -547,7 +547,7 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                    <div class="content-sensitive" v-if="true">
+                    <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                           <div class="sensitive-left">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -773,6 +773,7 @@ import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import CollectionListModal from "@/components/CollectionListModal.vue";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import mammoth from "mammoth";
 import { extractDocText } from "@/util/docParser";
 import * as pdfjsLib from "pdfjs-dist";
@@ -780,6 +781,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
 import { toast } from "@/util/toast";
 import { trackClickPublishButton } from "@/utils/analytics";
 import { baseUrl } from "@/util/config";
@@ -1133,6 +1135,12 @@ const showChapterDropdown = ref(false);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return selectedCollection.value?.is_nsfw ?? 0;
+});
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
@@ -2031,7 +2039,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: coverPreview.value || (selectedCollection.value?.cover || ''),
       content: (captionRef.value ? serializeCaptionContent() : form.value.description).trim(),
-      is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+      is_nsfw: computedIsNsfw.value,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
@@ -4123,7 +4131,7 @@ async function runBatchPublishLoop() {
         title: title.substring(0, 60),
         cover: coverPreview.value || (selectedCollection.value?.cover || ''),
         content: content,
-        is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+        is_nsfw: computedIsNsfw.value,
         access_rights: accessRights,
         book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
         chapter_index: collectionChapterIndex,
@@ -4326,7 +4334,7 @@ async function handlePublish(publishData?: any) {
             || '').slice(0, 1000);
           const collectionDescription = storySummary || t('collection.defaultDescription');
           const projectStoryMode = publishData?.project?.user_selected?.story_mode || publishData?.project?.story_mode || selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-          const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+          const collectionIsNsfw = contentSwitch.mode === 0 ? 0 : contentSwitch.mode === 2 ? 1 : (projectStoryMode == 'nsfw' ? 1 : 0);
 
           const createRes = await api.addCollection({
             title: projectName,
@@ -4567,7 +4575,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                 || '').slice(0, 1000);
               const collectionDescription = storySummary || t('collection.defaultDescription');
               const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-              const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+              const collectionIsNsfw = contentSwitch.mode === 0 ? 0 : contentSwitch.mode === 2 ? 1 : (projectStoryMode == 'nsfw' ? 1 : 0);
 
               const createRes = await api.addCollection({
                 title,
@@ -4722,7 +4730,7 @@ async function initBatchPublish(session_id: string) {
           const storySummary = (selectedProject.value?.result_async?.generate_novel_outline?.story_summary?.summary || '').slice(0, 1000);
           const collectionDescription = storySummary || t('collection.defaultDescription');
           const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';
-          const collectionIsNsfw = projectStoryMode == 'nsfw' ? 1 : 0;
+          const collectionIsNsfw = contentSwitch.mode === 0 ? 0 : contentSwitch.mode === 2 ? 1 : (projectStoryMode == 'nsfw' ? 1 : 0);
 
           const createRes = await api.addCollection({
             title: projectTitle,
@@ -4773,6 +4781,7 @@ async function initBatchPublish(session_id: string) {
 }
 
   onMounted(async () => {
+    await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 
     checkSubscriptionStatus();

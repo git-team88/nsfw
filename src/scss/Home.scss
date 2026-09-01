@@ -130,7 +130,7 @@ $pinkopacity: rgba(255,79,154,0.12);
 
 .hero-section {
   position: relative;
-  z-index: 2;
+  z-index: 150;
   margin: 8px;
   border: 1px solid #3d3d3d;
   border-radius: 18px;
@@ -508,8 +508,9 @@ $pinkopacity: rgba(255,79,154,0.12);
 
         .dropdown {
           position: absolute;
-          top: calc(100% + 6px);
+          bottom: 100%;
           left: 0;
+          margin-bottom: 6px;
           padding: 12px 14px;
           background: #1a1a1a;
           border: 1px solid #3d3d3d;
@@ -1089,6 +1090,8 @@ $pinkopacity: rgba(255,79,154,0.12);
         z-index: 100;
         max-height: 200px;
         overflow-y: auto;
+        bottom: 100%;
+        margin-bottom: 6px;
 
         &::-webkit-scrollbar { width: 5px; }
         &::-webkit-scrollbar-thumb { background: $line; border-radius: 999px; }
@@ -1224,9 +1227,9 @@ $pinkopacity: rgba(255,79,154,0.12);
 
           .dropdown {
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             left: 0;
-            margin-top: 6px;
+            margin-bottom: 6px;
             padding: 12px 14px;
             background: #1a1a1a;
             border: 1px solid #3d3d3d;
@@ -1463,9 +1466,9 @@ $pinkopacity: rgba(255,79,154,0.12);
 
   .dropdown {
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 0;
-    margin-top: 6px;
+    margin-bottom: 6px;
     padding: 12px 14px;
     background: #1a1a1a;
     border: 1px solid #3d3d3d;
@@ -1562,10 +1565,10 @@ $pinkopacity: rgba(255,79,154,0.12);
 
   .dropdown {
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 0;
     width: max-content;
-    margin-top: 6px;
+    margin-bottom: 6px;
     padding: 12px 14px;
     border: 1px solid #3d3d3d;
     border-radius: 10px;
@@ -1665,10 +1668,10 @@ $pinkopacity: rgba(255,79,154,0.12);
 
   .dropdown {
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 0;
     width: max-content;
-    margin-top: 6px;
+    margin-bottom: 6px;
     padding: 12px 14px;
     border: 1px solid #3d3d3d;
     border-radius: 10px;

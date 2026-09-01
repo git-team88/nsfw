@@ -279,7 +279,7 @@ const contentSwitch = useContentSwitchStore();
 const route = useRoute();
 
 // State
-const activeMainTab = ref('photo');
+const activeMainTab = ref('video');
 const activeStatusTab = ref('unpublished');
 const projects = ref<any[]>([]);
 const loading = ref(false);

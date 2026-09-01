@@ -322,7 +322,7 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive" v-if="true">
+                        <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                           <div class="sensitive-left">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -495,7 +495,7 @@
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
-                      <div class="content-sensitive">
+                      <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                         <div class="sensitive-left">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -806,6 +806,7 @@ import BatchPublishProgressDialog from "@/components/BatchPublishProgressDialog.
 import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import Pagination from "@/components/Pagination.vue";
 import api from "@/api/index";
+import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -825,6 +826,7 @@ import { baseUrl } from "@/util/config";
 const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
 
 function getI18nMsg(res: any) {
   const lang = locale.value;
@@ -1096,6 +1098,12 @@ const previewProject = ref<any>(null);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return selectedCollection.value?.is_nsfw ?? 0;
+});
 const editingCollectionId = ref<string | number | null>(null);
 const showEditCollectionModal = ref(false);
 const isCollectionHovered = ref(false);
@@ -1300,7 +1308,7 @@ async function handlePublishFromSelection() {
               type: 3,
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
 
             if (createRes.code == 0 && createRes.data?.book_id) {
@@ -1309,7 +1317,7 @@ async function handlePublishFromSelection() {
                 name: targetProject.name,
                 cover: targetProject.result_async?.generate_manju_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1533,7 +1541,7 @@ async function runBatchPublishLoop() {
         type: 3,
         title: title.substring(0, 60),
         cover: coverPreview.value || (selectedCollection.value?.cover || ''),
-        is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+        is_nsfw: computedIsNsfw.value,
         access_rights: accessRights,
         book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
         chapter_index: collectionChapterIndex,
@@ -2396,7 +2404,7 @@ async function handlePublish(publishData?: any) {
             type: 3,
             cover: project.video_cover_url || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
-            is_nsfw: 0
+            is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
@@ -2406,7 +2414,7 @@ async function handlePublish(publishData?: any) {
               name: project.name,
               cover: project.video_cover_url || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -3858,7 +3866,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: coverPreview.value,
       content: processedContent,
-      is_nsfw: selectedCollection.value?.is_nsfw ?? 0,
+      is_nsfw: computedIsNsfw.value,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
@@ -3975,7 +3983,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
               type: 3,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
 
             if (createRes.code === 0 && createRes.data?.book_id) {
@@ -3984,7 +3992,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 name: title,
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4191,7 +4199,7 @@ async function initBatchPublish(session_id: string) {
             type: 3,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
-            is_nsfw: 0
+            is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
@@ -4200,7 +4208,7 @@ async function initBatchPublish(session_id: string) {
               name: projectTitle,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';
@@ -4246,6 +4254,7 @@ async function initBatchPublish(session_id: string) {
 }
 
 onMounted(async () => {
+    await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 
     getCountry();

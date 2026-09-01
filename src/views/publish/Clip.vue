@@ -303,7 +303,7 @@
           </div>
 
           <!-- Content Settings -->
-          <div class="inline-perm-row" v-if="true">
+          <div class="inline-perm-row" v-if="contentSwitch.showSensitiveToggle">
             <div class="perm-group">
               <span class="perm-label">{{ t('submit.contentSettings') }}</span>
               <div class="perm-options">
@@ -400,6 +400,12 @@ import selectActive from "@/assets/images/publish/select_active.png";
 
 const { t, locale } = useI18n();
 const contentSwitch = useContentSwitchStore();
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return form.value.content === "yes" ? 1 : 0;
+});
 
 const route = useRoute();
 
@@ -1785,7 +1791,7 @@ async function onSubmit() {
       title: form.value.title.trim(),
       cover: coverUrl.value,
       content: form.value.description.trim(),
-      is_nsfw: form.value.content === "yes" ? 1 : 0,
+      is_nsfw: computedIsNsfw.value,
       access_rights: accessRights.value,
       video_url: videoUrl.value,
       language: form.value.language,

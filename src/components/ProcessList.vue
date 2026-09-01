@@ -133,8 +133,11 @@ let pollingTimer: number | null = null;
 // Track start times for batch generation tasks
 const batchTaskStartTimes = ref<Map<string, number>>(new Map());
 
+const emit = defineEmits<{ (e: 'toggle'): void }>();
+
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
+  emit('toggle');
 };
 
 const categories = computed(() => {

@@ -45,7 +45,7 @@
         </div>
 
         <!-- Sensitive Content Section -->
-        <div class="form-group">
+        <div class="form-group" v-if="contentSwitch.showSensitiveToggle">
           <div class="form-label-inner">
             <label class="form-label" style="margin-bottom: 0;"><b class="required">*</b>{{ t("submit.contentSettings") }}</label>
             <div class="info-icon" @mouseover="adjustTooltipPosition">
@@ -149,6 +149,7 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
+import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { processImageUrl } from '@/util/utils';
 import CollectionCoverModal from './CollectionCoverModal.vue';
@@ -158,6 +159,13 @@ import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
 const { t, locale } = useI18n();
+const contentSwitch = useContentSwitchStore();
+
+const computedIsNsfw = computed(() => {
+  if (contentSwitch.mode === 0) return 0;
+  if (contentSwitch.mode === 2) return 1;
+  return isNsfw.value;
+});
 
 const props = defineProps<{
   visible: boolean;
@@ -229,6 +237,7 @@ const initialLanguage = ref(props.language || defaultLang);
 
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
+    await contentSwitch.ensureLoaded();
     errorMessage.value = '';
     isLoading.value = false;
     selectedLanguage.value = props.language || defaultLang;
@@ -390,8 +399,8 @@ async function handleSave() {
       if (description.value.trim() !== initialDescription.value) {
         params.description = description.value.trim();
       }
-      if (isNsfw.value !== initialIsNsfw.value) {
-        params.is_nsfw = isNsfw.value;
+      if (computedIsNsfw.value !== initialIsNsfw.value) {
+        params.is_nsfw = computedIsNsfw.value;
       }
       if (selectedLanguage.value !== initialLanguage.value) {
         params.language = selectedLanguage.value;
@@ -404,7 +413,7 @@ async function handleSave() {
           name: collectionName.value.trim(),
           cover: coverUrl.value,
           description: description.value.trim(),
-          is_nsfw: isNsfw.value,
+          is_nsfw: computedIsNsfw.value,
           language: selectedLanguage.value
         });
         handleCancel();
@@ -421,7 +430,7 @@ async function handleSave() {
         title: collectionName.value.trim(),
         description: description.value.trim() || t('collection.defaultDescription'),
         cover: coverUrl.value,
-        is_nsfw: isNsfw.value,
+        is_nsfw: computedIsNsfw.value,
         language: selectedLanguage.value
       };
 
@@ -432,7 +441,7 @@ async function handleSave() {
           name: collectionName.value.trim(),
           cover: coverUrl.value,
           description: description.value.trim(),
-          is_nsfw: isNsfw.value,
+          is_nsfw: computedIsNsfw.value,
           language: selectedLanguage.value
         });
         handleCancel();
