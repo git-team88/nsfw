@@ -917,15 +917,15 @@ const tabList = ref([
     path: "/publish/clip",
   },
   {
-    name: t("submit.tabs.novel"),
-    path: "/publish/novel",
-  },
-  {
     name: t("submit.tabs.manhua"),
     path: "/publish/comic",
+  },
+  {
+    name: t("submit.tabs.novel"),
+    path: "/publish/novel",
   }
 ]);
-const tabIndex = ref(2);
+const tabIndex = ref(3);
 const pendingRoute = ref<{ path: string } | null>(null);
 const isShowConfirm = ref(false);
 
@@ -1248,12 +1248,12 @@ watch(locale, () => {
       path: "/publish/clip",
     },
     {
-      name: t("submit.tabs.novel"),
-      path: "/publish/novel",
-    },
-    {
       name: t("submit.tabs.manhua"),
       path: "/publish/comic",
+    },
+    {
+      name: t("submit.tabs.novel"),
+      path: "/publish/novel",
     },
   ];
 });

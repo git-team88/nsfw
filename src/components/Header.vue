@@ -354,12 +354,12 @@ const typeList = ref([
     path: "/publish/clip",
   },
   {
-    name: t("header.type4"),
-    path: "/publish/novel",
-  },
-  {
     name: t("header.type3"),
     path: "/publish/comic",
+  },
+  {
+    name: t("header.type4"),
+    path: "/publish/novel",
   },
 ]);
 
@@ -409,12 +409,12 @@ watch(locale, () => {
       path: "/publish/clip",
     },
     {
-      name: t("header.type4"),
-      path: "/publish/novel",
-    },
-    {
       name: t("header.type3"),
       path: "/publish/comic",
+    },
+    {
+      name: t("header.type4"),
+      path: "/publish/novel",
     },
   ];
 });

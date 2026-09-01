@@ -664,8 +664,8 @@ function buildTabList(): TabItem[] {
   return [
     { name: t("submit.tabs.photo"), path: "/publish/image" },
     { name: t("submit.tabs.video"), path: "/publish/clip" },
-    { name: t("submit.tabs.novel"), path: "/publish/novel" },
     { name: t("submit.tabs.manhua"), path: "/publish/comic" },
+    { name: t("submit.tabs.novel"), path: "/publish/novel" },
   ];
 }
 

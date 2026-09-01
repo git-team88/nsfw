@@ -256,8 +256,8 @@ const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 4, label: t('home.contentType.image') },
   { id: 5, label: t('home.contentType.video') },
-  { id: 2, label: t('home.contentType.novel') },
-  { id: 1, label: t('home.contentType.comic') }
+  { id: 1, label: t('home.contentType.comic') },
+  { id: 2, label: t('home.contentType.novel') }
 ]);
 
 // Refs for waterfall layout
@@ -294,8 +294,8 @@ watch(() => locale.value, () => {
     { id: 0, label: t('home.contentType.all') },
     { id: 4, label: t('home.contentType.image') },
     { id: 5, label: t('home.contentType.video') },
-    { id: 2, label: t('home.contentType.novel') },
-    { id: 1, label: t('home.contentType.comic') }
+    { id: 1, label: t('home.contentType.comic') },
+    { id: 2, label: t('home.contentType.novel') }
   ]
 
   // Re-trigger search when language changes

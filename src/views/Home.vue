@@ -27,7 +27,7 @@
       </div>
 
       <!-- Hero Section -->
-      <div class="hero-section">
+      <div ref="heroSectionRef" class="hero-section">
         <!-- 3D 漂浮漫画卡片背景动效 -->
         <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
         <!-- 中间柔光层（让中间内容更清晰） -->
@@ -69,7 +69,40 @@
           <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
 
           <!-- Input Area -->
-           <div class="input-area-box">
+           <div
+             ref="inputAreaBoxRef"
+             class="input-area-box"
+             :class="{ 'is-sticky': showStickyInput, 'is-expanded': showStickyInput && stickyInputExpanded }"
+           >
+            <div
+              v-if="showStickyInput && !stickyInputExpanded"
+              class="sticky-input-trigger"
+              role="button"
+              tabindex="0"
+              :aria-label="stickyInputDisplayText"
+              @click="expandStickyInput"
+              @keydown.enter.prevent="expandStickyInput"
+              @keydown.space.prevent="expandStickyInput"
+            >
+              <span class="sticky-input-summary">
+                <span v-if="stickyInputPreviewItems.length" class="sticky-input-items" aria-hidden="true">
+                  <span v-for="item in stickyInputPreviewItems" :key="item.key" class="sticky-input-item"><img :src="item.src" alt="" /></span>
+                </span>
+                <span class="sticky-input-placeholder" :class="{ 'has-content': stickyInputPreview }">{{ stickyInputDisplayText }}</span>
+              </span>
+              <span
+                class="sticky-input-arrow"
+                role="button"
+                tabindex="0"
+                aria-label="发送"
+                @click.stop="submitStickyInput"
+                @keydown.enter.stop.prevent="submitStickyInput"
+                @keydown.space.stop.prevent="submitStickyInput"
+              >
+                ↗
+              </span>
+            </div>
+
             <div class="input-type-box">
               <!-- Content Type Selector -->
               <div class="content-type-selector">
@@ -1066,10 +1099,11 @@
               </div>
             </div>
           </div>
+          <div v-if="showStickyInput" class="sticky-input-spacer" :style="{ height: `${stickyInputPlaceholderHeight}px` }" aria-hidden="true"></div>
         </div>
       </div>
 
-      <ProcessList />
+      <ProcessList @toggle="collapseStickyInput" />
 
       <!-- 推荐创作者 + 人气作品（3D 动效 Showcase，移植自 moegen-web） -->
       <div v-if="false">
@@ -1147,7 +1181,7 @@
         </div>
 
         <div class="filter-container">
-          <div class="content-type-filter" v-if="activeContentTab === 'suggested' || viewMode === 'content'">
+            <div class="content-type-filter" v-if="activeContentTab === 'suggested' || viewMode === 'content'" ref="contentTypeFilterRef">
             <span
               v-for="type in contentTypes"
               :key="type.id"
@@ -1405,6 +1439,20 @@
     />
 
 
+    <!-- Bottom content tabs -->
+    <nav v-if="showBottomContentTabs" class="bottom-content-tabs" aria-label="content types">
+      <button
+        v-for="type in contentTypes"
+        :key="`bottom-${type.id}`"
+        type="button"
+        class="bottom-content-tab"
+        :class="{ active: activeContentType == type.id }"
+        @click="activeContentType = type.id"
+      >
+        {{ t('home.contentType.' + type.label) }}
+      </button>
+    </nav>
+
     <!-- Footer -->
     <Footer
       :total-pages="Math.ceil(totalPosts / pageSize)"
@@ -1494,6 +1542,9 @@ const sortOrder = ref('hot');
 const loading = ref(false);
 const activeContentType = ref(0);
 const isSearchFocused = ref(false);
+const contentTypeFilterRef = ref<HTMLElement | null>(null);
+const showBottomContentTabs = ref(false);
+
 
 const uid = localStorage.getItem('uid');
 
@@ -2181,6 +2232,13 @@ const getSliderValuePosition = () => {
 const showAtDropdown = ref(false);
 const atDropdownItems = ref<any[]>([]);
 const editableInputRef = ref<HTMLElement | null>(null);
+const inputAreaBoxRef = ref<HTMLElement | null>(null);
+const heroSectionRef = ref<HTMLElement | null>(null);
+const showStickyInput = ref(false);
+const stickyInputExpanded = ref(false);
+const stickyInputPlaceholderHeight = ref(0);
+const stickyInputPreview = ref('');
+let stickyExpandedAtScrollY = 0;
 const isInputFocused = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
@@ -2211,7 +2269,66 @@ const currentPlaceholder = computed(() => {
   return getCurrentPlaceholder();
 });
 
-// 打字机效果的占位文字：未获焦点且输入为空时循环打出目标 placeholder
+const stickyInputDisplayText = computed(() => stickyInputPreview.value || currentPlaceholder.value);
+const stickyInputPreviewItems = computed(() => combinedItems.value.slice(0, 4).map((item: any, index: number) => ({
+  key: `${item.id || item.type}-${index}`,
+  src: item.type === 'audio' ? audioIcon : item.cover || item.image || item.url || defaultCover
+})));
+
+const syncStickyInputPreview = () => {
+  if (contentType.value === 'novel') {
+    stickyInputPreview.value = novelInput.value.replace(/\s+/g, ' ').trim();
+  } else if (editableInputRef.value) {
+    stickyInputPreview.value = (editableInputRef.value.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+};
+
+const submitStickyInput = () => {
+  switch (contentType.value) {
+    case 'video': return generateVideo();
+    case 'photo': return generatePhoto();
+    case 'comic': return generateComic();
+    case 'drama': return generateDrama();
+    case 'novel': return navigateToNovelGenerate();
+  }
+};
+const collapseStickyInput = () => {
+  stickyInputExpanded.value = false;
+  showAtDropdown.value = false;
+  editableInputRef.value?.blur();
+};
+
+const expandStickyInput = () => {
+  stickyExpandedAtScrollY = window.scrollY;
+  stickyInputExpanded.value = true;
+  nextTick(() => {
+    if (contentType.value === 'novel') {
+      document.querySelector<HTMLElement>('.input-area-box.is-expanded .novel-textarea')?.focus();
+    } else {
+      editableInputRef.value?.focus();
+    }
+  });
+};
+
+const updateStickyInputVisibility = () => {
+  const hero = heroSectionRef.value;
+  if (!hero) return;
+  const outOfView = hero.getBoundingClientRect().bottom <= 0;
+  if (!outOfView) {
+    showStickyInput.value = false;
+    stickyInputExpanded.value = false;
+    return;
+  }
+  if (!showStickyInput.value) {
+    syncStickyInputPreview();
+    stickyInputPlaceholderHeight.value = inputAreaBoxRef.value?.offsetHeight || 0;
+  }
+  showStickyInput.value = true;
+  if (stickyInputExpanded.value && Math.abs(window.scrollY - stickyExpandedAtScrollY) > 4) {
+    collapseStickyInput();
+  }
+};
+
 const typedPlaceholder = ref('');
 let typeTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -2259,8 +2376,8 @@ const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
   { value: 'photo', label: '18x' + ' ' + t('home.contentType.photo') },
   { value: 'video', label: '18x' + ' ' + t('home.contentType.video') },
-  { value: 'novel', label: '18x' + ' ' + t('home.contentType.novel') },
   { value: 'comic', label: '18x' + ' ' + t('home.contentType.comic') },
+  { value: 'novel', label: '18x' + ' ' + t('home.contentType.novel') },
 ]);
 
 // Word count and language settings
@@ -2463,8 +2580,8 @@ const contentTypes = ref([
   { id: 0, label: 'all' },
   { id: 4, label: 'image' },
   { id: 5, label: 'video' },
-  { id: 2, label: 'novel' },
-  { id: 1, label: 'comic' }
+  { id: 1, label: 'comic' },
+  { id: 2, label: 'novel' }
 ]);
 
 // Sort Options
@@ -5257,6 +5374,7 @@ const handleInput = (event: Event) => {
   });
 
   isInputEmpty.value = actualText.trim() === '';
+  stickyInputPreview.value = actualText.replace(/\s+/g, ' ').trim();
 
   const cursorPosition = getCursorPosition(target);
   const textBeforeCursor = actualText.substring(0, cursorPosition);
@@ -5663,6 +5781,7 @@ const handleTextareaInput = () => {
     novelInput.value = novelInput.value.substring(0, maxLimit);
     limitToast(t('home.error.maxInputLimit', { max: maxLimit }));
   }
+  stickyInputPreview.value = novelInput.value.replace(/\s+/g, ' ').trim();
 };
 
 // Select @ dropdown item
@@ -6387,6 +6506,7 @@ onMounted(async () => {
     selectedInsertImage.value = 4;
   }
   window.addEventListener('scroll', handleScrollToBottom);
+  window.addEventListener('scroll', updateStickyInputVisibility, { passive: true });
 
   // 启动占位打字机 + 注册相关 watch（此时所有依赖 ref 已声明）
   runTypewriter();
@@ -6397,7 +6517,10 @@ onMounted(async () => {
   await initLanguage();
 
   // 启动 hero 拟声词淡入 + 浮动
-  nextTick(() => initHeroParts());
+  nextTick(() => {
+    initHeroParts();
+    updateStickyInputVisibility();
+  });
 
   nextTick(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -6604,6 +6727,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScrollToBottom);
+  window.removeEventListener('scroll', updateStickyInputVisibility);
   if (typeTimer) clearTimeout(typeTimer);
 });
 
@@ -6777,6 +6901,9 @@ function handlePageChange(page: number) {
 }
 
 const handleScrollToBottom = () => {
+  const filter = contentTypeFilterRef.value;
+  const shouldShowFilterTabs = activeContentTab.value === 'suggested' || viewMode.value === 'content';
+  showBottomContentTabs.value = shouldShowFilterTabs && !!filter && filter.getBoundingClientRect().bottom < 0;
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const windowHeight = window.innerHeight;
   const documentHeight = document.documentElement.scrollHeight;

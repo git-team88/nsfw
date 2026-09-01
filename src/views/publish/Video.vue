@@ -1042,12 +1042,12 @@ const tabList = [
     path: "/publish/clip",
   },
   {
-    name: t("submit.tabs.novel"),
-    path: "/publish/novel",
-  },
-  {
     name: t("submit.tabs.manhua"),
     path: "/publish/comic",
+  },
+  {
+    name: t("submit.tabs.novel"),
+    path: "/publish/novel",
   }
 ];
 

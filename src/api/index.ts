@@ -149,7 +149,7 @@ export default {
     }),
   getContentSwitchPublic: () =>
     axios.request({
-      url: "index/getContentSwitchPublic",
+      url: "index/getContentSwitchPublic?channel=1",
       method: "GET",
     }),
   setAdult: (data: any) =>
