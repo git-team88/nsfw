@@ -2626,9 +2626,7 @@ const handleVideoRefUpload = async (event: Event) => {
 
       if (isUnlimited && selectedVideoMultimodal.value == 'multimodal') {
         const allVideoDurations = [...existingVideoDurations, ...newFileVideoDurations];
-        if (allVideoDurations.length === 1) {
-          totalVideoDuration += Math.ceil(allVideoDurations[0]);
-        } else if (allVideoDurations.length > 1) {
+        if (allVideoDurations.length > 0) {
           totalVideoDuration += Math.ceil(allVideoDurations.reduce((sum, d) => sum + d, 0));
         }
       } else {
@@ -2712,6 +2710,20 @@ const handleVideoRefUpload = async (event: Event) => {
           };
           const newIndex = uploadedVideoRefs.value.length;
           uploadedVideoRefs.value.push(newItem);
+
+          // Update selectedVideoDuration after video upload in multimodal mode
+          if (fileType === 'video' && selectedVideoMultimodal.value === 'multimodal' && effectiveVideoMode.value === 'unlimited') {
+            const totalUploadedVideoDuration = getUploadedVideoDurationSum();
+            const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
+            const currentDuration = parseInt(selectedVideoDuration.value);
+            if (maxGenDuration > 0) {
+              const targetDuration = Math.min(15, maxGenDuration);
+              if (currentDuration > maxGenDuration || currentDuration < targetDuration) {
+                selectedVideoDuration.value = targetDuration.toString();
+                lastValidVideoDuration.value = targetDuration.toString();
+              }
+            }
+          }
 
           insertVideoRefTag(newItem, newIndex);
         }
@@ -3858,19 +3870,17 @@ const onVideoDurationChange = (event: Event) => {
   selectedVideoDuration.value = target.value;
 };
 
-const getUploadedVideoDurationCeil = () => {
+const getUploadedVideoDurationSum = () => {
   const videoItems = uploadedVideoRefs.value.filter((item: any) => item.type === 'video' && item.duration);
-  if (videoItems.length === 1) {
-    return Math.ceil(videoItems[0].duration);
-  } else if (videoItems.length > 1) {
-    return Math.ceil(videoItems.reduce((sum: number, item: any) => sum + item.duration, 0));
+  if (videoItems.length > 0) {
+    return videoItems.reduce((sum: number, item: any) => sum + item.duration, 0);
   }
   return 0;
 };
 
 const validateDurationAndRestore = () => {
   if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-    const totalVideoDuration = getUploadedVideoDurationCeil();
+    const totalVideoDuration = getUploadedVideoDurationSum();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
     if (totalVideoDuration > 0 && newDuration > maxDuration) {
@@ -3929,7 +3939,7 @@ const estimatedVideoPower = computed(() => {
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = 30;
   } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-    duration = (parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationCeil();
+    duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
   }
@@ -4712,7 +4722,7 @@ const doGenerateVideo = async () => {
       simple_image_resolution: '1K',
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? parseInt(selectedVideoDuration.value) + getUploadedVideoDurationCeil() : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
 

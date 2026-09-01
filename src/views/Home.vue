@@ -2172,19 +2172,17 @@ const onVideoDurationChange = (e: Event) => {
   selectedVideoDuration.value = target.value;
 };
 
-const getUploadedVideoDurationCeil = () => {
+const getUploadedVideoDurationSum = () => {
   const videoItems = combinedItemsVideo.value.filter((item: any) => item.type === 'video' && item.duration);
-  if (videoItems.length === 1) {
-    return Math.ceil(videoItems[0].duration);
-  } else if (videoItems.length > 1) {
-    return Math.ceil(videoItems.reduce((sum: number, item: any) => sum + item.duration, 0));
+  if (videoItems.length > 0) {
+    return videoItems.reduce((sum: number, item: any) => sum + item.duration, 0);
   }
   return 0;
 };
 
 const validateDurationAndRestore = () => {
   if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-    const totalVideoDuration = getUploadedVideoDurationCeil();
+    const totalVideoDuration = getUploadedVideoDurationSum();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
     if (totalVideoDuration > 0 && newDuration > maxDuration) {
@@ -2739,7 +2737,7 @@ const estimatedVideoComputingPower = computed(() => {
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = 30;
   } else if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-    duration = (parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationCeil();
+    duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
   }
@@ -3726,7 +3724,7 @@ const doGenerateVideo = async () => {
           : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? parseInt(selectedVideoDuration.value) + getUploadedVideoDurationCeil() : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
     };
@@ -4884,6 +4882,20 @@ const handleFileChange = async (event: Event) => {
             }
             // Add to combined items array with type information
             currentCombinedItems.value.push(newItem);
+
+            // Update selectedVideoDuration after video upload in multimodal mode
+            if (fileType === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+              const totalUploadedVideoDuration = getUploadedVideoDurationSum();
+              const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
+              const currentDuration = parseInt(selectedVideoDuration.value);
+              if (maxGenDuration > 0) {
+                const targetDuration = Math.min(15, maxGenDuration);
+                if (currentDuration > maxGenDuration || currentDuration < targetDuration) {
+                  selectedVideoDuration.value = targetDuration.toString();
+                  lastValidVideoDuration.value = targetDuration.toString();
+                }
+              }
+            }
           } else {
             currentUploadedImages.value.push(newItem);
             currentCombinedItems.value.push(newItem);
@@ -5162,6 +5174,20 @@ const removeUploadedImage = (id: string) => {
 
   // Also remove from combinedItems array
   currentCombinedItems.value = currentCombinedItems.value.filter(item => item.id !== id);
+
+  // Update selectedVideoDuration after removing a video in multimodal mode
+  if (itemType === 'video' && contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && currentVideoMode.value === 'unlimited') {
+    const totalUploadedVideoDuration = getUploadedVideoDurationSum();
+    const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
+    const currentDuration = parseInt(selectedVideoDuration.value);
+    if (maxGenDuration > 0) {
+      const targetDuration = Math.min(15, maxGenDuration);
+      if (currentDuration > maxGenDuration || currentDuration < targetDuration) {
+        selectedVideoDuration.value = targetDuration.toString();
+        lastValidVideoDuration.value = targetDuration.toString();
+      }
+    }
+  }
 
   // Update image order in input-textarea
   // Note: Using nextTick to ensure DOM is updated before modifying it
