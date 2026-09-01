@@ -1,6 +1,5 @@
 import { baseUrl } from './config';
 import i18n from '../lang/i18n';
-import api from '../api';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -38,29 +37,10 @@ export async function initLanguage() {
     return savedLang;
   }
 
-  try {
-    const res: any = await api.getCode();
-    if (res.code === 0 && res.data?.countryCode) {
-      const countryCode = res.data.countryCode;
-      let lang = 'en';
-
-      if (countryCode === 'CN') {
-        lang = 'zh';
-      } else if (countryCode === 'JP') {
-        lang = 'jp';
-      } else if (countryCode === 'TW' || countryCode === 'HK') {
-        lang = 'tc';
-      }
-
-      localStorage.setItem('lang', lang);
-      i18n.global.locale.value = lang;
-      return lang;
-    }
-  } catch (error) {
-    console.error('Failed to get country code:', error);
-  }
-
-  return 'en';
+  const lang = 'en';
+  localStorage.setItem('lang', lang);
+  i18n.global.locale.value = lang;
+  return lang;
 }
 
 export function formatQuantity(num: number) {

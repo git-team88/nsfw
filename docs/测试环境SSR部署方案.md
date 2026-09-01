@@ -9,16 +9,16 @@
 
 ## 一、测试环境现状（巡检结论）
 
-| 检查项 | 结果 |
-|---|---|
-| 测试机 | `root@43.153.158.49`（hostname `jp49test`），Debian 12，Node v22.22、npm 10.9、PM2 6.0，包管理 `apt` |
-| 前端部署目录 | `/data/wwwroot/testapp.addaiaroot.com/`（静态 + `try_files $uri /index.html` SPA 兜底） |
-| PM2 进程 | 仅 `manju_api` / `manju_web` / `manju_worker`，**无 `seo-render`** |
-| `seo-server.mjs` / `scripts/` | 服务器上**不存在** |
-| 端口 3001 | **无监听** |
-| puppeteer / 系统 Chromium | **均未安装**（`/root/.cache/puppeteer` 不存在，无系统 chromium） |
-| nginx | 源码编译版，主配 `/usr/local/nginx/conf/nginx.conf`，测试站 vhost `/usr/local/nginx/conf/vhost/testapp.addaiaroot.com.conf` |
-| 测试站移动域名 | **`m.addaiaroot.com`**（vhost 里有移动 UA 301 跳转），**不是** `m.fansfans.ai` |
+| 检查项                        | 结果                                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 测试机                        | `root@43.153.158.49`（hostname `jp49test`），Debian 12，Node v22.22、npm 10.9、PM2 6.0，包管理 `apt`                        |
+| 前端部署目录                  | `/data/wwwroot/testapp.addaiaroot.com/`（静态 + `try_files $uri /index.html` SPA 兜底）                                     |
+| PM2 进程                      | 仅 `manju_api` / `manju_web` / `manju_worker`，**无 `seo-render`**                                                          |
+| `seo-server.mjs` / `scripts/` | 服务器上**不存在**                                                                                                          |
+| 端口 3001                     | **无监听**                                                                                                                  |
+| puppeteer / 系统 Chromium     | **均未安装**（`/root/.cache/puppeteer` 不存在，无系统 chromium）                                                            |
+| nginx                         | 源码编译版，主配 `/usr/local/nginx/conf/nginx.conf`，测试站 vhost `/usr/local/nginx/conf/vhost/testapp.addaiaroot.com.conf` |
+| 测试站移动域名                | **`mtest.fansfans.ai`**（vhost 里有移动 UA 301 跳转），**不是** `m.fansfans.ai`                                             |
 
 **结论：测试环境从未部署过 SSR 服务，需要从零搭建，而不是「改配置」。**
 
@@ -26,22 +26,22 @@
 
 ## 二、测试环境 与 正式环境 的差异（务必注意）
 
-| 项 | 正式（www.fansfans.ai） | 测试（testapp.addaiaroot.com） |
-|---|---|---|
-| 部署目录 | `/data/wwwroot/www.fansfans.ai` | `/data/wwwroot/testapp.addaiaroot.com` |
-| `docs/ecosystem.config.js` 的 `cwd`/`SPA_URL` | 已按正式写死 | 需改成测试路径/域名 |
-| 移动端域名 | `m.fansfans.ai` | `m.addaiaroot.com` |
-| nginx 爬虫转发 | `docs/nginx-seo.conf` | 尚无，需新增 |
+| 项                                            | 正式（www.fansfans.ai）         | 测试（testapp.addaiaroot.com）         |
+| --------------------------------------------- | ------------------------------- | -------------------------------------- |
+| 部署目录                                      | `/data/wwwroot/www.fansfans.ai` | `/data/wwwroot/testapp.addaiaroot.com` |
+| `docs/ecosystem.config.js` 的 `cwd`/`SPA_URL` | 已按正式写死                    | 需改成测试路径/域名                    |
+| 移动端域名                                    | `m.fansfans.ai`                 | `mtest.fansfans.ai`                    |
+| nginx 爬虫转发                                | `docs/nginx-seo.conf`           | 尚无，需新增                           |
 
 ### ⚠️ 两个已知坑
 
-1. **A/C 标签里的移动端域名**：本次改的 `src/App.vue` 里 `MOBILE_ORIGIN` 写死为 `https://m.fansfans.ai`。`index.html` 里有段内联脚本会在非正式站把 `m.fansfans.ai` 替换成 `m.addaiaroot.com`，但**那段脚本只改 index.html 里静态那条，不会改 App.vue 运行时注入的 link**。因此测试环境上 App.vue 注入的 alternate 仍指向 `m.fansfans.ai`。
+1. **A/C 标签里的移动端域名**：本次改的 `src/App.vue` 里 `MOBILE_ORIGIN` 写死为 `https://m.fansfans.ai`。`index.html` 里有段内联脚本会在非正式站把 `m.fansfans.ai` 替换成 `mtest.fansfans.ai`，但**那段脚本只改 index.html 里静态那条，不会改 App.vue 运行时注入的 link**。因此测试环境上 App.vue 注入的 alternate 仍指向 `m.fansfans.ai`。
    - 影响：测试环境验证「标签是否按页面正确生成」没问题；但域名会是 `m.fansfans.ai`。若测试环境也要域名正确，需让 `App.vue` 的 `MOBILE_ORIGIN` 按 `location.hostname` 动态取值（见第六节）。
 
 2. **测试站 vhost 已有移动 UA 跳转**：
    ```nginx
    if ($http_user_agent ~* (mobile|...|android|iphone|ipad|...)) {
-       rewrite ^(.*) https://m.addaiaroot.com$1 permanent;
+       rewrite ^(.*) https://mtest.fansfans.ai$1 permanent;
    }
    ```
    **Googlebot 智能手机版**（UA 含 `Android`/`Mobile`）会命中此规则被 301 到移动站，走不到 SEO 渲染服务。新增爬虫转发时，**必须让爬虫判断排在移动跳转之前**，否则移动爬虫抓不到 PC 渲染结果。
@@ -129,21 +129,23 @@ scp -i /Users/chunliu/Downloads/acg.pem \
 
 ```js
 module.exports = {
-  apps: [{
-    name: 'seo-render',
-    script: 'scripts/seo-server.mjs',
-    cwd: '/data/seo-render',
-    env: {
-      SEO_PORT: 3001,
-      SPA_URL: 'https://testapp.addaiaroot.com',
-      CACHE_DIR: '/data/seo-cache-test',
-      CACHE_TTL: 86400
+  apps: [
+    {
+      name: "seo-render",
+      script: "scripts/seo-server.mjs",
+      cwd: "/data/seo-render",
+      env: {
+        SEO_PORT: 3001,
+        SPA_URL: "https://testapp.addaiaroot.com",
+        CACHE_DIR: "/data/seo-cache-test",
+        CACHE_TTL: 86400,
+      },
+      instances: 1,
+      max_memory_restart: "512M",
+      restart_delay: 3000,
     },
-    instances: 1,
-    max_memory_restart: '512M',
-    restart_delay: 3000
-  }]
-}
+  ],
+};
 ```
 
 ### Step 3 · 启动并设为开机自启
@@ -172,6 +174,7 @@ curl -s http://127.0.0.1:3001/health   # {"status":"ok"}
 编辑 `/usr/local/nginx/conf/vhost/testapp.addaiaroot.com.conf`：
 
 1. **在 `http` 或 server 外层**（主配 `nginx.conf` 的 http 块）加爬虫 UA map：
+
    ```nginx
    map $http_user_agent $is_bot {
        default 0;
@@ -183,6 +186,7 @@ curl -s http://127.0.0.1:3001/health   # {"status":"ok"}
    ```
 
 2. **在 server 块内、移动 UA 跳转之前**插入爬虫优先转发：
+
    ```nginx
    # ★ 必须放在 mobile UA rewrite 之前，避免 Googlebot-Mobile 被 301 到移动站
    if ($is_bot) { rewrite ^(.*)$ /seo-render last; }
@@ -196,6 +200,7 @@ curl -s http://127.0.0.1:3001/health   # {"status":"ok"}
        error_page 502 503 504 /index.html;   # 渲染服务挂了降级回 SPA
    }
    ```
+
    > 注意 `$is_args$args`：详情页靠 query（`?id=&contentType=`），必须带上，否则渲染服务拿不到参数。
 
 3. **校验后再 reload**（reload 不断连接，比 restart 安全）：
@@ -219,11 +224,11 @@ curl -X POST http://127.0.0.1:3001/invalidate -H "Content-Type: application/json
 
 ## 五、回滚
 
-| 改动 | 回滚 |
-|---|---|
-| PM2 进程 | `pm2 delete seo-render && pm2 save` |
+| 改动       | 回滚                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------- |
+| PM2 进程   | `pm2 delete seo-render && pm2 save`                                                                       |
 | nginx 改动 | 改前先备份：`cp testapp.addaiaroot.com.conf{,.bak}`；出问题 `cp .bak 回去 && nginx -t && nginx -s reload` |
-| 运行目录 | `rm -rf /data/seo-render /data/seo-cache-test` |
+| 运行目录   | `rm -rf /data/seo-render /data/seo-cache-test`                                                            |
 
 nginx 每次改动务必：**先备份 → `nginx -t` → 再 `nginx -s reload`**。
 
@@ -231,7 +236,7 @@ nginx 每次改动务必：**先备份 → `nginx -t` → 再 `nginx -s reload`*
 
 ## 六、可选优化（本次不一定做）
 
-1. **A/C 移动域名按环境动态取值**：把 `src/App.vue` 的 `MOBILE_ORIGIN` 改成按 `location.hostname` 判断——正式站用 `m.fansfans.ai`，测试站用 `m.addaiaroot.com`（与 index.html 内联脚本一致）。这样测试环境标签域名也正确。
+1. **A/C 移动域名按环境动态取值**：把 `src/App.vue` 的 `MOBILE_ORIGIN` 改成按 `location.hostname` 判断——正式站用 `m.fansfans.ai`，测试站用 `mtest.fansfans.ai`（与 index.html 内联脚本一致）。这样测试环境标签域名也正确。
 2. **`seo-server.mjs` 参数化站点信息**：把 `SITE_URL`/`SITE_NAME` 改为读环境变量，彻底复用同一份脚本跑测试/正式。
 3. **缓存预热**：参考 `scripts/warm-cache.sh`，把 `SITE` 改成 `https://testapp.addaiaroot.com`，部署后预热热门详情页。
 

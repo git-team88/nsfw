@@ -163,7 +163,7 @@ onMounted(() => {
 
   window.addEventListener('storage', (e) => {
     if (e.key == 'lang') {
-      const newLang = e.newValue || 'jp';
+      const newLang = e.newValue || 'en';
       if (newLang !== locale.value) {
         locale.value = newLang;
       }

@@ -941,12 +941,12 @@ const DESC_MAX = 4000;
 
 const tabList = ref([
   {
-    name: t("submit.tabs.photo"),
-    path: "/publish/image",
-  },
-  {
     name: t("submit.tabs.video"),
     path: "/publish/clip",
+  },
+  {
+    name: t("submit.tabs.photo"),
+    path: "/publish/image",
   },
   {
     name: t("submit.tabs.manhua"),
@@ -2086,12 +2086,12 @@ watch(uploadOption, (newOption) => {
 watch(locale, () => {
   tabList.value = [
     {
-      name: t("submit.tabs.photo"),
-      path: "/publish/image",
-    },
-    {
       name: t("submit.tabs.video"),
       path: "/publish/clip",
+    },
+    {
+      name: t("submit.tabs.photo"),
+      path: "/publish/image",
     },
     {
       name: t("submit.tabs.manhua"),

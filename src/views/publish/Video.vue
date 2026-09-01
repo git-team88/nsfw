@@ -1034,12 +1034,12 @@ watch(uploadOption, (newOption) => {
 // Tab list
 const tabList = [
   {
-    name: t("submit.tabs.photo"),
-    path: "/publish/image",
-  },
-  {
     name: t("submit.tabs.video"),
     path: "/publish/clip",
+  },
+  {
+    name: t("submit.tabs.photo"),
+    path: "/publish/image",
   },
   {
     name: t("submit.tabs.manhua"),

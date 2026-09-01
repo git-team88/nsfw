@@ -460,7 +460,7 @@ interface TabItem {
 }
 
 const tabList = ref<TabItem[]>([]);
-const tabIndex = ref(0);
+const tabIndex = ref(1);
 
 const uploadOption = ref("history");
 const uploadOptions = [
@@ -662,8 +662,8 @@ async function onReuploadPicked(e: Event) {
 
 function buildTabList(): TabItem[] {
   return [
-    { name: t("submit.tabs.photo"), path: "/publish/image" },
     { name: t("submit.tabs.video"), path: "/publish/clip" },
+    { name: t("submit.tabs.photo"), path: "/publish/image" },
     { name: t("submit.tabs.manhua"), path: "/publish/comic" },
     { name: t("submit.tabs.novel"), path: "/publish/novel" },
   ];
@@ -1521,7 +1521,7 @@ async function onSubmit() {
   try {
     const imageUrlsPayload: string[] = finalUrls.map((url: string) => {
       const sid = imageSessionMap.value.get(url) || session_id.value || "";
-      return sid ? `${sid}|${url}` : url;
+      return `${sid}|${url}`;
     });
 
     const isEditMode = !!editPostId.value;

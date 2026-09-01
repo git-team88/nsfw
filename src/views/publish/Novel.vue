@@ -909,12 +909,12 @@ const uid = localStorage.getItem('uid') || '';
 
 const tabList = ref([
   {
-    name: t("submit.tabs.photo"),
-    path: "/publish/image",
-  },
-  {
     name: t("submit.tabs.video"),
     path: "/publish/clip",
+  },
+  {
+    name: t("submit.tabs.photo"),
+    path: "/publish/image",
   },
   {
     name: t("submit.tabs.manhua"),
@@ -1240,12 +1240,12 @@ loadCoverSettings();
 watch(locale, () => {
   tabList.value = [
     {
-      name: t("submit.tabs.photo"),
-      path: "/publish/image",
-    },
-    {
       name: t("submit.tabs.video"),
       path: "/publish/clip",
+    },
+    {
+      name: t("submit.tabs.photo"),
+      path: "/publish/image",
     },
     {
       name: t("submit.tabs.manhua"),

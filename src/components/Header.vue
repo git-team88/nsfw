@@ -346,12 +346,12 @@ const typeList = ref([
   //   path: "/ai",
   // },
   {
-    name: t("header.type5"),
-    path: "/publish/image",
-  },
-  {
     name: t("header.type6"),
     path: "/publish/clip",
+  },
+  {
+    name: t("header.type5"),
+    path: "/publish/image",
   },
   {
     name: t("header.type3"),
@@ -401,12 +401,12 @@ watch(locale, () => {
     //   path: "/ai",
     // },
     {
-      name: t("header.type5"),
-      path: "/publish/image",
-    },
-    {
       name: t("header.type6"),
       path: "/publish/clip",
+    },
+    {
+      name: t("header.type5"),
+      path: "/publish/image",
     },
     {
       name: t("header.type3"),

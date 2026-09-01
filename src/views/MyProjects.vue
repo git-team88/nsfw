@@ -310,10 +310,10 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
 const mainTabs = ref([
-  { value: 'photo' },
   { value: 'video' },
-  { value: 'novel' },
-  { value: 'manhua' }
+  { value: 'photo' },
+  { value: 'manhua' },
+  { value: 'novel' }
 ]);
 
 const statusTabs = ref([

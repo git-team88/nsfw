@@ -69,41 +69,13 @@
           <p class="hero-subtitle">{{ t('home.hero.sub') }}</p>
 
           <!-- Input Area -->
-           <div
-             ref="inputAreaBoxRef"
-             class="input-area-box"
-             :class="{ 'is-sticky': showStickyInput, 'is-expanded': showStickyInput && stickyInputExpanded }"
-           >
             <div
-              v-if="showStickyInput && !stickyInputExpanded"
-              class="sticky-input-trigger"
-              role="button"
-              tabindex="0"
-              :aria-label="stickyInputDisplayText"
-              @click="expandStickyInput"
-              @keydown.enter.prevent="expandStickyInput"
-              @keydown.space.prevent="expandStickyInput"
+              ref="inputAreaBoxRef"
+              class="input-area-box"
+              :class="{ 'is-sticky': showStickyInput, 'is-expanded': showStickyInput && stickyInputExpanded }"
             >
-              <span class="sticky-input-summary">
-                <span v-if="stickyInputPreviewItems.length" class="sticky-input-items" aria-hidden="true">
-                  <span v-for="item in stickyInputPreviewItems" :key="item.key" class="sticky-input-item"><img :src="item.src" alt="" /></span>
-                </span>
-                <span class="sticky-input-placeholder" :class="{ 'has-content': stickyInputPreview }">{{ stickyInputDisplayText }}</span>
-              </span>
-              <span
-                class="sticky-input-arrow"
-                role="button"
-                tabindex="0"
-                aria-label="发送"
-                @click.stop="submitStickyInput"
-                @keydown.enter.stop.prevent="submitStickyInput"
-                @keydown.space.stop.prevent="submitStickyInput"
-              >
-                ↗
-              </span>
-            </div>
 
-            <div class="input-type-box">
+            <div class="input-type-box" v-show="!isStickyCollapsed">
               <!-- Content Type Selector -->
               <div class="content-type-selector">
                 <div
@@ -143,8 +115,7 @@
             <div v-if="contentType == 'video'">
               <!-- Input Area -->
               <div class="input-area">
-                <div class="input-inner">
-                  <!-- Multimodal Mode - Show image upload button -->
+                <div class="input-inner" :class="{ collapsed: isStickyCollapsed }">
                   <template v-if="selectedVideoMultimodal == 'multimodal'">
                     <!-- Combined Characters and Images List -->
                     <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
@@ -186,7 +157,7 @@
                     <div
                       ref="editableInputRef"
                       :key="`input-${inputKey}`"
-                      class="input-textarea"
+                      :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                       contenteditable="true"
                       spellcheck="false"
                       autocorrect="off"
@@ -275,7 +246,7 @@
                       </div>
 
                       <textarea
-                        class="frames-textarea"
+                        :class="['frames-textarea', { collapsed: isStickyCollapsed }]"
                         :placeholder="typedPlaceholder"
                         v-model="novelInput"
                         spellcheck="false"
@@ -351,7 +322,7 @@
                       <div
                         ref="editableInputRef"
                         :key="`input-${inputKey}`"
-                        class="input-textarea"
+                        :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                         contenteditable="true"
                         spellcheck="false"
                         autocorrect="off"
@@ -459,7 +430,7 @@
                       <div
                         ref="editableInputRef"
                         :key="`input-${inputKey}`"
-                        class="input-textarea"
+                        :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                         contenteditable="true"
                         spellcheck="false"
                         autocorrect="off"
@@ -501,8 +472,8 @@
                     </div>
                   </template>
 
-                  <div class="input-box">
-                    <div class="input-options">
+                  <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
+                    <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Video - only show if not a teenager -->
                       <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' }">
@@ -652,8 +623,8 @@
             <!--// Drama Mode Content -->
             <div v-else-if="contentType == 'drama'">
               <!-- Input Area -->
-              <div class="input-area">
-                <div class="input-inner">
+               <div class="input-area">
+                 <div class="input-inner" :class="{ collapsed: isStickyCollapsed }">
                   <!-- Combined Characters and Images List -->
                   <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
                     <div
@@ -675,7 +646,7 @@
                   <div
                     ref="editableInputRef"
                     :key="`input-${inputKey}`"
-                    class="input-textarea"
+                    :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
@@ -713,8 +684,8 @@
                     </div>
                   </div>
 
-                  <div class="input-box">
-                    <div class="input-options">
+                  <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
+                    <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Comic Video - only show if not a teenager -->
                       <div class="unlimited-switch" :class="{ disabled: isTeenager }" @click="!isTeenager && switchDramaMode(currentDramaMode == 'normal' ? 'unlimited' : 'normal', currentDramaMode == 'normal' ? 2 : 1)">
                         <img
@@ -762,8 +733,8 @@
             <!-- Photo Mode Content -->
             <div v-else-if="contentType == 'photo'">
               <!-- Input Area -->
-              <div class="input-area">
-                <div class="input-inner">
+               <div class="input-area">
+                 <div class="input-inner" :class="{ collapsed: isStickyCollapsed }">
                   <!-- Combined Characters and Images List -->
                   <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
                     <div
@@ -785,7 +756,7 @@
                   <div
                     ref="editableInputRef"
                     :key="`input-${inputKey}`"
-                    class="input-textarea"
+                    :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
@@ -823,8 +794,8 @@
                     </div>
                   </div>
 
-                  <div class="input-box">
-                    <div class="input-options">
+                  <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
+                    <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
                       <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' }">
@@ -905,8 +876,8 @@
             <!-- Comic Mode Content -->
             <div v-else-if="contentType == 'comic'">
               <!-- Input Area -->
-              <div class="input-area">
-                <div class="input-inner">
+               <div class="input-area">
+                 <div class="input-inner" :class="{ collapsed: isStickyCollapsed }">
                   <!-- Combined Characters and Images List -->
                   <div class="selected-items" v-if="combinedItems.length > 0" :key="`selected-items-${inputKey}`">
                     <!-- Combined Items -->
@@ -932,7 +903,7 @@
                   <div
                     ref="editableInputRef"
                     :key="`input-${inputKey}`"
-                    class="input-textarea"
+                    :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
@@ -971,8 +942,8 @@
                     </div>
                   </div>
 
-                  <div class="input-box">
-                    <div class="input-options">
+                  <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
+                    <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
                       <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' }">
@@ -1004,21 +975,21 @@
 
             <!-- Novel Mode Content -->
             <div v-else-if="contentType == 'novel'" class="novel-mode-content">
-              <div class="input-area novel-input-area">
-                <div class="input-inner">
-                  <textarea
-                    class="novel-textarea"
-                    :placeholder="typedPlaceholder"
-                    v-model="novelInput"
-                    spellcheck="false"
-                    @input="handleTextareaInput"
-                    @focus="isInputFocused = true; popHeroParts()"
-                    @blur="isInputFocused = false"
-                    @click="handleNovelTextareaClick"
-                  ></textarea>
+               <div class="input-area novel-input-area">
+                 <div class="input-inner" :class="{ collapsed: isStickyCollapsed }">
+                   <textarea
+                     :class="['novel-textarea', { collapsed: isStickyCollapsed }]"
+                     :placeholder="typedPlaceholder"
+                     v-model="novelInput"
+                     spellcheck="false"
+                     @input="handleTextareaInput"
+                     @focus="handleNovelTextareaFocus"
+                     @blur="isInputFocused = false"
+                     @click="handleNovelTextareaClick"
+                   ></textarea>
 
-                  <div class="input-box">
-                    <div class="input-options novel-input-options">
+                  <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
+                    <div class="input-options novel-input-options" v-show="!isStickyCollapsed">
                       <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
@@ -1865,6 +1836,10 @@ function triggerEndFrameUpload() {
 }
 
 function handleFramesTextareaClick() {
+  if (isStickyCollapsed.value) {
+    expandStickyInput();
+    return;
+  }
   trackClickPromptBox();
   const token = localStorage.getItem('token');
   if (!token) {
@@ -1872,7 +1847,20 @@ function handleFramesTextareaClick() {
   }
 }
 
+function handleNovelTextareaFocus() {
+  if (isStickyCollapsed.value) {
+    expandStickyInput();
+    return;
+  }
+  isInputFocused.value = true;
+  popHeroParts();
+}
+
 function handleNovelTextareaClick() {
+  if (isStickyCollapsed.value) {
+    expandStickyInput();
+    return;
+  }
   trackClickPromptBox();
   const token = localStorage.getItem('token');
   if (!token) {
@@ -2270,6 +2258,7 @@ const currentPlaceholder = computed(() => {
 });
 
 const stickyInputDisplayText = computed(() => stickyInputPreview.value || currentPlaceholder.value);
+const isStickyCollapsed = computed(() => showStickyInput.value && !stickyInputExpanded.value);
 const stickyInputPreviewItems = computed(() => combinedItems.value.slice(0, 4).map((item: any, index: number) => ({
   key: `${item.id || item.type}-${index}`,
   src: item.type === 'audio' ? audioIcon : item.cover || item.image || item.url || defaultCover
@@ -2374,8 +2363,8 @@ const runTypewriter = () => {
 const contentType = ref('photo'); // video, comic, novel, photo
 const showHelpDropdown = ref(false); // Control help dropdown visibility
 const contentTypeOptions = ref([
-  { value: 'photo', label: '18x' + ' ' + t('home.contentType.photo') },
   { value: 'video', label: '18x' + ' ' + t('home.contentType.video') },
+  { value: 'photo', label: '18x' + ' ' + t('home.contentType.photo') },
   { value: 'comic', label: '18x' + ' ' + t('home.contentType.comic') },
   { value: 'novel', label: '18x' + ' ' + t('home.contentType.novel') },
 ]);
@@ -2578,8 +2567,8 @@ const onCardTiltReset = (e: MouseEvent) => {
 // Content Types
 const contentTypes = ref([
   { id: 0, label: 'all' },
-  { id: 4, label: 'image' },
   { id: 5, label: 'video' },
+  { id: 4, label: 'image' },
   { id: 1, label: 'comic' },
   { id: 2, label: 'novel' }
 ]);
@@ -5588,6 +5577,10 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 // Handle input click
 const handleInputClick = () => {
+  if (isStickyCollapsed.value) {
+    expandStickyInput();
+    return;
+  }
   trackClickPromptBox();
   // Only handle @ dropdown logic, don't update isInputEmpty
   if (editableInputRef.value) {
@@ -5710,6 +5703,10 @@ const handleInputClick = () => {
 
 // Handle input focus
 const handleInputFocus = () => {
+  if (isStickyCollapsed.value) {
+    expandStickyInput();
+    return;
+  }
   popHeroParts();
   checkLogin();
   isInputFocused.value = true;
