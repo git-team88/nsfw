@@ -270,7 +270,8 @@ async function handleCreateAccount() {
       return;
     }
 
-    showCountrySelectModal.value = true;
+    // showCountrySelectModal.value = true;
+    handleCountrySelected('JP');
   } catch (error) {
     toast(t("fail"));
   }
@@ -531,10 +532,10 @@ async function handleAccountFailedModify() {
   transition: transform 0.15s;
 
   &:hover {
-    
+
   }
   &:active {
-    
+
   }
 }
 

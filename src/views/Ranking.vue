@@ -209,8 +209,8 @@ const userTabs = [
 
 const types = [
   { id: 'all', label: 'rank.all' },
-  { id: 'novel', label: 'rank.novel' },
   { id: 'manga', label: 'rank.manga' },
+  { id: 'novel', label: 'rank.novel' },
 ]
 
 // ---------- 作品排行（真实数据，分页 + 下拉加载） ----------

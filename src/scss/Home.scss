@@ -36,6 +36,7 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .input-area {
       padding: 10px 16px;
+      overflow: visible;
     }
 
     .input-inner.collapsed {
@@ -656,6 +657,7 @@ $pinkopacity: rgba(255,79,154,0.12);
       border: 1px solid #706a70;
       border-radius: 25px;
       box-shadow: 0 18px 45px rgba(0,0,0,.45), inset 0 -2px rgba(255,50,140,.25);
+      overflow: visible;
 
       .input-inner {
         position: relative;
@@ -1090,7 +1092,6 @@ $pinkopacity: rgba(255,79,154,0.12);
         z-index: 100;
         max-height: 200px;
         overflow-y: auto;
-        bottom: 100%;
         margin-bottom: 6px;
 
         &::-webkit-scrollbar { width: 5px; }
@@ -3319,6 +3320,7 @@ $pinkopacity: rgba(255,79,154,0.12);
   .input-area-box.is-sticky:not(.is-expanded) {
     .input-area {
       padding: 8px 14px;
+      overflow: visible;
     }
 
     .input-textarea.collapsed,

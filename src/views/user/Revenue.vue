@@ -254,7 +254,8 @@ async function openWithdrawRecord() {
 }
 
 function handleCreateAccount() {
-  showCountrySelectModal.value = true;
+  // showCountrySelectModal.value = true;
+  handleCountrySelected('JP');
 }
 
 async function handleCountrySelected(country: string) {

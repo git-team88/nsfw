@@ -253,7 +253,8 @@ async function handleEditClick() {
 
 function handleCreateAccount() {
   if (!checkLogin()) return;
-  showCountrySelectModal.value = true;
+  // showCountrySelectModal.value = true;
+  handleCountrySelected('JP');
 }
 
 async function handleCountrySelected(country: string) {
