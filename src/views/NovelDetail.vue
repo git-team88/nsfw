@@ -208,6 +208,11 @@
         <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
       </div>
 
+      <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+        <img :src="makeIcon" alt="" class="make-icon" />
+        <span>{{ t('home.makeSimilar') }}</span>
+      </div>
+
       <!-- Floating action buttons -->
       <div class="floating-actions">
         <div class="action-btn toc-btn" @click="toggleToc" v-if="isCollectionMode">
@@ -246,6 +251,7 @@
       @navigate-to-chapter="navigateToChapter"
       @open-report-modal="openReportModal"
       @update-post-data="updatePostData"
+      @make-similar="goMakeSimilar"
     />
   </div>
 
@@ -295,6 +301,7 @@ import likeActiveIcon from '@/assets/images/detail/like_active.png';
 import collectIcon from '@/assets/images/detail/collect.png';
 import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
+import makeIcon from '@/assets/images/base/make.png';
 import { trackShare } from '@/utils/analytics';
 
 const { t, locale } = useI18n();
@@ -384,7 +391,8 @@ const detail = ref({
   book_title: '',
   chapter_index: '',
   comment_total: 0,
-  latest_read_chapter_index: ''
+  latest_read_chapter_index: '',
+  session_id: ''
 });
 
 // Content sections
@@ -682,6 +690,7 @@ async function fetchDetail() {
       const data = res.data.post;
 
       let bookIsNsfw = 0;
+      let bookSessionId = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
@@ -689,6 +698,9 @@ async function fetchDetail() {
             const bookData = bookRes.data?.book_info || bookRes.data;
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
               bookIsNsfw = 1;
+            }
+            if (bookData?.session_id) {
+              bookSessionId = bookData.session_id;
             }
           }
         } catch (e) {
@@ -721,7 +733,8 @@ async function fetchDetail() {
         book_title: data.book_title || '',
         chapter_index: data.chapter_index || '',
         comment_total: res.data.comment_total || 0,
-        latest_read_chapter_index: res.data.latest_read_chapter_index || ''
+        latest_read_chapter_index: res.data.latest_read_chapter_index || '',
+        session_id: data.session_id || bookSessionId || ''
       };
 
       likes.value = detail.value.likes;
@@ -1663,6 +1676,14 @@ function navigateToUserHome() {
   if (detail.value.author.id) {
     router.push({ path: '/user-home', query: { id: detail.value.author.id } });
   }
+}
+
+function goMakeSimilar(sessionId: string) {
+  if (isChinaRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  router.push({ path: '/', query: { make: sessionId } });
 }
 
 async function enterCollectionMode(type: number) {

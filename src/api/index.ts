@@ -1155,6 +1155,11 @@ export default {
       params: { channel: 1 },
       method: "GET",
     }),
+  getProjectInfoPublic: (session_id: string) =>
+    axios.request({
+      url: "index/getProjectInfoPublic?session_id=" + session_id,
+      method: "GET",
+    }),
   getRelativeByTopicPublic: (data: any) =>
     axios.request({
       url: "index/getRelativeByTopicPublic",

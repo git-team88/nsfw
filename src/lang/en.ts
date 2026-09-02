@@ -2013,7 +2013,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       videoDurationSumExceed: "The total duration of generated video and reference video cannot exceed 30s",
       unlimitedModeRestricted: "Due to age or region restrictions, unlimited mode content generation is not supported",
       unlimitedNoAudio: "Audio upload is not supported in unlimited mode",
-      maxInputLimit: "Maximum input limit of {max} characters reached"
+      maxInputLimit: "Maximum input limit of {max} characters reached",
+      generateFailed: "Generation failed. Please try again later"
     },
     generate: {
       started: "Video generation started",
@@ -2023,6 +2024,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     noMore: "No more content",
     loadMore: "Load More",
      retry: "Retry",
+     makeSimilar: "Make Similar",
+     makeSimilarChinaNotSupported: "This region does not support generating NSFW content",
      contentType: {
        all: "All",
        drama: "Drama",

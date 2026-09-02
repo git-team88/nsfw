@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar-overlay" v-if="visible" @click="close">
+  <div class="sidebar-overlay" v-if="visible">
     <div class="sidebar" @click.stop>
       <div class="sidebar-header">
         <div class="header-tabs">
@@ -303,10 +303,17 @@
             {{ detail.book_title }}
           </div>
           <div class="toc-header">
-            <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
+            <div class="toc-title">
+              <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
 
-            <div class="view-collection-info" @click="goToCollectionDetail">
-              {{ t('detail.viewCollectionInfo') }}
+              <div class="view-collection-info" @click="goToCollectionDetail">
+                {{ t('detail.viewCollectionInfo') }}
+              </div>
+            </div>
+
+            <div class="make-similar-btn" v-if="detail.session_id" @click.stop="emit('make-similar', detail.session_id)">
+              <img :src="makeIcon" alt="" class="make-icon" />
+              <span>{{ t('home.makeSimilar') }}</span>
             </div>
           </div>
 
@@ -387,6 +394,7 @@ function goAuth() {
 // Import images
 import likeIcon from '@/assets/images/detail/like.png';
 import likeActiveIcon from '@/assets/images/detail/like_active.png';
+import makeIcon from '@/assets/images/base/make.png';
 
 const props = defineProps({
   visible: {
@@ -407,7 +415,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close', 'navigate-to-user', 'navigate-to-chapter', 'open-report-modal', 'update-post-data']);
+const emit = defineEmits(['close', 'navigate-to-user', 'navigate-to-chapter', 'open-report-modal', 'update-post-data', 'make-similar']);
 
 const { t, locale } = useI18n();
 
@@ -3114,15 +3122,51 @@ function likeReply(id: string, liked: boolean) {
       .toc-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
         padding: 0 24px 24px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         font-size: 14px;
         color: #aaa;
 
+        .toc-title{
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
         .view-collection-info{
           color: #ff4f9a;
           cursor: pointer;
+        }
+
+        .make-similar-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 12px;
+          font-size: 12px;
+          font-weight: 800;
+          color: #fff;
+          background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+          border: 2px solid #101828;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+          .make-icon {
+            width: 16px;
+            height: 16px;
+          }
+
+          &:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 2px 2px 0 #161122;
+          }
+
+          &:active {
+            transform: translate(0, 0);
+          }
         }
       }
 

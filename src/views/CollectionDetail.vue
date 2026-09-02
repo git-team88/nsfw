@@ -57,6 +57,10 @@
                     </button>
                     <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
                     <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
+                    <button class="make-similar-btn" v-if="collection.session_id" @click.stop="goMakeSimilar(collection.session_id)">
+                      <img :src="makeIcon" alt="" class="make-icon" />
+                      <span>{{ t('home.makeSimilar') }}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -199,6 +203,7 @@ import { eventBus } from '@/utils/eventBus';
 import { trackBookView } from '@/util/viewTracker';
 import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
+import makeIcon from '@/assets/images/base/make.png';
 
 const { t, locale } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -238,6 +243,7 @@ interface Collection {
   chapter_count_private: number | string;
   readIndexes: number[];
   history: CollectionHistory | null;
+  session_id: string;
 }
 
 interface BooksGroupItem {
@@ -271,6 +277,7 @@ const authorInfo = ref<AuthorInfo>({
 });
 const loading = ref(false);
 const userRegion = ref(false);
+const regionLoaded = ref(false);
 const userInfo = ref<any>(null);
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
@@ -293,8 +300,12 @@ async function getCountry() {
     }
   } catch {
     userRegion.value = false;
+  } finally {
+    regionLoaded.value = true;
   }
 }
+
+const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
 function getChapterLabel(type: string): string {
   switch (type) {
@@ -400,7 +411,8 @@ async function fetchCollectionDetail() {
             chapter_index: String(finalData.history.chapter_index || '0'),
             title: finalData.history.title || '',
             cover: finalData.history.cover || ''
-          } : null
+          } : null,
+          session_id: finalBookInfo.session_id || ''
         };
 
         // 从 book_info 获取作者后，请求博主详情接口
@@ -523,6 +535,14 @@ function goChapter(chapter: Chapter) {
   }
 
   navigateToChapter(chapter);
+}
+
+function goMakeSimilar(sessionId: string) {
+  if (isChinaRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  router.push({ path: '/', query: { make: sessionId } });
 }
 
 function navigateToChapter(chapter: Chapter) {
@@ -1080,6 +1100,38 @@ onBeforeUnmount(() => {
 
       &:hover {
         box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+        transform: translate(-1px, -1px);
+      }
+    }
+
+    .make-similar-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 48px;
+      padding: 8px 20px;
+      border-radius: 12px;
+      border: 2px solid #101828;
+      background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      .make-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 2px 2px 0 #161122;
+      }
+
+      &:active {
+        transform: translate(0, 0);
       }
     }
   }
@@ -1516,6 +1568,17 @@ onBeforeUnmount(() => {
         font-size: 12px;
         border-radius: 0.5556vw;
       }
+      .make-similar-btn {
+        height: 3.3333vw;
+        padding: 0.5556vw 1.3889vw;
+        font-size: 12px;
+        border-radius: 0.5556vw;
+
+        .make-icon {
+          width: 1.8vw;
+          height: 1.8vw;
+        }
+      }
       .favorite-btn {
         height: 3.3333vw;
         padding: 0.5556vw 1.3889vw;
@@ -1690,6 +1753,16 @@ onBeforeUnmount(() => {
         height: 4.5vw;
         padding: 6px 14px;
         font-size: 12px;
+      }
+      .make-similar-btn {
+        height: 4.5vw;
+        padding: 6px 14px;
+        font-size: 12px;
+
+        .make-icon {
+          width: 2.4vw;
+          height: 2.4vw;
+        }
       }
       .favorite-btn {
         height: 4.5vw;

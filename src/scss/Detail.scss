@@ -298,6 +298,38 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   align-items: center;
   justify-content: center;
 
+  .make-similar-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+    border: 2px solid #101828;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    .make-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      transform: translate(-1px, -1px);
+    }
+
+    &:active {
+      transform: translate(0, 0);
+    }
+  }
+
   .video-wrapper {
     width: 100%;
     height: 100%;
@@ -2271,6 +2303,140 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   }
 }
 
+.image-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .make-similar-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+    border: 2px solid #101828;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    .make-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      transform: translate(-1px, -1px);
+    }
+
+    &:active {
+      transform: translate(0, 0);
+    }
+  }
+
+  .carousel-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    will-change: transform;
+
+    .carousel-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      .image-wrap {
+        position: relative;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .stacked-image {
+          max-width: 100%;
+          display: block;
+        }
+      }
+
+      .locked-view {
+        width: 100%;
+        height: 470px;
+        background: url('@/assets/images/detail/not_open.jpg') no-repeat;
+        background-size: cover;
+      }
+    }
+  }
+
+  .carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    &.carousel-arrow-left {
+      left: 16px;
+    }
+
+    &.carousel-arrow-right {
+      right: 16px;
+    }
+  }
+
+  .carousel-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 2px solid #101828;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &.active {
+        background: #101828;
+      }
+    }
+  }
+}
+
 .gallery-counter {
   position: absolute;
   top: 24px;
@@ -2448,6 +2614,34 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     &:hover {
       box-shadow: 0 0 23px rgba(255, 50, 140, 0.5);
     }
+  }
+}
+
+.make-similar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+  border: 2px solid #101828;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  .make-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    transform: translate(-1px, -1px);
+  }
+
+  &:active {
+    transform: translate(0, 0);
   }
 }
 

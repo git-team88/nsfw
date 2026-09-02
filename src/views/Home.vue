@@ -1237,6 +1237,10 @@
                     <!-- <div class="video-duration" v-if="item.type == '3' && item.duration">
                       {{ formatDuration(item.duration) }}
                     </div> -->
+                    <div class="make-similar-btn" v-if="item.type != '4' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
+                      <img :src="makeIcon" alt="" class="make-icon" />
+                      <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                    </div>
                   </div>
 
                 </div>
@@ -1358,6 +1362,7 @@
     />
 
     <UploadMask :visible="isUploading" />
+    <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
 
     <UserInfoModal
       :visible="showUserInfoModal"
@@ -1502,6 +1507,7 @@ import defaultCover from "@/assets/images/base/cover.png";
 import audioIcon from "@/assets/images/home/audio.png";
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
+import makeIcon from "@/assets/images/base/make.png";
 
 const { t, locale } = useI18n();
 
@@ -2228,6 +2234,7 @@ let stickyExpandedAtScrollY = 0;
 const isInputFocused = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
+const isMakeSimilarLoading = ref(false);
 const justSwitchedTab = ref(false);
 const inputKey = ref(0);
 const previousInputHtml = ref('');
@@ -2282,7 +2289,13 @@ const submitStickyInput = () => {
 const collapseStickyInput = () => {
   stickyInputExpanded.value = false;
   showAtDropdown.value = false;
+  isInputFocused.value = false;
   editableInputRef.value?.blur();
+  document.querySelector<HTMLTextAreaElement>('.input-area-box .novel-textarea')?.blur();
+  const activeElement = document.activeElement as HTMLElement | null;
+  if (activeElement && inputAreaBoxRef.value?.contains(activeElement)) {
+    activeElement.blur();
+  }
 };
 
 const expandStickyInput = () => {
@@ -2295,6 +2308,23 @@ const expandStickyInput = () => {
       editableInputRef.value?.focus();
     }
   });
+};
+
+const handleStickyUserScroll = () => {
+  if (showStickyInput.value && stickyInputExpanded.value) {
+    collapseStickyInput();
+  }
+};
+
+const blurHomeInputOnScroll = () => {
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLElement) {
+    if (activeElement.matches('.input-textarea, .novel-textarea') ||
+        inputAreaBoxRef.value?.contains(activeElement)) {
+      activeElement.blur();
+    }
+  }
+  isInputFocused.value = false;
 };
 
 const updateStickyInputVisibility = () => {
@@ -3380,6 +3410,229 @@ const selectContentType = (type: string) => {
       isInputEmpty.value = true;
     }
   });
+};
+
+const handleMakeSimilar = async (item: any) => {
+  const sessionId = item.session_id;
+  if (!sessionId) return;
+
+  if (hasFetchedRegion.value && !userRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+
+  isMakeSimilarLoading.value = true;
+
+  try {
+    const res = await api.getProjectInfoPublic(sessionId) as any;
+    if (res.code != 200 && res.code != 0) {
+      toast(res.message || t('home.error.generateFailed'));
+      return;
+    }
+
+    const data = res.data || {};
+    const userSelected = data.user_selected || {};
+    const storyType = userSelected.story_type || data.story_type || '';
+    const others = userSelected.others || {};
+    const content = others.content || data.topic || data.description || '';
+    const optimizedPrompt = data.optimized_prompt || '';
+    const shouldReplayOptimizedPrompt =
+      (storyType == 'simple_image' || storyType == 'simple_video') &&
+      userSelected.enable_optimize_prompt == true &&
+      Boolean(optimizedPrompt);
+    const replayContent = shouldReplayOptimizedPrompt ? optimizedPrompt : content;
+
+    const typeToContentType: Record<string, string> = {
+      'simple_video': 'video',
+      'manju': 'drama',
+      'simple_image': 'photo',
+      'manhua': 'comic',
+      'novel': 'novel'
+    };
+    const targetContentType = typeToContentType[storyType];
+    if (!targetContentType) {
+      toast(t('home.error.generateFailed'));
+      return;
+    }
+
+    contentType.value = targetContentType;
+    setSeoMeta(targetContentType);
+
+    const storyMode = userSelected.story_mode;
+    const mode = storyMode == 'nsfw' ? 'unlimited' : (storyMode || 'normal');
+    const safeMode = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+
+    if (targetContentType === 'video') {
+      currentVideoMode.value = safeMode;
+      if (userSelected.ratio) selectedVideoRatio.value = userSelected.ratio;
+      if (userSelected.simple_video_resolution) selectedVideoQuality.value = userSelected.simple_video_resolution.toUpperCase();
+      if (userSelected.simple_video_duration) selectedVideoDuration.value = userSelected.simple_video_duration.toString();
+      enableVideoOptimizePrompt.value = shouldReplayOptimizedPrompt ? false : (safeMode === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true));
+
+      const generateMode = userSelected.simple_video_generate_mode;
+      if (generateMode == 'first_last_frames') {
+        selectedVideoMultimodal.value = 'startEndFrames';
+        const refImages = userSelected.reference_images || [];
+        startFrameImage.value = refImages[0]?.url || '';
+        endFrameImage.value = refImages[1]?.url || '';
+      } else if (generateMode == 'video_edit') {
+        selectedVideoMultimodal.value = 'videoModify';
+      } else if (generateMode == 'video_extension') {
+        selectedVideoMultimodal.value = 'videoExtend';
+      } else {
+        selectedVideoMultimodal.value = 'multimodal';
+      }
+
+      const list = others.list || [];
+      const refImages = userSelected.reference_images || [];
+      uploadedImagesVideo.value = list.filter((i: any) => i.type !== 'video' && i.type !== 'audio').map((img: any, idx: number) => ({
+        id: img.id || Date.now() + idx.toString(),
+        name: img.name || `image${idx + 1}`,
+        image: img.image || img.url || '',
+        type: 'image'
+      }));
+      uploadedVideosVideo.value = list.filter((i: any) => i.type === 'video').map((v: any, idx: number) => ({
+        id: v.id || Date.now() + idx.toString(),
+        name: v.name || `video${idx + 1}`,
+        image: v.cover || v.image || v.url || '',
+        url: v.url || v.image || '',
+        type: 'video',
+        cover: v.cover || '',
+        duration: v.duration || 0
+      }));
+      uploadedAudiosVideo.value = list.filter((i: any) => i.type === 'audio').map((a: any, idx: number) => ({
+        id: a.id || Date.now() + idx.toString(),
+        name: a.name || `audio${idx + 1}`,
+        image: a.image || a.url || '',
+        url: a.url || a.image || '',
+        type: 'audio'
+      }));
+      selectedCharactersVideo.value = [];
+      combinedItemsVideo.value = [...uploadedImagesVideo.value, ...uploadedVideosVideo.value, ...uploadedAudiosVideo.value];
+
+      nextTick(() => {
+        if (editableInputRef.value) {
+          editableInputRef.value.innerHTML = replayContent;
+          isInputEmpty.value = !replayContent.trim();
+        }
+      });
+
+    } else if (targetContentType === 'photo') {
+      currentPhotoMode.value = safeMode;
+      if (userSelected.ratio) selectedPhotoRatio.value = userSelected.ratio;
+      if (userSelected.simple_image_resolution) selectedPhotoQuality.value = userSelected.simple_image_resolution;
+      enablePhotoOptimizePrompt.value = shouldReplayOptimizedPrompt ? false : (userSelected.enable_optimize_prompt === true);
+
+      const list = others.list || [];
+      uploadedImagesPhoto.value = list.map((img: any, idx: number) => ({
+        id: img.id || Date.now() + idx.toString(),
+        name: img.name || `image${idx + 1}`,
+        image: img.image || img.url || '',
+        type: 'image'
+      }));
+      combinedItemsPhoto.value = [...uploadedImagesPhoto.value];
+
+      nextTick(() => {
+        if (editableInputRef.value) {
+          editableInputRef.value.innerHTML = replayContent;
+          isInputEmpty.value = !replayContent.trim();
+        }
+      });
+
+    } else if (targetContentType === 'comic') {
+      currentComicMode.value = safeMode;
+
+      const list = others.list || [];
+      const charList = userSelected.addition_characters || [];
+      uploadedImagesComic.value = list.filter((i: any) => i.type !== 'character').map((img: any, idx: number) => ({
+        id: img.id || Date.now() + idx.toString(),
+        name: img.name || `image${idx + 1}`,
+        image: img.image || img.url || '',
+        type: 'image'
+      }));
+      selectedCharactersComic.value = charList.map((c: any, idx: number) => ({
+        id: c.id || Date.now() + idx.toString(),
+        name: c.name || `character${idx + 1}`,
+        image: c.image || c.cover || c.url || '',
+        type: 'character'
+      }));
+      combinedItemsComic.value = [...uploadedImagesComic.value, ...selectedCharactersComic.value];
+
+      nextTick(() => {
+        if (editableInputRef.value) {
+          editableInputRef.value.innerHTML = content;
+          isInputEmpty.value = !content.trim();
+        }
+      });
+
+    } else if (targetContentType === 'drama') {
+      currentDramaMode.value = safeMode;
+
+      const list = others.list || [];
+      const charList = userSelected.addition_characters || [];
+      uploadedImagesDrama.value = list.filter((i: any) => i.type !== 'character').map((img: any, idx: number) => ({
+        id: img.id || Date.now() + idx.toString(),
+        name: img.name || `image${idx + 1}`,
+        image: img.image || img.url || '',
+        type: 'image'
+      }));
+      selectedCharactersDrama.value = charList.map((c: any, idx: number) => ({
+        id: c.id || Date.now() + idx.toString(),
+        name: c.name || `character${idx + 1}`,
+        image: c.image || c.cover || c.url || '',
+        type: 'character'
+      }));
+      combinedItemsDrama.value = [...uploadedImagesDrama.value, ...selectedCharactersDrama.value];
+
+      nextTick(() => {
+        if (editableInputRef.value) {
+          editableInputRef.value.innerHTML = content;
+          isInputEmpty.value = !content.trim();
+        }
+      });
+
+    } else if (targetContentType === 'novel') {
+      currentNovelMode.value = safeMode;
+      if (userSelected.total_words) {
+        const words = userSelected.total_words;
+        if (words >= 300000) selectedWordCount.value = '300K';
+        else if (words >= 100000) selectedWordCount.value = '100K';
+        else selectedWordCount.value = '30K';
+      }
+      if (userSelected.language) selectedLanguage.value = userSelected.language;
+      if (userSelected.insert_image_count !== undefined) selectedInsertImage.value = userSelected.insert_image_count;
+
+      novelInput.value = content;
+    }
+
+    previousInputHtml.value = '';
+
+    if (showStickyInput.value && isStickyCollapsed.value) {
+      stickyExpandedAtScrollY = window.scrollY;
+      stickyInputExpanded.value = true;
+    }
+
+    nextTick(() => {
+      nextTick(() => {
+        if (targetContentType !== 'novel') {
+          const el = editableInputRef.value;
+          if (el) {
+            while (el.firstChild) {
+              el.removeChild(el.firstChild);
+            }
+            el.innerHTML = replayContent || content || '';
+            isInputEmpty.value = !(replayContent || content || '').trim();
+          }
+        }
+      });
+    });
+
+  } catch (error) {
+    console.error('Error fetching project detail for make similar:', error);
+    toast(t('home.error.generateFailed'));
+  } finally {
+    isMakeSimilarLoading.value = false;
+  }
 };
 
 // Mode dropdown for novel mode
@@ -5475,11 +5728,30 @@ const handleInput = (event: Event) => {
               if (inputInner && dropdown) {
                 const inputInnerRect = inputInner.getBoundingClientRect();
                 // 计算相对于 input-inner 的位置
-                const relativeTop = rect.bottom - inputInnerRect.top;
                 const relativeLeft = rect.left - inputInnerRect.left;
+                const dropdownHeight = 200;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
 
-                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
-                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+                if (spaceBelow >= dropdownHeight + 10) {
+                  // 下方空间足够，显示在 @ 下方
+                  dropdown.style.top = `${rect.bottom - inputInnerRect.top + 5}px`;
+                  dropdown.style.bottom = '';
+                } else if (spaceAbove >= dropdownHeight + 10) {
+                  // 上方空间足够，显示在 @ 上方
+                  dropdown.style.bottom = `${inputInnerRect.bottom - rect.top + 5}px`;
+                  dropdown.style.top = '';
+                } else {
+                  // 两边都不够，优先显示在空间较大的一侧
+                  if (spaceAbove >= spaceBelow) {
+                    dropdown.style.bottom = `${inputInnerRect.bottom - rect.top + 5}px`;
+                    dropdown.style.top = '';
+                  } else {
+                    dropdown.style.top = `${rect.bottom - inputInnerRect.top + 5}px`;
+                    dropdown.style.bottom = '';
+                  }
+                }
+                dropdown.style.left = `${relativeLeft}px`;
               }
             }
           }
@@ -5709,11 +5981,30 @@ const handleInputClick = () => {
               if (inputInner && dropdown) {
                 const inputInnerRect = inputInner.getBoundingClientRect();
                 // 计算相对于 input-inner 的位置
-                const relativeTop = rect.bottom - inputInnerRect.top;
                 const relativeLeft = rect.left - inputInnerRect.left;
+                const dropdownHeight = 200;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
 
-                dropdown.style.top = `${relativeTop + 5}px`; // @ 符号下方 5px
-                dropdown.style.left = `${relativeLeft}px`; // @ 符号左侧对齐
+                if (spaceBelow >= dropdownHeight + 10) {
+                  // 下方空间足够，显示在 @ 下方
+                  dropdown.style.top = `${rect.bottom - inputInnerRect.top + 5}px`;
+                  dropdown.style.bottom = '';
+                } else if (spaceAbove >= dropdownHeight + 10) {
+                  // 上方空间足够，显示在 @ 上方
+                  dropdown.style.bottom = `${inputInnerRect.bottom - rect.top + 5}px`;
+                  dropdown.style.top = '';
+                } else {
+                  // 两边都不够，优先显示在空间较大的一侧
+                  if (spaceAbove >= spaceBelow) {
+                    dropdown.style.bottom = `${inputInnerRect.bottom - rect.top + 5}px`;
+                    dropdown.style.top = '';
+                  } else {
+                    dropdown.style.top = `${rect.bottom - inputInnerRect.top + 5}px`;
+                    dropdown.style.bottom = '';
+                  }
+                }
+                dropdown.style.left = `${relativeLeft}px`;
               }
             }
           }
@@ -6530,6 +6821,9 @@ onMounted(async () => {
   }
   window.addEventListener('scroll', handleScrollToBottom);
   window.addEventListener('scroll', updateStickyInputVisibility, { passive: true });
+  window.addEventListener('scroll', blurHomeInputOnScroll, { passive: true });
+  window.addEventListener('wheel', handleStickyUserScroll, { passive: true });
+  window.addEventListener('touchmove', handleStickyUserScroll, { passive: true });
 
   // 启动占位打字机 + 注册相关 watch（此时所有依赖 ref 已声明）
   runTypewriter();
@@ -6539,7 +6833,13 @@ onMounted(async () => {
   // 初始化语言设置
   await initLanguage();
 
-  // 启动 hero 拟声词淡入 + 浮动
+  const queryParams = new URLSearchParams(window.location.search);
+  const makeFromUrl = queryParams.get('make') || queryParams.get('session_id');
+  if (makeFromUrl) {
+    await getCountry();
+    await handleMakeSimilar({ session_id: makeFromUrl });
+  }
+
   nextTick(() => {
     initHeroParts();
     updateStickyInputVisibility();
@@ -6567,12 +6867,14 @@ onMounted(async () => {
   // 真实用户：切换 tab 会 router.replace 到 /{lang}/{type} 虚拟路由并触发重挂载，
   //   这里按 URL 识别的内容类型恢复 contentType（保证一次点击即生效，且地址栏保留虚拟路由）。
   const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
-  if (detectedContentType) {
+  if (detectedContentType && !makeFromUrl) {
     contentType.value = detectedContentType;
   }
 
   // Set SEO meta tags: 预渲染按 URL 内容类型；真实用户按实际显示的（默认）内容类型
-  setSeoMeta(isSeoPrerender ? (detectedContentType || undefined) : contentType.value);
+  if (!makeFromUrl) {
+    setSeoMeta(isSeoPrerender ? (detectedContentType || undefined) : contentType.value);
+  }
 
   // Restore last content tab and content type if coming back from detail page
   try {
@@ -6751,6 +7053,9 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScrollToBottom);
   window.removeEventListener('scroll', updateStickyInputVisibility);
+  window.removeEventListener('scroll', blurHomeInputOnScroll);
+  window.removeEventListener('wheel', handleStickyUserScroll);
+  window.removeEventListener('touchmove', handleStickyUserScroll);
   if (typeTimer) clearTimeout(typeTimer);
 });
 

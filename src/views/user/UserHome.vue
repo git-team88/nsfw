@@ -218,6 +218,9 @@
                     <div class="update-badge" v-if="collection.chapter_count > 0">
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
+                    <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                      <img :src="makeIcon" alt="" class="make-icon" />
+                    </div>
                     <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
                       <div
                         class="card-action-btn"
@@ -424,6 +427,7 @@
       @close="showEditCollectionModal = false"
       @save="handleEditCollectionSave"
     />
+    <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
   </div>
 </template>
 
@@ -435,10 +439,12 @@ import ReportModal from "@/components/ReportModal.vue";
 import CustomToast from "@/components/CustomToast.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
+import UploadMask from "@/components/UploadMask.vue";
 import defaultHeaderImg from "@/assets/images/user/pic.jpg";
 import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
+import makeIcon from "@/assets/images/base/make.png";
 import {
   ref,
   computed,
@@ -679,6 +685,8 @@ const currentRequestId = ref(0);
 // User region (true = not in China, false = in China)
 const userRegion = ref(false);
 const hasFetchedRegion = ref(false);
+const regionLoaded = ref(false);
+const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
 // Collection tabs
 interface CollectionTab {
@@ -1083,6 +1091,7 @@ function getCountry(): Promise<void> {
 
   return api.getCode().then((res: any) => {
     hasFetchedRegion.value = true;
+    regionLoaded.value = true;
     if (res.code == 0) {
       if (res.data.countryCode != 'CN') {
         userRegion.value = true;
@@ -1096,6 +1105,7 @@ function getCountry(): Promise<void> {
     console.log(err);
     userRegion.value = false;
     hasFetchedRegion.value = true;
+    regionLoaded.value = true;
   })
 }
 
@@ -1831,6 +1841,18 @@ async function loadPosts(reset = false) {
     loading.value = false;
   }
 }
+
+const isMakeSimilarLoading = ref(false);
+
+const handleMakeSimilar = (collection: any) => {
+  const sessionId = collection.session_id;
+  if (!sessionId) return;
+  if (isChinaRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  router.push({ path: '/', query: { make: sessionId } });
+};
 
 function goDetail(id: number | string, authorId?: number | string) {
   localStorage.setItem('userHomeContentType', activeContentType.value.toString());
@@ -3393,6 +3415,29 @@ async function unpinCollection(collection: any) {
         color: #fff;
         font-weight: 700;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+
+      .make-similar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        transition: background 0.2s, padding 0.2s;
+        z-index: 2;
+
+        .make-icon {
+          width: 20px;
+          height: 20px;
+        }
+
+        &:hover {
+          background: rgba(0,0,0,0.3);
+          padding: 4px;
+        }
       }
 
       .card-actions {

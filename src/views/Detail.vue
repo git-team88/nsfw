@@ -8,7 +8,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '4' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' || detail?.type == '4' }" @wheel="handleLeftPanelWheel">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -54,6 +54,10 @@
             </template>
 
             <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+              <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                <img :src="makeIcon" alt="" class="make-icon" />
+                <span>{{ t('home.makeSimilar') }}</span>
+              </div>
               <div v-if="!isVideoLocked && !isLoading" @click="togglePlay">
                 <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
                   <img :src="currentVideoPoster" alt="Cover" draggable="false" />
@@ -159,7 +163,95 @@
               </div>
             </div>
 
-            <template v-else-if="(detail.type == '1' || detail.type == '4') && !isCollectionMode">
+            <template v-else-if="detail.type == '4' && !isCollectionMode">
+              <SensitiveNsfwPanel
+                v-if="isSensitiveContentLocked"
+                class="nsfw-panel-full"
+                :isTeenager="detail.is_teenager == 1"
+                :isChina="isChinaRegion"
+                @enable="enableSensitiveBrowsing"
+                @confirm-adult="confirmAdultBrowsing"
+              />
+
+              <div v-else class="image-carousel" ref="imageStackRef">
+                <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                  <img :src="makeIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSimilar') }}</span>
+                </div>
+
+                <template v-if="!isLoading">
+                  <div class="carousel-arrow carousel-arrow-left" v-if="currentImageIndex > 0" @click.stop="prevImage()">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M15 6l-6 6 6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+
+                  <div class="carousel-content" ref="galleryContentRef">
+                    <div
+                      class="carousel-slide"
+                      v-for="(img, index) in detail.images"
+                      :key="index"
+                    >
+                      <template v-if="isImageLocked(index)">
+                        <div class="locked-view">
+                          <div class="lock-tip">
+                            <span>{{ t("detail.lock.tip") }}</span>
+                            <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                            <span class="subs-btn" @click="onSubscribe">
+                              {{ t("detail.lock.subscribe") }}
+                            </span>
+                          </div>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <div
+                          class="image-wrap"
+                          @click="handleImageClick(index)"
+                          @mousedown.prevent
+                        >
+                          <img
+                            class="stacked-image"
+                            :src="processImageUrl(img.image_url) || ''"
+                            alt=""
+                            draggable="false"
+                            @load="onImageLoaded(detail.images.length)"
+                          />
+                        </div>
+
+                        <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
+                          <div class="lock-tip">
+                            <span>{{ t("detail.lock.tip") }}</span>
+                            <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                            <span class="subs-btn" @click="onSubscribe">
+                              {{ t("detail.lock.subscribe") }}
+                            </span>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+
+                  <div class="carousel-arrow carousel-arrow-right" v-if="currentImageIndex < (detail.images?.length || 0) - 1" @click.stop="nextImage()">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M9 6l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+
+                  <div class="carousel-dots" v-if="(detail.images?.length || 0) > 1">
+                    <span
+                      class="carousel-dot"
+                      :class="{ active: currentImageIndex === index }"
+                      v-for="(img, index) in detail.images"
+                      :key="index"
+                      @click="goToImage(index)"
+                    ></span>
+                  </div>
+
+                  <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && isImagesLoaded">
+                    <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
+                    <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <template v-else-if="detail.type == '1' && !isCollectionMode">
               <!-- 敏感内容：面板独立于 image-stack，占满整个区域 -->
               <SensitiveNsfwPanel
                 v-if="isSensitiveContentLocked"
@@ -335,6 +427,10 @@
 
               <div class="collection-link" @click="goToCollectionDetail">
                 {{ t('detail.viewCollectionInfo') }}
+              </div>
+              <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                <img :src="makeIcon" alt="" class="make-icon" />
+                <span>{{ t('home.makeSimilar') }}</span>
               </div>
             </div>
           </div>
@@ -837,6 +933,7 @@ import { useContentSwitchStore } from "@/stores/contentSwitch";
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
 import defaultAvatar from "@/assets/images/base/avatar.png";
+import makeIcon from "@/assets/images/base/make.png";
 import { trackShare } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
@@ -1167,6 +1264,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 interface imgItem {
   image_url: string;
+  session_id?: string;
 }
 
 const largeImage = ref([] as imgItem[])
@@ -1208,6 +1306,7 @@ interface DetailData {
   book_title: string;
   chapter_index: string | number;
   latest_read_chapter_index: string | number;
+  session_id: string;
 }
 
 const detail = ref<DetailData>({
@@ -1244,7 +1343,8 @@ const detail = ref<DetailData>({
   book_id: '',
   book_title: '',
   chapter_index: '',
-  latest_read_chapter_index: ''
+  latest_read_chapter_index: '',
+  session_id: ''
 });
 
 // Tab state
@@ -1408,6 +1508,14 @@ function goToCollectionDetail() {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     router.push(`/collection/${detail.value.book_id}`);
   }
+}
+
+function goMakeSimilar(sessionId: string) {
+  if (isChinaRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  router.push({ path: '/', query: { make: sessionId } });
 }
 
 // Enter next chapter if available, otherwise enter current chapter
@@ -2051,6 +2159,7 @@ async function fetchDetail(newId: number) {
       const data = res.data.post || res.data;
 
       let bookIsNsfw = 0;
+      let bookSessionId = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
@@ -2058,6 +2167,9 @@ async function fetchDetail(newId: number) {
             const bookData = bookRes.data?.book_info || bookRes.data;
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
               bookIsNsfw = 1;
+            }
+            if (bookData?.session_id) {
+              bookSessionId = bookData.session_id;
             }
           }
         } catch (e) {
@@ -2095,7 +2207,8 @@ async function fetchDetail(newId: number) {
         book_id: data.book_id || '',
         book_title: data.book_title || '',
         chapter_index: data.chapter_index || '',
-        latest_read_chapter_index: res.data.latest_read_chapter_index || ''
+        latest_read_chapter_index: res.data.latest_read_chapter_index || '',
+        session_id: data.session_id || bookSessionId || ''
       } as DetailData;
 
       setSeoMeta(
@@ -2194,7 +2307,8 @@ async function fetchDetail(newId: number) {
         book_id: "",
         book_title: "",
         chapter_index: "",
-        latest_read_chapter_index: ""
+        latest_read_chapter_index: "",
+        session_id: ''
       };
       return;
     }
@@ -2233,7 +2347,8 @@ async function fetchDetail(newId: number) {
       book_id: "",
       book_title: "",
       chapter_index: "",
-      latest_read_chapter_index: ""
+      latest_read_chapter_index: "",
+      session_id: ''
     };
     likes.value = 0;
     liked.value = false;
@@ -2986,12 +3101,12 @@ const shouldShowExpand = computed(() => {
 });
 
 const hasPrevImage = computed(() => {
-  if (detail.value.type === "1") return currentImageIndex.value > 0;
+  if (detail.value.type === "1" || detail.value.type === "4") return currentImageIndex.value > 0;
   return false; // Article cover only has 1 image usually, or handle array if needed
 });
 
 const hasNextImage = computed(() => {
-  if (detail.value.type === "1")
+  if (detail.value.type === "1" || detail.value.type === "4")
     return currentImageIndex.value < (detail.value.images?.length || 0) - 1;
   return false;
 });
@@ -3461,6 +3576,36 @@ function nextImage() {
     } else {
       currentImageIndex.value++;
     }
+  }
+}
+
+function goToImage(index: number) {
+  if (index === currentImageIndex.value) return;
+  if (index < 0 || index >= (detail.value.images?.length || 0)) return;
+  if (galleryContentRef.value) {
+    requestAnimationFrame(() => {
+      galleryContentRef.value!.style.transition = "none";
+      galleryContentRef.value!.style.transform = `translateX(-${index * 100}%)`;
+      galleryContentRef.value!.style.willChange = "transform";
+
+      void galleryContentRef.value!.offsetHeight;
+
+      requestAnimationFrame(() => {
+        galleryContentRef.value!.style.transition =
+          "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+        galleryContentRef.value!.style.transform = `translateX(-${index * 100}%)`;
+
+        currentImageIndex.value = index;
+
+        setTimeout(() => {
+          if (galleryContentRef.value) {
+            galleryContentRef.value!.style.willChange = "auto";
+          }
+        }, 400);
+      });
+    });
+  } else {
+    currentImageIndex.value = index;
   }
 }
 

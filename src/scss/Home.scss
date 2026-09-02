@@ -1092,7 +1092,6 @@ $pinkopacity: rgba(255,79,154,0.12);
         z-index: 100;
         max-height: 200px;
         overflow-y: auto;
-        margin-bottom: 6px;
 
         &::-webkit-scrollbar { width: 5px; }
         &::-webkit-scrollbar-thumb { background: $line; border-radius: 999px; }
@@ -2611,6 +2610,57 @@ $pinkopacity: rgba(255,79,154,0.12);
 
           .chapter-divider {
             color: rgba(255, 255, 255, 0.5);
+          }
+        }
+
+        .make-similar-btn {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          margin-bottom: -6px;
+          padding: 4px;
+          background: transparent;
+          border: none;
+          border-radius: 6px;
+          transition: background 0.2s;
+
+          .make-icon {
+            width: 24px;
+            height: 24px;
+          }
+
+          .make-similar-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-60%);
+            margin-bottom: 6px;
+            padding: 6px 12px;
+            background: #FFFFFF;
+            border: 2px solid #161122;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #161122;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 100;
+            pointer-events: none;
+          }
+
+          &:hover {
+            background: rgba(0,0,0,0.3);
+
+            .make-similar-tooltip {
+              opacity: 1;
+              visibility: visible;
+            }
           }
         }
 

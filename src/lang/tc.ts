@@ -2113,7 +2113,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       videoDurationSumExceed: "生成視頻時長與參考視頻時長總和不能超過30秒",
       unlimitedModeRestricted: "由於年齡或地區限制，不支持使用無限制模式生成內容",
       unlimitedNoAudio: "無限制模式暫不支持上傳音頻",
-      maxInputLimit: "已達最大輸入限制{max}字"
+      maxInputLimit: "已達最大輸入限制{max}字",
+      generateFailed: "生成失敗，請稍後重試"
     },
     generate: {
       started: "視頻生成已開始",
@@ -2122,6 +2123,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     loading: "加載中...",
     noMore: "沒有更多內容了",
      loadMore: "加載更多",
+     makeSimilar: "做同款",
+     makeSimilarChinaNotSupported: "當前地區不支持生成NSFW內容",
      contentType: {
        all: "全部",
        drama: "漫劇",

@@ -1839,7 +1839,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       videoDurationSumExceed: "生成動画の長さと参考動画の長さの合計は30秒を超えることはできません",
       unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
       unlimitedNoAudio: "無制限モードでは音声のアップロードはサポートされていません",
-      maxInputLimit: "最大入力制限{max}文字に達しました"
+      maxInputLimit: "最大入力制限{max}文字に達しました",
+      generateFailed: "生成に失敗しました。後でもう一度お試しください"
     },
     generate: {
       started: "動画の生成を開始しました",
@@ -1848,6 +1849,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     loading: "読み込み中...",
     noMore: "コンテンツはもうありません",
      loadMore: "もっと見る",
+     makeSimilar: "同じものを作る",
+     makeSimilarChinaNotSupported: "現在の地域ではNSFWコンテンツの生成はサポートされていません",
      contentType: {
        all: "すべて",
        drama: "アニメドラマ",
