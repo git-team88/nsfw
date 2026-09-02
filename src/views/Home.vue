@@ -2838,7 +2838,8 @@ const checkItemLimit = () => {
 
   const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length;
   if (totalItems >= maxPhotos) {
-    toast(t('home.error.maxPhotoReached', { max: maxPhotos }));
+    const isComicOrDrama = contentType.value === 'comic' || contentType.value === 'drama';
+    toast(t(isComicOrDrama ? 'home.error.maxItemReached' : 'home.error.maxPhotoReached', { max: maxPhotos }));
     return false;
   }
   return true;

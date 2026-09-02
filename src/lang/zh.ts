@@ -2098,6 +2098,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       videoDimensionLimit: "视频宽高需在300~6000像素之间",
       videoDurationLimit: "视频总时长不能超过{max}秒",
       maxPhotoReached: "最多只能上传{max}张图片",
+      maxItemReached: "角色和参考图总共最多{max}个",
       maxPhotoSize: "图片大小超过限制，最大支持10MB",
       invalidPhotoFormat: "不支持的图片格式，请上传 JPG、PNG 或 WEBP 格式图片",
       corruptedImage: "图片文件已损坏，无法识别，请重新选择或另存后上传",

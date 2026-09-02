@@ -1818,6 +1818,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       videoDimensionLimit: "動画の幅と高さは300〜6000ピクセルの間である必要があります",
       videoDurationLimit: "動画の合計時間は{max}秒を超えることはできません",
       maxPhotoReached: "最大{max}枚の写真をアップロードできます",
+      maxItemReached: "キャラクターと参考画像は合計最大{max}個まで",
       maxPhotoSize: "画像サイズが制限を超えています。最大10MBまでサポートしています",
       invalidPhotoFormat: "サポートされていない画像形式です。JPG、PNG、またはWEBP形式の画像をアップロードしてください",
       corruptedImage: "画像ファイルが破損しています。認識できません。再度選択するか、別途保存してからアップロードしてください",

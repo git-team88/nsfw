@@ -1992,6 +1992,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       videoDimensionLimit: "Video width and height must be between 300 and 6000 pixels",
       videoDurationLimit: "Total video duration cannot exceed {max} seconds",
       maxPhotoReached: "Maximum {max} photos allowed",
+      maxItemReached: "Up to {max} characters and reference images in total",
       maxPhotoSize: "Image size exceeds limit, maximum supported is 10MB",
       invalidPhotoFormat: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
       corruptedImage: "The image file is corrupted and cannot be recognized. Please reselect or save it again before uploading",

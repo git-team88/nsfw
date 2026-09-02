@@ -2092,6 +2092,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       videoDimensionLimit: "視頻寬高需在300~6000像素之間",
       videoDurationLimit: "視頻總時長不能超過{max}秒",
       maxPhotoReached: "最多只能上傳{max}張圖片",
+      maxItemReached: "角色和參考圖總共最多{max}個",
       maxPhotoSize: "圖片大小超過限制，最大支援10MB",
       invalidPhotoFormat: "不支援的圖片格式，請上傳 JPG、PNG 或 WEBP 格式圖片",
       corruptedImage: "圖片檔案已損壞，無法識別，請重新選擇或另存後上傳",
