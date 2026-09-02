@@ -1156,6 +1156,7 @@
             <span
               v-for="type in contentTypes"
               :key="type.id"
+              v-show="activeContentTab === 'suggested' || type.id !== 0"
               class="type-btn"
               :class="{ active: activeContentType == type.id }"
               @click="activeContentType = type.id"
@@ -4568,7 +4569,7 @@ const switchContentTab = (tabId: string, index: number) => {
   followUserPage.value = 1;
   hasMoreContent.value = true;
   hasMoreUsers.value = true;
-  activeContentType.value = 0; // Reset to 'all' tab in content-type-filter
+  activeContentType.value = (tabId === 'following' || tabId === 'subscriptions') ? 5 : 0;
   allContent.value = []; // Clear old data to show loading state
   followUserList.value = []; // Clear user list
   contentCardRefs.value = []; // Clear card refs to reset layout
