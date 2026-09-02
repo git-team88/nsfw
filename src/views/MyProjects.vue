@@ -327,6 +327,7 @@ function switchMainTab(tab: string) {
   currentPage.value = 1;
   projects.value = [];
   hasMore.value = true;
+  router.replace({ query: { ...route.query, tab } });
   loadProjects(true);
 }
 
@@ -692,15 +693,19 @@ onMounted(async () => {
   // Check for tab parameter in route query
   const tabParam = route.query.tab as string;
   if (tabParam) {
-    // Map tab parameter to tab value
     const tabMap: Record<string, string> = {
-      '1': 'novel',  // 小说
-      '2': 'manhua', // 漫画
-      '3': 'manju'   // 漫剧
+      '1': 'novel',
+      '2': 'manhua',
+      '3': 'manju',
+      'novel': 'novel',
+      'manhua': 'manhua',
+      'manju': 'manju',
+      'photo': 'photo',
+      'video': 'video'
     };
 
     const tabValue = tabMap[tabParam];
-    if (tabValue) {
+    if (tabValue && mainTabs.value.some(t => t.value === tabValue)) {
       activeMainTab.value = tabValue;
     }
   }

@@ -48,7 +48,9 @@ $pinkopacity: rgba(255,79,154,0.12);
       .selected-items {
         flex-wrap: nowrap;
         margin-bottom: 0;
-        flex-shrink: 0;
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .start-end-frames-input,
