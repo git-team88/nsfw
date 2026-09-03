@@ -218,8 +218,14 @@
                     <div class="update-badge" v-if="collection.chapter_count > 0">
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
-                    <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
-                      <img :src="makeIcon" alt="" class="make-icon" />
+                    <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
+                      <div class="make-similar-btn" v-if="collection.type != '4' && collection.type != '5' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                        <img :src="makeIcon" alt="" class="make-icon" />
+                      </div>
+                      <div class="make-similar-btn" v-if="collection.type == '5'" @click.stop="handleMakeSequelFromList(collection)">
+                        <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
+                        <img v-else :src="videoIcon" alt="" class="make-icon" />
+                      </div>
                     </div>
                     <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
                       <div
@@ -428,6 +434,13 @@
       @save="handleEditCollectionSave"
     />
     <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
+
+    <MakeSequelSubscribeModal
+      :visible="showMakeSequelSubscribeModal"
+      @cancel="showMakeSequelSubscribeModal = false"
+      @go-subscribe="goMakeSequelSubscribe"
+    />
   </div>
 </template>
 
@@ -439,12 +452,14 @@ import ReportModal from "@/components/ReportModal.vue";
 import CustomToast from "@/components/CustomToast.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
+import MakeSequelSubscribeModal from "@/components/MakeSequelSubscribeModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import defaultHeaderImg from "@/assets/images/user/pic.jpg";
 import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
 import makeIcon from "@/assets/images/base/make.png";
+import videoIcon from "@/assets/images/home/video_icon.png";
 import {
   ref,
   computed,
@@ -459,6 +474,7 @@ import { toast } from "@/util/toast";
 import { processImageUrl, initLanguage, formatTimestamp } from "@/util/utils";
 import { useRoute } from "vue-router";
 import api from "@/api/index";
+import { baseUrl } from "@/util/config";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { eventBus } from "@/utils/eventBus";
 import { trackHomeView } from "@/util/viewTracker";
@@ -1843,6 +1859,9 @@ async function loadPosts(reset = false) {
 }
 
 const isMakeSimilarLoading = ref(false);
+const isMakeSequelLoading = ref(false);
+const showMakeSequelSubscribeModal = ref(false);
+const makeSequelAuthorId = ref('');
 
 const handleMakeSimilar = (collection: any) => {
   const sessionId = collection.session_id;
@@ -1853,6 +1872,62 @@ const handleMakeSimilar = (collection: any) => {
   }
   router.push({ path: '/', query: { make: sessionId } });
 };
+
+const handleMakeSequelFromList = async (collection: any) => {
+  if (!checkLogin()) return;
+  if (isMakeSequelLoading.value) return;
+  isMakeSequelLoading.value = true;
+
+  try {
+    const token = localStorage.getItem('token') || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        token,
+        ts,
+        sign,
+      },
+      body: JSON.stringify({ post_id: collection.id, fromIndexRecommend: { tab: 'hot' } }),
+    }).then(r => r.json());
+
+    if (res.code !== 0 && res.code !== 200) {
+      toast(t('fail'));
+      return;
+    }
+
+    const data = res.data.post || res.data;
+    const authorId = res.data.author?.id || data.author_id || '';
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    localStorage.setItem('makeSequelData', JSON.stringify({
+      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || collection.id, isNsfw
+    }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make sequel:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSequelLoading.value = false;
+  }
+};
+
+function goMakeSequelSubscribe() {
+  showMakeSequelSubscribeModal.value = false;
+  if (makeSequelAuthorId.value) {
+    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+  }
+}
 
 function goDetail(id: number | string, authorId?: number | string) {
   localStorage.setItem('userHomeContentType', activeContentType.value.toString());
@@ -3417,6 +3492,13 @@ async function unpinCollection(collection: any) {
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
       }
 
+      .make-btns-wrap {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        z-index: 2;
+      }
+
       .make-similar-btn {
         display: inline-flex;
         align-items: center;
@@ -3437,6 +3519,15 @@ async function unpinCollection(collection: any) {
         &:hover {
           background: rgba(0,0,0,0.3);
           padding: 4px;
+        }
+
+        .loading-spinner-small {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
         }
       }
 

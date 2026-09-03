@@ -54,9 +54,16 @@
             </template>
 
             <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
-              <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
-                <img :src="makeIcon" alt="" class="make-icon" />
-                <span>{{ t('home.makeSimilar') }}</span>
+              <div class="make-actions">
+                <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                  <img :src="makeIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSimilar') }}</span>
+                </div>
+                <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl" @click.stop="goMakeSequel()">
+                  <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
+                  <img v-else :src="videoIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSequel') }}</span>
+                </div>
               </div>
               <div v-if="!isVideoLocked && !isLoading" @click="togglePlay">
                 <div class="video-poster" v-if="isVideoEnded && currentVideoPoster">
@@ -915,12 +922,20 @@
       @close="showSensitiveContentConfirmModal = false"
       @confirm="confirmSensitiveContent"
     />
+
+    <MakeSequelSubscribeModal
+      :visible="showMakeSequelSubscribeModal"
+      @cancel="showMakeSequelSubscribeModal = false"
+      @go-subscribe="goMakeSequelSubscribe"
+    />
+    <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="Detail">
 import NovelDetail from "@/views/NovelDetail.vue"
 import ReportModal from "@/components/ReportModal.vue";
+import MakeSequelSubscribeModal from "@/components/MakeSequelSubscribeModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import PreviewModal from "@/components/PreviewModal.vue";
 import ImageViewer from "@/components/ImageViewer.vue";
@@ -943,6 +958,7 @@ import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
+import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
@@ -1444,6 +1460,9 @@ function getCountry(){
 const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
 const isMakeVideoLoading = ref(false);
+const isMakeSequelLoading = ref(false);
+const showMakeSequelSubscribeModal = ref(false);
+const makeSequelAuthorId = ref('');
 
 const contentSwitch = useContentSwitchStore();
 // userRegion.value = true means NOT in China, false means IN China
@@ -1527,6 +1546,29 @@ function goMakeSimilar(sessionId: string) {
     return;
   }
   router.push({ path: '/', query: { make: sessionId } });
+}
+
+function goMakeSequel() {
+  const videoUrl = detail.value.videoUrl || '';
+  if (!videoUrl) return;
+  const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
+  if (isChinaRegion.value && isNsfw) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  const postId = detail.value.id || '';
+  const cover = detail.value.cover || '';
+  localStorage.setItem('makeSequelData', JSON.stringify({
+    videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw
+  }));
+  router.push({ path: '/' });
+}
+
+function goMakeSequelSubscribe() {
+  showMakeSequelSubscribeModal.value = false;
+  if (makeSequelAuthorId.value) {
+    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+  }
 }
 
 function goMakeVideo() {

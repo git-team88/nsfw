@@ -442,7 +442,7 @@ async function fetchImageToBlobUrl(url: string): Promise<string> {
 
   let fetchUrl = url;
   const cloudfrontDomain = 'https://static.moegen.ai';
-  const proxyDomain = `${baseUrl}/proxy_download`;
+  const proxyDomain = `${baseUrl}proxy_download`;
 
   if (url.startsWith(cloudfrontDomain)) {
     fetchUrl = proxyDomain + url.replace(cloudfrontDomain, '');
@@ -451,11 +451,6 @@ async function fetchImageToBlobUrl(url: string): Promise<string> {
   const response = await fetch(fetchUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch image: ${response.status}`);
-  }
-
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.startsWith('image/')) {
-    throw new Error('Response is not an image');
   }
 
   const blob = await response.blob();

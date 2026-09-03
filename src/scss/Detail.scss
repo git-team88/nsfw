@@ -315,11 +315,16 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       position: relative;
     }
 
-    .make-similar-btn {
+    .make-actions {
       position: absolute;
       top: 12px;
       right: 18px;
       z-index: 10;
+      display: flex;
+      gap: 8px;
+    }
+
+    .make-similar-btn {
       display: flex;
       align-items: center;
       width: max-content;
@@ -338,6 +343,15 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       .make-icon {
         width: 18px;
         height: 18px;
+      }
+
+      .loading-spinner-small {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
       }
 
       &:active {

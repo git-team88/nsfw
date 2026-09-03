@@ -491,7 +491,6 @@ const coverPreview = ref("");
 const showCoverModal = ref(false);
 const showFullContent = ref(false);
 const isUploading = ref(false);
-const isUpload = ref(false);
 const editPostId = ref("");
 const previewImageUrl = ref("");
 const showPreviewMedia = ref(false);
@@ -919,8 +918,10 @@ async function appendFiles(files: File[]) {
   const maxSize = 10 * 1024 * 1024;
   const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
+  const validFiles: PreviewFile[] = [];
+
   for (const f of files) {
-    if (imageFiles.value.length >= maxCount) {
+    if (imageFiles.value.length + validFiles.length >= maxCount) {
       toast(t("submit.image.maxSelectTip"));
       break;
     }
@@ -943,11 +944,39 @@ async function appendFiles(files: File[]) {
     pf._key = `${Date.now()}_${Math.random()}`;
     pf._preview = URL.createObjectURL(f);
 
-    uploadImage(pf);
+    validFiles.push(pf);
   }
+
+  if (validFiles.length === 0) return;
+
+  isUploadingImages.value = true;
+
+  const uploadPromises = validFiles.map((pf) => uploadImageAsync(pf));
+  const results = await Promise.allSettled(uploadPromises);
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled' && result.value) {
+      const pf = validFiles[i];
+      imageFiles.value.push(pf);
+      if (pf._url) {
+        imageUrls.value.push(pf._url);
+        imageSessionMap.value.set(pf._url, "");
+      }
+    }
+  }
+
+  if (imageUrls.value.length > 0) {
+    if (!coverPreview.value) {
+      coverPreview.value = imageUrls.value[0];
+    }
+    showFullContent.value = true;
+  }
+
+  isUploadingImages.value = false;
 }
 
-function uploadImage(pf: PreviewFile) {
+async function uploadImageAsync(pf: PreviewFile): Promise<boolean> {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push("/login");
@@ -960,51 +989,36 @@ function uploadImage(pf: PreviewFile) {
     return false;
   }
 
-  isUpload.value = true;
-
   const formData = new FormData();
   formData.append("file", pf);
 
   const authHeaders = (window as any).AntiCrawler.generateAuthParams(token);
 
-  const parma = {
-    method: "POST",
-    headers: {
-      token: token,
-      Platform: "web",
-      ...authHeaders,
-    },
-    body: formData,
-  };
-
-  fetch(baseUrl + "user/uploadImage", parma)
-    .then((response) => response.json())
-    .then((res: any) => {
-      if (res.code === 0 || res.code === 200) {
-        const url = (res?.data && (res.data.url || res.data)) || res?.url;
-        if (typeof url === "string") {
-          pf._url = url;
-        }
-
-        imageFiles.value.push(pf);
-
-        if (imageFiles.value.length === 1) {
-          coverPreview.value = pf._url || pf._preview;
-        }
-
-        showFullContent.value = true;
-        isUpload.value = false;
-      } else {
-        toast(locale.value === "en" ? res.msg : locale.value === "zh" ? res.msg_cn : locale.value === "tc" ? res.msg_tc : res.msg_jp);
-        isUpload.value = false;
-      }
-    })
-    .catch((error: unknown) => {
-      toast(String(error));
-      isUpload.value = false;
+  try {
+    const response = await fetch(baseUrl + "user/uploadImage", {
+      method: "POST",
+      headers: {
+        token: token,
+        Platform: "web",
+        ...authHeaders,
+      },
+      body: formData,
     });
+    const res = await response.json();
+    if (res.code === 0 || res.code === 200) {
+      const url = (res?.data && (res.data.url || res.data)) || res?.url;
+      if (typeof url === "string") {
+        pf._url = url;
+        return true;
+      }
+    } else {
+      toast(locale.value === "en" ? res.msg : locale.value === "zh" ? res.msg_cn : locale.value === "tc" ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    toast(String(error));
+  }
 
-  return true;
+  return false;
 }
 
 // Keep imageUrls in sync with uploaded files (first is cover)

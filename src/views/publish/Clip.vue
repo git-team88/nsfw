@@ -138,13 +138,7 @@
             />
           </div>
 
-          <!-- Upload Progress -->
-          <div v-if="isUpload" class="upload-progress-box">
-            <div class="upload-progress-bar">
-              <div class="upload-progress-inner" :style="{ width: uploadProgress + '%' }"></div>
-            </div>
-            <span class="upload-progress-text">{{ uploadProgress }}%</span>
-          </div>
+
         </div>
       </div>
 
@@ -178,9 +172,7 @@
                   </div>
                 </div>
               </div>
-              <div class="status-progress-bar">
-                <div class="progress-fill success" style="width: 100%;"></div>
-              </div>
+
             </div>
           </div>
 
@@ -371,6 +363,8 @@
       @confirm="onCoverConfirmed"
     />
 
+    <UploadMask :visible="isUpload" />
+
     <!-- Subscription Prompt Modal -->
     <SubscriptionPromptModal
       :visible="showSubscriptionModal"
@@ -390,6 +384,7 @@ import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { processImageUrl } from "@/util/utils";
+import UploadMask from "@/components/UploadMask.vue";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
@@ -519,7 +514,6 @@ const showCoverModal = ref(false);
 const sessionId = ref("");
 const isUpload = ref(false);
 const editPostId = ref("");
-const uploadProgress = ref(0);
 
   // Local upload file input
   const videoInputRef = ref<HTMLInputElement | null>(null);
@@ -1561,7 +1555,6 @@ async function handleVideoFile(file: File) {
   }
 
   isUpload.value = true;
-  uploadProgress.value = 0;
 
   try {
     // Validate metadata first
@@ -1607,7 +1600,6 @@ async function handleVideoFile(file: File) {
       return;
     }
 
-    uploadProgress.value = 30;
     const { uploadId, fileKey } = videoIdResponse.data;
 
     // 2. Upload parts in 5MB chunks
@@ -1647,7 +1639,6 @@ async function handleVideoFile(file: File) {
       const etag = videoUrlData.data?.etag || "";
       uploadedParts.push({ PartNumber: i, ETag: etag });
 
-      uploadProgress.value = Math.round(30 + (i / totalParts) * 60);
     }
 
     // 3. Merge parts
@@ -1663,7 +1654,6 @@ async function handleVideoFile(file: File) {
     }
 
     videoUrl.value = videoMergeResponse.data.url || "";
-    uploadProgress.value = 100;
 
     // Capture first frame as cover
     await captureFirstFrame(file);
@@ -1726,7 +1716,7 @@ async function mockUploadCover(dataUrl: string) {
 
     const authHeaders = (window as any).AntiCrawler.generateAuthParams(token);
 
-    const res = await fetch(baseUrl + "user/uploadFile", {
+    const res = await fetch(baseUrl + "user/uploadImage", {
       method: "POST",
       headers: {
         token: token,

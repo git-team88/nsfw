@@ -2615,6 +2615,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           }
         }
 
+        .make-btns-wrap {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          z-index: 2;
+        }
+
         .make-similar-btn {
           position: relative;
           display: flex;
@@ -2663,6 +2670,15 @@ $pinkopacity: rgba(255,79,154,0.12);
               opacity: 1;
               visibility: visible;
             }
+          }
+
+          .loading-spinner-small {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
           }
         }
 

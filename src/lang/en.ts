@@ -2028,6 +2028,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
      retry: "Retry",
      makeSimilar: "Make Similar",
      makeSimilarChinaNotSupported: "This region does not support generating NSFW content",
+     makeSequel: "Make Sequel",
+     makeSequelPrompt: "Extend video 1 based on the description: ",
+     makeSequelSubscribeTitle: "This work is only available to subscribed users for creation",
+     makeSequelSubscribeGo: "Get Creation Access",
      makeVideo: "Make Video",
      contentType: {
        all: "All",

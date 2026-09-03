@@ -1231,9 +1231,16 @@
                     <!-- <div class="video-duration" v-if="item.type == '3' && item.duration">
                       {{ formatDuration(item.duration) }}
                     </div> -->
-                    <div class="make-similar-btn" v-if="item.type != '4' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
-                      <img :src="makeIcon" alt="" class="make-icon" />
-                      <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                    <div class="make-btns-wrap" v-if="(item.session_id && item.type != '4') || item.type == '5'">
+                      <div class="make-similar-btn" v-if="item.type != '4' && item.type != '5' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
+                        <img :src="makeIcon" alt="" class="make-icon" />
+                        <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                      </div>
+                      <div class="make-similar-btn" v-if="item.type == '5'" @click.stop.prevent="handleMakeSequelFromList(item)">
+                        <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
+                        <img v-else :src="videoIcon" alt="" class="make-icon" />
+                        <div class="make-similar-tooltip">{{ t('home.makeSequel') }}</div>
+                      </div>
                     </div>
                   </div>
 
@@ -1357,6 +1364,13 @@
 
     <UploadMask :visible="isUploading" />
     <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
+
+    <MakeSequelSubscribeModal
+      :visible="showMakeSequelSubscribeModal"
+      @cancel="showMakeSequelSubscribeModal = false"
+      @go-subscribe="goMakeSequelSubscribe"
+    />
 
     <UserInfoModal
       :visible="showUserInfoModal"
@@ -1467,6 +1481,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Swiper from 'swiper';
 import { Autoplay, Pagination } from 'swiper/modules';
 import Header from '@/components/Header.vue';
+import MakeSequelSubscribeModal from '@/components/MakeSequelSubscribeModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
@@ -1502,6 +1517,7 @@ import audioIcon from "@/assets/images/home/audio.png";
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import makeIcon from "@/assets/images/base/make.png";
+import videoIcon from "@/assets/images/home/video_icon.png";
 
 const { t, locale } = useI18n();
 
@@ -2231,6 +2247,9 @@ const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
 const isMakeSimilar = ref(false);
 const makeSimilarSessionId = ref('');
+const isMakeSequelLoading = ref(false);
+const showMakeSequelSubscribeModal = ref(false);
+const makeSequelAuthorId = ref('');
 const justSwitchedTab = ref(false);
 const inputKey = ref(0);
 const previousInputHtml = ref('');
@@ -3729,6 +3748,99 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
     isMakeSimilarLoading.value = false;
   }
 };
+
+const handleMakeSequelFromList = async (item: any) => {
+  if (!checkLogin()) return;
+  if (isMakeSequelLoading.value) return;
+  isMakeSequelLoading.value = true;
+
+  try {
+    const token = localStorage.getItem('token') || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        token,
+        ts,
+        sign,
+      },
+      body: JSON.stringify({ post_id: item.id, fromIndexRecommend: { tab: 'hot' } }),
+    }).then(r => r.json());
+
+    if (res.code !== 0 && res.code !== 200) {
+      toast(t('fail'));
+      return;
+    }
+
+    const data = res.data.post || res.data;
+    const authorId = res.data.author?.id || data.author_id || '';
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    localStorage.setItem('makeSequelData', JSON.stringify({
+      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || item.id, isNsfw
+    }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make sequel:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSequelLoading.value = false;
+  }
+};
+
+const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: string, postId: string, isNsfw: boolean) => {
+  if (hasFetchedRegion.value && !userRegion.value && isNsfw) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+
+  const isUnlimited = isNsfw;
+  contentType.value = 'video';
+  currentVideoMode.value = isUnlimited ? 'unlimited' : 'normal';
+  selectedVideoMultimodal.value = 'videoExtend';
+  selectedVideoRatio.value = '9:16';
+  selectedVideoQuality.value = '720P';
+  selectedVideoDuration.value = '15';
+  enableVideoOptimizePrompt.value = false;
+
+  uploadedVideo.value = videoUrl;
+  uploadedVideoCover.value = cover || null;
+
+  uploadedImagesVideo.value = [];
+  selectedCharactersVideo.value = [];
+  combinedItemsVideo.value = [];
+
+  nextTick(() => {
+    if (editableInputRef.value) {
+      editableInputRef.value.innerHTML = t('home.makeSequelPrompt');
+      isInputEmpty.value = false;
+      editableInputRef.value.focus();
+      const range = document.createRange();
+      range.selectNodeContents(editableInputRef.value);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  });
+};
+
+function goMakeSequelSubscribe() {
+  showMakeSequelSubscribeModal.value = false;
+  if (makeSequelAuthorId.value) {
+    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+  }
+}
 
 // Mode dropdown for novel mode
 const toggleModeDropdown = () => {
@@ -6958,6 +7070,19 @@ onMounted(async () => {
       }
     } catch (e) {
       localStorage.removeItem('makeVideoData');
+    }
+  }
+
+  const makeSequelData = localStorage.getItem('makeSequelData');
+  if (makeSequelData) {
+    await getCountry();
+    try {
+      const { videoUrl, cover, type, postId, isNsfw } = JSON.parse(makeSequelData);
+      if (videoUrl) {
+        await handleMakeSequelFromCache(videoUrl, cover, type, postId, isNsfw);
+      }
+    } catch (e) {
+      localStorage.removeItem('makeSequelData');
     }
   }
 

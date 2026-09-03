@@ -99,10 +99,17 @@
                       </span>
                     </template>
                   </div>
-                  <!-- Video Duration -->
-                  <!-- <div class="video-duration" v-if="post.type == '3' && post.duration">
-                    {{ formatDuration(post.duration) }}
-                  </div> -->
+                </div>
+                <div class="make-btns-wrap" v-if="(post.session_id && post.type != '4') || post.type == '5'">
+                  <div class="make-similar-btn" v-if="post.type != '4' && post.type != '5' && post.session_id" @click.stop.prevent="handleMakeSimilar(post)">
+                    <img :src="makeIcon" alt="" class="make-icon" />
+                    <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                  </div>
+                  <div class="make-similar-btn" v-if="post.type == '5'" @click.stop.prevent="handleMakeSequelFromList(post)">
+                    <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
+                    <img v-else :src="videoIcon" alt="" class="make-icon" />
+                    <div class="make-similar-tooltip">{{ t('home.makeSequel') }}</div>
+                  </div>
                 </div>
               </div>
               <div class="content-info">
@@ -180,6 +187,15 @@
       </div>
       </div><!-- end search-panel -->
     </div>
+
+    <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
+
+    <MakeSequelSubscribeModal
+      :visible="showMakeSequelSubscribeModal"
+      @cancel="showMakeSequelSubscribeModal = false"
+      @go-subscribe="goMakeSequelSubscribe"
+    />
   </div>
 </template>
 
@@ -189,10 +205,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import UploadMask from '@/components/UploadMask.vue';
+import MakeSequelSubscribeModal from '@/components/MakeSequelSubscribeModal.vue';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
+import { baseUrl } from '@/util/config';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -214,6 +233,8 @@ import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
+import makeIcon from "@/assets/images/base/make.png";
+import videoIcon from "@/assets/images/home/video_icon.png";
 const contentSwitch = useContentSwitchStore();
 
 // Types
@@ -245,6 +266,10 @@ const activeTab = ref(route.query.type === 'user' ? 'users' : 'posts');
 const postFilter = ref(0);
 const userRegion = ref(false);
 const hasFetchedRegion = ref(false);
+const isMakeSimilarLoading = ref(false);
+const isMakeSequelLoading = ref(false);
+const showMakeSequelSubscribeModal = ref(false);
+const makeSequelAuthorId = ref('');
 
 // Tabs and filters data
 const tabs = ref([
@@ -681,6 +706,72 @@ function formatNumber(num: number | string): string {
 }
 
 
+
+const handleMakeSimilar = (post: any) => {
+  const sessionId = post.session_id;
+  if (!sessionId) return;
+  if (hasFetchedRegion.value && !userRegion.value) {
+    toast(t('home.makeSimilarChinaNotSupported'));
+    return;
+  }
+  router.push({ path: '/', query: { make: sessionId } });
+};
+
+const handleMakeSequelFromList = async (post: any) => {
+  if (!checkLogin()) return;
+  if (isMakeSequelLoading.value) return;
+  isMakeSequelLoading.value = true;
+
+  try {
+    const token = localStorage.getItem('token') || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        token,
+        ts,
+        sign,
+      },
+      body: JSON.stringify({ post_id: post.id, fromIndexRecommend: { tab: 'hot' } }),
+    }).then(r => r.json());
+
+    if (res.code !== 0 && res.code !== 200) {
+      toast(t('fail'));
+      return;
+    }
+
+    const data = res.data.post || res.data;
+    const authorId = res.data.author?.id || data.author_id || '';
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    localStorage.setItem('makeSequelData', JSON.stringify({
+      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || post.id, isNsfw
+    }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make sequel:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSequelLoading.value = false;
+  }
+};
+
+function goMakeSequelSubscribe() {
+  showMakeSequelSubscribeModal.value = false;
+  if (makeSequelAuthorId.value) {
+    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+  }
+}
 
 // Get user region
 function getCountry(): Promise<void> {
@@ -1137,6 +1228,79 @@ $line: #2c2c2c;
       justify-content: space-between;
       padding: 0 10px 10px;
       background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+    }
+
+    .make-btns-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 0 10px 10px;
+      background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+      z-index: 2;
+    }
+
+    .make-similar-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      margin-bottom: -6px;
+      padding: 4px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      transition: background 0.2s;
+
+      .make-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .make-similar-tooltip {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-60%);
+        margin-bottom: 6px;
+        padding: 6px 12px;
+        background: #FFFFFF;
+        border: 2px solid #161122;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #161122;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s ease;
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      .loading-spinner-small {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      &:hover {
+        background: rgba(0,0,0,0.3);
+
+        .make-similar-tooltip {
+          opacity: 1;
+          visibility: visible;
+        }
+      }
     }
 
     .update-info {

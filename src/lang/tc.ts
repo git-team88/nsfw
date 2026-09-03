@@ -2127,6 +2127,10 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
      loadMore: "加載更多",
      makeSimilar: "做同款",
      makeSimilarChinaNotSupported: "當前地區不支持生成NSFW內容",
+     makeSequel: "做續集",
+     makeSequelPrompt: "根據描述延續影片1：",
+     makeSequelSubscribeTitle: "該作品僅訂閱使用者可使用創作",
+     makeSequelSubscribeGo: "獲取創作權限",
      makeVideo: "做影片",
      contentType: {
        all: "全部",

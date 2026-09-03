@@ -1853,6 +1853,10 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
      loadMore: "もっと見る",
      makeSimilar: "同じものを作る",
      makeSimilarChinaNotSupported: "現在の地域ではNSFWコンテンツの生成はサポートされていません",
+     makeSequel: "続編を作る",
+     makeSequelPrompt: "説明に基づいて動画1を延長する：",
+     makeSequelSubscribeTitle: "この作品は購読ユーザーのみ創作に使用できます",
+     makeSequelSubscribeGo: "創作権限を取得",
      makeVideo: "動画を作る",
      contentType: {
        all: "すべて",
