@@ -2564,8 +2564,12 @@ const handleVideoRefUpload = async (event: Event) => {
       const newVideos = files.filter(f => f.type.startsWith('video/')).length;
       const newAudios = files.filter(f => f.type.startsWith('audio/')).length;
 
-      if (existingVideos + newVideos > (isUnlimited ? 5 : 10)) {
-        toast(t('home.error.maxVideoCount', { max: isUnlimited ? 5 : 10 }));
+      const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
+      const maxVideos = isUnlimited ? 5 : 10;
+      const maxExtraVideos = isEdit ? maxVideos - 1 : maxVideos;
+
+      if (existingVideos + newVideos > maxExtraVideos) {
+        toast(t('home.error.maxVideoCount', { max: maxExtraVideos }));
         input.value = '';
         return;
       }

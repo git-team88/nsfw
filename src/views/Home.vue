@@ -2828,7 +2828,7 @@ const checkItemLimit = () => {
 
   // Photo upload limits based on mode
   let maxPhotos = currentMode === 'unlimited' ? 10 : 7;
-  if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+  if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
     maxPhotos = currentMode === 'unlimited' ? 10 : 30;
   }
 
@@ -4790,6 +4790,10 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
       toast(t('home.error.imageDimensionLimit'));
       return false;
     }
+    if (width > 6000 || height > 6000) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
   } else if (isVideoUnlimited) {
     // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
     if (ratio < 1 / 8 || ratio > 8) {
@@ -4949,8 +4953,8 @@ const handleFileChange = async (event: Event) => {
 
     // Photo upload limits based on mode
     let maxPhotos = currentMode === 'unlimited' ? 10 : 7;
-    let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 30;
+    let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 10 * 1024 * 1024;
+    let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 10;
 
     if (contentType.value === 'photo' && currentMode === 'unlimited') {
       maxFileSizeBytes = 30 * 1024 * 1024;
@@ -4965,8 +4969,8 @@ const handleFileChange = async (event: Event) => {
     const maxVideoSizeBytes = currentMode === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
     const maxAudioSizeBytes = 15 * 1024 * 1024;
 
-    // Video multimodal mode allows up to 30 images (normal), 3 images (unlimited)
-    if (contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal') {
+    // Video reference modes: normal 30MB, unlimited 20MB
+    if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
       maxPhotos = currentMode === 'unlimited' ? 10 : 30;
       maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
       maxFileSizeMB = currentMode === 'unlimited' ? 20 : 30;
@@ -5136,10 +5140,13 @@ const handleFileChange = async (event: Event) => {
             }
             // Check video count limit for video reference modes
             if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
+              const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
+              const maxVideos = currentMode === 'unlimited' ? 5 : 10;
+              const maxExtraVideos = isEdit ? maxVideos - 1 : maxVideos;
               const existingVideos = uploadedVideosVideo.value.length;
               const newVideos = files.filter(f => f.type.startsWith('video/')).length;
-              if (existingVideos + newVideos > (currentMode === 'unlimited' ? 5 : 10)) {
-                toast(t('home.error.maxVideoCount', { max: currentMode === 'unlimited' ? 5 : 10 }));
+              if (existingVideos + newVideos > maxExtraVideos) {
+                toast(t('home.error.maxVideoCount', { max: maxExtraVideos }));
                 return;
               }
             }
