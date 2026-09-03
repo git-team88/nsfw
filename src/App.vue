@@ -19,12 +19,13 @@ const router = useRouter();
 // 其它页面仍按 path 作为 key。
 const routeViewKey = computed(() => {
   const path = route.fullPath;
+  const pathOnly = route.path;
   const LANGS = 'ja|en|zh-cn|zh-tw';
   const TYPES = 'novel|comic|drama|photo|video';
   const isHome =
-    path === '/' ||
-    new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(path) ||
-    new RegExp(`^/(${TYPES})/?$`).test(path);
+    pathOnly === '/' ||
+    new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(pathOnly) ||
+    new RegExp(`^/(${TYPES})/?$`).test(pathOnly);
   return isHome ? 'home' : path;
 });
 

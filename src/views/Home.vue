@@ -2230,6 +2230,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
 const isMakeSimilar = ref(false);
+const makeSimilarSessionId = ref('');
 const justSwitchedTab = ref(false);
 const inputKey = ref(0);
 const previousInputHtml = ref('');
@@ -2506,7 +2507,7 @@ const navigateToNovelGenerate = async () => {
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
+      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3409,7 +3410,7 @@ const selectContentType = (type: string) => {
   });
 };
 
-const handleMakeSimilar = async (item: any) => {
+const handleMakeSimilar = async (item: any, fromUrl = false) => {
   const sessionId = item.session_id;
   if (!sessionId) return;
 
@@ -3420,8 +3421,9 @@ const handleMakeSimilar = async (item: any) => {
 
   isMakeSimilarLoading.value = true;
   isMakeSimilar.value = true;
+  makeSimilarSessionId.value = sessionId;
 
-  if (route.query.make) {
+  if (!fromUrl && route.query.make) {
     const { make, ...rest } = route.query;
     router.replace({ query: rest });
   }
@@ -4003,7 +4005,7 @@ const doGenerateVideo = async () => {
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
+      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4028,7 +4030,8 @@ const doGenerateVideo = async () => {
 
     const response = await api.generateSingleVideo({
       session_id: sessionId,
-      topic: processedContent
+      topic: processedContent,
+      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {})
     }) as any;
 
     if (response.code == 200) {
@@ -4182,7 +4185,7 @@ const doGenerateComic = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
+      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4339,7 +4342,7 @@ const doGenerateDrama = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
+      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4503,7 +4506,7 @@ const doGeneratePhoto = async () => {
       },
       addition_characters: [],
       enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
+      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4531,7 +4534,8 @@ const doGeneratePhoto = async () => {
     // Settings updated successfully, now generate photo
     const params = {
       session_id: sessionId,
-      topic: contentWithRefTags
+      topic: contentWithRefTags,
+      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {})
     };
 
     const response = await api.generateSinglePhoto(params) as any;
@@ -6864,7 +6868,7 @@ onMounted(async () => {
   const makeFromUrl = queryParams.get('make') || queryParams.get('session_id');
   if (makeFromUrl) {
     await getCountry();
-    await handleMakeSimilar({ session_id: makeFromUrl });
+    await handleMakeSimilar({ session_id: makeFromUrl }, true);
   }
 
   nextTick(() => {
