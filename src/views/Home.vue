@@ -1124,32 +1124,25 @@
           </div>
         </div>
 
-        <div class="view-mode-filter-box" v-if="activeContentTab !== 'suggested'">
-          <!-- User/Content toggle - only show for following/subscriptions tabs -->
-          <div class="view-mode-filter">
-            <span
-              class="view-mode-btn"
-              :class="{ active: viewMode === 'user' }"
-              @click="viewMode = 'user'"
-            >
-              {{ t('home.tab.user') }}
-            </span>
-            <span
-              class="view-mode-btn"
-              :class="{ active: viewMode === 'content' }"
-              @click="viewMode = 'content'"
-            >
-              {{ t('home.tab.content') }}
-            </span>
-          </div>
-
-          <div class="sensitive-content-toggle" v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle">
-            <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
-            <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
-              <span class="nsfw-knob"></span>
-            </button>
-          </div>
-        </div>
+         <div class="view-mode-filter-box" v-if="activeContentTab !== 'suggested'">
+           <!-- User/Content toggle - only show for following/subscriptions tabs -->
+           <div class="view-mode-filter">
+             <span
+               class="view-mode-btn"
+               :class="{ active: viewMode === 'user' }"
+               @click="viewMode = 'user'"
+             >
+               {{ t('home.tab.user') }}
+             </span>
+             <span
+               class="view-mode-btn"
+               :class="{ active: viewMode === 'content' }"
+               @click="viewMode = 'content'"
+             >
+               {{ t('home.tab.content') }}
+             </span>
+           </div>
+         </div>
 
         <div class="filter-container">
             <div class="content-type-filter" v-if="activeContentTab === 'suggested' || viewMode === 'content'" ref="contentTypeFilterRef">
@@ -1166,7 +1159,7 @@
           </div>
 
           <!-- Sensitive Content Toggle -->
-          <div class="sensitive-content-toggle" v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle">
+          <div class="sensitive-content-toggle" v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle && (activeContentTab === 'suggested' || viewMode === 'content')">
             <span class="nsfw-label">{{ t('home.sensitiveContent') }}</span>
             <button class="nsfw-switch" :class="{ on: allowSensitiveContent }" @click="handleSensitiveContentToggle" :aria-pressed="allowSensitiveContent">
               <span class="nsfw-knob"></span>
@@ -2236,6 +2229,7 @@ const isInputFocused = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
+const isMakeSimilar = ref(false);
 const justSwitchedTab = ref(false);
 const inputKey = ref(0);
 const previousInputHtml = ref('');
@@ -2512,6 +2506,7 @@ const navigateToNovelGenerate = async () => {
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
+      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3424,6 +3419,12 @@ const handleMakeSimilar = async (item: any) => {
   }
 
   isMakeSimilarLoading.value = true;
+  isMakeSimilar.value = true;
+
+  if (route.query.make) {
+    const { make, ...rest } = route.query;
+    router.replace({ query: rest });
+  }
 
   try {
     const res = await api.getProjectInfoPublic(sessionId) as any;
@@ -3981,7 +3982,8 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
+      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4159,7 +4161,8 @@ const doGenerateComic = async () => {
         desc: character.description,
         main_image_url: character.image,
         tri_view_url: character.tri_image
-      }))
+      })),
+      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4315,7 +4318,8 @@ const doGenerateDrama = async () => {
         desc: character.description,
         main_image_url: character.image,
         tri_view_url: character.tri_image
-      }))
+      })),
+      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4478,7 +4482,8 @@ const doGeneratePhoto = async () => {
         list: combinedItemsPhoto.value
       },
       addition_characters: [],
-      enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value
+      enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
+      ...(isMakeSimilar.value ? { is_make_same: 1 } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {

@@ -10,7 +10,7 @@
         <!-- Main Tabs: 小说, 漫画, 漫剧, 图片, 视频 -->
         <div class="main-tabs">
           <div
-            v-for="tab in mainTabs"
+            v-for="tab in mainTabs.filter(t => t.value !== 'manju')"
             :key="tab.value"
             class="tab-item"
             :class="{ active: activeMainTab === tab.value }"
@@ -310,10 +310,11 @@ const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
 const mainTabs = ref([
-  { value: 'video' },
-  { value: 'photo' },
-  { value: 'manhua' },
-  { value: 'novel' }
+  { value: 'video', id: 5 },
+  { value: 'photo', id: 4 },
+  { value: 'manhua', id: 2 },
+  { value: 'manju', id: 3 },
+  { value: 'novel', id: 1 }
 ]);
 
 const statusTabs = ref([
@@ -327,7 +328,8 @@ function switchMainTab(tab: string) {
   currentPage.value = 1;
   projects.value = [];
   hasMore.value = true;
-  router.replace({ query: { ...route.query, tab } });
+  const tabItem = mainTabs.value.find(t => t.value === tab);
+  router.replace({ query: { ...route.query, tab: tabItem?.id } });
   loadProjects(true);
 }
 
@@ -693,20 +695,9 @@ onMounted(async () => {
   // Check for tab parameter in route query
   const tabParam = route.query.tab as string;
   if (tabParam) {
-    const tabMap: Record<string, string> = {
-      '1': 'novel',
-      '2': 'manhua',
-      '3': 'manju',
-      'novel': 'novel',
-      'manhua': 'manhua',
-      'manju': 'manju',
-      'photo': 'photo',
-      'video': 'video'
-    };
-
-    const tabValue = tabMap[tabParam];
-    if (tabValue && mainTabs.value.some(t => t.value === tabValue)) {
-      activeMainTab.value = tabValue;
+    const tabItem = mainTabs.value.find(t => String(t.id) === tabParam);
+    if (tabItem) {
+      activeMainTab.value = tabItem.value;
     }
   }
 
