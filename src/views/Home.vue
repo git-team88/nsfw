@@ -1772,7 +1772,7 @@ const videoMultimodalOptions = computed(() => {
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
-  if (contentSwitch.loaded && contentSwitch.mode !== 2 && currentVideoMode.value === 'normal') {
+  if (contentSwitch.loaded && contentSwitch.mode !== 2) {
     options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
     options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
   }
@@ -2990,9 +2990,6 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = false;
-      if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-        selectedVideoMultimodal.value = 'multimodal';
-      }
       resetVideoInputs();
       selectedVideoDuration.value = '2';
       lastValidVideoDuration.value = '2';
@@ -3004,9 +3001,6 @@ const switchVideoMode = (mode: string, index: number) => {
     currentVideoMode.value = 'normal';
     enableVideoOptimizePrompt.value = true;
     showVideoModeDropdown.value = false;
-    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      selectedVideoMultimodal.value = 'multimodal';
-    }
     resetVideoInputs();
     if (parseInt(selectedVideoDuration.value) < 4) {
       selectedVideoDuration.value = '4';
@@ -3406,6 +3400,82 @@ const selectContentType = (type: string) => {
     if (editableInputRef.value) {
       editableInputRef.value.innerHTML = '';
       isInputEmpty.value = true;
+    }
+  });
+};
+
+const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
+  const isUnlimited = isNsfw && userRegion.value;
+
+  contentType.value = 'video';
+  setSeoMeta('video');
+
+  if (isUnlimited) {
+    currentVideoMode.value = 'unlimited';
+    enableVideoOptimizePrompt.value = false;
+  } else {
+    currentVideoMode.value = 'normal';
+    enableVideoOptimizePrompt.value = true;
+  }
+
+  selectedVideoMultimodal.value = 'multimodal';
+  selectedVideoRatio.value = '9:16';
+  selectedVideoQuality.value = '720P';
+  selectedVideoDuration.value = '15';
+
+  const imgItem = {
+    id: Date.now().toString(),
+    name: 'image1',
+    image: imageUrl,
+    type: 'image' as const
+  };
+  uploadedImagesVideo.value = [imgItem];
+  selectedCharactersVideo.value = [];
+  uploadedVideosVideo.value = [];
+  uploadedAudiosVideo.value = [];
+  combinedItemsVideo.value = [imgItem];
+
+  isInputEmptyVideo.value = false;
+  isInputEmpty.value = false;
+
+  localStorage.removeItem('makeVideoData');
+
+  nextTick(() => {
+    if (editableInputRef.value) {
+      editableInputRef.value.innerHTML = '';
+      const itemTag = document.createElement('span');
+      itemTag.className = 'image-tag';
+      itemTag.contentEditable = 'false';
+      itemTag.dataset.itemId = imgItem.id;
+      const img = document.createElement('img');
+      img.src = imgItem.image;
+      img.alt = imgItem.name;
+      img.className = 'image-tag-img';
+      itemTag.appendChild(img);
+      const textNode = document.createTextNode(`${t('home.img')}1`);
+      itemTag.appendChild(textNode);
+      editableInputRef.value.appendChild(itemTag);
+
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        range.setStartAfter(itemTag);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+    isInputEmpty.value = false;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (isStickyCollapsed.value) {
+        stickyInputExpanded.value = true;
+      }
+      return;
+    }
+    if (editableInputRef.value) {
+      editableInputRef.value.focus();
     }
   });
 };
@@ -6869,6 +6939,19 @@ onMounted(async () => {
   if (makeFromUrl) {
     await getCountry();
     await handleMakeSimilar({ session_id: makeFromUrl }, true);
+  }
+
+  const makeVideoData = localStorage.getItem('makeVideoData');
+  if (makeVideoData) {
+    await getCountry();
+    try {
+      const { imageUrl, isNsfw } = JSON.parse(makeVideoData);
+      if (imageUrl) {
+        await handleMakeVideo(imageUrl, isNsfw);
+      }
+    } catch (e) {
+      localStorage.removeItem('makeVideoData');
+    }
   }
 
   nextTick(() => {

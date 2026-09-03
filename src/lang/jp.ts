@@ -1841,7 +1841,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       unlimitedModeRestricted: "年齢または地域の制限により、ロング生成モードでのコンテンツ生成はサポートされていません",
       unlimitedNoAudio: "無制限モードでは音声のアップロードはサポートされていません",
       maxInputLimit: "最大入力制限{max}文字に達しました",
-      generateFailed: "生成に失敗しました。後でもう一度お試しください"
+      generateFailed: "生成に失敗しました。後でもう一度お試しください",
+      makeVideoImageInvalid: "画像フォーマットが動画生成の要件を満たしていません。別の画像をお試しください。"
     },
     generate: {
       started: "動画の生成を開始しました",
@@ -1852,6 +1853,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
      loadMore: "もっと見る",
      makeSimilar: "同じものを作る",
      makeSimilarChinaNotSupported: "現在の地域ではNSFWコンテンツの生成はサポートされていません",
+     makeVideo: "動画を作る",
      contentType: {
        all: "すべて",
        drama: "アニメドラマ",

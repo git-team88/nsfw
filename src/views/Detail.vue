@@ -174,9 +174,16 @@
               />
 
               <div v-else class="image-carousel" ref="imageStackRef">
-                <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
-                  <img :src="makeIcon" alt="" class="make-icon" />
-                  <span>{{ t('home.makeSimilar') }}</span>
+                <div class="make-action-group">
+                  <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                    <img :src="makeIcon" alt="" class="make-icon" />
+                    <span>{{ t('home.makeSimilar') }}</span>
+                  </div>
+                  <div class="make-video-btn" :class="{ disabled: isMakeVideoLoading }" v-if="detail.images?.[currentImageIndex]?.image_url" @click.stop="!isMakeVideoLoading && goMakeVideo()">
+                    <img src="@/assets/images/base/video.png" alt="" class="make-icon" />
+                    <span>{{ t('home.makeVideo') }}</span>
+                    <div class="loading-spinner" v-if="isMakeVideoLoading"></div>
+                  </div>
                 </div>
 
                 <template v-if="!isLoading">
@@ -1436,6 +1443,8 @@ function getCountry(){
 // 是否中国大陆用户（地区接口已返回且非海外）
 const isChinaRegion = computed(() => regionLoaded.value && !userRegion.value);
 
+const isMakeVideoLoading = ref(false);
+
 const contentSwitch = useContentSwitchStore();
 // userRegion.value = true means NOT in China, false means IN China
 // Pass show_nsfw only when NOT in China (userRegion.value = true)
@@ -1518,6 +1527,51 @@ function goMakeSimilar(sessionId: string) {
     return;
   }
   router.push({ path: '/', query: { make: sessionId } });
+}
+
+function goMakeVideo() {
+  const img = detail.value.images?.[currentImageIndex.value]?.image_url || detail.value.cover || '';
+  if (!img) return;
+  const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
+
+  const validExts = /\.(jpe?g|png|webp)(\?.*)?$/i;
+  if (!validExts.test(img)) {
+    toast(t('home.error.makeVideoImageInvalid'));
+    return;
+  }
+
+  isMakeVideoLoading.value = true;
+  const testImg = new Image();
+  testImg.onload = () => {
+    const width = testImg.naturalWidth;
+    const height = testImg.naturalHeight;
+    if (width === 0 || height === 0) {
+      isMakeVideoLoading.value = false;
+      toast(t('home.error.makeVideoImageInvalid'));
+      return;
+    }
+    const ratio = width / height;
+    if (isNsfw) {
+      if (ratio < 1 / 8 || ratio > 8 || width < 240 || width > 8000 || height < 240 || height > 8000) {
+        isMakeVideoLoading.value = false;
+        toast(t('home.error.makeVideoImageInvalid'));
+        return;
+      }
+    } else {
+      if (ratio < 0.4 || ratio > 2.5 || width < 300 || width > 6000 || height < 300 || height > 6000) {
+        isMakeVideoLoading.value = false;
+        toast(t('home.error.makeVideoImageInvalid'));
+        return;
+      }
+    }
+    localStorage.setItem('makeVideoData', JSON.stringify({ imageUrl: img, isNsfw }));
+    router.push({ path: '/' });
+  };
+  testImg.onerror = () => {
+    isMakeVideoLoading.value = false;
+    toast(t('home.error.makeVideoImageInvalid'));
+  };
+  testImg.src = img;
 }
 
 // Enter next chapter if available, otherwise enter current chapter

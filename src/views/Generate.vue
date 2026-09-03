@@ -1990,7 +1990,7 @@ const videoMultimodalOptions = computed(() => {
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
     { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
   ];
-  if (effectiveVideoMode.value === 'normal') {
+  if (contentSwitch.mode !== 2) {
     options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
     options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
   }
@@ -5837,9 +5837,6 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = false;
-      if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-        selectedVideoMultimodal.value = 'multimodal';
-      }
       videoInput.value = '';
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
@@ -5854,9 +5851,6 @@ const switchVideoMode = (mode: string, index: number) => {
   } else {
     currentVideoMode.value = 'normal';
     enableVideoOptimizePrompt.value = true;
-    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      selectedVideoMultimodal.value = 'multimodal';
-    }
     videoInput.value = '';
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';
@@ -5871,9 +5865,6 @@ const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
     currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = false;
-    if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
-      selectedVideoMultimodal.value = 'multimodal';
-    }
     videoInput.value = '';
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';

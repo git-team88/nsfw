@@ -2121,7 +2121,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       unlimitedModeRestricted: "由于年龄或地区限制，不支持使用无限制模式生成内容",
       unlimitedNoAudio: "无限制模式暂不支持上传音频",
       maxInputLimit: "已达最大输入限制{max}字",
-      generateFailed: "生成失败，请稍后重试"
+      generateFailed: "生成失败，请稍后重试",
+      makeVideoImageInvalid: "原图格式不满足生成视频要求，请选用其他图片尝试"
     },
     generate: {
       started: "视频生成已开始",
@@ -2132,6 +2133,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
      loadMore: "加载更多",
      makeSimilar: "做同款",
      makeSimilarChinaNotSupported: "当前地区不支持生成NSFW内容",
+     makeVideo: "做视频",
      contentType: {
        all: "全部",
        drama: "漫剧",
