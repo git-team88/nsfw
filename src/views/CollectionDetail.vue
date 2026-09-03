@@ -1089,7 +1089,7 @@ onBeforeUnmount(() => {
       padding: 8px 20px;
       border-radius: 12px;
       border: 1px solid #ff9aca;
-      background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+      background: linear-gradient(145deg, #ff74b3, #f73382);
       color: #fff;
       font-size: 14px;
       font-weight: 600;
@@ -1100,7 +1100,6 @@ onBeforeUnmount(() => {
 
       &:hover {
         box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
-        transform: translate(-1px, -1px);
       }
     }
 
@@ -1112,8 +1111,8 @@ onBeforeUnmount(() => {
       height: 48px;
       padding: 8px 20px;
       border-radius: 12px;
-      border: 2px solid #101828;
-      background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
+      border: 1px solid #ff9aca;
+      background: linear-gradient(145deg, #ff74b3, #f73382);
       color: #fff;
       font-size: 14px;
       font-weight: 600;
@@ -1126,12 +1125,7 @@ onBeforeUnmount(() => {
       }
 
       &:hover {
-        transform: translate(-1px, -1px);
         box-shadow: 2px 2px 0 #161122;
-      }
-
-      &:active {
-        transform: translate(0, 0);
       }
     }
   }

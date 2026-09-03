@@ -3627,6 +3627,26 @@ const handleMakeSimilar = async (item: any) => {
             isInputEmpty.value = !(replayContent || content || '').trim();
           }
         }
+        if (isLoggedIn.value) {
+          if (targetContentType === 'novel') {
+            const ta = document.querySelector<HTMLTextAreaElement>('.input-area-box.is-expanded .novel-textarea');
+            if (ta) {
+              ta.focus();
+              ta.setSelectionRange(ta.value.length, ta.value.length);
+            }
+          } else {
+            const el = editableInputRef.value;
+            if (el) {
+              el.focus();
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              range.collapse(false);
+              const sel = window.getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            }
+          }
+        }
       });
     });
 

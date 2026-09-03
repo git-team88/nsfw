@@ -1375,7 +1375,6 @@ const layerList = computed(() =>
   box-shadow: none;
   transition: transform 0.16s;
 
-  &:hover { transform: translate(-1px, -1px); }
 }
 .comic-markup-guide-actions button:last-child { color: #ffffff; background: linear-gradient(135deg, #ff4f9a, #ff2d7f); }
 

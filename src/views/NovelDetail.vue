@@ -208,11 +208,6 @@
         <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
       </div>
 
-      <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
-        <img :src="makeIcon" alt="" class="make-icon" />
-        <span>{{ t('home.makeSimilar') }}</span>
-      </div>
-
       <!-- Floating action buttons -->
       <div class="floating-actions">
         <div class="action-btn toc-btn" @click="toggleToc" v-if="isCollectionMode">

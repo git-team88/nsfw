@@ -3148,8 +3148,8 @@ function likeReply(id: string, liked: boolean) {
           font-size: 12px;
           font-weight: 800;
           color: #fff;
-          background: linear-gradient(315deg, #FF4D8E 42.31%, #FFD347 100%);
-          border: 2px solid #101828;
+          background: linear-gradient(145deg, #ff74b3, #f73382);
+          border: 1px solid #ff9aca;
           border-radius: 12px;
           cursor: pointer;
           transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3160,7 +3160,6 @@ function likeReply(id: string, liked: boolean) {
           }
 
           &:hover {
-            transform: translate(-1px, -1px);
             box-shadow: 2px 2px 0 #161122;
           }
 

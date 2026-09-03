@@ -428,9 +428,11 @@
               <div class="collection-link" @click="goToCollectionDetail">
                 {{ t('detail.viewCollectionInfo') }}
               </div>
-              <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
-                <img :src="makeIcon" alt="" class="make-icon" />
-                <span>{{ t('home.makeSimilar') }}</span>
+              <div class="make-similar-wrap" v-if="detail.session_id">
+                <div class="make-similar-btn" @click.stop="goMakeSimilar(detail.session_id)">
+                  <img :src="makeIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSimilar') }}</span>
+                </div>
               </div>
             </div>
           </div>
