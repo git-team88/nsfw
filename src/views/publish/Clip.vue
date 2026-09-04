@@ -345,6 +345,15 @@
             :disabled="isUpload"
             @click="onSubmit"
           >{{ isUpload ? t('submit.count') : t('submit.submit') }}</button>
+          <div class="agreement-row">
+            <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
+              <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
+              <img v-else src="@/assets/images/register/check.png" alt="" />
+            </div>
+            <span class="agreement-text"
+              >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+            >
+          </div>
         </div>
       </div>
     </div>
@@ -366,6 +375,13 @@
     />
 
     <UploadMask :visible="isUpload" />
+
+    <!-- Community Convention Modal -->
+    <CommunityConventionModal
+      :visible="showConventionModal"
+      @cancel="closeConventionModal"
+      @confirm="confirmConvention"
+    />
 
     <!-- Subscription Prompt Modal -->
     <SubscriptionPromptModal
@@ -391,6 +407,7 @@ import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -545,6 +562,8 @@ const previewMediaUrl = ref("");
 
 const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
+const agreeTerms = ref(true);
+const showConventionModal = ref(false);
 
 function handlePermissionChange(permission: string) {
   if (permission === "partial" && !hasActiveSubscription.value) {
@@ -575,6 +594,21 @@ function closeSubscriptionModal() {
 function goToSubscriptionSettings() {
   showSubscriptionModal.value = false;
   window.location.href = '/user-subscription';
+}
+
+function closeConventionModal() {
+  showConventionModal.value = false;
+}
+
+function confirmConvention() {
+  showConventionModal.value = false;
+  agreeTerms.value = true;
+  onSubmit();
+}
+
+function openCommunityConvention() {
+  localStorage.setItem("isBack", "1");
+  window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
 function handlePaste(e: ClipboardEvent) {
@@ -1802,6 +1836,11 @@ async function onSubmit() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push("/login");
+    return;
+  }
+
+  if (!agreeTerms.value) {
+    showConventionModal.value = true;
     return;
   }
 

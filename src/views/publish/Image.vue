@@ -358,6 +358,15 @@
         <button class="publish-btn" :disabled="isUploading" @click="onSubmit">
           {{ isUploading ? t('submit.publishing') : t('submit.submit') }}
         </button>
+        <div class="agreement-row">
+          <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
+            <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
+            <img v-else src="@/assets/images/register/check.png" alt="" />
+          </div>
+          <span class="agreement-text"
+            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+          >
+        </div>
       </div>
     </div>
 
@@ -383,6 +392,13 @@
       @go-to-settings="goToSubscriptionSettings"
     />
 
+    <!-- Community Convention Modal -->
+    <CommunityConventionModal
+      :visible="showConventionModal"
+      @cancel="closeConventionModal"
+      @confirm="confirmConvention"
+    />
+
     <UploadMask :visible="isUploadingImages" />
   </div>
 </template>
@@ -402,6 +418,7 @@ import Pagination from "@/components/Pagination.vue";
 import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
 import select from "@/assets/images/publish/select.png";
@@ -501,6 +518,8 @@ const previewMediaUrl = ref("");
 
 const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
+const agreeTerms = ref(true);
+const showConventionModal = ref(false);
 
 const isLoadingDetail = ref(false);
 const isUploadingImages = ref(false);
@@ -862,6 +881,21 @@ function closeSubscriptionModal() {
 function goToSubscriptionSettings() {
   showSubscriptionModal.value = false;
   window.location.href = '/user-subscription';
+}
+
+function closeConventionModal() {
+  showConventionModal.value = false;
+}
+
+function confirmConvention() {
+  showConventionModal.value = false;
+  agreeTerms.value = true;
+  onSubmit();
+}
+
+function openCommunityConvention() {
+  localStorage.setItem("isBack", "1");
+  window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
 // --- Local upload helpers ---
@@ -1561,6 +1595,11 @@ async function onSubmit() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push("/login");
+    return;
+  }
+
+  if (!agreeTerms.value) {
+    showConventionModal.value = true;
     return;
   }
 
