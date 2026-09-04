@@ -218,46 +218,50 @@
                     <div class="update-badge" v-if="collection.chapter_count > 0">
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
-                    <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
-                      <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
-                        <img :src="makeIcon" alt="" class="make-icon" />
-                      </div>
-                      <div class="make-similar-btn" v-if="collection.type == '5'" @click.stop="handleMakeSequelFromList(collection)">
-                        <img :src="videoIcon" alt="" class="make-icon" />
-                      </div>
-                    </div>
-                    <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
-                      <div
-                        class="card-action-btn"
-                        @click.stop="collection.is_top === '1' ? unpinCollection(collection) : pinCollection(collection)"
-                      >
-                        <img src="@/assets/images/user/top.png" alt="" />
-                      </div>
-                      <template v-if="activeContentType == 4 || activeContentType == 5">
-                        <div class="card-action-btn" @click.stop="toggleCardDropdown(collection.id, $event)">
-                          <img src="@/assets/images/user/set.png" alt="" />
+                    <div class="card-actions-row">
+                      <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
+                        <div
+                          class="card-action-btn"
+                          @click.stop="collection.is_top === '1' ? unpinCollection(collection) : pinCollection(collection)"
+                        >
+                          <img src="@/assets/images/user/top.png" alt="" />
                         </div>
-                        <Teleport to="body">
-                          <div class="card-dropdown-menu" v-if="activeCardDropdownId === collection.id" :style="cardDropdownStyle">
-                            <div class="card-dropdown-item" @click.stop="goEditPost(collection)">{{ t('userHome.card.edit') }}</div>
-                            <div class="card-dropdown-item card-dropdown-item-danger" @click.stop="deletePost(collection)">{{ t('userHome.card.delete') }}</div>
+                        <template v-if="activeContentType == 4 || activeContentType == 5">
+                          <div class="card-action-btn" @click.stop="toggleCardDropdown(collection.id, $event)">
+                            <img src="@/assets/images/user/set.png" alt="" />
                           </div>
-                        </Teleport>
-                      </template>
-                      <template v-else>
-                        <div
-                          class="card-action-btn"
-                          @click.stop="goCollectionSettings(collection.id)"
-                        >
-                          <img src="@/assets/images/user/set.png" alt="" />
+                          <Teleport to="body">
+                            <div class="card-dropdown-menu" v-if="activeCardDropdownId === collection.id" :style="cardDropdownStyle">
+                              <div class="card-dropdown-item" @click.stop="goEditPost(collection)">{{ t('userHome.card.edit') }}</div>
+                              <div class="card-dropdown-item card-dropdown-item-danger" @click.stop="deletePost(collection)">{{ t('userHome.card.delete') }}</div>
+                            </div>
+                          </Teleport>
+                        </template>
+                        <template v-else>
+                          <div
+                            class="card-action-btn"
+                            @click.stop="goCollectionSettings(collection.id)"
+                          >
+                            <img src="@/assets/images/user/set.png" alt="" />
+                          </div>
+                          <div
+                            class="card-action-btn"
+                            @click.stop="goChapterManage(collection.id)"
+                          >
+                            <img src="@/assets/images/user/chapter.png" alt="" />
+                          </div>
+                        </template>
+                      </div>
+                      <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
+                        <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                          <img :src="makeIcon" alt="" class="make-icon" />
+                          <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                         </div>
-                        <div
-                          class="card-action-btn"
-                          @click.stop="goChapterManage(collection.id)"
-                        >
-                          <img src="@/assets/images/user/chapter.png" alt="" />
+                        <div class="make-similar-btn" v-if="collection.type == '5'" @click.stop="handleMakeSequelFromList(collection)">
+                          <img :src="videoIcon" alt="" class="make-icon" />
+                          <div class="make-similar-tooltip">{{ t('home.makeSequel') }}</div>
                         </div>
-                      </template>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -817,6 +821,7 @@ async function fetchCollections(reset = false) {
       if (type === 4 || type === 5) {
         collectionData = collectionData.map((item: any) => ({
           ...item,
+          type: item.type ?? String(type),
           is_top: String(item.is_post_top ?? item.is_top ?? '0'),
         }));
       }
@@ -3477,12 +3482,13 @@ async function unpinCollection(collection: any) {
         position: absolute;
         bottom: 0;
         width: 100%;
-        height: 56px;
+        height: auto;
         display: flex;
         align-items: flex-end;
         padding: 0 12px 12px;
         border-radius: 0 0 0 0;
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+        overflow: visible;
       }
 
       .update-badge{
@@ -3494,21 +3500,24 @@ async function unpinCollection(collection: any) {
 
       .make-btns-wrap {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 2px;
+        justify-content: center;
+        gap: 4px;
         z-index: 2;
       }
 
       .make-similar-btn {
-        display: inline-flex;
+        position: relative;
+        display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        padding: 0;
+        padding: 4px;
         background: transparent;
         border: none;
         border-radius: 6px;
-        transition: background 0.2s, padding 0.2s;
+        transition: background 0.2s;
         z-index: 2;
 
         .make-icon {
@@ -3516,15 +3525,46 @@ async function unpinCollection(collection: any) {
           height: 20px;
         }
 
+        .make-similar-tooltip {
+          position: absolute;
+          right: 100%;
+          top: 50%;
+          transform: translateY(-50%);
+          margin-right: 6px;
+          padding: 6px 12px;
+          background: #FFFFFF;
+          border: 2px solid #3d3d3d;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          color: #161122;
+          white-space: nowrap;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.2s ease;
+          z-index: 100;
+          pointer-events: none;
+        }
+
         &:hover {
           background: rgba(0,0,0,0.3);
-          padding: 4px;
+
+          .make-similar-tooltip {
+            opacity: 1;
+            visibility: visible;
+          }
         }
 
       }
 
-      .card-actions {
+      .card-actions-row {
         margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .card-actions {
         display: flex;
         flex-direction: column;
         gap: 6px;

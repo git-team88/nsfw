@@ -1270,7 +1270,7 @@ $line: #2c2c2c;
         margin-bottom: 6px;
         padding: 6px 12px;
         background: #FFFFFF;
-        border: 2px solid #161122;
+        border: 2px solid #3d3d3d;
         border-radius: 8px;
         font-size: 12px;
         font-weight: 700;

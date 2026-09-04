@@ -329,7 +329,7 @@ function switchMainTab(tab: string) {
   projects.value = [];
   hasMore.value = true;
   const tabItem = mainTabs.value.find(t => t.value === tab);
-  router.replace({ query: { ...route.query, tab: tabItem?.id } });
+  router.replace({ path: '/my-projects', query: { ...route.query, tab: tabItem?.id } });
   loadProjects(true);
 }
 
