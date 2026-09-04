@@ -3503,6 +3503,71 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   });
 };
 
+const formatReplayContent = (content: string, list: any[]) => {
+  if (!content) return '';
+  const getList = list || [];
+
+  const getTagHtml = (index: string, tagType: string, originalMatch: string) => {
+    const refIndex = parseInt(index);
+    const arrayIndex = refIndex - 1;
+
+    let targetType = '';
+    if (tagType === 'vid') {
+      targetType = 'video';
+    } else if (tagType === 'aud') {
+      targetType = 'audio';
+    } else {
+      targetType = 'image';
+    }
+
+    const filteredList = getList.filter((i: any) => i.type === targetType);
+    const item = filteredList[arrayIndex];
+
+    if (item) {
+      const imgUrl = item.image || item.url || '';
+      let tagClass = 'image-tag';
+      let innerClass = 'image-tag-img';
+      let iconUrl = imgUrl;
+      let label = '';
+
+      if (item.type === 'audio') {
+        tagClass = 'audio-tag';
+        innerClass = 'audio-tag-img';
+        iconUrl = audioIcon;
+        label = `${t('home.audio')}${refIndex}`;
+      } else if (item.type === 'video') {
+        tagClass = 'video-tag';
+        innerClass = 'video-tag-img';
+        iconUrl = item.cover || imgUrl;
+        label = `${t('home.video')}${refIndex}`;
+      } else {
+        label = `${t('home.img')}${refIndex}`;
+      }
+
+      return `<span class="${tagClass}" contenteditable="false" data-item-id="${item.id || ''}"><img src="${iconUrl}" class="${innerClass}" />${label}</span>`;
+    }
+
+    return originalMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+
+  let result = content;
+
+  result = result.replace(/<vid_(\d+)>/gi, (match, index) => getTagHtml(index, 'vid', match));
+  result = result.replace(/<vid_(\d+)><\/vid_\d+>/gi, (match, index) => getTagHtml(index, 'vid', match));
+  result = result.replace(/<aud_(\d+)>/gi, (match, index) => getTagHtml(index, 'aud', match));
+  result = result.replace(/<aud_(\d+)><\/aud_\d+>/gi, (match, index) => getTagHtml(index, 'aud', match));
+  result = result.replace(/<ref_(\d+)>/gi, (match, index) => getTagHtml(index, 'ref', match));
+  result = result.replace(/<ref_(\d+)><\/ref_\d+>/gi, (match, index) => getTagHtml(index, 'ref', match));
+  result = result.replace(/&lt;vid_(\d+)&gt;/gi, (match, index) => getTagHtml(index, 'vid', match));
+  result = result.replace(/&lt;vid_(\d+)&gt;&lt;\/vid_\d+&gt;/gi, (match, index) => getTagHtml(index, 'vid', match));
+  result = result.replace(/&lt;aud_(\d+)&gt;/gi, (match, index) => getTagHtml(index, 'aud', match));
+  result = result.replace(/&lt;aud_(\d+)&gt;&lt;\/aud_\d+&gt;/gi, (match, index) => getTagHtml(index, 'aud', match));
+  result = result.replace(/&lt;ref_(\d+)&gt;/gi, (match, index) => getTagHtml(index, 'ref', match));
+  result = result.replace(/&lt;ref_(\d+)&gt;&lt;\/ref_\d+&gt;/gi, (match, index) => getTagHtml(index, 'ref', match));
+
+  return result;
+};
+
 const handleMakeSimilar = async (item: any, fromUrl = false) => {
   const sessionId = item.session_id;
   if (!sessionId) return;
@@ -3532,7 +3597,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
     const userSelected = data.user_selected || {};
     const storyType = userSelected.story_type || data.story_type || '';
     const others = userSelected.others || {};
-    const content = others.content || data.topic || data.description || '';
+    const content = data.topic || others.content || '';
     const optimizedPrompt = data.optimized_prompt || '';
     const shouldReplayOptimizedPrompt =
       (storyType == 'simple_image' || storyType == 'simple_video') &&
@@ -3608,9 +3673,11 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       selectedCharactersVideo.value = [];
       combinedItemsVideo.value = [...uploadedImagesVideo.value, ...uploadedVideosVideo.value, ...uploadedAudiosVideo.value];
 
+      const formattedReplayContent = formatReplayContent(replayContent, others.list || []);
+
       nextTick(() => {
         if (editableInputRef.value) {
-          editableInputRef.value.innerHTML = replayContent;
+          editableInputRef.value.innerHTML = formattedReplayContent;
           isInputEmpty.value = !replayContent.trim();
         }
       });
@@ -3630,9 +3697,11 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       }));
       combinedItemsPhoto.value = [...uploadedImagesPhoto.value];
 
+      const formattedReplayContent = formatReplayContent(replayContent, others.list || []);
+
       nextTick(() => {
         if (editableInputRef.value) {
-          editableInputRef.value.innerHTML = replayContent;
+          editableInputRef.value.innerHTML = formattedReplayContent;
           isInputEmpty.value = !replayContent.trim();
         }
       });
@@ -3656,9 +3725,11 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       }));
       combinedItemsComic.value = [...uploadedImagesComic.value, ...selectedCharactersComic.value];
 
+      const formattedContent = formatReplayContent(content, others.list || []);
+
       nextTick(() => {
         if (editableInputRef.value) {
-          editableInputRef.value.innerHTML = content;
+          editableInputRef.value.innerHTML = formattedContent;
           isInputEmpty.value = !content.trim();
         }
       });
@@ -3682,9 +3753,11 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       }));
       combinedItemsDrama.value = [...uploadedImagesDrama.value, ...selectedCharactersDrama.value];
 
+      const formattedContent = formatReplayContent(content, others.list || []);
+
       nextTick(() => {
         if (editableInputRef.value) {
-          editableInputRef.value.innerHTML = content;
+          editableInputRef.value.innerHTML = formattedContent;
           isInputEmpty.value = !content.trim();
         }
       });
@@ -3718,7 +3791,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
             while (el.firstChild) {
               el.removeChild(el.firstChild);
             }
-            el.innerHTML = replayContent || content || '';
+            el.innerHTML = formatReplayContent(replayContent || content || '', others.list || []);
             isInputEmpty.value = !(replayContent || content || '').trim();
           }
         }
