@@ -405,6 +405,7 @@
             <!-- Uploaded reference images, including the protected current illustration -->
             <div class="insert-image-ref-list" v-if="insertImageRefImages.length > 0">
               <div v-for="(img, index) in insertImageRefImages" :key="img.id" :class="['insert-image-ref-item']">
+                <span class="image-index">{{ index + 1 }}</span>
                 <img @click.stop="zoomCoverImage(img.image)" :src="img.id === -1 ? toWebpImageUrl(img.image) : img.image" alt="" class="insert-image-ref-thumb" />
                 <span class="insert-image-ref-name" @click.stop="zoomCoverImage(img.image)">{{ t('novel.image') }}{{ index + 1 }}</span>
                 <button v-if="img.id !== -1" class="insert-image-ref-remove" @click="removeInsertImageRefImage(img.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>

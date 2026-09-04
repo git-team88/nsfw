@@ -330,7 +330,8 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     enterCode: "Enter Invite Code",
     confirm: "Confirm",
     noCode: "No invitation code? Skip",
-    inviteError: "Enter invite code."
+    inviteError: "Enter invite code.",
+    optional: "(optional)"
   },
   similar: {
     title: "Similar Content Recommendations",

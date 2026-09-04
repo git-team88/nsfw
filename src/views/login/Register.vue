@@ -33,7 +33,7 @@
 
         <form id="emailForm" @submit.prevent="handleSubmit">
           <div class="auth-field">
-            <label>{{ t("register.emailLabel") }}</label>
+            <label><span class="required">*</span> {{ t("register.emailLabel") }}</label>
             <input
               id="email"
               class="auth-input"
@@ -48,7 +48,7 @@
           </div>
 
           <div class="auth-field">
-            <label>{{ t("register.passwordLabel") }}</label>
+            <label><span class="required">*</span> {{ t("register.passwordLabel") }}</label>
             <div class="password-row">
               <input
                 id="password"
@@ -75,7 +75,7 @@
           </div>
 
           <div class="auth-field">
-            <label>{{ t("register.codeLabel") }}</label>
+            <label><span class="required">*</span> {{ t("register.codeLabel") }}</label>
             <div class="input-row">
               <input
                 id="code"
@@ -104,7 +104,7 @@
           </div>
 
           <div class="auth-field">
-            <label>{{ t("inviteCode.title") }}</label>
+            <label>{{ t("inviteCode.title") }} <span class="optional">{{ t("inviteCode.optional") }}</span></label>
             <input
               id="inviteCode"
               class="auth-input"
@@ -732,6 +732,15 @@ function googleRegister() {
       font-weight: 800;
       color: #ddd;
       letter-spacing: 0.02em;
+
+      .required {
+        color: #E5484D;
+      }
+
+      .optional {
+        color: #777;
+        font-weight: 600;
+      }
     }
   }
 

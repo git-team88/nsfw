@@ -256,6 +256,7 @@ interface Post {
   all_like: number;
   isLiked: boolean;
   is_nsfw: number | string;
+  session_id?: string;
 }
 
 // State
@@ -470,6 +471,7 @@ async function loadData(fromLoadMore = false) {
           all_like: parseInt(item.all_like || "0"),
           isLiked: item.is_liked == 1 || false,
           is_nsfw: item.is_nsfw,
+          session_id: item.session_id,
         };
         });
 

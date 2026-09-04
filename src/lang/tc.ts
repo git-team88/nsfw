@@ -396,7 +396,8 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     enterCode: "輸入您的邀請碼",
     confirm: "確認",
     noCode: "沒有邀請碼？跳過",
-    inviteError: "邀請碼錯誤"
+    inviteError: "邀請碼錯誤",
+    optional: "（可不填）"
   },
   subscription: {
     prompt: "訂閱功能開啟後，才能設定訂閱使用者可見。請先前往【個人中心-訂閱價格設定】設定收費功能，再開啟此選項。",

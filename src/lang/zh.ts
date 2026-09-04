@@ -396,7 +396,8 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     enterCode: "输入您的邀请码",
     confirm: "确认",
     noCode: "没有邀请码？跳过",
-    inviteError: "邀请码错误"
+    inviteError: "邀请码错误",
+    optional: "（可不填）"
   },
   subscription: {
     prompt: "订阅功能开启后，才能设置订阅用户可见。请先前往【个人中心-订阅价格设置】设置收费功能，再开启此选项。",
