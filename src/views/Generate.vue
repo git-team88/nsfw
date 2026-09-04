@@ -1083,7 +1083,7 @@ const handleClickOutside = (event: MouseEvent) => {
 const records = ref<any[]>([]);
 const displayRecords = ref<any[]>([]);
 const currentPage = ref(1);
-const pageSize = ref(100);
+const pageSize = ref(1000);
 const displayCount = ref(20);
 const totalCount = ref(0);
 const isLoadingNewer = ref(false);
@@ -4030,11 +4030,11 @@ const pollTaskStatus = async (taskId: string) => {
           updatedRecord.step_status = 'SUCCESS';
         }
 
-        if (taskData.status === 'FAIL' || taskData.status === 'FAILED') {
+        if (taskData.status === 'FAIL' || taskData.status === 'FAILED' || taskData.status === 'fail' || taskData.status === 'failed') {
           updatedRecord.step_status = 'FAILED';
           const statusMsg = (taskData.status_message || '').toLowerCase();
           if (statusMsg.includes('credit is not enough') || statusMsg.includes('recharge')) {
-            updatedRecord.fail_reason = t('recordList.generateFailed') + '。' + t('home.insufficientBalance');
+            updatedRecord.fail_reason = t('recordList.generateFailedInsufficientBalance');
             showInsufficientBalanceModal.value = true;
           } else {
             updatedRecord.fail_reason = t('recordList.generateFailed');
@@ -4054,11 +4054,21 @@ const pollTaskStatus = async (taskId: string) => {
     } else {
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
       if (recordIndex !== -1) {
-        records.value[recordIndex] = {
-          ...records.value[recordIndex],
-          step_status: 'FAILED',
-          fail_reason: t('recordList.generateFailed')
-        };
+        const errMsg = (response.message || response.msg || '').toLowerCase();
+        if (errMsg.includes('credit is not enough') || errMsg.includes('recharge')) {
+          records.value[recordIndex] = {
+            ...records.value[recordIndex],
+            step_status: 'FAILED',
+            fail_reason: t('recordList.generateFailedInsufficientBalance')
+          };
+          showInsufficientBalanceModal.value = true;
+        } else {
+          records.value[recordIndex] = {
+            ...records.value[recordIndex],
+            step_status: 'FAILED',
+            fail_reason: t('recordList.generateFailed')
+          };
+        }
       }
       stopPolling(taskId);
     }
@@ -4204,6 +4214,9 @@ const normalizeSimpleRecord = (record: any) => {
     ? (userSelected.simple_video_resolution || '').replace(/p$/i, 'P')
     : userSelected.simple_image_resolution || '';
 
+  const statusMsg = (record.status_message || '').toLowerCase();
+  const isInsufficientBalance = statusMsg.includes('credit is not enough') || statusMsg.includes('recharge');
+
   return {
     ...record,
     user_selected: userSelected,
@@ -4218,7 +4231,8 @@ const normalizeSimpleRecord = (record: any) => {
     cover: coverImage,
     videoCover,
     videoUrl,
-    createTime: record.created_at || ''
+    createTime: record.created_at || '',
+    fail_reason: isInsufficientBalance ? t('recordList.generateFailedInsufficientBalance') : (record.fail_reason || '')
   };
 };
 

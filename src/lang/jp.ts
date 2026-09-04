@@ -1923,6 +1923,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     delete: "削除",
     image: "画像",
     generateFailed: "生成に失敗しました。アップロードされた情報がプラットフォーム規約に適合していません。修正してから再度お試しください。",
+    generateFailedInsufficientBalance: "計クレジットが不足しています、クレジット後に再試行してください",
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",
     deleteWarning: "削除された履歴レコードは復元できません"
   },

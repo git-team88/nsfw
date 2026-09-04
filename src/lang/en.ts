@@ -2098,6 +2098,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     delete: "Delete",
     image: "Image",
     generateFailed: "Generation failed. The information you uploaded does not comply with platform rules. Please revise and try again.",
+    generateFailedInsufficientBalance: "Insufficient computing power, please recharge and retry",
     deleteConfirm: "Confirm deletion of this batch of generated results?",
     deleteWarning: "Deleted history records cannot be recovered"
   },

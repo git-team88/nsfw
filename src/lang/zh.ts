@@ -2203,6 +2203,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     delete: "删除",
     image: "图片",
     generateFailed: "生成失败。您上传的信息不符合平台规则，请修改后重试",
+    generateFailedInsufficientBalance: "算力不足，请充值后重试",
     deleteConfirm: "确认删除该批次生成结果？",
     deleteWarning: "删除的历史记录将无法找回"
   },
