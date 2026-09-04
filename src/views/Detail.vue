@@ -61,7 +61,7 @@
                 </div>
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl" @click.stop="goMakeSequel()">
                   <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
-                  <img v-else :src="videoIcon" alt="" class="make-icon" />
+                  <img v-else src="@/assets/images/base/video.png" alt="" class="make-icon" />
                   <span>{{ t('home.makeSequel') }}</span>
                 </div>
               </div>

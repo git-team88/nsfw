@@ -508,6 +508,7 @@
             display: none;
           }
         }
+      }
 
       .cover-row {
         display: flex;
@@ -578,10 +579,10 @@
           padding: 0 16px;
           font-size: 14px;
           font-weight: 800;
-          border: 1px solid #3d3d3d;
+          border: 1px solid #ff9aca;
           border-radius: 10px;
           background: linear-gradient(145deg, #ff65ab, #f02c80);
-          color: #1a1a1a;
+          color: #ffffff;
           cursor: pointer;
           box-shadow: none;
           white-space: nowrap;
@@ -876,6 +877,8 @@
       outline: none;
       overflow: auto;
       line-height: 1.6;
+      word-break: normal;
+      white-space: pre-wrap;
 
       &:empty::before {
         content: attr(placeholder);
@@ -1043,8 +1046,6 @@
       }
     }
   }
-}
-
 }
 
 @keyframes spin {

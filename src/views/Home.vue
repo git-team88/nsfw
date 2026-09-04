@@ -494,7 +494,7 @@
                             :key="option.value"
                             class="dropdown-item"
                             :class="{ active: selectedVideoMultimodal == option.value }"
-                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = currentVideoMode === 'normal' && option.value !== 'videoModify' && option.value !== 'videoExtend'; resetVideoInputs()"
+                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = false; resetVideoInputs()"
                           >
                             <span>{{ option.label }}</span>
                           </div>
@@ -1757,8 +1757,8 @@ const currentVideoMode = ref('normal');
 const currentComicMode = ref('normal');
 const currentDramaMode = ref('normal');
 const currentPhotoMode = ref('normal');
-const enablePhotoOptimizePrompt = ref(true);
-const enableVideoOptimizePrompt = ref(true);
+const enablePhotoOptimizePrompt = ref(false);
+const enableVideoOptimizePrompt = ref(false);
 
 // Photo settings
 const showPhotoSettings = ref(false);
@@ -1785,12 +1785,10 @@ const selectedVideoMultimodal = ref('multimodal');
 const videoMultimodalOptions = computed(() => {
   const options = [
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
-    { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
+    { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') },
+    { value: 'videoModify', label: t('home.videoMode.videoModify') },
+    { value: 'videoExtend', label: t('home.videoMode.videoExtend') }
   ];
-  if (contentSwitch.loaded && contentSwitch.mode !== 2) {
-    options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
-    options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
-  }
   return options;
 });
 
@@ -3021,7 +3019,7 @@ const switchVideoMode = (mode: string, index: number) => {
     }
   } else {
     currentVideoMode.value = 'normal';
-    enableVideoOptimizePrompt.value = true;
+    enableVideoOptimizePrompt.value = false;
     showVideoModeDropdown.value = false;
     resetVideoInputs();
     if (parseInt(selectedVideoDuration.value) < 4) {
@@ -3166,7 +3164,7 @@ const switchPhotoMode = (mode: string, index: number) => {
     }
   } else {
     currentPhotoMode.value = 'normal';
-    enablePhotoOptimizePrompt.value = true;
+    enablePhotoOptimizePrompt.value = false;
     uploadedImagesPhoto.value = [];
     combinedItemsPhoto.value = [];
     inputContentPhoto.value = '';
@@ -3412,19 +3410,22 @@ const selectContentType = (type: string) => {
   // Switch content type
   contentType.value = type;
 
-  enablePhotoOptimizePrompt.value = true;
-  enableVideoOptimizePrompt.value = true;
+  enablePhotoOptimizePrompt.value = false;
+  enableVideoOptimizePrompt.value = false;
 
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
 
   // Clear input area
-  nextTick(() => {
-    if (editableInputRef.value) {
-      editableInputRef.value.innerHTML = '';
-      isInputEmpty.value = true;
-    }
-  });
+      nextTick(() => {
+        if (selectedVideoMultimodal.value === 'startEndFrames') {
+          novelInput.value = replayContent;
+          isInputEmpty.value = !replayContent.trim();
+        } else if (editableInputRef.value) {
+          editableInputRef.value.innerHTML = formattedReplayContent;
+          isInputEmpty.value = !replayContent.trim();
+        }
+      });
 };
 
 const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
@@ -3438,7 +3439,7 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
     enableVideoOptimizePrompt.value = false;
   } else {
     currentVideoMode.value = 'normal';
-    enableVideoOptimizePrompt.value = true;
+    enableVideoOptimizePrompt.value = false;
   }
 
   selectedVideoMultimodal.value = 'multimodal';

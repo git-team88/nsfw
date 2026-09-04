@@ -521,7 +521,7 @@
                 :key="ref.id"
                 class="uploaded-image-item"
               >
-                <span class="image-index">{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}</span>
+                <span class="image-index">{{ uploadedVideoRefs.filter(r => r.type == ref.type).findIndex(r => r.id === ref.id) + 1 + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 1 : 0) }}</span>
                 <div class="uploaded-item-wrapper">
                   <div v-if="ref.type == 'video'" class="video-thumbnail-wrapper" @click="playUploadedVideo(ref)">
                     <img :src="ref.cover" class="uploaded-image" />
@@ -535,7 +535,7 @@
                 </div>
                 <span class="tooltip-name">{{ ref.name }}</span>
                 <span class="image-name" @click="ref.type == 'video' ? playUploadedVideo(ref) : ref.type == 'audio' ? playAudio(ref) : ref.type == 'image' ? openImageViewer(ref.image) : undefined">
-                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.slice(0, index).filter(r => r.type == ref.type).length + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}
+                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.filter(r => r.type == ref.type).findIndex(r => r.id === ref.id) + 1 + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 1 : 0) }}
                 </span>
                 <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideoRef(ref.id)" />
               </div>
@@ -681,9 +681,9 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
-                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
-                    <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
+                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
                   </div>
                 </div>
               </div>
@@ -739,9 +739,9 @@
                     <div class="dropdown-img">
                       <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
                     </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + (item.id === 'uploaded-video' ? 1 : (uploadedVideo ? 2 : 1)) }}</span>
-                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
-                    <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
                   </div>
                 </div>
               </div>
@@ -864,7 +864,7 @@
                    </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && currentVideoMode != 'unlimited'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
                   <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
@@ -1004,8 +1004,8 @@ const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
-const enablePhotoOptimizePrompt = ref(true);
-const enableVideoOptimizePrompt = ref(true);
+const enablePhotoOptimizePrompt = ref(false);
+const enableVideoOptimizePrompt = ref(false);
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageNoBirthdayModal = ref(false);
@@ -1988,12 +1988,10 @@ const uploadedVideoRefs = ref<any[]>([]);
 const videoMultimodalOptions = computed(() => {
   const options = [
     { value: 'multimodal', label: t('home.videoMode.multimodal') },
-    { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') }
+    { value: 'startEndFrames', label: t('home.videoMode.startEndFrames') },
+    { value: 'videoModify', label: t('home.videoMode.videoModify') },
+    { value: 'videoExtend', label: t('home.videoMode.videoExtend') }
   ];
-  if (contentSwitch.mode !== 2) {
-    options.push({ value: 'videoModify', label: t('home.videoMode.videoModify') });
-    options.push({ value: 'videoExtend', label: t('home.videoMode.videoExtend') });
-  }
   return options;
 });
 const videoQualityOptions = ref([
@@ -2063,8 +2061,8 @@ const resetVideoSettings = () => {
 
 const switchBottomTab = (tab: string) => {
   bottomActiveTab.value = tab;
-  enablePhotoOptimizePrompt.value = true;
-  enableVideoOptimizePrompt.value = true;
+  enablePhotoOptimizePrompt.value = false;
+  enableVideoOptimizePrompt.value = false;
   setSeoMeta(tab);
   if (tab == 'photo') {
     resetPhotoSettings();
@@ -2758,7 +2756,8 @@ const insertVideoRefTag = (item: any, index: number) => {
   }
 
   // Calculate type-specific index (e.g., image1, image2, video1, video2)
-  const typeCount = uploadedVideoRefs.value.slice(0, index).filter((i: any) => i.type === item.type).length + 1;
+  const isVideoExtendOrModify = selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify';
+  const typeCount = uploadedVideoRefs.value.filter((i: any) => i.type === item.type).findIndex((i: any) => i.id === item.id) + 1 + (item.type === 'video' && isVideoExtendOrModify && uploadedVideo.value ? 1 : 0);
 
   const itemTag = document.createElement('span');
   itemTag.className = item.type === 'image' ? 'image-tag' : item.type === 'video' ? 'video-tag' : 'audio-tag';
@@ -2804,11 +2803,32 @@ const insertVideoRefTag = (item: any, index: number) => {
   }
 
   target.appendChild(itemTag);
+
   const prevSibling = itemTag.previousSibling;
   if (prevSibling && prevSibling.nodeName === 'BR') {
     prevSibling.remove();
   }
+
+  const parentDiv = itemTag.parentElement;
+  if (parentDiv && parentDiv !== target && parentDiv.nodeName === 'DIV') {
+    while (parentDiv.firstChild) {
+      target.insertBefore(parentDiv.firstChild, parentDiv);
+    }
+    target.removeChild(parentDiv);
+  }
+
   target.appendChild(document.createTextNode(' '));
+
+  target.focus();
+
+  const selection = window.getSelection();
+  if (selection) {
+    const range = document.createRange();
+    range.setStartAfter(itemTag);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 };
 
 const showVideoRefDropdown = ref(false);
@@ -3279,12 +3299,11 @@ const createVideoItemTag = (item: any): HTMLElement => {
   if (item.id === 'uploaded-video') {
     itemIndex = 1;
   } else if (item.type === 'image') {
-    const itemPos = uploadedVideoRefs.value.findIndex((v: any) => v.id === item.id);
-    itemIndex = uploadedVideoRefs.value.slice(0, itemPos + 1).filter((i: any) => i.type === 'image').length;
+    itemIndex = uploadedVideoRefs.value.filter((i: any) => i.type === 'image').findIndex((i: any) => i.id === item.id) + 1;
+  } else if (item.type === 'audio') {
+    itemIndex = uploadedVideoRefs.value.filter((i: any) => i.type === 'audio').findIndex((i: any) => i.id === item.id) + 1;
   } else {
-    const itemPos = uploadedVideoRefs.value.findIndex((v: any) => v.id === item.id);
-    const countInRefs = uploadedVideoRefs.value.slice(0, itemPos + 1).filter((i: any) => i.type === item.type).length;
-    itemIndex = countInRefs + (item.type === 'video' && isVideoExtendOrModify && uploadedVideo.value ? 1 : 0);
+    itemIndex = uploadedVideoRefs.value.filter((i: any) => i.type === 'video').findIndex((i: any) => i.id === item.id) + 1 + (isVideoExtendOrModify && uploadedVideo.value ? 1 : 0);
   }
 
   const itemTag = document.createElement('span');
@@ -3476,7 +3495,7 @@ const triggerExtendVideoUpload = () => {
 const selectVideoMultimodal = (value: string) => {
   selectedVideoMultimodal.value = value;
   showVideoMultimodalDropdown.value = false;
-  enableVideoOptimizePrompt.value = effectiveVideoMode.value === 'normal' && value !== 'videoModify' && value !== 'videoExtend';
+  enableVideoOptimizePrompt.value = false;
   clearGenerateFileInputs();
   videoInput.value = '';
   startFrameImage.value = '';
@@ -4780,7 +4799,7 @@ const doGenerateVideo = async () => {
       selectedVideoQuality.value = '720P';
       selectedVideoMultimodal.value = 'multimodal';
       currentVideoMode.value = 'normal';
-      enableVideoOptimizePrompt.value = true;
+      enableVideoOptimizePrompt.value = false;
 
       startPolling(sessionId);
       eventBus.emit('balanceUpdated');
@@ -5854,7 +5873,7 @@ const switchVideoMode = (mode: string, index: number) => {
     }
   } else {
     currentVideoMode.value = 'normal';
-    enableVideoOptimizePrompt.value = true;
+    enableVideoOptimizePrompt.value = false;
     videoInput.value = '';
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';

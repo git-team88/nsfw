@@ -1792,7 +1792,8 @@ $pinkopacity: rgba(255,79,154,0.12);
           border: 1px solid #2c2c2c;
           border-radius: 10px;
           z-index: 1000;
-          min-width: 160px;
+          min-width: 120px;
+          max-width: 240px;
           width: max-content;
 
           .dropdown-item {
@@ -1803,7 +1804,7 @@ $pinkopacity: rgba(255,79,154,0.12);
             font-size: 12px;
             font-weight: 800;
             border-radius: 8px;
-            border: 1px solid transparent;
+            border: 1px solid #3d3d3d;
             color: #888;
             cursor: pointer;
             background: #1a1a1a;
@@ -2410,12 +2411,22 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .frame-upload {
       position: relative;
-      width: 72px;
-      height: 96px;
-      border-radius: 8px;
-      background: $cream;
-      border: 2px solid $ink;
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      border: 2px dashed #cfc9d6;
+      background: #1a1a1a;
       overflow: hidden;
+      transition: border-color 0.15s;
+
+      &:hover {
+        border-color: $pink;
+      }
+
+      &.uploaded {
+        border-style: solid;
+        border-color: #f5f5f5;
+      }
 
       .upload-area {
         display: flex;
@@ -2430,24 +2441,22 @@ $pinkopacity: rgba(255,79,154,0.12);
           width: 24px;
           height: 24px;
           margin-bottom: 4px;
+          filter: brightness(0) invert(1);
         }
 
         .upload-label {
           font-size: 12px;
-          font-weight: 600;
-          color: $muted;
+          font-weight: 800;
+          color: #888;
           text-align: center;
         }
 
         .frame-preview {
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          max-width: calc(100% - 4px);
+          max-width: 100%;
           width: auto;
-          height: calc(100% - 4px);
+          height: 100%;
           object-fit: contain;
-          border-radius: 8px;
+          border-radius: 12px;
         }
       }
 
@@ -2479,18 +2488,11 @@ $pinkopacity: rgba(255,79,154,0.12);
       outline: none;
       border: none;
       background: transparent;
-      color: $ink;
+      color: #f5f5f5;
       padding: 0;
 
       &::placeholder {
-        color: $muted;
-      }
-
-      &.collapsed {
-        height: 28px;
-        min-height: 28px;
-        overflow: hidden;
-        white-space: nowrap;
+        color: #888;
       }
     }
   }
@@ -2507,9 +2509,19 @@ $pinkopacity: rgba(255,79,154,0.12);
       height: 96px;
       flex-shrink: 0;
       border-radius: 10px;
-      background: $cream;
-      border: 2px solid $ink;
+      border: 2px dashed #cfc9d6;
+      background: #1a1a1a;
       overflow: hidden;
+      transition: border-color 0.15s;
+
+      &:hover {
+        border-color: $pink;
+      }
+
+      &.uploaded {
+        border-style: solid;
+        border-color: #f5f5f5;
+      }
 
       .upload-area {
         display: flex;
@@ -2525,12 +2537,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           width: 24px;
           height: 24px;
           margin-bottom: 4px;
+          filter: brightness(0) invert(1);
         }
 
         .upload-label {
           font-size: 12px;
-          font-weight: 600;
-          color: $muted;
+          font-weight: 800;
+          color: #888;
           text-align: center;
         }
 
@@ -2573,7 +2586,7 @@ $pinkopacity: rgba(255,79,154,0.12);
           align-items: center;
           justify-content: center;
           gap: 4px;
-          border-radius: 8px;
+          border-radius: 12px;
           background: rgba(22, 17, 34, 0.06);
 
           .video-icon {
@@ -2611,7 +2624,7 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .video-textarea {
       flex: 1;
-      min-height: 10px;
+      min-height: 100px;
       max-height: 220px;
       font-family: inherit;
       font-size: 14px;
@@ -2620,19 +2633,11 @@ $pinkopacity: rgba(255,79,154,0.12);
       outline: none;
       border: none;
       background: transparent;
-      color: $ink;
+      color: #f5f5f5;
       padding: 0;
 
-      &.collapsed {
-        height: 28px;
-        min-height: 28px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
       &::placeholder {
-        color: $muted;
+        color: #888;
       }
     }
   }

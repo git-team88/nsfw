@@ -265,6 +265,8 @@
               :placeholder="t('submit.descriptionPlaceholder')"
               @input="handleCaptionInput"
               @keydown="handleCaptionKeydown"
+              @compositionstart="handleCompositionStart"
+              @compositionend="handleCompositionEnd"
               @click="handleCaptionClick"
               @blur="onCaptionBlur"
               @paste="handlePaste"
@@ -531,6 +533,7 @@ interface DropdownItem {
 }
 
 const showDropdown = ref(false);
+const isComposingText = ref(false);
 const dropdownType = ref<"" | "#" | "@">("");
 const dropdownItems = ref<DropdownItem[]>([]);
 const dropdownPosition = ref<{ top?: number; left?: number; right?: number; position?: 'above'; bottom?: number; align?: 'right' }>({ top: 0, left: 0 });
@@ -1211,6 +1214,10 @@ function onActionBtnClick(symbol: "#" | "@") {
 
 async function handleCaptionInput(e: Event) {
   const target = e.target as HTMLDivElement;
+  if (isComposingText.value || (e as InputEvent).isComposing) {
+    captionLength.value = (target.innerText || "").replace(/\n$/, "").length;
+    return;
+  }
   if (captionRef.value) {
     captionRef.value.querySelectorAll('.tag').forEach((span: Element) => {
       const el = span as HTMLElement;
@@ -1236,7 +1243,10 @@ async function handleCaptionInput(e: Event) {
     node = node.parentNode;
   }
   if (inSpan) { showDropdown.value = false; return; }
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+  const caretPos = resolveCaretPosition(range);
+  const textBefore = caretPos
+    ? (caretPos.node.textContent || "").substring(0, caretPos.offset)
+    : (range.startContainer.textContent?.substring(0, range.startOffset) || "");
   const match = textBefore.match(/([#@])([^#@\s]*)$/u);
   if (match) {
     const trigger = match[1] as "#" | "@";
@@ -1279,7 +1289,44 @@ function handleCaptionClick() {
   }
 }
 
+function handleCompositionStart() {
+  isComposingText.value = true;
+  showDropdown.value = false;
+}
+
+function handleCompositionEnd(e: CompositionEvent) {
+  isComposingText.value = false;
+  handleCaptionInput(e as unknown as Event);
+}
+
+function resolveCaretPosition(range: Range): { node: Node; offset: number } | null {
+  let node: Node = range.startContainer;
+  let offset = range.startOffset;
+
+  if (node.nodeType === Node.TEXT_NODE) {
+    return { node, offset };
+  }
+
+  while (node.nodeType === Node.ELEMENT_NODE) {
+    if (offset <= 0) return null;
+    const child: Node | undefined = node.childNodes[offset - 1];
+    if (!child) return null;
+    if (child.nodeType === Node.TEXT_NODE) {
+      const len = (child.textContent || "").length;
+      if (len === 0) {
+        offset -= 1;
+        continue;
+      }
+      return { node: child, offset: len };
+    }
+    return null;
+  }
+  return null;
+}
+
 function handleCaptionKeydown(e: KeyboardEvent) {
+  if (isComposingText.value || e.isComposing || e.keyCode === 229) return;
+
   if (e.key === " " || e.key === "Spacebar") {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
@@ -1322,10 +1369,13 @@ function handleCaptionKeydown(e: KeyboardEvent) {
         }
       }
     }
-    const textNode = range.startContainer;
+    const caretPos = resolveCaretPosition(range);
+    const textNode = caretPos ? caretPos.node : range.startContainer;
+    const caretOffset = caretPos ? caretPos.offset : range.startOffset;
+
     if (textNode.nodeType === Node.TEXT_NODE) {
-      const textBefore = textNode.textContent?.substring(0, range.startOffset) || "";
-      const hashMatch = textBefore.match(/#([^#@]+)$/u);
+      const textBefore = textNode.textContent?.substring(0, caretOffset) || "";
+      const hashMatch = textBefore.match(/#([\p{L}\p{N}\p{M}_]+)$/u);
       if (hashMatch) {
         const tagContent = hashMatch[1];
         const hasChineseChars = /[\u4e00-\u9fa5]/.test(tagContent);
@@ -1346,7 +1396,7 @@ function handleCaptionKeydown(e: KeyboardEvent) {
           const matchStartIndex = hashMatch.index!;
           const tagRange = document.createRange();
           tagRange.setStart(textNode, matchStartIndex);
-          tagRange.setEnd(textNode, range.startOffset);
+          tagRange.setEnd(textNode, caretOffset);
           tagRange.deleteContents();
           const span = document.createElement("span");
           span.className = "tag topic";
@@ -1376,7 +1426,7 @@ function handleCaptionKeydown(e: KeyboardEvent) {
           const matchStartIndex = hashMatch.index!;
           const tagRange = document.createRange();
           tagRange.setStart(textNode, matchStartIndex);
-          tagRange.setEnd(textNode, range.startOffset);
+          tagRange.setEnd(textNode, caretOffset);
           tagRange.deleteContents();
           const span = document.createElement("span");
           span.className = "tag topic";
@@ -1476,8 +1526,9 @@ function selectDropdownItem(item: { label: string; value: string }) {
   const spaceText = " ";
   if (currentText.length + tagText.length + spaceText.length > DESC_MAX) { showDropdown.value = false; return; }
   const range = lastRange.value;
-  const textNode = range.startContainer;
-  const offset = range.startOffset;
+  const caretPos = resolveCaretPosition(range);
+  const textNode = caretPos ? caretPos.node : range.startContainer;
+  const offset = caretPos ? caretPos.offset : range.startOffset;
   const textContent = textNode.textContent || "";
   const textBefore = textContent.substring(0, offset);
   const match = textBefore.match(/([#@])([^#@\s]*)$/);
