@@ -3417,15 +3417,15 @@ const selectContentType = (type: string) => {
   setSeoMeta(type);
 
   // Clear input area
-      nextTick(() => {
-        if (selectedVideoMultimodal.value === 'startEndFrames') {
-          novelInput.value = replayContent;
-          isInputEmpty.value = !replayContent.trim();
-        } else if (editableInputRef.value) {
-          editableInputRef.value.innerHTML = formattedReplayContent;
-          isInputEmpty.value = !replayContent.trim();
-        }
-      });
+  nextTick(() => {
+    if (selectedVideoMultimodal.value === 'startEndFrames') {
+      novelInput.value = '';
+      isInputEmpty.value = true;
+    } else if (editableInputRef.value) {
+      editableInputRef.value.innerHTML = '';
+      isInputEmpty.value = true;
+    }
+  });
 };
 
 const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
