@@ -1975,10 +1975,10 @@ const photoRatioOptions = ref([
 
 // Video settings for bottom generator
 const showVideoSettings = ref(false);
-const selectedVideoQuality = ref('1080P');
+const selectedVideoQuality = ref('720P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('15');
-const lastValidVideoDuration = ref('15');
+const selectedVideoDuration = ref('30');
+const lastValidVideoDuration = ref('30');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
@@ -2047,9 +2047,9 @@ const resetPhotoSettings = () => {
 };
 
 const resetVideoSettings = () => {
-  selectedVideoQuality.value = '1080P';
+  selectedVideoQuality.value = '720P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -2721,8 +2721,8 @@ const handleVideoRefUpload = async (event: Event) => {
             const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
             const currentDuration = parseInt(selectedVideoDuration.value);
             if (maxGenDuration > 0) {
-              const targetDuration = Math.min(15, maxGenDuration);
-              if (currentDuration > maxGenDuration || currentDuration < targetDuration) {
+              const targetDuration = Math.min(maxGenDuration, maxGenDuration);
+              if (currentDuration > maxGenDuration || currentDuration < 2) {
                 selectedVideoDuration.value = targetDuration.toString();
                 lastValidVideoDuration.value = targetDuration.toString();
               }
@@ -3489,10 +3489,10 @@ const selectVideoMultimodal = (value: string) => {
     videoEditableInputRef.value.innerHTML = '';
   }
 
-  selectedVideoQuality.value = '1080P';
+  selectedVideoQuality.value = '720P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
-  lastValidVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
+  lastValidVideoDuration.value = '30';
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -4775,9 +4775,9 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '15';
+      selectedVideoDuration.value = '30';
       selectedVideoRatio.value = '9:16';
-      selectedVideoQuality.value = '1080P';
+      selectedVideoQuality.value = '720P';
       selectedVideoMultimodal.value = 'multimodal';
       currentVideoMode.value = 'normal';
       enableVideoOptimizePrompt.value = true;
@@ -5845,8 +5845,8 @@ const switchVideoMode = (mode: string, index: number) => {
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
       uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '2';
-      lastValidVideoDuration.value = '2';
+      selectedVideoDuration.value = '30';
+      lastValidVideoDuration.value = '30';
       nextTick(() => startVideoTypewriter());
     } else {
       pendingModeType.value = 'video';
@@ -5859,8 +5859,8 @@ const switchVideoMode = (mode: string, index: number) => {
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';
     uploadedVideoRefs.value = [];
-    selectedVideoDuration.value = '4';
-    lastValidVideoDuration.value = '4';
+    selectedVideoDuration.value = '30';
+    lastValidVideoDuration.value = '30';
     nextTick(() => startVideoTypewriter());
   }
 };
@@ -5873,9 +5873,9 @@ const confirmUnlimitedMode = () => {
     uploadedVideo.value = '';
     uploadedVideoCover.value = '';
     uploadedVideoRefs.value = [];
-    selectedVideoDuration.value = '2';
-    lastValidVideoDuration.value = '2';
-    clearGenerateFileInputs();
+      selectedVideoDuration.value = '30';
+      lastValidVideoDuration.value = '30';
+      clearGenerateFileInputs();
     nextTick(() => startVideoTypewriter());
   } else if (pendingModeType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';

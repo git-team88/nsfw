@@ -101,13 +101,12 @@
                   </div>
                 </div>
                 <div class="make-btns-wrap" v-if="(post.session_id && post.type != '4') || post.type == '5'">
-                  <div class="make-similar-btn" v-if="post.type != '4' && post.type != '5' && post.session_id" @click.stop.prevent="handleMakeSimilar(post)">
+                  <div class="make-similar-btn" v-if="post.type != '4' && post.session_id" @click.stop.prevent="handleMakeSimilar(post)">
                     <img :src="makeIcon" alt="" class="make-icon" />
                     <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                   </div>
                   <div class="make-similar-btn" v-if="post.type == '5'" @click.stop.prevent="handleMakeSequelFromList(post)">
-                    <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
-                    <img v-else :src="videoIcon" alt="" class="make-icon" />
+                    <img :src="videoIcon" alt="" class="make-icon" />
                     <div class="make-similar-tooltip">{{ t('home.makeSequel') }}</div>
                   </div>
                 </div>
@@ -234,7 +233,7 @@ import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
 import makeIcon from "@/assets/images/base/make.png";
-import videoIcon from "@/assets/images/home/video_icon.png";
+import videoIcon from "@/assets/images/base/video.png";
 const contentSwitch = useContentSwitchStore();
 
 // Types
@@ -724,16 +723,17 @@ const handleMakeSequelFromList = async (post: any) => {
 
   try {
     const token = localStorage.getItem('token') || '';
-    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['token'] = token;
+    }
+    headers['Platform'] = 'web';
+    headers['ts'] = ts;
+    headers['sign'] = sign;
     const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Platform': 'web',
-        token,
-        ts,
-        sign,
-      },
+      headers,
       body: JSON.stringify({ post_id: post.id, fromIndexRecommend: { tab: 'hot' } }),
     }).then(r => r.json());
 
@@ -1233,7 +1233,6 @@ $line: #2c2c2c;
     .make-btns-wrap {
       position: absolute;
       bottom: 0;
-      left: 0;
       right: 0;
       display: flex;
       align-items: flex-end;
@@ -1282,15 +1281,6 @@ $line: #2c2c2c;
         transition: all 0.2s ease;
         z-index: 100;
         pointer-events: none;
-      }
-
-      .loading-spinner-small {
-        width: 18px;
-        height: 18px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
       }
 
       &:hover {

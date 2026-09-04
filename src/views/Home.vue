@@ -1232,13 +1232,12 @@
                       {{ formatDuration(item.duration) }}
                     </div> -->
                     <div class="make-btns-wrap" v-if="(item.session_id && item.type != '4') || item.type == '5'">
-                      <div class="make-similar-btn" v-if="item.type != '4' && item.type != '5' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
+                      <div class="make-similar-btn" v-if="item.type != '4' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
                         <img :src="makeIcon" alt="" class="make-icon" />
                         <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                       </div>
                       <div class="make-similar-btn" v-if="item.type == '5'" @click.stop.prevent="handleMakeSequelFromList(item)">
-                        <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
-                        <img v-else :src="videoIcon" alt="" class="make-icon" />
+                        <img :src="videoIcon" alt="" class="make-icon" />
                         <div class="make-similar-tooltip">{{ t('home.makeSequel') }}</div>
                       </div>
                     </div>
@@ -1517,7 +1516,7 @@ import audioIcon from "@/assets/images/home/audio.png";
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import makeIcon from "@/assets/images/base/make.png";
-import videoIcon from "@/assets/images/home/video_icon.png";
+import videoIcon from "@/assets/images/base/video.png";
 
 const { t, locale } = useI18n();
 
@@ -1820,8 +1819,8 @@ function resetVideoInputs() {
   uploadedImagesVideo.value = [];
   inputContentVideo.value = '';
   inputHtmlVideo.value = '';
-  selectedVideoDuration.value = '15';
-  lastValidVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
+  lastValidVideoDuration.value = '30';
   inputKey.value++;
   nextTick(() => {
     if (editableInputRef.value) {
@@ -2110,19 +2109,21 @@ async function handleVideoUpload(e: Event) {
       const uploadedUrl = await uploadVideo(file);
       if (uploadedUrl) {
         uploadedVideo.value = uploadedUrl;
-        // 保存上传视频时长
         uploadedVideoDuration.value = duration;
-        // 更新lastValidVideoDuration
         lastValidVideoDuration.value = selectedVideoDuration.value;
 
-        // 如果当前设置的时长小于等于视频时长，自动调整为视频时长+1或最小可选时长
-        const currentDuration = parseInt(selectedVideoDuration.value);
-        if (currentDuration <= duration) {
-          const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
-          const newDuration = Math.max(duration + 1, minDuration);
-          // 确保不超过最大值30
-          selectedVideoDuration.value = Math.min(newDuration, 30).toString();
+        if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+          const maxDuration = duration > 0 ? Math.floor(30 - duration) : 30;
+          selectedVideoDuration.value = Math.max(maxDuration, 2).toString();
           lastValidVideoDuration.value = selectedVideoDuration.value;
+        } else {
+          const currentDuration = parseInt(selectedVideoDuration.value);
+          if (currentDuration <= duration) {
+            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+            const newDuration = Math.max(duration + 1, minDuration);
+            selectedVideoDuration.value = Math.min(newDuration, 30).toString();
+            lastValidVideoDuration.value = selectedVideoDuration.value;
+          }
         }
       }
     } catch (error) {
@@ -2140,10 +2141,10 @@ function removeVideo() {
 }
 
 const showVideoSettings = ref(false);
-const selectedVideoQuality = ref('1080P');
+const selectedVideoQuality = ref('720P');
 const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('15');
-const lastValidVideoDuration = ref('15');
+const selectedVideoDuration = ref('30');
+const lastValidVideoDuration = ref('30');
 const videoQualityOptions = computed(() => {
   const optionsByMode = {
     normal: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
@@ -2247,6 +2248,7 @@ const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
 const isMakeSimilar = ref(false);
 const makeSimilarSessionId = ref('');
+const makeSequelPostId = ref('');
 const isMakeSequelLoading = ref(false);
 const showMakeSequelSubscribeModal = ref(false);
 const makeSequelAuthorId = ref('');
@@ -2527,6 +2529,7 @@ const navigateToNovelGenerate = async () => {
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
       ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -3010,8 +3013,8 @@ const switchVideoMode = (mode: string, index: number) => {
       currentVideoMode.value = 'unlimited';
       enableVideoOptimizePrompt.value = false;
       resetVideoInputs();
-      selectedVideoDuration.value = '2';
-      lastValidVideoDuration.value = '2';
+      selectedVideoDuration.value = '30';
+      lastValidVideoDuration.value = '30';
       showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
@@ -3022,8 +3025,8 @@ const switchVideoMode = (mode: string, index: number) => {
     showVideoModeDropdown.value = false;
     resetVideoInputs();
     if (parseInt(selectedVideoDuration.value) < 4) {
-      selectedVideoDuration.value = '4';
-      lastValidVideoDuration.value = '4';
+      selectedVideoDuration.value = '30';
+      lastValidVideoDuration.value = '30';
     }
   }
 };
@@ -3177,8 +3180,8 @@ const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
     enableVideoOptimizePrompt.value = false;
-    selectedVideoDuration.value = '2';
-    lastValidVideoDuration.value = '2';
+    selectedVideoDuration.value = '30';
+    lastValidVideoDuration.value = '30';
     resetVideoInputs();
   } else if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
@@ -3395,11 +3398,12 @@ const selectContentType = (type: string) => {
   currentPhotoMode.value = 'normal';
   selectedInsertImage.value = contentSwitch.mode === 2 ? 4 : 0;
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
+  makeSequelPostId.value = '';
 
   // Reset video settings to default
-  selectedVideoQuality.value = '1080P';
+  selectedVideoQuality.value = '720P';
   selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
@@ -3440,7 +3444,7 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   selectedVideoMultimodal.value = 'multimodal';
   selectedVideoRatio.value = '9:16';
   selectedVideoQuality.value = '720P';
-  selectedVideoDuration.value = '15';
+  selectedVideoDuration.value = '30';
 
   const imgItem = {
     id: Date.now().toString(),
@@ -3756,16 +3760,17 @@ const handleMakeSequelFromList = async (item: any) => {
 
   try {
     const token = localStorage.getItem('token') || '';
-    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['token'] = token;
+    }
+    headers['Platform'] = 'web';
+    headers['ts'] = ts;
+    headers['sign'] = sign;
     const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Platform': 'web',
-        token,
-        ts,
-        sign,
-      },
+      headers,
       body: JSON.stringify({ post_id: item.id, fromIndexRecommend: { tab: 'hot' } }),
     }).then(r => r.json());
 
@@ -3805,12 +3810,19 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
   }
 
   const isUnlimited = isNsfw;
+  const promptText = t('home.makeSequelPrompt');
+
+  localStorage.removeItem('makeSequelData');
+
   contentType.value = 'video';
+  setSeoMeta('video');
+
   currentVideoMode.value = isUnlimited ? 'unlimited' : 'normal';
   selectedVideoMultimodal.value = 'videoExtend';
+  makeSequelPostId.value = postId || '';
   selectedVideoRatio.value = '9:16';
-  selectedVideoQuality.value = '720P';
-  selectedVideoDuration.value = '15';
+    selectedVideoQuality.value = '720P';
+    selectedVideoDuration.value = '30';
   enableVideoOptimizePrompt.value = false;
 
   uploadedVideo.value = videoUrl;
@@ -3821,17 +3833,22 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
   combinedItemsVideo.value = [];
 
   nextTick(() => {
-    if (editableInputRef.value) {
-      editableInputRef.value.innerHTML = t('home.makeSequelPrompt');
-      isInputEmpty.value = false;
-      editableInputRef.value.focus();
-      const range = document.createRange();
-      range.selectNodeContents(editableInputRef.value);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    }
+    nextTick(() => {
+      if (editableInputRef.value) {
+        while (editableInputRef.value.firstChild) {
+          editableInputRef.value.removeChild(editableInputRef.value.firstChild);
+        }
+        editableInputRef.value.innerHTML = promptText;
+        isInputEmpty.value = false;
+        editableInputRef.value.focus();
+        const range = document.createRange();
+        range.selectNodeContents(editableInputRef.value);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    });
   });
 };
 
@@ -4188,6 +4205,7 @@ const doGenerateVideo = async () => {
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
       ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4213,7 +4231,8 @@ const doGenerateVideo = async () => {
     const response = await api.generateSingleVideo({
       session_id: sessionId,
       topic: processedContent,
-      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {})
+      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {})
     }) as any;
 
     if (response.code == 200) {
@@ -4368,6 +4387,7 @@ const doGenerateComic = async () => {
         tri_view_url: character.tri_image
       })),
       ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4525,6 +4545,7 @@ const doGenerateDrama = async () => {
         tri_view_url: character.tri_image
       })),
       ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4689,6 +4710,7 @@ const doGeneratePhoto = async () => {
       addition_characters: [],
       enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
       ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4717,7 +4739,8 @@ const doGeneratePhoto = async () => {
     const params = {
       session_id: sessionId,
       topic: contentWithRefTags,
-      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {})
+      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {}),
+      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {})
     };
 
     const response = await api.generateSinglePhoto(params) as any;
@@ -5362,7 +5385,7 @@ const handleFileChange = async (event: Event) => {
               const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
               const currentDuration = parseInt(selectedVideoDuration.value);
               if (maxGenDuration > 0) {
-                const targetDuration = Math.min(15, maxGenDuration);
+                const targetDuration = maxGenDuration;
                 if (currentDuration > maxGenDuration || currentDuration < targetDuration) {
                   selectedVideoDuration.value = targetDuration.toString();
                   lastValidVideoDuration.value = targetDuration.toString();

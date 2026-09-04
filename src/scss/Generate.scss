@@ -1163,22 +1163,28 @@ $pinkopacity: rgba(255,79,154,0.12);
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 8px 14px;
+    font-weight: 800;
+    font-size: 13px;
+    border: 1px solid #3d3d3d;
     border-radius: 999px;
-    border: 1px solid #2c2c2c;
-    background: $paper;
+    box-shadow: none;
     cursor: pointer;
+    user-select: none;
+    padding: 8px 14px;
+    background: #1a1a1a;
+    color: #fff;
+    transition: border-color 0.15s, color 0.15s;
 
     &.disabled {
       cursor: pointer;
+      opacity: 0.5;
     }
 
     &.active {
-      background: $ink;
-
-      .unlimited-label {
-        color: #fff;
-      }
+      border-color: #ff4f9a;
+      background: rgba(255,79,154,0.2);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255,79,154,0.35);
 
       .unlimited-dot {
         background: $pink;
@@ -1189,15 +1195,15 @@ $pinkopacity: rgba(255,79,154,0.12);
       width: 9px;
       height: 9px;
       border-radius: 999px;
-      border: 1.5px solid $ink;
-      background: #cfc9d6;
+      border: 1.5px solid #3d3d3d;
+      background: #555;
       flex-shrink: 0;
     }
 
     .unlimited-label {
       font-size: 13px;
       font-weight: 800;
-      color: $ink;
+      color: #fff;
     }
   }
 

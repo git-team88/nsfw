@@ -219,12 +219,11 @@
                       {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
                     <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
-                      <div class="make-similar-btn" v-if="collection.type != '4' && collection.type != '5' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                      <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
                         <img :src="makeIcon" alt="" class="make-icon" />
                       </div>
                       <div class="make-similar-btn" v-if="collection.type == '5'" @click.stop="handleMakeSequelFromList(collection)">
-                        <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
-                        <img v-else :src="videoIcon" alt="" class="make-icon" />
+                        <img :src="videoIcon" alt="" class="make-icon" />
                       </div>
                     </div>
                     <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
@@ -459,7 +458,7 @@ import successIcon from "@/assets/images/user/success.png";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
 import makeIcon from "@/assets/images/base/make.png";
-import videoIcon from "@/assets/images/home/video_icon.png";
+import videoIcon from "@/assets/images/base/video.png";
 import {
   ref,
   computed,
@@ -1880,16 +1879,17 @@ const handleMakeSequelFromList = async (collection: any) => {
 
   try {
     const token = localStorage.getItem('token') || '';
-    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams(token);
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['token'] = token;
+    }
+    headers['Platform'] = 'web';
+    headers['ts'] = ts;
+    headers['sign'] = sign;
     const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Platform': 'web',
-        token,
-        ts,
-        sign,
-      },
+      headers,
       body: JSON.stringify({ post_id: collection.id, fromIndexRecommend: { tab: 'hot' } }),
     }).then(r => r.json());
 
@@ -3521,14 +3521,6 @@ async function unpinCollection(collection: any) {
           padding: 4px;
         }
 
-        .loading-spinner-small {
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
       }
 
       .card-actions {
