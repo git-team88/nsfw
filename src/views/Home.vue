@@ -2919,7 +2919,7 @@ const estimatedVideoComputingPower = computed(() => {
   if (selectedVideoMultimodal.value === 'videoModify') {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
-    duration = 30;
+    duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 30;
   } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
@@ -4073,8 +4073,9 @@ const handleMakeSequelFromList = async (item: any) => {
     const videoUrl = data.video_url || '';
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    const videoDuration = Number(data.duration) || 0;
     await getCountry();
-    await handleMakeSequelFromCache(videoUrl, cover, data.type, data.id || item.id, isNsfw);
+    await handleMakeSequelFromCache(videoUrl, cover, data.type, data.id || item.id, isNsfw, videoDuration);
   } catch (error) {
     console.error('Error fetching post detail for make sequel:', error);
     toast(t('fail'));
@@ -4083,7 +4084,7 @@ const handleMakeSequelFromList = async (item: any) => {
   }
 };
 
-const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: string, postId: string, isNsfw: boolean) => {
+const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: string, postId: string, isNsfw: boolean, duration?: number) => {
   const isUnlimited = isNsfw && userRegion.value;
 
   isMakeExtensionMode.value = true;
@@ -4109,7 +4110,7 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
 
   uploadedVideo.value = videoUrl;
   uploadedVideoCover.value = cover || null;
-  uploadedVideoDuration.value = 0;
+  uploadedVideoDuration.value = duration || 0;
 
   uploadedImagesVideo.value = [];
   selectedCharactersVideo.value = [];
@@ -4471,18 +4472,8 @@ const doGenerateVideo = async () => {
       if (uploadedVideo.value) {
         let effectiveVideoUrl = uploadedVideo.value;
         if (isMakeExtensionMode.value && originVideoUrlForTail.value) {
-          try {
-            const tailUrl = await extractVideoTail(originVideoUrlForTail.value);
-            if (tailUrl) {
-              effectiveVideoUrl = tailUrl;
-              uploadedVideo.value = tailUrl;
-            }
-          } catch (e) {
-            console.error('Error extracting video tail:', e);
-            toast(t('fail'));
-            isGeneratingVideo.value = false;
-            return;
-          }
+          effectiveVideoUrl = originVideoUrlForTail.value;
+          uploadedVideo.value = originVideoUrlForTail.value;
         }
         reference_videos = [effectiveVideoUrl];
       }
@@ -7455,9 +7446,9 @@ onMounted(async () => {
   if (makeSequelData) {
     await getCountry();
     try {
-      const { videoUrl, cover, type, postId, isNsfw } = JSON.parse(makeSequelData);
+      const { videoUrl, cover, type, postId, isNsfw, duration: sequelDuration } = JSON.parse(makeSequelData);
       if (videoUrl) {
-        await handleMakeSequelFromCache(videoUrl, cover, type, postId, isNsfw);
+        await handleMakeSequelFromCache(videoUrl, cover, type, postId, isNsfw, sequelDuration);
       }
     } catch (e) {
       localStorage.removeItem('makeSequelData');

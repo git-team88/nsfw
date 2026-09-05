@@ -816,17 +816,9 @@ const handleMakeSequelFromList = async (post: any) => {
     const videoUrl = data.video_url || '';
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
-    let tailVideoUrl = videoUrl;
-    try {
-      const extRes = await api.extractVideoTail({ video_url: videoUrl, tail_seconds: 30 }) as any;
-      if ((extRes.code === 0 || extRes.code === 200) && extRes.data?.video_url) {
-        tailVideoUrl = extRes.data.video_url;
-      }
-    } catch (e) {
-      console.error('Error extracting video tail:', e);
-    }
+    const videoDuration = Number(data.duration) || 0;
     localStorage.setItem('makeSequelData', JSON.stringify({
-      videoUrl: tailVideoUrl, cover, type: data.type, videoExtend: true, postId: data.id || post.id, isNsfw
+      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || post.id, isNsfw, duration: videoDuration
     }));
     router.push({ path: '/' });
   } catch (error) {

@@ -435,26 +435,73 @@ onMounted(() => {
   imgOffsetX.value = 0;
 });
 
-async function fetchImageToBlobUrl(url: string): Promise<string> {
-  if (url.startsWith('data:')) {
-    return url;
+function toProxyUrls(url: string): string[] {
+  try {
+    const u = new URL(url, window.location.href);
+    if (u.origin === window.location.origin) return [];
+    const base = baseUrl.replace(/\/+$/, "");
+    return [
+      `${base}/proxy_download${u.pathname}${u.search}`,
+      `${base}/proxy_download?url=${encodeURIComponent(u.href)}`,
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function loadImageElement(src: string, crossOrigin?: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (crossOrigin) img.crossOrigin = crossOrigin;
+    const timer = setTimeout(() => reject(new Error("Image load timeout")), 15000);
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error("Image load failed"));
+    };
+    img.src = src;
+  });
+}
+
+async function tryFetchAsBlobUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const contentType = response.headers.get("content-type") || "";
+    const blob = await response.blob();
+    if (!contentType.startsWith("image/") && !blob.type.startsWith("image/")) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+async function loadCropImage(url: string): Promise<{ img: HTMLImageElement; revoke?: string }> {
+  if (url.startsWith("data:") || url.startsWith("blob:")) {
+    return { img: await loadImageElement(url) };
   }
 
-  let fetchUrl = url;
-  const cloudfrontDomain = 'https://static.moegen.ai';
-  const proxyDomain = `${baseUrl}proxy_download`;
-
-  if (url.startsWith(cloudfrontDomain)) {
-    fetchUrl = proxyDomain + url.replace(cloudfrontDomain, '');
+  const candidates = [...toProxyUrls(url), url];
+  for (const candidate of candidates) {
+    const blobUrl = await tryFetchAsBlobUrl(candidate);
+    if (blobUrl) {
+      try {
+        return { img: await loadImageElement(blobUrl), revoke: blobUrl };
+      } catch {
+        URL.revokeObjectURL(blobUrl);
+      }
+    }
   }
 
-  const response = await fetch(fetchUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status}`);
+  try {
+    const busted = url + (url.includes("?") ? "&" : "?") + "_cors=" + Date.now();
+    return { img: await loadImageElement(busted, "anonymous") };
+  } catch {
+    return { img: await loadImageElement(url) };
   }
-
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 }
 
 async function detectOrientation() {
@@ -514,51 +561,49 @@ async function detectOrientation() {
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {
-  const blobUrl = await fetchImageToBlobUrl(dataUrl);
-  const img = new Image();
-  img.src = blobUrl;
-  await new Promise((r) => (img.onload = r));
+  const { img, revoke: blobUrl } = await loadCropImage(dataUrl);
 
-  const imgEl = previewImgRef.value!;
-  const imgRect = imgEl.getBoundingClientRect();
+  try {
+    const imgEl = previewImgRef.value!;
+    const imgRect = imgEl.getBoundingClientRect();
 
-  const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const boxEl = imgEl.parentElement!;
-  const boxRect = boxEl.getBoundingClientRect();
+    const { width: CROP_W, height: CROP_H } = cropDimensions.value;
+    const boxEl = imgEl.parentElement!;
+    const boxRect = boxEl.getBoundingClientRect();
 
-  // Calculate crop frame position (centered in the preview box)
-  const cropLeft = boxRect.left + (boxRect.width - CROP_W) / 2;
-  const cropTop = boxRect.top + (boxRect.height - CROP_H) / 2;
+    const cropLeft = boxRect.left + (boxRect.width - CROP_W) / 2;
+    const cropTop = boxRect.top + (boxRect.height - CROP_H) / 2;
 
-  // Display scale - how much the image is visually scaled
-  const displayScale = imgRect.width / img.naturalWidth;
+    const displayScale = imgRect.width / img.naturalWidth || imgScale.value || 1;
 
-  // Convert display coordinates to natural image coordinates
-  const sx = (cropLeft - imgRect.left) / displayScale;
-  const sy = (cropTop - imgRect.top) / displayScale;
-  const sw = CROP_W / displayScale;
-  const sh = CROP_H / displayScale;
+    const sx = (cropLeft - imgRect.left) / displayScale;
+    const sy = (cropTop - imgRect.top) / displayScale;
+    const sw = CROP_W / displayScale;
+    const sh = CROP_H / displayScale;
 
-  // Clamp to image bounds
-  const actualSx = Math.max(0, sx);
-  const actualSy = Math.max(0, sy);
-  const actualSw = Math.min(img.naturalWidth - actualSx, sw);
-  const actualSh = Math.min(img.naturalHeight - actualSy, sh);
+    const actualSx = Math.max(0, sx);
+    const actualSy = Math.max(0, sy);
+    const actualSw = Math.max(1, Math.min(img.naturalWidth - actualSx, sw));
+    const actualSh = Math.max(1, Math.min(img.naturalHeight - actualSy, sh));
 
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(actualSw);
-  canvas.height = Math.round(actualSh);
-  const ctx = canvas.getContext("2d")!;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(actualSw);
+    canvas.height = Math.round(actualSh);
+    const ctx = canvas.getContext("2d")!;
 
-  ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
-  ctx.drawImage(img, actualSx, actualSy, actualSw, actualSh, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, actualSx, actualSy, actualSw, actualSh, 0, 0, canvas.width, canvas.height);
 
-  if (blobUrl !== dataUrl) {
-    URL.revokeObjectURL(blobUrl);
+    try {
+      return canvas.toDataURL("image/webp", 0.92);
+    } catch {
+      throw new Error("Canvas is tainted: the cover image could not be read cross-origin");
+    }
+  } finally {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
   }
-
-  return canvas.toDataURL("image/webp", 0.92);
 }
 </script>
 

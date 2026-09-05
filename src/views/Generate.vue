@@ -3985,7 +3985,7 @@ const estimatedVideoPower = computed(() => {
   if (selectedVideoMultimodal.value === 'videoModify') {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
-    duration = 30;
+    duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 30;
   } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
@@ -5522,22 +5522,7 @@ const regenerateRecord = async (record: any) => {
       }
 
       if (originalVideoUrl) {
-        try {
-          const tailRes = await api.extractVideoTail({ video_url: originalVideoUrl, tail_seconds: 15 }) as any;
-          if (tailRes.code === 0 || tailRes.code === 200) {
-            const tailUrl = tailRes.data?.url || tailRes.data || '';
-            if (typeof tailUrl === 'string' && tailUrl) {
-              uploadedVideo.value = tailUrl;
-            } else {
-              uploadedVideo.value = originalVideoUrl;
-            }
-          } else {
-            uploadedVideo.value = originalVideoUrl;
-          }
-        } catch (error) {
-          console.error('Error extracting video tail:', error);
-          uploadedVideo.value = originalVideoUrl;
-        }
+        uploadedVideo.value = originalVideoUrl;
       }
 
       const extRefImages = userSelected.reference_images || [];

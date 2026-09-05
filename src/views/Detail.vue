@@ -1674,7 +1674,7 @@ async function goMakeSequel() {
     }
 
     localStorage.setItem('makeSequelData', JSON.stringify({
-      videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw
+      videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw, duration: videoDuration
     }));
     router.push({ path: '/' });
   } catch (error) {
