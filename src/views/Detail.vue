@@ -1673,6 +1673,7 @@ async function goMakeSequel() {
       return;
     }
 
+    const videoDuration = Number(data.duration) || 0;
     localStorage.setItem('makeSequelData', JSON.stringify({
       videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw, duration: videoDuration
     }));
