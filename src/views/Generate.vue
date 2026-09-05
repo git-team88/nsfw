@@ -754,6 +754,25 @@
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
+                <div class="video-selector" @mousedown.prevent @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showNsfwVersionDropdown = false; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
+                  <div class="selector-header">
+                    <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
+                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                  </div>
+                  <div class="dropdown" v-if="showVideoMultimodalDropdown" @click.stop @mousedown.stop>
+                    <div
+                      v-for="option in videoMultimodalOptions"
+                      :key="option.value"
+                      class="dropdown-item"
+                      :class="{ active: selectedVideoMultimodal == option.value }"
+                      @click.stop="selectVideoMultimodal(option.value)"
+                    >
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- NSFW Version Selector - only show in unlimited mode -->
                 <div v-if="effectiveVideoMode == 'unlimited'" class="video-selector nsfw-version-selector" @mousedown.prevent @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false" :class="{ open: showNsfwVersionDropdown }">
                   <div class="selector-header">
                     <span>{{ nsfwVersionOptions.find(opt => opt.value === selectedNsfwVersion)?.label || selectedNsfwVersion }}</span>
@@ -766,24 +785,6 @@
                       class="dropdown-item"
                       :class="{ active: selectedNsfwVersion == option.value }"
                       @click.stop="selectedNsfwVersion = option.value; showNsfwVersionDropdown = false"
-                    >
-                      <span>{{ option.label }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="video-selector" @mousedown.prevent @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
-                  <div class="selector-header">
-                    <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
-                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
-                  </div>
-                  <div class="dropdown" v-if="showVideoMultimodalDropdown" @click.stop @mousedown.stop>
-                    <div
-                      v-for="option in videoMultimodalOptions"
-                      :key="option.value"
-                      class="dropdown-item"
-                      :class="{ active: selectedVideoMultimodal == option.value }"
-                      @click.stop="selectVideoMultimodal(option.value)"
                     >
                       <span>{{ option.label }}</span>
                     </div>

@@ -1973,7 +1973,7 @@ $pinkopacity: rgba(255,79,154,0.12);
   margin: 32px 0 0;
   border: 0;
   border-radius: 0;
-  padding: 0;
+  padding: 0 0 80px;
   background: transparent;
 
   .feed-heading {
@@ -3354,10 +3354,6 @@ $pinkopacity: rgba(255,79,154,0.12);
     .hero-content {
       padding: 30px 16px 30px;
     }
-  }
-
-  .content-section {
-    padding: 0;
   }
 
   .content-section .content-grid .waterfall {

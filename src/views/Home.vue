@@ -476,13 +476,33 @@
                     <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Video - only show if not a teenager -->
                       <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                        <span class="nsfw-btn" :class="{ on: currentVideoMode == 'unlimited' }">
+                        <span class="nsfw-btn" :class="{ on: effectiveVideoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
                         </span>
                       </div>
 
-                      <div v-if="currentVideoMode == 'unlimited'" class="video-selector nsfw-version-selector"
+                      <!-- Multimodal Selector -->
+                      <div class="video-selector" @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showNsfwVersionDropdown = false; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
+                        <div class="selector-header">
+                          <span>{{ videoMultimodalOptions.find(opt => opt.value === selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showVideoMultimodalDropdown">
+                          <div
+                            v-for="option in videoMultimodalOptions"
+                            :key="option.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedVideoMultimodal == option.value }"
+                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = false; resetVideoInputs()"
+                          >
+                            <span>{{ option.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- NSFW Version Selector - only show in unlimited mode -->
+                      <div v-if="effectiveVideoMode == 'unlimited'" class="video-selector nsfw-version-selector"
                         @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false"
                         :class="{ open: showNsfwVersionDropdown }">
                         <div class="selector-header">
@@ -496,25 +516,6 @@
                             class="dropdown-item"
                             :class="{ active: selectedNsfwVersion == option.value }"
                             @click.stop="selectedNsfwVersion = option.value; showNsfwVersionDropdown = false"
-                          >
-                            <span>{{ option.label }}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Multimodal Selector -->
-                      <div class="video-selector" @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
-                        <div class="selector-header">
-                          <span>{{ videoMultimodalOptions.find(opt => opt.value === selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
-                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
-                        </div>
-                        <div class="dropdown" v-if="showVideoMultimodalDropdown">
-                          <div
-                            v-for="option in videoMultimodalOptions"
-                            :key="option.value"
-                            class="dropdown-item"
-                            :class="{ active: selectedVideoMultimodal == option.value }"
-                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = false; resetVideoInputs()"
                           >
                             <span>{{ option.label }}</span>
                           </div>
@@ -593,7 +594,7 @@
                               </div>
                               <input
                                 type="range"
-                                :min="currentVideoMode == 'unlimited' ? 2 : 4"
+                                :min="effectiveVideoMode == 'unlimited' ? 2 : 4"
                                   :max="30"
                                 step="1"
                                 :value="selectedVideoDuration"
@@ -616,7 +617,7 @@
                         </div>
                       </div>
 
-                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && currentVideoMode != 'unlimited'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && effectiveVideoMode != 'unlimited'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -627,7 +628,7 @@
                       <!-- <div v-if="isLoggedIn" class="cover-cost-display">
                         <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
                       </div> -->
-                      <div class="generate-btn" :class="[currentVideoMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingVideo }]" @click="generateVideo">
+                      <div class="generate-btn" :class="[effectiveVideoMode == 'unlimited' ? 'unlimit' : '', { loading: isGeneratingVideo }]" @click="generateVideo">
                         <div class="generate-novel-btn">
                           <span>{{ estimatedVideoComputingPower }}</span>
                           <div v-if="isGeneratingVideo" class="loading-spinner-small"></div>
@@ -1785,6 +1786,11 @@ const inputHtmlPhoto = ref('');
 
 // Mode states - separate for video, comic, drama and photo
 const currentVideoMode = ref('normal');
+const overrideNormalVideoMode = ref(false);
+const effectiveVideoMode = computed(() => {
+  if (overrideNormalVideoMode.value) return 'normal';
+  return contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value;
+});
 const selectedNsfwVersion = ref('enhanced');
 const showNsfwVersionDropdown = ref(false);
 const nsfwVersionOptions = computed(() => [
@@ -2012,8 +2018,8 @@ async function handleStartFrameChange(e: Event) {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -2050,8 +2056,8 @@ async function handleEndFrameChange(e: Event) {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = currentVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = currentVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -2104,7 +2110,7 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       const height = video.videoHeight;
       if (width === 0 || height === 0) { resolve(true); return; }
       const ratio = width / height;
-      if (currentVideoMode.value === 'unlimited') {
+      if (effectiveVideoMode.value === 'unlimited') {
         // 无限制模式：宽高比 1:8~8:1，像素 [240, 4096]
         if (ratio < 1/8 || ratio > 8) {
           toast(t('home.error.videoRatioLimit'));
@@ -2165,8 +2171,8 @@ async function handleVideoUpload(e: Event) {
       target.value = '';
       return;
     }
-    const maxVideoSizeBytes = currentVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
-    const maxVideoSizeMB = currentVideoMode.value === 'unlimited' ? 100 : 200;
+    const maxVideoSizeBytes = effectiveVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
+    const maxVideoSizeMB = effectiveVideoMode.value === 'unlimited' ? 100 : 200;
     if (file.size > maxVideoSizeBytes) {
       toast(t('home.error.maxVideoSize', { max: maxVideoSizeMB }));
       target.value = '';
@@ -2196,8 +2202,8 @@ async function handleVideoUpload(e: Event) {
       }
     } else if (selectedVideoMultimodal.value === 'multimodal') {
       // 多模态参考：普通模式 2-30s，无限制模式 1-15s
-      const minDuration = currentVideoMode.value === 'unlimited' ? 1 : 2;
-      const maxDuration = currentVideoMode.value === 'unlimited' ? 15 : 30;
+      const minDuration = effectiveVideoMode.value === 'unlimited' ? 1 : 2;
+      const maxDuration = effectiveVideoMode.value === 'unlimited' ? 15 : 30;
       if (duration < minDuration) {
         toast(t('home.error.videoDurationTooShort', { min: minDuration }));
         target.value = '';
@@ -2231,14 +2237,14 @@ async function handleVideoUpload(e: Event) {
         uploadedVideoDuration.value = duration;
         lastValidVideoDuration.value = selectedVideoDuration.value;
 
-        if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+        if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
           const maxDuration = duration > 0 ? Math.floor(30 - duration) : 30;
           selectedVideoDuration.value = Math.max(maxDuration, 2).toString();
           lastValidVideoDuration.value = selectedVideoDuration.value;
         } else {
           const currentDuration = parseInt(selectedVideoDuration.value);
           if (currentDuration <= duration) {
-            const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+            const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
             const newDuration = Math.max(duration + 1, minDuration);
             selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
@@ -2269,17 +2275,17 @@ const videoQualityOptions = computed(() => {
     normal: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
     unlimited: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
   };
-  return optionsByMode[currentVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+  return optionsByMode[effectiveVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
 });
 const videoRatioOptions = computed(() => {
   const optionsByMode = {
     normal: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }],
     unlimited: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }],
   };
-  return optionsByMode[currentVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
+  return optionsByMode[effectiveVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
 });
 const videoDurationOptions = computed(() => {
-  const minDuration = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   if (minDuration == 4) {
     return [
       { value: '4', label: '4s' },
@@ -2317,7 +2323,7 @@ const getUploadedVideoDurationSum = () => {
 };
 
 const validateDurationAndRestore = () => {
-  if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     const totalVideoDuration = getUploadedVideoDurationSum();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
@@ -2334,9 +2340,9 @@ const validateDurationAndRestore = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
-  const marks = currentVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
+  const marks = effectiveVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -2344,7 +2350,7 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const min = currentVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
@@ -2914,7 +2920,7 @@ const estimatedVideoComputingPower = computed(() => {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = 30;
-  } else if (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
@@ -2922,13 +2928,13 @@ const estimatedVideoComputingPower = computed(() => {
   let costPerSecond = 0;
 
   if (selectedVideoQuality.value === '720P') {
-    if (currentVideoMode.value === 'unlimited') {
+    if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
     }
   } else if (selectedVideoQuality.value === '1080P') {
-    if (currentVideoMode.value === 'unlimited') {
+    if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
     } else {
       costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second);
@@ -2936,7 +2942,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && currentVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -3481,6 +3487,7 @@ const selectContentType = (type: string) => {
   isMakeVideoSequelMode.value = false;
   originSessionIdForExtension.value = '';
   originVideoUrlForTail.value = '';
+  overrideNormalVideoMode.value = false;
   previousInputHtml.value = '';
 
   // Reset video settings to default
@@ -3980,8 +3987,10 @@ const handleMakeSimilarVideo = async (item: any) => {
     if (isUnlimited) {
       currentVideoMode.value = 'unlimited';
       selectedNsfwVersion.value = 'super';
+      overrideNormalVideoMode.value = false;
     } else {
       currentVideoMode.value = 'normal';
+      overrideNormalVideoMode.value = true;
     }
 
     selectedVideoMultimodal.value = 'videoModify';
@@ -4010,10 +4019,13 @@ const handleMakeSimilarVideo = async (item: any) => {
       }
       if (editableInputRef.value) {
         editableInputRef.value.focus();
+        isInputFocused.value = true;
+        if (typeTimer) clearTimeout(typeTimer);
+        typedPlaceholder.value = currentPlaceholder.value;
       }
     });
   } catch (error) {
-    console.error('Error fetching post detail for make similar video:', error);
+    console.error("Error fetching post detail for make similar video:", error);
     toast(t('fail'));
   } finally {
     isMakeSimilarVideoLoading.value = false;
@@ -4086,8 +4098,10 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
   if (isUnlimited) {
     currentVideoMode.value = 'unlimited';
     selectedNsfwVersion.value = 'super';
+    overrideNormalVideoMode.value = false;
   } else {
     currentVideoMode.value = 'normal';
+    overrideNormalVideoMode.value = true;
   }
 
   selectedVideoMultimodal.value = 'videoExtend';
@@ -4118,6 +4132,9 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
     }
     if (editableInputRef.value) {
       editableInputRef.value.focus();
+      isInputFocused.value = true;
+      if (typeTimer) clearTimeout(typeTimer);
+      typedPlaceholder.value = currentPlaceholder.value;
     }
   });
 };
@@ -4478,8 +4495,8 @@ const doGenerateVideo = async () => {
       ratio: (selectedVideoMultimodal.value === 'startEndFrames' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? '9:16' : selectedVideoRatio.value,
       language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "simple_video",
-      story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
-      ...(currentVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
+      story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
       story_style: "",
       reference_images: reference_images,
       reference_videos: reference_videos,
@@ -4492,9 +4509,9 @@ const doGenerateVideo = async () => {
           : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
       ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
@@ -5192,7 +5209,7 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
   if (width === 0 || height === 0) return false;
   const ratio = width / height;
   const isPhotoUnlimited = contentType.value === 'photo' && currentPhotoMode.value === 'unlimited';
-  const isVideoUnlimited = contentType.value === 'video' && currentVideoMode.value === 'unlimited';
+  const isVideoUnlimited = contentType.value === 'video' && effectiveVideoMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
       toast(t('home.error.imageRatioLimit'));
@@ -5432,7 +5449,7 @@ const handleFileChange = async (event: Event) => {
 
     // Check individual video/audio duration for video multimodal mode
     if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
-      const isUnlimited = currentVideoMode.value === 'unlimited';
+      const isUnlimited = effectiveVideoMode.value === 'unlimited';
       for (const file of Array.from(input.files)) {
         if (file.type.startsWith('video/')) {
           const duration = await getMediaDuration(file);
@@ -5458,7 +5475,7 @@ const handleFileChange = async (event: Event) => {
 
     // Check video/audio total duration limit for video multimodal mode
     if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
-      const isUnlimited = currentVideoMode.value === 'unlimited';
+      const isUnlimited = effectiveVideoMode.value === 'unlimited';
       let totalVideoDuration = 0;
       let totalAudioDuration = 0;
 
@@ -5949,7 +5966,7 @@ const removeUploadedImage = (id: string) => {
   currentCombinedItems.value = currentCombinedItems.value.filter(item => item.id !== id);
 
   // Update selectedVideoDuration after removing a video in multimodal mode
-  if (itemType === 'video' && contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && currentVideoMode.value === 'unlimited') {
+  if (itemType === 'video' && contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && effectiveVideoMode.value === 'unlimited') {
     const totalUploadedVideoDuration = getUploadedVideoDurationSum();
     const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
     const currentDuration = parseInt(selectedVideoDuration.value);
@@ -7392,8 +7409,10 @@ onMounted(async () => {
         if (isUnlimited) {
           currentVideoMode.value = 'unlimited';
           selectedNsfwVersion.value = 'super';
+          overrideNormalVideoMode.value = false;
         } else {
           currentVideoMode.value = 'normal';
+          overrideNormalVideoMode.value = true;
         }
 
         selectedVideoMultimodal.value = 'videoModify';
@@ -7421,6 +7440,9 @@ onMounted(async () => {
           }
           if (editableInputRef.value) {
             editableInputRef.value.focus();
+            isInputFocused.value = true;
+            if (typeTimer) clearTimeout(typeTimer);
+            typedPlaceholder.value = currentPlaceholder.value;
           }
         });
       }

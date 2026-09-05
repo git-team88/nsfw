@@ -15,7 +15,7 @@
             <div class="chapter-meta">
               <span class="chapter-book-title" v-if="detail.book_title" :title="detail.book_title" @click="goToCollection">{{ detail.book_title }}</span>
               <span class="chapter-date">{{ detail.time }}</span>
-              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
+              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author?.id != uid">
                 <div class="more-btn" @click.stop="toggleHeaderMore">
                   <img src="@/assets/images/detail/menu.png" alt="" />
                 </div>
@@ -29,14 +29,14 @@
           </div>
           <div class="header-right">
             <div class="user-info" @click="navigateToUserHome">
-              <img class="avatar" :src="detail.author.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-              <span class="nickname">{{ detail.author.nickname }}</span>
+              <img class="avatar" :src="detail.author?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+              <span class="nickname">{{ detail.author?.nickname }}</span>
             </div>
             <button
               class="follow-btn"
               :class="{ followed: detail.isFollowed }"
               @click="toggleFollow"
-              v-if="detail.author.id != uid"
+              v-if="detail.author?.id != uid"
             >
               <img v-if="!detail.isFollowed" src="@/assets/images/detail/follow.png" alt="" />
               <span class="btn-text">{{ detail.isFollowed ? t('detail.following') : t('detail.follow') }}</span>
@@ -101,7 +101,7 @@
             <div class="chapter-meta">
               <span class="chapter-book-title" v-if="detail.book_title" :title="detail.book_title" @click="goToCollection">{{ detail.book_title }}</span>
               <span class="chapter-date">{{ detail.time }}</span>
-              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author.id != uid">
+              <div class="more-menu-wrap" ref="headerMoreRef" v-if="detail.author?.id != uid">
                 <div class="more-btn" @click.stop="toggleHeaderMore">
                   <img src="@/assets/images/detail/menu.png" alt="" />
                 </div>
@@ -115,14 +115,14 @@
           </div>
           <div class="header-right">
             <div class="user-info" @click="navigateToUserHome">
-              <img class="avatar" :src="detail.author.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
-              <span class="nickname">{{ detail.author.nickname }}</span>
+              <img class="avatar" :src="detail.author?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
+              <span class="nickname">{{ detail.author?.nickname }}</span>
             </div>
             <button
               class="follow-btn"
               :class="{ followed: detail.isFollowed }"
               @click="toggleFollow"
-              v-if="detail.author.id != uid"
+              v-if="detail.author?.id != uid"
             >
               <img v-if="!detail.isFollowed" src="@/assets/images/detail/follow.png" alt="" />
               <span class="btn-text">{{ detail.isFollowed ? t('detail.following') : t('detail.follow') }}</span>
@@ -142,7 +142,7 @@
         </div>
 
         <!-- Subscription required提示 -->
-        <div class="subscription-required" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author.id !== uid">
+        <div class="subscription-required" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
           <div class="subscription-content">
             <span class="subscription-text">{{ t('detail.subscribeToView') }}</span>
             <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
