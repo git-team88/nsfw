@@ -278,7 +278,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? (record.user_selected?.video_nsfw_model_type === 'super' ? t('home.nsfwVersion.super') : t('home.nsfwVersion.enhanced')) : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
@@ -754,6 +754,24 @@
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
 
+                <div v-if="effectiveVideoMode == 'unlimited'" class="video-selector nsfw-version-selector" @mousedown.prevent @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false" :class="{ open: showNsfwVersionDropdown }">
+                  <div class="selector-header">
+                    <span>{{ nsfwVersionOptions.find(opt => opt.value === selectedNsfwVersion)?.label || selectedNsfwVersion }}</span>
+                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                  </div>
+                  <div class="dropdown" v-if="showNsfwVersionDropdown" @click.stop @mousedown.stop>
+                    <div
+                      v-for="option in nsfwVersionOptions"
+                      :key="option.value"
+                      class="dropdown-item"
+                      :class="{ active: selectedNsfwVersion == option.value }"
+                      @click.stop="selectedNsfwVersion = option.value; showNsfwVersionDropdown = false"
+                    >
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="video-selector" @mousedown.prevent @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
                   <div class="selector-header">
                     <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
@@ -1004,6 +1022,12 @@ const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
+const selectedNsfwVersion = ref('enhanced');
+const showNsfwVersionDropdown = ref(false);
+const nsfwVersionOptions = computed(() => [
+  { value: 'enhanced', label: t('home.nsfwVersion.enhanced') },
+  { value: 'super', label: t('home.nsfwVersion.super') }
+]);
 const enablePhotoOptimizePrompt = ref(false);
 const enableVideoOptimizePrompt = ref(false);
 const showUnlimitedModal = ref(false);
@@ -4699,6 +4723,7 @@ const doGenerateVideo = async () => {
         language: locale.value == 'zh' ? 'cn' : locale.value,
         story_type: 'simple_video',
         story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
         story_style: '',
         reference_images: referenceImages,
         reference_videos: referenceVideosForDisplay,
@@ -4740,6 +4765,7 @@ const doGenerateVideo = async () => {
       language: videoSettings.language,
       story_type: "simple_video",
       story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
       story_style: "",
       reference_images: referenceImages,
       reference_videos: referenceVideos,
@@ -5274,12 +5300,13 @@ const publishVideo = (record: any) => {
   router.push({
     path: '/publish/clip',
     query: {
-      session_id: record.session_id
+      session_id: record.session_id,
+      ...(record.duration ? { duration: record.duration } : {})
     }
   });
 };
 
-const regenerateRecord = (record: any) => {
+const regenerateRecord = async (record: any) => {
   if (record.type == 'photo') {
     bottomActiveTab.value = 'photo';
 
@@ -5384,6 +5411,9 @@ const regenerateRecord = (record: any) => {
     if (userSelected.story_mode) {
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
       currentVideoMode.value = mode;
+      if (mode === 'unlimited') {
+        selectedNsfwVersion.value = userSelected.video_nsfw_model_type === 'super' ? 'super' : 'enhanced';
+      }
     } else {
       currentVideoMode.value = 'normal';
     }
@@ -5459,18 +5489,54 @@ const regenerateRecord = (record: any) => {
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
 
+      let originalVideoUrl = '';
+
       const videoItem = list.find((item: any) => item.type === 'video');
       if (videoItem) {
-        const videoUrl = videoItem.image || videoItem.url || '';
-        if (videoUrl) {
-          uploadedVideo.value = videoUrl;
+        originalVideoUrl = videoItem.image || videoItem.url || '';
+        if (originalVideoUrl) {
           uploadedVideoCover.value = videoItem.cover || '';
         }
       }
 
-      if (!uploadedVideo.value && userSelected.reference_videos?.length > 0) {
+      if (!originalVideoUrl && userSelected.reference_videos?.length > 0) {
         const refVideo = userSelected.reference_videos[0];
-        uploadedVideo.value = typeof refVideo === 'string' ? refVideo : refVideo.url;
+        originalVideoUrl = typeof refVideo === 'string' ? refVideo : refVideo.url;
+      }
+
+      if (!originalVideoUrl && record.session_id) {
+        try {
+          const detailRes = await api.detailProject(record.session_id) as any;
+          if (detailRes.code === 200 && detailRes.data) {
+            const ra = typeof detailRes.data.result_async === 'string'
+              ? (() => { try { return JSON.parse(detailRes.data.result_async || '{}'); } catch { return {}; } })()
+              : (detailRes.data.result_async || {});
+            const finalVideos = ra.final_videos || [];
+            const firstVideo = finalVideos[0] || ra.final_video_output || {};
+            originalVideoUrl = firstVideo.video_url || ra.final_video || detailRes.data.video_url || '';
+          }
+        } catch (error) {
+          console.error('Error fetching project detail for video extend:', error);
+        }
+      }
+
+      if (originalVideoUrl) {
+        try {
+          const tailRes = await api.extractVideoTail({ video_url: originalVideoUrl, tail_seconds: 15 }) as any;
+          if (tailRes.code === 0 || tailRes.code === 200) {
+            const tailUrl = tailRes.data?.url || tailRes.data || '';
+            if (typeof tailUrl === 'string' && tailUrl) {
+              uploadedVideo.value = tailUrl;
+            } else {
+              uploadedVideo.value = originalVideoUrl;
+            }
+          } else {
+            uploadedVideo.value = originalVideoUrl;
+          }
+        } catch (error) {
+          console.error('Error extracting video tail:', error);
+          uploadedVideo.value = originalVideoUrl;
+        }
       }
 
       const extRefImages = userSelected.reference_images || [];
@@ -5485,7 +5551,7 @@ const regenerateRecord = (record: any) => {
       const extFilteredList = list.filter((item: any) => item.id !== 'uploaded-video');
       const extRefVideoList = (userSelected.reference_videos || []).filter((v: any) => {
         const vUrl = typeof v === 'string' ? v : v.url;
-        return vUrl !== uploadedVideo.value;
+        return vUrl !== originalVideoUrl;
       });
       const extVideoIndices: number[] = [];
       extFilteredList.forEach((item: any, idx: number) => { if (item.type === 'video') extVideoIndices.push(idx); });
@@ -5873,6 +5939,7 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
+      selectedNsfwVersion.value = 'enhanced';
       enableVideoOptimizePrompt.value = false;
       videoInput.value = '';
       uploadedVideo.value = '';
@@ -5901,6 +5968,7 @@ const switchVideoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
     currentVideoMode.value = 'unlimited';
+    selectedNsfwVersion.value = 'enhanced';
     enableVideoOptimizePrompt.value = false;
     videoInput.value = '';
     uploadedVideo.value = '';

@@ -1,13 +1,14 @@
 <template>
-  <div v-if="visible" class="modal-overlay">
+  <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content">
-      <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="$emit('close')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
-      <div class="modal-text">
-        {{ t('home.makeSequelSubscribeTitle') }}
+      <div class="modal-header">
+        <h3>{{ t('home.makeSequelSubscribeTitle') }}</h3>
       </div>
-      <div class="modal-buttons">
-        <button class="btn primary-btn" @click="$emit('go-subscribe')">{{ t('home.makeSequelSubscribeGo') }}</button>
+
+      <div class="modal-footer">
+        <button class="btn confirm" @click="$emit('go-subscribe')">{{ t('home.makeSequelSubscribeGo') }}</button>
       </div>
     </div>
   </div>
@@ -24,7 +25,7 @@ defineProps({
   }
 });
 
-defineEmits(['cancel', 'go-subscribe']);
+defineEmits(['go-subscribe', 'close']);
 </script>
 
 <style lang="scss" scoped>
@@ -40,15 +41,17 @@ defineEmits(['cancel', 'go-subscribe']);
 
 .modal-content {
   position: relative;
+  width: 500px;
+  max-width: 90vw;
+  padding: 14px 24px 24px;
+  background: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 500px;
-  padding: 44px 20px 24px;
-  background: #1a1a1a;
-  border: 1px solid #3d3d3d;
-  box-shadow: none;
-  border-radius: 18px;
   gap: 24px;
 }
 
@@ -72,39 +75,47 @@ defineEmits(['cancel', 'go-subscribe']);
   &:hover { transform: scale(1.1) rotate(90deg); }
 }
 
-.modal-text {
-  font-size: 14px;
-  color: #f5f5f5;
-  font-weight: 700;
-  text-align: center;
-  line-height: 20px;
-}
-
-.modal-buttons {
+.modal-header {
   display: flex;
-  gap: 24px;
-  width: 100%;
+  align-items: center;
   justify-content: center;
+  margin-top: 22px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #f5f5f5;
+    margin: 0;
+    text-align: center;
+    line-height: 22px;
+  }
 }
 
-.btn {
-  min-width: 136px;
-  height: 48px;
-  border: 1px solid #3d3d3d;
-  border-radius: 18px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
-}
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
 
-.primary-btn {
-  background: linear-gradient(145deg, #ff74b3, #f73382);
-  color: #f5f5f5;
-  box-shadow: none;
-  font-weight: 800;
+  .btn {
+    min-width: 136px;
+    height: 48px;
+    border: 1px solid #3d3d3d;
+    border-radius: 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s;
 
-  &:hover {
-    box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+    &.confirm {
+      background: linear-gradient(145deg, #ff65ab, #f02c80);
+      color: #ffffff;
+      border: 1px solid #ff9aca;
+      box-shadow: 0 0 20px rgba(255, 50, 140, 0.5);
+      font-weight: 800;
+
+      &:hover {
+        box-shadow: 0 0 28px rgba(255, 50, 140, 0.65);
+      }
+    }
   }
 }
 </style>

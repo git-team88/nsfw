@@ -1701,6 +1701,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       placeholderDrama: "あなたの一言から、物語が動き出す。例：公園で昼寝をしていたら、突然一匹の猫が腕の中に飛び込んできた。",
       placeholderPhoto: "一言から、物語のワンシーンが生まれる。例：桜吹雪の中、振り返った彼女の瞳には涙が浮かんでいた。",
       placeholderVideo: "見たい物語を一行で入力。例：余命3ヶ月のロボットが孤独な少女と出会い、最後の景色を探す旅に出る。",
+      placeholderMakeSimilar: "キャラクターを替えるかプロットを修正して同款を作る",
+      placeholderMakeSequel: "続きのプロットを描写して続編を作る",
       placeholderAt: `{'@'}を入力して画像をクイック参照`
     },
     img: '画像',
@@ -1894,6 +1896,10 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       startEndFrames: "開始および終了フレーム",
       videoExtend: "ビデオ拡張",
       videoModify: "ビデオ修正"
+    },
+    nsfwVersion: {
+      enhanced: "エンハンス",
+      super: "スーパー"
     },
     start: "開始",
     end: "終了",

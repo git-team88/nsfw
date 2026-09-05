@@ -982,6 +982,13 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
+  extractVideoTail: (data: any) =>
+    axios.request({
+      url: "ai/simple_video/extract_video_tail",
+      method: "POST",
+      baseURL: aiUrl,
+      data,
+    }),
   modifyProject: (data: any) =>
     axios.request({
       url: "app/project/rename",

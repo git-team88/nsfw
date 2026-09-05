@@ -1981,6 +1981,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderDrama: "任意输入一句，得到整部专属漫剧。例：\"再叫一次哥哥。\"他咬着我的耳朵笑，\"叫对了就放你走。\"",
       placeholderPhoto: "输入一句，画面诞生。例：清晨的古街，一只猫正坐在石灯笼上打盹。",
       placeholderVideo: "输入一句，视界展开。例：细雨霏霏，他们共撑一伞，樱花树下缓缓行。",
+      placeholderMakeSimilar: "替换角色或修改情节拍同款",
+      placeholderMakeSequel: "请描述后续情节做续集",
       placeholderAt: `输入{'@'}快速调用参考内容`
     },
     img: '图片',
@@ -2174,6 +2176,10 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       startEndFrames: "首尾帧",
       videoExtend: "视频续写",
       videoModify: "视频修改"
+    },
+    nsfwVersion: {
+      enhanced: "增强版",
+      super: "超级版"
     },
     start: "首帧",
     end: "尾帧",

@@ -253,7 +253,11 @@
                         </template>
                       </div>
                       <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
-                        <div class="make-similar-btn" v-if="collection.type != '4' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                        <div class="make-similar-btn" v-if="collection.type != '4' && collection.type != '5' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
+                          <img :src="makeIcon" alt="" class="make-icon" />
+                          <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                        </div>
+                        <div class="make-similar-btn" v-if="collection.type == '5' && parseFloat(collection.duration) <= 30" @click.stop="handleMakeSimilarVideo(collection)">
                           <img :src="makeIcon" alt="" class="make-icon" />
                           <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                         </div>
@@ -441,8 +445,8 @@
 
     <MakeSequelSubscribeModal
       :visible="showMakeSequelSubscribeModal"
-      @cancel="showMakeSequelSubscribeModal = false"
       @go-subscribe="goMakeSequelSubscribe"
+      @close="showMakeSequelSubscribeModal = false"
     />
   </div>
 </template>
@@ -1863,6 +1867,7 @@ async function loadPosts(reset = false) {
 }
 
 const isMakeSimilarLoading = ref(false);
+const isMakeSimilarVideoLoading = ref(false);
 const isMakeSequelLoading = ref(false);
 const showMakeSequelSubscribeModal = ref(false);
 const makeSequelAuthorId = ref('');
@@ -1875,6 +1880,59 @@ const handleMakeSimilar = (collection: any) => {
     return;
   }
   router.push({ path: '/', query: { make: sessionId } });
+};
+
+const handleMakeSimilarVideo = async (collection: any) => {
+  if (!checkLogin()) return;
+  if (isMakeSimilarVideoLoading.value) return;
+  isMakeSimilarVideoLoading.value = true;
+
+  try {
+    const token = localStorage.getItem('token') || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Platform': 'web',
+      'ts': ts,
+      'sign': sign,
+    };
+    if (token) {
+      headers['token'] = token;
+    }
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ post_id: collection.id, fromIndexRecommend: { tab: 'hot' } }),
+    }).then(r => r.json());
+
+    if (res.code != 0 && res.code != 200) {
+      toast(res.message || t('fail'));
+      return;
+    }
+
+    const data = res.data.post || res.data;
+    const authorId = res.data.author?.id || data.author_id || '';
+    const uid = localStorage.getItem('uid');
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    const videoDuration = Number(data.duration) || 0;
+
+    localStorage.setItem('makeSimilarVideoData', JSON.stringify({ videoUrl, cover, isNsfw, duration: videoDuration, postId: data.id || collection.id }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make similar video:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSimilarVideoLoading.value = false;
+  }
 };
 
 const handleMakeSequelFromList = async (collection: any) => {
@@ -1915,8 +1973,17 @@ const handleMakeSequelFromList = async (collection: any) => {
     const videoUrl = data.video_url || '';
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    let tailVideoUrl = videoUrl;
+    try {
+      const extRes = await api.extractVideoTail({ video_url: videoUrl, tail_seconds: 30 }) as any;
+      if ((extRes.code === 0 || extRes.code === 200) && extRes.data?.video_url) {
+        tailVideoUrl = extRes.data.video_url;
+      }
+    } catch (e) {
+      console.error('Error extracting video tail:', e);
+    }
     localStorage.setItem('makeSequelData', JSON.stringify({
-      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || collection.id, isNsfw
+      videoUrl: tailVideoUrl, cover, type: data.type, videoExtend: true, postId: data.id || collection.id, isNsfw
     }));
     router.push({ path: '/' });
   } catch (error) {
@@ -1929,8 +1996,13 @@ const handleMakeSequelFromList = async (collection: any) => {
 
 function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   if (makeSequelAuthorId.value) {
-    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+    router.push(`/subscription-payment?id=${makeSequelAuthorId.value}`);
   }
 }
 

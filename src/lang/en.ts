@@ -1875,6 +1875,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       placeholderDrama: "One line in. A whole motion comic out. e.g. \"Run.\" My dog had never spoken before. I ran.",
       placeholderPhoto: "One line in. A photo out. e.g. A cat napping on a stone lantern, in the quiet of a misty morning street.",
       placeholderVideo: "One line in. A world unfolds. e.g. They share one umbrella under the cherry blossoms, rain falling soft between them.",
+      placeholderMakeSimilar: "Replace characters or modify the plot to make a similar video",
+      placeholderMakeSequel: "Describe the subsequent plot to make a sequel",
       placeholderAt: `Type {'@'} to quickly reference content`
     },
     img: 'Image',
@@ -2069,6 +2071,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
       startEndFrames: "Start and End Frames",
       videoExtend: "Video Extend",
       videoModify: "Video Modify"
+    },
+    nsfwVersion: {
+      enhanced: "Enhanced",
+      super: "Super"
     },
     start: "Start",
     end: "End",

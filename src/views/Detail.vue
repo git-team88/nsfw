@@ -55,8 +55,13 @@
 
             <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
               <div class="make-actions">
-                <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                <div class="make-similar-btn" v-if="detail.session_id && detail.type != '5'" @click.stop="goMakeSimilar(detail.session_id)">
                   <img :src="makeIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSimilar') }}</span>
+                </div>
+                <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30" @click.stop="goMakeSimilarVideo()">
+                  <div class="loading-spinner-small" v-if="isMakeSequelLoading"></div>
+                  <img v-else :src="makeIcon" alt="" class="make-icon" />
                   <span>{{ t('home.makeSimilar') }}</span>
                 </div>
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl" @click.stop="goMakeSequel()">
@@ -442,8 +447,14 @@
               <div class="collection-link" @click="goToCollectionDetail">
                 {{ t('detail.viewCollectionInfo') }}
               </div>
-              <div class="make-similar-wrap" v-if="detail.session_id">
+              <div class="make-similar-wrap" v-if="detail.session_id && detail.type != '5'">
                 <div class="make-similar-btn" @click.stop="goMakeSimilar(detail.session_id)">
+                  <img :src="makeIcon" alt="" class="make-icon" />
+                  <span>{{ t('home.makeSimilar') }}</span>
+                </div>
+              </div>
+              <div class="make-similar-wrap" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30">
+                <div class="make-similar-btn" @click.stop="goMakeSimilarVideo()">
                   <img :src="makeIcon" alt="" class="make-icon" />
                   <span>{{ t('home.makeSimilar') }}</span>
                 </div>
@@ -925,8 +936,8 @@
 
     <MakeSequelSubscribeModal
       :visible="showMakeSequelSubscribeModal"
-      @cancel="showMakeSequelSubscribeModal = false"
       @go-subscribe="goMakeSequelSubscribe"
+      @close="showMakeSequelSubscribeModal = false"
     />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
   </div>
@@ -1332,6 +1343,7 @@ interface DetailData {
   chapter_index: string | number;
   latest_read_chapter_index: string | number;
   session_id: string;
+  duration: number | string;
 }
 
 const detail = ref<DetailData>({
@@ -1369,7 +1381,8 @@ const detail = ref<DetailData>({
   book_title: '',
   chapter_index: '',
   latest_read_chapter_index: '',
-  session_id: ''
+  session_id: '',
+  duration: 0
 });
 
 // Tab state
@@ -1541,33 +1554,148 @@ function goToCollectionDetail() {
 }
 
 function goMakeSimilar(sessionId: string) {
-  if (isChinaRegion.value) {
-    toast(t('home.makeSimilarChinaNotSupported'));
+  if (isChinaRegion.value && (detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1)) {
+    toast(t('home.unlimitedModeRestricted'));
     return;
   }
   router.push({ path: '/', query: { make: sessionId } });
 }
 
-function goMakeSequel() {
+async function goMakeSimilarVideo() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+  const postId = detail.value.id || '';
+  if (!postId) return;
+
+  isMakeSequelLoading.value = true;
+
+  try {
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Platform': 'web',
+      'ts': ts,
+      'sign': sign,
+    };
+    if (token) {
+      headers['token'] = token;
+    }
+    const detailRes = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        post_id: postId,
+        fromIndexRecommend: { tab: 'hot' },
+      }),
+    }).then(r => r.json());
+
+    if (detailRes.code != 0 && detailRes.code != 200) {
+      toast(detailRes.message || t('fail'));
+      return;
+    }
+
+    const data = detailRes.data.post || detailRes.data;
+    const authorId = detailRes.data.author?.id || data.author_id || '';
+    const uid = localStorage.getItem('uid');
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    const videoDuration = Number(data.duration) || 0;
+
+    localStorage.setItem('makeSimilarVideoData', JSON.stringify({ videoUrl, cover, isNsfw, duration: videoDuration, postId }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make similar video:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSequelLoading.value = false;
+  }
+}
+
+async function goMakeSequel() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   const videoUrl = detail.value.videoUrl || '';
   if (!videoUrl) return;
   const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
   if (isChinaRegion.value && isNsfw) {
-    toast(t('home.makeSimilarChinaNotSupported'));
+    toast(t('home.unlimitedModeRestricted'));
     return;
   }
-  const postId = detail.value.id || '';
-  const cover = detail.value.cover || '';
-  localStorage.setItem('makeSequelData', JSON.stringify({
-    videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw
-  }));
-  router.push({ path: '/' });
+
+  isMakeSequelLoading.value = true;
+
+  try {
+    const postId = detail.value.id || '';
+    const cover = detail.value.cover || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Platform': 'web',
+      'ts': ts,
+      'sign': sign,
+    };
+    if (token) {
+      headers['token'] = token;
+    }
+    const detailRes = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        post_id: postId,
+        fromIndexRecommend: { tab: 'hot' },
+      }),
+    }).then(r => r.json());
+
+    if (detailRes.code != 0 && detailRes.code != 200) {
+      toast(detailRes.message || t('fail'));
+      return;
+    }
+
+    const data = detailRes.data.post || detailRes.data;
+    const authorId = detailRes.data.author?.id || data.author_id || '';
+    const uid = localStorage.getItem('uid');
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    localStorage.setItem('makeSequelData', JSON.stringify({
+      videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw
+    }));
+    router.push({ path: '/' });
+  } catch (error) {
+    console.error('Error fetching post detail for make sequel:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSequelLoading.value = false;
+  }
 }
 
 function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   if (makeSequelAuthorId.value) {
-    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+    router.push(`/subscription-payment?id=${makeSequelAuthorId.value}`);
   }
 }
 
@@ -2306,7 +2434,8 @@ async function fetchDetail(newId: number) {
         book_title: data.book_title || '',
         chapter_index: data.chapter_index || '',
         latest_read_chapter_index: res.data.latest_read_chapter_index || '',
-        session_id: data.session_id || bookSessionId || ''
+        session_id: data.session_id || bookSessionId || '',
+        duration: data.duration || 0
       } as DetailData;
 
       setSeoMeta(
@@ -2406,7 +2535,8 @@ async function fetchDetail(newId: number) {
         book_title: "",
         chapter_index: "",
         latest_read_chapter_index: "",
-        session_id: ''
+        session_id: '',
+        duration: 0
       };
       return;
     }
@@ -2446,7 +2576,8 @@ async function fetchDetail(newId: number) {
       book_title: "",
       chapter_index: "",
       latest_read_chapter_index: "",
-      session_id: ''
+      session_id: '',
+      duration: 0
     };
     likes.value = 0;
     liked.value = false;

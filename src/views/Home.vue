@@ -482,6 +482,26 @@
                         </span>
                       </div>
 
+                      <div v-if="currentVideoMode == 'unlimited'" class="video-selector nsfw-version-selector"
+                        @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false"
+                        :class="{ open: showNsfwVersionDropdown }">
+                        <div class="selector-header">
+                          <span>{{ nsfwVersionOptions.find(opt => opt.value === selectedNsfwVersion)?.label || selectedNsfwVersion }}</span>
+                          <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
+                        </div>
+                        <div class="dropdown" v-if="showNsfwVersionDropdown">
+                          <div
+                            v-for="option in nsfwVersionOptions"
+                            :key="option.value"
+                            class="dropdown-item"
+                            :class="{ active: selectedNsfwVersion == option.value }"
+                            @click.stop="selectedNsfwVersion = option.value; showNsfwVersionDropdown = false"
+                          >
+                            <span>{{ option.label }}</span>
+                          </div>
+                        </div>
+                      </div>
+
                       <!-- Multimodal Selector -->
                       <div class="video-selector" @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
                         <div class="selector-header">
@@ -656,6 +676,7 @@
                     @paste="handlePaste"
                     @focus="handleInputFocus"
                     :data-placeholder="typedPlaceholder"
+                    :data-tab="contentType"
                   ></div>
 
                   <!-- Hidden file input for image upload -->
@@ -1232,7 +1253,11 @@
                       {{ formatDuration(item.duration) }}
                     </div> -->
                     <div class="make-btns-wrap" v-if="(item.session_id && item.type != '4') || item.type == '5'">
-                      <div class="make-similar-btn" v-if="item.type != '4' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
+                      <div class="make-similar-btn" v-if="item.type != '4' && item.type != '5' && item.session_id" @click.stop.prevent="handleMakeSimilar(item)">
+                        <img :src="makeIcon" alt="" class="make-icon" />
+                        <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                      </div>
+                      <div class="make-similar-btn" v-if="item.type == '5' && parseFloat(item.duration) <= 30" @click.stop.prevent="handleMakeSimilarVideo(item)">
                         <img :src="makeIcon" alt="" class="make-icon" />
                         <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                       </div>
@@ -1367,8 +1392,8 @@
 
     <MakeSequelSubscribeModal
       :visible="showMakeSequelSubscribeModal"
-      @cancel="showMakeSequelSubscribeModal = false"
       @go-subscribe="goMakeSequelSubscribe"
+      @close="showMakeSequelSubscribeModal = false"
     />
 
     <UserInfoModal
@@ -1664,6 +1689,12 @@ const getCurrentVideoMode = () => {
   }
 };
 const getCurrentPlaceholder = () => {
+  if (isMakeVideoSequelMode.value) {
+    return t('home.input.placeholderMakeSequel');
+  }
+  if (isMakeVideoSimilarMode.value) {
+    return t('home.input.placeholderMakeSimilar');
+  }
   switch (contentType.value) {
     case 'video': return t('home.input.placeholderVideo');
     case 'comic': return t('home.input.placeholderComic');
@@ -1754,11 +1785,101 @@ const inputHtmlPhoto = ref('');
 
 // Mode states - separate for video, comic, drama and photo
 const currentVideoMode = ref('normal');
+const selectedNsfwVersion = ref('enhanced');
+const showNsfwVersionDropdown = ref(false);
+const nsfwVersionOptions = computed(() => [
+  { value: 'enhanced', label: t('home.nsfwVersion.enhanced') },
+  { value: 'super', label: t('home.nsfwVersion.super') }
+]);
 const currentComicMode = ref('normal');
 const currentDramaMode = ref('normal');
 const currentPhotoMode = ref('normal');
 const enablePhotoOptimizePrompt = ref(false);
 const enableVideoOptimizePrompt = ref(false);
+
+// ---------------------------------------------------------------------------
+// 草稿缓存：小说 / 漫画 / 漫剧 tab 来回切时保留已填内容
+// 只在停留在首页期间有效：tab 来回切、切 NSFW 模式都保留已填的内容。
+// 刷新、关闭页面、跳去别的页面都不保留 —— 组件卸载，这些 ref 跟着一起没。
+// 图片和视频 tab 输入结构更复杂，暂不接入。
+// ---------------------------------------------------------------------------
+type DraftTab = 'novel' | 'comic' | 'drama';
+const DRAFT_TABS: DraftTab[] = ['novel', 'comic', 'drama'];
+
+function isDraftTab(type: string): type is DraftTab {
+  return (DRAFT_TABS as string[]).includes(type);
+}
+
+function syncEditableInputToDraft(type: string) {
+  if (type !== 'comic' && type !== 'drama') return;
+  const el = editableInputRef.value;
+  if (!el) return;
+  if (el.dataset.tab !== type) return;
+  if (type === 'comic') {
+    inputHtmlComic.value = el.innerHTML;
+    inputContentComic.value = el.textContent || '';
+  } else {
+    inputHtmlDrama.value = el.innerHTML;
+    inputContentDrama.value = el.textContent || '';
+  }
+}
+
+function restoreEditableInput(type: string) {
+  nextTick(() => {
+    const el = editableInputRef.value;
+    if (!el) return;
+    if (el.dataset.tab !== type) return;
+
+    if (type === 'comic' || type === 'drama') {
+      el.innerHTML = (type === 'comic' ? inputHtmlComic.value : inputHtmlDrama.value) || '';
+    } else {
+      el.innerHTML = '';
+    }
+
+    previousInputHtml.value = el.innerHTML;
+    isInputEmpty.value = (el.textContent || '').trim() === '';
+    syncStickyInputPreview();
+  });
+}
+
+function clearDraftFor(type: DraftTab) {
+  if (type === 'novel') {
+    novelInput.value = '';
+  } else if (type === 'comic') {
+    selectedCharactersComic.value = [];
+    uploadedImagesComic.value = [];
+    combinedItemsComic.value = [];
+    inputContentComic.value = '';
+    inputHtmlComic.value = '';
+    isInputEmptyComic.value = true;
+  } else {
+    selectedCharactersDrama.value = [];
+    uploadedImagesDrama.value = [];
+    combinedItemsDrama.value = [];
+    inputContentDrama.value = '';
+    inputHtmlDrama.value = '';
+    isInputEmptyDrama.value = true;
+  }
+}
+
+function closeComicInputDropdowns() {
+  showAtDropdown.value = false;
+  atDropdownItems.value = [];
+  runTypewriter();
+}
+
+function closeDramaInputDropdowns() {
+  showAtDropdown.value = false;
+  atDropdownItems.value = [];
+  runTypewriter();
+}
+
+function closeNovelInputDropdowns() {
+  showModeDropdown.value = false;
+  showWordCountDropdown.value = false;
+  showInsertImageDropdown.value = false;
+  runTypewriter();
+}
 
 // Photo settings
 const showPhotoSettings = ref(false);
@@ -2244,10 +2365,19 @@ const isInputFocused = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
+const isMakeSameMode = ref(false);
 const isMakeSimilar = ref(false);
 const makeSimilarSessionId = ref('');
+const originSessionId = ref('');
+const isMakeExtensionMode = ref(false);
+const originPostId = ref('');
+const originSessionIdForExtension = ref('');
+const originVideoUrlForTail = ref('');
+const isMakeVideoSimilarMode = ref(false);
+const isMakeVideoSequelMode = ref(false);
 const makeSequelPostId = ref('');
 const isMakeSequelLoading = ref(false);
+const isMakeSimilarVideoLoading = ref(false);
 const showMakeSequelSubscribeModal = ref(false);
 const makeSequelAuthorId = ref('');
 const justSwitchedTab = ref(false);
@@ -2526,8 +2656,8 @@ const navigateToNovelGenerate = async () => {
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
+      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -2544,6 +2674,7 @@ const navigateToNovelGenerate = async () => {
       const data = await response.json();
       if (data.code == 200 || data.code == 0) {
         trackContentPublished(sessionId);
+        clearDraftFor('novel');
         router.push(`/novel/${sessionId}`);
       } else {
         toast(data.message);
@@ -3009,6 +3140,7 @@ const switchVideoMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentVideoMode.value = 'unlimited';
+      selectedNsfwVersion.value = 'enhanced';
       enableVideoOptimizePrompt.value = false;
       resetVideoInputs();
       selectedVideoDuration.value = '30';
@@ -3044,22 +3176,16 @@ const switchNovelMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentNovelMode.value = 'unlimited';
-      showModeDropdown.value = false;
+      closeNovelInputDropdowns();
       selectedInsertImage.value = 4;
-      novelInput.value = '';
-      inputKey.value++;
-      nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentNovelMode.value = 'normal';
-    showModeDropdown.value = false;
+    closeNovelInputDropdowns();
     selectedInsertImage.value = 0;
     showInsertImageDropdown.value = false;
-    novelInput.value = '';
-    inputKey.value++;
-    nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
   }
 };
 
@@ -3078,25 +3204,13 @@ const switchComicMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentComicMode.value = 'unlimited';
-      selectedCharactersComic.value = [];
-      uploadedImagesComic.value = [];
-      combinedItemsComic.value = [];
-      inputContentComic.value = '';
-      inputHtmlComic.value = '';
-      inputKey.value++;
-      nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+      closeComicInputDropdowns();
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentComicMode.value = 'normal';
-    selectedCharactersComic.value = [];
-    uploadedImagesComic.value = [];
-    combinedItemsComic.value = [];
-    inputContentComic.value = '';
-    inputHtmlComic.value = '';
-    inputKey.value++;
-    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+    closeComicInputDropdowns();
   }
 };
 
@@ -3115,25 +3229,13 @@ const switchDramaMode = (mode: string, index: number) => {
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
       currentDramaMode.value = 'unlimited';
-      selectedCharactersDrama.value = [];
-      uploadedImagesDrama.value = [];
-      combinedItemsDrama.value = [];
-      inputContentDrama.value = '';
-      inputHtmlDrama.value = '';
-      inputKey.value++;
-      nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+      closeDramaInputDropdowns();
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
     currentDramaMode.value = 'normal';
-    selectedCharactersDrama.value = [];
-    uploadedImagesDrama.value = [];
-    combinedItemsDrama.value = [];
-    inputContentDrama.value = '';
-    inputHtmlDrama.value = '';
-    inputKey.value++;
-    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+    closeDramaInputDropdowns();
   }
 };
 
@@ -3177,34 +3279,21 @@ const switchPhotoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
+    selectedNsfwVersion.value = 'enhanced';
     enableVideoOptimizePrompt.value = false;
     selectedVideoDuration.value = '30';
     lastValidVideoDuration.value = '30';
     resetVideoInputs();
   } else if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
-    selectedCharactersComic.value = [];
-    uploadedImagesComic.value = [];
-    combinedItemsComic.value = [];
-    inputContentComic.value = '';
-    inputHtmlComic.value = '';
-    inputKey.value++;
-    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+    closeComicInputDropdowns();
   } else if (contentType.value === 'novel') {
     currentNovelMode.value = 'unlimited';
+    closeNovelInputDropdowns();
     selectedInsertImage.value = 4;
-    novelInput.value = '';
-    inputKey.value++;
-    nextTick(() => { isInputEmpty.value = true; runTypewriter(); });
   } else if (contentType.value === 'drama') {
     currentDramaMode.value = 'unlimited';
-    selectedCharactersDrama.value = [];
-    uploadedImagesDrama.value = [];
-    combinedItemsDrama.value = [];
-    inputContentDrama.value = '';
-    inputHtmlDrama.value = '';
-    inputKey.value++;
-    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+    closeDramaInputDropdowns();
   } else if (contentType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';
     enablePhotoOptimizePrompt.value = false;
@@ -3353,34 +3442,22 @@ const selectContentType = (type: string) => {
     router.replace(targetPath);
   }
 
-  // Reset all content and settings when switching content types
+  // 离开当前 tab 前，把富文本框里的内容同步回 ref。
+  // 这一步必须在改 contentType 之前做：切换之后 DOM 还没更新，
+  // 那时读到的还是上一个 tab 的输入框。
+  if (isDraftTab(contentType.value)) {
+    syncEditableInputToDraft(contentType.value);
+  }
+
+  // 小说 / 漫画 / 漫剧的输入、图片、选项由草稿缓存保留，这里不再清空。
+  // 视频和图片 tab 维持原来的「切换即重置」行为。
+
   // Clear video-related content
   selectedCharactersVideo.value = [];
   uploadedImagesVideo.value = [];
   combinedItemsVideo.value = [];
   inputContentVideo.value = '';
   inputHtmlVideo.value = '';
-
-  // Clear comic-related content
-  selectedCharactersComic.value = [];
-  uploadedImagesComic.value = [];
-  combinedItemsComic.value = [];
-  inputContentComic.value = '';
-  inputHtmlComic.value = '';
-
-  // Clear novel-related content
-  novelInput.value = '';
-
-  // Reset novel settings to default
-  selectedWordCount.value = '30K';
-  currentStyleName.value = '';
-
-  // Clear drama-related content
-  selectedCharactersDrama.value = [];
-  uploadedImagesDrama.value = [];
-  combinedItemsDrama.value = [];
-  inputContentDrama.value = '';
-  inputHtmlDrama.value = '';
 
   // Clear photo-related content
   uploadedImagesPhoto.value = [];
@@ -3390,13 +3467,21 @@ const selectContentType = (type: string) => {
 
   // Reset modes to default
   currentVideoMode.value = 'normal';
-  currentComicMode.value = 'normal';
-  currentDramaMode.value = 'normal';
-  currentNovelMode.value = contentSwitch.mode === 2 ? 'unlimited' : 'normal';
+  selectedNsfwVersion.value = 'enhanced';
   currentPhotoMode.value = 'normal';
-  selectedInsertImage.value = contentSwitch.mode === 2 ? 4 : 0;
   selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
   makeSequelPostId.value = '';
+  isMakeSameMode.value = false;
+  isMakeSimilar.value = false;
+  makeSimilarSessionId.value = '';
+  originSessionId.value = '';
+  originPostId.value = '';
+  isMakeExtensionMode.value = false;
+  isMakeVideoSimilarMode.value = false;
+  isMakeVideoSequelMode.value = false;
+  originSessionIdForExtension.value = '';
+  originVideoUrlForTail.value = '';
+  previousInputHtml.value = '';
 
   // Reset video settings to default
   selectedVideoQuality.value = '720P';
@@ -3416,16 +3501,8 @@ const selectContentType = (type: string) => {
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
 
-  // Clear input area
-  nextTick(() => {
-    if (selectedVideoMultimodal.value === 'startEndFrames') {
-      novelInput.value = '';
-      isInputEmpty.value = true;
-    } else if (editableInputRef.value) {
-      editableInputRef.value.innerHTML = '';
-      isInputEmpty.value = true;
-    }
-  });
+  // 回填新 tab 的富文本内容（非草稿 tab 仍然清空）
+  restoreEditableInput(type);
 };
 
 const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
@@ -3579,8 +3656,10 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
   }
 
   isMakeSimilarLoading.value = true;
+  isMakeSameMode.value = true;
   isMakeSimilar.value = true;
   makeSimilarSessionId.value = sessionId;
+  originSessionId.value = sessionId;
 
   if (!fromUrl && route.query.make) {
     const { make, ...rest } = route.query;
@@ -3628,6 +3707,9 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
 
     if (targetContentType === 'video') {
       currentVideoMode.value = safeMode;
+      if (safeMode === 'unlimited') {
+        selectedNsfwVersion.value = userSelected.video_nsfw_model_type === 'super' ? 'super' : 'enhanced';
+      }
       if (userSelected.ratio) selectedVideoRatio.value = userSelected.ratio;
       if (userSelected.simple_video_resolution) selectedVideoQuality.value = userSelected.simple_video_resolution.toUpperCase();
       if (userSelected.simple_video_duration) selectedVideoDuration.value = userSelected.simple_video_duration.toString();
@@ -3827,34 +3909,49 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
   }
 };
 
-const handleMakeSequelFromList = async (item: any) => {
+const extractVideoTail = async (videoUrl: string): Promise<string> => {
+  try {
+    const res = await api.extractVideoTail({ video_url: videoUrl, tail_seconds: 30 }) as any;
+    if ((res.code === 0 || res.code === 200) && res.data?.video_url) {
+      return res.data.video_url;
+    }
+  } catch (e) {
+    console.error('Error extracting video tail:', e);
+  }
+  return videoUrl;
+};
+
+const handleMakeSimilarVideo = async (item: any) => {
   if (!checkLogin()) return;
-  if (isMakeSequelLoading.value) return;
-  isMakeSequelLoading.value = true;
+  if (isMakeSimilarVideoLoading.value) return;
+  isMakeSimilarVideoLoading.value = true;
 
   try {
     const token = localStorage.getItem('token') || '';
     const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Platform': 'web',
+      'ts': ts,
+      'sign': sign,
+    };
     if (token) {
       headers['token'] = token;
     }
-    headers['Platform'] = 'web';
-    headers['ts'] = ts;
-    headers['sign'] = sign;
     const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ post_id: item.id, fromIndexRecommend: { tab: 'hot' } }),
     }).then(r => r.json());
 
-    if (res.code !== 0 && res.code !== 200) {
-      toast(t('fail'));
+    if (res.code != 0 && res.code != 200) {
+      toast(res.message || t('fail'));
       return;
     }
 
     const data = res.data.post || res.data;
     const authorId = res.data.author?.id || data.author_id || '';
+    const uid = localStorage.getItem('uid');
     const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
@@ -3865,10 +3962,107 @@ const handleMakeSequelFromList = async (item: any) => {
     const videoUrl = data.video_url || '';
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
-    localStorage.setItem('makeSequelData', JSON.stringify({
-      videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || item.id, isNsfw
-    }));
-    router.push({ path: '/' });
+    const videoDuration = Number(data.duration) || 0;
+
+    await getCountry();
+
+    localStorage.removeItem('makeSimilarVideoData');
+
+    const isUnlimited = isNsfw && userRegion.value;
+
+    isMakeVideoSimilarMode.value = true;
+    isMakeSameMode.value = true;
+    originPostId.value = String(data.id || item.id);
+
+    contentType.value = 'video';
+    setSeoMeta('video');
+
+    if (isUnlimited) {
+      currentVideoMode.value = 'unlimited';
+      selectedNsfwVersion.value = 'super';
+    } else {
+      currentVideoMode.value = 'normal';
+    }
+
+    selectedVideoMultimodal.value = 'videoModify';
+    enableVideoOptimizePrompt.value = false;
+
+    uploadedVideo.value = videoUrl;
+    uploadedVideoCover.value = cover || null;
+    uploadedVideoDuration.value = videoDuration;
+
+    uploadedImagesVideo.value = [];
+    selectedCharactersVideo.value = [];
+    combinedItemsVideo.value = [];
+
+    nextTick(() => {
+      if (editableInputRef.value) {
+        editableInputRef.value.innerHTML = '';
+        isInputEmpty.value = true;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        if (isStickyCollapsed.value) {
+          stickyInputExpanded.value = true;
+        }
+        return;
+      }
+      if (editableInputRef.value) {
+        editableInputRef.value.focus();
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching post detail for make similar video:', error);
+    toast(t('fail'));
+  } finally {
+    isMakeSimilarVideoLoading.value = false;
+  }
+};
+
+const handleMakeSequelFromList = async (item: any) => {
+  if (!checkLogin()) return;
+  if (isMakeSequelLoading.value) return;
+  isMakeSequelLoading.value = true;
+
+  try {
+    const token = localStorage.getItem('token') || '';
+    const { ts, sign } = (window as any).AntiCrawler.generateAuthParams('');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Platform': 'web',
+      'ts': ts,
+      'sign': sign,
+    };
+    if (token) {
+      headers['token'] = token;
+    }
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ post_id: item.id, fromIndexRecommend: { tab: 'hot' } }),
+    }).then(r => r.json());
+
+    if (res.code != 0 && res.code != 200) {
+      toast(res.message || t('fail'));
+      return;
+    }
+
+    const data = res.data.post || res.data;
+    const authorId = res.data.author?.id || data.author_id || '';
+    const uid = localStorage.getItem('uid');
+    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    if (needsSubscription) {
+      makeSequelAuthorId.value = String(authorId);
+      showMakeSequelSubscribeModal.value = true;
+      return;
+    }
+
+    const videoUrl = data.video_url || '';
+    const cover = data.cover || '';
+    const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
+    await getCountry();
+    await handleMakeSequelFromCache(videoUrl, cover, data.type, data.id || item.id, isNsfw);
   } catch (error) {
     console.error('Error fetching post detail for make sequel:', error);
     toast(t('fail'));
@@ -3878,58 +4072,65 @@ const handleMakeSequelFromList = async (item: any) => {
 };
 
 const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: string, postId: string, isNsfw: boolean) => {
-  if (hasFetchedRegion.value && !userRegion.value && isNsfw) {
-    toast(t('home.makeSimilarChinaNotSupported'));
-    return;
-  }
+  const isUnlimited = isNsfw && userRegion.value;
 
-  const isUnlimited = isNsfw;
-  const promptText = t('home.makeSequelPrompt');
-
-  localStorage.removeItem('makeSequelData');
+  isMakeExtensionMode.value = true;
+  isMakeVideoSequelMode.value = true;
+  originPostId.value = postId || '';
+  originVideoUrlForTail.value = videoUrl;
+  originSessionIdForExtension.value = postId || '';
 
   contentType.value = 'video';
   setSeoMeta('video');
 
-  currentVideoMode.value = isUnlimited ? 'unlimited' : 'normal';
+  if (isUnlimited) {
+    currentVideoMode.value = 'unlimited';
+    selectedNsfwVersion.value = 'super';
+  } else {
+    currentVideoMode.value = 'normal';
+  }
+
   selectedVideoMultimodal.value = 'videoExtend';
-  makeSequelPostId.value = postId || '';
-  selectedVideoRatio.value = '9:16';
-    selectedVideoQuality.value = '720P';
-    selectedVideoDuration.value = '30';
   enableVideoOptimizePrompt.value = false;
 
   uploadedVideo.value = videoUrl;
   uploadedVideoCover.value = cover || null;
+  uploadedVideoDuration.value = 0;
 
   uploadedImagesVideo.value = [];
   selectedCharactersVideo.value = [];
   combinedItemsVideo.value = [];
 
+  localStorage.removeItem('makeSequelData');
+
   nextTick(() => {
-    nextTick(() => {
-      if (editableInputRef.value) {
-        while (editableInputRef.value.firstChild) {
-          editableInputRef.value.removeChild(editableInputRef.value.firstChild);
-        }
-        editableInputRef.value.innerHTML = promptText;
-        isInputEmpty.value = false;
-        editableInputRef.value.focus();
-        const range = document.createRange();
-        range.selectNodeContents(editableInputRef.value);
-        range.collapse(false);
-        const sel = window.getSelection();
-        sel?.removeAllRanges();
-        sel?.addRange(range);
+    if (editableInputRef.value) {
+      editableInputRef.value.innerHTML = '';
+      isInputEmpty.value = true;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (isStickyCollapsed.value) {
+        stickyInputExpanded.value = true;
       }
-    });
+      return;
+    }
+    if (editableInputRef.value) {
+      editableInputRef.value.focus();
+    }
   });
 };
 
 function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
   if (makeSequelAuthorId.value) {
-    window.location.href = `/user-subscription?uid=${makeSequelAuthorId.value}`;
+    router.push(`/subscription-payment?id=${makeSequelAuthorId.value}`);
   }
 }
 
@@ -4251,7 +4452,22 @@ const doGenerateVideo = async () => {
     let reference_videos: any[] = [];
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       if (uploadedVideo.value) {
-        reference_videos = [uploadedVideo.value];
+        let effectiveVideoUrl = uploadedVideo.value;
+        if (isMakeExtensionMode.value && originVideoUrlForTail.value) {
+          try {
+            const tailUrl = await extractVideoTail(originVideoUrlForTail.value);
+            if (tailUrl) {
+              effectiveVideoUrl = tailUrl;
+              uploadedVideo.value = tailUrl;
+            }
+          } catch (e) {
+            console.error('Error extracting video tail:', e);
+            toast(t('fail'));
+            isGeneratingVideo.value = false;
+            return;
+          }
+        }
+        reference_videos = [effectiveVideoUrl];
       }
       reference_videos = reference_videos.concat(combinedItemsVideo.value.filter(item => item.type === 'video').map(item => item.url || item.videoUrl || item.image));
     } else {
@@ -4263,6 +4479,7 @@ const doGenerateVideo = async () => {
       language: locale.value == 'zh' ? 'cn' : locale.value,
       story_type: "simple_video",
       story_mode: currentVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
+      ...(currentVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
       story_style: "",
       reference_images: reference_images,
       reference_videos: reference_videos,
@@ -4278,8 +4495,8 @@ const doGenerateVideo = async () => {
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (currentVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || currentVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
+      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4305,8 +4522,8 @@ const doGenerateVideo = async () => {
     const response = await api.generateSingleVideo({
       session_id: sessionId,
       topic: processedContent,
-      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {})
+      ...(isMakeSameMode.value && !isMakeVideoSimilarMode.value ? { origin_session_id: originSessionId.value } : {}),
+      ...(isMakeExtensionMode.value && !isMakeVideoSequelMode.value ? { origin_session_id: originSessionIdForExtension.value } : {})
     }) as any;
 
     if (response.code == 200) {
@@ -4460,8 +4677,8 @@ const doGenerateComic = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
+      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4481,16 +4698,9 @@ const doGenerateComic = async () => {
         // window.open(`/tools/comic/${sessionId}`, '_blank');
         window.location.href = `/tools/comic/${sessionId}`;
 
-        if (editableInputRef.value) {
-          editableInputRef.value.textContent = '';
-          isInputEmptyComic.value = true;
-          isInputEmpty.value = true;
-          selectedCharactersComic.value = [];
-          uploadedImagesComic.value = [];
-          combinedItemsComic.value = [];
-          inputContentComic.value = '';
-          inputHtmlComic.value = '';
-        }
+        clearDraftFor('comic');
+        inputKey.value++;
+        nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
       } else {
         toast(data.message)
       }
@@ -4618,8 +4828,8 @@ const doGenerateDrama = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
+      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4638,16 +4848,9 @@ const doGenerateDrama = async () => {
         trackContentPublished(sessionId);
         window.location.href = `/tools/video/${sessionId}`;
 
-        if (editableInputRef.value) {
-          editableInputRef.value.textContent = '';
-          isInputEmptyDrama.value = true;
-          isInputEmpty.value = true;
-          selectedCharactersDrama.value = [];
-          uploadedImagesDrama.value = [];
-          combinedItemsDrama.value = [];
-          inputContentDrama.value = '';
-          inputHtmlDrama.value = '';
-        }
+        clearDraftFor('drama');
+        inputKey.value++;
+        nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
       } else {
         toast(data.message);
       }
@@ -4783,8 +4986,8 @@ const doGeneratePhoto = async () => {
       },
       addition_characters: [],
       enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
-      ...(isMakeSimilar.value ? { is_make_same: 1, origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {}),
+      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4813,8 +5016,8 @@ const doGeneratePhoto = async () => {
     const params = {
       session_id: sessionId,
       topic: contentWithRefTags,
-      ...(isMakeSimilar.value ? { origin_session_id: makeSimilarSessionId.value } : {}),
-      ...(makeSequelPostId.value ? { origin_session_id: makeSequelPostId.value } : {})
+      ...(isMakeSameMode.value && !isMakeVideoSimilarMode.value ? { origin_session_id: originSessionId.value } : {}),
+      ...(isMakeExtensionMode.value && !isMakeVideoSequelMode.value ? { origin_session_id: originSessionIdForExtension.value } : {})
     };
 
     const response = await api.generateSinglePhoto(params) as any;
@@ -7167,6 +7370,62 @@ onMounted(async () => {
       }
     } catch (e) {
       localStorage.removeItem('makeVideoData');
+    }
+  }
+
+  const makeSimilarVideoData = localStorage.getItem('makeSimilarVideoData');
+  if (makeSimilarVideoData) {
+    await getCountry();
+    try {
+      const { videoUrl, cover, isNsfw, duration: similarVideoDuration, postId: similarPostId } = JSON.parse(makeSimilarVideoData);
+      localStorage.removeItem('makeSimilarVideoData');
+      if (videoUrl) {
+        const isUnlimited = isNsfw && userRegion.value;
+
+        isMakeVideoSimilarMode.value = true;
+        isMakeSameMode.value = true;
+        originPostId.value = similarPostId || '';
+
+        contentType.value = 'video';
+        setSeoMeta('video');
+
+        if (isUnlimited) {
+          currentVideoMode.value = 'unlimited';
+          selectedNsfwVersion.value = 'super';
+        } else {
+          currentVideoMode.value = 'normal';
+        }
+
+        selectedVideoMultimodal.value = 'videoModify';
+        enableVideoOptimizePrompt.value = false;
+
+        uploadedVideo.value = videoUrl;
+        uploadedVideoCover.value = cover || null;
+        uploadedVideoDuration.value = Number(similarVideoDuration) || 0;
+
+        uploadedImagesVideo.value = [];
+        selectedCharactersVideo.value = [];
+        combinedItemsVideo.value = [];
+
+        nextTick(() => {
+          if (editableInputRef.value) {
+            editableInputRef.value.innerHTML = '';
+            isInputEmpty.value = true;
+          }
+          const token = localStorage.getItem('token');
+          if (!token) {
+            if (isStickyCollapsed.value) {
+              stickyInputExpanded.value = true;
+            }
+            return;
+          }
+          if (editableInputRef.value) {
+            editableInputRef.value.focus();
+          }
+        });
+      }
+    } catch (e) {
+      localStorage.removeItem('makeSimilarVideoData');
     }
   }
 

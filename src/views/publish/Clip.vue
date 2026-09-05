@@ -366,11 +366,12 @@
     />
 
     <!-- Cover Selection Modal -->
-    <SetImageCoverModal
+    <SetCoverModal
       v-model:visible="showCoverModal"
-      :images="coverImages"
-      :cover-image="coverUrl"
-      :hide-strip="true"
+      :video-file="videoFile"
+      :video-url="videoUrl"
+      :cover-url="coverUrl"
+      :extract-all-frames="true"
       @confirm="onCoverConfirmed"
     />
 
@@ -408,7 +409,7 @@ import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
-import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
+import SetCoverModal from "@/components/SetCoverModal.vue";
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
@@ -509,6 +510,7 @@ watch(uploadOption, (newOption) => {
     selectedProjectId.value = "";
     coverUrl.value = "";
     videoUrl.value = "";
+    videoFile.value = null;
   }
 });
 
@@ -527,7 +529,9 @@ const pageSize = 10;
 // Full publish form state
 const showFullContent = ref(false);
 const videoUrl = ref("");
+const videoFile = ref<File | null>(null);
 const coverUrl = ref("");
+const videoDuration = ref<number>(0);
 const coverImages = ref<string[]>([]);
 const showCoverModal = ref(false);
 const sessionId = ref("");
@@ -1608,6 +1612,7 @@ function onReuploadPicked(e: Event) {
   target.value = "";
   showFullContent.value = false;
   videoUrl.value = "";
+  videoFile.value = null;
   coverUrl.value = "";
 }
 
@@ -1640,6 +1645,7 @@ async function handleVideoFile(file: File) {
     return;
   }
 
+  videoFile.value = file;
   isUpload.value = true;
 
   try {
@@ -1655,6 +1661,7 @@ async function handleVideoFile(file: File) {
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
           resolve(false);
         } else {
+          videoDuration.value = Math.round(video.duration * 100) / 100;
           resolve(true);
         }
       };
@@ -1876,6 +1883,7 @@ async function onSubmit() {
       access_rights: accessRights.value,
       video_url: videoUrl.value,
       language: form.value.language,
+      duration: videoDuration.value || 0,
       ...(sessionId.value ? { session_id: sessionId.value } : {}),
       ...(isEditMode && { post_id: editPostId.value }),
     };
@@ -1994,6 +2002,7 @@ onMounted(async () => {
         if (post.language) form.value.language = post.language;
         if (post.cover) coverUrl.value = post.cover;
         if (post.video_url) videoUrl.value = post.video_url;
+        if (post.duration) videoDuration.value = Number(post.duration) || 0;
         if (post.session_id) sessionId.value = post.session_id;
         if (videoUrl.value && sessionId.value) {
           try {
@@ -2030,6 +2039,10 @@ onMounted(async () => {
 
   if (sid) {
     sessionId.value = sid;
+    const durationParam = route.query.duration as string;
+    if (durationParam) {
+      videoDuration.value = parseFloat(durationParam);
+    }
     try {
       const detailRes = await api.detailProject(sid) as any;
       if (detailRes.code === 200 && detailRes.data) {
@@ -2040,6 +2053,9 @@ onMounted(async () => {
         const firstVideo = finalVideos[0] || ra.final_video_output || {};
         const vUrl = firstVideo.video_url || ra.final_video || detailRes.data.video_url || '';
         const vCover = firstVideo.video_cover_url || ra.cover_url || ra.cover || ra.final_video_cover || detailRes.data.cover || '';
+        if (firstVideo.duration && !durationParam) {
+          videoDuration.value = parseFloat(firstVideo.duration);
+        }
         if (vUrl) {
           videoUrl.value = vUrl;
           coverUrl.value = vCover;

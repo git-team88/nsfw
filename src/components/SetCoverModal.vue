@@ -47,20 +47,17 @@
 
             <div class="timeline-box" ref="timelineRef">
               <div class="frames-strip">
-                <!-- Skeleton loading for frames -->
-                <div v-if="isLoadingFrames" class="frame-skeleton-container">
-                  <div v-if="coverUrl" class="frame-skeleton cover-skeleton"></div>
-                  <div v-for="i in estimatedFrameCount" :key="'skeleton-' + i" class="frame-skeleton"></div>
-                </div>
-                <!-- Actual frames -->
-                <div class="frames-list" v-else>
+                <div class="frames-list">
                   <div
                     v-for="(frame, index) in frames"
-                    :key="index"
+                    :key="'frame-' + index"
                     class="frame-cell"
                     @click="onFrameClick(index)"
                   >
                     <img :src="frame" alt="" />
+                  </div>
+                  <div v-if="isLoadingFrames" class="frame-skeleton-container">
+                    <div v-for="i in remainingFrameCount" :key="'skeleton-' + i" class="frame-skeleton"></div>
                   </div>
                 </div>
               </div>
@@ -171,6 +168,12 @@ const isUploading = ref(false);
 const isLoadingFrames = ref(false);
 const estimatedFrameCount = ref(8);
 
+const remainingFrameCount = computed(() => {
+  const total = estimatedFrameCount.value;
+  const loaded = frames.value.length;
+  return Math.max(0, total - loaded);
+});
+
 function getCropDimensions() {
   return {
     width: 150,
@@ -241,70 +244,95 @@ async function generateFrames() {
   isLoadingFrames.value = true;
 
   const video = document.createElement("video");
-
-  if (props.videoFile) {
-    video.src = URL.createObjectURL(props.videoFile);
-  } else if (props.videoUrl) {
-    video.src = props.videoUrl;
-  }
-
   video.muted = true;
-  video.crossOrigin = "anonymous";
 
-  await new Promise((resolve) => {
-    video.onloadedmetadata = () => {
-      resolve(true);
-    };
-    video.onerror = () => {
-      console.log("Error loading video for frame generation");
-      resolve(false);
-    };
-  });
+  let objectUrlToRevoke = "";
 
-  const duration = video.duration;
-  if (!duration) {
-    isLoadingFrames.value = false;
-    return;
-  }
-
-  const count = props.extractAllFrames ? Math.floor(duration) : 8;
-  estimatedFrameCount.value = count;
-  const interval = duration / count;
-
-  for (let i = 0; i < count; i++) {
-    video.currentTime = i * interval + 0.1; // Add small offset
-    await new Promise((r) => (video.onseeked = r));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const data = canvas.toDataURL("image/jpeg", 0.6); // Lower quality for thumbnails
-    frames.value.push(data);
-  }
-
-  if (frames.value.length > 0) {
-    if (!selectedFrame.value) {
-      selectedFrame.value = frames.value[0];
-      dragPos.value = 0;
-      await detectOrientation(selectedFrame.value);
-    } else if (props.coverUrl) {
-      const matchIndex = frames.value.findIndex(f => f === selectedFrame.value);
-      if (matchIndex >= 0) {
-        const frameWidth = 45;
-        dragPos.value = (matchIndex + 0.5) * frameWidth;
-      } else {
-        dragPos.value = 0;
+  try {
+    if (props.videoFile) {
+      video.src = URL.createObjectURL(props.videoFile);
+      objectUrlToRevoke = video.src;
+    } else if (props.videoUrl) {
+      try {
+        const resp = await fetch(props.videoUrl, { mode: "cors" });
+        const blob = await resp.blob();
+        video.src = URL.createObjectURL(blob);
+        objectUrlToRevoke = video.src;
+      } catch {
+        video.crossOrigin = "anonymous";
+        video.src = props.videoUrl;
       }
     }
-  }
 
-  if (props.videoFile) {
-    URL.revokeObjectURL(video.src);
-  }
+    const loaded = await new Promise<boolean>((resolve) => {
+      const timeout = setTimeout(() => resolve(false), 10000);
+      video.onloadedmetadata = () => {
+        clearTimeout(timeout);
+        resolve(true);
+      };
+      video.onerror = () => {
+        clearTimeout(timeout);
+        console.log("Error loading video for frame generation");
+        resolve(false);
+      };
+    });
 
-  isLoadingFrames.value = false;
+    const duration = video.duration;
+    if (!loaded || !duration) {
+      isLoadingFrames.value = false;
+      if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+      return;
+    }
+
+    const count = props.extractAllFrames ? Math.floor(duration) : 8;
+    estimatedFrameCount.value = count;
+    const interval = duration / count;
+
+    for (let i = 0; i < count; i++) {
+      video.currentTime = i * interval + 0.1;
+      await new Promise<void>((resolve) => {
+        const seekTimeout = setTimeout(() => resolve(), 3000);
+        video.onseeked = () => {
+          clearTimeout(seekTimeout);
+          resolve();
+        };
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      try {
+        const data = canvas.toDataURL("image/jpeg", 0.6);
+        frames.value.push(data);
+        if (frames.value.length === 1 && !selectedFrame.value) {
+          selectedFrame.value = data;
+          dragPos.value = 0;
+          detectOrientation(data);
+        }
+      } catch {
+        console.log("Canvas tainted. skipping frame", i);
+      }
+    }
+
+    if (frames.value.length > 0 && selectedFrame.value) {
+      if (props.coverUrl && selectedFrame.value === props.coverUrl) {
+        const matchIndex = frames.value.findIndex(f => f === selectedFrame.value);
+        if (matchIndex >= 0) {
+          const frameWidth = 45;
+          dragPos.value = (matchIndex + 0.5) * frameWidth;
+        } else {
+          dragPos.value = 0;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("generateFrames error:", err);
+  } finally {
+    if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+    isLoadingFrames.value = false;
+  }
 }
 
 // Drag Logic
@@ -839,7 +867,6 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
 
       .frame-skeleton-container {
         display: flex;
-        min-width: 100%;
         height: 100%;
       }
 
