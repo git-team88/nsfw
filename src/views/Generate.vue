@@ -1264,7 +1264,8 @@ const getPhotoMaxInputLimit = (): number => {
 };
 
 const getVideoMaxInputLimit = (): number => {
-  return currentVideoMode.value === 'normal' ? 1000 : 20000;
+  if (currentVideoMode.value === 'normal') return 1000;
+  return selectedNsfwVersion.value === 'super' ? 5000 : 20000;
 };
 
 const getPhotoInputContent = () => {
