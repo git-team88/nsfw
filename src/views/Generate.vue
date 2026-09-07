@@ -784,7 +784,7 @@
                       :key="option.value"
                       class="dropdown-item"
                       :class="{ active: selectedNsfwVersion == option.value }"
-                      @click.stop="selectedNsfwVersion = option.value; showNsfwVersionDropdown = false"
+                      @click.stop="selectNsfwVersion(option.value)"
                     >
                       <span>{{ option.label }}</span>
                     </div>
@@ -860,7 +860,7 @@
                         </div>
                         <input
                           type="range"
-                          :min="currentVideoMode === 'unlimited' ? 2 : 4"
+                          :min="videoLimitMode == 'unlimited' ? 2 : 4"
                           :max="30"
                           step="1"
                           :value="selectedVideoDuration"
@@ -1037,9 +1037,9 @@ const selectedNsfwVersion = ref('enhanced');
 // 由后端裁掉，时长也按裁剪后算 —— 否则一段 15.9s 的视频会先被
 // 「总时长不超过 15s」拦下来，根本走不到裁剪那一步。
 // 视频 tab 的限制档位：
-// 无限制模式下分两个版本 —— 加强版(enhanced) 按无限制的图片 / 视频时长限制走，
-// 超级版(super) 按普通模式的限制走。普通模式自然还是普通。
-// 覆盖校验、可选项、以及跟时长规则配套的计费与提交时长；
+// 无限制模式下分两个版本 —— 加强版(enhanced) 按无限制走，超级版(super) 按普通模式走。
+// 覆盖上传校验（文件大小 / 数量 / 尺寸 / 素材时长）和时长规则（生成时长下限与滑块、
+// 多模态「30 - 已上传总时长」的预算、算力估算里累加的时长、提交的 simple_video_duration）。
 // 每秒单价、story_mode / nsfw_version、回显仍然按真实的 effectiveVideoMode。
 const videoLimitMode = computed(() =>
   effectiveVideoMode.value === 'unlimited' && selectedNsfwVersion.value !== 'super' ? 'unlimited' : 'normal'
@@ -1047,6 +1047,7 @@ const videoLimitMode = computed(() =>
 
 const refVideoMaxSeconds = computed(() => (videoLimitMode.value === 'unlimited' ? 15 : 30));
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
+
 const showNsfwVersionDropdown = ref(false);
 const nsfwVersionOptions = computed(() => [
   { value: 'enhanced', label: t('home.nsfwVersion.enhanced') },
@@ -3597,6 +3598,35 @@ const selectVideoMultimodal = (value: string) => {
 
   selectedVideoQuality.value = '720P';
   selectedVideoRatio.value = '9:16';
+  selectedVideoDuration.value = '30';
+  lastValidVideoDuration.value = '30';
+};
+
+// 切换 NSFW 版本。两个版本的参考文件限制不一样（加强版更严：图片 20MB/10 张、
+// 视频 100MB、单个参考视频 15s、多模态总时长 15s；超级版按普通模式走），
+// 已经填的内容换个版本很可能就超标了，所以切换时直接清空重来。
+const selectNsfwVersion = (version: string) => {
+  showNsfwVersionDropdown.value = false;
+  if (selectedNsfwVersion.value === version) return;
+
+  selectedNsfwVersion.value = version;
+
+  clearGenerateFileInputs();
+  videoInput.value = '';
+  startFrameImage.value = '';
+  endFrameImage.value = '';
+  uploadedVideo.value = '';
+  uploadedVideoCover.value = '';
+  uploadedVideoDuration.value = 0;
+  uploadedVideoRefs.value = [];
+  previousVideoInputHtml.value = '';
+  if (videoEditableInputRef.value) {
+    videoEditableInputRef.value.innerHTML = '';
+  }
+  startVideoTypewriter();
+
+  // 内容已经清空，生成时长也回到默认值（最大 30s）。
+  // 两个版本的下限不一样（超级版 4s、加强版 2s），直接给最大值就不用管下限了。
   selectedVideoDuration.value = '30';
   lastValidVideoDuration.value = '30';
 };
