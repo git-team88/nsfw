@@ -1878,7 +1878,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       placeholderMakeSimilar: "Replace characters or modify the plot to make a similar video",
       placeholderMakeSequel: "Describe the subsequent plot to make a sequel",
       placeholderMakeVideo: "Describe the video scene, generate a video based on the reference image",
-      placeholderMakeSimilarVideo: "Replace characters in the original video to make a similar video"
+      placeholderMakeSimilarVideo: "Replace characters in the original video to make a similar video; or freely modify the original video plot to generate a video you like"
     },
     img: 'Image',
     unreferencedFiles: {

@@ -1704,7 +1704,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       placeholderMakeSimilar: "キャラクターを替えるかプロットを修正して同款を作る",
       placeholderMakeSequel: "続きのプロットを描写して続編を作る",
       placeholderMakeVideo: "動画のシーンを描写し、参考画像から動画を生成",
-      placeholderMakeSimilarVideo: "元動画のキャラクターを替えて同款動画を作る"
+      placeholderMakeSimilarVideo: "元動画のキャラクターを替えて同款動画を作る；または元動画のストーリーを自由に変更して好きな動画を生成"
     },
     img: '画像',
     unreferencedFiles: {

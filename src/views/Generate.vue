@@ -278,7 +278,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? (record.user_selected?.video_nsfw_model_type === 'super' ? t('home.nsfwVersion.super') : t('home.nsfwVersion.enhanced')) : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}{{ record.user_selected.story_mode == 'nsfw' ? ' · ' + (record.user_selected?.video_nsfw_model_type === 'super' ? t('home.nsfwVersion.super') : t('home.nsfwVersion.enhanced')) : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
@@ -5527,7 +5527,10 @@ const regenerateRecord = async (record: any) => {
       uploadedVideo.value = '';
       uploadedVideoCover.value = '';
 
-      const videoItem = list.find((item: any) => item.type === 'video');
+      // 主视频固定是 others.list 里 id 为 uploaded-video 的那条（提交时 prepend 进去的），
+      // 它自己带着 cover；没有这条才退回第一条 type 为 video 的。
+      const videoItem = list.find((item: any) => item.id === 'uploaded-video')
+        || list.find((item: any) => item.type === 'video');
       if (videoItem) {
         const videoUrl = videoItem.image || videoItem.url || '';
         if (videoUrl) {
@@ -5541,13 +5544,27 @@ const regenerateRecord = async (record: any) => {
         uploadedVideo.value = typeof refVideo === 'string' ? refVideo : refVideo.url;
       }
 
-      const refImages = userSelected.reference_images || [];
-      const coverRef = refImages.find((i: any) => typeof i === 'object' && i.type === 'video_cover');
-      const coverStr = refImages.find((i: any) => typeof i === 'string' && !i.match(/\.(mp4|mov|avi|webm)/i));
-      if (coverRef) {
-        uploadedVideoCover.value = coverRef.url;
-      } else if (coverStr) {
-        uploadedVideoCover.value = coverStr;
+      // 封面只能从「视频自己」身上取：先用 others.list 里那条视频的 cover（上面已取），
+      // 取不到就找 reference_videos 里对应那条的 cover —— 提交时封面正是存在那儿
+      // （referenceVideosForDisplay = [{ url, cover }]）。
+      //
+      // 不能从 reference_images 里猜：提交时那个数组只放用户的参考图
+      // （reference_images = uploadedVideoRefs.filter(type === 'image').map(ref => ref.image)），
+      // 原来「取第一个不像视频文件的字符串」等于把用户的第一张参考图当成了视频封面；
+      // 而且它是无条件覆盖，连上面取对的 cover 也一起冲掉了。
+      if (!uploadedVideoCover.value) {
+        const coverFromRefVideo = (userSelected.reference_videos || []).find(
+          (v: any) => typeof v === 'object' && v.cover && (!uploadedVideo.value || v.url === uploadedVideo.value)
+        );
+        if (coverFromRefVideo) {
+          uploadedVideoCover.value = coverFromRefVideo.cover;
+        } else {
+          // 兼容早期记录：封面曾经以 { type: 'video_cover' } 的形式放在 reference_images 里
+          const legacyCover = (userSelected.reference_images || []).find(
+            (i: any) => typeof i === 'object' && i.type === 'video_cover'
+          );
+          if (legacyCover) uploadedVideoCover.value = legacyCover.url;
+        }
       }
 
       const filteredList = list.filter((item: any) => item.id !== 'uploaded-video');
@@ -5587,7 +5604,10 @@ const regenerateRecord = async (record: any) => {
 
       let originalVideoUrl = '';
 
-      const videoItem = list.find((item: any) => item.type === 'video');
+      // 主视频固定是 others.list 里 id 为 uploaded-video 的那条（提交时 prepend 进去的），
+      // 它自己带着 cover；没有这条才退回第一条 type 为 video 的。
+      const videoItem = list.find((item: any) => item.id === 'uploaded-video')
+        || list.find((item: any) => item.type === 'video');
       if (videoItem) {
         originalVideoUrl = videoItem.image || videoItem.url || '';
         if (originalVideoUrl) {
@@ -5620,13 +5640,27 @@ const regenerateRecord = async (record: any) => {
         uploadedVideo.value = originalVideoUrl;
       }
 
-      const extRefImages = userSelected.reference_images || [];
-      const extCoverRef = extRefImages.find((i: any) => typeof i === 'object' && i.type === 'video_cover');
-      const extCoverStr = extRefImages.find((i: any) => typeof i === 'string' && !i.match(/\.(mp4|mov|avi|webm)/i));
-      if (extCoverRef) {
-        uploadedVideoCover.value = extCoverRef.url;
-      } else if (extCoverStr) {
-        uploadedVideoCover.value = extCoverStr;
+      // 封面只能从「视频自己」身上取：先用 others.list 里那条视频的 cover（上面已取），
+      // 取不到就找 reference_videos 里对应那条的 cover —— 提交时封面正是存在那儿
+      // （referenceVideosForDisplay = [{ url, cover }]）。
+      //
+      // 不能从 reference_images 里猜：提交时那个数组只放用户的参考图
+      // （reference_images = uploadedVideoRefs.filter(type === 'image').map(ref => ref.image)），
+      // 原来「取第一个不像视频文件的字符串」等于把用户的第一张参考图当成了视频封面；
+      // 而且它是无条件覆盖，连上面取对的 cover 也一起冲掉了。
+      if (!uploadedVideoCover.value) {
+        const coverFromRefVideo = (userSelected.reference_videos || []).find(
+          (v: any) => typeof v === 'object' && v.cover && (!uploadedVideo.value || v.url === uploadedVideo.value)
+        );
+        if (coverFromRefVideo) {
+          uploadedVideoCover.value = coverFromRefVideo.cover;
+        } else {
+          // 兼容早期记录：封面曾经以 { type: 'video_cover' } 的形式放在 reference_images 里
+          const legacyCover = (userSelected.reference_images || []).find(
+            (i: any) => typeof i === 'object' && i.type === 'video_cover'
+          );
+          if (legacyCover) uploadedVideoCover.value = legacyCover.url;
+        }
       }
 
       const extFilteredList = list.filter((item: any) => item.id !== 'uploaded-video');

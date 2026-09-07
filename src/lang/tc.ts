@@ -1978,7 +1978,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       placeholderMakeSimilar: "替換角色或修改情節拍同款",
       placeholderMakeSequel: "請描述後續情節做續集",
       placeholderMakeVideo: "描述影片畫面，根據參考圖生成影片",
-      placeholderMakeSimilarVideo: "替換原影片中的角色拍同款影片"
+      placeholderMakeSimilarVideo: "替換原影片中的角色拍同款影片；或者自由修改原影片情節生成自己喜歡的影片"
     },
     img: '圖片',
     unreferencedFiles: {

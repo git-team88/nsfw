@@ -1984,7 +1984,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderMakeSimilar: "替换角色或修改情节拍同款",
       placeholderMakeSequel: "请描述后续情节做续集",
       placeholderMakeVideo: "描述视频画面，根据参考图生成视频",
-      placeholderMakeSimilarVideo: "替换原视频中的角色拍同款视频"
+      placeholderMakeSimilarVideo: "替换原视频中的角色拍同款视频；或者自由修改原视频情节生成自己喜欢的视频"
     },
     img: '图片',
     unreferencedFiles: {

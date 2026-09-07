@@ -444,15 +444,15 @@ export default {
       url: "post/getMyPostDetail?post_id=" + id,
       method: "GET",
     }),
-  postDetail: (data: any) =>
-    axios.request({
-      url: "post/getPostDetailPublic",
-      data: data,
-      method: "POST",
-      header: {
-        "Content-Type": "application/json",
-      },
-    }),
+  // postDetail: (data: any) =>
+  //   axios.request({
+  //     url: "post/getPostDetailPublic",
+  //     data: data,
+  //     method: "POST",
+  //     header: {
+  //       "Content-Type": "application/json",
+  //     },
+  //   }),
   modifyPost: (data: any) =>
     axios.request({
       url: "post/modifyPost",
