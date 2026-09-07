@@ -1479,7 +1479,7 @@
     <!-- Video Player Modal -->
     <div v-if="showVideoModal" class="video-modal">
       <div class="video-modal-content">
-        <button class="close-btn" @click="closeVideoModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+        <button class="close-btn" @click="closeVideoModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
         <video :src="playingVideoUrl" controls autoplay class="video-player" playsinline></video>
       </div>
     </div>
@@ -1488,7 +1488,7 @@
     <div v-if="showAudioModal" class="video-modal audio-modal">
       <div class="audio-modal-content">
         <div class="audio-modal-inner">
-          <button class="close-btn" @click="closeAudioModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+          <button class="close-btn" @click="closeAudioModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
           <img src="@/assets/images/home/audio.png" alt="audio" class="audio-modal-icon" />
           <audio :src="playingAudioUrl" controls autoplay class="audio-player"></audio>
         </div>
