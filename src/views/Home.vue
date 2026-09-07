@@ -2227,6 +2227,10 @@ async function handleVideoUpload(e: Event) {
       return;
     }
 
+    // 本次上传允许的时长上限。修改 / 续写按档位取；
+    // 多模态还要再扣掉已有参考视频占掉的时长，所以在下面的分支里改写。
+    let uploadMaxSeconds = refVideoMaxSeconds.value;
+
     if (selectedVideoMultimodal.value === 'videoModify') {
       // 视频修改：普通模式和超级版 4s 起，加强版 1s 起；
       // 上限放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
@@ -2254,11 +2258,13 @@ async function handleVideoUpload(e: Event) {
         target.value = '';
         return;
       }
-      if (duration > maxDuration) {
+      // 放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
+      if (duration >= maxDuration + 1) {
         toast(t('home.error.videoDurationTooLong', { max: maxDuration }));
         target.value = '';
         return;
       }
+      uploadMaxSeconds = maxDuration;
     }
 
     isUploading.value = true;
@@ -2283,13 +2289,15 @@ async function handleVideoUpload(e: Event) {
       // 超过 30s 的先让后端裁到 30s，拿到裁好的地址再回显到参考视频位置。
       const needsTrim =
         !!uploadedUrl &&
-        duration > refVideoMaxSeconds.value &&
-        (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend');
+        duration > uploadMaxSeconds &&
+        (selectedVideoMultimodal.value === 'videoModify'
+          || selectedVideoMultimodal.value === 'videoExtend'
+          || selectedVideoMultimodal.value === 'multimodal');
       if (needsTrim) {
-        const trimRes = await api.extractVideoTail({ video_url: uploadedUrl, tail_seconds: refVideoMaxSeconds.value }) as any;
+        const trimRes = await api.extractVideoTail({ video_url: uploadedUrl, tail_seconds: uploadMaxSeconds }) as any;
         if ((trimRes.code === 0 || trimRes.code === 200) && trimRes.data?.video_url) {
           uploadedUrl = trimRes.data.video_url;
-          refDuration = refVideoMaxSeconds.value;
+          refDuration = uploadMaxSeconds;
         } else {
           uploadedVideoCover.value = null;
           toast(trimRes.message || t('fail'));
@@ -3027,7 +3035,7 @@ const checkItemLimit = () => {
   let currentMode = 'normal';
   switch (contentType.value) {
     case 'video':
-      currentMode = currentVideoMode.value;
+      currentMode = videoLimitMode.value;
       break;
     case 'drama':
       currentMode = currentDramaMode.value;
@@ -4326,6 +4334,7 @@ const handleClickOutside = (event: MouseEvent) => {
     showVideoMultimodalDropdown.value = false;
     showVideoSettings.value = false;
     showInsertImageDropdown.value = false;
+    showNsfwVersionDropdown.value = false;
   }
 };
 
@@ -5458,7 +5467,7 @@ const handleFileChange = async (event: Event) => {
     let currentMode = 'normal';
     switch (contentType.value) {
       case 'video':
-        currentMode = currentVideoMode.value;
+        currentMode = videoLimitMode.value;
         break;
       case 'drama':
         currentMode = currentDramaMode.value;
