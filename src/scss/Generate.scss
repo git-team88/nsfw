@@ -1056,7 +1056,7 @@ $pinkopacity: rgba(255,79,154,0.12);
         height: 44px;
         padding: 0 12px;
         border-radius: 10px;
-    border: 1px solid #2c2c2c;
+        border: 1px solid #2c2c2c;
         background: $cream;
 
         .selector-img {
@@ -1839,13 +1839,6 @@ $pinkopacity: rgba(255,79,154,0.12);
               }
             }
           }
-        }
-      }
-
-      .nsfw-version-selector {
-        .selector-header {
-          border-color: #ff4f9a;
-          box-shadow: 0 0 12px rgba(255, 79, 154, 0.3);
         }
       }
     }
