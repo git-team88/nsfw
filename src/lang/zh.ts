@@ -1983,7 +1983,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderVideo: "输入一句，视界展开。例：细雨霏霏，他们共撑一伞，樱花树下缓缓行。",
       placeholderMakeSimilar: "替换角色或修改情节拍同款",
       placeholderMakeSequel: "请描述后续情节做续集",
-      placeholderAt: `输入{'@'}快速调用参考内容`
+      placeholderMakeVideo: "描述视频画面，根据参考图生成视频",
+      placeholderMakeSimilarVideo: "替换原视频中的角色拍同款视频"
     },
     img: '图片',
     unreferencedFiles: {
@@ -2135,6 +2136,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     noMore: "没有更多内容了",
      loadMore: "加载更多",
      makeSimilar: "做同款",
+     makeSimilarVideo: "拍同款/改编",
      makeSimilarChinaNotSupported: "当前地区不支持生成NSFW内容",
      makeSequel: "做续集",
      makeSequelPrompt: "根据描述延续视频1：",

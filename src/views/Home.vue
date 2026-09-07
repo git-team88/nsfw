@@ -1260,7 +1260,7 @@
                       </div>
                       <div class="make-similar-btn" v-if="item.type == '5' && parseFloat(item.duration) <= 30" @click.stop.prevent="handleMakeSimilarVideo(item)">
                         <img :src="makeIcon" alt="" class="make-icon" />
-                        <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                        <div class="make-similar-tooltip">{{ t('home.makeSimilarVideo') }}</div>
                       </div>
                       <div class="make-similar-btn" v-if="item.type == '5'" @click.stop.prevent="handleMakeSequelFromList(item)">
                         <img :src="videoIcon" alt="" class="make-icon" />
@@ -1690,11 +1690,14 @@ const getCurrentVideoMode = () => {
   }
 };
 const getCurrentPlaceholder = () => {
+  if (isMakeVideoMode.value) {
+    return t('home.input.placeholderMakeVideo');
+  }
   if (isMakeVideoSequelMode.value) {
     return t('home.input.placeholderMakeSequel');
   }
   if (isMakeVideoSimilarMode.value) {
-    return t('home.input.placeholderMakeSimilar');
+    return t('home.input.placeholderMakeSimilarVideo');
   }
   switch (contentType.value) {
     case 'video': return t('home.input.placeholderVideo');
@@ -1944,6 +1947,7 @@ function resetVideoInputs() {
   uploadedImagesVideo.value = [];
   inputContentVideo.value = '';
   inputHtmlVideo.value = '';
+  isMakeVideoMode.value = false;
   selectedVideoDuration.value = '30';
   lastValidVideoDuration.value = '30';
   inputKey.value++;
@@ -2381,6 +2385,7 @@ const originSessionIdForExtension = ref('');
 const originVideoUrlForTail = ref('');
 const isMakeVideoSimilarMode = ref(false);
 const isMakeVideoSequelMode = ref(false);
+const isMakeVideoMode = ref(false);
 const makeSequelPostId = ref('');
 const isMakeSequelLoading = ref(false);
 const isMakeSimilarVideoLoading = ref(false);
@@ -2402,14 +2407,6 @@ const isInputEmpty = computed({
 });
 
 const currentPlaceholder = computed(() => {
-  const hasImagesOrCharacters =
-    getSelectedCharacters().value.length > 0 ||
-    getUploadedImages().value.length > 0;
-
-  if (hasImagesOrCharacters && isInputEmpty.value && contentType.value !== 'novel') {
-    return t('home.input.placeholderAt');
-  }
-
   return getCurrentPlaceholder();
 });
 
@@ -3485,6 +3482,7 @@ const selectContentType = (type: string) => {
   isMakeExtensionMode.value = false;
   isMakeVideoSimilarMode.value = false;
   isMakeVideoSequelMode.value = false;
+  isMakeVideoMode.value = false;
   originSessionIdForExtension.value = '';
   originVideoUrlForTail.value = '';
   overrideNormalVideoMode.value = false;
@@ -3530,6 +3528,8 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   selectedVideoRatio.value = '9:16';
   selectedVideoQuality.value = '720P';
   selectedVideoDuration.value = '30';
+
+  isMakeVideoMode.value = true;
 
   const imgItem = {
     id: Date.now().toString(),

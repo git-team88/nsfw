@@ -107,7 +107,7 @@
                   </div>
                   <div class="make-similar-btn" v-if="post.type == '5' && parseFloat(String(post.duration || 0)) <= 30" @click.stop.prevent="handleMakeSimilarVideo(post)">
                     <img :src="makeIcon" alt="" class="make-icon" />
-                    <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
+                    <div class="make-similar-tooltip">{{ t('home.makeSimilarVideo') }}</div>
                   </div>
                   <div class="make-similar-btn" v-if="post.type == '5'" @click.stop.prevent="handleMakeSequelFromList(post)">
                     <img :src="videoIcon" alt="" class="make-icon" />

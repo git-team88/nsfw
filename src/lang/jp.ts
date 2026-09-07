@@ -1703,7 +1703,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       placeholderVideo: "見たい物語を一行で入力。例：余命3ヶ月のロボットが孤独な少女と出会い、最後の景色を探す旅に出る。",
       placeholderMakeSimilar: "キャラクターを替えるかプロットを修正して同款を作る",
       placeholderMakeSequel: "続きのプロットを描写して続編を作る",
-      placeholderAt: `{'@'}を入力して画像をクイック参照`
+      placeholderMakeVideo: "動画のシーンを描写し、参考画像から動画を生成",
+      placeholderMakeSimilarVideo: "元動画のキャラクターを替えて同款動画を作る"
     },
     img: '画像',
     unreferencedFiles: {
@@ -1855,6 +1856,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     noMore: "コンテンツはもうありません",
      loadMore: "もっと見る",
      makeSimilar: "同じものを作る",
+     makeSimilarVideo: "リメイク/アレンジ",
      makeSimilarChinaNotSupported: "現在の地域ではNSFWコンテンツの生成はサポートされていません",
      makeSequel: "続編を作る",
      makeSequelPrompt: "説明に基づいて動画1を延長する：",

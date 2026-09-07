@@ -1877,7 +1877,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       placeholderVideo: "One line in. A world unfolds. e.g. They share one umbrella under the cherry blossoms, rain falling soft between them.",
       placeholderMakeSimilar: "Replace characters or modify the plot to make a similar video",
       placeholderMakeSequel: "Describe the subsequent plot to make a sequel",
-      placeholderAt: `Type {'@'} to quickly reference content`
+      placeholderMakeVideo: "Describe the video scene, generate a video based on the reference image",
+      placeholderMakeSimilarVideo: "Replace characters in the original video to make a similar video"
     },
     img: 'Image',
     unreferencedFiles: {
@@ -2030,6 +2031,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     loadMore: "Load More",
      retry: "Retry",
      makeSimilar: "Make Similar",
+     makeSimilarVideo: "Remake/Adapt",
      makeSimilarChinaNotSupported: "This region does not support generating NSFW content",
      makeSequel: "Make Sequel",
      makeSequelPrompt: "Extend video 1 based on the description: ",

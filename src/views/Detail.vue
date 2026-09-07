@@ -61,7 +61,7 @@
                 </div>
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30" @click.stop="goMakeSimilarVideo()">
                   <img :src="makeIcon" alt="" class="make-icon" />
-                  <span>{{ t('home.makeSimilar') }}</span>
+                  <span>{{ t('home.makeSimilarVideo') }}</span>
                 </div>
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl" @click.stop="goMakeSequel()">
                   <img src="@/assets/images/base/video.png" alt="" class="make-icon" />
@@ -189,10 +189,9 @@
                     <img :src="makeIcon" alt="" class="make-icon" />
                     <span>{{ t('home.makeSimilar') }}</span>
                   </div>
-                  <div class="make-video-btn" :class="{ disabled: isMakeVideoLoading }" v-if="detail.images?.[currentImageIndex]?.image_url" @click.stop="!isMakeVideoLoading && goMakeVideo()">
+                  <div class="make-video-btn" v-if="detail.images?.[currentImageIndex]?.image_url" @click.stop="!isMakeVideoLoading && goMakeVideo()">
                     <img src="@/assets/images/base/video.png" alt="" class="make-icon" />
                     <span>{{ t('home.makeVideo') }}</span>
-                    <div class="loading-spinner" v-if="isMakeVideoLoading"></div>
                   </div>
                 </div>
 
@@ -454,7 +453,7 @@
               <div class="make-similar-wrap" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30">
                 <div class="make-similar-btn" @click.stop="goMakeSimilarVideo()">
                   <img :src="makeIcon" alt="" class="make-icon" />
-                  <span>{{ t('home.makeSimilar') }}</span>
+                  <span>{{ t('home.makeSimilarVideo') }}</span>
                 </div>
               </div>
             </div>
@@ -938,6 +937,7 @@
       @close="showMakeSequelSubscribeModal = false"
     />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeVideoLoading" :text="t('home.loading')" />
   </div>
 </template>
 

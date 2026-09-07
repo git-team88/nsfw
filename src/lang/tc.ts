@@ -1977,7 +1977,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       placeholderVideo: "輸入一句，視界展開。例：細雨霏霏，他們共撐一傘，櫻花樹下緩緩行。",
       placeholderMakeSimilar: "替換角色或修改情節拍同款",
       placeholderMakeSequel: "請描述後續情節做續集",
-      placeholderAt: `輸入{'@'}快速調用參考內容`
+      placeholderMakeVideo: "描述影片畫面，根據參考圖生成影片",
+      placeholderMakeSimilarVideo: "替換原影片中的角色拍同款影片"
     },
     img: '圖片',
     unreferencedFiles: {
@@ -2129,6 +2130,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     noMore: "沒有更多內容了",
      loadMore: "加載更多",
      makeSimilar: "做同款",
+     makeSimilarVideo: "拍同款/改編",
      makeSimilarChinaNotSupported: "當前地區不支持生成NSFW內容",
      makeSequel: "做續集",
      makeSequelPrompt: "根據描述延續影片1：",
