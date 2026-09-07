@@ -2137,6 +2137,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
      makeSequelSubscribeTitle: "該作品僅訂閱使用者可使用創作",
      makeSequelSubscribeGo: "獲取創作權限",
      makeVideo: "做影片",
+     modeSwitch: {
+       fileNotSupported: "有參考檔案不符合切換版本模型的要求，切換後將刪除對應圖片，是否確認切換"
+     },
      contentType: {
        all: "全部",
        drama: "漫劇",

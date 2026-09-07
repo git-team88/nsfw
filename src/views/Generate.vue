@@ -925,6 +925,12 @@
     <!-- Upload Loading Mask -->
     <UploadMask :visible="isUploading" />
 
+    <ModeSwitchFileWarningModal
+      :visible="showModeSwitchFileWarning"
+      @cancel="cancelModeSwitchFileWarning"
+      @confirm="confirmModeSwitchFileWarning"
+    />
+
     <!-- Cover Zoom Modal -->
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
       <div class="cover-zoom-content" @click.stop>
@@ -985,6 +991,7 @@ import { eventBus } from "@/utils/eventBus";
 import InsufficientBalanceModal from '@/components/InsufficientBalanceModal.vue';
 import DeleteRecordModal from '@/components/DeleteRecordModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
+import ModeSwitchFileWarningModal from '@/components/ModeSwitchFileWarningModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import loadingGif916 from '@/assets/images/home/9_16.gif';
@@ -1034,6 +1041,7 @@ const enableVideoOptimizePrompt = ref(false);
 const showUnlimitedModal = ref(false);
 const pendingModeType = ref('');
 const showUnderageNoBirthdayModal = ref(false);
+const showModeSwitchFileWarning = ref(false);
 const isPositioningTarget = ref(false);
 
 
@@ -1140,6 +1148,22 @@ const isVideoInputFocused = ref(false);
 const isUploading = ref(false);
 const previousPhotoInputHtml = ref('');
 const previousVideoInputHtml = ref('');
+const photoInputHtml = ref('');
+
+const syncPhotoInputToDraft = () => {
+  const el = photoEditableInputRef.value;
+  if (!el) return;
+  photoInputHtml.value = el.innerHTML;
+};
+
+const restorePhotoInput = () => {
+  nextTick(() => {
+    const el = photoEditableInputRef.value;
+    if (!el) return;
+    el.innerHTML = photoInputHtml.value || '';
+    previousPhotoInputHtml.value = el.innerHTML;
+  });
+};
 
 const photoPlaceholderFull = computed(() => t('home.input.placeholderPhoto'));
 const videoPlaceholderFull = computed(() => t('home.input.placeholderVideo'));
@@ -2086,13 +2110,17 @@ const resetVideoSettings = () => {
 };
 
 const switchBottomTab = (tab: string) => {
+  if (bottomActiveTab.value === 'photo') {
+    syncPhotoInputToDraft();
+  }
+
   bottomActiveTab.value = tab;
   enablePhotoOptimizePrompt.value = false;
   enableVideoOptimizePrompt.value = false;
   setSeoMeta(tab);
   if (tab == 'photo') {
     resetPhotoSettings();
-    // Clear video input when switching to photo
+    restorePhotoInput();
     if (videoEditableInputRef.value) {
       videoEditableInputRef.value.innerHTML = '';
     }
@@ -2104,7 +2132,6 @@ const switchBottomTab = (tab: string) => {
     startPhotoTypewriter();
   } else {
     resetVideoSettings();
-    // Clear photo input when switching to video
     if (photoEditableInputRef.value) {
       photoEditableInputRef.value.innerHTML = '';
     }
@@ -4537,6 +4564,7 @@ const doGeneratePhoto = async () => {
       if (photoEditableInputRef.value) {
         photoEditableInputRef.value.innerHTML = '';
       }
+      photoInputHtml.value = '';
       photoInputKey.value++;
       uploadedPhotoImages.value = [];
 
@@ -5845,6 +5873,16 @@ const getPositionInText = (element: HTMLElement, range: Range): number => {
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  if (isTeenager.value) {
+    pendingModeType.value = modeType;
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
+
   return false;
 };
 
@@ -5871,6 +5909,41 @@ const handleUnlimitedAgeConfirm = async (isAdult: boolean) => {
 
   // 确认满18岁后直接开启无限制模式（不再二次弹「是否开启无限制」确认）
   confirmUnlimitedMode();
+};
+
+const PHOTO_NORMAL_MAX_COUNT = 7;
+const PHOTO_NORMAL_MAX_SIZE = 10 * 1024 * 1024;
+
+const pickPhotoImagesForNormalMode = () => {
+  const kept: any[] = [];
+  const rejected: any[] = [];
+  uploadedPhotoImages.value.forEach((img: any) => {
+    const size = Number(img.size) || 0;
+    if (size > PHOTO_NORMAL_MAX_SIZE || kept.length >= PHOTO_NORMAL_MAX_COUNT) {
+      rejected.push(img);
+    } else {
+      kept.push(img);
+    }
+  });
+  return { kept, rejected };
+};
+
+const applyPhotoNormalMode = (removeRejected = false) => {
+  if (removeRejected) {
+    const rejectedIds = pickPhotoImagesForNormalMode().rejected.map((img: any) => img.id);
+    rejectedIds.forEach((id: string) => removePhotoImage(id));
+    syncPhotoInputToDraft();
+  }
+  currentPhotoMode.value = contentSwitch.mode === 2 ? 'unlimited' : 'normal';
+};
+
+const confirmModeSwitchFileWarning = () => {
+  showModeSwitchFileWarning.value = false;
+  applyPhotoNormalMode(true);
+};
+
+const cancelModeSwitchFileWarning = () => {
+  showModeSwitchFileWarning.value = false;
 };
 
 const switchPhotoMode = (mode: string, index: number) => {
@@ -5900,14 +5973,11 @@ const switchPhotoMode = (mode: string, index: number) => {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentPhotoMode.value = 'normal';
-    uploadedPhotoImages.value = [];
-    photoInputKey.value++;
-    if (photoEditableInputRef.value) {
-      photoEditableInputRef.value.innerHTML = '';
+    if (currentPhotoMode.value === 'unlimited' && pickPhotoImagesForNormalMode().rejected.length > 0) {
+      showModeSwitchFileWarning.value = true;
+      return;
     }
-    previousPhotoInputHtml.value = '';
-    nextTick(() => startPhotoTypewriter());
+    applyPhotoNormalMode();
   }
 };
 

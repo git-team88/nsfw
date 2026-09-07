@@ -2038,6 +2038,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
      makeSequelSubscribeTitle: "This work is only available to subscribed users for creation",
      makeSequelSubscribeGo: "Get Creation Access",
      makeVideo: "Make Video",
+     modeSwitch: {
+       fileNotSupported: "Some reference files do not meet the requirements of the model version you are switching to. Those images will be deleted after switching. Switch anyway?"
+     },
      contentType: {
        all: "All",
        drama: "Drama",

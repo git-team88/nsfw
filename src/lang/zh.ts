@@ -2143,6 +2143,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
      makeSequelSubscribeTitle: "该作品仅订阅用户可使用创作",
      makeSequelSubscribeGo: "获取创作权限",
      makeVideo: "做视频",
+     modeSwitch: {
+       fileNotSupported: "有参考文件不符合切换版本模型的要求，切换后将删除对应图片，是否确认切换"
+     },
      contentType: {
        all: "全部",
        drama: "漫剧",

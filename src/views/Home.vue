@@ -1392,6 +1392,12 @@
     <UploadMask :visible="isMakeSimilarVideoLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
 
+    <ModeSwitchFileWarningModal
+      :visible="showModeSwitchFileWarning"
+      @cancel="cancelModeSwitchFileWarning"
+      @confirm="confirmModeSwitchFileWarning"
+    />
+
     <MakeSequelSubscribeModal
       :visible="showMakeSequelSubscribeModal"
       @go-subscribe="goMakeSequelSubscribe"
@@ -1514,6 +1520,7 @@ import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdul
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import CharacterSelectModal from '@/components/CharacterSelectModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
+import ModeSwitchFileWarningModal from '@/components/ModeSwitchFileWarningModal.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UserInfoModal from '@/components/UserInfoModal.vue';
 import InviteCodeModal from '@/components/InviteCodeModal.vue';
@@ -1813,24 +1820,27 @@ const enableVideoOptimizePrompt = ref(false);
 // 刷新、关闭页面、跳去别的页面都不保留 —— 组件卸载，这些 ref 跟着一起没。
 // 图片和视频 tab 输入结构更复杂，暂不接入。
 // ---------------------------------------------------------------------------
-type DraftTab = 'novel' | 'comic' | 'drama';
-const DRAFT_TABS: DraftTab[] = ['novel', 'comic', 'drama'];
+type DraftTab = 'novel' | 'comic' | 'drama' | 'photo';
+const DRAFT_TABS: DraftTab[] = ['novel', 'comic', 'drama', 'photo'];
 
 function isDraftTab(type: string): type is DraftTab {
   return (DRAFT_TABS as string[]).includes(type);
 }
 
 function syncEditableInputToDraft(type: string) {
-  if (type !== 'comic' && type !== 'drama') return;
+  if (type !== 'comic' && type !== 'drama' && type !== 'photo') return;
   const el = editableInputRef.value;
   if (!el) return;
   if (el.dataset.tab !== type) return;
   if (type === 'comic') {
     inputHtmlComic.value = el.innerHTML;
     inputContentComic.value = el.textContent || '';
-  } else {
+  } else if (type === 'drama') {
     inputHtmlDrama.value = el.innerHTML;
     inputContentDrama.value = el.textContent || '';
+  } else {
+    inputHtmlPhoto.value = el.innerHTML;
+    inputContentPhoto.value = el.textContent || '';
   }
 }
 
@@ -1840,8 +1850,12 @@ function restoreEditableInput(type: string) {
     if (!el) return;
     if (el.dataset.tab !== type) return;
 
-    if (type === 'comic' || type === 'drama') {
-      el.innerHTML = (type === 'comic' ? inputHtmlComic.value : inputHtmlDrama.value) || '';
+    if (type === 'comic') {
+      el.innerHTML = inputHtmlComic.value || '';
+    } else if (type === 'drama') {
+      el.innerHTML = inputHtmlDrama.value || '';
+    } else if (type === 'photo') {
+      el.innerHTML = inputHtmlPhoto.value || '';
     } else {
       el.innerHTML = '';
     }
@@ -1855,6 +1869,12 @@ function restoreEditableInput(type: string) {
 function clearDraftFor(type: DraftTab) {
   if (type === 'novel') {
     novelInput.value = '';
+  } else if (type === 'photo') {
+    uploadedImagesPhoto.value = [];
+    combinedItemsPhoto.value = [];
+    inputContentPhoto.value = '';
+    inputHtmlPhoto.value = '';
+    isInputEmptyPhoto.value = true;
   } else if (type === 'comic') {
     selectedCharactersComic.value = [];
     uploadedImagesComic.value = [];
@@ -2780,6 +2800,7 @@ const showUnderageNoBirthdayModal = ref(false);
 const pendingModeType = ref('video');
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
+const showModeSwitchFileWarning = ref(false);
 const allowSensitiveContent = computed({
   get: () => contentSwitch.showNsfw === 1,
   set: (value: boolean) => contentSwitch.setUserAllowsSensitive(value),
@@ -3101,6 +3122,16 @@ const handleSensitiveContentAgeConfirm = async (isAdult: boolean) => {
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
+  if (!userInfo.value) {
+    return false;
+  }
+
+  if (isTeenager.value) {
+    pendingModeType.value = modeType;
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
+
   return false;
 };
 
@@ -3243,6 +3274,41 @@ const switchDramaMode = (mode: string, index: number) => {
   }
 };
 
+const PHOTO_NORMAL_MAX_COUNT = 7;
+const PHOTO_NORMAL_MAX_SIZE = 10 * 1024 * 1024;
+
+function pickPhotoImagesForNormalMode() {
+  const kept: any[] = [];
+  const rejected: any[] = [];
+  uploadedImagesPhoto.value.forEach((img: any) => {
+    const size = Number(img.size) || 0;
+    if (size > PHOTO_NORMAL_MAX_SIZE || kept.length >= PHOTO_NORMAL_MAX_COUNT) {
+      rejected.push(img);
+    } else {
+      kept.push(img);
+    }
+  });
+  return { kept, rejected };
+}
+
+function applyPhotoNormalMode(removeRejected = false) {
+  if (removeRejected) {
+    const rejectedIds = pickPhotoImagesForNormalMode().rejected.map((img: any) => img.id);
+    rejectedIds.forEach((id: string) => removeUploadedImage(id));
+  }
+  currentPhotoMode.value = 'normal';
+  enablePhotoOptimizePrompt.value = false;
+}
+
+function confirmModeSwitchFileWarning() {
+  showModeSwitchFileWarning.value = false;
+  applyPhotoNormalMode(true);
+}
+
+function cancelModeSwitchFileWarning() {
+  showModeSwitchFileWarning.value = false;
+}
+
 const switchPhotoMode = (mode: string, index: number) => {
   if (index == 2) {
     const token = localStorage.getItem('token');
@@ -3269,14 +3335,11 @@ const switchPhotoMode = (mode: string, index: number) => {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentPhotoMode.value = 'normal';
-    enablePhotoOptimizePrompt.value = false;
-    uploadedImagesPhoto.value = [];
-    combinedItemsPhoto.value = [];
-    inputContentPhoto.value = '';
-    inputHtmlPhoto.value = '';
-    inputKey.value++;
-    nextTick(() => { if (editableInputRef.value) editableInputRef.value.innerHTML = ''; isInputEmpty.value = true; runTypewriter(); });
+    if (currentPhotoMode.value === 'unlimited' && pickPhotoImagesForNormalMode().rejected.length > 0) {
+      showModeSwitchFileWarning.value = true;
+      return;
+    }
+    applyPhotoNormalMode();
   }
 };
 

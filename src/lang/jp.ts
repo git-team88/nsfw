@@ -1863,6 +1863,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
      makeSequelSubscribeTitle: "この作品は購読ユーザーのみ創作に使用できます",
      makeSequelSubscribeGo: "創作権限を取得",
      makeVideo: "動画を作る",
+     modeSwitch: {
+       fileNotSupported: "参考ファイルの中に、切り替え先のモデルバージョンの要件を満たさないものがあります。切り替えると該当する画像は削除されます。切り替えてよろしいですか？"
+     },
      contentType: {
        all: "すべて",
        drama: "アニメドラマ",
