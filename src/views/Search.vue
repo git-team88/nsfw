@@ -192,6 +192,7 @@
     </div>
 
     <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeSimilarVideoLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
 
     <MakeSequelSubscribeModal
@@ -726,7 +727,6 @@ const handleMakeSimilar = (post: any) => {
 const isMakeSimilarVideoLoading = ref(false);
 
 const handleMakeSimilarVideo = async (post: any) => {
-  if (!checkLogin()) return;
   if (isMakeSimilarVideoLoading.value) return;
   isMakeSimilarVideoLoading.value = true;
 
@@ -756,7 +756,7 @@ const handleMakeSimilarVideo = async (post: any) => {
     const data = res.data.post || res.data;
     const authorId = res.data.author?.id || data.author_id || '';
     const uid = localStorage.getItem('uid');
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -779,7 +779,6 @@ const handleMakeSimilarVideo = async (post: any) => {
 };
 
 const handleMakeSequelFromList = async (post: any) => {
-  if (!checkLogin()) return;
   if (isMakeSequelLoading.value) return;
   isMakeSequelLoading.value = true;
 
@@ -806,7 +805,7 @@ const handleMakeSequelFromList = async (post: any) => {
 
     const data = res.data.post || res.data;
     const authorId = res.data.author?.id || data.author_id || '';
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -833,7 +832,7 @@ function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    router.push('/register');
     return;
   }
   if (makeSequelAuthorId.value) {

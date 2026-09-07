@@ -1389,6 +1389,7 @@
 
     <UploadMask :visible="isUploading" />
     <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
+    <UploadMask :visible="isMakeSimilarVideoLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
 
     <MakeSequelSubscribeModal
@@ -3929,7 +3930,6 @@ const extractVideoTail = async (videoUrl: string): Promise<string> => {
 };
 
 const handleMakeSimilarVideo = async (item: any) => {
-  if (!checkLogin()) return;
   if (isMakeSimilarVideoLoading.value) return;
   isMakeSimilarVideoLoading.value = true;
 
@@ -3959,7 +3959,7 @@ const handleMakeSimilarVideo = async (item: any) => {
     const data = res.data.post || res.data;
     const authorId = res.data.author?.id || data.author_id || '';
     const uid = localStorage.getItem('uid');
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -4033,7 +4033,6 @@ const handleMakeSimilarVideo = async (item: any) => {
 };
 
 const handleMakeSequelFromList = async (item: any) => {
-  if (!checkLogin()) return;
   if (isMakeSequelLoading.value) return;
   isMakeSequelLoading.value = true;
 
@@ -4063,7 +4062,7 @@ const handleMakeSequelFromList = async (item: any) => {
     const data = res.data.post || res.data;
     const authorId = res.data.author?.id || data.author_id || '';
     const uid = localStorage.getItem('uid');
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -5071,10 +5070,10 @@ const switchContentTab = (tabId: string, index: number) => {
   // Check if user is logged in when switching to following or subscriptions tabs
   if ((tabId === 'following' || tabId === 'subscriptions')) {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+  if (!token) {
+    router.push('/register');
+    return;
+  }
   }
 
   // Set flag to prevent content restoration

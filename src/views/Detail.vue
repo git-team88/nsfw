@@ -1192,6 +1192,7 @@ const headerMoreRef = ref<HTMLElement | null>(null);
 const showSensitiveContentAdultConfirmModal = ref(false);
 const showSensitiveContentConfirmModal = ref(false);
 const pendingChapter = ref<any>(null);
+const pendingAction = ref<(() => void) | null>(null);
 const isAllowSensitiveContent = ref(true);
 const reportModalVisible = ref(false);
 const reportTarget = ref<{ type: string; id: number } | null>(null);
@@ -1556,17 +1557,17 @@ function goMakeSimilar(sessionId: string) {
     toast(t('home.unlimitedModeRestricted'));
     return;
   }
-  router.push({ path: '/', query: { make: sessionId } });
+  checkSensitiveContentBeforeAction(() => {
+    router.push({ path: '/', query: { make: sessionId } });
+  });
 }
 
 async function goMakeSimilarVideo() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
   const postId = detail.value.id || '';
   if (!postId) return;
+
+  const doMakeSimilarVideo = async () => {
+  const token = localStorage.getItem('token');
 
   isMakeSequelLoading.value = true;
 
@@ -1598,7 +1599,7 @@ async function goMakeSimilarVideo() {
     const data = detailRes.data.post || detailRes.data;
     const authorId = detailRes.data.author?.id || data.author_id || '';
     const uid = localStorage.getItem('uid');
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -1618,14 +1619,12 @@ async function goMakeSimilarVideo() {
   } finally {
     isMakeSequelLoading.value = false;
   }
+  };
+
+  checkSensitiveContentBeforeAction(doMakeSimilarVideo);
 }
 
 async function goMakeSequel() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
   const videoUrl = detail.value.videoUrl || '';
   if (!videoUrl) return;
   const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
@@ -1633,6 +1632,9 @@ async function goMakeSequel() {
     toast(t('home.unlimitedModeRestricted'));
     return;
   }
+
+  const doMakeSequel = async () => {
+  const token = localStorage.getItem('token');
 
   isMakeSequelLoading.value = true;
 
@@ -1666,7 +1668,7 @@ async function goMakeSequel() {
     const data = detailRes.data.post || detailRes.data;
     const authorId = detailRes.data.author?.id || data.author_id || '';
     const uid = localStorage.getItem('uid');
-    const needsSubscription = data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid;
+    const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
       showMakeSequelSubscribeModal.value = true;
@@ -1684,13 +1686,16 @@ async function goMakeSequel() {
   } finally {
     isMakeSequelLoading.value = false;
   }
+  };
+
+  checkSensitiveContentBeforeAction(doMakeSequel);
 }
 
 function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/login');
+    router.push('/register');
     return;
   }
   if (makeSequelAuthorId.value) {
@@ -1709,6 +1714,7 @@ function goMakeVideo() {
     return;
   }
 
+  const doMakeVideo = () => {
   isMakeVideoLoading.value = true;
   const testImg = new Image();
   testImg.onload = () => {
@@ -1741,6 +1747,9 @@ function goMakeVideo() {
     toast(t('home.error.makeVideoImageInvalid'));
   };
   testImg.src = img;
+  };
+
+  checkSensitiveContentBeforeAction(doMakeVideo);
 }
 
 // Enter next chapter if available, otherwise enter current chapter
@@ -3315,6 +3324,61 @@ const isSensitiveContent = computed(() => {
     : detail.value.is_nsfw == '1';
 });
 
+const checkSensitiveContentBeforeAction = (action: () => void): boolean => {
+  if (!isSensitiveContent.value) {
+    action();
+    return true;
+  }
+  const authorId = detail.value.author?.id;
+  const uid = localStorage.getItem('uid');
+  if (authorId && authorId === uid) {
+    action();
+    return true;
+  }
+  const token = localStorage.getItem('token');
+  if (!token) {
+    const isAdult = localStorage.getItem('is_adult') == '1';
+    if (!isAdult) {
+      pendingAction.value = action;
+      showSensitiveContentAdultConfirmModal.value = true;
+      return false;
+    }
+    if (!isAllowSensitiveContent.value) {
+      if (localStorage.getItem('sensitiveContentDontAsk') == '1') {
+        localStorage.setItem('allowSensitiveContent', '1');
+        isAllowSensitiveContent.value = true;
+      } else {
+        pendingAction.value = action;
+        showSensitiveContentConfirmModal.value = true;
+        return false;
+      }
+    }
+    action();
+    return true;
+  }
+  const userInfoStr = localStorage.getItem('userInfo');
+  if (userInfoStr) {
+    const parsedUserInfo = JSON.parse(userInfoStr);
+    if (parsedUserInfo.is_adult != 1) {
+      pendingAction.value = action;
+      showSensitiveContentAdultConfirmModal.value = true;
+      return false;
+    }
+  }
+  if (!isAllowSensitiveContent.value) {
+    if (localStorage.getItem('sensitiveContentDontAsk') == '1') {
+      localStorage.setItem('allowSensitiveContent', '1');
+      isAllowSensitiveContent.value = true;
+    } else {
+      pendingAction.value = action;
+      showSensitiveContentConfirmModal.value = true;
+      return false;
+    }
+  }
+  action();
+  return true;
+};
+
 const isSensitiveContentLocked = computed(() => {
   return false;
 });
@@ -3665,7 +3729,11 @@ function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
   isAllowSensitiveContent.value = true;
-  if (pendingChapter.value) {
+  if (pendingAction.value) {
+    const action = pendingAction.value;
+    pendingAction.value = null;
+    action();
+  } else if (pendingChapter.value) {
     const chapter = pendingChapter.value;
     pendingChapter.value = null;
     doNavigateToChapter(chapter);
@@ -3710,14 +3778,12 @@ async function confirmAdultBrowsing() {
 
 async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
   showSensitiveContentAdultConfirmModal.value = false;
-  // 选择"否"：未满18岁，直接关闭不开启
   if (!isAdult) {
     pendingChapter.value = null;
+    pendingAction.value = null;
     return;
   }
-  // 选择"是"：声明已满18岁
   if (localStorage.getItem('token')) {
-    // 已登录：写回后端 is_adult
     try {
       const res = await api.setAdult({ is_adult: 1 }) as any;
       if (res.code != 0 && res.code != 200) {
@@ -3729,15 +3795,17 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
       return;
     }
   } else {
-    // 未登录：仅存本地，不请求接口
     localStorage.setItem('is_adult', '1');
   }
-  // 声明成年后，直接开启敏感内容浏览，不再二次弹「允许敏感？」确认弹窗
   localStorage.setItem('allowSensitiveContent', '1');
   isAllowSensitiveContent.value = true;
+  const action = pendingAction.value;
+  pendingAction.value = null;
   const chapter = pendingChapter.value;
   pendingChapter.value = null;
-  if (chapter) {
+  if (action) {
+    action();
+  } else if (chapter) {
     doNavigateToChapter(chapter);
   }
   fetchDetail(id.value);
