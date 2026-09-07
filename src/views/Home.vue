@@ -2228,18 +2228,20 @@ async function handleVideoUpload(e: Event) {
     }
 
     if (selectedVideoMultimodal.value === 'videoModify') {
-      // 视频修改：4-30s
-      // 放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
-      if (duration < 4 || duration >= refVideoMaxSeconds.value + 1) {
-        toast(t('home.error.videoModifyDurationLimit'));
+      // 视频修改：普通模式和超级版 4s 起，加强版 1s 起；
+      // 上限放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
+      const modifyMinSeconds = videoLimitMode.value === 'unlimited' ? 1 : 4;
+      if (duration < modifyMinSeconds || duration >= refVideoMaxSeconds.value + 1) {
+        toast(t('home.error.videoUploadedDuration', { min: modifyMinSeconds, max: refVideoMaxSeconds.value }));
         target.value = '';
         return;
       }
     } else if (selectedVideoMultimodal.value === 'videoExtend') {
-      // 视频续写：2-30s
-      // 放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
-      if (duration < 2 || duration >= refVideoMaxSeconds.value + 1) {
-        toast(t('home.error.videoExtendDurationLimit'));
+      // 视频续写：普通模式和超级版 2s 起，加强版 1s 起；
+      // 上限放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
+      const extendMinSeconds = videoLimitMode.value === 'unlimited' ? 1 : 2;
+      if (duration < extendMinSeconds || duration >= refVideoMaxSeconds.value + 1) {
+        toast(t('home.error.videoUploadedDuration', { min: extendMinSeconds, max: refVideoMaxSeconds.value }));
         target.value = '';
         return;
       }
