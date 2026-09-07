@@ -257,7 +257,7 @@
                           <img :src="makeIcon" alt="" class="make-icon" />
                           <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
                         </div>
-                        <div class="make-similar-btn" v-if="collection.type == '5' && parseFloat(collection.duration) <= 30" @click.stop="handleMakeSimilarVideo(collection)">
+                        <div class="make-similar-btn" v-if="collection.type == '5' && parseFloat(collection.duration) < 31" @click.stop="handleMakeSimilarVideo(collection)">
                           <img :src="makeIcon" alt="" class="make-icon" />
                           <div class="make-similar-tooltip">{{ t('home.makeSimilarVideo') }}</div>
                         </div>

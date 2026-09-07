@@ -1370,10 +1370,7 @@ const handlePhotoInput = (event: Event) => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    const isTrailingBr = !next;
-    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
-    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
       br.remove();
     }
   });
@@ -2908,10 +2905,7 @@ const handleVideoInput = () => {
     const isBetweenTextAndTag = (prev && prev.nodeType === 3) && isBeforeTag;
     const isBetweenTagAndText = (next && next.nodeType === 3) && isAfterTag;
     const isLeadingBr = !prev && isBeforeTag;
-    const isTrailingBr = !next;
-    const isBetweenTagAndTag = isAfterTag && isBeforeTag;
-    const isBetweenTextAndText = (prev && prev.nodeType === 3) && (next && next.nodeType === 3);
-    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr || isTrailingBr || isBetweenTagAndTag || isBetweenTextAndText) {
+    if (isBetweenTextAndTag || isBetweenTagAndText || isLeadingBr) {
       br.remove();
     }
   });
