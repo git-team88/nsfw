@@ -594,7 +594,7 @@
                               </div>
                               <input
                                 type="range"
-                                :min="effectiveVideoMode == 'unlimited' ? 2 : 4"
+                                :min="videoLimitMode == 'unlimited' ? 2 : 4"
                                   :max="30"
                                 step="1"
                                 :value="selectedVideoDuration"
@@ -1803,6 +1803,22 @@ const effectiveVideoMode = computed(() => {
   return contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value;
 });
 const selectedNsfwVersion = ref('enhanced');
+
+// 视频 tab 里视频素材的时长上限：无限制模式的加强版 15s，其余（普通 / 超级版）30s。
+// 上传时放宽到「上限 + 1 秒」以内（<16s / <31s），超出上限的部分在上传成功后
+// 由后端裁掉，时长也按裁剪后算 —— 否则一段 15.9s 的视频会先被
+// 「总时长不超过 15s」拦下来，根本走不到裁剪那一步。
+// 视频 tab 的限制档位：
+// 无限制模式下分两个版本 —— 加强版(enhanced) 按无限制的图片 / 视频时长限制走，
+// 超级版(super) 按普通模式的限制走。普通模式自然还是普通。
+// 覆盖校验、可选项、以及跟时长规则配套的计费与提交时长；
+// 每秒单价、story_mode / nsfw_version、回显仍然按真实的 effectiveVideoMode。
+const videoLimitMode = computed(() =>
+  effectiveVideoMode.value === 'unlimited' && selectedNsfwVersion.value !== 'super' ? 'unlimited' : 'normal'
+);
+
+const refVideoMaxSeconds = computed(() => (videoLimitMode.value === 'unlimited' ? 15 : 30));
+const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
 const showNsfwVersionDropdown = ref(false);
 const nsfwVersionOptions = computed(() => [
   { value: 'enhanced', label: t('home.nsfwVersion.enhanced') },
@@ -2043,8 +2059,8 @@ async function handleStartFrameChange(e: Event) {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = videoLimitMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = videoLimitMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -2081,8 +2097,8 @@ async function handleEndFrameChange(e: Event) {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = effectiveVideoMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = effectiveVideoMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = videoLimitMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
+    const maxFileSizeMB = videoLimitMode.value === 'unlimited' ? 20 : 30;
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -2135,7 +2151,7 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       const height = video.videoHeight;
       if (width === 0 || height === 0) { resolve(true); return; }
       const ratio = width / height;
-      if (effectiveVideoMode.value === 'unlimited') {
+      if (videoLimitMode.value === 'unlimited') {
         // 无限制模式：宽高比 1:8~8:1，像素 [240, 4096]
         if (ratio < 1/8 || ratio > 8) {
           toast(t('home.error.videoRatioLimit'));
@@ -2196,8 +2212,8 @@ async function handleVideoUpload(e: Event) {
       target.value = '';
       return;
     }
-    const maxVideoSizeBytes = effectiveVideoMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
-    const maxVideoSizeMB = effectiveVideoMode.value === 'unlimited' ? 100 : 200;
+    const maxVideoSizeBytes = videoLimitMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
+    const maxVideoSizeMB = videoLimitMode.value === 'unlimited' ? 100 : 200;
     if (file.size > maxVideoSizeBytes) {
       toast(t('home.error.maxVideoSize', { max: maxVideoSizeMB }));
       target.value = '';
@@ -2213,22 +2229,24 @@ async function handleVideoUpload(e: Event) {
 
     if (selectedVideoMultimodal.value === 'videoModify') {
       // 视频修改：4-30s
-      if (duration < 4 || duration > 30) {
+      // 放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
+      if (duration < 4 || duration >= refVideoMaxSeconds.value + 1) {
         toast(t('home.error.videoModifyDurationLimit'));
         target.value = '';
         return;
       }
     } else if (selectedVideoMultimodal.value === 'videoExtend') {
       // 视频续写：2-30s
-      if (duration < 2 || duration > 30) {
+      // 放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
+      if (duration < 2 || duration >= refVideoMaxSeconds.value + 1) {
         toast(t('home.error.videoExtendDurationLimit'));
         target.value = '';
         return;
       }
     } else if (selectedVideoMultimodal.value === 'multimodal') {
       // 多模态参考：普通模式 2-30s，无限制模式 1-15s
-      const minDuration = effectiveVideoMode.value === 'unlimited' ? 1 : 2;
-      const maxDuration = effectiveVideoMode.value === 'unlimited' ? 15 : 30;
+      const minDuration = videoLimitMode.value === 'unlimited' ? 1 : 2;
+      const maxDuration = videoLimitMode.value === 'unlimited' ? 15 : 30;
       if (duration < minDuration) {
         toast(t('home.error.videoDurationTooShort', { min: minDuration }));
         target.value = '';
@@ -2256,21 +2274,42 @@ async function handleVideoUpload(e: Event) {
       }
 
       // Upload the video
-      const uploadedUrl = await uploadVideo(file);
+      let uploadedUrl = await uploadVideo(file);
+      let refDuration = duration;
+
+      // 视频修改 / 续写放宽到 31s 以内，但模型只接受 30s：
+      // 超过 30s 的先让后端裁到 30s，拿到裁好的地址再回显到参考视频位置。
+      const needsTrim =
+        !!uploadedUrl &&
+        duration > refVideoMaxSeconds.value &&
+        (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend');
+      if (needsTrim) {
+        const trimRes = await api.extractVideoTail({ video_url: uploadedUrl, tail_seconds: refVideoMaxSeconds.value }) as any;
+        if ((trimRes.code === 0 || trimRes.code === 200) && trimRes.data?.video_url) {
+          uploadedUrl = trimRes.data.video_url;
+          refDuration = refVideoMaxSeconds.value;
+        } else {
+          uploadedVideoCover.value = null;
+          toast(trimRes.message || t('fail'));
+          target.value = '';
+          return;
+        }
+      }
+
       if (uploadedUrl) {
         uploadedVideo.value = uploadedUrl;
-        uploadedVideoDuration.value = duration;
+        uploadedVideoDuration.value = refDuration;
         lastValidVideoDuration.value = selectedVideoDuration.value;
 
-        if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
-          const maxDuration = duration > 0 ? Math.floor(30 - duration) : 30;
+        if (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+          const maxDuration = refDuration > 0 ? Math.floor(30 - refDuration) : 30;
           selectedVideoDuration.value = Math.max(maxDuration, 2).toString();
           lastValidVideoDuration.value = selectedVideoDuration.value;
         } else {
           const currentDuration = parseInt(selectedVideoDuration.value);
-          if (currentDuration <= duration) {
-            const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
-            const newDuration = Math.max(duration + 1, minDuration);
+          if (currentDuration <= refDuration) {
+            const minDuration = videoLimitMode.value === 'unlimited' ? 2 : 4;
+            const newDuration = Math.max(refDuration + 1, minDuration);
             selectedVideoDuration.value = Math.min(newDuration, 30).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
           }
@@ -2310,7 +2349,7 @@ const videoRatioOptions = computed(() => {
   return optionsByMode[effectiveVideoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
 });
 const videoDurationOptions = computed(() => {
-  const minDuration = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
+  const minDuration = videoLimitMode.value === 'unlimited' ? 2 : 4;
   if (minDuration == 4) {
     return [
       { value: '4', label: '4s' },
@@ -2348,7 +2387,7 @@ const getUploadedVideoDurationSum = () => {
 };
 
 const validateDurationAndRestore = () => {
-  if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  if (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     const totalVideoDuration = getUploadedVideoDurationSum();
     const newDuration = parseInt(selectedVideoDuration.value);
     const maxDuration = totalVideoDuration > 0 ? Math.floor(30 - totalVideoDuration) : 30;
@@ -2365,9 +2404,9 @@ const validateDurationAndRestore = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = videoLimitMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
-  const marks = effectiveVideoMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
+  const marks = videoLimitMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
   return marks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
@@ -2375,7 +2414,7 @@ const sliderMarks = computed(() => {
 });
 
 const getSliderValuePosition = () => {
-  const min = effectiveVideoMode.value === 'unlimited' ? 2 : 4;
+  const min = videoLimitMode.value === 'unlimited' ? 2 : 4;
   const max = 30;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
@@ -2939,7 +2978,7 @@ const estimatedVideoComputingPower = computed(() => {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 1;
   } else if (selectedVideoMultimodal.value === 'videoExtend') {
     duration = uploadedVideoDuration.value > 0 ? Math.ceil(uploadedVideoDuration.value) : 30;
-  } else if (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
+  } else if (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') {
     duration = Math.ceil((parseInt(selectedVideoDuration.value) || 30) + getUploadedVideoDurationSum());
   } else {
     duration = parseInt(selectedVideoDuration.value) || 30;
@@ -4562,7 +4601,7 @@ const doGenerateVideo = async () => {
           : combinedItemsVideo.value
       },
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
-      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (effectiveVideoMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
+      simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
       ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
@@ -5262,7 +5301,7 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
   if (width === 0 || height === 0) return false;
   const ratio = width / height;
   const isPhotoUnlimited = contentType.value === 'photo' && currentPhotoMode.value === 'unlimited';
-  const isVideoUnlimited = contentType.value === 'video' && effectiveVideoMode.value === 'unlimited';
+  const isVideoUnlimited = contentType.value === 'video' && videoLimitMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
       toast(t('home.error.imageRatioLimit'));
@@ -5502,13 +5541,14 @@ const handleFileChange = async (event: Event) => {
 
     // Check individual video/audio duration for video multimodal mode
     if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
-      const isUnlimited = effectiveVideoMode.value === 'unlimited';
+      const isUnlimited = videoLimitMode.value === 'unlimited';
       for (const file of Array.from(input.files)) {
         if (file.type.startsWith('video/')) {
           const duration = await getMediaDuration(file);
           const minDuration = isUnlimited ? 1 : 2;
-          const maxDuration = isUnlimited ? 15 : 30;
-          if (duration < minDuration || duration > maxDuration) {
+          const maxDuration = refVideoMaxSeconds.value;
+          // 放宽到「上限 + 1 秒」以内，超出的在上传后裁掉
+          if (duration < minDuration || duration >= maxDuration + 1) {
             toast(t('home.error.videoUploadedDuration', { min: minDuration, max: maxDuration }));
             input.value = '';
             return;
@@ -5528,7 +5568,7 @@ const handleFileChange = async (event: Event) => {
 
     // Check video/audio total duration limit for video multimodal mode
     if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
-      const isUnlimited = effectiveVideoMode.value === 'unlimited';
+      const isUnlimited = videoLimitMode.value === 'unlimited';
       let totalVideoDuration = 0;
       let totalAudioDuration = 0;
 
@@ -5549,7 +5589,8 @@ const handleFileChange = async (event: Event) => {
       for (const file of Array.from(input.files)) {
         if (file.type.startsWith('video/')) {
           const duration = await getMediaDuration(file);
-          newFileVideoDurations.push(duration);
+          // 按裁剪后的时长算，超出上限的部分上传后会被裁掉
+          newFileVideoDurations.push(clampRefVideoDuration(duration));
         } else if (file.type.startsWith('audio/')) {
           const duration = await getMediaDuration(file);
           totalAudioDuration += duration;
@@ -5614,8 +5655,8 @@ const handleFileChange = async (event: Event) => {
             if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
               const videoDuration = await getMediaDuration(file);
               const minDuration = currentMode === 'unlimited' ? 1 : 2;
-              const maxDuration = currentMode === 'unlimited' ? 15 : 30;
-              if (videoDuration < minDuration || videoDuration > maxDuration) {
+              const maxDuration = refVideoMaxSeconds.value;
+              if (videoDuration < minDuration || videoDuration >= maxDuration + 1) {
                 toast(t('home.error.videoUploadedDuration', { min: minDuration, max: maxDuration }));
                 return;
               }
@@ -5683,11 +5724,23 @@ const handleFileChange = async (event: Event) => {
           }
 
           // Upload using appropriate API
-          const uploadedUrl = fileType === 'video'
+          let uploadedUrl = fileType === 'video'
             ? await uploadVideo(file)
             : fileType === 'audio'
             ? await uploadAudio(file)
             : await uploadImage(file, getCurrentVideoMode().value);
+
+          // 参考视频超过上限的，先让后端裁到上限，再拿裁好的地址入列
+          if (fileType === 'video' && uploadedUrl && mediaDuration > refVideoMaxSeconds.value) {
+            const trimRes = await api.extractVideoTail({ video_url: uploadedUrl, tail_seconds: refVideoMaxSeconds.value }) as any;
+            if ((trimRes.code === 0 || trimRes.code === 200) && trimRes.data?.video_url) {
+              uploadedUrl = trimRes.data.video_url;
+              mediaDuration = refVideoMaxSeconds.value;
+            } else {
+              toast(trimRes.message || t('fail'));
+              return;
+            }
+          }
 
           const newItem = fileType === 'video' ? {
             id: Date.now() + index.toString(),
@@ -6019,7 +6072,7 @@ const removeUploadedImage = (id: string) => {
   currentCombinedItems.value = currentCombinedItems.value.filter(item => item.id !== id);
 
   // Update selectedVideoDuration after removing a video in multimodal mode
-  if (itemType === 'video' && contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && effectiveVideoMode.value === 'unlimited') {
+  if (itemType === 'video' && contentType.value === 'video' && selectedVideoMultimodal.value === 'multimodal' && videoLimitMode.value === 'unlimited') {
     const totalUploadedVideoDuration = getUploadedVideoDurationSum();
     const maxGenDuration = Math.floor(30 - Math.ceil(totalUploadedVideoDuration));
     const currentDuration = parseInt(selectedVideoDuration.value);
