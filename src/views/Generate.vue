@@ -3621,7 +3621,6 @@ async function uploadImage(file: File, mode: string): Promise<string> {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('mode', mode);
 
   const authHeaders = (window as any).AntiCrawler?.generateAuthParams?.(token) || {};
 

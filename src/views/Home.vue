@@ -5913,7 +5913,6 @@ async function uploadImage(file: File, mode: string): Promise<string> {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('mode', mode);
 
   const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
@@ -6413,6 +6412,15 @@ const handleInput = (event: Event) => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     showAtDropdown.value = false;
+  }
+
+  // 回车自己插一个 <br>。不能交给浏览器默认行为：Chrome 会把新起的一行包成
+  // <div>…</div>，而 handleInput 里为了避免换行错乱会把所有 <div> 拆包摊平，
+  // 于是这一行又被并回上一行，看起来就是回车没反应。
+  if (event.key === 'Enter' && !event.isComposing) {
+    event.preventDefault();
+    document.execCommand('insertLineBreak');
+    return;
   }
 
   const maxLimit = getMaxInputLimit();
