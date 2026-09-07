@@ -1288,7 +1288,7 @@ const getPhotoMaxInputLimit = (): number => {
 };
 
 const getVideoMaxInputLimit = (): number => {
-  if (currentVideoMode.value === 'normal') return 1000;
+  if (currentVideoMode.value === 'normal') return selectedNsfwVersion.value === 'super' ? 5000 : 1000;
   return selectedNsfwVersion.value === 'super' ? 5000 : 20000;
 };
 
@@ -1667,11 +1667,10 @@ const findAtSymbolBeforeCursor = (element: HTMLElement, selection: Selection): {
 };
 
 const handlePhotoKeydown = (event: KeyboardEvent) => {
-  if (event.key == 'Enter') {
-    if (event.shiftKey) {
-      event.preventDefault();
-      document.execCommand('insertLineBreak');
-    }
+  if (event.key === 'Enter' && !event.isComposing) {
+    event.preventDefault();
+    document.execCommand('insertLineBreak');
+    return;
   }
 
   const maxLimit = getPhotoMaxInputLimit();
@@ -3125,6 +3124,12 @@ const getVideoCursorPosition = (element: HTMLElement): number => {
 
 const handleVideoKeydown = (event: KeyboardEvent) => {
   if (!videoEditableInputRef.value) return;
+
+  if (event.key === 'Enter' && !event.isComposing) {
+    event.preventDefault();
+    document.execCommand('insertLineBreak');
+    return;
+  }
 
   const maxLimit = getVideoMaxInputLimit();
   const currentCharCount = getInputCharCount(videoEditableInputRef.value);
