@@ -219,37 +219,11 @@ async function fetchSubscription() {
   }
 }
 
-async function handleEditClick() {
+function handleEditClick() {
   if (!checkLogin()) return;
-  try {
-    const kycRes = (await api.kycDetail()) as any;
-    if (kycRes.code === 0 || kycRes.code === 200) {
-      const kycData = kycRes.data;
-
-      const isDataEmpty = !kycData || Object.keys(kycData).length === 0;
-
-      if (isDataEmpty) {
-        showKycRequiredModal.value = true;
-      } else {
-        const status = kycData.status;
-        if (status == '0' || status == '2') {
-          showKycReviewingModal.value = true;
-        } else {
-          if (accountStatus.value === 'failed') {
-            showAccountFailedModal.value = true;
-          } else if (accountStatus.value === 'none') {
-            showAccountRequiredModal.value = true;
-          } else {
-            window.location.href = '/user-subscription-edit';
-          }
-        }
-      }
-    } else {
-      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
-    }
-  } catch (e) {
-    console.error('Error in handleEditClick:', e);
-  }
+  // 编辑入口不再做 KYC / 收款账户校验，直接进编辑页。
+  // 用整页跳转而非路由跳转，确保编辑页组件重新挂载、拿到最新数据。
+  window.location.href = '/user-subscription-edit';
 }
 
 function handleCreateAccount() {

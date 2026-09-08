@@ -85,7 +85,11 @@
               <div v-if="index == 0 && isUserNew && promotionTitle" class="zero-plan-badge">{{ promotionTitle }}</div>
 
               <div class="plan-card-inner" :class="{ active: selectedPlan == plan.plan_id, 'discount-card': activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan), 'credits-card': activeTab == 'credits_pack' }">
-                <span class="plan-mode" v-if="!(paymentTab === 'usdt' && activeTab === 'subscription') && getPlanTitle(plan) !== t('aiRecharge.unknownPlan')">{{ getPlanTitle(plan) }}</span>
+                <!-- 算力包 tab 不取接口下发的套餐名，统一写死为「算力包」 -->
+                <span
+                  class="plan-mode"
+                  v-if="activeTab === 'credits_pack' || (!(paymentTab === 'usdt' && activeTab === 'subscription') && getPlanTitle(plan) !== t('aiRecharge.unknownPlan'))"
+                >{{ activeTab === 'credits_pack' ? t('aiRecharge.creditsPackTab') : getPlanTitle(plan) }}</span>
 
                 <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan)" class="plan-price-section">
                   <div class="plan-discount-price">
