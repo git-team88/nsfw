@@ -520,6 +520,7 @@ interface Post {
 // Subscription Plan Interface
 interface SubscriptionPlan {
   price: string;
+  web3?: { price?: string };
   id?: number;
   name?: string;
   description?: string;
@@ -652,10 +653,11 @@ function getSubscriptionPrice() {
   const plans = userInfo.value.subscription_plans;
   if (!plans) return '0';
 
-  const raw = (plans as SubscriptionPlan).price || '0';
+  const plan = plans as SubscriptionPlan;
+  const raw = plan.web3?.price || plan.price || '0';
   const num = parseFloat(raw);
   if (isNaN(num)) return raw;
-  return parseFloat(num.toFixed(8)).toString();
+  return String(parseFloat(raw));
 }
 
 const moreMenuRef = ref<HTMLElement | null>(null);
@@ -2508,6 +2510,7 @@ async function unpinCollection(collection: any) {
             width: 18px;
             height: 18px;
             cursor: pointer;
+            filter: brightness(0) invert(1);
           }
 
           .dropdown-menu {
@@ -2841,6 +2844,7 @@ async function unpinCollection(collection: any) {
         width: 20px;
         height: 20px;
         cursor: pointer;
+        filter: brightness(0) invert(1);
       }
 
       .dropdown-menu {

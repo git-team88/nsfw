@@ -32,7 +32,8 @@
                   </button>
                 </div>
                 <div class="price-row">
-                  <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ trimZeros(web3Price) }} USDT）</template></span>
+                  <!-- <span class="price">{{ trimZeros(price) }} {{ t('aiRecharge.unit') }}<template v-if="web3Price">（{{ trimZeros(web3Price) }} USDT）</template></span> -->
+                   <span class="price" v-if="web3Price">{{ trimZeros(web3Price) }} USDT</span>
                   <span class="per">{{ t("user.subscription.perMonth") }}</span>
                 </div>
               </div>
@@ -60,7 +61,7 @@
               </div>
             </div>
           </div>
-          <div class="account-section">
+          <!-- <div class="account-section">
             <div class="account-item">
               <div class="account-info">
                 <img class="account-icon" src="@/assets/images/user/account.png" alt="" />
@@ -87,7 +88,7 @@
                 </template>
               </div>
             </div>
-          </div>
+          </div> -->
 
         </div>
       </div>

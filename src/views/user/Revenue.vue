@@ -45,7 +45,7 @@
             </div>
           </div>
 
-          <div class="cash-section">
+          <!-- <div class="cash-section">
             <div class="metric cash-frozen">
               <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
@@ -73,7 +73,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

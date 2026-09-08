@@ -454,7 +454,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         followerCount: parseInt(data.data?.user?.follower_count || data.data?.follower_count || '0'),
         isFollow: data.data?.is_follow || 0,
         isSubscribe: data.data?.is_subscribe || 0,
-        subscribePrice: data.data?.subscribe_price || '',
+        subscribePrice: formatPrice(data.data?.subscription_plans?.web3?.price || data.data?.subscribe_price || ''),
         books_group: data.data?.books_group || []
       };
 
@@ -463,7 +463,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         try {
           const subscriptionRes = await api.getOthersSubscription({ blogger_id: authorId }) as any;
           if (subscriptionRes.code === 0 && subscriptionRes.data?.plan) {
-            authorInfo.value.subscribePrice = subscriptionRes.data.plan.price || '';
+            authorInfo.value.subscribePrice = formatPrice(subscriptionRes.data.plan.web3?.price || subscriptionRes.data.plan.price || '');
           }
         } catch (error) {
           console.error('Failed to fetch subscription price:', error);
@@ -475,6 +475,12 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
   } catch (error) {
     console.error('Failed to fetch author info:', error);
   }
+}
+
+function formatPrice(raw: string): string {
+  const num = parseFloat(raw);
+  if (isNaN(num) || !raw) return raw;
+  return String(parseFloat(raw));
 }
 
 function goHome() {

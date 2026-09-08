@@ -35,7 +35,8 @@
                     <img src="@/assets/images/header/check_active.png" alt="" v-if="selectedId == option.plan_id" />
                     <img src="@/assets/images/header/check.png" alt="" v-else />
                   </div>
-                  <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}（{{ trimZeros(option.web3?.price || '') }} USDT）</span>
+                  <!-- <span class="price-text">{{ trimZeros(option.price) }} {{ t('aiRecharge.unit') }}（{{ trimZeros(option.web3?.price || '') }} USDT）</span> -->
+                  <span class="price-text">{{ trimZeros(option.web3?.price || '') }} USDT</span>
                 </div>
               </div>
             </div>
@@ -78,7 +79,7 @@
               </div>
             </div>
           </div>
-          <div class="account-section">
+          <!-- <div class="account-section">
             <div class="account-item">
               <div class="account-info">
                 <img class="account-icon" src="@/assets/images/user/account.png" alt="" />
@@ -105,7 +106,7 @@
                 </template>
               </div>
             </div>
-          </div>
+          </div> -->
 
         </div>
       </div>
@@ -601,8 +602,8 @@ async function handleAccountFailedModify() {
   cursor: pointer;
 
   .radio-circle {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
 
     img {
       width: 100%;
