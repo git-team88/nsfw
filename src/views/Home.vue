@@ -6246,7 +6246,7 @@ const getMaxInputLimit = (): number => {
     case 'photo':
       return currentPhotoMode.value === 'unlimited' ? 1000 : 5000;
     case 'video':
-      if (currentVideoMode.value === 'normal') return selectedNsfwVersion.value === 'super' ? 5000 : 1000;
+      if (currentVideoMode.value === 'normal') return 5000;
       return selectedNsfwVersion.value === 'super' ? 5000 : 20000;
     default:
       return 5000;
