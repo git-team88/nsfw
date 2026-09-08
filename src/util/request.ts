@@ -70,7 +70,8 @@ class Request {
         authToken = token || '';
       }
 
-      ;(config.headers as any).Platform = 'web'
+      ; (config.headers as any).Platform = 'web'
+      ; (config.headers as any).siteid = '1'
 
       const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
       ;(config.headers as any).ts = ts

@@ -606,7 +606,7 @@ async function uploadImageForAdd(file: File) {
   try {
     const res = await fetch(baseUrl + "user/uploadImage", {
       method: "POST",
-      headers: { token, Platform: "web", ...authHeaders },
+      headers: { token, Platform: "web", siteid: "1", ...authHeaders },
       body: formData,
     });
     const data = await res.json();
@@ -662,7 +662,7 @@ async function onReuploadPicked(e: Event) {
   try {
     const res = await fetch(baseUrl + "user/uploadImage", {
       method: "POST",
-      headers: { token, Platform: "web", ...authHeaders },
+      headers: { token, Platform: "web", siteid: "1", ...authHeaders },
       body: formData,
     });
     const data = await res.json();
@@ -1037,6 +1037,7 @@ async function uploadImageAsync(pf: PreviewFile): Promise<boolean> {
       headers: {
         token: token,
         Platform: "web",
+        siteid: "1",
         ...authHeaders,
       },
       body: formData,
@@ -1654,6 +1655,7 @@ async function onSubmit() {
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
     headers.append("Platform", "web");
+    headers.append("siteid", "1");
 
     const data = JSON.stringify(payload);
     const requestOptions = {

@@ -156,6 +156,9 @@
 
                     <div
                       ref="editableInputRef"
+                      :data-tab="contentType"
+                      :data-mode="selectedVideoMultimodal"
+                      @vue:mounted="onVideoInputMounted"
                       :key="`input-${inputKey}`"
                       :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                       contenteditable="true"
@@ -248,7 +251,7 @@
                       <textarea
                         :class="['frames-textarea', { collapsed: isStickyCollapsed }]"
                         :placeholder="typedPlaceholder"
-                        v-model="novelInput"
+                        v-model="framesInput"
                         spellcheck="false"
                         @input="handleTextareaInput"
                         @click="handleFramesTextareaClick"
@@ -321,6 +324,9 @@
 
                       <div
                         ref="editableInputRef"
+                        :data-tab="contentType"
+                        :data-mode="selectedVideoMultimodal"
+                        @vue:mounted="onVideoInputMounted"
                         :key="`input-${inputKey}`"
                         :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                         contenteditable="true"
@@ -429,6 +435,9 @@
 
                       <div
                         ref="editableInputRef"
+                        :data-tab="contentType"
+                        :data-mode="selectedVideoMultimodal"
+                        @vue:mounted="onVideoInputMounted"
                         :key="`input-${inputKey}`"
                         :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                         contenteditable="true"
@@ -494,7 +503,7 @@
                             :key="option.value"
                             class="dropdown-item"
                             :class="{ active: selectedVideoMultimodal == option.value }"
-                            @click.stop="selectedVideoMultimodal = option.value; showVideoMultimodalDropdown = false; enableVideoOptimizePrompt = false; resetVideoInputs()"
+                            @click.stop="switchVideoMultimodal(option.value)"
                           >
                             <span>{{ option.label }}</span>
                           </div>
@@ -777,6 +786,7 @@
 
                   <div
                     ref="editableInputRef"
+                    :data-tab="contentType"
                     :key="`input-${inputKey}`"
                     :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                     contenteditable="true"
@@ -924,6 +934,7 @@
 
                   <div
                     ref="editableInputRef"
+                    :data-tab="contentType"
                     :key="`input-${inputKey}`"
                     :class="['input-textarea', { collapsed: isStickyCollapsed }]"
                     contenteditable="true"
@@ -1837,14 +1848,21 @@ const enableVideoOptimizePrompt = ref(false);
 // 刷新、关闭页面、跳去别的页面都不保留 —— 组件卸载，这些 ref 跟着一起没。
 // 图片和视频 tab 输入结构更复杂，暂不接入。
 // ---------------------------------------------------------------------------
-type DraftTab = 'novel' | 'comic' | 'drama' | 'photo';
-const DRAFT_TABS: DraftTab[] = ['novel', 'comic', 'drama', 'photo'];
+type DraftTab = 'novel' | 'comic' | 'drama' | 'photo' | 'video';
+const DRAFT_TABS: DraftTab[] = ['novel', 'comic', 'drama', 'photo', 'video'];
 
 function isDraftTab(type: string): type is DraftTab {
   return (DRAFT_TABS as string[]).includes(type);
 }
 
 function syncEditableInputToDraft(type: string) {
+  // 视频走按模式分桶的暂存，DOM 读取与守卫都在 stashVideoDraft 里处理
+  if (type === 'video') {
+    const mode = currentVideoMode2();
+    lastVideoMode.value = mode;
+    stashVideoDraft(mode);
+    return;
+  }
   if (type !== 'comic' && type !== 'drama' && type !== 'photo') return;
   const el = editableInputRef.value;
   if (!el) return;
@@ -1862,28 +1880,49 @@ function syncEditableInputToDraft(type: string) {
 }
 
 function restoreEditableInput(type: string) {
-  nextTick(() => {
-    const el = editableInputRef.value;
-    if (!el) return;
-    if (el.dataset.tab !== type) return;
+  const expectedHtml = () => {
+    if (type === 'comic') return inputHtmlComic.value || '';
+    if (type === 'drama') return inputHtmlDrama.value || '';
+    if (type === 'photo') return inputHtmlPhoto.value || '';
+    return '';
+  };
 
-    if (type === 'comic') {
-      el.innerHTML = inputHtmlComic.value || '';
-    } else if (type === 'drama') {
-      el.innerHTML = inputHtmlDrama.value || '';
-    } else if (type === 'photo') {
-      el.innerHTML = inputHtmlPhoto.value || '';
-    } else {
-      el.innerHTML = '';
-    }
+  const write = () => {
+    // 视频 tab 的回填由输入框自己的 @vue:mounted 钩子负责，这里不重复写。
+    // 切模式会重建元素、必然触发挂载；不重建则内容本来就在，无需回填。
+    if (type === 'video') return;
+
+    const el = resolveInputEl(type);
+    if (!el) return;
+
+    const want = expectedHtml();
+    if (el.innerHTML === want) return;   // 已经对了就别动，避免打断光标
+    el.innerHTML = want;
 
     previousInputHtml.value = el.innerHTML;
     isInputEmpty.value = (el.textContent || '').trim() === '';
     syncStickyInputPreview();
+  };
+
+  // 切 v-if 分支时新输入框可能还没挂上，挂上之后也可能被后续一轮渲染清掉。
+  // 连着比对三帧，内容和 ref 不一致就补写；一致则直接返回，不会打断用户输入。
+  nextTick(() => {
+    write();
+    requestAnimationFrame(() => {
+      write();
+      requestAnimationFrame(write);
+    });
   });
 }
 
 function clearDraftFor(type: DraftTab) {
+  if (type === 'video') {
+    // 只清当前模式那一桶，其他模式用户可能还留着内容
+    videoDrafts.value[currentVideoMode2()] = emptyVideoModeDraft();
+    resetVideoInputs();
+    framesInput.value = '';
+    return;
+  }
   if (type === 'novel') {
     novelInput.value = '';
   } else if (type === 'photo') {
@@ -2005,13 +2044,16 @@ function selectNsfwVersion(version: string) {
   showNsfwVersionDropdown.value = false;
   if (selectedNsfwVersion.value === version) return;
 
-  selectedNsfwVersion.value = version;
-  resetVideoInputs();
-
-  // 内容已经清空，生成时长也回到默认值（最大 30s）。
-  // 两个版本的下限不一样（超级版 4s、加强版 2s），直接给最大值就不用管下限了。
-  selectedVideoDuration.value = '30';
-  lastValidVideoDuration.value = '30';
+  // 加强版限制更严（图片 20MB/10 张、参考视频 15s、总时长 15s），超级版按普通模式走。
+  // 档位变了参考文件大概率超标：先问一句，确认后丢掉超标文件；提示词始终保留。
+  const prevLimitMode = videoLimitMode.value;
+  const nextLimitMode = currentVideoMode.value === 'unlimited' && version !== 'super' ? 'unlimited' : 'normal';
+  requestVideoLimitModeChange(nextLimitMode, () => {
+    stashCurrentVideoPrompt();
+    selectedNsfwVersion.value = version;
+    applyVideoLimitModeChange(prevLimitMode);
+    restoreEditableInput('video');
+  });
 }
 
 // Start/End Frames upload handlers
@@ -2681,6 +2723,470 @@ const selectedInsertImageText = computed(() => {
 // Mode dropdown for novel mode
 const showModeDropdown = ref(false);
 const novelInput = ref('');
+// 首尾帧模式的提示词。原来和小说 tab 共用 novelInput，两边会互相串，拆开独立持有。
+const framesInput = ref('');
+
+// ---------------------------------------------------------------------------
+// 视频 tab 的草稿与切换迁移
+//
+// 视频比其他 tab 复杂在三点：4 个模式各有独立的 DOM 分支、参考文件分四类
+// （角色/图片/视频/音频）外加首尾帧与原视频、生成时长的可选范围随限制档位变化。
+// 所以不能沿用其他 tab 那套「一个 tab 一份草稿」，改成按模式分桶 + 统一迁移入口。
+//
+// videoLimitMode 是这里的核心判据（已有 computed）：
+//   加强版             -> 'unlimited'  图片 20MB/10 张、视频 100MB、单个 15s、总时长 15s，时长下限 2s
+//   普通模式 / 超级版  -> 'normal'     参考文件按普通模式，时长下限 4s
+// 档位不变 => 已填内容仍然合法，保留；档位变化 => 大概率超标，清空重来。
+// ---------------------------------------------------------------------------
+type VideoMode = 'multimodal' | 'startEndFrames' | 'videoModify' | 'videoExtend';
+const VIDEO_MODES: VideoMode[] = ['multimodal', 'startEndFrames', 'videoModify', 'videoExtend'];
+
+interface VideoModeDraft {
+  text: string;
+  html: string;
+  characters: any[];
+  images: any[];
+  videos: any[];
+  audios: any[];
+  combined: any[];
+  startFrame: string | null;
+  endFrame: string | null;
+  sourceVideo: string | null;
+  sourceCover: string | null;
+  sourceDuration: number;
+}
+
+function emptyVideoModeDraft(): VideoModeDraft {
+  return {
+    text: '', html: '',
+    characters: [], images: [], videos: [], audios: [], combined: [],
+    startFrame: null, endFrame: null,
+    sourceVideo: null, sourceCover: null, sourceDuration: 0,
+  };
+}
+
+const videoDrafts = ref<Record<VideoMode, VideoModeDraft>>({
+  multimodal: emptyVideoModeDraft(),
+  startEndFrames: emptyVideoModeDraft(),
+  videoModify: emptyVideoModeDraft(),
+  videoExtend: emptyVideoModeDraft(),
+});
+
+// 切回视频 tab 时恢复到离开前所在的模式
+const lastVideoMode = ref<VideoMode>('multimodal');
+
+function currentVideoMode2(): VideoMode {
+  return (VIDEO_MODES.includes(selectedVideoMultimodal.value as VideoMode)
+    ? selectedVideoMultimodal.value
+    : 'multimodal') as VideoMode;
+}
+
+// editableInputRef 被 6 个输入框共用（视频 3 个模式 + 漫画/漫剧/图片各一个）。
+// 切换 v-if 分支时 Vue 会卸载旧元素、挂载新元素，卸载会把这个共用 ref 置空，
+// nextTick 里拿到的可能是 null 或上一个分支的元素。所以先校验 ref 的 data 属性，
+// 对不上就直接按 data 属性查 DOM 兜底。
+function resolveInputEl(type: string): HTMLElement | null {
+  const mode = type === 'video' ? currentVideoMode2() : '';
+  const matches = (e: HTMLElement | null | undefined) =>
+    !!e && e.dataset.tab === type && (type !== 'video' || e.dataset.mode === mode);
+
+  const current = editableInputRef.value;
+  if (matches(current)) return current;
+
+  const selector = type === 'video'
+    ? `[data-tab="video"][data-mode="${mode}"]`
+    : `[data-tab="${type}"]`;
+  return document.querySelector<HTMLElement>(selector);
+}
+
+// 把视频输入框的现状同步进 ref。
+// 每次输入 / 插入 @ 标签都调一次，让 inputContentVideo / inputHtmlVideo 始终是最新的。
+// 这样切模式时读 ref 就够了，不用在 DOM 正被 v-if 分支重建的时刻去抢着读它。
+function syncVideoPromptFromDom(el?: HTMLElement | null) {
+  if (contentType.value !== 'video') return;
+  const mode = currentVideoMode2();
+  if (mode === 'startEndFrames') return;
+  const target = el && el.dataset.mode === mode ? el : resolveInputEl('video');
+  if (!target) return;
+  inputContentVideo.value = target.textContent || '';
+  inputHtmlVideo.value = target.innerHTML;
+  isInputEmptyVideo.value = !(target.textContent || '').trim();
+}
+
+// 视频输入框挂载时直接把内容写进去。
+//
+// 之前靠 restoreEditableInput 在 nextTick 里找元素再写，踩了两个坑：
+// editableInputRef 被 6 个输入框共用，切 v-if 分支时会被旧元素的卸载置空；
+// 就算查到了元素，也可能赶在新分支挂载完成之前。
+// 挂载钩子拿到的就是刚插入 DOM 的那个元素本身，没有查找、没有时序问题。
+function onVideoInputMounted(vnode: any) {
+  const el = vnode?.el as HTMLElement | null | undefined;
+  if (!el) return;
+  const html = inputHtmlVideo.value || '';
+  if (el.innerHTML !== html) el.innerHTML = html;
+  previousInputHtml.value = el.innerHTML;
+  isInputEmptyVideo.value = !(el.textContent || '').trim();
+  syncStickyInputPreview();
+}
+
+// 读当前模式的提示词。首尾帧走 textarea(framesInput)，其余三个模式走 contenteditable。
+// DOM 停在别的 tab / 别的模式时不回读，否则内容会串到新模式上。
+function readVideoPrompt(mode: VideoMode): { text: string; html: string } {
+  if (mode === 'startEndFrames') {
+    return { text: framesInput.value, html: '' };
+  }
+  // 内容由 syncVideoPromptFromDom 持续同步，这里直接读 ref。
+  // 之前在这里读 DOM，切模式时元素正被销毁重建，读到的可能是空的或旧分支的。
+  if (mode === currentVideoMode2()) {
+    syncVideoPromptFromDom();
+  }
+  return { text: inputContentVideo.value, html: inputHtmlVideo.value };
+}
+
+// 把当前 live 状态存进指定模式的桶
+function stashVideoDraft(mode: VideoMode) {
+  const { text, html } = readVideoPrompt(mode);
+  videoDrafts.value[mode] = {
+    text, html,
+    characters: [...selectedCharactersVideo.value],
+    images: [...uploadedImagesVideo.value],
+    videos: [...uploadedVideosVideo.value],
+    audios: [...uploadedAudiosVideo.value],
+    combined: [...combinedItemsVideo.value],
+    startFrame: startFrameImage.value,
+    endFrame: endFrameImage.value,
+    sourceVideo: uploadedVideo.value,
+    sourceCover: uploadedVideoCover.value,
+    sourceDuration: uploadedVideoDuration.value,
+  };
+}
+
+// 把指定模式的桶写回 live 状态。DOM 由 restoreEditableInput 在 nextTick 里补。
+function applyVideoDraft(mode: VideoMode) {
+  const d = videoDrafts.value[mode];
+  selectedCharactersVideo.value = [...d.characters];
+  uploadedImagesVideo.value = [...d.images];
+  uploadedVideosVideo.value = [...d.videos];
+  uploadedAudiosVideo.value = [...d.audios];
+  combinedItemsVideo.value = [...d.combined];
+  startFrameImage.value = d.startFrame;
+  endFrameImage.value = d.endFrame;
+  uploadedVideo.value = d.sourceVideo;
+  uploadedVideoCover.value = d.sourceCover;
+  uploadedVideoDuration.value = d.sourceDuration;
+  // text 兜底：来源只留了 html 时（例如富文本里只有标签），从 html 还原纯文本，
+  // 免得进首尾帧模式看到空白
+  const text = d.text || (d.html ? htmlToText(d.html) : '');
+  inputContentVideo.value = text;
+  inputHtmlVideo.value = d.html || (text ? textToHtml(text) : '');
+  framesInput.value = mode === 'startEndFrames' ? text : '';
+  isInputEmptyVideo.value = !text.trim();
+  inputKey.value++;
+}
+
+// 只把提示词带到目标模式，参考文件一律不带（spec 四：模式之间只回显提示词）
+// 首尾帧是纯文本 textarea，readVideoPrompt 给它的 html 恒为空。
+// 带到 contenteditable 模式（多模态/视频修改/视频续写）时不能直接用这个空 html，
+// 否则目标输入框被写成空的 —— 按纯文本转义成 html 再带过去。
+function htmlToText(html: string) {
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  return box.textContent || '';
+}
+
+function textToHtml(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+}
+
+// 输入框里的 @ 引用标签（角色/图片/视频/音频）是手工建的 span，指向具体的已上传文件。
+// 切模式时参考文件不带走，这些 span 就成了指向不存在文件的空引用 —— 显示还在、
+// 提交时却取不到对应素材。所以带提示词过去之前要把它们摘掉。
+const REF_TAG_SELECTOR = 'span.character-tag-input, span.image-tag, span.video-tag, span.audio-tag';
+
+function stripRefTags(html: string): { html: string; text: string } {
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  box.querySelectorAll(REF_TAG_SELECTOR).forEach((el) => el.remove());
+  // 摘掉标签后常留下孤立的空格和连续 <br>，顺手收一下
+  box.innerHTML = box.innerHTML.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>').replace(/^\s+|\s+$/g, '');
+  return { html: box.innerHTML, text: box.textContent || '' };
+}
+
+// 只摘掉「引用的文件已经不在了」的那些标签，留下的标签对应的文件仍然存在。
+// 切档位时会按新限制筛掉超标文件，对应的引用标签必须跟着消失。
+function stripDanglingRefTags(html: string, keepIds: Set<string>): { html: string; text: string } {
+  if (!html) return { html: '', text: '' };
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  box.querySelectorAll(REF_TAG_SELECTOR).forEach((el) => {
+    const id = (el as HTMLElement).dataset.itemId || '';
+    // 角色标签不受参考文件筛选影响，没有 id 的老标签也一并保留
+    if (id && !keepIds.has(id) && !el.classList.contains('character-tag-input')) {
+      el.remove();
+    }
+  });
+  return { html: box.innerHTML, text: box.textContent || '' };
+}
+
+function carryPromptToMode(from: VideoMode, to: VideoMode) {
+  const raw = readVideoPrompt(from);
+  const rawHtml = raw.html || (raw.text ? textToHtml(raw.text) : '');
+  const cleaned = rawHtml ? stripRefTags(rawHtml) : { html: '', text: raw.text };
+  videoDrafts.value[to] = { ...emptyVideoModeDraft(), text: cleaned.text, html: cleaned.html };
+}
+
+// ---------------------------------------------------------------------------
+// 参考文件的迁移能力表
+//
+// 数值抽自上传校验里那套判断（见 handleFileUpload / checkItemLimit），
+// 迁移时用同一套规则决定哪些参考文件带得过去，避免两处规则各写一份而走偏。
+// ---------------------------------------------------------------------------
+const MB = 1024 * 1024;
+
+interface RefLimits {
+  imageMaxCount: number;
+  imageMaxSize: number;
+  videoMaxSize: number;
+  videoMaxSeconds: number;
+  acceptsVideo: boolean;
+  acceptsAudio: boolean;
+}
+
+function refLimitsFor(tab: string, mode: string, videoMode?: VideoMode): RefLimits {
+  // 视频 tab 的多模态 / 视频修改 / 视频续写：接受图片 + 视频 + 音频
+  if (tab === 'video' && videoMode && videoMode !== 'startEndFrames') {
+    return mode === 'unlimited'
+      ? { imageMaxCount: 10, imageMaxSize: 20 * MB, videoMaxSize: 100 * MB, videoMaxSeconds: 15, acceptsVideo: true, acceptsAudio: true }
+      : { imageMaxCount: 30, imageMaxSize: 30 * MB, videoMaxSize: 200 * MB, videoMaxSeconds: 30, acceptsVideo: true, acceptsAudio: true };
+  }
+  if (tab === 'photo') {
+    return mode === 'unlimited'
+      ? { imageMaxCount: 10, imageMaxSize: 30 * MB, videoMaxSize: 0, videoMaxSeconds: 0, acceptsVideo: false, acceptsAudio: false }
+      : { imageMaxCount: 7, imageMaxSize: 10 * MB, videoMaxSize: 0, videoMaxSeconds: 0, acceptsVideo: false, acceptsAudio: false };
+  }
+  if (tab === 'comic' || tab === 'drama') {
+    return { imageMaxCount: 7, imageMaxSize: 10 * MB, videoMaxSize: 0, videoMaxSeconds: 0, acceptsVideo: false, acceptsAudio: false };
+  }
+  // 首尾帧模式、小说 tab：不接受任何参考文件
+  return { imageMaxCount: 0, imageMaxSize: 0, videoMaxSize: 0, videoMaxSeconds: 0, acceptsVideo: false, acceptsAudio: false };
+}
+
+// 按目标限制筛一遍参考文件。
+// 做同款回填和早期上传的老数据没有 size / duration 字段，无从判断，按合规处理，
+// 只受数量上限约束 —— 与 pickPhotoImagesForNormalMode 的既有口径保持一致。
+function filterRefFiles(
+  images: any[], videos: any[], audios: any[], limits: RefLimits,
+): { images: any[]; videos: any[]; audios: any[]; dropped: any[] } {
+  const keptImages: any[] = [];
+  const dropped: any[] = [];
+
+  images.forEach((img: any) => {
+    const size = Number(img.size) || 0;
+    if (keptImages.length >= limits.imageMaxCount || (size > 0 && size > limits.imageMaxSize)) {
+      dropped.push(img);
+    } else {
+      keptImages.push(img);
+    }
+  });
+
+  const keptVideos: any[] = [];
+  videos.forEach((v: any) => {
+    const size = Number(v.size) || 0;
+    const dur = Number(v.duration) || 0;
+    if (!limits.acceptsVideo
+      || (size > 0 && size > limits.videoMaxSize)
+      || (dur > 0 && dur > limits.videoMaxSeconds)) {
+      dropped.push(v);
+    } else {
+      keptVideos.push(v);
+    }
+  });
+
+  const keptAudios: any[] = [];
+  audios.forEach((a: any) => {
+    if (!limits.acceptsAudio) dropped.push(a);
+    else keptAudios.push(a);
+  });
+
+  return { images: keptImages, videos: keptVideos, audios: keptAudios, dropped };
+}
+
+// 把筛过的参考文件写回视频 tab 的 live 状态
+function applyVideoRefFiles(kept: { images: any[]; videos: any[]; audios: any[] }) {
+  uploadedImagesVideo.value = kept.images;
+  uploadedVideosVideo.value = kept.videos;
+  uploadedAudiosVideo.value = kept.audios;
+  combinedItemsVideo.value = [...kept.images, ...kept.videos, ...kept.audios];
+  inputKey.value++;
+}
+
+// 把输入框里正在编辑的提示词回读到 ref。
+// applyVideoRefFiles 里的 inputKey++ 会重建输入框 DOM，重建后 restoreEditableInput
+// 用的是 inputHtmlVideo —— 不先回读的话，写回去的是上一次进 tab 时的旧值，
+// 用户刚敲的内容就被盖没了。所有会改动视频状态的入口都必须先调它。
+function stashCurrentVideoPrompt() {
+  const mode = currentVideoMode2();
+  const { text, html } = readVideoPrompt(mode);
+  inputContentVideo.value = text;
+  inputHtmlVideo.value = html;
+  if (mode === 'startEndFrames') framesInput.value = text;
+  isInputEmptyVideo.value = !text.trim();
+}
+
+// 按目标档位预演一遍当前视频参考文件
+function previewVideoRefsFor(nextLimitMode: string) {
+  return filterRefFiles(
+    uploadedImagesVideo.value, uploadedVideosVideo.value, uploadedAudiosVideo.value,
+    refLimitsFor('video', nextLimitMode, currentVideoMode2()),
+  );
+}
+
+// 「做同款 / 续写 / 首尾帧延续」这些一次性入口的标志位。切模式、切档位时必须清掉，
+// 否则会带着上一次的来源身份进入新模式，提交时参数对不上。
+function clearVideoMakeFlags() {
+  isMakeVideoSimilarMode.value = false;
+  isMakeVideoSequelMode.value = false;
+  isMakeVideoMode.value = false;
+  originVideoUrlForTail.value = '';
+}
+
+// 限制档位变化时用：所有模式的草稿一起作废
+function clearAllVideoDrafts() {
+  VIDEO_MODES.forEach((m) => { videoDrafts.value[m] = emptyVideoModeDraft(); });
+}
+
+// 参数迁移：当前值在新档位/新模式下仍可选就沿用，否则回默认值
+function migrateVideoParams() {
+  if (!videoDurationOptions.value.some((o) => o.value === selectedVideoDuration.value)) {
+    selectedVideoDuration.value = '30';
+  }
+  lastValidVideoDuration.value = selectedVideoDuration.value;
+  if (!videoRatioOptions.value.some((o) => o.value === selectedVideoRatio.value)) {
+    selectedVideoRatio.value = '9:16';
+  }
+  if (!videoQualityOptions.value.some((o) => o.value === selectedVideoQuality.value)) {
+    selectedVideoQuality.value = '720P';
+  }
+}
+
+function resetVideoParams() {
+  selectedVideoRatio.value = '9:16';
+  selectedVideoQuality.value = '720P';
+  selectedVideoDuration.value = '30';
+  lastValidVideoDuration.value = '30';
+  enableVideoOptimizePrompt.value = false;
+}
+
+// spec 四：模式之间切换。只回显提示词；涉及多模态的切换参数尽量沿用，
+// 首尾帧/视频修改/视频续写 三者互切一律回默认参数。
+// 当前模式里挂着的参考文件数量（含角色、首尾帧、原视频）。
+// 切模式一律不带走，有内容就先问一句，别让用户一点就丢。
+function currentVideoRefCount() {
+  return uploadedImagesVideo.value.length
+    + uploadedVideosVideo.value.length
+    + uploadedAudiosVideo.value.length
+    + selectedCharactersVideo.value.length
+    + (startFrameImage.value ? 1 : 0)
+    + (endFrameImage.value ? 1 : 0)
+    + (uploadedVideo.value ? 1 : 0);
+}
+
+function switchVideoMultimodal(next: string) {
+  showVideoMultimodalDropdown.value = false;
+  const from = currentVideoMode2();
+  const target = next as VideoMode;
+  if (!VIDEO_MODES.includes(target) || target === from) return;
+
+  // 有参考文件要被丢弃就先确认；取消则留在当前模式，内容原样不动
+  if (currentVideoRefCount() > 0) {
+    pendingModeSwitchAction.value = () => doSwitchVideoMultimodal(from, target);
+    showModeSwitchFileWarning.value = true;
+    return;
+  }
+  doSwitchVideoMultimodal(from, target);
+}
+
+function doSwitchVideoMultimodal(from: VideoMode, target: VideoMode) {
+  carryPromptToMode(from, target);
+  clearVideoMakeFlags();
+  selectedVideoMultimodal.value = target;
+  lastVideoMode.value = target;
+  applyVideoDraft(target);
+
+  if (from === 'multimodal' || target === 'multimodal') {
+    migrateVideoParams();
+  } else {
+    resetVideoParams();
+  }
+  enableVideoOptimizePrompt.value = false;
+  restoreEditableInput('video');
+}
+
+// 「做同款」「续写」等外部入口会直接改 selectedVideoMultimodal，不走 switchVideoMultimodal。
+// 用 watch 兜底，保证 lastVideoMode 始终跟得上，切走再切回来能回到正确的模式。
+watch(selectedVideoMultimodal, (m) => {
+  if (VIDEO_MODES.includes(m as VideoMode)) lastVideoMode.value = m as VideoMode;
+});
+
+// spec 二：NSFW 开关 / 版本切换落定后统一走这里。
+// 档位不变 -> 内容与参数原样保留。
+// 档位变化 -> 提示词保留，参考文件按新档位重新筛（超标的丢掉），参数回默认值。
+function applyVideoLimitModeChange(prevLimitMode: string) {
+  if (videoLimitMode.value === prevLimitMode) {
+    migrateVideoParams();
+    return;
+  }
+  stashCurrentVideoPrompt();
+  const kept = previewVideoRefsFor(videoLimitMode.value);
+  applyVideoRefFiles(kept);
+
+  // 被筛掉的文件，其引用标签也要从提示词里摘掉，否则留下指向不存在素材的空引用
+  const keptIds = new Set<string>(
+    [...kept.images, ...kept.videos, ...kept.audios].map((f: any) => String(f.id)),
+  );
+  const cleaned = stripDanglingRefTags(inputHtmlVideo.value, keptIds);
+  inputHtmlVideo.value = cleaned.html;
+  inputContentVideo.value = cleaned.text;
+  isInputEmptyVideo.value = !cleaned.text.trim();
+  // 其余模式的暂存也按新档位筛一遍，否则切回去还是超标的旧文件
+  VIDEO_MODES.forEach((m) => {
+    if (m === currentVideoMode2()) return;
+    const d = videoDrafts.value[m];
+    const r = filterRefFiles(d.images, d.videos, d.audios,
+      refLimitsFor('video', videoLimitMode.value, m));
+    const ids = new Set<string>(
+      [...r.images, ...r.videos, ...r.audios].map((f: any) => String(f.id)),
+    );
+    const c = stripDanglingRefTags(d.html, ids);
+    videoDrafts.value[m] = {
+      ...d,
+      text: c.text || d.text, html: c.html,
+      images: r.images, videos: r.videos, audios: r.audios,
+      combined: [...r.images, ...r.videos, ...r.audios],
+    };
+  });
+  clearVideoMakeFlags();
+  resetVideoParams();
+}
+
+// 切档位前先预演：有参考文件留不下就先问一句，确认后才真正切；取消则什么都不变。
+function requestVideoLimitModeChange(nextLimitMode: string, apply: () => void) {
+  if (nextLimitMode !== videoLimitMode.value && previewVideoRefsFor(nextLimitMode).dropped.length > 0) {
+    pendingModeSwitchAction.value = apply;
+    showModeSwitchFileWarning.value = true;
+    return;
+  }
+  apply();
+}
+
+// 当前输入载体是不是视频首尾帧那个 textarea（小说 tab 的 textarea 走 novelInput）
+function isFramesTextarea() {
+  return contentType.value === 'video' && selectedVideoMultimodal.value === 'startEndFrames';
+}
 
 // Mode dropdown for video mode
 const showVideoModeDropdown = ref(false);
@@ -3240,25 +3746,30 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'unlimited';
-      selectedNsfwVersion.value = 'enhanced';
-      enableVideoOptimizePrompt.value = false;
-      resetVideoInputs();
-      selectedVideoDuration.value = '30';
-      lastValidVideoDuration.value = '30';
+      // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
+      const prevLimitMode = videoLimitMode.value;
+      requestVideoLimitModeChange('unlimited', () => {
+        stashCurrentVideoPrompt();
+        currentVideoMode.value = 'unlimited';
+        selectedNsfwVersion.value = 'enhanced';
+        enableVideoOptimizePrompt.value = false;
+        applyVideoLimitModeChange(prevLimitMode);
+        restoreEditableInput('video');
+      });
       showVideoModeDropdown.value = false;
     } else {
       showUnlimitedModal.value = true;
     }
   } else {
-    currentVideoMode.value = 'normal';
-    enableVideoOptimizePrompt.value = false;
+    const prevLimitMode = videoLimitMode.value;
     showVideoModeDropdown.value = false;
-    resetVideoInputs();
-    if (parseInt(selectedVideoDuration.value) < 4) {
-      selectedVideoDuration.value = '30';
-      lastValidVideoDuration.value = '30';
-    }
+    requestVideoLimitModeChange('normal', () => {
+      stashCurrentVideoPrompt();
+      currentVideoMode.value = 'normal';
+      enableVideoOptimizePrompt.value = false;
+      applyVideoLimitModeChange(prevLimitMode);
+      restoreEditableInput('video');
+    });
   }
 };
 
@@ -3366,13 +3877,24 @@ function applyPhotoNormalMode(removeRejected = false) {
   enablePhotoOptimizePrompt.value = false;
 }
 
+// 这个弹窗被多条切换链路共用（图片切档位、视频切模式、视频切档位），
+// 用 pending 记住「确认之后要执行什么」，取消则原样不动。
+const pendingModeSwitchAction = ref<(() => void) | null>(null);
+
 function confirmModeSwitchFileWarning() {
   showModeSwitchFileWarning.value = false;
+  const act = pendingModeSwitchAction.value;
+  pendingModeSwitchAction.value = null;
+  if (act) {
+    act();
+    return;
+  }
   applyPhotoNormalMode(true);
 }
 
 function cancelModeSwitchFileWarning() {
   showModeSwitchFileWarning.value = false;
+  pendingModeSwitchAction.value = null;
 }
 
 const switchPhotoMode = (mode: string, index: number) => {
@@ -3582,15 +4104,7 @@ const selectContentType = (type: string) => {
     syncEditableInputToDraft(contentType.value);
   }
 
-  // 小说 / 漫画 / 漫剧的输入、图片、选项由草稿缓存保留，这里不再清空。
-  // 视频和图片 tab 维持原来的「切换即重置」行为。
-
-  // Clear video-related content
-  selectedCharactersVideo.value = [];
-  uploadedImagesVideo.value = [];
-  combinedItemsVideo.value = [];
-  inputContentVideo.value = '';
-  inputHtmlVideo.value = '';
+  // 各 tab 的输入、参考图、选项都由草稿保留，这里不再清空（视频见下）。
 
   // Clear photo-related content
   uploadedImagesPhoto.value = [];
@@ -3598,11 +4112,8 @@ const selectContentType = (type: string) => {
   inputContentPhoto.value = '';
   inputHtmlPhoto.value = '';
 
-  // Reset modes to default
-  currentVideoMode.value = 'normal';
-  selectedNsfwVersion.value = 'enhanced';
+  // Reset modes to default（视频的模式与档位由草稿接管，不在这里重置）
   currentPhotoMode.value = 'normal';
-  selectedVideoMultimodal.value = 'multimodal'; // Reset video mode to default
   makeSequelPostId.value = '';
   isMakeSameMode.value = false;
   isMakeSimilar.value = false;
@@ -3618,17 +4129,20 @@ const selectContentType = (type: string) => {
   overrideNormalVideoMode.value = false;
   previousInputHtml.value = '';
 
-  // Reset video settings to default
-  selectedVideoQuality.value = '720P';
-  selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
-
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
   selectedPhotoRatio.value = '9:16';
 
   // Switch content type
   contentType.value = type;
+
+  // 进入视频 tab：回到离开前所在的模式，并把那一桶内容写回。
+  // 离开视频 tab：内容已在上面的 syncEditableInputToDraft 里存好，这里什么都不用做。
+  if (type === 'video') {
+    selectedVideoMultimodal.value = lastVideoMode.value;
+    applyVideoDraft(lastVideoMode.value);
+    migrateVideoParams();
+  }
 
   enablePhotoOptimizePrompt.value = false;
   enableVideoOptimizePrompt.value = false;

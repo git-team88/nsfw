@@ -531,13 +531,6 @@ async function handleAccountFailedModify() {
   font-weight: 800;
   cursor: pointer;
   transition: transform 0.15s;
-
-  &:hover {
-
-  }
-  &:active {
-
-  }
 }
 
 .account-status {

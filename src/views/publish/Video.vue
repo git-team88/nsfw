@@ -1577,6 +1577,7 @@ async function runBatchPublishLoop() {
       headers.append("sign", sign);
       headers.append("Content-Type", "application/json");
       headers.append("Platform", "web");
+      headers.append("siteid", "1");
 
       const response = await fetch(`${baseUrl}post/addPost`, {
         method: "POST",
@@ -3913,6 +3914,7 @@ async function onSubmit() {
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
     headers.append("Platform", "web");
+    headers.append("siteid", "1");
 
     const data = JSON.stringify(payload);
 

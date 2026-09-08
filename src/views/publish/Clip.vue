@@ -1788,6 +1788,7 @@ async function mockUploadCover(dataUrl: string) {
       headers: {
         token: token,
         Platform: "web",
+        siteid: "1",
         ...authHeaders,
       } as Record<string, string>,
       body: formData,
@@ -1869,6 +1870,7 @@ async function onSubmit() {
     headers.append("sign", sign);
     headers.append("Content-Type", "application/json");
     headers.append("Platform", "web");
+    headers.append("siteid", "1");
 
     const data = JSON.stringify(payload);
 

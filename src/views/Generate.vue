@@ -545,6 +545,9 @@
             <template v-if="selectedVideoMultimodal == 'multimodal'">
               <div
                 ref="videoEditableInputRef"
+                :data-video-mode="selectedVideoMultimodal"
+                :data-mode="selectedVideoMultimodal"
+                @vue:mounted="onVideoInputMounted"
                 :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
                 contenteditable="true"
                 spellcheck="false"
@@ -659,6 +662,9 @@
 
                 <div
                   ref="videoEditableInputRef"
+                  :data-video-mode="selectedVideoMultimodal"
+                  :data-mode="selectedVideoMultimodal"
+                  @vue:mounted="onVideoInputMounted"
                   :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
                   contenteditable="true"
                   spellcheck="false"
@@ -717,6 +723,9 @@
 
                 <div
                   ref="videoEditableInputRef"
+                  :data-video-mode="selectedVideoMultimodal"
+                  :data-mode="selectedVideoMultimodal"
+                  @vue:mounted="onVideoInputMounted"
                   :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
                   contenteditable="true"
                   spellcheck="false"
@@ -2923,6 +2932,7 @@ const handleVideoInput = () => {
   if (!videoEditableInputRef.value) return;
 
   const target = videoEditableInputRef.value;
+  syncVideoPromptFromDom(target);
 
   // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题
   const divs = target.querySelectorAll('div');
@@ -3379,6 +3389,8 @@ const selectVideoRefItem = (item: any) => {
   }
 
   previousVideoInputHtml.value = target.innerHTML;
+  // 插入引用标签是直接改 DOM，不触发 input 事件，这里补一次同步
+  syncVideoPromptFromDom(target);
 };
 
 const createVideoItemTag = (item: any): HTMLElement => {
@@ -3580,26 +3592,294 @@ const triggerExtendVideoUpload = () => {
   }
 };
 
-const selectVideoMultimodal = (value: string) => {
-  selectedVideoMultimodal.value = value;
-  showVideoMultimodalDropdown.value = false;
-  enableVideoOptimizePrompt.value = false;
-  clearGenerateFileInputs();
-  videoInput.value = '';
-  startFrameImage.value = '';
-  endFrameImage.value = '';
-  uploadedVideo.value = '';
-  uploadedVideoCover.value = '';
-  uploadedVideoDuration.value = 0;
-  uploadedVideoRefs.value = [];
-  if (videoEditableInputRef.value) {
-    videoEditableInputRef.value.innerHTML = '';
-  }
+// ---------------------------------------------------------------------------
+// 视频 tab 的草稿与切换迁移（与 Home.vue 同一套设计）
+//
+// 四个模式各有独立的 DOM 分支，参考文件、首尾帧、原视频挂在不同的 ref 上，
+// 生成时长的可选范围随限制档位变化。所以按模式分桶暂存 + 统一迁移入口。
+//
+// videoLimitMode 是核心判据：
+//   加强版             -> 'unlimited'  图片 20MB/10 张、参考视频 100MB/15s，时长下限 2s
+//   普通模式 / 超级版  -> 'normal'     参考文件按普通模式，时长下限 4s
+// 档位不变 => 已填内容仍然合法，保留；档位变化 => 大概率超标，按新限制筛。
+// 提示词在任何切换下都保留。
+// ---------------------------------------------------------------------------
+type VideoMode = 'multimodal' | 'startEndFrames' | 'videoModify' | 'videoExtend';
+const VIDEO_MODES: VideoMode[] = ['multimodal', 'startEndFrames', 'videoModify', 'videoExtend'];
 
-  selectedVideoQuality.value = '720P';
+interface VideoModeDraft {
+  text: string;
+  html: string;
+  refs: any[];
+  startFrame: string;
+  endFrame: string;
+  sourceVideo: string;
+  sourceCover: string;
+  sourceDuration: number;
+}
+
+function emptyVideoModeDraft(): VideoModeDraft {
+  return { text: '', html: '', refs: [], startFrame: '', endFrame: '', sourceVideo: '', sourceCover: '', sourceDuration: 0 };
+}
+
+const videoDrafts = ref<Record<VideoMode, VideoModeDraft>>({
+  multimodal: emptyVideoModeDraft(),
+  startEndFrames: emptyVideoModeDraft(),
+  videoModify: emptyVideoModeDraft(),
+  videoExtend: emptyVideoModeDraft(),
+});
+
+// contenteditable 里的提示词。DOM 随分支重建，靠这两个 ref 保存现状。
+const videoPromptText = ref('');
+const videoPromptHtml = ref('');
+
+function currentVideoMode2(): VideoMode {
+  return (VIDEO_MODES.includes(selectedVideoMultimodal.value as VideoMode)
+    ? selectedVideoMultimodal.value : 'multimodal') as VideoMode;
+}
+
+// videoEditableInputRef 被三个模式分支共用，切分支时会被旧元素的卸载置空。
+// 校验 data-mode 对不上就直接查 DOM 兜底。
+function resolveVideoInputEl(): HTMLElement | null {
+  const mode = currentVideoMode2();
+  const cur = videoEditableInputRef.value;
+  if (cur && cur.dataset.mode === mode) return cur;
+  return document.querySelector<HTMLElement>(`[data-video-mode="${mode}"]`);
+}
+
+// 把输入框现状同步进 ref。每次输入 / 插入引用标签都调，读取时就不用碰 DOM。
+function syncVideoPromptFromDom(el?: HTMLElement | null) {
+  const mode = currentVideoMode2();
+  if (mode === 'startEndFrames') return;
+  const target = el && el.dataset.mode === mode ? el : resolveVideoInputEl();
+  if (!target) return;
+  videoPromptText.value = target.textContent || '';
+  videoPromptHtml.value = target.innerHTML;
+}
+
+function readVideoPrompt(mode: VideoMode): { text: string; html: string } {
+  // 首尾帧是纯文本 textarea，没有 html
+  if (mode === 'startEndFrames') return { text: videoInput.value, html: '' };
+  if (mode === currentVideoMode2()) syncVideoPromptFromDom();
+  return { text: videoPromptText.value, html: videoPromptHtml.value };
+}
+
+function textToHtml(text: string) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function htmlToText(html: string) {
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  return box.textContent || '';
+}
+
+// 输入框里的引用标签是手工建的 span，指向具体的已上传文件。
+// 文件不带走时这些 span 会变成指向不存在素材的空引用，必须一并摘掉。
+const REF_TAG_SELECTOR = 'span.image-tag, span.video-tag, span.audio-tag';
+
+function stripRefTags(html: string): { html: string; text: string } {
+  if (!html) return { html: '', text: '' };
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  box.querySelectorAll(REF_TAG_SELECTOR).forEach((el) => el.remove());
+  box.innerHTML = box.innerHTML.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>').replace(/^\s+|\s+$/g, '');
+  return { html: box.innerHTML, text: box.textContent || '' };
+}
+
+// 只摘掉引用文件已经不在的那些标签
+function stripDanglingRefTags(html: string, keepIds: Set<string>): { html: string; text: string } {
+  if (!html) return { html: '', text: '' };
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  box.querySelectorAll(REF_TAG_SELECTOR).forEach((el) => {
+    const id = (el as HTMLElement).dataset.itemId || '';
+    if (id && !keepIds.has(id)) el.remove();
+  });
+  return { html: box.innerHTML, text: box.textContent || '' };
+}
+
+function stashVideoDraft(mode: VideoMode) {
+  const { text, html } = readVideoPrompt(mode);
+  videoDrafts.value[mode] = {
+    text, html,
+    refs: [...uploadedVideoRefs.value],
+    startFrame: startFrameImage.value,
+    endFrame: endFrameImage.value,
+    sourceVideo: uploadedVideo.value,
+    sourceCover: uploadedVideoCover.value,
+    sourceDuration: uploadedVideoDuration.value,
+  };
+}
+
+function applyVideoDraft(mode: VideoMode) {
+  const d = videoDrafts.value[mode];
+  uploadedVideoRefs.value = [...d.refs];
+  startFrameImage.value = d.startFrame;
+  endFrameImage.value = d.endFrame;
+  uploadedVideo.value = d.sourceVideo;
+  uploadedVideoCover.value = d.sourceCover;
+  uploadedVideoDuration.value = d.sourceDuration;
+
+  // text / html 互为兜底：首尾帧只有纯文本，contenteditable 只有 html
+  const text = d.text || (d.html ? htmlToText(d.html) : '');
+  videoPromptText.value = text;
+  videoPromptHtml.value = d.html || (text ? textToHtml(text) : '');
+  videoInput.value = mode === 'startEndFrames' ? text : '';
+}
+
+// 切模式：只带提示词，参考文件一律不带（引用标签同时摘掉）
+function carryPromptToMode(from: VideoMode, to: VideoMode) {
+  const raw = readVideoPrompt(from);
+  const rawHtml = raw.html || (raw.text ? textToHtml(raw.text) : '');
+  const cleaned = rawHtml ? stripRefTags(rawHtml) : { html: '', text: raw.text };
+  videoDrafts.value[to] = { ...emptyVideoModeDraft(), text: cleaned.text, html: cleaned.html };
+}
+
+// 参考文件限制，数值抽自上传校验，迁移时用同一套规则
+const MB = 1024 * 1024;
+function videoRefLimits(limitMode: string) {
+  return limitMode === 'unlimited'
+    ? { imageMaxCount: 10, imageMaxSize: 20 * MB, videoMaxSize: 100 * MB, videoMaxSeconds: 15 }
+    : { imageMaxCount: 30, imageMaxSize: 30 * MB, videoMaxSize: 200 * MB, videoMaxSeconds: 30 };
+}
+
+// 老数据没有 size / duration，无从判断，按合规处理，只受数量上限约束
+function filterVideoRefs(refs: any[], limitMode: string) {
+  const lim = videoRefLimits(limitMode);
+  const kept: any[] = [];
+  const dropped: any[] = [];
+  let imageCount = 0;
+  refs.forEach((r: any) => {
+    const size = Number(r.size) || 0;
+    const dur = Number(r.duration) || 0;
+    let ok = true;
+    if (r.type === 'video') {
+      ok = !((size > 0 && size > lim.videoMaxSize) || (dur > 0 && dur > lim.videoMaxSeconds));
+    } else if (r.type !== 'audio') {
+      ok = !(size > 0 && size > lim.imageMaxSize) && imageCount < lim.imageMaxCount;
+      if (ok) imageCount++;
+    }
+    (ok ? kept : dropped).push(r);
+  });
+  return { kept, dropped };
+}
+
+function migrateVideoParams() {
+  if (!videoDurationOptions.value.some((o: any) => o.value === selectedVideoDuration.value)) {
+    selectedVideoDuration.value = '30';
+  }
+  lastValidVideoDuration.value = selectedVideoDuration.value;
+  if (!videoRatioOptions.value.some((o: any) => o.value === selectedVideoRatio.value)) {
+    selectedVideoRatio.value = '9:16';
+  }
+  if (!videoQualityOptions.value.some((o: any) => o.value === selectedVideoQuality.value)) {
+    selectedVideoQuality.value = '720P';
+  }
+}
+
+function resetVideoParams() {
   selectedVideoRatio.value = '9:16';
+  selectedVideoQuality.value = '720P';
   selectedVideoDuration.value = '30';
   lastValidVideoDuration.value = '30';
+  enableVideoOptimizePrompt.value = false;
+}
+
+// 档位落定后统一走这里：提示词保留，参考文件按新档位筛，参数回默认
+function applyVideoLimitModeChange(prevLimitMode: string) {
+  if (videoLimitMode.value === prevLimitMode) {
+    migrateVideoParams();
+    return;
+  }
+  syncVideoPromptFromDom();
+  const { kept } = filterVideoRefs(uploadedVideoRefs.value, videoLimitMode.value);
+  uploadedVideoRefs.value = kept;
+
+  const keptIds = new Set<string>(kept.map((r: any) => String(r.id)));
+  const cleaned = stripDanglingRefTags(videoPromptHtml.value, keptIds);
+  videoPromptHtml.value = cleaned.html;
+  videoPromptText.value = cleaned.text;
+
+  VIDEO_MODES.forEach((m) => {
+    if (m === currentVideoMode2()) return;
+    const d = videoDrafts.value[m];
+    const r = filterVideoRefs(d.refs, videoLimitMode.value);
+    const ids = new Set<string>(r.kept.map((f: any) => String(f.id)));
+    const c = stripDanglingRefTags(d.html, ids);
+    videoDrafts.value[m] = { ...d, refs: r.kept, html: c.html, text: c.text || d.text };
+  });
+
+  resetVideoParams();
+  restoreVideoInput();
+}
+
+// 切档位前先预演：有参考文件留不下就先问一句，确认后才真正切；取消则什么都不变
+function requestVideoLimitModeChange(nextLimitMode: string, apply: () => void) {
+  if (nextLimitMode !== videoLimitMode.value
+    && filterVideoRefs(uploadedVideoRefs.value, nextLimitMode).dropped.length > 0) {
+    pendingModeSwitchAction.value = apply;
+    showModeSwitchFileWarning.value = true;
+    return;
+  }
+  apply();
+}
+
+// 把 ref 里的提示词写回输入框。挂载钩子覆盖不到的场景（档位切换不重建元素）用它兜底。
+function restoreVideoInput() {
+  nextTick(() => {
+    if (currentVideoMode2() === 'startEndFrames') return;
+    const el = resolveVideoInputEl();
+    if (!el) return;
+    const want = videoPromptHtml.value || '';
+    if (el.innerHTML !== want) el.innerHTML = want;
+    previousVideoInputHtml.value = el.innerHTML;
+  });
+}
+
+// 输入框挂载时直接写入，不依赖 ref 时序
+function onVideoInputMounted(vnode: any) {
+  const el = vnode?.el as HTMLElement | null | undefined;
+  if (!el) return;
+  const html = videoPromptHtml.value || '';
+  if (el.innerHTML !== html) el.innerHTML = html;
+  previousVideoInputHtml.value = el.innerHTML;
+}
+
+// 当前挂着的参考物数量（含首尾帧和原视频），切模式时全部丢弃，有就先确认
+function currentVideoRefCount() {
+  return uploadedVideoRefs.value.length
+    + (startFrameImage.value ? 1 : 0)
+    + (endFrameImage.value ? 1 : 0)
+    + (uploadedVideo.value ? 1 : 0);
+}
+
+const selectVideoMultimodal = (value: string) => {
+  showVideoMultimodalDropdown.value = false;
+  const from = currentVideoMode2();
+  const target = value as VideoMode;
+  if (!VIDEO_MODES.includes(target) || target === from) return;
+
+  // 有参考文件要被丢弃就先确认；取消则留在当前模式，内容原样不动
+  if (currentVideoRefCount() > 0) {
+    pendingModeSwitchAction.value = () => doSelectVideoMultimodal(from, target);
+    showModeSwitchFileWarning.value = true;
+    return;
+  }
+  doSelectVideoMultimodal(from, target);
+};
+
+const doSelectVideoMultimodal = (from: VideoMode, target: VideoMode) => {
+  // 只把提示词带到目标模式，参考文件与引用标签一律不带
+  carryPromptToMode(from, target);
+  selectedVideoMultimodal.value = target;
+  applyVideoDraft(target);
+
+  // 涉及多模态的切换参数尽量沿用，其余三者互切回默认
+  if (from === 'multimodal' || target === 'multimodal') migrateVideoParams();
+  else resetVideoParams();
+  enableVideoOptimizePrompt.value = false;
+  restoreVideoInput();
 };
 
 // 切换 NSFW 版本。两个版本的参考文件限制不一样（加强版更严：图片 20MB/10 张、
@@ -3609,26 +3889,15 @@ const selectNsfwVersion = (version: string) => {
   showNsfwVersionDropdown.value = false;
   if (selectedNsfwVersion.value === version) return;
 
-  selectedNsfwVersion.value = version;
-
-  clearGenerateFileInputs();
-  videoInput.value = '';
-  startFrameImage.value = '';
-  endFrameImage.value = '';
-  uploadedVideo.value = '';
-  uploadedVideoCover.value = '';
-  uploadedVideoDuration.value = 0;
-  uploadedVideoRefs.value = [];
-  previousVideoInputHtml.value = '';
-  if (videoEditableInputRef.value) {
-    videoEditableInputRef.value.innerHTML = '';
-  }
-  startVideoTypewriter();
-
-  // 内容已经清空，生成时长也回到默认值（最大 30s）。
-  // 两个版本的下限不一样（超级版 4s、加强版 2s），直接给最大值就不用管下限了。
-  selectedVideoDuration.value = '30';
-  lastValidVideoDuration.value = '30';
+  // 加强版限制更严（图片 20MB/10 张、参考视频 15s），超级版按普通模式走。
+  // 档位变了参考文件大概率超标：先问一句，确认后丢掉超标文件；提示词始终保留。
+  const prevLimitMode = videoLimitMode.value;
+  const nextLimitMode = currentVideoMode.value === 'unlimited' && version !== 'super' ? 'unlimited' : 'normal';
+  requestVideoLimitModeChange(nextLimitMode, () => {
+    syncVideoPromptFromDom();
+    selectedNsfwVersion.value = version;
+    applyVideoLimitModeChange(prevLimitMode);
+  });
 };
 
 function getVideoDuration(file: File): Promise<number> {
@@ -6076,13 +6345,21 @@ const applyPhotoNormalMode = (removeRejected = false) => {
   currentPhotoMode.value = contentSwitch.mode === 2 ? 'unlimited' : 'normal';
 };
 
+// 弹窗被多条链路共用（图片切档位、视频切模式、视频切档位），
+// 用 pending 记住确认之后要执行什么；取消则原样不动。
+const pendingModeSwitchAction = ref<(() => void) | null>(null);
+
 const confirmModeSwitchFileWarning = () => {
   showModeSwitchFileWarning.value = false;
+  const act = pendingModeSwitchAction.value;
+  pendingModeSwitchAction.value = null;
+  if (act) { act(); return; }
   applyPhotoNormalMode(true);
 };
 
 const cancelModeSwitchFileWarning = () => {
   showModeSwitchFileWarning.value = false;
+  pendingModeSwitchAction.value = null;
 };
 
 const switchPhotoMode = (mode: string, index: number) => {
@@ -6134,47 +6411,47 @@ const switchVideoMode = (mode: string, index: number) => {
 
     const hasConfirmed = localStorage.getItem('unlimitedDontAsk') == '1';
     if (hasConfirmed) {
-      currentVideoMode.value = 'unlimited';
-      selectedNsfwVersion.value = 'enhanced';
-      enableVideoOptimizePrompt.value = false;
-      videoInput.value = '';
-      uploadedVideo.value = '';
-      uploadedVideoCover.value = '';
-      uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '30';
-      lastValidVideoDuration.value = '30';
-      nextTick(() => startVideoTypewriter());
+      // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
+      const prevLimitMode = videoLimitMode.value;
+      requestVideoLimitModeChange('unlimited', () => {
+        syncVideoPromptFromDom();
+        currentVideoMode.value = 'unlimited';
+        selectedNsfwVersion.value = 'enhanced';
+        enableVideoOptimizePrompt.value = false;
+        applyVideoLimitModeChange(prevLimitMode);
+      });
     } else {
       pendingModeType.value = 'video';
       showUnlimitedModal.value = true;
     }
   } else {
-    currentVideoMode.value = 'normal';
-    enableVideoOptimizePrompt.value = false;
-    videoInput.value = '';
-    uploadedVideo.value = '';
-    uploadedVideoCover.value = '';
-    uploadedVideoRefs.value = [];
-    selectedVideoDuration.value = '30';
-    lastValidVideoDuration.value = '30';
-    nextTick(() => startVideoTypewriter());
+    const prevLimitMode = videoLimitMode.value;
+    // 关掉 NSFW 必然回到 normal 档位
+    requestVideoLimitModeChange('normal', () => {
+      syncVideoPromptFromDom();
+      currentVideoMode.value = 'normal';
+      enableVideoOptimizePrompt.value = false;
+      applyVideoLimitModeChange(prevLimitMode);
+    });
   }
 };
 
 const confirmUnlimitedMode = () => {
   if (pendingModeType.value === 'video') {
-    currentVideoMode.value = 'unlimited';
-    selectedNsfwVersion.value = 'enhanced';
-    enableVideoOptimizePrompt.value = false;
-    videoInput.value = '';
-    uploadedVideo.value = '';
-    uploadedVideoCover.value = '';
-    uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '30';
-      lastValidVideoDuration.value = '30';
-      clearGenerateFileInputs();
-    nextTick(() => startVideoTypewriter());
-  } else if (pendingModeType.value === 'photo') {
+    showUnlimitedModal.value = false;
+    // 首次开 NSFW 会先弹这个说明框，确认后要和 switchVideoMode 走同一条路：
+    // 提示词保留，只按新档位筛参考文件、参数回默认，不能再走全清。
+    const prevLimitMode = videoLimitMode.value;
+    requestVideoLimitModeChange('unlimited', () => {
+      syncVideoPromptFromDom();
+      currentVideoMode.value = 'unlimited';
+      selectedNsfwVersion.value = 'enhanced';
+      enableVideoOptimizePrompt.value = false;
+      applyVideoLimitModeChange(prevLimitMode);
+    });
+    return;
+  }
+  if (pendingModeType.value === 'photo') {
     currentPhotoMode.value = 'unlimited';
     uploadedPhotoImages.value = [];
     photoInputKey.value++;
