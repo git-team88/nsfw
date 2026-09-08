@@ -1390,14 +1390,16 @@ function setActiveContentType(typeId: number | string) {
 
   const newQuery = { ...route.query };
   delete newQuery.tab;
-  delete newQuery.type;
-
-  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
-    router.replace({
-      path: "/user-home",
-      query: newQuery,
-    });
+  if (typeof typeId === 'number') {
+    newQuery.type = String(typeId);
+  } else {
+    delete newQuery.type;
   }
+
+  router.replace({
+    path: "/user-home",
+    query: newQuery,
+  });
 }
 
 // Set active collection tab
