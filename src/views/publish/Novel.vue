@@ -373,8 +373,8 @@
                         </div>
                       </div>
                     </div>
-                    <div class="collection-info" v-else>
-                      <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                    <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                      <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                     </div>
 
                     <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
@@ -420,8 +420,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="collection-info" v-else>
-                  <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                  <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                 </div>
               </div>
             </div>
@@ -592,8 +592,8 @@
                         </div>
                       </div>
                     </div>
-                    <div class="collection-info" v-else>
-                      <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                    <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                      <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                     </div>
                   </div>
 
@@ -615,8 +615,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="collection-info" v-else-if="!isNoCollection">
-                  <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                <div class="collection-info clickable" @click="openCollectionListModal" v-else-if="!isNoCollection">
+                  <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                 </div>
 
               </div>

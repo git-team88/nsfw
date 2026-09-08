@@ -375,7 +375,10 @@
       @confirm="onCoverConfirmed"
     />
 
-    <UploadMask :visible="isUpload" />
+    <UploadMask
+      :visible="isUpload"
+      :text="uploadProgress > 0 ? `${t('upload')} ${uploadProgress}%` : ''"
+    />
 
     <!-- Community Convention Modal -->
     <CommunityConventionModal
@@ -399,6 +402,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
+import { uploadParts, PartUploadError } from "@/util/uploadVideo";
 import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
@@ -536,6 +540,7 @@ const coverImages = ref<string[]>([]);
 const showCoverModal = ref(false);
 const sessionId = ref("");
 const isUpload = ref(false);
+const uploadProgress = ref(0);
 const editPostId = ref("");
 
   // Local upload file input
@@ -1648,6 +1653,7 @@ async function handleVideoFile(file: File) {
   videoFile.value = file;
   isUpload.value = true;
 
+  uploadProgress.value = 0;
   try {
     // Validate metadata first
     const video = document.createElement("video");
@@ -1695,44 +1701,10 @@ async function handleVideoFile(file: File) {
 
     const { uploadId, fileKey } = videoIdResponse.data;
 
-    // 2. Upload parts in 5MB chunks
-    const CHUNK_SIZE = 5 * 1024 * 1024;
-    const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadedParts: { PartNumber: number; ETag: string }[] = [];
-
-    for (let i = 1; i <= totalParts; i++) {
-      const start = (i - 1) * CHUNK_SIZE;
-      const end = Math.min(i * CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
-
-      const formData = new FormData();
-      formData.append("uploadId", uploadId);
-      formData.append("key", fileKey);
-      formData.append("partNumber", String(i));
-      formData.append("file", chunk);
-
-      const authToken = localStorage.getItem("token") ?? "";
-      const authHeaders = (window as any).AntiCrawler.generateAuthParams(authToken);
-      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
-        method: "POST",
-        headers: {
-          token: authToken || undefined,
-          Platform: "web",
-          ...authHeaders,
-        } as Record<string, string>,
-        body: formData,
-      });
-      const videoUrlData = await videoUrlResponse.json();
-      if (!videoUrlData || videoUrlData.code !== 0) {
-        isUpload.value = false;
-        toast(getI18nMsg(videoUrlData));
-        return;
-      }
-
-      const etag = videoUrlData.data?.etag || "";
-      uploadedParts.push({ PartNumber: i, ETag: etag });
-
-    }
+    // 2. 分片并发上传，单片网络失败自动重试
+    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+      uploadProgress.value = percent;
+    });
 
     // 3. Merge parts
     const videoMergeResponse = (await api.getVideoMerge({
@@ -1752,10 +1724,12 @@ async function handleVideoFile(file: File) {
     await captureFirstFrame(file);
 
     isUpload.value = false;
+    uploadProgress.value = 0;
     showFullContent.value = true;
   } catch (error) {
     isUpload.value = false;
-    toast(t("fail"));
+    uploadProgress.value = 0;
+    toast(error instanceof PartUploadError ? getI18nMsg(error.payload) : t("fail"));
   }
 }
 

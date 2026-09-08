@@ -9,7 +9,7 @@
 
       <div class="content-box">
         <div class="page-title-tabs">
-          <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <div v-if="false" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
           <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
         </div>
 
@@ -133,7 +133,7 @@ const subscriptionPlans = ref<SubscriptionPlan | SubscriptionPlan[]>({
   price: ''
 });
 
-const paymentTab = ref<'cash' | 'usdt'>('cash');
+const paymentTab = ref<'cash' | 'usdt'>('usdt');
 const bloggerStatus = ref<number>(0);
 const paymentAgree = ref(true);
 const isLoading = ref(false);

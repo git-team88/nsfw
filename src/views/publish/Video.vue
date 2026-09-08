@@ -364,8 +364,8 @@
                         </div>
                       </div>
                     </div>
-                    <div class="collection-info" v-else>
-                      <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                    <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                      <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                     </div>
                   </div>
 
@@ -537,8 +537,8 @@
                       </div>
                     </div>
                   </div>
-                  <div class="collection-info" v-else>
-                    <span class="collection-name no-collection" @click="openCollectionListModal">{{ t('collection.noCollection') }}</span>
+                  <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
                   </div>
                 </div>
               </div>
@@ -708,7 +708,10 @@
     <CustomToast :visible="toastShow" :message="toastMsg" :icon="toastIcon" :theme="toastTheme" />
 
     <!-- Upload Mask -->
-    <UploadMask :visible="isUpload"></UploadMask>
+    <UploadMask
+      :visible="isUpload"
+      :text="videoUploadPercent > 0 ? `${t('upload')} ${videoUploadPercent}%` : ''"
+    ></UploadMask>
     <LoadingMask :visible="isSelectionLoading" @cancel="cancelSelectionLoading" />
 
     <!-- Project View Modal -->
@@ -824,6 +827,7 @@ import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import { baseUrl } from "@/util/config";
+import { uploadParts, PartUploadError } from "@/util/uploadVideo";
 
 const isEditing = computed(() => !!postId.value);
 
@@ -885,6 +889,8 @@ const uploadSuccess = ref(false);
 const isBatchRoute = computed(() => route.query.batch === 'true');
 const uploadError = ref("");
 const uploadProgress = ref(0);
+// 仅用于分片上传期间的遮罩文案；uploadProgress 需在上传完成后保持 100 以撑满进度条
+const videoUploadPercent = ref(0);
 const videoSize = ref(0);
 const videoDuration = ref(0);
 const videoType = ref("");
@@ -2549,6 +2555,7 @@ function handleUserInfoLoaded(userInfo: any) {
 async function startFakeUpload(file: File) {
   videoFile.value = file;
   uploadProgress.value = 0;
+  videoUploadPercent.value = 0;
   isUpload.value = true;
 
   try {
@@ -2595,49 +2602,13 @@ async function startFakeUpload(file: File) {
       return false;
     }
 
-    uploadProgress.value = 30;
     const { uploadId, fileKey } = videoIdResponse.data;
 
-    const CHUNK_SIZE = 5 * 1024 * 1024;
-    const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadedParts = [];
-
-    for (let i = 1; i <= totalParts; i++) {
-      const start = (i - 1) * CHUNK_SIZE;
-      const end = Math.min(i * CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
-
-      const formData = new FormData();
-      formData.append('uploadId', uploadId);
-      formData.append('key', fileKey);
-      formData.append('partNumber', String(i));
-      formData.append('file', chunk);
-
-      const authToken = localStorage.getItem("token") ?? "";
-      const authHeaders = window.AntiCrawler.generateAuthParams(authToken);
-      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
-        method: "POST",
-        headers: {
-          token: authToken || undefined,
-          'Platform': 'web',
-          ...authHeaders,
-        } as Record<string, string>,
-        body: formData,
-      });
-      const videoUrlData = await videoUrlResponse.json();
-      if (!videoUrlData || videoUrlData.code !== 0) {
-        isUpload.value = false;
-        toast(getI18nMsg(videoUrlData));
-        return false;
-      }
-
-      uploadProgress.value = 60;
-
-      const etag = videoUrlData.data?.etag || '';
-      uploadedParts.push({ PartNumber: i, ETag: etag });
-
-      uploadProgress.value = Math.round((i / totalParts) * 100);
-    }
+    // 分片并发上传，单片网络失败自动重试
+    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+      uploadProgress.value = percent;
+      videoUploadPercent.value = percent;
+    });
 
     const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
     if (!videoMergeResponse || videoMergeResponse.code !== 0) {
@@ -2650,9 +2621,12 @@ async function startFakeUpload(file: File) {
 
     uploadSuccess.value = true;
     isUpload.value = false;
+    videoUploadPercent.value = 0;
   } catch (error: any) {
     isUpload.value = false;
-    toast(t('fail'));
+    videoUploadPercent.value = 0;
+    toast(error instanceof PartUploadError ? getI18nMsg(error.payload) : t('fail'));
+    return false;
   }
 }
 

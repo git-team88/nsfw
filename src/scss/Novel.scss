@@ -1128,6 +1128,12 @@
             padding: 18px;
             border: 1px solid #3d3d3d;
             border-radius: 14px;
+
+            // 仅未选合集时整行可点（已选态无点击事件，不给手型）
+            &.clickable {
+              cursor: pointer;
+            }
+
           }
 
           .collection-cover {

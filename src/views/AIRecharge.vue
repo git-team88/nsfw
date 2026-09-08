@@ -14,6 +14,7 @@
           <div class="tab-left">
             <div class="tab-group payment-tab-group">
               <div
+                v-show="false"
                 class="tab-item"
                 :class="{ active: paymentTab === 'wallet' }"
                 @click="switchPaymentTab('wallet')"
@@ -284,7 +285,7 @@ const isUserNew = ref(false);
 const promotionTitle = ref('');
 const promotionContent = ref('');
 const activeTab = ref('subscription');
-const paymentTab = ref('wallet');
+const paymentTab = ref('usdt');
 const hasFirstMonthDiscount = ref(false);
 const showWalletModal = ref(false);
 

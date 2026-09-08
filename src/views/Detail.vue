@@ -965,6 +965,7 @@ import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
+import { uploadParts, PartUploadError } from "@/util/uploadVideo";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
@@ -2272,6 +2273,8 @@ async function fetchDetail(newId: number) {
   try {
     id.value = newId;
 
+    // 该遮罩与上传共用 loadText，此处必须复位，否则会残留上一次的上传文案
+    loadText.value = t('userHome.loading');
     isLoading.value = true;
     comments.value = [];
     isLoadingComments.value = true;
@@ -4689,41 +4692,10 @@ async function uploadVideo(file: File) {
 
     const { uploadId, fileKey } = videoIdResponse.data;
 
-    const CHUNK_SIZE = 5 * 1024 * 1024;
-    const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadedParts = [];
-
-    for (let i = 1; i <= totalParts; i++) {
-      const start = (i - 1) * CHUNK_SIZE;
-      const end = Math.min(i * CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
-
-      const formData = new FormData();
-      formData.append('uploadId', uploadId);
-      formData.append('key', fileKey);
-      formData.append('partNumber', String(i));
-      formData.append('file', chunk);
-
-      const authToken = localStorage.getItem("token") ?? "";
-      const authHeaders = window.AntiCrawler.generateAuthParams(authToken);
-      const videoUrlResponse = await fetch(baseUrl + "user/uploadCosPart", {
-        method: "POST",
-        headers: {
-          token: authToken || undefined,
-          'Platform': 'web',
-          ...authHeaders,
-        } as Record<string, string>,
-        body: formData,
-      });
-      const videoUrlData = await videoUrlResponse.json();
-      if (!videoUrlData || videoUrlData.code !== 0) {
-        toast(getI18nMsg(videoUrlData));
-        return false;
-      }
-
-      const etag = videoUrlData.data?.etag || '';
-      uploadedParts.push({ PartNumber: i, ETag: etag });
-    }
+    // 分片并发上传，单片网络失败自动重试
+    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+      loadText.value = `${t('detail.uploading')} ${percent}%`;
+    });
 
     const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
     if (!videoMergeResponse || videoMergeResponse.code !== 0) {
@@ -4738,7 +4710,9 @@ async function uploadVideo(file: File) {
       url: videoUrl.value,
       file});
   } catch (error: any) {
-    toast(getI18nMsg(error?.response?.data || error));
+    toast(getI18nMsg(error instanceof PartUploadError
+      ? error.payload
+      : (error?.response?.data || error)));
   } finally {
     isLoading.value = false;
   }
