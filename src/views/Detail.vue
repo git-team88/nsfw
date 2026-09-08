@@ -365,8 +365,8 @@
             <!-- Collection Mode Info Bar -->
             <div class="collection-mode-bar" v-else-if="detail.book_id !== '' && Number(detail.book_id) > 0 && isCollectionMode && !isStandaloneType">
               <div class="current-episode">
-                <span class="episode-number">第{{ currentCollectionIndex + 1 }}集</span>
-                <span class="episode-line"></span>
+                <!-- <span class="episode-number">第{{ currentCollectionIndex + 1 }}集</span>
+                <span class="episode-line"></span> -->
                 <span class="episode-title">{{ currentCollection?.title }}</span>
               </div>
             </div>

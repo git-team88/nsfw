@@ -491,6 +491,8 @@ import { trackHomeView } from "@/util/viewTracker";
 function checkLogin() {
   const token = localStorage.getItem('token');
   if (!token) {
+    // 记录当前个人主页地址（含 query 里的用户 id），登录/注册成功后回跳
+    localStorage.setItem('loginRedirect', route.fullPath);
     router.push('/login');
     return false;
   }

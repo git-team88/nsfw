@@ -2209,6 +2209,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     image: "圖片",
     generateFailed: "生成失敗。您上傳的信息不符合平台規則，請修改後重試",
     generateFailedInsufficientBalance: "算力不足，請充值後重試",
+    generateFailedModeMismatch: "模式選擇錯誤，請切換為視頻編輯模式重新生成",
     deleteConfirm: "確認刪除該批次生成結果？",
     deleteWarning: "刪除的歷史記錄將無法找回"
   },

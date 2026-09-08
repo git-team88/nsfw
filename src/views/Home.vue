@@ -56,7 +56,7 @@
           <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.6" stroke-linecap="round"><path d="M9 5v14" /><path d="M15 5v14" /></svg>
         </button>
 
-        <div class="hero-content" style="position: relative; z-index: 20;">
+        <div class="hero-content">
           <div class="hero-title-wrap">
             <span class="hero-speedlines left" aria-hidden="true">
               <span></span><span></span><span></span>

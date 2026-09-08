@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLogin && totalCount > 0" class="process-container">
+  <div v-if="isLogin && totalCount > 0" class="process-container" :class="{ 'is-open': isDropdownOpen }">
     <div class="process-header" :class="{ 'has-success': completedCount > 0 }" @click="toggleDropdown">
       <div class="process-title">
           <img class="status-icon" src="@/assets/images/process/wait.png" alt="status" />
@@ -577,6 +577,13 @@ onUnmounted(() => {
   flex-direction: column-reverse;
   animation: tdIn .3s cubic-bezier(.16,1,.3,1) both;
   transform-origin: bottom right;
+
+
+  // 展开时提到 Home 的 .hero-content(200) 之上，盖住输入框；
+  // 收起时回到 100，仍在 hero 装饰层之上、输入框之下。
+  &.is-open {
+    z-index: 300;
+  }
 
   .process-header {
     position: relative;

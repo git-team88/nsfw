@@ -4071,6 +4071,28 @@ const isTaskProcessing = (status: string) => {
   return status == 'DOING' || status == 'PREPARE' || status == 'PROCESSING';
 };
 
+// 把后端 status_message 映射成列表里展示的失败原因。
+// 轮询和列表回显两条路径都走这里，避免判断逻辑再次分叉。
+function resolveFailReason(statusMessage: string): { reason: string; insufficient: boolean; matched: boolean } {
+  const msg = (statusMessage || '').toLowerCase();
+
+  if (msg.includes('credit is not enough') || msg.includes('recharge')) {
+    return { reason: t('recordList.generateFailedInsufficientBalance'), insufficient: true, matched: true };
+  }
+
+  // 后端同时回 `ratio` must be `adaptive` 和 `duration` must be -1 时，说明当前模式
+  // 传的比例和时长都不是自适应值 —— 这两个参数只有视频修改/续写模式才会按自适应提交。
+  // 必须两条都命中：只有 ratio 一条时首尾帧模式也会触发，指向视频修改会误导用户。
+  // 去掉反引号和引号再匹配，兼容后端换标点的写法。
+  const plain = msg.replace(/[`'"]/g, '');
+  if (/ratio\s+must\s+be\s+adaptive/.test(plain) && /duration\s+must\s+be\s+-1/.test(plain)) {
+    return { reason: t('recordList.generateFailedModeMismatch'), insufficient: false, matched: true };
+  }
+
+  // 没命中具体规则：matched=false，调用方可选择保留后端原文
+  return { reason: t('recordList.generateFailed'), insufficient: false, matched: false };
+}
+
 const isTaskFailed = (status: string) => {
   return status == 'FAIL' || status == 'FAILED';
 };
@@ -4181,13 +4203,9 @@ const pollTaskStatus = async (taskId: string) => {
 
         if (taskData.status === 'FAIL' || taskData.status === 'FAILED' || taskData.status === 'fail' || taskData.status === 'failed') {
           updatedRecord.step_status = 'FAILED';
-          const statusMsg = (taskData.status_message || '').toLowerCase();
-          if (statusMsg.includes('credit is not enough') || statusMsg.includes('recharge')) {
-            updatedRecord.fail_reason = t('recordList.generateFailedInsufficientBalance');
-            showInsufficientBalanceModal.value = true;
-          } else {
-            updatedRecord.fail_reason = t('recordList.generateFailed');
-          }
+          const failed = resolveFailReason(taskData.status_message);
+          updatedRecord.fail_reason = failed.reason;
+          if (failed.insufficient) showInsufficientBalanceModal.value = true;
         }
 
         records.value[recordIndex] = { ...updatedRecord };
@@ -4203,21 +4221,13 @@ const pollTaskStatus = async (taskId: string) => {
     } else {
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
       if (recordIndex !== -1) {
-        const errMsg = (response.message || response.msg || '').toLowerCase();
-        if (errMsg.includes('credit is not enough') || errMsg.includes('recharge')) {
-          records.value[recordIndex] = {
-            ...records.value[recordIndex],
-            step_status: 'FAILED',
-            fail_reason: t('recordList.generateFailedInsufficientBalance')
-          };
-          showInsufficientBalanceModal.value = true;
-        } else {
-          records.value[recordIndex] = {
-            ...records.value[recordIndex],
-            step_status: 'FAILED',
-            fail_reason: t('recordList.generateFailed')
-          };
-        }
+        const failed = resolveFailReason(response.message || response.msg || '');
+        records.value[recordIndex] = {
+          ...records.value[recordIndex],
+          step_status: 'FAILED',
+          fail_reason: failed.reason
+        };
+        if (failed.insufficient) showInsufficientBalanceModal.value = true;
       }
       stopPolling(taskId);
     }
@@ -4363,8 +4373,7 @@ const normalizeSimpleRecord = (record: any) => {
     ? (userSelected.simple_video_resolution || '').replace(/p$/i, 'P')
     : userSelected.simple_image_resolution || '';
 
-  const statusMsg = (record.status_message || '').toLowerCase();
-  const isInsufficientBalance = statusMsg.includes('credit is not enough') || statusMsg.includes('recharge');
+  const failed = resolveFailReason(record.status_message);
 
   return {
     ...record,
@@ -4381,7 +4390,7 @@ const normalizeSimpleRecord = (record: any) => {
     videoCover,
     videoUrl,
     createTime: record.created_at || '',
-    fail_reason: isInsufficientBalance ? t('recordList.generateFailedInsufficientBalance') : (record.fail_reason || '')
+    fail_reason: failed.matched ? failed.reason : (record.fail_reason || '')
   };
 };
 

@@ -1935,6 +1935,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     image: "画像",
     generateFailed: "生成に失敗しました。アップロードされた情報がプラットフォーム規約に適合していません。修正してから再度お試しください。",
     generateFailedInsufficientBalance: "計クレジットが不足しています、クレジット後に再試行してください",
+    generateFailedModeMismatch: "モードの選択が正しくありません。ビデオ修正モードに切り替えて再生成してください。",
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",
     deleteWarning: "削除された履歴レコードは復元できません"
   },

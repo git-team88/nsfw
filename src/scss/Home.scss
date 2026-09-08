@@ -132,8 +132,9 @@ $pinkopacity: rgba(255,79,154,0.12);
 }
 
 .hero-section {
+  // 不设 z-index：一旦设了就会形成层叠上下文，内部元素再高也无法越过
+  // 兄弟节点 .process-container（右下角任务进度条）。层级改由各子元素自己声明。
   position: relative;
-  z-index: 150;
   margin: 8px;
   border: 1px solid #3d3d3d;
   border-radius: 18px;
@@ -240,7 +241,9 @@ $pinkopacity: rgba(255,79,154,0.12);
 
   .hero-content {
     position: relative;
-    z-index: 20;
+    // 高于 .process-container，使其中的 .input-area-box 能盖住进度条；
+    // hero 的装饰层与左右下角按钮仍停在 0~30，由进度条盖住。
+    z-index: 200;
     min-height: auto;
     display: flex;
     flex-direction: column;
