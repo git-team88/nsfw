@@ -1820,6 +1820,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       imageTotalPixelsLimit: "画像の総ピクセル数は196〜3600万の間である必要があります",
       videoRatioLimit: "動画のアスペクト比は0.4〜2.5の間である必要があります",
       videoDimensionLimit: "動画の幅と高さは300〜6000ピクセルの間である必要があります",
+      maxVideoClips: "参照動画は最大 {max} 本までです",
+      maxAudioClips: "参照音声は最大 {max} 本までです",
       videoDurationLimit: "動画の合計時間は{max}秒を超えることはできません",
       maxPhotoReached: "最大{max}枚の写真をアップロードできます",
       maxItemReached: "キャラクターと参考画像は合計最大{max}個まで",
@@ -1904,6 +1906,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       videoModify: "ビデオ修正"
     },
     nsfwVersion: {
+      fast: "ターボ",
       enhanced: "エンハンス",
       super: "スーパー"
     },

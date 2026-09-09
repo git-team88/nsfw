@@ -1994,6 +1994,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       imageTotalPixelsLimit: "Image total pixels must be between 196 and 36 million",
       videoRatioLimit: "Video aspect ratio must be between 0.4 and 2.5",
       videoDimensionLimit: "Video width and height must be between 300 and 6000 pixels",
+      maxVideoClips: "You can add at most {max} reference videos",
+      maxAudioClips: "You can add at most {max} reference audio files",
       videoDurationLimit: "Total video duration cannot exceed {max} seconds",
       maxPhotoReached: "Maximum {max} photos allowed",
       maxItemReached: "Up to {max} characters and reference images in total",
@@ -2079,7 +2081,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       videoModify: "Video Modify"
     },
     nsfwVersion: {
-      enhanced: "Enhanced",
+      fast: "Fast",
+      enhanced: "Plus",
       super: "Super"
     },
     start: "Start",

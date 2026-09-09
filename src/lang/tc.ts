@@ -2094,6 +2094,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       imageTotalPixelsLimit: "圖片總像素需在196~3600萬之間",
       videoRatioLimit: "視頻寬高比需在0.4~2.5之間",
       videoDimensionLimit: "視頻寬高需在300~6000像素之間",
+      maxVideoClips: "最多只能添加 {max} 個參考視頻",
+      maxAudioClips: "最多只能添加 {max} 個參考音頻",
       videoDurationLimit: "視頻總時長不能超過{max}秒",
       maxPhotoReached: "最多只能上傳{max}張圖片",
       maxItemReached: "角色和參考圖總共最多{max}個",
@@ -2178,7 +2180,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       videoModify: "視頻修改"
     },
     nsfwVersion: {
-      enhanced: "增強版",
+      fast: "極速版",
+      enhanced: "加強版",
       super: "超級版"
     },
     start: "首幀",

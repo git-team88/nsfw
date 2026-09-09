@@ -278,7 +278,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}{{ record.user_selected.story_mode == 'nsfw' ? ' · ' + (record.user_selected?.video_nsfw_model_type === 'super' ? t('home.nsfwVersion.super') : t('home.nsfwVersion.enhanced')) : '' }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}{{ record.user_selected.story_mode == 'nsfw' ? ' · ' + t('home.nsfwVersion.' + (record.user_selected?.video_nsfw_model_type === 'super' ? 'super' : record.user_selected?.video_nsfw_model_type === 'fast' ? 'fast' : 'enhanced')) : '' }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
@@ -782,7 +782,7 @@
                 </div>
 
                 <!-- NSFW Version Selector - only show in unlimited mode -->
-                <div v-if="effectiveVideoMode == 'unlimited'" class="video-selector nsfw-version-selector" @mousedown.prevent @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false" :class="{ open: showNsfwVersionDropdown }">
+                <div v-if="nsfwVersionOptions.length > 1" class="video-selector nsfw-version-selector" @mousedown.prevent @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false" :class="{ open: showNsfwVersionDropdown }">
                   <div class="selector-header">
                     <span>{{ nsfwVersionOptions.find(opt => opt.value === selectedNsfwVersion)?.label || selectedNsfwVersion }}</span>
                     <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
@@ -869,7 +869,7 @@
                         </div>
                         <input
                           type="range"
-                          :min="videoLimitMode == 'unlimited' ? 2 : 4"
+                          :min="videoProfile.durationMin"
                           :max="30"
                           step="1"
                           :value="selectedVideoDuration"
@@ -1009,6 +1009,10 @@ import loadingGif11 from '@/assets/images/home/1_1.gif';
 import audioIcon from '@/assets/images/home/audio.png';
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
+import {
+  MB, profileOf, videoVersionsFor, pickVideoVersion,
+  videoLimitModeOf, toModelType, fromModelType,
+} from '@/util/videoProfile';
 
 const { t, locale } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -1039,29 +1043,17 @@ const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
-const selectedNsfwVersion = ref('enhanced');
+const selectedNsfwVersion = ref('fast');
 
-// 视频 tab 里视频素材的时长上限：无限制模式的加强版 15s，其余（普通 / 超级版）30s。
-// 上传时放宽到「上限 + 1 秒」以内（<16s / <31s），超出上限的部分在上传成功后
-// 由后端裁掉，时长也按裁剪后算 —— 否则一段 15.9s 的视频会先被
-// 「总时长不超过 15s」拦下来，根本走不到裁剪那一步。
-// 视频 tab 的限制档位：
-// 无限制模式下分两个版本 —— 加强版(enhanced) 按无限制走，超级版(super) 按普通模式走。
-// 覆盖上传校验（文件大小 / 数量 / 尺寸 / 素材时长）和时长规则（生成时长下限与滑块、
-// 多模态「30 - 已上传总时长」的预算、算力估算里累加的时长、提交的 simple_video_duration）。
-// 每秒单价、story_mode / nsfw_version、回显仍然按真实的 effectiveVideoMode。
-const videoLimitMode = computed(() =>
-  effectiveVideoMode.value === 'unlimited' && selectedNsfwVersion.value !== 'super' ? 'unlimited' : 'normal'
-);
+// 视频 tab 的限制档位：极速版 fast / 加强版 unlimited(仅 NSFW) / 超级版与普通模式 normal。
+// 三档的参数与文件限制集中在 @/util/videoProfile，Home.vue 共用同一张表。
+const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
+const videoProfile = computed(() => profileOf(videoLimitMode.value));
 
-const refVideoMaxSeconds = computed(() => (videoLimitMode.value === 'unlimited' ? 15 : 30));
+const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
 
 const showNsfwVersionDropdown = ref(false);
-const nsfwVersionOptions = computed(() => [
-  { value: 'enhanced', label: t('home.nsfwVersion.enhanced') },
-  { value: 'super', label: t('home.nsfwVersion.super') }
-]);
 const enablePhotoOptimizePrompt = ref(false);
 const enableVideoOptimizePrompt = ref(false);
 const showUnlimitedModal = ref(false);
@@ -1318,10 +1310,7 @@ const getPhotoMaxInputLimit = (): number => {
   return currentPhotoMode.value === 'unlimited' ? 1000 : 5000;
 };
 
-const getVideoMaxInputLimit = (): number => {
-  if (currentVideoMode.value === 'normal') return 5000;
-  return selectedNsfwVersion.value === 'super' ? 5000 : 20000;
-};
+const getVideoMaxInputLimit = (): number => videoProfile.value.maxInputChars;
 
 const getPhotoInputContent = () => {
   if (!photoEditableInputRef.value) return '';
@@ -2059,6 +2048,14 @@ const lastValidVideoDuration = ref('30');
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');
+
+// 当前「模式 × 视频模式」下可选的版本。只有一个可选时不展示下拉。
+const availableVideoVersions = computed(() =>
+  videoVersionsFor(effectiveVideoMode.value, selectedVideoMultimodal.value)
+);
+const nsfwVersionOptions = computed(() =>
+  availableVideoVersions.value.map((v) => ({ value: v, label: t(`home.nsfwVersion.${v}`) }))
+);
 const videoRefInput = ref<HTMLInputElement | null>(null);
 const videoEditableInputRef = ref<HTMLElement | null>(null);
 const uploadedVideoRefs = ref<any[]>([]);
@@ -2071,33 +2068,14 @@ const videoMultimodalOptions = computed(() => {
   ];
   return options;
 });
-const videoQualityOptions = ref([
-  { value: '720P', label: '720P' },
-  { value: '1080P', label: '1080P' }
-]);
-const videoRatioOptions = ref([
-  { value: '9:16', label: '9:16' },
-  { value: '16:9', label: '16:9' }
-]);
+const videoQualityOptions = computed(() => videoProfile.value.qualityOptions);
+const videoRatioOptions = computed(() => videoProfile.value.ratioOptions);
 const videoDurationOptions = computed(() => {
-  const minDuration = videoLimitMode.value === 'unlimited' ? 2 : 4;
-  if (minDuration === 4) {
-    return [
-      { value: '4', label: '4s' },
-      { value: '10', label: '10s' },
-      { value: '15', label: '15s' },
-      { value: '20', label: '20s' },
-      { value: '30', label: '30s' }
-    ];
-  }
-  return [
-    { value: '2', label: '2s' },
-    { value: '5', label: '5s' },
-    { value: '10', label: '10s' },
-    { value: '15', label: '15s' },
-    { value: '20', label: '20s' },
-    { value: '30', label: '30s' }
-  ];
+  const { durationMin, durationMax } = videoProfile.value;
+  const steps = [durationMin, 5, 10, 15, 20, 30]
+    .filter((v, i, a) => v >= durationMin && v <= durationMax && a.indexOf(v) === i)
+    .sort((a, b) => a - b);
+  return steps.map((v) => ({ value: String(v), label: `${v}s` }));
 });
 
 // Input content
@@ -2325,26 +2303,15 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       const height = video.videoHeight;
       if (width === 0 || height === 0) { resolve(true); return; }
       const ratio = width / height;
-      if (videoLimitMode.value === 'unlimited') {
-        // 无限制模式：宽高比 1:8~8:1，像素 [240, 4096]
-        if (ratio < 1/8 || ratio > 8) {
-          toast(t('home.error.videoRatioLimit'));
-          resolve(false); return;
-        }
-        if (width < 240 || width > 4096 || height < 240 || height > 4096) {
-          toast(t('home.error.videoDimensionLimit'));
-          resolve(false); return;
-        }
-      } else {
-        // 普通模式：宽高比 [0.4, 2.5]，像素 [300, 6000]
-        if (ratio < 0.4 || ratio > 2.5) {
-          toast(t('home.error.videoRatioLimit'));
-          resolve(false); return;
-        }
-        if (width < 300 || width > 6000 || height < 300 || height > 6000) {
-          toast(t('home.error.videoDimensionLimit'));
-          resolve(false); return;
-        }
+      // 极速版 [0.4,2.5] / [256,5760]，加强版 1:8~8:1 / [240,4096]，超级版与普通 [0.4,2.5] / [300,6000]
+      const pf = videoProfile.value;
+      if (ratio < pf.ratioMin || ratio > pf.ratioMax) {
+        toast(t('home.error.videoRatioLimit'));
+        resolve(false); return;
+      }
+      if (width < pf.dimMin || width > pf.dimMax || height < pf.dimMin || height > pf.dimMax) {
+        toast(t('home.error.videoDimensionLimit'));
+        resolve(false); return;
       }
       resolve(true);
     };
@@ -2466,6 +2433,16 @@ const validateImageDimensions = async (file: File): Promise<boolean> => {
       toast(t('home.error.imageDimensionLimit'));
       return false;
     }
+  } else if (bottomActiveTab.value === 'video' && videoLimitMode.value === 'fast') {
+    // 极速版视频参考图片：宽高比 [0.4, 2.5]，像素 [256, 5760]
+    if (ratio < 0.4 || ratio > 2.5) {
+      toast(t('home.error.imageRatioLimit'));
+      return false;
+    }
+    if (width < 256 || width > 5760 || height < 256 || height > 5760) {
+      toast(t('home.error.imageDimensionLimit'));
+      return false;
+    }
   } else if (isVideoUnlimited) {
     // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
     if (ratio < 1 / 8 || ratio > 8) {
@@ -2570,17 +2547,35 @@ const handleVideoRefUpload = async (event: Event) => {
 
     // Get upload limits based on mode
     const isUnlimited = videoLimitMode.value === 'unlimited';
-    let maxFileSizeBytes = isUnlimited ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxVideoSizeBytes = isUnlimited ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
-    const maxAudioSizeBytes = 15 * 1024 * 1024;
+    const pf = videoProfile.value;
+    let maxFileSizeBytes = pf.imageMaxSize;
+    const maxVideoSizeBytes = pf.videoMaxSize;
+    const maxAudioSizeBytes = pf.audioMaxSize > 0 ? pf.audioMaxSize : 15 * MB;
 
     // Check file size limits for multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
+      // 极速版限制参考视频 / 音频的段数（各最多 3 段）
+      if (pf.refVideoMaxClips > 0 || pf.refAudioMaxClips > 0) {
+        const newVideoCount = files.filter((f) => f.type.startsWith('video/')).length;
+        const newAudioCount = files.filter((f) => f.type.startsWith('audio/')).length;
+        const existVideoCount = uploadedVideoRefs.value.filter((r: any) => r.type === 'video').length;
+        const existAudioCount = uploadedVideoRefs.value.filter((r: any) => r.type === 'audio').length;
+        if (pf.refVideoMaxClips > 0 && existVideoCount + newVideoCount > pf.refVideoMaxClips) {
+          toast(t('home.error.maxVideoClips', { max: pf.refVideoMaxClips }));
+          input.value = '';
+          return;
+        }
+        if (pf.refAudioMaxClips > 0 && existAudioCount + newAudioCount > pf.refAudioMaxClips) {
+          toast(t('home.error.maxAudioClips', { max: pf.refAudioMaxClips }));
+          input.value = '';
+          return;
+        }
+      }
       const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       for (const file of files) {
         if (file.type.startsWith('video/')) {
           if (file.size > maxVideoSizeBytes) {
-            toast(t('home.error.maxVideoSize', { max: isUnlimited ? 100 : 200 }));
+            toast(t('home.error.maxVideoSize', { max: Math.round(maxVideoSizeBytes / MB) }));
             input.value = '';
             return;
           }
@@ -2590,7 +2585,7 @@ const handleVideoRefUpload = async (event: Event) => {
             return;
           }
           const videoDuration = await getMediaDuration(file);
-          const minVideoDuration = isUnlimited ? 1 : 2;
+          const minVideoDuration = pf.refVideoMinSeconds;
           const maxVideoDuration = refVideoMaxSeconds.value;
           // 放宽到「上限 + 1 秒」以内，超出的在上传后裁掉
           if (videoDuration < minVideoDuration || videoDuration >= maxVideoDuration + 1) {
@@ -2600,13 +2595,13 @@ const handleVideoRefUpload = async (event: Event) => {
           }
         } else if (file.type.startsWith('audio/')) {
           if (file.size > maxAudioSizeBytes) {
-            toast(t('home.error.maxAudioSize', { max: 15 }));
+            toast(t('home.error.maxAudioSize', { max: Math.round(maxAudioSizeBytes / MB) }));
             input.value = '';
             return;
           }
           const duration = await getMediaDuration(file);
-          const audioMinDuration = isUnlimited ? 1 : 2;
-          const audioMaxDuration = isUnlimited ? 15 : 30;
+          const audioMinDuration = pf.refAudioMinSeconds > 0 ? pf.refAudioMinSeconds : (isUnlimited ? 1 : 2);
+          const audioMaxDuration = pf.refAudioMaxSeconds > 0 ? pf.refAudioMaxSeconds : (isUnlimited ? 15 : 30);
           if (duration < audioMinDuration || duration > audioMaxDuration) {
             toast(t('home.error.audioUploadedDuration', { min: audioMinDuration, max: audioMaxDuration }));
             input.value = '';
@@ -2717,8 +2712,9 @@ const handleVideoRefUpload = async (event: Event) => {
         totalVideoDuration += existingVideoDurations.reduce((sum, d) => sum + d, 0) + newFileVideoDurations.reduce((sum, d) => sum + d, 0);
       }
 
-      const maxTotalVideoDuration = isUnlimited ? 15 : 30;
-      const maxTotalAudioDuration = isUnlimited ? 15 : 30;
+      const pf2 = videoProfile.value;
+      const maxTotalVideoDuration = videoLimitMode.value === 'fast' ? pf2.refVideoBudget : (isUnlimited ? 15 : 30);
+      const maxTotalAudioDuration = pf2.refAudioBudget > 0 ? pf2.refAudioBudget : (isUnlimited ? 15 : 30);
 
       if (totalVideoDuration > maxTotalVideoDuration) {
         toast(t('home.error.videoDurationLimit', { max: maxTotalVideoDuration }));
@@ -3737,11 +3733,14 @@ function carryPromptToMode(from: VideoMode, to: VideoMode) {
 }
 
 // 参考文件限制，数值抽自上传校验，迁移时用同一套规则
-const MB = 1024 * 1024;
 function videoRefLimits(limitMode: string) {
-  return limitMode === 'unlimited'
-    ? { imageMaxCount: 10, imageMaxSize: 20 * MB, videoMaxSize: 100 * MB, videoMaxSeconds: 15 }
-    : { imageMaxCount: 30, imageMaxSize: 30 * MB, videoMaxSize: 200 * MB, videoMaxSeconds: 30 };
+  const pf = profileOf(limitMode);
+  return {
+    imageMaxCount: pf.imageMaxCount,
+    imageMaxSize: pf.imageMaxSize,
+    videoMaxSize: pf.videoMaxSize,
+    videoMaxSeconds: pf.refVideoMaxSeconds,
+  };
 }
 
 // 老数据没有 size / duration，无从判断，按合规处理，只受数量上限约束
@@ -3766,23 +3765,26 @@ function filterVideoRefs(refs: any[], limitMode: string) {
 }
 
 function migrateVideoParams() {
-  if (!videoDurationOptions.value.some((o: any) => o.value === selectedVideoDuration.value)) {
-    selectedVideoDuration.value = '30';
+  const pf = videoProfile.value;
+  const d = parseInt(selectedVideoDuration.value);
+  if (!Number.isFinite(d) || d < pf.durationMin || d > pf.durationMax) {
+    selectedVideoDuration.value = pf.defaultDuration;
   }
   lastValidVideoDuration.value = selectedVideoDuration.value;
   if (!videoRatioOptions.value.some((o: any) => o.value === selectedVideoRatio.value)) {
-    selectedVideoRatio.value = '9:16';
+    selectedVideoRatio.value = pf.defaultRatio;
   }
   if (!videoQualityOptions.value.some((o: any) => o.value === selectedVideoQuality.value)) {
-    selectedVideoQuality.value = '720P';
+    selectedVideoQuality.value = pf.defaultQuality;
   }
 }
 
 function resetVideoParams() {
-  selectedVideoRatio.value = '9:16';
-  selectedVideoQuality.value = '720P';
-  selectedVideoDuration.value = '30';
-  lastValidVideoDuration.value = '30';
+  const pf = videoProfile.value;
+  selectedVideoRatio.value = pf.defaultRatio;
+  selectedVideoQuality.value = pf.defaultQuality;
+  selectedVideoDuration.value = pf.defaultDuration;
+  lastValidVideoDuration.value = pf.defaultDuration;
   enableVideoOptimizePrompt.value = false;
 }
 
@@ -3870,13 +3872,20 @@ const selectVideoMultimodal = (value: string) => {
 };
 
 const doSelectVideoMultimodal = (from: VideoMode, target: VideoMode) => {
+  const prevLimitMode = videoLimitMode.value;
   // 只把提示词带到目标模式，参考文件与引用标签一律不带
   carryPromptToMode(from, target);
   selectedVideoMultimodal.value = target;
+  // 目标模式不支持当前版本（如切到视频修改，普通模式下只有超级版）就按 fast → enhanced → super 往后落
+  selectedNsfwVersion.value = pickVideoVersion(
+    selectedNsfwVersion.value,
+    videoVersionsFor(effectiveVideoMode.value, target),
+  );
   applyVideoDraft(target);
 
-  // 涉及多模态的切换参数尽量沿用，其余三者互切回默认
-  if (from === 'multimodal' || target === 'multimodal') migrateVideoParams();
+  // 档位跟着版本变了就走统一的档位变更流程；否则涉及多模态的切换参数尽量沿用
+  if (videoLimitMode.value !== prevLimitMode) applyVideoLimitModeChange(prevLimitMode);
+  else if (from === 'multimodal' || target === 'multimodal') migrateVideoParams();
   else resetVideoParams();
   enableVideoOptimizePrompt.value = false;
   restoreVideoInput();
@@ -3892,7 +3901,7 @@ const selectNsfwVersion = (version: string) => {
   // 加强版限制更严（图片 20MB/10 张、参考视频 15s），超级版按普通模式走。
   // 档位变了参考文件大概率超标：先问一句，确认后丢掉超标文件；提示词始终保留。
   const prevLimitMode = videoLimitMode.value;
-  const nextLimitMode = currentVideoMode.value === 'unlimited' && version !== 'super' ? 'unlimited' : 'normal';
+  const nextLimitMode = videoLimitModeOf(version, effectiveVideoMode.value);
   requestVideoLimitModeChange(nextLimitMode, () => {
     syncVideoPromptFromDom();
     selectedNsfwVersion.value = version;
@@ -4049,8 +4058,8 @@ const handleStartFrameChange = async (event: Event) => {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = videoLimitMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = videoLimitMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = videoProfile.value.imageMaxSize;
+    const maxFileSizeMB = Math.round(maxFileSizeBytes / MB);
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -4088,8 +4097,8 @@ const handleEndFrameChange = async (event: Event) => {
       target.value = '';
       return;
     }
-    const maxFileSizeBytes = videoLimitMode.value === 'unlimited' ? 20 * 1024 * 1024 : 30 * 1024 * 1024;
-    const maxFileSizeMB = videoLimitMode.value === 'unlimited' ? 20 : 30;
+    const maxFileSizeBytes = videoProfile.value.imageMaxSize;
+    const maxFileSizeMB = Math.round(maxFileSizeBytes / MB);
     if (file.size > maxFileSizeBytes) {
       toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
       target.value = '';
@@ -4164,7 +4173,7 @@ const handleVideoUpload = async (event: Event) => {
     if (selectedVideoMultimodal.value === 'videoModify') {
       // 视频修改：普通模式和超级版 4s 起，加强版 1s 起；
       // 上限放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
-      const modifyMinSeconds = videoLimitMode.value === 'unlimited' ? 1 : 4;
+      const modifyMinSeconds = videoProfile.value.modifyMinSeconds;
       if (duration < modifyMinSeconds || duration >= refVideoMaxSeconds.value + 1) {
         toast(t('home.error.videoUploadedDuration', { min: modifyMinSeconds, max: refVideoMaxSeconds.value }));
         target.value = '';
@@ -4173,7 +4182,7 @@ const handleVideoUpload = async (event: Event) => {
     } else if (selectedVideoMultimodal.value === 'videoExtend') {
       // 视频续写：普通模式和超级版 2s 起，加强版 1s 起；
       // 上限放宽到「上限 + 1 秒」以内，超过上限的上传后由后端裁到上限
-      const extendMinSeconds = videoLimitMode.value === 'unlimited' ? 1 : 2;
+      const extendMinSeconds = videoProfile.value.extendMinSeconds;
       if (duration < extendMinSeconds || duration >= refVideoMaxSeconds.value + 1) {
         toast(t('home.error.videoUploadedDuration', { min: extendMinSeconds, max: refVideoMaxSeconds.value }));
         target.value = '';
@@ -4181,8 +4190,8 @@ const handleVideoUpload = async (event: Event) => {
       }
     } else if (selectedVideoMultimodal.value === 'multimodal') {
       // 多模态参考：普通模式 2-30s，无限制模式 1-15s
-      const minDuration = videoLimitMode.value === 'unlimited' ? 1 : 2;
-      const maxDuration = videoLimitMode.value === 'unlimited' ? 15 : 30;
+      const minDuration = videoProfile.value.refVideoMinSeconds;
+      const maxDuration = videoProfile.value.refVideoMaxSeconds;
       if (duration < minDuration) {
         toast(t('home.error.videoDurationTooShort', { min: minDuration }));
         target.value = '';
@@ -4198,9 +4207,9 @@ const handleVideoUpload = async (event: Event) => {
     }
 
     // Video file size validation
-    const maxVideoSizeBytes = videoLimitMode.value === 'unlimited' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
+    const maxVideoSizeBytes = videoProfile.value.videoMaxSize;
     if (file.size > maxVideoSizeBytes) {
-      toast(t('home.error.maxVideoSize', { max: videoLimitMode.value === 'unlimited' ? 100 : 200 }));
+      toast(t('home.error.maxVideoSize', { max: Math.round(videoProfile.value.videoMaxSize / MB) }));
       target.value = '';
       return;
     }
@@ -4260,9 +4269,9 @@ const handleVideoUpload = async (event: Event) => {
           // 如果当前设置的时长小于等于视频时长，自动调整
           const currentDuration = parseInt(selectedVideoDuration.value);
           if (currentDuration <= refDuration) {
-            const minDuration = videoLimitMode.value === 'unlimited' ? 2 : 4;
+            const minDuration = videoProfile.value.durationMin;
             const newDuration = Math.max(refDuration + 1, minDuration);
-            selectedVideoDuration.value = Math.min(newDuration, 30).toString();
+            selectedVideoDuration.value = Math.min(newDuration, videoProfile.value.durationMax).toString();
             lastValidVideoDuration.value = selectedVideoDuration.value;
           }
         }
@@ -4285,21 +4294,18 @@ const removeVideo = () => {
 };
 
 const sliderMarks = computed(() => {
-  const min = videoLimitMode.value === 'unlimited' ? 2 : 4;
-  const max = 30;
-  const marks = videoLimitMode.value === 'unlimited' ? [min, 10, 20, 30] : [min, 10, 20, 30];
-  return marks.map(value => ({
+  const { durationMin: min, durationMax: max, durationMarks } = videoProfile.value;
+  return durationMarks.map(value => ({
     value,
     position: `${((value - min) / (max - min)) * 100}%`
   }));
 });
 
 const getSliderValuePosition = () => {
-  const min = videoLimitMode.value === 'unlimited' ? 2 : 4;
-  const max = 30;
+  const { durationMin: min, durationMax: max } = videoProfile.value;
   const value = parseInt(selectedVideoDuration.value);
   const percentage = ((value - min) / (max - min)) * 100;
-  return `${percentage}%`;
+  return `${Math.min(100, Math.max(0, percentage))}%`;
 };
 
 const saveLastValidDuration = () => {
@@ -5127,7 +5133,8 @@ const doGenerateVideo = async () => {
         language: locale.value == 'zh' ? 'cn' : locale.value,
         story_type: 'simple_video',
         story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
-        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
+        video_nsfw_model_type: toModelType(selectedNsfwVersion.value),
+        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value } : {}),
         story_style: '',
         reference_images: referenceImages,
         reference_videos: referenceVideosForDisplay,
@@ -5169,7 +5176,8 @@ const doGenerateVideo = async () => {
       language: videoSettings.language,
       story_type: "simple_video",
       story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
-      ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value, video_nsfw_model_type: selectedNsfwVersion.value === 'super' ? 'super' : 'plus' } : {}),
+      video_nsfw_model_type: toModelType(selectedNsfwVersion.value),
+        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value } : {}),
       story_style: "",
       reference_images: referenceImages,
       reference_videos: referenceVideos,
@@ -5817,7 +5825,7 @@ const regenerateRecord = async (record: any) => {
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
       currentVideoMode.value = mode;
       if (mode === 'unlimited') {
-        selectedNsfwVersion.value = userSelected.video_nsfw_model_type === 'super' ? 'super' : 'enhanced';
+        selectedNsfwVersion.value = fromModelType(userSelected.video_nsfw_model_type);
       }
     } else {
       currentVideoMode.value = 'normal';
@@ -6414,10 +6422,11 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
       const prevLimitMode = videoLimitMode.value;
-      requestVideoLimitModeChange('unlimited', () => {
+      const nextVersion = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+      requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
         syncVideoPromptFromDom();
         currentVideoMode.value = 'unlimited';
-        selectedNsfwVersion.value = 'enhanced';
+        selectedNsfwVersion.value = nextVersion;
         enableVideoOptimizePrompt.value = false;
         applyVideoLimitModeChange(prevLimitMode);
       });
@@ -6427,10 +6436,12 @@ const switchVideoMode = (mode: string, index: number) => {
     }
   } else {
     const prevLimitMode = videoLimitMode.value;
-    // 关掉 NSFW 必然回到 normal 档位
-    requestVideoLimitModeChange('normal', () => {
+    // 普通模式没有加强版，落回极速；视频修改/续写下只有超级版
+    const nextVersion = pickVideoVersion('fast', videoVersionsFor('normal', selectedVideoMultimodal.value));
+    requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'normal'), () => {
       syncVideoPromptFromDom();
       currentVideoMode.value = 'normal';
+      selectedNsfwVersion.value = nextVersion;
       enableVideoOptimizePrompt.value = false;
       applyVideoLimitModeChange(prevLimitMode);
     });
@@ -6443,10 +6454,11 @@ const confirmUnlimitedMode = () => {
     // 首次开 NSFW 会先弹这个说明框，确认后要和 switchVideoMode 走同一条路：
     // 提示词保留，只按新档位筛参考文件、参数回默认，不能再走全清。
     const prevLimitMode = videoLimitMode.value;
-    requestVideoLimitModeChange('unlimited', () => {
+    const nextVersion = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+    requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
       syncVideoPromptFromDom();
       currentVideoMode.value = 'unlimited';
-      selectedNsfwVersion.value = 'enhanced';
+      selectedNsfwVersion.value = nextVersion;
       enableVideoOptimizePrompt.value = false;
       applyVideoLimitModeChange(prevLimitMode);
     });
