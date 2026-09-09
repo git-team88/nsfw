@@ -892,7 +892,7 @@
                    </div>
                 </div>
 
-                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && effectiveVideoMode != 'unlimited'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                   {{ t('home.option.optimizePrompt') }}
                   <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                 </div>
@@ -1150,7 +1150,13 @@ const displayCount = ref(20);
 const totalCount = ref(0);
 const isLoadingNewer = ref(false);
 const pollingTasks = ref<Set<string>>(new Set());
-const pollingTimers = ref<Map<string, ReturnType<typeof setInterval>>>(new Map());
+const pollingTimers = ref<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+// 每个任务连续「请求失败」的次数。成功一次就清零。
+const pollFailCounts = ref<Map<string, number>>(new Map());
+const POLL_INTERVAL_MS = 3000;
+const POLL_MAX_INTERVAL_MS = 15000;
+// 连续失败到这个次数才放弃轮询（约 3+6+9+12+15 秒），期间不动列表项的状态
+const POLL_MAX_CONSECUTIVE_ERRORS = 5;
 const isLoading = ref(false);
 const balanceInfo = ref<any>(null);
 const isPhotoGenerating = ref(false);
@@ -4469,18 +4475,91 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  // 无限制模式下开关先隐藏，算力也不再叠加这笔（要放开就把 effectiveVideoMode 这段判断去掉）
-  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
 });
 
+// 未登录 / 登录态失效（后端返回 401、101、100）。请求层的响应拦截器已经清了 token、
+// 弹了「登录已过期」并跳首页，这里只负责把所有轮询停掉 —— 否则每 3 秒还会再打一次
+// 任务接口，再触发一次 401、再弹一次提示、再跳一次首页。
+const UNAUTHORIZED_CODES = [401, 101, 100];
+
+const stopAllPolling = () => {
+  pollingTimers.value.forEach((timer) => clearTimeout(timer));
+  pollingTimers.value.clear();
+  pollingTasks.value.clear();
+  pollFailCounts.value.clear();
+};
+
+const handleUnauthorized = () => {
+  stopAllPolling();
+  // 拦截器正常情况下已经跳过了，这里兜一道，保证一定回到首页
+  if (window.location.pathname !== '/') router.push('/');
+};
+
+// 拦截器的两条 401 路径（业务码 401 和 HTTP 401）都会派发这个事件，统一在这里收口
+const onUserLogout = () => { stopAllPolling(); };
+window.addEventListener('userLogout', onUserLogout);
+
+const onVisibilityChange = () => resumeStalledPolling();
+const onNetworkOnline = () => resumeStalledPolling();
+document.addEventListener('visibilitychange', onVisibilityChange);
+window.addEventListener('online', onNetworkOnline);
+
+// 一次轮询请求失败 ≠ 任务失败。网络抖动、网关超时、偶发非 200 都只累计次数并继续轮询，
+// 连续失败到上限才停掉，且不把这一项标成「生成失败」——真实状态以服务端列表为准，
+// 用户刷新页面就能拿回正确状态。以前这里一次请求出错就直接判失败并停轮询，
+// 任务其实还在跑，界面却永远停在失败上。
+const onPollTransientError = (taskId: string, detail?: unknown) => {
+  const n = (pollFailCounts.value.get(taskId) || 0) + 1;
+  pollFailCounts.value.set(taskId, n);
+  console.warn(`[poll] ${taskId} 第 ${n} 次轮询请求失败，任务状态保持不变`, detail);
+  if (n >= POLL_MAX_CONSECUTIVE_ERRORS) {
+    console.warn(`[poll] ${taskId} 连续失败 ${n} 次，停止轮询（不标记为生成失败）`);
+    stopPolling(taskId);
+    // 同一时间多个任务一起断网时只提示一次，别刷屏
+    if (!pollAbortedToastShown) {
+      pollAbortedToastShown = true;
+      toast(t('recordList.pollNetworkError'));
+    }
+  }
+};
+
+// 连续失败放弃过轮询：用来控制 toast 只弹一次，恢复成功后复位
+let pollAbortedToastShown = false;
+
+// 页面重新可见 / 网络恢复时，把还在处理中但已经没有轮询的任务重新挂上。
+// 否则放弃之后那几项会一直停在「处理中」，只能靠用户手动刷新。
+const resumeStalledPolling = () => {
+  if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+  let resumed = 0;
+  records.value.forEach((r: any) => {
+    const status = r.step_status || r.status;
+    if (!r.session_id || !isTaskProcessing(status)) return;
+    if (pollingTasks.value.has(r.session_id)) return;
+    startPolling(r.session_id);
+    resumed += 1;
+  });
+  if (resumed > 0) {
+    pollAbortedToastShown = false;
+    console.info(`[poll] 恢复 ${resumed} 个任务的轮询`);
+  }
+};
+
 const pollTaskStatus = async (taskId: string) => {
   try {
     const response = await api.taskPolling(taskId) as any;
 
+    // 未登录就没必要再轮询了：停掉全部任务并回首页
+    if (UNAUTHORIZED_CODES.includes(Number(response?.code))) {
+      handleUnauthorized();
+      return;
+    }
+
     if (response.code == 200) {
+      pollFailCounts.value.delete(taskId);
       const taskData = response.data;
 
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
@@ -4535,49 +4614,59 @@ const pollTaskStatus = async (taskId: string) => {
         }
       }
     } else {
+      // 只有能识别出的明确业务失败（如余额不足）才立刻判失败；
+      // 其余非 200 一律当成「这次请求失败」，任务状态不动。
+      const failed = resolveFailReason(response.message || response.msg || '');
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
-      if (recordIndex !== -1) {
-        const failed = resolveFailReason(response.message || response.msg || '');
+      if (failed.matched && recordIndex !== -1) {
         records.value[recordIndex] = {
           ...records.value[recordIndex],
           step_status: 'FAILED',
           fail_reason: failed.reason
         };
         if (failed.insufficient) showInsufficientBalanceModal.value = true;
+        stopPolling(taskId);
+      } else {
+        onPollTransientError(taskId, response);
       }
-      stopPolling(taskId);
     }
   } catch (error) {
-    console.error('Error polling task:', error);
-    const recordIndex = records.value.findIndex(r => r.session_id == taskId);
-    if (recordIndex !== -1) {
-      records.value[recordIndex] = {
-        ...records.value[recordIndex],
-        step_status: 'FAILED',
-        fail_reason: t('recordList.generateFailed')
-      };
-    }
-    stopPolling(taskId);
+    // 网络错误 / 超时 / 网关异常：任务本身多半还在跑，不能按失败处理
+    onPollTransientError(taskId, error);
   }
 };
 
+// 用自调度的 setTimeout 而不是 setInterval：等上一次请求回来再排下一次，
+// 后端慢的时候不会把请求叠着发；连续失败时按次数退避，别在服务端不稳时反复打。
 const startPolling = (taskId: string) => {
   if (pollingTasks.value.has(taskId)) return;
 
   pollingTasks.value.add(taskId);
-  const timer = setInterval(() => {
-    pollTaskStatus(taskId);
-  }, 3000);
-  pollingTimers.value.set(taskId, timer);
+  pollFailCounts.value.set(taskId, 0);
+
+  const tick = async () => {
+    if (!pollingTasks.value.has(taskId)) return;
+    await pollTaskStatus(taskId);
+    // pollTaskStatus 里可能已经 stopPolling 了
+    if (!pollingTasks.value.has(taskId)) return;
+    const fails = pollFailCounts.value.get(taskId) || 0;
+    const delay = fails > 0
+      ? Math.min(POLL_INTERVAL_MS * (fails + 1), POLL_MAX_INTERVAL_MS)
+      : POLL_INTERVAL_MS;
+    pollingTimers.value.set(taskId, setTimeout(tick, delay));
+  };
+
+  pollingTimers.value.set(taskId, setTimeout(tick, POLL_INTERVAL_MS));
 };
 
 const stopPolling = (taskId: string) => {
   const timer = pollingTimers.value.get(taskId);
   if (timer) {
-    clearInterval(timer);
+    clearTimeout(timer);
     pollingTimers.value.delete(taskId);
   }
   pollingTasks.value.delete(taskId);
+  pollFailCounts.value.delete(taskId);
 };
 
 const formatContent = (content: string, record: any) => {
@@ -5175,7 +5264,6 @@ const doGenerateVideo = async () => {
         story_type: 'simple_video',
         story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
         video_nsfw_model_type: toModelType(selectedNsfwVersion.value),
-        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value } : {}),
         story_style: '',
         reference_images: referenceImages,
         reference_videos: referenceVideosForDisplay,
@@ -5194,7 +5282,7 @@ const doGenerateVideo = async () => {
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
       }
     };
 
@@ -5218,7 +5306,6 @@ const doGenerateVideo = async () => {
       story_type: "simple_video",
       story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       video_nsfw_model_type: toModelType(selectedNsfwVersion.value),
-        ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value } : {}),
       story_style: "",
       reference_images: referenceImages,
       reference_videos: referenceVideos,
@@ -5239,7 +5326,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5614,9 +5701,10 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('scroll', handleScrollForInput);
-  pollingTimers.value.forEach(timer => clearInterval(timer));
-  pollingTimers.value.clear();
-  pollingTasks.value.clear();
+  window.removeEventListener('userLogout', onUserLogout);
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('online', onNetworkOnline);
+  stopAllPolling();
   if (scrollTimeout) {
     clearTimeout(scrollTimeout);
     scrollTimeout = null;

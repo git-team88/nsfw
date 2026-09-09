@@ -1938,6 +1938,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     delete: "削除",
     image: "画像",
     generateFailed: "生成に失敗しました。アップロードされた情報がプラットフォーム規約に適合していません。修正してから再度お試しください。",
+    pollNetworkError: "ネットワークエラーが発生しました。ページを再読み込みして最新の状態をご確認ください",
     generateFailedInsufficientBalance: "計クレジットが不足しています、クレジット後に再試行してください",
     generateFailedModeMismatch: "モードの選択が正しくありません。ビデオ修正モードに切り替えて再生成してください。",
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",

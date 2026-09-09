@@ -2113,6 +2113,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     delete: "Delete",
     image: "Image",
     generateFailed: "Generation failed. The information you uploaded does not comply with platform rules. Please revise and try again.",
+    pollNetworkError: "Network error. Refresh the page to see the latest status",
     generateFailedInsufficientBalance: "Insufficient computing power, please recharge and retry",
     generateFailedModeMismatch: "Incorrect mode selected. Please switch to Video Modify mode and generate again.",
     deleteConfirm: "Confirm deletion of this batch of generated results?",

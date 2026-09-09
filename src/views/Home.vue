@@ -626,7 +626,7 @@
                         </div>
                       </div>
 
-                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && effectiveVideoMode != 'unlimited'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -2781,6 +2781,52 @@ function resolveInputEl(type: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(selector);
 }
 
+// 做同款 / 做续集 / 做视频 这些入口会同时改 contentType、视频模式、NSFW 模式，
+// 输入框所在的 v-if 分支会被重建 —— editableInputRef 在这一帧可能还是 null，
+// 或者仍指向已卸载的旧分支元素，直接拿它 focus 会落空（表现就是回填了但光标没进去）。
+// 统一走 resolveInputEl 按 data-tab + data-mode 命中当前分支，拿不到就下一帧再试一次。
+function focusCurrentInput() {
+  let tries = 0;
+
+  const apply = () => {
+    const el = resolveInputEl(contentType.value);
+    // 隐藏元素 focus() 是空操作，必须等它真的渲染出来
+    if (!el || (el.offsetParent === null && el.getClientRects().length === 0)) return false;
+
+    el.focus();
+
+    // contenteditable 只 focus 不给 selection，光标不会显示，用户看着就是「没聚焦」。
+    // 把光标放到内容末尾，回填的内容后面可以直接接着打字。
+    if (el.isContentEditable) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    } else if (el instanceof HTMLTextAreaElement) {
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+
+    // 程序化 focus 未必触发 @focus（元素可能本来就是焦点），显式同步
+    isInputFocused.value = true;
+    if (typeTimer) clearTimeout(typeTimer);
+    typedPlaceholder.value = currentPlaceholder.value;
+
+    return document.activeElement === el;
+  };
+
+  // 回填过程中会连着改 contentType / 视频模式 / NSFW 模式，输入框所在的 v-if 分支
+  // 可能重建好几次，一次 nextTick 抢不到。逐帧重试，直到 activeElement 真的是它。
+  const attempt = () => {
+    if (apply()) return;
+    if (++tries >= 10) return;
+    requestAnimationFrame(attempt);
+  };
+  nextTick(attempt);
+}
+
 // 把视频输入框的现状同步进 ref。
 // 每次输入 / 插入 @ 标签都调一次，让 inputContentVideo / inputHtmlVideo 始终是最新的。
 // 这样切模式时读 ref 就够了，不用在 DOM 正被 v-if 分支重建的时刻去抢着读它。
@@ -3569,8 +3615,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  // 无限制模式下开关先隐藏，算力也不再叠加这笔（要放开就把 effectiveVideoMode 这段判断去掉）
-  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -4289,9 +4334,11 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
       }
       return;
     }
-    if (editableInputRef.value) {
-      editableInputRef.value.focus();
+    // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
+    if (isStickyCollapsed.value) {
+      stickyInputExpanded.value = true;
     }
+    focusCurrentInput();
   });
 };
 
@@ -4711,10 +4758,9 @@ const handleMakeSimilarVideo = async (item: any) => {
     combinedItemsVideo.value = [];
 
     nextTick(() => {
-      if (editableInputRef.value) {
-        editableInputRef.value.innerHTML = '';
-        isInputEmpty.value = true;
-      }
+      // 输入框所在的 v-if 分支刚重建，按 data-tab + data-mode 取当前分支的元素
+      const el = resolveInputEl(contentType.value);
+      if (el) { el.innerHTML = ''; isInputEmpty.value = true; }
 
       const token = localStorage.getItem('token');
       if (!token) {
@@ -4723,12 +4769,11 @@ const handleMakeSimilarVideo = async (item: any) => {
         }
         return;
       }
-      if (editableInputRef.value) {
-        editableInputRef.value.focus();
-        isInputFocused.value = true;
-        if (typeTimer) clearTimeout(typeTimer);
-        typedPlaceholder.value = currentPlaceholder.value;
+      // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
+      if (isStickyCollapsed.value) {
+        stickyInputExpanded.value = true;
       }
+      focusCurrentInput();
     });
   } catch (error) {
     console.error("Error fetching post detail for make similar video:", error);
@@ -4824,10 +4869,9 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
   localStorage.removeItem('makeSequelData');
 
   nextTick(() => {
-    if (editableInputRef.value) {
-      editableInputRef.value.innerHTML = '';
-      isInputEmpty.value = true;
-    }
+    // 输入框所在的 v-if 分支刚重建，按 data-tab + data-mode 取当前分支的元素
+    const el = resolveInputEl(contentType.value);
+    if (el) { el.innerHTML = ''; isInputEmpty.value = true; }
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -4836,12 +4880,11 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
       }
       return;
     }
-    if (editableInputRef.value) {
-      editableInputRef.value.focus();
-      isInputFocused.value = true;
-      if (typeTimer) clearTimeout(typeTimer);
-      typedPlaceholder.value = currentPlaceholder.value;
+    // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
+    if (isStickyCollapsed.value) {
+      stickyInputExpanded.value = true;
     }
+    focusCurrentInput();
   });
 };
 
@@ -5208,7 +5251,6 @@ const doGenerateVideo = async () => {
       story_mode: effectiveVideoMode.value == 'unlimited' ? 'nsfw' : 'normal',
       // 模型档位：极速版 fast / 加强版 plus / 超级版 super。普通模式也能选极速与超级，所以始终要传。
       video_nsfw_model_type: toModelType(selectedNsfwVersion.value),
-      ...(effectiveVideoMode.value == 'unlimited' ? { nsfw_version: selectedNsfwVersion.value } : {}),
       story_style: "",
       reference_images: reference_images,
       reference_videos: reference_videos,
@@ -5223,7 +5265,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value,
       ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
@@ -5849,10 +5891,9 @@ const switchContentTab = (tabId: string, index: number) => {
   currentStyleName.value = '';
 
   // Clear current content type's input
-  if (editableInputRef.value) {
-    editableInputRef.value.innerHTML = '';
-    isInputEmpty.value = true;
-  }
+  // 输入框所在的 v-if 分支刚重建，按 data-tab + data-mode 取当前分支的元素
+  const el = resolveInputEl(contentType.value);
+  if (el) { el.innerHTML = ''; isInputEmpty.value = true; }
 
   // Use nextTick to ensure DOM is updated before loading new content
   nextTick(() => {
@@ -8214,10 +8255,9 @@ onMounted(async () => {
         combinedItemsVideo.value = [];
 
         nextTick(() => {
-          if (editableInputRef.value) {
-            editableInputRef.value.innerHTML = '';
-            isInputEmpty.value = true;
-          }
+          // 输入框所在的 v-if 分支刚重建，按 data-tab + data-mode 取当前分支的元素
+          const el = resolveInputEl(contentType.value);
+          if (el) { el.innerHTML = ''; isInputEmpty.value = true; }
           const token = localStorage.getItem('token');
           if (!token) {
             if (isStickyCollapsed.value) {
@@ -8225,12 +8265,11 @@ onMounted(async () => {
             }
             return;
           }
-          if (editableInputRef.value) {
-            editableInputRef.value.focus();
-            isInputFocused.value = true;
-            if (typeTimer) clearTimeout(typeTimer);
-            typedPlaceholder.value = currentPlaceholder.value;
+          // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
+          if (isStickyCollapsed.value) {
+            stickyInputExpanded.value = true;
           }
+          focusCurrentInput();
         });
       }
     } catch (e) {

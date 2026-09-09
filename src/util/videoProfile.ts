@@ -15,7 +15,7 @@ export type VideoVersion = typeof VIDEO_VERSION_ORDER[number];
 // 极速版入口的总开关。关掉后可选版本里不再出现 fast：
 // 普通模式只剩超级版（选择器 length > 1 判据自动不显示），NSFW 模式回到加强版 / 超级版两档。
 // 极速版本身的档位配置、限制、计价都保留着，改回 true 即可整体放出。
-export const FAST_VERSION_ENABLED = false;
+export const FAST_VERSION_ENABLED = true;
 
 // 可选版本 = f(普通 or NSFW 模式, 视频模式)
 export function videoVersionsFor(mode: string, videoMode: string): VideoVersion[] {
