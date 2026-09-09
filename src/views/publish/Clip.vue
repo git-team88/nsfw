@@ -1532,6 +1532,11 @@ async function confirmSelectedProject() {
   const cover = projectFirstVideo.video_cover_url || projectRa.cover_url || projectRa.cover || project?.cover || "";
   coverUrl.value = cover;
 
+  // 发布接口要带 duration，这里先从项目数据取；取不到再由下面的详情接口兜底
+  if (projectFirstVideo.duration) {
+    videoDuration.value = parseFloat(projectFirstVideo.duration) || 0;
+  }
+
   coverImages.value = projectFinalVideos
     .map((v: any) => v.video_cover_url)
     .filter(Boolean);
@@ -1565,6 +1570,9 @@ async function confirmSelectedProject() {
           coverImages.value = resultAsync.final_videos
             .map((v: any) => v.video_cover_url)
             .filter(Boolean);
+        }
+        if (!videoDuration.value && resultAsync?.final_videos?.[0]?.duration) {
+          videoDuration.value = parseFloat(resultAsync.final_videos[0].duration) || 0;
         }
         if (chapterRes.data.title) {
           form.value.title = chapterRes.data.title;

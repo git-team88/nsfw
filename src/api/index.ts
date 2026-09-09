@@ -103,11 +103,7 @@ export default {
   banner: () =>
     axios.request({
       url: "index/getIndexBannerPublic",
-      // channel 只在「生效模式」为 2（强制展示 NSFW）时才带。
-      // 中国地区即使后端下发 2，也已在 contentSwitch store 里降级为 0，这里读到的就不是 '2'。
-      // 直接读 localStorage 而不是引 store：stores/contentSwitch 反过来 import 了本文件，
-      // 引进来会形成循环依赖；request.ts 的 channel 判断也是同一口径。
-      params: localStorage.getItem('contentSwitchMode') === '2' ? { channel: 1 } : {},
+      params: { channel: 1 },
       method: "GET",
     }),
 
@@ -1163,11 +1159,7 @@ export default {
   getBanner: () =>
     axios.request({
       url: "index/getIndexBannerPublic",
-      // channel 只在「生效模式」为 2（强制展示 NSFW）时才带。
-      // 中国地区即使后端下发 2，也已在 contentSwitch store 里降级为 0，这里读到的就不是 '2'。
-      // 直接读 localStorage 而不是引 store：stores/contentSwitch 反过来 import 了本文件，
-      // 引进来会形成循环依赖；request.ts 的 channel 判断也是同一口径。
-      params: localStorage.getItem('contentSwitchMode') === '2' ? { channel: 1 } : {},
+      params: { channel: 1 },
       method: "GET",
     }),
   getProjectInfoPublic: (session_id: string) =>

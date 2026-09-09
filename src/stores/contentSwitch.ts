@@ -34,6 +34,9 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
     // 创作类型标题前的「18x」前缀：只有强制展示 NSFW（生效模式 2）时才挂。
     // 中国地区已降级为 0，标题回到「视频 / 图片 / 漫画 / 小说」。
     showAdultLabel: (state): boolean => state.mode == 2,
+    // 中国地区 + 后端下发 2：整块运营 banner 既不请求也不展示。
+    // 用 rawMode 而不是 mode —— mode 已被降级为 0，分不出「后端本来就给 0」和「被降级的 2」。
+    bannerDisabled: (state): boolean => state.isChinaRegion && state.rawMode == 2,
   },
   actions: {
     async ensureLoaded() {

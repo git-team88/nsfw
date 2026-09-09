@@ -8295,6 +8295,11 @@ onMounted(async () => {
 
 // Load banners
 const loadBanners = async () => {
+  // 等地区与 content switch 就绪再判断，否则首屏这一刻还读不到结果
+  await contentSwitch.ensureLoaded();
+  // 中国地区 + 后端下发 2：不请求也不展示（banners 保持空数组，模板的 v-if 自然不渲染）
+  if (contentSwitch.bannerDisabled) return;
+
   try {
     const res = await api.getBanner() as any;
     if (res.code == 0 || res.code == 200) {
