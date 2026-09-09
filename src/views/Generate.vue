@@ -361,7 +361,7 @@
               @click="switchBottomTab('video')"
             >
               <div class="type-text">
-                <span>18x {{ t('home.contentType.video') }}</span>
+                <span>{{ contentSwitch.showAdultLabel ? '18x ' : '' }}{{ t('home.contentType.video') }}</span>
               </div>
             </div>
             <div
@@ -369,7 +369,7 @@
               @click="switchBottomTab('photo')"
             >
               <div class="type-text">
-                <span>18x {{ t('home.contentType.photo') }}</span>
+                <span>{{ contentSwitch.showAdultLabel ? '18x ' : '' }}{{ t('home.contentType.photo') }}</span>
               </div>
             </div>
           </div>
@@ -5701,11 +5701,12 @@ const publishPhoto = (record: any) => {
 };
 
 const publishVideo = (record: any) => {
+  // 只带 session_id。时长由 Clip 页用它调项目详情接口取
+  // （result_async.final_videos[0].duration），URL 不重复传。
   router.push({
     path: '/publish/clip',
     query: {
-      session_id: record.session_id,
-      ...(record.duration ? { duration: record.duration } : {})
+      session_id: record.session_id
     }
   });
 };

@@ -1182,7 +1182,7 @@
             <span
               v-for="type in contentTypes"
               :key="type.id"
-              v-show="activeContentTab === 'suggested' || type.id !== 0"
+              v-show="activeContentTab !== 'suggested' || type.id !== 0"
               class="type-btn"
               :class="{ active: activeContentType == type.id }"
               @click="activeContentType = type.id"
@@ -1471,6 +1471,7 @@
       <button
         v-for="type in contentTypes"
         :key="`bottom-${type.id}`"
+        v-show="activeContentTab !== 'suggested' || type.id !== 0"
         type="button"
         class="bottom-content-tab"
         :class="{ active: activeContentType == type.id }"
@@ -1571,7 +1572,7 @@ const activeContentTab = ref('suggested');
 const searchQuery = ref('');
 const sortOrder = ref('hot');
 const loading = ref(false);
-const activeContentType = ref(0);
+const activeContentType = ref(5);
 const isSearchFocused = ref(false);
 const contentTypeFilterRef = ref<HTMLElement | null>(null);
 const showBottomContentTabs = ref(false);
@@ -2667,11 +2668,14 @@ const runTypewriter = () => {
 // Content type
 const contentType = ref('video'); // video, comic, novel, photo
 const showHelpDropdown = ref(false); // Control help dropdown visibility
-const contentTypeOptions = ref([
-  { value: 'video', label: '18x' + ' ' + t('home.contentType.video') },
-  { value: 'photo', label: '18x' + ' ' + t('home.contentType.photo') },
-  { value: 'comic', label: '18x' + ' ' + t('home.contentType.comic') },
-  { value: 'novel', label: '18x' + ' ' + t('home.contentType.novel') },
+// 「18x」前缀只在强制展示 NSFW 时挂（中国地区已在 store 里降级，标题不带前缀）。
+// 改成 computed：contentSwitch 是异步加载的，用 ref 会固化成首屏那一刻的值。
+const adultPrefix = computed(() => (contentSwitch.showAdultLabel ? '18x ' : ''));
+const contentTypeOptions = computed(() => [
+  { value: 'video', label: adultPrefix.value + t('home.contentType.video') },
+  { value: 'photo', label: adultPrefix.value + t('home.contentType.photo') },
+  { value: 'comic', label: adultPrefix.value + t('home.contentType.comic') },
+  { value: 'novel', label: adultPrefix.value + t('home.contentType.novel') },
 ]);
 
 // Word count and language settings
@@ -5732,7 +5736,7 @@ const switchContentTab = (tabId: string, index: number) => {
   followUserPage.value = 1;
   hasMoreContent.value = true;
   hasMoreUsers.value = true;
-  activeContentType.value = (tabId === 'following' || tabId === 'subscriptions') ? 5 : 0;
+  activeContentType.value = (tabId === 'following' || tabId === 'subscriptions') ? 0 : 5;
   allContent.value = []; // Clear old data to show loading state
   followUserList.value = []; // Clear user list
   contentCardRefs.value = []; // Clear card refs to reset layout
