@@ -123,3 +123,53 @@ export function profileOf(limitMode: string): VideoProfile {
 export const DEFAULT_VIDEO_VERSION: VideoVersion = 'fast';
 export const DEFAULT_VIDEO_PROFILE: VideoProfile =
   profileOf(videoLimitModeOf(DEFAULT_VIDEO_VERSION, 'normal'));
+
+// 按输入框的计数规则（不可编辑的 @ 引用标签算 7 个字符）把提示词 HTML 截到 max 字符以内。
+// 切档位时用：极速版只有 7000 字，从加强版 20000 字切过来会超标，而现有的字数限制
+// 是「拒绝输入」不是「截断」—— 超标内容留在框里，用户一个字都打不进去，却还能点生成
+// 然后被后端拒。这里在切换时就把它收敛掉。
+export function clampPromptHtml(
+  html: string,
+  max: number,
+): { html: string; text: string; clamped: boolean } {
+  if (!html || typeof document === 'undefined') return { html: html || '', text: '', clamped: false };
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  let count = 0;
+  let clamped = false;
+
+  const walk = (node: Node) => {
+    for (const child of Array.from(node.childNodes)) {
+      if (count >= max) {
+        child.parentNode?.removeChild(child);
+        clamped = true;
+        continue;
+      }
+      if (child.nodeType === 3) {
+        const text = child.textContent || '';
+        if (count + text.length > max) {
+          child.textContent = text.slice(0, max - count);
+          count = max;
+          clamped = true;
+        } else {
+          count += text.length;
+        }
+      } else if (child.nodeType === 1) {
+        const el = child as HTMLElement;
+        // 引用标签整块算 7 个字符，放不下就整块丢掉，不能截半个标签
+        if (el.hasAttribute('contenteditable') && el.contentEditable === 'false') {
+          if (count + 7 > max) {
+            el.parentNode?.removeChild(el);
+            clamped = true;
+          } else {
+            count += 7;
+          }
+        } else {
+          walk(el);
+        }
+      }
+    }
+  };
+  walk(box);
+  return { html: box.innerHTML, text: box.textContent || '', clamped };
+}

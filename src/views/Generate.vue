@@ -1012,6 +1012,7 @@ import optimizePromptOff from "@/assets/images/project/close.png";
 import {
   MB, profileOf, videoVersionsFor, pickVideoVersion,
   videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE,
+  clampPromptHtml,
 } from '@/util/videoProfile';
 
 const { t, locale } = useI18n();
@@ -1049,6 +1050,11 @@ const selectedNsfwVersion = ref('fast');
 // 三档的参数与文件限制集中在 @/util/videoProfile，Home.vue 共用同一张表。
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
+
+// 计价用的画质档。极速版是 480P / 768P，余额接口还没有对应的每秒单价字段，
+// 暂时按 720P 计价 —— 否则两个分支都不命中，costPerSecond 恒为 0，算力永远显示 1。
+// 等后端下发 480p / 768p 单价后，把这里换成真实字段即可。
+const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
 
 // 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
 // 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
@@ -3817,8 +3823,41 @@ function applyVideoLimitModeChange(prevLimitMode: string) {
     videoDrafts.value[m] = { ...d, refs: r.kept, html: c.html, text: c.text || d.text };
   });
 
+  clampVideoPromptsToLimit();
   resetVideoParams();
   restoreVideoInput();
+}
+
+// 新档位的字数上限可能比原来小（加强版 20000 → 极速版 7000）。
+// 提示词是保留的，超标部分必须在这里截掉：现有的字数限制是「拒绝输入」而不是「截断」，
+// 留着超标内容用户一个字都打不进去，却还能点生成然后被后端拒。
+function clampVideoPromptsToLimit() {
+  const max = videoProfile.value.maxInputChars;
+  let clamped = false;
+
+  const cur = clampPromptHtml(videoPromptHtml.value, max);
+  if (cur.clamped) {
+    videoPromptHtml.value = cur.html;
+    videoPromptText.value = cur.text;
+    clamped = true;
+  }
+
+  VIDEO_MODES.forEach((m) => {
+    if (m === currentVideoMode2()) return;
+    const d = videoDrafts.value[m];
+    const c = clampPromptHtml(d.html, max);
+    const overText = d.text.length > max;
+    if (c.clamped || overText) {
+      videoDrafts.value[m] = {
+        ...d,
+        html: c.clamped ? c.html : d.html,
+        text: c.clamped ? c.text : d.text.slice(0, max),
+      };
+      clamped = true;
+    }
+  });
+
+  if (clamped) toast(t('home.error.maxInputLimit', { max }));
 }
 
 // 切档位前先预演：有参考文件留不下就先问一句，确认后才真正切；取消则什么都不变
@@ -4419,13 +4458,13 @@ const estimatedVideoPower = computed(() => {
   }
   let costPerSecond = 0;
 
-  if (selectedVideoQuality.value == '720P') {
+  if (pricingQuality.value == '720P') {
     if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
     }
-  } else if (selectedVideoQuality.value == '1080P') {
+  } else if (pricingQuality.value == '1080P') {
     if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
     } else {
