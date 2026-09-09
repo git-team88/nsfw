@@ -62,7 +62,7 @@ const navigateTo = (path: string) => {
   padding: 0 40px;
   border-top: 1px solid #2b2b2b;
   background: #111;
-  z-index: 30;
+  z-index: 210;
 }
 
 .footer-policies {

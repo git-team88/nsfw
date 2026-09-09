@@ -1982,9 +1982,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderPhoto: "输入一句，画面诞生。例：清晨的古街，一只猫正坐在石灯笼上打盹。",
       placeholderVideo: "输入一句，视界展开。例：细雨霏霏，他们共撑一伞，樱花树下缓缓行。",
       placeholderMakeSimilar: "替换角色或修改情节拍同款",
-      placeholderMakeSequel: "请描述后续情节做续集",
+      placeholderMakeSequel: "请输入任意想法即可生成视频后续情节，例如“视频1，男人微笑着走近女人并亲吻她”",
       placeholderMakeVideo: "描述视频画面，根据参考图生成视频",
-      placeholderMakeSimilarVideo: "替换原视频中的角色拍同款视频；或者自由修改原视频情节生成自己喜欢的视频"
+      placeholderMakeSimilarVideo: "替换角色：只需点击下方“参考”按钮上传参考图，同时输入替换要求，例如“视频1中的左边的男人换成图1中的人物”。情节修改：只需在输入框中输入任意想法即可，例如“视频1的剧情改成男人和女人拥抱在一起”"
     },
     img: '图片',
     unreferencedFiles: {

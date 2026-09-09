@@ -1702,9 +1702,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       placeholderPhoto: "一言から、物語のワンシーンが生まれる。例：桜吹雪の中、振り返った彼女の瞳には涙が浮かんでいた。",
       placeholderVideo: "見たい物語を一行で入力。例：余命3ヶ月のロボットが孤独な少女と出会い、最後の景色を探す旅に出る。",
       placeholderMakeSimilar: "キャラクターを替えるかプロットを修正して同款を作る",
-      placeholderMakeSequel: "続きのプロットを描写して続編を作る",
+      placeholderMakeSequel: "思いついた内容を入力するだけで動画の続きを生成できます。例：「動画1、男性が微笑みながら女性に近づいてキスをする」",
       placeholderMakeVideo: "動画のシーンを描写し、参考画像から動画を生成",
-      placeholderMakeSimilarVideo: "元動画のキャラクターを替えて同款動画を作る；または元動画のストーリーを自由に変更して好きな動画を生成"
+      placeholderMakeSimilarVideo: "キャラクターの差し替え：下の「参照」ボタンから参照画像をアップロードし、差し替え内容を入力してください。例：「動画1の左側の男性を画像1の人物に変更」。ストーリーの変更：入力欄に思いついた内容を入力するだけです。例：「動画1のストーリーを、男性と女性が抱き合う内容に変更」"
     },
     img: '画像',
     unreferencedFiles: {
