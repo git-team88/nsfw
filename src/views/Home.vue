@@ -3544,9 +3544,31 @@ const estimatedVideoComputingPower = computed(() => {
 });
 
 // Check if user is logged in
+// 做同款 / 做续集 / 做视频 的原始入参。onMounted 消费后就从 localStorage 删掉了，
+// 但这些回填内容是纯内存态 —— 未登录时点输入框会被跳去登录页、Home 随之卸载，内容全丢。
+// 这里留一份，跳登录前写回 localStorage，登录回来 onMounted 会重新消费一次、自动回填。
+const pendingMakeSource = ref<{ key: string; raw: string } | null>(null);
+
+function keepMakeSourceForLogin() {
+  const src = pendingMakeSource.value;
+  if (!src) return;
+  try {
+    localStorage.setItem(src.key, src.raw);
+  } catch {
+    /* 存储不可用（无痕模式等），忽略 */
+  }
+}
+
 const checkLogin = () => {
   const token = localStorage.getItem('token');
   if (!token) {
+    keepMakeSourceForLogin();
+    // 记住当前地址，登录成功后回到同一个内容类型 tab，而不是落到根路径
+    try {
+      localStorage.setItem('loginRedirect', route.fullPath);
+    } catch {
+      /* 忽略 */
+    }
     router.push('/login');
     return false;
   }
@@ -5118,9 +5140,22 @@ const doGenerateVideo = async () => {
     if (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') {
       if (uploadedVideo.value) {
         let effectiveVideoUrl = uploadedVideo.value;
+        // 做续集：原视频要先取尾 30 秒再送去生成。
+        // 裁剪放在这里而不是点「做续集」的入口 —— 那时用户还没决定要不要生成，
+        // 提前调等于白烧一次转码，还会把跳转卡在 await 上。
         if (isMakeExtensionMode.value && originVideoUrlForTail.value) {
-          effectiveVideoUrl = originVideoUrlForTail.value;
-          uploadedVideo.value = originVideoUrlForTail.value;
+          try {
+            const tailUrl = await extractVideoTail(originVideoUrlForTail.value);
+            if (tailUrl) {
+              effectiveVideoUrl = tailUrl;
+              uploadedVideo.value = tailUrl;
+            }
+          } catch (e) {
+            console.error('Error extracting video tail:', e);
+            toast(t('fail'));
+            isGeneratingVideo.value = false;
+            return;
+          }
         }
         reference_videos = [effectiveVideoUrl];
       }
@@ -8040,6 +8075,8 @@ onMounted(async () => {
 
   const makeVideoData = localStorage.getItem('makeVideoData');
   if (makeVideoData) {
+    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
+    pendingMakeSource.value = { key: 'makeVideoData', raw: makeVideoData };
     await getCountry();
     try {
       const { imageUrl, isNsfw } = JSON.parse(makeVideoData);
@@ -8053,6 +8090,8 @@ onMounted(async () => {
 
   const makeSimilarVideoData = localStorage.getItem('makeSimilarVideoData');
   if (makeSimilarVideoData) {
+    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
+    pendingMakeSource.value = { key: 'makeSimilarVideoData', raw: makeSimilarVideoData };
     await getCountry();
     try {
       const { videoUrl, cover, isNsfw, duration: similarVideoDuration, postId: similarPostId } = JSON.parse(makeSimilarVideoData);
@@ -8114,6 +8153,8 @@ onMounted(async () => {
 
   const makeSequelData = localStorage.getItem('makeSequelData');
   if (makeSequelData) {
+    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
+    pendingMakeSource.value = { key: 'makeSequelData', raw: makeSequelData };
     await getCountry();
     try {
       const { videoUrl, cover, type, postId, isNsfw, duration: sequelDuration } = JSON.parse(makeSequelData);
