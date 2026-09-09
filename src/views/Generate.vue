@@ -361,7 +361,7 @@
               @click="switchBottomTab('video')"
             >
               <div class="type-text">
-                <span>{{ contentSwitch.showAdultLabel ? '18x ' : '' }}{{ t('home.contentType.video') }}</span>
+                <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.video') }}</span>
               </div>
             </div>
             <div
@@ -369,7 +369,7 @@
               @click="switchBottomTab('photo')"
             >
               <div class="type-text">
-                <span>{{ contentSwitch.showAdultLabel ? '18x ' : '' }}{{ t('home.contentType.photo') }}</span>
+                <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.photo') }}</span>
               </div>
             </div>
           </div>
@@ -4423,7 +4423,7 @@ const estimatedVideoPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -5146,7 +5146,7 @@ const doGenerateVideo = async () => {
         simple_image_resolution: '1K',
         simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
-        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+        enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
       }
     };
 
@@ -5190,7 +5190,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5823,7 +5823,7 @@ const regenerateRecord = async (record: any) => {
       currentVideoMode.value = 'normal';
     }
 
-    enableVideoOptimizePrompt.value = effectiveVideoMode.value === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true);
+    enableVideoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
 
     if (userSelected.simple_video_generate_mode == 'first_last_frames') {
       selectedVideoMultimodal.value = 'startEndFrames';

@@ -626,7 +626,7 @@
                         </div>
                       </div>
 
-                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend' && effectiveVideoMode != 'unlimited'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+                      <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @click="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
                         {{ t('home.option.optimizePrompt') }}
                         <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
                       </div>
@@ -1205,7 +1205,7 @@
           <!-- Content View - always show for suggested tab, or when viewMode is content -->
           <template v-if="activeContentTab === 'suggested' || viewMode === 'content'">
             <!-- Empty State -->
-            <EmptyState v-if="!loading && allContent.length === 0" />
+            <EmptyState v-if="!loading && allContent.length === 0" :text="t('home.emptyContent')" />
 
             <!-- Waterfall Layout -->
             <div
@@ -2668,9 +2668,9 @@ const runTypewriter = () => {
 // Content type
 const contentType = ref('video'); // video, comic, novel, photo
 const showHelpDropdown = ref(false); // Control help dropdown visibility
-// 「18x」前缀只在强制展示 NSFW 时挂（中国地区已在 store 里降级，标题不带前缀）。
+// 「R18」前缀只在强制展示 NSFW 时挂（中国地区已在 store 里降级，标题不带前缀）。
 // 改成 computed：contentSwitch 是异步加载的，用 ref 会固化成首屏那一刻的值。
-const adultPrefix = computed(() => (contentSwitch.showAdultLabel ? '18x ' : ''));
+const adultPrefix = computed(() => (contentSwitch.showAdultLabel ? 'R18 ' : ''));
 const contentTypeOptions = computed(() => [
   { value: 'video', label: adultPrefix.value + t('home.contentType.video') },
   { value: 'photo', label: adultPrefix.value + t('home.contentType.photo') },
@@ -3537,7 +3537,7 @@ const estimatedVideoComputingPower = computed(() => {
   }
 
   let totalCost = Math.ceil(costPerSecond * duration);
-  if (enableVideoOptimizePrompt.value && effectiveVideoMode.value !== 'unlimited' && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
+  if (enableVideoOptimizePrompt.value && selectedVideoMultimodal.value !== 'videoModify' && selectedVideoMultimodal.value !== 'videoExtend') {
     totalCost += Math.ceil(Number(balanceInfo.value.additional_optimize_prompt_cost) || 0);
   }
   return Math.max(1, totalCost);
@@ -4390,7 +4390,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       if (userSelected.ratio) selectedVideoRatio.value = userSelected.ratio;
       if (userSelected.simple_video_resolution) selectedVideoQuality.value = userSelected.simple_video_resolution.toUpperCase();
       if (userSelected.simple_video_duration) selectedVideoDuration.value = userSelected.simple_video_duration.toString();
-      enableVideoOptimizePrompt.value = shouldReplayOptimizedPrompt ? false : (safeMode === 'unlimited' ? false : (userSelected.enable_optimize_prompt === true));
+      enableVideoOptimizePrompt.value = shouldReplayOptimizedPrompt ? false : (userSelected.enable_optimize_prompt === true);
 
       const generateMode = userSelected.simple_video_generate_mode;
       if (generateMode == 'first_last_frames') {
@@ -5184,7 +5184,7 @@ const doGenerateVideo = async () => {
       simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
-      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend' || effectiveVideoMode.value === 'unlimited') ? false : enableVideoOptimizePrompt.value,
+      enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value,
       ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };

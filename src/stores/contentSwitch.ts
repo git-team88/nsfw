@@ -31,7 +31,7 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
     showSensitiveToggle: (state): boolean => state.mode == 1,
     channel: (state): number | undefined => state.mode == 2 ? 1 : undefined,
     projectNsfwFilter: (state): number => state.mode == 0 ? 2 : state.mode == 2 ? 3 : 1,
-    // 创作类型标题前的「18x」前缀：只有强制展示 NSFW（生效模式 2）时才挂。
+    // 创作类型标题前的「R18」前缀：只有强制展示 NSFW（生效模式 2）时才挂。
     // 中国地区已降级为 0，标题回到「视频 / 图片 / 漫画 / 小说」。
     showAdultLabel: (state): boolean => state.mode == 2,
     // 中国地区 + 后端下发 2：整块运营 banner 既不请求也不展示。

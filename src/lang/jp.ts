@@ -1854,6 +1854,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     },
     loading: "読み込み中...",
     noMore: "コンテンツはもうありません",
+    emptyContent: "表示できるデータがありません",
      loadMore: "もっと見る",
      makeSimilar: "同じものを作る",
      makeSimilarVideo: "リメイク/アレンジ",

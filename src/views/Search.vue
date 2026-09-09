@@ -177,7 +177,10 @@
         </div>
 
         <!-- Empty State -->
-        <EmptyState v-else-if="(activeTab === 'posts' && postList && postList.length === 0) || (activeTab === 'users' && users.length === 0)" />
+        <EmptyState
+          v-else-if="(activeTab === 'posts' && postList && postList.length === 0) || (activeTab === 'users' && users.length === 0)"
+          :text="activeTab === 'posts' ? t('home.emptyContent') : ''"
+        />
 
         <!-- Load More Indicator -->
         <div v-if="isLoadingMore" class="load-more-indicator">

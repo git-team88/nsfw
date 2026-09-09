@@ -2128,6 +2128,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
     loading: "加載中...",
     noMore: "沒有更多內容了",
+    emptyContent: "暫無可用數據",
      loadMore: "加載更多",
      makeSimilar: "做同款",
      makeSimilarVideo: "拍同款/改編",
