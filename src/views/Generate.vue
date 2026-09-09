@@ -1011,7 +1011,7 @@ import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import {
   MB, profileOf, videoVersionsFor, pickVideoVersion,
-  videoLimitModeOf, toModelType, fromModelType,
+  videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE,
 } from '@/util/videoProfile';
 
 const { t, locale } = useI18n();
@@ -1049,6 +1049,10 @@ const selectedNsfwVersion = ref('fast');
 // 三档的参数与文件限制集中在 @/util/videoProfile，Home.vue 共用同一张表。
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
+
+// 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
+// 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
+watch(videoLimitMode, () => { migrateVideoParams(); });
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
@@ -2041,10 +2045,11 @@ const photoRatioOptions = ref([
 
 // Video settings for bottom generator
 const showVideoSettings = ref(false);
-const selectedVideoQuality = ref('720P');
-const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+// 初始值跟默认版本（极速版）走，别写死 —— 否则一进页面就是 720P / 30s，和档位对不上
+const selectedVideoQuality = ref(DEFAULT_VIDEO_PROFILE.defaultQuality);
+const selectedVideoRatio = ref(DEFAULT_VIDEO_PROFILE.defaultRatio);
+const selectedVideoDuration = ref(DEFAULT_VIDEO_PROFILE.defaultDuration);
+const lastValidVideoDuration = ref(DEFAULT_VIDEO_PROFILE.defaultDuration);
 const uploadedVideoDuration = ref(0);
 const showVideoMultimodalDropdown = ref(false);
 const selectedVideoMultimodal = ref('multimodal');

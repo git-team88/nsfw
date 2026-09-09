@@ -117,3 +117,9 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
 export function profileOf(limitMode: string): VideoProfile {
   return VIDEO_PROFILES[limitMode] || VIDEO_PROFILES.normal;
 }
+
+// 页面初始状态：默认极速版 + 普通模式。分辨率 / 比例 / 时长这几个 ref 的初始值
+// 必须从这里取，写死 720P / 30s 会和默认版本对不上（极速版是 480P / 15s）。
+export const DEFAULT_VIDEO_VERSION: VideoVersion = 'fast';
+export const DEFAULT_VIDEO_PROFILE: VideoProfile =
+  profileOf(videoLimitModeOf(DEFAULT_VIDEO_VERSION, 'normal'));

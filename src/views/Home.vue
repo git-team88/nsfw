@@ -1565,7 +1565,7 @@ import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/base/video.png";
 import {
   MB, VIDEO_PROFILES, profileOf, videoVersionsFor, pickVideoVersion,
-  videoLimitModeOf, toModelType, fromModelType,
+  videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE,
 } from '@/util/videoProfile';
 
 const { t, locale } = useI18n();
@@ -1825,6 +1825,10 @@ const selectedNsfwVersion = ref('fast');
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
+
+// 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
+// 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
+watch(videoLimitMode, () => { migrateVideoParams(); });
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
@@ -2391,10 +2395,11 @@ function removeVideo() {
 }
 
 const showVideoSettings = ref(false);
-const selectedVideoQuality = ref('720P');
-const selectedVideoRatio = ref('9:16');
-const selectedVideoDuration = ref('30');
-const lastValidVideoDuration = ref('30');
+// 初始值跟默认版本（极速版）走，别写死 —— 否则一进页面就是 720P / 30s，和档位对不上
+const selectedVideoQuality = ref(DEFAULT_VIDEO_PROFILE.defaultQuality);
+const selectedVideoRatio = ref(DEFAULT_VIDEO_PROFILE.defaultRatio);
+const selectedVideoDuration = ref(DEFAULT_VIDEO_PROFILE.defaultDuration);
+const lastValidVideoDuration = ref(DEFAULT_VIDEO_PROFILE.defaultDuration);
 const videoQualityOptions = computed(() => videoProfile.value.qualityOptions);
 const videoRatioOptions = computed(() => videoProfile.value.ratioOptions);
 const videoDurationOptions = computed(() => {
