@@ -12,19 +12,19 @@ function md5(str: string): string {
 function detectDevTools(): boolean {
   let detected = false;
 
-  const check = (): number => {
-    const s = performance.now();
-    (() => {}).constructor('debugger')();
-    return performance.now() - s;
-  };
+  // const check = (): number => {
+  //   const s = performance.now();
+  //   (() => {}).constructor('debugger')();
+  //   return performance.now() - s;
+  // };
 
-  if (check() > 100) detected = true;
+  // if (check() > 100) detected = true;
 
-  const log = console.log;
-  console.log = function (...args: any[]) {
-    detected = true;
-    log.apply(console, args);
-  };
+  // const log = console.log;
+  // console.log = function (...args: any[]) {
+  //   detected = true;
+  //   log.apply(console, args);
+  // };
 
   return detected;
 }
