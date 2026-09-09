@@ -1011,7 +1011,7 @@ import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import {
   MB, profileOf, videoVersionsFor, pickVideoVersion,
-  videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE,
+  videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE, DEFAULT_VIDEO_VERSION,
   clampPromptHtml,
 } from '@/util/videoProfile';
 
@@ -1044,7 +1044,7 @@ const currentPhotoMode = ref('normal');
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
-const selectedNsfwVersion = ref('fast');
+const selectedNsfwVersion = ref<string>(DEFAULT_VIDEO_VERSION);
 
 // 视频 tab 的限制档位：极速版 fast / 加强版 unlimited(仅 NSFW) / 超级版与普通模式 normal。
 // 三档的参数与文件限制集中在 @/util/videoProfile，Home.vue 共用同一张表。
@@ -1055,10 +1055,6 @@ const videoProfile = computed(() => profileOf(videoLimitMode.value));
 // 暂时按 720P 计价 —— 否则两个分支都不命中，costPerSecond 恒为 0，算力永远显示 1。
 // 等后端下发 480p / 768p 单价后，把这里换成真实字段即可。
 const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
-
-// 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
-// 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
-watch(videoLimitMode, () => { migrateVideoParams(); });
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
@@ -5532,7 +5528,18 @@ const getUserInfo = () => {
 };
 
 onMounted(async () => {
+  // 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
+  // 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
+  // 必须在 onMounted 里注册：watch 一个 computed 会在注册时立即求值，写在 setup 顶部时
+  // videoLimitMode 会顺着 effectiveVideoMode 摸到还没声明的 contentSwitch，直接 TDZ 报错。
+  // 放在 onMounted 最前面，保证后面消费 localStorage 的做同款 / 做续集回填也能被兜到。
+  watch(videoLimitMode, () => { migrateVideoParams(); });
   await contentSwitch.ensureLoaded();
+  // 生效模式要等 content switch 回来才定：后端下发 2（强制 NSFW）时一进页面就是无限制模式，
+  // 而 selectedNsfwVersion 的初始值是按普通模式算的（超级版），会停在超级版上。
+  // 这里按当时真实的可选列表重取默认（fast → enhanced → super 顺序的第一个）：
+  // 普通模式 → 超级版，无限制模式 → 加强版。
+  selectedNsfwVersion.value = availableVideoVersions.value[0];
   if (contentSwitch.mode === 2) {
     currentPhotoMode.value = 'unlimited';
     currentVideoMode.value = 'unlimited';
