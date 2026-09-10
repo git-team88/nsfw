@@ -1845,6 +1845,11 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     }
   },
   home: {
+    // Banner 推广位文案（占位，替换成正式文案即可）。sub 走 v-html，支持 <br> 换行和 <em> 强调色
+    promoBanner: {
+      title: "用 AI 把你的想法變成影片",
+      sub: "在 <em>FansFans AI</em> 上傳參考圖，幾分鐘內生成屬於你的影片<br>支援圖片、影片、音訊多種參考素材",
+    },
     popularCreator: "人氣創作者",
     feedTitle: "大家的新作",
     feedSub: "看看剛剛投稿的作品",

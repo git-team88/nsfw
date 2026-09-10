@@ -147,7 +147,7 @@
                 <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
                   <img src="@/assets/images/project/publish.png" alt="publish" />
                 </div>
-                <div class="regenerate-btn" @click="regenerateRecord(record)">
+                <div class="regenerate-btn" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
                 </div>
 
@@ -323,7 +323,7 @@
                 <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
                   <img src="@/assets/images/project/publish.png" alt="publish" />
                 </div>
-                <div class="regenerate-btn" @click="regenerateRecord(record)">
+                <div class="regenerate-btn" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">
                   <img src="@/assets/images/home/renew.png" alt="regenerate" />
                 </div>
 
@@ -1038,6 +1038,14 @@ const playingVideoIsUnlimited = ref(false);
 const showAudioModal = ref(false);
 const playingAudioUrl = ref('');
 const userRegion = ref(false);
+
+// 敏感内容的「重新生成」入口只挡中国地区：
+// switch_no 0 和 1 都会放出创作侧的 NSFW 开关，这两种情况下按钮照常给；
+// 中国地区那个开关本来就不渲染（下发 2 也会被降级），重新生成会把页面强行切回
+// 无限制模式，所以只在这里收掉。
+const nsfwRegenerateBlocked = computed(() => !userRegion.value);
+const canRegenerateRecord = (record: any) =>
+  !(record?.user_selected?.story_mode === 'nsfw' && nsfwRegenerateBlocked.value);
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
@@ -4831,7 +4839,7 @@ const loadRecords = async (isLoadMore = false, targetSessionId: string = '', tar
   try {
       const storyType = selectedType.value == 'all' ? '' : selectedType.value;
       const loadSize = targetSessionId ? 1000 : pageSize.value;
-      const response = await api.singleTaskList(currentPage.value, loadSize, storyType, undefined, contentSwitch.projectNsfwFilter) as any;
+      const response = await api.singleTaskList(currentPage.value, loadSize, storyType) as any;
       if (response.code == 200) {
         const dataList = response.data.data_list || response.data.list || [];
 
@@ -5433,7 +5441,7 @@ const loadNewerRecords = async () => {
   isLoadingNewer.value = true;
   try {
     const storyType = selectedType.value == 'all' ? '' : selectedType.value;
-    const response = await api.singleTaskList(1, pageSize.value, storyType, undefined, contentSwitch.projectNsfwFilter) as any;
+    const response = await api.singleTaskList(1, pageSize.value, storyType) as any;
     if (response.code == 200) {
       const dataList = response.data.data_list || response.data.list || [];
       const fetched = dataList.map(normalizeSimpleRecord);

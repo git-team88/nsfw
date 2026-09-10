@@ -2014,6 +2014,15 @@ function goDetail(id: number | string, authorId?: number | string) {
   if (type !== 4 && type !== 5) {
     queryParams.type = type;
     queryParams.uid = authorId || route.query.id || '';
+  } else {
+    // 图片、视频是单篇作品，来源是博主主页 => 详情接口拼 fromBloggerIndex。
+    // 把 uid 和当前的搜索/日期筛选一起带过去，后端才能还原出同一份列表，
+    // 详情页才有上一个/下一个可切。
+    queryParams.type = 4;
+    queryParams.uid = authorId || route.query.id || '';
+    if (searchKeyword.value) queryParams.keyword = searchKeyword.value;
+    if (dateRange.value?.start) queryParams.start_day = dateRange.value.start;
+    if (dateRange.value?.end) queryParams.end_day = dateRange.value.end;
   }
 
   router.push({

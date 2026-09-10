@@ -1745,6 +1745,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   home: {
+    // Banner 推广位文案（占位，替换成正式文案即可）。sub 走 v-html，支持 <br> 换行和 <em> 强调色
+    promoBanner: {
+      title: "Want realistic <em>18+</em> videos with her face?",
+      sub: "Upload any photo on <em>FansFans AI</em> and get 18+ videos in minutes.",
+    },
     popularCreator: "Popular Creators",
     feedTitle: "Fresh from everyone",
     feedSub: "Check out just-posted works",

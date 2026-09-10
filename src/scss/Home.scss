@@ -1876,112 +1876,11 @@ $pinkopacity: rgba(255,79,154,0.12);
   margin: 15px 0 0;
   z-index: 0;
   width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
 
-  .banner-swiper {
-    position: relative;
-    width: 100%;
-    height: auto;
-    border-radius: 18px;
-    border: 0;
-    overflow: hidden;
-    box-shadow: none;
-
-    .swiper-container {
-      position: relative;
-      width: 100%;
-      height: auto;
-    }
-
-    .banner-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 3;
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      border-radius: 999px;
-      background: #1a1a1a;
-      border: 1px solid #3d3d3d;
-      box-shadow: none;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      user-select: none;
-      transition: transform .12s ease-out;
-
-      &:hover { transform: translateY(-50%) scale(1.12); }
-      &:active { transform: translateY(-50%) scale(.94); }
-      &.prev { left: 14px; }
-      &.next { right: 14px; }
-    }
-
-    .swiper-wrapper {
-      width: 100%;
-      height: auto;
-    }
-
-    .swiper-slide {
-      width: 100%;
-      height: auto;
-
-      a {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-    }
-
-    .swiper-pagination {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      bottom: 9px;
-      z-index: 3;
-    }
-
-    :deep(.swiper-pagination-bullet) {
-      width: 9px;
-      height: 9px;
-      margin: 0;
-      border-radius: 50%;
-      border: 1px solid #3d3d3d;
-      background: #1a1a1a;
-      opacity: 1;
-
-      &.swiper-pagination-bullet-active {
-        background: rgba(255,79,154,0.2);
-      }
-    }
-  }
-
-  .banner-slide {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .banner-link {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  .banner-image {
-    width: 100%;
-    height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    object-fit: cover;
-  }
-
-  .banner-img {
-    // 等比缩放：宽度铺满，高度由图片自身比例决定，不裁切
-    display: block;
-    width: 100%;
-    height: auto;
+  &.clickable {
+    cursor: pointer;
   }
 }
 
@@ -3503,14 +3402,6 @@ $pinkopacity: rgba(255,79,154,0.12);
     }
   }
 
-  .event-banner {
-    .banner-arrow {
-      width: 32px;
-      height: 32px;
-      &.prev { left: 8px; }
-      &.next { right: 8px; }
-    }
-  }
 
   .bottom-content-tabs {
     bottom: 34px;

@@ -4,26 +4,16 @@
 
     <!-- Main Content -->
     <div class="main-content">
-      <!-- Banner（纯图轮播，移到 hero 上方，对齐 moegen-web） -->
-      <div class="event-banner" v-if="banners.length > 0">
-        <div class="swiper-outer banner-swiper">
-          <div class="swiper-container">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
-                <img class="banner-img" :src="banner.cover" alt="" @load="onBannerImageLoad" @click="banner.jump_url && goBanner(banner.jump_url)" />
-              </div>
-            </div>
-            <div class="swiper-pagination"></div>
-          </div>
-          <template v-if="banners.length > 1">
-            <button type="button" class="banner-arrow prev" @click.stop="bannerPrev" aria-label="prev">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-            </button>
-            <button type="button" class="banner-arrow next" @click.stop="bannerNext" aria-label="next">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#161122" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
-          </template>
-        </div>
+      <!-- Banner：本地固定推广位，不再请求接口 -->
+      <div class="event-banner" v-if="showPromoBanner" :class="{ clickable: !!PROMO_BANNER_LINK }">
+        <PromoBanner
+          :image="bannerSlotImage"
+          :video="bannerSlotVideo"
+          @click="PROMO_BANNER_LINK && goBanner(PROMO_BANNER_LINK)"
+        >
+          <template #title><h2 v-html="t('home.promoBanner.title', {}, { locale: 'en' })"></h2></template>
+          <template #sub><p v-html="t('home.promoBanner.sub', {}, { locale: 'en' })"></p></template>
+        </PromoBanner>
       </div>
 
       <!-- Hero Section -->
@@ -1539,8 +1529,6 @@ import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type Compon
 import { useI18n } from 'vue-i18n';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
-import Swiper from 'swiper';
-import { Autoplay, Pagination } from 'swiper/modules';
 import Header from '@/components/Header.vue';
 import MakeSequelSubscribeModal from '@/components/MakeSequelSubscribeModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
@@ -1567,6 +1555,10 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
+import PromoBanner from '@/components/PromoBanner.vue';
+import bannerSlotImage from '@/assets/images/home/banner.webp';
+import bannerSlotVideo from '@/assets/images/home/banner.mp4';
+import heroBgVideo from '@/assets/images/home/video.mp4';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
 import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
@@ -1605,7 +1597,7 @@ const uid = localStorage.getItem('uid');
 // hero 背景动画暂停/播放
 // hero 背景视频：switch_no = 2 且非中国地区时，用它替掉漂浮动效 / 拟声词 / 柔光。
 // 换素材直接改这两个常量（放 public/ 下或填完整 URL 都行）。
-const HERO_VIDEO_SRC = '/hero/hero-bg.mp4';
+const HERO_VIDEO_SRC = heroBgVideo;
 const HERO_VIDEO_POSTER = '';
 const heroVideoRef = ref<HTMLVideoElement | null>(null);
 
@@ -1693,8 +1685,13 @@ const popHeroParts = () => {
 };
 
 // Banner data
-const banners = ref<any[]>([]);
-let bannerSwiper = ref<Swiper | null>(null);
+// Banner 是本地固定推广位，素材见上面的 import，文案走 i18n。
+// 填了链接整块就可点，留空则纯展示。
+const PROMO_BANNER_LINK = '';
+
+// 中国地区不展示这块运营 banner（口径见 contentSwitch.bannerDisabled）
+const showPromoBanner = computed(() => contentSwitch.loaded && !contentSwitch.bannerDisabled);
+
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
@@ -2612,9 +2609,38 @@ const blurHomeInputOnScroll = () => {
   isInputFocused.value = false;
 };
 
+// 做同款 / 做续集回填后，输入框强制吸底：不管页面滚到哪儿都固定在底部并保持展开，
+// 直到来源被清掉（发起生成、或用户手动清空）。
+// 不钉住的话，只有 hero 已经滚出视口时输入框才会吸底，在页面顶部点做同款，
+// 内容会回填进 hero 里那个输入框，用户看不见。
+const stickyInputPinned = ref(false);
+
+const pinStickyInput = () => {
+  // 从非吸底切过来要先量占位高度，否则 hero 里会塌掉一块
+  if (!showStickyInput.value) {
+    stickyInputPlaceholderHeight.value = inputAreaBoxRef.value?.offsetHeight || 0;
+    syncStickyInputPreview();
+  }
+  stickyInputPinned.value = true;
+  showStickyInput.value = true;
+  stickyInputExpanded.value = true;
+  stickyExpandedAtScrollY = window.scrollY;
+};
+
+const unpinStickyInput = () => {
+  if (!stickyInputPinned.value) return;
+  stickyInputPinned.value = false;
+  updateStickyInputVisibility();
+};
+
 const updateStickyInputVisibility = () => {
   const hero = heroSectionRef.value;
   if (!hero) return;
+  // 钉住期间不跟随滚动重算，否则滚回顶部输入框会跳回 hero 里
+  if (stickyInputPinned.value) {
+    showStickyInput.value = true;
+    return;
+  }
   const outOfView = hero.getBoundingClientRect().bottom <= 0;
   if (!outOfView) {
     showStickyInput.value = false;
@@ -4366,15 +4392,11 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
 
     const token = localStorage.getItem('token');
     if (!token) {
-      if (isStickyCollapsed.value) {
-        stickyInputExpanded.value = true;
-      }
+      pinStickyInput();
       return;
     }
-    // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
-    if (isStickyCollapsed.value) {
-      stickyInputExpanded.value = true;
-    }
+    // 回填后输入框强制吸底，页面停在哪儿都固定在底部
+    pinStickyInput();
     focusCurrentInput();
   });
 };
@@ -4659,10 +4681,8 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
 
     previousInputHtml.value = '';
 
-    if (showStickyInput.value && isStickyCollapsed.value) {
-      stickyExpandedAtScrollY = window.scrollY;
-      stickyInputExpanded.value = true;
-    }
+    // 回填后输入框强制吸底，页面停在哪儿都固定在底部
+    pinStickyInput();
 
     nextTick(() => {
       nextTick(() => {
@@ -4801,15 +4821,11 @@ const handleMakeSimilarVideo = async (item: any) => {
 
       const token = localStorage.getItem('token');
       if (!token) {
-        if (isStickyCollapsed.value) {
-          stickyInputExpanded.value = true;
-        }
+        pinStickyInput();
         return;
       }
-      // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
-      if (isStickyCollapsed.value) {
-        stickyInputExpanded.value = true;
-      }
+      // 回填后输入框强制吸底，页面停在哪儿都固定在底部
+      pinStickyInput();
       focusCurrentInput();
     });
   } catch (error) {
@@ -4912,15 +4928,11 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
 
     const token = localStorage.getItem('token');
     if (!token) {
-      if (isStickyCollapsed.value) {
-        stickyInputExpanded.value = true;
-      }
+      pinStickyInput();
       return;
     }
-    // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
-    if (isStickyCollapsed.value) {
-      stickyInputExpanded.value = true;
-    }
+    // 回填后输入框强制吸底，页面停在哪儿都固定在底部
+    pinStickyInput();
     focusCurrentInput();
   });
 };
@@ -7945,6 +7957,23 @@ const formatNumber = (num: number) => {
   return num.toLocaleString();
 };
 
+// 首页三个 tab 对应详情接口的「来源列表」类型（Detail.vue 的 fetchDetail 按它拼 fromXxx）：
+// 1 = fromIndexRecommend（推荐）/ 2 = fromIndexFollow（关注）/ 3 = fromIndexSubscription（订阅）。
+// 图片、视频（type 4/5）是单篇作品，详情页靠这个参数才能算出上一个/下一个，显示上下箭头。
+const HOME_TAB_SOURCE: Record<string, string> = {
+  suggested: '1',
+  following: '2',
+  subscriptions: '3',
+};
+
+const detailQuery = (postId: string | number) => ({
+  id: String(postId),
+  // 详情接口把 tab 当 contentType 用，要传列表当前的内容类型（4 图片 / 5 视频），
+  // 不能传 tab 名，否则后端还原不出同一份列表
+  tab: String(activeContentType.value),
+  type: HOME_TAB_SOURCE[activeContentTab.value] || '1',
+});
+
 const navigateToDetail = (bookId: string, type?: string, postId?: string | number) => {
   const typeCategoryMap: Record<string, "Novel" | "Comic" | "Drama" | "Image" | "Video"> = {
     '1': 'Comic',
@@ -7959,7 +7988,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
   if (String(type) === '4' || String(type) === '5') {
-    router.push({ path: '/detail', query: { id: postId || bookId, tab: activeContentTab.value } });
+    router.push({ path: '/detail', query: detailQuery(postId || bookId) });
   } else {
     router.push(`/collection/${bookId}`);
   }
@@ -7968,7 +7997,8 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
 const detailHref = (bookId: string, type?: string, postId?: string | number) => {
   if (String(type) === '4' || String(type) === '5') {
-    return `/detail?id=${postId || bookId}&tab=${activeContentTab.value}`;
+    const q = detailQuery(postId || bookId);
+    return `/detail?id=${q.id}&tab=${q.tab}&type=${q.type}`;
   }
   return `/collection/${bookId}`;
 };
@@ -8203,6 +8233,13 @@ watch(() => locale.value, (newLocale) => {
 });
 
 onMounted(async () => {
+  // 做同款/做续集的来源被清掉后（发起生成、或用户手动清空），解除输入框的强制吸底，
+  // 之后重新按滚动位置决定。注册在 onMounted 里：watch 一个 computed 会在注册时立即求值，
+  // 写在 setup 顶部会 TDZ。
+  watch(isMakeSourceActive, (active) => {
+    if (!active) unpinStickyInput();
+  });
+
   // 档位变了就把画质 / 比例 / 时长校回新档位的合法范围。
   // 做同款、做续集、历史回填会直接改 selectedNsfwVersion，不走切换 handler，这里兜一道。
   // 必须在 onMounted 里注册：watch 一个 computed 会在注册时立即求值，写在 setup 顶部时
@@ -8299,15 +8336,11 @@ onMounted(async () => {
           if (el) { el.innerHTML = ''; isInputEmpty.value = true; }
           const token = localStorage.getItem('token');
           if (!token) {
-            if (isStickyCollapsed.value) {
-              stickyInputExpanded.value = true;
-            }
+            pinStickyInput();
             return;
           }
-          // 收起状态下先展开，否则焦点落在折叠起来的输入框里，用户看不到
-          if (isStickyCollapsed.value) {
-            stickyInputExpanded.value = true;
-          }
+          // 回填后输入框强制吸底，页面停在哪儿都固定在底部
+          pinStickyInput();
           focusCurrentInput();
         });
       }
@@ -8491,7 +8524,6 @@ onMounted(async () => {
   }
 
   loadContent(1);
-  loadBanners();
 
   window.addEventListener('resize', handleResize);
   document.addEventListener('click', handleClickOutside);
@@ -8499,58 +8531,6 @@ onMounted(async () => {
   checkFirstRegister();
 });
 
-// Load banners
-const loadBanners = async () => {
-  // 等地区与 content switch 就绪再判断，否则首屏这一刻还读不到结果
-  await contentSwitch.ensureLoaded();
-  // 中国地区 + 后端下发 2：不请求也不展示（banners 保持空数组，模板的 v-if 自然不渲染）
-  if (contentSwitch.bannerDisabled) return;
-
-  try {
-    const res = await api.getBanner() as any;
-    if (res.code == 0 || res.code == 200) {
-      banners.value = res.data.banners || [];
-
-      await nextTick();
-      initBannerSwiper();
-    } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
-    }
-  } catch (error) {
-    toast(t('fail'));
-  }
-};
-
-// Initialize banner swiper
-const initBannerSwiper = () => {
-  bannerSwiper.value = new Swiper('.banner-swiper .swiper-container', {
-    modules: [Autoplay, Pagination],
-    slidesPerView: 1,
-    spaceBetween: 0,
-    // banner 等比缩放，高度由图片决定，让 swiper 自己跟着量
-    autoHeight: true,
-    loop: banners.value.length > 1,
-    autoplay: banners.value.length > 1 ? {
-      delay: 5000,
-      disableOnInteraction: false
-    } : false,
-    pagination: {
-      el: '.banner-swiper .swiper-pagination',
-      clickable: true,
-      enabled: true
-    },
-  })
-};
-
-// Banner 左右箭头切换
-// 图片是等比缩放的，加载完才知道真实高度，让 swiper 重新量一次
-const onBannerImageLoad = () => {
-  bannerSwiper.value?.update();
-  bannerSwiper.value?.updateAutoHeight(0);
-};
-
-const bannerPrev = () => { bannerSwiper.value?.slidePrev(); };
-const bannerNext = () => { bannerSwiper.value?.slideNext(); };
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);

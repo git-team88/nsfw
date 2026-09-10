@@ -2481,6 +2481,7 @@ $pinkopacity: rgba(255,79,154,0.12);
       flex: 1;
       min-height: 220px;
       max-height: 275px;
+      transition: height 0.3s ease;
       font-family: inherit;
       font-size: 14px;
       line-height: 28px;
@@ -2493,6 +2494,17 @@ $pinkopacity: rgba(255,79,154,0.12);
 
       &::placeholder {
         color: #888;
+      }
+
+      // 收起时压成一行。基础态是 min-height:220 / max-height:275，
+      // 三个高度都要覆盖掉，只写 height 不生效。
+      &.collapsed {
+        height: 28px;
+        min-height: 28px;
+        max-height: 28px;
+        line-height: 28px;
+        overflow: hidden;
+        white-space: nowrap;
       }
     }
   }

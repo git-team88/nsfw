@@ -942,10 +942,13 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   gap: 20px;
   z-index: 10;
 
-  // 图片 / 视频详情：按钮挪到左侧，别和右侧信息面板挤在一起
-  &.left {
-    right: auto;
-    left: 30px;
+  // 图片 / 视频（type 4、5）：不做垂直居中，锚在左栏底部，用 bottom + right 定位
+  &.at-bottom {
+    top: auto;
+    left: auto;
+    bottom: 30px;
+    right: 30px;
+    transform: none;
   }
 
   &.on {
@@ -2447,19 +2450,26 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       align-items: center;
       justify-content: center;
       position: relative;
-      overflow-y: auto;
-      overflow-x: hidden;
+      // 图片类型不再有内部滚动条，整张按面板宽高等比缩放放得下
+      overflow: hidden;
 
       .image-wrap {
         position: relative;
         max-width: 100%;
+        // 必须定高：它是 flex 子项，不写死的话高度由内容撑，
+        // 里面图片的 max-height: 100% 就解析不出来，竖图会顶出去被裁掉
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
 
         .stacked-image {
-          max-width: 100%;
           display: block;
+          width: auto;
+          height: auto;
+          max-width: 100%;
+          // 竖图按高度撑满，宽度自适应，两侧留白，不裁切
+          max-height: 100%;
         }
       }
 
@@ -3044,6 +3054,11 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     flex: none;
   }
 
+  // 图片类型：窄屏下左栏是 height:auto，百分比高度失效，用视口高度兜底
+  .image-carousel .carousel-slide .image-wrap .stacked-image {
+    max-height: 72vh;
+  }
+
   // 漫画/长图（scroll-panel）随整页滚动，不要单独的内部滚动条
   .left-panel.scroll-panel {
     height: auto;
@@ -3076,8 +3091,9 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     right: 16px;
   }
 
-  .nav-arrows.left {
-    left: 16px;
+  .nav-arrows.at-bottom {
+    bottom: 16px;
+    right: 16px;
   }
 
   // 合集列表不再内部滚动，跟随整页滚动（load-more 改由 IntersectionObserver 触发）

@@ -749,7 +749,7 @@ function changeTab(item: TabItem, index: number) {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.singleTaskList(currentPage.value, pageSize, "simple_image", true, contentSwitch.projectNsfwFilter) as any;
+    const response = await api.singleTaskList(currentPage.value, pageSize, "simple_image", true) as any;
     if (response.code !== 200) {
       toast(t("fail"));
       return;

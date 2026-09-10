@@ -1,16 +1,16 @@
 // 法币金额的显示形式，按接口下发的 currency 字段决定：
-//   jpy -> 保持日元后缀             例：1,200 日元
-//   其他（usd / 缺省 / 认不出）-> $ 前缀   例：$1,200
+//   usd -> $ 前缀                        例：$1,200
+//   其他（jpy / 缺省 / 认不出）-> 日元后缀   例：1,200 日元
 // USDT 等加密支付不走这里，仍然是「数字 + USDT」。
 //
-// 兜底方向是「美元」：只有明确拿到 jpy 才显示日元，取不到 currency 一律按 $ 显示。
+// 兜底方向是「日元」：只有明确拿到 usd 才显示 $，取不到 currency 一律按日元显示。
 
-const YEN_CODES = ['jpy', 'jp', '円', '日元', '日圓'];
+const USD_CODES = ['usd', 'us', 'usa', 'dollar', 'dollars', '$', '美元', '美金'];
 
 // 是否用美元形式显示（$ 前缀）
 export function isUsdDisplay(currency: unknown): boolean {
   const c = String(currency ?? '').trim().toLowerCase();
-  return !YEN_CODES.includes(c);
+  return USD_CODES.includes(c);
 }
 
 // 放在金额数字前面的部分

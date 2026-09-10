@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api, { PROJECT_NSFW_ALL } from '@/api/index'
+import api from '@/api/index'
 
 export type ContentSwitchMode = 0 | 1 | 2
 
@@ -36,9 +36,6 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
     // 仍然走 showSensitiveToggle（只有 1 才给）。
     showCreateNsfwToggle: (state): boolean => state.mode == 0 || state.mode == 1,
     channel: (state): number | undefined => state.mode == 2 ? 1 : undefined,
-    // 自己的内容（我的项目 / 生成历史 / 任务进度）一律取全部：
-    // switch_no = 0 时用户照样能创作 NSFW，再按浏览开关过滤会把自己的作品藏起来。
-    projectNsfwFilter: (): number => PROJECT_NSFW_ALL,
     // 创作类型标题前的「R18」前缀：只有强制展示 NSFW（生效模式 2）时才挂。
     // 中国地区已降级为 0，标题回到「视频 / 图片 / 漫画 / 小说」。
     showAdultLabel: (state): boolean => state.mode == 2,
@@ -46,9 +43,8 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
     // 但内容实质仍是 NSFW —— 发布作品 / 新建合集时 is_nsfw 仍按 1 传，
     // 别让展示层的降级把内容标记也带偏。
     nsfwDowngraded: (state): boolean => state.isChinaRegion && state.rawMode == 2,
-    // 中国地区 + 后端下发 2：整块运营 banner 既不请求也不展示。
-    // 用 rawMode 而不是 mode —— mode 已被降级为 0，分不出「后端本来就给 0」和「被降级的 2」。
-    bannerDisabled: (state): boolean => state.isChinaRegion && state.rawMode == 2,
+    // 中国地区一律不展示这块运营 banner（跟后端下发的 mode/rawMode 无关）。
+    bannerDisabled: (state): boolean => state.isChinaRegion,
   },
   actions: {
     async ensureLoaded() {

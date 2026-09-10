@@ -1489,7 +1489,7 @@ function getI18nMsg(res: any): string {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = (await api.singleTaskList(currentPage.value, 10, "simple_video", true, contentSwitch.projectNsfwFilter)) as any;
+    const response = (await api.singleTaskList(currentPage.value, 10, "simple_video", true)) as any;
     if (response.code != 200) {
       toast(t("fail"));
       return;
