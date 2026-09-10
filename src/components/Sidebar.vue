@@ -376,7 +376,7 @@ import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { trackShare } from '@/utils/analytics';
 import { baseUrl } from '@/util/config';
-import { uploadParts, PartUploadError } from '@/util/uploadVideo';
+import { uploadVideoFile, PartUploadError } from '@/util/uploadVideo';
 import { formatTimestamp } from '@/util/utils';
 import { useRoute, useRouter } from "vue-router";
 import EmptyState from '@/components/EmptyState.vue';
@@ -1782,26 +1782,9 @@ async function uploadVideo(file: File) {
       };
     });
 
-    const videoIdResponse = await api.getVideoId({ filename: file.name, filesize: file.size }) as any;
-    if (!videoIdResponse || videoIdResponse.code !== 0) {
-      toast(getI18nMsg(videoIdResponse));
-      return false;
-    }
-
-    const { uploadId, fileKey } = videoIdResponse.data;
-
-    // 分片并发上传，单片网络失败自动重试
-    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+    videoUrl.value = await uploadVideoFile(file, (percent) => {
       loadText.value = `${t('detail.uploading')} ${percent}%`;
     });
-
-    const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
-    if (!videoMergeResponse || videoMergeResponse.code !== 0) {
-      toast(getI18nMsg(videoMergeResponse));
-      return false;
-    }
-
-    videoUrl.value = videoMergeResponse.data.url || '';
 
     uploadedFiles.value.push({
       type: 'video',

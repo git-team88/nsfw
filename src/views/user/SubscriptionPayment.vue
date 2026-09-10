@@ -23,7 +23,7 @@
           </div>
           <div class="price-tag">
             <span v-if="paymentTab === 'usdt'">{{ subscriptionWeb3Price }} USDT</span>
-            <span v-else>{{ subscriptionPrice }} {{t('aiRecharge.unit')}}</span>
+            <span v-else>{{ fiatPrefix(subscriptionCurrency) }}{{ subscriptionPrice }} {{ fiatSuffix(subscriptionCurrency, t('aiRecharge.unit')) }}</span>
             /{{ t("subscribe.month") }}
           </div>
         </div>
@@ -88,6 +88,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
+import { fiatPrefix, fiatSuffix, pickCurrency } from '@/util/currency';
 
 const router = useRouter();
 const route = useRoute();
@@ -123,6 +124,8 @@ const userInfo = ref({
 
 interface SubscriptionPlan {
   price: string;
+  // 接口下发的法币类型（usd / jpy）
+  currency?: string;
   web3?: { price?: string };
   id?: number;
   name?: string;
@@ -158,6 +161,13 @@ const subscriptionPrice = computed(() => {
   const parts = trimmed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return parts.join('.');
+});
+
+// 接口下发的法币类型（usd / jpy），取不到按日元兜底
+const subscriptionCurrency = computed(() => {
+  const plans = subscriptionPlans.value;
+  const first = Array.isArray(plans) ? plans[0] : plans;
+  return pickCurrency(first?.currency);
 });
 
 const subscriptionWeb3Price = computed(() => {

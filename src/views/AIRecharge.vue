@@ -93,23 +93,23 @@
 
                 <div v-if="activeTab == 'subscription' && hasFirstMonthDiscount && planHasDiscount(plan)" class="plan-price-section">
                   <div class="plan-discount-price">
-                    <span class="price-num">{{ formatPrice(getFirstMonthPrice(plan)) }}</span>
+                    <span class="price-num">{{ pricePrefix }}{{ formatPrice(getFirstMonthPrice(plan)) }}</span>
                     <span class="price-unit">{{ priceUnit }}{{ getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
-                  <div class="plan-original-price">{{ formatPrice(getPlanPrice(plan)) }}{{ priceUnit }}</div>
+                  <div class="plan-original-price">{{ pricePrefix }}{{ formatPrice(getPlanPrice(plan)) }}{{ priceUnit }}</div>
                   <div class="plan-price-desc">
                     <span class="desc-highlight">{{ t('aiRecharge.firstMonth30Off') }}，</span><br>
-                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: formatPrice(getPlanPrice(plan)), unit: priceUnit }) }}。</span>
+                    <span class="desc-then">{{ t('aiRecharge.firstMonth30OffThenPrice', { price: pricePrefix + formatPrice(getPlanPrice(plan)), unit: priceUnit }) }}。</span>
                   </div>
                 </div>
 
                 <div v-else class="plan-price-section">
                   <div class="plan-price-value">
-                    <span class="price-num">{{ formatPrice(getPlanPrice(plan)) }}</span>
+                    <span class="price-num">{{ pricePrefix }}{{ formatPrice(getPlanPrice(plan)) }}</span>
                     <span class="price-unit">{{ priceUnit }}{{ activeTab == 'credits_pack' ? '' : getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
                   <div v-if="activeTab === 'credits_pack' && plan.original_price" class="plan-strikethrough-price">
-                    <span>{{ formatPrice(plan.original_price) }}{{ priceUnit }}</span>
+                    <span>{{ pricePrefix }}{{ formatPrice(plan.original_price) }}{{ priceUnit }}</span>
                   </div>
                 </div>
 
@@ -156,7 +156,7 @@
         <div v-if="rechargePlans.length > 0" class="bottom-bar">
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.originalPrice') }}</div>
-            <div class="block-value"><span class="price-num">{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
+            <div class="block-value"><span class="price-num">{{ pricePrefix }}{{ formatPrice(planOriginalPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
           </div>
 
           <div v-if="activeTab !== 'subscription' || !(hasFirstMonthDiscount && currentPlanHasDiscount)" v-show="paymentTab !== 'usdt'" class="bottom-bar-divider"></div>
@@ -173,7 +173,7 @@
             </div>
             <div class="block-value" v-if="couponCode">
               <button class="cancel-coupon-btn" @click="cancelCoupon">{{ t('aiRecharge.cancelCoupon') }}</button>
-              <span class="discount-amount">-<span class="price-num">{{ formatPrice(discountAmount.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></span>
+              <span class="discount-amount">-<span class="price-num">{{ pricePrefix }}{{ formatPrice(discountAmount.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></span>
             </div>
             <div class="block-value" v-else>
               <span class="coupon-link" @click="goToCoupon">{{ t('aiRecharge.addCoupon') }}></span>
@@ -184,7 +184,7 @@
 
           <div class="bottom-block">
             <div class="block-label">{{ t('aiRecharge.actualAmount') }}</div>
-            <div class="block-value total-value"><span class="price-num">{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
+            <div class="block-value total-value"><span class="price-num">{{ pricePrefix }}{{ formatPrice(discountedPrice.toString()) }}</span><span class="price-unit">{{ priceYen }}</span></div>
           </div>
 
           <div class="bottom-bar-divider"></div>
@@ -242,6 +242,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
+import { fiatPrefix, fiatSuffix, pickCurrency } from '@/util/currency';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -256,6 +257,7 @@ interface RechargePlan {
     promotion_content?: string;
   }>;
   price: string;
+  currency?: string;
   web3?: {
     price: string;
     currency: string;
@@ -278,6 +280,8 @@ interface RechargePlan {
 }
 
 const rechargePlans = ref<RechargePlan[]>([]);
+// 接口下发的法币类型（usd / jpy）。取不到按日元兜底。
+const fiatCurrency = ref('');
 const selectedPlan = ref<number | string>(0);
 const agreeTerms = ref(true);
 const isLoading = ref(true);
@@ -304,8 +308,10 @@ const currentPlanHasDiscount = computed(() => {
   return planHasDiscount(plan);
 });
 
-const priceUnit = computed(() => paymentTab.value === 'usdt' ? 'USDT' : t('aiRecharge.unit'));
-const priceYen = computed(() => paymentTab.value === 'usdt' ? 'USDT' : t('aiRecharge.yen'));
+// USDT 支付不受影响，仍是「数字 + USDT」；法币按 currency 决定 $ 前缀还是日元后缀
+const priceUnit = computed(() => paymentTab.value === 'usdt' ? 'USDT' : fiatSuffix(fiatCurrency.value, t('aiRecharge.unit')));
+const priceYen = computed(() => paymentTab.value === 'usdt' ? 'USDT' : fiatSuffix(fiatCurrency.value, t('aiRecharge.yen')));
+const pricePrefix = computed(() => paymentTab.value === 'usdt' ? '' : fiatPrefix(fiatCurrency.value));
 
 const planOriginalPrice = computed(() => {
   const plan = rechargePlans.value.find(p => p.plan_id === selectedPlan.value);
@@ -420,12 +426,15 @@ function getList() {
     if (res.code == 0) {
       if (res.data) {
         const planList = res.data;
+        fiatCurrency.value = pickCurrency(res.data?.currency, res.currency,
+          Array.isArray(planList) ? planList[0]?.currency : undefined);
         if (Array.isArray(planList)) {
           rechargePlans.value = planList.map((plan: any) => {
             return {
               plan_id: plan.plan_id || plan.id || Math.random(),
               info: plan.info || [],
               price: plan.price || '0',
+              currency: plan.currency || '',
               web3: plan.web3 || null,
               period: plan.period || '',
               credits: plan.credits || '0',

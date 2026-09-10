@@ -402,7 +402,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import { baseUrl } from "@/util/config";
-import { uploadParts, PartUploadError } from "@/util/uploadVideo";
+import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
 import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
@@ -1698,37 +1698,9 @@ async function handleVideoFile(file: File) {
 
     URL.revokeObjectURL(video.src);
 
-    // 1. Get uploadId + fileKey
-    const videoIdResponse = (await api.getVideoId({
-      filename: file.name,
-      filesize: file.size,
-    })) as any;
-    if (!videoIdResponse || videoIdResponse.code != 0) {
-      isUpload.value = false;
-      toast(getI18nMsg(videoIdResponse));
-      return;
-    }
-
-    const { uploadId, fileKey } = videoIdResponse.data;
-
-    // 2. 分片并发上传，单片网络失败自动重试
-    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+    videoUrl.value = await uploadVideoFile(file, (percent) => {
       uploadProgress.value = percent;
     });
-
-    // 3. Merge parts
-    const videoMergeResponse = (await api.getVideoMerge({
-      uploadId,
-      key: fileKey,
-      parts: JSON.stringify(uploadedParts),
-    })) as any;
-    if (!videoMergeResponse || videoMergeResponse.code !== 0) {
-      isUpload.value = false;
-      toast(getI18nMsg(videoMergeResponse));
-      return;
-    }
-
-    videoUrl.value = videoMergeResponse.data.url || "";
 
     // Capture first frame as cover
     await captureFirstFrame(file);

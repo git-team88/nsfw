@@ -827,7 +827,7 @@ import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import { baseUrl } from "@/util/config";
-import { uploadParts, PartUploadError } from "@/util/uploadVideo";
+import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
 
 const isEditing = computed(() => !!postId.value);
 
@@ -2598,29 +2598,10 @@ async function startFakeUpload(file: File) {
 
     URL.revokeObjectURL(video.src);
 
-    const videoIdResponse = await api.getVideoId({ filename: file.name, filesize: file.size }) as any;
-    if (!videoIdResponse || videoIdResponse.code != 0) {
-      isUpload.value = false;
-      toast(getI18nMsg(videoIdResponse));
-      return false;
-    }
-
-    const { uploadId, fileKey } = videoIdResponse.data;
-
-    // 分片并发上传，单片网络失败自动重试
-    const uploadedParts = await uploadParts(file, uploadId, fileKey, (percent) => {
+    videoUrl.value = await uploadVideoFile(file, (percent) => {
       uploadProgress.value = percent;
       videoUploadPercent.value = percent;
     });
-
-    const videoMergeResponse = await api.getVideoMerge({ uploadId, key: fileKey, parts: JSON.stringify(uploadedParts) }) as any;
-    if (!videoMergeResponse || videoMergeResponse.code !== 0) {
-      isUpload.value = false;
-      toast(getI18nMsg(videoMergeResponse));
-      return false;
-    }
-
-    videoUrl.value = videoMergeResponse.data.url || '';
 
     uploadSuccess.value = true;
     isUpload.value = false;

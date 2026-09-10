@@ -50,13 +50,13 @@
               <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
               <div class="metric-value">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)} ${t('user.revenue.yen')}` : "--" }}
+                {{ pendingUsd != null ? `$${formatSci(pendingUsd)}` : "--" }}
               </div>
             </div>
             <div class="metric cash-withdrawing">
               <div class="metric-label">{{ t("user.revenue.cashPending") }}</div>
               <div class="metric-value">
-                {{ availableJpy != null ? `${formatSci(availableJpy)} ${t('user.revenue.yen')}` : "--" }}
+                {{ availableUsd != null ? `$${formatSci(availableUsd)}` : "--" }}
               </div>
             </div>
             <div class="cash-info">
@@ -91,7 +91,7 @@
 
     <WithdrawModal
       :visible="showCashWithdrawModal"
-      :total-withdrawable="availableJpy"
+      :total-withdrawable="availableUsd"
       @close="showCashWithdrawModal = false"
       @confirm="confirmCashWithdraw"
     />
@@ -123,8 +123,9 @@ import api from "@/api/index";
 const { t, locale } = useI18n();
 const sidebarKey = ref("revenue");
 
-const availableJpy = ref<number | null>(null);
-const pendingJpy = ref<number | null>(null);
+// 收益结算走美元：接口的 available_usd / pending_usd
+const availableUsd = ref<number | null>(null);
+const pendingUsd = ref<number | null>(null);
 
 const accountStatus = ref('');
 const isLoading = ref(false);
@@ -147,8 +148,8 @@ async function fetchBalance() {
     const data = res as any;
 
     if (data.code == 200 || data.code == 0) {
-      availableJpy.value = data.data.balance?.available_jpy || 0;
-      pendingJpy.value = data.data.balance?.pending_jpy || 0;
+      availableUsd.value = data.data.balance?.available_usd || 0;
+      pendingUsd.value = data.data.balance?.pending_usd || 0;
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -217,7 +218,7 @@ async function fetchKycDetail() {
 }
 
 function openCashWithdrawModal() {
-  if (availableJpy.value && availableJpy.value > 0) {
+  if (availableUsd.value && availableUsd.value > 0) {
     showCashWithdrawModal.value = true;
   } else {
     toast(t("user.revenue.noProfit"));

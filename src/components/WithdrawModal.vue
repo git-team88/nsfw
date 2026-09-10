@@ -5,7 +5,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
       <div class="modal-title">{{ t("user.revenue.totalWithdrawable") }}</div>
-      <div class="modal-amount">{{ totalWithdrawable != null ? `${formatSci(totalWithdrawable)}` : "--" }}</div>
+      <div class="modal-amount">{{ totalWithdrawable != null ? `$${formatSci(totalWithdrawable)}` : "--" }}</div>
       <div class="modal-confirm" @click="handleConfirm" :disabled="!agreeTerms">
         {{ t("user.revenue.confirmWithdraw") }}
       </div>
