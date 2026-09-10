@@ -1737,8 +1737,8 @@ const selectedInsertImageText = computed(() => {
   const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
   return option ? option.label : '';
 });
-const effectiveRegenerateNsfw = computed(() => contentSwitch.mode === 2 || (contentSwitch.mode === 1 && regenerateNsfwMode.value));
-const showRegenerateNsfwToggle = computed(() => contentSwitch.loaded && contentSwitch.mode === 1 && userRegion.value);
+const effectiveRegenerateNsfw = computed(() => contentSwitch.mode === 2 || (contentSwitch.showCreateNsfwToggle && regenerateNsfwMode.value));
+const showRegenerateNsfwToggle = computed(() => contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion.value);
 const showRegenerateInsertImage = computed(() => contentSwitch.loaded && effectiveRegenerateNsfw.value);
 
 const currentChapter = ref<any>(null);
@@ -3830,17 +3830,14 @@ const regenerateOutline = async () => {
   }
 
   // Set NSFW mode & illustration setting from global content policy and user settings
+  // switch_no 为 0 时创作侧同样放开 NSFW，所以只有 2 是强制开，其余都跟用户上次的选择走
   regenerateNsfwMode.value = contentSwitch.mode === 2
     ? true
-    : contentSwitch.mode === 0
-      ? false
-      : userSelectedSettings.value?.story_mode === 'nsfw';
+    : userSelectedSettings.value?.story_mode === 'nsfw';
   const rawInsertCount = userSelectedSettings.value?.insert_image_count;
   selectedInsertImage.value = contentSwitch.mode === 2
     ? 4
-    : contentSwitch.mode === 0
-      ? 0
-      : (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4);
+    : (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4);
   showInsertImageDropdown.value = false;
 };
 
@@ -3923,12 +3920,6 @@ const toggleRegenerateNsfw = () => {
     selectedInsertImage.value = 4;
     return;
   }
-  if (contentSwitch.mode === 0) {
-    regenerateNsfwMode.value = false;
-    selectedInsertImage.value = 0;
-    return;
-  }
-
   if (!regenerateNsfwMode.value) {
     // Turning NSFW ON — run age check + confirmation flow (consistent with Home)
     const token = localStorage.getItem('token');
@@ -4058,7 +4049,7 @@ const sendRegenerateRequest = async () => {
     const previousOthers = previousSettings.others || {};
 
     await contentSwitch.ensureLoaded();
-    const effectiveNsfw = contentSwitch.mode === 2 || (contentSwitch.mode === 1 && userRegion.value && regenerateNsfwMode.value);
+    const effectiveNsfw = contentSwitch.mode === 2 || (contentSwitch.showCreateNsfwToggle && userRegion.value && regenerateNsfwMode.value);
 
     // Build request data based on previous settings, only updating modified fields
     const requestData = {

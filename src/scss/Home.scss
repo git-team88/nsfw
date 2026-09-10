@@ -150,6 +150,19 @@ $pinkopacity: rgba(255,79,154,0.12);
     overflow: hidden;
   }
 
+  // switch_no = 2 且非中国地区时的背景视频，铺满整块 hero、裁切填充
+  .hero-video-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    pointer-events: none;
+    background: #15101e;
+  }
+
   .hero-glow {
     position: absolute;
     inset: 0;
@@ -1867,7 +1880,7 @@ $pinkopacity: rgba(255,79,154,0.12);
   .banner-swiper {
     position: relative;
     width: 100%;
-    height: 370px;
+    height: auto;
     border-radius: 18px;
     border: 0;
     overflow: hidden;
@@ -1876,7 +1889,7 @@ $pinkopacity: rgba(255,79,154,0.12);
     .swiper-container {
       position: relative;
       width: 100%;
-      height: 100%;
+      height: auto;
     }
 
     .banner-arrow {
@@ -1905,17 +1918,17 @@ $pinkopacity: rgba(255,79,154,0.12);
 
     .swiper-wrapper {
       width: 100%;
-      height: 100%;
+      height: auto;
     }
 
     .swiper-slide {
       width: 100%;
-      height: 100%;
+      height: auto;
 
       a {
         display: block;
         width: 100%;
-        height: 100%;
+        height: auto;
       }
     }
 
@@ -1957,7 +1970,7 @@ $pinkopacity: rgba(255,79,154,0.12);
 
   .banner-image {
     width: 100%;
-    height: 120px;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1965,14 +1978,19 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 
   .banner-img {
+    // 等比缩放：宽度铺满，高度由图片自身比例决定，不裁切
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    height: auto;
   }
 }
 
 .content-section {
+  // hero 有 62vh，feed 不够高时整页滚不过 hero，吸底输入框永远不会出现，
+  // 点做同款/做续集就只能回填到顶部那个已经滚出屏幕的输入框里。
+  // footer 是 fixed 的不占文档高度，所以这里在一个视口之外再多给 240px，
+  // 让「hero 已滚出、吸底输入框生效」这段有实际可用的滚动区间，而不是只剩几十像素。
+  min-height: calc(100vh + 240px);
   margin: 32px 0 0;
   border: 0;
   border-radius: 0;
@@ -3486,10 +3504,6 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 
   .event-banner {
-    .banner-swiper {
-      height: 390px;
-    }
-
     .banner-arrow {
       width: 32px;
       height: 32px;

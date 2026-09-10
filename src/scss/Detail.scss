@@ -942,6 +942,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   gap: 20px;
   z-index: 10;
 
+  // 图片 / 视频详情：按钮挪到左侧，别和右侧信息面板挤在一起
+  &.left {
+    right: auto;
+    left: 30px;
+  }
+
   &.on {
     position: fixed;
     right: 480px;
@@ -3068,6 +3074,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   .nav-arrows.on,
   .isRightPanelHidden .nav-arrows.on {
     right: 16px;
+  }
+
+  .nav-arrows.left {
+    left: 16px;
   }
 
   // 合集列表不再内部滚动，跟随整页滚动（load-more 改由 IntersectionObserver 触发）

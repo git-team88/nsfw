@@ -1108,10 +1108,19 @@ const previewProject = ref<any>(null);
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
 
+// 来源作品生成时用的是不是无限制模式。
+// switch_no = 0 时发布页不显示「敏感内容」勾选，is_nsfw 只能由这里推导。
+const sourceIsNsfw = computed(() => {
+  const project: any = selectedProject.value;
+  const storyMode = project?.user_selected?.story_mode || project?.story_mode;
+  return storyMode === 'nsfw' ? 1 : 0;
+});
+
 const computedIsNsfw = computed(() => {
   // 中国地区 + 后端下发 2：展示上按普通模式走，但内容仍是 NSFW，发布照 1 传
   if (contentSwitch.nsfwDowngraded) return 1;
-  if (contentSwitch.mode === 0) return 0;
+  // switch_no = 0：允许创作 NSFW，但发布页不给手动勾选，按生成时的模式判定
+  if (contentSwitch.mode === 0) return sourceIsNsfw.value;
   if (contentSwitch.mode === 2) return 1;
   return selectedCollection.value?.is_nsfw ?? 0;
 });

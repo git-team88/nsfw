@@ -164,8 +164,8 @@ const contentSwitch = useContentSwitchStore();
 const computedIsNsfw = computed(() => {
   // 中国地区 + 后端下发 2：展示上按普通模式走，但内容仍是 NSFW，发布照 1 传
   if (contentSwitch.nsfwDowngraded) return 1;
-  if (contentSwitch.mode === 0) return 0;
   if (contentSwitch.mode === 2) return 1;
+  // switch_no = 0：不显示勾选，沿用传进来 / 合集本身的值（发布页会按生成时的模式传）
   return isNsfw.value;
 });
 

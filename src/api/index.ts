@@ -4,10 +4,10 @@ import { aiUrl } from "../util/config";
 const appendContentChannel = (showNsfw: number | undefined, channel?: number) =>
   (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : '') + (channel !== undefined ? '&channel=' + channel : '');
 
-const getProjectNsfwFilter = () => {
-  const mode = localStorage.getItem('contentSwitchMode');
-  return mode === '0' ? 2 : mode === '2' ? 3 : 1;
-};
+// 「我的项目 / 生成历史 / 任务进度」这类自己的内容，一律按全部取（1）。
+// switch_no = 0 时用户照样能创作 NSFW，再按浏览开关过滤会把自己的作品藏起来。
+export const PROJECT_NSFW_ALL = 1;
+const getProjectNsfwFilter = () => PROJECT_NSFW_ALL;
 
 export default {
   messageList: (data: any) =>
@@ -1049,7 +1049,7 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
-  totalProcess: (verbose: boolean, isNsfw?: number) =>
+  totalProcess: (verbose: boolean, isNsfw: number = PROJECT_NSFW_ALL) =>
     axios.request({
       url: `app/progress/display?verbose=` + verbose + (isNsfw !== undefined ? '&is_nsfw=' + isNsfw : ''),
       method: "GET",

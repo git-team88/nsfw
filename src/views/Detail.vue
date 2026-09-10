@@ -377,11 +377,11 @@
             <button class="nav-btn down" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId"></button>
           </div>
 
-          <div class="nav-arrows" v-if="!isCollectionMode && !isStandaloneType">
+          <!-- 图片 / 视频（type 4、5）没有合集，上下按钮切上一个 / 下一个作品，放在左侧 -->
+          <div class="nav-arrows" :class="{ left: isStandaloneType }" v-if="!isCollectionMode">
             <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
             <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
           </div>
-          <div class="nav-arrows" v-else-if="!isCollectionMode && isStandaloneType"></div>
         </div>
 
         <!-- Right Side: Info & Comments -->

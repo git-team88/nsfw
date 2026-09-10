@@ -434,7 +434,7 @@
             <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
               <div class="input-options" v-show="!isPhotoInputCollapsed">
 
-                <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" :class="{ active: effectivePhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" :class="{ active: effectivePhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>
@@ -758,7 +758,7 @@
 
             <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
               <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" :class="{ active: effectiveVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" :class="{ active: effectiveVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                   <span class="unlimited-dot"></span>
                   <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
                 </div>

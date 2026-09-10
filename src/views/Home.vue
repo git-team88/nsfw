@@ -10,7 +10,7 @@
           <div class="swiper-container">
             <div class="swiper-wrapper">
               <div class="swiper-slide" v-for="(banner, index) in banners" :key="index">
-                <img class="banner-img" :src="banner.cover" alt="" @click="banner.jump_url && goBanner(banner.jump_url)" />
+                <img class="banner-img" :src="banner.cover" alt="" @load="onBannerImageLoad" @click="banner.jump_url && goBanner(banner.jump_url)" />
               </div>
             </div>
             <div class="swiper-pagination"></div>
@@ -28,21 +28,38 @@
 
       <!-- Hero Section -->
       <div ref="heroSectionRef" class="hero-section">
-        <!-- 3D 漂浮漫画卡片背景动效 -->
-        <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
-        <!-- 中间柔光层（让中间内容更清晰） -->
-        <div class="hero-glow" aria-hidden="true"></div>
-        <!-- 边上飘的拟声词装饰 -->
-        <div class="hero-parts" aria-hidden="true" ref="heroPartsRef">
-          <img
-            v-for="(p, i) in heroParts"
-            :key="p.before"
-            class="hero-part"
-            :src="`/onomatopoeia/${heroPartSrc[i]}.png`"
-            alt=""
-            :style="heroPartStyle(p, i)"
-          />
-        </div>
+        <!-- switch_no = 2 且非中国地区：整块背景换成视频，漂浮卡片 / 拟声词 / 柔光都不要 -->
+        <video
+          v-if="showHeroVideo"
+          ref="heroVideoRef"
+          class="hero-video-layer"
+          :src="HERO_VIDEO_SRC"
+          :poster="HERO_VIDEO_POSTER || undefined"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          aria-hidden="true"
+        ></video>
+
+        <template v-else>
+          <!-- 3D 漂浮漫画卡片背景动效 -->
+          <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
+          <!-- 中间柔光层（让中间内容更清晰） -->
+          <div class="hero-glow" aria-hidden="true"></div>
+          <!-- 边上飘的拟声词装饰 -->
+          <div class="hero-parts" aria-hidden="true" ref="heroPartsRef">
+            <img
+              v-for="(p, i) in heroParts"
+              :key="p.before"
+              class="hero-part"
+              :src="`/onomatopoeia/${heroPartSrc[i]}.png`"
+              alt=""
+              :style="heroPartStyle(p, i)"
+            />
+          </div>
+        </template>
 
         <!-- 左下：说明按钮（暂时隐藏） -->
         <a v-if="false" class="hero-howto" href="/guide.html" target="_blank" rel="noopener noreferrer">
@@ -484,7 +501,7 @@
                   <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
                     <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Video - only show if not a teenager -->
-                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: effectiveVideoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -829,7 +846,7 @@
                   <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
                     <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Photo - only show if not a teenager -->
-                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentPhotoMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -978,7 +995,7 @@
                   <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
                     <div class="input-options" v-show="!isStickyCollapsed">
                       <!-- Mode Switch for Comic - only show if not a teenager -->
-                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" @click="switchComicMode(currentComicMode == 'normal' ? 'unlimited' : 'normal', currentComicMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentComicMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -1023,7 +1040,7 @@
 
                   <div class="input-box" :class="{ collapsed: isStickyCollapsed }">
                     <div class="input-options novel-input-options" v-show="!isStickyCollapsed">
-                      <div v-if="contentSwitch.loaded && contentSwitch.showSensitiveToggle" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
+                      <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" @click="switchNovelMode(currentNovelMode == 'normal' ? 'unlimited' : 'normal', currentNovelMode == 'normal' ? 2 : 1)">
                         <span class="nsfw-btn" :class="{ on: currentNovelMode == 'unlimited' }">
                           <span class="nsfw-dot"></span>
                           {{ t('home.mode.unlimited') }}
@@ -1586,6 +1603,12 @@ const showBottomContentTabs = ref(false);
 const uid = localStorage.getItem('uid');
 
 // hero 背景动画暂停/播放
+// hero 背景视频：switch_no = 2 且非中国地区时，用它替掉漂浮动效 / 拟声词 / 柔光。
+// 换素材直接改这两个常量（放 public/ 下或填完整 URL 都行）。
+const HERO_VIDEO_SRC = '/hero/hero-bg.mp4';
+const HERO_VIDEO_POSTER = '';
+const heroVideoRef = ref<HTMLVideoElement | null>(null);
+
 const heroPaused = ref(false);
 // hero 编辑态：聚焦输入框后 3D 漫画卡片背景散开并消失
 const heroEditing = ref(false);
@@ -1618,6 +1641,20 @@ const heroPartStyle = (p: typeof heroParts[number], i: number) => ({
 }) as any;
 
 const heroPartsRef = ref<HTMLDivElement>();
+
+// mode 已经是「生效模式」（中国地区的 2 会被降级成 0），这里再显式排一次中国地区，
+// 免得以后降级规则改了这块跟着走偏。
+const showHeroVideo = computed(
+  () => contentSwitch.loaded && contentSwitch.mode === 2 && !contentSwitch.isChinaRegion,
+);
+
+// 右下角那个暂停按钮在视频模式下改成控制视频播放
+watch(heroPaused, (paused) => {
+  const v = heroVideoRef.value;
+  if (!v) return;
+  if (paused) v.pause();
+  else v.play().catch(() => {});
+});
 
 const initHeroParts = () => {
   const box = heroPartsRef.value;
@@ -8490,6 +8527,8 @@ const initBannerSwiper = () => {
     modules: [Autoplay, Pagination],
     slidesPerView: 1,
     spaceBetween: 0,
+    // banner 等比缩放，高度由图片决定，让 swiper 自己跟着量
+    autoHeight: true,
     loop: banners.value.length > 1,
     autoplay: banners.value.length > 1 ? {
       delay: 5000,
@@ -8504,6 +8543,12 @@ const initBannerSwiper = () => {
 };
 
 // Banner 左右箭头切换
+// 图片是等比缩放的，加载完才知道真实高度，让 swiper 重新量一次
+const onBannerImageLoad = () => {
+  bannerSwiper.value?.update();
+  bannerSwiper.value?.updateAutoHeight(0);
+};
+
 const bannerPrev = () => { bannerSwiper.value?.slidePrev(); };
 const bannerNext = () => { bannerSwiper.value?.slideNext(); };
 
