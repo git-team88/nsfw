@@ -271,7 +271,16 @@ const arrowPixels = computed(() => makePixels(781205, 22, 0.55));
   font-weight: 800;
   line-height: 1.45;
   letter-spacing: 0.01em;
-  text-shadow: 0 0.15cqw 1.1cqw rgba(0, 0, 0, 0.6);
+  /* text-shadow: 0 0.15cqw 1.1cqw rgba(0, 0, 0, 0.6); */
+}
+
+.pb-copy :deep(h2){
+  background: linear-gradient(90deg, #d9919e 0%, #FFFFFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* 整体轻微发光 */
+  /* filter: drop-shadow(0 0 3px rgba(255, 51, 102, 0.2)); */
 }
 .pb-copy :deep(p),
 .pb-copy :deep(.pb-sub) {
@@ -285,6 +294,8 @@ const arrowPixels = computed(() => makePixels(781205, 22, 0.55));
 .pb-copy :deep(em) {
   font-style: normal;
   color: #ff4f9a;
+  -webkit-text-fill-color: #ff4f9a;
+  background: none;
 }
 
 /* ---------- 两块牌子 ---------- */
