@@ -1189,7 +1189,7 @@
             <span
               v-for="type in contentTypes"
               :key="type.id"
-              v-show="activeContentTab !== 'suggested' || type.id !== 0"
+              v-show="type.id !== 0"
               class="type-btn"
               :class="{ active: activeContentType == type.id }"
               @click="activeContentType = type.id"
@@ -1478,7 +1478,7 @@
       <button
         v-for="type in contentTypes"
         :key="`bottom-${type.id}`"
-        v-show="activeContentTab !== 'suggested' || type.id !== 0"
+        v-show="type.id !== 0"
         type="button"
         class="bottom-content-tab"
         :class="{ active: activeContentType == type.id }"
@@ -1556,7 +1556,7 @@ const route = useRoute();
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import PromoBanner from '@/components/PromoBanner.vue';
-import bannerSlotImage from '@/assets/images/home/banner.webp';
+import bannerSlotImage from '@/assets/images/home/banner.jpg';
 import bannerSlotVideo from '@/assets/images/home/banner.mp4';
 import heroBgVideo from '@/assets/images/home/video.mp4';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
@@ -5903,7 +5903,8 @@ const switchContentTab = (tabId: string, index: number) => {
   followUserPage.value = 1;
   hasMoreContent.value = true;
   hasMoreUsers.value = true;
-  activeContentType.value = (tabId === 'following' || tabId === 'subscriptions') ? 0 : 5;
+  // 「全部」筛选项已经隐藏，订阅/关注切到作品视图时跟推荐 tab 一样默认选中「视频」
+  activeContentType.value = 5;
   allContent.value = []; // Clear old data to show loading state
   followUserList.value = []; // Clear user list
   contentCardRefs.value = []; // Clear card refs to reset layout

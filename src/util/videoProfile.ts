@@ -107,7 +107,8 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     dimMin: 240, dimMax: 4096, ratioMin: 1 / 8, ratioMax: 8,
   },
   normal: {
-    maxInputChars: 5000,
+    // 超级版（super）：普通模式和无限制模式都落到这一档
+    maxInputChars: 20000,
     qualityOptions: [{ value: '720P', label: '720P' }, { value: '1080P', label: '1080P' }],
     defaultQuality: '720P',
     ratioOptions: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }],
