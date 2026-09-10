@@ -278,7 +278,7 @@
                 <!-- 底部：设置信息和时间 -->
                 <div class="video-meta-row">
                   <div class="video-meta">
-                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}{{ record.user_selected.story_mode == 'nsfw' ? ' · ' + t('home.nsfwVersion.' + (record.user_selected?.video_nsfw_model_type === 'super' ? 'super' : record.user_selected?.video_nsfw_model_type === 'fast' ? 'fast' : 'enhanced')) : '' }}</span>
+                    <span class="meta-item type-label">{{ t('recordList.videoGenerate') }}: {{ record.user_selected.story_mode == 'nsfw' ? t('home.mode.unlimited') : t('home.mode.normal') }} · {{ record.user_selected?.simple_video_generate_mode === 'multi_modal_reference' ? t('home.videoMode.multimodal') : record.user_selected?.simple_video_generate_mode === 'first_last_frames' ? t('home.videoMode.startEndFrames') : record.user_selected?.simple_video_generate_mode === 'video_extension' ? t('home.videoMode.videoExtend') : record.user_selected?.simple_video_generate_mode === 'video_edit' ? t('home.videoMode.videoModify') : '' }}{{ recordVersionLabel(record) }}</span>
                     <span class="meta-item">{{ t('recordList.quality') }}: {{ record.resolution }}</span>
                     <span class="meta-item">{{ t('recordList.ratio') }}: {{ (record.user_selected?.simple_video_generate_mode === 'first_last_frames' || record.user_selected?.simple_video_generate_mode === 'video_extension' || record.user_selected?.simple_video_generate_mode === 'video_edit') ? t('home.videoSettings.ratioAuto') : record.ratio }}</span>
                     <span v-if="record.duration" class="meta-item">{{ t('recordList.duration') }}: {{ (record.user_selected?.simple_video_generate_mode === 'video_edit' || record.user_selected?.simple_video_generate_mode === 'video_extension') ? t('home.videoSettings.durationAuto') : `${record.duration}s` }}</span>
@@ -4412,6 +4412,21 @@ function resolveFailReason(statusMessage: string): { reason: string; insufficien
 
   // 没命中具体规则：matched=false，调用方可选择保留后端原文
   return { reason: t('recordList.generateFailed'), insufficient: false, matched: false };
+}
+
+// 生成记录上的模型档位标签（· 极速版 / 加强版 / 超级版）。
+// fast -> 极速版，plus -> 加强版，其余（super / 字段缺失的老记录）一律按超级版 ——
+// 超级版是普通和 NSFW 两种模式下都存在的档位，拿它兜底不会标出一个该模式下没有的版本。
+// 普通模式的视频修改 / 视频续写只有超级版一个档位，没得选就不用标出来。
+function recordVersionLabel(record: any): string {
+  const selected = record?.user_selected;
+  const generateMode = selected?.simple_video_generate_mode;
+  const isEditMode = generateMode === 'video_edit' || generateMode === 'video_extension';
+  if (selected?.story_mode != 'nsfw' && isEditMode) return '';
+
+  const modelType = selected?.video_nsfw_model_type;
+  const key = modelType === 'fast' ? 'fast' : modelType === 'plus' ? 'enhanced' : 'super';
+  return ' · ' + t('home.nsfwVersion.' + key);
 }
 
 const isTaskFailed = (status: string) => {

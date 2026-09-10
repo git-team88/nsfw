@@ -5037,7 +5037,8 @@ const generateVideo = async () => {
   let inputContent = '';
 
   if (selectedVideoMultimodal.value === 'startEndFrames') {
-    inputContent = novelInput.value || '';
+    // 首尾帧的输入框是独立的 framesInput，不是小说 tab 的 novelInput
+    inputContent = framesInput.value || '';
   } else {
     if (!editableInputRef.value) {
       toast(t('home.error.emptyInput'));
@@ -5093,7 +5094,8 @@ const doGenerateVideo = async () => {
 
     let inputContent = '';
     if (selectedVideoMultimodal.value === 'startEndFrames') {
-      inputContent = novelInput.value || '';
+      // 首尾帧的输入框是独立的 framesInput，不是小说 tab 的 novelInput
+      inputContent = framesInput.value || '';
     } else if (editableInputRef.value) {
       inputContent = editableInputRef.value.textContent || '';
     }
