@@ -1434,7 +1434,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       orderHistory: "Order History",
       subscribe: "Subscribe",
       aiToolRecharge: "AI Tool Recharge",
-      tabSubscribe: "Subscribe",
+      tabSubscribe: "Creator Subscription",
       tabRecharge: "AI Tool Subscription",
       tabTopUp: "AI Tool Top-Up Pack",
       issueInvoice: "Issue Invoice",

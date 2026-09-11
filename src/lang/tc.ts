@@ -1538,7 +1538,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       orderHistory: "訂單歷史",
       subscribe: "訂閱",
       aiToolRecharge: "AI工具充值",
-      tabSubscribe: "訂閱",
+      tabSubscribe: "博主訂閱",
       tabRecharge: "AI工具訂閱",
       tabTopUp: "AI工具加油包",
       issueInvoice: "開具發票",

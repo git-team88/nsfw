@@ -1156,7 +1156,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       orderHistory: "注文履歴",
       subscribe: "サブスク",
       aiToolRecharge: "AIツールのメンバーシップ",
-      tabSubscribe: "サブスク",
+      tabSubscribe: "クリエイターサブスク",
       tabRecharge: "AIツールサブスク",
       tabTopUp: "AIツール追加パック",
       issueInvoice: "請求書を発行",
