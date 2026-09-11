@@ -1574,7 +1574,7 @@ import optimizePromptOff from "@/assets/images/project/close.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/base/video.png";
 import {
-  MB, VIDEO_PROFILES, profileOf, videoVersionsFor, pickVideoVersion,
+  MB, VIDEO_PROFILES, profileOf, videoVersionsFor, pickVideoVersion, defaultVideoVersionFor,
   videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE, DEFAULT_VIDEO_VERSION,
   clampPromptHtml,
 } from '@/util/videoProfile';
@@ -2069,8 +2069,9 @@ function resetVideoInputs() {
   inputContentVideo.value = '';
   inputHtmlVideo.value = '';
   isMakeVideoMode.value = false;
-  selectedVideoDuration.value = '30';
-  lastValidVideoDuration.value = '30';
+  // 时长回当前档位的默认值，别写死 30s —— 极速版最长 15s
+  selectedVideoDuration.value = videoProfile.value.defaultDuration;
+  lastValidVideoDuration.value = videoProfile.value.defaultDuration;
   inputKey.value++;
   nextTick(() => {
     if (editableInputRef.value) {
@@ -3962,7 +3963,7 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
       const prevLimitMode = videoLimitMode.value;
-      const nextVersion = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+      const nextVersion = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
       requestVideoLimitModeChange(nextVersion === 'fast' ? 'fast' : (nextVersion === 'enhanced' ? 'unlimited' : 'normal'), () => {
         stashCurrentVideoPrompt();
         currentVideoMode.value = 'unlimited';
@@ -3979,7 +3980,7 @@ const switchVideoMode = (mode: string, index: number) => {
     const prevLimitMode = videoLimitMode.value;
     showVideoModeDropdown.value = false;
     // 普通模式没有加强版，落回极速；视频修改/续写下只有超级版
-    const nextVersion = pickVideoVersion('fast', videoVersionsFor('normal', selectedVideoMultimodal.value));
+    const nextVersion = defaultVideoVersionFor('normal', selectedVideoMultimodal.value);
     requestVideoLimitModeChange(nextVersion === 'fast' ? 'fast' : 'normal', () => {
       stashCurrentVideoPrompt();
       currentVideoMode.value = 'normal';
@@ -4136,7 +4137,7 @@ const switchPhotoMode = (mode: string, index: number) => {
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
     currentVideoMode.value = 'unlimited';
-    selectedNsfwVersion.value = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+    selectedNsfwVersion.value = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
     enableVideoOptimizePrompt.value = false;
     selectedVideoDuration.value = videoProfile.value.defaultDuration;
     lastValidVideoDuration.value = selectedVideoDuration.value;
@@ -4370,6 +4371,8 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
     enableVideoOptimizePrompt.value = false;
   }
 
+  // 下面回填的是 720P / 30s，只有超级版支持，极速版放出后默认档位不再是它，要跟着定死
+  selectedNsfwVersion.value = 'super';
   selectedVideoMultimodal.value = 'multimodal';
   selectedVideoRatio.value = '9:16';
   selectedVideoQuality.value = '720P';
@@ -4558,9 +4561,6 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
 
     if (targetContentType === 'video') {
       currentVideoMode.value = safeMode;
-      if (safeMode === 'unlimited') {
-        selectedNsfwVersion.value = fromModelType(userSelected.video_nsfw_model_type);
-      }
       if (userSelected.ratio) selectedVideoRatio.value = userSelected.ratio;
       if (userSelected.simple_video_resolution) selectedVideoQuality.value = userSelected.simple_video_resolution.toUpperCase();
       if (userSelected.simple_video_duration) selectedVideoDuration.value = userSelected.simple_video_duration.toString();
@@ -4579,6 +4579,14 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       } else {
         selectedVideoMultimodal.value = 'multimodal';
       }
+
+      // 做同款：档位按原作的设置回填。极速版放出后默认档位不再是超级版，
+      // 不显式回填的话，档位会停在极速版、参数却是原作的 720P / 30s，对不上。
+      // 原作档位在「当前模式 × 视频模式」下不可选时，按 fast → enhanced → super 落到第一个能用的。
+      selectedNsfwVersion.value = pickVideoVersion(
+        fromModelType(userSelected.video_nsfw_model_type),
+        videoVersionsFor(safeMode, selectedVideoMultimodal.value),
+      );
 
       const list = others.list || [];
       const refImages = userSelected.reference_images || [];

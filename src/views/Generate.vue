@@ -1010,7 +1010,7 @@ import audioIcon from '@/assets/images/home/audio.png';
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import {
-  MB, profileOf, videoVersionsFor, pickVideoVersion,
+  MB, profileOf, videoVersionsFor, pickVideoVersion, defaultVideoVersionFor,
   videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE, DEFAULT_VIDEO_VERSION,
   clampPromptHtml,
 } from '@/util/videoProfile';
@@ -2121,9 +2121,6 @@ const resetPhotoSettings = () => {
 };
 
 const resetVideoSettings = () => {
-  selectedVideoQuality.value = '720P';
-  selectedVideoRatio.value = '9:16';
-  selectedVideoDuration.value = '30';
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -2133,6 +2130,8 @@ const resetVideoSettings = () => {
   uploadedVideoCover.value = '';
   // Reset unlimited mode when switching tabs
   currentVideoMode.value = 'normal';
+  // 分辨率 / 比例 / 时长跟着当前档位走，别写死 720P / 30s —— 极速版没有这两个值
+  resetVideoParams();
 };
 
 const switchBottomTab = (tab: string) => {
@@ -5402,11 +5401,10 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
-      selectedVideoDuration.value = '30';
-      selectedVideoRatio.value = '9:16';
-      selectedVideoQuality.value = '720P';
       selectedVideoMultimodal.value = 'multimodal';
       currentVideoMode.value = 'normal';
+      // 分辨率 / 比例 / 时长跟着当前档位走，别写死 720P / 30s —— 极速版没有这两个值
+      resetVideoParams();
       enableVideoOptimizePrompt.value = false;
 
       startPolling(sessionId);
@@ -6590,7 +6588,7 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
       const prevLimitMode = videoLimitMode.value;
-      const nextVersion = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+      const nextVersion = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
       requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
         syncVideoPromptFromDom();
         currentVideoMode.value = 'unlimited';
@@ -6605,7 +6603,7 @@ const switchVideoMode = (mode: string, index: number) => {
   } else {
     const prevLimitMode = videoLimitMode.value;
     // 普通模式没有加强版，落回极速；视频修改/续写下只有超级版
-    const nextVersion = pickVideoVersion('fast', videoVersionsFor('normal', selectedVideoMultimodal.value));
+    const nextVersion = defaultVideoVersionFor('normal', selectedVideoMultimodal.value);
     requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'normal'), () => {
       syncVideoPromptFromDom();
       currentVideoMode.value = 'normal';
@@ -6622,7 +6620,7 @@ const confirmUnlimitedMode = () => {
     // 首次开 NSFW 会先弹这个说明框，确认后要和 switchVideoMode 走同一条路：
     // 提示词保留，只按新档位筛参考文件、参数回默认，不能再走全清。
     const prevLimitMode = videoLimitMode.value;
-    const nextVersion = pickVideoVersion('fast', videoVersionsFor('unlimited', selectedVideoMultimodal.value));
+    const nextVersion = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
     requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
       syncVideoPromptFromDom();
       currentVideoMode.value = 'unlimited';
