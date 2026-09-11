@@ -8,8 +8,13 @@ import router from "./router";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import ProcessList from "./components/ProcessList.vue";
+import { cleanupExpiredViews } from "./util/viewTracker";
 
 import 'swiper/swiper-bundle.css';
+
+// 清理浏览上报的过期缓存：放在启动时跑一次，
+// 这样即使用户之后再没进过个人主页 / 合集详情，残留的 key 也不会一直留着。
+cleanupExpiredViews();
 
 const app = createApp(App);
 
