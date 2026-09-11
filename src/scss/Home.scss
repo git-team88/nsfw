@@ -1885,11 +1885,10 @@ $pinkopacity: rgba(255,79,154,0.12);
 }
 
 .content-section {
-  // hero 有 62vh，feed 不够高时整页滚不过 hero，吸底输入框永远不会出现，
-  // 点做同款/做续集就只能回填到顶部那个已经滚出屏幕的输入框里。
-  // footer 是 fixed 的不占文档高度，所以这里在一个视口之外再多给 240px，
-  // 让「hero 已滚出、吸底输入框生效」这段有实际可用的滚动区间，而不是只剩几十像素。
-  min-height: calc(100vh + 240px);
+  // 作品很少时别让这块塌成一条，但也不用撑满一屏 ——
+  // 「吸底输入框出不来」已经由 pinStickyInput 解决（钉住只看用户有没有往上滚，
+  // 不依赖页面能滚多远），不再需要靠这里堆出滚动区间。
+  min-height: 360px;
   margin: 32px 0 0;
   border: 0;
   border-radius: 0;

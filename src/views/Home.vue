@@ -3508,12 +3508,14 @@ const onCardTiltReset = (e: MouseEvent) => {
 };
 
 // Content Types
+// 漫画 / 小说先隐藏（推荐、关注、订阅三个 tab 下的作品列表共用这一份类型筛选）。
+// 要恢复把下面两行的注释去掉即可。
 const contentTypes = ref([
   { id: 0, label: 'all' },
   { id: 5, label: 'video' },
   { id: 4, label: 'image' },
-  { id: 1, label: 'comic' },
-  { id: 2, label: 'novel' }
+  // { id: 1, label: 'comic' },
+  // { id: 2, label: 'novel' }
 ]);
 
 // Sort Options
@@ -8433,7 +8435,8 @@ onMounted(async () => {
     const homeContentType = localStorage.getItem('homeContentType');
     if (homeContentType !== null) {
       const contentTypeNum = parseInt(homeContentType, 10);
-      if (!isNaN(contentTypeNum)) {
+      // 只认当前还显示着的类型，漫画/小说隐藏后旧缓存值会让页面停在看不见的筛选上
+      if (!isNaN(contentTypeNum) && contentTypes.value.some((tp) => tp.id === contentTypeNum)) {
         activeContentType.value = contentTypeNum;
       }
       localStorage.removeItem('homeContentType');

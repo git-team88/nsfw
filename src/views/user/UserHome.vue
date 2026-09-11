@@ -685,11 +685,12 @@ const workContentTypes = computed(() => {
     return item ? parseInt(item.num) || 0 : 0;
   };
 
+  // 漫画 / 小说先隐藏，要恢复把下面两行的注释去掉即可
   return [
     { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0, hideCount: false },
     { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0, hideCount: false },
-    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
-    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
+    // { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
+    // { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
   ];
 });
 
@@ -699,7 +700,8 @@ watch(topTab, (val) => {
     fetchLikedBooks(true);
   } else {
     if (activeContentType.value === 'favorites') {
-      activeContentType.value = 2;
+      // 原来固定落到 2（小说），该 tab 已隐藏，改成落到第一个还显示着的类型
+      activeContentType.value = workContentTypes.value[0]?.id ?? 5;
     }
     fetchCollections(true);
   }
@@ -1155,7 +1157,8 @@ onMounted(async () => {
     const lastContentType = localStorage.getItem('userHomeContentType');
     if (lastContentType !== null) {
       const contentTypeNum = parseInt(lastContentType, 10);
-      if (!isNaN(contentTypeNum)) {
+      // 只认当前还显示着的类型，漫画/小说隐藏后旧缓存值会让页面停在看不见的 tab 上
+      if (!isNaN(contentTypeNum) && workContentTypes.value.some((tp) => tp.id === contentTypeNum)) {
         activeContentType.value = contentTypeNum;
       }
       localStorage.removeItem('userHomeContentType');

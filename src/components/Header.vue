@@ -341,10 +341,6 @@ const navList = ref([
 ]);
 
 const typeList = ref([
-  // {
-  //   name: t("header.type1"),
-  //   path: "/ai",
-  // },
   {
     name: t("header.type6"),
     path: "/publish/clip",
@@ -353,14 +349,14 @@ const typeList = ref([
     name: t("header.type5"),
     path: "/publish/image",
   },
-  {
-    name: t("header.type3"),
-    path: "/publish/comic",
-  },
-  {
-    name: t("header.type4"),
-    path: "/publish/novel",
-  },
+  // {
+  //   name: t("header.type3"),
+  //   path: "/publish/comic",
+  // },
+  // {
+  //   name: t("header.type4"),
+  //   path: "/publish/novel",
+  // },
 ]);
 
 const props = defineProps<{
@@ -396,10 +392,6 @@ watch(locale, () => {
   ];
 
   typeList.value = [
-    // {
-    //   name: t("header.type1"),
-    //   path: "/ai",
-    // },
     {
       name: t("header.type6"),
       path: "/publish/clip",
@@ -408,14 +400,14 @@ watch(locale, () => {
       name: t("header.type5"),
       path: "/publish/image",
     },
-    {
-      name: t("header.type3"),
-      path: "/publish/comic",
-    },
-    {
-      name: t("header.type4"),
-      path: "/publish/novel",
-    },
+    // {
+    //   name: t("header.type3"),
+    //   path: "/publish/comic",
+    // },
+    // {
+    //   name: t("header.type4"),
+    //   path: "/publish/novel",
+    // },
   ];
 });
 

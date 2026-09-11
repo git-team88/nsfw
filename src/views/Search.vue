@@ -286,12 +286,13 @@ const tabs = ref([
   { value: 'users', label: t('search.users') }
 ]);
 
+// 漫画 / 小说先隐藏，要恢复把下面两行的注释去掉即可
 const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
   { id: 5, label: t('home.contentType.video') },
   { id: 4, label: t('home.contentType.image') },
-  { id: 1, label: t('home.contentType.comic') },
-  { id: 2, label: t('home.contentType.novel') }
+  // { id: 1, label: t('home.contentType.comic') },
+  // { id: 2, label: t('home.contentType.novel') }
 ]);
 
 // Refs for waterfall layout
@@ -891,7 +892,8 @@ onMounted(async () => {
     const lastPostFilter = localStorage.getItem('searchPostFilter');
     if (lastPostFilter !== null) {
       const filterNum = parseInt(lastPostFilter, 10);
-      if (!isNaN(filterNum)) {
+      // 只认当前还显示着的筛选项，漫画/小说隐藏后旧缓存值会让页面停在看不见的筛选上
+      if (!isNaN(filterNum) && postFilters.value.some((f) => f.id === filterNum)) {
         postFilter.value = filterNum;
       }
       localStorage.removeItem('searchPostFilter');
