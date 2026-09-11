@@ -3187,6 +3187,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     type3: "アニメドラマ",
     continueReading: "続きを読む",
     startReading: "読み始める",
+    // 漫剧是看的不是读的，按钮文案单独一套
+    startWatching: "視聴を開始",
+    continueWatching: "視聴を続ける",
     favorite: "お気に入り",
     favorited: "お気に入り済み",
     chapterCount: "全 {count} 章",

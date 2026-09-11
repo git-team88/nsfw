@@ -3235,6 +3235,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     type3: "漫剧",
     continueReading: "继续阅读",
     startReading: "开始阅读",
+    // 漫剧是看的不是读的，按钮文案单独一套
+    startWatching: "开始观看",
+    continueWatching: "继续观看",
     favorite: "收藏",
     favorited: "已收藏",
     chapterCount: "共 {count} 章",

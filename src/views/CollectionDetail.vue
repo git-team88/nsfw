@@ -55,8 +55,8 @@
                       <img v-else src="@/assets/images/detail/collect_active.png" alt="" />
                       <span>{{ isLiked ? t('collectionDetail.favorited') : t('collectionDetail.favorite') }}</span>
                     </button>
-                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ t('collectionDetail.continueReading') }}</button>
-                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ t('collectionDetail.startReading') }}</button>
+                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && collection.history && !Array.isArray(collection.history)" @click="continueReading">{{ continueActionText }}</button>
+                    <button class="continue-reading-btn" v-if="collection.chapters && collection.chapters.length > 0 && (!collection.history || Array.isArray(collection.history))" @click="startReading">{{ startActionText }}</button>
                     <button class="make-similar-btn" v-if="collection.session_id" @click.stop="goMakeSimilar(collection.session_id)">
                       <img :src="makeIcon" alt="" class="make-icon" />
                       <span>{{ t('home.makeSimilar') }}</span>
@@ -264,6 +264,15 @@ interface AuthorInfo {
 }
 
 const collection = ref<Collection | null>(null);
+
+// 漫剧（type 3）是看的不是读的，按钮文案换成「观看」
+const isDramaCollection = computed(() => String(collection.value?.type ?? '') === '3');
+const startActionText = computed(() =>
+  t(isDramaCollection.value ? 'collectionDetail.startWatching' : 'collectionDetail.startReading'),
+);
+const continueActionText = computed(() =>
+  t(isDramaCollection.value ? 'collectionDetail.continueWatching' : 'collectionDetail.continueReading'),
+);
 const authorInfo = ref<AuthorInfo>({
   id: '',
   nickname: '',

@@ -3126,6 +3126,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     type3: "Drama",
     continueReading: "Continue Reading",
     startReading: "Start Reading",
+    // 漫剧是看的不是读的，按钮文案单独一套
+    startWatching: "Start Watching",
+    continueWatching: "Continue Watching",
     favorite: "Favorite",
     favorited: "Favorited",
     chapterCount: "Total {count} Chapters",
