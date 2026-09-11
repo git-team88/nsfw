@@ -1123,7 +1123,7 @@
       </div>
 
       <!-- Content Section -->
-      <div id="feed" class="content-section">
+      <div id="feed" class="content-section" ref="contentSectionRef">
         <div class="feed-heading">
           <h2 class="feed-title">{{ t('home.feedTitle') }}</h2>
           <p class="feed-sub">{{ t('home.feedSub') }}</p>
@@ -2102,20 +2102,12 @@ function selectNsfwVersion(version: string) {
 
 // Start/End Frames upload handlers
 function triggerStartFrameUpload() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
+  if (!checkLogin()) return;
   startFrameInput.value?.click();
 }
 
 function triggerEndFrameUpload() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
+  if (!checkLogin()) return;
   endFrameInput.value?.click();
 }
 
@@ -2125,10 +2117,7 @@ function handleFramesTextareaClick() {
     return;
   }
   trackClickPromptBox();
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-  }
+  checkLogin();
 }
 
 function handleNovelTextareaFocus() {
@@ -2146,10 +2135,7 @@ function handleNovelTextareaClick() {
     return;
   }
   trackClickPromptBox();
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-  }
+  checkLogin();
 }
 
 async function handleStartFrameChange(e: Event) {
@@ -2501,6 +2487,20 @@ const atDropdownItems = ref<any[]>([]);
 const editableInputRef = ref<HTMLElement | null>(null);
 const inputAreaBoxRef = ref<HTMLElement | null>(null);
 const heroSectionRef = ref<HTMLElement | null>(null);
+const contentSectionRef = ref<HTMLElement | null>(null);
+
+// 从详情页/搜索页点做同款、做视频、做续集跳回首页时，停在推荐列表这一屏。
+// 用户是奔着「看列表 + 底部输入框」来的，滚到顶部的 hero 反而把输入框顶出视野。
+const FEED_SCROLL_OFFSET = 70; // 顶部固定 header 的高度
+const scrollToFeed = () => {
+  const el = contentSectionRef.value;
+  if (!el) {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    return;
+  }
+  const top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+};
 const showStickyInput = ref(false);
 const stickyInputExpanded = ref(false);
 const stickyInputPlaceholderHeight = ref(0);
@@ -2600,6 +2600,9 @@ const handleStickyUserScroll = () => {
 };
 
 const blurHomeInputOnScroll = () => {
+  // 做同款/做续集回填后输入框是钉在底部并主动聚焦的，
+  // 这时滚动列表不该把焦点抢走（否则刚跳过来就失焦）
+  if (stickyInputPinned.value) return;
   const activeElement = document.activeElement;
   if (activeElement instanceof HTMLElement) {
     if (activeElement.matches('.input-textarea, .novel-textarea') ||
@@ -2637,12 +2640,16 @@ const unpinStickyInput = () => {
 const updateStickyInputVisibility = () => {
   const hero = heroSectionRef.value;
   if (!hero) return;
-  // 钉住期间不跟随滚动重算，否则滚回顶部输入框会跳回 hero 里
-  if (stickyInputPinned.value) {
-    showStickyInput.value = true;
-    return;
-  }
   const outOfView = hero.getBoundingClientRect().bottom <= 0;
+  // 钉住只在 hero 已滚出视口时有效：这期间保持吸底、且不因滚动被收起。
+  // 一旦用户自己滚回 hero，就解除钉住，让输入框回到 hero 里原来的大小和位置。
+  if (stickyInputPinned.value) {
+    if (outOfView) {
+      showStickyInput.value = true;
+      return;
+    }
+    stickyInputPinned.value = false;
+  }
   if (!outOfView) {
     showStickyInput.value = false;
     stickyInputExpanded.value = false;
@@ -2849,6 +2856,13 @@ function resolveInputEl(type: string): HTMLElement | null {
 // 输入框所在的 v-if 分支会被重建 —— editableInputRef 在这一帧可能还是 null，
 // 或者仍指向已卸载的旧分支元素，直接拿它 focus 会落空（表现就是回填了但光标没进去）。
 // 统一走 resolveInputEl 按 data-tab + data-mode 命中当前分支，拿不到就下一帧再试一次。
+//
+// 这里的 el.focus() 是我们自己代码触发的程序化聚焦，但浏览器分发的 focus 事件和用户手动点进去
+// 完全一样，会原样触发输入框上绑定的 @focus="handleInputFocus" —— 那里未登录会直接 checkLogin()
+// 跳登录页。回填内容本来就是给未登录用户看的（做同款/做续集不要求登录），所以这个标志位用来告诉
+// handleInputFocus：这次 focus 是程序化触发的，跳过登录校验；用户自己点输入框的 focus 不受影响。
+let isProgrammaticInputFocus = false;
+
 function focusCurrentInput() {
   let tries = 0;
 
@@ -2857,7 +2871,9 @@ function focusCurrentInput() {
     // 隐藏元素 focus() 是空操作，必须等它真的渲染出来
     if (!el || (el.offsetParent === null && el.getClientRects().length === 0)) return false;
 
+    isProgrammaticInputFocus = true;
     el.focus();
+    isProgrammaticInputFocus = false;
 
     // contenteditable 只 focus 不给 selection，光标不会显示，用户看着就是「没聚焦」。
     // 把光标放到内容末尾，回填的内容后面可以直接接着打字。
@@ -3342,12 +3358,12 @@ const navigateToNovelGenerate = async () => {
   if (isGeneratingNovel.value) return;
   isGeneratingNovel.value = true;
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
+  // 走 checkLogin：保存做同款/做续集的来源 + 记住回跳地址
+  if (!checkLogin()) {
     isGeneratingNovel.value = false;
     return;
   }
+  const token = localStorage.getItem('token') || '';
 
   if (!novelInput.value.trim()) {
     toast(t('home.error.emptyInput'));
@@ -3433,11 +3449,7 @@ const navigateToNovelGenerate = async () => {
 }
 
 function goRecharge() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return false;
-  }
+  if (!checkLogin()) return false;
 
   router.push('/ai-recharge');
   showInsufficientBalanceModal.value = false;
@@ -3902,11 +3914,7 @@ const handleUnlimitedAgeConfirm = async (isAdult: boolean) => {
 
 const switchVideoMode = (mode: string, index: number) => {
   if (index == 2) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return false;
-    }
+    if (!checkLogin()) return false;
 
     if (checkAgeForUnlimitedMode('video')) {
       return;
@@ -3947,11 +3955,7 @@ const switchVideoMode = (mode: string, index: number) => {
 
 const switchNovelMode = (mode: string, index: number) => {
   if (index == 2) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return false;
-    }
+    if (!checkLogin()) return false;
 
     if (checkAgeForUnlimitedMode('novel')) {
       return;
@@ -3975,11 +3979,7 @@ const switchNovelMode = (mode: string, index: number) => {
 
 const switchComicMode = (mode: string, index: number) => {
   if (index == 2) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return false;
-    }
+    if (!checkLogin()) return false;
 
     if (checkAgeForUnlimitedMode('comic')) {
       return;
@@ -4000,11 +4000,7 @@ const switchComicMode = (mode: string, index: number) => {
 
 const switchDramaMode = (mode: string, index: number) => {
   if (index == 2) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return false;
-    }
+    if (!checkLogin()) return false;
 
     if (checkAgeForUnlimitedMode('drama')) {
       return;
@@ -4071,11 +4067,7 @@ function cancelModeSwitchFileWarning() {
 
 const switchPhotoMode = (mode: string, index: number) => {
   if (index == 2) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return false;
-    }
+    if (!checkLogin()) return false;
 
     if (checkAgeForUnlimitedMode('photo')) {
       return;
@@ -4940,11 +4932,7 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
 
 function goMakeSequelSubscribe() {
   showMakeSequelSubscribeModal.value = false;
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
+  if (!checkLogin()) return;
   if (makeSequelAuthorId.value) {
     router.push(`/subscription-payment?id=${makeSequelAuthorId.value}`);
   }
@@ -5077,9 +5065,9 @@ const generateVideo = async () => {
   if (isGeneratingVideo.value) return;
   isGeneratingVideo.value = true;
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
+  // 走 checkLogin：保存做同款/做续集的来源 + 记住回跳地址，
+  // 否则登录回来来源没了、输入框也空了
+  if (!checkLogin()) {
     isGeneratingVideo.value = false;
     return;
   }
@@ -5384,9 +5372,9 @@ const generateComic = async () => {
   if (isGeneratingComic.value) return;
   isGeneratingComic.value = true;
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
+  // 走 checkLogin：保存做同款/做续集的来源 + 记住回跳地址，
+  // 否则登录回来来源没了、输入框也空了
+  if (!checkLogin()) {
     isGeneratingComic.value = false;
     return;
   }
@@ -5544,9 +5532,9 @@ const generateDrama = async () => {
   if (isGeneratingDrama.value) return;
   isGeneratingDrama.value = true;
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
+  // 走 checkLogin：保存做同款/做续集的来源 + 记住回跳地址，
+  // 否则登录回来来源没了、输入框也空了
+  if (!checkLogin()) {
     isGeneratingDrama.value = false;
     return;
   }
@@ -5728,9 +5716,9 @@ const generatePhoto = async () => {
   if (isGeneratingPhoto.value) return;
   isGeneratingPhoto.value = true;
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
+  // 走 checkLogin：保存做同款/做续集的来源 + 记住回跳地址，
+  // 否则登录回来来源没了、输入框也空了
+  if (!checkLogin()) {
     isGeneratingPhoto.value = false;
     return;
   }
@@ -6657,11 +6645,8 @@ const handleFileChange = async (event: Event) => {
 
 // Upload image to server
 async function uploadImage(file: File, mode: string): Promise<string> {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push('/login');
-    return '';
-  }
+  if (!checkLogin()) return '';
+  const token = localStorage.getItem("token") || '';
 
   const formData = new FormData();
   formData.append('file', file);
@@ -7428,7 +7413,10 @@ const handleInputFocus = () => {
     return;
   }
   popHeroParts();
-  checkLogin();
+  // 做同款/做续集回填后由 focusCurrentInput() 程序化聚焦，不算用户主动点输入框，不应该被顶去登录页
+  if (!isProgrammaticInputFocus) {
+    checkLogin();
+  }
   isInputFocused.value = true;
   if (editableInputRef.value) {
     previousInputHtml.value = editableInputRef.value.innerHTML;
@@ -8091,11 +8079,7 @@ const fetchFollowUserList = async (append = false) => {
 
 async function toggleLike(item: any) {
   // Check if user is logged in
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
+  if (!checkLogin()) return;
 
   try {
     const postId = item.id;
@@ -8274,13 +8258,17 @@ onMounted(async () => {
 
   const queryParams = new URLSearchParams(window.location.search);
   const makeFromUrl = queryParams.get('make') || queryParams.get('session_id');
+  // 带着做同款/做视频/做续集的来源进来时，落地不滚顶部，改为停在推荐列表
+  let arrivedWithMakeSource = false;
   if (makeFromUrl) {
+    arrivedWithMakeSource = true;
     await getCountry();
     await handleMakeSimilar({ session_id: makeFromUrl }, true);
   }
 
   const makeVideoData = localStorage.getItem('makeVideoData');
   if (makeVideoData) {
+    arrivedWithMakeSource = true;
     // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
     pendingMakeSource.value = { key: 'makeVideoData', raw: makeVideoData };
     await getCountry();
@@ -8296,6 +8284,7 @@ onMounted(async () => {
 
   const makeSimilarVideoData = localStorage.getItem('makeSimilarVideoData');
   if (makeSimilarVideoData) {
+    arrivedWithMakeSource = true;
     // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
     pendingMakeSource.value = { key: 'makeSimilarVideoData', raw: makeSimilarVideoData };
     await getCountry();
@@ -8353,6 +8342,7 @@ onMounted(async () => {
 
   const makeSequelData = localStorage.getItem('makeSequelData');
   if (makeSequelData) {
+    arrivedWithMakeSource = true;
     // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
     pendingMakeSource.value = { key: 'makeSequelData', raw: makeSequelData };
     await getCountry();
@@ -8372,7 +8362,19 @@ onMounted(async () => {
   });
 
   nextTick(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    if (arrivedWithMakeSource) {
+      // 先滚到列表，再钉住并聚焦：顺序反了的话滚动事件会把焦点抹掉
+      scrollToFeed();
+      pinStickyInput();
+      // 未登录时不要在这里程序化 focus 输入框——focus() 会触发输入框的 @focus -> handleInputFocus -> checkLogin()，
+      // 把刚回填好内容、还没登录的用户直接顶去登录页，回显也就白做了。未登录只回显内容、不聚焦，
+      // 跟各个 make* 分支自己「无 token 就只 pinStickyInput 不 focus」的逻辑保持一致。
+      if (localStorage.getItem('token')) {
+        focusCurrentInput();
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
   });
 
   // 根据 URL 识别内容类型
