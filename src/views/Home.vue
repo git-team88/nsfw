@@ -2498,7 +2498,14 @@ const scrollToFeed = () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
     return;
   }
-  const top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET;
+  let top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET;
+  // 至少要滚到 hero 完全离开视口。只按「列表顶部 - header」算的话，
+  // hero 和列表之间的间距不足 header 高度时，hero 底边还露在视口里，
+  // 吸底输入框的判定条件就不成立。
+  const hero = heroSectionRef.value;
+  if (hero) {
+    top = Math.max(top, hero.getBoundingClientRect().bottom + window.scrollY + 1);
+  }
   window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
 };
 const showStickyInput = ref(false);
@@ -2619,6 +2626,10 @@ const blurHomeInputOnScroll = () => {
 // 内容会回填进 hero 里那个输入框，用户看不见。
 const stickyInputPinned = ref(false);
 
+// 钉住时的滚动位置，用来判断用户是不是主动往上滚了
+let pinnedAtScrollY = 0;
+const PIN_RELEASE_DISTANCE = 60;
+
 const pinStickyInput = () => {
   // 从非吸底切过来要先量占位高度，否则 hero 里会塌掉一块
   if (!showStickyInput.value) {
@@ -2626,6 +2637,7 @@ const pinStickyInput = () => {
     syncStickyInputPreview();
   }
   stickyInputPinned.value = true;
+  pinnedAtScrollY = window.scrollY;
   showStickyInput.value = true;
   stickyInputExpanded.value = true;
   stickyExpandedAtScrollY = window.scrollY;
@@ -2641,10 +2653,11 @@ const updateStickyInputVisibility = () => {
   const hero = heroSectionRef.value;
   if (!hero) return;
   const outOfView = hero.getBoundingClientRect().bottom <= 0;
-  // 钉住只在 hero 已滚出视口时有效：这期间保持吸底、且不因滚动被收起。
-  // 一旦用户自己滚回 hero，就解除钉住，让输入框回到 hero 里原来的大小和位置。
+  // 钉住期间保持吸底。只有用户主动往上滚（离开落地位置一定距离）才交还给正常逻辑——
+  // 不能用「hero 是否可见」判断：落地滚动常停在 hero 还露一点的位置，
+  // 那样刚钉上就被自己解开，输入框又跳回 hero 里。
   if (stickyInputPinned.value) {
-    if (outOfView) {
+    if (window.scrollY >= pinnedAtScrollY - PIN_RELEASE_DISTANCE) {
       showStickyInput.value = true;
       return;
     }

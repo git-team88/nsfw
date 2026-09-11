@@ -372,10 +372,7 @@
             </div>
           </div>
 
-          <div class="nav-arrows on" v-if="isCollectionMode">
-            <button class="nav-btn up" @click="navigateToChapter({ post_id: prevChapterId })" v-if="prevChapterId"></button>
-            <button class="nav-btn down" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId"></button>
-          </div>
+          <!-- 合集模式（type 1 / 3）不显示右侧上下箭头，换集走右栏的合集列表和「下一集」按钮 -->
 
           <!-- 图片 / 视频（type 4、5）没有合集，上下按钮切上一个 / 下一个作品，放在左侧 -->
           <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode">
