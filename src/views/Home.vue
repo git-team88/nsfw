@@ -33,7 +33,8 @@
           aria-hidden="true"
         ></video>
 
-        <template v-else>
+        <!-- 接口没返回前，不知道该展示动效还是视频，两个都先不显示，只留 hero-section 自己的背景 -->
+        <template v-else-if="contentSwitch.loaded">
           <!-- 3D 漂浮漫画卡片背景动效 -->
           <Hero3DBackground class="hero-3d-layer" :paused="heroPaused" :scattered="heroEditing" />
           <!-- 中间柔光层（让中间内容更清晰） -->
