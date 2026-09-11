@@ -1753,6 +1753,8 @@ const getCurrentPlaceholder = () => {
   if (isMakeVideoMode.value) {
     return t('home.input.placeholderMakeVideo');
   }
+  // 拍续集放在拍同款前面：两个入口的标记可能同时为真（同一次会话里先拍同款再拍续集），
+  // 这时要显示的是当前这次操作的文案。两个入口的文案必须区分开，别共用一条。
   if (isMakeVideoSequelMode.value) {
     return t('home.input.placeholderMakeSequel');
   }
@@ -2250,6 +2252,11 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
         toast(t('home.error.videoDimensionLimit'));
         resolve(false); return;
       }
+      // 超级版还卡宽 × 高：[614×664, 3326×2494]。areaMax 为 0 的档位不校验。
+      if (pf.areaMax > 0 && (width * height < pf.areaMin || width * height > pf.areaMax)) {
+        toast(t('home.error.videoAreaLimit'));
+        resolve(false); return;
+      }
       resolve(true);
     };
     video.onerror = () => {
@@ -2586,6 +2593,22 @@ const collapseStickyInput = () => {
   if (activeElement && inputAreaBoxRef.value?.contains(activeElement)) {
     activeElement.blur();
   }
+};
+
+// 弹窗 / 遮罩 / 全局提示：里面的点击不算「点了别处」——选角色、二次确认这些关掉之后
+// 还要回到展开态接着编辑，收起来会把刚插进去的内容藏到折叠条里。
+const STICKY_KEEP_OPEN_SELECTOR =
+  '[class*="modal"], [class*="overlay"], [class*="mask"], [class*="dialog"], [class*="popup"], [class*="toast"]';
+
+// 吸底输入框展开后，点输入框以外的地方就收起来（滚动收起的逻辑在 updateStickyInputVisibility 里）。
+const collapseStickyInputOnOutsideClick = (target: HTMLElement) => {
+  if (!showStickyInput.value || !stickyInputExpanded.value) return;
+  // 点的节点已经被自己的处理函数从 DOM 里摘掉了（删除按钮之类），这时算不出它在不在输入框里，不收
+  if (!target.isConnected) return;
+  const box = inputAreaBoxRef.value;
+  if (!box || box.contains(target)) return;
+  if (target.closest(STICKY_KEEP_OPEN_SELECTOR)) return;
+  collapseStickyInput();
 };
 
 const expandStickyInput = () => {
@@ -4796,6 +4819,7 @@ const handleMakeSimilarVideo = async (item: any) => {
     const isUnlimited = isNsfw && userRegion.value;
 
     isMakeVideoSimilarMode.value = true;
+    isMakeVideoSequelMode.value = false;
     isMakeSameMode.value = true;
     originPostId.value = String(data.id || item.id);
 
@@ -4900,6 +4924,7 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
 
   isMakeExtensionMode.value = true;
   isMakeVideoSequelMode.value = true;
+  isMakeVideoSimilarMode.value = false;
   originPostId.value = postId || '';
   originVideoUrlForTail.value = videoUrl;
   originSessionIdForExtension.value = postId || '';
@@ -5026,6 +5051,7 @@ const handleClickOutside = (event: MouseEvent) => {
     showInsertImageDropdown.value = false;
     showNsfwVersionDropdown.value = false;
   }
+  collapseStickyInputOnOutsideClick(target);
 };
 
 function getCountry(): Promise<void> {
@@ -8310,6 +8336,7 @@ onMounted(async () => {
         const isUnlimited = isNsfw && userRegion.value;
 
         isMakeVideoSimilarMode.value = true;
+        isMakeVideoSequelMode.value = false;
         isMakeSameMode.value = true;
         originPostId.value = similarPostId || '';
 

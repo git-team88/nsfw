@@ -15,7 +15,7 @@ export type VideoVersion = typeof VIDEO_VERSION_ORDER[number];
 // 极速版入口的总开关。关掉后可选版本里不再出现 fast：
 // 普通模式只剩超级版（选择器 length > 1 判据自动不显示），NSFW 模式回到加强版 / 超级版两档。
 // 极速版本身的档位配置、限制、计价都保留着，改回 true 即可整体放出。
-export const FAST_VERSION_ENABLED = true;
+export const FAST_VERSION_ENABLED = false;
 
 // 可选版本 = f(普通 or NSFW 模式, 视频模式)
 export function videoVersionsFor(mode: string, videoMode: string): VideoVersion[] {
@@ -44,7 +44,8 @@ export function toModelType(version: string): string {
   return version === 'super' ? 'super' : 'plus';
 }
 export function fromModelType(modelType: any): VideoVersion {
-  if (modelType === 'fast') return 'fast';
+  // 极速版关掉时，旧作品重新编辑不能把已经隐藏的档位选回来，落到加强版。
+  if (modelType === 'fast' && FAST_VERSION_ENABLED) return 'fast';
   return modelType === 'super' ? 'super' : 'enhanced';
 }
 
@@ -76,6 +77,9 @@ export interface VideoProfile {
   dimMax: number;
   ratioMin: number;
   ratioMax: number;
+  // 参考视频的宽 × 高 像素总数区间，0 表示该档位不校验
+  areaMin: number;
+  areaMax: number;
 }
 
 // refVideoMaxClips / refAudioMaxClips / audioMaxSize 为 0 表示不限制
@@ -92,6 +96,7 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     refAudioMinSeconds: 2, refAudioMaxSeconds: 15, refAudioBudget: 15, refAudioMaxClips: 3,
     modifyMinSeconds: 2, extendMinSeconds: 2,
     dimMin: 256, dimMax: 5760, ratioMin: 0.4, ratioMax: 2.5,
+    areaMin: 0, areaMax: 0,
   },
   unlimited: {
     maxInputChars: 20000,
@@ -105,6 +110,7 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     refAudioMinSeconds: 0, refAudioMaxSeconds: 0, refAudioBudget: 0, refAudioMaxClips: 0,
     modifyMinSeconds: 1, extendMinSeconds: 1,
     dimMin: 240, dimMax: 4096, ratioMin: 1 / 8, ratioMax: 8,
+    areaMin: 0, areaMax: 0,
   },
   normal: {
     // 超级版（super）：普通模式和无限制模式都落到这一档
@@ -119,6 +125,8 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     refAudioMinSeconds: 0, refAudioMaxSeconds: 0, refAudioBudget: 0, refAudioMaxClips: 0,
     modifyMinSeconds: 4, extendMinSeconds: 2,
     dimMin: 300, dimMax: 6000, ratioMin: 0.4, ratioMax: 2.5,
+    // 超级版参考视频还要求宽 × 高 落在 [614×664, 3326×2494] 之间
+    areaMin: 614 * 664, areaMax: 3326 * 2494,
   },
 };
 

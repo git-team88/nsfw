@@ -2099,6 +2099,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       imageTotalPixelsLimit: "圖片總像素需在196~3600萬之間",
       videoRatioLimit: "視頻寬高比需在0.4~2.5之間",
       videoDimensionLimit: "視頻寬高需在300~6000像素之間",
+      videoAreaLimit: "視頻總像素需在40.8萬~829.5萬之間（614×664 ~ 3326×2494）",
       maxVideoClips: "最多只能添加 {max} 個參考視頻",
       maxAudioClips: "最多只能添加 {max} 個參考音頻",
       videoDurationLimit: "視頻總時長不能超過{max}秒",

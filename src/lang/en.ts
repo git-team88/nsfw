@@ -1999,6 +1999,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       imageTotalPixelsLimit: "Image total pixels must be between 196 and 36 million",
       videoRatioLimit: "Video aspect ratio must be between 0.4 and 2.5",
       videoDimensionLimit: "Video width and height must be between 300 and 6000 pixels",
+      videoAreaLimit: "Video total pixels must be between 407,696 and 8,295,044 (614×664 ~ 3326×2494)",
       maxVideoClips: "You can add at most {max} reference videos",
       maxAudioClips: "You can add at most {max} reference audio files",
       videoDurationLimit: "Total video duration cannot exceed {max} seconds",

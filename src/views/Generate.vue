@@ -2334,6 +2334,11 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
         toast(t('home.error.videoDimensionLimit'));
         resolve(false); return;
       }
+      // 超级版还卡宽 × 高：[614×664, 3326×2494]。areaMax 为 0 的档位不校验。
+      if (pf.areaMax > 0 && (width * height < pf.areaMin || width * height > pf.areaMax)) {
+        toast(t('home.error.videoAreaLimit'));
+        resolve(false); return;
+      }
       resolve(true);
     };
     video.onerror = () => {

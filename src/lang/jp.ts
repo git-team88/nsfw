@@ -1825,6 +1825,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       imageTotalPixelsLimit: "画像の総ピクセル数は196〜3600万の間である必要があります",
       videoRatioLimit: "動画のアスペクト比は0.4〜2.5の間である必要があります",
       videoDimensionLimit: "動画の幅と高さは300〜6000ピクセルの間である必要があります",
+      videoAreaLimit: "動画の総ピクセル数は407,696〜8,295,044（614×664 ~ 3326×2494）の範囲内である必要があります",
       maxVideoClips: "参照動画は最大 {max} 本までです",
       maxAudioClips: "参照音声は最大 {max} 本までです",
       videoDurationLimit: "動画の合計時間は{max}秒を超えることはできません",
