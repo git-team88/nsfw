@@ -4233,18 +4233,19 @@ const selectCharacter = (characters: any[]) => {
         // Append character tag to the end
         target.appendChild(characterTag);
 
-        // Add a space after the character tag for better readability
-        const spaceNode = document.createTextNode(' ');
+        // 标签后面补一个不断行空格：光标要落在真实文本节点里，否则输入法
+        // 在 contenteditable="false" 的标签旁边没有组合目标，中文会被拆开
+        const spaceNode = document.createTextNode('\u00A0');
         target.appendChild(spaceNode);
 
         // Focus the input to ensure cursor is visible
         target.focus();
 
-        // Set cursor position after the space
+        // 光标放进空格节点内部
         const selection = window.getSelection();
         if (selection) {
           const range = document.createRange();
-          range.setStartAfter(spaceNode);
+          range.setStart(spaceNode, spaceNode.length);
           range.collapse(true);
           selection.removeAllRanges();
           selection.addRange(range);
@@ -5358,7 +5359,7 @@ const doGenerateVideo = async () => {
       reference_audios: combinedItemsVideo.value.filter(item => item.type === 'audio').map(item => item.image),
       emotion: "",
       others: {
-        content: processedContent,
+        content: processedContent.replace(/\u00A0/g, ' '),
         list: (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value
           ? [{ id: 'uploaded-video', name: 'uploaded-video', type: 'video', image: uploadedVideo.value, cover: uploadedVideoCover.value || '', url: uploadedVideo.value }, ...combinedItemsVideo.value]
           : combinedItemsVideo.value
@@ -5539,7 +5540,7 @@ const doGenerateComic = async () => {
       reference_images: uploadedImagesComic.value.map(img => img.image),
       emotion: "",
       others: {
-        content: processedContent,
+        content: processedContent.replace(/\u00A0/g, ' '),
         list: combinedItemsComic.value
       },
       addition_characters: selectedCharactersComic.value.map(character => ({
@@ -5690,7 +5691,7 @@ const doGenerateDrama = async () => {
       reference_images: uploadedImagesDrama.value.map(img => img.image),
       emotion: "",
       others: {
-        content: processedContent.trim(),
+        content: processedContent.replace(/\u00A0/g, ' ').trim(),
         list: combinedItemsDrama.value
       },
       addition_characters: selectedCharactersDrama.value.map(character => ({
@@ -7725,13 +7726,17 @@ const selectAtItem = (item: any) => {
     // 在删除位置插入 item tag
     atRange.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();
@@ -7742,13 +7747,17 @@ const selectAtItem = (item: any) => {
     // 没有找到 @，直接在光标位置插入
     range.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();

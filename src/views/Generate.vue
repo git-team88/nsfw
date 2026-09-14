@@ -1390,7 +1390,8 @@ const getPhotoInputContent = () => {
     processNode(photoEditableInputRef.value.childNodes[i]);
   }
 
-  return content;
+  // 标签后面那个不断行空格只为光标定位服务，提交前换回普通空格
+  return content.replace(/\u00A0/g, ' ');
 };
 
 const handlePhotoInput = (event: Event) => {
@@ -1580,13 +1581,17 @@ const selectPhotoRefItem = (item: any) => {
     // 插入 item tag
     atRange.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();
@@ -1598,13 +1603,17 @@ const selectPhotoRefItem = (item: any) => {
     const itemTag = createPhotoItemTag(item);
     range.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();
@@ -3395,13 +3404,17 @@ const selectVideoRefItem = (item: any) => {
     // 插入 item tag
     atRange.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();
@@ -3413,13 +3426,17 @@ const selectVideoRefItem = (item: any) => {
     const itemTag = createVideoItemTag(item);
     range.insertNode(itemTag);
 
-    // 添加空格
-    const spaceNode = document.createTextNode(' ');
+    // 标签后面补一个不断行空格，两个作用：
+    // 1) 光标必须落在真实的文本节点里 —— 停在 contenteditable="false" 的标签旁边时
+    //    输入法没有可组合的目标，打「加一个人」会被拆成「j下一个人」；
+    // 2) 普通空格在行尾会被折叠，看起来光标就贴着标签，\u00A0 不会。
+    //    序列化时统一换回普通空格，不会带进提交内容。
+    const spaceNode = document.createTextNode('\u00A0');
     itemTag.parentNode?.insertBefore(spaceNode, itemTag.nextSibling);
 
-    // 设置光标位置在空格后面
+    // 光标放进空格节点内部，而不是它后面的父节点位置
     const cursorRange = document.createRange();
-    cursorRange.setStartAfter(spaceNode);
+    cursorRange.setStart(spaceNode, spaceNode.length);
     cursorRange.collapse(true);
 
     selection.removeAllRanges();
@@ -3564,7 +3581,8 @@ const getVideoInputContent = () => {
     processNode(videoEditableInputRef.value.childNodes[i]);
   }
 
-  return content.trim();
+  // 标签后面那个不断行空格只为光标定位服务，提交前换回普通空格
+  return content.replace(/\u00A0/g, ' ').trim();
 };
 
 const removeVideoRef = (id: string) => {
