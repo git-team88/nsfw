@@ -822,7 +822,7 @@
               <div v-if="collections.length > 0 && !isLoadingCollections"
                   class="collection-item"
                   v-for="(item, index) in collections"
-                  :key="item.id"
+                  :key="item.post_id"
                   :class="{ 'active': item.post_id == detail.id }"
                   @click="playCollectionItem(item)">
                 <div class="collection-content">
@@ -5250,25 +5250,42 @@ async function toggleCollectionLike(item: any) {
     return;
   }
 
+  // 合集列表里这一项的作品 id 是 post_id。列表数据是 loadCollections 映射出来的，
+  // 字段只有 post_id / title / cover / likes / liked ... 根本没有 id，
+  // 原来传 item.id 等于传了 undefined，接口直接回参数错误。
+  const postId = item?.post_id;
+  if (!postId) return;
+
   try {
-    const previousLiked = item.liked;
-    const previousLikes = item.likes;
+    const previousLikes = Number(item.likes) || 0;
+    const isCurrentPost = detail.value && postId == detail.value.id;
     if (!item.liked) {
       // Like collection item
-      const res = await api.likePost({ post_id: item.id }) as any;
+      const res = await api.likePost({ post_id: postId }) as any;
       if (res.code == 0 || res.code == 200) {
         item.liked = true;
-
-        likes.value = previousLikes + 1;
+        // 原来这里写的是 likes.value —— 那是详情页顶部整篇作品的赞数，
+        // 结果列表这一项的数字不动，反而把顶部的赞数冲掉了。
+        // 取消点赞那条分支本来就是改 item.likes，两边保持一致。
+        item.likes = previousLikes + 1;
+        // 点的正好是当前正在看的这一话时，把顶部的点赞态一起同步过去
+        if (isCurrentPost) {
+          liked.value = true;
+          likes.value = previousLikes + 1;
+        }
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }
     } else {
       // Unlike collection item
-      const res = await api.dislikePost({ post_id: item.id }) as any;
+      const res = await api.dislikePost({ post_id: postId }) as any;
       if (res.code === 0 || res.code === 200) {
         item.liked = false;
         item.likes = Math.max(0, previousLikes - 1);
+        if (isCurrentPost) {
+          liked.value = false;
+          likes.value = Math.max(0, previousLikes - 1);
+        }
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
       }

@@ -330,10 +330,11 @@ const navList = ref([
     name: t("header.title4"),
     path: "/character-library",
   },
-  {
-    name: t("header.title6"),
-    path: "/rank",
-  },
+  // 排行榜入口暂时隐藏，需要放出时把这段注释解开
+  // {
+  //   name: t("header.title6"),
+  //   path: "/rank",
+  // },
   {
     name: t("header.title5"),
     path: "/user-home",
@@ -381,10 +382,11 @@ watch(locale, () => {
       name: t("header.title4"),
       path: "/character-library",
     },
-    {
-      name: t("header.title6"),
-      path: "/rank",
-    },
+    // 排行榜入口暂时隐藏，需要放出时把这段注释解开
+    // {
+    //   name: t("header.title6"),
+    //   path: "/rank",
+    // },
     {
       name: t("header.title5"),
       path: "/user-home",

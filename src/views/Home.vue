@@ -557,7 +557,8 @@
                           <span>{{ selectedVideoQuality }}</span>
 
                           <span class="settings-divider"></span>
-                          <span>{{ (selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
+                          <span v-if="selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'">{{ t('home.videoSettings.ratioAuto') }}</span>
+                          <span v-else class="settings-ratio"><RatioIcon :value="selectedVideoRatio" />{{ selectedVideoRatio }}</span>
                           <span class="settings-divider"></span>
                           <span>{{ (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
                           <span class="settings-line"></span>
@@ -588,7 +589,7 @@
                                 :class="{ active: selectedVideoRatio == ratio.value }"
                                 @click.stop="selectedVideoRatio = ratio.value"
                               >
-                                {{ ratio.label }}
+                                <RatioIcon :value="ratio.value" />{{ ratio.label }}
                               </div>
                             </div>
                           </div>
@@ -893,7 +894,7 @@
                                 :class="{ active: selectedPhotoRatio == ratio.value }"
                                 @click.stop="selectedPhotoRatio = ratio.value"
                               >
-                                {{ ratio.label }}
+                                <RatioIcon :value="ratio.value" />{{ ratio.label }}
                               </div>
                             </div>
                           </div>
@@ -1543,6 +1544,7 @@ import { useI18n } from 'vue-i18n';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import Header from '@/components/Header.vue';
+import RatioIcon from '@/components/RatioIcon.vue';
 import MakeSequelSubscribeModal from '@/components/MakeSequelSubscribeModal.vue';
 import UnlimitedModeModal from '@/components/UnlimitedModeModal.vue';
 import UnderageNoBirthdayModal from '@/components/UnderageNoBirthdayModal.vue';
@@ -2018,7 +2020,7 @@ function closeNovelInputDropdowns() {
 // Photo settings
 const showPhotoSettings = ref(false);
 const selectedPhotoQuality = ref('1K');
-const selectedPhotoRatio = ref('9:16');
+const selectedPhotoRatio = ref('16:9');
 const photoQualityOptions = computed(() => {
   const optionsByMode = {
     normal: [{ value: '1K', label: '1K' }, { value: '2K', label: '2K' }],
@@ -2028,8 +2030,8 @@ const photoQualityOptions = computed(() => {
 });
 const photoRatioOptions = computed(() => {
   const optionsByMode = {
-    normal: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '1:1', label: '1:1' }],
-    unlimited: [{ value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '1:1', label: '1:1' }],
+    normal: [{ value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '1:1', label: '1:1' }],
+    unlimited: [{ value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '1:1', label: '1:1' }],
   };
   return optionsByMode[currentPhotoMode.value === 'unlimited' ? 'unlimited' : 'normal'];
 });
@@ -4347,7 +4349,7 @@ const selectContentType = (type: string) => {
 
   // Reset photo settings to default
   selectedPhotoQuality.value = '1K';
-  selectedPhotoRatio.value = '9:16';
+  selectedPhotoRatio.value = '16:9';
 
   // Switch content type
   contentType.value = type;
@@ -4387,7 +4389,7 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   // 下面回填的是 720P / 30s，只有超级版支持，极速版放出后默认档位不再是它，要跟着定死
   selectedNsfwVersion.value = 'super';
   selectedVideoMultimodal.value = 'multimodal';
-  selectedVideoRatio.value = '9:16';
+  selectedVideoRatio.value = '16:9';
   selectedVideoQuality.value = '720P';
   selectedVideoDuration.value = '30';
 

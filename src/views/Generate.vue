@@ -479,7 +479,7 @@
                           :class="{ active: selectedPhotoRatio == ratio.value }"
                           @click.stop="selectedPhotoRatio = ratio.value"
                         >
-                          {{ ratio.label }}
+                          <RatioIcon :value="ratio.value" />{{ ratio.label }}
                         </div>
                          </div>
                        </div>
@@ -817,7 +817,8 @@
                   <div class="selector-header">
                     <span>{{ selectedVideoQuality }}</span>
                     <span class="settings-divider"></span>
-                    <span>{{ (selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.ratioAuto') : selectedVideoRatio }}</span>
+                    <span v-if="selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'">{{ t('home.videoSettings.ratioAuto') }}</span>
+                    <span v-else class="settings-ratio"><RatioIcon :value="selectedVideoRatio" />{{ selectedVideoRatio }}</span>
                     <span class="settings-divider"></span>
                     <span>{{ (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
                     <span class="settings-line"></span>
@@ -848,7 +849,7 @@
                           :class="{ active: selectedVideoRatio == ratio.value }"
                           @click.stop="selectedVideoRatio = ratio.value"
                         >
-                          {{ ratio.label }}
+                          <RatioIcon :value="ratio.value" />{{ ratio.label }}
                         </div>
                       </div>
                     </div>
@@ -878,7 +879,7 @@
                         <input
                           type="range"
                           :min="videoProfile.durationMin"
-                          :max="30"
+                          :max="videoProfile.durationMax"
                           step="1"
                           :value="selectedVideoDuration"
                           @input="onVideoDurationChange"
@@ -1000,6 +1001,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import Header from '@/components/Header.vue';
+import RatioIcon from '@/components/RatioIcon.vue';
 import arrowIcon from '@/assets/images/publish/arrow_icon.png';
 import router from "@/router";
 import api from "@/api/index";
@@ -1185,7 +1187,7 @@ const handleBalanceInfoLoaded = (info: any) => {
 // Photo settings for bottom generator
 const showPhotoSettings = ref(false);
 const selectedPhotoQuality = ref('1K');
-const selectedPhotoRatio = ref('9:16');
+const selectedPhotoRatio = ref('16:9');
 const photoFileInput = ref<HTMLInputElement | null>(null);
 const photoEditableInputRef = ref<HTMLElement | null>(null);
 const uploadedPhotoImages = ref<any[]>([]);
@@ -1886,7 +1888,6 @@ const handlePhotoInputBlur = () => {
     if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
       return;
     }
-    checkInputCollapse();
     if (!isPhotoInputCollapsed.value) {
       photoPlaceholderDisplay.value = '';
       startPhotoTypewriter();
@@ -1918,7 +1919,6 @@ const handleVideoInputBlur = () => {
     if (activeEl && (activeEl.closest('.bottom-generator') || activeEl.closest('.input-box'))) {
       return;
     }
-    checkInputCollapse();
     if (!isVideoInputCollapsed.value) {
       videoPlaceholderDisplay.value = '';
       startVideoTypewriter();
@@ -1999,79 +1999,17 @@ const handleVideoPaste = (event: ClipboardEvent) => {
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 let lastCollapseState: boolean | null = null;
 
-const checkInputCollapse = () => {
-  if (isPhotoInputFocused.value) {
-    if (lastCollapseState !== false) {
-      isPhotoInputCollapsed.value = false;
-      isVideoInputCollapsed.value = false;
-      lastCollapseState = false;
-    }
-    return;
-  }
-
-  if (isVideoInputFocused.value) {
-    if (lastCollapseState !== false) {
-      isVideoInputCollapsed.value = false;
-      isPhotoInputCollapsed.value = false;
-      lastCollapseState = false;
-    }
-    return;
-  }
-
-  const bottomGenerator = document.querySelector('.bottom-generator');
-  if (!bottomGenerator) {
-    if (lastCollapseState !== false) {
-      isPhotoInputCollapsed.value = false;
-      isVideoInputCollapsed.value = false;
-      lastCollapseState = false;
-      startPhotoTypewriter();
-      startVideoTypewriter();
-    }
-    return;
-  }
-
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const docHeight = document.documentElement.scrollHeight;
-  const windowHeight = window.innerHeight;
-  const isNearBottom = scrollTop + windowHeight >= docHeight - 10;
-
-  const targetState = !isNearBottom;
-
-  if (lastCollapseState !== targetState) {
-    isPhotoInputCollapsed.value = targetState;
-    isVideoInputCollapsed.value = targetState;
-    lastCollapseState = targetState;
-    if (bottomActiveTab.value === 'photo') {
-      startPhotoTypewriter();
-    } else {
-      startVideoTypewriter();
-    }
-  }
-};
-
-const handleScrollForInput = () => {
-  if (scrollTimeout) {
-    clearTimeout(scrollTimeout);
-  }
-  scrollTimeout = setTimeout(() => {
-    // Blur input fields when scrolling
-    if (photoEditableInputRef.value) {
-      photoEditableInputRef.value.blur();
-    }
-    if (videoEditableInputRef.value) {
-      videoEditableInputRef.value.blur();
-    }
-    checkInputCollapse();
-  }, 150);
-};
+// 底部输入框不再自动收起。原来这里有两段逻辑：一段按页面滚动位置决定收/展，
+// 一段在滚动时先 blur 输入框再收起；失焦（点击页面其他地方）也会走同一条路。
+// 产品上去掉了，输入框保持展开，两个 collapsed 标记恒为 false。
 
 const photoQualityOptions = ref([
   { value: '1K', label: '1K' },
   { value: '2K', label: '2K' }
 ]);
 const photoRatioOptions = ref([
-  { value: '9:16', label: '9:16' },
   { value: '16:9', label: '16:9' },
+  { value: '9:16', label: '9:16' },
   { value: '1:1', label: '1:1' }
 ]);
 
@@ -2131,7 +2069,7 @@ const bottomActiveTab = ref('video');
 
 const resetPhotoSettings = () => {
   selectedPhotoQuality.value = '1K';
-  selectedPhotoRatio.value = '9:16';
+  selectedPhotoRatio.value = '16:9';
   // Reset unlimited mode when switching tabs
   currentPhotoMode.value = 'normal';
 };
@@ -5727,7 +5665,6 @@ onMounted(async () => {
 
   document.addEventListener('click', handleClickOutside);
   window.addEventListener('scroll', handleScroll);
-  window.addEventListener('scroll', handleScrollForInput);
 
   // 获取用户区域和用户信息
   getCountry();
@@ -5765,7 +5702,6 @@ watch(() => locale.value, () => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScroll);
-  window.removeEventListener('scroll', handleScrollForInput);
   window.removeEventListener('userLogout', onUserLogout);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('online', onNetworkOnline);
@@ -6029,12 +5965,25 @@ const regenerateRecord = async (record: any) => {
     if (userSelected.story_mode) {
       const mode = userSelected.story_mode == 'nsfw' ? 'unlimited' : userSelected.story_mode;
       currentVideoMode.value = mode;
-      if (mode === 'unlimited') {
-        selectedNsfwVersion.value = fromModelType(userSelected.video_nsfw_model_type);
-      }
     } else {
       currentVideoMode.value = 'normal';
     }
+    // 档位按原作回填。之前只在 unlimited 分支里回填 —— 普通模式放出极速版后，
+    // 普通模式的极速版记录重新生成会退回超级版，时长 / 分辨率却还是原作那份，
+    // 于是出现「档位是极速版、滑块停在 30s」这种对不上的状态。
+    // 原档位在「当前模式 x 目标视频模式」下不可选时，按 加强版 -> 超级版 -> 极速版 落到第一个能用的。
+    const targetMultimodal = userSelected.simple_video_generate_mode == 'first_last_frames'
+      ? 'startEndFrames'
+      : isVideoModifyMode ? 'videoModify'
+        : isVideoExtensionMode ? 'videoExtend'
+          : 'multimodal';
+    selectedNsfwVersion.value = pickVideoVersion(
+      fromModelType(userSelected.video_nsfw_model_type),
+      videoVersionsFor(effectiveVideoMode.value, targetMultimodal),
+    );
+    // 档位定了再收敛分辨率 / 比例 / 时长：回填值超出该档位范围就落回该档位的默认值
+    // （极速版 480P/768P、5-15s，超级版 720P/1080P、4-30s）。
+    migrateVideoParams();
 
     enableVideoOptimizePrompt.value = userSelected.enable_optimize_prompt === true;
 

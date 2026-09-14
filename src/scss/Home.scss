@@ -3528,3 +3528,31 @@ $pinkopacity: rgba(255,79,154,0.12);
     animation: none;
   }
 }
+
+// 比例前面的横/竖版图标（RatioIcon）配色。组件里默认是 currentColor，
+// 这里按本项目主题覆盖：未选中一套边框，选中（.active）换另一套。
+// 自定义属性会继承进组件内部，所以不用给子组件写 :deep()。
+.dropdown-item {
+  --ratio-icon-border: #666;
+  --ratio-icon-fill: rgba(255,255,255,0.10);
+  --ratio-icon-fill-opacity: 1;
+
+  &.active {
+    --ratio-icon-border: #{$pink};
+    --ratio-icon-fill: rgba(255,79,154,0.30);
+  }
+}
+
+// 收起状态下 selector-header 里也显示比例，图标沿用「未选中」那套配色，
+// 并给图标和数字之间留点间距。
+.video-settings-selector .selector-header {
+  --ratio-icon-border: #666;
+  --ratio-icon-fill: rgba(255,255,255,0.10);
+  --ratio-icon-fill-opacity: 1;
+
+  span.settings-ratio {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

@@ -311,11 +311,13 @@ const routes = [
     name: "CreateCollection",
     component: () => import("@/views/CreateCollection.vue"),
   },
-  {
-    path: "/rank",
-    name: "Ranking",
-    component: () => import("@/views/Ranking.vue"),
-  },
+  // 排行榜入口暂时隐藏，需要放出时把这段注释解开。
+  // 路由摘掉后 /rank 会落到下面的兜底规则，直接回首页。
+  // {
+  //   path: "/rank",
+  //   name: "Ranking",
+  //   component: () => import("@/views/Ranking.vue"),
+  // },
   {
     path: "/:pathMatch(.*)*",
     redirect: "/",
