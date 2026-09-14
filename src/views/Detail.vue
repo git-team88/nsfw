@@ -8,7 +8,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel" @mousedown="handleLeftPanelMouseDown">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -183,7 +183,7 @@
                 @confirm-adult="confirmAdultBrowsing"
               />
 
-              <div v-else class="image-carousel" ref="imageStackRef">
+              <div v-else class="image-carousel" ref="imageStackRef" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
                 <div class="make-action-group">
                   <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
                     <img :src="makeIcon" alt="" class="make-icon" />
@@ -374,8 +374,9 @@
 
           <!-- 合集模式（type 1 / 3）不显示右侧上下箭头，换集走右栏的合集列表和「下一集」按钮 -->
 
-          <!-- 图片 / 视频（type 4、5）没有合集，上下按钮切上一个 / 下一个作品，放在左侧 -->
-          <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode">
+          <!-- 图片 / 视频（type 4、5）改用键盘方向键 / 滚轮 / 按住左键上下拖来切作品，
+               右下角的上下箭头不再显示；其余非合集类型仍然保留这两个按钮 -->
+          <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode && !isStandaloneType">
             <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
             <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
           </div>
@@ -2048,11 +2049,12 @@ function restoreRightPanel() {
 // Handle mouse wheel on left panel for video navigation (non-collection mode only)
 let wheelDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 function handleLeftPanelWheel(event: WheelEvent) {
-  // Only in non-collection mode and for video type
+  // 合集模式换集走右栏的合集列表，滚轮不接管
   if (isCollectionMode.value) return;
-  // For image type (1) and comic type (2), don't handle wheel - use right scrollbar instead
-  if (detail.value.type === '1' || detail.value.type === '2' || detail.value.type === '4') return;
-  if (detail.value.type !== '3' && detail.value.type !== '5') return;
+  // 漫画(1) / 漫剧(2) 是往下读的长内容，滚轮留给右侧滚动条
+  if (detail.value.type === '1' || detail.value.type === '2') return;
+  // 短剧(3) / 图片(4) / 视频(5)：滚轮上下 = 上一个 / 下一个作品
+  if (detail.value.type !== '3' && detail.value.type !== '4' && detail.value.type !== '5') return;
 
   // Debounce to prevent rapid switching
   if (wheelDebounceTimer) return;
@@ -2303,7 +2305,6 @@ async function fetchDetail(newId: number) {
         post_id: newId,
         is_adult: isAdult,
         fromIndexFollow: {
-          test: 1,
           "type": contentType,
           "language": language,
           "show_nsfw": showNsfw.value
@@ -2314,7 +2315,6 @@ async function fetchDetail(newId: number) {
         post_id: newId,
         is_adult: isAdult,
         fromIndexSubscription: {
-          test: 1,
           "type": contentType,
           "language": language,
           "show_nsfw": showNsfw.value
@@ -2344,6 +2344,7 @@ async function fetchDetail(newId: number) {
       data = JSON.stringify({
         post_id: newId,
         is_adult: isAdult,
+        show_nsfw: showNsfw.value,
         fromSearch: {
           keywords: searchKeyword,
           "type": contentType,
@@ -5432,10 +5433,125 @@ function handleFullscreenChange() {
 }
 
 // Disable F12 and right-click context menu
+// --- 图片(4) / 视频(5) 上下切作品：键盘方向键、滚轮、按住左键上下拖 ---
+// 三种都只在「独立作品」（非合集）下生效；合集模式换集走右栏列表。
+
+function canSwitchWork(): boolean {
+  return !isCollectionMode.value && isStandaloneType.value;
+}
+
+// 焦点在输入框 / 富文本里时不接管方向键，否则光标没法上下移动
+function isTypingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.closest !== 'function') return false;
+  if (el.isContentEditable) return true;
+  return !!el.closest('input, textarea, select, [contenteditable="true"]');
+}
+
+// 这些元素上按下左键是要操作它们本身的，不当成切作品的手势
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.closest !== 'function') return false;
+  return !!el.closest('button, a, input, textarea, select, [contenteditable="true"], .nav-arrows, .input-area, .video-controls, .progress-bar, .control-bar');
+}
+
+// 按住左键拖动超过这个距离才算一次切换，避免手抖误触
+const DRAG_SWITCH_THRESHOLD = 60;
+// 超过这个距离就算「拖」不算「点」：抬手带出的 click 一律吞掉。
+// 不这么做的话，在图片上拖一下（没够切换距离、或者已经是第一个/最后一个）
+// 抬手就把全屏预览打开了。
+const DRAG_CLICK_CANCEL_THRESHOLD = 8;
+let dragStartY: number | null = null;
+let dragStartX = 0;
+let dragMoved = false;
+let dragSwitched = false;
+
+function handleLeftPanelMouseDown(event: MouseEvent) {
+  if (event.button !== 0) return;
+  if (!canSwitchWork()) return;
+  if (isInteractiveTarget(event.target)) return;
+  // 图片默认可拖拽，会拖出一个半透明副本挡住手势
+  if ((event.target as HTMLElement)?.tagName === 'IMG') event.preventDefault();
+
+  dragStartY = event.clientY;
+  dragStartX = event.clientX;
+  dragMoved = false;
+  dragSwitched = false;
+  window.addEventListener('mousemove', handleDragMove);
+  window.addEventListener('mouseup', handleDragEnd);
+}
+
+function handleDragMove(event: MouseEvent) {
+  if (dragStartY === null) return;
+  const dy = event.clientY - dragStartY;
+  const dx = event.clientX - dragStartX;
+  // 先记「这次是拖不是点」，和够不够切换距离无关
+  if (!dragMoved && Math.hypot(dx, dy) > DRAG_CLICK_CANCEL_THRESHOLD) dragMoved = true;
+
+  if (dragSwitched) return;
+  if (Math.abs(dy) < DRAG_SWITCH_THRESHOLD) return;
+
+  // 上划 = 下一个作品，下划 = 上一个作品（和短视频的手势一致）
+  const goingNext = dy < 0;
+  // 已经是第一个 / 最后一个时这个手势不生效，直接不切换（click 仍然会被吞掉，
+  // 因为拖都拖了，不该顺手再触发图片全屏）
+  if (goingNext ? isLast.value : isFirst.value) return;
+
+  dragSwitched = true;
+  if (goingNext) goNext();
+  else goPrev();
+  // 一次手势只切一次，剩下的移动不再响应
+  window.removeEventListener('mousemove', handleDragMove);
+}
+
+// 拖动之后抬手带出来的那一下 click 不要再落到底下的元素上 ——
+// 图片上是全屏预览，视频上是播放/暂停，都不该被一次拖拽顺手触发
+function swallowClickOnce(event: MouseEvent) {
+  event.stopPropagation();
+  event.preventDefault();
+  window.removeEventListener('click', swallowClickOnce, true);
+}
+
+function handleDragEnd() {
+  // 只要真的拖动过就吞掉 click —— 不管有没有切成功。
+  // 切换到头了、或者没拖够 60px，都不该顺手触发图片全屏 / 视频播放暂停。
+  const moved = dragMoved;
+  dragStartY = null;
+  dragMoved = false;
+  dragSwitched = false;
+  window.removeEventListener('mousemove', handleDragMove);
+  window.removeEventListener('mouseup', handleDragEnd);
+
+  if (moved) {
+    window.addEventListener('click', swallowClickOnce, true);
+    // 没有后续 click 时（比如在窗口外抬手）也要把监听摘掉
+    setTimeout(() => window.removeEventListener('click', swallowClickOnce, true), 0);
+  }
+}
+
+function stopDragTracking() {
+  dragStartY = null;
+  dragMoved = false;
+  dragSwitched = false;
+  window.removeEventListener('mousemove', handleDragMove);
+  window.removeEventListener('mouseup', handleDragEnd);
+  window.removeEventListener('click', swallowClickOnce, true);
+}
+
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
     e.preventDefault();
+    return;
   }
+
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+  if (!canSwitchWork()) return;
+  if (isTypingTarget(e.target)) return;
+
+  e.preventDefault();
+  if (e.key === 'ArrowUp') goPrev();
+  else goNext();
 }
 
 function handleContextMenu(e: MouseEvent) {
@@ -5482,6 +5598,7 @@ onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   document.removeEventListener("keydown", handleKeyDown);
   document.removeEventListener("contextmenu", handleContextMenu);
+  stopDragTracking();
 
   // Remove scroll listener
   const scrollContent = document.querySelector('.scroll-content');
