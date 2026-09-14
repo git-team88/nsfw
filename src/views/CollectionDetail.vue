@@ -496,7 +496,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
 }
 
 // isWeb3 为 true 时传进来的是 USDT 金额，原值展示；
-// 法币走 currency：美元下发的是千分之一美元，展示前除以 1000
+// 法币走 currency：美元下发的是美分，展示前除以 100
 function formatPrice(raw: string, currency?: string, isWeb3 = false): string {
   const num = parseFloat(raw);
   if (isNaN(num) || !raw) return raw;

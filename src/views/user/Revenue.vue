@@ -130,7 +130,7 @@ const pendingAmount = ref<number | null>(null);
 
 function fiatAmount(v: number | null): string {
   if (v == null) return '--';
-  // 接口下发的是千分之一美元（9900 = $9.9），展示前除以 1000
+  // 接口下发的是美分（9900 = $99），展示前除以 100
   const num = scaleFiatAmount(v, 'usd');
   // 最多两位小数、四舍五入，末尾多余的 0 去掉：
   // 9.9 -> 9.9，10 -> 10，1234.567 -> 1,234.57

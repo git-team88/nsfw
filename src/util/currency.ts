@@ -25,13 +25,13 @@ export function fiatSuffix(currency: unknown, yenUnit: string): string {
 }
 
 // 从接口返回里捞 currency，字段可能挂在不同层级，逐个试
-// 美元价格后端下发的是「千分之一美元」—— 9900 表示 $9.9，展示前要除以 1000。
+// 美元价格后端下发的是「美分」—— 9900 表示 $99，展示前要除以 100。
 // 日元金额按原值展示；USDT 是链上金额，不走这里。
-export const USD_PRICE_SCALE = 1000;
+export const USD_PRICE_SCALE = 100;
 
 // 注意这里用的是「明确下发 usd」而不是 isUsdDisplay。
 // isUsdDisplay 的兜底方向是美元（取不到 currency 也当美元，为的是显示 $ 前缀），
-// 拿它来判断要不要除以 1000 的话，接口没回 currency 时金额会凭空缩小 1000 倍。
+// 拿它来判断要不要除以 100 的话，接口没回 currency 时金额会凭空缩小 100 倍。
 const USD_CODES = ['usd', 'us', 'usa', 'dollar', 'dollars', '$', '美元', '美金'];
 function isExplicitUsd(currency: unknown): boolean {
   return USD_CODES.includes(String(currency ?? '').trim().toLowerCase());

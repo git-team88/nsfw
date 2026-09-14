@@ -753,7 +753,7 @@ function formatPrice(price: string | number): string {
   const cleanPrice = String(price).replace(/[^0-9.]/g, '');
   const parsed = parseFloat(cleanPrice);
   if (isNaN(parsed)) return cleanPrice;
-  // 美元价格下发的是千分之一美元（9900 = $9.9），展示前除以 1000。
+  // 美元价格下发的是美分（9900 = $99），展示前除以 100。
   // USDT 是链上金额、日元是原值，都不缩放。
   const num = paymentTab.value === 'usdt' ? parsed : scaleFiatAmount(parsed, fiatCurrency.value);
   const trimmed = parseFloat(num.toFixed(8)).toString();

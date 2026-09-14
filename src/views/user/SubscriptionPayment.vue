@@ -157,7 +157,7 @@ const subscriptionPrice = computed(() => {
   if (!raw) return '';
   const parsed = parseFloat(raw);
   if (isNaN(parsed)) return raw;
-  // 美元价格下发的是千分之一美元（9900 = $9.9），展示前除以 1000
+  // 美元价格下发的是美分（9900 = $99），展示前除以 100
   const num = scaleFiatAmount(parsed, subscriptionCurrency.value);
   const trimmed = parseFloat(num.toFixed(8)).toString();
   const parts = trimmed.split('.');

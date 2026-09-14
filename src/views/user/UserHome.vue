@@ -658,7 +658,7 @@ function getSubscriptionPrice() {
   if (!plans) return '0';
 
   const plan = plans as SubscriptionPlan;
-  // web3 那份是 USDT，原值展示；法币那份美元下发的是千分之一美元，要除以 1000
+  // web3 那份是 USDT，原值展示；法币那份美元下发的是美分，要除以 100
   const web3Raw = plan.web3?.price || '';
   const raw = web3Raw || plan.price || '0';
   const num = parseFloat(raw);
