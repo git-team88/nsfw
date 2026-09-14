@@ -2241,17 +2241,23 @@ const removePhotoImage = (id: string) => {
       tag.remove();
     });
 
-    // Update remaining tags' numbering
+    // 重新编号按图片在 uploadedPhotoImages 里的位置算，不能按标签在文中出现的先后。
+    // 按文中先后自增会把「先 @图片3 再 @图片1」重写成「图片1、图片2」——
+    // 提交时 <ref_N> 走的是 id 映射（见 getPhotoInputContent），两边口径就对不上了。
+    // 注意 uploadedPhotoImages 在函数开头已经把这张摘掉了，直接按现在的顺序数。
     const remainingImages = photoEditableInputRef.value.querySelectorAll('.image-tag');
-    const imageCount = { image: 0 };
     remainingImages.forEach(tag => {
-      imageCount.image++;
-      const newName = `${t('home.img')}${imageCount.image}`;
+      const tagElement = tag as HTMLElement;
+      const pos = uploadedPhotoImages.value.findIndex(
+        (img: any) => String(img.id) === String(tagElement.dataset.itemId ?? ''),
+      );
+      if (pos < 0) return;
+      const newName = `${t('home.img')}${pos + 1}`;
       const textNode = tag.querySelector('img')?.nextSibling;
       if (textNode && textNode.nodeType === Node.TEXT_NODE) {
         textNode.textContent = newName;
       }
-      (tag as HTMLElement).dataset.name = newName;
+      tagElement.dataset.name = newName;
     });
   }
 };
@@ -3548,29 +3554,35 @@ const removeVideoRef = (id: string) => {
       tag.remove();
     });
 
-    // Update remaining tags' numbering
+    // 重新编号必须按素材在 uploadedVideoRefs 里的位置算，不能按标签在文中出现的先后。
+    // 按文中先后自增会把「先 @图片3 再 @图片1」重写成「图片1、图片2」——
+    // 而提交时 <ref_N> 走的是 id 映射（见 getVideoInputContent），回显又是拿 N 当下标
+    // 取 list.filter(type)[N-1]，标签文字和真正指向的素材就分叉了。
     const remainingTags = videoEditableInputRef.value.querySelectorAll('.image-tag, .video-tag, .audio-tag');
 
     const isVideoExtendOrModify = selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify';
-    const videoCount = { video: 0, audio: 0, image: 0 };
+    // 这个函数尾部才真正从数组里摘掉，这里先算出摘掉之后的样子
+    const nextRefs = uploadedVideoRefs.value.filter((ref: any) => ref.id !== id);
     remainingTags.forEach(tag => {
       const tagElement = tag as HTMLElement;
       const tagType = tagElement.dataset.type || 'image';
-      const isUploadedVideoTag = tagElement.dataset.itemId === 'uploaded-video';
-      if (isUploadedVideoTag) {
-        const textNode = tag.querySelector('img')?.nextSibling;
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          textNode.textContent = `${t('home.video')}1`;
-        }
-      } else {
-        videoCount[tagType as keyof typeof videoCount]++;
-        const textNode = tag.querySelector('img')?.nextSibling;
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          const typeLabel = tagType === 'video' ? t('home.video') : tagType === 'audio' ? t('home.audio') : t('home.img');
-          const offset = tagType === 'video' && isVideoExtendOrModify && uploadedVideo.value ? 1 : 0;
-          textNode.textContent = `${typeLabel}${videoCount[tagType as keyof typeof videoCount] + offset}`;
-        }
+      const textNode = tag.querySelector('img')?.nextSibling;
+      if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+
+      if (tagElement.dataset.itemId === 'uploaded-video') {
+        textNode.textContent = `${t('home.video')}1`;
+        tagElement.dataset.name = textNode.textContent;
+        return;
       }
+
+      const pos = nextRefs.findIndex((v: any) => String(v.id) === String(tagElement.dataset.itemId ?? ''));
+      if (pos < 0) return;
+      const seq = nextRefs.slice(0, pos + 1).filter((i: any) => (i.type || 'image') === tagType).length;
+      const typeLabel = tagType === 'video' ? t('home.video') : tagType === 'audio' ? t('home.audio') : t('home.img');
+      // 视频修改 / 视频续写 里原视频占掉了视频1，参考视频从 2 起
+      const offset = tagType === 'video' && isVideoExtendOrModify && uploadedVideo.value ? 1 : 0;
+      textNode.textContent = `${typeLabel}${seq + offset}`;
+      tagElement.dataset.name = textNode.textContent;
     });
   }
 

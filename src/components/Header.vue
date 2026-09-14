@@ -611,7 +611,8 @@ function getUserInfo() {
         subscribeCount.value = data.data.sub_count;
         followersCount.value = data.data.follow_count;
         fansCount.value = data.data.fans_count;
-        postCount.value = data.data.book_count;
+        // 作品总数取 product_count；老接口只回 book_count，留个兜底，别显示空
+        postCount.value = data.data.product_count ?? data.data.book_count ?? 0;
         emit('userInfoLoaded', data.data);
         setUserId(String(data.data.info.id));
       } else {

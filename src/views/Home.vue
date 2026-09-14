@@ -6928,68 +6928,59 @@ const removeUploadedImage = (id: string) => {
   nextTick(() => {
     if (editableInputRef.value) {
       try {
+        // 重新编号：优先按 data-item-id 找这条素材在数组里的位置，拿不到 id 才退回 src 匹配。
+        // 原来只按 src 匹配有两个坑：
+        //   1) 素材的 image 为空串时，img.src.includes('') 恒真 —— 所有标签都会匹配到
+        //      数组第一条，全被改成「图片1」；
+        //   2) 同一张图传两次（两个 id、同一个 url），find 只会返回第一条，两个标签撞号。
+        // 音频标签更是全都用同一个本地图标，src 根本匹配不到素材，以前压根不会重新编号。
+        const findItemPos = (tag: Element, img: HTMLImageElement | null, list: any[]): number => {
+          const itemId = (tag as HTMLElement).dataset.itemId || '';
+          if (itemId) {
+            const byId = list.findIndex((it: any) => String(it.id) === itemId);
+            if (byId >= 0) return byId;
+          }
+          const src = img?.src || '';
+          if (!src) return -1;
+          return list.findIndex((it: any) => {
+            const url = it.image || it.cover || '';
+            return !!url && (url === src || src.includes(url));
+          });
+        };
+        const setTagText = (tag: Element, text: string) => {
+          const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
+          if (textNode) textNode.textContent = text;
+          (tag as HTMLElement).dataset.name = text;
+        };
+
         // Update image tags based on current content type
         const currentUploadedImages = getUploadedImages();
         const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
         imageTags.forEach(tag => {
-          const img = tag.querySelector('img');
-          if (img) {
-            const image = currentUploadedImages.value.find(imgItem =>
-              imgItem.image === img.src || img.src.includes(imgItem.image)
-            );
-            if (image) {
-              const imageIndex = currentUploadedImages.value.findIndex(imgItem => imgItem.id === image.id) + 1;
-              const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-              if (textNode) {
-                textNode.textContent = `${t('home.img')}${imageIndex}`;
-              }
-            }
-          }
+          const pos = findItemPos(tag, tag.querySelector('img'), currentUploadedImages.value);
+          if (pos >= 0) setTagText(tag, `${t('home.img')}${pos + 1}`);
         });
 
         // Update video tags
         const videoTags = editableInputRef.value.querySelectorAll('.video-tag');
         videoTags.forEach(tag => {
-          const img = tag.querySelector('img');
-          if (img) {
-            const itemId = (tag as HTMLElement).dataset.itemId;
-            if (itemId === 'uploaded-video') {
-              const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-              if (textNode) {
-                textNode.textContent = `${t('home.video')}1`;
-              }
-            } else {
-              const videoItem = uploadedVideosVideo.value.find(item =>
-                item.type === 'video' && (item.cover === img.src || item.image === img.src || img.src.includes(item.image || item.cover || ''))
-              );
-              if (videoItem) {
-                const isVideoExtendOrModify = contentType.value === 'video' && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
-                const videoIndex = uploadedVideosVideo.value.findIndex(item => item.id === videoItem.id) + (isVideoExtendOrModify ? 2 : 1);
-                const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-                if (textNode) {
-                  textNode.textContent = `${t('home.video')}${videoIndex}`;
-                }
-              }
-            }
+          if ((tag as HTMLElement).dataset.itemId === 'uploaded-video') {
+            setTagText(tag, `${t('home.video')}1`);
+            return;
           }
+          const pos = findItemPos(tag, tag.querySelector('img'), uploadedVideosVideo.value);
+          if (pos < 0) return;
+          // 视频修改 / 视频续写 里原视频占掉了视频1，参考视频从 2 起
+          const isVideoExtendOrModify = contentType.value === 'video'
+            && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+          setTagText(tag, `${t('home.video')}${pos + (isVideoExtendOrModify ? 2 : 1)}`);
         });
 
         // Update audio tags
         const audioTags = editableInputRef.value.querySelectorAll('.audio-tag');
         audioTags.forEach(tag => {
-          const img = tag.querySelector('img');
-          if (img) {
-            const audio = uploadedAudiosVideo.value.find(item =>
-              item.image === img.src || img.src.includes(item.image)
-            );
-            if (audio) {
-              const audioIndex = uploadedAudiosVideo.value.findIndex(item => item.id === audio.id) + 1;
-              const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-              if (textNode) {
-                textNode.textContent = `${t('home.audio')}${audioIndex}`;
-              }
-            }
-          }
+          const pos = findItemPos(tag, tag.querySelector('img'), uploadedAudiosVideo.value);
+          if (pos >= 0) setTagText(tag, `${t('home.audio')}${pos + 1}`);
         });
 
         // Update character tags (for comic/drama tabs)
