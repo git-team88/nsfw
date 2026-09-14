@@ -32,9 +32,11 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
     // 创作侧的 NSFW 开关：0 和 1 都放出来。
     // 0 表示站点默认不展示敏感内容，但仍允许用户主动创作；
     // 2 是强制 NSFW，本来就没有可切的余地，所以不含 2。
+    // 中国地区一律不给 —— 地区优先于内容开关。
     // 注意这个只管「创作」——浏览开关、发布页的敏感勾选、合集 is_nsfw
     // 仍然走 showSensitiveToggle（只有 1 才给）。
-    showCreateNsfwToggle: (state): boolean => state.mode == 0 || state.mode == 1,
+    showCreateNsfwToggle: (state): boolean =>
+      !state.isChinaRegion && (state.mode == 0 || state.mode == 1),
     channel: (state): number | undefined => state.mode == 2 ? 1 : undefined,
     // 创作类型标题前的「R18」前缀：只有强制展示 NSFW（生效模式 2）时才挂。
     // 中国地区已降级为 0，标题回到「视频 / 图片 / 漫画 / 小说」。
@@ -70,9 +72,9 @@ export const useContentSwitchStore = defineStore('contentSwitch', {
         const countryCode = codeRes && codeRes.code == 0 ? codeRes.data?.countryCode : ''
         const isChina = !countryCode || countryCode == 'CN'
 
-        // 中国地区即使后端下发 2（强制展示 NSFW），也降级为 0 按普通模式展示：
-        // 不显示敏感内容，也不给用户开关。其余地区维持后端下发值。
-        const effectiveMode: ContentSwitchMode = (isChina && rawMode == 2) ? 0 : rawMode
+        // 地区优先于内容开关：中国地区不管后端下发 0 / 1 / 2，一律按 0 展示 ——
+        // 不显示敏感内容，也不给任何 NSFW 开关。其余地区维持后端下发值。
+        const effectiveMode: ContentSwitchMode = isChina ? 0 : rawMode
 
         this.rawMode = rawMode
         this.isChinaRegion = isChina

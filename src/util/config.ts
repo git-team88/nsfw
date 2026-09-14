@@ -1,14 +1,14 @@
-// export const baseUrl = "https://test.addaiaroot.com/";
-// export const redirectUrl = "https://wwwtest.fansfans.ai";
-// export const aiUrl = "https://testapi.addaiaroot.com/";
+export const baseUrl = "https://test.addaiaroot.com/";
+export const redirectUrl = "https://wwwtest.fansfans.ai";
+export const aiUrl = "https://testapi.addaiaroot.com/";
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
-export const baseUrl = "https://api.moegen.ai/";
-export const redirectUrl = "https://www.fansfans.ai";
-export const aiUrl = "https://api2.moegen.ai/";
+// export const baseUrl = "https://api.moegen.ai/";
+// export const redirectUrl = "https://www.fansfans.ai";
+// export const aiUrl = "https://api2.moegen.ai/";
 
 // Chain environment: true = testnet, false = mainnet
-export const IS_TESTNET = false;
+export const IS_TESTNET = true;
 
 // BSC Testnet
 export const BSC_TESTNET_CHAIN_ID = '0x61';

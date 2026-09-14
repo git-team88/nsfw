@@ -9,8 +9,7 @@
 
 export const MB = 1024 * 1024;
 
-// 展示与回落顺序：加强版 -> 超级版 -> 极速版。
-// 每个模式的默认档位就是它可选列表里的第一个：NSFW 模式默认加强版，普通模式默认超级版。
+// 档位不可选时的回落次序。展示顺序不看这里，看 videoVersionsFor 返回的数组。
 export const VIDEO_VERSION_ORDER = ['enhanced', 'super', 'fast'] as const;
 export type VideoVersion = typeof VIDEO_VERSION_ORDER[number];
 
@@ -19,17 +18,18 @@ export type VideoVersion = typeof VIDEO_VERSION_ORDER[number];
 // 极速版本身的档位配置、限制、计价都保留着，改回 true 即可整体放出。
 export const FAST_VERSION_ENABLED = true;
 
-// 可选版本 = f(普通 or NSFW 模式, 视频模式)。数组顺序就是选择器里的展示顺序。
+// 可选版本 = f(普通 or NSFW 模式, 视频模式)。数组顺序就是选择器里的展示顺序：
+// NSFW 模式 超级版 -> 加强版 -> 极速版，普通模式 超级版 -> 极速版。
 export function videoVersionsFor(mode: string, videoMode: string): VideoVersion[] {
   const isEdit = videoMode === 'videoModify' || videoMode === 'videoExtend';
   const list: VideoVersion[] = mode === 'unlimited'
-    ? (isEdit ? ['enhanced', 'super'] : ['enhanced', 'super', 'fast'])
+    ? (isEdit ? ['super', 'enhanced'] : ['super', 'enhanced', 'fast'])
     : (isEdit ? ['super'] : ['super', 'fast']);
   return FAST_VERSION_ENABLED ? list : list.filter((v) => v !== 'fast');
 }
 
-// 该「模式 × 视频模式」下的默认档位 —— 列表首项：
-// NSFW 模式 -> 加强版，普通模式 -> 超级版；视频修改 / 续写下分别是加强版、超级版。
+// 该「模式 × 视频模式」下的默认档位 —— 可选列表的首项，两种模式都是超级版。
+// 极速版关掉时列表里没有 fast，首项仍然是超级版，不受影响。
 export function defaultVideoVersionFor(mode: string, videoMode: string): VideoVersion {
   return videoVersionsFor(mode, videoMode)[0];
 }

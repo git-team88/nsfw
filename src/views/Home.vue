@@ -174,6 +174,8 @@
                       autocorrect="off"
                       autocapitalize="none"
                       @input="handleInput"
+                      @compositionstart="handleCompositionStart"
+                      @compositionend="handleCompositionEnd"
                       @keydown="handleKeydown"
                       @click="handleInputClick"
                       @blur="handleInputBlur"
@@ -342,6 +344,8 @@
                         autocorrect="off"
                         autocapitalize="none"
                         @input="handleInput"
+                        @compositionstart="handleCompositionStart"
+                        @compositionend="handleCompositionEnd"
                         @keydown="handleKeydown"
                         @click="handleInputClick"
                         @blur="handleInputBlur"
@@ -453,6 +457,8 @@
                         autocorrect="off"
                         autocapitalize="none"
                         @input="handleInput"
+                        @compositionstart="handleCompositionStart"
+                        @compositionend="handleCompositionEnd"
                         @keydown="handleKeydown"
                         @click="handleInputClick"
                         @blur="handleInputBlur"
@@ -688,6 +694,8 @@
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
+                    @compositionstart="handleCompositionStart"
+                    @compositionend="handleCompositionEnd"
                     @keydown="handleKeydown"
                     @click="handleInputClick"
                     @blur="handleInputBlur"
@@ -800,6 +808,8 @@
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
+                    @compositionstart="handleCompositionStart"
+                    @compositionend="handleCompositionEnd"
                     @keydown="handleKeydown"
                     @click="handleInputClick"
                     @blur="handleInputBlur"
@@ -948,6 +958,8 @@
                     contenteditable="true"
                     spellcheck="false"
                     @input="handleInput"
+                    @compositionstart="handleCompositionStart"
+                    @compositionend="handleCompositionEnd"
                     @keydown="handleKeydown"
                     @click="handleInputClick"
                     @blur="handleInputBlur"
@@ -7011,7 +7023,25 @@ const getMaxInputLimit = (): number => {
 };
 
 // Handle input for @ dropdown
+// 输入法组合中（拼音 / 注音的候选还没上屏）。
+// 组合期间绝对不能动 contenteditable 的 DOM：下面 handleInput 里的 div/br 清理、
+// 超长回滚都会把正在组合的文本节点整个换掉，IME 当场失去目标，
+// 打「加一个人」会变成「j下一个人」。
+const isComposingInput = ref(false);
+
+const handleCompositionStart = () => {
+  isComposingInput.value = true;
+};
+
+const handleCompositionEnd = (event: Event) => {
+  isComposingInput.value = false;
+  // 组合结束后浏览器不一定再补一次 input，这里主动跑一遍清理与 @ 检测
+  handleInput(event);
+};
+
 const handleInput = (event: Event) => {
+  // 输入法组合没结束就什么都不做，等 compositionend 再统一处理
+  if (isComposingInput.value || (event as InputEvent).isComposing) return;
   const target = event.target as HTMLElement;
 
   // 清理 contenteditable 中浏览器自动生成的 div 包裹，避免换行问题

@@ -409,6 +409,8 @@
               contenteditable="true"
               spellcheck="false"
               @input="handlePhotoInput"
+              @compositionstart="handleCompositionStart"
+              @compositionend="handlePhotoCompositionEnd"
               @keydown="handlePhotoKeydown"
               @focus="handlePhotoInputFocus"
               @blur="handlePhotoInputBlur"
@@ -553,6 +555,8 @@
                 spellcheck="false"
                 :data-placeholder="videoPlaceholderDisplay"
                 @input="handleVideoInput"
+                @compositionstart="handleCompositionStart"
+                @compositionend="handleVideoCompositionEnd"
                 @keydown="handleVideoKeydown"
                 @click="handleVideoInputClick"
                 @focus="handleVideoInputFocus"
@@ -670,6 +674,8 @@
                   spellcheck="false"
                   :data-placeholder="videoPlaceholderDisplay"
                   @input="handleVideoInput"
+                  @compositionstart="handleCompositionStart"
+                  @compositionend="handleVideoCompositionEnd"
                   @keydown="handleVideoKeydown"
                   @click="handleVideoInputClick"
                   @focus="handleVideoInputFocus"
@@ -731,6 +737,8 @@
                   spellcheck="false"
                   :data-placeholder="videoPlaceholderDisplay"
                   @input="handleVideoInput"
+                  @compositionstart="handleCompositionStart"
+                  @compositionend="handleVideoCompositionEnd"
                   @keydown="handleVideoKeydown"
                   @click="handleVideoInputClick"
                   @focus="handleVideoInputFocus"
@@ -1336,8 +1344,15 @@ const getPhotoInputContent = () => {
   if (!photoEditableInputRef.value) return '';
 
   let content = '';
-  let imageIndex = 1;
+  // <ref_N> 的 N 必须是该图片在提交的 reference_images / others.list 里的位置，
+  // 不能按标签在文中出现的先后自增 —— 回显那边是拿 N 当数组下标取的
+  // （见 formatRefTags: list.filter(type)[N - 1]），
+  // 两边口径不一致时，先 @图片3 再 @图片1 会显示成图片1、图片2。
   const imageIndexMap = new Map<string, number>();
+  uploadedPhotoImages.value.forEach((img: any, i: number) => {
+    const key = String(img.id ?? img.image ?? '');
+    if (key) imageIndexMap.set(key, i + 1);
+  });
 
   const processNode = (node: Node) => {
     if (node.nodeType == Node.TEXT_NODE) {
@@ -1348,13 +1363,8 @@ const getPhotoInputContent = () => {
       if (element.classList.contains('image-tag')) {
         const src = element.dataset.src;
         const itemId = element.dataset.itemId;
-        const key = itemId || src;
-        if (key) {
-          let currentIndex = imageIndexMap.get(key) ?? 0;
-          if (!currentIndex) {
-            currentIndex = imageIndex++;
-            imageIndexMap.set(key, currentIndex);
-          }
+        const currentIndex = imageIndexMap.get(String(itemId ?? '')) ?? imageIndexMap.get(String(src ?? ''));
+        if (currentIndex) {
           content += `<ref_${currentIndex}>`;
           return;
         }
@@ -1363,13 +1373,8 @@ const getPhotoInputContent = () => {
       if (element.classList.contains('ref-tag')) {
         const src = element.dataset.src;
         const itemId = element.dataset.itemId;
-        const key = itemId || src;
-        if (key) {
-          let currentIndex = imageIndexMap.get(key) ?? 0;
-          if (!currentIndex) {
-            currentIndex = imageIndex++;
-            imageIndexMap.set(key, currentIndex);
-          }
+        const currentIndex = imageIndexMap.get(String(itemId ?? '')) ?? imageIndexMap.get(String(src ?? ''));
+        if (currentIndex) {
           content += `<ref_${currentIndex}>`;
           return;
         }
@@ -1389,6 +1394,8 @@ const getPhotoInputContent = () => {
 };
 
 const handlePhotoInput = (event: Event) => {
+  // 输入法组合没结束就什么都不做，等 compositionend 再统一处理
+  if (isComposingInput.value || (event as InputEvent).isComposing) return;
   if (!photoEditableInputRef.value) return;
 
   const target = photoEditableInputRef.value;
@@ -2949,7 +2956,28 @@ const insertVideoRefTag = (item: any, index: number) => {
 const showVideoRefDropdown = ref(false);
 const videoRefDropdownItems = ref<any[]>([]);
 
+// 输入法组合中（拼音 / 注音的候选还没上屏）。
+// 组合期间绝对不能动 contenteditable 的 DOM：下面的 div/br 清理会把正在组合的
+// 文本节点整个换掉，IME 当场失去目标，打「加一个人」会变成「j下一个人」。
+const isComposingInput = ref(false);
+
+const handleCompositionStart = () => {
+  isComposingInput.value = true;
+};
+
+const handleVideoCompositionEnd = () => {
+  isComposingInput.value = false;
+  handleVideoInput();
+};
+
+const handlePhotoCompositionEnd = (event: Event) => {
+  isComposingInput.value = false;
+  handlePhotoInput(event);
+};
+
 const handleVideoInput = () => {
+  // 输入法组合没结束就什么都不做，等 compositionend 再统一处理
+  if (isComposingInput.value) return;
   if (!videoEditableInputRef.value) return;
 
   const target = videoEditableInputRef.value;
@@ -3473,16 +3501,30 @@ const getVideoInputContent = () => {
   if (!videoEditableInputRef.value) return '';
 
   let content = '';
-  let imageIndex = 1;
-  let videoIndex = 1;
-  let audioIndex = 1;
+  // <ref_N> / <vid_N> / <aud_N> 的 N 必须是该素材在提交数组里的位置：
+  //   reference_images = uploadedVideoRefs.filter(type==='image')
+  //   reference_videos = [原视频?] + uploadedVideoRefs.filter(type==='video')
+  //   reference_audios = uploadedVideoRefs.filter(type==='audio')
+  // 不能按标签在文中出现的先后自增 —— 回显是拿 N 当下标取的（formatRefTags:
+  // list.filter(type)[N - 1]），口径不一致时先 @图片3 再 @图片1 会显示成图片1、图片2，
+  // 后端按同样的下标取参考图，实际用的素材也会跟着错。
   const imageIndexMap = new Map<string, number>();
   const videoIndexMap = new Map<string, number>();
   const audioIndexMap = new Map<string, number>();
 
-  if ((selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify') && uploadedVideo.value) {
-    videoIndex = 2;
-  }
+  const keyOf = (ref: any) => String(ref?.id ?? ref?.url ?? ref?.image ?? '');
+  const hasOriginVideo = (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify')
+    && Boolean(uploadedVideo.value);
+  let imageIndex = 0;
+  let videoIndex = hasOriginVideo ? 1 : 0;
+  let audioIndex = 0;
+  uploadedVideoRefs.value.forEach((ref: any) => {
+    const key = keyOf(ref);
+    if (!key) return;
+    if (ref.type === 'video') videoIndexMap.set(key, ++videoIndex);
+    else if (ref.type === 'audio') audioIndexMap.set(key, ++audioIndex);
+    else imageIndexMap.set(key, ++imageIndex);
+  });
 
   const processNode = (node: Node) => {
     if (node.nodeType == Node.TEXT_NODE) {
@@ -3500,36 +3542,15 @@ const getVideoInputContent = () => {
           return;
         }
         if (key && itemType) {
-          let tagPrefix = 'ref';
-          let indexMap = imageIndexMap;
-          let currentIndex: number;
-
-          if (itemType === 'video') {
-            tagPrefix = 'vid';
-            indexMap = videoIndexMap;
-            currentIndex = indexMap.get(key) ?? 0;
-            if (!currentIndex) {
-              currentIndex = videoIndex++;
-              indexMap.set(key, currentIndex);
-            }
-          } else if (itemType === 'audio') {
-            tagPrefix = 'aud';
-            indexMap = audioIndexMap;
-            currentIndex = indexMap.get(key) ?? 0;
-            if (!currentIndex) {
-              currentIndex = audioIndex++;
-              indexMap.set(key, currentIndex);
-            }
-          } else {
-            currentIndex = indexMap.get(key) ?? 0;
-            if (!currentIndex) {
-              currentIndex = imageIndex++;
-              indexMap.set(key, currentIndex);
-            }
+          const tagPrefix = itemType === 'video' ? 'vid' : itemType === 'audio' ? 'aud' : 'ref';
+          const indexMap = itemType === 'video' ? videoIndexMap
+            : itemType === 'audio' ? audioIndexMap
+            : imageIndexMap;
+          const currentIndex = indexMap.get(key) ?? indexMap.get(String(src ?? ''));
+          if (currentIndex) {
+            content += `<${tagPrefix}_${currentIndex}>`;
+            return;
           }
-
-          content += `<${tagPrefix}_${currentIndex}>`;
-          return;
         }
       }
 
