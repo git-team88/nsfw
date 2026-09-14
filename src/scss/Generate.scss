@@ -1552,7 +1552,7 @@ $pinkopacity: rgba(255,79,154,0.12);
       overflow-y: auto;
       font-family: inherit;
       font-size: 16px;
-      line-height: 1.5;
+      line-height: 32px;
       resize: none;
       outline: none;
       text-decoration: none;
@@ -1609,7 +1609,7 @@ $pinkopacity: rgba(255,79,154,0.12);
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 4px;
+        padding: 0 6px 0 0;
         background: $pinkopacity;
         border-radius: 4px;
         font-size: 12px;
@@ -1624,13 +1624,13 @@ $pinkopacity: rgba(255,79,154,0.12);
         -ms-user-select: none;
         position: relative;
         vertical-align: middle;
-        line-height: 24px;
+        line-height: 32px;
         z-index: -1;
 
         .image-tag-img, .audio-tag-img, .video-tag-img{
           width: auto;
-          max-width: 20px;
-          height: 20px;
+          max-width: 32px;
+          height: 32px;
           border-radius: 4px;
           object-fit: cover;
           pointer-events: none;
@@ -1669,15 +1669,15 @@ $pinkopacity: rgba(255,79,154,0.12);
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 20px;
-          height: 20px;
+          width: 28px;
+          height: 28px;
           border-radius: 4px;
           background: $cream;
 
           img {
             width: auto;
-            width: 20px;
-            height: 20px;
+            width: 28px;
+            height: 28px;
             object-fit: contain;
           }
         }

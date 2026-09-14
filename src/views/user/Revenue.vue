@@ -50,13 +50,13 @@
               <img class="metric-bg-icon" src="@/assets/images/user/cash_icon.png" alt="" />
               <div class="metric-label">{{ t("user.revenue.withdrawn") }}</div>
               <div class="metric-value">
-                {{ pendingJpy != null ? `${formatSci(pendingJpy)} ${t("user.revenue.yen")}` : "--" }}
+                {{ fiatAmount(pendingAmount) }}
               </div>
             </div>
             <div class="metric cash-withdrawing">
               <div class="metric-label">{{ t("user.revenue.cashPending") }}</div>
               <div class="metric-value">
-                {{ availableJpy != null ? `${formatSci(availableJpy)} ${t("user.revenue.yen")}` : "--" }}
+                {{ fiatAmount(availableAmount) }}
               </div>
             </div>
             <div class="cash-info">
@@ -91,7 +91,7 @@
 
     <WithdrawModal
       :visible="showCashWithdrawModal"
-      :total-withdrawable="availableJpy"
+      :total-withdrawable="availableAmount"
       @close="showCashWithdrawModal = false"
       @confirm="confirmCashWithdraw"
     />
@@ -118,14 +118,20 @@ import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import {toast} from "@/util/toast";
+import { fiatPrefix } from "@/util/currency";
 import api from "@/api/index";
 
 const { t, locale } = useI18n();
 const sidebarKey = ref("revenue");
 
-// 收益结算走日元：接口的 available_jpy / pending_jpy
-const availableJpy = ref<number | null>(null);
-const pendingJpy = ref<number | null>(null);
+// 收益走美元：接口的 available_usd / pending_usd
+const availableAmount = ref<number | null>(null);
+const pendingAmount = ref<number | null>(null);
+
+function fiatAmount(v: number | null): string {
+  if (v == null) return '--';
+  return `${fiatPrefix('usd')}${formatSci(v)}`;
+}
 
 const accountStatus = ref('');
 const isLoading = ref(false);
@@ -148,8 +154,8 @@ async function fetchBalance() {
     const data = res as any;
 
     if (data.code == 200 || data.code == 0) {
-      availableJpy.value = data.data.balance?.available_jpy || 0;
-      pendingJpy.value = data.data.balance?.pending_jpy || 0;
+      availableAmount.value = data.data.balance?.available_usd || 0;
+      pendingAmount.value = data.data.balance?.pending_usd || 0;
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -218,7 +224,7 @@ async function fetchKycDetail() {
 }
 
 function openCashWithdrawModal() {
-  if (availableJpy.value && availableJpy.value > 0) {
+  if (availableAmount.value && availableAmount.value > 0) {
     showCashWithdrawModal.value = true;
   } else {
     toast(t("user.revenue.noProfit"));

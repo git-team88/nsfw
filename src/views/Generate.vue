@@ -3726,6 +3726,40 @@ function applyVideoDraft(mode: VideoMode) {
   videoInput.value = mode === 'startEndFrames' ? text : '';
 }
 
+// 每个模式自己的分辨率 / 比例 / 时长。切走时记一份，切回来盖回去。
+// 参考文件切模式就丢（见 carryPromptToMode），参数不跟着丢 —— 视频修改 / 视频续写
+// 的时长是上传原视频时自动算出来的（原视频 4s 就顶成 5s），界面上是「自适应」根本看不见，
+// 不单独记的话切到多模态就会带出一个莫名其妙的 5s。
+// null 表示这个模式还没进去过，进去时交给 migrateVideoParams：当前值能用就沿用，不能用回默认。
+interface VideoModeParams {
+  quality: string;
+  ratio: string;
+  duration: string;
+}
+
+const videoModeParams = ref<Record<VideoMode, VideoModeParams | null>>({
+  multimodal: null,
+  startEndFrames: null,
+  videoModify: null,
+  videoExtend: null,
+});
+
+function stashVideoModeParams(mode: VideoMode) {
+  videoModeParams.value[mode] = {
+    quality: selectedVideoQuality.value,
+    ratio: selectedVideoRatio.value,
+    duration: selectedVideoDuration.value,
+  };
+}
+
+function applyVideoModeParams(mode: VideoMode) {
+  const p = videoModeParams.value[mode];
+  if (!p) return;
+  selectedVideoQuality.value = p.quality;
+  selectedVideoRatio.value = p.ratio;
+  selectedVideoDuration.value = p.duration;
+}
+
 // 切模式：只带提示词，参考文件一律不带（引用标签同时摘掉）
 function carryPromptToMode(from: VideoMode, to: VideoMode) {
   const raw = readVideoPrompt(from);
@@ -3908,7 +3942,8 @@ const selectVideoMultimodal = (value: string) => {
 
 const doSelectVideoMultimodal = (from: VideoMode, target: VideoMode) => {
   const prevLimitMode = videoLimitMode.value;
-  // 只把提示词带到目标模式，参考文件与引用标签一律不带
+  // 参考文件切模式就丢，但把当前模式的分辨率 / 比例 / 时长记一份，切回来能还原
+  stashVideoModeParams(from);
   carryPromptToMode(from, target);
   selectedVideoMultimodal.value = target;
   // 目标模式不支持当前版本（如切到视频修改，普通模式下只有超级版）就按 fast → enhanced → super 往后落
@@ -3917,11 +3952,16 @@ const doSelectVideoMultimodal = (from: VideoMode, target: VideoMode) => {
     videoVersionsFor(effectiveVideoMode.value, target),
   );
   applyVideoDraft(target);
+  applyVideoModeParams(target);
 
-  // 档位跟着版本变了就走统一的档位变更流程；否则涉及多模态的切换参数尽量沿用
-  if (videoLimitMode.value !== prevLimitMode) applyVideoLimitModeChange(prevLimitMode);
-  else if (from === 'multimodal' || target === 'multimodal') migrateVideoParams();
-  else resetVideoParams();
+  // 档位跟着版本变了就走统一的档位变更流程（文件按新档位筛掉超标的，参数回默认），
+  // 之后再把目标模式自己存过的那份参数盖回来。
+  if (videoLimitMode.value !== prevLimitMode) {
+    applyVideoLimitModeChange(prevLimitMode);
+    applyVideoModeParams(target);
+  }
+  // 分辨率 / 比例 / 时长：在目标档位里能用的就沿用，不能用的回该档位默认值
+  migrateVideoParams();
   enableVideoOptimizePrompt.value = false;
   restoreVideoInput();
 };
