@@ -88,7 +88,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
-import { fiatPrefix, fiatSuffix, pickCurrency } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount } from '@/util/currency';
 
 const router = useRouter();
 const route = useRoute();
@@ -155,8 +155,10 @@ const subscriptionPrice = computed(() => {
   const plans = subscriptionPlans.value;
   const raw = Array.isArray(plans) ? (plans.length > 0 ? plans[0].price : '') : (plans.price || '');
   if (!raw) return '';
-  const num = parseFloat(raw);
-  if (isNaN(num)) return raw;
+  const parsed = parseFloat(raw);
+  if (isNaN(parsed)) return raw;
+  // 美元价格下发的是千分之一美元（9900 = $9.9），展示前除以 1000
+  const num = scaleFiatAmount(parsed, subscriptionCurrency.value);
   const trimmed = parseFloat(num.toFixed(8)).toString();
   const parts = trimmed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');

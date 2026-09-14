@@ -118,7 +118,7 @@ import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import {toast} from "@/util/toast";
-import { fiatPrefix } from "@/util/currency";
+import { fiatPrefix, scaleFiatAmount } from "@/util/currency";
 import api from "@/api/index";
 
 const { t, locale } = useI18n();
@@ -130,7 +130,12 @@ const pendingAmount = ref<number | null>(null);
 
 function fiatAmount(v: number | null): string {
   if (v == null) return '--';
-  return `${fiatPrefix('usd')}${formatSci(v)}`;
+  // 接口下发的是千分之一美元（9900 = $9.9），展示前除以 1000
+  const num = scaleFiatAmount(v, 'usd');
+  // 最多两位小数、四舍五入，末尾多余的 0 去掉：
+  // 9.9 -> 9.9，10 -> 10，1234.567 -> 1,234.57
+  const rounded = Math.round(num * 100) / 100;
+  return `${fiatPrefix('usd')}${rounded.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 const accountStatus = ref('');

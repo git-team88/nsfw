@@ -25,6 +25,35 @@ export function fiatSuffix(currency: unknown, yenUnit: string): string {
 }
 
 // 从接口返回里捞 currency，字段可能挂在不同层级，逐个试
+// 美元价格后端下发的是「千分之一美元」—— 9900 表示 $9.9，展示前要除以 1000。
+// 日元金额按原值展示；USDT 是链上金额，不走这里。
+export const USD_PRICE_SCALE = 1000;
+
+// 注意这里用的是「明确下发 usd」而不是 isUsdDisplay。
+// isUsdDisplay 的兜底方向是美元（取不到 currency 也当美元，为的是显示 $ 前缀），
+// 拿它来判断要不要除以 1000 的话，接口没回 currency 时金额会凭空缩小 1000 倍。
+const USD_CODES = ['usd', 'us', 'usa', 'dollar', 'dollars', '$', '美元', '美金'];
+function isExplicitUsd(currency: unknown): boolean {
+  return USD_CODES.includes(String(currency ?? '').trim().toLowerCase());
+}
+
+/** 数值形态：缩放后还要参与计算时用 */
+export function scaleFiatAmount(value: unknown, currency: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return isExplicitUsd(currency) ? n / USD_PRICE_SCALE : n;
+}
+
+/** 字符串形态：直接拿去显示。不是数字就原样返回（接口回空串之类） */
+export function scaleFiatPrice(value: unknown, currency: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return raw;
+  if (!isExplicitUsd(currency)) return raw;
+  const n = Number(raw.replace(/[^0-9.\-]/g, ''));
+  if (!Number.isFinite(n)) return raw;
+  return String(parseFloat((n / USD_PRICE_SCALE).toFixed(6)));
+}
+
 export function pickCurrency(...candidates: unknown[]): string {
   for (const c of candidates) {
     const v = String(c ?? '').trim();

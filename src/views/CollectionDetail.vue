@@ -188,6 +188,7 @@
 </template>
 
 <script setup lang="ts" name="CollectionDetail">
+import { scaleFiatPrice } from '@/util/currency';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
@@ -463,7 +464,12 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         followerCount: parseInt(data.data?.user?.follower_count || data.data?.follower_count || '0'),
         isFollow: data.data?.is_follow || 0,
         isSubscribe: data.data?.is_subscribe || 0,
-        subscribePrice: formatPrice(data.data?.subscription_plans?.web3?.price || data.data?.subscribe_price || ''),
+        subscribePrice: (() => {
+          const web3Raw = data.data?.subscription_plans?.web3?.price || '';
+          return web3Raw
+            ? formatPrice(web3Raw, '', true)
+            : formatPrice(data.data?.subscribe_price || '', data.data?.subscription_plans?.currency);
+        })(),
         books_group: data.data?.books_group || []
       };
 
@@ -472,7 +478,10 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         try {
           const subscriptionRes = await api.getOthersSubscription({ blogger_id: authorId }) as any;
           if (subscriptionRes.code === 0 && subscriptionRes.data?.plan) {
-            authorInfo.value.subscribePrice = formatPrice(subscriptionRes.data.plan.web3?.price || subscriptionRes.data.plan.price || '');
+            const planWeb3 = subscriptionRes.data.plan.web3?.price || '';
+            authorInfo.value.subscribePrice = planWeb3
+              ? formatPrice(planWeb3, '', true)
+              : formatPrice(subscriptionRes.data.plan.price || '', subscriptionRes.data.plan.currency);
           }
         } catch (error) {
           console.error('Failed to fetch subscription price:', error);
@@ -486,10 +495,13 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
   }
 }
 
-function formatPrice(raw: string): string {
+// isWeb3 为 true 时传进来的是 USDT 金额，原值展示；
+// 法币走 currency：美元下发的是千分之一美元，展示前除以 1000
+function formatPrice(raw: string, currency?: string, isWeb3 = false): string {
   const num = parseFloat(raw);
   if (isNaN(num) || !raw) return raw;
-  return String(parseFloat(raw));
+  if (isWeb3) return String(parseFloat(raw));
+  return scaleFiatPrice(raw, currency);
 }
 
 function goHome() {

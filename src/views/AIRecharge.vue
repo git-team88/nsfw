@@ -242,7 +242,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
-import { fiatPrefix, fiatSuffix, pickCurrency } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount } from '@/util/currency';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -751,8 +751,11 @@ function getValidityText(expiryMonths: number | undefined) {
 
 function formatPrice(price: string | number): string {
   const cleanPrice = String(price).replace(/[^0-9.]/g, '');
-  const num = parseFloat(cleanPrice);
-  if (isNaN(num)) return cleanPrice;
+  const parsed = parseFloat(cleanPrice);
+  if (isNaN(parsed)) return cleanPrice;
+  // 美元价格下发的是千分之一美元（9900 = $9.9），展示前除以 1000。
+  // USDT 是链上金额、日元是原值，都不缩放。
+  const num = paymentTab.value === 'usdt' ? parsed : scaleFiatAmount(parsed, fiatCurrency.value);
   const trimmed = parseFloat(num.toFixed(8)).toString();
   const parts = trimmed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');

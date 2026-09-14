@@ -453,6 +453,7 @@
 </template>
 
 <script setup lang="ts" name="UserHome">
+import { scaleFiatPrice } from '@/util/currency';
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import EmptyState from "@/components/EmptyState.vue";
@@ -522,6 +523,7 @@ interface Post {
 // Subscription Plan Interface
 interface SubscriptionPlan {
   price: string;
+  currency?: string;
   web3?: { price?: string };
   id?: number;
   name?: string;
@@ -656,10 +658,13 @@ function getSubscriptionPrice() {
   if (!plans) return '0';
 
   const plan = plans as SubscriptionPlan;
-  const raw = plan.web3?.price || plan.price || '0';
+  // web3 那份是 USDT，原值展示；法币那份美元下发的是千分之一美元，要除以 1000
+  const web3Raw = plan.web3?.price || '';
+  const raw = web3Raw || plan.price || '0';
   const num = parseFloat(raw);
   if (isNaN(num)) return raw;
-  return String(parseFloat(raw));
+  if (web3Raw) return String(parseFloat(raw));
+  return scaleFiatPrice(raw, plan.currency);
 }
 
 const moreMenuRef = ref<HTMLElement | null>(null);

@@ -66,7 +66,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? 'USDT' : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}{{ t('user.paymentHistory.month') }}</div>
+                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : scaleFiatPrice(item.price, item.fiatCurrency) }} {{ item.isWeb3 ? 'USDT' : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}{{ t('user.paymentHistory.month') }}</div>
                       <div class="date">
                         {{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}
                       </div>
@@ -108,7 +108,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? 'USDT' : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
+                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : scaleFiatPrice(item.price, item.fiatCurrency) }} {{ item.isWeb3 ? 'USDT' : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}{{ getTimeUnit(item.plan_info?.billing_period || '1') }}</div>
                       <div class="date">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
                     </div>
 
@@ -146,7 +146,7 @@
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }} {{ item.isWeb3 ? item.currency : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}</div>
+                      <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : scaleFiatPrice(item.price, item.fiatCurrency) }} {{ item.isWeb3 ? item.currency : fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}</div>
                     </div>
                   </div>
                 </div>
@@ -166,7 +166,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency) }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : item.amount }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency) }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : scaleFiatPrice(item.amount, item.currency) }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -244,7 +244,7 @@ import api from "@/api/index";
 import { toast } from "@/util/toast";
 import { formatTimestamp } from "@/util/utils";
 import defaultAvatar from "@/assets/images/base/avatar.png";
-import { fiatPrefix, fiatSuffix } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, scaleFiatPrice } from '@/util/currency';
 
 const { t, locale } = useI18n();
 
