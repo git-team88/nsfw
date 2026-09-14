@@ -989,11 +989,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           z-index: -1;
 
           .character-tag-img {
-            width: auto;
-            max-width: 32px;
+            width: 32px;
             height: 32px;
-            border-radius: 2px;
+            background: #F0F0F0;
+            border-radius: 4px;
+            flex: none;
             object-fit: contain;
+            object-position: center center;
             pointer-events: none;
             user-select: none;
           }
@@ -1022,11 +1024,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           z-index: -1;
 
           .image-tag-img {
-            width: auto;
-            max-width: 32px;
+            width: 32px;
             height: 32px;
-            border-radius: 2px;
-            object-fit: cover;
+            background: #F0F0F0;
+            border-radius: 4px;
+            flex: none;
+            object-fit: contain;
+            object-position: center center;
             pointer-events: none;
             user-select: none;
           }
@@ -1055,11 +1059,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           z-index: -1;
 
           .video-tag-img {
-            width: auto;
-            max-width: 32px;
+            width: 32px;
             height: 32px;
-            border-radius: 2px;
-            object-fit: cover;
+            background: #F0F0F0;
+            border-radius: 4px;
+            flex: none;
+            object-fit: contain;
+            object-position: center center;
             pointer-events: none;
             user-select: none;
           }
@@ -1088,11 +1094,13 @@ $pinkopacity: rgba(255,79,154,0.12);
           z-index: -1;
 
           .audio-tag-img {
-            width: auto;
-            max-width: 32px;
+            width: 32px;
             height: 32px;
-            border-radius: 2px;
-            object-fit: cover;
+            background: #F0F0F0;
+            border-radius: 4px;
+            flex: none;
+            object-fit: contain;
+            object-position: center center;
             pointer-events: none;
             user-select: none;
           }
@@ -1135,7 +1143,7 @@ $pinkopacity: rgba(255,79,154,0.12);
             width: 28px;
             height: 28px;
             border-radius: 4px;
-            background: #1a1a1a;
+            background: #F0F0F0;
             overflow: hidden;
 
             img {
