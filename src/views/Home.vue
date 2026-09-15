@@ -6387,22 +6387,40 @@ const handleFileChange = async (event: Event) => {
     // 段数上限要排在格式校验前面：数量超限的提示优先级更高
     if (isVideoRefMode) {
       const pf = videoProfile.value;
+      const isUnlimited = videoLimitMode.value === 'unlimited';
+      const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
+      const newVideoCount = pickedFiles.filter((f) => f.type.startsWith('video/')).length;
+      const newAudioCount = pickedFiles.filter((f) => f.type.startsWith('audio/')).length;
+      const existVideoCount = combinedItemsVideo.value.filter((i: any) => i.type === 'video').length;
+      const existAudioCount = combinedItemsVideo.value.filter((i: any) => i.type === 'audio').length;
+
       // 极速版限制参考视频 / 音频的段数（各最多 3 段）
-      if (pf.refVideoMaxClips > 0 || pf.refAudioMaxClips > 0) {
-        const newVideoCount = pickedFiles.filter((f) => f.type.startsWith('video/')).length;
-        const newAudioCount = pickedFiles.filter((f) => f.type.startsWith('audio/')).length;
-        const existVideoCount = combinedItemsVideo.value.filter((i: any) => i.type === 'video').length;
-        const existAudioCount = combinedItemsVideo.value.filter((i: any) => i.type === 'audio').length;
-        if (pf.refVideoMaxClips > 0 && existVideoCount + newVideoCount > pf.refVideoMaxClips) {
-          toast(t('home.error.maxVideoClips', { max: pf.refVideoMaxClips }));
-          input.value = '';
-          return;
-        }
-        if (pf.refAudioMaxClips > 0 && existAudioCount + newAudioCount > pf.refAudioMaxClips) {
-          toast(t('home.error.maxAudioClips', { max: pf.refAudioMaxClips }));
-          input.value = '';
-          return;
-        }
+      if (pf.refVideoMaxClips > 0 && existVideoCount + newVideoCount > pf.refVideoMaxClips) {
+        toast(t('home.error.maxVideoClips', { max: pf.refVideoMaxClips }));
+        input.value = '';
+        return;
+      }
+      if (pf.refAudioMaxClips > 0 && existAudioCount + newAudioCount > pf.refAudioMaxClips) {
+        toast(t('home.error.maxAudioClips', { max: pf.refAudioMaxClips }));
+        input.value = '';
+        return;
+      }
+
+      // 没有段数上限的档位（加强版 / 超级版）也要兜底按条数拦，
+      // 否则数量超了会先撞上时长、比例这些格式提示 —— 和 Generate 页保持一致。
+      const maxVideoCount = isUnlimited ? 5 : 10;
+      // 改写 / 续写的原视频本身占掉一条名额
+      const maxExtraVideoCount = isEdit ? maxVideoCount - 1 : maxVideoCount;
+      if (existVideoCount + newVideoCount > maxExtraVideoCount) {
+        toast(t('home.error.maxVideoCount', { max: maxExtraVideoCount }));
+        input.value = '';
+        return;
+      }
+      const maxAudioCount = isUnlimited ? 5 : 10;
+      if (existAudioCount + newAudioCount > maxAudioCount) {
+        toast(t('home.error.maxAudioCount', { max: maxAudioCount }));
+        input.value = '';
+        return;
       }
     }
 
