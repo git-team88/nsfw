@@ -382,6 +382,7 @@
           <input
             ref="photoFileInput"
             type="file"
+            multiple
             accept="image/*"
             class="file-input"
             style="display: none;"
@@ -510,6 +511,7 @@
           <input
             ref="videoRefInput"
             type="file"
+            multiple
             :accept="'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
             class="file-input"
             style="display: none;"
@@ -2133,7 +2135,8 @@ const triggerPhotoUpload = () => {
 const handlePhotoFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
-    const files = Array.from(input.files);
+    // 批量选择后这一批可能会被裁剪，所以是 let
+    let files = Array.from(input.files);
 
     // Photo upload limits based on mode
     const maxPhotos = currentPhotoMode.value === 'unlimited' ? 10 : 7;
@@ -2142,38 +2145,41 @@ const handlePhotoFileChange = async (event: Event) => {
 
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-    // Check total count limit
-    if (uploadedPhotoImages.value.length + files.length > maxPhotos) {
-      toast(t('home.error.maxPhotoReached', { max: maxPhotos }));
-      input.value = '';
-      return;
+    // 批量选择：能收多少收多少 —— 不合格式的跳过，超出数量的截掉，最后只弹一条提示
+    const kept: File[] = [];
+    let firstError = '';
+    for (const file of files) {
+      let err = '';
+      if (!validImageTypes.includes(file.type)) {
+        err = t('home.error.invalidPhotoFormat');
+      } else if (file.size > maxFileSizeBytes) {
+        err = t('home.error.maxPhotoSize', { max: maxFileSizeMB });
+      } else if (await isImageCorrupted(file)) {
+        err = t('home.error.corruptedImage');
+      } else {
+        err = await imageDimensionError(file);
+      }
+      if (err) {
+        if (!firstError) firstError = err;
+        continue;
+      }
+      kept.push(file);
     }
 
-    // Check individual file format, size and corruption
-    for (const file of files) {
-      if (!validImageTypes.includes(file.type)) {
-        toast(t('home.error.invalidPhotoFormat'));
-        input.value = '';
-        return;
-      }
-      if (file.size > maxFileSizeBytes) {
-        toast(t('home.error.maxPhotoSize', { max: maxFileSizeMB }));
-        input.value = '';
-        return;
-      }
-      // Check if image is corrupted (broken image)
-      const isCorrupted = await isImageCorrupted(file);
-      if (isCorrupted) {
-        toast(t('home.error.corruptedImage'));
-        input.value = '';
-        return;
-      }
-      // Check image dimensions (ratio and size)
-      const validDimensions = await validateImageDimensions(file);
-      if (!validDimensions) {
-        input.value = '';
-        return;
-      }
+    const capacity = Math.max(0, maxPhotos - uploadedPhotoImages.value.length);
+    const overflow = kept.length > capacity;
+    files = kept.slice(0, capacity);
+
+    // 数量超限优先提示，其次才是具体的格式错误
+    if (overflow) {
+      toast(t('home.error.maxPhotoReached', { max: maxPhotos }));
+    } else if (firstError) {
+      toast(firstError);
+    }
+
+    if (!files.length) {
+      input.value = '';
+      return;
     }
 
     isUploading.value = true;
@@ -2272,8 +2278,8 @@ const removePhotoImage = (id: string) => {
   }
 };
 
-const validateVideoDimensions = async (file: File): Promise<boolean> => {
-  return new Promise((resolve) => {
+const videoDimensionError = async (file: File): Promise<string> => {
+  return new Promise<string>((resolve) => {
     const video = document.createElement('video');
     video.preload = 'metadata';
     const url = URL.createObjectURL(file);
@@ -2281,31 +2287,34 @@ const validateVideoDimensions = async (file: File): Promise<boolean> => {
       URL.revokeObjectURL(url);
       const width = video.videoWidth;
       const height = video.videoHeight;
-      if (width === 0 || height === 0) { resolve(true); return; }
+      if (width === 0 || height === 0) { resolve(''); return; }
       const ratio = width / height;
       // 极速版 [0.4,2.5] / [256,5760]，加强版 1:8~8:1 / [240,4096]，超级版与普通 [0.4,2.5] / [300,6000]
       const pf = videoProfile.value;
       if (ratio < pf.ratioMin || ratio > pf.ratioMax) {
-        toast(t('home.error.videoRatioLimit'));
-        resolve(false); return;
+        resolve(t('home.error.videoRatioLimit')); return;
       }
       if (width < pf.dimMin || width > pf.dimMax || height < pf.dimMin || height > pf.dimMax) {
-        toast(t('home.error.videoDimensionLimit'));
-        resolve(false); return;
+        resolve(t('home.error.videoDimensionLimit')); return;
       }
       // 超级版还卡宽 × 高：[614×664, 3326×2494]。areaMax 为 0 的档位不校验。
       if (pf.areaMax > 0 && (width * height < pf.areaMin || width * height > pf.areaMax)) {
-        toast(t('home.error.videoAreaLimit'));
-        resolve(false); return;
+        resolve(t('home.error.videoAreaLimit')); return;
       }
-      resolve(true);
+      resolve('');
     };
     video.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve(true);
+      resolve('');
     };
     video.src = url;
   });
+};
+
+const validateVideoDimensions = async (file: File): Promise<boolean> => {
+  const err = await videoDimensionError(file);
+  if (err) toast(err);
+  return !err;
 };
 
 const getMediaDuration = (file: File): Promise<number> => {
@@ -2403,52 +2412,50 @@ const getImageDimensions = (file: File): Promise<{ width: number; height: number
   });
 };
 
-const validateImageDimensions = async (file: File): Promise<boolean> => {
+const imageDimensionError = async (file: File): Promise<string> => {
   const { width, height } = await getImageDimensions(file);
-  if (width === 0 || height === 0) return false;
+  if (width === 0 || height === 0) return t('home.error.corruptedImage');
   const ratio = width / height;
   const isPhotoUnlimited = bottomActiveTab.value === 'photo' && currentPhotoMode.value === 'unlimited';
   const isVideoUnlimited = bottomActiveTab.value === 'video' && videoLimitMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
-      toast(t('home.error.imageRatioLimit'));
-      return false;
+      return t('home.error.imageRatioLimit');
     }
     if (width < 14 || height < 14) {
-      toast(t('home.error.imageDimensionLimit'));
-      return false;
+      return t('home.error.imageDimensionLimit');
     }
   } else if (bottomActiveTab.value === 'video' && videoLimitMode.value === 'fast') {
     // 极速版视频参考图片：宽高比 [0.4, 2.5]，像素 [256, 5760]
     if (ratio < 0.4 || ratio > 2.5) {
-      toast(t('home.error.imageRatioLimit'));
-      return false;
+      return t('home.error.imageRatioLimit');
     }
     if (width < 256 || width > 5760 || height < 256 || height > 5760) {
-      toast(t('home.error.imageDimensionLimit'));
-      return false;
+      return t('home.error.imageDimensionLimit');
     }
   } else if (isVideoUnlimited) {
     // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
     if (ratio < 1 / 8 || ratio > 8) {
-      toast(t('home.error.imageRatioLimit'));
-      return false;
+      return t('home.error.imageRatioLimit');
     }
     if (width < 240 || width > 8000 || height < 240 || height > 8000) {
-      toast(t('home.error.imageDimensionLimit'));
-      return false;
+      return t('home.error.imageDimensionLimit');
     }
   } else {
     if (ratio < 0.4 || ratio > 2.5) {
-      toast(t('home.error.imageRatioLimit'));
-      return false;
+      return t('home.error.imageRatioLimit');
     }
     if (width < 300 || width > 6000 || height < 300 || height > 6000) {
-      toast(t('home.error.imageDimensionLimit'));
-      return false;
+      return t('home.error.imageDimensionLimit');
     }
   }
-  return true;
+  return '';
+};
+
+const validateImageDimensions = async (file: File): Promise<boolean> => {
+  const err = await imageDimensionError(file);
+  if (err) toast(err);
+  return !err;
 };
 
 const captureVideoFirstFrame = (file: File): Promise<string> => {
@@ -2537,6 +2544,27 @@ const handleVideoRefUpload = async (event: Event) => {
     const maxVideoSizeBytes = pf.videoMaxSize;
     const maxAudioSizeBytes = pf.audioMaxSize > 0 ? pf.audioMaxSize : 15 * MB;
 
+    // 数量先于格式：这一批只要数量超了就整批不收，提示也以数量为准。
+    // 视频 tab 的参考文件不做部分收下 —— 少一个文件出来的效果和用户预期差太远。
+    if (selectedVideoMultimodal.value == 'multimodal') {
+      const existingImages = uploadedVideoRefs.value.filter(ref => ref.type === 'image').length;
+      const newImages = files.filter(f => !f.type.startsWith('video/') && !f.type.startsWith('audio/')).length;
+
+      const maxImages = isUnlimited ? 10 : 30;
+
+      if (existingImages + newImages > maxImages) {
+        toast(t('home.error.maxPhotoReached', { max: maxImages }));
+        input.value = '';
+        return;
+      }
+    } else {
+      if (uploadedVideoRefs.value.length + files.length > 4) {
+        toast(t('home.error.maxItemsReached'));
+        input.value = '';
+        return;
+      }
+    }
+
     // Check file size limits for multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
       // 极速版限制参考视频 / 音频的段数（各最多 3 段）
@@ -2555,6 +2583,27 @@ const handleVideoRefUpload = async (event: Event) => {
           input.value = '';
           return;
         }
+      }
+
+      // Check video and audio count limits
+      const existingVideos = uploadedVideoRefs.value.filter(ref => ref.type === 'video').length;
+      const existingAudios = uploadedVideoRefs.value.filter(ref => ref.type === 'audio').length;
+      const newVideos = files.filter(f => f.type.startsWith('video/')).length;
+      const newAudios = files.filter(f => f.type.startsWith('audio/')).length;
+
+      const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
+      const maxVideos = isUnlimited ? 5 : 10;
+      const maxExtraVideos = isEdit ? maxVideos - 1 : maxVideos;
+
+      if (existingVideos + newVideos > maxExtraVideos) {
+        toast(t('home.error.maxVideoCount', { max: maxExtraVideos }));
+        input.value = '';
+        return;
+      }
+      if (existingAudios + newAudios > (isUnlimited ? 5 : 10)) {
+        toast(t('home.error.maxAudioCount', { max: isUnlimited ? 5 : 10 }));
+        input.value = '';
+        return;
       }
       const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       for (const file of files) {
@@ -2617,46 +2666,8 @@ const handleVideoRefUpload = async (event: Event) => {
         }
       }
 
-      // Check video and audio count limits
-      const existingVideos = uploadedVideoRefs.value.filter(ref => ref.type === 'video').length;
-      const existingAudios = uploadedVideoRefs.value.filter(ref => ref.type === 'audio').length;
-      const newVideos = files.filter(f => f.type.startsWith('video/')).length;
-      const newAudios = files.filter(f => f.type.startsWith('audio/')).length;
-
-      const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
-      const maxVideos = isUnlimited ? 5 : 10;
-      const maxExtraVideos = isEdit ? maxVideos - 1 : maxVideos;
-
-      if (existingVideos + newVideos > maxExtraVideos) {
-        toast(t('home.error.maxVideoCount', { max: maxExtraVideos }));
-        input.value = '';
-        return;
-      }
-      if (existingAudios + newAudios > (isUnlimited ? 5 : 10)) {
-        toast(t('home.error.maxAudioCount', { max: isUnlimited ? 5 : 10 }));
-        input.value = '';
-        return;
-      }
     }
 
-    if (selectedVideoMultimodal.value == 'multimodal') {
-      const existingImages = uploadedVideoRefs.value.filter(ref => ref.type === 'image').length;
-      const newImages = files.filter(f => !f.type.startsWith('video/') && !f.type.startsWith('audio/')).length;
-
-      const maxImages = isUnlimited ? 10 : 30;
-
-      if (existingImages + newImages > maxImages) {
-        toast(t('home.error.maxPhotoReached', { max: maxImages }));
-        input.value = '';
-        return;
-      }
-    } else {
-      if (uploadedVideoRefs.value.length + files.length > 4) {
-        toast(t('home.error.maxItemsReached'));
-        input.value = '';
-        return;
-      }
-    }
 
     // Check video/audio total duration limit for video multimodal mode
     if (selectedVideoMultimodal.value == 'multimodal' || selectedVideoMultimodal.value == 'videoModify' || selectedVideoMultimodal.value == 'videoExtend') {
