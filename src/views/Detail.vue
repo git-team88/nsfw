@@ -115,11 +115,11 @@
                       <div class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration || 0) }}</div>
                     </div>
                     <div class="controls-right">
-                      <div class="subtitle-control" v-if="subtitles.length > 0 && !isStandaloneType" @click.stop="showSubtitleMenu = !showSubtitleMenu">
+                      <div class="subtitle-control" v-if="availableSubtitleLangs.length > 0 && !isStandaloneType" @click.stop="showSubtitleMenu = !showSubtitleMenu">
                           <span class="subtitle-label">{{ t('detail.subtitle') }}：{{ selectedSubtitleLang ? t(subtitleLangMap[selectedSubtitleLang] || '') : t('detail.subtitleNone') }}</span>
                         <svg class="subtitle-arrow" viewBox="0 0 12 12" width="10" height="10"><path d="M3 5l3 3 3-3" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <div class="subtitle-menu" v-show="showSubtitleMenu" @click.stop>
-                          <div class="subtitle-option" :class="{ active: selectedSubtitleLang === lang }" v-for="lang in subtitleMenuLangs" :key="lang" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang]) }}</div>
+                          <div class="subtitle-option" v-for="lang in subtitleMenuLangs" :key="lang" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang] || '') }}</div>
                         </div>
                       </div>
                        <div class="volume-control" :class="{ 'volume-active': showVolumeSlider || isDraggingVolume }" @mouseenter="showVolumeSlider = true" @mouseleave="onVolumeControlLeave">
@@ -1022,12 +1022,59 @@ const isDraggingProgress = ref(false);
 const progressBarRef = ref<HTMLElement | null>(null);
 const bufferedPercent = ref(0);
 const subtitles = ref<{ lang: string; url: string }[]>([]);
+// 当前这份字幕是哪一集的。合集里切集要靠它判断需不需要重新拉
+const subtitlesPostId = ref('');
 const selectedSubtitleLang = ref<string>('');
 const showSubtitleMenu = ref(false);
 const subtitleCues = ref<{ start: number; end: number; text: string }[]>([]);
 const currentSubtitleText = ref('');
 
 const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: 'novel.language.tc', jp: 'novel.language.jp', en: 'novel.language.en' };
+
+// 字幕语言的固定顺序。既是下拉项的排列顺序（后端返回顺序不保证稳定，
+// 排一下菜单才不会每次进来都跳），也是「导航语言没有对应字幕」时的兜底优先级：
+// 英语 -> 日语 -> 中文简体 -> 中文繁体。
+const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc'];
+
+// 已经选了某个语言时，下拉项按漫剧自身的语言排（作品自身的语言本来就不在列表里）。
+// 认不出作品语言就退回 SUBTITLE_LANG_ORDER。
+const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
+  cn: ['jp', 'en', 'tc'],
+  tc: ['jp', 'en', 'cn'],
+  jp: ['en', 'tc', 'cn'],
+  en: ['jp', 'tc', 'cn'],
+};
+
+/** 导航语言换算成后端的字幕语言码（后端把简体叫 cn，导航里叫 zh） */
+function navSubtitleLang(): string {
+  return locale.value == 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value == 'jp' ? 'jp' : 'en';
+}
+
+// 真正能选的字幕语言：后端返回了哪些就有哪些，去掉作品自身的语言（漫剧是中文简体
+// 就不给简体字幕）和认不出来的语言码，再按固定顺序排。
+// 这个数组为空 = 一条字幕都没有 = 整个开关不显示。
+const availableSubtitleLangs = computed(() => {
+  const ownLang = detail.value?.language || '';
+  const langs = subtitles.value
+    .map(s => s.lang)
+    .filter(l => !!subtitleLangMap[l] && l !== ownLang);
+  return SUBTITLE_LANG_ORDER.filter(l => langs.includes(l));
+});
+
+/** 默认字幕：和导航语言一致的优先，没有就按 SUBTITLE_LANG_ORDER 取第一个能用的 */
+function pickDefaultSubtitleLang(): string {
+  const langs = availableSubtitleLangs.value;
+  if (!langs.length) return '';
+  const nav = navSubtitleLang();
+  return langs.includes(nav) ? nav : langs[0];
+}
+
+/** 字幕列表就位后统一走这里：记下是哪一集的，并挑出默认选中项 */
+function applySubtitleList(list: any, postId: number | string) {
+  subtitles.value = Array.isArray(list) ? list : [];
+  subtitlesPostId.value = String(postId || '');
+  selectedSubtitleLang.value = pickDefaultSubtitleLang();
+}
 
 async function loadSubtitleCues() {
   subtitleCues.value = [];
@@ -1097,42 +1144,15 @@ function updateCurrentSubtitle() {
   currentSubtitleText.value = cue?.text || '';
 }
 
-function enableSubtitleTrack() {
-  if (!videoRef.value || !selectedSubtitleLang.value) return;
-  nextTick(() => {
-    if (!videoRef.value) return;
-    const tracks = videoRef.value.textTracks;
-    for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = 'hidden';
-    }
-    for (let i = 0; i < tracks.length; i++) {
-      if (tracks[i].language === selectedSubtitleLang.value) {
-        tracks[i].mode = 'showing';
-        break;
-      }
-    }
-  });
-  setTimeout(() => {
-    if (!videoRef.value) return;
-    const tracks = videoRef.value.textTracks;
-    for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = 'hidden';
-    }
-    for (let i = 0; i < tracks.length; i++) {
-      if (tracks[i].language === selectedSubtitleLang.value) {
-        tracks[i].mode = 'showing';
-        break;
-      }
-    }
-  }, 1000);
-}
-
-watch([() => videoRef.value, () => subtitles.value.length, selectedSubtitleLang], () => {
-  enableSubtitleTrack();
-});
-
+// 单选菜单。「无」固定排在最前且一直在（随时可以关字幕），后面的语言分两种排法：
+//   当前是「无」        -> 英语 -> 日语 -> 中文简体 -> 中文繁体
+//   当前选了某个语言    -> 按漫剧自身语言定的顺序（SUBTITLE_MENU_ORDER），且不列出当前选中的那个
 const subtitleMenuLangs = computed(() => {
-  const langs = subtitles.value.map(s => s.lang).filter(l => l !== selectedSubtitleLang.value);
+  const available = availableSubtitleLangs.value;
+  if (!selectedSubtitleLang.value) return ['none', ...available];
+
+  const order = SUBTITLE_MENU_ORDER[detail.value?.language || ''] || SUBTITLE_LANG_ORDER;
+  const langs = order.filter(l => available.includes(l) && l !== selectedSubtitleLang.value);
   return ['none', ...langs];
 });
 
@@ -2258,27 +2278,40 @@ function setSeoMeta(title: string, description: string, type: string) {
 }
 
 // API Data Load
-async function fetchSubtitles(postId: number) {
+/**
+ * 拉某一集的字幕。
+ *
+ * 合集里每一集都是独立的 post，字幕各自一套 —— 原来只在 fetchDetail 里拉一次，
+ * 切到下一集时上一集的字幕还挂在新视频上对着轴放，这里补上。
+ */
+async function loadSubtitles(postId: number | string) {
+  if (!postId || isStandaloneType.value || detail.value?.type != '3') {
+    applySubtitleList([], postId);
+    return;
+  }
+
   try {
-    const res = await api.getSubtitlesPublic({ post_id: postId }) as any;
-    if (res.code == 0 || res.code == 200) {
-      const list = res.data?.subtitles || [];
-      subtitles.value = Array.isArray(list) ? list : [];
-      const navLang = locale.value == 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value == 'jp' ? 'jp' : 'en';
-      if (subtitles.value.some(s => s.lang == navLang)) {
-        selectedSubtitleLang.value = navLang;
-      } else {
-        selectedSubtitleLang.value = '';
-      }
-    } else {
-      subtitles.value = [];
-      selectedSubtitleLang.value = '';
-    }
+    const res = (await api.getSubtitlesPublic({ post_id: postId })) as any;
+    const ok = res && (res.code == 0 || res.code == 200);
+    applySubtitleList(ok ? res.data?.subtitles || res.data || [] : [], postId);
   } catch {
-    subtitles.value = [];
-    selectedSubtitleLang.value = '';
+    applySubtitleList([], postId);
   }
 }
+
+// 正在播的那一集。合集模式下是当前章节，否则就是详情本身
+const playingPostId = computed(() => {
+  if (isCollectionMode.value && currentCollection.value?.post_id) {
+    return String(currentCollection.value.post_id);
+  }
+  return String(detail.value?.id || '');
+});
+
+watch(playingPostId, (id) => {
+  // 进详情时那一集的字幕在 fetchDetail 里和详情并行拉过了，别重复请求
+  if (!id || id === subtitlesPostId.value) return;
+  loadSubtitles(id);
+});
 
 async function fetchDetail(newId: number) {
   await contentSwitch.ensureLoaded();
@@ -2475,18 +2508,15 @@ async function fetchDetail(newId: number) {
         detail.value.type
       );
 
-      if (detail.value.type === '3' && subRes && ((subRes as any).code === 0 || (subRes as any).code === 200)) {
-        const list = (subRes as any).data?.subtitles || (subRes as any).data || [];
-        if (Array.isArray(list) && list.length > 0) {
-          subtitles.value = list;
-          const navLang = locale.value === 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value === 'jp' ? 'jp' : 'en';
-          if (subtitles.value.some(s => s.lang === navLang)) {
-            selectedSubtitleLang.value = navLang;
-          } else {
-            selectedSubtitleLang.value = '';
-          }
-        }
-      }
+      // 字幕。不是漫剧、或者这条没有字幕，都要显式清空 ——
+      // 否则从有字幕的作品翻到没字幕的作品，上一条的字幕还留在开关里。
+      const subOk = subRes && ((subRes as any).code === 0 || (subRes as any).code === 200);
+      applySubtitleList(
+        detail.value.type === '3' && subOk
+          ? (subRes as any).data?.subtitles || (subRes as any).data || []
+          : [],
+        newId,
+      );
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
