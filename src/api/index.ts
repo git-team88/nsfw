@@ -1129,6 +1129,14 @@ export default {
       data,
     }),
 
+  /** COS 分片直传用的 STS 临时凭证，有效期 2 小时。走 aiUrl，不是 baseUrl */
+  getCosCredential: () =>
+    axios.request({
+      url: "common/cos_upload_credential",
+      method: "GET",
+      baseURL: aiUrl,
+    }),
+
   photoCreate: (data: any) =>
     axios.request({
       url: "ai/photo/create",

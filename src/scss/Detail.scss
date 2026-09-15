@@ -266,6 +266,13 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
 .left-panel {
   flex: 1;
   height: 100vh;
+  // 图片 / 视频（type 4、5）用上下滑动切作品：纵向手势交给我们自己处理，
+  // 否则触摸屏上浏览器会把它判成页面滚动，直接派发 pointercancel 把手势掐掉。
+  // 横向仍然留给浏览器（图片左右切换）。漫画 / 短剧不加这个类，保持原生上下滚动。
+  &.swipe-nav {
+    touch-action: pan-x;
+  }
+
   background: #1F1F21;
   position: relative;
   display: flex;

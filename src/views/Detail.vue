@@ -8,7 +8,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1' }" @wheel="handleLeftPanelWheel" @mousedown="handleLeftPanelMouseDown">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1', 'swipe-nav': isStandaloneType && !isCollectionMode }" @wheel="handleLeftPanelWheel" @pointerdown="handleLeftPanelPointerDown">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -800,7 +800,7 @@
               <input
                 ref="videoInputRef"
                 type="file"
-                accept="video/*"
+                accept="video/mp4,video/quicktime"
                 class="hidden-file-input"
                 @change="handleFileUpload"
               />
@@ -1258,6 +1258,28 @@ const isInputEmpty = ref(true); // Track if input is empty
 const MAX_LENGTH = 280;
 const MAX_IMAGES = 4;
 const MAX_VIDEOS = 1;
+// 评论区视频的限制。发布页（漫剧 5GB / 视频不限、都是 1 小时）面向的是正片，
+// 评论区只是附一段短视频，单独收紧一档，别让人往评论里塞几个 G 的文件。
+const COMMENT_VIDEO_EXTENSIONS = ['mp4', 'mov'];
+const COMMENT_VIDEO_MAX_SIZE = 200 * 1024 * 1024;
+const COMMENT_VIDEO_MAX_DURATION = 5 * 60;
+
+/**
+ * 评论视频的格式与大小校验。
+ * 时长要等元数据加载完才知道，放在 uploadVideo 里判，不在这里。
+ */
+function validateCommentVideo(file: File): boolean {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!COMMENT_VIDEO_EXTENSIONS.includes(ext)) {
+    toast(t('detail.videoFormatError'));
+    return false;
+  }
+  if (file.size > COMMENT_VIDEO_MAX_SIZE) {
+    toast(t('detail.videoSizeError'));
+    return false;
+  }
+  return true;
+}
 
 // Dropdown state for # and @
 const showDropdown = ref(false);
@@ -4647,6 +4669,8 @@ async function handleFileUpload(event: Event) {
         break;
       }
 
+      if (!validateCommentVideo(file)) break;
+
       // Upload video using three-step process
       await uploadVideo(file);
     } else {
@@ -4673,14 +4697,27 @@ async function uploadVideo(file: File) {
   isLoading.value = true;
 
   try {
+    // 时长要等元数据加载完才知道。顺带补上 onerror 和超时兜底 ——
+    // 原来只挂了 onloadedmetadata，选到坏文件这个 Promise 永远不 resolve，
+    // isLoading 会一直转下去。
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
-    await new Promise((resolve) => {
-      video.onloadedmetadata = () => {
-        videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
-        resolve(true);
-      };
+    const duration = await new Promise<number>((resolve) => {
+      video.onloadedmetadata = () => resolve(video.duration);
+      video.onerror = () => resolve(NaN);
+      setTimeout(() => resolve(NaN), 15000);
     });
+    URL.revokeObjectURL(video.src);
+
+    if (!Number.isFinite(duration) || duration <= 0) {
+      toast(t('detail.videoCorruptedError'));
+      return;
+    }
+    if (duration > COMMENT_VIDEO_MAX_DURATION) {
+      toast(t('detail.videoDurationError'));
+      return;
+    }
+    videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
 
     videoUrl.value = await uploadVideoFile(file, (percent) => {
       loadText.value = `${t('detail.uploading')} ${percent}%`;
@@ -5455,34 +5492,46 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   return !!el.closest('button, a, input, textarea, select, [contenteditable="true"], .nav-arrows, .input-area, .video-controls, .progress-bar, .control-bar');
 }
 
-// 按住左键拖动超过这个距离才算一次切换，避免手抖误触
+// 上下拖动（鼠标按住左键 / 手指滑动）超过这个距离才算一次切换，避免手抖误触
 const DRAG_SWITCH_THRESHOLD = 60;
 // 超过这个距离就算「拖」不算「点」：抬手带出的 click 一律吞掉。
 // 不这么做的话，在图片上拖一下（没够切换距离、或者已经是第一个/最后一个）
 // 抬手就把全屏预览打开了。
 const DRAG_CLICK_CANCEL_THRESHOLD = 8;
+let dragPointerId: number | null = null;
 let dragStartY: number | null = null;
 let dragStartX = 0;
 let dragMoved = false;
 let dragSwitched = false;
 
-function handleLeftPanelMouseDown(event: MouseEvent) {
+// 用 Pointer Events 而不是 mouse* —— 一套同时覆盖鼠标、触摸屏和手写笔。
+// 触屏上不会有合成的 mousemove（合成的 mousedown/mouseup 是 touchend 之后才补发的），
+// 只监听 mouse* 的话手指划动永远进不来。
+function handleLeftPanelPointerDown(event: PointerEvent) {
+  // 鼠标只认左键；触摸和手写笔的 button 同样是 0
   if (event.button !== 0) return;
   if (!canSwitchWork()) return;
   if (isInteractiveTarget(event.target)) return;
-  // 图片默认可拖拽，会拖出一个半透明副本挡住手势
-  if ((event.target as HTMLElement)?.tagName === 'IMG') event.preventDefault();
+  // 图片默认可拖拽，鼠标拖会拖出一个半透明副本挡住手势；
+  // 触摸不走原生拖拽，这里不拦，免得把点击也一起吃掉
+  if (event.pointerType === 'mouse' && (event.target as HTMLElement)?.tagName === 'IMG') {
+    event.preventDefault();
+  }
 
+  dragPointerId = event.pointerId;
   dragStartY = event.clientY;
   dragStartX = event.clientX;
   dragMoved = false;
   dragSwitched = false;
-  window.addEventListener('mousemove', handleDragMove);
-  window.addEventListener('mouseup', handleDragEnd);
+  window.addEventListener('pointermove', handleDragMove);
+  window.addEventListener('pointerup', handleDragEnd);
+  // 浏览器把手势接管过去（比如判成页面滚动）时会派发 pointercancel，要一起收尾
+  window.addEventListener('pointercancel', handleDragEnd);
 }
 
-function handleDragMove(event: MouseEvent) {
-  if (dragStartY === null) return;
+function handleDragMove(event: PointerEvent) {
+  // 多指时只跟第一根手指，别被第二根带跑
+  if (dragStartY === null || event.pointerId !== dragPointerId) return;
   const dy = event.clientY - dragStartY;
   const dx = event.clientX - dragStartX;
   // 先记「这次是拖不是点」，和够不够切换距离无关
@@ -5501,7 +5550,7 @@ function handleDragMove(event: MouseEvent) {
   if (goingNext) goNext();
   else goPrev();
   // 一次手势只切一次，剩下的移动不再响应
-  window.removeEventListener('mousemove', handleDragMove);
+  window.removeEventListener('pointermove', handleDragMove);
 }
 
 // 拖动之后抬手带出来的那一下 click 不要再落到底下的元素上 ——
@@ -5512,15 +5561,18 @@ function swallowClickOnce(event: MouseEvent) {
   window.removeEventListener('click', swallowClickOnce, true);
 }
 
-function handleDragEnd() {
+function handleDragEnd(event?: PointerEvent) {
+  if (event && dragPointerId !== null && event.pointerId !== dragPointerId) return;
   // 只要真的拖动过就吞掉 click —— 不管有没有切成功。
   // 切换到头了、或者没拖够 60px，都不该顺手触发图片全屏 / 视频播放暂停。
   const moved = dragMoved;
+  dragPointerId = null;
   dragStartY = null;
   dragMoved = false;
   dragSwitched = false;
-  window.removeEventListener('mousemove', handleDragMove);
-  window.removeEventListener('mouseup', handleDragEnd);
+  window.removeEventListener('pointermove', handleDragMove);
+  window.removeEventListener('pointerup', handleDragEnd);
+  window.removeEventListener('pointercancel', handleDragEnd);
 
   if (moved) {
     window.addEventListener('click', swallowClickOnce, true);
@@ -5530,11 +5582,13 @@ function handleDragEnd() {
 }
 
 function stopDragTracking() {
+  dragPointerId = null;
   dragStartY = null;
   dragMoved = false;
   dragSwitched = false;
-  window.removeEventListener('mousemove', handleDragMove);
-  window.removeEventListener('mouseup', handleDragEnd);
+  window.removeEventListener('pointermove', handleDragMove);
+  window.removeEventListener('pointerup', handleDragEnd);
+  window.removeEventListener('pointercancel', handleDragEnd);
   window.removeEventListener('click', swallowClickOnce, true);
 }
 

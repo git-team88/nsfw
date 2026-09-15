@@ -101,7 +101,7 @@
 
     <UploadMask v-if="isShowLoad" :visible="isShowLoad" :text="t('loading')" />
 
-    <Agree ref="agreeRef" @toRegister="goRegister"></Agree>
+    <Agree ref="agreeRef" @toRegister="toRegister"></Agree>
   </div>
 </template>
 
@@ -188,10 +188,20 @@ watch(() => locale.value, () => {
   setSeoMeta();
 });
 
+// 点「去注册」先弹协议，真正的跳转在协议弹窗确认之后（toRegister）。
+// 这两个别接到一起 —— 之前弹窗的 toRegister 事件绑的就是 goRegister，
+// 确认完又把弹窗重新打开一遍，永远跳不过去。
 function goRegister() {
   if (agreeRef.value) {
     agreeRef.value.showAgree();
   }
+}
+
+// 协议弹窗确认后的跳转
+function toRegister() {
+  router.push({
+    path: "/register",
+  });
 }
 
 function goForget() {

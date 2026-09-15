@@ -1661,11 +1661,21 @@ function onVideoPicked(e: Event) {
   target.value = "";
 }
 
+/** 本地上传的视频上限：5GB / 1 小时，与漫剧发布页保持一致 */
+const MAX_VIDEO_SIZE = 5 * 1024 * 1024 * 1024;
+const MAX_VIDEO_DURATION = 3600;
+
 async function handleVideoFile(file: File) {
   const fileName = file.name;
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
   if (extension !== "mp4" && extension !== "mov") {
     toast(t("submit.video.formatError"));
+    return;
+  }
+  // 大小在读元数据之前先拦一道：超限的文件没必要再解一遍。
+  // 时长的上限在下面 onloadedmetadata 里判（MAX_VIDEO_DURATION）。
+  if (file.size > MAX_VIDEO_SIZE) {
+    toast(t("submit.video.sizeError"));
     return;
   }
 
@@ -1679,7 +1689,7 @@ async function handleVideoFile(file: File) {
     video.src = URL.createObjectURL(file);
     const metadataOk = await new Promise<boolean>((resolve) => {
       video.onloadedmetadata = () => {
-        if (video.duration > 3600) {
+        if (video.duration > MAX_VIDEO_DURATION) {
           resolve(false);
           return;
         }
@@ -1697,7 +1707,7 @@ async function handleVideoFile(file: File) {
     if (!metadataOk) {
       URL.revokeObjectURL(video.src);
       isUpload.value = false;
-      if (video.duration > 3600) {
+      if (video.duration > MAX_VIDEO_DURATION) {
         toast(t("submit.video.durationLimit"));
       } else {
         toast(t("submit.video.corruptedError"));
