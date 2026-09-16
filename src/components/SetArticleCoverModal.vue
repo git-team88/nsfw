@@ -772,13 +772,12 @@ async function detectOrientation(dataUrl: string) {
     imgScale.value = 1;
   }
 
-  // Center the image in the crop frame
-  const scaledWidth = img.naturalWidth * imgScale.value;
-  const scaledHeight = img.naturalHeight * imgScale.value;
-
-  // Calculate offsets to center the image
-  imgOffsetX.value = (CROP_W - scaledWidth) / 2;
-  imgOffsetY.value = (CROP_H - scaledHeight) / 2;
+  // 居中。imgOffsetX / imgOffsetY 是相对「已经居中的位置」的偏移量：
+  // 图片在 flex 居中的容器里本来就居中，transformOrigin 又是 center center，
+  // applyImageOffset 的钳制范围也是 ±(缩放后尺寸 - 裁剪框)/2，对称于 0。
+  // 按「从左上角出发」算会把竖图推到钳制边界上，只看得到最底下那一截。
+  imgOffsetX.value = 0;
+  imgOffsetY.value = 0;
 
   // Apply the transformation immediately
   applyImageOffset();

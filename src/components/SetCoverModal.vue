@@ -559,11 +559,99 @@ onMounted(() => {
   imgOffsetX.value = 0;
 });
 
+// ---------------------------------------------------------------------------
+// 跨域图片的加载。static.moegen.ai 不下发 Access-Control-Allow-Origin，
+// 所以凡是要读像素（画进 canvas）的地方都不能直接用 crossOrigin 的 <img>。
+// 这套和 CollectionCoverModal 里的一致。
+// ---------------------------------------------------------------------------
+
+function loadImageElement(src: string, crossOrigin?: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (crossOrigin) img.crossOrigin = crossOrigin;
+    const timer = setTimeout(() => reject(new Error("Image load timeout")), 15000);
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error("Image load failed"));
+    };
+    img.src = src;
+  });
+}
+
+function toProxyUrls(url: string): string[] {
+  try {
+    const u = new URL(url, window.location.href);
+    if (u.origin === window.location.origin) return [];
+    const base = baseUrl.replace(/\/+$/, "");
+    return [
+      `${base}/proxy_download${u.pathname}${u.search}`,
+      `${base}/proxy_download?url=${encodeURIComponent(u.href)}`,
+    ];
+  } catch {
+    return [];
+  }
+}
+
+async function tryFetchAsBlobUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const contentType = response.headers.get("content-type") || "";
+    const blob = await response.blob();
+    if (!contentType.startsWith("image/") && !blob.type.startsWith("image/")) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/** 拿一张能安全画进 canvas 的图。调用方负责 revoke 返回的 blob 地址 */
+async function loadCropImage(url: string): Promise<{ img: HTMLImageElement; revoke?: string }> {
+  if (url.startsWith("data:") || url.startsWith("blob:")) {
+    return { img: await loadImageElement(url) };
+  }
+
+  // 1. 后端代理 / 直接 fetch —— 两种都能拿到同源的 blob
+  const candidates = [...toProxyUrls(url), url];
+  for (const candidate of candidates) {
+    const blobUrl = await tryFetchAsBlobUrl(candidate);
+    if (blobUrl) {
+      try {
+        return { img: await loadImageElement(blobUrl), revoke: blobUrl };
+      } catch {
+        URL.revokeObjectURL(blobUrl);
+      }
+    }
+  }
+
+  // 2. 带 CORS 的 <img>：CDN 真的配了头时才走得通。
+  //    预览用的 <img> 已经把这个地址按「无 CORS」缓存过了，浏览器会复用那条缓存，
+  //    即便 CDN 配置正确也会失败，所以加个参数强制重新请求。
+  try {
+    const busted = url + (url.includes("?") ? "&" : "?") + "_cors=" + Date.now();
+    return { img: await loadImageElement(busted, "anonymous") };
+  } catch {
+    // 3. 兜底：画面能出来，但 canvas 会被污染，下面 toDataURL 会抛一个看得懂的错，
+    //    好过在这里无声地挂住
+    return { img: await loadImageElement(url) };
+  }
+}
+
 async function detectOrientation(dataUrl: string) {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
+  // 这里只要原始宽高，不需要读像素，所以不要设 crossOrigin ——
+  // CDN 没有 Access-Control-Allow-Origin 时带 crossOrigin 会直接加载失败，
+  // 原来只挂了 onload 没挂 onerror，Promise 永远不 resolve，下面的缩放计算
+  // 一行都跑不到，预览里就是一张没缩放过的原图（看着特别小）。
+  let img: HTMLImageElement;
+  try {
+    img = await loadImageElement(dataUrl);
+  } catch {
+    return;
+  }
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
   const naturalRatio = img.naturalWidth / img.naturalHeight;
@@ -586,24 +674,33 @@ async function detectOrientation(dataUrl: string) {
     imgScale.value = 1;
   }
 
-  // Center the image in the crop frame
-  const scaledWidth = img.naturalWidth * imgScale.value;
-  const scaledHeight = img.naturalHeight * imgScale.value;
-
-  // Calculate offsets to center the image
-  imgOffsetX.value = (CROP_W - scaledWidth) / 2;
-  imgOffsetY.value = (CROP_H - scaledHeight) / 2;
+  // 居中。
+  //
+  // imgOffsetX / imgOffsetY 是相对「已经居中的位置」的偏移量 —— 图片在
+  // .preview-crop-box（flex 居中）里本来就是居中的，transform 又是
+  // transformOrigin: center center，缩放不改变中心点；applyImageOffset 的钳制
+  // 范围也是 ±(缩放后尺寸 - 裁剪框)/2，对称于 0。所以 0 就是正中间。
+  //
+  // 原来这里按「从左上角出发要移多少」算，把 (CROP - scaled)/2 塞了进来，
+  // 竖图正好被推到钳制边界上，看到的就是图片最底下那一截。
+  imgOffsetX.value = 0;
+  imgOffsetY.value = 0;
 
   // Apply the transformation immediately
   applyImageOffset();
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
+  // 这里要把图画进 canvas 再导出，必须拿到同源（或真正带 CORS）的图片
+  const { img, revoke } = await loadCropImage(dataUrl);
+  try {
+    return cropImageToDataUrl(img);
+  } finally {
+    if (revoke) URL.revokeObjectURL(revoke);
+  }
+}
 
+function cropImageToDataUrl(img: HTMLImageElement): string {
   const imgEl = previewImgRef.value!;
   const imgRect = imgEl.getBoundingClientRect();
 
