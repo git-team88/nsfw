@@ -96,6 +96,20 @@
           ></textarea>
         </div>
 
+        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
+        <div class="form-group" v-if="showPriceRow">
+          <label class="form-label"><b>*</b>{{ t('collection.price') }}</label>
+          <div class="price-options">
+            <div
+              class="price-option"
+              v-for="plan in rechargePlans"
+              :key="plan.id"
+              :class="{ active: selectedPlanId === plan.id }"
+              @click="selectedPlanId = plan.id"
+            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
+          </div>
+        </div>
+
         <!-- Language Section -->
         <div class="form-group">
           <label class="form-label"><b>*</b>{{ t('submit.language') }}</label>
@@ -155,6 +169,13 @@ import { processImageUrl } from '@/util/utils';
 import CollectionCoverModal from './CollectionCoverModal.vue';
 import SensitiveConfirmModal from './SensitiveConfirmModal.vue';
 
+import {
+  fetchBookRechargePlans,
+  findPlanByPrice,
+  planPriceText,
+  type BookRechargePlan,
+} from '@/util/bookRechargePlan';
+
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
@@ -181,14 +202,39 @@ const props = defineProps<{
   sessionId?: string;
   storySummary?: string;
   language?: string;
+  /** 合集已存的价格（原始金额），用来回显选中的档位 */
+  price?: string | number;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string }): void;
+  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number }): void;
 }>();
 
 const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
+
+// --- 收费档 ---------------------------------------------------------------
+// 只有漫剧（type 3）的合集有这一行。没选过档的默认落在第一档。
+const rechargePlans = ref<BookRechargePlan[]>([]);
+const selectedPlanId = ref('');
+
+const showPriceRow = computed(
+  () => String(props.type ?? '') === '3' && rechargePlans.value.length > 0,
+);
+const selectedPlan = computed(
+  () => rechargePlans.value.find((p) => p.id === selectedPlanId.value),
+);
+
+function syncSelectedPlan() {
+  if (!rechargePlans.value.length) return;
+  const matched = findPlanByPrice(rechargePlans.value, props.price);
+  selectedPlanId.value = matched ? matched.id : rechargePlans.value[0].id;
+}
+
+fetchBookRechargePlans().then((plans) => {
+  rechargePlans.value = plans;
+  syncSelectedPlan();
+});
 
 const langOptions = [
   { key: "en", labelKey: "submit.langEn" },
@@ -407,6 +453,10 @@ async function handleSave() {
       if (selectedLanguage.value !== initialLanguage.value) {
         params.language = selectedLanguage.value;
       }
+      // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
+      if (showPriceRow.value && selectedPlan.value) {
+        params.price = selectedPlan.value.price;
+      }
 
       const response = await api.modifyCollection(params) as any;
       if (response.code === 0) {
@@ -416,7 +466,8 @@ async function handleSave() {
           cover: coverUrl.value,
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
-          language: selectedLanguage.value
+          language: selectedLanguage.value,
+          price: showPriceRow.value ? selectedPlan.value?.price : undefined
         });
         handleCancel();
       } else {
@@ -433,7 +484,8 @@ async function handleSave() {
         description: description.value.trim() || t('collection.defaultDescription'),
         cover: coverUrl.value,
         is_nsfw: computedIsNsfw.value,
-        language: selectedLanguage.value
+        language: selectedLanguage.value,
+        ...(showPriceRow.value && selectedPlan.value ? { price: selectedPlan.value.price } : {}),
       };
 
       const response = await api.addCollection(params) as any;
@@ -444,7 +496,8 @@ async function handleSave() {
           cover: coverUrl.value,
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
-          language: selectedLanguage.value
+          language: selectedLanguage.value,
+          price: showPriceRow.value ? selectedPlan.value?.price : undefined
         });
         handleCancel();
       } else {
@@ -927,5 +980,40 @@ function handleModalKeydown(e: KeyboardEvent) {
       cursor: not-allowed;
     }
   }
+}
+
+/* 收费档位：一排胶囊按钮，选中的填深色 */
+.price-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.price-option {
+  flex: 1 1 0;
+  min-width: 88px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #161122;
+  background: #FFFFFF;
+  border: 2px solid rgba(22, 17, 34, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.price-option:hover {
+  border-color: rgba(22, 17, 34, 0.3);
+}
+
+.price-option.active {
+  background: #161122;
+  border-color: #161122;
+  color: #FFFFFF;
 }
 </style>

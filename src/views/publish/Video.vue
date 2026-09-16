@@ -315,7 +315,14 @@
 
                   <div class="collection-display">
                     <div class="collection-info" v-if="selectedCollection">
-                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="collection-cover-box" v-if="selectedCollection.cover">
+                        <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                        <!-- 漫剧合集的收费档，封面下方 -->
+                        <div class="collection-price" v-if="collectionPriceText">
+                          <span class="price-amount">{{ collectionPriceText }}</span>
+                          <span class="price-unit">/{{ t('collection.fullSeries') }}</span>
+                        </div>
+                      </div>
                       <div class="collection-text">
                         <div class="collection-top">
                           <span class="collection-name">{{ selectedCollection.name }}</span>
@@ -488,7 +495,14 @@
 
                 <div class="collection-display">
                   <div class="collection-info" v-if="selectedCollection">
-                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                    <div class="collection-cover-box" v-if="selectedCollection.cover">
+                      <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <!-- 漫剧合集的收费档，封面下方 -->
+                      <div class="collection-price" v-if="collectionPriceText">
+                        <span class="price-amount">{{ collectionPriceText }}</span>
+                        <span class="price-unit">/{{ t('collection.fullSeries') }}</span>
+                      </div>
+                    </div>
                     <div class="collection-text">
                       <div class="collection-top">
                         <span class="collection-name">{{ selectedCollection.name }}</span>
@@ -745,6 +759,7 @@
       :collection-name="isCreateFromCollectionList ? projectNameForNewCollection : ''"
       :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
       :is-nsfw="0"
+      :price="selectedCollection?.price || ''"
       :type="3"
       :session-id="selectedProject?.session_id || route.query.session_id || sessionId || ''"
       :story-summary="selectedProject?.result_async?.generate_manju_outline?.synopsis || ''"
@@ -816,6 +831,12 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue"
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
+import {
+  fetchBookRechargePlans,
+  findPlanByPrice,
+  planPriceText,
+  type BookRechargePlan,
+} from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
 import router from "@/router";
 import { processImageUrl } from "@/util/utils";
@@ -1106,7 +1127,21 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number } | null>(null);
+
+// --- 漫剧合集的收费档 -------------------------------------------------------
+// 档位由 book/getBookRechargePlan 下发，这里只负责把合集存的金额换算成展示文案。
+// 拿不到档位、或者合集没存过价格，这一行就不渲染。
+const rechargePlans = ref<BookRechargePlan[]>([]);
+const collectionPriceText = computed(() => {
+  const price = selectedCollection.value?.price;
+  if (price === undefined || price === null || price === '') return '';
+  const plan = findPlanByPrice(rechargePlans.value, price);
+  // 匹配不到档位时按第一档的币种换算，至少不会显示原始的分值
+  // 金额是美分，currency 缺省时也按 usd 缩放
+  const currency = plan?.currency || rechargePlans.value[0]?.currency || 'usd';
+  return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
+});
 
 // 来源作品生成时用的是不是无限制模式。
 // switch_no = 0 时发布页不显示「敏感内容」勾选，is_nsfw 只能由这里推导。
@@ -1337,7 +1372,8 @@ async function handlePublishFromSelection() {
                 name: targetProject.name,
                 cover: targetProject.result_async?.generate_manju_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+                price: ''
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1354,7 +1390,8 @@ async function handlePublishFromSelection() {
                 name: searchRes.data?.book_info?.title || targetProject.name,
                 cover: searchRes.data?.book_info?.cover,
                 description: searchRes.data?.book_info?.description || '',
-                is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+                price: searchRes.data?.book_info?.price ?? ''
               };
               isNoCollection.value = false;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -1844,7 +1881,8 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       name: collection.title,
       cover: collection.cover,
       description: collection.description,
-      is_nsfw: collection.is_nsfw ?? 0
+      is_nsfw: collection.is_nsfw ?? 0,
+      price: collection.price ?? ''
     };
 
     coverPreview.value = collection.cover || '';
@@ -1994,7 +2032,7 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number }) {
   showEditCollectionModal.value = false;
 
   if (editingCollectionId.value === null) {
@@ -2003,7 +2041,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       name: collection.name,
       cover: collection.cover,
       description: collection.description,
-      is_nsfw: collection.is_nsfw ?? 0
+      is_nsfw: collection.is_nsfw ?? 0,
+      price: collection.price ?? ''
     };
 
     if (collection.is_nsfw == 1) {
@@ -2435,7 +2474,8 @@ async function handlePublish(publishData?: any) {
               name: project.name,
               cover: project.video_cover_url || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+              price: ''
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -2453,7 +2493,8 @@ async function handlePublish(publishData?: any) {
               name: searchRes.data?.book_info?.title || project.name,
               cover: searchRes.data?.book_info?.cover || collectionCover,
               description: searchRes.data?.book_info?.description || '',
-              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              price: searchRes.data?.book_info?.price ?? ''
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -4026,7 +4067,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 name: title,
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
-                is_nsfw: contentSwitch.mode === 2 ? 1 : 0
+                is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+                price: ''
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4044,7 +4086,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 name: searchRes.data?.book_info?.title || title,
                 cover: searchRes.data?.book_info?.cover || '',
                 description: searchRes.data?.book_info?.description || '',
-                is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+                price: searchRes.data?.book_info?.price ?? ''
               };
               selectedCollectionId.value = book_id;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -4242,7 +4285,8 @@ async function initBatchPublish(session_id: string) {
               name: projectTitle,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
-              is_nsfw: contentSwitch.mode === 2 ? 1 : 0
+              is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+              price: ''
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';
@@ -4260,7 +4304,8 @@ async function initBatchPublish(session_id: string) {
               name: searchRes.data?.book_info?.title || projectTitle,
               cover: searchRes.data?.book_info?.cover || '',
               description: searchRes.data?.book_info?.description || '',
-              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              price: searchRes.data?.book_info?.price ?? ''
             };
             selectedCollectionId.value = book_id;
             selectedEpisodeNumber.value = episodeNumber.toString();
@@ -4288,6 +4333,7 @@ async function initBatchPublish(session_id: string) {
 }
 
 onMounted(async () => {
+  fetchBookRechargePlans().then((plans) => { rechargePlans.value = plans; });
     await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 
@@ -4328,4 +4374,31 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
  @use '@/scss/Video.scss';
+
+/* 封面 + 价格一列，价格挂在封面下面 */
+.collection-cover-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.collection-price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.collection-price .price-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FF4D8E;
+}
+
+.collection-price .price-unit {
+  font-size: 12px;
+  color: #8A8A99;
+}
 </style>

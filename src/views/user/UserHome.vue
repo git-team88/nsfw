@@ -712,7 +712,25 @@ watch(topTab, (val) => {
   }
 });
 
-const activeContentType = ref<number | string>(5);
+/** 作品子 tab 的默认值。地址栏里没有 type 时落在这一档 */
+const DEFAULT_CONTENT_TYPE = 5;
+
+/**
+ * 从地址栏解析当前该选哪个子 tab。
+ *
+ * 必须在这里同步解析出来当初始值 —— 以前是先用默认档渲染，等 onMounted
+ * 里 await fetchUserInfo() 回来才改成 query 里的值，结果进页面会先闪一下
+ * 默认那个 tab，列表也白取一次数。
+ */
+function resolveContentTypeFromQuery(): number | string {
+  const t = route.query.type;
+  if (t === 'favorites') return 'favorites';
+  const n = parseInt(t as string);
+  if (!isNaN(n) && [1, 2, 3, 4, 5].includes(n)) return n;
+  return DEFAULT_CONTENT_TYPE;
+}
+
+const activeContentType = ref<number | string>(resolveContentTypeFromQuery());
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
@@ -1178,13 +1196,7 @@ onMounted(async () => {
   // 上报个人主页浏览（10 分钟内只上报一次）
   trackHomeView((route.query.id as string) || userInfo.value.id);
 
-    const typeParam = route.query.type;
-    if (typeParam) {
-      const typeNum = parseInt(typeParam as string);
-      if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
-        activeContentType.value = typeNum;
-      }
-    }
+    // type 已经在 activeContentType 初始化时就从地址栏解析过了，这里不用再读一遍
 
     const tabParam = route.query.tab;
     if (tabParam) {
@@ -1322,10 +1334,24 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
     }
   }
 
-  else if (typeChanged && newType) {
-    const typeNum = parseInt(newType as string);
-    if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
-      setActiveContentType(typeNum);
+  else if (typeChanged) {
+    // 只在地址栏和当前状态真的不一致时才动 —— 自己切 tab 时写地址栏
+    // 也会触发这个 watcher，不拦住的话列表会取两次数
+    let target: number | string | null = null;
+    if (newType) {
+      const typeNum = parseInt(newType as string);
+      if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
+        target = typeNum;
+      } else if (newType === 'favorites') {
+        target = 'favorites';
+      }
+    } else if (!newTab) {
+      // 地址栏里没有 type（比如从别处跳进来），回默认 tab
+      target = DEFAULT_CONTENT_TYPE;
+    }
+
+    if (target !== null && target !== activeContentType.value) {
+      setActiveContentType(target, true);
     }
   }
 
@@ -1386,7 +1412,13 @@ function getEndDate() {
 }
 
 // Set active content type
-function setActiveContentType(typeId: number | string) {
+/**
+ * 切换作品子 tab。
+ *
+ * fromRoute 表示这次是地址栏变化（浏览器前进/后退）驱动的，
+ * 那就只改状态、不再回写地址栏，否则会多压一条历史记录。
+ */
+function setActiveContentType(typeId: number | string, fromRoute = false) {
   viewMode.value = "posts";
   topTab.value = "works";
   activeContentType.value = typeId;
@@ -1398,18 +1430,21 @@ function setActiveContentType(typeId: number | string) {
     fetchCollections(true);
   }
 
-  const newQuery = { ...route.query };
-  delete newQuery.tab;
-  if (typeof typeId === 'number') {
-    newQuery.type = String(typeId);
-  } else {
-    delete newQuery.type;
-  }
+  if (fromRoute) return;
 
-  router.replace({
-    path: "/user-home",
-    query: newQuery,
-  });
+  // 把当前 tab 记进地址栏。用 replace 不用 push：不额外压历史记录，
+  // 但地址栏带上了 type —— 从这里点进作品再返回，就能回到原来的 tab，
+  // 而不是落回默认那个列表。刷新也能停在当前 tab。
+  const newQuery: Record<string, any> = { ...route.query };
+  delete newQuery.tab;
+  newQuery.type = String(typeId);
+
+  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+    router.replace({
+      path: "/user-home",
+      query: newQuery,
+    });
+  }
 }
 
 // Set active collection tab

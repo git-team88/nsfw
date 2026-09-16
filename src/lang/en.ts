@@ -2218,6 +2218,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       duration: "Duration",
       previewTitle: "Preview Video",
       toastUploadFirst: "Please upload a video first",
+      toastUploadFailed: "Video upload is not complete, please upload again",
       toastEnterTitle: "Please enter a title",
       toastSetCover: "Please set a cover image",
       toastAgreeTerms: "Please agree to the terms of service",
@@ -2393,6 +2394,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     confirm: "Confirm"
   },
   detail: {
+    commentHidden: "This comment is hidden",
     prev: "Previous",
     next: "Next",
     first: "First",
@@ -2872,6 +2874,27 @@ If you have any questions, complaints, comments or suggestions regarding persona
     queue: "Queue",
   },
   collection: {
+    collectionNotFound: "Collection not found",
+    unlockSuccess: {
+      title: "Payment successful!",
+      line1: "Your unlock takes effect in a few minutes — refresh to check.",
+      line2: "Still not active after an hour? Contact support."
+    },
+    unlockFailed: {
+      title: "Payment failed!",
+      message: "Check your payment details and balance, then try again."
+    },
+    watchWork: "Watch now",
+    backToPay: "Back to payment",
+    unlockTip: "Unlock the full series for just {price} — follow serialized works to the finale",
+    unlockFullSeries: "Unlock Full Series",
+    payAgree: "By paying you agree to the ",
+    unlockedFullSeries: "Full series unlocked",
+    tabUnlocked: "Unlocked",
+    viewDetail: "View details",
+    price: "Price",
+    fullSeries: "Full Series",
+    priceFree: "Free",
     createCollection: "Create Collection",
     collectionName: "Collection Name",
     placeholder: "Enter collection name",
@@ -3160,6 +3183,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
   },
   collectionSettings: {
+    notFound: "Collection not found",
     back: "Back",
     title: "Basic Info",
     delete: "Delete",

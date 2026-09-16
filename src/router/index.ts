@@ -197,6 +197,17 @@ const routes = [
     component: () => import("@/views/user/SubscriptionFailed.vue"),
   },
   {
+    // 漫剧解锁的支付结果页。带 post_id，成功页的「观看作品」按它回详情
+    path: "/drama-unlock-success",
+    name: "DramaUnlockSuccess",
+    component: () => import("@/views/user/DramaUnlockSuccess.vue"),
+  },
+  {
+    path: "/drama-unlock-fail",
+    name: "DramaUnlockFailed",
+    component: () => import("@/views/user/DramaUnlockFailed.vue"),
+  },
+  {
     path: "/aitool-payment-success",
     name: "AIToolPaymentSuccess",
     component: () => import("@/views/user/AIToolPaymentSuccess.vue"),

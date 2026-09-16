@@ -156,6 +156,19 @@
                     @confirm-adult="confirmAdultBrowsing"
                   />
                 </template>
+                <!-- 漫剧付费：未订阅且作品设了订阅可见时，给解锁全集的入口 -->
+                <template v-else-if="showDramaUnlock">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
+                  <DramaUnlockCard
+                    :book-id="detail.book_id"
+                    :post-id="detail.id"
+                    :author-id="detail.author?.id"
+                    :price="detail.book_price"
+                    :currency="detail.book_currency"
+                    :web3-price="detail.book_web3_price"
+                    @unlocked="handleDramaUnlocked"
+                  />
+                </template>
                 <template v-else>
                   <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
 
@@ -951,6 +964,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import SensitiveContentAdultConfirmModal from "@/components/SensitiveContentAdultConfirmModal.vue";
 import SensitiveContentConfirmModal from "@/components/SensitiveContentConfirmModal.vue";
 import SensitiveNsfwPanel from "@/components/SensitiveNsfwPanel.vue";
+import DramaUnlockCard from "@/components/DramaUnlockCard.vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
@@ -1092,6 +1106,23 @@ function navSubtitleLang(): string {
 // 这个数组为空 = 一条字幕都没有 = 整个开关不显示。
 /** BL 标记的漫剧 —— 字幕只给英日韩泰四种 */
 const isBlDrama = computed(() => detail.value?.type == '3' && detail.value?.is_bl == 1);
+
+/**
+ * 漫剧解锁全集的入口。四个条件都满足才给：
+ * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人。
+ * 价格取不到时卡片内部会自己不渲染（后端字段还没上）。
+ */
+const showDramaUnlock = computed(
+  () => detail.value?.type == '3'
+    && isPaidContentLocked.value
+    && !detail.value?.isSubscribed
+    && detail.value?.author?.id !== uid,
+);
+
+/** 解锁成功后重新拉一遍详情，锁自然就开了 */
+function handleDramaUnlocked() {
+  fetchDetail(Number(detail.value?.id ?? id.value));
+}
 
 const availableSubtitleLangs = computed(() => {
   const ownLang = detail.value?.language || '';
@@ -1435,6 +1466,10 @@ interface DetailData {
   is_nsfw: string;
   /** BL 标记的作品。漫剧（type 3）带这个标记时字幕只给英日韩泰 */
   is_bl?: number | string;
+  /** 漫剧解锁全集的价格（原始金额）。后端字段还没上，取不到解锁卡片就不渲染 */
+  book_price?: string | number;
+  book_currency?: string;
+  book_web3_price?: string | number;
   book_is_nsfw: number;
   book_id: string;
   book_title: string;
@@ -1653,7 +1688,7 @@ function goToCollectionDetail() {
 
 function goMakeSimilar(sessionId: string) {
   if (isChinaRegion.value && (detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1)) {
-    toast(t('home.unlimitedModeRestricted'));
+    toast(t('home.error.unlimitedModeRestricted'));
     return;
   }
   checkSensitiveContentBeforeAction(() => {
@@ -1728,7 +1763,7 @@ async function goMakeSequel() {
   if (!videoUrl) return;
   const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
   if (isChinaRegion.value && isNsfw) {
-    toast(t('home.unlimitedModeRestricted'));
+    toast(t('home.error.unlimitedModeRestricted'));
     return;
   }
 
@@ -2552,6 +2587,9 @@ async function fetchDetail(newId: number) {
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
         is_bl: data.is_bl ?? 0,
+        book_price: data.book_price ?? data.book_info?.price ?? '',
+        book_currency: data.book_currency ?? data.book_info?.currency ?? '',
+        book_web3_price: data.book_web3_price ?? data.book_info?.web3_price ?? '',
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
         book_title: data.book_title || '',

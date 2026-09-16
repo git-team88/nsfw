@@ -16,7 +16,8 @@ const router = useRouter();
 
 // 首页各内容类型路由（/、/{lang}、/{lang}/{type}、/{type}）共用同一 key，
 // 使切换内容类型 tab 时不触发 Home 组件重挂载（避免重新请求首页所有接口）；
-// 其它页面仍按 path 作为 key。
+// 个人主页同理，key 只跟用户 id 走，切子 tab（type / tab 变化）不重挂载，
+// 换一个用户（id 变化）才重挂载；其它页面仍按 fullPath 作为 key。
 const routeViewKey = computed(() => {
   const path = route.fullPath;
   const pathOnly = route.path;
@@ -26,6 +27,16 @@ const routeViewKey = computed(() => {
     pathOnly === '/' ||
     new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(pathOnly) ||
     new RegExp(`^/(${TYPES})/?$`).test(pathOnly);
+  // 个人主页：只认用户 id，query 里的 type / tab 不参与
+  if (pathOnly === '/user-home') {
+    return `user-home:${route.query.id ?? ''}`;
+  }
+
+  // 我的项目：数据只跟当前登录用户走，query 里就一个 tab，用固定 key
+  if (pathOnly === '/my-projects') {
+    return 'my-projects';
+  }
+
   return isHome ? 'home' : path;
 });
 

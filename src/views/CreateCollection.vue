@@ -97,6 +97,20 @@
           ></textarea>
         </div>
 
+        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
+        <div class="form-group" v-if="showPriceRow">
+          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}</label>
+          <div class="price-options">
+            <div
+              class="price-option"
+              v-for="plan in rechargePlans"
+              :key="plan.id"
+              :class="{ active: selectedPlanId === plan.id }"
+              @click="selectedPlanId = plan.id"
+            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
+          </div>
+        </div>
+
         <!-- Language Section -->
         <div class="form-group">
           <label class="form-label"><b class="required">*</b>{{ t('submit.language') }}</label>
@@ -155,6 +169,12 @@ import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { processImageUrl } from '@/util/utils';
 import { baseUrl } from '@/util/config';
+import {
+  fetchBookRechargePlans,
+  findPlanByPrice,
+  planPriceText,
+  type BookRechargePlan,
+} from '@/util/bookRechargePlan';
 import CollectionCoverModal from '@/components/CollectionCoverModal.vue';
 import SensitiveConfirmModal from '@/components/SensitiveConfirmModal.vue';
 
@@ -203,6 +223,28 @@ const langDropdownOpen = ref(false);
 const langDropdownUp = ref(false);
 const langDropdownRef = ref<HTMLElement | null>(null);
 const selectedLanguage = ref(defaultLang);
+
+// --- 收费档 ---------------------------------------------------------------
+// 档位由接口下发，金额不写死。只有漫剧（type 3）的合集有这一行；
+// 没选过档的合集默认落在第一档。
+const rechargePlans = ref<BookRechargePlan[]>([]);
+const selectedPlanId = ref('');
+const collectionType = ref('');
+const originalPrice = ref('');
+
+const showPriceRow = computed(
+  () => collectionType.value == '3' && rechargePlans.value.length > 0,
+);
+const selectedPlan = computed(
+  () => rechargePlans.value.find((p) => p.id === selectedPlanId.value),
+);
+
+/** 档位和合集详情哪个先到不一定，两边到齐都调一次 */
+function syncSelectedPlan() {
+  if (!rechargePlans.value.length || selectedPlanId.value) return;
+  const matched = findPlanByPrice(rechargePlans.value, originalPrice.value);
+  selectedPlanId.value = matched ? matched.id : rechargePlans.value[0].id;
+}
 const languageModified = ref(false);
 const originalLanguage = ref(defaultLang);
 
@@ -285,6 +327,11 @@ function adjustTooltipPosition(event: MouseEvent) {
 
 onMounted(async () => {
   await contentSwitch.ensureLoaded();
+  fetchBookRechargePlans().then((plans) => {
+    rechargePlans.value = plans;
+    syncSelectedPlan();
+  });
+
   const id = route.query.id;
   if (id) {
     editId.value = id as string;
@@ -313,6 +360,9 @@ async function loadCollection(id: string) {
         selectedLanguage.value = bookInfo.language;
         originalLanguage.value = bookInfo.language;
       }
+      collectionType.value = String(bookInfo.type ?? '');
+      originalPrice.value = String(bookInfo.price ?? '');
+      syncSelectedPlan();
     }
   } catch (error) {
     console.error('Failed to load collection:', error);
@@ -360,6 +410,11 @@ async function handleSave() {
 
       if (selectedLanguage.value !== originalLanguage.value) {
         params.language = selectedLanguage.value;
+      }
+
+      // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
+      if (showPriceRow.value && selectedPlan.value) {
+        params.price = selectedPlan.value.price;
       }
     } else {
       params.title = collectionName.value.trim();
@@ -1067,5 +1122,40 @@ function goBack() {
     border-radius: 6px;
     font-size: 14px;
   }
+}
+
+/* 收费档位：一排胶囊按钮，选中的填深色 */
+.price-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.price-option {
+  flex: 1 1 0;
+  min-width: 88px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #161122;
+  background: #FFFFFF;
+  border: 2px solid rgba(22, 17, 34, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.price-option:hover {
+  border-color: rgba(22, 17, 34, 0.3);
+}
+
+.price-option.active {
+  background: #161122;
+  border-color: #161122;
+  color: #FFFFFF;
 }
 </style>

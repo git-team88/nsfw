@@ -892,6 +892,18 @@ export default {
       url: "book/getBookDetail?book_id=" + bookId,
       method: "GET"
     }),
+  /** 漫剧解锁记录。接口还没上线，路径待后端确认 */
+  userDramaUnlockList: (page: number, limit: number) =>
+    axios.request({
+      url: "user/getDramaUnlockList?page=" + page + "&limit=" + limit,
+      method: "GET"
+    }),
+  /** 漫剧合集的收费档位列表。返回 data.plan_list */
+  getBookRechargePlan: () =>
+    axios.request({
+      url: "book/getBookRechargePlan",
+      method: "GET"
+    }),
   recordHistory: (data: any) =>
     axios.request({
       url: "post/writeHistory",

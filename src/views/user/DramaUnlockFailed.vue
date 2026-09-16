@@ -1,0 +1,183 @@
+<template>
+  <div class="drama-unlock-failed-page">
+    <Header :cur="-1"></Header>
+    <div class="container">
+      <!-- <div class="back" @click="router.back()">
+        <img src="@/assets/images/base/back.png" alt="" />
+      </div> -->
+
+      <div class="content-box">
+        <h1 class="page-title">{{ t("collection.unlockFailed.title") }}</h1>
+
+        <!-- Error Message -->
+        <p class="error-message">{{ t("collection.unlockFailed.message") }}</p>
+
+        <!-- Failed Icon -->
+        <div class="failed-icon">
+          <img src="@/assets/images/user/fail_icon.png" alt="" />
+        </div>
+
+        <!-- Back Button -->
+        <button class="back-btn" @click="backToPayment">
+          {{ t("collection.backToPay") }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts" name="DramaUnlockFailed">
+import Header from "@/components/Header.vue";
+import { useRouter, useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
+
+const router = useRouter();
+const route = useRoute();
+const { t } = useI18n();
+
+/** 返回支付页 —— 回到作品详情，解锁卡片还在那儿 */
+function backToPayment() {
+  const postId = route.query.post_id || route.query.id;
+  if (postId) {
+    router.replace(`/detail/${postId}`);
+  } else {
+    router.back();
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.drama-unlock-failed-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 140px 0 0;
+  background: #1a1a1a;
+}
+
+.container {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.content-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #f5f5f5;
+    margin-bottom: 20px;
+  }
+
+  .error-message {
+    font-size: 14px;
+    color: #f5f5f5;
+    text-align: center;
+    line-height: 20px;
+  }
+
+  .failed-icon {
+    width: 80px;
+    height: 80px;
+    margin: 40px 0 60px;
+    background: #ef4444;
+    border: 1px solid #3d3d3d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    animation: chPanelIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+
+    img {
+      display: none;
+    }
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      width: 28px;
+      height: 4px;
+      background: #1a1a1a;
+      border-radius: 2px;
+    }
+
+    &::before {
+      transform: rotate(45deg);
+    }
+
+    &::after {
+      transform: rotate(-45deg);
+    }
+  }
+
+  .back-btn {
+    min-width: 240px;
+    height: 48px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    box-shadow: 0 0 16px rgba(255, 61, 134, .3);
+    color: #FFFFFF;
+    border: 2px solid #ff9aca;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 22px rgba(255, 61, 134, .35);
+    transition: box-shadow 0.14s;
+  }
+}
+
+@keyframes chPanelIn {
+  0% { opacity: 0; transform: scale(.92) translateY(-6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .drama-unlock-failed-page {
+    padding: 80px 0 0;
+  }
+  .container {
+    padding: 0 20px;
+  }
+  .content-box {
+    .page-title {
+      font-size: 18px;
+    }
+    .failed-icon {
+      margin: 30px 0 40px;
+    }
+    .back-btn {
+      min-width: 160px;
+      height: 44px;
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .drama-unlock-failed-page {
+    padding: 70px 0 0;
+  }
+  .container {
+    padding: 0 16px;
+  }
+  .content-box {
+    .page-title {
+      font-size: 16px;
+    }
+    .failed-icon {
+      margin: 24px 0 30px;
+    }
+    .back-btn {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+}
+</style>

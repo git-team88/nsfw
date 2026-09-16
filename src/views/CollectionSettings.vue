@@ -43,6 +43,12 @@
               <span class="info-value">{{ collection.title }}</span>
             </div>
 
+            <!-- 价格：只有漫剧（type 3）的合集有收费档 -->
+            <div class="info-item" v-if="collectionPriceText">
+              <span class="info-label">{{ t('collection.price') }}：</span>
+              <span class="info-value price-value">{{ collectionPriceText }}<span class="price-unit">/{{ t('collection.fullSeries') }}</span></span>
+            </div>
+
             <div class="info-item">
               <span class="info-label">{{ t('collectionSettings.description') }}：</span>
               <span class="info-value description">{{ collection.description }}</span>
@@ -117,6 +123,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import api from '@/api/index';
+import {
+  fetchBookRechargePlans,
+  findPlanByPrice,
+  planPriceText,
+  type BookRechargePlan,
+} from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
@@ -150,7 +162,22 @@ const collection = ref({
   chapter_count_private: 0,
   user_id: '',
   is_nsfw: '0',
+  price: '' as string | number,
   chatpers: [] as any[]
+});
+
+// --- 漫剧合集的收费档 -------------------------------------------------------
+// 档位由 book/getBookRechargePlan 下发，这里只把合集存的金额换算成展示文案。
+// 不是漫剧、或者没存过价格，这一行就不渲染。
+const rechargePlans = ref<BookRechargePlan[]>([]);
+const collectionPriceText = computed(() => {
+  if (collection.value.type != '3') return '';
+  const price = collection.value.price;
+  if (price === undefined || price === null || price === '') return '';
+  const plan = findPlanByPrice(rechargePlans.value, price);
+  // 金额是美分，currency 缺省时也按 usd 缩放
+  const currency = plan?.currency || rechargePlans.value[0]?.currency || 'usd';
+  return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
 });
 
 const collectionInfo = computed(() => ({
@@ -161,6 +188,7 @@ const collectionInfo = computed(() => ({
 }));
 
 onMounted(async () => {
+  fetchBookRechargePlans().then((plans) => { rechargePlans.value = plans; });
   const bookIdParam = route.params.id;
   if (!bookIdParam) {
     toast(t('collectionSettings.notFound'));
@@ -187,6 +215,7 @@ onMounted(async () => {
           chapter_count_private: bookInfo.chapter_count_private || 0,
           user_id: bookInfo.user_id || '',
           is_nsfw: bookInfo.is_nsfw || '0',
+          price: bookInfo.price ?? '',
           chatpers: data.chatpers || [],
         };
     } else {
@@ -977,5 +1006,17 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
       height: 160px;
     }
   }
+}
+
+/* 合集详情的价格行 */
+.info-value.price-value {
+  font-weight: 800;
+  color: #FF4D8E;
+}
+
+.info-value.price-value .price-unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8A8A99;
 }
 </style>

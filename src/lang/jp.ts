@@ -2042,6 +2042,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       duration: "再生時間",
       previewTitle: "プレビュー動画",
       toastUploadFirst: "先に動画をアップロードしてください",
+      toastUploadFailed: "動画のアップロードが完了していません。もう一度お試しください",
       toastEnterTitle: "タイトルを入力してください",
       toastSetCover: "カバー画像を設定してください",
       toastAgreeTerms: "利用規約に同意してください",
@@ -2217,6 +2218,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     confirm: "確定"
   },
   detail: {
+    commentHidden: "このコメントは非表示です",
     prev: "前のページ",
     next: "次のページ",
     first: "最初のページ",
@@ -2564,6 +2566,27 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     queue: "キュー",
   },
   collection: {
+    collectionNotFound: "コレクションが見つかりません",
+    unlockSuccess: {
+      title: "お支払いが完了しました！",
+      line1: "解除は数分で反映されます。少し経ってから更新してください。",
+      line2: "1時間経っても反映されない場合はサポートまでご連絡ください。"
+    },
+    unlockFailed: {
+      title: "お支払いに失敗しました",
+      message: "お支払い情報と残高をご確認のうえ、もう一度お試しください。"
+    },
+    watchWork: "作品を見る",
+    backToPay: "支払いページへ戻る",
+    unlockTip: "{price}で全話を解除、連載作品は完結まで追えます",
+    unlockFullSeries: "全話を解除",
+    payAgree: "お支払いで",
+    unlockedFullSeries: "全話解除済み",
+    tabUnlocked: "全話解除",
+    viewDetail: "詳細を見る",
+    price: "価格",
+    fullSeries: "全話",
+    priceFree: "無料",
     createCollection: "コレクションを作成",
     collectionName: "コレクション名",
     placeholder: "コレクション名を入力してください",
@@ -3221,6 +3244,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     },
   },
   collectionSettings: {
+    notFound: "コレクションが見つかりません",
     back: "戻る",
     title: "基本情報",
     delete: "削除",
