@@ -95,7 +95,27 @@
               <!-- 图片网格区域（白色背景） -->
               <div class="photo-grid-container">
                 <div class="photo-grid">
-                  <template v-if="record.status == 'DOING' || record.status == 'PREPARE'">
+                  <!-- 排队中：还没轮到这条任务，别铺生成中的动图，换成小说生成页那块「专家在赶来」。
+                       状态一律读 step_status || status：轮询拿到结果后只改 step_status，
+                       只看 status 的话这里会一直停在排队中，下面的 footer 却已经出来了 -->
+                  <template v-if="isTaskQueuing(record.step_status || record.status)">
+                    <div class="queuing-state">
+                      <div class="preparation-content">
+                        <div class="preparation-image">
+                          <img src="@/assets/images/role/load_role.png" alt="" />
+                        </div>
+
+                        <div class="preparation-middle">
+                          <div class="preparation-line"></div>
+                        </div>
+
+                        <div class="preparation-text">
+                          <span class="preparation-title">{{ t('novel.preparationTitle') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-else-if="isTaskProcessing(record.step_status || record.status)">
                     <div
                       v-for="i in 1"
                       :key="i"
@@ -288,8 +308,24 @@
               </div>
 
               <div class="video-player-container" v-if="!isTaskFailed(record.step_status || record.status) && (isTaskProcessing(record.step_status || record.status) || record.videoUrl)">
+                <!-- 排队中：同上，不放动图。不套播放器外框，也不按比例撑 -->
+                <div v-if="isTaskQueuing(record.step_status || record.status)" class="queuing-state">
+                  <div class="preparation-content">
+                    <div class="preparation-image">
+                      <img src="@/assets/images/role/load_role.png" alt="" />
+                    </div>
+
+                    <div class="preparation-middle">
+                      <div class="preparation-line"></div>
+                    </div>
+
+                    <div class="preparation-text">
+                      <span class="preparation-title">{{ t('novel.preparationTitle') }}</span>
+                    </div>
+                  </div>
+                </div>
                 <div
-                  v-if="isTaskProcessing(record.step_status || record.status)"
+                  v-else-if="isTaskProcessing(record.step_status || record.status)"
                   class="video-player-wrapper skeleton"
                   :style="getVideoPlayerStyle(record.ratio)"
                 >
@@ -4442,6 +4478,12 @@ const validateDurationAndRestore = () => {
 
 const isTaskProcessing = (status: string) => {
   return status == 'DOING' || status == 'PREPARE' || status == 'PROCESSING';
+};
+
+// PREPARE 是后端的排队态：任务提交了但还没轮到。
+// 这会儿什么都还没开始跑，铺一张生成中的动图会让人以为已经在出图了。
+const isTaskQueuing = (status: string) => {
+  return status == 'PREPARE';
 };
 
 // 把后端 status_message 映射成列表里展示的失败原因。

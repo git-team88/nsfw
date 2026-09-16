@@ -47,17 +47,19 @@ export interface CosCredential {
 }
 
 /**
- * 分片大小，固定 5MB。算 md5 时也按这个尺寸读文件。
- * 发布页限的是 5GB，5GB / 5MB = 1000 片，离 COS 的 10000 片上限还远，不用动态调。
+ * 分片大小，固定 10MB。算 md5 时也按这个尺寸读文件。
+ * 发布页限的是 5GB，5GB / 10MB = 500 片，离 COS 的 10000 片上限还远，不用动态调。
  * 小于一片的文件就传一片 —— COS 的「每片不小于 1MB」不约束最后一片。
  */
-const CHUNK_SIZE = 5 * 1024 * 1024;
+const CHUNK_SIZE = 10 * 1024 * 1024;
 /** 并发上传的分片数 */
 const CONCURRENCY = 4;
 /** 单片的网络失败重试次数 */
 const MAX_RETRY = 3;
-/** 算 md5 在总进度里占的比重：进度条前 5% 是校验，后面才是真上传 */
-const HASH_WEIGHT = 5;
+/** 上传分片占到这里为止，剩下的留给 CompleteMultipartUpload（合并大文件不是瞬时的） */
+const UPLOAD_END = 95;
+/** 合并完成后的进度；最后的 100 由调用方在拿到地址后给 */
+const COMPLETE_DONE = 99;
 
 /** 这条通道只传视频，允许的扩展名就这两个 */
 const ALLOWED_EXTENSIONS = ["mp4", "mov"] as const;
@@ -92,10 +94,70 @@ function withScheme(host: string): string {
 }
 
 /**
- * 按 CHUNK_SIZE 增量算整个文件的 md5。
- * 不能一次 arrayBuffer() 读完 —— 几百 MB 的视频直接把内存打爆。
+ * 整个文件的 md5。
+ *
+ * 两点都要顾：
+ *   内存 —— 按 CHUNK_SIZE 增量喂，不能一次 arrayBuffer() 读完，几百 MB 的视频直接爆。
+ *   卡顿 —— 放 worker 里算。md5 是串行的，拆不成多份并行算，但这段 CPU 活儿
+ *           留在主线程上，每片会卡住渲染十几到几十毫秒，大文件累计几秒，
+ *           表现就是进度条一顿一顿、点什么都没反应。
+ *
+ * worker 起不来（老 webview 不支持 module worker 之类）就退回主线程算，
+ * 慢归慢，至少传得上去。
  */
-export async function md5OfFile(
+export function md5OfFile(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
+  return md5InWorker(file, onProgress).catch((err) => {
+    console.warn("[upload] md5 worker 不可用，退回主线程计算", err);
+    return md5OnMainThread(file, onProgress);
+  });
+}
+
+function md5InWorker(file: File, onProgress?: (percent: number) => void): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let worker: Worker;
+    try {
+      // Vite 认这种写法，会把 worker 单独打成一个 chunk
+      worker = new Worker(new URL("./md5Worker.ts", import.meta.url), { type: "module" });
+    } catch (err) {
+      reject(err);
+      return;
+    }
+
+    let settled = false;
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      worker.terminate();
+      fn();
+    };
+
+    worker.onmessage = (e: MessageEvent) => {
+      const data = e.data || {};
+      if (data.type === "progress") {
+        onProgress?.(data.percent);
+        return;
+      }
+      if (data.type === "done" && data.md5) {
+        finish(() => resolve(data.md5));
+        return;
+      }
+      finish(() => reject(new Error(data.message || "md5 worker failed")));
+    };
+
+    worker.onerror = (e) => {
+      finish(() => reject(new Error(e.message || "md5 worker error")));
+    };
+
+    // File 走结构化克隆，底层数据不复制，只是换个线程去读
+    worker.postMessage({ file, chunkSize: CHUNK_SIZE });
+  });
+}
+
+/** 兜底：worker 用不了时在主线程上算，逻辑和 worker 里那份一致 */
+async function md5OnMainThread(
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<string> {
@@ -421,10 +483,12 @@ async function abortUpload(credential: CosCredential, target: CosTarget, uploadI
  *
  * 目录前缀和两个域名都来自凭证接口，分桶目录和文件名由 buildObjectKey 拼，调用方不用准备。
  *
- * @param onProgress 0-100。前 HASH_WEIGHT% 是算 md5，之后才是真上传；
- *                   上传段统计的是「交给网络的字节」，所以压到 99，等
- *                   CompleteMultipartUpload 返回之后由调用方置 100 —— 合并
- *                   大文件要几秒，进度条满着不动比停在 99% 更像卡死。
+ * @param onProgress 0-100。算 md5 的那一段不报进度 —— 那会儿一个字节都还没传，
+ *                   给个百分比是骗人的，界面上留着转圈就行。真正开报是从分片开始：
+ *                   0 ~ 95    分片上传，统计的是「交给网络的字节」
+ *                   95 ~ 99   CompleteMultipartUpload，合并大文件要几秒
+ *                   100       传完返回地址时给满
+ *                   数值经 createSmoothProgress 平滑后再往外报。
  */
 export async function uploadFileToCos(
   file: File,
@@ -432,10 +496,11 @@ export async function uploadFileToCos(
 ): Promise<string> {
   const credential = await getCosCredential();
 
-  // 先算内容 md5 —— key 要用它，所以这一步必须在 Initiate 之前
-  const md5 = await md5OfFile(file, (percent) => {
-    onProgress?.(Math.floor((percent * HASH_WEIGHT) / 100));
-  });
+  const progress = createSmoothProgress(onProgress);
+
+  // 先算内容 md5 —— key 要用它，所以这一步必须在 Initiate 之前。
+  // 这一段不往外报进度：还没开始传，报出来的百分比对用户没意义。
+  const md5 = await md5OfFile(file);
 
   const key = buildObjectKey(credential.uploadPrefix, md5, file);
   // 写打 COS 接入点，读用 CDN 域名，key 是同一份
@@ -449,10 +514,8 @@ export async function uploadFileToCos(
   // 所以按下标记，不能用累加的方式。
   const loaded: number[] = new Array(total).fill(0);
   const report = () => {
-    if (!onProgress) return;
     const sum = loaded.reduce((a, b) => a + b, 0);
-    const percent = HASH_WEIGHT + (sum / file.size) * (99 - HASH_WEIGHT);
-    onProgress(Math.min(99, Math.floor(percent)));
+    progress.set((sum / file.size) * UPLOAD_END);
   };
 
   const etags: string[] = new Array(total);
@@ -476,10 +539,63 @@ export async function uploadFileToCos(
   try {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker()));
     await completeUpload(credential, target, uploadId, etags);
+    progress.set(COMPLETE_DONE);
   } catch (err) {
+    progress.stop();
     await abortUpload(credential, target, uploadId);
     throw err;
   }
 
+  progress.finish();
   return fileUrlOf(cdnTarget);
+}
+
+/**
+ * 进度平滑器。
+ *
+ * 真实进度是跳的：md5 一瞬间算完就是 5%，只有一片的文件 XHR 往往只报一次
+ * upload progress，于是 5% 直接变 95%。数值没错，但看着就是「闪一下就满了」。
+ * 这里把目标值和显示值分开，显示值按 tick 往上追，差得越多追得越快。
+ *
+ * 只增不减：并发分片里有重传时真实值会回退，进度条不该跟着往回跳。
+ */
+function createSmoothProgress(emit?: (percent: number) => void) {
+  let target = 0;
+  let shown = 0;
+  let timer: ReturnType<typeof setInterval> | null = null;
+
+  const stopTimer = () => {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+  };
+
+  const tick = () => {
+    if (shown >= target) {
+      stopTimer();
+      return;
+    }
+    shown = Math.min(target, shown + Math.max(1, Math.ceil((target - shown) / 8)));
+    emit?.(shown);
+  };
+
+  return {
+    set(percent: number) {
+      const next = Math.min(COMPLETE_DONE, Math.floor(percent));
+      if (next <= target) return;
+      target = next;
+      if (!timer) timer = setInterval(tick, 40);
+    },
+    /** 传完了，直接给满 —— 剩下那点差值交给进度条自己的 css 过渡 */
+    finish() {
+      stopTimer();
+      shown = target = 100;
+      emit?.(100);
+    },
+    /** 出错时别再往上爬了 */
+    stop() {
+      stopTimer();
+    },
+  };
 }
