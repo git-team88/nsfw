@@ -1,6 +1,6 @@
 import { baseUrl } from "@/util/config";
 import api from "@/api/index";
-import { uploadFileToCos, CosUploadError, type CosTarget } from "@/util/cosUpload";
+import { uploadFileToCos, CosUploadError } from "@/util/cosUpload";
 
 /** 分片大小，需与后端 / COS 约定保持一致 */
 const CHUNK_SIZE = 5 * 1024 * 1024;
@@ -123,6 +123,7 @@ export async function uploadParts(
 //   cos-sts    STS 凭证直传分片：浏览器拿临时密钥自己和 COS 说话，
 //              Initiate → UploadPart x N（并发）→ Complete。
 //              既不占自己的带宽，又有单片重试和字节级进度。
+//              目录前缀（upload_prefix）和域名（cos_domain）都由凭证接口下发。
 //
 // 页面调用方只认 uploadVideoFile(file, onProgress)，换通道不用动页面。
 // ---------------------------------------------------------------------------
@@ -131,13 +132,9 @@ const UPLOAD_MODE: "direct" | "multipart" | "cos-sts" = "cos-sts";
 /** 视频上传成功后统一替换成的静态域名 */
 const STATIC_HOST = "https://static.moegen.ai";
 
-/** 小于这个大小就一次 PUT 传完，没必要为几 MB 走三次请求的分片流程 */
-const SLICE_THRESHOLD = 10 * 1024 * 1024;
-
+/** 只传 mp4 / mov，其它格式页面那层已经拦掉了 */
 function contentTypeOf(ext: string): string {
-  if (ext === "mov") return "video/quicktime";
-  if (ext === "webm") return "video/webm";
-  return "video/mp4";
+  return ext === "mov" ? "video/quicktime" : "video/mp4";
 }
 
 function extensionOf(file: File): string {
@@ -147,26 +144,6 @@ function extensionOf(file: File): string {
 /** 预签名地址去掉签名参数、换成静态域名，就是最终可访问的地址 */
 function toStaticUrl(presignedUrl: string): string {
   return presignedUrl.split("?")[0].replace(/^https?:\/\/[^/]+/, STATIC_HOST);
-}
-
-/**
- * 从预签名地址里解析出桶、地域和对象路径。
- *
- * 凭证接口只给临时密钥，桶 / 地域 / key 一个都没有；而预签名地址里三样俱全，
- * 且一定落在后端 STS 策略允许写入的范围内。所以桶名、地域、路径规则全留在后端，
- * 前端一个常量都不写死，后端换桶、换地域、换路径，前端都不用跟着发版。
- */
-function parseCosTarget(presignedUrl: string): CosTarget | null {
-  try {
-    const url = new URL(presignedUrl);
-    const matched = /^(.+)\.cos\.([a-z0-9-]+)\.myqcloud\.com$/i.exec(url.hostname);
-    if (!matched) return null;
-    const key = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
-    if (!key) return null;
-    return { bucket: matched[1], region: matched[2], key };
-  } catch {
-    return null;
-  }
 }
 
 /** 向后端要一个预签名 PUT 地址 */
@@ -242,40 +219,31 @@ async function uploadMultipart(
 /**
  * STS 凭证直传分片通道。选完文件之后的请求顺序：
  *
- *   <= 10MB：getCosUploadPreSignUrl -> PUT 一次传完（和以前一样，不碰凭证接口）
- *   >  10MB：getCosUploadPreSignUrl -> cos_upload_credential
- *            -> Initiate -> UploadPart x N（并发）-> Complete
+ *   cos_upload_credential -> Initiate -> UploadPart x N（并发）-> Complete
  *
- * 分片要往 https://{Bucket}.cos.{Region}.myqcloud.com/{Key} 上发，这三样凭证接口
- * 不给，都在预签名地址里（见 parseCosTarget）—— 所以大文件也要先要一次预签名地址。
- * 那个请求很轻，之后几百 MB 的字节流全部是浏览器直连 COS，不经过自己的服务器。
+ * 不按大小分流，所有文件都走分片 —— 小文件只是分成一片，多一次 Initiate 和
+ * 一次 Complete，换来的是所有上传一套代码路径，不用维护两条。
+ *
+ * 凭证接口给出目录前缀、写入接入点和读取域名，key 前端自己拼。字节流全部是
+ * 浏览器直连 COS，不经过自己的服务器。
+ *
+ * 凭证申请或 Initiate 失败（setup 阶段，一个字节都还没出去）时退回预签名单次 PUT。
  */
 async function uploadCosSts(file: File, onProgress?: (percent: number) => void): Promise<string> {
-  const presignedUrl = await allocateTarget(file);
-
-  // 小文件一次 PUT 就够了，不申请凭证
-  if (file.size <= SLICE_THRESHOLD) return putPresigned(presignedUrl, file, onProgress);
-
-  const target = parseCosTarget(presignedUrl);
-  // 解析不出桶信息（比如以后换成自定义加速域名）就用手上这个地址一次 PUT 传完
-  if (!target) return putPresigned(presignedUrl, file, onProgress);
-
   try {
-    // 第一步就是 getCosCredential（凭证带缓存，2 小时内只申请一次）
-    await uploadFileToCos(file, target, onProgress);
+    const url = await uploadFileToCos(file, onProgress);
+    onProgress?.(100);
+    return url;
   } catch (err) {
     // setup 阶段（申请凭证、Initiate）失败时一个字节都还没出去，退回单次 PUT，
     // 别让上传直接挂掉；传到一半才失败的就老实报错，整个重传不划算。
     if (err instanceof CosUploadError && err.stage === "setup") {
       console.warn("[upload] COS 分片启动失败，退回预签名直传", err);
-      return putPresigned(presignedUrl, file, onProgress);
+      return uploadDirect(file, onProgress);
     }
     console.error("[upload] COS 分片上传失败", err);
     throw err instanceof Error ? err : new Error("cos upload failed");
   }
-
-  onProgress?.(100);
-  return toStaticUrl(presignedUrl);
 }
 
 /**

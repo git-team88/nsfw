@@ -693,7 +693,7 @@
     <PreviewModal
       :visible="showPreviewModal"
       :videoUrl="videoPreviewUrl"
-      @close="showPreviewModal = false"
+      @close="closePreview"
     />
 
     <SetCoverModal
@@ -2758,13 +2758,26 @@ async function onDropFile(e: DragEvent) {
 }
 
 function previewVideo() {
-  if (videoFile.value) {
-    videoPreviewUrl.value = URL.createObjectURL(videoFile.value);
-    showPreviewModal.value = true;
-  } else if (videoUrl.value) {
+  // 传完了就放线上那份 —— 预览本地文件看着是对的，但验证不了真正入库的地址能不能播
+  if (videoUrl.value) {
+    closePreview();
     videoPreviewUrl.value = videoUrl.value;
     showPreviewModal.value = true;
+  } else if (videoFile.value) {
+    // 还没传完，只能先放本地的
+    closePreview();
+    videoPreviewUrl.value = URL.createObjectURL(videoFile.value);
+    showPreviewModal.value = true;
   }
+}
+
+/** 关预览。blob 地址不释放会一直把整个文件钉在内存里，5GB 的视频尤其要命 */
+function closePreview() {
+  if (videoPreviewUrl.value.startsWith("blob:")) {
+    URL.revokeObjectURL(videoPreviewUrl.value);
+  }
+  videoPreviewUrl.value = "";
+  showPreviewModal.value = false;
 }
 
 function pickCover() {

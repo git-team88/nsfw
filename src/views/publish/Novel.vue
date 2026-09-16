@@ -549,7 +549,7 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                    <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
+                        <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                           <div class="sensitive-left">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 

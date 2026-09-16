@@ -1,12 +1,27 @@
 import CryptoJS from "crypto-js";
+import SparkMD5 from "spark-md5";
 import api from "@/api/index";
 
 // ---------------------------------------------------------------------------
 // COS 直传分片。
 //
-// 浏览器拿一份 STS 临时凭证（common/cos_upload_credential，有效期 2 小时），
-// 自己算 COS 的请求签名，直接和 COS 说话：
+// 浏览器拿一份 STS 临时凭证（common/cos_upload_credential），自己算 COS 的请求签名，
+// 直接和 COS 说话：
 //   InitiateMultipartUpload -> UploadPart x N（并发）-> CompleteMultipartUpload
+//
+// 凭证接口给出三样：目录前缀（upload_prefix）、写请求发往的接入点（endpoint）、
+// 读取用的 CDN 域名（cdn_domain）。桶名、地域、目录规则全在后端，前端一个都不写死。
+//
+// 写和读的域名不是同一个：
+//   写 —— endpoint，COS 自己的接入点（如 {bucket}.cos.accelerate.myqcloud.com）。
+//         CDN 域名走不通：请求穿 EdgeOne 回源时 Authorization 头被剥掉，COS 当匿名请求，一律 403。
+//   读 —— cdn_domain，传完拼给业务用的地址。
+//
+// 完整 key = {upload_prefix}/{md5 前两位}/{完整 md5}.{扩展名}，见 buildObjectKey。
+//
+// 完整 key = {upload_prefix}/{YYYYMMDD}/{文件内容的 md5}.{扩展名}。
+// 文件名用内容 md5，不用原文件名 —— 一来中文、日文、空格、emoji 这些进不了路径，
+// 二来同一个文件重传落在同一个 key 上，断线重来和手抖点两次都不会在桶里堆垃圾。
 //
 // 相比预签名单次 PUT：单片失败可重试，有字节级进度，断的只是一片不是整个文件。
 // 相比服务端中转分片：不走自己的服务器，不吃自己的带宽。
@@ -23,24 +38,90 @@ export interface CosCredential {
   Token: string;
   StartTime: number;
   ExpiredTime: number;
+  /** 上传目录前缀，形如 /test/video —— 后面的分桶目录和文件名由前端拼（见 buildObjectKey） */
+  uploadPrefix: string;
+  /** 写请求（Initiate / UploadPart / Complete）发往的 COS 接入点 */
+  endpoint: string;
+  /** 传完之后拼访问地址用的 CDN 域名。只用于读，写不走它 */
+  cdnDomain: string;
 }
 
-/** 单片大小的下限。COS 要求除最后一片外每片不小于 1MB，这里取 10MB */
-const MIN_CHUNK_SIZE = 10 * 1024 * 1024;
-/** COS 单次分片上传最多 10000 片，留足余量按 1000 片封顶，片数超了就把片调大 */
-const MAX_PART_COUNT = 1000;
+/**
+ * 分片大小，固定 5MB。算 md5 时也按这个尺寸读文件。
+ * 发布页限的是 5GB，5GB / 5MB = 1000 片，离 COS 的 10000 片上限还远，不用动态调。
+ * 小于一片的文件就传一片 —— COS 的「每片不小于 1MB」不约束最后一片。
+ */
+const CHUNK_SIZE = 5 * 1024 * 1024;
 /** 并发上传的分片数 */
 const CONCURRENCY = 4;
 /** 单片的网络失败重试次数 */
 const MAX_RETRY = 3;
-/** 凭证提前过期的余量：剩不到 5 分钟就重新申请，避免大文件传到一半签名失效 */
-const CREDENTIAL_MARGIN = 5 * 60;
+/** 算 md5 在总进度里占的比重：进度条前 5% 是校验，后面才是真上传 */
+const HASH_WEIGHT = 5;
 
-/** 按文件大小挑分片尺寸，保证片数不超过 MAX_PART_COUNT */
-export function pickChunkSize(fileSize: number): number {
-  let size = MIN_CHUNK_SIZE;
-  while (Math.ceil(fileSize / size) > MAX_PART_COUNT) size *= 2;
-  return size;
+/** 这条通道只传视频，允许的扩展名就这两个 */
+const ALLOWED_EXTENSIONS = ["mp4", "mov"] as const;
+/** 原文件名取不到可用后缀时，按 file.type 兜底 */
+const MIME_EXTENSION: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+};
+/** MIME 也认不出来时的最后兜底 —— 发布页只放行 mp4 / mov，走到这里基本是 mp4 */
+const DEFAULT_EXTENSION = "mp4";
+
+/**
+ * 洗出一个能进路径的扩展名。
+ *
+ * 「我的视频.mp4」「動画.MOV」取到的是 mp4 / mov；「影片」这种没后缀的、
+ * 后缀全是非 ASCII 的、或者后缀不在白名单里的（有人把文件随手改成 .txt），
+ * 退回按 file.type 猜，再不行按 mp4 处理 —— 页面那层已经拦过格式了。
+ */
+function extensionOf(file: File): string {
+  const dot = file.name.lastIndexOf(".");
+  const cleaned = dot < 0
+    ? ""
+    : file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "");
+  if ((ALLOWED_EXTENSIONS as readonly string[]).includes(cleaned)) return cleaned;
+  return MIME_EXTENSION[file.type] || DEFAULT_EXTENSION;
+}
+
+/** 域名可能带协议也可能不带，统一补成 https 并去掉尾斜杠 */
+function withScheme(host: string): string {
+  const trimmed = host.trim().replace(/\/+$/, "");
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+/**
+ * 按 CHUNK_SIZE 增量算整个文件的 md5。
+ * 不能一次 arrayBuffer() 读完 —— 几百 MB 的视频直接把内存打爆。
+ */
+export async function md5OfFile(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
+  const spark = new SparkMD5.ArrayBuffer();
+  let offset = 0;
+  while (offset < file.size) {
+    const chunk = file.slice(offset, Math.min(offset + CHUNK_SIZE, file.size));
+    spark.append(await chunk.arrayBuffer());
+    offset += chunk.size;
+    onProgress?.(Math.floor((offset / file.size) * 100));
+  }
+  return spark.end();
+}
+
+/**
+ * 完整对象 key：{前缀}/{md5 前两位}/{完整 md5}.{扩展名}
+ *
+ * 前缀先去掉首尾斜杠 —— 接口给的是 /test/video，直接相加会拼出 test/video86/…，
+ * 而且 key 自己绝不能带头斜杠：签名里的 UriPathname 是 "/" + key，
+ * 带了就成了 //test/video/…，和实际请求路径对不上，直接 SignatureDoesNotMatch。
+ *
+ * md5 前两位当分桶目录，256 个，均匀分布且同一个文件永远落同一个目录。
+ */
+export function buildObjectKey(uploadPrefix: string, md5: string, file: File): string {
+  const prefix = uploadPrefix.replace(/^\/+|\/+$/g, "");
+  return `${prefix}/${md5.slice(0, 2)}/${md5}.${extensionOf(file)}`;
 }
 
 /**
@@ -61,44 +142,34 @@ export class CosUploadError extends Error {
   }
 }
 
-// --- 凭证缓存 ---------------------------------------------------------------
-// 一次发布可能连着传封面、视频，凭证 2 小时有效，没必要每次都申请。
-// inflight 保证并发调用只会打一个请求。
-
-let credentialCache: CosCredential | null = null;
-let credentialInflight: Promise<CosCredential> | null = null;
-
-/** 退出登录或切账号时清掉，避免用着上一个账号的凭证 */
-export function resetCosCredential() {
-  credentialCache = null;
-  credentialInflight = null;
-}
-
-function credentialUsable(c: CosCredential | null): c is CosCredential {
-  if (!c) return false;
-  return c.ExpiredTime - CREDENTIAL_MARGIN > Math.floor(Date.now() / 1000);
-}
+// --- 凭证 -------------------------------------------------------------------
+// 一次上传打一次，不做缓存。凭证接口很轻，而缓存要处理过期、切账号、并发去重，
+// 省下的那一个请求不值当 —— 何况原来那次预签名请求已经省掉了，净请求数没变。
 
 export async function getCosCredential(): Promise<CosCredential> {
-  if (credentialUsable(credentialCache)) return credentialCache;
-
-  if (!credentialInflight) {
-    credentialInflight = (async () => {
-      const res = (await api.getCosCredential()) as any;
-      if (!res || (res.code !== 0 && res.code !== 200)) {
-        throw new CosUploadError(res, "credential failed", "setup");
-      }
-      const data = res.data || {};
-      if (!data.TmpSecretId || !data.TmpSecretKey || !data.Token) {
-        throw new CosUploadError(res, "credential incomplete", "setup");
-      }
-      credentialCache = data as CosCredential;
-      return credentialCache;
-    })().finally(() => {
-      credentialInflight = null;
-    });
+  const res = (await api.getCosCredential()) as any;
+  if (!res || (res.code !== 0 && res.code !== 200)) {
+    throw new CosUploadError(res, "credential failed", "setup");
   }
-  return credentialInflight;
+  const data = res.data || {};
+  if (!data.TmpSecretId || !data.TmpSecretKey || !data.Token) {
+    throw new CosUploadError(res, "credential incomplete", "setup");
+  }
+  // cdn_domain 兼容旧字段名 cos_domain
+  const cdnDomain = data.cdn_domain || data.cos_domain;
+  if (!data.upload_prefix || !data.endpoint || !cdnDomain) {
+    throw new CosUploadError(
+      res,
+      "credential missing upload_prefix/endpoint/cdn_domain",
+      "setup",
+    );
+  }
+  return {
+    ...(data as CosCredential),
+    uploadPrefix: String(data.upload_prefix),
+    endpoint: withScheme(String(data.endpoint)),
+    cdnDomain: withScheme(String(cdnDomain)),
+  };
 }
 
 // --- 签名 -------------------------------------------------------------------
@@ -175,16 +246,18 @@ export function buildAuthorization(opts: {
 // --- 请求 -------------------------------------------------------------------
 
 export interface CosTarget {
-  /** 形如 examplebucket-1250000000 */
-  bucket: string;
-  /** 形如 ap-guangzhou */
-  region: string;
+  /** 请求发往的域名，形如 https://static.moegen.ai，不带结尾斜杠 */
+  origin: string;
   /** 对象路径，不带开头的斜杠 */
   key: string;
 }
 
+/** 传完之后可访问的地址 */
+export function fileUrlOf(target: CosTarget): string {
+  return `${target.origin}/${target.key}`;
+}
+
 function targetUrl(target: CosTarget, params: Record<string, string | number>): string {
-  const host = `${target.bucket}.cos.${target.region}.myqcloud.com`;
   const path = target.key.split("/").map(urlEncode).join("/");
   const query = Object.keys(params)
     .map((k) => {
@@ -192,7 +265,7 @@ function targetUrl(target: CosTarget, params: Record<string, string | number>): 
       return v === "" ? urlEncode(k) : `${urlEncode(k)}=${urlEncode(String(v))}`;
     })
     .join("&");
-  return `https://${host}/${path}${query ? "?" + query : ""}`;
+  return `${target.origin}/${path}${query ? "?" + query : ""}`;
 }
 
 function pathnameOf(target: CosTarget): string {
@@ -344,21 +417,32 @@ async function abortUpload(credential: CosCredential, target: CosTarget, uploadI
 }
 
 /**
- * 把一个文件分片直传到 COS。
+ * 把一个文件分片直传到 COS，返回传完之后可访问的地址。
  *
- * @param onProgress 0-100。统计的是「交给网络的字节」，所以这里压到 99，
- *                   等 CompleteMultipartUpload 返回之后由调用方置 100 —— 合并
+ * 目录前缀和两个域名都来自凭证接口，分桶目录和文件名由 buildObjectKey 拼，调用方不用准备。
+ *
+ * @param onProgress 0-100。前 HASH_WEIGHT% 是算 md5，之后才是真上传；
+ *                   上传段统计的是「交给网络的字节」，所以压到 99，等
+ *                   CompleteMultipartUpload 返回之后由调用方置 100 —— 合并
  *                   大文件要几秒，进度条满着不动比停在 99% 更像卡死。
  */
 export async function uploadFileToCos(
   file: File,
-  target: CosTarget,
   onProgress?: (percent: number) => void,
-): Promise<void> {
+): Promise<string> {
   const credential = await getCosCredential();
-  const chunkSize = pickChunkSize(file.size);
-  const total = Math.ceil(file.size / chunkSize);
 
+  // 先算内容 md5 —— key 要用它，所以这一步必须在 Initiate 之前
+  const md5 = await md5OfFile(file, (percent) => {
+    onProgress?.(Math.floor((percent * HASH_WEIGHT) / 100));
+  });
+
+  const key = buildObjectKey(credential.uploadPrefix, md5, file);
+  // 写打 COS 接入点，读用 CDN 域名，key 是同一份
+  const target: CosTarget = { origin: credential.endpoint, key };
+  const cdnTarget: CosTarget = { origin: credential.cdnDomain, key };
+
+  const total = Math.ceil(file.size / CHUNK_SIZE);
   const uploadId = await initiateUpload(credential, target);
 
   // 每片各自上报已传字节，求和算总进度。并发完成顺序是乱的，
@@ -367,7 +451,8 @@ export async function uploadFileToCos(
   const report = () => {
     if (!onProgress) return;
     const sum = loaded.reduce((a, b) => a + b, 0);
-    onProgress(Math.min(99, Math.floor((sum / file.size) * 100)));
+    const percent = HASH_WEIGHT + (sum / file.size) * (99 - HASH_WEIGHT);
+    onProgress(Math.min(99, Math.floor(percent)));
   };
 
   const etags: string[] = new Array(total);
@@ -377,8 +462,8 @@ export async function uploadFileToCos(
     while (true) {
       const index = next++;
       if (index >= total) return;
-      const start = index * chunkSize;
-      const chunk = file.slice(start, Math.min(start + chunkSize, file.size));
+      const start = index * CHUNK_SIZE;
+      const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
       etags[index] = await uploadPart(credential, target, uploadId, index + 1, chunk, (bytes) => {
         loaded[index] = bytes;
         report();
@@ -395,4 +480,6 @@ export async function uploadFileToCos(
     await abortUpload(credential, target, uploadId);
     throw err;
   }
+
+  return fileUrlOf(cdnTarget);
 }
