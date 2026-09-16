@@ -530,7 +530,9 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
       zh: "Chinese",
       en: "English",
       jp: "Japanese",
-      tc: "Traditional Chinese"
+      tc: "Traditional Chinese",
+      kr: "Korean",
+      th: "Thai"
     },
     freezeComputingPower: {
       title: "Freeze Computing Power Notice",

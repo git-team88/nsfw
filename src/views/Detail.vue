@@ -1029,21 +1029,58 @@ const showSubtitleMenu = ref(false);
 const subtitleCues = ref<{ start: number; end: number; text: string }[]>([]);
 const currentSubtitleText = ref('');
 
-const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: 'novel.language.tc', jp: 'novel.language.jp', en: 'novel.language.en' };
+const subtitleLangMap: Record<string, string> = {
+  cn: 'novel.language.zh',
+  tc: 'novel.language.tc',
+  jp: 'novel.language.jp',
+  en: 'novel.language.en',
+  kr: 'novel.language.kr',
+  th: 'novel.language.th',
+};
 
 // 字幕语言的固定顺序。既是下拉项的排列顺序（后端返回顺序不保证稳定，
 // 排一下菜单才不会每次进来都跳），也是「导航语言没有对应字幕」时的兜底优先级：
-// 英语 -> 日语 -> 中文简体 -> 中文繁体。
-const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc'];
+// 英语 -> 日语 -> 中文简体 -> 中文繁体 -> 韩语 -> 泰语。
+// BL 作品只留英日韩泰，过滤掉中文之后正好是英 -> 日 -> 韩 -> 泰。
+const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc', 'kr', 'th'];
+
+// BL 标记的漫剧（is_bl == 1）只给这四种，后端就算返回了中文也不列。
+const BL_SUBTITLE_LANGS = ['en', 'jp', 'kr', 'th'];
+
+// 手动切到韩文 / 泰文时写这个 key，下次进别的视频优先按它选。
+// 只记这两种：用户特地切过去的才算偏好，切回英日中文当成临时行为。
+const SUBTITLE_LANG_CACHE_KEY = 'subtitleLangPref';
+const CACHEABLE_SUBTITLE_LANGS = ['kr', 'th'];
 
 // 已经选了某个语言时，下拉项按漫剧自身的语言排（作品自身的语言本来就不在列表里）。
 // 认不出作品语言就退回 SUBTITLE_LANG_ORDER。
 const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
-  cn: ['jp', 'en', 'tc'],
-  tc: ['jp', 'en', 'cn'],
-  jp: ['en', 'tc', 'cn'],
-  en: ['jp', 'tc', 'cn'],
+  cn: ['jp', 'en', 'tc', 'kr', 'th'],
+  tc: ['jp', 'en', 'cn', 'kr', 'th'],
+  jp: ['en', 'tc', 'cn', 'kr', 'th'],
+  en: ['jp', 'tc', 'cn', 'kr', 'th'],
+  kr: ['en', 'jp', 'tc', 'cn', 'th'],
+  th: ['en', 'jp', 'tc', 'cn', 'kr'],
 };
+
+/** 读缓存的字幕偏好。隐私模式下 localStorage 会抛，读不到就当没设过 */
+function readCachedSubtitleLang(): string {
+  try {
+    const v = localStorage.getItem(SUBTITLE_LANG_CACHE_KEY) || '';
+    return CACHEABLE_SUBTITLE_LANGS.includes(v) ? v : '';
+  } catch {
+    return '';
+  }
+}
+
+function writeCachedSubtitleLang(lang: string) {
+  if (!CACHEABLE_SUBTITLE_LANGS.includes(lang)) return;
+  try {
+    localStorage.setItem(SUBTITLE_LANG_CACHE_KEY, lang);
+  } catch {
+    // 写不进去就算了，只是下次不记得而已
+  }
+}
 
 /** 导航语言换算成后端的字幕语言码（后端把简体叫 cn，导航里叫 zh） */
 function navSubtitleLang(): string {
@@ -1053,18 +1090,35 @@ function navSubtitleLang(): string {
 // 真正能选的字幕语言：后端返回了哪些就有哪些，去掉作品自身的语言（漫剧是中文简体
 // 就不给简体字幕）和认不出来的语言码，再按固定顺序排。
 // 这个数组为空 = 一条字幕都没有 = 整个开关不显示。
+/** BL 标记的漫剧 —— 字幕只给英日韩泰四种 */
+const isBlDrama = computed(() => detail.value?.type == '3' && detail.value?.is_bl == 1);
+
 const availableSubtitleLangs = computed(() => {
   const ownLang = detail.value?.language || '';
   const langs = subtitles.value
     .map(s => s.lang)
-    .filter(l => !!subtitleLangMap[l] && l !== ownLang);
+    .filter(l => !!subtitleLangMap[l] && l !== ownLang)
+    .filter(l => !isBlDrama.value || BL_SUBTITLE_LANGS.includes(l));
   return SUBTITLE_LANG_ORDER.filter(l => langs.includes(l));
 });
 
-/** 默认字幕：和导航语言一致的优先，没有就按 SUBTITLE_LANG_ORDER 取第一个能用的 */
+/**
+ * 默认字幕，按这个优先级挑：
+ *   1. 缓存里的偏好（只可能是韩文 / 泰文）—— 这个视频有就用它
+ *   2. 缓存有但这个视频没有这种字幕 -> 英文，英文也没有才退回排序第一个
+ *   3. 没缓存 -> 和导航语言一致的
+ *   4. 都不沾边 -> 按 SUBTITLE_LANG_ORDER（英、日、韩、泰、简、繁）取第一个能用的
+ */
 function pickDefaultSubtitleLang(): string {
   const langs = availableSubtitleLangs.value;
   if (!langs.length) return '';
+
+  const cached = readCachedSubtitleLang();
+  if (cached) {
+    if (langs.includes(cached)) return cached;
+    return langs.includes('en') ? 'en' : langs[0];
+  }
+
   const nav = navSubtitleLang();
   return langs.includes(nav) ? nav : langs[0];
 }
@@ -1099,6 +1153,8 @@ const subtitleTrackUrl = computed(() => {
 
 function selectSubtitle(lang: string) {
   selectedSubtitleLang.value = lang == 'none' ? '' : lang;
+  // 只有切到韩文 / 泰文才记，切回别的语言不动缓存
+  writeCachedSubtitleLang(lang);
   showSubtitleMenu.value = false;
   loadSubtitleCues();
 }
@@ -1377,6 +1433,8 @@ interface DetailData {
   isFav: boolean;
   is_teenager: number;
   is_nsfw: string;
+  /** BL 标记的作品。漫剧（type 3）带这个标记时字幕只给英日韩泰 */
+  is_bl?: number | string;
   book_is_nsfw: number;
   book_id: string;
   book_title: string;
@@ -2493,6 +2551,7 @@ async function fetchDetail(newId: number) {
         isFav: res.data.is_fav == 1 || res.data.is_fav === true,
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
+        is_bl: data.is_bl ?? 0,
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
         book_title: data.book_title || '',

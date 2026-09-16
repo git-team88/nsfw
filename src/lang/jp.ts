@@ -2786,7 +2786,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       zh: "中国語",
       en: "英語",
       jp: "日本語",
-      tc: "中国語（繁体字）"
+      tc: "中国語（繁体字）",
+      kr: "韓国語",
+      th: "タイ語"
     },
     freezeComputingPower: {
       title: "クレジット消費に関する注意事項",
