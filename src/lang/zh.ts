@@ -2983,6 +2983,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     queue: "队列",
   },
   collection: {
+    publicCount: "{count}{unit}公开",
+    paidCount: "{count}{unit}付费",
     collectionNotFound: "合集不存在",
     unlockSuccess: {
       title: "支付成功！",

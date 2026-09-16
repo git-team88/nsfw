@@ -2566,6 +2566,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     queue: "キュー",
   },
   collection: {
+    publicCount: "公開{count}{unit}",
+    paidCount: "有料{count}{unit}",
     collectionNotFound: "コレクションが見つかりません",
     unlockSuccess: {
       title: "お支払いが完了しました！",

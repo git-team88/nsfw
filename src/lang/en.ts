@@ -2874,6 +2874,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     queue: "Queue",
   },
   collection: {
+    publicCount: "{count} {unit} public",
+    paidCount: "{count} {unit} paid",
     collectionNotFound: "Collection not found",
     unlockSuccess: {
       title: "Payment successful!",

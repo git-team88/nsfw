@@ -2975,6 +2975,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     queue: "隊列",
   },
   collection: {
+    publicCount: "{count}{unit}公開",
+    paidCount: "{count}{unit}付費",
     collectionNotFound: "合集不存在",
     unlockSuccess: {
       title: "支付成功！",

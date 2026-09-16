@@ -198,7 +198,9 @@
         <div class="loading-text">{{ t('home.loading') }}</div>
       </div>
 
-      <div class="content-wrapper" v-if="uploadSuccess || postId">
+      <!-- 初始化期间不要渲染：postId 是同步从地址栏取的，不排除掉的话
+           编辑模式一进来就会先铺一屏空数据，和上面的加载中同时出现 -->
+      <div class="content-wrapper" v-if="(uploadSuccess || postId) && !isInitializing && !isLoadingBatchPublish">
 
         <!-- Single mode: video status + permission -->
         <div v-if="!isBatchPublish" class="section">
@@ -835,6 +837,8 @@ import {
   fetchBookRechargePlans,
   findPlanByPrice,
   planPriceText,
+  planPriceOf,
+  planCurrencyOf,
   type BookRechargePlan,
 } from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
@@ -1127,19 +1131,30 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number; currency?: string } | null>(null);
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
 // 档位由 book/getBookRechargePlan 下发，这里只负责把合集存的金额换算成展示文案。
 // 拿不到档位、或者合集没存过价格，这一行就不渲染。
 const rechargePlans = ref<BookRechargePlan[]>([]);
+
+/**
+ * 自动建合集时用的档位 —— 帮用户选中接口返回的第一档。
+ * onMounted 那次拉取可能还没回来，所以这里兜一次 await（fetch 内部有缓存，不会重复打请求）。
+ */
+async function firstPlanId(): Promise<string> {
+  const plans = rechargePlans.value.length ? rechargePlans.value : await fetchBookRechargePlans();
+  rechargePlans.value = plans;
+  const plan = plans[0];
+  return plan ? String(plan.plan_id ?? plan.id) : '';
+}
 const collectionPriceText = computed(() => {
   const price = selectedCollection.value?.price;
   if (price === undefined || price === null || price === '') return '';
   const plan = findPlanByPrice(rechargePlans.value, price);
-  // 匹配不到档位时按第一档的币种换算，至少不会显示原始的分值
+  // 接口下发的 plan 自带币种，优先用它；再退回档位列表
   // 金额是美分，currency 缺省时也按 usd 缩放
-  const currency = plan?.currency || rechargePlans.value[0]?.currency || 'usd';
+  const currency = selectedCollection.value?.currency || plan?.currency || rechargePlans.value[0]?.currency || 'usd';
   return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
 });
 
@@ -1361,6 +1376,7 @@ async function handlePublishFromSelection() {
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
+              plan_id: await firstPlanId(),
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -1391,7 +1407,8 @@ async function handlePublishFromSelection() {
                 cover: searchRes.data?.book_info?.cover,
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-                price: searchRes.data?.book_info?.price ?? ''
+                price: planPriceOf(searchRes.data?.book_info),
+                currency: planCurrencyOf(searchRes.data?.book_info)
               };
               isNoCollection.value = false;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -1882,7 +1899,9 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       cover: collection.cover,
       description: collection.description,
       is_nsfw: collection.is_nsfw ?? 0,
-      price: collection.price ?? ''
+      // 价格读接口新下发的 plan，没有再退回老的顶层 price
+      price: planPriceOf(collection),
+      currency: planCurrencyOf(collection)
     };
 
     coverPreview.value = collection.cover || '';
@@ -2462,6 +2481,7 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
+            plan_id: await firstPlanId(),
             cover: project.video_cover_url || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -2494,7 +2514,8 @@ async function handlePublish(publishData?: any) {
               cover: searchRes.data?.book_info?.cover || collectionCover,
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-              price: searchRes.data?.book_info?.price ?? ''
+              price: planPriceOf(searchRes.data?.book_info),
+              currency: planCurrencyOf(searchRes.data?.book_info)
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -2977,7 +2998,10 @@ async function getPostDetails() {
         selectedCollection.value = {
           id: postData.book_id || '',
           name: postData.book_title,
-          cover: postData.cover || ''
+          cover: postData.cover || '',
+          // 详情接口也下发了合集的收费档，编辑态一样要把价格显示出来
+          price: planPriceOf(data.data?.plan ? data.data : postData),
+          currency: planCurrencyOf(data.data?.plan ? data.data : postData)
         };
         isNoCollection.value = false;
 
@@ -4056,6 +4080,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
             const createRes = await api.addCollection({
               title,
               type: 3,
+              plan_id: await firstPlanId(),
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4087,7 +4112,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 cover: searchRes.data?.book_info?.cover || '',
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-                price: searchRes.data?.book_info?.price ?? ''
+                price: planPriceOf(searchRes.data?.book_info),
+                currency: planCurrencyOf(searchRes.data?.book_info)
               };
               selectedCollectionId.value = book_id;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -4274,6 +4300,7 @@ async function initBatchPublish(session_id: string) {
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
+            plan_id: await firstPlanId(),
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4305,7 +4332,8 @@ async function initBatchPublish(session_id: string) {
               cover: searchRes.data?.book_info?.cover || '',
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-              price: searchRes.data?.book_info?.price ?? ''
+              price: planPriceOf(searchRes.data?.book_info),
+              currency: planCurrencyOf(searchRes.data?.book_info)
             };
             selectedCollectionId.value = book_id;
             selectedEpisodeNumber.value = episodeNumber.toString();

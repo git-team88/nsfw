@@ -45,6 +45,20 @@
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
+        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
+        <div class="form-group" v-if="showPriceRow">
+          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}</label>
+          <div class="price-options">
+            <div
+              class="price-option"
+              v-for="plan in rechargePlans"
+              :key="plan.id"
+              :class="{ active: selectedPlanId === plan.id }"
+              @click="selectedPlanId = plan.id"
+            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
+          </div>
+        </div>
+
         <!-- Sensitive Content Section -->
         <div class="form-group" v-if="contentSwitch.showSensitiveToggle">
           <div class="form-label-inner">
@@ -95,20 +109,6 @@
             maxlength="1000"
             spellcheck="false"
           ></textarea>
-        </div>
-
-        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
-        <div class="form-group" v-if="showPriceRow">
-          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}</label>
-          <div class="price-options">
-            <div
-              class="price-option"
-              v-for="plan in rechargePlans"
-              :key="plan.id"
-              :class="{ active: selectedPlanId === plan.id }"
-              @click="selectedPlanId = plan.id"
-            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
-          </div>
         </div>
 
         <!-- Language Section -->
@@ -332,6 +332,10 @@ onMounted(async () => {
     syncSelectedPlan();
   });
 
+  // 新建模式的类型只能从地址栏拿（user-home 的「新建合集」带 ?type= 进来）；
+  // 编辑模式下面 loadCollection 会用合集真实的 type 覆盖掉它
+  collectionType.value = String(route.query.type ?? '');
+
   const id = route.query.id;
   if (id) {
     editId.value = id as string;
@@ -415,6 +419,7 @@ async function handleSave() {
       // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
       if (showPriceRow.value && selectedPlan.value) {
         params.price = selectedPlan.value.price;
+        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
       }
     } else {
       params.title = collectionName.value.trim();
@@ -422,6 +427,11 @@ async function handleSave() {
       params.cover = coverUrl.value;
       params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
+
+      if (showPriceRow.value && selectedPlan.value) {
+        params.price = selectedPlan.value.price;
+        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
+      }
     }
 
     let response;
@@ -885,7 +895,7 @@ function goBack() {
   &.btn-save {
     background: linear-gradient(135deg, #ff4f9a, #e03e87);
     color: #f5f5f5;
-    border: 1px solid #ff4f9a;
+    border: 1px solid #ff9aca;
     box-shadow: 0 0 12px rgba(255, 79, 154, 0.4);
 
     &:hover:not(:disabled) {
@@ -1129,20 +1139,24 @@ function goBack() {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  /* .form-label 没有下边距，这里自己隔开标题 */
+  margin-top: 12px;
 }
 
 .price-option {
-  flex: 1 1 0;
-  min-width: 88px;
+  /* 不铺满整行 —— 只有一个档位时通栏很难看，按钮宽度固定下限 */
+  flex: 0 0 auto;
+  min-width: 136px;
+  padding: 0 16px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 15px;
   font-weight: 700;
-  color: #161122;
-  background: #FFFFFF;
-  border: 2px solid rgba(22, 17, 34, 0.12);
+  color: #FFFFFF;
+  background: #222222;
+  border: 2px solid #3d3d3d;
   border-radius: 12px;
   cursor: pointer;
   user-select: none;
@@ -1154,8 +1168,8 @@ function goBack() {
 }
 
 .price-option.active {
-  background: #161122;
-  border-color: #161122;
-  color: #FFFFFF;
+  border: 1px solid #ff9aca;
+  background: linear-gradient(145deg, #ff65ab, #f02c80);
+  box-shadow: 0 0 6px rgba(255, 50, 140, 0.65);
 }
 </style>

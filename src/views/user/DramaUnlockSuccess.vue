@@ -49,14 +49,15 @@ if (amount > 0) {
 
 /**
  * 观看作品 —— 回到刚解锁的那一集。
- * 拿不到 post_id 时退到支付历史的漫剧解锁 tab（设计稿上成功页的兜底去处）。
+ * 拿不到 post_id 就退回上一页（多半就是来时的详情页），和失败页一致。
  */
 function goWatch() {
   const postId = route.query.post_id || route.query.id;
   if (postId) {
-    router.replace(`/detail/${postId}`);
+    // 详情页的路由是 /detail?id=xx，没有 /detail/:id 这条，拼错会被兜底规则甩回首页
+    router.replace({ path: '/detail', query: { id: String(postId) } });
   } else {
-    router.replace({ path: '/user-payment-history', query: { tab: 'unlocked' } });
+    router.back();
   }
 }
 </script>

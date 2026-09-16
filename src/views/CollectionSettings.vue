@@ -46,7 +46,10 @@
             <!-- 价格：只有漫剧（type 3）的合集有收费档 -->
             <div class="info-item" v-if="collectionPriceText">
               <span class="info-label">{{ t('collection.price') }}：</span>
-              <span class="info-value price-value">{{ collectionPriceText }}<span class="price-unit">/{{ t('collection.fullSeries') }}</span></span>
+              <span class="info-value price-value">{{ collectionPriceText }}<span class="price-unit">/{{ t('collection.fullSeries') }}</span><span
+                class="chapter-access"
+                v-if="chapterAccessText"
+              >{{ chapterAccessText }}</span></span>
             </div>
 
             <div class="info-item">
@@ -163,6 +166,9 @@ const collection = ref({
   user_id: '',
   is_nsfw: '0',
   price: '' as string | number,
+  currency: '',
+  /** 按 access_rights 分组的章节数：1 公开 / 2 订阅可见 / 3 仅自己可见 */
+  group: [] as { access_rights: string | number; num: string | number }[],
   chatpers: [] as any[]
 });
 
@@ -176,8 +182,26 @@ const collectionPriceText = computed(() => {
   if (price === undefined || price === null || price === '') return '';
   const plan = findPlanByPrice(rechargePlans.value, price);
   // 金额是美分，currency 缺省时也按 usd 缩放
-  const currency = plan?.currency || rechargePlans.value[0]?.currency || 'usd';
+  const currency = collection.value.currency
+    || plan?.currency
+    || rechargePlans.value[0]?.currency
+    || 'usd';
   return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
+});
+
+/** 按 access_rights 取章节数：1 公开、2 订阅可见（付费）、3 仅自己可见 */
+function groupCount(accessRights: string): number {
+  const item = collection.value.group.find((g) => String(g.access_rights) === accessRights);
+  return item ? Number(item.num) || 0 : 0;
+}
+
+/** 价格后面那半句：8集公开，0集付费 */
+const chapterAccessText = computed(() => {
+  if (!collection.value.group.length) return '';
+  const unit = getPublishedUnit();
+  const pub = t('collection.publicCount', { count: groupCount('1'), unit });
+  const paid = t('collection.paidCount', { count: groupCount('2'), unit });
+  return `${pub}，${paid}`;
 });
 
 const collectionInfo = computed(() => ({
@@ -202,6 +226,9 @@ onMounted(async () => {
     if (res.code == 0 || res.code == 200) {
       const data = res.data || {};
       const bookInfo = data.book_info || {};
+      // plan 没设置时是空数组 []，设置了才是对象
+      const rawPlan = data.plan ?? bookInfo.plan;
+      const plan = (rawPlan && !Array.isArray(rawPlan) ? rawPlan : {}) as any;
       collection.value = {
           id: bookInfo.id || bookInfo.book_id || bookId,
           title: bookInfo.title || '',
@@ -215,7 +242,10 @@ onMounted(async () => {
           chapter_count_private: bookInfo.chapter_count_private || 0,
           user_id: bookInfo.user_id || '',
           is_nsfw: bookInfo.is_nsfw || '0',
-          price: bookInfo.price ?? '',
+          // 价格读 plan.price。plan 没设置时接口给的是空数组或空对象，两种都当没有处理
+          price: plan.price ?? '',
+          currency: plan.currency || '',
+          group: Array.isArray(data.group) ? data.group : [],
           chatpers: data.chatpers || [],
         };
     } else {
@@ -1009,14 +1039,25 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 }
 
 /* 合集详情的价格行 */
-.info-value.price-value {
+/* 选择器要带满 .detail-section .info-item，否则压不过上面那条 .info-value（3 个 class） */
+.detail-section .info-item .info-value.price-value {
   font-weight: 800;
   color: #FF4D8E;
 }
 
-.info-value.price-value .price-unit {
-  font-size: 13px;
+.detail-section .info-item .info-value.price-value .price-unit {
+  font-size: 16px;
   font-weight: 500;
-  color: #8A8A99;
+  color: #FFFFFF;
+}
+
+/* 价格后面的「X集公开，Y集付费」 */
+.detail-section .info-item .info-value.price-value .chapter-access {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #FFFFFF;
+  font-size: 16px;
+  font-weight: 500;
+  color: #FFFFFF;
 }
 </style>

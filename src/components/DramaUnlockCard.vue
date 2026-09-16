@@ -1,7 +1,8 @@
 <template>
   <!-- 漫剧解锁全集。价格取不到就整张卡不渲染 —— 宁可不显示，也不给一个没有金额的付费入口 -->
   <div class="drama-unlock-card" v-if="priceText">
-    <p class="unlock-tip">{{ t('collection.unlockTip', { price: priceText }) }}</p>
+    <!-- 价格要单独上色，所以整句走 v-html；插进去的只有自己算出来的金额文案 -->
+    <p class="unlock-tip" v-html="unlockTipHtml"></p>
 
     <div class="pay-methods">
       <label class="pay-method" :class="{ active: payMethod === 'cash' }" @click="payMethod = 'cash'">
@@ -14,20 +15,30 @@
       </label>
     </div>
 
-    <button class="unlock-btn" :disabled="isLoading" @click="handleUnlock">
-      {{ isLoading ? t('loading') : t('collection.unlockFullSeries') }}
+    <!-- 加载态只靠整页遮罩表现，按钮文案和样式不跟着变 -->
+    <button class="unlock-btn" @click="handleUnlock">
+      {{ t('collection.unlockFullSeries') }}
     </button>
 
     <p class="pay-terms">
-      {{ t('collection.payAgree') }}<a class="terms-link" @click="goTerms">{{ t('subscribe.paymentTerms') }}</a>
+      {{ t('collection.payAgree') }}<span class="terms-link">{{ t('subscribe.paymentTerms') }}</span>
     </p>
 
-    <WalletSelectModal
-      :visible="showWalletModal"
-      @close="showWalletModal = false"
-      @select="handleWalletSelect"
-      @noWallet="handleNoWallet"
-    />
+    <!--
+      挂到 body 上：卡片外层 .drama-unlock-wrap 有 transform，
+      transform 会变成 position:fixed 的包含块，不 teleport 的话遮罩只盖住卡片那一小块。
+    -->
+    <Teleport to="body">
+      <WalletSelectModal
+        :visible="showWalletModal"
+        @close="showWalletModal = false"
+        @select="handleWalletSelect"
+        @noWallet="handleNoWallet"
+      />
+
+      <!-- 下单 / 跳 Stripe / 链上转账期间都盖住，不给取消 —— 中途取消会留下孤儿订单 -->
+      <UploadMask :visible="isLoading" :text="t('loading')" />
+    </Teleport>
   </div>
 </template>
 
@@ -38,6 +49,7 @@ import { useI18n } from 'vue-i18n';
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 import WalletSelectModal from '@/components/WalletSelectModal.vue';
+import UploadMask from '@/components/UploadMask.vue';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import erc20Abi from '@/util/abi/erc20Abi.json';
@@ -58,6 +70,8 @@ const props = defineProps<{
   currency?: string;
   /** USDT 价格。没单独下发就退回法币换算后的数值 */
   web3Price?: string | number;
+  /** 收费档位 id，详情接口的 plan 里带下来 */
+  planId?: string | number;
 }>();
 
 const emit = defineEmits<{ (e: 'unlocked'): void }>();
@@ -65,13 +79,24 @@ const emit = defineEmits<{ (e: 'unlocked'): void }>();
 const { t, locale } = useI18n();
 const router = useRouter();
 
-// 默认选中 USDT，和设计稿一致
-const payMethod = ref<'cash' | 'usdt'>('usdt');
+// 默认选中现金支付
+const payMethod = ref<'cash' | 'usdt'>('cash');
+
+// plan_id 由详情接口的 plan 直接下发，这里不再单独去拉档位列表
+function resolvePlanId(): string {
+  const id = props.planId;
+  return id === undefined || id === null ? '' : String(id);
+}
 const showWalletModal = ref(false);
 const isLoading = ref(false);
 
 // 金额一律是美分，currency 缺省时也按 usd 缩放，否则 1200 会显示成 $1200
 const payCurrency = computed(() => props.currency || 'usd');
+
+/** 把金额包一层 span 好上色，其余部分还是多语言原文 */
+const unlockTipHtml = computed(() =>
+  t('collection.unlockTip', { price: `<span class="tip-price">${priceText.value}</span>` }),
+);
 
 const priceText = computed(() => {
   const raw = props.price;
@@ -101,11 +126,8 @@ function checkLogin(): boolean {
   return false;
 }
 
-function goTerms() {
-  router.push('/payment-terms');
-}
-
 async function handleUnlock() {
+  if (isLoading.value) return;
   if (!checkLogin()) return;
 
   if (payMethod.value === 'usdt') {
@@ -113,23 +135,39 @@ async function handleUnlock() {
     return;
   }
 
-  // 现金走 Stripe。下单接口暂时照搬订阅博主那套，只多带作品参数，
-  // 等解锁专用接口出来把这里换掉即可。
+  // 现金走 Stripe：book/addBookOrder 下单拿 checkout 地址，再整页跳过去
+  isLoading.value = true;
+
   try {
-    isLoading.value = true;
-    const res = (await api.subscribe({
-      creator_id: props.authorId,
+    const planId = resolvePlanId();
+    if (!props.bookId || !planId) {
+      toast(t('fail'));
+      return;
+    }
+
+    const res = (await api.addBookOrder({
       book_id: props.bookId,
+      plan_id: planId,
+      // 后端靠这个把成功/失败页的回跳地址拼上 post_id，「观看作品」才知道回哪一集
       post_id: props.postId,
     })) as any;
+
     if (res.code === 0 || res.code === 200) {
-      window.location.href = res.data?.url;
+      // 地址包了一层：data.url.url，兼容后端以后拍平成 data.url
+      const checkoutUrl = typeof res.data?.url === 'string' ? res.data.url : res.data?.url?.url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+        return;
+      }
+      toast(t('fail'));
     } else {
       toast(apiMsg(res));
     }
   } catch {
     toast(t('fail'));
   } finally {
+    // 跳 Stripe 这条也一样撤掉 —— 留着的话从 Stripe 返回时页面是 bfcache 恢复的，
+    // 组件不重建，遮罩会一直盖在那儿
     isLoading.value = false;
   }
 }
@@ -184,18 +222,17 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
       return;
     }
 
-    const res = (await api.generateUBloggerSubOrder({
-      blogger_id: props.authorId,
+    // 漫剧解锁按合集下单，不走博主订阅那条
+    const res = (await api.generateUBookOrder({
       book_id: props.bookId,
-      post_id: props.postId,
-      address: account,
+      wallet: account,
     })) as any;
 
     if (res.code == 0 || res.code == 200) {
       const orderId = res.data?.order_id || '';
       const txHash = await transferUSDT(walletProvider, account, amount);
       if (txHash && orderId) {
-        await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
+        await api.webThreeCallbackUBookPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
         emit('unlocked');
         goResult('success');
       } else {
@@ -213,11 +250,19 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
   }
 }
 
-/** 跳解锁的支付结果页，带上 post_id 供「观看作品」用 */
+/**
+ * 跳解锁的支付结果页。USDT 是前端自己跳，所以 post_id / book_id 在这里拼；
+ * 现金那条是 Stripe 回跳，由后端往 success_url 上拼。
+ * 空值不往 query 里塞 —— post_id= 这种空串会让成功页误判成「有 post_id」。
+ */
 function goResult(kind: 'success' | 'fail') {
+  const query: Record<string, string> = {};
+  if (props.postId !== undefined && props.postId !== null && props.postId !== '') {
+    query.post_id = String(props.postId);
+  }
   router.push({
     path: kind === 'success' ? '/drama-unlock-success' : '/drama-unlock-fail',
-    query: { post_id: String(props.postId ?? ''), book_id: String(props.bookId ?? '') },
+    query,
   });
 }
 
@@ -275,6 +320,11 @@ function handleNoWallet() {
   font-weight: 700;
   line-height: 1.5;
   color: #161122;
+
+  /* v-html 插进来的，得用 :deep 才命中 */
+  :deep(.tip-price) {
+    color: #FF4D8E;
+  }
 }
 
 .pay-methods {
@@ -339,8 +389,8 @@ function handleNoWallet() {
 }
 
 .terms-link {
+  /* 只是协议名，不跳转，样式照旧，只是不可点 */
   color: #FF4D8E;
-  cursor: pointer;
   text-decoration: underline;
 }
 </style>

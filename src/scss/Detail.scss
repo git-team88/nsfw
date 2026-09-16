@@ -706,6 +706,17 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
         cursor: default;
       }
 
+      // 解锁卡和 .lock-content 一样绝对定位居中，别当成 flex 项去和背景图并排
+      .drama-unlock-wrap {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(420px, 90%);
+        max-height: 100%;
+        z-index: 10;
+      }
+
       .lock-content {
         position: absolute;
         left: 50%;

@@ -456,6 +456,7 @@ async function handleSave() {
       // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
       if (showPriceRow.value && selectedPlan.value) {
         params.price = selectedPlan.value.price;
+        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
       }
 
       const response = await api.modifyCollection(params) as any;
@@ -485,7 +486,12 @@ async function handleSave() {
         cover: coverUrl.value,
         is_nsfw: computedIsNsfw.value,
         language: selectedLanguage.value,
-        ...(showPriceRow.value && selectedPlan.value ? { price: selectedPlan.value.price } : {}),
+        ...(showPriceRow.value && selectedPlan.value
+          ? {
+              price: selectedPlan.value.price,
+              plan_id: selectedPlan.value.plan_id ?? selectedPlan.value.id,
+            }
+          : {}),
       };
 
       const response = await api.addCollection(params) as any;
@@ -987,11 +993,15 @@ function handleModalKeydown(e: KeyboardEvent) {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  /* .form-label 没有下边距，这里自己隔开标题 */
+  margin-top: 12px;
 }
 
 .price-option {
-  flex: 1 1 0;
-  min-width: 88px;
+  /* 不铺满整行 —— 只有一个档位时通栏很难看，按钮宽度固定下限 */
+  flex: 0 0 auto;
+  min-width: 136px;
+  padding: 0 16px;
   height: 44px;
   display: flex;
   align-items: center;

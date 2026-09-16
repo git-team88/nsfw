@@ -75,6 +75,40 @@ export function planPriceText(plan: BookRechargePlan | null | undefined, yenUnit
   return `${fiatPrefix(currency)}${scaleFiatPrice(plan.price, currency)}${fiatSuffix(currency, yenUnit)}`;
 }
 
+/**
+ * 从接口返回里取收费档。
+ *
+ * 后端没给合集设档位时，plan 下发的是空数组 []，设了才是对象；再加上
+ * price 可能是空串，所以统一在这里收口，外面只判 null。
+ */
+export function pickPlan(raw: unknown): BookRechargePlan | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const price = (raw as BookRechargePlan).price;
+  if (price === undefined || price === null || price === "") return null;
+  return raw as BookRechargePlan;
+}
+
+/** 合集价格：优先读新下发的 plan，退回老的顶层 price 字段 */
+export function planPriceOf(source: any): string | number {
+  const plan = pickPlan(source?.plan);
+  if (plan) return plan.price;
+  const price = source?.price;
+  return price === undefined || price === null ? "" : price;
+}
+
+/** 合集币种。取不到就留空，由展示处按 usd 兜底（金额一律是美分） */
+export function planCurrencyOf(source: any): string {
+  return pickPlan(source?.plan)?.currency || source?.currency || "";
+}
+
+/** 合集的档位 id，同样优先 plan */
+export function planIdOf(source: any): string {
+  const plan = pickPlan(source?.plan);
+  if (plan) return String(plan.plan_id ?? plan.id ?? "");
+  const id = source?.plan_id;
+  return id === undefined || id === null ? "" : String(id);
+}
+
 /** 后端存的是原始金额，回显时要按金额找回是哪个档位 */
 export function findPlanByPrice(
   plans: BookRechargePlan[],

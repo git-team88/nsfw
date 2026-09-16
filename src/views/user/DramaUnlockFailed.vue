@@ -39,7 +39,8 @@ const { t } = useI18n();
 function backToPayment() {
   const postId = route.query.post_id || route.query.id;
   if (postId) {
-    router.replace(`/detail/${postId}`);
+    // 详情页的路由是 /detail?id=xx，没有 /detail/:id 这条，拼错会被兜底规则甩回首页
+    router.replace({ path: '/detail', query: { id: String(postId) } });
   } else {
     router.back();
   }

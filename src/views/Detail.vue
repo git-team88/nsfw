@@ -159,15 +159,19 @@
                 <!-- 漫剧付费：未订阅且作品设了订阅可见时，给解锁全集的入口 -->
                 <template v-else-if="showDramaUnlock">
                   <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
-                  <DramaUnlockCard
-                    :book-id="detail.book_id"
-                    :post-id="detail.id"
-                    :author-id="detail.author?.id"
-                    :price="detail.book_price"
-                    :currency="detail.book_currency"
-                    :web3-price="detail.book_web3_price"
-                    @unlocked="handleDramaUnlocked"
-                  />
+                  <!-- 卡片要盖在背景图上，overlay 是 flex 行，不套一层就会被挤到图右边 -->
+                  <div class="drama-unlock-wrap">
+                    <DramaUnlockCard
+                      :book-id="detail.book_id"
+                      :post-id="detail.id"
+                      :author-id="detail.author?.id"
+                      :price="detail.book_price"
+                      :currency="detail.book_currency"
+                      :web3-price="detail.book_web3_price"
+                      :plan-id="detail.book_plan_id"
+                      @unlocked="handleDramaUnlocked"
+                    />
+                  </div>
                 </template>
                 <template v-else>
                   <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
@@ -970,6 +974,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
+import { pickPlan } from "@/util/bookRechargePlan";
 import { formatTimestamp, initLanguage, processImageUrl } from "@/util/utils";
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
@@ -1107,16 +1112,28 @@ function navSubtitleLang(): string {
 /** BL 标记的漫剧 —— 字幕只给英日韩泰四种 */
 const isBlDrama = computed(() => detail.value?.type == '3' && detail.value?.is_bl == 1);
 
+/** 合集的解锁价格。取不到或是 0 就当这个合集没设收费档 */
+const dramaUnlockPrice = computed(() => {
+  const raw = detail.value?.book_price;
+  if (raw === undefined || raw === null || raw === '') return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+});
+
 /**
- * 漫剧解锁全集的入口。四个条件都满足才给：
- * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人。
- * 价格取不到时卡片内部会自己不渲染（后端字段还没上）。
+ * 漫剧解锁全集的入口。条件都满足才给：
+ * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人、合集设了价格。
+ * 价格必须在这里判 —— 卡片内部拿不到价会整张不渲染，
+ * 放行到这一步的话页面就只剩一张空背景图，连订阅提示都没了。
  */
 const showDramaUnlock = computed(
   () => detail.value?.type == '3'
     && isPaidContentLocked.value
     && !detail.value?.isSubscribed
-    && detail.value?.author?.id !== uid,
+    && detail.value?.author?.id !== uid
+    && dramaUnlockPrice.value > 0
+    // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
+    && !hasBoughtBook.value,
 );
 
 /** 解锁成功后重新拉一遍详情，锁自然就开了 */
@@ -1466,10 +1483,13 @@ interface DetailData {
   is_nsfw: string;
   /** BL 标记的作品。漫剧（type 3）带这个标记时字幕只给英日韩泰 */
   is_bl?: number | string;
-  /** 漫剧解锁全集的价格（原始金额）。后端字段还没上，取不到解锁卡片就不渲染 */
+  /** 漫剧解锁的收费档位。没设置档位时接口给空数组 / 空对象，取不到就不渲染解锁卡片 */
   book_price?: string | number;
   book_currency?: string;
   book_web3_price?: string | number;
+  book_plan_id?: string | number;
+  /** 是否已经买过这个合集。买过就不再显示解锁入口 */
+  book_buy?: number | string | boolean;
   book_is_nsfw: number;
   book_id: string;
   book_title: string;
@@ -2540,6 +2560,8 @@ async function fetchDetail(newId: number) {
 
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post || res.data;
+      // 收费档位。没设置时接口给的是空数组 []，设置了才是对象，交给 pickPlan 收口
+      const detailPlan = (pickPlan(data.plan ?? res.data?.plan) ?? {}) as any;
 
       let bookIsNsfw = 0;
       let bookSessionId = '';
@@ -2587,9 +2609,11 @@ async function fetchDetail(newId: number) {
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
         is_bl: data.is_bl ?? 0,
-        book_price: data.book_price ?? data.book_info?.price ?? '',
-        book_currency: data.book_currency ?? data.book_info?.currency ?? '',
-        book_web3_price: data.book_web3_price ?? data.book_info?.web3_price ?? '',
+        book_price: detailPlan.price ?? '',
+        book_currency: detailPlan.currency ?? '',
+        book_web3_price: detailPlan.web3_price ?? '',
+        book_plan_id: detailPlan.plan_id ?? detailPlan.id ?? '',
+        book_buy: data.book_buy ?? res.data?.book_buy ?? 0,
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
         book_title: data.book_title || '',
@@ -3452,9 +3476,15 @@ const isImageLocked = (index: number) => {
   return index > 0;
 };
 
+/** 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品 */
+const hasBoughtBook = computed(
+  () => detail.value?.book_buy == 1 || detail.value?.book_buy === true,
+);
+
 const isArticleLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
   if (detail.value.isSubscribed) return false;
+  if (hasBoughtBook.value) return false;
   // If it's the author's own work, don't lock
   if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
   // If paid and not subscribed, show lock
@@ -3464,6 +3494,8 @@ const isArticleLocked = computed(() => {
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
   if (detail.value.isSubscribed) return false;
+  // 合集已购：锁直接放开，不用再看有没有订阅博主
+  if (hasBoughtBook.value) return false;
   if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
   return true;
 });
@@ -3852,7 +3884,12 @@ function closePage() {
     }
   }
 
-  if (window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
+  // vue-router 会把上一条站内记录挂在 history.state.back 上。
+  // 从 Stripe 回来 → 成功页 → replace 到详情页这条路径上它是 null，
+  // 这时 history.back() 退回去的是 Stripe 的地址，所以直接回首页。
+  const hasInAppBack = !!(window.history.state && (window.history.state as any).back);
+
+  if (!hasInAppBack || window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
     router.push('/');
   } else {
     router.back();

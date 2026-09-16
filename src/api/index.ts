@@ -222,6 +222,13 @@ export default {
       data: data,
       method: "POST",
     }),
+  // 漫剧解锁的 USDT 下单，按合集走
+  generateUBookOrder: (data: any) =>
+    axios.request({
+      url: "order/generateUBookOrder",
+      data: data,
+      method: "POST",
+    }),
   generateUAIOrder: (data: any) =>
     axios.request({
       url: "order/generateUAIOrder",
@@ -231,6 +238,13 @@ export default {
   webThreeCallbackUPaid: (data: any) =>
     axios.request({
       url: "webThreeCallback/uPaid",
+      data: data,
+      method: "POST",
+    }),
+  // 漫剧解锁的 USDT 到账回调，和订阅那条分开
+  webThreeCallbackUBookPaid: (data: any) =>
+    axios.request({
+      url: "webThreeCallback/uBookPaid",
       data: data,
       method: "POST",
     }),
@@ -891,6 +905,13 @@ export default {
     axios.request({
       url: "book/getBookDetail?book_id=" + bookId,
       method: "GET"
+    }),
+  /** 漫剧解锁下单（现金 / Stripe）。返回 data.url.url 是 checkout 地址 */
+  addBookOrder: (data: any) =>
+    axios.request({
+      url: "book/addBookOrder",
+      data: data,
+      method: "POST",
     }),
   /** 漫剧解锁记录。接口还没上线，路径待后端确认 */
   userDramaUnlockList: (page: number, limit: number) =>
