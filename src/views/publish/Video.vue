@@ -322,7 +322,7 @@
                         <!-- 漫剧合集的收费档，封面下方 -->
                         <div class="collection-price" v-if="collectionPriceText">
                           <span class="price-amount">{{ collectionPriceText }}</span>
-                          <span class="price-unit">/{{ t('collection.fullSeries') }}</span>
+                          <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
                         </div>
                       </div>
                       <div class="collection-text">
@@ -502,7 +502,7 @@
                       <!-- 漫剧合集的收费档，封面下方 -->
                       <div class="collection-price" v-if="collectionPriceText">
                         <span class="price-amount">{{ collectionPriceText }}</span>
-                        <span class="price-unit">/{{ t('collection.fullSeries') }}</span>
+                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
                       </div>
                     </div>
                     <div class="collection-text">
@@ -4415,18 +4415,26 @@ onBeforeUnmount(() => {
 .collection-price {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  /* 靠左：cover-box 是居中的一列，这里自己挑出来贴左边 */
+  align-self: flex-start;
+  gap: 8px;
   line-height: 1.15;
 }
 
 .collection-price .price-amount {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 800;
   color: #FF4D8E;
 }
 
 .collection-price .price-unit {
-  font-size: 12px;
-  color: #8A8A99;
+  font-size: 16px;
+  color: #FFFFFF;
+}
+
+/* 斜杠跟金额一样大，后面的文字才是 16px */
+.collection-price .price-slash {
+  font-size: 28px;
 }
 </style>

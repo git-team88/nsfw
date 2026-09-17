@@ -98,7 +98,7 @@
 
         <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
         <div class="form-group" v-if="showPriceRow">
-          <label class="form-label"><b>*</b>{{ t('collection.price') }}</label>
+          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}</label>
           <div class="price-options">
             <div
               class="price-option"
@@ -112,7 +112,7 @@
 
         <!-- Language Section -->
         <div class="form-group">
-          <label class="form-label"><b>*</b>{{ t('submit.language') }}</label>
+          <label class="form-label"><b class="required">*</b>{{ t('submit.language') }}</label>
           <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
             <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
               <span>{{ currentLangLabel }}</span>
