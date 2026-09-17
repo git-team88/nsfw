@@ -543,37 +543,12 @@ async function detectOrientation(src?: string) {
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
 
-  const PREVIEW_W = 470;
-  const PREVIEW_H = 224;
-
-  // 裁剪框比例是 3:4 (15:20)
-  const cropAspectRatio = CROP_W / CROP_H;
-  const imgAspectRatio = img.naturalWidth / img.naturalHeight;
-
-  let scale = 1;
-
-  // 检查图片是否接近3:4比例（允许5%误差）
-  const ratioDiff = Math.abs(imgAspectRatio - cropAspectRatio) / cropAspectRatio;
-  if (ratioDiff < 0.05) {
-    // 3:4比例图片：直接缩放到裁剪框大小
-    scale = Math.max(CROP_W / img.naturalWidth, CROP_H / img.naturalHeight);
-  } else if (imgAspectRatio > PREVIEW_W / PREVIEW_H) {
-    // 宽图：按预览框宽度缩放
-    scale = PREVIEW_W / img.naturalWidth;
-  } else {
-    // 竖图：按预览框高度缩放
-    scale = PREVIEW_H / img.naturalHeight;
-  }
-
-  // 确保图片至少能覆盖裁剪区域
-  const minScaleForCrop = Math.max(CROP_W / img.naturalWidth, CROP_H / img.naturalHeight);
-  if (scale < minScaleForCrop) {
-    scale = minScaleForCrop;
-  }
-
-  // 最大缩放不超过2倍，避免过度放大
-  const maxScale = Math.max(PREVIEW_W / img.naturalWidth, PREVIEW_H / img.naturalHeight) * 2;
-  if (scale > maxScale) scale = maxScale;
+  // 按短边铺满裁剪框：取两个方向所需缩放的较大值，
+  // 相对较短的那条边正好贴住框，另一条边溢出、留给用户拖动取景。
+  //
+  // 原来是按预览框（470×224）缩放的 —— 预览框比裁剪框（150×200）大得多，
+  // 于是图片四条边都超出裁剪框，上下左右全被裁掉。
+  const scale = Math.max(CROP_W / img.naturalWidth, CROP_H / img.naturalHeight);
 
   imgScale.value = scale;
   imgOffsetX.value = 0;
