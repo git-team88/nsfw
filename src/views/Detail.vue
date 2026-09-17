@@ -439,7 +439,7 @@
               <div
                 class="tab-item"
                 :class="{ active: activeTab == 'collection' }"
-                @click="activeTab = 'collection'; loadCollections()"
+                @click="openCollectionTab()"
                 v-if="detail.book_id && Number(detail.book_id) > 0 && !isStandaloneType"
               >
                 {{ t('detail.collection') }}
@@ -1600,6 +1600,8 @@ async function enterCollectionMode() {
   isRightPanelHidden.value = false;
 
   await loadChapters();
+  // loadChapters 把列表重置回第一页了，这一集可能在后面几页，重新定位一次
+  await locateActiveCollection();
 }
 
 // Enter current chapter
@@ -1898,7 +1900,7 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
+    const response = await api.singleCollection(String(detail.value.book_id), 1, COLLECTION_PAGE_SIZE) as any;
     if (response.code == 0) {
       const newCollections = response.data?.data || [];
       collections.value = newCollections.map((chapter: any) => ({
@@ -1906,6 +1908,11 @@ async function loadChapters() {
         type: String(detail.value.type)
       }));
       chapterCount.value = response.data?.allnums || 0;
+      // 和 loadCollections 共用同一份分页状态 —— 这里只拿了第一页，
+      // 后面定位当前这一集要接着往下翻，状态对不上就翻不动了
+      currentCollectionPage.value = 1;
+      hasMoreCollections.value = newCollections.length > 0
+        && collections.value.length < Number(chapterCount.value || 0);
       setChapterNavigation();
     }
   } catch (error) {
@@ -1969,6 +1976,8 @@ async function doNavigateToChapter(chapter: any) {
   isRightPanelHidden.value = false;
 
   await loadChapters();
+  // loadChapters 把列表重置回第一页了，这一集可能在后面几页，重新定位一次
+  await locateActiveCollection();
 }
 
 // Set chapter navigation
@@ -2204,6 +2213,9 @@ function playCollectionItem(chapter: any) {
 }
 
 // Collection list scroll ref
+// 右侧合集列表每页条数。一页装得多，定位当前这一集时少翻几次
+const COLLECTION_PAGE_SIZE = 100;
+
 const collectionListRef = ref<HTMLElement | null>(null);
 const collectionSentinelRef = ref<HTMLElement | null>(null);
 let collectionObserver: IntersectionObserver | null = null;
@@ -2632,6 +2644,9 @@ async function fetchDetail(newId: number) {
         activeTab.value = 'collection';
         isRightPanelHidden.value = false;
 
+        // 地址栏带的这一集不一定在第一页，翻到它所在的页并滚到列表中间
+        locateActiveCollection();
+
         if (localStorage.getItem('token')) {
           await recordViewHistory();
         }
@@ -2940,6 +2955,64 @@ function searchByTag(tag: string) {
 }
 
 // Load collections
+/**
+ * 右侧合集列表里，当前这一集的下标。
+ * 按地址栏的 id 比对（切集时 router.replace 会同步这个 id），取不到再退回详情自己的 id。
+ */
+function findActiveCollectionIndex(): number {
+  const targetId = String(route.query.id ?? detail.value?.id ?? '').trim();
+  if (!targetId) return -1;
+  return collections.value.findIndex((item: any) => String(item?.post_id ?? '') === targetId);
+}
+
+/**
+ * 把当前这一集滚到列表可视区正中间。
+ *
+ * 只滚列表自己，不碰整页滚动 —— 窄屏下这个列表是跟着整页滚的（height:auto），
+ * 内容没超出时 scrollHeight == clientHeight，这里直接不动，免得把页面顶跑。
+ */
+async function scrollCollectionToActive(index: number) {
+  if (index < 0) return;
+  await nextTick();
+  const listEl = collectionListRef.value;
+  if (!listEl || listEl.scrollHeight <= listEl.clientHeight) return;
+
+  const items = listEl.querySelectorAll('.collection-item');
+  const el = items[index] as HTMLElement | undefined;
+  if (!el) return;
+
+  const offset = el.getBoundingClientRect().top - listEl.getBoundingClientRect().top;
+  const centered = listEl.scrollTop + offset - (listEl.clientHeight - el.offsetHeight) / 2;
+  const max = listEl.scrollHeight - listEl.clientHeight;
+  listEl.scrollTop = Math.max(0, Math.min(centered, max));
+}
+
+// 定位时最多往下翻这么多页，防止 id 根本不在这个合集里时一直翻到底
+const MAX_LOCATE_PAGES = 20;
+
+/**
+ * 定位到地址栏 id 对应的那一集：已加载的这几页里找不到，就继续加载下一页再找，
+ * 直到找到、没有更多数据、或者翻够 MAX_LOCATE_PAGES 页为止。
+ */
+async function locateActiveCollection() {
+  for (let i = 0; i < MAX_LOCATE_PAGES; i++) {
+    const index = findActiveCollectionIndex();
+    if (index !== -1) {
+      await scrollCollectionToActive(index);
+      return;
+    }
+    if (!hasMoreCollections.value || isLoadingCollections.value || loadingMoreCollections.value) return;
+    await loadCollections(true);
+  }
+}
+
+/** 切到「合集」tab：拉列表，然后定位到当前这一集 */
+async function openCollectionTab() {
+  activeTab.value = 'collection';
+  await loadCollections();
+  await locateActiveCollection();
+}
+
 async function loadCollections(append: boolean = false) {
   try {
     if (append) {
@@ -2951,7 +3024,7 @@ async function loadCollections(append: boolean = false) {
     }
 
     const page = append ? currentCollectionPage.value + 1 : 1;
-    const pageSize = 50;
+    const pageSize = COLLECTION_PAGE_SIZE;
 
     // 有book_id且值大于0，使用真实API调用
     if (detail.value.book_id && Number(detail.value.book_id) > 0) {
@@ -2972,15 +3045,18 @@ async function loadCollections(append: boolean = false) {
           requiresSubscription: chapter.access_rights == '2' || false
         }));
 
-        // 检查是否有更多数据
-        hasMoreCollections.value = newCollections.length == response.data.allnums;
-
         if (append) {
           collections.value = [...collections.value, ...transformedCollections];
           currentCollectionPage.value = page;
         } else {
           collections.value = transformedCollections;
         }
+
+        // 还有没有下一页：这一页有东西，且已经拿到的条数还没到总数。
+        // （原来写的是「这一页条数 == 总数」，只在一页正好装下全部时才成立，反了）
+        const totalChapters = Number(response.data?.allnums ?? 0);
+        hasMoreCollections.value = newCollections.length > 0
+          && collections.value.length < totalChapters;
       }
     } else {
       // 如果没有book_id或book_id值不大于0，清空collections
@@ -3009,7 +3085,6 @@ async function searchByMention(mention: string) {
     if (res.code === 0 || res.code === 200) {
       const userId = res.data?.user_id;
       if (userId) {
-        localStorage.removeItem('userHomeContentType');
         router.push({ path: "/user-home", query: { id: userId } });
       } else {
         toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)

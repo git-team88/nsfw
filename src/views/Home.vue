@@ -1885,11 +1885,9 @@ const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
 
 // 计价用的画质档。余额接口只有 720P / 1080P 两个每秒单价字段，极速版的 480P / 768P
-// 按档次对应过去算钱：480P 对应 720P 的价，768P 对应 1080P 的价 —— 否则两个分支都不
-// 命中，costPerSecond 恒为 0，算力永远显示 1。等后端下发 480p / 768p 单价后换成真实字段。
-const pricingQuality = computed(() =>
-  (selectedVideoQuality.value === '1080P' || selectedVideoQuality.value === '768P') ? '1080P' : '720P',
-);
+// 一律按 720P 的单价算 —— 否则两个分支都不命中，costPerSecond 恒为 0，算力永远显示 1。
+// 等后端下发 480p / 768p 单价后，把这里换成真实字段即可。
+const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);

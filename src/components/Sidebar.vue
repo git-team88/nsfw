@@ -493,7 +493,8 @@ const isPageFullscreen = ref(false);
 const chapters = ref<any[]>([]);
 const chapterCount = ref(0);
 const currentPage = ref(1);
-const pageSize = ref(50);
+// 目录列表每页条数。一页装得多，定位当前这一章时少翻几次
+const pageSize = ref(100);
 const isLoadingChapters = ref(false);
 const hasMoreChapters = ref(true);
 const tocListRef = ref<HTMLElement | null>(null);
@@ -1969,6 +1970,9 @@ watch(() => props.activeTab, (newTab) => {
 watch(() => props.visible, (newVisible) => {
   if (newVisible && activeTab.value === 'comment') {
     loadComments();
+  } else if (newVisible && activeTab.value === 'toc') {
+    // 侧栏是后打开的，这时候目录可能已经加载过了，补一次定位
+    locateActiveChapter();
   }
 });
 
@@ -1978,6 +1982,56 @@ watch(() => props.detail, (newDetail) => {
     totalComments.value = newDetail.comment_total.toString();
   }
 }, { immediate: true, deep: true });
+
+/**
+ * 目录里当前这一章的下标。
+ * 按地址栏的 id 比对（切章时地址栏的 id 会跟着换），接口两种主键都认，取不到再退回详情自己的 id。
+ */
+function findActiveChapterIndex(): number {
+  const targetId = String(route.query.id ?? (props.detail as any)?.id ?? '').trim();
+  if (!targetId) return -1;
+  return chapters.value.findIndex((c: any) =>
+    String(c?.post_id ?? '') === targetId || String(c?.id ?? '') === targetId);
+}
+
+/**
+ * 把当前这一章滚到目录可视区正中间。
+ * 只滚目录自己，不碰整页滚动；内容没超出（没有滚动条）时什么都不做。
+ */
+async function scrollTocToActive(index: number) {
+  if (index < 0) return;
+  await nextTick();
+  const listEl = tocListRef.value;
+  if (!listEl || listEl.scrollHeight <= listEl.clientHeight) return;
+
+  const items = listEl.querySelectorAll('.toc-item');
+  const el = items[index] as HTMLElement | undefined;
+  if (!el) return;
+
+  const offset = el.getBoundingClientRect().top - listEl.getBoundingClientRect().top;
+  const centered = listEl.scrollTop + offset - (listEl.clientHeight - el.offsetHeight) / 2;
+  const max = listEl.scrollHeight - listEl.clientHeight;
+  listEl.scrollTop = Math.max(0, Math.min(centered, max));
+}
+
+// 定位时最多往下翻这么多页，防止 id 根本不在这个合集里时一直翻到底
+const MAX_LOCATE_PAGES = 20;
+
+/**
+ * 定位到地址栏 id 对应的那一章：这几页里找不到就继续加载下一页再找，
+ * 直到找到、没有更多数据、或者翻够 MAX_LOCATE_PAGES 页为止。
+ */
+async function locateActiveChapter() {
+  for (let i = 0; i < MAX_LOCATE_PAGES; i++) {
+    const index = findActiveChapterIndex();
+    if (index !== -1) {
+      await scrollTocToActive(index);
+      return;
+    }
+    if (!hasMoreChapters.value || isLoadingChapters.value) return;
+    await loadChapters(true);
+  }
+}
 
 // Load chapters list
 async function loadChapters(isLoadMore = false) {
@@ -2030,6 +2084,12 @@ async function loadChapters(isLoadMore = false) {
     console.error('Error loading chapters:', error);
   } finally {
     isLoadingChapters.value = false;
+  }
+
+  // 第一页拉完就定位到地址栏那一章，不在这页就接着翻下一页。
+  // 侧栏没开、或者当前不在目录 tab 时不做 —— 免得白翻几页。
+  if (!isLoadMore && props.visible && activeTab.value === 'toc') {
+    await locateActiveChapter();
   }
 }
 

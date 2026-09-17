@@ -352,6 +352,21 @@ const dramaUnlockList = ref<DramaUnlockItem[]>([]);
  * 自己管 loading —— fetchProcessingData 那条路径是在 try 外面调的，
  * 这里不兜住的话，一旦请求抛异常就一直停在转圈。
  */
+/**
+ * 漫剧订单的金额换算。
+ *
+ * 这个列表不管单位是 usd 还是 usdt，接口都是放大 100 倍下发的（9900 -> 99），
+ * 所以两种单位都要除以 100。法币那份在模板里交给 scaleFiatPrice（它只认 usd），
+ * USDT 那份没有现成的，就在这儿先除好再存进 web3Price。
+ */
+function scaleDramaPrice(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return raw;
+  const n = Number(raw.replace(/[^0-9.\-]/g, ''));
+  if (!Number.isFinite(n)) return raw;
+  return String(parseFloat((n / 100).toFixed(6)));
+}
+
 async function fetchDramaUnlockList() {
   loading.value = true;
   try {
@@ -360,8 +375,13 @@ async function fetchDramaUnlockList() {
       const list = res.data?.data || [];
       dramaUnlockList.value = list.map((item: any) => {
         const info = item.book_info || {};
-        // 只有明确是链上支付才按 USDT 显示；stripe 和空值都按法币走（price 是美分）
-        const isWeb3 = /usdt|web3|crypto/i.test(String(item.pay_type || ''));
+        // 按订单的单位（currency）判断：usdt 就是链上支付，金额原样显示成「X USDT」；
+        // 其余（usd / 空）都按法币走，美元后端下发的是美分，scaleFiatPrice 里除以 100 后加 $。
+        // currency 取不到时才退回看 pay_type —— 老订单可能没带这个字段。
+        const orderCurrency = String(item.currency || '').trim();
+        const isWeb3 = orderCurrency
+          ? /^usdt$/i.test(orderCurrency)
+          : /usdt|web3|crypto/i.test(String(item.pay_type || ''));
         return {
           bookId: item.book_id,
           cover: info.cover || '',
@@ -369,7 +389,7 @@ async function fetchDramaUnlockList() {
           price: item.price,
           fiatCurrency: item.currency || 'usd',
           isWeb3,
-          web3Price: isWeb3 ? item.price : '',
+          web3Price: isWeb3 ? scaleDramaPrice(item.price) : '',
         } as DramaUnlockItem;
       });
       total.value = Number(res.data?.allnums ?? res.data?.count ?? 0) || 0;

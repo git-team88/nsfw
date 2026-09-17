@@ -1175,21 +1175,6 @@ onMounted(async () => {
   await getCountry();
   setSeoMeta();
 
-  // Restore last content type if coming back from detail page
-  try {
-    const lastContentType = localStorage.getItem('userHomeContentType');
-    if (lastContentType !== null) {
-      const contentTypeNum = parseInt(lastContentType, 10);
-      // 只认当前还显示着的类型，漫画/小说隐藏后旧缓存值会让页面停在看不见的 tab 上
-      if (!isNaN(contentTypeNum) && workContentTypes.value.some((tp) => tp.id === contentTypeNum)) {
-        activeContentType.value = contentTypeNum;
-      }
-      localStorage.removeItem('userHomeContentType');
-    }
-  } catch (error) {
-    console.error('Error loading last content type:', error);
-  }
-
   // First fetch user info
   await fetchUserInfo();
 
@@ -2047,7 +2032,6 @@ function goMakeSequelSubscribe() {
 }
 
 function goDetail(id: number | string, authorId?: number | string) {
-  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
   const type = Number(activeContentType.value);
   const queryParams: any = {
     id: id,
@@ -2170,13 +2154,11 @@ function goCollectionDetail(collectionId: number) {
 }
 
 function goCollectionSettings(collectionId: number) {
-  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
   router.push(`/collection-settings/${collectionId}`);
   activeCollectionMenuId.value = null;
 }
 
 function goChapterManage(collectionId: number) {
-  localStorage.setItem('userHomeContentType', activeContentType.value.toString());
   router.push(`/collection/${collectionId}`);
   activeCollectionMenuId.value = null;
 }
