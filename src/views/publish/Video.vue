@@ -1258,7 +1258,15 @@ const isChapterPublished = computed(() => {
 const selectedChapters = ref<number[]>([]);
 const isBatchPublish = computed(() => selectedChapters.value.length > 1);
 const isLoadingBatchPublish = ref(false);
-const isInitializing = ref(false);
+// 带 post_id / 批量 / 单章参数进来的都是编辑态，数据要等 onMounted 里拉回来。
+// 初始值必须在这儿就定下来 —— onMounted 第一个 await 之前页面已经画过一帧了，
+// 起手是 false 的话会先铺一屏空的发布页，再切成转圈，然后才是内容。
+// 条件和下面 onMounted 里那三条管这个标志的分支一一对应。
+const isInitializing = ref(
+  !!route.query.post_id
+  || (route.query.batch === 'true' && !!route.query.session_id)
+  || (!!route.query.session_id && !!route.query.url),
+);
 
 const unpublishedChapters = computed(() =>
   (selectedProject.value?.chapters || []).filter((c: any) => c.is_publish != 1)
@@ -2095,6 +2103,13 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         coverPreview.value = collection.cover;
       }
       selectedCollection.value.is_nsfw = collection.is_nsfw ?? 0;
+      // 价格也要同步 —— 漫剧合集在弹窗里改了档位，封面下那行才会跟着变。
+      // 非漫剧的弹窗不带这个字段（undefined），别把已有的值抹掉。
+      if (collection.price !== undefined) {
+        selectedCollection.value.price = collection.price;
+        // 币种交给档位列表反查，别留上一个合集的
+        selectedCollection.value.currency = '';
+      }
       if (collection.is_nsfw == 1) {
         form.value.content = 'yes';
       } else if (collection.is_nsfw == 0 && form.value.content !== 'no') {
@@ -2110,6 +2125,12 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         collections.value[index].cover = collection.cover;
       }
       collections.value[index].is_nsfw = collection.is_nsfw ?? 0;
+      if (collection.price !== undefined) {
+        collections.value[index].price = collection.price;
+        // 列表接口带下来的 plan 是旧档位，价格改了就过期了，
+        // 清掉免得下次从列表里选中时又被 planPriceOf 优先读到
+        collections.value[index].plan = null;
+      }
     }
   }
 }

@@ -386,6 +386,7 @@ function handleNoWallet() {
   margin: 12px 0 0;
   font-size: 12px;
   color: #8A8A99;
+  cursor: default;
 }
 
 .terms-link {

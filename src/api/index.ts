@@ -913,10 +913,10 @@ export default {
       data: data,
       method: "POST",
     }),
-  /** 漫剧解锁记录。接口还没上线，路径待后端确认 */
-  userDramaUnlockList: (page: number, limit: number) =>
+  /** 我的漫剧合集购买订单。返回 data.data[]，条数在 data.allnums */
+  getBookOrderList: (page: number, limit: number) =>
     axios.request({
-      url: "user/getDramaUnlockList?page=" + page + "&limit=" + limit,
+      url: "book/getBookOrderList?page=" + page + "&limit=" + limit,
       method: "GET"
     }),
   /** 漫剧合集的收费档位列表。返回 data.plan_list */

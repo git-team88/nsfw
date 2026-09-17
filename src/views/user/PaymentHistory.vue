@@ -111,7 +111,7 @@
                 <div
                   class="sub-item drama-item"
                   v-for="(item, idx) in dramaUnlockList"
-                  :key="item.id"
+                  :key="idx"
                   :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }"
                   @click="goDramaDetail(item)"
                 >
@@ -201,7 +201,7 @@
                 <EmptyState v-if="!topupProcessingList.length" />
               </div>
 
-              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup') && total > pageSize">
+              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup' || activeSubTab === 'unlocked') && total > pageSize">
                 <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
               </div>
             </div>
@@ -330,10 +330,8 @@ const activeMainTab = ref<"processing" | "orderHistory">("processing");
 const showDramaUnlockTab = false;
 const activeSubTab = ref<"subscribe" | "recharge" | "topup" | "unlocked">("subscribe");
 
-// 漫剧解锁记录。后端接口还没好 —— api.userDramaUnlockList 已经封好，
-// 接口上线后把 fetchDramaUnlockList 里那行注释放开即可，UI 不用动。
+// 漫剧解锁记录，数据来自 book/getBookOrderList（我的合集购买订单）
 interface DramaUnlockItem {
-  id: string | number;
   postId?: string | number;
   bookId?: string | number;
   cover?: string;
@@ -345,23 +343,48 @@ interface DramaUnlockItem {
 }
 const dramaUnlockList = ref<DramaUnlockItem[]>([]);
 
-// TODO 接口上线后删掉这块假数据，把下面 fetchDramaUnlockList 里的真实请求放开。
-// 金额按美分给，和真实字段一致（2000 -> $20）。
-const MOCK_DRAMA_UNLOCKS: DramaUnlockItem[] = [
-  { id: 'mock-1', postId: 1, bookId: 1, cover: '', title: '江时甜甜（第二季）', price: 2000, fiatCurrency: 'usd' },
-  { id: 'mock-2', postId: 2, bookId: 2, cover: '', title: '江时甜甜（第二季）', price: 2000, fiatCurrency: 'usd' },
-  { id: 'mock-3', postId: 3, bookId: 3, cover: '', title: '江时甜甜（第二季）', price: 1200, fiatCurrency: 'usd' },
-];
-
+/**
+ * 我的漫剧合集购买订单。
+ *
+ * 接口一条记录长这样：
+ *   { book_id, price, currency, pay_type, author_id, created_at, book_info: { title, cover, ... } }
+ * 没有主键字段，列表 key 用下标 —— 这个列表每次都是整体替换，不做原地增删。
+ * 自己管 loading —— fetchProcessingData 那条路径是在 try 外面调的，
+ * 这里不兜住的话，一旦请求抛异常就一直停在转圈。
+ */
 async function fetchDramaUnlockList() {
-  // TODO 接口好了换成下面三行，并删掉假数据
-  dramaUnlockList.value = MOCK_DRAMA_UNLOCKS;
-  total.value = 0;
-  // const res = await api.userDramaUnlockList(page.value, pageSize.value) as any;
-  // if (res.code === 0 || res.code === 200) {
-  //   dramaUnlockList.value = res.data?.data || res.data || [];
-  //   total.value = res.data?.allnums || 0;
-  // }
+  loading.value = true;
+  try {
+    const res = (await api.getBookOrderList(page.value, pageSize.value)) as any;
+    if (res.code === 0 || res.code === 200) {
+      const list = res.data?.data || [];
+      dramaUnlockList.value = list.map((item: any) => {
+        const info = item.book_info || {};
+        // 只有明确是链上支付才按 USDT 显示；stripe 和空值都按法币走（price 是美分）
+        const isWeb3 = /usdt|web3|crypto/i.test(String(item.pay_type || ''));
+        return {
+          bookId: item.book_id,
+          cover: info.cover || '',
+          title: info.title || '',
+          price: item.price,
+          fiatCurrency: item.currency || 'usd',
+          isWeb3,
+          web3Price: isWeb3 ? item.price : '',
+        } as DramaUnlockItem;
+      });
+      total.value = Number(res.data?.allnums ?? res.data?.count ?? 0) || 0;
+    } else {
+      dramaUnlockList.value = [];
+      total.value = 0;
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    dramaUnlockList.value = [];
+    total.value = 0;
+    toast(t('fail'));
+  } finally {
+    loading.value = false;
+  }
 }
 
 /** 查看详情 -> 合集详情页。解锁买的是整个合集，没有单集可跳 */
@@ -1755,7 +1778,7 @@ onBeforeUnmount(() => {
 }
 
 .drama-price {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   color: #FF4D8E;
 }
@@ -1764,6 +1787,17 @@ onBeforeUnmount(() => {
  * 不然压不过上面 .sub-item .left .info .name 那条（4 个 class）。
  */
 .sub-item.drama-item {
+  align-items: center;
+
+  /* 漫剧封面是竖图，不跟着通用头像的 52×52 走 */
+  .left .avatar {
+    width: 54px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
   .left .info {
     min-width: 0;
   }
@@ -1793,7 +1827,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: baseline;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 14px;
   }
 
   .drama-state {

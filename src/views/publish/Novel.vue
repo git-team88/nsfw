@@ -954,7 +954,15 @@ const agreeToTerms = ref(false);
 
 const isBatchPublishMode = ref(false);
 const isLoadingBatchPublish = ref(false);
-const isInitializing = ref(false);
+// 带 post_id / 批量 / 单章参数进来的都是编辑态，数据要等 onMounted 里拉回来。
+// 初始值必须在这儿就定下来 —— onMounted 第一个 await 之前页面已经画过一帧了，
+// 起手是 false 的话会先铺一屏空的发布页，再切成转圈，然后才是内容。
+// 条件和 onMounted 里那几条管这个标志的分支一一对应。
+const isInitializing = ref(
+  !!route.query.post_id
+  || (route.query.batch === 'true' && !!route.query.session_id)
+  || (!!route.query.session_id && !!route.query.index),
+);
 const batchPublishIndexes = ref<number[]>([]);
 const batchPublishCurrentIndex = ref(0);
 const batchPublishTotal = ref(0);

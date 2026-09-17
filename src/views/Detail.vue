@@ -2421,10 +2421,52 @@ const playingPostId = computed(() => {
 });
 
 watch(playingPostId, (id) => {
+  if (!id) return;
+  // 每一集的 access_rights 各自独立，切集时按这一集重新取一遍详情里的权限，
+  // 不然锁沿用的还是最初打开那一集的（该放的不放、该锁的不锁）
+  refreshPlayingPermission(id);
   // 进详情时那一集的字幕在 fetchDetail 里和详情并行拉过了，别重复请求
-  if (!id || id === subtitlesPostId.value) return;
+  if (id === subtitlesPostId.value) return;
   loadSubtitles(id);
 });
+
+/**
+ * 切集时把当前这一集的权限同步过来。
+ *
+ * 不走 fetchDetail —— 那个会连带重置合集列表、当前下标、评论、播放状态，整页重建。
+ * 这里只打同一个详情接口，取回来只更新和锁有关的几个字段。
+ * 请求失败就沿用上一集的，宁可保守，不把该锁的放开。
+ */
+async function refreshPlayingPermission(postId: string) {
+  try {
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {};
+    if (token) headers['token'] = token;
+    const { ts, sign } = window.AntiCrawler.generateAuthParams('');
+    headers['Platform'] = 'web';
+    headers['ts'] = ts;
+    headers['sign'] = sign;
+
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ post_id: Number(postId) }),
+    }).then(r => r.json());
+
+    if (res.code != 0 && res.code != 200) return;
+    // 这一步可能被下一次切集赶超，结果回来时已经不是当前这一集了，丢掉
+    if (String(postId) !== playingPostId.value) return;
+
+    const data = res.data?.post || res.data || {};
+    detail.value.permission = data.access_rights == '2'
+      ? 'partial'
+      : data.access_rights == '3' ? 'private' : 'public';
+    if (data.book_buy !== undefined) detail.value.book_buy = data.book_buy;
+    if (data.is_subscribed !== undefined) detail.value.isSubscribed = data.is_subscribed == 1;
+  } catch {
+    // ignore
+  }
+}
 
 async function fetchDetail(newId: number) {
   await contentSwitch.ensureLoaded();
