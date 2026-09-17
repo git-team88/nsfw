@@ -6,14 +6,15 @@ declare global {
   }
 }
 
-const GA_ID =
-  typeof window !== "undefined" && window.GA_ID
-    ? window.GA_ID
-    : "G-VNJ9YW8YN6";
+const PROD_GA_ID = "G-VNJ9YW8YN6";
 
-const isDebug =
-  typeof window !== "undefined" &&
-  !window.location.hostname.endsWith("fansfans.ai");
+const GA_ID =
+  typeof window !== "undefined" && window.GA_ID ? window.GA_ID : PROD_GA_ID;
+
+// 用哪个 id 是 index.html 按域名定的（测试站走调试 id），这里跟着它走。
+// 不在这儿再判一遍域名 —— 判两遍的话，以后加测试域名只改一处就会出现
+// 「打的是调试 GA、isDebug 却是 false」这种拧着的状态。
+const isDebug = GA_ID !== PROD_GA_ID;
 
 function gtag(...args: unknown[]) {
   if (typeof window !== "undefined" && window.gtag) {
@@ -74,12 +75,14 @@ export function trackClickGenerateButton() {
   gtag("event", "click_generate_button");
 }
 
+// 用 set 不用 config：config 每调一次都会顺带发一条 page_view，
+// 登录时同步一次 uid 就多一条 PV，数据会虚高。
 export function setUserId(userId: string) {
-  gtag("config", GA_ID, { user_id: userId });
+  gtag("set", { user_id: userId });
 }
 
 export function clearUserId() {
-  gtag("config", GA_ID, { user_id: null });
+  gtag("set", { user_id: null });
 }
 
 export function updateConsent(granted: boolean) {
