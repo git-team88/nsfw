@@ -12,6 +12,14 @@
           <div class="tabs-row">
             <div class="tabs">
               <div
+                v-if="showDramaUnlockTab"
+                class="tab-item"
+                :class="{ active: activeSubTab == 'unlocked' }"
+                @click="switchTab('unlocked')"
+              >
+                {{ t("collection.tabUnlocked") }}
+              </div>
+              <div
                 class="tab-item"
                 :class="{ active: activeSubTab == 'subscribe' }"
                 @click="switchTab('subscribe')"
@@ -98,6 +106,46 @@
                 <EmptyState v-if="!processingList.length" />
               </div>
 
+              <!-- 漫剧解锁。结构套用本页其它列表的 .sub-item，样式跟着各项目走 -->
+              <div class="list-area" v-if="activeSubTab === 'unlocked'">
+                <div
+                  class="sub-item drama-item"
+                  v-for="(item, idx) in dramaUnlockList"
+                  :key="idx"
+                  :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }"
+                  @click="goDramaDetail(item)"
+                >
+                  <div class="left">
+                    <img
+                      class="avatar"
+                      :src="item.cover || defaultAvatar"
+                      alt=""
+                      @error="($event.target as HTMLImageElement).src = defaultAvatar"
+                    />
+                    <div class="info">
+                      <div class="name">
+                        <span class="drama-badge">{{ t('home.contentType.drama') }}</span>
+                        <span class="drama-title">{{ item.title }}</span>
+                      </div>
+                      <div class="drama-meta">
+                        <span class="drama-price">
+                          {{ item.isWeb3 ? trimZeros(item.web3Price ?? '') + ' USDT' : fiatPrefix(item.fiatCurrency || 'usd') + scaleFiatPrice(item.price ?? '', item.fiatCurrency || 'usd') }}
+                        </span>
+                        <span class="drama-state">{{ t('collection.unlockedFullSeries') }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="right">
+                    <div class="operate-box">
+                      <button class="view-all-btn" @click.stop="goDramaDetail(item)">
+                        {{ t('collection.viewDetail') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <EmptyState v-if="!dramaUnlockList.length" />
+              </div>
+
               <div class="list-area" v-else-if="activeSubTab === 'recharge'">
                 <div class="sub-item" v-for="(item, idx) in processingList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                   <div class="left">
@@ -153,7 +201,7 @@
                 <EmptyState v-if="!topupProcessingList.length" />
               </div>
 
-              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup') && total > pageSize">
+              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup' || activeSubTab === 'unlocked') && total > pageSize">
                 <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
               </div>
             </div>
@@ -277,7 +325,76 @@ const router = useRouter();
 const route = useRoute();
 const sidebarKey = ref("payment-history");
 const activeMainTab = ref<"processing" | "orderHistory">("processing");
-const activeSubTab = ref<"subscribe" | "recharge" | "topup">("subscribe");
+// 漫剧解锁 tab 的开关。nsfw 还没有漫剧这个内容类型，先关掉；
+// 功能补齐时改成 true，列表和路由都是现成的。
+const showDramaUnlockTab = false;
+const activeSubTab = ref<"subscribe" | "recharge" | "topup" | "unlocked">("subscribe");
+
+// 漫剧解锁记录，数据来自 book/getBookOrderList（我的合集购买订单）
+interface DramaUnlockItem {
+  postId?: string | number;
+  bookId?: string | number;
+  cover?: string;
+  title?: string;
+  price?: string | number;
+  fiatCurrency?: string;
+  isWeb3?: boolean;
+  web3Price?: string | number;
+}
+const dramaUnlockList = ref<DramaUnlockItem[]>([]);
+
+/**
+ * 我的漫剧合集购买订单。
+ *
+ * 接口一条记录长这样：
+ *   { book_id, price, currency, pay_type, author_id, created_at, book_info: { title, cover, ... } }
+ * 没有主键字段，列表 key 用下标 —— 这个列表每次都是整体替换，不做原地增删。
+ * 自己管 loading —— fetchProcessingData 那条路径是在 try 外面调的，
+ * 这里不兜住的话，一旦请求抛异常就一直停在转圈。
+ */
+async function fetchDramaUnlockList() {
+  loading.value = true;
+  try {
+    const res = (await api.getBookOrderList(page.value, pageSize.value)) as any;
+    if (res.code === 0 || res.code === 200) {
+      const list = res.data?.data || [];
+      dramaUnlockList.value = list.map((item: any) => {
+        const info = item.book_info || {};
+        // 只有明确是链上支付才按 USDT 显示；stripe 和空值都按法币走（price 是美分）
+        const isWeb3 = /usdt|web3|crypto/i.test(String(item.pay_type || ''));
+        return {
+          bookId: item.book_id,
+          cover: info.cover || '',
+          title: info.title || '',
+          price: item.price,
+          fiatCurrency: item.currency || 'usd',
+          isWeb3,
+          web3Price: isWeb3 ? item.price : '',
+        } as DramaUnlockItem;
+      });
+      total.value = Number(res.data?.allnums ?? res.data?.count ?? 0) || 0;
+    } else {
+      dramaUnlockList.value = [];
+      total.value = 0;
+      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+    }
+  } catch (error) {
+    dramaUnlockList.value = [];
+    total.value = 0;
+    toast(t('fail'));
+  } finally {
+    loading.value = false;
+  }
+}
+
+/** 查看详情 -> 合集详情页。解锁买的是整个合集，没有单集可跳 */
+function goDramaDetail(item: DramaUnlockItem) {
+  if (!item.bookId) {
+    toast(t('collection.collectionNotFound'));
+    return;
+  }
+  router.push(`/collection/${item.bookId}`);
+}
 const activeOrderHistoryTab = ref<"subscribe" | "recharge" | "topup">("subscribe");
 
 const loading = ref(false);
@@ -323,7 +440,7 @@ function switchMainTab(tab: "processing" | "orderHistory") {
   }
 }
 
-function switchTab(tab: "subscribe" | "recharge" | "topup") {
+function switchTab(tab: "subscribe" | "recharge" | "topup" | "unlocked") {
   router.replace({
     path: '/user-payment-history'
   });
@@ -346,6 +463,10 @@ async function fetchData() {
 
   try {
     let res;
+    if (activeSubTab.value === "unlocked") {
+      await fetchDramaUnlockList();
+      return;
+    }
     if (activeSubTab.value === "subscribe") {
       res = await api.userPayList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
@@ -380,6 +501,11 @@ async function fetchData() {
 }
 
 async function fetchProcessingData() {
+  if (activeSubTab.value === 'unlocked') {
+    await fetchDramaUnlockList();
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   processingList.value = [];
 
@@ -672,6 +798,11 @@ onMounted(() => {
     fetchProcessingData();
   } else if (type == '3') {
     activeSubTab.value = 'topup';
+    page.value = 1;
+    fetchProcessingData();
+  } else if (showDramaUnlockTab && (type == '4' || route.query.tab === 'unlocked')) {
+    // 解锁成功页拿不到 post_id 时会跳到这里，直接锚到漫剧解锁 tab
+    activeSubTab.value = 'unlocked';
     page.value = 1;
     fetchProcessingData();
   } else {
@@ -1631,4 +1762,78 @@ onBeforeUnmount(() => {
     font-size: 13px;
   }
 }
+
+/* 漫剧角标。配色沿用本项目 .type-badge 的 type-3 */
+.drama-badge {
+  display: flex;
+  padding: 2px 10px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 999px;
+  background: #00D3F2;
+  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.drama-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FF4D8E;
+}
+/*
+ * 漫剧行的排版。选择器要带满 .sub-item.drama-item .left .info，
+ * 不然压不过上面 .sub-item .left .info .name 那条（4 个 class）。
+ */
+.sub-item.drama-item {
+  align-items: center;
+
+  /* 漫剧封面是竖图，不跟着通用头像的 52×52 走 */
+  .left .avatar {
+    width: 54px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .left .info {
+    min-width: 0;
+  }
+
+  /* 截断交给标题自己，.name 上继承来的 nowrap / overflow / ellipsis 全部撤掉 */
+  .left .info .name {
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .drama-badge {
+    flex-shrink: 0;
+  }
+
+  .drama-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drama-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .drama-state {
+    font-size: 14px;
+    opacity: 0.75;
+  }
+}
+
 </style>

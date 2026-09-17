@@ -593,7 +593,9 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
       zh: "中文簡體",
       en: "英文",
       jp: "日文",
-      tc: "中文繁體"
+      tc: "中文繁體",
+      kr: "韓文",
+      th: "泰文"
     },
     freezeComputingPower: {
       title: "凍結算力說明",
@@ -2315,6 +2317,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       duration: "時長",
       previewTitle: "預覽視頻",
       toastUploadFirst: "請先上傳視頻",
+      toastUploadFailed: "影片尚未上傳成功，請重新上傳",
       toastEnterTitle: "請輸入標題",
       toastSetCover: "請設置封面圖片",
       toastAgreeTerms: "請同意服務條款",
@@ -2491,6 +2494,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     confirm: "確定"
   },
   detail: {
+    commentHidden: "該評論已被隱藏",
     prev: "上一頁",
     next: "下一頁",
     first: "第一頁",
@@ -2971,6 +2975,29 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     queue: "隊列",
   },
   collection: {
+    publicCount: "{count}{unit}公開",
+    paidCount: "{count}{unit}付費",
+    collectionNotFound: "合集不存在",
+    unlockSuccess: {
+      title: "支付成功！",
+      line1: "解鎖將在幾分鐘內生效，請稍後刷新查看",
+      line2: "若 1 小時後仍未生效，可以聯繫客服處理"
+    },
+    unlockFailed: {
+      title: "支付失敗！",
+      message: "請檢查支付資訊或餘額，確認無誤後返回重試"
+    },
+    watchWork: "觀看作品",
+    backToPay: "返回支付頁",
+    unlockTip: "解鎖漫劇全集僅需{price} 連載作品可以追更到大結局",
+    unlockFullSeries: "解鎖全集",
+    payAgree: "支付即同意",
+    unlockedFullSeries: "已解鎖全集",
+    tabUnlocked: "漫劇解鎖",
+    viewDetail: "查看詳情",
+    price: "價格",
+    fullSeries: "全集",
+    priceFree: "免費",
     createCollection: "創建合集",
     collectionName: "合集名稱",
     placeholder: "請輸入合集名稱",
@@ -3251,6 +3278,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
   },
   collectionSettings: {
+    notFound: "合集不存在",
     back: "返回",
     title: "基本信息",
     delete: "刪除",

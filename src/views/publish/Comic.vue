@@ -1998,6 +1998,15 @@ const captionLength = ref(0);
 
 // Check if in edit mode
 const route = useRoute();
+
+// 带 post_id / 批量 / 单章参数进来的都是编辑态，数据要等 onMounted 里拉回来。
+// 这里就得定下来 —— onMounted 第一个 await 之前页面已经画过一帧了，
+// 还是 false 的话会先铺一屏空的发布页，再切成转圈，然后才是内容。
+// 条件和 onMounted 里那几条管这个标志的分支一一对应。
+// （写在这儿而不是声明处：route 在本文件里定义得比 isInitializing 晚，声明处取不到）
+isInitializing.value = !!route.query.post_id
+  || (route.query.batch === 'true' && !!route.query.session_id)
+  || (!!route.query.session_id && !!route.query.index);
 const isEditMode = ref(route.query.edit === "1");
 const postId = ref(route.query.post_id as string);
 const chapterIdForPublish = ref<number | null>(null);
@@ -4641,7 +4650,9 @@ onMounted(async () => {
     if (postId.value) {
       isInitializing.value = true;
       isEditingWork.value = true;
-      getPostDetails();
+      // 这里必须 await：不等的话下一行立刻把 isInitializing 置回 false，
+      // 内容区在数据回来之前就铺出来了，转圈那层等于白加
+      await getPostDetails();
       isInitializing.value = false;
     } else {
       const session_id = route.query.session_id as string;

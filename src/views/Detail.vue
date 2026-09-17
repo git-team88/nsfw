@@ -156,6 +156,23 @@
                     @confirm-adult="confirmAdultBrowsing"
                   />
                 </template>
+                <!-- 漫剧付费：未订阅且作品设了订阅可见时，给解锁全集的入口 -->
+                <template v-else-if="showDramaUnlock">
+                  <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
+                  <!-- 卡片要盖在背景图上，overlay 是 flex 行，不套一层就会被挤到图右边 -->
+                  <div class="drama-unlock-wrap">
+                    <DramaUnlockCard
+                      :book-id="detail.book_id"
+                      :post-id="detail.id"
+                      :author-id="detail.author?.id"
+                      :price="detail.book_price"
+                      :currency="detail.book_currency"
+                      :web3-price="detail.book_web3_price"
+                      :plan-id="detail.book_plan_id"
+                      @unlocked="handleDramaUnlocked"
+                    />
+                  </div>
+                </template>
                 <template v-else>
                   <img class="lock_bg" src="@/assets/images/detail/lock_pic.png" alt="" />
 
@@ -951,11 +968,13 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import SensitiveContentAdultConfirmModal from "@/components/SensitiveContentAdultConfirmModal.vue";
 import SensitiveContentConfirmModal from "@/components/SensitiveContentConfirmModal.vue";
 import SensitiveNsfwPanel from "@/components/SensitiveNsfwPanel.vue";
+import DramaUnlockCard from "@/components/DramaUnlockCard.vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
+import { pickPlan } from "@/util/bookRechargePlan";
 import { formatTimestamp, initLanguage, processImageUrl } from "@/util/utils";
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
@@ -1036,6 +1055,7 @@ const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: '
 // 英语 -> 日语 -> 中文简体 -> 中文繁体。
 const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc'];
 
+
 // 已经选了某个语言时，下拉项按漫剧自身的语言排（作品自身的语言本来就不在列表里）。
 // 认不出作品语言就退回 SUBTITLE_LANG_ORDER。
 const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
@@ -1048,6 +1068,35 @@ const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
 /** 导航语言换算成后端的字幕语言码（后端把简体叫 cn，导航里叫 zh） */
 function navSubtitleLang(): string {
   return locale.value == 'zh' ? 'cn' : locale.value == 'tc' ? 'tc' : locale.value == 'jp' ? 'jp' : 'en';
+}
+
+/** 合集的解锁价格。取不到或是 0 就当这个合集没设收费档 */
+const dramaUnlockPrice = computed(() => {
+  const raw = detail.value?.book_price;
+  if (raw === undefined || raw === null || raw === '') return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+});
+
+/**
+ * 漫剧解锁全集的入口。条件都满足才给：
+ * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人、合集设了价格。
+ * 价格必须在这里判 —— 卡片内部拿不到价会整张不渲染，
+ * 放行到这一步的话页面就只剩一张空背景图，连订阅提示都没了。
+ */
+const showDramaUnlock = computed(
+  () => detail.value?.type == '3'
+    && isPaidContentLocked.value
+    && !detail.value?.isSubscribed
+    && detail.value?.author?.id !== uid
+    && dramaUnlockPrice.value > 0
+    // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
+    && !hasBoughtBook.value,
+);
+
+/** 解锁成功后重新拉一遍详情，锁自然就开了 */
+function handleDramaUnlocked() {
+  fetchDetail(Number(detail.value?.id ?? id.value));
 }
 
 // 真正能选的字幕语言：后端返回了哪些就有哪些，去掉作品自身的语言（漫剧是中文简体
@@ -1377,6 +1426,13 @@ interface DetailData {
   isFav: boolean;
   is_teenager: number;
   is_nsfw: string;
+  /** 漫剧解锁的收费档位。没设置档位时接口给空数组 / 空对象，取不到就不渲染解锁卡片 */
+  book_price?: string | number;
+  book_currency?: string;
+  book_web3_price?: string | number;
+  book_plan_id?: string | number;
+  /** 是否已经买过这个合集。买过就不再显示解锁入口 */
+  book_buy?: number | string | boolean;
   book_is_nsfw: number;
   book_id: string;
   book_title: string;
@@ -1595,7 +1651,7 @@ function goToCollectionDetail() {
 
 function goMakeSimilar(sessionId: string) {
   if (isChinaRegion.value && (detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1)) {
-    toast(t('home.unlimitedModeRestricted'));
+    toast(t('home.error.unlimitedModeRestricted'));
     return;
   }
   checkSensitiveContentBeforeAction(() => {
@@ -1670,7 +1726,7 @@ async function goMakeSequel() {
   if (!videoUrl) return;
   const isNsfw = detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1;
   if (isChinaRegion.value && isNsfw) {
-    toast(t('home.unlimitedModeRestricted'));
+    toast(t('home.error.unlimitedModeRestricted'));
     return;
   }
 
@@ -2308,10 +2364,52 @@ const playingPostId = computed(() => {
 });
 
 watch(playingPostId, (id) => {
+  if (!id) return;
+  // 每一集的 access_rights 各自独立，切集时按这一集重新取一遍详情里的权限，
+  // 不然锁沿用的还是最初打开那一集的（该放的不放、该锁的不锁）
+  refreshPlayingPermission(id);
   // 进详情时那一集的字幕在 fetchDetail 里和详情并行拉过了，别重复请求
-  if (!id || id === subtitlesPostId.value) return;
+  if (id === subtitlesPostId.value) return;
   loadSubtitles(id);
 });
+
+/**
+ * 切集时把当前这一集的权限同步过来。
+ *
+ * 不走 fetchDetail —— 那个会连带重置合集列表、当前下标、评论、播放状态，整页重建。
+ * 这里只打同一个详情接口，取回来只更新和锁有关的几个字段。
+ * 请求失败就沿用上一集的，宁可保守，不把该锁的放开。
+ */
+async function refreshPlayingPermission(postId: string) {
+  try {
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {};
+    if (token) headers['token'] = token;
+    const { ts, sign } = window.AntiCrawler.generateAuthParams('');
+    headers['Platform'] = 'web';
+    headers['ts'] = ts;
+    headers['sign'] = sign;
+
+    const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ post_id: Number(postId) }),
+    }).then(r => r.json());
+
+    if (res.code != 0 && res.code != 200) return;
+    // 这一步可能被下一次切集赶超，结果回来时已经不是当前这一集了，丢掉
+    if (String(postId) !== playingPostId.value) return;
+
+    const data = res.data?.post || res.data || {};
+    detail.value.permission = data.access_rights == '2'
+      ? 'partial'
+      : data.access_rights == '3' ? 'private' : 'public';
+    if (data.book_buy !== undefined) detail.value.book_buy = data.book_buy;
+    if (data.is_subscribed !== undefined) detail.value.isSubscribed = data.is_subscribed == 1;
+  } catch {
+    // ignore
+  }
+}
 
 async function fetchDetail(newId: number) {
   await contentSwitch.ensureLoaded();
@@ -2447,6 +2545,8 @@ async function fetchDetail(newId: number) {
 
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post || res.data;
+      // 收费档位。没设置时接口给的是空数组 []，设置了才是对象，交给 pickPlan 收口
+      const detailPlan = (pickPlan(data.plan ?? res.data?.plan) ?? {}) as any;
 
       let bookIsNsfw = 0;
       let bookSessionId = '';
@@ -2493,6 +2593,11 @@ async function fetchDetail(newId: number) {
         isFav: res.data.is_fav == 1 || res.data.is_fav === true,
         is_teenager: data.is_teenager,
         is_nsfw: data.is_nsfw || '0',
+        book_price: detailPlan.price ?? '',
+        book_currency: detailPlan.currency ?? '',
+        book_web3_price: detailPlan.web3_price ?? '',
+        book_plan_id: detailPlan.plan_id ?? detailPlan.id ?? '',
+        book_buy: data.book_buy ?? res.data?.book_buy ?? 0,
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
         book_title: data.book_title || '',
@@ -3355,9 +3460,15 @@ const isImageLocked = (index: number) => {
   return index > 0;
 };
 
+/** 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品 */
+const hasBoughtBook = computed(
+  () => detail.value?.book_buy == 1 || detail.value?.book_buy === true,
+);
+
 const isArticleLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
   if (detail.value.isSubscribed) return false;
+  if (hasBoughtBook.value) return false;
   // If it's the author's own work, don't lock
   if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
   // If paid and not subscribed, show lock
@@ -3367,6 +3478,8 @@ const isArticleLocked = computed(() => {
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
   if (detail.value.isSubscribed) return false;
+  // 合集已购：锁直接放开，不用再看有没有订阅博主
+  if (hasBoughtBook.value) return false;
   if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
   return true;
 });
@@ -3755,7 +3868,12 @@ function closePage() {
     }
   }
 
-  if (window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
+  // vue-router 会把上一条站内记录挂在 history.state.back 上。
+  // 从 Stripe 回来 → 成功页 → replace 到详情页这条路径上它是 null，
+  // 这时 history.back() 退回去的是 Stripe 的地址，所以直接回首页。
+  const hasInAppBack = !!(window.history.state && (window.history.state as any).back);
+
+  if (!hasInAppBack || window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
     router.push('/');
   } else {
     router.back();
