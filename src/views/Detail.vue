@@ -5522,8 +5522,10 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   return !!el.closest('button, a, input, textarea, select, [contenteditable="true"], .nav-arrows, .input-area, .video-controls, .progress-bar, .control-bar');
 }
 
-// 上下拖动（鼠标按住左键 / 手指滑动）超过这个距离才算一次切换，避免手抖误触
-const DRAG_SWITCH_THRESHOLD = 60;
+// 上下拖动（鼠标按住左键 / 手指滑动）超过这个距离才算一次切换。
+// 45px：比手抖 / 点按时的抖动（几个像素）大得多，不会误触；
+// 又比 60px 轻一截，有翻页意图的一划就能到，不用刻意划一大段。
+const DRAG_SWITCH_THRESHOLD = 45;
 // 超过这个距离就算「拖」不算「点」：抬手带出的 click 一律吞掉。
 // 不这么做的话，在图片上拖一下（没够切换距离、或者已经是第一个/最后一个）
 // 抬手就把全屏预览打开了。
