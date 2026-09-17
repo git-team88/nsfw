@@ -236,6 +236,14 @@ function changeTab(tab: string) {
     localImage.value = null;
   }
   activeTab.value = tab;
+  // 换 tab 等于换了一张图：位移先归零，再按这个 tab 当前的图重算缩放。
+  // 不重算的话，上一张图的 scale / offset 会原样留给新图 ——
+  // 比如本地传了张横图再切回选帧，竖图就偏了。
+  imgOffsetX.value = 0;
+  imgOffsetY.value = 0;
+  if (tab === 'select' && selectedFrame.value) {
+    detectOrientation(selectedFrame.value);
+  }
 }
 
 async function generateFrames() {

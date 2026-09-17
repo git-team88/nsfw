@@ -201,13 +201,13 @@ watch(
 
 watch(localImage, (newVal) => {
   if (newVal) {
-    detectOrientation();
+    detectOrientation(newVal);
   }
 });
 
-watch(selectedImage, () => {
+watch(selectedImage, (newVal) => {
   nextTick(() => {
-    detectOrientation();
+    detectOrientation(newVal);
   });
 });
 
@@ -216,6 +216,13 @@ function changeTab(tab: string) {
     localImage.value = null;
   }
   activeTab.value = tab;
+  // 换 tab 等于换了一张图：位移归零，再按这个 tab 当前的图重算缩放，
+  // 不然上一张图的 scale / offset 会留给新图（竖图切横图再切回来就偏了）
+  imgOffsetX.value = 0;
+  imgOffsetY.value = 0;
+  if (tab === 'select' && selectedImage.value) {
+    detectOrientation(selectedImage.value);
+  }
 }
 
 function onImageClick(index: number) {
@@ -450,22 +457,34 @@ async function loadCropImage(url: string): Promise<{ img: HTMLImageElement; revo
   }
 }
 
-async function detectOrientation() {
-  const imgEl = previewImgRef.value;
-  if (!imgEl) return;
+/**
+ * 按图片原始宽高算缩放。
+ *
+ * 不读 previewImgRef 那个 <img>：两个 tab 共用同一个 ref，切过去的那一帧上面
+ * 挂的可能还是上一张图（complete 为真但尺寸是旧的），或者 onload 已经错过，
+ * 结果是用错尺寸、或者这段直接 return 一点没缩放。单独量一张更稳。
+ */
+async function detectOrientation(src?: string) {
+  const url = src
+    || (activeTab.value === 'select' ? selectedImage.value : localImage.value)
+    || '';
+  if (!url) return;
 
-  await new Promise((resolve) => {
-    if (imgEl.complete) {
-      resolve(null);
-    } else {
-      imgEl.onload = resolve;
-    }
-  });
+  let img: HTMLImageElement;
+  try {
+    img = await loadImageElement(url);
+  } catch {
+    return;
+  }
+
+  // 被下一次切换赶超了就丢掉，别拿旧图的尺寸去盖新图
+  const current = activeTab.value === 'select' ? selectedImage.value : localImage.value;
+  if (url !== current) return;
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
 
-  const scaleByWidth = CROP_W / imgEl.naturalWidth;
-  const scaleByHeight = CROP_H / imgEl.naturalHeight;
+  const scaleByWidth = CROP_W / img.naturalWidth;
+  const scaleByHeight = CROP_H / img.naturalHeight;
 
   let scale = Math.max(scaleByWidth, scaleByHeight);
 
@@ -479,7 +498,7 @@ async function detectOrientation() {
   imgOffsetY.value = 0;
   applyImageOffset();
 
-  isPortrait.value = imgEl.naturalHeight >= imgEl.naturalWidth;
+  isPortrait.value = img.naturalHeight >= img.naturalWidth;
 }
 
 async function cropToCanvas(dataUrl: string): Promise<string> {

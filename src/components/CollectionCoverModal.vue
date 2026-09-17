@@ -4,7 +4,8 @@
       <button class="close-btn" @click="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <div class="modal-header">
-        <div class="modal-tabs">
+        <!-- 没有原封面时只剩「上传封面」一个 tab，这时它不是切换器，按纯文字显示 -->
+        <div class="modal-tabs" :class="{ single: !coverImage }">
           <span v-if="coverImage" :class="{ active: activeTab === 'select' }" @click="changeTab('select')">
             {{ t("collection.selectCover") }}
           </span>
@@ -134,6 +135,11 @@ const isImgDragging = ref(false);
 const lastY = ref(0);
 const lastX = ref(0);
 const localImage = ref<string | null>(null);
+// 量到的原图宽高。居中和拖拽钳制都按它算 ——
+// previewImgRef 那个 <img> 两个 tab 共用，切 tab 时上面挂的可能还是上一张图，
+// 现读 naturalWidth 会拿到旧尺寸，竖图切横图再切回来位置就偏了。
+const naturalW = ref(0);
+const naturalH = ref(0);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
@@ -197,8 +203,7 @@ function getCropDimensions() {
 const cropDimensions = computed(() => getCropDimensions());
 
 const imageStyle = computed(() => {
-  const imgEl = previewImgRef.value;
-  if (!imgEl || !imgEl.naturalWidth) {
+  if (!naturalW.value || !naturalH.value) {
     return {
       transform: `translate(${imgOffsetX.value}px, ${imgOffsetY.value}px) scale(${imgScale.value})`,
       transformOrigin: 'top left',
@@ -206,8 +211,8 @@ const imageStyle = computed(() => {
   }
   const PREVIEW_W = 470;
   const PREVIEW_H = 224;
-  const scaledWidth = imgEl.naturalWidth * imgScale.value;
-  const scaledHeight = imgEl.naturalHeight * imgScale.value;
+  const scaledWidth = naturalW.value * imgScale.value;
+  const scaledHeight = naturalH.value * imgScale.value;
   const centerOffsetX = (PREVIEW_W - scaledWidth) / 2;
   const centerOffsetY = (PREVIEW_H - scaledHeight) / 2;
   return {
@@ -263,9 +268,12 @@ function changeTab(tab: string) {
   imgOffsetX.value = 0;
   imgOffsetY.value = 0;
   imgScale.value = 1;
+  // 尺寸也清掉，等新图量完再填 —— 留着旧的会让居中按上一张图算
+  naturalW.value = 0;
+  naturalH.value = 0;
   nextTick(() => {
     if (activeTab.value === 'select' && selectedImage.value) {
-      detectOrientation();
+      detectOrientation(selectedImage.value);
     }
   });
 }
@@ -413,12 +421,11 @@ function endImageDrag() {
 }
 
 function applyImageOffset() {
-  const imgEl = previewImgRef.value;
-  if (!imgEl) return;
+  if (!naturalW.value || !naturalH.value) return;
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
-  const scaledWidth = imgEl.naturalWidth * imgScale.value;
-  const scaledHeight = imgEl.naturalHeight * imgScale.value;
+  const scaledWidth = naturalW.value * imgScale.value;
+  const scaledHeight = naturalH.value * imgScale.value;
 
   // Max drag distance: how far the image can move while still covering crop frame
   const maxOffsetX = Math.max(0, (scaledWidth - CROP_W) / 2);
@@ -504,17 +511,35 @@ async function loadCropImage(url: string): Promise<{ img: HTMLImageElement; revo
   }
 }
 
-async function detectOrientation() {
-  const imgEl = previewImgRef.value;
-  if (!imgEl) return;
+/**
+ * 按图片原始宽高算出铺进裁剪框的缩放比。
+ *
+ * 不再依赖 previewImgRef 那个 DOM 元素：本地上传时元素是这一帧才建出来的，
+ * 拿到时 complete 可能还是上一张图的状态，onload 也可能已经错过，
+ * 结果就是这段直接 return / 用了错的宽高，预览里是一张没缩放过的原图。
+ * 这里单独 new 一个 Image 量尺寸（带超时和 onerror，不会卡住）。
+ */
+async function detectOrientation(src?: string) {
+  const url = src
+    || (activeTab.value === 'select' ? selectedImage.value : localImage.value)
+    || '';
+  if (!url) return;
 
-  await new Promise((resolve) => {
-    if (imgEl.complete) {
-      resolve(null);
-    } else {
-      imgEl.onload = resolve;
-    }
-  });
+  let img: HTMLImageElement;
+  try {
+    img = await loadImageElement(url);
+  } catch {
+    // 量不到就按原图显示，至少别一直卡在转圈
+    isImageReady.value = true;
+    return;
+  }
+
+  // 这次可能被下一次切换赶超，结果回来时已经不是当前这张图了，丢掉
+  const current = activeTab.value === 'select' ? selectedImage.value : localImage.value;
+  if (url !== current) return;
+
+  naturalW.value = img.naturalWidth;
+  naturalH.value = img.naturalHeight;
 
   const { width: CROP_W, height: CROP_H } = cropDimensions.value;
 
@@ -523,7 +548,7 @@ async function detectOrientation() {
 
   // 裁剪框比例是 3:4 (15:20)
   const cropAspectRatio = CROP_W / CROP_H;
-  const imgAspectRatio = imgEl.naturalWidth / imgEl.naturalHeight;
+  const imgAspectRatio = img.naturalWidth / img.naturalHeight;
 
   let scale = 1;
 
@@ -531,23 +556,23 @@ async function detectOrientation() {
   const ratioDiff = Math.abs(imgAspectRatio - cropAspectRatio) / cropAspectRatio;
   if (ratioDiff < 0.05) {
     // 3:4比例图片：直接缩放到裁剪框大小
-    scale = Math.max(CROP_W / imgEl.naturalWidth, CROP_H / imgEl.naturalHeight);
+    scale = Math.max(CROP_W / img.naturalWidth, CROP_H / img.naturalHeight);
   } else if (imgAspectRatio > PREVIEW_W / PREVIEW_H) {
     // 宽图：按预览框宽度缩放
-    scale = PREVIEW_W / imgEl.naturalWidth;
+    scale = PREVIEW_W / img.naturalWidth;
   } else {
     // 竖图：按预览框高度缩放
-    scale = PREVIEW_H / imgEl.naturalHeight;
+    scale = PREVIEW_H / img.naturalHeight;
   }
 
   // 确保图片至少能覆盖裁剪区域
-  const minScaleForCrop = Math.max(CROP_W / imgEl.naturalWidth, CROP_H / imgEl.naturalHeight);
+  const minScaleForCrop = Math.max(CROP_W / img.naturalWidth, CROP_H / img.naturalHeight);
   if (scale < minScaleForCrop) {
     scale = minScaleForCrop;
   }
 
   // 最大缩放不超过2倍，避免过度放大
-  const maxScale = Math.max(PREVIEW_W / imgEl.naturalWidth, PREVIEW_H / imgEl.naturalHeight) * 2;
+  const maxScale = Math.max(PREVIEW_W / img.naturalWidth, PREVIEW_H / img.naturalHeight) * 2;
   if (scale > maxScale) scale = maxScale;
 
   imgScale.value = scale;
@@ -661,6 +686,26 @@ async function cropToCanvas(dataUrl: string): Promise<string> {
     border: 1px solid #3d3d3d;
     border-radius: 14px;
     padding: 5px;
+
+    /* 只有一个 tab 时没什么可切的：去掉胶囊底和选中态，只留标题文字 */
+    &.single {
+      background: transparent;
+      border-color: transparent;
+      padding: 0;
+
+      span {
+        padding: 0;
+        color: #f5f5f5;
+        font-weight: 800;
+        cursor: default;
+
+        &:hover,
+        &.active {
+          background: transparent;
+          color: #f5f5f5;
+        }
+      }
+    }
 
     span {
       display: flex;
