@@ -422,6 +422,10 @@ async function handleSave() {
         params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
       }
     } else {
+      // 合集类型跟着入口走（用户主页按当前 tab 带 ?type= 进来）。
+      // 不传的话后端按默认类型建，漫剧合集就不是 type 3，价格档位也挂不上。
+      // 缺省 2 和 EditCollectionModal 的 props.type || 2 保持一致。
+      params.type = Number(collectionType.value) || 2;
       params.title = collectionName.value.trim();
       params.description = description.value.trim();
       params.cover = coverUrl.value;

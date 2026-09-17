@@ -1066,10 +1066,6 @@ const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc', 'kr', 'th'];
 // BL 标记的漫剧（is_bl == 1）只给这四种，后端就算返回了中文也不列。
 const BL_SUBTITLE_LANGS = ['en', 'jp', 'kr', 'th'];
 
-// 手动切到韩文 / 泰文时写这个 key，下次进别的视频优先按它选。
-// 只记这两种：用户特地切过去的才算偏好，切回英日中文当成临时行为。
-const SUBTITLE_LANG_CACHE_KEY = 'subtitleLangPref';
-const CACHEABLE_SUBTITLE_LANGS = ['kr', 'th'];
 
 // 已经选了某个语言时，下拉项按漫剧自身的语言排（作品自身的语言本来就不在列表里）。
 // 认不出作品语言就退回 SUBTITLE_LANG_ORDER。
@@ -1081,25 +1077,6 @@ const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
   kr: ['en', 'jp', 'tc', 'cn', 'th'],
   th: ['en', 'jp', 'tc', 'cn', 'kr'],
 };
-
-/** 读缓存的字幕偏好。隐私模式下 localStorage 会抛，读不到就当没设过 */
-function readCachedSubtitleLang(): string {
-  try {
-    const v = localStorage.getItem(SUBTITLE_LANG_CACHE_KEY) || '';
-    return CACHEABLE_SUBTITLE_LANGS.includes(v) ? v : '';
-  } catch {
-    return '';
-  }
-}
-
-function writeCachedSubtitleLang(lang: string) {
-  if (!CACHEABLE_SUBTITLE_LANGS.includes(lang)) return;
-  try {
-    localStorage.setItem(SUBTITLE_LANG_CACHE_KEY, lang);
-  } catch {
-    // 写不进去就算了，只是下次不记得而已
-  }
-}
 
 /** 导航语言换算成后端的字幕语言码（后端把简体叫 cn，导航里叫 zh） */
 function navSubtitleLang(): string {
@@ -1152,20 +1129,13 @@ const availableSubtitleLangs = computed(() => {
 
 /**
  * 默认字幕，按这个优先级挑：
- *   1. 缓存里的偏好（只可能是韩文 / 泰文）—— 这个视频有就用它
- *   2. 缓存有但这个视频没有这种字幕 -> 英文，英文也没有才退回排序第一个
- *   3. 没缓存 -> 和导航语言一致的
- *   4. 都不沾边 -> 按 SUBTITLE_LANG_ORDER（英、日、韩、泰、简、繁）取第一个能用的
+ *   1. 和导航语言一致的
+ *   2. 没有 -> 按 SUBTITLE_LANG_ORDER（英、日、简、繁、韩、泰）取第一个能用的
+ * 这个站不记韩 / 泰偏好，手动切换只对当前这一集生效。
  */
 function pickDefaultSubtitleLang(): string {
   const langs = availableSubtitleLangs.value;
   if (!langs.length) return '';
-
-  const cached = readCachedSubtitleLang();
-  if (cached) {
-    if (langs.includes(cached)) return cached;
-    return langs.includes('en') ? 'en' : langs[0];
-  }
 
   const nav = navSubtitleLang();
   return langs.includes(nav) ? nav : langs[0];
@@ -1201,8 +1171,6 @@ const subtitleTrackUrl = computed(() => {
 
 function selectSubtitle(lang: string) {
   selectedSubtitleLang.value = lang == 'none' ? '' : lang;
-  // 只有切到韩文 / 泰文才记，切回别的语言不动缓存
-  writeCachedSubtitleLang(lang);
   showSubtitleMenu.value = false;
   loadSubtitleCues();
 }
