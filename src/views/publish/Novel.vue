@@ -1112,7 +1112,9 @@ const uploadOptions = [
 const projects = ref<any[]>([]);
 const selectedProjectId = ref('');
 const selectedProject = ref<any>(null);
-const isLoadingProjects = ref(false);
+// 初始值就是 true：历史列表那块一挂载就渲染，
+// 起手是 false 的话，在 onMounted 拉到数据之前会先闪一下「暂无作品」。
+const isLoadingProjects = ref(true);
 const isLoadingMoreProjects = ref(false);
 const hasMoreProjects = ref(true);
 const currentProjectPage = ref(1);
@@ -3821,12 +3823,18 @@ function handleClickOutside(event: MouseEvent) {
 const projectDetailsCache = ref<Record<string, any>>({});
 
 // Project list methods
+// 「有没有请求在飞」和「界面要不要显示转圈」是两回事：
+// isLoadingProjects 初始就是 true（不然挂载到拿到数据之间会闪一下「暂无作品」），
+// 所以重入判据不能再用它，另起一个标志。
+let projectsInflight = false;
+
 async function fetchProjects(loadMore = false) {
   if (loadMore) {
     if (isLoadingMoreProjects.value || !hasMoreProjects.value) return;
     isLoadingMoreProjects.value = true;
   } else {
-    if (isLoadingProjects.value || !hasMoreProjects.value) return;
+    if (projectsInflight || !hasMoreProjects.value) return;
+    projectsInflight = true;
     isLoadingProjects.value = true;
   }
 
@@ -3863,6 +3871,7 @@ async function fetchProjects(loadMore = false) {
     if (loadMore) {
       isLoadingMoreProjects.value = false;
     } else {
+      projectsInflight = false;
       isLoadingProjects.value = false;
     }
   }
@@ -4699,6 +4708,12 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
     console.error('Error fetching chapter details:', error);
     await fetchProjects();
     await checkSubscriptionStatus();
+  }
+
+  // 章节没取到（接口非 200 但没抛异常）时不会进上面的 catch，也没切到编辑态，
+  // 页面会退回历史列表那一屏 —— 这里补一次拉取，否则就一直停在转圈。
+  if (!showFullContent.value) {
+    await fetchProjects();
   }
 }
 

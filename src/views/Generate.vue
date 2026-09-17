@@ -1210,6 +1210,9 @@ const pollingTimers = ref<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 // 每个任务连续「请求失败」的次数。成功一次就清零。
 const pollFailCounts = ref<Map<string, number>>(new Map());
 const POLL_INTERVAL_MS = 3000;
+// 排队（PREPARE）期间放慢到 6 秒：还没轮到这条任务，返回的内容不会变，
+// 3 秒一轮纯属白打。转成 DOING 之后回到 3 秒，出结果的那一下不至于迟钝。
+const POLL_QUEUING_INTERVAL_MS = 6000;
 const POLL_MAX_INTERVAL_MS = 15000;
 // 连续失败到这个次数才放弃轮询（约 3+6+9+12+15 秒），期间不动列表项的状态
 const POLL_MAX_CONSECUTIVE_ERRORS = 5;
@@ -4745,6 +4748,13 @@ const pollTaskStatus = async (taskId: string) => {
   }
 };
 
+// 这条任务下一轮该隔多久：排队中放慢，真在跑就用默认间隔
+const pollIntervalOf = (taskId: string): number => {
+  const record = records.value.find((r: any) => r.session_id == taskId);
+  const status = record?.step_status || record?.status;
+  return isTaskQueuing(status) ? POLL_QUEUING_INTERVAL_MS : POLL_INTERVAL_MS;
+};
+
 // 用自调度的 setTimeout 而不是 setInterval：等上一次请求回来再排下一次，
 // 后端慢的时候不会把请求叠着发；连续失败时按次数退避，别在服务端不稳时反复打。
 const startPolling = (taskId: string) => {
@@ -4761,7 +4771,7 @@ const startPolling = (taskId: string) => {
     const fails = pollFailCounts.value.get(taskId) || 0;
     const delay = fails > 0
       ? Math.min(POLL_INTERVAL_MS * (fails + 1), POLL_MAX_INTERVAL_MS)
-      : POLL_INTERVAL_MS;
+      : pollIntervalOf(taskId);
     pollingTimers.value.set(taskId, setTimeout(tick, delay));
   };
 

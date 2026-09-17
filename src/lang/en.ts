@@ -1796,7 +1796,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     viewList: "List",
     viewRing: "Ring",
     hero: {
-      title: "One spark. Infinite stories.",
+      title: "Train Your Girl, In Your Words",
       sub: "Just type the world you dreamed up. A full episode's storyboard in seconds."
     },
     howto: "How it works",

@@ -13,10 +13,15 @@ export const MB = 1024 * 1024;
 export const VIDEO_VERSION_ORDER = ['enhanced', 'super', 'fast'] as const;
 export type VideoVersion = typeof VIDEO_VERSION_ORDER[number];
 
-// 极速版入口的总开关。关掉后可选版本里不再出现 fast：
+// 极速版（minimax h3 max）入口的总开关。关掉后可选版本里不再出现 fast：
 // 普通模式只剩超级版（选择器 length > 1 判据自动不显示），NSFW 模式回到加强版 / 超级版两档。
 // 极速版本身的档位配置、限制、计价都保留着，改回 true 即可整体放出。
-export const FAST_VERSION_ENABLED = true;
+export const FAST_VERSION_ENABLED = false;
+
+// 加强版（wan3.0）入口的总开关。关掉后可选版本里不再出现 enhanced —— 它本来
+// 就只在 NSFW 模式下可选，关掉后那边只剩超级版（以及开着的话的极速版）。
+// 同样只是不给选，档位配置和限制都留着，改回 true 即可放出。
+export const ENHANCED_VERSION_ENABLED = true;
 
 // 可选版本 = f(普通 or NSFW 模式, 视频模式)。数组顺序就是选择器里的展示顺序：
 // NSFW 模式 超级版 -> 加强版 -> 极速版，普通模式 超级版 -> 极速版。
@@ -25,7 +30,9 @@ export function videoVersionsFor(mode: string, videoMode: string): VideoVersion[
   const list: VideoVersion[] = mode === 'unlimited'
     ? (isEdit ? ['super', 'enhanced'] : ['super', 'enhanced', 'fast'])
     : (isEdit ? ['super'] : ['super', 'fast']);
-  return FAST_VERSION_ENABLED ? list : list.filter((v) => v !== 'fast');
+  return list.filter(
+    (v) => (v !== 'fast' || FAST_VERSION_ENABLED) && (v !== 'enhanced' || ENHANCED_VERSION_ENABLED),
+  );
 }
 
 // 该「模式 × 视频模式」下的默认档位 —— 可选列表的首项，两种模式都是超级版。
@@ -52,9 +59,10 @@ export function toModelType(version: string): string {
   return version === 'super' ? 'super' : 'plus';
 }
 export function fromModelType(modelType: any): VideoVersion {
-  // 极速版关掉时，旧作品重新编辑不能把已经隐藏的档位选回来，落到加强版。
+  // 某一档关掉时，旧作品重新编辑不能把已经隐藏的档位选回来，落到还开着的那档。
   if (modelType === 'fast' && FAST_VERSION_ENABLED) return 'fast';
-  return modelType === 'super' ? 'super' : 'enhanced';
+  if (modelType === 'super') return 'super';
+  return ENHANCED_VERSION_ENABLED ? 'enhanced' : 'super';
 }
 
 export interface VideoProfile {

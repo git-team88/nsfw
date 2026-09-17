@@ -239,7 +239,7 @@
         <!-- Title -->
         <div class="form-item">
           <div class="form-label-box">
-            <span><b>*</b>{{ t('submit.titleLabel') }}</span>
+            <span>{{ t('submit.titleLabel') }}</span>
             <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
           </div>
           <input
@@ -541,7 +541,9 @@ const reuploadIndex = ref<number | null>(null);
 const projects = ref<any[]>([]);
 const totalProjects = ref(0);
 const currentPage = ref(1);
-const isLoadingProjects = ref(false);
+// 初始值就是 true：历史列表那块一挂载就渲染，
+// 起手是 false 的话，在 onMounted 拉到数据之前会先闪一下「暂无作品」。
+const isLoadingProjects = ref(true);
 const selectedProjectIds = ref<(number | string)[]>([]);
 const selectedProjectsMap = ref<Map<number | string, any>>(new Map());
 
@@ -1615,10 +1617,11 @@ async function onSubmit() {
     return;
   }
 
-  if (!form.value.title.trim()) {
-    toast(t("submit.titleRequired"));
-    return;
-  }
+  // 标题改成非必填，校验先注释掉留着，要恢复直接放开
+  // if (!form.value.title.trim()) {
+  //   toast(t("submit.titleRequired"));
+  //   return;
+  // }
 
   if (captionRef.value) {
     form.value.description = captionRef.value.innerText;

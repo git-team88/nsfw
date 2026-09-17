@@ -218,7 +218,7 @@
           <div class="form-item">
             <div class="caption-container">
               <div class="label-row">
-                <label class="form-label"><b>*</b>{{ t('submit.titleLabel') }}</label>
+                <label class="form-label">{{ t('submit.titleLabel') }}</label>
                 <span class="char-count">{{ form.title.length }}/{{ TITLE_MAX }}</span>
               </div>
               <div class="title-input-wrap">
@@ -1831,10 +1831,11 @@ async function onSubmit() {
     form.value.description = captionRef.value.innerText;
   }
 
-  if (!form.value.title.trim()) {
-    toast(t("submit.titleRequired"));
-    return;
-  }
+  // 标题改成非必填，校验先注释掉留着，要恢复直接放开
+  // if (!form.value.title.trim()) {
+  //   toast(t("submit.titleRequired"));
+  //   return;
+  // }
 
   if (!videoUrl.value) {
     toast(t("submit.video.toastUploadFirst"));

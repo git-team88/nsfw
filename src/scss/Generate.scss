@@ -2916,7 +2916,8 @@ $pinkopacity: rgba(255,79,154,0.12);
 .queuing-state {
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* 整块靠左，不再整行居中 */
+  justify-content: flex-start;
   width: 100%;
   padding: 24px 0;
 
@@ -2925,7 +2926,8 @@ $pinkopacity: rgba(255,79,154,0.12);
     flex-direction: column;
     align-items: center;
     text-align: center;
-    width: 100%;
+    /* 只占半幅，右边留白 */
+    width: 50%;
   }
 
   .preparation-image {
