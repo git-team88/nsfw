@@ -367,6 +367,8 @@ async function handleSave() {
       params.cover = coverUrl.value;
       params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
+      // 合集类型跟着进来的 tab 走（个人主页 ?type= ），不传后端认不出这是哪一类合集
+      params.type = Number(route.query.type) || 2;
     }
 
     let response;

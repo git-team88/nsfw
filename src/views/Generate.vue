@@ -1107,10 +1107,12 @@ const selectedNsfwVersion = ref<string>(DEFAULT_VIDEO_VERSION);
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
 
-// 计价用的画质档。极速版是 480P / 768P，余额接口还没有对应的每秒单价字段，
-// 暂时按 720P 计价 —— 否则两个分支都不命中，costPerSecond 恒为 0，算力永远显示 1。
-// 等后端下发 480p / 768p 单价后，把这里换成真实字段即可。
-const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
+// 计价用的画质档。余额接口只有 720P / 1080P 两个每秒单价字段，极速版的 480P / 768P
+// 按档次对应过去算钱：480P 对应 720P 的价，768P 对应 1080P 的价 —— 否则两个分支都不
+// 命中，costPerSecond 恒为 0，算力永远显示 1。等后端下发 480p / 768p 单价后换成真实字段。
+const pricingQuality = computed(() =>
+  (selectedVideoQuality.value === '1080P' || selectedVideoQuality.value === '768P') ? '1080P' : '720P',
+);
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
 const clampRefVideoDuration = (d: number) => Math.min(d, refVideoMaxSeconds.value);
@@ -5399,7 +5401,7 @@ const doGenerateVideo = async () => {
         per_chapter_duration: 1.5,
         per_chapter_scene_count: 6,
         simple_image_resolution: '1K',
-        simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
+        simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
         simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
         enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value
       }
@@ -5442,7 +5444,7 @@ const doGenerateVideo = async () => {
       per_chapter_duration: 1.5,
       per_chapter_scene_count: 6,
       simple_image_resolution: '1K',
-      simple_video_resolution: selectedVideoQuality.value == '720P' ? '720p' : '1080p',
+      simple_video_resolution: selectedVideoQuality.value.toLowerCase(),
       simple_video_generate_mode: selectedVideoMultimodal.value == 'multimodal' ? 'multi_modal_reference' : selectedVideoMultimodal.value == 'startEndFrames' ? 'first_last_frames' : selectedVideoMultimodal.value == 'videoModify' ? 'video_edit' : 'video_extension',
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value

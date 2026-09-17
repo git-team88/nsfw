@@ -2154,7 +2154,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     coverInfo: "Image Format(PNG/JPG/Webp),Image Size(≤ 10MB),Image dimension(4:3)",
     reupload: "Set Cover",
     descriptionLabel: "Description",
-    descriptionPlaceholder: "Enter content here...",
+    descriptionPlaceholder: "Enter description...",
     fanOnly: "Member-Only Content",
     permission: "Permission Range",
     permPublic: "Public",
