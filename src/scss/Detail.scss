@@ -3131,6 +3131,17 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
       width: 100%;
     }
   }
+
+  // 合集信息条 / 模式条：桌面端 fixed 在视口左下角，max-width 用 calc(100vw - 660px) 给右栏让位。
+  // 窄屏下左右栏改成上下堆叠，fixed 会让它飘到页面底部、盖在右栏上；
+  // 100vw - 660px 又是负数，条子被压成一个空白小块，里面的标题也看不见了。
+  // 改成贴在媒体区底部。选择器要带 .media-container，否则优先级打不过上面的嵌套规则。
+  .media-container .collection-info-bar,
+  .media-container .collection-mode-bar {
+    position: absolute;
+    left: 16px;
+    max-width: calc(100% - 32px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
