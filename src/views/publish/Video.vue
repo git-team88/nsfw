@@ -3028,13 +3028,22 @@ async function getPostDetails() {
       if (postData.book_title) {
         selectedCollection.value = {
           id: postData.book_id || '',
-          name: postData.book_title,
-          cover: postData.cover || '',
+          name: data.data?.book_info?.title || postData.book_title,
+          // 封面和简介取合集自己的（book_info），别用这篇帖子的封面
+          cover: data.data?.book_info?.cover || '',
+          description: data.data?.book_info?.description || '',
           // 详情接口也下发了合集的收费档，编辑态一样要把价格显示出来
           price: planPriceOf(data.data?.plan ? data.data : postData),
-          currency: planCurrencyOf(data.data?.plan ? data.data : postData)
+          currency: planCurrencyOf(data.data?.plan ? data.data : postData),
+          // 敏感开关的状态取合集自己的 is_nsfw，不然编辑态永远显示关
+          is_nsfw: data.data?.book_info?.is_nsfw ?? 0
         };
         isNoCollection.value = false;
+        // 语言下拉框回显合集自己设的语言；没设（空串）或不在选项里就保持默认
+        const bookLang = data.data?.book_info?.language;
+        if (bookLang && langOptions.some((o) => o.key === bookLang)) {
+          collectionLanguage.value = bookLang;
+        }
 
         // Set chapter index from postData
         if (postData.chapter_index) {
@@ -3906,6 +3915,11 @@ function handleClickOutside(event: MouseEvent) {
   }
   if (showEpisodeDropdown.value && collectionSelect && !collectionSelect.contains(target)) {
     showEpisodeDropdown.value = false;
+  }
+
+  // 语言下拉框：点到外面就收起
+  if (langDropdownOpen.value && !langDropdownRef.value?.contains(target)) {
+    langDropdownOpen.value = false;
   }
 }
 

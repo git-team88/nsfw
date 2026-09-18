@@ -1879,6 +1879,11 @@ async function getPostDetails() {
           is_nsfw: data.data?.book_info?.is_nsfw ?? 0
         };
         isNoCollection.value = false;
+        // 语言下拉框回显合集自己设的语言；没设（空串）或不在选项里就保持默认
+        const bookLang = data.data?.book_info?.language;
+        if (bookLang && langOptions.some((o) => o.key === bookLang)) {
+          collectionLanguage.value = bookLang;
+        }
 
         // Set chapter index from postData
         if (postData.chapter_index) {
@@ -3830,6 +3835,11 @@ function handleClickOutside(event: MouseEvent) {
   const batchChapterDropdown = document.querySelector(".partial-chapter-dropdown");
   if (showBatchChapterDropdown.value && batchChapterDropdown && !batchChapterDropdown.contains(target)) {
     showBatchChapterDropdown.value = false;
+  }
+
+  // 语言下拉框：点到外面就收起
+  if (langDropdownOpen.value && !langDropdownRef.value?.contains(target)) {
+    langDropdownOpen.value = false;
   }
 }
 
