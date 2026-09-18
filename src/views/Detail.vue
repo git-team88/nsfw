@@ -73,7 +73,8 @@
                   <img :src="currentVideoPoster" alt="Cover" draggable="false" />
                 </div>
 
-                <div class="video-loading" v-if="isVideoLoading">
+                <!-- 首次加载、拖进度条后缓冲、播放中卡顿，都显示转圈 -->
+                <div class="video-loading" v-if="isVideoLoading || isVideoBuffering">
                   <div class="loading-spinner"></div>
                 </div>
 
@@ -92,6 +93,8 @@
                   @error="onVideoError"
                   @canplay="onCanPlay"
                   @waiting="onVideoWaiting"
+                  @seeking="onVideoSeeking"
+                  @seeked="onVideoSeeked"
                   @playing="onVideoPlaying"
                   @volumechange="onVolumeChange"
                   @ended="onVideoEnded"
@@ -141,7 +144,7 @@
                   </div>
                 </div>
 
-                <div class="play-overlay" v-show="!isPlaying && !isVideoLoading" @click.stop="togglePlay">
+                <div class="play-overlay" v-show="!isPlaying && !isVideoLoading && !isVideoBuffering" @click.stop="togglePlay">
                   <img src="@/assets/images/detail/play.png" alt="Play" />
                 </div>
 
@@ -3676,7 +3679,11 @@ function onLoadedMetadata(e: Event) {
 
 function onCanPlay() {
   isVideoBuffering.value = false;
-  tryAutoPlay();
+  // canplay 在每次 seek 完成后都会再触发一次。只有首次加载才走自动播放；
+  // 拖进度条时如果视频是暂停的就保持暂停，正在播的浏览器会自己续播。
+  // 否则拖动过程中会连续 play()，前一个 play() 被后一个 seek 打断就抛 AbortError，
+  // 下面的 catch 又会把它当成自动播放被拦截，把视频静音掉。
+  if (!hasAutoPlayed.value) tryAutoPlay();
 }
 
 function tryAutoPlay() {
@@ -3700,7 +3707,13 @@ function tryAutoPlay() {
       hasAutoPlayed.value = true;
       isPlaying.value = true;
       isVideoLoading.value = false;
-    }).catch(() => {
+    }).catch((error: any) => {
+      // 只有 NotAllowedError 才是浏览器自动播放策略拦截；
+      // AbortError 是 play() 被 pause() / 换源 / seek 打断，不是拦截，别回退成静音
+      if (error?.name !== 'NotAllowedError') {
+        isVideoLoading.value = false;
+        return;
+      }
       // 带声自动播放被拦截 → 回退静音重试，并记下来让喇叭图标显示成静音
       if (wantSound && videoRef.value) {
         videoRef.value.muted = true;
@@ -3723,6 +3736,18 @@ function tryAutoPlay() {
 
 function onVideoWaiting() {
   isVideoBuffering.value = true;
+}
+
+// 拖进度条：seek 开始就转圈，seek 完成（新位置的数据到了）再收起。
+// 如果 seek 完成后数据还不够播，浏览器会紧接着触发 waiting，转圈会再亮起来。
+function onVideoSeeking() {
+  isVideoBuffering.value = true;
+}
+
+function onVideoSeeked() {
+  const v = videoRef.value;
+  // readyState >= 3（HAVE_FUTURE_DATA）才算真的能播了
+  if (v && v.readyState >= 3) isVideoBuffering.value = false;
 }
 
 function onVideoPlaying() {
@@ -3837,6 +3862,17 @@ function onProgressDragStart(e: MouseEvent) {
   isDraggingProgress.value = true;
   onProgressClick(e);
 
+  // 拖动时进度条 UI 每次 mousemove 都更新，但真正 seek 每帧最多一次：
+  // 每次改 currentTime 浏览器都会取消上一个分段（Range）请求再发新的，
+  // mousemove 一秒几十次，全部 seek 会刷出一堆「已取消」的请求，还容易卡顿
+  let pendingSeek: number | null = null;
+  let seekRaf = 0;
+  const flushSeek = () => {
+    seekRaf = 0;
+    if (pendingSeek === null || !videoRef.value) return;
+    videoRef.value.currentTime = pendingSeek;
+    pendingSeek = null;
+  };
   const onMove = (moveEvent: MouseEvent) => {
     if (!isDraggingProgress.value || !videoRef.value || !duration.value) return;
     const bar = progressBarRef.value;
@@ -3844,14 +3880,18 @@ function onProgressDragStart(e: MouseEvent) {
     const rect = bar.getBoundingClientRect();
     const x = moveEvent.clientX - rect.left;
     const percent = Math.max(0, Math.min(1, x / rect.width));
-    videoRef.value.currentTime = percent * duration.value;
-    currentTime.value = percent * duration.value;
+    const target = percent * duration.value;
+    currentTime.value = target;
+    pendingSeek = target;
+    if (!seekRaf) seekRaf = requestAnimationFrame(flushSeek);
   };
 
   const onUp = () => {
     isDraggingProgress.value = false;
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
+    if (seekRaf) cancelAnimationFrame(seekRaf);
+    flushSeek();
   };
 
   document.addEventListener('mousemove', onMove);
@@ -4356,6 +4396,9 @@ function togglePlay() {
     }).catch(error => {
       isPlaying.value = false;
       isVideoBuffering.value = false;
+      // AbortError 是这次 play() 被随后的 pause() / seek / 换源打断（比如加载中连点、拖进度条），
+      // 不是真的播放失败，不提示
+      if (error?.name === 'AbortError') return;
       toast(t('detail.videoPlayFailed') + ': ' + error.message);
     });
   } else {
