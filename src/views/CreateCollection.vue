@@ -365,7 +365,10 @@ async function loadCollection(id: string) {
         originalLanguage.value = bookInfo.language;
       }
       collectionType.value = String(bookInfo.type ?? '');
-      originalPrice.value = String(bookInfo.price ?? '');
+      // 当前档位在外层 data.plan（设了是对象 { price, currency }，没设是空数组 []），
+      // book_info 里只有 plan_id 没有 price；不从这里读的话编辑时会默认落到第一档
+      const plan = data.plan && !Array.isArray(data.plan) ? data.plan : {};
+      originalPrice.value = String(plan.price ?? bookInfo.price ?? '');
       syncSelectedPlan();
     }
   } catch (error) {

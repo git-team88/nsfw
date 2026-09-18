@@ -126,12 +126,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import api from '@/api/index';
-import {
-  fetchBookRechargePlans,
-  findPlanByPrice,
-  planPriceText,
-  type BookRechargePlan,
-} from '@/util/bookRechargePlan';
+import { planPriceText } from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
@@ -173,19 +168,15 @@ const collection = ref({
 });
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
-// 档位由 book/getBookRechargePlan 下发，这里只把合集存的金额换算成展示文案。
-// 不是漫剧、或者没存过价格，这一行就不渲染。
-const rechargePlans = ref<BookRechargePlan[]>([]);
+// 合集详情接口（book/getBookDetail）直接下发 data.plan = { price, currency, ... }，
+// 这里只把它换算成展示文案，不用再拉档位列表。
+// 不是漫剧、或者没设过档位，这一行就不渲染。
 const collectionPriceText = computed(() => {
   if (collection.value.type != '3') return '';
   const price = collection.value.price;
   if (price === undefined || price === null || price === '') return '';
-  const plan = findPlanByPrice(rechargePlans.value, price);
   // 金额是美分，currency 缺省时也按 usd 缩放
-  const currency = collection.value.currency
-    || plan?.currency
-    || rechargePlans.value[0]?.currency
-    || 'usd';
+  const currency = collection.value.currency || 'usd';
   return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
 });
 
@@ -212,7 +203,6 @@ const collectionInfo = computed(() => ({
 }));
 
 onMounted(async () => {
-  fetchBookRechargePlans().then((plans) => { rechargePlans.value = plans; });
   const bookIdParam = route.params.id;
   if (!bookIdParam) {
     toast(t('collectionSettings.notFound'));
@@ -226,9 +216,8 @@ onMounted(async () => {
     if (res.code == 0 || res.code == 200) {
       const data = res.data || {};
       const bookInfo = data.book_info || {};
-      // plan 没设置时是空数组 []，设置了才是对象
-      const rawPlan = data.plan ?? bookInfo.plan;
-      const plan = (rawPlan && !Array.isArray(rawPlan) ? rawPlan : {}) as any;
+      // 收费档在 data.plan：设了是对象 { price, currency }，没设是空数组 []
+      const plan = (data.plan && !Array.isArray(data.plan) ? data.plan : {}) as any;
       collection.value = {
           id: bookInfo.id || bookInfo.book_id || bookId,
           title: bookInfo.title || '',
@@ -242,7 +231,7 @@ onMounted(async () => {
           chapter_count_private: bookInfo.chapter_count_private || 0,
           user_id: bookInfo.user_id || '',
           is_nsfw: bookInfo.is_nsfw || '0',
-          // 价格读 plan.price。plan 没设置时接口给的是空数组或空对象，两种都当没有处理
+          // 没设档位就留空，价格那一行不渲染
           price: plan.price ?? '',
           currency: plan.currency || '',
           group: Array.isArray(data.group) ? data.group : [],
