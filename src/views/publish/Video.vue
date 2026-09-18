@@ -319,11 +319,10 @@
                     <div class="collection-info" v-if="selectedCollection">
                       <div class="collection-cover-box" v-if="selectedCollection.cover">
                         <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                        <!-- 漫剧合集的收费档，封面下方 -->
-                        <div class="collection-price" v-if="collectionPriceText">
-                          <span class="price-amount">{{ collectionPriceText }}</span>
-                          <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                        </div>
+                      </div>
+                      <div class="collection-price" v-if="collectionPriceText">
+                        <span class="price-amount">{{ collectionPriceText }}</span>
+                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
                       </div>
                       <div class="collection-text">
                         <div class="collection-top">
@@ -499,11 +498,10 @@
                   <div class="collection-info" v-if="selectedCollection">
                     <div class="collection-cover-box" v-if="selectedCollection.cover">
                       <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                      <!-- 漫剧合集的收费档，封面下方 -->
-                      <div class="collection-price" v-if="collectionPriceText">
-                        <span class="price-amount">{{ collectionPriceText }}</span>
-                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                      </div>
+                    </div>
+                    <div class="collection-price" v-if="collectionPriceText">
+                      <span class="price-amount">{{ collectionPriceText }}</span>
+                      <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
                     </div>
                     <div class="collection-text">
                       <div class="collection-top">
@@ -1145,8 +1143,12 @@ const rechargePlans = ref<BookRechargePlan[]>([]);
 async function firstPlanId(): Promise<string> {
   const plans = rechargePlans.value.length ? rechargePlans.value : await fetchBookRechargePlans();
   rechargePlans.value = plans;
-  const plan = plans[0];
-  return plan ? String(plan.plan_id ?? plan.id) : '';
+  const cheapest = plans.reduce((min, p) => {
+    const pv = Number(p.price || 0);
+    const mv = Number(min.price || 0);
+    return pv < mv ? p : min;
+  }, plans[0]);
+  return cheapest ? String(cheapest.plan_id ?? cheapest.id) : '';
 }
 const collectionPriceText = computed(() => {
   const price = selectedCollection.value?.price;
@@ -1391,13 +1393,19 @@ async function handlePublishFromSelection() {
             }) as any;
 
             if (createRes.code == 0 && createRes.data?.book_id) {
+              const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
+                const pv = Number(p.price || 0);
+                const mv = Number(min.price || 0);
+                return pv < mv ? p : min;
+              }, rechargePlans.value[0]);
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: targetProject.name,
                 cover: targetProject.result_async?.generate_manju_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-                price: ''
+                price: cheapestPlan?.price ?? '',
+                currency: cheapestPlan?.currency || 'usd'
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1415,8 +1423,8 @@ async function handlePublishFromSelection() {
                 cover: searchRes.data?.book_info?.cover,
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-                price: planPriceOf(searchRes.data?.book_info),
-                currency: planCurrencyOf(searchRes.data?.book_info)
+                price: planPriceOf(searchRes.data),
+                currency: planCurrencyOf(searchRes.data)
               };
               isNoCollection.value = false;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -2510,13 +2518,19 @@ async function handlePublish(publishData?: any) {
 
           if (createRes.code == 0 && createRes.data?.book_id) {
 
+            const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
+              const pv = Number(p.price || 0);
+              const mv = Number(min.price || 0);
+              return pv < mv ? p : min;
+            }, rechargePlans.value[0]);
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.video_cover_url || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-              price: ''
+              price: cheapestPlan?.price ?? '',
+              currency: cheapestPlan?.currency || 'usd'
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -2535,8 +2549,8 @@ async function handlePublish(publishData?: any) {
               cover: searchRes.data?.book_info?.cover || collectionCover,
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-              price: planPriceOf(searchRes.data?.book_info),
-              currency: planCurrencyOf(searchRes.data?.book_info)
+              price: planPriceOf(searchRes.data),
+              currency: planCurrencyOf(searchRes.data)
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -4108,13 +4122,19 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
             }) as any;
 
             if (createRes.code === 0 && createRes.data?.book_id) {
+              const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
+                const pv = Number(p.price || 0);
+                const mv = Number(min.price || 0);
+                return pv < mv ? p : min;
+              }, rechargePlans.value[0]);
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: title,
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-                price: ''
+                price: cheapestPlan?.price ?? '',
+                currency: cheapestPlan?.currency || 'usd'
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4133,8 +4153,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 cover: searchRes.data?.book_info?.cover || '',
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-                price: planPriceOf(searchRes.data?.book_info),
-                currency: planCurrencyOf(searchRes.data?.book_info)
+                price: planPriceOf(searchRes.data),
+                currency: planCurrencyOf(searchRes.data)
               };
               selectedCollectionId.value = book_id;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -4328,13 +4348,19 @@ async function initBatchPublish(session_id: string) {
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
+            const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
+              const pv = Number(p.price || 0);
+              const mv = Number(min.price || 0);
+              return pv < mv ? p : min;
+            }, rechargePlans.value[0]);
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: projectTitle,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-              price: ''
+              price: cheapestPlan?.price ?? '',
+              currency: cheapestPlan?.currency || 'usd'
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';
@@ -4353,8 +4379,8 @@ async function initBatchPublish(session_id: string) {
               cover: searchRes.data?.book_info?.cover || '',
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
-              price: planPriceOf(searchRes.data?.book_info),
-              currency: planCurrencyOf(searchRes.data?.book_info)
+              price: planPriceOf(searchRes.data),
+              currency: planCurrencyOf(searchRes.data)
             };
             selectedCollectionId.value = book_id;
             selectedEpisodeNumber.value = episodeNumber.toString();

@@ -32,12 +32,7 @@ export function resetBookRechargePlans() {
 }
 
 function sortPlans(list: BookRechargePlan[]): BookRechargePlan[] {
-  return [...list].sort((a, b) => {
-    const sa = Number(a.sort_num);
-    const sb = Number(b.sort_num);
-    if (Number.isFinite(sa) && Number.isFinite(sb) && sa !== sb) return sa - sb;
-    return Number(a.price || 0) - Number(b.price || 0);
-  });
+  return [...list].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
 }
 
 export async function fetchBookRechargePlans(): Promise<BookRechargePlan[]> {
@@ -78,8 +73,8 @@ export function planPriceText(plan: BookRechargePlan | null | undefined, yenUnit
 /**
  * 从接口返回里取收费档。
  *
- * 后端没给合集设档位时，plan 下发的是空数组 []，设了才是对象；再加上
- * price 可能是空串，所以统一在这里收口，外面只判 null。
+ * 后端没给合集设档位时，plan 下发的是空数组 []，设了才是对象；
+ * 再加上 price 可能是空串，所以统一在这里收口，外面只判 null。
  */
 export function pickPlan(raw: unknown): BookRechargePlan | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
