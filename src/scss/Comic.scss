@@ -815,7 +815,7 @@
 
         .collection-info {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 10px;
           min-height: 50px;
           padding: 10px;
@@ -842,7 +842,6 @@
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          gap: 4px;
           flex: 1;
           min-width: 0;
           min-height: 160px;
@@ -887,8 +886,7 @@
         .content-sensitive {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          margin-top: 18px;
+          margin-top: 10px;
 
           .sensitive-left {
             display: flex;
@@ -909,6 +907,7 @@
             color: #ff4f9a;
             white-space: nowrap;
             cursor: pointer;
+            margin-left: auto;
           }
         }
 

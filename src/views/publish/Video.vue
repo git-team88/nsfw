@@ -331,8 +331,8 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
-                          <div class="sensitive-left">
+                        <div class="content-sensitive">
+                          <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                             <div class="info-icon" @mouseover="adjustTooltipPosition">
@@ -351,7 +351,7 @@
                               @click="toggleCollectionSensitive"
                             />
                           </div>
-                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                          <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
                         <div class="content-language">
                           <label class="form-label">{{ t('submit.language') }}</label>
@@ -511,8 +511,8 @@
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
-                      <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
-                        <div class="sensitive-left">
+                      <div class="content-sensitive">
+                        <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
                           <div class="info-icon" @mouseover="adjustTooltipPosition">
@@ -531,7 +531,7 @@
                             @click="toggleCollectionSensitive"
                           />
                         </div>
-                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                        <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                       <div class="content-language">
                         <label class="form-label">{{ t('submit.language') }}</label>
