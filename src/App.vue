@@ -58,7 +58,7 @@ const htmlLangMap: Record<string, string> = {
 // 移动端域名仍按正式/测试区分：正式站(*.fansfans.ai)→ m.fansfans.ai，其它 → mtest.fansfans.ai。
 function resolveOrigins() {
   const host = window.location.hostname;
-  const isProd = host.endsWith('fansfans.ai');
+  const isProd = !host.startsWith('wwwtest') && host.endsWith('fansfans.ai');
   return {
     site: window.location.origin,
     mobile: isProd ? 'https://m.fansfans.ai' : 'https://mtest.fansfans.ai',
