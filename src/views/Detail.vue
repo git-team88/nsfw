@@ -129,7 +129,7 @@
                           </div>
                         </div>
                         <div class="volume-btn" @click.stop="toggleMute">
-                          <img v-if="volume > 0" src="@/assets/images/detail/volume.png" alt="Volume" />
+                          <img v-if="volume > 0 && !autoMutedByPolicy" src="@/assets/images/detail/volume.png" alt="Volume" />
                           <svg v-else class="volume-muted-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="white"/><line x1="23" y1="9" x2="17" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
                         </div>
                       </div>
@@ -1244,6 +1244,11 @@ function progressPercent() {
 // 从localStorage中读取音量设置，如果没有则使用默认值0
 const savedVolume = localStorage.getItem('videoVolume');
 const volume = ref(savedVolume ? parseFloat(savedVolume) : 0);
+// 刷新后带声自动播放被浏览器拦截、回退成静音播放时置 true。
+// 这时喇叭显示成静音（和视频实际状态一致），缓存的音量值不动；
+// 用户点一下喇叭就按缓存音量把声音开回来（有手势了，浏览器允许）。
+const autoMutedByPolicy = ref(false);
+
 
 // Comment Video State
 const commentVideoRef = ref<HTMLVideoElement | null>(null);
@@ -3691,14 +3696,16 @@ function tryAutoPlay() {
   const playPromise = videoRef.value.play();
   if (playPromise !== undefined) {
     playPromise.then(() => {
+      autoMutedByPolicy.value = false;
       hasAutoPlayed.value = true;
       isPlaying.value = true;
       isVideoLoading.value = false;
     }).catch(() => {
-      // 带声自动播放被拦截 → 回退静音重试
+      // 带声自动播放被拦截 → 回退静音重试，并记下来让喇叭图标显示成静音
       if (wantSound && videoRef.value) {
         videoRef.value.muted = true;
         videoRef.value.play().then(() => {
+          autoMutedByPolicy.value = true;
           hasAutoPlayed.value = true;
           isPlaying.value = true;
           isVideoLoading.value = false;
@@ -3853,7 +3860,11 @@ function onProgressDragStart(e: MouseEvent) {
 
 function toggleMute() {
   if (!videoRef.value) return;
-  if (volume.value > 0) {
+  if (autoMutedByPolicy.value) {
+    // 刷新后被浏览器强制静音的：点喇叭就是要开声，按缓存音量恢复
+    autoMutedByPolicy.value = false;
+    if (volume.value === 0) volume.value = 0.6;
+  } else if (volume.value > 0) {
     volume.value = 0;
   } else {
     volume.value = 0.6;
@@ -3905,6 +3916,7 @@ function updateVolumeFromEvent(e: MouseEvent) {
   volume.value = percent;
   videoRef.value.volume = percent;
   videoRef.value.muted = percent === 0;
+  if (percent > 0) autoMutedByPolicy.value = false;
   localStorage.setItem('videoVolume', percent.toString());
 }
 
