@@ -397,25 +397,28 @@
                           @click="toggleCollectionSensitive"
                         />
                       </div>
-                      <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                     </div>
 
                     <div class="content-language">
                       <label class="form-label">{{ t('submit.language') }}</label>
-                      <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
-                        <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
-                          <span>{{ currentLangLabel }}</span>
-                          <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
+                      <div class="lang-row">
+                        <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                          <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                            <span>{{ currentLangLabel }}</span>
+                            <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                          </div>
+                          <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                            <div
+                              class="lang-dropdown-item"
+                              v-for="opt in langOptions"
+                              :key="opt.key"
+                              :class="{ active: collectionLanguage === opt.key }"
+                              @click="handleCollectionLanguageChange(opt.key)"
+                            >{{ t(opt.labelKey) }}</div>
+                          </div>
                         </div>
-                        <div class="lang-dropdown-menu" v-if="langDropdownOpen">
-                          <div
-                            class="lang-dropdown-item"
-                            v-for="opt in langOptions"
-                            :key="opt.key"
-                            :class="{ active: collectionLanguage === opt.key }"
-                            @click="handleCollectionLanguageChange(opt.key)"
-                          >{{ t(opt.labelKey) }}</div>
-                        </div>
+                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                     </div>
                   </div>
@@ -569,25 +572,28 @@
                               @click="toggleCollectionSensitive"
                             />
                           </div>
-                          <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
 
                         <div class="content-language">
                           <label class="form-label"><b>*</b>{{ t('submit.language') }}</label>
-                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
-                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
-                              <span>{{ currentLangLabel }}</span>
-                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                          <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
+                          <div class="lang-row">
+                            <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                              <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                                <span>{{ currentLangLabel }}</span>
+                                <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                              </div>
+                              <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                                <div
+                                  class="lang-dropdown-item"
+                                  v-for="opt in langOptions"
+                                  :key="opt.key"
+                                  :class="{ active: collectionLanguage === opt.key }"
+                                  @click="handleCollectionLanguageChange(opt.key)"
+                                >{{ t(opt.labelKey) }}</div>
+                              </div>
                             </div>
-                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
-                              <div
-                                class="lang-dropdown-item"
-                                v-for="opt in langOptions"
-                                :key="opt.key"
-                                :class="{ active: collectionLanguage === opt.key }"
-                                @click="handleCollectionLanguageChange(opt.key)"
-                              >{{ t(opt.labelKey) }}</div>
-                            </div>
+                            <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                           </div>
                         </div>
                       </div>

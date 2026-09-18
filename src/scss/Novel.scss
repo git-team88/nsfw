@@ -1210,14 +1210,6 @@
               cursor: pointer;
             }
 
-            .modify-link {
-              font-size: 16px;
-              font-weight: 600;
-              color: #ff4f9a;
-              white-space: nowrap;
-              cursor: pointer;
-              margin-left: auto;
-            }
           }
 
           .content-language {
@@ -1227,9 +1219,27 @@
             width: 100%;
             gap: 10px;
 
+            // 下拉框 + 「修改合集信息」一行，链接靠右
+            .lang-row {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+              width: 100%;
+            }
+
+            .modify-link {
+              font-size: 16px;
+              font-weight: 600;
+              color: #ff4f9a;
+              white-space: nowrap;
+              cursor: pointer;
+              margin-left: auto;
+            }
+
             .lang-dropdown {
               position: relative;
               flex: 1;
+              min-width: 0;
               max-width: 400px;
 
               .lang-dropdown-trigger {
@@ -2210,8 +2220,24 @@
       width: 100%;
     }
 
-    .collection-section .form-item .collection-row .content-language {
+    // 带上 .content-wrapper 是为了和上面基础规则的层级一样深，不然 .lang-dropdown 的 max-width 盖不过去
+    .content-wrapper .collection-section .form-item .collection-row .content-language {
       max-width: 100%;
+
+      // 窄屏：下拉框占一行，「修改合集信息」另起一行靠右
+      .lang-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .lang-dropdown {
+        max-width: 100%;
+      }
+
+      .modify-link {
+        align-self: flex-end;
+      }
     }
 
     .chapter-dropdown,

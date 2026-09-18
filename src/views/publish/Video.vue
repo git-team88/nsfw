@@ -317,12 +317,13 @@
 
                   <div class="collection-display">
                     <div class="collection-info" v-if="selectedCollection">
-                      <div class="collection-cover-box" v-if="selectedCollection.cover">
-                        <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                      </div>
-                      <div class="collection-price" v-if="collectionPriceText">
-                        <span class="price-amount">{{ collectionPriceText }}</span>
-                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                      <!-- 封面 + 价格是一列：封面在上，漫剧合集的收费档在下 -->
+                      <div class="collection-cover-box" v-if="selectedCollection.cover || collectionPriceText">
+                        <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                        <div class="collection-price" v-if="collectionPriceText">
+                          <span class="price-amount">{{ collectionPriceText }}</span>
+                          <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                        </div>
                       </div>
                       <div class="collection-text">
                         <div class="collection-top">
@@ -350,24 +351,27 @@
                               @click="toggleCollectionSensitive"
                             />
                           </div>
-                          <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
                         <div class="content-language">
                           <label class="form-label">{{ t('submit.language') }}</label>
-                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
-                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
-                              <span>{{ currentLangLabel }}</span>
-                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                          <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
+                          <div class="lang-row">
+                            <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                              <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                                <span>{{ currentLangLabel }}</span>
+                                <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                              </div>
+                              <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                                <div
+                                  class="lang-dropdown-item"
+                                  v-for="opt in langOptions"
+                                  :key="opt.key"
+                                  :class="{ active: collectionLanguage === opt.key }"
+                                  @click="handleCollectionLanguageChange(opt.key)"
+                                >{{ t(opt.labelKey) }}</div>
+                              </div>
                             </div>
-                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
-                              <div
-                                class="lang-dropdown-item"
-                                v-for="opt in langOptions"
-                                :key="opt.key"
-                                :class="{ active: collectionLanguage === opt.key }"
-                                @click="handleCollectionLanguageChange(opt.key)"
-                              >{{ t(opt.labelKey) }}</div>
-                            </div>
+                            <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                           </div>
                         </div>
                       </div>
@@ -496,12 +500,13 @@
 
                 <div class="collection-display">
                   <div class="collection-info" v-if="selectedCollection">
-                    <div class="collection-cover-box" v-if="selectedCollection.cover">
-                      <img :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                    </div>
-                    <div class="collection-price" v-if="collectionPriceText">
-                      <span class="price-amount">{{ collectionPriceText }}</span>
-                      <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                    <!-- 封面 + 价格是一列：封面在上，漫剧合集的收费档在下 -->
+                    <div class="collection-cover-box" v-if="selectedCollection.cover || collectionPriceText">
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                      <div class="collection-price" v-if="collectionPriceText">
+                        <span class="price-amount">{{ collectionPriceText }}</span>
+                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                      </div>
                     </div>
                     <div class="collection-text">
                       <div class="collection-top">
@@ -529,24 +534,27 @@
                             @click="toggleCollectionSensitive"
                           />
                         </div>
-                        <span class="modify-link" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                       <div class="content-language">
                         <label class="form-label">{{ t('submit.language') }}</label>
-                        <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
-                          <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
-                            <span>{{ currentLangLabel }}</span>
-                            <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
+                        <div class="lang-row">
+                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                              <span>{{ currentLangLabel }}</span>
+                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                              <div
+                                class="lang-dropdown-item"
+                                v-for="opt in langOptions"
+                                :key="opt.key"
+                                :class="{ active: collectionLanguage === opt.key }"
+                                @click="handleCollectionLanguageChange(opt.key)"
+                              >{{ t(opt.labelKey) }}</div>
+                            </div>
                           </div>
-                          <div class="lang-dropdown-menu" v-if="langDropdownOpen">
-                            <div
-                              class="lang-dropdown-item"
-                              v-for="opt in langOptions"
-                              :key="opt.key"
-                              :class="{ active: collectionLanguage === opt.key }"
-                              @click="handleCollectionLanguageChange(opt.key)"
-                            >{{ t(opt.labelKey) }}</div>
-                          </div>
+                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
                       </div>
                     </div>
@@ -4394,33 +4402,40 @@ onMounted(async () => {
     await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 
-    getCountry();
-    await checkSubscriptionStatus();
+    // 编辑态 / 单章 / 批量进来时 isInitializing 起手就是 true（见上面的定义）。
+    // 初始化过程里任何一步抛错都必须把它关掉，否则页面会一直停在转圈上；
+    // 所以整段放进 try/finally，出错只打日志，不阻塞用户操作。
+    try {
+      getCountry();
+      await checkSubscriptionStatus();
 
-    const sessionIdParam = route.query.session_id as string;
-    const urlParam = route.query.url as string;
-    const indexParam = route.query.index as string;
-    const isBatch = route.query.batch === 'true';
+      const sessionIdParam = route.query.session_id as string;
+      const urlParam = route.query.url as string;
+      const indexParam = route.query.index as string;
+      const isBatch = route.query.batch === 'true';
 
-    if (isBatch && sessionIdParam) {
-      isInitializing.value = true;
-      isEditingWork.value = true;
-      await initBatchPublish(sessionIdParam);
+      if (isBatch && sessionIdParam) {
+        isInitializing.value = true;
+        isEditingWork.value = true;
+        await initBatchPublish(sessionIdParam);
+      } else if (sessionIdParam && urlParam) {
+        isInitializing.value = true;
+        await initSingleChapter(sessionIdParam, urlParam, indexParam);
+      } else if (sessionIdParam) {
+        sessionId.value = sessionIdParam;
+        isEditingWork.value = true;
+      } else if (postId.value) {
+        isInitializing.value = true;
+        isEditingWork.value = true;
+        await getPostDetails();
+      } else {
+        await fetchProjects();
+      }
+    } catch (error) {
+      console.error('Error initializing publish page:', error);
+    } finally {
       isInitializing.value = false;
-    } else if (sessionIdParam && urlParam) {
-      isInitializing.value = true;
-      await initSingleChapter(sessionIdParam, urlParam, indexParam);
-      isInitializing.value = false;
-    } else if (sessionIdParam) {
-      sessionId.value = sessionIdParam;
-      isEditingWork.value = true;
-    } else if (postId.value) {
-      isInitializing.value = true;
-      isEditingWork.value = true;
-      await getPostDetails();
-      isInitializing.value = false;
-    } else {
-      await fetchProjects();
+      isLoadingBatchPublish.value = false;
     }
   });
 
@@ -4445,7 +4460,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* 靠左：cover-box 是居中的一列，这里自己挑出来贴左边 */
+  /* 靠左：cover-box 是居中的一列，价格自己贴左边，和封面左边缘对齐 */
   align-self: flex-start;
   gap: 8px;
   line-height: 1.15;

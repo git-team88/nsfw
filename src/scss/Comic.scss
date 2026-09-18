@@ -901,14 +901,6 @@
             cursor: pointer;
           }
 
-          .modify-link {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ff4f9a;
-            white-space: nowrap;
-            cursor: pointer;
-            margin-left: auto;
-          }
         }
 
         .content-language {
@@ -918,9 +910,27 @@
           width: 100%;
           gap: 10px;
 
+          // 下拉框 + 「修改合集信息」一行，链接靠右
+          .lang-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+          }
+
+          .modify-link {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff4f9a;
+            white-space: nowrap;
+            cursor: pointer;
+            margin-left: auto;
+          }
+
           .lang-dropdown {
             position: relative;
             flex: 1;
+            min-width: 0;
             max-width: 400px;
 
             .lang-dropdown-trigger {
@@ -2390,6 +2400,21 @@
 
     .collection-section .form-item .collection-row .content-language {
       max-width: 100%;
+
+      // 窄屏：下拉框占一行，「修改合集信息」另起一行靠右
+      .lang-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .lang-dropdown {
+        max-width: 100%;
+      }
+
+      .modify-link {
+        align-self: flex-end;
+      }
     }
 
     .chapter-dropdown {
