@@ -1137,18 +1137,13 @@ const selectedCollection = ref<{ id: string | number; name: string; cover?: stri
 const rechargePlans = ref<BookRechargePlan[]>([]);
 
 /**
- * 自动建合集时用的档位 —— 帮用户选中接口返回的第一档。
+ * 自动建合集时默认选中的档位 —— 接口返回的第一档（前端不排序，顺序以后端为准）。
  * onMounted 那次拉取可能还没回来，所以这里兜一次 await（fetch 内部有缓存，不会重复打请求）。
  */
-async function firstPlanId(): Promise<string> {
+async function firstPlan(): Promise<BookRechargePlan | null> {
   const plans = rechargePlans.value.length ? rechargePlans.value : await fetchBookRechargePlans();
   rechargePlans.value = plans;
-  const cheapest = plans.reduce((min, p) => {
-    const pv = Number(p.price || 0);
-    const mv = Number(min.price || 0);
-    return pv < mv ? p : min;
-  }, plans[0]);
-  return cheapest ? String(cheapest.plan_id ?? cheapest.id) : '';
+  return plans[0] || null;
 }
 const collectionPriceText = computed(() => {
   const price = selectedCollection.value?.price;
@@ -1383,29 +1378,26 @@ async function handlePublishFromSelection() {
             const storySummary = (targetProject.result_async?.generate_manju_outline?.synopsis
               || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
               || '').slice(0, 1000);
+            // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
+            const defaultPlan = await firstPlan();
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
-              plan_id: await firstPlanId(),
+              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
 
             if (createRes.code == 0 && createRes.data?.book_id) {
-              const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
-                const pv = Number(p.price || 0);
-                const mv = Number(min.price || 0);
-                return pv < mv ? p : min;
-              }, rechargePlans.value[0]);
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: targetProject.name,
                 cover: targetProject.result_async?.generate_manju_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-                price: cheapestPlan?.price ?? '',
-                currency: cheapestPlan?.currency || 'usd'
+                price: defaultPlan?.price ?? '',
+                currency: defaultPlan?.currency || ''
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -2507,30 +2499,26 @@ async function handlePublish(publishData?: any) {
           const storySummary = (publishData?.project?.result_async?.generate_manju_outline?.synopsis
             || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
             || '').slice(0, 1000);
+          // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
+          const defaultPlan = await firstPlan();
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
-            plan_id: await firstPlanId(),
+            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
             cover: project.video_cover_url || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
-
-            const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
-              const pv = Number(p.price || 0);
-              const mv = Number(min.price || 0);
-              return pv < mv ? p : min;
-            }, rechargePlans.value[0]);
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
               cover: project.video_cover_url || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-              price: cheapestPlan?.price ?? '',
-              currency: cheapestPlan?.currency || 'usd'
+              price: defaultPlan?.price ?? '',
+              currency: defaultPlan?.currency || ''
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -4112,29 +4100,26 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
           if (book_id === 0) {
             const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
               || '').slice(0, 1000);
+            // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
+            const defaultPlan = await firstPlan();
             const createRes = await api.addCollection({
               title,
               type: 3,
-              plan_id: await firstPlanId(),
+              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
 
             if (createRes.code === 0 && createRes.data?.book_id) {
-              const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
-                const pv = Number(p.price || 0);
-                const mv = Number(min.price || 0);
-                return pv < mv ? p : min;
-              }, rechargePlans.value[0]);
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: title,
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-                price: cheapestPlan?.price ?? '',
-                currency: cheapestPlan?.currency || 'usd'
+                price: defaultPlan?.price ?? '',
+                currency: defaultPlan?.currency || ''
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4338,29 +4323,26 @@ async function initBatchPublish(session_id: string) {
         if (book_id == 0) {
           const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
             || '').slice(0, 1000);
+          // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
+          const defaultPlan = await firstPlan();
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
-            plan_id: await firstPlanId(),
+            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
 
           if (createRes.code == 0 && createRes.data?.book_id) {
-            const cheapestPlan = rechargePlans.value.reduce((min: any, p: any) => {
-              const pv = Number(p.price || 0);
-              const mv = Number(min.price || 0);
-              return pv < mv ? p : min;
-            }, rechargePlans.value[0]);
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: projectTitle,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
-              price: cheapestPlan?.price ?? '',
-              currency: cheapestPlan?.currency || 'usd'
+              price: defaultPlan?.price ?? '',
+              currency: defaultPlan?.currency || ''
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';

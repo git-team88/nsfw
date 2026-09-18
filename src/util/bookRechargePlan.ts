@@ -31,10 +31,6 @@ export function resetBookRechargePlans() {
   plansInflight = null;
 }
 
-function sortPlans(list: BookRechargePlan[]): BookRechargePlan[] {
-  return [...list].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
-}
-
 export async function fetchBookRechargePlans(): Promise<BookRechargePlan[]> {
   if (plansCache) return plansCache;
 
@@ -44,7 +40,8 @@ export async function fetchBookRechargePlans(): Promise<BookRechargePlan[]> {
         const res = (await api.getBookRechargePlan()) as any;
         const ok = res && (res.code === 0 || res.code === 200);
         const list = ok ? res.data?.plan_list || res.data?.planList || [] : [];
-        plansCache = sortPlans(Array.isArray(list) ? list : []);
+        // 顺序按接口返回，前端不排序 —— 默认档位就是第一档
+        plansCache = Array.isArray(list) ? list : [];
         return plansCache;
       } catch {
         // 拿不到就当没有档位，价格那一行不渲染，不挡住保存
@@ -73,14 +70,24 @@ export function planPriceText(plan: BookRechargePlan | null | undefined, yenUnit
 /**
  * 从接口返回里取收费档。
  *
- * 后端没给合集设档位时，plan 下发的是空数组 []，设了才是对象；
- * 再加上 price 可能是空串，所以统一在这里收口，外面只判 null。
+ * 后端没给合集设档位时，plan 下发的是空数组 []；设了档位时可能是对象，
+ * 也可能是数组 [{plan_id, price, currency}]（如 searchBookFullname 的返回）。
+ * 数组时取第一个有 price 的元素；再加上 price 可能是空串，统一在这里收口，外面只判 null。
  */
 export function pickPlan(raw: unknown): BookRechargePlan | null {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const price = (raw as BookRechargePlan).price;
+  if (!raw || typeof raw !== "object") return null;
+  let candidate: any = raw;
+  if (Array.isArray(candidate)) {
+    if (candidate.length === 0) return null;
+    candidate = candidate.find(item => {
+      const p = item?.price;
+      return p !== undefined && p !== null && p !== "";
+    }) || null;
+    if (!candidate) return null;
+  }
+  const price = (candidate as BookRechargePlan).price;
   if (price === undefined || price === null || price === "") return null;
-  return raw as BookRechargePlan;
+  return candidate as BookRechargePlan;
 }
 
 /** 合集价格：优先读新下发的 plan，退回老的顶层 price 字段 */
