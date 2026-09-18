@@ -841,7 +841,6 @@ import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import {
   fetchBookRechargePlans,
-  findPlanByPrice,
   planPriceText,
   planPriceOf,
   planCurrencyOf,
@@ -1140,26 +1139,26 @@ const previewProject = ref<any>(null);
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number; currency?: string } | null>(null);
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
-// 档位由 book/getBookRechargePlan 下发，这里只负责把合集存的金额换算成展示文案。
-// 拿不到档位、或者合集没存过价格，这一行就不渲染。
-const rechargePlans = ref<BookRechargePlan[]>([]);
+// 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
+// 这里只把它换算成展示文案。合集没存过价格，这一行就不渲染。
+
+// 档位列表拉失败（或后端没配档位）时自动建合集用的兜底档位 id
+const DEFAULT_PLAN_ID = '1';
 
 /**
  * 自动建合集时默认选中的档位 —— 接口返回的第一档（前端不排序，顺序以后端为准）。
- * onMounted 那次拉取可能还没回来，所以这里兜一次 await（fetch 内部有缓存，不会重复打请求）。
+ * 调用方是 await 的，列表没回来之前不会去建合集；拉失败时返回 null，由调用方用 DEFAULT_PLAN_ID 兜底。
+ * 只有真的要自动建合集时才会走到这里请求档位列表（fetch 内部有缓存，不会重复打请求）。
  */
 async function firstPlan(): Promise<BookRechargePlan | null> {
-  const plans = rechargePlans.value.length ? rechargePlans.value : await fetchBookRechargePlans();
-  rechargePlans.value = plans;
+  const plans = await fetchBookRechargePlans();
   return plans[0] || null;
 }
 const collectionPriceText = computed(() => {
   const price = selectedCollection.value?.price;
   if (price === undefined || price === null || price === '') return '';
-  const plan = findPlanByPrice(rechargePlans.value, price);
-  // 接口下发的 plan 自带币种，优先用它；再退回档位列表
   // 金额是美分，currency 缺省时也按 usd 缩放
-  const currency = selectedCollection.value?.currency || plan?.currency || rechargePlans.value[0]?.currency || 'usd';
+  const currency = selectedCollection.value?.currency || 'usd';
   return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
 });
 
@@ -1391,7 +1390,7 @@ async function handlePublishFromSelection() {
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
-              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
+              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -2067,7 +2066,7 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number; currency?: string }) {
   showEditCollectionModal.value = false;
 
   if (editingCollectionId.value === null) {
@@ -2115,8 +2114,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       // 非漫剧的弹窗不带这个字段（undefined），别把已有的值抹掉。
       if (collection.price !== undefined) {
         selectedCollection.value.price = collection.price;
-        // 币种交给档位列表反查，别留上一个合集的
-        selectedCollection.value.currency = '';
+        // 币种也用弹窗选中档位的，别留上一个合集的
+        selectedCollection.value.currency = collection.currency || '';
       }
       if (collection.is_nsfw == 1) {
         form.value.content = 'yes';
@@ -2512,7 +2511,7 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
-            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
+            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
             cover: project.video_cover_url || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4127,7 +4126,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
             const createRes = await api.addCollection({
               title,
               type: 3,
-              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
+              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4350,7 +4349,7 @@ async function initBatchPublish(session_id: string) {
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
-            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : '',
+            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4412,7 +4411,6 @@ async function initBatchPublish(session_id: string) {
 }
 
 onMounted(async () => {
-  fetchBookRechargePlans().then((plans) => { rechargePlans.value = plans; });
     await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 

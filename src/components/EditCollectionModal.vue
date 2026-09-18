@@ -208,7 +208,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number }): void;
+  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string }): void;
 }>();
 
 const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
@@ -468,7 +468,8 @@ async function handleSave() {
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
           language: selectedLanguage.value,
-          price: showPriceRow.value ? selectedPlan.value?.price : undefined
+          price: showPriceRow.value ? selectedPlan.value?.price : undefined,
+          currency: showPriceRow.value ? selectedPlan.value?.currency : undefined
         });
         handleCancel();
       } else {
@@ -503,7 +504,8 @@ async function handleSave() {
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
           language: selectedLanguage.value,
-          price: showPriceRow.value ? selectedPlan.value?.price : undefined
+          price: showPriceRow.value ? selectedPlan.value?.price : undefined,
+          currency: showPriceRow.value ? selectedPlan.value?.currency : undefined
         });
         handleCancel();
       } else {
