@@ -1654,6 +1654,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     submit: "Submit",
     next: "Next",
     success: "Report submitted successfully",
+    failed: "Failed to submit report",
     uploadLimit: "Max 3 images",
     reasons: {
       porn: "Pornographic & Obscene",

@@ -1373,6 +1373,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     submit: "送信",
     next: "次へ",
     success: "通報を送信しました",
+    failed: "通報の送信に失敗しました",
     uploadLimit: "最大3枚",
     reasons: {
       porn: "わいせつ・低俗な内容",

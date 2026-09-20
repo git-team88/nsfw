@@ -296,6 +296,97 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   }
 }
 
+
+// 做同款 / 做续集唤出输入框时：左侧区域改成上下排布，媒体占剩余高度被顶上去，
+// 输入框贴在底部并水平居中。全屏下 composer-open 不成立，自动恢复原样。
+.left-panel.composer-open:not(.composer-overlay) {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+  // 媒体和输入框之间留口气，别让视频的控制条直接贴着类型 tab
+  gap: 16px;
+
+  // flex-basis 0 + min-height 0：媒体区真正让出高度给输入框。
+  // height 保持 100%（基础规则里的），这样里面写死 height:100% 的图片/视频
+  // 还能按 flex 算出来的实际高度解析百分比，不会退回内容高度把输入框顶出面板。
+  .media-container {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  // 媒体内部多处写死 height:100% / 100vh，统一收到可用高度以内
+  .media-container > *,
+  .image-carousel,
+  .image-stack,
+  .comic-gallery,
+  .video-wrapper {
+    max-height: 100%;
+  }
+
+  .detail-composer {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: 60%;
+    // 右边多留一点，收起态的关闭按钮挂在输入框外侧，别被面板裁掉
+    padding: 0 56px 20px 20px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .nav-arrows {
+    z-index: 2;
+  }
+}
+
+// 漫画（type 1）：长图整页滚动，媒体顶不上去，输入框改成浮在左侧区域底部，
+// 合集的章节条抬到输入框上面（--composer-h 由组件的 height-change 事件喂进来）。
+.left-panel.composer-overlay {
+  // 漫画的左栏自己是滚动容器，absolute 会跟着长图一起滚走，只能用 fixed，
+  // 宽度按「视口减掉右栏」算，跟 .collection-mode-bar 一个口径。
+  .detail-composer {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    width: calc(100vw - 450px - 48px);
+    max-height: 60vh;
+    z-index: 12;
+    padding: 0 32px 0 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+
+    > * {
+      pointer-events: auto;
+    }
+  }
+
+  .collection-mode-bar,
+  .collection-info-bar,
+  .nav-arrows {
+    bottom: calc(var(--composer-h, 0px) + 60px);
+  }
+
+  // 输入框是浮在上面的，长图滚到底会被它压住最后一屏，
+  // 给滚动内容垫出等高的底部空间（收起 / 展开跟着 --composer-h 变）
+  .media-container {
+    padding-bottom: calc(var(--composer-h, 0px) + 40px);
+  }
+}
+
+.main-container.isRightPanelHidden .left-panel.composer-overlay .detail-composer {
+  width: calc(100vw - 48px);
+}
+
+.detail-composer {
+  width: 100%;
+}
+
+
 .media-container {
   width: 100%;
   height: 100%;

@@ -184,10 +184,17 @@
       @close="showDeleteChapterModal = false"
       @confirm="deleteChapter(currentChapter)"
     />
+    <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
+    <PromptComposer
+      ref="composerRef"
+      placement="bottom"
+      @loading-change="composerLoading = $event"
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="CollectionDetail">
+import PromptComposer from '@/components/PromptComposer.vue';
 import { scaleFiatPrice } from '@/util/currency';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
@@ -198,6 +205,10 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
+
+const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
+// 来源数据请求中：输入框先不显示，接口回来才露出
+const composerLoading = ref(false);
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
@@ -569,7 +580,8 @@ function goMakeSimilar(sessionId: string) {
     toast(t('home.makeSimilarChinaNotSupported'));
     return;
   }
-  router.push({ path: '/', query: { make: sessionId } });
+  // 在本页底部展开输入框回填，不再跳首页
+  composerRef.value?.applyMakeSame(sessionId);
 }
 
 function navigateToChapter(chapter: Chapter) {

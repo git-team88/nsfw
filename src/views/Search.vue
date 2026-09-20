@@ -203,10 +203,19 @@
       @go-subscribe="goMakeSequelSubscribe"
       @close="showMakeSequelSubscribeModal = false"
     />
+    <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
+    <PromptComposer
+      ref="composerRef"
+      placement="bottom"
+      @loading-change="composerLoading = $event"
+    />
+    <!-- 做同款 / 做续集的来源数据请求中 -->
+    <UploadMask :visible="composerLoading" :text="t('home.loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="Search">
+import PromptComposer from '@/components/PromptComposer.vue';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch, type CSSProperties } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -216,6 +225,10 @@ import UploadMask from '@/components/UploadMask.vue';
 import MakeSequelSubscribeModal from '@/components/MakeSequelSubscribeModal.vue';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
+
+const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
+// 来源数据请求中：输入框先不显示，接口回来才露出
+const composerLoading = ref(false);
 import { toast } from '@/util/toast';
 import { formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
 import { baseUrl } from '@/util/config';
@@ -673,7 +686,7 @@ async function toggleLike(post: Post) {
   } catch (error) {
     console.error('Like/unlike error:', error);
     // Show error message if API call failed
-    toast(t('common.fail'));
+    toast(t('fail'));
   }
 }
 
@@ -734,7 +747,8 @@ const handleMakeSimilar = (post: any) => {
     toast(t('home.makeSimilarChinaNotSupported'));
     return;
   }
-  router.push({ path: '/', query: { make: sessionId } });
+  // 在本页底部展开输入框回填，不再跳首页
+  composerRef.value?.applyMakeSame(sessionId);
 };
 
 const isMakeSimilarVideoLoading = ref(false);
@@ -781,8 +795,7 @@ const handleMakeSimilarVideo = async (post: any) => {
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
     const videoDuration = Number(data.duration) || 0;
 
-    localStorage.setItem('makeSimilarVideoData', JSON.stringify({ videoUrl, cover, isNsfw, duration: videoDuration, postId: data.id || post.id }));
-    router.push({ path: '/' });
+    await composerRef.value?.applyMakeSimilarVideoData({ videoUrl, cover, isNsfw, duration: videoDuration, postId: data.id || post.id });
   } catch (error) {
     console.error('Error fetching post detail for make similar video:', error);
     toast(t('fail'));
@@ -829,10 +842,9 @@ const handleMakeSequelFromList = async (post: any) => {
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
     const videoDuration = Number(data.duration) || 0;
-    localStorage.setItem('makeSequelData', JSON.stringify({
+    await composerRef.value?.applyMakeSequelData({
       videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || post.id, isNsfw, duration: videoDuration
-    }));
-    router.push({ path: '/' });
+    });
   } catch (error) {
     console.error('Error fetching post detail for make sequel:', error);
     toast(t('fail'));

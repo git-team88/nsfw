@@ -8,7 +8,7 @@
       <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1', 'swipe-nav': isStandaloneType && !isCollectionMode }" @wheel="handleLeftPanelWheel" @pointerdown="handleLeftPanelPointerDown">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1', 'swipe-nav': isStandaloneType && !isCollectionMode, 'composer-open': composerOpen, 'composer-overlay': composerOpen && isOverlayComposerType }" :style="composerOpen ? { '--composer-h': composerHeight + 'px' } : undefined" @wheel="handleLeftPanelWheel" @pointerdown="handleLeftPanelPointerDown">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -400,6 +400,19 @@
           <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode && !isStandaloneType">
             <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
             <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
+          </div>
+
+          <!-- 做同款 / 做续集：漫剧、图片、视频（type 3/4/5）把媒体顶上去，
+               输入框排在左侧区域底部居中；全屏时不显示 -->
+          <div class="detail-composer" v-if="isPanelComposerType" v-show="composerOpen">
+            <PromptComposer
+              ref="composerRef"
+              placement="panel"
+              closable
+              @active-change="composerActive = $event"
+              @height-change="composerHeight = $event"
+              @loading-change="composerLoading = $event"
+            />
           </div>
         </div>
 
@@ -957,10 +970,22 @@
     />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeVideoLoading" :text="t('home.loading')" />
+    <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
+    <!-- 小说 / 漫画：输入框固定在视口底部即可 -->
+    <PromptComposer
+      v-if="!isPanelComposerType"
+      ref="composerRef"
+      placement="bottom"
+      closable
+      @active-change="composerActive = $event"
+    />
+    <!-- 做同款 / 做续集的来源数据请求中 -->
+    <UploadMask :visible="composerLoading" :text="t('home.loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="Detail">
+import PromptComposer from '@/components/PromptComposer.vue';
 import NovelDetail from "@/views/NovelDetail.vue"
 import ReportModal from "@/components/ReportModal.vue";
 import MakeSequelSubscribeModal from "@/components/MakeSequelSubscribeModal.vue";
@@ -984,6 +1009,20 @@ import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
+
+const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
+// 输入框是否已经被做同款 / 做续集唤出
+const composerActive = ref(false);
+// 来源数据请求中：输入框先不显示，接口回来才露出
+const composerLoading = ref(false);
+// 输入框当前高度，漫画类型要靠它把章节条抬到输入框上面
+const composerHeight = ref(0);
+// 漫剧 / 图片 / 视频：输入框排进左侧区域底部，把媒体顶上去
+// 漫画（type 1）是整页滚动的长图，顶不动，改成浮在左侧区域底部
+const isPanelComposerType = computed(() => ['1', '3', '4', '5'].includes(String(detail.value?.type ?? '')));
+const isOverlayComposerType = computed(() => String(detail.value?.type ?? '') === '1');
+// 全屏下不显示输入框，媒体也要恢复满高
+const composerOpen = computed(() => composerActive.value && isPanelComposerType.value && !isPageFullscreen.value);
 import EmptyState from "@/components/EmptyState.vue";
 import { baseUrl } from "@/util/config";
 import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
@@ -1489,6 +1528,16 @@ const detail = ref<DetailData>({
 });
 
 // Tab state
+// 做同款 / 图片做视频回填的是「当前这张图 / 当前这篇作品」，
+// 左右切图或切到上一个 / 下一个作品之后来源就作废了：清空输入框并收起。
+watch(currentImageIndex, (v, prev) => {
+  if (v !== prev && composerActive.value) composerRef.value?.close();
+});
+
+watch(() => detail.value?.id, (id, prev) => {
+  if (id !== prev && composerActive.value) composerRef.value?.close();
+});
+
 const activeTab = ref('detail');
 
 // Collection Mode
@@ -1689,7 +1738,8 @@ function goMakeSimilar(sessionId: string) {
     return;
   }
   checkSensitiveContentBeforeAction(() => {
-    router.push({ path: '/', query: { make: sessionId } });
+    // 在本页底部展开输入框回填，不再跳首页
+    composerRef.value?.applyMakeSame(sessionId);
   });
 }
 
@@ -1742,8 +1792,7 @@ async function goMakeSimilarVideo() {
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
     const videoDuration = Number(data.duration) || 0;
 
-    localStorage.setItem('makeSimilarVideoData', JSON.stringify({ videoUrl, cover, isNsfw, duration: videoDuration, postId }));
-    router.push({ path: '/' });
+    await composerRef.value?.applyMakeSimilarVideoData({ videoUrl, cover, isNsfw, duration: videoDuration, postId });
   } catch (error) {
     console.error('Error fetching post detail for make similar video:', error);
     toast(t('fail'));
@@ -1807,10 +1856,9 @@ async function goMakeSequel() {
     }
 
     const videoDuration = Number(data.duration) || 0;
-    localStorage.setItem('makeSequelData', JSON.stringify({
+    await composerRef.value?.applyMakeSequelData({
       videoUrl, cover, type: detail.value.type, videoExtend: true, postId, isNsfw, duration: videoDuration
-    }));
-    router.push({ path: '/' });
+    });
   } catch (error) {
     console.error('Error fetching post detail for make sequel:', error);
     toast(t('fail'));
@@ -1870,8 +1918,8 @@ function goMakeVideo() {
         return;
       }
     }
-    localStorage.setItem('makeVideoData', JSON.stringify({ imageUrl: img, isNsfw }));
-    router.push({ path: '/' });
+    isMakeVideoLoading.value = false;
+    composerRef.value?.applyMakeVideoData({ imageUrl: img, isNsfw });
   };
   testImg.onerror = () => {
     isMakeVideoLoading.value = false;
@@ -2187,9 +2235,18 @@ function restoreRightPanel() {
 
 // Handle mouse wheel on left panel for video navigation (non-collection mode only)
 let wheelDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+// 做同款 / 做续集唤出的输入框、以及各种弹窗里的滚动 / 拖动，都不是切作品的手势
+function isComposerTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.closest !== 'function') return false;
+  return !!el.closest('.detail-composer, .input-area-box, [class*="modal"]');
+}
+
 function handleLeftPanelWheel(event: WheelEvent) {
   // 合集模式换集走右栏的合集列表，滚轮不接管
   if (isCollectionMode.value) return;
+  // 在底部输入框（做同款 / 做续集）里滚动是在看输入内容，不能切作品
+  if (isComposerTarget(event.target)) return;
   // 漫画(1) / 漫剧(2) 是往下读的长内容，滚轮留给右侧滚动条
   if (detail.value.type === '1' || detail.value.type === '2') return;
   // 短剧(3) / 图片(4) / 视频(5)：滚轮上下 = 上一个 / 下一个作品
@@ -5810,7 +5867,7 @@ function handleLeftPanelPointerDown(event: PointerEvent) {
   // 鼠标只认左键；触摸和手写笔的 button 同样是 0
   if (event.button !== 0) return;
   if (!canSwitchWork()) return;
-  if (isInteractiveTarget(event.target)) return;
+  if (isInteractiveTarget(event.target) || isComposerTarget(event.target)) return;
   // 图片默认可拖拽，鼠标拖会拖出一个半透明副本挡住手势；
   // 触摸不走原生拖拽，这里不拦，免得把点击也一起吃掉
   if (event.pointerType === 'mouse' && (event.target as HTMLElement)?.tagName === 'IMG') {

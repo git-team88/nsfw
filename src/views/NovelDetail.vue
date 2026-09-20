@@ -272,14 +272,27 @@
     @close="showSensitiveContentConfirmModal = false"
     @confirm="confirmSensitiveContent"
   />
+    <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
+    <PromptComposer
+      ref="composerRef"
+      placement="bottom"
+      @loading-change="composerLoading = $event"
+    />
+    <!-- 做同款 / 做续集的来源数据请求中 -->
+    <UploadMask :visible="composerLoading" :text="t('home.loading')" />
 </template>
 
 <script setup lang="ts">
+import PromptComposer from '@/components/PromptComposer.vue';
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
+
+const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
+// 来源数据请求中：输入框先不显示，接口回来才露出
+const composerLoading = ref(false);
 import UploadMask from '@/components/UploadMask.vue';
 import ReportModal from '@/components/ReportModal.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -1678,7 +1691,10 @@ function goMakeSimilar(sessionId: string) {
     toast(t('home.makeSimilarChinaNotSupported'));
     return;
   }
-  router.push({ path: '/', query: { make: sessionId } });
+  // 右侧评论 / 目录栏会盖住底部输入框，做同款时先收起来
+  showSidebar.value = false;
+  // 在本页底部展开输入框回填，不再跳首页
+  composerRef.value?.applyMakeSame(sessionId);
 }
 
 async function enterCollectionMode(type: number) {
