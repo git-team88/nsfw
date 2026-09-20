@@ -3818,24 +3818,19 @@ function onVideoEnded() {
     videoRef.value.currentTime = 0;
   }
 
-  // 在合集模式下，自动跳转到下一集，但如果是最后一集则暂停
-  if (isCollectionMode.value && currentCollectionIndex.value < collections.value.length - 1) {
-    // 获取下一集
+  // 漫剧（type 3）合集模式：一集播完自动接下一集；到最后一集就单集循环。
+  // 换集必须走 playCollectionItem —— 合集列表接口不带视频地址，光改 currentCollectionIndex 视频不会换，
+  // 得跳到下一集的 post 重新拉详情，新视频源到位后 watch(currentVideoSrc) 会自动播放。
+  if (isCollectionMode.value && detail.value.type === '3' && collections.value.length > 0) {
     const nextEpisode = collections.value[currentCollectionIndex.value + 1];
-    // 检查下一集是否需要订阅以及用户是否已订阅
-    const needSubscription = nextEpisode.requiresSubscription && !nextEpisode.isSubscribed;
-
-    // 延迟一段时间后自动跳转，给用户时间看到视频结束画面
-    setTimeout(() => {
-      currentCollectionIndex.value++;
-      // 重置视频状态
-      isVideoLoading.value = true;
+    if (nextEpisode) {
+      playCollectionItem(nextEpisode);
+    } else if (videoRef.value) {
       isVideoEnded.value = false;
-    }, 2000);
-  }
-  // 如果是最后一集，保持暂停状态
-  else if (isCollectionMode.value && currentCollectionIndex.value >= collections.value.length - 1) {
-    // 保持当前状态，不自动播放
+      videoRef.value.play().catch(() => {
+        isPlaying.value = false;
+      });
+    }
   }
 }
 
