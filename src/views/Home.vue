@@ -85,6 +85,7 @@
              @seo="setSeoMeta"
              @input-active="popHeroParts"
              @make-source-applied="handleMakeSourceApplied"
+             @height-change="composerHeight = $event"
            />
         </div>
       </div>
@@ -97,7 +98,7 @@
       </div>
 
       <!-- Content Section -->
-      <div id="feed" class="content-section" ref="contentSectionRef">
+      <div id="feed" class="content-section" ref="contentSectionRef" :style="composerHeight ? { paddingBottom: `${composerHeight + 24}px` } : undefined">
         <div class="feed-heading">
           <h2 class="feed-title">{{ t('home.feedTitle') }}</h2>
           <p class="feed-sub">{{ t('home.feedSub') }}</p>
@@ -1515,6 +1516,9 @@ watch(() => locale.value, () => {
 });
 
 // 输入框回填完做同款来源后，停在推荐列表这一屏
+// 输入框吸底时的高度（收起 / 展开不一样），垫到列表底部，别挡住最后一排
+const composerHeight = ref(0);
+
 function handleMakeSourceApplied() {
   scrollToFeed();
 }
