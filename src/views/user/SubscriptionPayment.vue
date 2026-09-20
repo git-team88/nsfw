@@ -366,7 +366,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
           // 现金那条由后端往 Stripe 的 success_url 上拼
           router.push({
             path: '/subscription-success',
-            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', id: String(route.query.id || '') },
+            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', id: String(route.query.id || ''), order_id: orderId },
           });
           return;
         } else {

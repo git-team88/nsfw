@@ -38,16 +38,53 @@ export function trackSignUp() {
  * 现金（Stripe）支付的金额、币种由后端拼在成功页的 success_url 上；
  * USDT 支付是前端转账完成后自己跳成功页，金额、币种要在跳转时自己拼进 query。
  */
+const PURCHASE_REPORTED_KEY = "ga_purchase_reported";
+const PURCHASE_REPORTED_MAX = 50;
+
+/** 这笔订单是否已经上报过（按 transactionId 记在 localStorage 里） */
+function hasReportedPurchase(transactionId: string): boolean {
+  try {
+    const list: string[] = JSON.parse(localStorage.getItem(PURCHASE_REPORTED_KEY) || "[]");
+    return list.includes(transactionId);
+  } catch {
+    return false;
+  }
+}
+
+function markPurchaseReported(transactionId: string) {
+  try {
+    const list: string[] = JSON.parse(localStorage.getItem(PURCHASE_REPORTED_KEY) || "[]");
+    if (!list.includes(transactionId)) list.push(transactionId);
+    // 只留最近几十条，别无限涨
+    localStorage.setItem(PURCHASE_REPORTED_KEY, JSON.stringify(list.slice(-PURCHASE_REPORTED_MAX)));
+  } catch {
+    // localStorage 不可用就算了，最多重复报一次
+  }
+}
+
 export function trackPurchase(params: {
   paymentType: "1" | "2" | "3" | "4";
   value: number;
   currency: string;
+  /**
+   * 订单标识：现金是 Stripe 的 session_id，USDT 是我们自己的 order_id。
+   * 用来防重复上报（刷新成功页、回退再前进），同时作为 GA 的 transaction_id，GA 那边也会按它去重。
+   * 老链接没有的话就不去重，照报。
+   */
+  transactionId?: string;
 }) {
+  const tid = (params.transactionId || "").trim();
+  if (tid && hasReportedPurchase(tid)) {
+    if (isDebug) console.log("[GA Debug] purchase already reported, skip:", tid);
+    return;
+  }
   gtag("event", "purchase", {
     payment_type: params.paymentType,
     value: params.value,
     currency: params.currency,
+    ...(tid ? { transaction_id: tid } : {}),
   });
+  if (tid) markPurchaseReported(tid);
 }
 
 export function trackShare(params: {

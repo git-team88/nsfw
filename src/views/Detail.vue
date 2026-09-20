@@ -1084,16 +1084,14 @@ const dramaUnlockPrice = computed(() => {
 
 /**
  * 漫剧解锁全集的入口。条件都满足才给：
- * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人、合集设了价格。
- * 价格必须在这里判 —— 卡片内部拿不到价会整张不渲染，
- * 放行到这一步的话页面就只剩一张空背景图，连订阅提示都没了。
+ * 漫剧类型、作品设了订阅可见且当前被锁、自己没订阅过、不是作者本人。
+ * 不看价格：价格取不到时卡片内部自己不渲染。
  */
 const showDramaUnlock = computed(
   () => detail.value?.type == '3'
     && isPaidContentLocked.value
     && !detail.value?.isSubscribed
     && detail.value?.author?.id !== uid
-    && dramaUnlockPrice.value > 0
     // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
     && !hasBoughtBook.value,
 );
@@ -1529,15 +1527,15 @@ const currentVideoSrc = computed(() => {
 });
 
 // 博主有没有开通 Stripe 收款（blogger_status == 1），决定解锁卡上能不能选现金支付。
-// 详情接口不带这个字段，漫剧类型要另外调一次博主信息接口。
-// 放在 detail 声明之后 —— watch 是 immediate 的，写在前面会在 detail 初始化前就读它。
+// 详情接口不带这个字段，要另外调一次博主信息接口。
+// 只在解锁卡真的要显示时才拉（showDramaUnlock 已经排除了非漫剧、已订阅、已购买、作者本人），
+// 其他情况这个值用不上，不发请求。放在 detail 声明之后 —— watch 是 immediate 的。
 const authorBloggerStatus = ref<number>(0);
 let bloggerStatusFetchedFor: string | number | null = null;
 watch(
-  () => [detail.value?.type, detail.value?.author?.id] as const,
-  async ([type, authorId]) => {
-    // 自己的作品不会出解锁卡（showDramaUnlock 里排除了作者本人），不用拉
-    if (type != '3' || !authorId || String(authorId) === String(uid) || authorId === bloggerStatusFetchedFor) return;
+  () => (showDramaUnlock.value ? detail.value?.author?.id : null),
+  async (authorId) => {
+    if (!authorId || authorId === bloggerStatusFetchedFor) return;
     bloggerStatusFetchedFor = authorId;
     try {
       const res = await api.authorInfo(authorId) as any;

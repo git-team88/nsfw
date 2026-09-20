@@ -55,11 +55,14 @@ const rawCurrency = String(route.query.currency || "usd").trim();
 const isUsdt = /^usdt$/i.test(rawCurrency);
 const amount = isUsdt ? Number(rawAmount) : scaleFiatAmount(rawAmount, rawCurrency);
 const reportCurrency = isUsdt ? "USDT" : rawCurrency.toUpperCase();
+// 订单标识：现金回跳带 Stripe 的 session_id，USDT 跳转带 order_id；用来防重复上报
+const transactionId = String(route.query.session_id || route.query.order_id || "").trim();
 if (Number.isFinite(amount) && amount > 0) {
   trackPurchase({
     paymentType: "1",
     value: amount,
     currency: reportCurrency,
+    transactionId,
   });
 }
 

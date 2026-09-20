@@ -658,7 +658,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
           router.push({
             path: '/aitool-payment-success',
             // 去掉接口金额末尾多余的 0（5.000000 -> 5）
-            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', mode: tabModeMap[activeTab.value] || activeTab.value },
+            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', mode: tabModeMap[activeTab.value] || activeTab.value, order_id: orderId },
           });
           return;
         } else {

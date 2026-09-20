@@ -241,7 +241,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
       if (txHash && orderId) {
         await api.webThreeCallbackUBookPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
         emit('unlocked');
-        goResult('success', amount);
+        goResult('success', amount, orderId);
       } else {
         goResult('fail');
       }
@@ -263,7 +263,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
  * 空值不往 query 里塞 —— post_id= 这种空串会让成功页误判成「有 post_id」。
  * 成功时带上 USDT 金额和币种，成功页靠它们上报 purchase。
  */
-function goResult(kind: 'success' | 'fail', usdtAmount?: string) {
+function goResult(kind: 'success' | 'fail', usdtAmount?: string, orderId?: string) {
   const query: Record<string, string> = {};
   if (props.postId !== undefined && props.postId !== null && props.postId !== '') {
     query.post_id = String(props.postId);
@@ -271,6 +271,7 @@ function goResult(kind: 'success' | 'fail', usdtAmount?: string) {
   if (kind === 'success' && usdtAmount && parseFloat(usdtAmount) > 0) {
     query.amount = trimTrailingZeros(usdtAmount); // 去掉末尾多余的 0
     query.currency = 'USDT';
+    if (orderId) query.order_id = orderId; // 成功页用它防重复上报
   }
   router.push({
     path: kind === 'success' ? '/drama-unlock-success' : '/drama-unlock-fail',
