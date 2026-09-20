@@ -33,8 +33,13 @@ export function trackSignUp() {
   gtag("event", "sign_up");
 }
 
+/**
+ * 购买上报。payment_type：1 博主订阅 / 2 AI 会员订阅 / 3 AI 积分包 / 4 漫剧解锁全集。
+ * 现金（Stripe）支付的金额、币种由后端拼在成功页的 success_url 上；
+ * USDT 支付是前端转账完成后自己跳成功页，金额、币种要在跳转时自己拼进 query。
+ */
 export function trackPurchase(params: {
-  paymentType: "1" | "2" | "3";
+  paymentType: "1" | "2" | "3" | "4";
   value: number;
   currency: string;
 }) {

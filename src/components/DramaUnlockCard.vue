@@ -234,7 +234,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
       if (txHash && orderId) {
         await api.webThreeCallbackUBookPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
         emit('unlocked');
-        goResult('success');
+        goResult('success', amount);
       } else {
         goResult('fail');
       }
@@ -254,11 +254,16 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
  * 跳解锁的支付结果页。USDT 是前端自己跳，所以 post_id / book_id 在这里拼；
  * 现金那条是 Stripe 回跳，由后端往 success_url 上拼。
  * 空值不往 query 里塞 —— post_id= 这种空串会让成功页误判成「有 post_id」。
+ * 成功时带上 USDT 金额和币种，成功页靠它们上报 purchase。
  */
-function goResult(kind: 'success' | 'fail') {
+function goResult(kind: 'success' | 'fail', usdtAmount?: string) {
   const query: Record<string, string> = {};
   if (props.postId !== undefined && props.postId !== null && props.postId !== '') {
     query.post_id = String(props.postId);
+  }
+  if (kind === 'success' && usdtAmount && parseFloat(usdtAmount) > 0) {
+    query.amount = usdtAmount;
+    query.currency = 'USDT';
   }
   router.push({
     path: kind === 'success' ? '/drama-unlock-success' : '/drama-unlock-fail',

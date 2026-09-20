@@ -33,17 +33,27 @@ import Header from "@/components/Header.vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { trackPurchase } from "@/utils/analytics";
+import { scaleFiatAmount } from "@/util/currency";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
 
-const amount = Number(route.query.amount || 0);
-if (amount > 0) {
+// 上报金额：
+//   USDT（前端跳转时拼的）就是实际转账数量，原样上报；
+//   现金（Stripe 回跳，后端拼的）是原始金额，美元下是美分，要除以 100；
+//   没带 currency 一律按美元处理。
+const rawAmount = String(route.query.amount ?? "").replace(/,/g, "");
+const rawCurrency = String(route.query.currency || "usd").trim();
+const isUsdt = /^usdt$/i.test(rawCurrency);
+const amount = isUsdt ? Number(rawAmount) : scaleFiatAmount(rawAmount, rawCurrency);
+const reportCurrency = isUsdt ? "USDT" : rawCurrency.toUpperCase();
+if (Number.isFinite(amount) && amount > 0) {
   trackPurchase({
-    paymentType: "1",
+    // 4 = 漫剧解锁全集，和博主订阅（1）分开
+    paymentType: "4",
     value: amount,
-    currency: (route.query.currency || "JPY") as string,
+    currency: reportCurrency,
   });
 }
 

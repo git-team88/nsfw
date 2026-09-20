@@ -653,7 +653,12 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
         const txHash = await transferUSDT(walletProvider, account, usdtAmount);
         if (txHash && orderId) {
           await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
-          router.push('/aitool-payment-success');
+          // USDT 是前端自己跳成功页，金额、币种、mode（subscription 会员 / payment 积分包）要自己拼上，
+          // 成功页靠它们上报 purchase；现金那条由后端往 Stripe 的 success_url 上拼
+          router.push({
+            path: '/aitool-payment-success',
+            query: { amount: usdtAmount, currency: 'USDT', mode: tabModeMap[activeTab.value] || activeTab.value },
+          });
           return;
         } else {
           router.push('/aitool-payment-fail');

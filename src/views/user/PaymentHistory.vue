@@ -129,7 +129,7 @@
                       </div>
                       <div class="drama-meta">
                         <span class="drama-price">
-                          {{ item.isWeb3 ? trimZeros(item.web3Price ?? '') + ' USDT' : fiatPrefix(item.fiatCurrency || 'usd') + scaleFiatPrice(item.price ?? '', item.fiatCurrency || 'usd') }}
+                          {{ item.isWeb3 ? trimZeros(item.web3Price ?? '') + ' USDT' : fiatPrefix(item.fiatCurrency || 'usd') + scaleDramaPrice(item.price ?? '') + fiatSuffix(item.fiatCurrency || 'usd', t('aiRecharge.unit')) }}
                         </span>
                         <span class="drama-state">{{ t('collection.unlockedFullSeries') }}</span>
                       </div>
@@ -214,7 +214,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency) }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : scaleFiatPrice(item.amount, item.currency) }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency || 'usd') }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : scaleFiatPrice(item.amount, item.currency || 'usd') }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency || 'usd', t('aiRecharge.unit')) }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -355,9 +355,9 @@ const dramaUnlockList = ref<DramaUnlockItem[]>([]);
 /**
  * 漫剧订单的金额换算。
  *
- * 这个列表不管单位是 usd 还是 usdt，接口都是放大 100 倍下发的（9900 -> 99），
- * 所以两种单位都要除以 100。法币那份在模板里交给 scaleFiatPrice（它只认 usd），
- * USDT 那份没有现成的，就在这儿先除好再存进 web3Price。
+ * 这个列表不管单位是什么（usd / jpy / usdt），接口都是放大 100 倍下发的（9900 -> 99），
+ * 所以一律除以 100。不用 scaleFiatPrice（它只在明确是 usd 时才除），法币和 USDT 都走这个函数：
+ * 法币在模板里直接调，USDT 在下面先除好存进 web3Price。
  */
 function scaleDramaPrice(value: unknown): string {
   const raw = String(value ?? '').trim();
@@ -375,8 +375,8 @@ async function fetchDramaUnlockList() {
       const list = res.data?.data || [];
       dramaUnlockList.value = list.map((item: any) => {
         const info = item.book_info || {};
-        // 按订单的单位（currency）判断：usdt 就是链上支付，金额原样显示成「X USDT」；
-        // 其余（usd / 空）都按法币走，美元后端下发的是美分，scaleFiatPrice 里除以 100 后加 $。
+        // 按订单的单位（currency）判断：usdt 就是链上支付，显示成「X USDT」；其余都按法币走。
+        // 金额不管什么单位都是放大 100 倍下发的，展示时统一用 scaleDramaPrice 除回来。
         // currency 取不到时才退回看 pay_type —— 老订单可能没带这个字段。
         const orderCurrency = String(item.currency || '').trim();
         const isWeb3 = orderCurrency
@@ -541,6 +541,8 @@ async function fetchProcessingData() {
           name: item.author?.nickname || '',
           avatar: item.author?.avatar || '',
           price: item.plan?.price || 0,
+          // 法币单位没下发就按 usd：美元后端给的是美分，scaleFiatPrice 只在 usd 时才除以 100
+          fiatCurrency: item.currency || item.plan?.currency || 'usd',
           web3Price: item.plan?.web3?.price || '',
           startTime: item.start_at || item.created_at || '',
           endTime: item.expire_at || '',
@@ -560,6 +562,7 @@ async function fetchProcessingData() {
           id: item.id,
           avatar: '',
           price: item.amount || 0,
+          fiatCurrency: item.currency || item.plan?.currency || 'usd',
           web3Price: item.web3?.price || '',
           startTime: item.created_at || '',
           endTime: item.current_period_end || '',
@@ -592,7 +595,7 @@ async function fetchProcessingData() {
           price: item.amount || item.plan?.price || 0,
           web3Price: item.web3?.price || '',
           currency: item.web3?.currency || 'USDT',
-          fiatCurrency: item.currency || '',
+          fiatCurrency: item.currency || 'usd',
           pay_time: item.pay_time || item.created_at || '',
           isWeb3: (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3'),
           plan_info: {

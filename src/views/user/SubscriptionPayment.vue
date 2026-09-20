@@ -9,7 +9,8 @@
 
       <div class="content-box">
         <div class="page-title-tabs">
-          <div v-if="false" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <!-- 现金支付只有博主开通了收款（blogger_status == 1）才显示，否则只能走 USDT -->
+          <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
           <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
         </div>
 
@@ -136,7 +137,7 @@ const subscriptionPlans = ref<SubscriptionPlan | SubscriptionPlan[]>({
   price: ''
 });
 
-const paymentTab = ref<'cash' | 'usdt'>('usdt');
+const paymentTab = ref<'cash' | 'usdt'>('cash');
 const bloggerStatus = ref<number>(0);
 const paymentAgree = ref(true);
 const isLoading = ref(false);
@@ -218,11 +219,11 @@ async function fetchAuthorInfo() {
 
       subscriptionPlans.value = data.data?.subscription_plans || [];
 
+      // 现金支付 tab 只在博主 blogger_status == 1（已开通收款）时显示；
+      // 没开通就把默认 tab 切到 USDT，别停在一个看不见的 tab 上
       const status = data.data?.blogger_status ?? data.data?.user?.blogger_status;
       bloggerStatus.value = Number(status) || 0;
-      if (bloggerStatus.value === 0) {
-        paymentTab.value = 'usdt';
-      }
+      paymentTab.value = bloggerStatus.value === 1 ? 'cash' : 'usdt';
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -320,7 +321,8 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
 
     isLoading.value = true;
 
-    const usdtAmount = subscriptionWeb3Price.value;
+    // subscriptionWeb3Price 是带千分位逗号的展示值（1,234.5），转账和拼 query 都要用纯数字
+    const usdtAmount = String(subscriptionWeb3Price.value || '').replace(/,/g, '');
     console.log('[SubscriptionPayment] usdtAmount:', usdtAmount);
 
     if (!usdtAmount || parseFloat(usdtAmount) <= 0) {
@@ -360,7 +362,12 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
         const txHash = await transferUSDT(walletProvider, account, usdtAmount);
         if (txHash && orderId) {
           await api.webThreeCallbackUPaid({ order_id: orderId, tx_hash: txHash }).catch(() => {});
-          router.push('/subscription-success');
+          // USDT 是前端自己跳成功页，金额、币种要自己拼上，成功页靠它们上报 purchase；
+          // 现金那条由后端往 Stripe 的 success_url 上拼
+          router.push({
+            path: '/subscription-success',
+            query: { amount: usdtAmount, currency: 'USDT', id: String(route.query.id || '') },
+          });
           return;
         } else {
           router.push('/subscription-fail');
