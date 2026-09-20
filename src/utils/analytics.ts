@@ -25,6 +25,45 @@ function gtag(...args: unknown[]) {
   }
 }
 
+/** 兜底：从 _ga cookie 解析 client_id。GA1.1.1234567890.1700000000 -> 1234567890.1700000000 */
+function clientIdFromCookie(): string {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+    if (!m) return "";
+    const parts = decodeURIComponent(m[1]).split(".");
+    return parts.length >= 4 ? parts.slice(-2).join(".") : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * 下单时取 GA 的 client_id，随下单接口传给后端 —— 购买改由后端用 Measurement Protocol 上报，
+ * 带上它购买才能归到这个访客的会话和来源渠道上。
+ * gtag('get') 是异步回调，且 gtag 被广告拦截插件挡掉时回调永远不会触发，
+ * 所以超时就退回读 _ga cookie；都拿不到给空串 —— 不能因为取不到就卡住下单。
+ */
+export function getGaClientId(timeout = 800): Promise<string> {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (id: string) => {
+      if (done) return;
+      done = true;
+      resolve(id || clientIdFromCookie());
+    };
+    const timer = setTimeout(() => finish(""), timeout);
+    if (typeof window === "undefined" || !window.gtag) {
+      clearTimeout(timer);
+      finish("");
+      return;
+    }
+    window.gtag("get", GA_ID, "client_id", (id: unknown) => {
+      clearTimeout(timer);
+      finish(typeof id === "string" ? id : "");
+    });
+  });
+}
+
 export function trackLogin() {
   gtag("event", "login");
 }

@@ -235,6 +235,7 @@ import { ref, watch, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
+import { getGaClientId } from "@/utils/analytics";
 import { toast } from "@/util/toast";
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
@@ -554,7 +555,8 @@ async function handleRecharge() {
 
     const params: any = {
       plan_id: selectedPlan.value,
-      promo_code: couponCode.value
+      promo_code: couponCode.value,
+      client_id: await getGaClientId()
     };
 
     const response = await api.AIRecharge(params);
@@ -645,7 +647,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
       return;
     }
 
-    const res = await api.generateUAIOrder({ plan_id: selectedPlan.value, address: account });
+    const res = await api.generateUAIOrder({ plan_id: selectedPlan.value, address: account, client_id: await getGaClientId() });
     const data = res as any;
     if (data.code === 0 || data.code === 200) {
       const orderId = data.data?.order_id || '';

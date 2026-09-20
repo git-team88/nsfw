@@ -39,13 +39,15 @@
 import Header from "@/components/Header.vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { trackPurchase } from "@/utils/analytics";
-import { scaleFiatAmount } from "@/util/currency";
+// 购买上报改由后端接口（Measurement Protocol）上报，前端上报先隐藏，观察一段没问题后删掉
+// import { trackPurchase } from "@/utils/analytics";
+// import { scaleFiatAmount } from "@/util/currency";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
 
+/*
 // 上报金额：
 //   USDT（前端跳转时拼的）就是实际转账数量，原样上报；
 //   现金（Stripe 回跳，后端拼的）是原始金额，美元下是美分，要除以 100；
@@ -65,6 +67,7 @@ if (Number.isFinite(amount) && amount > 0) {
     transactionId,
   });
 }
+*/
 
 function backToCommunity() {
   const id = route.query.id;

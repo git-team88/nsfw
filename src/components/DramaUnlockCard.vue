@@ -52,6 +52,7 @@ import BigNumber from 'bignumber.js';
 import WalletSelectModal from '@/components/WalletSelectModal.vue';
 import UploadMask from '@/components/UploadMask.vue';
 import api from '@/api/index';
+import { getGaClientId } from '@/utils/analytics';
 import { toast } from '@/util/toast';
 import erc20Abi from '@/util/abi/erc20Abi.json';
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from '@/util/config';
@@ -157,6 +158,7 @@ async function handleUnlock() {
       plan_id: planId,
       // 后端靠这个把成功/失败页的回跳地址拼上 post_id，「观看作品」才知道回哪一集
       post_id: props.postId,
+      client_id: await getGaClientId(),
     })) as any;
 
     if (res.code === 0 || res.code === 200) {
@@ -233,6 +235,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
     const res = (await api.generateUBookOrder({
       book_id: props.bookId,
       wallet: account,
+      client_id: await getGaClientId(),
     })) as any;
 
     if (res.code == 0 || res.code == 200) {

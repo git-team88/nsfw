@@ -83,6 +83,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
+import { getGaClientId } from "@/utils/analytics";
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 import erc20Abi from "@/util/abi/erc20Abi.json";
@@ -261,7 +262,7 @@ async function handlePay() {
       return;
     }
 
-    const res = await api.subscribe({ creator_id: userId });
+    const res = await api.subscribe({ creator_id: userId, client_id: await getGaClientId() });
     const data = res as any;
     if (data.code === 0 || data.code === 200) {
       window.location.href = data.data?.url;
@@ -352,6 +353,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
     const params = {
       blogger_id: userId,
       address: account,
+      client_id: await getGaClientId(),
     };
 
     const res = await api.generateUBloggerSubOrder(params);
