@@ -150,18 +150,6 @@
             {{ type.label }}<template v-if="!type.hideCount"> ({{ type.count }})</template>
           </div>
         </div>
-        <!-- 我的收藏：和作品一样按类型分 5 个子 tab -->
-        <div class="sub-tabs" v-if="topTab === 'favorites' && viewMode === 'posts'">
-          <div
-            v-for="type in favoriteContentTypes"
-            :key="type.id"
-            class="sub-tab-item"
-            :class="{ active: favoriteContentType == type.id }"
-            @click="setFavoriteContentType(type.id)"
-          >
-            {{ type.label }} ({{ type.count }})
-          </div>
-        </div>
       </div>
 
       <div class="container">
@@ -214,7 +202,7 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" @click="(listContentType == 4 || listContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
+                  <div class="card-cover" @click="(activeContentType == 4 || activeContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
@@ -222,10 +210,13 @@
                     <div class="pinned-tag" v-if="collection.is_top === '1'">
                       {{ t("userHome.collection.pinned") }}
                     </div>
+                    <div class="type-icon" v-if="activeContentType === 'favorites' && collection.type">
+                      <span class="type-badge" :class="'type-' + collection.type">{{ collection.type == '1' ? t('collection.typeComic') : collection.type == '2' ? t('collection.typeNovel') : collection.type == '3' ? t('collection.typeVideo') : collection.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
+                    </div>
 
                   <div class="card-bottom">
                     <div class="update-badge" v-if="collection.chapter_count > 0">
-                      {{ listContentType == 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
+                      {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
                     <div class="card-actions-row">
                       <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
@@ -598,8 +589,6 @@ interface UserInfo {
   total_posts_5?: number;
   kyc_status?: number | string;
   books_group?: BooksGroupItem[];
-  /** 我的收藏按类型分组的数量，结构同 books_group */
-  liked_books_group?: BooksGroupItem[];
 }
 
 // User Info
@@ -627,8 +616,7 @@ const userInfo = ref<UserInfo>({
   total_posts_3: 0,
   total_posts_4: 0,
   total_posts_5: 0,
-  books_group: [],
-  liked_books_group: []
+  books_group: []
 });
 
 const reportTarget = ref<{ type: string; id: number | string } | null>(null);
@@ -710,37 +698,6 @@ const workContentTypes = computed(() => {
     // { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') || userInfo.value.total_posts_2 || 0, hideCount: false },
   ];
 });
-
-// 我的收藏当前选中的类型子 tab（1 小说 / 2 漫画 / 3 漫剧 / 4 图片 / 5 视频）
-const favoriteContentType = ref<number>(5);
-
-// 收藏子 tab：顺序和作品一样，数量读 liked_books_group（结构同 books_group）
-const favoriteContentTypes = computed(() => {
-  const group = userInfo.value.liked_books_group || [];
-  const getCountByType = (type: string) => {
-    const item = group.find((item: BooksGroupItem) => item.type === type);
-    return item ? parseInt(item.num) || 0 : 0;
-  };
-  return [
-    { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') },
-    { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') },
-    { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') },
-    { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') },
-    { id: 2, label: t('userHome.contentType.novel'), count: getCountByType('2') },
-  ];
-});
-
-/** 当前列表实际的内容类型：作品 tab 就是 activeContentType，收藏 tab 是 favoriteContentType */
-const listContentType = computed<number | string>(() =>
-  activeContentType.value === 'favorites' ? favoriteContentType.value : activeContentType.value,
-);
-
-function setFavoriteContentType(typeId: number) {
-  if (favoriteContentType.value === typeId && activeContentType.value === 'favorites') return;
-  favoriteContentType.value = typeId;
-  activeCollectionTab.value = 0;
-  fetchLikedBooks(true);
-}
 
 watch(topTab, (val) => {
   if (val === 'favorites') {
@@ -964,23 +921,10 @@ async function fetchLikedBooks(reset = false) {
     }
     collectionsLoading.value = true;
 
-    // 小说 / 漫画 / 漫剧是合集，走收藏合集接口传 type；图片 / 视频是单篇作品，走另一个接口
-    const type = favoriteContentType.value;
-    const isPostType = type === 4 || type === 5;
-    const response = (isPostType
-      ? await api.getLikedPostList(type, likedBooksPage.value, 20)
-      : await api.getLikedBookList(likedBooksPage.value, 20, type)) as any;
+    const response = await api.getLikedBookList(likedBooksPage.value, 20) as any;
 
     if (response.code == 0) {
-      const rawList = response.data?.data || [];
-      const bookData = isPostType
-        // 单篇作品接口的结构和「我的作品」里 4 / 5 的一样，字段直接用
-        ? rawList.map((item: any) => ({
-            ...item,
-            is_top: String(item.is_post_top ?? item.is_top ?? '0'),
-            isFavorite: true,
-          }))
-        : rawList.map((item: any) => ({
+      const bookData = (response.data?.data || []).map((item: any) => ({
         id: item.book_id || item.book_info?.id,
         cover: item.book_info?.public_post_cover_not_nsfw || item.book_info?.public_post_cover || item.book_info?.cover,
         title: item.book_info?.title,
@@ -1117,7 +1061,6 @@ async function fetchUserInfo() {
         total_posts_5: parseInt(data.data?.total_posts_5 || '0'),
         kyc_status: data.data?.kyc_status || 0,
         books_group: data.data?.books_group || [],
-        liked_books_group: data.data?.liked_books_group || data.data?.liked_group || [],
       };
 
     } else {

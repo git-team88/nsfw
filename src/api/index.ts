@@ -518,17 +518,9 @@ export default {
       url: "blogger/getPostListPublic?type=" + type + "&page=" + page + "&limit=" + limit + "&author_id=" + author_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  // 我的收藏 —— 合集（小说 1 / 漫画 2 / 漫剧 3），按 type 筛
-  getLikedBookList: (page: number, limit: number, type?: number) =>
+  getLikedBookList: (page: number, limit: number) =>
     axios.request({
-      url: "book/getLikedBookList?page=" + page + "&limit=" + limit + (type ? "&type=" + type : ""),
-      method: "GET",
-    }),
-  // 我的收藏 —— 单篇作品（图片 4 / 视频 5）。
-  // TODO 后端还没给收藏的图片 / 视频列表接口，先走「我的作品」同一个接口占位，接口出来后换 url
-  getLikedPostList: (type: number, page: number, limit: number) =>
-    axios.request({
-      url: "my/getPostList?type=" + type + "&page=" + page + "&limit=" + limit,
+      url: "book/getLikedBookList?page=" + page + "&limit=" + limit,
       method: "GET",
     }),
   likeBook: (data: any) =>
