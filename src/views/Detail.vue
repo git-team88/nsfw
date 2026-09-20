@@ -172,6 +172,7 @@
                       :currency="detail.book_currency"
                       :web3-price="detail.book_web3_price"
                       :plan-id="detail.book_plan_id"
+                      :blogger-status="authorBloggerStatus"
                       @unlocked="handleDramaUnlocked"
                     />
                   </div>
@@ -1526,6 +1527,31 @@ const currentVideoSrc = computed(() => {
   }
   return detail.value.videoUrl;
 });
+
+// 博主有没有开通 Stripe 收款（blogger_status == 1），决定解锁卡上能不能选现金支付。
+// 详情接口不带这个字段，漫剧类型要另外调一次博主信息接口。
+// 放在 detail 声明之后 —— watch 是 immediate 的，写在前面会在 detail 初始化前就读它。
+const authorBloggerStatus = ref<number>(0);
+let bloggerStatusFetchedFor: string | number | null = null;
+watch(
+  () => [detail.value?.type, detail.value?.author?.id] as const,
+  async ([type, authorId]) => {
+    // 自己的作品不会出解锁卡（showDramaUnlock 里排除了作者本人），不用拉
+    if (type != '3' || !authorId || String(authorId) === String(uid) || authorId === bloggerStatusFetchedFor) return;
+    bloggerStatusFetchedFor = authorId;
+    try {
+      const res = await api.authorInfo(authorId) as any;
+      if (res.code === 0 || res.code === 200) {
+        const status = res.data?.blogger_status ?? res.data?.user?.blogger_status;
+        authorBloggerStatus.value = Number(status) || 0;
+      }
+    } catch (error) {
+      console.error('Fetch author blogger_status error:', error);
+    }
+  },
+  { immediate: true },
+);
+
 
 watch(currentVideoSrc, () => {
   // 切换视频源时重置自动播放标记，新视频仍需静音自动播放以符合浏览器策略

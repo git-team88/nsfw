@@ -10,7 +10,7 @@
       <div class="content-box">
         <div class="page-title-tabs">
           <!-- 现金支付只有博主开通了收款（blogger_status == 1）才显示，否则只能走 USDT -->
-          <div v-if="bloggerStatus === 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <div v-if="bloggerStatus == 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
           <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
         </div>
 
@@ -89,7 +89,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
-import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount, trimTrailingZeros } from '@/util/currency';
 
 const router = useRouter();
 const route = useRoute();
@@ -223,7 +223,7 @@ async function fetchAuthorInfo() {
       // 没开通就把默认 tab 切到 USDT，别停在一个看不见的 tab 上
       const status = data.data?.blogger_status ?? data.data?.user?.blogger_status;
       bloggerStatus.value = Number(status) || 0;
-      paymentTab.value = bloggerStatus.value === 1 ? 'cash' : 'usdt';
+      paymentTab.value = bloggerStatus.value == 1 ? 'cash' : 'usdt';
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }
@@ -366,7 +366,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
           // 现金那条由后端往 Stripe 的 success_url 上拼
           router.push({
             path: '/subscription-success',
-            query: { amount: usdtAmount, currency: 'USDT', id: String(route.query.id || '') },
+            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', id: String(route.query.id || '') },
           });
           return;
         } else {

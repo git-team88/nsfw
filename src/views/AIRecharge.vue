@@ -242,7 +242,7 @@ import erc20Abi from "@/util/abi/erc20Abi.json";
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from "@/util/config";
 import { connectWalletConnect, getWalletConnectProvider } from "@/util/walletconnect";
 import { getWalletProvider, ensureChain, checkUsdtBalance } from "@/util/wallet";
-import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount, trimTrailingZeros } from '@/util/currency';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -657,7 +657,8 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
           // 成功页靠它们上报 purchase；现金那条由后端往 Stripe 的 success_url 上拼
           router.push({
             path: '/aitool-payment-success',
-            query: { amount: usdtAmount, currency: 'USDT', mode: tabModeMap[activeTab.value] || activeTab.value },
+            // 去掉接口金额末尾多余的 0（5.000000 -> 5）
+            query: { amount: trimTrailingZeros(usdtAmount), currency: 'USDT', mode: tabModeMap[activeTab.value] || activeTab.value },
           });
           return;
         } else {

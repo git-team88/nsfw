@@ -5,7 +5,8 @@
     <p class="unlock-tip" v-html="unlockTipHtml"></p>
 
     <div class="pay-methods">
-      <label class="pay-method" :class="{ active: payMethod === 'cash' }" @click="payMethod = 'cash'">
+      <!-- 现金支付只有博主开通了 Stripe 收款（blogger_status == 1）才显示，否则只能走 USDT -->
+      <label v-if="canPayCash" class="pay-method" :class="{ active: payMethod === 'cash' }" @click="payMethod = 'cash'">
         <span class="radio"></span>
         <span class="label">{{ t('subscribe.cashPay') }}</span>
       </label>
@@ -43,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Web3 from 'web3';
@@ -56,7 +57,7 @@ import erc20Abi from '@/util/abi/erc20Abi.json';
 import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from '@/util/config';
 import { connectWalletConnect, getWalletConnectProvider } from '@/util/walletconnect';
 import { getWalletProvider, ensureChain, checkUsdtBalance } from '@/util/wallet';
-import { fiatPrefix, fiatSuffix, scaleFiatPrice } from '@/util/currency';
+import { fiatPrefix, fiatSuffix, scaleFiatPrice, trimTrailingZeros } from '@/util/currency';
 
 const props = defineProps<{
   /** 合集 id */
@@ -72,6 +73,8 @@ const props = defineProps<{
   web3Price?: string | number;
   /** 收费档位 id，详情接口的 plan 里带下来 */
   planId?: string | number;
+  /** 博主的 blogger_status，1 = 已开通 Stripe 收款，才能用现金支付 */
+  bloggerStatus?: number | string;
 }>();
 
 const emit = defineEmits<{ (e: 'unlocked'): void }>();
@@ -79,8 +82,12 @@ const emit = defineEmits<{ (e: 'unlocked'): void }>();
 const { t, locale } = useI18n();
 const router = useRouter();
 
-// 默认选中现金支付
-const payMethod = ref<'cash' | 'usdt'>('cash');
+const canPayCash = computed(() => Number(props.bloggerStatus) == 1);
+// 博主开通了 Stripe 默认选现金，没开通只能 USDT；状态是异步拉的，变了要跟着切
+const payMethod = ref<'cash' | 'usdt'>(canPayCash.value ? 'cash' : 'usdt');
+watch(canPayCash, (ok) => {
+  payMethod.value = ok ? 'cash' : 'usdt';
+});
 
 // plan_id 由详情接口的 plan 直接下发，这里不再单独去拉档位列表
 function resolvePlanId(): string {
@@ -262,7 +269,7 @@ function goResult(kind: 'success' | 'fail', usdtAmount?: string) {
     query.post_id = String(props.postId);
   }
   if (kind === 'success' && usdtAmount && parseFloat(usdtAmount) > 0) {
-    query.amount = usdtAmount;
+    query.amount = trimTrailingZeros(usdtAmount); // 去掉末尾多余的 0
     query.currency = 'USDT';
   }
   router.push({

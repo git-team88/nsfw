@@ -595,7 +595,9 @@ async function fetchProcessingData() {
           price: item.amount || item.plan?.price || 0,
           web3Price: item.web3?.price || '',
           currency: item.web3?.currency || 'USDT',
-          fiatCurrency: item.currency || 'usd',
+          // 现金订单一律按美元显示（金额是美分，除以 100）。接口上老订单的 currency 还是 jpy，
+          // 但现在套餐都已经换成美元单位了，不按它走
+          fiatCurrency: 'usd',
           pay_time: item.pay_time || item.created_at || '',
           isWeb3: (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3'),
           plan_info: {

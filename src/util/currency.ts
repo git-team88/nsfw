@@ -61,3 +61,13 @@ export function pickCurrency(...candidates: unknown[]): string {
   }
   return '';
 }
+
+/**
+ * 去掉小数末尾多余的 0，纯字符串处理，不经过 Number，不会变成科学计数法：
+ *   "5.000000" -> "5"，"9.90" -> "9.9"，"12.5" -> "12.5"，"100" -> "100"
+ */
+export function trimTrailingZeros(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw.includes('.')) return raw;
+  return raw.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
