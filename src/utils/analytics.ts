@@ -77,6 +77,15 @@ export function trackSignUp() {
  * 现金（Stripe）支付的金额、币种由后端拼在成功页的 success_url 上；
  * USDT 支付是前端转账完成后自己跳成功页，金额、币种要在跳转时自己拼进 query。
  */
+// ---------------------------------------------------------------------------
+// 购买（purchase）由谁上报的开关。两边同时开会重复计数，只能开一个。
+//   "client" 前端发：支付成功页解析回跳地址上的金额，调 trackPurchase 发 GA 事件
+//   "server" 后端发：下单时前端把 client_id 传给后端，支付回调里后端走
+//            Measurement Protocol 上报（下单接口的 client_id 参数一直都传，不受这个开关影响）
+// 后端那条链路调通后，把这里改成 "server" 就行，其余代码不用动。
+// ---------------------------------------------------------------------------
+export const PURCHASE_REPORT_SOURCE: "client" | "server" = "client";
+
 const PURCHASE_REPORTED_KEY = "ga_purchase_reported";
 const PURCHASE_REPORTED_MAX = 50;
 
@@ -112,6 +121,10 @@ export function trackPurchase(params: {
    */
   transactionId?: string;
 }) {
+  if (PURCHASE_REPORT_SOURCE !== "client") {
+    if (isDebug) console.log("[GA Debug] purchase 由后端上报，前端跳过:", params);
+    return;
+  }
   const tid = (params.transactionId || "").trim();
   if (tid && hasReportedPurchase(tid)) {
     if (isDebug) console.log("[GA Debug] purchase already reported, skip:", tid);
