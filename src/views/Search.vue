@@ -673,7 +673,7 @@ async function toggleLike(post: Post) {
   } catch (error) {
     console.error('Like/unlike error:', error);
     // Show error message if API call failed
-    toast(t('common.fail'));
+    toast(t('fail'));
   }
 }
 

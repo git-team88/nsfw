@@ -1465,7 +1465,7 @@ async function deleteCollection() {
     const res = await api.deleteCollection({ book_id }) as any;
 
     if (res.code == 0) {
-      toast(t('succcess'));
+      toast(t('success'));
       // Refresh collections
       await fetchCollections();
     } else {

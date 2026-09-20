@@ -1757,6 +1757,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     submit: "提交",
     next: "下一步",
     success: "檢舉提交成功",
+    failed: "檢舉提交失敗",
     uploadLimit: "最多3張",
     reasons: {
       porn: "色情低俗",

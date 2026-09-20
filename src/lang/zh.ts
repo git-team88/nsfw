@@ -1760,6 +1760,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     submit: "提交",
     next: "下一步",
     success: "举报提交成功",
+    failed: "举报提交失败",
     uploadLimit: "最多3张",
     reasons: {
       porn: "色情低俗",
