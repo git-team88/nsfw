@@ -1833,6 +1833,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       maxItemReached: "キャラクターと参考画像は合計最大{max}個まで",
       maxPhotoSize: "画像サイズが制限を超えています。最大10MBまでサポートしています",
       invalidPhotoFormat: "サポートされていない画像形式です。JPG、PNG、またはWEBP形式の画像をアップロードしてください",
+      invalidVideoFormat: "サポートされていない動画形式です。MP4 または MOV 形式の動画をアップロードしてください",
+      invalidAudioFormat: "サポートされていない音声形式です。MP3 または WAV 形式の音声をアップロードしてください",
       corruptedImage: "画像ファイルが破損しています。認識できません。再度選択するか、別途保存してからアップロードしてください",
       onlyOneImage: "選択できる画像は1枚のみです",
       maxVideoSize: "一つのビデオのサイズは{max}MBを超えることはできません",

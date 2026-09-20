@@ -2009,6 +2009,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       maxItemReached: "Up to {max} characters and reference images in total",
       maxPhotoSize: "Image size exceeds limit, maximum supported is 10MB",
       invalidPhotoFormat: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
+      invalidVideoFormat: "Unsupported video format. Please upload MP4 or MOV videos",
+      invalidAudioFormat: "Unsupported audio format. Please upload MP3 or WAV audio",
       corruptedImage: "The image file is corrupted and cannot be recognized. Please reselect or save it again before uploading",
       onlyOneImage: "Only one image can be selected",
       maxVideoSize: "Single video size cannot exceed {max}MB",

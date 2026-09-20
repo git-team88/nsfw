@@ -2109,6 +2109,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       maxItemReached: "角色和參考圖總共最多{max}個",
       maxPhotoSize: "圖片大小超過限制，最大支援10MB",
       invalidPhotoFormat: "不支援的圖片格式，請上傳 JPG、PNG 或 WEBP 格式圖片",
+      invalidVideoFormat: "不支援的影片格式，請上傳 MP4 或 MOV 格式影片",
+      invalidAudioFormat: "不支援的音訊格式，請上傳 MP3 或 WAV 格式音訊",
       corruptedImage: "圖片檔案已損壞，無法識別，請重新選擇或另存後上傳",
       onlyOneImage: "只能選擇一張圖片",
       maxVideoSize: "單個視頻大小不能超過{max}MB",
