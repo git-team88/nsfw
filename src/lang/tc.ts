@@ -2151,6 +2151,13 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
      makeSequelSubscribeTitle: "該作品僅訂閱使用者可使用創作",
      makeSequelSubscribeGo: "獲取創作權限",
      makeVideo: "做影片",
+     // 做同款 / 做续集 / 图片做视频：输入框上方那行来源标签
+     makeSourceTip: {
+       makeSame: "{type}-做同款",
+       toVideo: "{type}-做視頻",
+       videoModify: "告訴我，怎麼替換？",
+       videoSequel: "接下來，你想讓故事如何發展？",
+     },
      modeSwitch: {
        // 切模型版本：多模态 / 视频编辑 / 视频续写，会连引用标签一起删
        fileNotSupported: "有參考檔案不符合切換版本模型的要求，切換後將刪除對應檔案和引用，是否確認切換",

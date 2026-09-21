@@ -1875,6 +1875,13 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
      makeSequelSubscribeTitle: "この作品は購読ユーザーのみ創作に使用できます",
      makeSequelSubscribeGo: "創作権限を取得",
      makeVideo: "動画を作る",
+     // 做同款 / 做续集 / 图片做视频：输入框上方那行来源标签
+     makeSourceTip: {
+       makeSame: "{type}・同じものを作る",
+       toVideo: "{type}・動画を作る",
+       videoModify: "どこを差し替えますか？",
+       videoSequel: "この先、物語をどう展開させますか？",
+     },
      modeSwitch: {
        // 切模型版本：多模态 / 视频编辑 / 视频续写，会连引用标签一起删
        fileNotSupported: "参考ファイルの中に、切り替え先のモデルバージョンの要件を満たさないものがあります。切り替えると該当するファイルと引用は削除されます。切り替えますか？",

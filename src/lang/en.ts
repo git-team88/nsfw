@@ -2052,6 +2052,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
      makeSequelSubscribeTitle: "This work is only available to subscribed users for creation",
      makeSequelSubscribeGo: "Get Creation Access",
      makeVideo: "Make Video",
+     // 做同款 / 做续集 / 图片做视频：输入框上方那行来源标签
+     makeSourceTip: {
+       makeSame: "{type} · Remix",
+       toVideo: "{type} · Make video",
+       videoModify: "Tell me what to replace",
+       videoSequel: "What happens next in the story?",
+     },
      modeSwitch: {
        // 切模型版本：多模态 / 视频编辑 / 视频续写，会连引用标签一起删
        fileNotSupported: "Some reference files do not meet the requirements of the model version you are switching to. Those files and their references will be deleted after switching. Switch anyway?",

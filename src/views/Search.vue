@@ -207,6 +207,7 @@
     <PromptComposer
       ref="composerRef"
       placement="bottom"
+      closable
       @loading-change="composerLoading = $event"
     />
     <!-- 做同款 / 做续集的来源数据请求中 -->

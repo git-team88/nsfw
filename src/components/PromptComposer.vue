@@ -13,7 +13,7 @@
            >
             <!-- 收起态类型栏是隐藏的，关闭按钮浮在折叠条右上角外侧 -->
             <button
-              v-if="props.closable && isStickyCollapsed"
+              v-if="showCloseBtn && isStickyCollapsed"
               class="composer-close-btn is-outside"
               type="button"
               aria-label="close"
@@ -24,6 +24,9 @@
             </button>
 
             <div class="input-type-box" :class="{ 'no-tabs': simplifyForMakeSource }" v-show="!isStickyCollapsed">
+              <!-- 做同款 / 做续集 / 图片做视频：标一行来源，让用户知道这次是在改什么。
+                   放在类型栏这一行里（tab 藏了之后这行本来就是空的，只有右上角浮着关闭按钮） -->
+              <div class="make-source-tip" v-if="makeSourceTip">{{ makeSourceTip }}</div>
               <!-- Content Type Selector：做同款 / 做续集 / 图片做视频时来源已经定了类型，不给切 -->
               <div class="content-type-selector" v-if="!simplifyForMakeSource">
                 <div
@@ -59,7 +62,7 @@
 
                 <!-- 关闭：清空内容并收起输入框，只有作品详情页需要 -->
                 <button
-                  v-if="props.closable"
+                  v-if="showCloseBtn"
                   class="composer-close-btn"
                   type="button"
                   aria-label="close"
@@ -1271,6 +1274,11 @@ const props = withDefaults(defineProps<{
   balanceInfo?: any;
   /** 是否消费 localStorage / URL 上的做同款来源（只有首页需要） */
   consumeMakeSource?: boolean;
+  /**
+   * 吸底时是否由组件给 body 垫底部内边距。
+   * 宿主页面想把这段留白垫在自己的容器里（拿 height-change 自己算）就传 false。
+   */
+  bodyPad?: boolean;
   /** 右上角要不要显示关闭按钮（只有作品详情页 Detail.vue 需要） */
   closable?: boolean;
 }>(), {
@@ -1278,6 +1286,7 @@ const props = withDefaults(defineProps<{
   userInfo: null,
   balanceInfo: null,
   consumeMakeSource: undefined,
+  bodyPad: true,
   closable: false,
 });
 
@@ -2357,6 +2366,26 @@ const isMakeSourceActive = computed(() =>
 // 带来源进来（做同款 / 做续集 / 图片做视频）时要不要把输入框简化（藏类型 tab、模式下拉、自动项）。
 // 详情页 / 搜索页 / 个人主页这些底部吸附的用法一律简化；
 // 首页只在吸底（滚出 hero）时简化，滚回 hero 区域还是完整的输入框。
+// 关闭按钮：详情页这些地方常驻显示；首页平时不给（输入框本来就常驻），
+// 但带着做同款 / 做续集 / 图片做视频的内容回填进来时也要给个退出口
+const showCloseBtn = computed(() => props.closable || isMakeSourceActive.value);
+
+// 输入框上方那行来源标签。做同款看回填时落在哪个 tab，视频的三个入口各有各的话术
+const makeSourceTip = computed(() => {
+  if (!simplifyForMakeSource.value) return '';
+  if (contentType.value === 'video') {
+    if (isMakeVideoSimilarMode.value) return t('home.makeSourceTip.videoModify');
+    if (isMakeVideoSequelMode.value) return t('home.makeSourceTip.videoSequel');
+    if (isMakeVideoMode.value) {
+      return t('home.makeSourceTip.toVideo', { type: t('home.contentType.photo') });
+    }
+  }
+  if (isMakeSameOn(contentType.value)) {
+    return t('home.makeSourceTip.makeSame', { type: t('home.contentType.' + contentType.value) });
+  }
+  return '';
+});
+
 const simplifyForMakeSource = computed(() =>
   isMakeSourceActive.value && (isBottomPlacement.value || showStickyInput.value)
 );
@@ -8050,7 +8079,7 @@ onBeforeUnmount(() => {
   finishItemDrag();
   bodyPadObserver?.disconnect();
   bodyPadObserver = null;
-  if (props.placement === 'bottom') document.body.style.paddingBottom = '';
+  if (props.placement === 'bottom' && props.bodyPad) document.body.style.paddingBottom = '';
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', updateStickyInputVisibility);
   window.removeEventListener('scroll', blurHomeInputOnScroll);
@@ -8093,6 +8122,7 @@ function closeComposer() {
   isInputEmpty.value = true;
 
   isMakeSameMode.value = false;
+  makeSameTab.value = '';
   isMakeExtensionMode.value = false;
   originSessionId.value = '';
   originPostId.value = '';
@@ -8124,7 +8154,7 @@ function syncBodyPadding() {
   const height = on ? el!.offsetHeight : 0;
   // 宿主页面拿它排版（详情页漫画类型要把章节条抬到输入框上面）
   emit('height-change', height);
-  if (props.placement !== 'bottom') return;
+  if (props.placement !== 'bottom' || !props.bodyPad) return;
   document.body.style.paddingBottom = on ? `${height + BODY_PAD_GAP}px` : '';
 }
 

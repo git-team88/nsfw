@@ -1,5 +1,8 @@
 <template>
-  <div class="collection-detail">
+  <div
+    class="collection-detail"
+    :style="composerHeight ? { paddingBottom: `${composerHeight + 24}px` } : undefined"
+  >
     <Header :cur="-1" @user-info-loaded="handleUserInfoLoaded"></Header>
 
     <div class="content-container">
@@ -188,8 +191,13 @@
     <PromptComposer
       ref="composerRef"
       placement="bottom"
+      closable
+      :body-pad="false"
+      @height-change="composerHeight = $event"
       @loading-change="composerLoading = $event"
     />
+    <!-- 做同款 / 做续集的来源数据请求中 -->
+    <UploadMask :visible="composerLoading" :text="t('home.loading')" />
   </div>
 </template>
 
@@ -209,12 +217,15 @@ import { useContentSwitchStore } from '@/stores/contentSwitch';
 const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
 // 来源数据请求中：输入框先不显示，接口回来才露出
 const composerLoading = ref(false);
+// 底部输入框出现时留出的高度，垫在本页容器里（不让组件去动 body）
+const composerHeight = ref(0);
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
 import { trackBookView } from '@/util/viewTracker';
 import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
+import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 
 const { t, locale } = useI18n();
@@ -842,6 +853,7 @@ onBeforeUnmount(() => {
 .collection-detail {
   min-height: 100vh;
   background-color: #111111;
+  // 底部输入框出现时这个值由行内样式覆盖（见模板上的 composerHeight）
   padding-bottom: 40px;
 }
 

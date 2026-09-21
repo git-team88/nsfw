@@ -14,6 +14,7 @@ $border-light: rgba(255,255,255,0.12);
 $border-med: rgba(255,255,255,0.2);
 $pinkopacity: rgba(255,79,154,0.12);
 
+
 .input-area-box {
   width: min(1280px, 100%);
   max-width: 100%;
@@ -28,11 +29,33 @@ $pinkopacity: rgba(255,79,154,0.12);
   justify-content: center;
   align-items: center;
 
-  // 做同款 / 做续集时类型 tab 藏了，这一行只剩右上角的关闭按钮（绝对定位），
-  // 得撑出它的高度，不然按钮会压到下面的输入卡片上
+  // 做同款 / 做续集时类型 tab 藏了，这一行只剩左边的来源标签和右上角的关闭按钮
+  // （后者绝对定位），得撑出按钮的高度，不然会压到下面的输入卡片上
   &.no-tabs {
     min-height: 36px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+    // 类型 tab 藏了之后这一行只剩标签，别再按 tab 那套居中
+    justify-content: flex-start;
+  }
+
+  // 来源标签：占住类型栏这一行的左侧，右边留给绝对定位的关闭按钮。
+  // 样式跟着本项目的深色卡片走：淡底 + 细描边
+  .make-source-tip {
+    flex: none;
+    margin-right: auto;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid $border-light;
+    background: $bg-tag;
+    color: $ink;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 18px;
+    // 右边给关闭按钮留位置
+    max-width: calc(100% - 56px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -2286,7 +2309,8 @@ $pinkopacity: rgba(255,79,154,0.12);
   &.is-outside {
     position: absolute;
     top: 0;
-    right: -38px;
+    // 36px 宽的按钮 + 10px 间距，别贴着折叠条
+    right: -46px;
     z-index: 20;
   }
 }
@@ -2300,7 +2324,8 @@ $pinkopacity: rgba(255,79,154,0.12);
 // 窄屏右边没地方放，收起态改到折叠条上沿右端
 @media (max-width: 768px) {
   .composer-close-btn.is-outside {
-    top: -38px;
+    // 36px 高的按钮 + 10px 间距
+    top: -46px;
     right: 0;
   }
 }
