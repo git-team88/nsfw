@@ -116,7 +116,7 @@
                 <div class="plan-credits-box">
                   <div class="plan-credits-main">
                     <span class="credits-label">{{ t('aiRecharge.includes') }}</span>
-                    <span class="credits-value">{{ formatCredits(plan.credits) }}</span>
+                    <span class="credits-value">{{ formatCredits(planBaseCredits(plan)) }}</span>
                     <span class="credits-label"> {{ t('aiRecharge.compute') }}</span>
                   </div>
                   <div class="plan-credits-bonus" v-if="plan.bonus_credits && plan.bonus_credits !== '0' && activeTab === 'subscription'">
@@ -531,6 +531,19 @@ function formatCredits(credits: string | undefined): string {
   if (!credits) return '0';
   const num = parseInt(credits);
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * 套餐「包含 X 算力」要显示的数。
+ * 订阅 tab：接口下发的 credits 是含赠送在内的总数，下面那行「赠送」已经单独列了 bonus_credits，
+ * 这里要减掉，不然两行加起来比实际到账多一份赠送。
+ * 加油包 tab：不显示赠送那行，credits 原样展示，不做减法。
+ */
+function planBaseCredits(plan: { credits?: string; bonus_credits?: string }): string {
+  const total = parseInt(String(plan.credits ?? '0')) || 0;
+  if (activeTab.value !== 'subscription') return String(total);
+  const bonus = parseInt(String(plan.bonus_credits ?? '0')) || 0;
+  return String(Math.max(0, total - bonus));
 }
 
 async function handleRecharge() {
