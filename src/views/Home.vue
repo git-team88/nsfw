@@ -4497,7 +4497,35 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   });
 };
 
-const formatReplayContent = (content: string, list: any[]) => {
+// 回显时，输入框里的引用标签和右侧的图片 / 角色列表要靠同一个 id 对上
+// （删掉列表里某一项时，是按标签上的 data-item-id 去找要摘掉的标签）。
+// 接口给的 others.list / addition_characters 不一定带 id，回显前先统一补上，
+// 之后格式化标签和生成列表用的都是这一份，id 才对得上。
+function ensureRefIds(list: any, prefix: string): any[] {
+  if (!Array.isArray(list)) return [];
+  return list.map((it: any, idx: number) => ({ ...(it || {}), id: it?.id || `${prefix}_${Date.now()}_${idx}` }));
+}
+
+// 输入框里「用户真正敲进去的文字」：递归收集所有文本节点，跳过 contenteditable=false 的引用标签。
+// 判断 @ 是否在光标前一位时用的就是它，得和 getCursorPosition 的口径一致（后者也是递归算的），
+// 只数直接子节点的话，回显内容一旦有嵌套结构，光标位置和文本就对不上，@ 下拉永远弹不出来。
+function collectEditableText(root: HTMLElement): string {
+  let text = '';
+  const walk = (node: Node) => {
+    if (node.nodeType === 3) {
+      text += node.textContent || '';
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    const el = node as HTMLElement;
+    if (el !== root && el.hasAttribute('contenteditable') && el.contentEditable === 'false') return;
+    el.childNodes.forEach(walk);
+  };
+  walk(root);
+  return text;
+}
+
+const formatReplayContent = (content: string, list: any[], chars: any[] = []) => {
   if (!content) return '';
   const getList = list || [];
 
@@ -4544,6 +4572,16 @@ const formatReplayContent = (content: string, list: any[]) => {
     return originalMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   };
 
+  // 角色引用 <chr_N>：N 是角色在 addition_characters 里的序号（生成时按 selectedCharacters 的顺序编的）。
+  // 还原成和手动 @ 选角色时一样的 character-tag-input 标签，data-item-id 用列表项的 id，删角色时才能对上。
+  const getCharTag = (index: string, originalMatch: string) => {
+    const c = chars[parseInt(index) - 1];
+    if (!c) return originalMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const image = c.image || c.main_image_url || c.cover || c.url || '';
+    const name = c.name || `character${index}`;
+    return `<span class="character-tag-input" contenteditable="false" data-character-id="${c.id}" data-item-id="${c.id}"><img src="${image}" alt="${name}" class="character-tag-img" />${name}</span>`;
+  };
+
   let result = content;
 
   result = result.replace(/<vid_(\d+)>/gi, (match, index) => getTagHtml(index, 'vid', match));
@@ -4558,6 +4596,15 @@ const formatReplayContent = (content: string, list: any[]) => {
   result = result.replace(/&lt;aud_(\d+)&gt;&lt;\/aud_\d+&gt;/gi, (match, index) => getTagHtml(index, 'aud', match));
   result = result.replace(/&lt;ref_(\d+)&gt;/gi, (match, index) => getTagHtml(index, 'ref', match));
   result = result.replace(/&lt;ref_(\d+)&gt;&lt;\/ref_\d+&gt;/gi, (match, index) => getTagHtml(index, 'ref', match));
+
+  // <chr_N> 不转成标签的话，浏览器会把它当未知元素，后面的文字全被套进去，
+  // innerHTML 再读出来就多出一串 </chr_N>；成对写法和转义写法也一并处理，残留的闭合标签直接丢掉
+  result = result.replace(/<chr_(\d+)><\/chr_\d+>/gi, (m, i) => getCharTag(i, m));
+  result = result.replace(/<chr_(\d+)>/gi, (m, i) => getCharTag(i, m));
+  result = result.replace(/<\/chr_\d+>/gi, '');
+  result = result.replace(/&lt;chr_(\d+)&gt;&lt;\/chr_\d+&gt;/gi, (m, i) => getCharTag(i, m));
+  result = result.replace(/&lt;chr_(\d+)&gt;/gi, (m, i) => getCharTag(i, m));
+  result = result.replace(/&lt;\/chr_\d+&gt;/gi, '');
 
   return result;
 };
@@ -4593,6 +4640,9 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
     const userSelected = data.user_selected || {};
     const storyType = userSelected.story_type || data.story_type || '';
     const others = userSelected.others || {};
+    // 先给参考素材和角色补上稳定 id，回显的标签和右侧列表共用（见 ensureRefIds）
+    others.list = ensureRefIds(others.list, 'ref');
+    userSelected.addition_characters = ensureRefIds(userSelected.addition_characters, 'chr');
     const content = data.topic || others.content || '';
     const optimizedPrompt = data.optimized_prompt || '';
     const shouldReplayOptimizedPrompt =
@@ -4677,7 +4727,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       selectedCharactersVideo.value = [];
       combinedItemsVideo.value = [...uploadedImagesVideo.value, ...uploadedVideosVideo.value, ...uploadedAudiosVideo.value];
 
-      const formattedReplayContent = formatReplayContent(replayContent, others.list || []);
+      const formattedReplayContent = formatReplayContent(replayContent, others.list || [], userSelected.addition_characters);
 
       nextTick(() => {
         if (editableInputRef.value) {
@@ -4701,7 +4751,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       }));
       combinedItemsPhoto.value = [...uploadedImagesPhoto.value];
 
-      const formattedReplayContent = formatReplayContent(replayContent, others.list || []);
+      const formattedReplayContent = formatReplayContent(replayContent, others.list || [], userSelected.addition_characters);
 
       nextTick(() => {
         if (editableInputRef.value) {
@@ -4724,12 +4774,14 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       selectedCharactersComic.value = charList.map((c: any, idx: number) => ({
         id: c.id || Date.now() + idx.toString(),
         name: c.name || `character${idx + 1}`,
-        image: c.image || c.cover || c.url || '',
+        // 生成时角色头像是按 main_image_url 存进 addition_characters 的（见 addition_characters 的组装），
+        // 回显只认 image 的话取不到，右侧列表就会落到默认头像
+        image: c.image || c.main_image_url || c.cover || c.url || '',
         type: 'character'
       }));
       combinedItemsComic.value = [...uploadedImagesComic.value, ...selectedCharactersComic.value];
 
-      const formattedContent = formatReplayContent(content, others.list || []);
+      const formattedContent = formatReplayContent(content, others.list || [], userSelected.addition_characters);
 
       nextTick(() => {
         if (editableInputRef.value) {
@@ -4752,12 +4804,14 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
       selectedCharactersDrama.value = charList.map((c: any, idx: number) => ({
         id: c.id || Date.now() + idx.toString(),
         name: c.name || `character${idx + 1}`,
-        image: c.image || c.cover || c.url || '',
+        // 生成时角色头像是按 main_image_url 存进 addition_characters 的（见 addition_characters 的组装），
+        // 回显只认 image 的话取不到，右侧列表就会落到默认头像
+        image: c.image || c.main_image_url || c.cover || c.url || '',
         type: 'character'
       }));
       combinedItemsDrama.value = [...uploadedImagesDrama.value, ...selectedCharactersDrama.value];
 
-      const formattedContent = formatReplayContent(content, others.list || []);
+      const formattedContent = formatReplayContent(content, others.list || [], userSelected.addition_characters);
 
       nextTick(() => {
         if (editableInputRef.value) {
@@ -4793,7 +4847,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
             while (el.firstChild) {
               el.removeChild(el.firstChild);
             }
-            el.innerHTML = formatReplayContent(replayContent || content || '', others.list || []);
+            el.innerHTML = formatReplayContent(replayContent || content || '', others.list || [], userSelected.addition_characters);
             isInputEmpty.value = !(replayContent || content || '').trim();
           }
         }
@@ -7193,26 +7247,7 @@ const handleInput = (event: Event) => {
   previousInputHtml.value = target.innerHTML;
 
   // 计算实际的文本内容，排除非可编辑标签中的文本
-  let actualText = '';
-  const textNodes = Array.from(target.childNodes).filter(node => {
-    if (node.nodeType === 3) {
-      // 检查节点是否在非可编辑标签内
-      let parent = node.parentElement;
-      let isInNonEditable = false;
-      while (parent) {
-        if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
-          isInNonEditable = true;
-          break;
-        }
-        parent = parent.parentElement;
-      }
-      return !isInNonEditable;
-    }
-    return false;
-  });
-  textNodes.forEach(node => {
-    actualText += node.textContent || '';
-  });
+  const actualText = collectEditableText(target);
 
   isInputEmpty.value = actualText.trim() === '';
   stickyInputPreview.value = actualText.replace(/\s+/g, ' ').trim();
@@ -7466,25 +7501,7 @@ const handleInputClick = () => {
   if (editableInputRef.value) {
     const target = editableInputRef.value;
 
-    let actualText = '';
-    const textNodes = Array.from(target.childNodes).filter(node => {
-      if (node.nodeType === 3) {
-        let parent = node.parentElement;
-        let isInNonEditable = false;
-        while (parent) {
-          if (parent.hasAttribute('contenteditable') && parent.contentEditable === 'false') {
-            isInNonEditable = true;
-            break;
-          }
-          parent = parent.parentElement;
-        }
-        return !isInNonEditable;
-      }
-      return false;
-    });
-    textNodes.forEach(node => {
-      actualText += node.textContent || '';
-    });
+    const actualText = collectEditableText(target);
 
     const cursorPosition = getCursorPosition(target);
     const textBeforeCursor = actualText.substring(0, cursorPosition);
