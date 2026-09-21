@@ -518,9 +518,16 @@ export default {
       url: "blogger/getPostListPublic?type=" + type + "&page=" + page + "&limit=" + limit + "&author_id=" + author_id + appendContentChannel(showNsfw, channel),
       method: "GET",
     }),
-  getLikedBookList: (page: number, limit: number) =>
+  // 我的收藏列表，type 同作品类型：1 漫画 / 2 小说 / 3 漫剧 / 4 图片 / 5 视频（0 为全部，页面上不用）
+  getLikedBookList: (page: number, limit: number, type: number = 0) =>
     axios.request({
-      url: "book/getLikedBookList?page=" + page + "&limit=" + limit,
+      url: "book/getLikedBookList?page=" + page + "&limit=" + limit + "&type=" + type,
+      method: "GET",
+    }),
+  // 我的收藏 —— 单篇作品列表（图片 4 / 视频 5），type 同上
+  getLikedPostList: (page: number, limit: number, type: number = 0) =>
+    axios.request({
+      url: "book/getLikedPostList?page=" + page + "&limit=" + limit + "&type=" + type,
       method: "GET",
     }),
   likeBook: (data: any) =>

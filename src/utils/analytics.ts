@@ -84,7 +84,7 @@ export function trackSignUp() {
 //            Measurement Protocol 上报（下单接口的 client_id 参数一直都传，不受这个开关影响）
 // 后端那条链路调通后，把这里改成 "server" 就行，其余代码不用动。
 // ---------------------------------------------------------------------------
-export const PURCHASE_REPORT_SOURCE: "client" | "server" = "client";
+export const PURCHASE_REPORT_SOURCE: "client" | "server" = "server";
 
 const PURCHASE_REPORTED_KEY = "ga_purchase_reported";
 const PURCHASE_REPORTED_MAX = 50;

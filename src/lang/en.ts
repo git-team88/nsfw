@@ -2125,8 +2125,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     image: "Image",
     generateFailed: "Generation failed. The information you uploaded does not comply with platform rules. Please revise and try again.",
     pollNetworkError: "Network error. Refresh the page to see the latest status",
-    generateFailedInsufficientBalance: "Insufficient computing power, please recharge and retry",
-    generateFailedModeMismatch: "Incorrect mode selected. Please switch to Video Modify mode and generate again.",
+    generateFailedInsufficientBalance: "Insufficient computing power, please recharge and retry.",
+    generateFailedModeMismatch: "Incorrect mode selected. Please switch to Video Modify mode and generate again. Failed tasks will not consume computing power.",
+    // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
+    generateFailedCopyright: "The generated content may involve copyright risks. Please revise and try again. Failed tasks will not consume computing power.",
+    // 上游模型接口故障：后端 status_message 里带 Upstream task
+    generateFailedUpstream: "Model generation error. Please tap retry. Failed tasks will not consume computing power.",
+    // 视频未知失败的兜底文案
+    generateFailedRetry: "Generation failed. Please tap retry. Failed tasks will not consume computing power.",
     deleteConfirm: "Confirm deletion of this batch of generated results?",
     deleteWarning: "Deleted history records cannot be recovered"
   },

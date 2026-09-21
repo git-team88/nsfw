@@ -113,7 +113,7 @@
               v-if="isSelf"
               class="main-tab"
               :class="{ active: topTab === 'favorites' && viewMode === 'posts' }"
-              @click="topTab = 'favorites'; viewMode = 'posts'"
+              @click="showFavorites()"
             >{{ t('userHome.contentType.myFavorites') }}</div>
           </div>
           <div class="stats-nums">
@@ -148,6 +148,18 @@
             @click="setActiveContentType(type.id)"
           >
             {{ type.label }}<template v-if="!type.hideCount"> ({{ type.count }})</template>
+          </div>
+        </div>
+        <!-- 我的收藏：按类型筛选（接口 type: 1 漫画 / 2 小说 / 3 漫剧） -->
+        <div class="sub-tabs" v-if="topTab === 'favorites' && viewMode === 'posts'">
+          <div
+            v-for="type in favoriteContentTypes"
+            :key="type.id"
+            class="sub-tab-item"
+            :class="{ active: favoriteContentType === type.id }"
+            @click="setFavoriteContentType(type.id)"
+          >
+            {{ type.label }} ({{ type.count }})
           </div>
         </div>
       </div>
@@ -202,16 +214,13 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" @click="(activeContentType == 4 || activeContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
+                  <div class="card-cover" @click="(listContentType == 4 || listContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
                     </div>
                     <div class="pinned-tag" v-if="collection.is_top === '1'">
                       {{ t("userHome.collection.pinned") }}
-                    </div>
-                    <div class="type-icon" v-if="activeContentType === 'favorites' && collection.type">
-                      <span class="type-badge" :class="'type-' + collection.type">{{ collection.type == '1' ? t('collection.typeComic') : collection.type == '2' ? t('collection.typeNovel') : collection.type == '3' ? t('collection.typeVideo') : collection.type == '4' ? t('collection.typeImage') : t('collection.typePhoto') }}</span>
                     </div>
 
                   <div class="card-bottom">
@@ -252,7 +261,7 @@
                           </div>
                         </template>
                       </div>
-                      <div class="make-btns-wrap" v-if="(collection.type != '4' && collection.session_id) || collection.type == '5'">
+                      <div class="make-btns-wrap" v-if="activeContentType !== 'favorites' && ((collection.type != '4' && collection.session_id) || collection.type == '5')">
                         <div class="make-similar-btn" v-if="collection.type != '4' && collection.type != '5' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
                           <img :src="makeIcon" alt="" class="make-icon" />
                           <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
@@ -589,6 +598,10 @@ interface UserInfo {
   total_posts_5?: number;
   kyc_status?: number | string;
   books_group?: BooksGroupItem[];
+  /** 我的收藏里合集（1 漫画 / 2 小说 / 3 漫剧）的数量，结构同 books_group（type / num） */
+  fav_book_group?: BooksGroupItem[];
+  /** 我的收藏里单篇作品（4 图片 / 5 视频）的数量，结构同 books_group */
+  fav_post_group?: BooksGroupItem[];
 }
 
 // User Info
@@ -616,7 +629,9 @@ const userInfo = ref<UserInfo>({
   total_posts_3: 0,
   total_posts_4: 0,
   total_posts_5: 0,
-  books_group: []
+  books_group: [],
+  fav_book_group: [],
+  fav_post_group: []
 });
 
 const reportTarget = ref<{ type: string; id: number | string } | null>(null);
@@ -677,7 +692,12 @@ const isSelf = computed(() => {
 });
 
 const currentTab = ref("all");
-const topTab = ref<"works" | "favorites">("works");
+/** 地址栏里 fav=1 表示当前在「我的收藏」，type 仍然是 1~5 的内容类型 */
+function isFavoritesQuery(): boolean {
+  return String(route.query.fav ?? '') === '1';
+}
+
+const topTab = ref<"works" | "favorites">(isFavoritesQuery() ? 'favorites' : 'works');
 const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
@@ -699,18 +719,86 @@ const workContentTypes = computed(() => {
   ];
 });
 
-watch(topTab, (val) => {
-  if (val === 'favorites') {
-    activeContentType.value = 'favorites';
-    fetchLikedBooks(true);
-  } else {
-    if (activeContentType.value === 'favorites') {
-      // 原来固定落到 2（小说），该 tab 已隐藏，改成落到第一个还显示着的类型
-      activeContentType.value = workContentTypes.value[0]?.id ?? 5;
-    }
-    fetchCollections(true);
-  }
+// 我的收藏的类型子 tab，顺序和「我的作品」的子 tab 一致（视频 5 → 漫剧 3 → 图片 4 → 漫画 1 → 小说 2），
+// 值直接作为收藏列表接口的 type 参数。
+// 和作品一样先只显示视频 / 图片，要恢复其它类型把注释去掉即可
+const FAVORITE_TYPES: number[] = [
+  5,
+  // 3,
+  4,
+  // 1,
+  // 2,
+];
+const FAVORITE_TYPE_DEFAULT = FAVORITE_TYPES[0];
+
+/** 收藏子 tab 从地址栏 type 里恢复（只在 fav=1 时），不合法就落到默认档 */
+function resolveFavoriteTypeFromQuery(): number {
+  if (!isFavoritesQuery()) return FAVORITE_TYPE_DEFAULT;
+  const n = parseInt(route.query.type as string);
+  return FAVORITE_TYPES.includes(n) ? n : FAVORITE_TYPE_DEFAULT;
+}
+
+const favoriteContentType = ref<number>(resolveFavoriteTypeFromQuery());
+
+// 收藏列表接口返回的 total，按类型记下来；博主信息里没给分组数量时兜底用
+const favoriteListTotals = ref<Record<number, number>>({});
+
+const favoriteContentTypes = computed(() => {
+  // 数量来自「获取自己的博主信息」：合集（1/2/3）在 fav_book_group，
+  // 单篇作品（4 图片 / 5 视频）在 fav_post_group，结构都是 [{ type, num }]
+  const getCountByType = (type: number) => {
+    const group = type === 4 || type === 5
+      ? (userInfo.value.fav_post_group || [])
+      : (userInfo.value.fav_book_group || []);
+    const item = group.find((item: BooksGroupItem) => item.type === String(type));
+    const fromGroup = item ? parseInt(item.num) || 0 : 0;
+    return fromGroup || favoriteListTotals.value[type] || 0;
+  };
+  const labels: Record<number, string> = {
+    5: t('userHome.contentType.photo'),
+    3: t('userHome.contentType.video'),
+    4: t('userHome.contentType.image'),
+    1: t('userHome.contentType.comic'),
+    2: t('userHome.contentType.novel'),
+  };
+  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: getCountByType(id) }));
 });
+
+/** 当前列表实际的内容类型：作品 tab 就是 activeContentType，收藏 tab 是 favoriteContentType */
+const listContentType = computed<number | string>(() =>
+  activeContentType.value === 'favorites' ? favoriteContentType.value : activeContentType.value,
+);
+
+/** 把当前收藏 tab 写进地址栏：type=<内容类型> & fav=1（replace，不压历史），返回时能回到这个 tab */
+function syncFavoriteQuery() {
+  const newQuery: Record<string, any> = { ...route.query };
+  delete newQuery.tab;
+  newQuery.type = String(favoriteContentType.value);
+  newQuery.fav = '1';
+  if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
+    router.replace({ path: "/user-home", query: newQuery });
+  }
+}
+
+/** 切换收藏的类型子 tab。fromRoute 表示由地址栏变化（前进/后退）驱动，不再回写地址栏 */
+function setFavoriteContentType(typeId: number, fromRoute = false) {
+  if (favoriteContentType.value === typeId && activeContentType.value === 'favorites') return;
+  favoriteContentType.value = typeId;
+  activeCollectionTab.value = 0;
+  fetchLikedBooks(true);
+  if (!fromRoute) syncFavoriteQuery();
+}
+
+/** 点顶部「我的收藏」 */
+function showFavorites() {
+  viewMode.value = "posts";
+  topTab.value = "favorites";
+  activeContentType.value = 'favorites';
+  favoriteContentType.value = FAVORITE_TYPE_DEFAULT;
+  activeCollectionTab.value = 0;
+  fetchLikedBooks(true);
+  syncFavoriteQuery();
+}
 
 /** 作品子 tab 的默认值。地址栏里没有 type 时落在这一档 */
 const DEFAULT_CONTENT_TYPE = 5;
@@ -723,9 +811,8 @@ const DEFAULT_CONTENT_TYPE = 5;
  * 默认那个 tab，列表也白取一次数。
  */
 function resolveContentTypeFromQuery(): number | string {
-  const t = route.query.type;
-  if (t === 'favorites') return 'favorites';
-  const n = parseInt(t as string);
+  if (isFavoritesQuery()) return 'favorites';
+  const n = parseInt(route.query.type as string);
   if (!isNaN(n) && [1, 2, 3, 4, 5].includes(n)) return n;
   return DEFAULT_CONTENT_TYPE;
 }
@@ -850,7 +937,8 @@ async function fetchCollections(reset = false) {
       }
     }
     if (response.code == 0 || response.code == 200) {
-      let collectionData = response.data?.data || [];
+      // 没有数据时部分接口返回的是 data: false，不是空数组
+      let collectionData = Array.isArray(response.data?.data) ? response.data.data : [];
 
       if (type === 4 || type === 5) {
         collectionData = collectionData.map((item: any) => ({
@@ -905,9 +993,12 @@ async function fetchCollections(reset = false) {
 
 const likedBooksPage = ref(1);
 const hasMoreLikedBooks = ref(true);
+// 快速切换收藏类型时，丢弃前一个类型还没回来的请求结果
+let likedBooksRequestId = 0;
 
 async function fetchLikedBooks(reset = false) {
   if (collectionsLoading.value && !reset) return;
+  const requestId = ++likedBooksRequestId;
 
   try {
     if (reset) {
@@ -921,10 +1012,24 @@ async function fetchLikedBooks(reset = false) {
     }
     collectionsLoading.value = true;
 
-    const response = await api.getLikedBookList(likedBooksPage.value, 20) as any;
+    const requestType = favoriteContentType.value;
+    // 图片 / 视频是单篇作品，走作品收藏接口；漫画 / 小说 / 漫剧是合集，走合集收藏接口
+    const isPostType = requestType === 4 || requestType === 5;
+    const response = (isPostType
+      ? await api.getLikedPostList(likedBooksPage.value, 20, requestType)
+      : await api.getLikedBookList(likedBooksPage.value, 20, requestType)) as any;
+    if (requestId !== likedBooksRequestId) return;
 
     if (response.code == 0) {
-      const bookData = (response.data?.data || []).map((item: any) => ({
+      // 没有数据时接口返回的是 data: false，不是空数组
+      const rawList = Array.isArray(response.data?.data) ? response.data.data : [];
+      const total = parseInt(response.data?.total);
+      if (!isNaN(total)) {
+        favoriteListTotals.value[requestType] = total;
+      } else if (likedBooksPage.value === 1 && rawList.length === 0) {
+        favoriteListTotals.value[requestType] = 0;
+      }
+      const bookData = rawList.map((item: any) => item.book_info ? ({
         id: item.book_id || item.book_info?.id,
         cover: item.book_info?.public_post_cover_not_nsfw || item.book_info?.public_post_cover || item.book_info?.cover,
         title: item.book_info?.title,
@@ -936,6 +1041,25 @@ async function fetchLikedBooks(reset = false) {
         latest_post_chapter_index: item.book_info?.latest_post_chapter_index,
         session_id: item.book_info?.session_id,
         user_id: item.book_info?.user_id,
+        isFavorite: true,
+      }) : item.post_info ? ({
+        // 图片 / 视频是单篇作品，接口只回 post_id + post_info(id/title/cover/user_id)
+        id: item.post_id || item.post_info?.id,
+        cover: item.post_info?.cover,
+        title: item.post_info?.title,
+        description: '',
+        type: String(requestType),
+        is_nsfw: item.post_info?.is_nsfw ?? 0,
+        is_top: '0',
+        chapter_count: 0,
+        user_id: item.post_info?.user_id,
+        isFavorite: true,
+      }) : ({
+        // 兜底：接口以后直接平铺作品字段时也能用
+        ...item,
+        id: item.post_id || item.id,
+        type: item.type ?? String(requestType),
+        is_top: String(item.is_post_top ?? item.is_top ?? '0'),
         isFavorite: true,
       }));
 
@@ -955,6 +1079,7 @@ async function fetchLikedBooks(reset = false) {
     collectionsLoading.value = false;
     loading.value = false;
   } catch (error) {
+    if (requestId !== likedBooksRequestId) return;
     console.error('Error fetching liked books:', error);
     collectionsInitialized.value = true;
     collectionsLoading.value = false;
@@ -1061,6 +1186,8 @@ async function fetchUserInfo() {
         total_posts_5: parseInt(data.data?.total_posts_5 || '0'),
         kyc_status: data.data?.kyc_status || 0,
         books_group: data.data?.books_group || [],
+        fav_book_group: data.data?.fav_book_group || [],
+        fav_post_group: data.data?.fav_post_group || [],
       };
 
     } else {
@@ -1256,11 +1383,11 @@ let lastId = ref(route.query.id);
 let lastTab = ref(route.query.tab);
 let lastType = ref(route.query.type);
 
-watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, newTab, newType], [oldId, oldTab, oldType]) => {
+watch(() => [route.query.id, route.query.tab, route.query.type, route.query.fav], async ([newId, newTab, newType, newFav], [oldId, oldTab, oldType, oldFav]) => {
 
   const idChanged = newId !== oldId;
   const tabChanged = newTab !== oldTab;
-  const typeChanged = newType !== oldType;
+  const typeChanged = newType !== oldType || newFav !== oldFav;
 
   if (idChanged) {
     // Reset states
@@ -1292,10 +1419,14 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
     // Fetch new user info and data
     await fetchUserInfo();
 
-    const typeParam = newType;
-    if (typeParam) {
-      const typeNum = parseInt(typeParam as string);
+    if (String(newFav ?? '') === '1') {
+      topTab.value = 'favorites';
+      activeContentType.value = 'favorites';
+      favoriteContentType.value = resolveFavoriteTypeFromQuery();
+    } else if (newType) {
+      const typeNum = parseInt(newType as string);
       if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
+        topTab.value = 'works';
         activeContentType.value = typeNum;
       }
     }
@@ -1323,12 +1454,12 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
     // 只在地址栏和当前状态真的不一致时才动 —— 自己切 tab 时写地址栏
     // 也会触发这个 watcher，不拦住的话列表会取两次数
     let target: number | string | null = null;
-    if (newType) {
+    if (String(newFav ?? '') === '1') {
+      target = 'favorites';
+    } else if (newType) {
       const typeNum = parseInt(newType as string);
       if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
         target = typeNum;
-      } else if (newType === 'favorites') {
-        target = 'favorites';
       }
     } else if (!newTab) {
       // 地址栏里没有 type（比如从别处跳进来），回默认 tab
@@ -1337,6 +1468,10 @@ watch(() => [route.query.id, route.query.tab, route.query.type], async ([newId, 
 
     if (target !== null && target !== activeContentType.value) {
       setActiveContentType(target, true);
+    } else if (target === 'favorites') {
+      // 还在收藏里，只是子 tab（type）变了
+      const favType = resolveFavoriteTypeFromQuery();
+      if (favType !== favoriteContentType.value) setFavoriteContentType(favType, true);
     }
   }
 
@@ -1405,11 +1540,13 @@ function getEndDate() {
  */
 function setActiveContentType(typeId: number | string, fromRoute = false) {
   viewMode.value = "posts";
-  topTab.value = "works";
+  topTab.value = typeId === 'favorites' ? "favorites" : "works";
   activeContentType.value = typeId;
   activeCollectionTab.value = 0;
 
   if (typeId === 'favorites') {
+    // 前进/后退回到收藏时，子 tab 也从地址栏的 type 恢复
+    favoriteContentType.value = fromRoute ? resolveFavoriteTypeFromQuery() : FAVORITE_TYPE_DEFAULT;
     fetchLikedBooks(true);
   } else {
     fetchCollections(true);
@@ -1417,11 +1554,17 @@ function setActiveContentType(typeId: number | string, fromRoute = false) {
 
   if (fromRoute) return;
 
+  if (typeId === 'favorites') {
+    syncFavoriteQuery();
+    return;
+  }
+
   // 把当前 tab 记进地址栏。用 replace 不用 push：不额外压历史记录，
   // 但地址栏带上了 type —— 从这里点进作品再返回，就能回到原来的 tab，
   // 而不是落回默认那个列表。刷新也能停在当前 tab。
   const newQuery: Record<string, any> = { ...route.query };
   delete newQuery.tab;
+  delete newQuery.fav;
   newQuery.type = String(typeId);
 
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
@@ -1517,8 +1660,11 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   }
 
   if (!fromRoute) {
-    const newQuery = { ...route.query };
+    const newQuery: Record<string, any> = { ...route.query };
     delete newQuery.tab;
+    // 点「我的作品」回来时把 type 也写进地址栏、去掉 fav，不然返回还会落到收藏
+    delete newQuery.fav;
+    newQuery.type = String(activeContentType.value);
 
     if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
       router.replace({
@@ -3549,39 +3695,6 @@ async function unpinCollection(collection: any) {
         box-shadow: none;
       }
 
-      .type-icon {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        z-index: 1;
-
-        .type-badge {
-          display: inline-block;
-          border: none;
-          border-radius: 999px;
-          padding: 4px 12px;
-          font-weight: 800;
-          font-size: 12px;
-          color: #1a1a1a;
-          background: #FFC24B;
-
-          &.type-2 {
-            background: #C9B6FF;
-          }
-
-          &.type-3 {
-            background: #7FD8E8;
-          }
-
-          &.type-4 {
-            background: #FF9EC6;
-          }
-
-          &.type-5 {
-            background: #7FD8E8;
-          }
-        }
-      }
 
       .card-bottom{
         position: absolute;

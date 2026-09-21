@@ -350,7 +350,7 @@
               <!-- 失败提示 -->
               <div v-if="isTaskFailed(record.step_status || record.status)" class="record-failed">
                 <img src="@/assets/images/home/intro.png" alt="warning" class="failed-icon" />
-                <span class="failed-text">{{ record.fail_reason || t('recordList.generateFailed') }}</span>
+                <span class="failed-text">{{ record.fail_reason || t('recordList.generateFailedRetry') }}</span>
               </div>
 
               <!-- 视频底部操作 -->
@@ -4491,7 +4491,7 @@ const isTaskQueuing = (status: string) => {
 
 // 把后端 status_message 映射成列表里展示的失败原因。
 // 轮询和列表回显两条路径都走这里，避免判断逻辑再次分叉。
-function resolveFailReason(statusMessage: string): { reason: string; insufficient: boolean; matched: boolean } {
+function resolveFailReason(statusMessage: string, isVideo = false): { reason: string; insufficient: boolean; matched: boolean } {
   const msg = (statusMessage || '').toLowerCase();
 
   if (msg.includes('credit is not enough') || msg.includes('recharge')) {
@@ -4507,8 +4507,24 @@ function resolveFailReason(statusMessage: string): { reason: string; insufficien
     return { reason: t('recordList.generateFailedModeMismatch'), insufficient: false, matched: true };
   }
 
-  // 没命中具体规则：matched=false，调用方可选择保留后端原文
-  return { reason: t('recordList.generateFailed'), insufficient: false, matched: false };
+  // 版权风险：后端回 copyright restrictions。按词组匹配，中间的空格 / 换行都容忍，
+  // restriction 单复数都算；只出现 copyright 一个词的其它报错不会误判到这条
+  if (/copyright\s+restriction/.test(plain)) {
+    return { reason: t('recordList.generateFailedCopyright'), insufficient: false, matched: true };
+  }
+
+  // 上游模型接口故障：后端回 Upstream task ...
+  if (/upstream\s+task/.test(plain)) {
+    return { reason: t('recordList.generateFailedUpstream'), insufficient: false, matched: true };
+  }
+
+  // 没命中具体规则：视频统一给「点击重试」的文案，图片沿用原来的提示。
+  // matched=false，调用方可选择保留后端原文
+  return {
+    reason: isVideo ? t('recordList.generateFailedRetry') : t('recordList.generateFailed'),
+    insufficient: false,
+    matched: false,
+  };
 }
 
 // 生成记录上的模型档位标签（· 极速版 / 加强版 / 超级版）。
@@ -4710,7 +4726,7 @@ const pollTaskStatus = async (taskId: string) => {
 
         if (taskData.status === 'FAIL' || taskData.status === 'FAILED' || taskData.status === 'fail' || taskData.status === 'failed') {
           updatedRecord.step_status = 'FAILED';
-          const failed = resolveFailReason(taskData.status_message);
+          const failed = resolveFailReason(taskData.status_message, updatedRecord.story_type === 'simple_video');
           updatedRecord.fail_reason = failed.reason;
           if (failed.insufficient) showInsufficientBalanceModal.value = true;
         }
@@ -4728,8 +4744,11 @@ const pollTaskStatus = async (taskId: string) => {
     } else {
       // 只有能识别出的明确业务失败（如余额不足）才立刻判失败；
       // 其余非 200 一律当成「这次请求失败」，任务状态不动。
-      const failed = resolveFailReason(response.message || response.msg || '');
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
+      const failed = resolveFailReason(
+        response.message || response.msg || '',
+        records.value[recordIndex]?.story_type === 'simple_video',
+      );
       if (failed.matched && recordIndex !== -1) {
         records.value[recordIndex] = {
           ...records.value[recordIndex],
@@ -4897,7 +4916,7 @@ const normalizeSimpleRecord = (record: any) => {
     ? (userSelected.simple_video_resolution || '').replace(/p$/i, 'P')
     : userSelected.simple_image_resolution || '';
 
-  const failed = resolveFailReason(record.status_message);
+  const failed = resolveFailReason(record.status_message, record.story_type === 'simple_video');
 
   return {
     ...record,

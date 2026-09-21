@@ -1948,8 +1948,14 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     image: "画像",
     generateFailed: "生成に失敗しました。アップロードされた情報がプラットフォーム規約に適合していません。修正してから再度お試しください。",
     pollNetworkError: "ネットワークエラーが発生しました。ページを再読み込みして最新の状態をご確認ください",
-    generateFailedInsufficientBalance: "計クレジットが不足しています、クレジット後に再試行してください",
-    generateFailedModeMismatch: "モードの選択が正しくありません。ビデオ修正モードに切り替えて再生成してください。",
+    generateFailedInsufficientBalance: "算力不足です。チャージして再試行してください。",
+    generateFailedModeMismatch: "モードの選択が正しくありません。ビデオ修正モードに切り替えて再生成してください。失敗したタスクの算力は消費されません。",
+    // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
+    generateFailedCopyright: "生成内容に著作権リスクがあります。修正して再試行してください。失敗したタスクの算力は消費されません。",
+    // 上游模型接口故障：后端 status_message 里带 Upstream task
+    generateFailedUpstream: "モデルの生成でエラーが発生しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
+    // 视频未知失败的兜底文案
+    generateFailedRetry: "生成に失敗しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",
     deleteWarning: "削除された履歴レコードは復元できません"
   },
