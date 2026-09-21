@@ -398,6 +398,29 @@ $pinkopacity: rgba(255,79,154,0.12);
       width: 64px;
       height: 64px;
       border-radius: 12px;
+      // 拖拽排序：手势自己处理，别让浏览器把按住拖动当成页面滚动
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+
+      // 缩略图不走浏览器的原生拖拽（那会拖出一张暗图）。
+      // 删除按钮、播放图标也是 img，所以这里只禁原生拖拽，不动 pointer-events
+      img {
+        -webkit-user-drag: none;
+        user-drag: none;
+      }
+
+      &.is-dragging {
+        z-index: 20;
+        cursor: grabbing;
+        // 拖动中的位移由 :style 的 transform 驱动，不要再有过渡，否则跟不上指针
+        transition: none;
+
+        .tooltip-name {
+          opacity: 0 !important;
+          visibility: hidden !important;
+        }
+      }
       border: 1px solid #3d3d3d;
       background: #222;
       cursor: pointer;

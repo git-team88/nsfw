@@ -82,7 +82,11 @@
                       <div
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
-                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                        :style="dragItemStyle(item.id)"
+                        @pointerdown="onItemPointerDown($event, item.id)"
+                        @click.capture="onItemClickCapture"
+                        @dragstart.prevent
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 1 }}</span>
@@ -228,7 +232,11 @@
                       <div
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
-                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                        :style="dragItemStyle(item.id)"
+                        @pointerdown="onItemPointerDown($event, item.id)"
+                        @click.capture="onItemClickCapture"
+                        @dragstart.prevent
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
@@ -342,7 +350,11 @@
                       <div
                         v-for="(item, index) in combinedItems"
                         :key="item.id"
-                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                        :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                        :style="dragItemStyle(item.id)"
+                        @pointerdown="onItemPointerDown($event, item.id)"
+                        @click.capture="onItemClickCapture"
+                        @dragstart.prevent
                       >
                         <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                         <span class="image-index" v-if="item.type == 'video'">{{ uploadedVideosVideo.findIndex(v => v.id === item.id) + 2 }}</span>
@@ -633,7 +645,11 @@
                     <div
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
-                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                      :style="dragItemStyle(item.id)"
+                      @pointerdown="onItemPointerDown($event, item.id)"
+                      @click.capture="onItemClickCapture"
+                      @dragstart.prevent
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <div class="image-box" @click="openImageViewer(item.image)">
@@ -747,7 +763,11 @@
                     <div
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
-                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                      :style="dragItemStyle(item.id)"
+                      @pointerdown="onItemPointerDown($event, item.id)"
+                      @click.capture="onItemClickCapture"
+                      @dragstart.prevent
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
                       <div class="image-box" @click="openImageViewer(item.image)">
@@ -895,7 +915,11 @@
                     <div
                       v-for="(item, index) in combinedItems"
                       :key="item.id"
-                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item']"
+                      :class="['item-tag', item.type === 'character' ? 'character-tag' : 'uploaded-image-item', { 'is-dragging': dragState.id === item.id }]"
+                      :style="dragItemStyle(item.id)"
+                      @pointerdown="onItemPointerDown($event, item.id)"
+                      @click.capture="onItemClickCapture"
+                      @dragstart.prevent
                     >
                       <span class="image-index" v-if="item.type == 'image'">{{ uploadedImages.findIndex(img => img.id === item.id) + 1 }}</span>
 
@@ -1193,7 +1217,7 @@
 
 <script setup lang="ts">
 import RatioIcon from '@/components/RatioIcon.vue';
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -2120,6 +2144,12 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isMakeSimilarLoading = ref(false);
 const isMakeSameMode = ref(false);
+// 做同款回填时所在的 tab。各 tab 的草稿是各自保留的，做同款的标记也只对那个 tab 生效：
+// 切到别的 tab 提交是普通生成，不能把原作品的 session 带过去（后端会按做同款处理）。
+const makeSameTab = ref('');
+function isMakeSameOn(tab: string): boolean {
+  return isMakeSameMode.value && makeSameTab.value === tab;
+}
 const isMakeSimilar = ref(false);
 const makeSimilarSessionId = ref('');
 const originSessionId = ref('');
@@ -2314,8 +2344,10 @@ const updateStickyInputVisibility = () => {
 // 占位文字停在完整文案上，不再跑打字机 —— 回填后旁边还在一个字一个字地打很干扰。
 // 走 make 标志位而不是新加开关：clearVideoMakeFlags() 在切模式 / 切档位时会清掉它们，
 // 打字机自然恢复，不用再单独维护一份重置逻辑。
+// 各 tab 的来源标记只在自己的 tab 下算数：视频那几个只看视频 tab，做同款看它回填时的 tab。
 const isMakeSourceActive = computed(() =>
-  isMakeVideoSimilarMode.value || isMakeVideoSequelMode.value || isMakeVideoMode.value || isMakeSameMode.value
+  (contentType.value === 'video' && (isMakeVideoSimilarMode.value || isMakeVideoSequelMode.value || isMakeVideoMode.value))
+  || isMakeSameOn(contentType.value)
 );
 
 // 带来源进来（做同款 / 做续集 / 图片做视频）时要不要把输入框简化（藏类型 tab、模式下拉、自动项）。
@@ -3115,7 +3147,7 @@ const navigateToNovelGenerate = async () => {
       addition_characters: [],
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
-      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeSameOn('novel') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
@@ -3319,24 +3351,10 @@ const estimatedVideoComputingPower = computed(() => {
 });
 
 // Check if user is logged in
-// 做同款 / 做续集 / 做视频 的原始入参。onMounted 消费后就从 localStorage 删掉了，
-// 但这些回填内容是纯内存态 —— 未登录时点输入框会被跳去登录页、Home 随之卸载，内容全丢。
-// 这里留一份，跳登录前写回 localStorage，登录回来 onMounted 会重新消费一次、自动回填。
-const pendingMakeSource = ref<{ key: string; raw: string } | null>(null);
-
+// 做同款 / 做同款视频 / 做续集的回填内容是纯内存态，未登录时点输入框会被跳去登录页、页面随之卸载。
+// 跳登录前把这次回填的来源连页面地址一起存下来，登录回来落回同一个页面时自动重新回填。
 function keepMakeSourceForLogin() {
-  // 首页那条老路子：把原始入参写回 localStorage，回到首页 onMounted 会重新消费一次
-  const src = pendingMakeSource.value;
-  if (src) {
-    try {
-      localStorage.setItem(src.key, src.raw);
-    } catch {
-      /* 存储不可用（无痕模式等），忽略 */
-    }
-  }
-
-  // 详情页 / 搜索页 / 个人主页：连页面地址一起存，登录回来落回同一个页面时自动重新回填
-  if (isBottomPlacement.value && lastMakeSource) {
+  if (lastMakeSource) {
     try {
       localStorage.setItem(MAKE_SOURCE_RESUME_KEY, JSON.stringify({
         ...lastMakeSource,
@@ -3351,29 +3369,29 @@ function keepMakeSourceForLogin() {
 
 // 登录/注册回来后，落回同一个页面就把刚才的回填重做一遍
 const RESUME_MAX_AGE = 30 * 60 * 1000;
-function resumeMakeSourceAfterLogin() {
-  if (!isBottomPlacement.value) return;
+async function resumeMakeSourceAfterLogin(): Promise<boolean> {
   let saved: any = null;
   try {
     const raw = localStorage.getItem(MAKE_SOURCE_RESUME_KEY);
-    if (!raw) return;
+    if (!raw) return false;
     saved = JSON.parse(raw);
   } catch {
     localStorage.removeItem(MAKE_SOURCE_RESUME_KEY);
-    return;
+    return false;
   }
   if (!saved || !saved.kind) {
     localStorage.removeItem(MAKE_SOURCE_RESUME_KEY);
-    return;
+    return false;
   }
   // 地址对不上说明落到了别的页面，留着等它自己那一页来消费；放太久的直接丢掉
   if (saved.at && Date.now() - saved.at > RESUME_MAX_AGE) {
     localStorage.removeItem(MAKE_SOURCE_RESUME_KEY);
-    return;
+    return false;
   }
-  if (!isSameLoginReturnTarget(saved.path)) return;
+  if (!isSameLoginReturnTarget(saved.path)) return false;
   localStorage.removeItem(MAKE_SOURCE_RESUME_KEY);
-  applySource(saved.kind, saved.payload);
+  await applySource(saved.kind, saved.payload);
+  return true;
 }
 
 // 判断当前页面是不是当初跳登录时那一页。
@@ -3849,33 +3867,10 @@ const selectContentType = (type: string) => {
   }
 
   // 各 tab 的输入、参考图、选项都由草稿保留，这里不再清空（视频见下）。
-
-  // Clear photo-related content
-  uploadedImagesPhoto.value = [];
-  combinedItemsPhoto.value = [];
-  inputContentPhoto.value = '';
-  inputHtmlPhoto.value = '';
-
-  // Reset modes to default（视频的模式与档位由草稿接管，不在这里重置）
-  currentPhotoMode.value = 'normal';
-  makeSequelPostId.value = '';
-  isMakeSameMode.value = false;
-  isMakeSimilar.value = false;
-  makeSimilarSessionId.value = '';
-  originSessionId.value = '';
-  originPostId.value = '';
-  isMakeExtensionMode.value = false;
-  isMakeVideoSimilarMode.value = false;
-  isMakeVideoSequelMode.value = false;
-  isMakeVideoMode.value = false;
-  originSessionIdForExtension.value = '';
-  originVideoUrlForTail.value = '';
-  overrideNormalVideoMode.value = false;
+  // 图片 tab 的内容、模式、画质 / 比例以前在这里被清掉，切走再回来就没了，现在一并保留。
+  // 做同款 / 做续集 / 图片做视频这些来源标记也跟各自 tab 的草稿一起保留，
+  // 提交时只对回填时所在的 tab 生效（见 isMakeSameOn），不会串到别的 tab。
   previousInputHtml.value = '';
-
-  // Reset photo settings to default
-  selectedPhotoQuality.value = '1K';
-  selectedPhotoRatio.value = '16:9';
 
   // Switch content type
   contentType.value = type;
@@ -3888,8 +3883,8 @@ const selectContentType = (type: string) => {
     migrateVideoParams();
   }
 
-  enablePhotoOptimizePrompt.value = false;
-  enableVideoOptimizePrompt.value = false;
+  // 图片 / 视频的「优化提示词」开关跟各自的草稿一起保留，切去别的 tab 再回来不重置；
+  // 切模式 / 档位时由各自的流程清。
 
   // Update SEO meta tags when switching content type
   setSeoMeta(type);
@@ -3935,8 +3930,6 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
 
   isInputEmptyVideo.value = false;
   isInputEmpty.value = false;
-
-  localStorage.removeItem('makeVideoData');
 
   nextTick(() => {
     if (editableInputRef.value) {
@@ -4089,7 +4082,7 @@ const formatReplayContent = (content: string, list: any[], chars: any[] = []) =>
   return result;
 };
 
-const handleMakeSimilar = async (item: any, fromUrl = false) => {
+const handleMakeSimilar = async (item: any) => {
   const sessionId = item.session_id;
   if (!sessionId) return;
 
@@ -4107,11 +4100,6 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
   isMakeSimilar.value = true;
   makeSimilarSessionId.value = sessionId;
   originSessionId.value = sessionId;
-
-  if (!fromUrl && route.query.make) {
-    const { make, ...rest } = route.query;
-    router.replace({ query: rest });
-  }
 
   try {
     const res = await api.getProjectInfoPublic(sessionId) as any;
@@ -4149,6 +4137,7 @@ const handleMakeSimilar = async (item: any, fromUrl = false) => {
     }
 
     contentType.value = targetContentType;
+    makeSameTab.value = targetContentType;
     setSeoMeta(targetContentType);
 
     const storyMode = userSelected.story_mode;
@@ -4422,13 +4411,12 @@ const handleMakeSimilarVideo = async (item: any) => {
 
     await getCountry();
 
-    localStorage.removeItem('makeSimilarVideoData');
-
     const isUnlimited = isNsfw && userRegion.value;
 
     isMakeVideoSimilarMode.value = true;
     isMakeVideoSequelMode.value = false;
     isMakeSameMode.value = true;
+    makeSameTab.value = 'video';
     originPostId.value = String(data.id || item.id);
 
     contentType.value = 'video';
@@ -4559,8 +4547,6 @@ const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: 
   uploadedImagesVideo.value = [];
   selectedCharactersVideo.value = [];
   combinedItemsVideo.value = [];
-
-  localStorage.removeItem('makeSequelData');
 
   nextTick(() => {
     // 输入框所在的 v-if 分支刚重建，按 data-tab + data-mode 取当前分支的元素
@@ -4909,7 +4895,7 @@ const doGenerateVideo = async () => {
       simple_video_duration: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? Math.ceil(uploadedVideoDuration.value || 30) : (videoLimitMode.value === 'unlimited' && selectedVideoMultimodal.value === 'multimodal') ? Math.ceil(parseInt(selectedVideoDuration.value) + getUploadedVideoDurationSum()) : parseInt(selectedVideoDuration.value),
       simple_video_generate_mode: videoGenerateMode,
       enable_optimize_prompt: (selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend') ? false : enableVideoOptimizePrompt.value,
-      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeSameOn('video') ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
@@ -5091,7 +5077,7 @@ const doGenerateComic = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeSameOn('comic') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
@@ -5242,7 +5228,7 @@ const doGenerateDrama = async () => {
         main_image_url: character.image,
         tri_view_url: character.tri_image
       })),
-      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeSameOn('drama') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
@@ -5400,7 +5386,7 @@ const doGeneratePhoto = async () => {
       },
       addition_characters: [],
       enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
-      ...(isMakeSameMode.value ? { is_make_same: 1, ...(isMakeVideoSimilarMode.value ? { origin_post_id: originPostId.value } : { origin_session_id: originSessionId.value }) } : {}),
+      ...(isMakeSameOn('photo') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
       ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
     };
 
@@ -6416,90 +6402,296 @@ const removeUploadedImage = (id: string) => {
     }
   }
 
-  // Update image order in input-textarea
-  // Note: Using nextTick to ensure DOM is updated before modifying it
-  nextTick(() => {
-    if (editableInputRef.value) {
-      try {
-        // 重新编号：优先按 data-item-id 找这条素材在数组里的位置，拿不到 id 才退回 src 匹配。
-        // 原来只按 src 匹配有两个坑：
-        //   1) 素材的 image 为空串时，img.src.includes('') 恒真 —— 所有标签都会匹配到
-        //      数组第一条，全被改成「图片1」；
-        //   2) 同一张图传两次（两个 id、同一个 url），find 只会返回第一条，两个标签撞号。
-        // 音频标签更是全都用同一个本地图标，src 根本匹配不到素材，以前压根不会重新编号。
-        const findItemPos = (tag: Element, img: HTMLImageElement | null, list: any[]): number => {
-          const itemId = (tag as HTMLElement).dataset.itemId || '';
-          if (itemId) {
-            const byId = list.findIndex((it: any) => String(it.id) === itemId);
-            if (byId >= 0) return byId;
-          }
-          const src = img?.src || '';
-          if (!src) return -1;
-          return list.findIndex((it: any) => {
-            const url = it.image || it.cover || '';
-            return !!url && (url === src || src.includes(url));
-          });
-        };
-        const setTagText = (tag: Element, text: string) => {
-          const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-          if (textNode) textNode.textContent = text;
-          (tag as HTMLElement).dataset.name = text;
-        };
+  // 素材少了一个，输入框里后面的「图片N」都要往前挪一号
+  nextTick(() => renumberInputTags());
+};
 
-        // Update image tags based on current content type
-        const currentUploadedImages = getUploadedImages();
-        const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
-        imageTags.forEach(tag => {
-          const pos = findItemPos(tag, tag.querySelector('img'), currentUploadedImages.value);
-          if (pos >= 0) setTagText(tag, `${t('home.img')}${pos + 1}`);
-        });
-
-        // Update video tags
-        const videoTags = editableInputRef.value.querySelectorAll('.video-tag');
-        videoTags.forEach(tag => {
-          if ((tag as HTMLElement).dataset.itemId === 'uploaded-video') {
-            setTagText(tag, `${t('home.video')}1`);
-            return;
-          }
-          const pos = findItemPos(tag, tag.querySelector('img'), uploadedVideosVideo.value);
-          if (pos < 0) return;
-          // 视频修改 / 视频续写 里原视频占掉了视频1，参考视频从 2 起
-          const isVideoExtendOrModify = contentType.value === 'video'
-            && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
-          setTagText(tag, `${t('home.video')}${pos + (isVideoExtendOrModify ? 2 : 1)}`);
-        });
-
-        // Update audio tags
-        const audioTags = editableInputRef.value.querySelectorAll('.audio-tag');
-        audioTags.forEach(tag => {
-          const pos = findItemPos(tag, tag.querySelector('img'), uploadedAudiosVideo.value);
-          if (pos >= 0) setTagText(tag, `${t('home.audio')}${pos + 1}`);
-        });
-
-        // Update character tags (for comic/drama tabs)
-        const characterTags = editableInputRef.value.querySelectorAll('.character-tag-input');
-        characterTags.forEach(tag => {
-          const characterName = tag.querySelector('.character-name-input');
-          if (characterName) {
-            const currentSelectedCharacters = getSelectedCharacters();
-            const character = currentSelectedCharacters.value.find(char =>
-              char.name === characterName.textContent
-            );
-            if (character) {
-              const charIndex = currentSelectedCharacters.value.findIndex(char => char.id === character.id) + 1;
-              const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
-              if (textNode) {
-                textNode.textContent = `${character.name}`;
-              }
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Error updating image order:', error);
+// 按素材在数组里的当前位置，刷新输入框里引用标签显示的序号（图片N / 视频N / 音频N）。
+// 删除素材和拖拽排序之后都要调：标签靠 data-item-id 认素材，序号只是显示，位置一变就得重算。
+function renumberInputTags() {
+  if (!editableInputRef.value) return;
+  try {
+    // 重新编号：优先按 data-item-id 找这条素材在数组里的位置，拿不到 id 才退回 src 匹配。
+    // 原来只按 src 匹配有两个坑：
+    //   1) 素材的 image 为空串时，img.src.includes('') 恒真 —— 所有标签都会匹配到
+    //      数组第一条，全被改成「图片1」；
+    //   2) 同一张图传两次（两个 id、同一个 url），find 只会返回第一条，两个标签撞号。
+    // 音频标签更是全都用同一个本地图标，src 根本匹配不到素材，以前压根不会重新编号。
+    const findItemPos = (tag: Element, img: HTMLImageElement | null, list: any[]): number => {
+      const itemId = (tag as HTMLElement).dataset.itemId || '';
+      if (itemId) {
+        const byId = list.findIndex((it: any) => String(it.id) === itemId);
+        if (byId >= 0) return byId;
       }
+      const src = img?.src || '';
+      if (!src) return -1;
+      return list.findIndex((it: any) => {
+        const url = it.image || it.cover || '';
+        return !!url && (url === src || src.includes(url));
+      });
+    };
+    const setTagText = (tag: Element, text: string) => {
+      const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
+      if (textNode) textNode.textContent = text;
+      (tag as HTMLElement).dataset.name = text;
+    };
+
+    // Update image tags based on current content type
+    const currentUploadedImages = getUploadedImages();
+    const imageTags = editableInputRef.value.querySelectorAll('.image-tag');
+    imageTags.forEach(tag => {
+      const pos = findItemPos(tag, tag.querySelector('img'), currentUploadedImages.value);
+      if (pos >= 0) setTagText(tag, `${t('home.img')}${pos + 1}`);
+    });
+
+    // Update video tags
+    const videoTags = editableInputRef.value.querySelectorAll('.video-tag');
+    videoTags.forEach(tag => {
+      if ((tag as HTMLElement).dataset.itemId === 'uploaded-video') {
+        setTagText(tag, `${t('home.video')}1`);
+        return;
+      }
+      const pos = findItemPos(tag, tag.querySelector('img'), uploadedVideosVideo.value);
+      if (pos < 0) return;
+      // 视频修改 / 视频续写 里原视频占掉了视频1，参考视频从 2 起
+      const isVideoExtendOrModify = contentType.value === 'video'
+        && (selectedVideoMultimodal.value === 'videoExtend' || selectedVideoMultimodal.value === 'videoModify');
+      setTagText(tag, `${t('home.video')}${pos + (isVideoExtendOrModify ? 2 : 1)}`);
+    });
+
+    // Update audio tags
+    const audioTags = editableInputRef.value.querySelectorAll('.audio-tag');
+    audioTags.forEach(tag => {
+      const pos = findItemPos(tag, tag.querySelector('img'), uploadedAudiosVideo.value);
+      if (pos >= 0) setTagText(tag, `${t('home.audio')}${pos + 1}`);
+    });
+
+    // Update character tags (for comic/drama tabs)
+    const characterTags = editableInputRef.value.querySelectorAll('.character-tag-input');
+    characterTags.forEach(tag => {
+      const characterName = tag.querySelector('.character-name-input');
+      if (characterName) {
+        const currentSelectedCharacters = getSelectedCharacters();
+        const character = currentSelectedCharacters.value.find(char =>
+          char.name === characterName.textContent
+        );
+        if (character) {
+          const charIndex = currentSelectedCharacters.value.findIndex(char => char.id === character.id) + 1;
+          const textNode = Array.from(tag.childNodes).find(node => node.nodeType === 3) as Text;
+          if (textNode) {
+            textNode.textContent = `${character.name}`;
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error updating image order:', error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 参考素材拖拽排序
+// 用 Pointer Events 自己实现，不用原生 draggable：原生那套会拖出一张半透明的「暗图」，
+// 移动端还不支持。被拖的缩略图只加 transform 跟着指针走，其它项原地不动；
+// 被拖项的中心越过某个兄弟的一半就把它挪到那个位置，数组一变 Vue 自动重排。
+// 松手后按新顺序重建各类型数组（图片 / 视频 / 音频 / 角色），再刷新输入框里的序号。
+// ---------------------------------------------------------------------------
+const dragState = reactive({ id: '', dx: 0, dy: 0 });
+
+interface ItemDragCtx {
+  id: string;
+  el: HTMLElement;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  /** 指针相对缩略图左上角的偏移，拖动时保持不变，缩略图才不会跳到指针下 */
+  grabX: number;
+  grabY: number;
+  active: boolean;
+  moved: boolean;
+  timer: number | null;
+}
+let itemDragCtx: ItemDragCtx | null = null;
+// 拖完松手会冒一个 click，在这个时间点之前的 click 一律吞掉，别把预览 / 播放弹出来
+let suppressItemClickUntil = 0;
+
+const DRAG_START_DISTANCE = 4;
+const TOUCH_DRAG_HOLD_MS = 200;
+const TOUCH_CANCEL_DISTANCE = 8;
+
+const dragItemStyle = (id: string) =>
+  dragState.id === id ? { transform: `translate(${dragState.dx}px, ${dragState.dy}px)` } : undefined;
+
+function onItemClickCapture(e: Event) {
+  if (Date.now() < suppressItemClickUntil) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}
+
+function onItemPointerDown(e: PointerEvent, id: string) {
+  if (e.button !== 0) return;
+  if ((e.target as HTMLElement | null)?.closest?.('.remove-btn')) return;
+  if (getCombinedItems().value.length < 2) return;
+  // 缩略图是 <img>，浏览器默认会对它启动原生拖拽：拖出一张半透明的暗图，同时给我们发 pointercancel，
+  // 松手还可能把图片「放」进 contenteditable 的输入框里。鼠标按下就拦掉默认行为，原生拖拽和选中文字都不会起来
+  if (e.pointerType === 'mouse') e.preventDefault();
+  const el = e.currentTarget as HTMLElement;
+  const rect = el.getBoundingClientRect();
+  itemDragCtx = {
+    id, el, pointerId: e.pointerId,
+    startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+    grabX: e.clientX - rect.left, grabY: e.clientY - rect.top,
+    active: false, moved: false, timer: null,
+  };
+  window.addEventListener('pointermove', onItemPointerMove, { passive: false });
+  window.addEventListener('pointerup', onItemPointerUp);
+  window.addEventListener('pointercancel', onItemPointerUp);
+  // 触屏：长按一小会儿再进入拖拽；鼠标：移动超过几像素就开始
+  if (e.pointerType !== 'mouse') {
+    itemDragCtx.timer = window.setTimeout(startItemDrag, TOUCH_DRAG_HOLD_MS);
+  }
+}
+
+function startItemDrag() {
+  const ctx = itemDragCtx;
+  if (!ctx || ctx.active) return;
+  ctx.active = true;
+  ctx.timer = null;
+  dragState.id = ctx.id;
+  dragState.dx = 0;
+  dragState.dy = 0;
+  try { ctx.el.setPointerCapture(ctx.pointerId); } catch { /* 部分浏览器不支持，忽略 */ }
+}
+
+function onItemPointerMove(e: PointerEvent) {
+  const ctx = itemDragCtx;
+  if (!ctx) return;
+  ctx.lastX = e.clientX;
+  ctx.lastY = e.clientY;
+  const dist = Math.hypot(e.clientX - ctx.startX, e.clientY - ctx.startY);
+  if (!ctx.active) {
+    if (e.pointerType === 'mouse') {
+      if (dist < DRAG_START_DISTANCE) return;
+      startItemDrag();
+    } else {
+      // 长按还没到就滑开了：当成普通触摸，不拖
+      if (dist >= TOUCH_CANCEL_DISTANCE) finishItemDrag();
+      return;
+    }
+  }
+  if (!ctx.active) return;
+  e.preventDefault();
+  ctx.moved = true;
+  updateDragPosition();
+  const from = getCombinedItems().value.findIndex((it: any) => it.id === ctx.id);
+  if (from < 0) return;
+  const to = resolveDragTarget(from);
+  if (to !== from) {
+    const list = getCombinedItems();
+    const next = [...list.value];
+    const [moving] = next.splice(from, 1);
+    next.splice(to, 0, moving);
+    list.value = next;
+    // 列表上的角标（图片1 / 2…）读的是各类型数组的位置，拖动过程中就跟着换
+    syncTypedListsFromCombined();
+    // 数组重排后缩略图落到新槽位，按最后的指针位置重算一次 translate，视觉上才不会跳
+    nextTick(updateDragPosition);
+  }
+}
+
+/** 缩略图该在的左上角 = 指针 - 抓取偏移；减去它当前的布局位置就是 translate */
+function updateDragPosition() {
+  const ctx = itemDragCtx;
+  if (!ctx || !ctx.active) return;
+  const rect = ctx.el.getBoundingClientRect();
+  const baseLeft = rect.left - dragState.dx;
+  const baseTop = rect.top - dragState.dy;
+  dragState.dx = ctx.lastX - ctx.grabX - baseLeft;
+  dragState.dy = ctx.lastY - ctx.grabY - baseTop;
+}
+
+/** 被拖的缩略图盖住哪个兄弟超过一半（重叠面积 > 兄弟面积的一半），就该落到哪个位置；盖住多个取盖得最多的那个 */
+function resolveDragTarget(from: number): number {
+  const ctx = itemDragCtx;
+  if (!ctx) return from;
+  const rect = ctx.el.getBoundingClientRect();
+  // 被拖项此刻的真实位置：指针减去抓取偏移（不依赖 transform 是否已经渲染出来）
+  const dL = ctx.lastX - ctx.grabX;
+  const dT = ctx.lastY - ctx.grabY;
+  const dR = dL + rect.width;
+  const dB = dT + rect.height;
+  const siblings = Array.from(ctx.el.parentElement?.children || [])
+    .filter((c) => c.classList.contains('item-tag')) as HTMLElement[];
+  let target = from;
+  let best = 0.5;
+  siblings.forEach((sib, idx) => {
+    if (sib === ctx.el) return;
+    const r = sib.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return;
+    const overlapW = Math.max(0, Math.min(dR, r.right) - Math.max(dL, r.left));
+    const overlapH = Math.max(0, Math.min(dB, r.bottom) - Math.max(dT, r.top));
+    const ratio = (overlapW * overlapH) / (r.width * r.height);
+    if (ratio > best) {
+      best = ratio;
+      target = idx;
     }
   });
-};
+  return target;
+}
+
+function onItemPointerUp() {
+  const ctx = itemDragCtx;
+  if (!ctx) return;
+  const { active, moved } = ctx;
+  finishItemDrag();
+  if (!active) return;
+  suppressItemClickUntil = Date.now() + 300;
+  if (moved) {
+    syncTypedListsFromCombined();
+    nextTick(() => renumberInputTags());
+  }
+}
+
+function finishItemDrag() {
+  const ctx = itemDragCtx;
+  if (!ctx) return;
+  if (ctx.timer) window.clearTimeout(ctx.timer);
+  try { ctx.el.releasePointerCapture(ctx.pointerId); } catch { /* 没 capture 过就会抛，忽略 */ }
+  window.removeEventListener('pointermove', onItemPointerMove);
+  window.removeEventListener('pointerup', onItemPointerUp);
+  window.removeEventListener('pointercancel', onItemPointerUp);
+  dragState.id = '';
+  dragState.dx = 0;
+  dragState.dy = 0;
+  itemDragCtx = null;
+}
+
+/** 按 combinedItems 的新顺序重建各类型数组：「图片1」永远是列表里的第一张图，提交时 <ref_1> 也是它 */
+function syncTypedListsFromCombined() {
+  const list = getCombinedItems().value;
+  const ofType = (type: string) => list.filter((it: any) => it.type === type);
+  switch (contentType.value) {
+    case 'video':
+      uploadedImagesVideo.value = ofType('image');
+      uploadedVideosVideo.value = ofType('video');
+      uploadedAudiosVideo.value = ofType('audio');
+      break;
+    case 'comic':
+      uploadedImagesComic.value = ofType('image');
+      selectedCharactersComic.value = ofType('character');
+      break;
+    case 'drama':
+      uploadedImagesDrama.value = ofType('image');
+      selectedCharactersDrama.value = ofType('character');
+      break;
+    case 'photo':
+      uploadedImagesPhoto.value = ofType('image');
+      break;
+  }
+}
 
 const getInputCharCount = (element: HTMLElement): number => {
   let charCount = 0;
@@ -7422,6 +7614,7 @@ async function applyMakeSimilarVideoData(payload: MakeSimilarVideoPayload) {
   isMakeVideoSimilarMode.value = true;
   isMakeVideoSequelMode.value = false;
   isMakeSameMode.value = true;
+  makeSameTab.value = 'video';
   originPostId.value = postId ? String(postId) : '';
 
   contentType.value = 'video';
@@ -7611,79 +7804,15 @@ onMounted(async () => {
     return;
   }
 
-  // 以下只有首页需要：消费 localStorage / URL 上带过来的做同款来源
+  // 以下只有首页需要：登录回来接上做同款、按地址栏识别内容类型
   if (!shouldConsumeMakeSource.value) return;
 
   await initLanguage();
 
-  const queryParams = new URLSearchParams(window.location.search);
-  const makeFromUrl = queryParams.get('make') || queryParams.get('session_id');
-  // 带着做同款/做视频/做续集的来源进来时，落地不滚顶部，改为停在推荐列表
-  let arrivedWithMakeSource = false;
-  if (makeFromUrl) {
-    arrivedWithMakeSource = true;
-    await getCountry();
-    await handleMakeSimilar({ session_id: makeFromUrl }, true);
-  }
-
-  const makeVideoData = localStorage.getItem('makeVideoData');
-  if (makeVideoData) {
-    arrivedWithMakeSource = true;
-    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
-    pendingMakeSource.value = { key: 'makeVideoData', raw: makeVideoData };
-    await getCountry();
-    try {
-      const { imageUrl, isNsfw } = JSON.parse(makeVideoData);
-      if (imageUrl) {
-        await handleMakeVideo(imageUrl, isNsfw);
-      }
-    } catch (e) {
-      localStorage.removeItem('makeVideoData');
-    }
-  }
-
-  const makeSimilarVideoData = localStorage.getItem('makeSimilarVideoData');
-  if (makeSimilarVideoData) {
-    arrivedWithMakeSource = true;
-    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
-    pendingMakeSource.value = { key: 'makeSimilarVideoData', raw: makeSimilarVideoData };
-    try {
-      const payload = JSON.parse(makeSimilarVideoData);
-      localStorage.removeItem('makeSimilarVideoData');
-      await applyMakeSimilarVideoData(payload);
-    } catch (e) {
-      localStorage.removeItem('makeSimilarVideoData');
-    }
-  }
-
-  const makeSequelData = localStorage.getItem('makeSequelData');
-  if (makeSequelData) {
-    arrivedWithMakeSource = true;
-    // 留一份原始入参，未登录被跳去登录页时用它恢复（见 keepMakeSourceForLogin）
-    pendingMakeSource.value = { key: 'makeSequelData', raw: makeSequelData };
-    await getCountry();
-    try {
-      const { videoUrl, cover, type, postId, isNsfw, duration: sequelDuration } = JSON.parse(makeSequelData);
-      if (videoUrl) {
-        await handleMakeSequelFromCache(videoUrl, cover, type, postId, isNsfw, sequelDuration);
-      }
-    } catch (e) {
-      localStorage.removeItem('makeSequelData');
-    }
-  }
-
-  nextTick(() => {
-    if (arrivedWithMakeSource) {
-      // 先滚到列表，再钉住并聚焦：顺序反了的话滚动事件会把焦点抹掉
-      emit('make-source-applied');
-      pinStickyInput();
-      // 未登录时不要在这里程序化 focus 输入框——focus() 会触发 handleInputFocus -> checkLogin()，
-      // 把刚回填好内容、还没登录的用户直接顶去登录页。未登录只回显内容、不聚焦。
-      if (localStorage.getItem('token')) {
-        focusCurrentInput();
-      }
-    }
-  });
+  // 首页里点卡片做同款 / 做续集后被跳去登录，登录回来落回首页时把那次回填接上。
+  // 回填落在推荐列表旁的吸底输入框里，通知首页滚过去
+  const resumedAfterLogin = await resumeMakeSourceAfterLogin();
+  if (resumedAfterLogin) emit('make-source-applied');
 
   // 根据 URL 识别内容类型
   const routeContentType = route.meta.contentType as string | undefined;
@@ -7703,17 +7832,18 @@ onMounted(async () => {
   // 真实用户：切换 tab 会 router.replace 到 /{lang}/{type} 虚拟路由并触发重挂载，
   //   这里按 URL 识别的内容类型恢复 contentType（保证一次点击即生效，且地址栏保留虚拟路由）。
   const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
-  if (detectedContentType && !makeFromUrl) {
+  if (detectedContentType && !resumedAfterLogin) {
     contentType.value = detectedContentType;
   }
 
   // Set SEO meta tags: 预渲染按 URL 内容类型；真实用户按实际显示的（默认）内容类型
-  if (!makeFromUrl) {
+  if (!resumedAfterLogin) {
     setSeoMeta(isSeoPrerender ? (detectedContentType || undefined) : contentType.value);
   }
 });
 
 onBeforeUnmount(() => {
+  finishItemDrag();
   bodyPadObserver?.disconnect();
   bodyPadObserver = null;
   if (props.placement === 'bottom') document.body.style.paddingBottom = '';
@@ -7822,7 +7952,7 @@ let lastMakeSource: MakeSource | null = null;
 function runMakeSource(src: MakeSource): any {
   const p = src.payload;
   switch (src.kind) {
-    case 'same': return handleMakeSimilar({ session_id: p }, true);
+    case 'same': return handleMakeSimilar({ session_id: p });
     case 'similarItem': return handleMakeSimilar(p);
     case 'similarVideoItem': return handleMakeSimilarVideo(p);
     case 'sequelItem': return handleMakeSequelFromList(p);
@@ -7921,6 +8051,15 @@ defineExpose({
     inputContentVideo.value = '';
     inputHtmlVideo.value = '';
     isInputEmptyVideo.value = true;
+    enableVideoOptimizePrompt.value = false;
+    // 视频 / 漫画的内容都清了，落在这两个 tab 上的做同款标记也一起清，
+    // 否则接着随便输入生成，请求里还会带着原作品的 session
+    if (makeSameTab.value === 'video' || makeSameTab.value === 'comic') {
+      isMakeSameMode.value = false;
+      originSessionId.value = '';
+      makeSameTab.value = '';
+    }
+    clearVideoMakeFlags();
 
     selectedCharactersComic.value = [];
     uploadedImagesComic.value = [];

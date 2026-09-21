@@ -1524,16 +1524,6 @@ function handleMakeSourceApplied() {
 }
 
 onMounted(async () => {
-  // 带着做同款/做视频/做续集的来源进来时，落地不滚顶部（输入框回填完会停在推荐列表）；
-  // 来源在输入框组件里消费，这里只先探一下，好知道要不要滚回顶部。
-  const queryParams = new URLSearchParams(window.location.search);
-  const arrivedWithMakeSource = !!(
-    queryParams.get('make') || queryParams.get('session_id')
-    || localStorage.getItem('makeVideoData')
-    || localStorage.getItem('makeSimilarVideoData')
-    || localStorage.getItem('makeSequelData')
-  );
-
   await contentSwitch.ensureLoaded();
   window.addEventListener('scroll', handleScrollToBottom);
 
@@ -1542,9 +1532,7 @@ onMounted(async () => {
 
   nextTick(() => {
     initHeroParts();
-    if (!arrivedWithMakeSource) {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }
+    window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
   // Restore last content tab and content type if coming back from detail page
