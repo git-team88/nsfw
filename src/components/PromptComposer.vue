@@ -1805,6 +1805,7 @@ async function handleStartFrameChange(e: Event) {
     try {
       const uploadedUrl = await uploadImage(file, currentVideoMode.value);
       if (uploadedUrl) {
+        rememberMediaSize(uploadedUrl, file.size);
         startFrameImage.value = uploadedUrl;
       }
     } catch (error) {
@@ -1843,6 +1844,7 @@ async function handleEndFrameChange(e: Event) {
     try {
       const uploadedUrl = await uploadImage(file, currentVideoMode.value);
       if (uploadedUrl) {
+        rememberMediaSize(uploadedUrl, file.size);
         endFrameImage.value = uploadedUrl;
       }
     } catch (error) {
@@ -2033,6 +2035,7 @@ async function handleVideoUpload(e: Event) {
       }
 
       if (uploadedUrl) {
+        rememberMediaSize(uploadedUrl, file.size);
         uploadedVideo.value = uploadedUrl;
         uploadedVideoDuration.value = refDuration;
         lastValidVideoDuration.value = selectedVideoDuration.value;
@@ -2769,11 +2772,64 @@ function stripDanglingRefTags(html: string, keepIds: Set<string>): { html: strin
   return { html: box.innerHTML, text: box.textContent || '' };
 }
 
-function carryPromptToMode(from: VideoMode, to: VideoMode) {
+// 切视频模式时，哪些素材能带过去、哪些得丢掉。
+//
+// 以前是一刀切：换模式就把参考文件、首尾帧、原视频全清掉，只留提示词，
+// 哪怕新模式完全能用（视频修改 15s 的原视频切到视频续写照样被删）。
+// 现在按「目标模式接不接受 + 在目标档位下合不合规」逐个判：
+//   参考图 / 视频 / 音频：首尾帧模式不接受，其余模式按新档位筛一遍，超标的才丢
+//   原视频：只有视频修改 <-> 视频续写之间才留（两边用的是同一个槽），且时长等要合规
+//   首尾帧图：只有首尾帧模式有这个槽，离开它就带不走
+// 角色是漫画 / 漫剧才有的，视频 tab 没有这个入口，不用管
+function previewModeSwitchPlan(from: VideoMode, target: VideoMode) {
+  const nextVersion = pickVideoVersion(
+    selectedNsfwVersion.value,
+    videoVersionsFor(effectiveVideoMode.value, target),
+  );
+  const nextLimitMode = videoLimitModeOf(nextVersion, effectiveVideoMode.value);
+  const acceptsRefs = target !== 'startEndFrames';
+  const kept = acceptsRefs
+    ? filterRefFiles(
+        uploadedImagesVideo.value, uploadedVideosVideo.value, uploadedAudiosVideo.value,
+        refLimitsFor('video', nextLimitMode, target),
+      )
+    : {
+        images: [] as any[], videos: [] as any[], audios: [] as any[],
+        dropped: [...uploadedImagesVideo.value, ...uploadedVideosVideo.value, ...uploadedAudiosVideo.value],
+      };
+  const isEditMode = (m: VideoMode) => m === 'videoModify' || m === 'videoExtend';
+  const keepSource = !!uploadedVideo.value
+    && isEditMode(from) && isEditMode(target)
+    && sourceVideoFitsLimit(uploadedVideo.value, nextLimitMode, target);
+  const dropFrames = from === 'startEndFrames';
+  const droppedCount = kept.dropped.length
+    + (uploadedVideo.value && !keepSource ? 1 : 0)
+    + (dropFrames ? (startFrameImage.value ? 1 : 0) + (endFrameImage.value ? 1 : 0) : 0);
+  return { nextVersion, nextLimitMode, kept, keepSource, droppedCount };
+}
+
+function carryPromptToMode(from: VideoMode, to: VideoMode, plan: ReturnType<typeof previewModeSwitchPlan>) {
   const raw = readVideoPrompt(from);
   const rawHtml = raw.html || (raw.text ? textToHtml(raw.text) : '');
-  const cleaned = rawHtml ? stripRefTags(rawHtml) : { html: '', text: raw.text };
-  videoDrafts.value[to] = { ...emptyVideoModeDraft(), text: cleaned.text, html: cleaned.html };
+  // 留下来的素材，输入框里的引用标签跟着留；被丢掉的才把标签摘掉
+  const keptIds = new Set<string>(
+    [...plan.kept.images, ...plan.kept.videos, ...plan.kept.audios].map((f: any) => String(f.id)),
+  );
+  const cleaned = rawHtml
+    ? stripDanglingRefTags(rawHtml, keptIds)
+    : { html: '', text: raw.text };
+  videoDrafts.value[to] = {
+    ...emptyVideoModeDraft(),
+    text: cleaned.text,
+    html: cleaned.html,
+    images: plan.kept.images,
+    videos: plan.kept.videos,
+    audios: plan.kept.audios,
+    combined: [...plan.kept.images, ...plan.kept.videos, ...plan.kept.audios],
+    sourceVideo: plan.keepSource ? uploadedVideo.value : null,
+    sourceCover: plan.keepSource ? uploadedVideoCover.value : null,
+    sourceDuration: plan.keepSource ? uploadedVideoDuration.value : 0,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -2880,6 +2936,124 @@ function stashCurrentVideoPrompt() {
 }
 
 // 按目标档位预演一遍当前视频参考文件
+
+// ---------------------------------------------------------------------------
+// 首尾帧图 / 原视频的规格测量
+//
+// 这两类素材在状态里只存了一个 URL（做同款回显进来的更是只有 URL），
+// 上传时校验用的 File 早没了，所以切档位时要重新量一遍：
+// 宽高和时长直接用 <img> / <video> 从 URL 读，不需要 CORS；
+// 字节大小读不到，只在本次上传时顺手记一份，回显进来的就不判（和参考文件一个口径）。
+// 量过的按 URL 缓存，切来切去不重复加载。
+// ---------------------------------------------------------------------------
+interface MediaMeta { width: number; height: number; duration: number; size?: number }
+const mediaMetaCache = new Map<string, MediaMeta>();
+
+function rememberMediaSize(url: string, size: number) {
+  if (!url || !size) return;
+  const m = mediaMetaCache.get(url) || { width: 0, height: 0, duration: 0 };
+  mediaMetaCache.set(url, { ...m, size });
+}
+
+function ensureImageMeta(url: string) {
+  if (!url) return;
+  const cached = mediaMetaCache.get(url);
+  if (cached && cached.width) return;
+  const img = new Image();
+  img.onload = () => {
+    const m = mediaMetaCache.get(url) || { width: 0, height: 0, duration: 0 };
+    mediaMetaCache.set(url, { ...m, width: img.naturalWidth, height: img.naturalHeight });
+  };
+  img.onerror = () => { /* 量不到就按「不知道」处理，不误删 */ };
+  img.src = url;
+}
+
+function ensureVideoMeta(url: string) {
+  if (!url) return;
+  const cached = mediaMetaCache.get(url);
+  if (cached && cached.width && cached.duration) return;
+  const v = document.createElement('video');
+  v.preload = 'metadata';
+  v.onloadedmetadata = () => {
+    const m = mediaMetaCache.get(url) || { width: 0, height: 0, duration: 0 };
+    mediaMetaCache.set(url, {
+      ...m,
+      width: v.videoWidth,
+      height: v.videoHeight,
+      duration: Number.isFinite(v.duration) ? v.duration : 0,
+    });
+  };
+  v.onerror = () => { /* 同上 */ };
+  v.src = url;
+}
+
+// URL 一变就去量（上传、做同款回显、切模式取草稿都会走到）
+watch([startFrameImage, endFrameImage], ([a, b]) => {
+  if (a) ensureImageMeta(a);
+  if (b) ensureImageMeta(b);
+});
+watch(uploadedVideo, (url) => { if (url) ensureVideoMeta(url); });
+
+/** 这张首尾帧图在目标档位下还合规吗。量不到的一律当合规，宁可不删 */
+function frameImageFitsLimit(url: string | null, limitMode: string): boolean {
+  if (!url) return true;
+  const meta = mediaMetaCache.get(url);
+  if (!meta) return true;
+  const pf = VIDEO_PROFILES[limitMode] || VIDEO_PROFILES.normal;
+  if (meta.size && meta.size > pf.imageMaxSize) return false;
+  if (meta.width && meta.height) {
+    const ratio = meta.width / meta.height;
+    if (ratio < pf.ratioMin || ratio > pf.ratioMax) return false;
+    if (meta.width < pf.dimMin || meta.width > pf.dimMax) return false;
+    if (meta.height < pf.dimMin || meta.height > pf.dimMax) return false;
+  }
+  return true;
+}
+
+/** 视频修改 / 视频续写的原视频在目标档位下还合规吗。口径和上传时那套一致 */
+function sourceVideoFitsLimit(url: string | null, limitMode: string, videoMode: VideoMode): boolean {
+  if (!url) return true;
+  const pf = VIDEO_PROFILES[limitMode] || VIDEO_PROFILES.normal;
+  const meta = mediaMetaCache.get(url);
+  if (meta?.size && meta.size > pf.videoMaxSize) return false;
+
+  // 时长：上传时记过一份，没有就用量出来的
+  const dur = Number(uploadedVideoDuration.value) || meta?.duration || 0;
+  if (dur > 0) {
+    const min = videoMode === 'videoExtend' ? pf.extendMinSeconds : pf.modifyMinSeconds;
+    if (dur < min || dur > pf.refVideoMaxSeconds) return false;
+  }
+  if (meta?.width && meta.height) {
+    const ratio = meta.width / meta.height;
+    if (ratio < pf.ratioMin || ratio > pf.ratioMax) return false;
+    if (meta.width < pf.dimMin || meta.width > pf.dimMax) return false;
+    if (meta.height < pf.dimMin || meta.height > pf.dimMax) return false;
+    const area = meta.width * meta.height;
+    if (pf.areaMax > 0 && (area < pf.areaMin || area > pf.areaMax)) return false;
+  }
+  return true;
+}
+
+/** 切到目标档位时，首尾帧图 / 原视频里哪些要被丢掉 */
+function previewFrameSourceDropsFor(limitMode: string) {
+  const mode = currentVideoMode2();
+  if (mode === 'startEndFrames') {
+    return {
+      start: !frameImageFitsLimit(startFrameImage.value, limitMode),
+      end: !frameImageFitsLimit(endFrameImage.value, limitMode),
+      source: false,
+    };
+  }
+  if (mode === 'videoModify' || mode === 'videoExtend') {
+    return {
+      start: false,
+      end: false,
+      source: !sourceVideoFitsLimit(uploadedVideo.value, limitMode, mode),
+    };
+  }
+  return { start: false, end: false, source: false };
+}
+
 function previewVideoRefsFor(nextLimitMode: string) {
   return filterRefFiles(
     uploadedImagesVideo.value, uploadedVideosVideo.value, uploadedAudiosVideo.value,
@@ -2930,15 +3104,6 @@ function resetVideoParams() {
 // 首尾帧/视频修改/视频续写 三者互切一律回默认参数。
 // 当前模式里挂着的参考文件数量（含角色、首尾帧、原视频）。
 // 切模式一律不带走，有内容就先问一句，别让用户一点就丢。
-function currentVideoRefCount() {
-  return uploadedImagesVideo.value.length
-    + uploadedVideosVideo.value.length
-    + uploadedAudiosVideo.value.length
-    + selectedCharactersVideo.value.length
-    + (startFrameImage.value ? 1 : 0)
-    + (endFrameImage.value ? 1 : 0)
-    + (uploadedVideo.value ? 1 : 0);
-}
 
 function switchVideoMultimodal(next: string) {
   showVideoMultimodalDropdown.value = false;
@@ -2946,8 +3111,8 @@ function switchVideoMultimodal(next: string) {
   const target = next as VideoMode;
   if (!VIDEO_MODES.includes(target) || target === from) return;
 
-  // 有参考文件要被丢弃就先确认；取消则留在当前模式，内容原样不动
-  if (currentVideoRefCount() > 0) {
+  // 只有确实有素材要被丢掉时才确认；能整个带过去的直接切，不打扰用户
+  if (previewModeSwitchPlan(from, target).droppedCount > 0) {
     pendingModeSwitchAction.value = () => doSwitchVideoMultimodal(from, target);
     modeSwitchWarningVariant.value = 'mode';
     showModeSwitchFileWarning.value = true;
@@ -2958,9 +3123,10 @@ function switchVideoMultimodal(next: string) {
 
 function doSwitchVideoMultimodal(from: VideoMode, target: VideoMode) {
   const prevLimitMode = videoLimitMode.value;
-  // 参考文件切模式就丢，但把当前模式的分辨率 / 比例 / 时长记一份，切回来能还原
+  // 把当前模式的分辨率 / 比例 / 时长记一份，切回来能还原
   stashVideoModeParams(from);
-  carryPromptToMode(from, target);
+  const plan = previewModeSwitchPlan(from, target);
+  carryPromptToMode(from, target, plan);
   // 参数怎么带：
   //   多模态 -> 其他模式：沿用当前的分辨率 / 比例 / 时长，新模式用不了的由 migrateVideoParams 回默认；
   //   首尾帧 / 视频编辑 / 视频续写之间：一律回默认值。
@@ -2969,10 +3135,7 @@ function doSwitchVideoMultimodal(from: VideoMode, target: VideoMode) {
   selectedVideoMultimodal.value = target;
   lastVideoMode.value = target;
   // 目标模式不支持当前版本（如切到视频修改，普通模式下只有超级版）就按 fast → enhanced → super 往后落
-  selectedNsfwVersion.value = pickVideoVersion(
-    selectedNsfwVersion.value,
-    videoVersionsFor(effectiveVideoMode.value, target),
-  );
+  selectedNsfwVersion.value = plan.nextVersion;
   applyVideoDraft(target);
   if (!keepParamsFromCurrent) resetVideoParams();
 
@@ -3002,6 +3165,15 @@ function applyVideoLimitModeChange(prevLimitMode: string) {
     return;
   }
   stashCurrentVideoPrompt();
+  // 首尾帧图 / 原视频在新档位下不合规的，跟参考文件一起丢掉
+  const frameSourceDrops = previewFrameSourceDropsFor(videoLimitMode.value);
+  if (frameSourceDrops.start) startFrameImage.value = null;
+  if (frameSourceDrops.end) endFrameImage.value = null;
+  if (frameSourceDrops.source) {
+    uploadedVideo.value = null;
+    uploadedVideoCover.value = null;
+    uploadedVideoDuration.value = 0;
+  }
   const kept = previewVideoRefsFor(videoLimitMode.value);
   applyVideoRefFiles(kept);
 
@@ -3074,7 +3246,10 @@ function clampVideoPromptsToLimit() {
 
 // 切档位前先预演：有参考文件留不下就先问一句，确认后才真正切；取消则什么都不变。
 function requestVideoLimitModeChange(nextLimitMode: string, apply: () => void) {
-  if (nextLimitMode !== videoLimitMode.value && previewVideoRefsFor(nextLimitMode).dropped.length > 0) {
+  const frameSourceDrops = previewFrameSourceDropsFor(nextLimitMode);
+  const hasDrop = previewVideoRefsFor(nextLimitMode).dropped.length > 0
+    || frameSourceDrops.start || frameSourceDrops.end || frameSourceDrops.source;
+  if (nextLimitMode !== videoLimitMode.value && hasDrop) {
     pendingModeSwitchAction.value = apply;
     // 首尾帧模式下能被丢掉的只有图片，文案单独一条
     modeSwitchWarningVariant.value = currentVideoMode2() === 'startEndFrames' ? 'images' : 'files';
