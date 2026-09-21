@@ -54,11 +54,8 @@
             </template>
 
             <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+              <!-- 漫剧（type 3）的「做同款」只放右侧合集信息栏里，左侧视频右上角不再显示 -->
               <div class="make-actions">
-                <div class="make-similar-btn" v-if="detail.session_id && detail.type != '5'" @click.stop="goMakeSimilar(detail.session_id)">
-                  <img :src="makeIcon" alt="" class="make-icon" />
-                  <span>{{ t('home.makeSimilar') }}</span>
-                </div>
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30" @click.stop="goMakeSimilarVideo()">
                   <img :src="makeIcon" alt="" class="make-icon" />
                   <span>{{ t('home.makeSimilarVideo') }}</span>
