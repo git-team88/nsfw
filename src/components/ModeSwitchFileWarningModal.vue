@@ -2,7 +2,7 @@
   <div v-if="visible" class="mode-switch-warning-modal" @click="$emit('cancel')">
     <div class="mode-switch-warning-content" @click.stop>
       <div class="modal-body">
-        <p class="modal-message">{{ t('home.modeSwitch.fileNotSupported') }}</p>
+        <p class="modal-message">{{ t(messageKey) }}</p>
       </div>
       <div class="modal-footer">
         <button class="cancel-btn" @click="$emit('cancel')">{{ t('cancel') }}</button>
@@ -13,11 +13,23 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
-defineProps<{
+// variant 决定弹哪条文案：
+//   files  切模型版本，多模态 / 视频编辑 / 视频续写（参考文件 + 引用）
+//   images 切模型版本，首尾帧（只有图片）
+//   mode   切视频模式（参考文件不跨模式带）
+const props = withDefaults(defineProps<{
   visible: boolean;
-}>();
+  variant?: 'files' | 'images' | 'mode';
+}>(), { variant: 'files' });
+
+const messageKey = computed(() => {
+  if (props.variant === 'images') return 'home.modeSwitch.imageNotSupported';
+  if (props.variant === 'mode') return 'home.modeSwitch.modeChangeFiles';
+  return 'home.modeSwitch.fileNotSupported';
+});
 
 defineEmits(["cancel", "confirm"]);
 const { t } = useI18n();

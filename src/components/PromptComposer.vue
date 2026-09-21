@@ -1144,6 +1144,7 @@
 
     <ModeSwitchFileWarningModal
       :visible="showModeSwitchFileWarning"
+      :variant="modeSwitchWarningVariant"
       @cancel="cancelModeSwitchFileWarning"
       @confirm="confirmModeSwitchFileWarning"
     />
@@ -1245,7 +1246,7 @@ import audioIcon from "@/assets/images/home/audio.png";
 import optimizePromptOn from "@/assets/images/project/opne.png";
 import optimizePromptOff from "@/assets/images/project/close.png";
 import {
-  MB, VIDEO_PROFILES, profileOf, videoVersionsFor, pickVideoVersion, defaultVideoVersionFor,
+  MB, VIDEO_PROFILES, profileOf, videoVersionsFor, pickVideoVersion,
   videoLimitModeOf, toModelType, fromModelType, DEFAULT_VIDEO_PROFILE, DEFAULT_VIDEO_VERSION,
   clampPromptHtml,
 } from '@/util/videoProfile';
@@ -2948,6 +2949,7 @@ function switchVideoMultimodal(next: string) {
   // 有参考文件要被丢弃就先确认；取消则留在当前模式，内容原样不动
   if (currentVideoRefCount() > 0) {
     pendingModeSwitchAction.value = () => doSwitchVideoMultimodal(from, target);
+    modeSwitchWarningVariant.value = 'mode';
     showModeSwitchFileWarning.value = true;
     return;
   }
@@ -2959,6 +2961,10 @@ function doSwitchVideoMultimodal(from: VideoMode, target: VideoMode) {
   // 参考文件切模式就丢，但把当前模式的分辨率 / 比例 / 时长记一份，切回来能还原
   stashVideoModeParams(from);
   carryPromptToMode(from, target);
+  // 参数怎么带：
+  //   多模态 -> 其他模式：沿用当前的分辨率 / 比例 / 时长，新模式用不了的由 migrateVideoParams 回默认；
+  //   首尾帧 / 视频编辑 / 视频续写之间：一律回默认值。
+  const keepParamsFromCurrent = from === 'multimodal';
   clearVideoMakeFlags();
   selectedVideoMultimodal.value = target;
   lastVideoMode.value = target;
@@ -2968,13 +2974,11 @@ function doSwitchVideoMultimodal(from: VideoMode, target: VideoMode) {
     videoVersionsFor(effectiveVideoMode.value, target),
   );
   applyVideoDraft(target);
-  applyVideoModeParams(target);
+  if (!keepParamsFromCurrent) resetVideoParams();
 
-  // 档位跟着版本变了就走统一的档位变更流程（文件按新档位筛掉超标的，参数回默认），
-  // 之后再把目标模式自己存过的那份参数盖回来。
+  // 档位跟着版本变了就走统一的档位变更流程（文件按新档位筛掉超标的，参数回默认）
   if (videoLimitMode.value !== prevLimitMode) {
     applyVideoLimitModeChange(prevLimitMode);
-    applyVideoModeParams(target);
   }
   // 分辨率 / 比例 / 时长：在目标档位里能用的就沿用，不能用的回该档位默认值
   migrateVideoParams();
@@ -3072,6 +3076,8 @@ function clampVideoPromptsToLimit() {
 function requestVideoLimitModeChange(nextLimitMode: string, apply: () => void) {
   if (nextLimitMode !== videoLimitMode.value && previewVideoRefsFor(nextLimitMode).dropped.length > 0) {
     pendingModeSwitchAction.value = apply;
+    // 首尾帧模式下能被丢掉的只有图片，文案单独一条
+    modeSwitchWarningVariant.value = currentVideoMode2() === 'startEndFrames' ? 'images' : 'files';
     showModeSwitchFileWarning.value = true;
     return;
   }
@@ -3205,6 +3211,8 @@ const showUnlimitedModal = ref(false);
 const showUnderageNoBirthdayModal = ref(false);
 const pendingModeType = ref('video');
 const showModeSwitchFileWarning = ref(false);
+// 这次弹窗是哪种场景（见 ModeSwitchFileWarningModal 的 variant）
+const modeSwitchWarningVariant = ref<'files' | 'images' | 'mode'>('files');
 const showCharacterModal = ref(false);
 const showStyleModal = ref(false);
 const showVideoSettingsModal = ref(false);
@@ -3525,8 +3533,13 @@ const switchVideoMode = (mode: string, index: number) => {
     if (hasConfirmed) {
       // 四个模式在加强版下都可用，切 NSFW 不改变当前模式
       const prevLimitMode = videoLimitMode.value;
-      const nextVersion = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
-      requestVideoLimitModeChange(nextVersion === 'fast' ? 'fast' : (nextVersion === 'enhanced' ? 'unlimited' : 'normal'), () => {
+      // 切 NSFW 不动档位：当前版本在无限制模式下还能选就保持不变（参数、参考文件都不受影响），
+      // 选不了了才按 加强版 -> 超级版 -> 极速版 回落
+      const nextVersion = pickVideoVersion(
+        selectedNsfwVersion.value,
+        videoVersionsFor('unlimited', selectedVideoMultimodal.value),
+      );
+      requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
         stashCurrentVideoPrompt();
         currentVideoMode.value = 'unlimited';
         selectedNsfwVersion.value = nextVersion;
@@ -3541,8 +3554,11 @@ const switchVideoMode = (mode: string, index: number) => {
   } else {
     const prevLimitMode = videoLimitMode.value;
     showVideoModeDropdown.value = false;
-    // 普通模式没有加强版，落回极速；视频修改/续写下只有超级版
-    const nextVersion = defaultVideoVersionFor('normal', selectedVideoMultimodal.value);
+    // 切回普通同样保持当前版本：普通模式下选不了的（加强版）才回落
+    const nextVersion = pickVideoVersion(
+      selectedNsfwVersion.value,
+      videoVersionsFor('normal', selectedVideoMultimodal.value),
+    );
     requestVideoLimitModeChange(nextVersion === 'fast' ? 'fast' : 'normal', () => {
       stashCurrentVideoPrompt();
       currentVideoMode.value = 'normal';
@@ -3698,13 +3714,26 @@ const switchPhotoMode = (mode: string, index: number) => {
 
 const confirmUnlimitedMode = () => {
   if (contentType.value === 'video') {
-    currentVideoMode.value = 'unlimited';
-    selectedNsfwVersion.value = defaultVideoVersionFor('unlimited', selectedVideoMultimodal.value);
-    enableVideoOptimizePrompt.value = false;
-    selectedVideoDuration.value = videoProfile.value.defaultDuration;
-    lastValidVideoDuration.value = selectedVideoDuration.value;
-    resetVideoInputs();
-  } else if (contentType.value === 'comic') {
+    showUnlimitedModal.value = false;
+    // 首次开 NSFW 会先弹这个说明框，确认后要和 switchVideoMode 走同一条路：
+    // 提示词保留、参数不动，只按新档位筛掉超标的参考文件。不能再全清。
+    const prevLimitMode = videoLimitMode.value;
+    // 当前版本在无限制模式下还能选就不动，选不了了才回落
+    const nextVersion = pickVideoVersion(
+      selectedNsfwVersion.value,
+      videoVersionsFor('unlimited', selectedVideoMultimodal.value),
+    );
+    requestVideoLimitModeChange(videoLimitModeOf(nextVersion, 'unlimited'), () => {
+      stashCurrentVideoPrompt();
+      currentVideoMode.value = 'unlimited';
+      selectedNsfwVersion.value = nextVersion;
+      enableVideoOptimizePrompt.value = false;
+      applyVideoLimitModeChange(prevLimitMode);
+      restoreEditableInput('video');
+    });
+    return;
+  }
+  if (contentType.value === 'comic') {
     currentComicMode.value = 'unlimited';
     closeComicInputDropdowns();
   } else if (contentType.value === 'novel') {

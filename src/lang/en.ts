@@ -2053,7 +2053,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
      makeSequelSubscribeGo: "Get Creation Access",
      makeVideo: "Make Video",
      modeSwitch: {
-       fileNotSupported: "Some reference files do not meet the requirements of the model version you are switching to. Those images will be deleted after switching. Switch anyway?"
+       // 切模型版本：多模态 / 视频编辑 / 视频续写，会连引用标签一起删
+       fileNotSupported: "Some reference files do not meet the requirements of the model version you are switching to. Those files and their references will be deleted after switching. Switch anyway?",
+       // 切模型版本：首尾帧，只有图片
+       imageNotSupported: "Some images do not meet the requirements of the model version you are switching to. Those images will be deleted after switching. Switch anyway?",
+       // 切视频模式：参考文件本来就不跨模式带，确认后清掉
+       modeChangeFiles: "The reference files you uploaded and their references will be deleted after switching modes. Switch anyway?",
      },
      contentType: {
        all: "All",
