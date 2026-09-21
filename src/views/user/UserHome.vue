@@ -458,10 +458,19 @@
       @go-subscribe="goMakeSequelSubscribe"
       @close="showMakeSequelSubscribeModal = false"
     />
+    <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
+    <PromptComposer
+      ref="composerRef"
+      placement="bottom"
+      @loading-change="composerLoading = $event"
+    />
+    <!-- 做同款 / 做续集的来源数据请求中 -->
+    <UploadMask :visible="composerLoading" :text="t('home.loading')" />
   </div>
 </template>
 
 <script setup lang="ts" name="UserHome">
+import PromptComposer from '@/components/PromptComposer.vue';
 import { scaleFiatPrice } from '@/util/currency';
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -494,6 +503,10 @@ import { useRoute } from "vue-router";
 import api from "@/api/index";
 import { baseUrl } from "@/util/config";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
+
+const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
+// 来源数据请求中：输入框先不显示，接口回来才露出
+const composerLoading = ref(false);
 import { eventBus } from "@/utils/eventBus";
 import { trackHomeView } from "@/util/viewTracker";
 
@@ -2060,7 +2073,8 @@ const handleMakeSimilar = (collection: any) => {
     toast(t('home.makeSimilarChinaNotSupported'));
     return;
   }
-  router.push({ path: '/', query: { make: sessionId } });
+  // 在本页底部展开输入框回填，不再跳首页
+  composerRef.value?.applyMakeSame(sessionId);
 };
 
 const handleMakeSimilarVideo = async (collection: any) => {
@@ -2105,8 +2119,7 @@ const handleMakeSimilarVideo = async (collection: any) => {
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
     const videoDuration = Number(data.duration) || 0;
 
-    localStorage.setItem('makeSimilarVideoData', JSON.stringify({ videoUrl, cover, isNsfw, duration: videoDuration, postId: data.id || collection.id }));
-    router.push({ path: '/' });
+    await composerRef.value?.applyMakeSimilarVideoData({ videoUrl, cover, isNsfw, duration: videoDuration, postId: data.id || collection.id });
   } catch (error) {
     console.error('Error fetching post detail for make similar video:', error);
     toast(t('fail'));
@@ -2153,10 +2166,9 @@ const handleMakeSequelFromList = async (collection: any) => {
     const cover = data.cover || '';
     const isNsfw = data.is_nsfw == 1 || data.is_nsfw == '1';
     const videoDuration = Number(data.duration) || 0;
-    localStorage.setItem('makeSequelData', JSON.stringify({
+    await composerRef.value?.applyMakeSequelData({
       videoUrl, cover, type: data.type, videoExtend: true, postId: data.id || collection.id, isNsfw, duration: videoDuration
-    }));
-    router.push({ path: '/' });
+    });
   } catch (error) {
     console.error('Error fetching post detail for make sequel:', error);
     toast(t('fail'));
