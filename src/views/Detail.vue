@@ -2637,9 +2637,7 @@ async function fetchDetail(newId: number) {
       body: data
     }).then(r => r.json());
 
-    const subtitlePromise = isStandaloneType.value ? Promise.resolve(null) : api.getSubtitlesPublic({ post_id: newId }).catch(() => null);
-
-    const [res, subRes] = await Promise.all([detailPromise, subtitlePromise]);
+    const res = await detailPromise;
 
     if (res.code == 0 || res.code == 200) {
       const data = res.data.post || res.data;
@@ -2711,15 +2709,11 @@ async function fetchDetail(newId: number) {
         detail.value.type
       );
 
-      // 字幕。不是漫剧、或者这条没有字幕，都要显式清空 ——
-      // 否则从有字幕的作品翻到没字幕的作品，上一条的字幕还留在开关里。
-      const subOk = subRes && ((subRes as any).code === 0 || (subRes as any).code === 200);
-      applySubtitleList(
-        detail.value.type === '3' && subOk
-          ? (subRes as any).data?.subtitles || (subRes as any).data || []
-          : [],
-        newId,
-      );
+      // 字幕：等详情回来知道类型了再拉，只有漫剧（type 3）才请求 getSubtitlesPublic；
+      // 以前是和详情并行发的，那时类型还是上一条 / 初始值，漫画、小说也会白请求一次。
+      // 不是漫剧、或者这条没有字幕，loadSubtitles 里都会显式清空，
+      // 不会把上一条的字幕留在开关里。
+      loadSubtitles(newId);
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
