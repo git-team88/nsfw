@@ -1990,9 +1990,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       placeholderPhoto: "输入一句，画面诞生。例：清晨的古街，一只猫正坐在石灯笼上打盹。",
       placeholderVideo: "输入一句，视界展开。例：细雨霏霏，他们共撑一伞，樱花树下缓缓行。",
       placeholderMakeSimilar: "替换角色或修改情节拍同款",
-      placeholderMakeSequel: "请输入任意想法即可生成视频后续情节，例如“视频1，男人微笑着走近女人并亲吻她”",
-      placeholderMakeVideo: "描述视频画面，根据参考图生成视频",
-      placeholderMakeSimilarVideo: "替换角色：只需点击下方“参考”按钮上传参考图，同时输入替换要求，例如“视频1中的左边的男人换成图1中的人物”。情节修改：只需在输入框中输入任意想法即可，例如“视频1的剧情改成男人和女人拥抱在一起”"
+      placeholderMakeSequel: "描述后续剧情",
+      placeholderMakeVideo: "参考图片1，描述你想要的视频内容",
+      placeholderMakeSimilarVideo: "上传参考图，告诉我用图片1替换视频1里哪个角色"
     },
     img: '图片',
     unreferencedFiles: {
@@ -2287,6 +2287,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     permission: "权限范围",
     permPublic: "公开",
     permPartial: "订阅用户可见",
+    permPaid: "付费用户可见",
     permPrivate: "仅自己可见",
     imgtip: "(第一张图片公开)",
     articleTip: "(前1000字公开)",
@@ -2628,6 +2629,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     subscribed: "已订阅",
     unsubscribed: "已取消订阅",
     subscribe: "订阅",
+    paid: "付费",
     subscribeToView: "订阅用户可查看完整内容",
     updatedToEpisode: "更新至第 {count} 集",
     readToEpisode: "看至第 {count} 集",
@@ -3029,6 +3031,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     tabUnlocked: "漫剧解锁",
     viewDetail: "查看详情",
     price: "价格",
+    priceHint: "有章节权限设为付费可见时生效",
     fullSeries: "全集",
     priceFree: "免费",
     createCollection: "创建合集",
@@ -3310,6 +3313,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     statusPublished: "已发布",
     statusDraft: "草稿",
     statusSubscribed: "订阅",
+    statusPaid: "付费",
     statusPrivate: "仅自己可见",
     deleteChapterConfirm: {
       title: "确认删除",

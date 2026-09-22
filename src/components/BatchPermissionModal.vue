@@ -148,7 +148,7 @@ function getAccessRightsPerm(chapter: any): string {
 function getAccessRightsText(chapter: any): string {
   const perm = getAccessRightsPerm(chapter);
   if (perm == 'private') return t('submit.permPrivate');
-  if (perm == 'partial') return t('submit.permPartial');
+  if (perm == 'partial') return t(props.collectionType === '3' ? 'submit.permPaid' : 'submit.permPartial');
   return t('submit.permPublic');
 }
 

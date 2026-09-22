@@ -820,7 +820,8 @@ function getPermClass(accessRights?: string): string {
 }
 
 function getPermText(accessRights?: string): string {
-  if (accessRights == '2') return t('collectionDetail.statusSubscribed');
+  // 漫剧合集的付费章节标「付费」，其余类型仍然是「订阅」
+  if (accessRights == '2') return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
   if (accessRights == '3') return t('submit.permPrivate');
   return t('submit.permPublic');
 }

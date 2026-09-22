@@ -48,7 +48,7 @@
 
         <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
         <div class="form-group" v-if="showPriceRow">
-          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}</label>
+          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}<span class="char-counter">({{ t('collection.priceHint') }})</span></label>
           <div class="price-options">
             <div
               class="price-option"

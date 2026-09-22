@@ -1372,7 +1372,9 @@ $pinkopacity: rgba(255,79,154,0.12);
     background: #1a1a1a;
     box-shadow: none;
     cursor: pointer;
-    min-width: 130px;
+    // 按内容宽度显示，别定最小宽：拍同款 / 做续集时比例、时长两段是藏起来的，
+    // 只剩「720P | 图标」，130px 的下限会在右边空出一截
+    min-width: 0;
 
     span {
       font-size: 13px;

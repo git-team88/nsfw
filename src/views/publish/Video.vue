@@ -326,6 +326,13 @@
                             <div class="collection-price" v-if="collectionPriceText">
                               <span class="price-amount">{{ collectionPriceText }}</span>
                               <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                              <!-- 价格只对设为「付费用户可见」的章节生效，和上面「权限范围」的说明图标同一套样式 -->
+                              <div class="info-icon price-info-icon" @mouseover="adjustTooltipPosition">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <div class="info-tooltip">
+                                  <div class="tooltip-content">{{ t('collection.priceHint') }}</div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
@@ -509,6 +516,13 @@
                           <div class="collection-price" v-if="collectionPriceText">
                             <span class="price-amount">{{ collectionPriceText }}</span>
                             <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                            <!-- 价格只对设为「付费用户可见」的章节生效，和上面「权限范围」的说明图标同一套样式 -->
+                            <div class="info-icon price-info-icon" @mouseover="adjustTooltipPosition">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                              <div class="info-tooltip">
+                                <div class="tooltip-content">{{ t('collection.priceHint') }}</div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
@@ -1009,7 +1023,8 @@ async function handleCollectionLanguageChange(key: string) {
 
 const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
-  { key: "partial", labelKey: "submit.permPartial" },
+  // 漫剧的「订阅用户可见」对外叫「付费用户可见」（值还是 partial / access_rights 2，只是文案）
+  { key: "partial", labelKey: "submit.permPaid" },
   { key: "private", labelKey: "submit.permPrivate" },
 ];
 
@@ -1469,7 +1484,7 @@ const showBatchChapterDropdown = ref(false);
 
 const batchPermOptions = [
   { key: 'public', labelKey: 'submit.permPublic' },
-  { key: 'partial', labelKey: 'submit.permPartial' },
+  { key: 'partial', labelKey: 'submit.permPaid' },
   { key: 'private', labelKey: 'submit.permPrivate' },
 ];
 
@@ -4492,6 +4507,13 @@ onBeforeUnmount(() => {
 .collection-price {
   display: inline-flex;
   align-items: baseline;
+
+  /* 价格后面的说明图标：和文字垂直居中，间距压小一点 */
+  .price-info-icon {
+    align-self: center;
+    margin-left: 4px;
+    svg { width: 16px; height: 16px; }
+  }
   flex-shrink: 0;
   white-space: nowrap;
   line-height: 1;

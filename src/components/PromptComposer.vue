@@ -1303,6 +1303,9 @@ const emit = defineEmits<{
   (e: 'height-change', height: number): void;
   /** 正在请求做同款 / 做续集的来源数据，宿主页面可以据此显示 loading */
   (e: 'loading-change', loading: boolean): void;
+  /** 组件自带的视频 / 音频预览弹窗开了或关了。宿主页面有自己的播放器的话（详情页左侧），拿它去暂停 / 恢复 */
+  (e: 'media-modal-open'): void;
+  (e: 'media-modal-close'): void;
 }>();
 
 const isPanelPlacement = computed(() => props.placement === 'panel');
@@ -1349,10 +1352,10 @@ const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 
 // 预览弹窗（组件自带一份，详情页里也要能用）
 const showVideoModal = ref(false);
 const playingVideoUrl = ref('');
-const closeVideoModal = () => { showVideoModal.value = false; playingVideoUrl.value = ''; };
+const closeVideoModal = () => { showVideoModal.value = false; playingVideoUrl.value = ''; emit('media-modal-close'); };
 const showAudioModal = ref(false);
 const playingAudioUrl = ref('');
-const closeAudioModal = () => { showAudioModal.value = false; playingAudioUrl.value = ''; };
+const closeAudioModal = () => { showAudioModal.value = false; playingAudioUrl.value = ''; emit('media-modal-close'); };
 const showImageZoomModal = ref(false);
 const zoomedImageUrl = ref('');
 const closeImageZoomModal = () => { showImageZoomModal.value = false; zoomedImageUrl.value = ''; };
@@ -1453,9 +1456,11 @@ const playUploadedVideo = (item: any) => {
   if (item.type === 'video' && (item.url || item.videoUrl || item.image)) {
     playingVideoUrl.value = item.url || item.videoUrl || item.image;
     showVideoModal.value = true;
+    emit('media-modal-open');
   } else if (item.url) {
     playingVideoUrl.value = item.url;
     showVideoModal.value = true;
+    emit('media-modal-open');
   }
 };
 
@@ -1464,6 +1469,7 @@ const playAudio = (item: any) => {
   if (item.image || item.url) {
     playingAudioUrl.value = item.image || item.url;
     showAudioModal.value = true;
+    emit('media-modal-open');
   }
 };
 

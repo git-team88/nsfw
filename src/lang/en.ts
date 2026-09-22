@@ -1884,9 +1884,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
       placeholderPhoto: "One line in. A photo out. e.g. A cat napping on a stone lantern, in the quiet of a misty morning street.",
       placeholderVideo: "One line in. A world unfolds. e.g. They share one umbrella under the cherry blossoms, rain falling soft between them.",
       placeholderMakeSimilar: "Replace characters or modify the plot to make a similar video",
-      placeholderMakeSequel: "Type any idea to continue the video — e.g. “Video 1, the man walks up to the woman with a smile and kisses her”",
-      placeholderMakeVideo: "Describe the video scene, generate a video based on the reference image",
-      placeholderMakeSimilarVideo: "Replace a character: click the “Reference” button below to upload a reference image and describe the swap — e.g. “Replace the man on the left in Video 1 with the person in Image 1”. Change the plot: just type any idea in the input box — e.g. “Change the plot of Video 1 so the man and woman hug”"
+      placeholderMakeSequel: "Describe what happens next",
+      placeholderMakeVideo: "Using Image 1 as reference, describe the video you want",
+      placeholderMakeSimilarVideo: "Upload a reference image and tell me which character in Video 1 to replace with Image 1"
     },
     img: 'Image',
     unreferencedFiles: {
@@ -2182,6 +2182,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     permission: "Permission Range",
     permPublic: "Public",
     permPartial: "Subscribers Only",
+    permPaid: "Paid Users Only",
     permPrivate: "Self Visible",
     imgtip: "(First image public)",
     articleTip: "(First 1000 words public)",
@@ -2521,6 +2522,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     subscribed: "Subscribed",
     unsubscribed: "Unsubscribed",
     subscribe: "Subscribe",
+    paid: "Paid",
     subscribeToView: "Subscribe to view full content",
     updatedToEpisode: "Updated to episode {count}",
     readToEpisode: "Read to episode {count}",
@@ -2920,6 +2922,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     tabUnlocked: "Unlocked",
     viewDetail: "View details",
     price: "Price",
+    priceHint: "Applies when a chapter's visibility is set to paid users only",
     fullSeries: "Full Series",
     priceFree: "Free",
     createCollection: "Create Collection",
@@ -3201,6 +3204,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusPublished: "Published",
     statusDraft: "Draft",
     statusSubscribed: "Subscribed",
+    statusPaid: "Paid",
     statusPrivate: "Private",
     deleteChapterConfirm: {
       title: "Confirm Delete",

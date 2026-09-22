@@ -269,8 +269,10 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   // 图片 / 视频（type 4、5）用上下滑动切作品：纵向手势交给我们自己处理，
   // 否则触摸屏上浏览器会把它判成页面滚动，直接派发 pointercancel 把手势掐掉。
   // 横向仍然留给浏览器（图片左右切换）。漫画 / 短剧不加这个类，保持原生上下滚动。
+  // 上下拖切作品已经关掉（只走箭头），不再需要把垂直手势从浏览器手里抢过来，
+  // 留着 pan-x 会让触屏上这块区域没法正常上下滚页面
   &.swipe-nav {
-    touch-action: pan-x;
+    touch-action: auto;
   }
 
   background: #1F1F21;
@@ -281,13 +283,6 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   overflow: hidden;
   transition: transform 0.3s ease;
 
-  &.slide-out {
-    transform: translateX(-100%);
-  }
-
-  &.slide-in {
-    transform: translateX(0);
-  }
 
   &.scroll-panel {
     align-items: flex-start;
@@ -1068,7 +1063,9 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
   &.at-bottom {
     top: auto;
     left: auto;
-    bottom: 30px;
+    // 视频的播放控制条贴在底部（bottom: 12px，含进度条约 50px 高），
+    // 箭头得抬到它上面，否则和进度条 / 全屏按钮叠在一起
+    bottom: 84px;
     right: 30px;
     transform: none;
   }

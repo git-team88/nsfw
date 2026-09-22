@@ -5,10 +5,11 @@
         <span></span>
       </div>
 
-      <UploadMask :visible="isLoading" :text="loadText"></UploadMask>
+      <!-- 上 / 下一个作品切换时不弹全屏加载遮罩：滑动本身就是加载反馈，遮罩会把动效整个盖住 -->
+      <UploadMask :visible="isLoading && !slideLoading" :text="loadText"></UploadMask>
 
       <div class="main-container" :class="{ 'isRightPanelHidden': isRightPanelHidden }">
-        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'slide-out': isSliding, 'slide-in': isSlidingIn, 'type-1': detail?.type == '1', 'swipe-nav': isStandaloneType && !isCollectionMode, 'composer-open': composerOpen, 'composer-overlay': composerOpen && isOverlayComposerType }" :style="composerOpen ? { '--composer-h': composerHeight + 'px' } : undefined" @wheel="handleLeftPanelWheel" @pointerdown="handleLeftPanelPointerDown">
+        <div class="left-panel" :class="{ 'scroll-panel': detail?.type == '1' || detail?.type == '3' || detail?.type == '5', 'type-1': detail?.type == '1', 'swipe-nav': isStandaloneType && !isCollectionMode, 'composer-open': composerOpen, 'composer-overlay': composerOpen && isOverlayComposerType }" :style="composerOpen ? { '--composer-h': composerHeight + 'px' } : undefined" @wheel="handleLeftPanelWheel" @pointerdown="handleLeftPanelPointerDown">
           <div class="media-container" :key="detail?.id || 'loading'">
             <template v-if="isCollectionMode">
               <!-- Image content -->
@@ -203,7 +204,9 @@
 
               <div v-else class="image-carousel" ref="imageStackRef" :style="{ cursor: isImageFullscreen ? 'zoom-out' : 'zoom-in' }">
                 <div class="make-action-group">
-                  <div class="make-similar-btn" v-if="detail.session_id" @click.stop="goMakeSimilar(detail.session_id)">
+                  <!-- 图片作品每张图各有各的 session（发布时按 "session|url" 提交），做同款按当前这张的来，
+                       不看帖子级 session_id（图片帖那个字段基本是空的，按它判断按钮永远不出现） -->
+                  <div class="make-similar-btn" v-if="detail.images?.[currentImageIndex]?.session_id" @click.stop="goMakeSimilar(detail.images[currentImageIndex].session_id!)">
                     <img :src="makeIcon" alt="" class="make-icon" />
                     <span>{{ t('home.makeSimilar') }}</span>
                   </div>
@@ -392,9 +395,11 @@
 
           <!-- 合集模式（type 1 / 3）不显示右侧上下箭头，换集走右栏的合集列表和「下一集」按钮 -->
 
-          <!-- 图片 / 视频（type 4、5）改用键盘方向键 / 滚轮 / 按住左键上下拖来切作品，
-               右下角的上下箭头不再显示；其余非合集类型仍然保留这两个按钮 -->
-          <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode && !isStandaloneType">
+          <!-- 上一个 / 下一个作品只走这两个按钮。滚轮、上下拖、方向键的切换都关了：
+               看图 / 看视频时手一滑就换了作品，误触太多（handleLeftPanelWheel /
+               handleLeftPanelPointerDown / handleKeyDown 里各自直接 return）。
+               图片 / 视频（type 4、5）锚在左栏底部（at-bottom），其余类型垂直居中 -->
+          <div class="nav-arrows" :class="{ 'at-bottom': isStandaloneType }" v-if="!isCollectionMode">
             <button class="nav-btn up" @click="goPrev" v-if="!isFirst"></button>
             <button class="nav-btn down" @click="goNext" v-if="!isLast"></button>
           </div>
@@ -409,6 +414,8 @@
               @active-change="composerActive = $event"
               @height-change="composerHeight = $event"
               @loading-change="composerLoading = $event"
+              @media-modal-open="pauseForComposerModal"
+              @media-modal-close="resumeAfterComposerModal"
             />
           </div>
         </div>
@@ -860,7 +867,7 @@
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id !== uid">{{ t('detail.subscribe') }}</div>
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id !== uid">{{ t(detail.type == '3' ? 'detail.paid' : 'detail.subscribe') }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -975,6 +982,8 @@
       placement="bottom"
       closable
       @active-change="composerActive = $event"
+      @media-modal-open="pauseForComposerModal"
+      @media-modal-close="resumeAfterComposerModal"
     />
     <!-- 做同款 / 做续集的来源数据请求中 -->
     <UploadMask :visible="composerLoading" :text="t('home.loading')" />
@@ -998,6 +1007,7 @@ import DramaUnlockCard from "@/components/DramaUnlockCard.vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
+import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import { pickPlan } from "@/util/bookRechargePlan";
@@ -2240,6 +2250,8 @@ function isComposerTarget(target: EventTarget | null): boolean {
 }
 
 function handleLeftPanelWheel(event: WheelEvent) {
+  // 滚轮切作品关掉了：误触太多，切换只走右侧的上下箭头。函数和调用先留着，要恢复删掉这行即可
+  return;
   // 合集模式换集走右栏的合集列表，滚轮不接管
   if (isCollectionMode.value) return;
   // 在底部输入框（做同款 / 做续集）里滚动是在看输入内容，不能切作品
@@ -2349,8 +2361,18 @@ const hasPrev = ref(false);
 const hasNext = ref(false);
 const prevId = ref<string | null>(null);
 const nextId = ref<string | null>(null);
-const isSliding = ref(false);
-const isSlidingIn = ref(false);
+// 上 / 下一个作品的切换动效是整页滑动，由 App.vue 的 <Transition> 做（旧页滑出、新页滑入）。
+// 这里只负责：换 id 前把方向写进 pageSlideDir；新实例挂载时看到方向没清，就知道是滑过来的，
+// 这次加载不弹全屏遮罩（滑动 + 深色底就是反馈），数据回来（isLoading 落下）自动恢复。
+const slideLoading = ref(false);
+watch(isLoading, (v) => { if (!v) slideLoading.value = false; });
+
+function slideSwitch(dir: 'up' | 'down', go: () => void) {
+  pageSlideDir.value = dir;
+  go();
+  // 正常由 App.vue 的 after-leave 清空；万一导航被拦下没发生过渡，别让方向残留到下一次跳转
+  setTimeout(() => { if (pageSlideDir.value === dir) pageSlideDir.value = ''; }, 1000);
+}
 
 const comments = ref<any[]>([]);
 const totalComments = ref('');
@@ -4407,14 +4429,17 @@ function goPrev() {
       navigateToChapter(chapter);
     }
   } else if (prevId.value) {
-    // 在非合集模式下，直接切换页面
-    activeTab.value = 'detail';
-    router.replace({
-      path: '/detail',
-      query: {
-        ...route.query,
-        id: prevId.value
-      }
+    // 在非合集模式下切换页面：当前往下滑出，上一个从上滑入
+    const targetId = prevId.value;
+    slideSwitch('down', () => {
+      activeTab.value = 'detail';
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: targetId
+        }
+      });
     });
   }
 }
@@ -4430,19 +4455,42 @@ function goNext() {
       navigateToChapter(chapter);
     }
   } else if (nextId.value) {
-    // 在非合集模式下，直接切换页面
-    activeTab.value = 'detail';
-    router.replace({
-      path: '/detail',
-      query: {
-        ...route.query,
-        id: nextId.value
-      }
+    // 在非合集模式下切换页面：当前往上滑出，下一个从下滑入
+    const targetId = nextId.value;
+    slideSwitch('up', () => {
+      activeTab.value = 'detail';
+      router.replace({
+        path: '/detail',
+        query: {
+          ...route.query,
+          id: targetId
+        }
+      });
     });
   }
 }
 
 // Media
+// 输入框里点视频 / 音频缩略图会弹一个自带 autoplay 的预览窗：左侧的作品要是正在播，
+// 两路一起响。弹窗打开时把左侧暂停，关掉再接着放（只恢复是被这里暂停掉的那次）
+let pausedByComposerModal = false;
+function pauseForComposerModal() {
+  pausedByComposerModal = false;
+  const v = videoRef.value;
+  if (!v || v.paused) return;
+  v.pause();
+  isPlaying.value = false;
+  isVideoBuffering.value = false;
+  pausedByComposerModal = true;
+}
+function resumeAfterComposerModal() {
+  if (!pausedByComposerModal) return;
+  pausedByComposerModal = false;
+  const v = videoRef.value;
+  if (!v || !v.paused) return;
+  v.play().then(() => { isPlaying.value = true; }).catch(() => { /* 被别的操作打断就算了 */ });
+}
+
 function togglePlay() {
   if (!videoRef.value) {
     console.log('Video element not found');
@@ -5855,6 +5903,8 @@ let dragSwitched = false;
 // 触屏上不会有合成的 mousemove（合成的 mousedown/mouseup 是 touchend 之后才补发的），
 // 只监听 mouse* 的话手指划动永远进不来。
 function handleLeftPanelPointerDown(event: PointerEvent) {
+  // 上下拖 / 触屏滑动切作品关掉了：误触太多，切换只走右侧的上下箭头。要恢复删掉这行即可
+  return;
   // 鼠标只认左键；触摸和手写笔的 button 同样是 0
   if (event.button !== 0) return;
   if (!canSwitchWork()) return;
@@ -5946,6 +5996,8 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 
   if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  // 方向键切作品关掉了：切换只走右侧的上下箭头。要恢复删掉这行即可
+  return;
   if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
   if (!canSwitchWork()) return;
   if (isTypingTarget(e.target)) return;
@@ -5960,6 +6012,8 @@ function handleContextMenu(e: MouseEvent) {
 }
 
 onMounted(async () => {
+  // 是从上 / 下一个滑过来的：这次加载不弹全屏遮罩（方向由 App.vue 在滑完后清空）
+  if (pageSlideDir.value) slideLoading.value = true;
   // 初始化语言设置
   await initLanguage();
 

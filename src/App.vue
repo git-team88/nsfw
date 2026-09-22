@@ -1,5 +1,10 @@
 <template>
-  <RouterView :key="routeViewKey"></RouterView>
+  <!-- 作品详情上 / 下一个：新旧两个页面同时在屏上，旧的滑出、新的滑进（pageSlideDir 为空时没有过渡） -->
+  <RouterView v-slot="{ Component }">
+    <Transition :name="pageSlideDir ? 'page-slide-' + pageSlideDir : 'page-none'" :css="!!pageSlideDir" @after-leave="pageSlideDir = ''">
+      <component :is="Component" :key="routeViewKey" />
+    </Transition>
+  </RouterView>
 </template>
 
 <script setup lang="ts">
@@ -7,6 +12,7 @@ import { watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
+import { pageSlideDir } from '@/util/pageSlide';
 
 const contentSwitch = useContentSwitchStore();
 const { locale } = useI18n();
@@ -200,3 +206,22 @@ watch(locale, () => {
   updateHtmlLang();
 });
 </script>
+
+<style lang="scss">
+/* 作品详情上 / 下一个的整页滑动：过渡期间新旧两页都铺满视口叠在一起，各自往自己的方向滑 */
+.page-slide-up-enter-active,
+.page-slide-up-leave-active,
+.page-slide-down-enter-active,
+.page-slide-down-leave-active {
+  position: fixed;
+  inset: 0;
+  will-change: transform;
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* 去下一个：旧页往上出，新页从下进 */
+.page-slide-up-enter-from { transform: translateY(100%); }
+.page-slide-up-leave-to { transform: translateY(-100%); }
+/* 回上一个：旧页往下出，新页从上进 */
+.page-slide-down-enter-from { transform: translateY(-100%); }
+.page-slide-down-leave-to { transform: translateY(100%); }
+</style>

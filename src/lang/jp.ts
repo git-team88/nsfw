@@ -1708,9 +1708,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       placeholderPhoto: "一言から、物語のワンシーンが生まれる。例：桜吹雪の中、振り返った彼女の瞳には涙が浮かんでいた。",
       placeholderVideo: "見たい物語を一行で入力。例：余命3ヶ月のロボットが孤独な少女と出会い、最後の景色を探す旅に出る。",
       placeholderMakeSimilar: "キャラクターを替えるかプロットを修正して同款を作る",
-      placeholderMakeSequel: "思いついた内容を入力するだけで動画の続きを生成できます。例：「動画1、男性が微笑みながら女性に近づいてキスをする」",
-      placeholderMakeVideo: "動画のシーンを描写し、参考画像から動画を生成",
-      placeholderMakeSimilarVideo: "キャラクターの差し替え：下の「参照」ボタンから参照画像をアップロードし、差し替え内容を入力してください。例：「動画1の左側の男性を画像1の人物に変更」。ストーリーの変更：入力欄に思いついた内容を入力するだけです。例：「動画1のストーリーを、男性と女性が抱き合う内容に変更」"
+      placeholderMakeSequel: "続きのストーリーを描写してください",
+      placeholderMakeVideo: "画像1を参考に、作りたい動画の内容を描写してください",
+      placeholderMakeSimilarVideo: "参考画像をアップロードし、動画1のどのキャラクターを画像1に差し替えるか教えてください"
     },
     img: '画像',
     unreferencedFiles: {
@@ -2006,6 +2006,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     permission: "公開範囲",
     permPublic: "公開",
     permPartial: "会員のみ閲覧可",
+    permPaid: "有料会員のみ閲覧可",
     permPrivate: "自分のみ閲覧可",
     imgtip: "（1枚目の画像を公開）",
     articleTip: "（冒頭1000文字を公開）",
@@ -2345,6 +2346,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     subscribed: "メンバーシップ済み",
     unsubscribed: "メンバーシップを解除",
     subscribe: "メンバーシップ",
+    paid: "有料",
     subscribeToView: "メンバーシップ者のみ全文を表示可能",
     updatedToEpisode: "第 {count} 話まで更新",
     readToEpisode: "第 {count} 話まで読了",
@@ -2612,6 +2614,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     tabUnlocked: "全話解除",
     viewDetail: "詳細を見る",
     price: "価格",
+    priceHint: "章の公開範囲を有料会員のみにした場合に有効",
     fullSeries: "全話",
     priceFree: "無料",
     createCollection: "コレクションを作成",
@@ -3262,6 +3265,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     statusPublished: "公開済み",
     statusDraft: "下書き",
     statusSubscribed: "メンバーシップ",
+    statusPaid: "有料",
     statusPrivate: "非公開",
     deleteChapterConfirm: {
       title: "削除の確認",
