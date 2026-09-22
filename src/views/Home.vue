@@ -194,6 +194,7 @@
             <div
               v-else-if="allContent.length > 0"
               class="waterfall"
+              :class="{ masonry: isMasonryList }"
               ref="waterfallRef"
               :key="`waterfall-${activeContentTab}`"
             >
@@ -201,13 +202,14 @@
                 v-for="(item, index) in displayContent"
                 :key="item.id"
                 class="content-item"
+                :class="{ 'is-image': item.type == '4' }"
                 :ref="(el) => setContentCardRef(el, index)"
                 :href="detailHref(item.book_id || item.id, item.type, item.id)"
                 @mousemove="onCardTilt"
                 @mouseleave="onCardTiltReset"
                 @click.prevent="navigateToDetail(item.book_id || item.id, item.type, item.id)"
               >
-                <div class="content-image">
+                <div class="content-image" :style="isMasonryList && item.type == '4' ? { aspectRatio: coverAspect(item.cover) } : undefined">
                   <img :src="item.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
 
                   <div class="r18-overlay" v-if="item.is_nsfw == 1">
@@ -455,6 +457,8 @@ import GuideModal from '@/components/GuideModal.vue';
 // import EventModal from '@/components/EventModal.vue';
 import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
+import { useMasonry } from '@/util/masonry';
+import { coverAspect } from '@/util/coverRatio';
 import Hero3DBackground from '@/components/Hero3DBackground.vue';
 import HomeShowcase from '@/components/HomeShowcase.vue';
 import router from '@/router';
@@ -683,6 +687,15 @@ const currentStyleName = ref(''); // Current selected style name
 
 // Waterfall layout state
 const waterfallRef = ref<HTMLElement | null>(null);
+// 「全部」和「图片」两个筛选用 JS 瀑布流：图片卡片高度按图片自适应，其他类型仍是 3:4。
+// 列数 / 间距和 Home.scss 里 grid 的断点一致
+const isMasonryList = computed(() => activeContentType.value == 0 || activeContentType.value == 4);
+useMasonry(waterfallRef, {
+  itemSelector: '.content-item',
+  enabled: isMasonryList,
+  columns: (_w, vw) => (vw <= 768 ? 2 : vw <= 992 ? 3 : vw <= 1200 ? 4 : vw <= 1400 ? 5 : 6),
+  gap: (_w, vw) => (vw <= 768 ? 12 : 20),
+});
 const contentCardRefs = ref<(HTMLElement | null)[]>([]);
 
 // Function to set content card ref at specific index

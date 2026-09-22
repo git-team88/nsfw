@@ -25,11 +25,13 @@
       <div class="posts-container">
         <div
           class="waterfall"
+          :class="{ masonry: isImageList }"
           v-if="contentList && contentList.length > 0"
           ref="waterfallRef"
         >
           <div
             class="content-item"
+            :class="{ 'is-image': item.type == '4' }"
             v-for="item in contentList"
             :key="item.id"
             ref="contentCardRefs"
@@ -37,7 +39,7 @@
             @mouseleave="onCardTiltReset"
             @click="goToDetail(item)"
           >
-            <div class="content-image">
+            <div class="content-image" :style="isImageList && item.type == '4' ? { aspectRatio: coverAspect(item.cover) } : undefined">
                 <img :src="item.cover || defaultCover" alt="" />
                 <div class="r18-overlay" v-if="item.is_nsfw == 1">
                   <span class="r18-text">R18</span>
@@ -110,6 +112,8 @@
 
 <script setup lang="ts" name="Similar">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { useMasonry } from '@/util/masonry';
+import { coverAspect } from '@/util/coverRatio';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
@@ -167,6 +171,8 @@ interface Content {
 
 // State
 const activeFilter = ref(0);
+// 图片（type 4）列表用瀑布流：地址栏 type=4 进来的相似图片列表，或筛选选了图片
+const isImageList = computed(() => activeFilter.value === 4 || Number(route.query.type) === 4);
 const contentList = ref<Content[] | null>(null);
 const currentPage = ref(1);
 const pageSize = ref(48);
@@ -185,6 +191,13 @@ const typeFilters = ref([
 
 // Refs for waterfall layout
 const waterfallRef = ref<HTMLElement | null>(null);
+// 图片（type 4）列表用 JS 瀑布流，列数 / 间距和下面 .waterfall 的 grid 断点一致
+useMasonry(waterfallRef, {
+  itemSelector: '.content-item',
+  enabled: isImageList,
+  columns: (_w, vw) => (vw >= 768 ? 4 : 2),
+  gap: (_w, vw) => (vw >= 768 ? 20 : 18),
+});
 const contentCardRefs = ref<HTMLElement[]>([]);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
@@ -945,6 +958,38 @@ $line: #2c2c2c;
   }
   .content-item:hover .content-image img {
     transform: none;
+  }
+}
+
+// 图片（type 4）列表：JS 瀑布流（util/masonry.ts）。卡片定位和容器高度由 JS 内联设置，
+// 这里只把 grid 关掉、把封面的固定比例放开。
+.posts-container .waterfall.masonry {
+  display: block;
+  position: relative;
+
+  .content-item {
+    display: block;
+    margin: 0;
+
+    // 图片类型的高度由内联 aspect-ratio 决定（封面真实宽高比，见 util/coverRatio.ts），
+    // 图片还没加载完时也已经是正确高度，不会先塌成一条再被撑开
+    &.is-image .content-image {
+      height: auto;
+    }
+  }
+
+  // 首次布局完成后 JS 才会加上 .masonry-ready，之后卡片换位才有过渡；
+  // 首屏和「加载更多」新进来的卡片直接落位，不会从 0,0 飘过去
+  &.masonry-ready .content-item {
+    transition: left 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      top 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.12s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  // 图片加载完、从占位比例切到真实比例时，让高度平滑长出来，
+  // 和下方卡片的位移动画同步，就不会「啪」地撑一下
+  &.masonry-ready .content-item.is-image .content-image {
+    transition: aspect-ratio 0.25s ease;
   }
 }
 </style>

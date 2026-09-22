@@ -1546,4 +1546,36 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 }
 
+// ---------------------------------------------------------------------------
+// 图片（type 4）列表：JS 瀑布流（util/masonry.ts）。卡片的 left/top/width 和容器高度
+// 由 JS 内联设置，这里只负责把 grid 关掉、把封面的固定比例放开。
+// ---------------------------------------------------------------------------
+.content-section .content-grid .waterfall.masonry {
+  display: block;
+  position: relative;
 
+  .content-item {
+    display: block;
+    margin: 0;
+
+    // 图片类型的高度由内联 aspect-ratio 决定（封面真实宽高比，见 util/coverRatio.ts），
+    // 图片还没加载完时也已经是正确高度，不会先塌成一条再被撑开
+    &.is-image .content-image {
+      height: auto;
+    }
+  }
+
+  // 首次布局完成后 JS 才会加上 .masonry-ready，之后卡片换位才有过渡；
+  // 首屏和「加载更多」新进来的卡片直接落位，不会从 0,0 飘过去
+  &.masonry-ready .content-item {
+    transition: left 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      top 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.12s ease-out, border-color 0.2s ease-out;
+  }
+
+  // 图片加载完、从占位比例切到真实比例时，让高度平滑长出来，
+  // 和下方卡片的位移动画同步，就不会「啪」地撑一下
+  &.masonry-ready .content-item.is-image .content-image {
+    transition: aspect-ratio 0.25s ease;
+  }
+}

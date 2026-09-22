@@ -57,18 +57,20 @@
         <div v-if="activeTab == 'posts'" class="posts-container">
           <div
             class="waterfall"
+            :class="{ masonry: isMasonryList }"
             v-if="postList && postList.length > 0"
             ref="waterfallRef"
           >
             <div
               class="content-item"
+              :class="{ 'is-image': post.type == '4' }"
               v-for="(post, index) in postList"
               :key="post.id"
               ref="postCardRefs"
               :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
               @click="goToDetail(post)"
             >
-              <div class="content-image">
+              <div class="content-image" :style="isMasonryList && post.type == '4' ? { aspectRatio: coverAspect(post.cover) } : undefined">
                 <img :src="post.cover || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
                 <div class="r18-overlay" v-if="post.is_nsfw == 1">
                   <span class="r18-text">R18</span>
@@ -218,6 +220,8 @@
 <script setup lang="ts" name="Search">
 import PromptComposer from '@/components/PromptComposer.vue';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch, type CSSProperties } from 'vue';
+import { useMasonry } from '@/util/masonry';
+import { coverAspect } from '@/util/coverRatio';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Header from '@/components/Header.vue';
@@ -311,6 +315,15 @@ const postFilters = ref([
 
 // Refs for waterfall layout
 const waterfallRef = ref<HTMLElement | null>(null);
+// 「全部」和「图片」两个筛选用 JS 瀑布流：图片卡片高度按图片自适应，其他类型仍是 3:4。
+// 列数 / 间距和下面 .waterfall 的 grid 断点一致
+const isMasonryList = computed(() => postFilter.value == 0 || postFilter.value == 4);
+useMasonry(waterfallRef, {
+  itemSelector: '.content-item',
+  enabled: isMasonryList,
+  columns: (_w, vw) => (vw >= 768 ? 4 : 2),
+  gap: (_w, vw) => (vw >= 768 ? 20 : 18),
+});
 const postCardRefs = ref<HTMLElement[]>([]);
 const containerHeight = ref(0);
 const loadingSentinel = ref<HTMLElement | null>(null);
@@ -1709,6 +1722,37 @@ $line: #2c2c2c;
   .se-skel {
     animation: none !important;
     opacity: 0.7;
+  }
+}
+
+// 图片（type 4）列表：JS 瀑布流（util/masonry.ts）。卡片定位和容器高度由 JS 内联设置，
+// 这里只把 grid 关掉、把封面的固定比例放开。
+.posts-container .waterfall.masonry {
+  display: block;
+  position: relative;
+
+  .content-item {
+    display: block;
+    margin: 0;
+
+    // 图片类型的高度由内联 aspect-ratio 决定（封面真实宽高比，见 util/coverRatio.ts），
+    // 图片还没加载完时也已经是正确高度，不会先塌成一条再被撑开
+    &.is-image .content-image {
+      height: auto;
+    }
+  }
+
+  // 首次布局完成后 JS 才会加上 .masonry-ready，之后卡片换位才有过渡；
+  // 首屏和「加载更多」新进来的卡片直接落位，不会从 0,0 飘过去
+  &.masonry-ready .content-item {
+    transition: left 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      top 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  // 图片加载完、从占位比例切到真实比例时，让高度平滑长出来，
+  // 和下方卡片的位移动画同步，就不会「啪」地撑一下
+  &.masonry-ready .content-item.is-image .content-image {
+    transition: aspect-ratio 0.25s ease;
   }
 }
 </style>

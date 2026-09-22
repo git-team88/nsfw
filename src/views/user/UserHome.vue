@@ -205,16 +205,19 @@
             <!-- Collection grid -->
             <div
               class="collections-grid"
+              :class="{ masonry: isMasonryList }"
+              ref="collectionsGridRef"
               v-else-if="collections && collections.length > 0 && userInfo.is_blacked != 1"
             >
               <div
                 class="collection-card"
+                :class="{ 'is-image': activeContentType == 4 || collection.type == '4' }"
                 v-for="(collection, index) in collections"
                 :key="collection.id"
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" @click="(listContentType == 4 || listContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
+                  <div class="card-cover" :style="isMasonryList && (activeContentType == 4 || collection.type == '4') ? { aspectRatio: coverAspect(processImageUrl(collection.cover)) } : undefined" @click="(listContentType == 4 || listContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
@@ -496,6 +499,8 @@ import {
   watch,
   nextTick
 } from "vue";
+import { useMasonry } from "@/util/masonry";
+import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
@@ -1104,6 +1109,16 @@ async function fetchLikedBooks(reset = false) {
 const loading = ref(false);
 
 const collectionCardRefs = ref<HTMLElement[]>([]);
+const collectionsGridRef = ref<HTMLElement | null>(null);
+// 「图片」tab 和「我的收藏」用 JS 瀑布流：图片卡片高度按图片自适应，其他类型保持原高度。
+// 列宽按原 grid 的 minmax(258px, 1fr) 折算列数
+const isMasonryList = computed(() => activeContentType.value == 4 || activeContentType.value === 'favorites');
+useMasonry(collectionsGridRef, {
+  itemSelector: '.collection-card',
+  enabled: isMasonryList,
+  columns: (w) => Math.max(1, Math.floor((w + 16) / (258 + 16))),
+  gap: () => 16,
+});
 
 const activeCollectionMenuId = ref<string | number | null>(null);
 const collectionMenuRefs = new Map<string | number, HTMLElement>();
@@ -4516,6 +4531,38 @@ async function unpinCollection(collection: any) {
         }
       }
     }
+  }
+}
+
+// 图片（type 4）列表：JS 瀑布流（util/masonry.ts）。卡片定位和容器高度由 JS 内联设置，
+// 这里只把 grid 关掉、把封面的固定高度放开。
+.collections-container .collections-grid.masonry {
+  display: block;
+  position: relative;
+
+  .collection-card {
+    display: block;
+    margin: 0;
+
+    // 图片类型的高度由内联 aspect-ratio 决定（封面真实宽高比，见 util/coverRatio.ts），
+    // 图片还没加载完时也已经是正确高度，不会先塌成一条再被撑开
+    &.is-image .card-cover {
+      height: auto;
+    }
+  }
+
+  // 首次布局完成后 JS 才会加上 .masonry-ready，之后卡片换位才有过渡；
+  // 首屏和「加载更多」新进来的卡片直接落位，不会从 0,0 飘过去
+  &.masonry-ready .collection-card {
+    transition: left 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      top 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      border-color 0.15s;
+  }
+
+  // 图片加载完、从占位比例切到真实比例时，让高度平滑长出来，
+  // 和下方卡片的位移动画同步，就不会「啪」地撑一下
+  &.masonry-ready .collection-card.is-image .card-cover {
+    transition: aspect-ratio 0.25s ease;
   }
 }
 </style>
