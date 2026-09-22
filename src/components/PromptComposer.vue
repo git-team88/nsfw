@@ -2195,6 +2195,40 @@ const makeSameTab = ref('');
 function isMakeSameOn(tab: string): boolean {
   return isMakeSameMode.value && makeSameTab.value === tab;
 }
+
+// 漫画 / 漫剧提交时要带的设置项。这几项是在内页设的，输入框里没有对应控件，
+// 做同款不带过去的话提交的就是写死的默认值，和原作对不上。
+// 字段取自内页（canvas-frontend）回传 user-selected 的 body：
+// 漫画 Comic.tsx —— chapter_count（集数）/ per_chapter_scene_count（每集图片数）
+// 漫剧 Video.tsx —— chapter_count（集数）/ per_chapter_duration（单集时长）
+// user_selected 里其余字段是别的类型（视频 / 图片 / 小说）用的，不带。
+// emotion 两个内页都不读，所以不带（创建时仍照旧传空串）。
+const MAKE_SAME_CARRY_KEYS: Record<string, string[]> = {
+  comic: ['ratio', 'language', 'story_style', 'chapter_count', 'per_chapter_scene_count'],
+  drama: ['ratio', 'language', 'story_style', 'chapter_count', 'per_chapter_duration'],
+};
+
+// 做同款回填下来的原作设置项。和 makeSameTab 同进同出，标记清了就不再用。
+const makeSameSourceSettings = ref<Record<string, any> | null>(null);
+
+// 空值不回填：老数据没存 language 的，提交时仍然回退到界面语言
+function pickMakeSameSettings(userSelected: any, tab: string): Record<string, any> {
+  const keys = MAKE_SAME_CARRY_KEYS[tab];
+  if (!keys) return {};
+  const picked: Record<string, any> = {};
+  keys.forEach((key) => {
+    const value = userSelected?.[key];
+    if (value === undefined || value === null || value === '') return;
+    picked[key] = value;
+  });
+  return picked;
+}
+
+// 提交漫画 / 漫剧时，把回填下来的设置项盖在默认值上
+function makeSameCarryOver(tab: string): Record<string, any> {
+  if (!isMakeSameOn(tab)) return {};
+  return makeSameSourceSettings.value || {};
+}
 const isMakeSimilar = ref(false);
 const makeSimilarSessionId = ref('');
 const originSessionId = ref('');
@@ -3160,6 +3194,7 @@ function resetMakeSourceForTab(tab: string) {
     originSessionId.value = '';
     isMakeSimilar.value = false;
     makeSimilarSessionId.value = '';
+    makeSameSourceSettings.value = null;
   }
   // 拍同款 / 做续集 / 图片做视频 这三套标记只有视频 tab 用
   if (tab === 'video') {
@@ -4450,6 +4485,8 @@ const handleMakeSimilar = async (item: any) => {
     isMakeSameMode.value = true;
     makeSameTab.value = targetContentType;
     originSessionId.value = sessionId;
+    // 漫画 / 漫剧的设置项在内页设，输入框里没控件，先把要用的几项回填下来，提交时带上
+    makeSameSourceSettings.value = pickMakeSameSettings(userSelected, targetContentType);
 
     if (targetContentType === 'video') {
       currentVideoMode.value = safeMode;
@@ -5369,13 +5406,17 @@ const doGenerateComic = async () => {
     }
 
     const params = {
+      // 语言 / 风格 / 比例 / 情绪这几项是在内页设的，输入框里没控件：
+      // 普通创建给默认值，做同款时被下面的 makeSameCarryOver 用原作的值盖掉
       ratio: "9:16",
       language: locale.value == 'zh' ? 'cn' : locale.value,
+      story_style: "",
+      emotion: "",
+      ...makeSameCarryOver('comic'),
+      // 以下几项以当前输入框为准，不跟原作
       story_type: "manhua",
       story_mode: currentComicMode.value == 'unlimited' ? 'nsfw' : 'normal',
-      story_style: "",
       reference_images: uploadedImagesComic.value.map(img => img.image),
-      emotion: "",
       others: {
         content: processedContent.replace(/\u00A0/g, ' '),
         list: combinedItemsComic.value
@@ -5520,13 +5561,17 @@ const doGenerateDrama = async () => {
     }
 
     const params = {
+      // 语言 / 风格 / 比例 / 情绪这几项是在内页设的，输入框里没控件：
+      // 普通创建给默认值，做同款时被下面的 makeSameCarryOver 用原作的值盖掉
       ratio: "9:16",
       language: locale.value == 'zh' ? 'cn' : locale.value,
+      story_style: "",
+      emotion: "",
+      ...makeSameCarryOver('drama'),
+      // 以下几项以当前输入框为准，不跟原作
       story_type: "manju",
       story_mode: currentDramaMode.value == 'unlimited' ? 'nsfw' : 'normal',
-      story_style: "",
       reference_images: uploadedImagesDrama.value.map(img => img.image),
-      emotion: "",
       others: {
         content: processedContent.replace(/\u00A0/g, ' ').trim(),
         list: combinedItemsDrama.value
@@ -8206,6 +8251,7 @@ function closeComposer() {
   makeSameTab.value = '';
   isMakeExtensionMode.value = false;
   originSessionId.value = '';
+  makeSameSourceSettings.value = null;
   originPostId.value = '';
   originSessionIdForExtension.value = '';
 
@@ -8374,6 +8420,7 @@ defineExpose({
       isMakeSameMode.value = false;
       originSessionId.value = '';
       makeSameTab.value = '';
+      makeSameSourceSettings.value = null;
     }
     clearVideoMakeFlags();
 

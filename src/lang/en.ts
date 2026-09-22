@@ -2145,6 +2145,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
     generateFailedUpstream: "Model generation error. Please tap retry. Failed tasks will not consume computing power.",
     // 视频未知失败的兜底文案
     generateFailedRetry: "Generation failed. Please tap retry. Failed tasks will not consume computing power.",
+    // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
+    generateFailedRetryPrefix: "Generation failed. Please tap ",
+    generateFailedRetryAction: "retry",
+    generateFailedRetrySuffix: ". Failed tasks will not consume computing power.",
     deleteConfirm: "Confirm deletion of this batch of generated results?",
     deleteWarning: "Deleted history records cannot be recovered"
   },

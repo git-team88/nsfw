@@ -2244,6 +2244,10 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     generateFailedUpstream: "模型生成出錯，請點擊重試，失敗任務將不扣算力。",
     // 视频未知失败的兜底文案
     generateFailedRetry: "生成失敗，請點擊重試，失敗任務將不扣算力。",
+    // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
+    generateFailedRetryPrefix: "生成失敗，請點擊",
+    generateFailedRetryAction: "重試",
+    generateFailedRetrySuffix: "，失敗任務將不扣算力。",
     deleteConfirm: "確認刪除該批次生成結果？",
     deleteWarning: "刪除的歷史記錄將無法找回"
   },

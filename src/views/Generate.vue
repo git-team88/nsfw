@@ -350,7 +350,19 @@
               <!-- 失败提示 -->
               <div v-if="isTaskFailed(record.step_status || record.status)" class="record-failed">
                 <img src="@/assets/images/home/intro.png" alt="warning" class="failed-icon" />
-                <span class="failed-text">{{ record.fail_reason || t('recordList.generateFailedRetry') }}</span>
+                <!-- 没有具体失败原因时，文案里的「重试」单独拆出来做成可点入口，
+                     点它走的就是底部 regenerate-btn 那套回填逻辑 -->
+                <span class="failed-text" v-if="record.fail_reason && !record.fail_retryable">{{ record.fail_reason }}</span>
+                <span class="failed-text" v-else
+                  >{{ t('recordList.generateFailedRetryPrefix')
+                  }}<span
+                    v-if="canRegenerateRecord(record)"
+                    class="failed-retry-link"
+                    @click="regenerateRecord(record)"
+                    >{{ t('recordList.generateFailedRetryAction') }}</span
+                  ><template v-else>{{ t('recordList.generateFailedRetryAction') }}</template
+                  >{{ t('recordList.generateFailedRetrySuffix') }}</span
+                >
               </div>
 
               <!-- 视频底部操作 -->
@@ -4491,11 +4503,14 @@ const isTaskQueuing = (status: string) => {
 
 // 把后端 status_message 映射成列表里展示的失败原因。
 // 轮询和列表回显两条路径都走这里，避免判断逻辑再次分叉。
-function resolveFailReason(statusMessage: string, isVideo = false): { reason: string; insufficient: boolean; matched: boolean } {
+function resolveFailReason(
+  statusMessage: string,
+  isVideo = false,
+): { reason: string; insufficient: boolean; matched: boolean; retryable: boolean } {
   const msg = (statusMessage || '').toLowerCase();
 
   if (msg.includes('credit is not enough') || msg.includes('recharge')) {
-    return { reason: t('recordList.generateFailedInsufficientBalance'), insufficient: true, matched: true };
+    return { reason: t('recordList.generateFailedInsufficientBalance'), insufficient: true, matched: true, retryable: false };
   }
 
   // 后端同时回 `ratio` must be `adaptive` 和 `duration` must be -1 时，说明当前模式
@@ -4504,26 +4519,28 @@ function resolveFailReason(statusMessage: string, isVideo = false): { reason: st
   // 去掉反引号和引号再匹配，兼容后端换标点的写法。
   const plain = msg.replace(/[`'"]/g, '');
   if (/ratio\s+must\s+be\s+adaptive/.test(plain) && /duration\s+must\s+be\s+-1/.test(plain)) {
-    return { reason: t('recordList.generateFailedModeMismatch'), insufficient: false, matched: true };
+    return { reason: t('recordList.generateFailedModeMismatch'), insufficient: false, matched: true, retryable: false };
   }
 
   // 版权风险：后端回 copyright restrictions。按词组匹配，中间的空格 / 换行都容忍，
   // restriction 单复数都算；只出现 copyright 一个词的其它报错不会误判到这条
   if (/copyright\s+restriction/.test(plain)) {
-    return { reason: t('recordList.generateFailedCopyright'), insufficient: false, matched: true };
+    return { reason: t('recordList.generateFailedCopyright'), insufficient: false, matched: true, retryable: false };
   }
 
   // 上游模型接口故障：后端回 Upstream task ...
   if (/upstream\s+task/.test(plain)) {
-    return { reason: t('recordList.generateFailedUpstream'), insufficient: false, matched: true };
+    return { reason: t('recordList.generateFailedUpstream'), insufficient: false, matched: true, retryable: false };
   }
 
   // 没命中具体规则：视频统一给「点击重试」的文案，图片沿用原来的提示。
   // matched=false，调用方可选择保留后端原文
+  // retryable：视频没命中具体规则才给「点击重试」那条，列表里把它渲染成可点入口
   return {
     reason: isVideo ? t('recordList.generateFailedRetry') : t('recordList.generateFailed'),
     insufficient: false,
     matched: false,
+    retryable: isVideo,
   };
 }
 
@@ -4728,6 +4745,7 @@ const pollTaskStatus = async (taskId: string) => {
           updatedRecord.step_status = 'FAILED';
           const failed = resolveFailReason(taskData.status_message, updatedRecord.story_type === 'simple_video');
           updatedRecord.fail_reason = failed.reason;
+          updatedRecord.fail_retryable = failed.retryable;
           if (failed.insufficient) showInsufficientBalanceModal.value = true;
         }
 
@@ -4753,7 +4771,8 @@ const pollTaskStatus = async (taskId: string) => {
         records.value[recordIndex] = {
           ...records.value[recordIndex],
           step_status: 'FAILED',
-          fail_reason: failed.reason
+          fail_reason: failed.reason,
+          fail_retryable: failed.retryable
         };
         if (failed.insufficient) showInsufficientBalanceModal.value = true;
         stopPolling(taskId);
@@ -4933,7 +4952,8 @@ const normalizeSimpleRecord = (record: any) => {
     videoCover,
     videoUrl,
     createTime: record.created_at || '',
-    fail_reason: failed.matched ? failed.reason : (record.fail_reason || '')
+    fail_reason: failed.matched ? failed.reason : (record.fail_reason || ''),
+    fail_retryable: failed.retryable && !record.fail_reason
   };
 };
 

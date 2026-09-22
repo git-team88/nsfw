@@ -1968,6 +1968,10 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     generateFailedUpstream: "モデルの生成でエラーが発生しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
     // 视频未知失败的兜底文案
     generateFailedRetry: "生成に失敗しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
+    // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
+    generateFailedRetryPrefix: "生成に失敗しました。",
+    generateFailedRetryAction: "再試行",
+    generateFailedRetrySuffix: "をタップしてください。失敗したタスクの算力は消費されません。",
     deleteConfirm: "このバッチの生成結果を削除してもよろしいですか？",
     deleteWarning: "削除された履歴レコードは復元できません"
   },

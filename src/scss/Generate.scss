@@ -2881,6 +2881,13 @@ $pinkopacity: rgba(255,79,154,0.12);
     font-weight: 500;
     color: $muted;
   }
+
+  // 失败文案里的「重试」：用主题色标出来，点了等于底部的 regenerate-btn
+  .failed-retry-link {
+    color: $pink;
+    font-weight: 600;
+    cursor: pointer;
+  }
 }
 
 // 比例前面的横/竖版图标（RatioIcon）配色。组件里默认是 currentColor，
