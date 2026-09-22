@@ -43,11 +43,10 @@ $pinkopacity: rgba(255,79,154,0.12);
   .make-source-tip {
     flex: none;
     margin-right: auto;
-    padding: 5px 12px;
-    border-radius: 999px;
-    border: 1px solid $border-light;
-    background: $bg-tag;
-    color: $ink;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    color: #364153;
     font-size: 12px;
     font-weight: 800;
     line-height: 18px;
@@ -2285,10 +2284,11 @@ $pinkopacity: rgba(255,79,154,0.12);
   padding: 0;
   display: grid;
   place-items: center;
-  border: 2px solid $ink;
+  // 深色主题里 $ink 是浅色，白底上白框白叉等于隐形；图标和边框固定用深灰
+  border: 2px solid #364153;
   border-radius: 8px;
   background: #fff;
-  color: $ink;
+  color: #364153;
   cursor: pointer;
   box-shadow: none;
   transition: background 0.16s, color 0.16s, border-color 0.16s;
@@ -2298,7 +2298,7 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 
   &:hover {
-    border-color: $ink;
+    border-color: #364153;
 
     svg {
       transform: rotate(180deg);

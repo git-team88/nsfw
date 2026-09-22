@@ -1415,16 +1415,21 @@ const getCurrentVideoMode = () => {
   }
 };
 const getCurrentPlaceholder = () => {
-  if (isMakeVideoMode.value) {
-    return t('home.input.placeholderMakeVideo');
-  }
-  // 拍续集放在拍同款前面：两个入口的标记可能同时为真（同一次会话里先拍同款再拍续集），
-  // 这时要显示的是当前这次操作的文案。两个入口的文案必须区分开，别共用一条。
-  if (isMakeVideoSequelMode.value) {
-    return t('home.input.placeholderMakeSequel');
-  }
-  if (isMakeVideoSimilarMode.value) {
-    return t('home.input.placeholderMakeSimilarVideo');
+  // 拍同款 / 做续集 / 图片做视频 的标记都是视频 tab 的，只在视频 tab 下才影响占位文案。
+  // 视频 tab 的草稿连同这些标记是保留的，切到漫画再切回来它们还在 —— 这是对的，
+  // 但漫画 tab 不能因为视频 tab 挂着做续集就显示做续集的占位（和 isMakeSourceActive 同一条规则）。
+  if (contentType.value === 'video') {
+    if (isMakeVideoMode.value) {
+      return t('home.input.placeholderMakeVideo');
+    }
+    // 拍续集放在拍同款前面：两个入口的标记可能同时为真（同一次会话里先拍同款再拍续集），
+    // 这时要显示的是当前这次操作的文案。两个入口的文案必须区分开，别共用一条。
+    if (isMakeVideoSequelMode.value) {
+      return t('home.input.placeholderMakeSequel');
+    }
+    if (isMakeVideoSimilarMode.value) {
+      return t('home.input.placeholderMakeSimilarVideo');
+    }
   }
   switch (contentType.value) {
     case 'video': return t('home.input.placeholderVideo');
@@ -3099,6 +3104,29 @@ function clearVideoMakeFlags() {
   originVideoUrlForTail.value = '';
 }
 
+/**
+ * 进入一个新的来源（做同款 / 拍同款 / 做续集 / 图片做视频）之前，把落在这个 tab 上的旧来源标记清掉。
+ * 各入口原来只设自己的标记、不清别人的：做同款之后再点做续集，请求里两套参数都会带上；
+ * 做同款拉详情失败也不回滚，上一次回填的内容会被挂上新的 session。
+ * 只清这个 tab 的：别的 tab 各自的草稿和标记不受影响。
+ */
+function resetMakeSourceForTab(tab: string) {
+  if (!makeSameTab.value || makeSameTab.value === tab) {
+    isMakeSameMode.value = false;
+    makeSameTab.value = '';
+    originSessionId.value = '';
+    isMakeSimilar.value = false;
+    makeSimilarSessionId.value = '';
+  }
+  // 拍同款 / 做续集 / 图片做视频 这三套标记只有视频 tab 用
+  if (tab === 'video') {
+    clearVideoMakeFlags();
+    isMakeExtensionMode.value = false;
+    originPostId.value = '';
+    originSessionIdForExtension.value = '';
+  }
+}
+
 // 限制档位变化时用：所有模式的草稿一起作废
 function clearAllVideoDrafts() {
   VIDEO_MODES.forEach((m) => { videoDrafts.value[m] = emptyVideoModeDraft(); });
@@ -3358,7 +3386,7 @@ const navigateToNovelGenerate = async () => {
       total_words: selectedWordCount.value == '100K' ? '10' : selectedWordCount.value == '300K' ? '30' : '3',
       insert_image_count: contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value,
       ...(isMakeSameOn('novel') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
-      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
+      // 做续集只有视频有，这个标记只在视频 tab 生效，别的类型不带（见 resetMakeSourceForTab）
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -4147,6 +4175,7 @@ const handleMakeVideo = async (imageUrl: string, isNsfw: boolean) => {
   selectedVideoQuality.value = '720P';
   selectedVideoDuration.value = '30';
 
+  resetMakeSourceForTab('video');
   isMakeVideoMode.value = true;
 
   const imgItem = {
@@ -4329,10 +4358,6 @@ const handleMakeSimilar = async (item: any) => {
   }
 
   isMakeSimilarLoading.value = true;
-  isMakeSameMode.value = true;
-  isMakeSimilar.value = true;
-  makeSimilarSessionId.value = sessionId;
-  originSessionId.value = sessionId;
 
   try {
     const res = await api.getProjectInfoPublic(sessionId) as any;
@@ -4370,12 +4395,18 @@ const handleMakeSimilar = async (item: any) => {
     }
 
     contentType.value = targetContentType;
-    makeSameTab.value = targetContentType;
     setSeoMeta(targetContentType);
 
     const storyMode = userSelected.story_mode;
     const mode = storyMode == 'nsfw' ? 'unlimited' : (storyMode || 'normal');
     const safeMode = isTeenager.value && mode == 'unlimited' ? 'normal' : mode;
+
+    // 到这里回填才算成立：先清掉落在这个 tab 上的旧来源，再打上做同款标记。
+    // 前面任何一步失败都不碰标记，不会把新 session 挂到上一次的内容上
+    resetMakeSourceForTab(targetContentType);
+    isMakeSameMode.value = true;
+    makeSameTab.value = targetContentType;
+    originSessionId.value = sessionId;
 
     if (targetContentType === 'video') {
       currentVideoMode.value = safeMode;
@@ -4646,6 +4677,7 @@ const handleMakeSimilarVideo = async (item: any) => {
 
     const isUnlimited = isNsfw && userRegion.value;
 
+    resetMakeSourceForTab('video');
     isMakeVideoSimilarMode.value = true;
     isMakeVideoSequelMode.value = false;
     isMakeSameMode.value = true;
@@ -4751,6 +4783,7 @@ const handleMakeSequelFromList = async (item: any) => {
 const handleMakeSequelFromCache = async (videoUrl: string, cover: string, type: string, postId: string, isNsfw: boolean, duration?: number) => {
   const isUnlimited = isNsfw && userRegion.value;
 
+  resetMakeSourceForTab('video');
   isMakeExtensionMode.value = true;
   isMakeVideoSequelMode.value = true;
   isMakeVideoSimilarMode.value = false;
@@ -5155,7 +5188,8 @@ const doGenerateVideo = async () => {
     const response = await api.generateSingleVideo({
       session_id: sessionId,
       topic: processedContent,
-      ...(isMakeSameMode.value && !isMakeVideoSimilarMode.value ? { origin_session_id: originSessionId.value } : {}),
+      // 做同款只认落在视频 tab 上的那份（别的 tab 的做同款不能带过来）
+      ...(isMakeSameOn('video') && !isMakeVideoSimilarMode.value ? { origin_session_id: originSessionId.value } : {}),
       ...(isMakeExtensionMode.value && !isMakeVideoSequelMode.value ? { origin_session_id: originSessionIdForExtension.value } : {})
     }) as any;
 
@@ -5311,7 +5345,7 @@ const doGenerateComic = async () => {
         tri_view_url: character.tri_image
       })),
       ...(isMakeSameOn('comic') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
-      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
+      // 做续集只有视频有，这个标记只在视频 tab 生效，别的类型不带（见 resetMakeSourceForTab）
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5462,7 +5496,7 @@ const doGenerateDrama = async () => {
         tri_view_url: character.tri_image
       })),
       ...(isMakeSameOn('drama') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
-      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
+      // 做续集只有视频有，这个标记只在视频 tab 生效，别的类型不带（见 resetMakeSourceForTab）
     };
 
     const response = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5620,7 +5654,7 @@ const doGeneratePhoto = async () => {
       addition_characters: [],
       enable_optimize_prompt: currentPhotoMode.value !== 'unlimited' && enablePhotoOptimizePrompt.value,
       ...(isMakeSameOn('photo') ? { is_make_same: 1, origin_session_id: originSessionId.value } : {}),
-      ...(isMakeExtensionMode.value ? { is_make_extension: 1, origin_post_id: originPostId.value, ...(isMakeVideoSequelMode.value ? {} : { origin_session_id: originSessionIdForExtension.value }) } : {}),
+      // 做续集只有视频有，这个标记只在视频 tab 生效，别的类型不带（见 resetMakeSourceForTab）
     };
 
     const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
@@ -5649,8 +5683,8 @@ const doGeneratePhoto = async () => {
     const params = {
       session_id: sessionId,
       topic: contentWithRefTags,
-      ...(isMakeSameMode.value && !isMakeVideoSimilarMode.value ? { origin_session_id: originSessionId.value } : {}),
-      ...(isMakeExtensionMode.value && !isMakeVideoSequelMode.value ? { origin_session_id: originSessionIdForExtension.value } : {})
+      // 做同款只认落在图片 tab 上的那份；做续集是视频专属，这里不带
+      ...(isMakeSameOn('photo') ? { origin_session_id: originSessionId.value } : {}),
     };
 
     const response = await api.generateSinglePhoto(params) as any;
