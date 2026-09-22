@@ -1177,7 +1177,7 @@ async function handlePublishFromSelection() {
               title: targetProject.name,
               type: 1,
               language: collectionLanguage.value,
-              cover: projectCoverForNewCollection.value,
+              cover: targetProject.result_async.generate_manhua_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
@@ -1186,7 +1186,7 @@ async function handlePublishFromSelection() {
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: targetProject.name,
-                cover: projectCoverForNewCollection.value,
+                cover: targetProject.result_async.generate_manhua_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
@@ -4065,7 +4065,7 @@ async function handlePublish(publishData?: any) {
             title: project.name,
             type: 1,
             language: collectionLanguage.value,
-            cover: projectCoverForNewCollection.value,
+            cover: project.result_async.generate_manhua_cover || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
@@ -4074,7 +4074,7 @@ async function handlePublish(publishData?: any) {
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
-              cover: projectCoverForNewCollection.value,
+              cover: project.result_async.generate_manhua_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,

@@ -1392,7 +1392,7 @@ async function handlePublishFromSelection() {
               type: 3,
               language: collectionLanguage.value,
               plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
-              cover: projectCoverForNewCollection.value,
+              cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
@@ -1401,7 +1401,7 @@ async function handlePublishFromSelection() {
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: targetProject.name,
-                cover: projectCoverForNewCollection.value,
+                cover: targetProject.result_async?.generate_manju_cover || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
@@ -2518,7 +2518,7 @@ async function handlePublish(publishData?: any) {
             type: 3,
             language: collectionLanguage.value,
             plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
-            cover: projectCoverForNewCollection.value,
+            cover: project.result_async?.generate_manju_cover || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
@@ -2527,7 +2527,7 @@ async function handlePublish(publishData?: any) {
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
-              cover: projectCoverForNewCollection.value,
+              cover: project.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,

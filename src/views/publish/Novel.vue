@@ -4843,6 +4843,7 @@ async function initBatchPublish(session_id: string) {
 
         if (book_id == 0) {
           const collectionCover = batchCover || selectedProject.value?.result_async?.generate_novel_cover || '';
+          projectCoverForNewCollection.value = collectionCover;
           const storySummary = (selectedProject.value?.result_async?.generate_novel_outline?.story_summary?.summary || '').slice(0, 1000);
           const collectionDescription = storySummary || t('collection.defaultDescription');
           const projectStoryMode = selectedProject.value?.user_selected?.story_mode || selectedProject.value?.story_mode || 'normal';

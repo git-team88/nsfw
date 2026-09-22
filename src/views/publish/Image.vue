@@ -164,8 +164,8 @@
         <div class="image-list-box">
           <!-- 按住拖动可以换顺序，第一张就是封面。
                key 用图片地址而不是下标：换位置时 Vue 只挪 DOM 节点，不会整排重建、图片重新加载；
-               TransitionGroup 让其他图平滑让位 -->
-          <TransitionGroup name="img" tag="div" class="image-list">
+               让位动画由 flipSiblings 手写（见下方脚本），不用 TransitionGroup -->
+          <div class="image-list">
             <div
               v-for="(item, index) in imageItems"
               :key="item.key"
@@ -194,7 +194,7 @@
                 />
               </div>
             </div>
-          </TransitionGroup>
+          </div>
         </div>
 
         <input
@@ -625,7 +625,11 @@ async function uploadImageForAdd(file: File) {
 // 用 Pointer Events 自己实现，不走原生 draggable —— 原生那套会拖出一张半透明的暗图，
 // 移动端也不支持。被拖的那张只加 transform 跟着指针走，其它图原地不动；
 // 盖住某张超过一半（重叠面积）就把它挪到那个位置，数组一变 Vue 自动重排，
-// TransitionGroup 让其它图平滑让位。
+// 让位的兄弟由 flipSiblings 做一段平滑位移。
+//
+// 不用 TransitionGroup：它做 FLIP 时不分谁在被拖，会把正在拖那张的行内 transform 覆盖掉；
+// 而且让位动画进行中兄弟的 getBoundingClientRect 是半路上的值，拿它算重叠会
+// 一会儿判定换、一会儿判定换回来，图就来回闪。这里两件事都自己管。
 const dragState = reactive({ key: '', dx: 0, dy: 0 });
 // 给每张图一个稳定的 key（同一地址出现多次时加序号），拖动换位时节点跟着走，不重建
 const imageItems = computed(() => {
@@ -700,6 +704,8 @@ function startImageDrag() {
   dragState.key = ctx.key;
   dragState.dx = 0;
   dragState.dy = 0;
+  // 它可能刚做完让位动画，行内还挂着 transition，清掉才能跟得上指针
+  ctx.el.style.transition = '';
   try { ctx.el.setPointerCapture(ctx.pointerId); } catch { /* 部分浏览器不支持，忽略 */ }
 }
 
@@ -727,13 +733,64 @@ function onImagePointerMove(e: PointerEvent) {
   if (from < 0) return;
   const to = resolveImageDragTarget(from);
   if (to !== from) {
-    const next = [...imageUrls.value];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    imageUrls.value = next;
+    flipSiblings(() => {
+      const next = [...imageUrls.value];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      imageUrls.value = next;
+    });
     // 换位后这张落到新槽位，按最后的指针位置重算一次 translate，视觉上才不会跳
     nextTick(updateImageDragPosition);
   }
+}
+
+/** 元素「该在」的位置：去掉当前 transform 的影响（让位动画进行中 rect 是半路上的） */
+function untransformedRect(el: HTMLElement) {
+  const r = el.getBoundingClientRect();
+  const t = getComputedStyle(el).transform;
+  if (!t || t === 'none') return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+  const m = new DOMMatrixReadOnly(t);
+  return { left: r.left - m.e, top: r.top - m.f, right: r.right - m.e, bottom: r.bottom - m.f, width: r.width, height: r.height };
+}
+
+const SIBLING_MOVE_TRANSITION = 'transform 0.18s ease';
+
+/**
+ * 给让位的兄弟做 FLIP：改数组前记下它们此刻「看得见」的位置，DOM 更新后
+ * 先无过渡地把它们摆回原地，再放开让它们滑到新槽位。被拖的那张不参与。
+ * 从上一次动画的半路接着滑也没问题 —— 记的是视觉位置，不是逻辑槽位。
+ */
+function flipSiblings(mutate: () => void) {
+  const ctx = imageDragCtx;
+  const list = ctx?.el.parentElement;
+  const before = new Map<HTMLElement, DOMRect>();
+  if (ctx && list) {
+    for (const c of Array.from(list.children) as HTMLElement[]) {
+      if (c !== ctx.el && c.classList.contains('image-item')) before.set(c, c.getBoundingClientRect());
+    }
+  }
+  mutate();
+  nextTick(() => {
+    before.forEach((old, el) => {
+      if (!el.isConnected) return;
+      const now = untransformedRect(el);
+      const dx = old.left - now.left;
+      const dy = old.top - now.top;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      void el.offsetWidth; // 强制回流，让「摆回原地」先生效
+      el.style.transition = SIBLING_MOVE_TRANSITION;
+      el.style.transform = '';
+      // 滑完把行内 transition 清掉，否则它下次被拖时会盖过 .is-dragging 的 transition: none
+      const done = (ev: TransitionEvent) => {
+        if (ev.propertyName !== 'transform') return;
+        el.style.transition = '';
+        el.removeEventListener('transitionend', done);
+      };
+      el.addEventListener('transitionend', done);
+    });
+  });
 }
 
 /** 缩略图该在的左上角 = 指针 - 抓取偏移；减去它当前的布局位置就是 translate */
@@ -751,11 +808,10 @@ function updateImageDragPosition() {
 function resolveImageDragTarget(from: number): number {
   const ctx = imageDragCtx;
   if (!ctx) return from;
-  const rect = ctx.el.getBoundingClientRect();
   const dL = ctx.lastX - ctx.grabX;
   const dT = ctx.lastY - ctx.grabY;
-  const dR = dL + rect.width;
-  const dB = dT + rect.height;
+  const dR = dL + ctx.el.offsetWidth;
+  const dB = dT + ctx.el.offsetHeight;
   const siblings = Array.from(ctx.el.parentElement?.children || [])
     .filter((c) => c.classList.contains('image-item')) as HTMLElement[];
   let target = from;
@@ -764,7 +820,8 @@ function resolveImageDragTarget(from: number): number {
     if (sib === ctx.el) return;
     const idx = Number(sib.dataset.index);
     if (Number.isNaN(idx)) return;
-    const r = sib.getBoundingClientRect();
+    // 用去掉 transform 的位置：兄弟正在让位滑动时也按它的目标槽位算，不会来回触发换位
+    const r = untransformedRect(sib);
     if (r.width <= 0 || r.height <= 0) return;
     const overlapW = Math.max(0, Math.min(dR, r.right) - Math.max(dL, r.left));
     const overlapH = Math.max(0, Math.min(dB, r.bottom) - Math.max(dT, r.top));
