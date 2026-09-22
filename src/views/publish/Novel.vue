@@ -1154,7 +1154,7 @@ const showProjectDropdown = ref(false);
 const showChapterDropdown = ref(false);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string } | null>(null);
 
 // 来源作品生成时用的是不是无限制模式。
 // switch_no = 0 时发布页不显示「敏感内容」勾选，is_nsfw 只能由这里推导。
@@ -1876,7 +1876,8 @@ async function getPostDetails() {
           name: postData.book_title,
           cover: data.data?.book_info?.cover,
           description: data.data?.book_info?.description,
-          is_nsfw: data.data?.book_info?.is_nsfw ?? 0
+          is_nsfw: data.data?.book_info?.is_nsfw ?? 0,
+          language: data.data?.book_info?.language || collectionLanguage.value,
         };
         isNoCollection.value = false;
         // 语言下拉框回显合集自己设的语言；没设（空串）或不在选项里就保持默认
@@ -3591,8 +3592,11 @@ function handleEditCollectionFromDropdown() {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string }) {
   showEditCollectionModal.value = false;
+  // 弹窗里可能改过语言，同步回页面的语言下拉，否则下拉一直显示旧值，
+  // 之后再触发自动创建还会拿这个过期的值去建合集
+  if (collection.language) collectionLanguage.value = collection.language;
 
   if (editingCollectionId.value === null) {
     selectedCollection.value = {
@@ -3600,7 +3604,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       name: collection.name,
       cover: collection.cover,
       description: collection.description,
-      is_nsfw: collection.is_nsfw ?? 0
+      is_nsfw: collection.is_nsfw ?? 0,
+      language: collection.language || collectionLanguage.value,
     };
 
     if (collection.is_nsfw == 1) {
@@ -3693,7 +3698,8 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       name: collection.title,
       cover: collection.cover,
       description: collection.description,
-      is_nsfw: collection.is_nsfw ?? 0
+      is_nsfw: collection.is_nsfw ?? 0,
+      language: collection.language || collectionLanguage.value,
     };
 
     // Update cover preview to use collection cover
@@ -4437,6 +4443,7 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({
             title: projectName,
             type: 2,
+            language: collectionLanguage.value,
             cover: collectionCover,
             description: collectionDescription,
             is_nsfw: collectionIsNsfw
@@ -4449,7 +4456,8 @@ async function handlePublish(publishData?: any) {
               name: projectName,
               cover: collectionCover,
               description: collectionDescription,
-              is_nsfw: collectionIsNsfw
+              is_nsfw: collectionIsNsfw,
+              language: collectionLanguage.value,
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -4466,7 +4474,8 @@ async function handlePublish(publishData?: any) {
               name: searchRes.data?.book_info?.title || projectName,
               cover: searchRes.data?.book_info?.cover,
               description: searchRes.data?.book_info?.description,
-              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              language: searchRes.data?.book_info?.language || collectionLanguage.value,
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -4678,6 +4687,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
               const createRes = await api.addCollection({
                 title,
                 type: 2,
+                language: collectionLanguage.value,
                 cover: collectionCover,
                 description: collectionDescription,
                 is_nsfw: collectionIsNsfw
@@ -4689,7 +4699,8 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                   name: title,
                   cover: collectionCover,
                   description: collectionDescription,
-                  is_nsfw: collectionIsNsfw
+                  is_nsfw: collectionIsNsfw,
+                  language: collectionLanguage.value,
                 };
                 selectedEpisodeNumber.value = '1';
                 isNoCollection.value = false;
@@ -4706,7 +4717,8 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                   name: searchRes.data?.book_info?.title || title,
                   cover: searchRes.data?.book_info?.cover,
                   description: searchRes.data?.book_info?.description,
-                  is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+                  is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+                  language: searchRes.data?.book_info?.language || collectionLanguage.value,
                 };
                 selectedEpisodeNumber.value = episodeNumber.toString();
                 isNoCollection.value = false;
@@ -4839,6 +4851,7 @@ async function initBatchPublish(session_id: string) {
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 2,
+            language: collectionLanguage.value,
             cover: collectionCover,
             description: collectionDescription,
             is_nsfw: collectionIsNsfw
@@ -4850,7 +4863,8 @@ async function initBatchPublish(session_id: string) {
               name: projectTitle,
               cover: collectionCover,
               description: collectionDescription,
-              is_nsfw: collectionIsNsfw
+              is_nsfw: collectionIsNsfw,
+              language: collectionLanguage.value,
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -4867,7 +4881,8 @@ async function initBatchPublish(session_id: string) {
               name: searchRes.data?.book_info?.title || projectTitle,
               cover: searchRes.data?.book_info?.cover,
               description: searchRes.data?.book_info?.description,
-              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0
+              is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              language: searchRes.data?.book_info?.language || collectionLanguage.value,
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;

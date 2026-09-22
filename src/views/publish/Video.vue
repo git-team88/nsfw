@@ -1136,7 +1136,7 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number; currency?: string } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string } | null>(null);
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
 // 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
@@ -1390,8 +1390,9 @@ async function handlePublishFromSelection() {
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
+              language: collectionLanguage.value,
               plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
-              cover: targetProject.result_async?.generate_manju_cover || '',
+              cover: projectCoverForNewCollection.value,
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
             }) as any;
@@ -1400,9 +1401,10 @@ async function handlePublishFromSelection() {
               selectedCollection.value = {
                 id: createRes.data.book_id,
                 name: targetProject.name,
-                cover: targetProject.result_async?.generate_manju_cover || '',
+                cover: projectCoverForNewCollection.value,
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+                language: collectionLanguage.value,
                 price: defaultPlan?.price ?? '',
                 currency: defaultPlan?.currency || ''
               };
@@ -1422,6 +1424,7 @@ async function handlePublishFromSelection() {
                 cover: searchRes.data?.book_info?.cover,
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+                language: searchRes.data?.book_info?.language || collectionLanguage.value,
                 price: planPriceOf(searchRes.data),
                 currency: planCurrencyOf(searchRes.data)
               };
@@ -1914,6 +1917,7 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       cover: collection.cover,
       description: collection.description,
       is_nsfw: collection.is_nsfw ?? 0,
+      language: collection.language || collectionLanguage.value,
       // 价格读接口新下发的 plan，没有再退回老的顶层 price
       price: planPriceOf(collection),
       currency: planCurrencyOf(collection)
@@ -2066,8 +2070,11 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; price?: string | number; currency?: string }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string }) {
   showEditCollectionModal.value = false;
+  // 弹窗里可能改过语言，同步回页面的语言下拉，否则下拉一直显示旧值，
+  // 之后再触发自动创建还会拿这个过期的值去建合集
+  if (collection.language) collectionLanguage.value = collection.language;
 
   if (editingCollectionId.value === null) {
     selectedCollection.value = {
@@ -2076,6 +2083,7 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       cover: collection.cover,
       description: collection.description,
       is_nsfw: collection.is_nsfw ?? 0,
+      language: collection.language || collectionLanguage.value,
       price: collection.price ?? ''
     };
 
@@ -2240,10 +2248,9 @@ async function selectProject(project: any) {
     const cachedProject = projectDetailsCache.value[project.session_id];
     Object.assign(project, cachedProject);
 
-    // Set cover from cached project details
-    if (project.cover) {
-      coverPreview.value = project.cover;
-    } else if (project.result_async?.generate_manju_cover) {
+    // 项目封面只有 result_async.generate_manju_cover 这一处，
+    // 接口的项目详情里没有 cover / video_cover_url 字段
+    if (project.result_async?.generate_manju_cover) {
       coverPreview.value = project.result_async.generate_manju_cover;
     }
 
@@ -2263,10 +2270,9 @@ async function selectProject(project: any) {
         // Update project with details
         Object.assign(project, res.data);
 
-        // Set cover from project details
-        if (project.cover) {
-          coverPreview.value = project.cover;
-        } else if (project.result_async?.generate_manju_cover) {
+        // 项目封面只有 result_async.generate_manju_cover 这一处，
+        // 接口的项目详情里没有 cover / video_cover_url 字段
+        if (project.result_async?.generate_manju_cover) {
           coverPreview.value = project.result_async.generate_manju_cover;
         }
 
@@ -2423,10 +2429,9 @@ async function handlePublish(publishData?: any) {
   // Get chapter details to get video, cover, and title from chapter data
   try {
     if (currentSessionId) {
-      // Set cover from project cover, not chapter cover
-      if (project.cover) {
-        coverPreview.value = project.cover;
-      } else if (project.result_async?.generate_manju_cover) {
+      // 项目封面只有 result_async.generate_manju_cover 这一处，
+      // 接口的项目详情里没有 cover / video_cover_url 字段
+      if (project.result_async?.generate_manju_cover) {
         coverPreview.value = project.result_async.generate_manju_cover;
       }
 
@@ -2489,7 +2494,7 @@ async function handlePublish(publishData?: any) {
   // Handle collection logic based on the project name
   if (project.name) {
     projectNameForNewCollection.value = project.name;
-    projectCoverForNewCollection.value = project.video_cover_url || project.result_async?.generate_manju_cover || coverPreview.value || '';
+    projectCoverForNewCollection.value = project.result_async?.generate_manju_cover || coverPreview.value || '';
     try {
       let searchRes: any = null;
       if (currentSessionId) {
@@ -2511,8 +2516,9 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
+            language: collectionLanguage.value,
             plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
-            cover: project.video_cover_url || '',
+            cover: projectCoverForNewCollection.value,
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
           }) as any;
@@ -2521,9 +2527,10 @@ async function handlePublish(publishData?: any) {
             selectedCollection.value = {
               id: createRes.data.book_id,
               name: project.name,
-              cover: project.video_cover_url || '',
+              cover: projectCoverForNewCollection.value,
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+              language: collectionLanguage.value,
               price: defaultPlan?.price ?? '',
               currency: defaultPlan?.currency || ''
             };
@@ -2544,6 +2551,7 @@ async function handlePublish(publishData?: any) {
               cover: searchRes.data?.book_info?.cover || collectionCover,
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              language: searchRes.data?.book_info?.language || collectionLanguage.value,
               price: planPriceOf(searchRes.data),
               currency: planCurrencyOf(searchRes.data)
             };
@@ -3035,7 +3043,8 @@ async function getPostDetails() {
           price: planPriceOf(data.data?.plan ? data.data : postData),
           currency: planCurrencyOf(data.data?.plan ? data.data : postData),
           // 敏感开关的状态取合集自己的 is_nsfw，不然编辑态永远显示关
-          is_nsfw: data.data?.book_info?.is_nsfw ?? 0
+          is_nsfw: data.data?.book_info?.is_nsfw ?? 0,
+          language: data.data?.book_info?.language || collectionLanguage.value,
         };
         isNoCollection.value = false;
         // 语言下拉框回显合集自己设的语言；没设（空串）或不在选项里就保持默认
@@ -4126,6 +4135,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
             const createRes = await api.addCollection({
               title,
               type: 3,
+              language: collectionLanguage.value,
               plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
@@ -4139,6 +4149,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 cover: coverPreview.value || '',
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+                language: collectionLanguage.value,
                 price: defaultPlan?.price ?? '',
                 currency: defaultPlan?.currency || ''
               };
@@ -4159,6 +4170,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 cover: searchRes.data?.book_info?.cover || '',
                 description: searchRes.data?.book_info?.description || '',
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+                language: searchRes.data?.book_info?.language || collectionLanguage.value,
                 price: planPriceOf(searchRes.data),
                 currency: planCurrencyOf(searchRes.data)
               };
@@ -4349,6 +4361,7 @@ async function initBatchPublish(session_id: string) {
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
+            language: collectionLanguage.value,
             plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
@@ -4362,6 +4375,7 @@ async function initBatchPublish(session_id: string) {
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
+              language: collectionLanguage.value,
               price: defaultPlan?.price ?? '',
               currency: defaultPlan?.currency || ''
             };
@@ -4382,6 +4396,7 @@ async function initBatchPublish(session_id: string) {
               cover: searchRes.data?.book_info?.cover || '',
               description: searchRes.data?.book_info?.description || '',
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
+              language: searchRes.data?.book_info?.language || collectionLanguage.value,
               price: planPriceOf(searchRes.data),
               currency: planCurrencyOf(searchRes.data)
             };
