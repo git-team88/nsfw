@@ -2318,6 +2318,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       uploadCta: "Click to upload or drag images here. Max 12 images.",
       uploadBtn: "Upload Image",
       uploadFormatError: "Please upload image files (PNG/JPG/Webp).",
+      sizeError: "Image width and height must be between 300 and 6000 px",
+      ratioError: "Image aspect ratio (width / height) must be between 0.4 and 2.5",
       uploadTip: "The uploaded image size must not exceed 10MB!",
       multiSelectError: "Please select only one image",
       maxSelectTip: "You can select up to 12 images",

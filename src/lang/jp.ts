@@ -2142,6 +2142,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       uploadCta: "クリックしてアップロード、またはここにドラッグ&ドロップ（最大12枚）",
       uploadBtn: "画像をアップロード",
       uploadFormatError: "画像ファイルをアップロードしてください（PNG/JPG/Webp）",
+      sizeError: "画像の幅と高さは 300〜6000px の範囲にしてください",
+      ratioError: "画像のアスペクト比（幅／高さ）は 0.4〜2.5 の範囲にしてください",
       uploadTip: "アップロードする画像は10MB以下にしてください",
       multiSelectError: "画像ファイルは1枚のみ選択してください",
       maxSelectTip: "画像は最大12枚まで選択できます",

@@ -456,6 +456,32 @@
           background: #1a1a1a;
           overflow: hidden;
 
+          // 按住拖动排序
+          cursor: grab;
+          touch-action: none;
+          user-select: none;
+          -webkit-user-select: none;
+
+          // 换位时平滑让位（img-move 由 TransitionGroup 加）
+          &.img-move {
+            transition: transform 0.18s ease;
+          }
+
+          // 正在拖的那张：抬到最上层跟着指针走，位移由行内 transform 驱动，
+          // 所以不能再有过渡，否则跟不上手
+          &.is-dragging {
+            z-index: 20;
+            cursor: grabbing;
+            transition: none;
+          }
+
+          // 缩略图不走浏览器的原生拖拽（那会拖出一张暗图）
+          img {
+            -webkit-user-drag: none;
+            user-drag: none;
+          }
+
+
           .image {
             width: auto;
             max-width: 100%;

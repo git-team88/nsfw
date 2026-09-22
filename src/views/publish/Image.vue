@@ -162,13 +162,22 @@
           />
         </div>
         <div class="image-list-box">
-          <div class="image-list">
+          <!-- 按住拖动可以换顺序，第一张就是封面。
+               key 用图片地址而不是下标：换位置时 Vue 只挪 DOM 节点，不会整排重建、图片重新加载；
+               TransitionGroup 让其他图平滑让位 -->
+          <TransitionGroup name="img" tag="div" class="image-list">
             <div
-              v-for="(url, index) in imageUrls"
-              :key="index"
+              v-for="(item, index) in imageItems"
+              :key="item.key"
               class="image-item"
+              :class="{ 'is-dragging': dragState.key === item.key }"
+              :style="dragItemStyle(item.key)"
+              :data-index="index"
+              @pointerdown="onImagePointerDown($event, item.key)"
+              @click.capture="onImageClickCapture"
+              @dragstart.prevent
             >
-              <img class="image" :src="processImageUrl(url)" alt="" />
+              <img class="image" :src="processImageUrl(item.url)" alt="" draggable="false" />
               <div class="image-btn">
                 <div class="reload">
                   <img
@@ -185,7 +194,7 @@
                 />
               </div>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
 
         <input
@@ -214,23 +223,6 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Cover Section -->
-      <div class="preview-section cover-section" v-if="showFullContent && imageUrls.length > 0">
-        <div class="form-label-box">
-          <span><b>*</b>{{ t('submit.coverLabel') }}</span>
-        </div>
-        <div class="cover-row">
-          <div class="cover-upload">
-            <img v-if="coverPreview" :src="processImageUrl(coverPreview)" alt="" class="cover-preview" />
-            <div v-else class="cover-placeholder">
-              <img src="@/assets/images/user/upload.png" alt="" />
-              <span>{{ t('collection.uploadCover') }}</span>
-            </div>
-          </div>
-          <button class="set-cover" @click="openCoverModal">{{ t('submit.image.setting') }}</button>
         </div>
       </div>
 
@@ -370,14 +362,6 @@
       </div>
     </div>
 
-    <!-- Cover Selection Modal -->
-    <SetImageCoverModal
-      v-model:visible="showCoverModal"
-      :images="imageUrls"
-      :cover-image="coverPreview"
-      @confirm="onCoverConfirmed"
-    />
-
     <!-- Media Preview Modal -->
     <MediaPreviewModal
       v-model:visible="showPreviewMedia"
@@ -404,7 +388,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
@@ -415,7 +399,6 @@ import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { processImageUrl } from "@/util/utils";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
-import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
@@ -517,8 +500,6 @@ const form = ref({
 const session_id = ref("");
 const imageUrls = ref<string[]>([]);
 const imageSessionMap = ref<Map<string, string>>(new Map());
-const coverPreview = ref("");
-const showCoverModal = ref(false);
 const showFullContent = ref(false);
 const isUploading = ref(false);
 const editPostId = ref("");
@@ -577,7 +558,7 @@ function addMoreImages() {
   addImagesInputRef.value?.click();
 }
 
-function onAddImagesPicked(e: Event) {
+async function onAddImagesPicked(e: Event) {
   const input = e.target as HTMLInputElement;
   const files = Array.from(input.files ?? []);
   input.value = "";
@@ -599,6 +580,7 @@ function onAddImagesPicked(e: Event) {
       toast(t("submit.image.uploadTip"));
       continue;
     }
+    if (!(await checkImageDimensions(f))) continue;
     validFiles.push(f);
   }
 
@@ -635,6 +617,237 @@ async function uploadImageForAdd(file: File) {
   }
 }
 
+// --- 封面 / 排序 / 语言 / 尺寸校验 ---------------------------------------------
+
+// 封面固定用第一张图（提交时取 imageUrls[0]），不再单独设置。拖动排序把哪张换到第一个，哪张就是封面。
+
+// 按住拖动调整图片顺序（和首页输入框里的参考素材同一套做法）：
+// 用 Pointer Events 自己实现，不走原生 draggable —— 原生那套会拖出一张半透明的暗图，
+// 移动端也不支持。被拖的那张只加 transform 跟着指针走，其它图原地不动；
+// 盖住某张超过一半（重叠面积）就把它挪到那个位置，数组一变 Vue 自动重排，
+// TransitionGroup 让其它图平滑让位。
+const dragState = reactive({ key: '', dx: 0, dy: 0 });
+// 给每张图一个稳定的 key（同一地址出现多次时加序号），拖动换位时节点跟着走，不重建
+const imageItems = computed(() => {
+  const seen = new Map<string, number>();
+  return imageUrls.value.map((url) => {
+    const n = seen.get(url) || 0;
+    seen.set(url, n + 1);
+    return { url, key: `${url}#${n}` };
+  });
+});
+interface ImageDragCtx {
+  key: string;
+  el: HTMLElement;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  /** 指针相对缩略图左上角的偏移，拖动时保持不变，图才不会跳到指针下 */
+  grabX: number;
+  grabY: number;
+  active: boolean;
+  moved: boolean;
+  timer: number | null;
+}
+let imageDragCtx: ImageDragCtx | null = null;
+// 拖完松手会冒一个 click，这个时间点之前的 click 一律吞掉，别把删除 / 重传点出来
+let suppressImageClickUntil = 0;
+
+const DRAG_START_DISTANCE = 4;
+const TOUCH_DRAG_HOLD_MS = 200;
+const TOUCH_CANCEL_DISTANCE = 8;
+
+const dragItemStyle = (key: string) =>
+  dragState.key === key ? { transform: `translate(${dragState.dx}px, ${dragState.dy}px)` } : undefined;
+
+function onImageClickCapture(e: Event) {
+  if (Date.now() < suppressImageClickUntil) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}
+
+function onImagePointerDown(e: PointerEvent, key: string) {
+  if (e.button !== 0) return;
+  if ((e.target as HTMLElement | null)?.closest?.('.image-btn')) return;
+  if (imageUrls.value.length < 2) return;
+  // 缩略图是 <img>，鼠标按下不拦的话浏览器会启动原生拖拽（暗图 + pointercancel）
+  if (e.pointerType === 'mouse') e.preventDefault();
+  const el = e.currentTarget as HTMLElement;
+  const rect = el.getBoundingClientRect();
+  imageDragCtx = {
+    key, el, pointerId: e.pointerId,
+    startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+    grabX: e.clientX - rect.left, grabY: e.clientY - rect.top,
+    active: false, moved: false, timer: null,
+  };
+  window.addEventListener('pointermove', onImagePointerMove, { passive: false });
+  window.addEventListener('pointerup', onImagePointerUp);
+  window.addEventListener('pointercancel', onImagePointerUp);
+  // 触屏：长按一小会儿再进入拖拽，免得和页面滚动打架；鼠标：移动超过几像素就开始
+  if (e.pointerType !== 'mouse') {
+    imageDragCtx.timer = window.setTimeout(startImageDrag, TOUCH_DRAG_HOLD_MS);
+  }
+}
+
+function startImageDrag() {
+  const ctx = imageDragCtx;
+  if (!ctx || ctx.active) return;
+  ctx.active = true;
+  ctx.timer = null;
+  dragState.key = ctx.key;
+  dragState.dx = 0;
+  dragState.dy = 0;
+  try { ctx.el.setPointerCapture(ctx.pointerId); } catch { /* 部分浏览器不支持，忽略 */ }
+}
+
+function onImagePointerMove(e: PointerEvent) {
+  const ctx = imageDragCtx;
+  if (!ctx) return;
+  ctx.lastX = e.clientX;
+  ctx.lastY = e.clientY;
+  const dist = Math.hypot(e.clientX - ctx.startX, e.clientY - ctx.startY);
+  if (!ctx.active) {
+    if (e.pointerType === 'mouse') {
+      if (dist < DRAG_START_DISTANCE) return;
+      startImageDrag();
+    } else {
+      // 长按还没到就滑开了：当成普通触摸，不拖
+      if (dist >= TOUCH_CANCEL_DISTANCE) finishImageDrag();
+      return;
+    }
+  }
+  if (!ctx.active) return;
+  e.preventDefault();
+  ctx.moved = true;
+  updateImageDragPosition();
+  const from = imageItems.value.findIndex((it) => it.key === ctx.key);
+  if (from < 0) return;
+  const to = resolveImageDragTarget(from);
+  if (to !== from) {
+    const next = [...imageUrls.value];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    imageUrls.value = next;
+    // 换位后这张落到新槽位，按最后的指针位置重算一次 translate，视觉上才不会跳
+    nextTick(updateImageDragPosition);
+  }
+}
+
+/** 缩略图该在的左上角 = 指针 - 抓取偏移；减去它当前的布局位置就是 translate */
+function updateImageDragPosition() {
+  const ctx = imageDragCtx;
+  if (!ctx || !ctx.active) return;
+  const rect = ctx.el.getBoundingClientRect();
+  const baseLeft = rect.left - dragState.dx;
+  const baseTop = rect.top - dragState.dy;
+  dragState.dx = ctx.lastX - ctx.grabX - baseLeft;
+  dragState.dy = ctx.lastY - ctx.grabY - baseTop;
+}
+
+/** 被拖的那张盖住哪张超过一半（重叠面积 > 对方面积的一半），就落到它的位置；盖住多张取最多的 */
+function resolveImageDragTarget(from: number): number {
+  const ctx = imageDragCtx;
+  if (!ctx) return from;
+  const rect = ctx.el.getBoundingClientRect();
+  const dL = ctx.lastX - ctx.grabX;
+  const dT = ctx.lastY - ctx.grabY;
+  const dR = dL + rect.width;
+  const dB = dT + rect.height;
+  const siblings = Array.from(ctx.el.parentElement?.children || [])
+    .filter((c) => c.classList.contains('image-item')) as HTMLElement[];
+  let target = from;
+  let best = 0.5;
+  siblings.forEach((sib) => {
+    if (sib === ctx.el) return;
+    const idx = Number(sib.dataset.index);
+    if (Number.isNaN(idx)) return;
+    const r = sib.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return;
+    const overlapW = Math.max(0, Math.min(dR, r.right) - Math.max(dL, r.left));
+    const overlapH = Math.max(0, Math.min(dB, r.bottom) - Math.max(dT, r.top));
+    const ratio = (overlapW * overlapH) / (r.width * r.height);
+    if (ratio > best) {
+      best = ratio;
+      target = idx;
+    }
+  });
+  return target;
+}
+
+function onImagePointerUp() {
+  const ctx = imageDragCtx;
+  if (!ctx) return;
+  const wasActive = ctx.active;
+  finishImageDrag();
+  if (wasActive) suppressImageClickUntil = Date.now() + 300;
+}
+
+function finishImageDrag() {
+  const ctx = imageDragCtx;
+  if (!ctx) return;
+  if (ctx.timer) window.clearTimeout(ctx.timer);
+  try { ctx.el.releasePointerCapture(ctx.pointerId); } catch { /* 没 capture 过会抛，忽略 */ }
+  window.removeEventListener('pointermove', onImagePointerMove);
+  window.removeEventListener('pointerup', onImagePointerUp);
+  window.removeEventListener('pointercancel', onImagePointerUp);
+  dragState.key = '';
+  dragState.dx = 0;
+  dragState.dy = 0;
+  imageDragCtx = null;
+}
+
+// 语言默认值优先级：AI 生成时配置的语言 > 进入发布页时地址栏带的 language > 站点当前语言。
+// 只是默认值，用户随时可以在下拉框里切。
+const LANG_KEYS = langOptions.map((o) => o.key);
+function applyNavLanguage() {
+  const navLang = (route.query.language || route.query.lang) as string;
+  if (navLang && LANG_KEYS.includes(navLang)) form.value.language = navLang;
+}
+function applyProjectLanguage(project: any) {
+  const ra = typeof project?.result_async === 'string'
+    ? (() => { try { return JSON.parse(project.result_async || '{}'); } catch { return {}; } })()
+    : (project?.result_async || {});
+  const lang = project?.user_selected?.language || ra?.user_selected?.language;
+  if (lang && LANG_KEYS.includes(lang)) form.value.language = lang;
+}
+
+// 手动上传的图片限制：宽高都在 300–6000px、宽高比（宽/高）在 0.4–2.5 之间，都是开区间，和后端口径一致
+const IMAGE_SIDE_MIN = 300;
+const IMAGE_SIDE_MAX = 6000;
+const IMAGE_RATIO_MIN = 0.4;
+const IMAGE_RATIO_MAX = 2.5;
+function readImageSize(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ width: img.naturalWidth, height: img.naturalHeight }); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+async function checkImageDimensions(file: File): Promise<boolean> {
+  const size = await readImageSize(file);
+  if (!size || !size.width || !size.height) {
+    toast(t("submit.image.uploadFormatError"));
+    return false;
+  }
+  const sideOk = size.width > IMAGE_SIDE_MIN && size.width < IMAGE_SIDE_MAX
+    && size.height > IMAGE_SIDE_MIN && size.height < IMAGE_SIDE_MAX;
+  if (!sideOk) {
+    toast(t("submit.image.sizeError"));
+    return false;
+  }
+  const ratio = size.width / size.height;
+  if (ratio <= IMAGE_RATIO_MIN || ratio >= IMAGE_RATIO_MAX) {
+    toast(t("submit.image.ratioError"));
+    return false;
+  }
+  return true;
+}
+
 function reloadImage(idx: number) {
   reuploadIndex.value = idx;
   reuploadInputRef.value?.click();
@@ -644,9 +857,6 @@ function removeImage(idx: number) {
   const removedUrl = imageUrls.value[idx];
   imageUrls.value.splice(idx, 1);
   imageSessionMap.value.delete(removedUrl);
-  if (coverPreview.value === removedUrl) {
-    coverPreview.value = imageUrls.value[0] || "";
-  }
 }
 
 async function onReuploadPicked(e: Event) {
@@ -664,6 +874,7 @@ async function onReuploadPicked(e: Event) {
     toast(t("submit.image.uploadTip"));
     return;
   }
+  if (!(await checkImageDimensions(file))) return;
 
   const token = localStorage.getItem("token");
   if (!token) { router.push("/login"); return; }
@@ -687,9 +898,6 @@ async function onReuploadPicked(e: Event) {
         imageUrls.value.splice(idx, 1, url);
         imageSessionMap.value.delete(oldUrl);
         imageSessionMap.value.set(url, "");
-        if (coverPreview.value === oldUrl) {
-          coverPreview.value = url;
-        }
       }
     }
   } catch (error) {
@@ -720,14 +928,6 @@ function goBack() {
 
 function goToHome() {
   router.push("/");
-}
-
-function openCoverModal() {
-  showCoverModal.value = true;
-}
-
-function onCoverConfirmed(url: string) {
-  coverPreview.value = url;
 }
 
 function openImageView(project: any) {
@@ -856,8 +1056,8 @@ async function confirmSelectedProjects() {
   }
 
   imageUrls.value = allUrls.slice(0, 15);
-  coverPreview.value = allUrls[0] || "";
   const firstProject = selected[0];
+  applyProjectLanguage(firstProject);
   session_id.value = firstProject?.session_id || "";
   showFullContent.value = true;
   if (firstProject?.name) {
@@ -990,6 +1190,8 @@ async function appendFiles(files: File[]) {
       continue;
     }
 
+    if (!(await checkImageDimensions(f))) continue;
+
     const pf = f as PreviewFile;
     pf._key = `${Date.now()}_${Math.random()}`;
     pf._preview = URL.createObjectURL(f);
@@ -1017,9 +1219,6 @@ async function appendFiles(files: File[]) {
   }
 
   if (imageUrls.value.length > 0) {
-    if (!coverPreview.value) {
-      coverPreview.value = imageUrls.value[0];
-    }
     showFullContent.value = true;
   }
 
@@ -1073,7 +1272,6 @@ async function uploadImageAsync(pf: PreviewFile): Promise<boolean> {
 }
 
 // Keep imageUrls in sync with uploaded files (first is cover)
-const uploadedUrls = computed(() => imageFiles.value.filter((f) => f._url).map((f) => f._url!));
 
 // --- Contenteditable helpers ---
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
@@ -1628,14 +1826,15 @@ async function onSubmit() {
   }
 
   // Merge uploaded local files into imageUrls if present
-  const finalUrls = uploadedUrls.value.length > 0 ? uploadedUrls.value : imageUrls.value;
+  // imageUrls 就是页面上的顺序（含拖动后的），提交按这个顺序，第一张是封面
+  const finalUrls = imageUrls.value;
 
   if (finalUrls.length === 0) {
     toast(t("submit.image.uploadFirst"));
     return;
   }
 
-  const finalCover = coverPreview.value || finalUrls[0] || "";
+  const finalCover = finalUrls[0] || "";
   if (!finalCover) {
     toast(t("submit.image.setCover"));
     return;
@@ -1756,6 +1955,8 @@ onMounted(async () => {
   tabList.value = buildTabList();
   checkSubscriptionStatus();
 
+  applyNavLanguage();
+
   const sessionId = route.query.session_id as string;
   const postId = route.query.post_id as string;
 
@@ -1776,7 +1977,7 @@ onMounted(async () => {
         if (post.access_rights == 2 || post.access_rights == '2') form.value.permission = "partial";
         if (post.access_rights == 3 || post.access_rights == '3') form.value.permission = "private";
         if (post.language) form.value.language = post.language;
-        if (post.cover) coverPreview.value = post.cover;
+        const postCover: string = post.cover || "";
         if (post.image_urls && Array.isArray(post.image_urls) && post.image_urls.length > 0) {
           imageUrls.value = post.image_urls.slice(0, 15);
           for (const u of imageUrls.value) {
@@ -1796,7 +1997,11 @@ onMounted(async () => {
             }
           }
         }
-        if (!coverPreview.value && imageUrls.value.length > 0) coverPreview.value = imageUrls.value[0];
+        // 封面就是第一张：原帖的封面如果在图片列表里，挪到最前面，编辑时封面不变
+        if (postCover) {
+          const ci = imageUrls.value.indexOf(postCover);
+          if (ci > 0) imageUrls.value.unshift(...imageUrls.value.splice(ci, 1));
+        }
         if (post.session_id) session_id.value = post.session_id;
         isLoadingDetail.value = false;
         showFullContent.value = true;
@@ -1832,7 +2037,7 @@ onMounted(async () => {
           for (const u of urls) {
             imageSessionMap.value.set(u, sessionId);
           }
-          coverPreview.value = urls[0];
+          applyProjectLanguage(detailRes.data);
           isLoadingDetail.value = false;
           showFullContent.value = true;
           return;
@@ -1876,3 +2081,4 @@ watch(locale, () => {
 <style lang="scss" scoped>
 @use '@/scss/Image.scss';
 </style>
+

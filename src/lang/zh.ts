@@ -2424,6 +2424,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       uploadCta: "点击上传或拖拽图片到此处，最多12张",
       uploadBtn: "上传图片",
       uploadFormatError: "请上传图片文件(PNG/JPG/Webp)",
+      sizeError: "图片宽高需在 300–6000px 之间",
+      ratioError: "图片宽高比（宽/高）需在 0.4–2.5 之间",
       uploadTip: "上传的图片大小不能超过10MB！",
       multiSelectError: "仅支持选择一张图片",
       maxSelectTip: "最多选择12张图片",

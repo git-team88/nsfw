@@ -2417,6 +2417,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       uploadCta: "點擊上傳或拖拽圖片到此處，最多12張",
       uploadBtn: "上傳圖片",
       uploadFormatError: "請上傳圖片文件(PNG/JPG/Webp)",
+      sizeError: "圖片寬高需在 300–6000px 之間",
+      ratioError: "圖片寬高比（寬/高）需在 0.4–2.5 之間",
       uploadTip: "上傳的圖片大小不能超過10MB！",
       multiSelectError: "僅支持選擇一張圖片",
       maxSelectTip: "最多選擇12張圖片",
