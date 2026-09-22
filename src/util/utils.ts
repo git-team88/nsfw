@@ -154,9 +154,31 @@ export function formatUpdateTime(timeStr: string): TimeFormatResult {
 
 export function processImageUrl(url: string | undefined, quality: number = 60): string {
   if (!url) return '';
+  // 有的接口返回的封面已经是转换过的、URL 上自带 imageMogr2 参数（比如我的收藏里的
+  // 图片 / 视频类型），再拼一次会变成 ?imageMogr2/...&imageMogr2/...，直接原样返回。
+  // 和 utils/markup.ts 里 toWebp 的判断保持一致
+  if (url.includes('imageMogr2')) return url;
   const formatParam = `imageMogr2/format/webp/quality/${quality}`;
   if (url.includes('?')) {
     return url + '&' + formatParam;
   }
   return url + '?' + formatParam;
+}
+
+/**
+ * 取接口返回的错误提示，按当前界面语言挑对应字段。
+ * 后端错误都带 msg / msg_cn / msg_jp / msg_tc 四份文案，直接用它的，
+ * 别再兜一个笼统的「操作失败」——那样用户看不出到底哪儿不对。
+ * 接口没给文案时返回空串，调用方自己决定兜底（一般是 t('fail')）。
+ */
+export function apiErrorMessage(res: any): string {
+  if (!res) return '';
+  const lang = i18n.global.locale.value as string;
+  const msg =
+    lang === 'en' ? res.msg :
+    lang === 'zh' ? res.msg_cn :
+    lang === 'tc' ? res.msg_tc :
+    lang === 'jp' ? res.msg_jp :
+    res.msg;
+  return (msg || res.msg || '').toString().trim();
 }

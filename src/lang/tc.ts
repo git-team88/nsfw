@@ -3029,6 +3029,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     duplicateError: "新建合集不能與已有合集名稱重複",
     cancel: "取消",
     save: "保存",
+    saving: "保存中...",
     noCollection: "請選擇合集",
     newCollection: "新建合集",
     modifyCollection: "修改合集信息",

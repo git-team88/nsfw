@@ -38,6 +38,7 @@
           <input
             type="text"
             v-model="collectionName"
+            ref="nameInputRef"
             class="form-input"
             :placeholder="t('collection.placeholder')"
             maxlength="60"
@@ -139,7 +140,8 @@
             @click="handleSave"
             :disabled="isLoading"
           >
-            {{ isLoading ? t('loading') : t('collection.save') }}
+            <span v-if="isLoading" class="btn-spinner"></span>
+            {{ isLoading ? t('collection.saving') : t('collection.save') }}
           </button>
         </div>
       </div>
@@ -160,14 +162,14 @@
 </template>
 
 <script setup lang="ts" name="CreateCollection">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
-import { processImageUrl } from '@/util/utils';
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import { baseUrl } from '@/util/config';
 import {
   fetchBookRechargePlans,
@@ -199,6 +201,23 @@ const description = ref('');
 const coverUrl = ref('');
 const isNsfw = ref(0);
 const errorMessage = ref('');
+
+const nameInputRef = ref<HTMLInputElement | null>(null);
+
+// 名称重复的红字挂在输入框下面，而保存按钮在表单最底部 —— 表单展开得长的时候
+// 报错落在视口外，用户只会觉得「点了没反应」，所以滚过去并聚焦
+function showDuplicateError() {
+  errorMessage.value = t('collection.duplicateError');
+  nextTick(() => {
+    nameInputRef.value?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    nameInputRef.value?.focus();
+  });
+}
+
+// 一改名字就把红字清掉，别一直挂着上一次的报错
+watch(collectionName, () => {
+  if (errorMessage.value) errorMessage.value = '';
+});
 const isLoading = ref(false);
 const editId = ref('');
 const showCoverModal = ref(false);
@@ -462,9 +481,9 @@ async function handleSave() {
       }, 500);
     } else {
       if (response.code == 22004) {
-        errorMessage.value = t('collection.duplicateError');
+        showDuplicateError();
       } else {
-        toast(t('fail'));
+        toast(apiErrorMessage(response) || t('fail'));
       }
     }
   } catch (error) {
@@ -880,7 +899,7 @@ function goBack() {
 .btn {
   min-width: 136px;
   height: 48px;
-  padding: 0 48px;
+  padding: 0 16px;
   border-radius: 8px;
   font-size: 14px;
   border: none;
@@ -1026,7 +1045,7 @@ function goBack() {
   .btn {
     min-width: 136px;
     height: 48px;
-    padding: 0 48px;
+    padding: 0 16px;
     border-radius: 8px;
     font-size: 14px;
   }
@@ -1178,5 +1197,30 @@ function goBack() {
   border: 1px solid #ff9aca;
   background: linear-gradient(145deg, #ff65ab, #f02c80);
   box-shadow: 0 0 6px rgba(255, 50, 140, 0.65);
+}
+
+/* 保存按钮的加载态：文字换成加载中 + 旁边一个小转圈，
+   和 BatchPublishDialog 的 .btn-spinner 一套写法；颜色跟着按钮文字走 */
+.btn.btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

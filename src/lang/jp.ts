@@ -2620,6 +2620,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     duplicateError: "既存のコレクション名と重複できません",
     cancel: "キャンセル",
     save: "保存",
+    saving: "保存中...",
     noCollection: "コレクションを使用しない",
     newCollection: "新規コレクション",
     modifyCollection: "コレクション情報を変更",

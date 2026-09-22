@@ -28,7 +28,8 @@
       <div class="modal-footer">
         <button class="btn btn-cancel" @click="handleCancel">{{ t('collection.cancel') }}</button>
         <button class="btn btn-save" @click="handleSave" :disabled="!isValid || isLoading">
-          {{ isLoading ? t('loading') : t('collection.save') }}
+          <span v-if="isLoading" class="btn-spinner"></span>
+          {{ isLoading ? t('collection.saving') : t('collection.save') }}
         </button>
       </div>
     </div>
@@ -40,6 +41,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
+import { apiErrorMessage } from '@/util/utils';
 
 const { t } = useI18n();
 
@@ -68,8 +70,8 @@ function handleInput() {
     collectionName.value = collectionName.value.substring(0, 30);
   }
 
-  const name = collectionName.value.trim();
-  if (name == '') {
+  // 一改名字就把红字清掉，别一直挂着上一次的报错
+  if (errorMessage.value) {
     errorMessage.value = '';
   }
 }
@@ -86,7 +88,7 @@ async function handleSave() {
         if (response.code == 22004) {
           errorMessage.value = t('collection.duplicateError');
         } else {
-          toast(t('fail'));
+          toast(apiErrorMessage(response) || t('fail'));
         }
       }
     } catch (error: any) {
@@ -255,5 +257,30 @@ function resetForm() {
       }
     }
   }
+}
+
+/* 保存按钮的加载态：文字换成加载中 + 旁边一个小转圈，
+   和 BatchPublishDialog 的 .btn-spinner 一套写法；颜色跟着按钮文字走 */
+.btn.btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

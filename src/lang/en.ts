@@ -2928,6 +2928,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     duplicateError: "New collection name cannot be the same as existing collections",
     cancel: "Cancel",
     save: "Save",
+    saving: "Saving...",
     noCollection: "No Collection",
     newCollection: "New Collection",
     modifyCollection: "Modify Collection Info",

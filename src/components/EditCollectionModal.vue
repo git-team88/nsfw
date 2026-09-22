@@ -36,6 +36,7 @@
           <input
             type="text"
             v-model="collectionName"
+            ref="nameInputRef"
             class="form-input"
             :placeholder="t('collection.placeholder')"
             maxlength="60"
@@ -138,7 +139,8 @@
             @click="handleSave"
             :disabled="isLoading"
           >
-            {{ t('collection.save') }}
+            <span v-if="isLoading" class="btn-spinner"></span>
+            {{ isLoading ? t('collection.saving') : t('collection.save') }}
           </button>
         </div>
         <p v-if="isEdit" class="edit-sync-tip">{{ t('collection.editSyncTip') }}</p>
@@ -160,12 +162,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
-import { processImageUrl } from '@/util/utils';
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import CollectionCoverModal from './CollectionCoverModal.vue';
 import SensitiveConfirmModal from './SensitiveConfirmModal.vue';
 
@@ -273,6 +275,23 @@ const description = ref(props.isEdit ? (props.description || '') : (props.descri
 const isNsfw = ref(props.isNsfw == 1 ? 1 : 0);
 const isNsfwSelected = ref(true);
 const errorMessage = ref('');
+
+const nameInputRef = ref<HTMLInputElement | null>(null);
+
+// 名称重复的红字挂在输入框下面，而保存按钮在表单最底部 —— 表单展开得长的时候
+// 报错落在视口外，用户只会觉得「点了没反应」，所以滚过去并聚焦
+function showDuplicateError() {
+  errorMessage.value = t('collection.duplicateError');
+  nextTick(() => {
+    nameInputRef.value?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    nameInputRef.value?.focus();
+  });
+}
+
+// 一改名字就把红字清掉，别一直挂着上一次的报错
+watch(collectionName, () => {
+  if (errorMessage.value) errorMessage.value = '';
+});
 const isLoading = ref(false);
 const showCoverModal = ref(false);
 const showSensitiveConfirm = ref(false);
@@ -338,7 +357,7 @@ watch(() => props.visible, async (newVal) => {
           initialDescription.value = description.value;
           initialIsNsfw.value = isNsfw.value;
         } else {
-          toast(t('fail'));
+          toast(apiErrorMessage(response) || t('fail'));
           emit('close');
         }
       } catch (error) {
@@ -474,9 +493,9 @@ async function handleSave() {
         handleCancel();
       } else {
         if (response.code == 22004) {
-          errorMessage.value = t('collection.duplicateError');
+          showDuplicateError();
         } else {
-          toast(t('fail'));
+          toast(apiErrorMessage(response) || t('fail'));
         }
       }
     } else {
@@ -510,9 +529,9 @@ async function handleSave() {
         handleCancel();
       } else {
         if (response.code === 22004) {
-          errorMessage.value = t('collection.duplicateError');
+          showDuplicateError();
         } else {
-          toast(t('fail'));
+          toast(apiErrorMessage(response) || t('fail'));
         }
       }
     }
@@ -952,7 +971,7 @@ function handleModalKeydown(e: KeyboardEvent) {
 .btn {
   min-width: 136px;
   height: 48px;
-  padding: 0 48px;
+  padding: 0 16px;
   border-radius: 14px;
   font-size: 14px;
   cursor: pointer;
@@ -1027,5 +1046,30 @@ function handleModalKeydown(e: KeyboardEvent) {
   background: #161122;
   border-color: #161122;
   color: #FFFFFF;
+}
+
+/* 保存按钮的加载态：文字换成加载中 + 旁边一个小转圈，
+   和 BatchPublishDialog 的 .btn-spinner 一套写法；颜色跟着按钮文字走 */
+.btn.btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

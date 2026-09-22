@@ -33,7 +33,7 @@ $pinkopacity: rgba(255,79,154,0.12);
   // （后者绝对定位），得撑出按钮的高度，不然会压到下面的输入卡片上
   &.no-tabs {
     min-height: 36px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     // 类型 tab 藏了之后这一行只剩标签，别再按 tab 那套居中
     justify-content: flex-start;
   }
@@ -2369,4 +2369,3 @@ $pinkopacity: rgba(255,79,154,0.12);
     gap: 6px;
   }
 }
-
