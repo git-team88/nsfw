@@ -336,6 +336,12 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     z-index: 2;
   }
 
+  // 图片 / 视频的上下箭头锚在左栏底部，输入框把媒体顶上去了它还停在原地，会压在输入框上。
+  // 跟着 --composer-h 抬：输入框高度 + 它的底部 padding(20) + 和媒体的间距(16)，再加原来离控制条的 84px
+  .nav-arrows.at-bottom {
+    bottom: calc(var(--composer-h, 0px) + 36px + 84px);
+  }
+
   // 合集的集数条 / 信息条是 fixed 在视口底部的（bottom: 90px / 76px），
   // 输入框出来后媒体区被顶上去了，条子还留在原地就压在输入框上，
   // 跟着 --composer-h 抬上去：输入框高度 + 它的底部 padding(20) + 和媒体的间距(16)
