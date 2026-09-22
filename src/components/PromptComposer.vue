@@ -2157,6 +2157,27 @@ const stickyInputExpanded = ref(false);
 const stickyInputPlaceholderHeight = ref(0);
 const stickyInputPreview = ref('');
 let stickyExpandedAtScrollY = 0;
+
+// 内层滚动容器（详情页漫画阅读区、图片堆栈这类 overflow: auto 的元素）滚动时 window.scrollY 不动，
+// 上面那条「离开展开位置就收起」的判定永远不成立，输入框就一直摊着挡内容。
+// 这里在 document 上用 capture 接住所有容器的 scroll（scroll 不冒泡，但能捕获），
+// 记每个容器自展开以来滚了多远，凑够阈值一样收起。输入框自己内部的滚动不算。
+const innerScrollPos = new Map<Element, number>();
+let innerScrollMoved = 0;
+const resetInnerScrollTracking = () => {
+  innerScrollPos.clear();
+  innerScrollMoved = 0;
+};
+const onAnyScrollCapture = (e: Event) => {
+  const el = e.target as Element | null;
+  if (!el || el === (document as unknown as Element) || !(el instanceof Element)) return; // window / document 的由上面那条处理
+  if (inputAreaBoxRef.value?.contains(el)) return;
+  const cur = el.scrollTop + el.scrollLeft;
+  const prev = innerScrollPos.get(el);
+  if (prev !== undefined) innerScrollMoved += Math.abs(cur - prev);
+  innerScrollPos.set(el, cur);
+  if (innerScrollMoved > 4) updateStickyInputVisibility();
+};
 const isInputFocused = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
@@ -2249,12 +2270,22 @@ const collapseStickyInputOnOutsideClick = (target: HTMLElement) => {
   if (!target.isConnected) return;
   const box = inputAreaBoxRef.value;
   if (!box || box.contains(target)) return;
-  if (target.closest(STICKY_KEEP_OPEN_SELECTOR)) return;
+  // 弹窗 / 遮罩 / toast 里的点击不收起。类名只是初筛，还得真是浮层（position: fixed）：
+  // 详情页视频中间的 .play-overlay 也带 overlay，但它是 absolute，点它就是在操作页面，该收
+  const layer = target.closest(STICKY_KEEP_OPEN_SELECTOR) as HTMLElement | null;
+  if (layer && getComputedStyle(layer).position === 'fixed') return;
   collapseStickyInput();
+};
+
+// 用 capture 在 document 上接：页面里的控件（详情页视频的播放 / 音量 / 全屏按钮）
+// 大多 @click.stop，冒泡到 document 的那份 click 根本到不了，输入框就一直摊着
+const handleOutsideClickCapture = (event: MouseEvent) => {
+  collapseStickyInputOnOutsideClick(event.target as HTMLElement);
 };
 
 const expandStickyInput = () => {
   stickyExpandedAtScrollY = window.scrollY;
+  resetInnerScrollTracking();
   stickyInputExpanded.value = true;
   nextTick(() => {
     if (contentType.value === 'novel') {
@@ -2312,6 +2343,7 @@ const pinStickyInput = () => {
   showStickyInput.value = true;
   stickyInputExpanded.value = true;
   stickyExpandedAtScrollY = window.scrollY;
+  resetInnerScrollTracking();
 };
 
 const unpinStickyInput = () => {
@@ -2325,7 +2357,7 @@ const updateStickyInputVisibility = () => {
   // 但滚动时跟首页一样把展开的输入框收成一条，别挡着列表看内容
   if (isBottomPlacement.value) {
     showStickyInput.value = true;
-    if (stickyInputExpanded.value && Math.abs(window.scrollY - stickyExpandedAtScrollY) > 4) {
+    if (stickyInputExpanded.value && (Math.abs(window.scrollY - stickyExpandedAtScrollY) > 4 || innerScrollMoved > 4)) {
       collapseStickyInput();
     }
     return;
@@ -2339,6 +2371,11 @@ const updateStickyInputVisibility = () => {
   if (stickyInputPinned.value) {
     if (window.scrollY >= pinnedAtScrollY - PIN_RELEASE_DISTANCE) {
       showStickyInput.value = true;
+      // 钉住只保证「一直吸底」，不保证「一直摊开」：做同款回填后用户往下滚去看列表，
+      // 和普通吸底一样收成一条，别挡着内容。原来这里直接 return，滚多远都不收
+      if (stickyInputExpanded.value && (Math.abs(window.scrollY - stickyExpandedAtScrollY) > 4 || innerScrollMoved > 4)) {
+        collapseStickyInput();
+      }
       return;
     }
     stickyInputPinned.value = false;
@@ -4911,7 +4948,7 @@ const handleClickOutside = (event: MouseEvent) => {
     showInsertImageDropdown.value = false;
     showNsfwVersionDropdown.value = false;
   }
-  collapseStickyInputOnOutsideClick(target);
+  // 收起输入框那条挪到 capture 阶段的 handleOutsideClickCapture 里了
 };
 
 
@@ -7950,6 +7987,7 @@ onMounted(async () => {
     selectedInsertImage.value = 4;
   }
   window.addEventListener('scroll', updateStickyInputVisibility, { passive: true });
+  document.addEventListener('scroll', onAnyScrollCapture, { capture: true, passive: true });
   window.addEventListener('scroll', blurHomeInputOnScroll, { passive: true });
   window.addEventListener('wheel', handleStickyUserScroll, { passive: true });
   window.addEventListener('touchmove', handleStickyUserScroll, { passive: true });
@@ -8048,6 +8086,7 @@ onMounted(async () => {
   }
 
   document.addEventListener('click', handleClickOutside);
+  document.addEventListener('click', handleOutsideClickCapture, true);
 
   // 宿主页面没有 Header 可以喂数据时（详情页这类），自己拉一次
   if (localStorage.getItem('token')) {
@@ -8115,7 +8154,9 @@ onBeforeUnmount(() => {
   bodyPadObserver = null;
   if (props.placement === 'bottom' && props.bodyPad) document.body.style.paddingBottom = '';
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('click', handleOutsideClickCapture, true);
   window.removeEventListener('scroll', updateStickyInputVisibility);
+  document.removeEventListener('scroll', onAnyScrollCapture, { capture: true } as EventListenerOptions);
   window.removeEventListener('scroll', blurHomeInputOnScroll);
   window.removeEventListener('wheel', handleStickyUserScroll);
   window.removeEventListener('touchmove', handleStickyUserScroll);
@@ -8284,6 +8325,7 @@ async function activateAndApply(run: () => any, source?: MakeSource) {
   stickyInputExpanded.value = true;
   stickyInputPinned.value = true;
   stickyExpandedAtScrollY = window.scrollY;
+  resetInnerScrollTracking();
   pinnedAtScrollY = window.scrollY;
   await nextTick();
   // 未登录不 focus，否则会被 checkLogin 顶去登录页，回填就白做了
