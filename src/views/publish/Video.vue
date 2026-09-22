@@ -317,17 +317,17 @@
 
                   <div class="collection-display">
                     <div class="collection-info" v-if="selectedCollection">
-                      <!-- 封面 + 价格是一列：封面在上，漫剧合集的收费档在下 -->
-                      <div class="collection-cover-box" v-if="selectedCollection.cover || collectionPriceText">
-                        <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                        <div class="collection-price" v-if="collectionPriceText">
-                          <span class="price-amount">{{ collectionPriceText }}</span>
-                          <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                        </div>
-                      </div>
+                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
                       <div class="collection-text">
                         <div class="collection-top">
-                          <span class="collection-name">{{ selectedCollection.name }}</span>
+                          <!-- 标题 + 价格同一行：价格始终靠右，标题长了自己截断，价格不挤没 -->
+                          <div class="collection-title-row">
+                            <span class="collection-name">{{ selectedCollection.name }}</span>
+                            <div class="collection-price" v-if="collectionPriceText">
+                              <span class="price-amount">{{ collectionPriceText }}</span>
+                              <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                            </div>
+                          </div>
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
@@ -500,17 +500,17 @@
 
                 <div class="collection-display">
                   <div class="collection-info" v-if="selectedCollection">
-                    <!-- 封面 + 价格是一列：封面在上，漫剧合集的收费档在下 -->
-                    <div class="collection-cover-box" v-if="selectedCollection.cover || collectionPriceText">
-                      <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                      <div class="collection-price" v-if="collectionPriceText">
-                        <span class="price-amount">{{ collectionPriceText }}</span>
-                        <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                      </div>
-                    </div>
+                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
                     <div class="collection-text">
                       <div class="collection-top">
-                        <span class="collection-name">{{ selectedCollection.name }}</span>
+                        <!-- 标题 + 价格同一行：价格始终靠右，标题长了自己截断，价格不挤没 -->
+                        <div class="collection-title-row">
+                          <span class="collection-name">{{ selectedCollection.name }}</span>
+                          <div class="collection-price" v-if="collectionPriceText">
+                            <span class="price-amount">{{ collectionPriceText }}</span>
+                            <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
+                          </div>
+                        </div>
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
@@ -4474,38 +4474,37 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
  @use '@/scss/Video.scss';
 
-/* 封面 + 价格一列，价格挂在封面下面 */
-.collection-cover-box {
+/* 标题 + 价格同一行 */
+.collection-title-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+
+  /* 标题吃掉剩余宽度、价格始终贴右；标题太长自己截断，价格不缩 */
+  .collection-name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .collection-price {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  /* 靠左：cover-box 是居中的一列，价格自己贴左边，和封面左边缘对齐 */
-  align-self: flex-start;
-  gap: 8px;
-  line-height: 1.15;
+  display: inline-flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .collection-price .price-amount {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 800;
-  color: #FF4D8E;
+  color: #FA2D47;
 }
 
 .collection-price .price-unit {
-  font-size: 16px;
-  color: #FFFFFF;
-}
-
-/* 斜杠跟金额一样大，后面的文字才是 16px */
-.collection-price .price-slash {
-  font-size: 28px;
+  font-size: 14px;
+  color: #dddddd;
 }
 </style>
