@@ -302,12 +302,12 @@ async function onDrop(e: DragEvent) {
     toast(t('home.error.onlyOneImage'));
     return;
   }
+  // 不是图片也要走校验：validateImageFile 会给出「格式不支持」的提示。
+  // 以前这里先判了 type.startsWith('image/')，拖进来 PDF / 视频这类文件会被直接跳过，用户看到的就是没反应
   const file = files[0];
-  if (file.type.startsWith("image/")) {
-    const valid = await validateImageFile(file);
-    if (!valid) return;
-    readFileAsDataURL(file);
-  }
+  const valid = await validateImageFile(file);
+  if (!valid) return;
+  readFileAsDataURL(file);
 }
 
 function close() {

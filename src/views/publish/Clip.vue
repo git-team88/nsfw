@@ -104,8 +104,9 @@
         </div>
 
         <!-- Local Upload -->
-        <div v-else-if="uploadOption == 'local'" class="upload-area-box">
-          <div class="upload-area" @dragover.prevent @drop.prevent="onDropFile">
+        <!-- 拖放挂在外层带边框的框上：框内上下各有 40px 内边距，挂在里层 .upload-area 上时这两条区域接不到 -->
+        <div v-else-if="uploadOption == 'local'" class="upload-area-box" @dragover.prevent @drop.prevent="onDropFile">
+          <div class="upload-area">
             <div class="upload-info">
               <p>{{ t("submit.video.uploadCta") }}</p>
               <button class="btn" @click="pickVideo">{{ t("submit.video.uploadBtn") }}</button>
@@ -1644,6 +1645,28 @@ function onReuploadPicked(e: Event) {
 function pickVideo() {
   videoInputRef.value?.click();
 }
+
+// 文件拖到没有拖放处理的地方（标题 / 简介输入框、页面空白处）时，别让浏览器把文件直接打开。
+// 只管「带文件」的拖拽，拖文字不受影响。上传框、封面弹窗这些真正的拖放区域会在自己的
+// @dragover.prevent / @drop 里先 preventDefault，这里看到 defaultPrevented 就不再干预；
+// 没人处理的才拦下来，并把光标设成「禁止」。
+function blockUnhandledFileDrop(e: DragEvent) {
+  const types = e.dataTransfer?.types;
+  if (!types || !Array.from(types).includes('Files')) return;
+  if (e.defaultPrevented) return;
+  e.preventDefault();
+  if (e.type === 'dragover' && e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'none';
+  }
+}
+onMounted(() => {
+  window.addEventListener('dragover', blockUnhandledFileDrop);
+  window.addEventListener('drop', blockUnhandledFileDrop);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('dragover', blockUnhandledFileDrop);
+  window.removeEventListener('drop', blockUnhandledFileDrop);
+});
 
 function onDropFile(e: DragEvent) {
   const files = e.dataTransfer?.files;

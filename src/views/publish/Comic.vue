@@ -159,12 +159,9 @@
         </div>
 
         <!-- Local Upload -->
-        <div v-else-if="uploadOption == 'local'" class="upload-area-box">
-          <div
-            class="upload-area"
-            @dragover.prevent="onDragOver"
-            @drop.prevent="onDropImages"
-          >
+        <!-- 拖放挂在外层带边框的框上：框内上下各有 40px 内边距，挂在里层 .upload-area 上时这两条区域接不到 -->
+        <div v-else-if="uploadOption == 'local'" class="upload-area-box" @dragover.prevent="onDragOver" @drop.prevent="onDropImages">
+          <div class="upload-area">
             <div class="upload-info">
               <p>{{ t("submit.image.uploadCta") }}</p>
               <button class="btn" @click="pickImages" :disabled="imageFiles.length >= 12">
