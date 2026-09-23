@@ -2887,6 +2887,13 @@ $pinkopacity: rgba(255,79,154,0.12);
     color: $pink;
     font-weight: 600;
     cursor: pointer;
+
+    // 提交中：颜色不变，只降透明度并屏蔽点击，接口回来之前不能再点第二次
+    &.disabled {
+      opacity: 0.6;
+      cursor: default;
+      pointer-events: none;
+    }
   }
 }
 

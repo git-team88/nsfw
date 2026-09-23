@@ -2241,14 +2241,14 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
     generateFailedCopyright: "生成內容有版權風險，請修改後重試，失敗任務將不扣算力。",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
-    generateFailedUpstream: "模型生成出錯，請點擊重試，失敗任務將不扣算力。",
+    generateFailedUpstream: "模型生成出錯，請點擊重新生成，失敗任務將不扣算力。",
     // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key
     generateFailedUpstreamPrefix: "模型生成出錯，請點擊",
     // 视频未知失败的兜底文案
-    generateFailedRetry: "生成失敗，請點擊重試，失敗任務將不扣算力。",
+    generateFailedRetry: "生成失敗，請點擊重新生成，失敗任務將不扣算力。",
     // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
     generateFailedRetryPrefix: "生成失敗，請點擊",
-    generateFailedRetryAction: "重試",
+    generateFailedRetryAction: "重新生成",
     generateFailedRetrySuffix: "，失敗任務將不扣算力。",
     deleteConfirm: "確認刪除該批次生成結果？",
     deleteWarning: "刪除的歷史記錄將無法找回"

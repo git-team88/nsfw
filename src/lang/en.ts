@@ -2142,14 +2142,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
     generateFailedCopyright: "The generated content may involve copyright risks. Please revise and try again. Failed tasks will not consume computing power.",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
-    generateFailedUpstream: "Model generation error. Please tap retry. Failed tasks will not consume computing power.",
+    generateFailedUpstream: "Model generation error. Please tap regenerate. Failed tasks will not consume computing power.",
     // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key
     generateFailedUpstreamPrefix: "Model generation error. Please tap ",
     // 视频未知失败的兜底文案
-    generateFailedRetry: "Generation failed. Please tap retry. Failed tasks will not consume computing power.",
+    generateFailedRetry: "Generation failed. Please tap regenerate. Failed tasks will not consume computing power.",
     // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
     generateFailedRetryPrefix: "Generation failed. Please tap ",
-    generateFailedRetryAction: "retry",
+    generateFailedRetryAction: "regenerate",
     generateFailedRetrySuffix: ". Failed tasks will not consume computing power.",
     deleteConfirm: "Confirm deletion of this batch of generated results?",
     deleteWarning: "Deleted history records cannot be recovered"

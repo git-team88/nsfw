@@ -350,15 +350,17 @@
               <!-- 失败提示 -->
               <div v-if="isTaskFailed(record.step_status || record.status)" class="record-failed">
                 <img src="@/assets/images/home/intro.png" alt="warning" class="failed-icon" />
-                <!-- 可重试的失败（上游故障 / 没命中具体规则）：文案里的「重试」单独拆出来做成可点入口，
-                     点它走的就是底部 regenerate-btn 那套回填逻辑。前缀按失败原因换，后半句共用 -->
+                <!-- 可重试的失败（上游故障 / 没命中具体规则）：文案里的「重新生成」单独拆出来做成可点入口。
+                     点它直接按原参数重投一次（regenerateFromRecord），不走底部 regenerate-btn 那套回填。
+                     前缀按失败原因换，后半句共用 -->
                 <span class="failed-text" v-if="record.fail_reason && !record.fail_retryable">{{ record.fail_reason }}</span>
                 <span class="failed-text" v-else
                   >{{ record.fail_retry_prefix || t('recordList.generateFailedRetryPrefix')
                   }}<span
                     v-if="canRegenerateRecord(record)"
                     class="failed-retry-link"
-                    @click="regenerateRecord(record)"
+                    :class="{ disabled: isRegeneratingRecord(record) }"
+                    @click="regenerateFromRecord(record)"
                     >{{ t('recordList.generateFailedRetryAction') }}</span
                   ><template v-else>{{ t('recordList.generateFailedRetryAction') }}</template
                   >{{ t('recordList.generateFailedRetrySuffix') }}</span
@@ -6024,6 +6026,229 @@ const publishVideo = (record: any) => {
       session_id: record.session_id
     }
   });
+};
+
+/**
+ * 按一条历史记录的 user_selected 估算重跑要花的算力。
+ * 和输入框那套 estimatedVideoPower 用的是同一张价目表（balanceInfo），
+ * 只是参数来源换成记录本身 —— 输入框的 computed 跟的是当前档位，对历史记录不适用。
+ */
+const estimateVideoPowerForRecord = (userSelected: any): number => {
+  const info = balanceInfo.value as any;
+  if (!info) return 1;
+
+  const mode = userSelected?.simple_video_generate_mode || 'multi_modal_reference';
+  const isNsfw = userSelected?.story_mode === 'nsfw';
+  // 余额接口只有 720P / 1080P 两个单价，极速版的 480P / 768P 一律按 720P 算（同 pricingQuality）
+  const quality = String(userSelected?.simple_video_resolution || '').includes('1080') ? '1080P' : '720P';
+
+  const list = userSelected?.others?.list || [];
+  const hasUploadedVideo = mode === 'video_edit'
+    || mode === 'video_extension'
+    || list.some((item: any) => item?.type === 'video')
+    || (userSelected?.reference_videos || []).length > 0;
+
+  let duration = Number(userSelected?.simple_video_duration) || 30;
+  // 加强版 + 无限制（即 videoLimitMode 为 unlimited）的多模态：参考视频的时长也计费
+  const isUnlimitedLimitMode = isNsfw && userSelected?.video_nsfw_model_type === 'plus';
+  if (isUnlimitedLimitMode && mode === 'multi_modal_reference' && hasUploadedVideo) {
+    const refDurationSum = list
+      .filter((item: any) => item?.type === 'video')
+      .reduce((sum: number, item: any) => sum + (Number(item?.duration) || 0), 0);
+    duration += Math.ceil(refDurationSum);
+  }
+
+  let costPerSecond = 0;
+  if (isNsfw) {
+    costPerSecond = Number(quality === '1080P'
+      ? info.single_video_cost_1080p_per_second_nsfw
+      : info.single_video_cost_720p_per_second_nsfw);
+  } else {
+    const isV2v = mode === 'video_edit' || mode === 'video_extension'
+      || (mode === 'multi_modal_reference' && hasUploadedVideo);
+    const isI2v = mode === 'first_last_frames'
+      || (mode === 'multi_modal_reference' && !hasUploadedVideo);
+    if (isV2v) {
+      costPerSecond = Number(quality === '1080P'
+        ? info.single_video_v2v_cost_1080p_per_second
+        : info.single_video_v2v_cost_720p_per_second);
+    } else if (isI2v) {
+      costPerSecond = Number(quality === '1080P'
+        ? info.single_video_i2v_cost_1080p_per_second
+        : info.single_video_i2v_cost_720p_per_second);
+    } else {
+      costPerSecond = Number(quality === '1080P'
+        ? info.single_video_cost_1080p_per_second
+        : info.single_video_cost_720p_per_second);
+    }
+  }
+
+  let totalCost = Math.ceil((Number(costPerSecond) || 0) * duration);
+  if (userSelected?.enable_optimize_prompt && mode !== 'video_edit' && mode !== 'video_extension') {
+    totalCost += Math.ceil(Number(info.additional_optimize_prompt_cost) || 0);
+  }
+  return Math.max(1, totalCost);
+};
+
+/**
+ * 失败卡片上的「重新生成」：不回填输入框，直接按这条记录原来的参数重投一次。
+ * 参数整份沿用 user_selected —— 后端存的就是上次提交的那份，不用再从界面拼一遍。
+ * 新任务是独立的一条记录，追加到列表底部；原来的失败记录留在原位。
+ * 余额不做前置校验（这条记录算不出当前档位的消耗），交给后端报错后走充值弹窗。
+ */
+// 正在重跑的失败记录 session。只把点的那一条置为不可点，其它卡片不受影响；
+// 接口回来（成功或失败）就移除，所以重跑成功后这条仍然可以再点
+const regeneratingSessions = ref<string[]>([]);
+const isRegeneratingRecord = (record: any) => regeneratingSessions.value.includes(record?.session_id);
+
+const regenerateFromRecord = async (record: any) => {
+  const sourceSessionId = record?.session_id;
+  if (!sourceSessionId || regeneratingSessions.value.includes(sourceSessionId)) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+
+  const userSelected = record.user_selected || {};
+  const content = record.topic || userSelected.others?.content || '';
+
+  regeneratingSessions.value.push(sourceSessionId);
+  const sessionId = uuidv4();
+
+  const dropSkeleton = () => {
+    const idx = records.value.findIndex(r => r.session_id == sessionId);
+    if (idx !== -1) records.value.splice(idx, 1);
+  };
+
+  try {
+    // 先拉一次最新余额，再按这条记录的参数估算消耗 —— 和正常生成一致，
+    // 不够就直接弹充值，不必白跑一趟接口
+    try {
+      const balanceRes = await api.userBalance() as any;
+      if (balanceRes.code == 200) {
+        balanceInfo.value = balanceRes.data;
+      }
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+
+    if (balanceInfo.value) {
+      const overFreezeRate = balanceInfo.value.over_freeze_rate || 1;
+      const requiredBalance = Math.round(estimateVideoPowerForRecord(userSelected) * overFreezeRate);
+      if (requiredBalance > (balanceInfo.value.balance || 0)) {
+        showInsufficientBalanceModal.value = true;
+        return;
+      }
+    }
+
+    // reference_videos 有两种形态：提交时是纯 url 数组，本地占位记录里是 { url, cover }。
+    // 这里统一成 url 数组再提交，否则后端拿到的是对象。
+    const referenceVideos = (userSelected.reference_videos || [])
+      .map((item: any) => (typeof item === 'string' ? item : item?.url || item?.image || ''))
+      .filter(Boolean);
+
+    const params = {
+      ...userSelected,
+      story_type: 'simple_video',
+      reference_videos: referenceVideos,
+    };
+
+    // 和正常生成一样先推一条占位记录，点完立刻能看到在跑
+    const skeletonRecord = {
+      id: Date.now(),
+      session_id: sessionId,
+      type: 'video',
+      status: 'DOING',
+      step_status: 'PROCESSING',
+      result_async: null,
+      story_type: 'simple_video',
+      status_message: '',
+      history_data: null,
+      name: '',
+      is_step_readed: 1,
+      created_at: new Date().toISOString(),
+      createTime: new Date().toISOString(),
+      topic: content,
+      description: content,
+      step_name: 'simple_video',
+      is_publish: 2,
+      is_batch_chapter: 2,
+      updated_at: new Date().toISOString(),
+      is_final: 1,
+      step_chapter_index: 0,
+      deleted_at: null,
+      frozen_points: 0,
+      task_start_at: new Date().toISOString(),
+      user_id: 0,
+      total_chapters: 1,
+      resolution: record.resolution || (userSelected.simple_video_resolution || '').toUpperCase(),
+      ratio: userSelected.ratio || record.ratio || '',
+      duration: userSelected.simple_video_duration || record.duration || '',
+      user_selected: params,
+    };
+
+    records.value.push(skeletonRecord);
+    displayRecords.value = records.value;
+
+    nextTick(() => {
+      const bottomGenerator = document.querySelector('.bottom-generator') as HTMLElement | null;
+      const bottomOffset = bottomGenerator ? bottomGenerator.offsetHeight : 120;
+      const scrollPosition = Math.max(0, document.body.scrollHeight - window.innerHeight - bottomOffset + 20);
+      window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+    });
+
+    const settingsResponse = await fetch(`${aiUrl}app/config/user-selected?session_id=${sessionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Platform': 'web',
+        'token': token,
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!settingsResponse.ok) {
+      throw new Error('Failed to update user settings');
+    }
+
+    const settingsData = await settingsResponse.json();
+    if (settingsData.code !== 200 && settingsData.code !== 0) {
+      dropSkeleton();
+      toast(settingsData.message || t('fail'));
+      return;
+    }
+
+    const index = records.value.findIndex(r => r.session_id == sessionId);
+    if (index !== -1) {
+      records.value[index].createTime = settingsData.time;
+    }
+
+    const generateResponse = await api.generateSingleVideo({
+      session_id: sessionId,
+      topic: content,
+    }) as any;
+
+    if (generateResponse.code == 200) {
+      startPolling(sessionId);
+      eventBus.emit('balanceUpdated');
+    } else {
+      dropSkeleton();
+      const errMsg = generateResponse.message || '';
+      if (errMsg.toLowerCase().includes('credit is not enough') || errMsg.toLowerCase().includes('recharge')) {
+        showInsufficientBalanceModal.value = true;
+      } else {
+        toast(errMsg || t('fail'));
+      }
+    }
+  } catch (error) {
+    console.error('Error regenerating video:', error);
+    dropSkeleton();
+    toast(t('fail'));
+  } finally {
+    regeneratingSessions.value = regeneratingSessions.value.filter(id => id !== sourceSessionId);
+  }
 };
 
 const regenerateRecord = async (record: any) => {
