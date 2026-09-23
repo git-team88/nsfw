@@ -320,25 +320,14 @@
                       <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
                       <div class="collection-text">
                         <div class="collection-top">
-                          <!-- 标题 + 价格同一行：价格始终靠右，标题长了自己截断，价格不挤没 -->
+                          <!-- 标题单独一行；价格挪到下面「是否含敏感内容」开关后面 -->
                           <div class="collection-title-row">
                             <span class="collection-name">{{ selectedCollection.name }}</span>
-                            <div class="collection-price" v-if="collectionPriceText">
-                              <span class="price-amount">{{ collectionPriceText }}</span>
-                              <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                              <!-- 价格只对设为「付费用户可见」的章节生效，和上面「权限范围」的说明图标同一套样式 -->
-                              <div class="info-icon price-info-icon" @mouseover="adjustTooltipPosition">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                <div class="info-tooltip">
-                                  <div class="tooltip-content">{{ t('collection.priceHint') }}</div>
-                                </div>
-                              </div>
-                            </div>
                           </div>
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive">
+                        <div class="content-sensitive" v-if="(contentSwitch.showSensitiveToggle) || collectionPriceText">
                           <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -357,6 +346,12 @@
                               alt=""
                               @click="toggleCollectionSensitive"
                             />
+                          </div>
+                          <!-- 价格跟在敏感开关后面（间距见 .content-sensitive 的 gap）；开关不显示时它就是第一个元素，自然靠左 -->
+                          <div class="collection-price" v-if="collectionPriceText">
+                            <span class="form-label price-label">{{ t('collection.fullSeriesPrice') }}</span>
+                            <span class="price-amount">{{ collectionPriceText }}</span>
+                            <span class="price-hint">({{ t('collection.priceHint') }})</span>
                           </div>
                         </div>
                         <div class="content-language">
@@ -510,25 +505,14 @@
                     <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
                     <div class="collection-text">
                       <div class="collection-top">
-                        <!-- 标题 + 价格同一行：价格始终靠右，标题长了自己截断，价格不挤没 -->
+                        <!-- 标题单独一行；价格挪到下面「是否含敏感内容」开关后面 -->
                         <div class="collection-title-row">
                           <span class="collection-name">{{ selectedCollection.name }}</span>
-                          <div class="collection-price" v-if="collectionPriceText">
-                            <span class="price-amount">{{ collectionPriceText }}</span>
-                            <span class="price-unit"><span class="price-slash">/</span>{{ t('collection.fullSeries') }}</span>
-                            <!-- 价格只对设为「付费用户可见」的章节生效，和上面「权限范围」的说明图标同一套样式 -->
-                            <div class="info-icon price-info-icon" @mouseover="adjustTooltipPosition">
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                              <div class="info-tooltip">
-                                <div class="tooltip-content">{{ t('collection.priceHint') }}</div>
-                              </div>
-                            </div>
-                          </div>
                         </div>
                         <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                       </div>
 
-                      <div class="content-sensitive">
+                      <div class="content-sensitive" v-if="(contentSwitch.showSensitiveToggle) || collectionPriceText">
                         <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
                           <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -547,6 +531,12 @@
                             alt=""
                             @click="toggleCollectionSensitive"
                           />
+                        </div>
+                        <!-- 价格跟在敏感开关后面（间距见 .content-sensitive 的 gap）；开关不显示时它就是第一个元素，自然靠左 -->
+                        <div class="collection-price" v-if="collectionPriceText">
+                          <span class="form-label price-label">{{ t('collection.fullSeriesPrice') }}</span>
+                          <span class="price-amount">{{ collectionPriceText }}</span>
+                          <span class="price-hint">({{ t('collection.priceHint') }})</span>
                         </div>
                       </div>
                       <div class="content-language">
@@ -4510,19 +4500,21 @@ onBeforeUnmount(() => {
   }
 }
 
+/* 整本价格：「整本价格：$20 (说明)」一行。标签复用 .form-label，和前面敏感开关的标签同样式；
+   说明文字直接跟在金额后面，不再用悬浮图标。窄屏放不下时说明文字换行，标签和金额不拆开 */
 .collection-price {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
+  column-gap: 6px;
+  row-gap: 4px;
+  min-width: 0;
+  line-height: 1.4;
 
-  /* 价格后面的说明图标：和文字垂直居中，间距压小一点 */
-  .price-info-icon {
-    align-self: center;
-    margin-left: 4px;
-    svg { width: 16px; height: 16px; }
+  .price-label,
+  .price-amount {
+    white-space: nowrap;
   }
-  flex-shrink: 0;
-  white-space: nowrap;
-  line-height: 1;
 }
 
 .collection-price .price-amount {
@@ -4531,8 +4523,8 @@ onBeforeUnmount(() => {
   color: #FA2D47;
 }
 
-.collection-price .price-unit {
-  font-size: 14px;
-  color: #dddddd;
+.collection-price .price-hint {
+  font-size: 12px;
+  color: #999;
 }
 </style>

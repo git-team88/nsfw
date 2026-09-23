@@ -3040,6 +3040,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     price: "价格",
     priceHint: "有章节权限设为付费可见时生效",
     fullSeries: "全集",
+    fullSeriesPrice: "整本价格：",
     priceFree: "免费",
     createCollection: "创建合集",
     collectionName: "合集名称",

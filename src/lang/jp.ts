@@ -2623,6 +2623,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     price: "価格",
     priceHint: "章の公開範囲を有料会員のみにした場合に有効",
     fullSeries: "全話",
+    fullSeriesPrice: "全話価格：",
     priceFree: "無料",
     createCollection: "コレクションを作成",
     collectionName: "コレクション名",

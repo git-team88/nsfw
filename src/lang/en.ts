@@ -2931,6 +2931,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     price: "Price",
     priceHint: "Applies when a chapter's visibility is set to paid users only",
     fullSeries: "Full Series",
+    fullSeriesPrice: "Full Series Price:",
     priceFree: "Free",
     createCollection: "Create Collection",
     collectionName: "Collection Name",

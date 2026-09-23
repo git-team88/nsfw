@@ -3032,6 +3032,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     price: "價格",
     priceHint: "有章節權限設為付費可見時生效",
     fullSeries: "全集",
+    fullSeriesPrice: "整本價格：",
     priceFree: "免費",
     createCollection: "創建合集",
     collectionName: "合集名稱",

@@ -1042,6 +1042,9 @@
         .content-sensitive {
           display: flex;
           align-items: center;
+          // 敏感开关和后面的价格之间的间距；窄屏放不下时价格换到下一行，行间距 10px
+          flex-wrap: wrap;
+          gap: 10px 40px;
           margin-top: 10px;
 
           .sensitive-left {
