@@ -1557,9 +1557,7 @@ const batchPermOptions = [
 ];
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
-  if (_index === 1 && !hasActiveSubscription.value) {
-    pendingSubscriptionAction = () => handleBatchPermissionChange(permission, _index);
-    showSubscriptionModal.value = true;
+  if (_index === 1 && !(await ensureSubscriptionOrPrompt(() => handleBatchPermissionChange(permission, _index)))) {
     return;
   }
   batchPermission.value = permission as 'public' | 'partial' | 'private';
@@ -4556,29 +4554,54 @@ function confirmConvention() {
   onSubmit();
 }
 
-// Check subscription status
-async function checkSubscriptionStatus() {
+// 查询当前用户是否已设置订阅价格。返回：'active' 已设置 / 'inactive' 确认没设置 / 'error' 请求失败或返回码不是 0。
+// notifyError：点击「订阅用户可见」时触发的检查，失败要提示用户（加载时也提示，保持小说页原来的行为）
+async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 'inactive' | 'error'> {
   try {
     const response = await api.getSubscription();
     const data = response as any;
 
     if (data.code === 0) {
       const subscription = data.data;
-      hasActiveSubscription.value = subscription && subscription.plan && parseFloat(subscription.plan.price) > 0;
-    } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
+      return hasActiveSubscription.value ? 'active' : 'inactive';
     }
+    toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;
+    if (notifyError) toast(t("fail"));
   }
+  return 'error';
+}
+
+// 点「订阅用户可见」时确认是否可以直接选中：
+// - 页面已确认设置过价格 → 直接放行，不再请求
+// - 否则重新请求一次最新状态（避免加载时接口还没回来 / 失败 / 别的标签页刚设置过价格时误弹）：
+//   有价格 → 放行；确认没价格 → 记下这次操作并弹订阅价格设置弹窗；请求失败 → 提示错误，不弹窗、不选中
+// 请求期间重复点击直接忽略
+let checkingSubscription = false;
+async function ensureSubscriptionOrPrompt(action: () => void): Promise<boolean> {
+  if (hasActiveSubscription.value) return true;
+  if (checkingSubscription) return false;
+  checkingSubscription = true;
+  let result: 'active' | 'inactive' | 'error';
+  try {
+    result = await checkSubscriptionStatus(true);
+  } finally {
+    checkingSubscription = false;
+  }
+  if (result === 'active') return true;
+  if (result === 'inactive') {
+    pendingSubscriptionAction = action;
+    showSubscriptionModal.value = true;
+  }
+  return false;
 }
 
 // Handle permission change with subscription check
 async function handlePermissionChange(permission: string, index: number) {
-  if (index == 1 && !hasActiveSubscription.value) {
-    pendingSubscriptionAction = () => handlePermissionChange(permission, index);
-    showSubscriptionModal.value = true;
+  if (index == 1 && !(await ensureSubscriptionOrPrompt(() => handlePermissionChange(permission, index)))) {
     return;
   }
 
