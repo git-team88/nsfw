@@ -2289,7 +2289,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     permPartial: "訂閱用戶可見",
     permPaid: "付費用戶可見",
     permPrivate: "僅自己可見",
-    imgtip: "(第一張圖片公開)",
+    imgtip: "（第1張圖公開）",
     articleTip: "(前1000字公開)",
     publicSettings: "公開設置",
     subscriptionTip: '訂閱功能未激活，請前往[個人中心-訂閱價格設置]設置價格後再啟用此選項',

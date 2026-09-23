@@ -2295,7 +2295,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     permPartial: "订阅用户可见",
     permPaid: "付费用户可见",
     permPrivate: "仅自己可见",
-    imgtip: "(第一张图片公开)",
+    imgtip: "（第1张图公开）",
     articleTip: "(前1000字公开)",
     publicSettings: "公开设置",
     subscriptionTip: '订阅功能未激活，请前往[个人中心-订阅价格设置]设置价格后再启用此选项',

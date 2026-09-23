@@ -2634,20 +2634,17 @@ $transition-spring: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shado
     gap: 8px;
     z-index: 10;
 
-    // 深色主题：未选中是半透明的白点，选中是实心白点。
-    // 原来是浅色主题那套（白底深边、选中填深色），在深色背景上选中的那个反而看不见
     .carousel-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      background: rgba(255, 255, 255, 0.4);
+      // 未选中 #333、选中主题粉色，都不要边框
+      background: #333333;
       cursor: pointer;
       transition: background 0.2s;
 
       &.active {
-        border-color: #FFFFFF;
-        background: #FFFFFF;
+        background: $pink;
       }
     }
   }

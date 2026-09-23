@@ -36,7 +36,7 @@
                         <img :src="processImageUrl(img.image_url)" alt="" class="comic-image" draggable="false" @load="onImageLoaded(detail.images.length)" />
                       </div>
 
-                    <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
+                    <div class="locked-view" v-if="showSubscribeLock">
                       <div class="lock-tip">
                         <span>{{ t("detail.lock.tip") }}</span>
                         <span class="subs-btn" @click="onSubscribe">
@@ -227,54 +227,43 @@
                       v-for="(img, index) in detail.images"
                       :key="index"
                     >
-                      <template v-if="isImageLocked(index)">
-                        <div class="locked-view">
-                          <div class="lock-tip">
-                            <span>{{ t("detail.lock.tip") }}</span>
-                            <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                            <span class="subs-btn" @click="onSubscribe">
-                              {{ t("detail.lock.subscribe") }}
-                            </span>
-                          </div>
+                      <div
+                        class="image-wrap"
+                        @click="handleImageClick(index)"
+                        @mousedown.prevent
+                      >
+                        <img
+                          class="stacked-image"
+                          :src="processImageUrl(img.image_url) || ''"
+                          alt=""
+                          draggable="false"
+                          @load="onImageLoaded(detail.images.length)"
+                        />
+                      </div>
+                    </div>
+                    <!-- 订阅锁定页：订阅用户可见且 images_num > 1 时，接在接口下发的图后面，只占一页，翻到这里就到头了 -->
+                    <div class="carousel-slide" v-if="showSubscribeLock">
+                      <div class="locked-view">
+                        <div class="lock-tip">
+                          <span>{{ t("detail.lock.tip") }}</span>
+                          <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                          <span class="subs-btn" @click="onSubscribe">
+                            {{ t("detail.lock.subscribe") }}
+                          </span>
                         </div>
-                      </template>
-                      <template v-else>
-                        <div
-                          class="image-wrap"
-                          @click="handleImageClick(index)"
-                          @mousedown.prevent
-                        >
-                          <img
-                            class="stacked-image"
-                            :src="processImageUrl(img.image_url) || ''"
-                            alt=""
-                            draggable="false"
-                            @load="onImageLoaded(detail.images.length)"
-                          />
-                        </div>
-
-                        <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
-                          <div class="lock-tip">
-                            <span>{{ t("detail.lock.tip") }}</span>
-                            <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                            <span class="subs-btn" @click="onSubscribe">
-                              {{ t("detail.lock.subscribe") }}
-                            </span>
-                          </div>
-                        </div>
-                      </template>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="carousel-arrow carousel-arrow-right" v-if="currentImageIndex < (detail.images?.length || 0) - 1" @click.stop="nextImage()">
+                  <div class="carousel-arrow carousel-arrow-right" v-if="currentImageIndex < carouselSlideCount - 1" @click.stop="nextImage()">
                     <svg viewBox="0 0 24 24" width="28" height="28"><path d="M9 6l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </div>
 
-                  <div class="carousel-dots" v-if="(detail.images?.length || 0) > 1">
+                  <div class="carousel-dots" v-if="carouselSlideCount > 1">
                     <span
                       class="carousel-dot"
                       :class="{ active: currentImageIndex === index }"
-                      v-for="(img, index) in detail.images"
+                      v-for="(n, index) in carouselSlideCount"
                       :key="index"
                       @click="goToImage(index)"
                     ></span>
@@ -306,42 +295,31 @@
                     v-for="(img, index) in detail.images"
                     :key="index"
                   >
-                    <template v-if="isImageLocked(index)">
-                      <div class="locked-view">
-                        <div class="lock-tip">
-                          <span>{{ t("detail.lock.tip") }}</span>
-                          <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                          <span class="subs-btn" @click="onSubscribe">
-                            {{ t("detail.lock.subscribe") }}
-                          </span>
-                        </div>
+                    <div
+                      class="image-wrap"
+                      @click="handleImageClick(index)"
+                      @mousedown.prevent
+                    >
+                      <img
+                        class="stacked-image"
+                        :src="processImageUrl(img.image_url) || ''"
+                        alt=""
+                        draggable="false"
+                        @load="onImageLoaded(detail.images.length)"
+                      />
+                    </div>
+                  </div>
+                  <!-- 订阅锁定块：订阅用户可见且 images_num > 1 时，接在接口下发的图下面，整个作品只显示一个 -->
+                  <div class="image-stack-item" v-if="showSubscribeLock">
+                    <div class="locked-view">
+                      <div class="lock-tip">
+                        <span>{{ t("detail.lock.tip") }}</span>
+                        <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
+                        <span class="subs-btn" @click="onSubscribe">
+                          {{ t("detail.lock.subscribe") }}
+                        </span>
                       </div>
-                    </template>
-                    <template v-else>
-                      <div
-                        class="image-wrap"
-                        @click="handleImageClick(index)"
-                        @mousedown.prevent
-                      >
-                        <img
-                          class="stacked-image"
-                          :src="processImageUrl(img.image_url) || ''"
-                          alt=""
-                          draggable="false"
-                          @load="onImageLoaded(detail.images.length)"
-                        />
-                      </div>
-
-                      <div class="locked-view" v-if="detail.permission == 'partial' && !detail.isSubscribed && detail.author?.id !== uid">
-                        <div class="lock-tip">
-                          <span>{{ t("detail.lock.tip") }}</span>
-                          <span class="lock-txt-secondary">{{ t("detail.lock.unlockOtherWorks") }}</span>
-                          <span class="subs-btn" @click="onSubscribe">
-                            {{ t("detail.lock.subscribe") }}
-                          </span>
-                        </div>
-                      </div>
-                    </template>
+                    </div>
                   </div>
 
                   <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && (isImagesLoaded || detail.type != '1')">
@@ -867,7 +845,7 @@
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id !== uid">{{ t(detail.type == '3' ? 'detail.paid' : 'detail.subscribe') }}</div>
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id != uid">{{ t(detail.type == '3' ? 'detail.paid' : 'detail.subscribe') }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -1137,7 +1115,7 @@ const showDramaUnlock = computed(
   () => detail.value?.type == '3'
     && isPaidContentLocked.value
     && !detail.value?.isSubscribed
-    && detail.value?.author?.id !== uid
+    && detail.value?.author?.id != uid
     // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
     && !hasBoughtBook.value,
 );
@@ -1465,6 +1443,7 @@ interface DetailData {
   cover: string;
   language: string;
   images: imgItem[];
+  images_num?: number;
   articleHtml: string;
   content: string;
   content_replace: string;
@@ -2012,7 +1991,7 @@ async function navigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
 
   if (isSensitiveContent.value) {
-    if (detail.value.author.id && detail.value.author.id === uid) {
+    if (detail.value.author.id && detail.value.author.id == uid) {
       // author bypass
     } else {
       const token = localStorage.getItem('token');
@@ -2697,6 +2676,8 @@ async function fetchDetail(newId: number) {
         cover: data.cover || "",
         language: data.language || "",
         images: res.data.images || [],
+        // 和 post 平级：作品总图数。订阅用户可见且没权限时 images 只下发第 1 张，靠它判断后面还有没有图
+        images_num: Number(res.data.images_num) || 0,
         articleHtml: formatContent(data.content_replace || data.content || ""),
         content: data.content || "",
         content_replace: data.content_replace || "",
@@ -3628,15 +3609,6 @@ const permText = computed(() => {
 });
 
 // --- Computed Properties for Logic ---
-const isImageLocked = (index: number) => {
-  if (detail.value.permission !== "partial") return false;
-  if (detail.value.isSubscribed) return false;
-  // If it's the author's own work, don't lock
-  if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
-  // If paid and not subscribed, lock all images except the first one
-  return index > 0;
-};
-
 /** 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品 */
 const hasBoughtBook = computed(
   () => detail.value?.book_buy == 1 || detail.value?.book_buy === true,
@@ -3647,7 +3619,7 @@ const isArticleLocked = computed(() => {
   if (detail.value.isSubscribed) return false;
   if (hasBoughtBook.value) return false;
   // If it's the author's own work, don't lock
-  if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
+  if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;
   // If paid and not subscribed, show lock
   return true;
 });
@@ -3657,9 +3629,19 @@ const isPaidContentLocked = computed(() => {
   if (detail.value.isSubscribed) return false;
   // 合集已购：锁直接放开，不用再看有没有订阅博主
   if (hasBoughtBook.value) return false;
-  if (detail.value.author.id && detail.value.author.id === localStorage.getItem('uid')) return false;
+  if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;
   return true;
 });
+
+// 图片 / 漫画的订阅锁定块。只能看第 1 张的规则和上面 isPaidContentLocked 一致
+//（订阅用户可见、没订阅、没买合集、不是作者本人），这时接口只下发第 1 张图。
+// 再看 images_num：总数 > 1 说明后面还有被锁住的图，显示订阅锁定块（整个作品只显示一个）
+const showSubscribeLock = computed(() => isPaidContentLocked.value && Number(detail.value.images_num) > 1);
+
+// 图片类型轮播的总页数：接口下发的图 + 订阅锁定页（最多一页）。
+// 箭头、圆点、nextImage / goToImage 都按它算，翻到锁定页就到头了
+const carouselSlideCount = computed(() => (detail.value.images?.length || 0) + (showSubscribeLock.value ? 1 : 0));
+
 
 const isSensitiveContent = computed(() => {
   return (detail.value.book_id && Number(detail.value.book_id) > 0)
@@ -3674,7 +3656,7 @@ const checkSensitiveContentBeforeAction = (action: () => void): boolean => {
   }
   const authorId = detail.value.author?.id;
   const uid = localStorage.getItem('uid');
-  if (authorId && authorId === uid) {
+  if (authorId && authorId == uid) {
     action();
     return true;
   }
@@ -4230,8 +4212,8 @@ function prevImage() {
 }
 
 function nextImage() {
-  // If next image is locked, we still switch to it, but template will show to lock screen
-  if (currentImageIndex.value < (detail.value.images?.length || 0) - 1) {
+  // 页数含订阅锁定页：能翻到它，但不会再往后翻
+  if (currentImageIndex.value < carouselSlideCount.value - 1) {
     const nextIndex = currentImageIndex.value + 1;
     if (galleryContentRef.value) {
 
@@ -4264,7 +4246,7 @@ function nextImage() {
 
 function goToImage(index: number) {
   if (index === currentImageIndex.value) return;
-  if (index < 0 || index >= (detail.value.images?.length || 0)) return;
+  if (index < 0 || index >= carouselSlideCount.value) return;
   if (galleryContentRef.value) {
     requestAnimationFrame(() => {
       galleryContentRef.value!.style.transition = "none";

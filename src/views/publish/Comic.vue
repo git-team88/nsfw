@@ -299,7 +299,7 @@
                 @click="handlePermissionChange(opt.key, index)"
               >
                 <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                <span>{{ t(opt.labelKey) }}</span>
+                <span>{{ t(opt.labelKey) }}<span v-if="opt.key == 'partial'" style="font-weight: 400">{{ t("submit.imgtip") }}</span></span>
               </div>
             </div>
           </div>
