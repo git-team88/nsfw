@@ -860,6 +860,7 @@ async function confirm() {
             headers: {
               token: token,
               'Platform': 'web',
+              'siteid': '1',
               ...authHeaders,
             },
             body: formData,
@@ -905,6 +906,7 @@ async function confirm() {
             headers: {
               token: token,
               'Platform': 'web',
+              'siteid': '1',
               ...authHeaders,
             },
             body: formData,

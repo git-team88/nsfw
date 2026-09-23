@@ -1743,6 +1743,7 @@ async function goMakeSimilarVideo() {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Platform': 'web',
+      'siteid': '1',
       'ts': ts,
       'sign': sign,
     };
@@ -1811,6 +1812,7 @@ async function goMakeSequel() {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Platform': 'web',
+      'siteid': '1',
       'ts': ts,
       'sign': sign,
     };
@@ -2486,6 +2488,7 @@ async function refreshPlayingPermission(postId: string) {
     if (token) headers['token'] = token;
     const { ts, sign } = window.AntiCrawler.generateAuthParams('');
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
     headers['ts'] = ts;
     headers['sign'] = sign;
 
@@ -2629,6 +2632,7 @@ async function fetchDetail(newId: number) {
     const authToken = '';
     const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
     headers['ts'] = ts;
     headers['sign'] = sign;
 
@@ -3400,6 +3404,7 @@ async function updateCommentCount() {
     const authToken = '';
     const { ts, sign } = window.AntiCrawler.generateAuthParams(authToken);
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
     headers['ts'] = ts;
     headers['sign'] = sign;
 
@@ -5131,6 +5136,7 @@ async function uploadImage(file: File) {
       headers: {
         token: token,
         'Platform': 'web',
+        'siteid': '1',
         ...authHeaders,
       },
       body: formData,
@@ -5487,6 +5493,7 @@ async function submitComment() {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token,
         ts,
         sign

@@ -317,6 +317,7 @@ async function mockUpload(dataUrl: string): Promise<string> {
       headers: {
         token: token,
         'Platform': 'web',
+        'siteid': '1',
         ...authHeaders,
       },
       body: formData,

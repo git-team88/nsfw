@@ -54,6 +54,7 @@ async function uploadPart(
         headers: {
           token: authToken || undefined,
           Platform: "web",
+          siteid: "1",
           ...authHeaders,
         } as Record<string, string>,
         body: formData,

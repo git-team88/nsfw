@@ -757,10 +757,10 @@
     />
 
     <!-- Subscription Prompt Modal -->
-    <SubscriptionPromptModal
+    <SubscriptionPriceModal
       :visible="showSubscriptionModal"
       @cancel="closeSubscriptionModal"
-      @go-to-settings="goToSubscriptionSettings"
+      @saved="onSubscriptionSaved"
     />
 
     <!-- Edit Collection Modal -->
@@ -831,7 +831,7 @@ import LoadingMask from "@/components/LoadingMask.vue";
 import PreviewModal from "@/components/PreviewModal.vue";
 import ProjectVideoViewModal from "@/components/ProjectVideoViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
-import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
 import CollectionListModal from "@/components/CollectionListModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
@@ -1221,6 +1221,8 @@ const showConventionModal = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
+// 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
+let pendingSubscriptionAction: (() => void) | null = null;
 
 // Computed
 const captionLength = ref(0);
@@ -1499,6 +1501,7 @@ watch(batchCollectionChapterList, (list) => {
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
   if (_index === 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handleBatchPermissionChange(permission, _index);
     showSubscriptionModal.value = true;
     return;
   }
@@ -2602,11 +2605,19 @@ function confirmConvention() {
 // Subscription prompt modal methods
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+  pendingSubscriptionAction = null;
 }
 
-function goToSubscriptionSettings() {
+// 订阅价格弹窗保存成功：视为已开通订阅，并补执行刚才被拦下的「订阅用户可见」选择
+// （planId 判空是兜底，正常保存一定带着选中的档位）
+function onSubscriptionSaved(planId: string) {
   showSubscriptionModal.value = false;
-  window.location.href = '/user-subscription';
+  const action = pendingSubscriptionAction;
+  pendingSubscriptionAction = null;
+  if (planId && planId != '0') {
+    hasActiveSubscription.value = true;
+    action?.();
+  }
 }
 
 // Check subscription status on page load
@@ -2786,6 +2797,7 @@ async function mockUploadCover(dataUrl: string) {
       headers: {
         token: token,
         'Platform': 'web',
+        'siteid': '1',
         ...authHeaders,
       },
       body: formData,
@@ -2936,6 +2948,7 @@ function toggleSensitive(val: string) {
 
 async function handlePermissionChange(permission: string, index: number) {
   if (index == 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handlePermissionChange(permission, index);
     showSubscriptionModal.value = true;
     return;
   }

@@ -115,19 +115,19 @@
         </div>
       </div>
     </div>
+
+    <UploadMask :visible="isLoading" :text="t('loading')" />
+
+    <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
+
+    <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
+
+    <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" @create="handleAccountRequiredCreate" />
+
+    <AccountFailedModal :visible="showAccountFailedModal" @close="showAccountFailedModal = false" @modify="handleAccountFailedModify" />
+
+    <CountrySelectModal :visible="showCountrySelectModal" @close="showCountrySelectModal = false" @select="handleCountrySelected" />
   </div>
-
-  <UploadMask :visible="isLoading" :text="t('loading')" />
-
-  <KycRequiredModal :visible="showKycRequiredModal" @close="showKycRequiredModal = false" />
-
-  <KycReviewingModal :visible="showKycReviewingModal" @close="showKycReviewingModal = false" />
-
-  <AccountRequiredModal :visible="showAccountRequiredModal" @close="showAccountRequiredModal = false" @create="handleAccountRequiredCreate" />
-
-  <AccountFailedModal :visible="showAccountFailedModal" @close="showAccountFailedModal = false" @modify="handleAccountFailedModify" />
-
-  <CountrySelectModal :visible="showCountrySelectModal" @close="showCountrySelectModal = false" @select="handleCountrySelected" />
 </template>
 
 <script setup lang="ts" name="UserSubscriptionEdit">

@@ -188,6 +188,7 @@
               ref="imageInputRef"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp"
+              multiple
               title=""
               class="hidden-file"
               @click.stop
@@ -226,6 +227,7 @@
                   ref="imageAddRef"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
+                  multiple
                   title=""
                   class="add-file"
                   @click.stop
@@ -743,10 +745,10 @@
     />
 
     <!-- Subscription Prompt Modal -->
-    <SubscriptionPromptModal
+    <SubscriptionPriceModal
       :visible="showSubscriptionModal"
       @cancel="closeSubscriptionModal"
-      @go-to-settings="goToSubscriptionSettings"
+      @saved="onSubscriptionSaved"
     />
 
     <!-- Edit Collection Modal -->
@@ -814,7 +816,7 @@ import UploadMask from "@/components/UploadMask.vue";
 import LoadingMask from "@/components/LoadingMask.vue";
 import ProjectCoimcViewModal from "@/components/ProjectCoimcViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
-import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
 import CollectionListModal from "@/components/CollectionListModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
@@ -993,6 +995,8 @@ const titleError = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
+// 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
+let pendingSubscriptionAction: (() => void) | null = null;
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string } | null>(null);
@@ -1270,6 +1274,7 @@ watch(batchCollectionChapterList, (list) => {
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
   if (_index === 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handleBatchPermissionChange(permission, _index);
     showSubscriptionModal.value = true;
     return;
   }
@@ -2211,6 +2216,7 @@ function handleUserInfoLoaded(userInfo: any) {
 
 async function handlePermissionChange(permission: string, index: number) {
   if (index == 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handlePermissionChange(permission, index);
     showSubscriptionModal.value = true;
     return;
   }
@@ -2249,6 +2255,41 @@ function onImagesPicked(e: Event) {
   appendFiles(files);
 }
 
+// 宽高 / 比例限制和 Image.vue 保持一致
+// 手动上传的图片限制：宽高都在 300–6000px、宽高比（宽/高）在 0.4–2.5 之间，都是开区间，和后端口径一致
+const IMAGE_SIDE_MIN = 300;
+const IMAGE_SIDE_MAX = 6000;
+const IMAGE_RATIO_MIN = 0.4;
+const IMAGE_RATIO_MAX = 2.5;
+function readImageSize(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ width: img.naturalWidth, height: img.naturalHeight }); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+async function checkImageDimensions(file: File): Promise<boolean> {
+  const size = await readImageSize(file);
+  if (!size || !size.width || !size.height) {
+    toast(t("submit.image.uploadFormatError"));
+    return false;
+  }
+  const sideOk = size.width > IMAGE_SIDE_MIN && size.width < IMAGE_SIDE_MAX
+    && size.height > IMAGE_SIDE_MIN && size.height < IMAGE_SIDE_MAX;
+  if (!sideOk) {
+    toast(t("submit.image.sizeError"));
+    return false;
+  }
+  const ratio = size.width / size.height;
+  if (ratio <= IMAGE_RATIO_MIN || ratio >= IMAGE_RATIO_MAX) {
+    toast(t("submit.image.ratioError"));
+    return false;
+  }
+  return true;
+}
+
 function isImageCorrupted(file: File): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -2278,13 +2319,7 @@ function onDropImages(e: DragEvent) {
   }
 
   const files = Array.from(e.dataTransfer?.files ?? []);
-
-  if (files.length > 1) {
-    toast(t("submit.image.multiSelectError"));
-    return;
-  }
-
-  appendFiles(files.slice(0, 1));
+  appendFiles(files);
 }
 
 async function appendFiles(files: File[]) {
@@ -2292,8 +2327,10 @@ async function appendFiles(files: File[]) {
   const maxSize = 10 * 1024 * 1024;
   const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
+  // 支持多选：先把整批校验完，已通过校验、还没上传完的也要算进 12 张上限
+  const validFiles: PreviewFile[] = [];
   for (const f of files) {
-    if (imageFiles.value.length >= maxCount) {
+    if (imageFiles.value.length + validFiles.length >= maxCount) {
       toast(t("submit.image.maxSelectTip"));
       break;
     }
@@ -2312,76 +2349,86 @@ async function appendFiles(files: File[]) {
       continue;
     }
 
+    if (!(await checkImageDimensions(f))) continue;
+
     const pf = f as PreviewFile;
     pf._key = `${Date.now()}_${Math.random()}`;
     pf._preview = URL.createObjectURL(f);
+    validFiles.push(pf);
+  }
 
-    uploadImage(pf);
+  if (validFiles.length === 0) return;
+
+  isUpload.value = true;
+  const results = await Promise.all(validFiles.map((pf) => uploadImage(pf)));
+  isUpload.value = false;
+
+  // 按用户选择的顺序加入列表（不按上传完成先后），漫画页序要和选图顺序一致
+  const wasEmpty = imageFiles.value.length === 0;
+  validFiles.forEach((pf, i) => {
+    if (results[i] && imageFiles.value.length < maxCount) {
+      imageFiles.value.push(pf);
+    }
+  });
+
+  if (imageFiles.value.length > 0) {
+    // Set first image as cover by default
+    if (wasEmpty) {
+      coverPreview.value = imageFiles.value[0]._url || imageFiles.value[0]._preview;
+      selectedCoverIndex.value = 0;
+    }
+    // Show full content after successful upload
+    showFullContent.value = true;
   }
 }
 
-function uploadImage(pf: PreviewFile) {
+// 只负责上传单张并返回是否成功；加入列表、设封面、loading 由 appendFiles 统一处理
+function uploadImage(pf: PreviewFile): Promise<boolean> {
   const token = localStorage.getItem("token");
   if (!token) {
-    return false;
+    return Promise.resolve(false);
   }
 
-  if (pf) {
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validImageTypes.includes(pf.type)) {
-      toast(t("home.error.invalidPhotoFormat"));
-      return false;
-    }
+  const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!validImageTypes.includes(pf.type)) {
+    toast(t("home.error.invalidPhotoFormat"));
+    return Promise.resolve(false);
+  }
 
-    isUpload.value = true;
+  const formData = new FormData();
+  formData.append("file", pf);
 
-    const formData = new FormData();
-    formData.append("file", pf);
+  const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
-    const authHeaders = window.AntiCrawler.generateAuthParams(token);
+  const parma = {
+    method: "POST",
+    headers: {
+      token: token,
+      'Platform': 'web',
+      'siteid': '1',
+      ...authHeaders,
+    },
+    body: formData,
+  };
 
-    const parma = {
-      method: "POST",
-      headers: {
-        token: token,
-        'Platform': 'web',
-        ...authHeaders,
-      },
-      body: formData,
-    };
-
-    fetch(baseUrl + "user/uploadImage", parma)
-      .then((response) => response.json())
-      .then((res: any) => {
-        if (res.code === 0 || res.code === 200) {
-          const url = (res?.data && (res.data.url || res.data)) || res?.url;
-          if (typeof url === "string") {
-            pf._url = url;
-          }
-
-          // Add to array only after successful upload
-          imageFiles.value.push(pf);
-
-          // Set first image as cover by default
-          if (imageFiles.value.length === 1) {
-            coverPreview.value = pf._url || pf._preview;
-            selectedCoverIndex.value = 0;
-          }
-
-          // Show full content after successful upload
-          showFullContent.value = true;
-
-          isUpload.value = false;
-        } else {
-          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
-          isUpload.value = false;
+  return fetch(baseUrl + "user/uploadImage", parma)
+    .then((response) => response.json())
+    .then((res: any) => {
+      if (res.code === 0 || res.code === 200) {
+        const url = (res?.data && (res.data.url || res.data)) || res?.url;
+        if (typeof url === "string") {
+          pf._url = url;
         }
-      })
-      .catch((error: unknown) => {
-        toast(String(error));
-        isUpload.value = false;
-      });
-  }
+        return true;
+      } else {
+        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        return false;
+      }
+    })
+    .catch((error: unknown) => {
+      toast(String(error));
+      return false;
+    });
 }
 
 function reloadImage(idx: number) {
@@ -2415,6 +2462,7 @@ async function onReuploadPicked(e: Event) {
     toast(t("home.error.corruptedImage"));
     return false;
   }
+  if (!(await checkImageDimensions(file))) return false;
   isUpload.value = true;
   const formData = new FormData();
   formData.append("file", file);
@@ -2426,6 +2474,7 @@ async function onReuploadPicked(e: Event) {
     headers: {
       token: token,
       'Platform': 'web',
+      'siteid': '1',
       ...authHeaders,
     },
     body: formData,
@@ -2569,6 +2618,7 @@ function onCoverConfirmed(coverUrl: string) {
         headers: {
           token: token,
           'Platform': 'web',
+          'siteid': '1',
           ...authHeaders,
         },
         body: formData,
@@ -3645,11 +3695,19 @@ function confirmConvention() {
 // Subscription prompt modal methods
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+  pendingSubscriptionAction = null;
 }
 
-function goToSubscriptionSettings() {
+// 订阅价格弹窗保存成功：视为已开通订阅，并补执行刚才被拦下的「订阅用户可见」选择
+// （planId 判空是兜底，正常保存一定带着选中的档位）
+function onSubscriptionSaved(planId: string) {
   showSubscriptionModal.value = false;
-  window.location.href = '/user-subscription';
+  const action = pendingSubscriptionAction;
+  pendingSubscriptionAction = null;
+  if (planId && planId != '0') {
+    hasActiveSubscription.value = true;
+    action?.();
+  }
 }
 
 // Project list methods

@@ -369,7 +369,8 @@ function handleSubmit() {
           headers: {
             "ts": ts,
             "sign": sign,
-            "Platform": "web"
+            "Platform": "web",
+            "siteid": "1"
           },
           body: formData,
         })

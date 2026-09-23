@@ -1275,6 +1275,7 @@ class OutlineStreamParser {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Platform': 'web',
+          'siteid': '1',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -2296,7 +2297,7 @@ async function handleSendMarkedImage(blob: Blob, instruction: string) {
     coverAbortController.value = new AbortController();
     const response = await fetch(`${aiUrl}ai/novel/renew_novel_cover`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'token': token },
+      headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'siteid': '1', 'token': token },
       body: JSON.stringify({
         session_id: sessionId.value,
         prompt: instruction,
@@ -2331,7 +2332,7 @@ async function handleSendMarkedImage(blob: Blob, instruction: string) {
   if (await isTaskLimitExceeded()) return;
   const response = await fetch(`${aiUrl}ai/novel/renew_novel_insert_image`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'token': token },
+    headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'siteid': '1', 'token': token },
     body: JSON.stringify({
       session_id: sessionId.value,
       chapter: currentChapter.value?.chapter,
@@ -3039,6 +3040,7 @@ const generateInsertImage = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify({
@@ -3225,6 +3227,7 @@ const selectHistoryInsertImage = async (url: string) => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify({
@@ -4072,6 +4075,7 @@ const sendRegenerateRequest = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token || ''
       },
       body: JSON.stringify(requestData)
@@ -4528,6 +4532,7 @@ const cancelEditChapter = () => {
           headers: {
             'Content-Type': 'application/json',
             'Platform': 'web',
+            'siteid': '1',
             'token': token || ''
           },
           body: JSON.stringify(updateData)
@@ -4631,6 +4636,7 @@ const saveChapterTitle = async (chapterId: number) => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -5384,6 +5390,7 @@ const saveManualEditOutline = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -9172,6 +9179,7 @@ class OutlineStreamParser {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Platform': 'web',
+          'siteid': '1',
           'token': token,
         },
         signal: this.abortController.signal,
@@ -9559,6 +9567,7 @@ async function selectHistoryOutline(outlineObj: any) {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token || ''
       },
       body: JSON.stringify(updateData)
@@ -9624,6 +9633,7 @@ async function selectHistoryChapter(chapterObj: any) {
         headers: {
           'Content-Type': 'application/json',
           'Platform': 'web',
+          'siteid': '1',
           'token': token || ''
         },
         body: JSON.stringify(updateData)
@@ -10314,6 +10324,7 @@ async function uploadCoverImage(file: File): Promise<string> {
     headers: {
       token: token,
       'Platform': 'web',
+      'siteid': '1',
       ...authHeaders,
     },
     body: formData,
@@ -10745,6 +10756,7 @@ async function selectHistoryCover(coverUrl: string) {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify({
@@ -10795,6 +10807,7 @@ async function usePreviousCover() {
         headers: {
           'Content-Type': 'application/json',
           'Platform': 'web',
+          'siteid': '1',
           'token': token
         },
         body: JSON.stringify({
@@ -10933,6 +10946,7 @@ async function doGenerateNovelCover() {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify({

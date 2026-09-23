@@ -128,7 +128,7 @@ function handleFile(e: Event) {
 
   const authHeaders = window.AntiCrawler.generateAuthParams(token);
 
-  const parma = { method: "POST", headers: { token, 'Platform': 'web', ...authHeaders }, body: formData };
+  const parma = { method: "POST", headers: { token, 'Platform': 'web', 'siteid': '1', ...authHeaders }, body: formData };
 
   fetch(baseUrl + "user/uploadImage", parma)
     .then((r) => r.json())

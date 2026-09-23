@@ -677,6 +677,7 @@ async function fetchDetail() {
     const token = localStorage.getItem('token');
     const headers: HeadersInit = {};
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
 
     if (token) {
       headers['token'] = token;
@@ -1074,6 +1075,7 @@ async function submitComment() {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token,
         ts,
         sign
@@ -1394,7 +1396,7 @@ async function uploadImage(file: File) {
   try {
     const res = await fetch(`${baseUrl}user/uploadImage`, {
       method: 'POST',
-      headers: { 'Platform': 'web', 'token': token, ts, sign },
+      headers: { 'Platform': 'web', 'siteid': '1', 'token': token, ts, sign },
       body: formData
     });
     const data = await res.json();
@@ -1423,7 +1425,7 @@ async function uploadVideo(file: File) {
   try {
     const res = await fetch(`${baseUrl}upload/video`, {
       method: 'POST',
-      headers: { 'Platform': 'web', 'token': token, ts, sign },
+      headers: { 'Platform': 'web', 'siteid': '1', 'token': token, ts, sign },
       body: formData
     });
     const data = await res.json();

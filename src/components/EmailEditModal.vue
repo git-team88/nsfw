@@ -165,6 +165,7 @@ function sendEmailCode() {
             "token": userToken,
             "ts": ts,
             "Platform": "web",
+            "siteid": "1",
             "sign": sign
           },
           body: formData,
@@ -229,6 +230,7 @@ function saveEmail() {
       "token": userToken,
       "ts": ts,
       "Platform": "web",
+      "siteid": "1",
       "sign": sign
     },
     body: formData,

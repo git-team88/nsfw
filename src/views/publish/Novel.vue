@@ -720,10 +720,10 @@
   />
 
   <!-- Subscription Prompt Modal -->
-  <SubscriptionPromptModal
+  <SubscriptionPriceModal
     :visible="showSubscriptionModal"
     @cancel="closeSubscriptionModal"
-    @go-to-settings="goToSubscriptionSettings"
+    @saved="onSubscriptionSaved"
   />
 
   <!-- Edit Collection Modal -->
@@ -776,7 +776,7 @@ import ProjectNovelViewModal from "@/components/ProjectNovelViewModal.vue";
 import BatchPublishProgressDialog from "@/components/BatchPublishProgressDialog.vue";
 import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
-import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import CollectionListModal from "@/components/CollectionListModal.vue";
@@ -1215,6 +1215,8 @@ const isLoadingCollections = ref(false);
 
 // Subscription prompt modal
 const showSubscriptionModal = ref(false);
+// 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
+let pendingSubscriptionAction: (() => void) | null = null;
 const showBatchPublishProgress = ref(false);
 const showBatchPublishFail = ref(false);
 const batchPublishChapterStatuses = ref<{ chapter: number; status: 'success' | 'publishing' | 'waiting' | 'fail' | 'unpublished' }[]>([]);
@@ -1383,6 +1385,7 @@ async function handleTitleBlur() {
           headers: {
             token: token,
             'Platform': 'web',
+            'siteid': '1',
             ...authHeaders,
           },
           body: formData,
@@ -1456,6 +1459,7 @@ async function goToNextStep() {
               headers: {
                 token: token,
                 'Platform': 'web',
+                'siteid': '1',
                 ...authHeaders,
               },
               body: formData,
@@ -1554,6 +1558,7 @@ const batchPermOptions = [
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
   if (_index === 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handleBatchPermissionChange(permission, _index);
     showSubscriptionModal.value = true;
     return;
   }
@@ -2838,7 +2843,7 @@ async function handleCaptionImageChange(event: Event) {
     const authHeaders = window.AntiCrawler.generateAuthParams(token);
     const res = await fetch(baseUrl + 'user/uploadImage', {
       method: 'POST',
-      headers: { token, 'Platform': 'web', ...authHeaders },
+      headers: { token, 'Platform': 'web', 'siteid': '1', ...authHeaders },
       body: formData,
     });
     const data = await res.json();
@@ -4524,11 +4529,19 @@ async function handlePublish(publishData?: any) {
 // Subscription prompt modal methods
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+  pendingSubscriptionAction = null;
 }
 
-function goToSubscriptionSettings() {
+// 订阅价格弹窗保存成功：视为已开通订阅，并补执行刚才被拦下的「订阅用户可见」选择
+// （planId 判空是兜底，正常保存一定带着选中的档位）
+function onSubscriptionSaved(planId: string) {
   showSubscriptionModal.value = false;
-  window.location.href = '/user-subscription';
+  const action = pendingSubscriptionAction;
+  pendingSubscriptionAction = null;
+  if (planId && planId != '0') {
+    hasActiveSubscription.value = true;
+    action?.();
+  }
 }
 
 // Community Convention Modal methods
@@ -4564,6 +4577,7 @@ async function checkSubscriptionStatus() {
 // Handle permission change with subscription check
 async function handlePermissionChange(permission: string, index: number) {
   if (index == 1 && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handlePermissionChange(permission, index);
     showSubscriptionModal.value = true;
     return;
   }
@@ -4626,6 +4640,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                 headers: {
                   token: token,
                   'Platform': 'web',
+                  'siteid': '1',
                   ...authHeaders,
                 },
                 body: formData,

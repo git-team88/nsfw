@@ -368,10 +368,10 @@
     />
 
     <!-- Subscription Prompt Modal -->
-    <SubscriptionPromptModal
+    <SubscriptionPriceModal
       :visible="showSubscriptionModal"
       @cancel="closeSubscriptionModal"
-      @go-to-settings="goToSubscriptionSettings"
+      @saved="onSubscriptionSaved"
     />
 
     <!-- Community Convention Modal -->
@@ -398,7 +398,7 @@ import { processImageUrl } from "@/util/utils";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
-import SubscriptionPromptModal from "@/components/SubscriptionPromptModal.vue";
+import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
@@ -508,6 +508,8 @@ const previewMediaUrl = ref("");
 
 const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
+// 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
+let pendingSubscriptionAction: (() => void) | null = null;
 const agreeTerms = ref(true);
 const showConventionModal = ref(false);
 
@@ -1122,6 +1124,7 @@ async function confirmSelectedProjects() {
 
 function handlePermissionChange(permission: string) {
   if (permission === "partial" && !hasActiveSubscription.value) {
+    pendingSubscriptionAction = () => handlePermissionChange(permission);
     showSubscriptionModal.value = true;
     return;
   }
@@ -1144,11 +1147,19 @@ async function checkSubscriptionStatus() {
 
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+  pendingSubscriptionAction = null;
 }
 
-function goToSubscriptionSettings() {
+// 订阅价格弹窗保存成功：视为已开通订阅，并补执行刚才被拦下的「订阅用户可见」选择
+// （planId 判空是兜底，正常保存一定带着选中的档位）
+function onSubscriptionSaved(planId: string) {
   showSubscriptionModal.value = false;
-  window.location.href = '/user-subscription';
+  const action = pendingSubscriptionAction;
+  pendingSubscriptionAction = null;
+  if (planId && planId != '0') {
+    hasActiveSubscription.value = true;
+    action?.();
+  }
 }
 
 function closeConventionModal() {

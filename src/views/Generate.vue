@@ -4093,6 +4093,7 @@ async function uploadImage(file: File, mode: string): Promise<string> {
     headers: {
       token: token,
       'Platform': 'web',
+      'siteid': '1',
       ...authHeaders,
     },
     body: formData,
@@ -5210,6 +5211,7 @@ const doGeneratePhoto = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(settingsParams)
@@ -5506,6 +5508,7 @@ const doGenerateVideo = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(params)
@@ -6204,6 +6207,7 @@ const regenerateFromRecord = async (record: any) => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token,
       },
       body: JSON.stringify(params),

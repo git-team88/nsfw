@@ -2103,6 +2103,7 @@ const handleMakeSimilarVideo = async (collection: any) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Platform': 'web',
+      'siteid': '1',
       'ts': ts,
       'sign': sign,
     };
@@ -2156,6 +2157,7 @@ const handleMakeSequelFromList = async (collection: any) => {
       headers['token'] = token;
     }
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
     headers['ts'] = ts;
     headers['sign'] = sign;
     const res = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {

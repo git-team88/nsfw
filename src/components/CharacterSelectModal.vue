@@ -213,6 +213,7 @@ const loadCharacters = async (isLoadMore = false) => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       }
     });

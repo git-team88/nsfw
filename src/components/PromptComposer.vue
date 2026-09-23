@@ -3472,6 +3472,7 @@ const navigateToNovelGenerate = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(params)
@@ -4722,6 +4723,7 @@ const handleMakeSimilarVideo = async (item: any) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Platform': 'web',
+      'siteid': '1',
       'ts': ts,
       'sign': sign,
     };
@@ -4820,6 +4822,7 @@ const handleMakeSequelFromList = async (item: any) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Platform': 'web',
+      'siteid': '1',
       'ts': ts,
       'sign': sign,
     };
@@ -5251,6 +5254,7 @@ const doGenerateVideo = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(params)
@@ -5438,6 +5442,7 @@ const doGenerateComic = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(params)
@@ -5593,6 +5598,7 @@ const doGenerateDrama = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(params)
@@ -5751,6 +5757,7 @@ const doGeneratePhoto = async () => {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token
       },
       body: JSON.stringify(settingsParams)
@@ -6595,6 +6602,7 @@ async function uploadImage(file: File, mode: string): Promise<string> {
     headers: {
       token: token,
       'Platform': 'web',
+      'siteid': '1',
       ...authHeaders,
     },
     body: formData,

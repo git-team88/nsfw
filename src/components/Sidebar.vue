@@ -1020,6 +1020,7 @@ async function submitComment() {
       headers: {
         'Content-Type': 'application/json',
         'Platform': 'web',
+        'siteid': '1',
         'token': token,
         ts,
         sign
@@ -1111,6 +1112,7 @@ async function updateCommentCount() {
     headers['ts'] = ts;
     headers['sign'] = sign;
     headers['Platform'] = 'web';
+    headers['siteid'] = '1';
 
     const response = await fetch(`${baseUrl}post/getPostDetailByListPublic`, {
       method: 'POST',
@@ -1820,6 +1822,7 @@ async function uploadImage(file: File) {
       headers: {
         token: token,
         'Platform': 'web',
+        'siteid': '1',
         ...authHeaders,
       },
       body: formData,
