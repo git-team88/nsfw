@@ -350,11 +350,11 @@
               <!-- 失败提示 -->
               <div v-if="isTaskFailed(record.step_status || record.status)" class="record-failed">
                 <img src="@/assets/images/home/intro.png" alt="warning" class="failed-icon" />
-                <!-- 没有具体失败原因时，文案里的「重试」单独拆出来做成可点入口，
-                     点它走的就是底部 regenerate-btn 那套回填逻辑 -->
+                <!-- 可重试的失败（上游故障 / 没命中具体规则）：文案里的「重试」单独拆出来做成可点入口，
+                     点它走的就是底部 regenerate-btn 那套回填逻辑。前缀按失败原因换，后半句共用 -->
                 <span class="failed-text" v-if="record.fail_reason && !record.fail_retryable">{{ record.fail_reason }}</span>
                 <span class="failed-text" v-else
-                  >{{ t('recordList.generateFailedRetryPrefix')
+                  >{{ record.fail_retry_prefix || t('recordList.generateFailedRetryPrefix')
                   }}<span
                     v-if="canRegenerateRecord(record)"
                     class="failed-retry-link"
@@ -4506,7 +4506,7 @@ const isTaskQueuing = (status: string) => {
 function resolveFailReason(
   statusMessage: string,
   isVideo = false,
-): { reason: string; insufficient: boolean; matched: boolean; retryable: boolean } {
+): { reason: string; insufficient: boolean; matched: boolean; retryable: boolean; retryPrefix?: string } {
   const msg = (statusMessage || '').toLowerCase();
 
   if (msg.includes('credit is not enough') || msg.includes('recharge')) {
@@ -4530,7 +4530,15 @@ function resolveFailReason(
 
   // 上游模型接口故障：后端回 Upstream task ...
   if (/upstream\s+task/.test(plain)) {
-    return { reason: t('recordList.generateFailedUpstream'), insufficient: false, matched: true, retryable: false };
+    // 上游模型挂了不是用户的错，也不扣算力，文案里的「重试」同样做成可点入口，
+    // 只是前缀不一样，后半句和兜底文案共用
+    return {
+      reason: t('recordList.generateFailedUpstream'),
+      insufficient: false,
+      matched: true,
+      retryable: isVideo,
+      retryPrefix: t('recordList.generateFailedUpstreamPrefix'),
+    };
   }
 
   // 没命中具体规则：视频统一给「点击重试」的文案，图片沿用原来的提示。
@@ -4541,6 +4549,7 @@ function resolveFailReason(
     insufficient: false,
     matched: false,
     retryable: isVideo,
+    retryPrefix: t('recordList.generateFailedRetryPrefix'),
   };
 }
 
@@ -4746,6 +4755,7 @@ const pollTaskStatus = async (taskId: string) => {
           const failed = resolveFailReason(taskData.status_message, updatedRecord.story_type === 'simple_video');
           updatedRecord.fail_reason = failed.reason;
           updatedRecord.fail_retryable = failed.retryable;
+          updatedRecord.fail_retry_prefix = failed.retryPrefix || '';
           if (failed.insufficient) showInsufficientBalanceModal.value = true;
         }
 
@@ -4772,7 +4782,8 @@ const pollTaskStatus = async (taskId: string) => {
           ...records.value[recordIndex],
           step_status: 'FAILED',
           fail_reason: failed.reason,
-          fail_retryable: failed.retryable
+          fail_retryable: failed.retryable,
+          fail_retry_prefix: failed.retryPrefix || ''
         };
         if (failed.insufficient) showInsufficientBalanceModal.value = true;
         stopPolling(taskId);
@@ -4953,7 +4964,8 @@ const normalizeSimpleRecord = (record: any) => {
     videoUrl,
     createTime: record.created_at || '',
     fail_reason: failed.matched ? failed.reason : (record.fail_reason || ''),
-    fail_retryable: failed.retryable && !record.fail_reason
+    fail_retryable: failed.retryable && !record.fail_reason,
+    fail_retry_prefix: failed.retryPrefix || ''
   };
 };
 

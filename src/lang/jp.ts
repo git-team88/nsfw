@@ -1966,6 +1966,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     generateFailedCopyright: "生成内容に著作権リスクがあります。修正して再試行してください。失敗したタスクの算力は消費されません。",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
     generateFailedUpstream: "モデルの生成でエラーが発生しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
+    // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key
+    generateFailedUpstreamPrefix: "モデルの生成でエラーが発生しました。",
     // 视频未知失败的兜底文案
     generateFailedRetry: "生成に失敗しました。再試行をタップしてください。失敗したタスクの算力は消費されません。",
     // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填

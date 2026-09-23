@@ -4639,11 +4639,12 @@ const handleMakeSimilar = async (item: any) => {
 
     } else if (targetContentType === 'novel') {
       currentNovelMode.value = safeMode;
+      // total_words 存的是「万字」档位 3 / 10 / 30，不是字数本身：
+      // 提交时写的就是这三个值（见 novel 的 params），小说内页也按这三个值回读。
+      // 以前拿它跟 300000 / 100000 比，任何原作都落到 else，字数永远回填成 30K。
       if (userSelected.total_words) {
-        const words = userSelected.total_words;
-        if (words >= 300000) selectedWordCount.value = '300K';
-        else if (words >= 100000) selectedWordCount.value = '100K';
-        else selectedWordCount.value = '30K';
+        const words = Number(userSelected.total_words);
+        selectedWordCount.value = words == 30 ? '300K' : words == 10 ? '100K' : '30K';
       }
       if (userSelected.language) selectedLanguage.value = userSelected.language;
       if (userSelected.insert_image_count !== undefined) selectedInsertImage.value = userSelected.insert_image_count;

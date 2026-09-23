@@ -2242,6 +2242,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     generateFailedCopyright: "生成內容有版權風險，請修改後重試，失敗任務將不扣算力。",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
     generateFailedUpstream: "模型生成出錯，請點擊重試，失敗任務將不扣算力。",
+    // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key
+    generateFailedUpstreamPrefix: "模型生成出錯，請點擊",
     // 视频未知失败的兜底文案
     generateFailedRetry: "生成失敗，請點擊重試，失敗任務將不扣算力。",
     // 失败文案拆成三段：中间那段是可点的「重试」，点了走重新生成回填
