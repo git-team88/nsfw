@@ -50,9 +50,9 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <UploadMask :visible="isUploading"></UploadMask>
+    <UploadMask :visible="isUploading"></UploadMask>
+  </div>
 </template>
 
 <script setup lang="ts" name="UserProfileEdit">

@@ -248,30 +248,29 @@
       @update-post-data="updatePostData"
       @make-similar="goMakeSimilar"
     />
-  </div>
 
-  <!-- Report Modal -->
-  <ReportModal
-    v-if="reportTarget"
-    v-model:visible="reportModalVisible"
-    :title="reportModalTitle"
-    :options="reportOptions"
-    :targetType="reportTarget"
-    @submit="handleReportSubmit"
-  />
+    <!-- Report Modal -->
+    <ReportModal
+      v-if="reportTarget"
+      v-model:visible="reportModalVisible"
+      :title="reportModalTitle"
+      :options="reportOptions"
+      :targetType="reportTarget"
+      @submit="handleReportSubmit"
+    />
 
-  <!-- Sensitive Content Modals -->
-  <SensitiveContentAdultConfirmModal
-    v-if="showSensitiveContentAdultConfirmModal"
-    @close="showSensitiveContentAdultConfirmModal = false"
-    @confirm="handleSensitiveContentAgeConfirm"
-  />
-  <SensitiveContentConfirmModal
-    v-if="showSensitiveContentConfirmModal"
-    :hideDontAsk="true"
-    @close="showSensitiveContentConfirmModal = false"
-    @confirm="confirmSensitiveContent"
-  />
+    <!-- Sensitive Content Modals -->
+    <SensitiveContentAdultConfirmModal
+      v-if="showSensitiveContentAdultConfirmModal"
+      @close="showSensitiveContentAdultConfirmModal = false"
+      @confirm="handleSensitiveContentAgeConfirm"
+    />
+    <SensitiveContentConfirmModal
+      v-if="showSensitiveContentConfirmModal"
+      :hideDontAsk="true"
+      @close="showSensitiveContentConfirmModal = false"
+      @confirm="confirmSensitiveContent"
+    />
     <!-- 做同款 / 做续集：在本页底部展开输入框，不再跳首页 -->
     <PromptComposer
       ref="composerRef"
@@ -281,6 +280,7 @@
     />
     <!-- 做同款 / 做续集的来源数据请求中 -->
     <UploadMask :visible="composerLoading" :text="t('home.loading')" />
+  </div>
 </template>
 
 <script setup lang="ts">
