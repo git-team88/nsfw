@@ -9,8 +9,9 @@
 
       <div class="content-box">
         <div class="page-title-tabs">
-          <!-- 现金支付只有博主开通了收款（blogger_status == 1）才显示，否则只能走 USDT -->
-          <div v-if="bloggerStatus == 1" class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
+          <!-- 现金支付先不看博主的 Stripe 开通状态（blogger_status）：始终显示并默认选中。
+               要恢复按开通状态显示时，把 v-if="bloggerStatus == 1" 加回来 -->
+          <div class="tab-item" :class="{ active: paymentTab === 'cash' }" @click="paymentTab = 'cash'">{{ t("subscribe.cashPay") }}</div>
           <div class="tab-item" :class="{ active: paymentTab === 'usdt' }" @click="paymentTab = 'usdt'">{{ t("subscribe.usdtPay") }}</div>
         </div>
 
@@ -220,11 +221,11 @@ async function fetchAuthorInfo() {
 
       subscriptionPlans.value = data.data?.subscription_plans || [];
 
-      // 现金支付 tab 只在博主 blogger_status == 1（已开通收款）时显示；
-      // 没开通就把默认 tab 切到 USDT，别停在一个看不见的 tab 上
+      // blogger_status 还是记下来，但现金支付先不按它显示 / 切换：
+      // tab 固定默认现金（paymentTab 初值就是 'cash'）。恢复时把下面那行注释解开
       const status = data.data?.blogger_status ?? data.data?.user?.blogger_status;
       bloggerStatus.value = Number(status) || 0;
-      paymentTab.value = bloggerStatus.value == 1 ? 'cash' : 'usdt';
+      // paymentTab.value = bloggerStatus.value == 1 ? 'cash' : 'usdt';
     } else {
       toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
     }

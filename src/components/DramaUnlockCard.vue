@@ -5,7 +5,8 @@
     <p class="unlock-tip" v-html="unlockTipHtml"></p>
 
     <div class="pay-methods">
-      <!-- 现金支付只有博主开通了 Stripe 收款（blogger_status == 1）才显示，否则只能走 USDT -->
+      <!-- 现金支付先不看博主的 Stripe 开通状态（blogger_status）：始终可选并默认选中。
+           canPayCash 现在恒为 true，恢复时把它改回按 blogger_status 判断即可 -->
       <label v-if="canPayCash" class="pay-method" :class="{ active: payMethod === 'cash' }" @click="payMethod = 'cash'">
         <span class="radio"></span>
         <span class="label">{{ t('subscribe.cashPay') }}</span>
@@ -83,9 +84,11 @@ const emit = defineEmits<{ (e: 'unlocked'): void }>();
 const { t, locale } = useI18n();
 const router = useRouter();
 
-const canPayCash = computed(() => Number(props.bloggerStatus) == 1);
-// 博主开通了 Stripe 默认选现金，没开通只能 USDT；状态是异步拉的，变了要跟着切
-const payMethod = ref<'cash' | 'usdt'>(canPayCash.value ? 'cash' : 'usdt');
+// 现金支付先不看博主的 Stripe 开通状态：这里恒为 true，
+// 恢复时改回 Number(props.bloggerStatus) == 1，并把 payMethod 初值改回 canPayCash.value ? 'cash' : 'usdt'
+const canPayCash = computed(() => true);
+// 现金始终可选，默认就选现金；下面的 watch 在 canPayCash 恒为 true 时不会触发
+const payMethod = ref<'cash' | 'usdt'>('cash');
 watch(canPayCash, (ok) => {
   payMethod.value = ok ? 'cash' : 'usdt';
 });

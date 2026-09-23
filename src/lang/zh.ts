@@ -2374,6 +2374,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       formatError: "不支持的视频格式，仅支持MP4、MOV",
       multiSelectError: "仅支持选择一个视频文件",
       corruptedError: "视频文件损坏或无法播放，请更换视频",
+      readTimeoutError: "视频读取超时，请检查文件或换个视频重试",
       durationLimit: "视频时长不能超过1小时，请更换视频",
       published: "已发布",
 

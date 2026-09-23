@@ -2269,6 +2269,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       formatError: "Unsupported video format. Only MP4, MOV are supported",
       multiSelectError: "Please select only one video file",
       corruptedError: "The video file is corrupted or unplayable, please try another",
+      readTimeoutError: "Timed out reading the video. Please check the file or try another",
       durationLimit: "Video duration cannot exceed 1 hour, please try another",
       published: "公開済み",
       projectView: {

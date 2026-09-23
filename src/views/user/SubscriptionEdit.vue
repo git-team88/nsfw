@@ -63,6 +63,9 @@
             </div>
           </div>
 
+          <!-- 收款账户（USDT / 现金）连同标题先整块隐藏。
+               v-if="false" 是临时开关，要放出来时把这层 template 包裹去掉即可 -->
+          <template v-if="false">
           <div class="account-title">{{ t("user.subscription.paymentAccountTitle") }}</div>
           <div class="account-tip" v-html="t('user.subscription.accountTip')"></div>
           <div class="account-section">
@@ -107,6 +110,7 @@
               </div>
             </div>
           </div> -->
+          </template>
 
         </div>
       </div>

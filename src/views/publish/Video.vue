@@ -2688,35 +2688,41 @@ async function startFakeUpload(file: File) {
   try {
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
-    const metadataOk = await new Promise<boolean>((resolve) => {
+    // 读元数据的三种失败分开报：时长超限 / 读取超时 / 文件本身坏了。
+    // 以前统一 resolve(false)，再回头看 videoDuration.value 判是不是超时长 ——
+    // 它是 ref，会留着上一个文件的值，换个坏文件进来会误报成「时长超过 1 小时」；
+    // 15 秒超时那条路径 duration 是 NaN，也会被当成「文件损坏」。
+    const metadataResult = await new Promise<'ok' | 'duration' | 'timeout' | 'corrupted'>((resolve) => {
       video.onloadedmetadata = () => {
         videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
         videoDuration.value = Math.round(video.duration);
         if (video.duration > 3600) {
-          resolve(false);
+          resolve('duration');
           return;
         }
         const fileName = file.name;
         const extension = fileName.split('.').pop()?.toLowerCase() || '';
         videoType.value = extension;
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
-          resolve(false);
+          resolve('corrupted');
         } else {
-          resolve(true);
+          resolve('ok');
         }
       };
-      video.onerror = () => resolve(false);
-      setTimeout(() => resolve(false), 15000);
+      video.onerror = () => resolve('corrupted');
+      setTimeout(() => resolve('timeout'), 15000);
     });
 
-    if (!metadataOk) {
+    if (metadataResult !== 'ok') {
       URL.revokeObjectURL(video.src);
       isUpload.value = false;
-      if (videoDuration.value > 3600) {
-        toast(t('submit.video.durationLimit'));
-      } else {
-        toast(t('submit.video.corruptedError'));
-      }
+      toast(t(
+        metadataResult === 'duration'
+          ? 'submit.video.durationLimit'
+          : metadataResult === 'timeout'
+            ? 'submit.video.readTimeoutError'
+            : 'submit.video.corruptedError',
+      ));
       return false;
     }
 

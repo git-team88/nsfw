@@ -1647,6 +1647,12 @@ function pickVideo() {
 
 function onDropFile(e: DragEvent) {
   const files = e.dataTransfer?.files;
+  // 视频只能传一个。选文件那边 input 没加 multiple，系统弹框本来就是单选；
+  // 拖拽绕开了弹框，不拦的话多拖几个会静默只传第一个，用户以为都传了
+  if (files && files.length > 1) {
+    toast(t("submit.video.multiSelectError"));
+    return;
+  }
   if (files && files.length > 0) {
     handleVideoFile(files[0]);
   }
@@ -1687,31 +1693,35 @@ async function handleVideoFile(file: File) {
     // Validate metadata first
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
-    const metadataOk = await new Promise<boolean>((resolve) => {
+    // 读元数据的三种失败分开报：时长超限 / 读取超时 / 文件本身坏了。
+    // 15 秒超时那条路径 duration 是 NaN，以前会被当成「文件损坏」报给用户。
+    const metadataResult = await new Promise<'ok' | 'duration' | 'timeout' | 'corrupted'>((resolve) => {
       video.onloadedmetadata = () => {
         if (video.duration > MAX_VIDEO_DURATION) {
-          resolve(false);
+          resolve('duration');
           return;
         }
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
-          resolve(false);
+          resolve('corrupted');
         } else {
           videoDuration.value = Math.round(video.duration * 100) / 100;
-          resolve(true);
+          resolve('ok');
         }
       };
-      video.onerror = () => resolve(false);
-      setTimeout(() => resolve(false), 15000);
+      video.onerror = () => resolve('corrupted');
+      setTimeout(() => resolve('timeout'), 15000);
     });
 
-    if (!metadataOk) {
+    if (metadataResult !== 'ok') {
       URL.revokeObjectURL(video.src);
       isUpload.value = false;
-      if (video.duration > MAX_VIDEO_DURATION) {
-        toast(t("submit.video.durationLimit"));
-      } else {
-        toast(t("submit.video.corruptedError"));
-      }
+      toast(t(
+        metadataResult === 'duration'
+          ? "submit.video.durationLimit"
+          : metadataResult === 'timeout'
+            ? "submit.video.readTimeoutError"
+            : "submit.video.corruptedError",
+      ));
       return;
     }
 

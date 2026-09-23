@@ -2092,6 +2092,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       formatError: "サポートされていない動画形式です。MP4、MOVのみ対応しています",
       multiSelectError: "動画ファイルは1つのみ選択してください",
       corruptedError: "動画ファイルが破損しているか再生できません。別のファイルをお試しください",
+      readTimeoutError: "動画の読み込みがタイムアウトしました。ファイルを確認するか、別の動画をお試しください",
       sizeError: "動画ファイルサイズは5GBを超えることはできません",
       durationLimit: "動画の再生時間は1時間を超えることはできません。別のファイルをお試しください",
       published: "公開済み",

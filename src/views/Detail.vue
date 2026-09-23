@@ -1582,29 +1582,29 @@ const currentVideoSrc = computed(() => {
   return detail.value.videoUrl;
 });
 
-// 博主有没有开通 Stripe 收款（blogger_status == 1），决定解锁卡上能不能选现金支付。
-// 详情接口不带这个字段，要另外调一次博主信息接口。
-// 只在解锁卡真的要显示时才拉（showDramaUnlock 已经排除了非漫剧、已订阅、已购买、作者本人），
-// 其他情况这个值用不上，不发请求。放在 detail 声明之后 —— watch 是 immediate 的。
+// 博主有没有开通 Stripe 收款（blogger_status == 1），原本决定解锁卡上能不能选现金支付。
+// 现在现金支付不看这个状态了（见 DramaUnlockCard 里恒为 true 的 canPayCash），
+// 所以这次额外的博主信息请求先停掉，authorBloggerStatus 保留默认值 0 继续传给解锁卡。
+// 恢复时把下面 bloggerStatusFetchedFor 和整段 watch 的注释一起解开。
 const authorBloggerStatus = ref<number>(0);
-let bloggerStatusFetchedFor: string | number | null = null;
-watch(
-  () => (showDramaUnlock.value ? detail.value?.author?.id : null),
-  async (authorId) => {
-    if (!authorId || authorId === bloggerStatusFetchedFor) return;
-    bloggerStatusFetchedFor = authorId;
-    try {
-      const res = await api.authorInfo(authorId) as any;
-      if (res.code === 0 || res.code === 200) {
-        const status = res.data?.blogger_status ?? res.data?.user?.blogger_status;
-        authorBloggerStatus.value = Number(status) || 0;
-      }
-    } catch (error) {
-      console.error('Fetch author blogger_status error:', error);
-    }
-  },
-  { immediate: true },
-);
+// let bloggerStatusFetchedFor: string | number | null = null;
+// watch(
+//   () => (showDramaUnlock.value ? detail.value?.author?.id : null),
+//   async (authorId) => {
+//     if (!authorId || authorId === bloggerStatusFetchedFor) return;
+//     bloggerStatusFetchedFor = authorId;
+//     try {
+//       const res = await api.authorInfo(authorId) as any;
+//       if (res.code === 0 || res.code === 200) {
+//         const status = res.data?.blogger_status ?? res.data?.user?.blogger_status;
+//         authorBloggerStatus.value = Number(status) || 0;
+//       }
+//     } catch (error) {
+//       console.error('Fetch author blogger_status error:', error);
+//     }
+//   },
+//   { immediate: true },
+// );
 
 
 watch(currentVideoSrc, () => {

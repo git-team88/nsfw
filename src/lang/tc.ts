@@ -2368,6 +2368,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       formatError: "不支持的視頻格式，僅支持MP4、MOV",
       multiSelectError: "僅支持選擇一個視頻文件",
       corruptedError: "視頻文件損壞或無法播放，請更換視頻",
+      readTimeoutError: "視頻讀取逾時，請檢查文件或換個視頻重試",
       durationLimit: "視頻時長不能超過1小時，請更換視頻",
       published: "已發布",
       projectView: {
