@@ -1526,10 +1526,11 @@ watch(() => [route.query.id, route.query.tab, route.query.type, route.query.fav]
 
 // Watch for language changes
 watch(() => locale.value, () => {
+  // 切语言要从第一页重新拉并替换列表（reset）；不传 reset 会当成加载下一页，把同一页追加到后面，列表出现重复
   if (activeContentType.value === 'favorites') {
-    fetchLikedBooks();
+    fetchLikedBooks(true);
   } else {
-    fetchCollections();
+    fetchCollections(true);
   }
   // Update SEO meta tags when language changes
   setSeoMeta();
@@ -1638,8 +1639,8 @@ async function deleteCollection() {
 
     if (res.code == 0) {
       toast(t('success'));
-      // Refresh collections
-      await fetchCollections();
+      // Refresh collections（reset：从第一页重新拉并替换列表，不然会把同一页追加到后面）
+      await fetchCollections(true);
     } else {
       toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
     }
@@ -1683,9 +1684,9 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   currentTab.value = "all";
 
   if (activeContentType.value === 'favorites') {
-    fetchLikedBooks();
+    fetchLikedBooks(true);
   } else {
-    fetchCollections();
+    fetchCollections(true);
   }
 
   if (!fromRoute) {
@@ -1916,7 +1917,7 @@ async function confirmBlockUser() {
 
       if (isBlacked) {
         toast(t("userHome.unblockSuccess"));
-        await fetchCollections();
+        await fetchCollections(true);
         // loadPosts(true);
       } else {
         collections.value = [];
