@@ -3899,6 +3899,15 @@ function onVideoEnded() {
     videoRef.value.currentTime = 0;
   }
 
+  // 视频（type 5）：播完循环播放，不停在封面上
+  if (detail.value.type === '5' && videoRef.value) {
+    isVideoEnded.value = false;
+    videoRef.value.play().catch(() => {
+      isPlaying.value = false;
+    });
+    return;
+  }
+
   // 漫剧（type 3）合集模式：一集播完自动接下一集；到最后一集就单集循环。
   // 换集必须走 playCollectionItem —— 合集列表接口不带视频地址，光改 currentCollectionIndex 视频不会换，
   // 得跳到下一集的 post 重新拉详情，新视频源到位后 watch(currentVideoSrc) 会自动播放。
