@@ -1,5 +1,5 @@
 import { baseUrl } from './config';
-import i18n from '../lang/i18n';
+import i18n, { detectBrowserLang } from '../lang/i18n';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -30,15 +30,16 @@ export function parseToUnixTimestamp(value: number | string): number {
   return dayjs.tz(str, SERVER_TIMEZONE).unix();
 }
 
-// 初始化语言设置
+/**
+ * 站点语言：用户在导航里手动切过（localStorage 里有 lang）就用切过的；
+ * 否则按浏览器语言显示（不再按 IP 判断，也不写 localStorage —— 只有用户手动切换才存）。
+ */
 export async function initLanguage() {
   const savedLang = localStorage.getItem('lang');
   if (savedLang) {
     return savedLang;
   }
-
-  const lang = 'en';
-  localStorage.setItem('lang', lang);
+  const lang = detectBrowserLang();
   i18n.global.locale.value = lang;
   return lang;
 }

@@ -302,8 +302,9 @@ const langList = [
   { value: 'tc', label: '中文繁體' },
   { value: 'zh', label: '中文简体' }
 ];
+// 没手动切过语言时 localStorage 里没有 lang（首次按浏览器语言显示），用当前语言做选中态
 const lang = localStorage.getItem("lang");
-const langText = ref(lang);
+const langText = ref(lang || locale.value);
 const isShowLang = ref(false);
 const userInfo = ref();
 
