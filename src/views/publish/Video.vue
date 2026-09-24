@@ -3015,6 +3015,78 @@ function onCoverConfirmed(imgData: string) {
 }
 
 // Get post details for editing
+// 把 form.description 渲染进描述富文本框（# 话题 / @ 提及做成不可编辑的标签）。
+// 编辑作品时不能在 getPostDetails 里直接渲染：那时 isInitializing 还是 true，内容区（v-if）没挂载，
+// captionRef 是空的，描述就丢了；要等 isInitializing 置回 false、DOM 更新后再调这个函数。
+function renderCaptionContent() {
+  if (!captionRef.value) return;
+  const content = form.value.description || "";
+  captionRef.value.innerHTML = '';
+
+  let currentIndex = 0;
+  let pos = 0;
+  const contentLength = content.length;
+
+  while (pos < contentLength) {
+    const tagIndex = content.indexOf('#', pos);
+    const mentionIndex = content.indexOf('@', pos);
+
+    let nextMatchIndex = -1;
+    let isTag = false;
+
+    if (tagIndex === -1 && mentionIndex === -1) {
+      break;
+    } else if (tagIndex === -1) {
+      nextMatchIndex = mentionIndex;
+      isTag = false;
+    } else if (mentionIndex === -1) {
+      nextMatchIndex = tagIndex;
+      isTag = true;
+    } else {
+      nextMatchIndex = Math.min(tagIndex, mentionIndex);
+      isTag = nextMatchIndex === tagIndex;
+    }
+
+    if (nextMatchIndex > currentIndex) {
+      const textBefore = content.substring(currentIndex, nextMatchIndex);
+      const textNode = document.createTextNode(textBefore);
+      captionRef.value?.appendChild(textNode);
+    }
+
+    let endIndex = nextMatchIndex + 1;
+    while (endIndex < contentLength) {
+      const char = content[endIndex];
+      if (char === '\u0020' || char === '\n' || char === '\t') {
+        break;
+      }
+      endIndex++;
+    }
+
+    const matchText = content.substring(nextMatchIndex, endIndex);
+
+    const span = document.createElement('span');
+    span.className = isTag ? 'tag topic' : 'tag mention';
+    span.style.color = '#00d3f2';
+    span.contentEditable = 'false';
+    span.textContent = matchText;
+    captionRef.value?.appendChild(span);
+
+    const space = document.createTextNode('\u0020');
+    captionRef.value?.appendChild(space);
+
+    currentIndex = endIndex;
+    pos = endIndex;
+  }
+
+  if (currentIndex < content.length) {
+    const textAfter = content.substring(currentIndex);
+    const textNode = document.createTextNode(textAfter);
+    captionRef.value?.appendChild(textNode);
+  }
+
+  captionLength.value = content.length;
+}
+
 async function getPostDetails() {
   if (!postId.value) return;
 
@@ -3035,73 +3107,6 @@ async function getPostDetails() {
         uploadProgress.value = 100;
       }
 
-      if (captionRef.value) {
-        const content = postData.content || "";
-        captionRef.value.innerHTML = '';
-
-        let currentIndex = 0;
-        let pos = 0;
-        const contentLength = content.length;
-
-        while (pos < contentLength) {
-          const tagIndex = content.indexOf('#', pos);
-          const mentionIndex = content.indexOf('@', pos);
-
-          let nextMatchIndex = -1;
-          let isTag = false;
-
-          if (tagIndex === -1 && mentionIndex === -1) {
-            break;
-          } else if (tagIndex === -1) {
-            nextMatchIndex = mentionIndex;
-            isTag = false;
-          } else if (mentionIndex === -1) {
-            nextMatchIndex = tagIndex;
-            isTag = true;
-          } else {
-            nextMatchIndex = Math.min(tagIndex, mentionIndex);
-            isTag = nextMatchIndex === tagIndex;
-          }
-
-          if (nextMatchIndex > currentIndex) {
-            const textBefore = content.substring(currentIndex, nextMatchIndex);
-            const textNode = document.createTextNode(textBefore);
-            captionRef.value?.appendChild(textNode);
-          }
-
-          let endIndex = nextMatchIndex + 1;
-          while (endIndex < contentLength) {
-            const char = content[endIndex];
-            if (char === '\u0020' || char === '\n' || char === '\t') {
-              break;
-            }
-            endIndex++;
-          }
-
-          const matchText = content.substring(nextMatchIndex, endIndex);
-
-          const span = document.createElement('span');
-          span.className = isTag ? 'tag topic' : 'tag mention';
-          span.style.color = '#00d3f2';
-          span.contentEditable = 'false';
-          span.textContent = matchText;
-          captionRef.value?.appendChild(span);
-
-          const space = document.createTextNode('\u0020');
-          captionRef.value?.appendChild(space);
-
-          currentIndex = endIndex;
-          pos = endIndex;
-        }
-
-        if (currentIndex < content.length) {
-          const textAfter = content.substring(currentIndex);
-          const textNode = document.createTextNode(textAfter);
-          captionRef.value?.appendChild(textNode);
-        }
-
-        captionLength.value = content.length;
-      }
 
       // Set selected collection from book_title
       if (postData.book_title) {
@@ -4535,6 +4540,12 @@ onMounted(async () => {
     } finally {
       isInitializing.value = false;
       isLoadingBatchPublish.value = false;
+      // 编辑作品 / 单章进来：内容区此时才挂载（初始化期间 v-if 隐藏着），
+      // 之前往富文本框写的描述会丢，等 DOM 更新后按 form.description 重新回填
+      if (postId.value || route.query.session_id) {
+        await nextTick();
+        renderCaptionContent();
+      }
     }
   });
 

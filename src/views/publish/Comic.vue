@@ -204,7 +204,7 @@
         <div class="loading-text">{{ t('home.loading') }}</div>
       </div>
 
-      <div class="content-wrapper" v-if="showFullContent || postId">
+      <div class="content-wrapper" v-if="(showFullContent || postId) && !isInitializing && !isLoadingBatchPublish">
         <input
           ref="reuploadInputRef"
           type="file"
@@ -4220,6 +4220,92 @@ async function handlePublish(publishData?: any) {
 }
 
 // Get post details for editing
+// 把 form.description 渲染进描述富文本框（# 话题 / @ 提及做成不可编辑的标签）。
+// 编辑作品时不能在 getPostDetails 里直接渲染：那时 isInitializing 还是 true，内容区（v-if）没挂载，
+// captionRef 是空的，描述就丢了；要等 isInitializing 置回 false、DOM 更新后再调这个函数。
+function renderCaptionContent() {
+  if (!captionRef.value) return;
+  const content = form.value.description || "";
+  // Clear the div
+  captionRef.value.innerHTML = '';
+
+  // Process content to handle #tags and @mentions
+  let currentIndex = 0;
+  let pos = 0;
+  const contentLength = content.length;
+
+  while (pos < contentLength) {
+    // Find the next # or @
+    const tagIndex = content.indexOf('#', pos);
+    const mentionIndex = content.indexOf('@', pos);
+
+    // Determine which comes first
+    let nextMatchIndex = -1;
+    let isTag = false;
+
+    if (tagIndex === -1 && mentionIndex === -1) {
+      // No more matches
+      break;
+    } else if (tagIndex === -1) {
+      nextMatchIndex = mentionIndex;
+      isTag = false;
+    } else if (mentionIndex === -1) {
+      nextMatchIndex = tagIndex;
+      isTag = true;
+    } else {
+      nextMatchIndex = Math.min(tagIndex, mentionIndex);
+      isTag = nextMatchIndex === tagIndex;
+    }
+
+    // Add text before the match
+    if (nextMatchIndex > currentIndex) {
+      const textBefore = content.substring(currentIndex, nextMatchIndex);
+      const textNode = document.createTextNode(textBefore);
+      captionRef.value?.appendChild(textNode);
+    }
+
+    // Find the end of the tag/mention (until whitespace or end of string)
+    let endIndex = nextMatchIndex + 1;
+    while (endIndex < contentLength) {
+      const char = content[endIndex];
+      if (char === ' ' || char === '\n' || char === '\t') {
+        break;
+      }
+      endIndex++;
+    }
+
+    // Extract the match
+    const matchText = content.substring(nextMatchIndex, endIndex);
+
+    // Create span for the match
+    const span = document.createElement('span');
+    span.className = isTag ? 'tag topic' : 'tag mention';
+    span.style.color = '#00d3f2';
+    span.style.marginRight = '4px';
+    span.contentEditable = 'false';
+    span.textContent = matchText;
+    captionRef.value?.appendChild(span);
+
+    // Add a space after
+    const space = document.createTextNode('\u0020');
+    captionRef.value?.appendChild(space);
+
+    // Update current index
+    currentIndex = endIndex;
+    pos = endIndex;
+  }
+
+  // Add remaining text
+  if (currentIndex < content.length) {
+    const textAfter = content.substring(currentIndex);
+    const textNode = document.createTextNode(textAfter);
+    captionRef.value?.appendChild(textNode);
+  }
+
+  // Update caption length
+  captionLength.value = content.length;
+}
+
 async function getPostDetails() {
   if (!postId.value) return;
 
@@ -4254,87 +4340,6 @@ async function getPostDetails() {
       }
 
       // Update contenteditable div with description and handle #tags and @mentions
-      if (captionRef.value) {
-        const content = postData.content || "";
-        // Clear the div
-        captionRef.value.innerHTML = '';
-
-        // Process content to handle #tags and @mentions
-        let currentIndex = 0;
-        let pos = 0;
-        const contentLength = content.length;
-
-        while (pos < contentLength) {
-          // Find the next # or @
-          const tagIndex = content.indexOf('#', pos);
-          const mentionIndex = content.indexOf('@', pos);
-
-          // Determine which comes first
-          let nextMatchIndex = -1;
-          let isTag = false;
-
-          if (tagIndex === -1 && mentionIndex === -1) {
-            // No more matches
-            break;
-          } else if (tagIndex === -1) {
-            nextMatchIndex = mentionIndex;
-            isTag = false;
-          } else if (mentionIndex === -1) {
-            nextMatchIndex = tagIndex;
-            isTag = true;
-          } else {
-            nextMatchIndex = Math.min(tagIndex, mentionIndex);
-            isTag = nextMatchIndex === tagIndex;
-          }
-
-          // Add text before the match
-          if (nextMatchIndex > currentIndex) {
-            const textBefore = content.substring(currentIndex, nextMatchIndex);
-            const textNode = document.createTextNode(textBefore);
-            captionRef.value?.appendChild(textNode);
-          }
-
-          // Find the end of the tag/mention (until whitespace or end of string)
-          let endIndex = nextMatchIndex + 1;
-          while (endIndex < contentLength) {
-            const char = content[endIndex];
-            if (char === ' ' || char === '\n' || char === '\t') {
-              break;
-            }
-            endIndex++;
-          }
-
-          // Extract the match
-          const matchText = content.substring(nextMatchIndex, endIndex);
-
-          // Create span for the match
-          const span = document.createElement('span');
-          span.className = isTag ? 'tag topic' : 'tag mention';
-          span.style.color = '#00d3f2';
-          span.style.marginRight = '4px';
-          span.contentEditable = 'false';
-          span.textContent = matchText;
-          captionRef.value?.appendChild(span);
-
-          // Add a space after
-          const space = document.createTextNode('\u0020');
-          captionRef.value?.appendChild(space);
-
-          // Update current index
-          currentIndex = endIndex;
-          pos = endIndex;
-        }
-
-        // Add remaining text
-        if (currentIndex < content.length) {
-          const textAfter = content.substring(currentIndex);
-          const textNode = document.createTextNode(textAfter);
-          captionRef.value?.appendChild(textNode);
-        }
-
-        // Update caption length
-        captionLength.value = content.length;
-      }
 
       // Handle images for edit mode
       if (res.data.images && Array.isArray(res.data.images)) {
@@ -4774,6 +4779,9 @@ onMounted(async () => {
       // 内容区在数据回来之前就铺出来了，转圈那层等于白加
       await getPostDetails();
       isInitializing.value = false;
+      // 内容区此时才挂载，等 DOM 更新后再把描述回填进富文本框
+      await nextTick();
+      renderCaptionContent();
     } else {
       const session_id = route.query.session_id as string;
       const index = route.query.index as string;
@@ -4797,6 +4805,9 @@ onMounted(async () => {
         isInitializing.value = true;
         await initSingleChapter(session_id, index, cover, title);
         isInitializing.value = false;
+        // 内容区此时才挂载，initSingleChapter 里写富文本框时它还没渲染，这里按 form.description 重新回填
+        await nextTick();
+        renderCaptionContent();
       } else {
         await fetchProjects();
       }
