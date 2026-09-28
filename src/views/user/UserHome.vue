@@ -2384,12 +2384,30 @@ function goEditPost(collection: any) {
   }
 }
 
+// 删除一篇作品后，重新请求博主信息，只用返回值更新被删类型的数量，其他字段不动。
+// 图片 / 视频的数量取 total_posts_4 / total_posts_5（books_group 是合集的，不用动）
+async function refreshPostCount(type: string | number) {
+  const t = String(type);
+  if (t !== '4' && t !== '5') return;
+  try {
+    // 删除只会发生在自己的主页上
+    const res = await api.authorSelfInfo() as any;
+    if (!(res.code === 200 || res.code === 0)) return;
+    const key = `total_posts_${t}` as 'total_posts_4' | 'total_posts_5';
+    userInfo.value[key] = parseInt(res.data?.[key] || '0');
+  } catch (error) {
+    console.error('Error refreshing post count:', error);
+  }
+}
+
 async function deletePost(collection: any) {
   activeCardDropdownId.value = null;
   try {
     const res = await api.deletePost({ post_id: collection.id }) as any;
     if (res.code == 0 || res.code == 200) {
       toast(t('success'));
+      // tab 上的数量来自博主信息（books_group / total_posts_N），删完重新请求一次，只更新被删类型的数量
+      refreshPostCount(collection.type ?? activeContentType.value);
       if (activeContentType.value === 'favorites') {
         fetchLikedBooks(true);
       } else {

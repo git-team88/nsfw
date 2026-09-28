@@ -5987,8 +5987,13 @@ function stopDragTracking() {
   window.removeEventListener('click', swallowClickOnce, true);
 }
 
+/** 当前作品是不是自己的（本地 uid == 作者 id） */
+const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && String(detail.value.author.id) === String(uid));
+
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+    // 作者看自己的作品：不拦 F12 / 右键
+    if (isOwnPost.value) return;
     e.preventDefault();
     return;
   }
@@ -6006,6 +6011,8 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function handleContextMenu(e: MouseEvent) {
+  // 作者看自己的作品：不拦右键
+  if (isOwnPost.value) return;
   e.preventDefault();
 }
 
