@@ -235,7 +235,7 @@ const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
 // 来源数据请求中：输入框先不显示，接口回来才露出
 const composerLoading = ref(false);
 import { toast } from '@/util/toast';
-import { formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
+import { formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
 import { baseUrl } from '@/util/config';
 
 const { t, locale } = useI18n();
@@ -559,7 +559,7 @@ async function loadData(fromLoadMore = false) {
           });
         });
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
 
         postList.value = [];
         isLoading.value = false;
@@ -609,7 +609,7 @@ async function loadData(fromLoadMore = false) {
         isLoading.value = false;
         isLoadingMore.value = false;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
 
         isLoading.value = false;
         isLoadingMore.value = false;
@@ -695,7 +695,7 @@ async function toggleLike(post: Post) {
         postList.value[postIndex].all_like += isCurrentlyLiked ? -1 : 1;
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Like/unlike error:', error);
@@ -733,7 +733,7 @@ async function toggleFollow(user: any) {
       // Show success message
       toast(isCurrentlyFollowing ? t('search.unfollow') : t('search.followed'));
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Follow/unfollow error:', error);

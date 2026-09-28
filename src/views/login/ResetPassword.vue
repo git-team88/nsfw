@@ -38,11 +38,11 @@ import Header from "@/components/Header.vue";
 import router from "@/router";
 import { baseUrl, siteKey } from "@/util/config";
 import { toast } from "@/util/toast";
-import { initLanguage } from "@/util/utils";
+import { initLanguage, apiErrorMessage } from '@/util/utils';
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
@@ -129,7 +129,7 @@ function goSendEmail() {
               localStorage.removeItem("lEmail");
               router.push("/reset-send");
             } else {
-              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+              toast(apiErrorMessage(res))
             }
           })
           .catch((error) => toast(t("fail")));

@@ -57,11 +57,12 @@
 
 <script setup lang="ts" name="UserProfileEdit">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 import headerImgDefault from "@/assets/images/user/pic.jpg";
 import { baseUrl } from "@/util/config";
 import { toast } from "@/util/toast";
@@ -83,7 +84,7 @@ onMounted(async () => {
       bio.value = res.data?.page_desc || "";
       headerUrl.value = res.data?.page_banner || defaultImg;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (e) {
     console.error(e);
@@ -128,7 +129,7 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
           const url = (typeof res.data === "string" ? res.data : res.data?.url) || res.url;
           if (typeof url === "string") cb(url);
         } else {
-          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+          toast(apiErrorMessage(res))
         }
       },
     )

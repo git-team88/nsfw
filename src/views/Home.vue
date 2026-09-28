@@ -470,7 +470,7 @@ import bannerSlotImage from '@/assets/images/home/banner.jpg';
 import bannerSlotVideo from '@/assets/images/home/banner.mp4';
 import heroBgVideo from '@/assets/images/home/video.mp4';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
-import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
+import { formatDuration, formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -1047,7 +1047,7 @@ const loadContent = async (page = 1) => {
         layoutWaterfall();
       });
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -1196,7 +1196,7 @@ const fetchFollowUserList = async (append = false) => {
         hasMoreUsers.value = followUserList.value.length < followUserTotal.value;
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : locale.value == 'jp' ? res.msg_jp : res.msg);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error fetching user list:', error);
@@ -1364,7 +1364,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+            toast(apiErrorMessage(res));
           }
         })
         .catch((e: any) => {
@@ -1387,7 +1387,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+            toast(apiErrorMessage(res));
           }
         })
         .catch((e: any) => {
@@ -1412,7 +1412,7 @@ function handleUserInfoConfirm(info: { username: string; avatar: string; birth?:
             checkAllOperationsComplete();
           } else {
             hasError = true;
-            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+            toast(apiErrorMessage(res));
           }
         })
         .catch((e: any) => {
@@ -1441,7 +1441,7 @@ function handleInviteCodeConfirm(code: string) {
       showInviteCodeModal.value = false;
       showUserInfoModal.value = true;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   }).catch(() => {
     toast(t('fail'));

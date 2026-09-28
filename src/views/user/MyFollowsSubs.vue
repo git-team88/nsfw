@@ -109,9 +109,9 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, apiErrorMessage } from '@/util/utils';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 function trimZeros(val: string | number): string {
   const s = String(val);
@@ -213,7 +213,7 @@ async function fetchData() {
         }
       });
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));

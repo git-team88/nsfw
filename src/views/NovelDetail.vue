@@ -301,7 +301,7 @@ import Sidebar from '@/components/Sidebar.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import { toast } from '@/util/toast';
-import { formatTimestamp } from '@/util/utils';
+import { formatTimestamp, apiErrorMessage } from '@/util/utils';
 import { baseUrl } from '@/util/config';
 
 // Import images
@@ -793,7 +793,7 @@ async function fetchDetail() {
         nextId.value = '';
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error fetching novel detail:', error);
@@ -984,7 +984,7 @@ async function onSubscribe() {
       }
       router.push(`/subscription-payment?id=${detail.value.author.id}`);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     toast(t('fail'));
@@ -1467,7 +1467,7 @@ async function toggleFollow() {
       if (response.code === 0 || response.code === 200) {
         detail.value.isFollowed = false;
       } else {
-        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+        toast(apiErrorMessage(response));
       }
     } else {
       // 关注
@@ -1475,7 +1475,7 @@ async function toggleFollow() {
       if (response.code == 0 || response.code == 200) {
         detail.value.isFollowed = true;
       } else {
-        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+        toast(apiErrorMessage(response));
       }
     }
   } catch (error) {
@@ -1601,7 +1601,7 @@ async function confirmAdultBrowsing() {
     try {
       const res = await api.setAdult({ is_adult: 1 }) as any;
       if (res.code != 0 && res.code != 200) {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
         return;
       }
     } catch (error) {
@@ -1631,7 +1631,7 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
     try {
       const res = await api.setAdult({ is_adult: 1 }) as any;
       if (res.code != 0 && res.code != 200) {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
         return;
       }
     } catch (error) {

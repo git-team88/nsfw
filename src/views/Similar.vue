@@ -121,7 +121,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
-import { formatUpdateTime, initLanguage } from '@/util/utils';
+import { formatUpdateTime, initLanguage, apiErrorMessage } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -349,7 +349,7 @@ async function loadData(fromLoadMore = false) {
         });
       });
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
       isLoading.value = false;
       isLoadingMore.value = false;
     }
@@ -435,7 +435,7 @@ async function toggleLike(item: Content) {
         contentList.value[itemIndex].all_like += isCurrentlyLiked ? -1 : 1;
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Like/unlike error:', error);

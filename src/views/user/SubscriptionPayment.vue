@@ -76,6 +76,7 @@
 
 <script setup lang="ts" name="SubscriptionPayment">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UploadMask from "@/components/UploadMask.vue";
 import WalletSelectModal from "@/components/WalletSelectModal.vue";
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -95,7 +96,7 @@ import { fiatPrefix, fiatSuffix, pickCurrency, scaleFiatAmount, trimTrailingZero
 
 const router = useRouter();
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const WALLET_SIGN_MSG = 'Welcome to our dApp! Please sign this message to prove ownership of your wallet.';
 
@@ -227,7 +228,7 @@ async function fetchAuthorInfo() {
       bloggerStatus.value = Number(status) || 0;
       // paymentTab.value = bloggerStatus.value == 1 ? 'cash' : 'usdt';
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     console.error("Fetch author info error:", error);
@@ -268,7 +269,7 @@ async function handlePay() {
     if (data.code === 0 || data.code === 200) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     toast(t("fail"));
@@ -378,7 +379,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));

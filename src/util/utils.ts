@@ -176,10 +176,10 @@ export function apiErrorMessage(res: any): string {
   if (!res) return '';
   const lang = i18n.global.locale.value as string;
   const msg =
-    lang === 'en' ? res.msg :
-    lang === 'zh' ? res.msg_cn :
-    lang === 'tc' ? res.msg_tc :
-    lang === 'jp' ? res.msg_jp :
+    lang == 'en' ? res.msg :
+    lang == 'zh' ? res.msg_cn :
+    lang == 'tc' ? res.msg_tc :
+    lang == 'jp' ? res.msg_jp :
     res.msg;
   return (msg || res.msg || '').toString().trim();
 }

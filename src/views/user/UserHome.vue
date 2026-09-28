@@ -504,7 +504,7 @@ import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
-import { processImageUrl, initLanguage, formatTimestamp } from "@/util/utils";
+import { processImageUrl, initLanguage, formatTimestamp, apiErrorMessage } from '@/util/utils';
 import { useRoute } from "vue-router";
 import api from "@/api/index";
 import { baseUrl } from "@/util/config";
@@ -1220,7 +1220,7 @@ async function fetchUserInfo() {
       };
 
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error(error);
@@ -1642,7 +1642,7 @@ async function deleteCollection() {
       // Refresh collections（reset：从第一页重新拉并替换列表，不然会把同一页追加到后面）
       await fetchCollections(true);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
 
     // Reset to all tab
@@ -1754,7 +1754,7 @@ async function fetchFollowList(reset = false) {
     } else if (data.code === 33003) {
       isPrivacyHidden.value = true;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error(error);
@@ -1786,7 +1786,7 @@ async function toggleListFollow(user: FollowUser) {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+        toast(apiErrorMessage(response));
       }
     } else {
       const res = await api.follow(data);
@@ -1799,7 +1799,7 @@ async function toggleListFollow(user: FollowUser) {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+        toast(apiErrorMessage(response));
       }
     }
   } catch (error) {
@@ -1827,7 +1827,7 @@ async function toggleFollow() {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     } else {
       const res = await api.follow(data) as any;
@@ -1840,7 +1840,7 @@ async function toggleFollow() {
         }
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     }
   } catch (error) {
@@ -1925,7 +1925,7 @@ async function confirmBlockUser() {
         activeCollectionTab.value = 0;
       }
     } else {
-      toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+      toast(apiErrorMessage(response));
     }
   } catch (error) {
     console.error('Failed to block/unblock user:', error);
@@ -2067,7 +2067,7 @@ async function loadPosts(reset = false) {
       }
       page.value++;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
       loading.value = false;
     }
   } catch (error) {
@@ -2313,7 +2313,7 @@ async function confirmReplacePin() {
       await fetchCollections(true);
       showToast(t("userHome.collection.pinnedSuccess"));
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);
@@ -2414,7 +2414,7 @@ async function deletePost(collection: any) {
         fetchCollections(true);
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error deleting post:', error);
@@ -2462,7 +2462,7 @@ async function pinCollection(collection: any) {
       await fetchCollections(true);
       showToast(t("userHome.collection.pinnedSuccess"));
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);
@@ -2484,7 +2484,7 @@ async function unpinCollection(collection: any) {
       await fetchCollections(true);
       showToast(t("userHome.collection.unpinnedSuccess"));
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);

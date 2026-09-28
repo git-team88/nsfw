@@ -853,7 +853,7 @@ import {
 } from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
 import router from "@/router";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -2333,7 +2333,7 @@ async function doToggleCollectionSensitive() {
       selectedCollection.value.is_nsfw = newNsfw;
       form.value.content = newNsfw == 1 ? 'yes' : 'no';
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Toggle sensitive error:', error);
@@ -2630,7 +2630,7 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
-    if (notifyError) toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    if (notifyError) toast(apiErrorMessage(data));
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;
@@ -3176,7 +3176,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error("Get post details error:", error);
@@ -4135,7 +4135,7 @@ async function onSubmit() {
     if (res.code === 0 || res.code === 200) {
       router.push(`/publish/success`);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t("fail"));

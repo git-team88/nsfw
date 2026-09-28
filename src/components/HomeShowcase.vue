@@ -143,6 +143,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
@@ -227,7 +228,7 @@ async function loadCreators() {
         };
       });
     } else {
-      toast((locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp) || t('fail'));
+      toast((apiErrorMessage(res)) || t('fail'));
     }
   } catch (e) {
     console.error('popularUserRank', e);

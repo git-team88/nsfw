@@ -124,7 +124,7 @@ import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
-import { formatTimestamp, processImageUrl } from '@/util/utils';
+import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import api from '@/api/index';
 import { planPriceText } from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
@@ -134,7 +134,7 @@ import ConfirmDeleteModal from '@/components/ConfirmDeleteModal.vue';
 import BatchPermissionModal from '@/components/BatchPermissionModal.vue';
 import defaultCover from '@/assets/images/base/cover.png';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -238,7 +238,7 @@ onMounted(async () => {
           chatpers: data.chatpers || [],
         };
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);
@@ -310,7 +310,7 @@ async function confirmFinish() {
         collection.value.status = '1';
       }
     } else {
-      toast(locale.value == 'en' ? finishRes.msg : locale.value == 'zh' ? finishRes.msg_cn : locale.value == 'tc' ? finishRes.msg_tc : finishRes.msg_jp);
+      toast(apiErrorMessage(finishRes));
     }
   } catch (error) {
     console.error(error);
@@ -338,7 +338,7 @@ async function confirmDelete() {
         router.push(`/user-home?id=${collection.value.user_id}`);
       }, 1000);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);
@@ -380,7 +380,7 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
         collection.value.chapter_count_private = bookInfo.chapter_count_private || 0;
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error(error);

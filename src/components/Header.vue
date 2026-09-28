@@ -214,6 +214,7 @@
 
 <script setup lang="ts" name="AppHeader">
 import Agree from "@/components/Agree.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UploadMask from "@/components/UploadMask.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -590,7 +591,7 @@ function getMessageInfo() {
         // Emit message info to parent components
         emit('messageInfoLoaded', newsCounts.value);
       } else {
-        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+        toast(apiErrorMessage(data));
       }
     })
     .catch((err) => {
@@ -617,7 +618,7 @@ function getUserInfo() {
         emit('userInfoLoaded', data.data);
         setUserId(String(data.data.info.id));
       } else {
-        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+        toast(apiErrorMessage(data))
       }
     })
     .catch((err) => {
@@ -633,7 +634,7 @@ function getBalance() {
 
       emit('balanceInfoLoaded', res.data);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   })
   .catch((err) => {
@@ -656,7 +657,7 @@ function getLoginUserInfo() {
         localStorage.setItem('uid', data.data.info.id);
         setUserId(String(data.data.info.id));
       } else {
-        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+        toast(apiErrorMessage(data));
       }
     })
     .catch((err) => {

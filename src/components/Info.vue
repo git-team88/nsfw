@@ -64,6 +64,7 @@
 
 <script setup lang="ts" name="Info">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 
 import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -167,7 +168,7 @@ function upload() {
             isUpload.value = false;
             userInfo.value.avatar = res.data.url;
           } else {
-            toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+            toast(apiErrorMessage(res))
             isUpload.value = false;
           }
         })

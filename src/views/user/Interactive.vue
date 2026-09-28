@@ -176,7 +176,7 @@ import { ref, watch, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import api from "@/api";
 import { toast } from "@/util/toast";
-import { formatTimestamp, formatDateOnly } from "@/util/utils";
+import { formatTimestamp, formatDateOnly, apiErrorMessage } from '@/util/utils';
 
 const { t, locale } = useI18n();
 
@@ -337,7 +337,7 @@ async function fetchOverall(page: number) {
 
       pagedOverall.value = overallRows.value;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     console.error('Error fetching overall work data:', error);
@@ -385,7 +385,7 @@ async function fetchWork(page: number) {
 
       pagedWork.value = workRows.value
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     console.error('Error fetching individual work data:', error);

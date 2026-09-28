@@ -107,6 +107,7 @@
 
 <script setup lang="ts" name="UserRevenue">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import TokenWithdrawModal from "@/components/TokenWithdrawModal.vue";
 import TokenWithdrawRecordModal from "@/components/TokenWithdrawRecordModal.vue";
@@ -121,7 +122,7 @@ import {toast} from "@/util/toast";
 import { fiatPrefix, scaleFiatAmount } from "@/util/currency";
 import api from "@/api/index";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const sidebarKey = ref("revenue");
 
 // 收益走美元：接口的 available_usd / pending_usd
@@ -162,7 +163,7 @@ async function fetchBalance() {
       availableAmount.value = data.data.balance?.available_usd || 0;
       pendingAmount.value = data.data.balance?.pending_usd || 0;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -177,7 +178,7 @@ async function fetchTokenBalance() {
       tokenBalance.value = data.data?.balanceInfo?.balance_available ?? 0;
       tokenWithdrawing.value = data.data?.balanceInfo?.balance_frozen ?? 0;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -221,7 +222,7 @@ async function fetchKycDetail() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+      toast(apiErrorMessage(kycRes));
     }
   } catch (e) {
     console.error(e);
@@ -251,7 +252,7 @@ async function openWithdrawRecord() {
       if (data.code === 200 || data.code === 0) {
         window.location.href = data.data?.url;
       } else {
-        toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+        toast(apiErrorMessage(data));
       }
     } catch (error) {
       toast(t("fail"));
@@ -284,7 +285,7 @@ async function handleCountrySelected(country: string) {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -302,7 +303,7 @@ async function handleViewAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));

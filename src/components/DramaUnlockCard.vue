@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { apiErrorMessage } from '@/util/utils';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Web3 from 'web3';
@@ -81,7 +82,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'unlocked'): void }>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const router = useRouter();
 
 // 现金支付先不看博主的 Stripe 开通状态：这里恒为 true，
@@ -125,10 +126,7 @@ const usdtAmount = computed(() => {
 });
 
 function apiMsg(data: any): string {
-  return locale.value == 'en' ? data.msg
-    : locale.value == 'zh' ? data.msg_cn
-    : locale.value == 'tc' ? data.msg_tc
-    : data.msg_jp;
+  return apiErrorMessage(data);
 }
 
 function checkLogin(): boolean {

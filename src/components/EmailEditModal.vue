@@ -29,12 +29,13 @@
 
 <script setup lang="ts" name="EmailEditModal">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import { baseUrl, siteKey } from "@/util/config";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -176,7 +177,7 @@ function sendEmailCode() {
               toast(t("success"));
               timeCount();
             } else {
-              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+              toast(apiErrorMessage(res));
               isSendCode.value = false;
             }
           })
@@ -242,7 +243,7 @@ function saveEmail() {
         toast(t("success"));
         closeModal();
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     })
     .catch((error) => {

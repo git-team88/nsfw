@@ -174,6 +174,7 @@
 
 <script setup lang="ts" name="UserAccount">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 
 import { ref, onMounted, computed, onUnmounted } from "vue";
@@ -263,7 +264,7 @@ async function getUserInfo() {
     if (res.code === 0 || res.code === 200) {
       userInfo.value = res.data || {};
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (e) {
     console.error(e);
@@ -380,7 +381,7 @@ function handleSubmit() {
               toast(t("success"));
               timeCount();
             } else {
-              toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+              toast(apiErrorMessage(res))
               isSend.value = false;
             }
           })
@@ -513,7 +514,7 @@ function confirmUnbind() {
         getUserInfo();
         closeUnbindModal();
       } else {
-        toast(locale.value == 'en' ? r.msg : locale.value == 'zh' ? r.msg_cn : locale.value == 'tc' ? r.msg_tc : r.msg_jp);
+        toast(apiErrorMessage(r));
       }
     })
     .catch((err: unknown) => {

@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
@@ -55,7 +56,7 @@ import { redirectUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const inviteCode = ref('');
 const inviteLink = ref('');
@@ -76,7 +77,7 @@ function fetchInviteInfo() {
       firstPurchaseStars.value = res.data?.user_num || res.data?.userNum || '--';
       totalRevenue.value = res.data?.credit.toString() || '--';
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   }).catch((error) => {
     console.error('Error fetching invite info:', error);

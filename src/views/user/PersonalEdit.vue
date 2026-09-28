@@ -99,11 +99,12 @@
 
 <script setup lang="ts" name="UserPersonalEdit">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 import { baseUrl } from "@/util/config";
 import { toast } from "@/util/toast";
@@ -157,7 +158,7 @@ function onToggleSensitive() {
     .then((res: any) => {
       if (res.code !== 200 && res.code !== 0) {
         showSensitive.value = !showSensitive.value;
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       } else {
         toast('success');
 
@@ -193,7 +194,7 @@ onMounted(async () => {
       // 根据详情接口回显是否满18岁（is_adult == 1 为「是」，否则「否」）
       isAdult.value = data.is_adult == 1;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (e) {
     console.error(e);
@@ -258,7 +259,7 @@ function uploadFile(input: HTMLInputElement | null, cb: (url: string) => void) {
             toast(t('success'));
           }
         } else {
-          toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+          toast(apiErrorMessage(res))
         }
       },
     )

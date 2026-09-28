@@ -228,6 +228,7 @@
 
 <script setup lang="ts" name="AIRecharge">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UploadMask from "@/components/UploadMask.vue";
 import CouponModal from "@/components/CouponModal.vue";
 import WalletSelectModal from "@/components/WalletSelectModal.vue";
@@ -471,7 +472,7 @@ function getList() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   }).catch((error) => {
     console.error('Error fetching recharge plans:', error);
@@ -580,7 +581,7 @@ async function handleRecharge() {
         window.location.href = data.data?.url.url;
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t('error'));
@@ -682,7 +683,7 @@ async function handleWalletSelect(wallet: { id: string; name: string }) {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'jp' ? data.msg_jp : data.msg);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     console.error('Wallet pay error:', error);

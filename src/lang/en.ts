@@ -250,7 +250,7 @@ Including but not limited to the following handling methods:<br />
 (6) Pursue legal responsibility according to law.<br />
 3. Liability bearing:<br />
 (1) Users shall be responsible for their own illegal, improper opening, use of any or multiple services and legal consequences;<br />
-(2) If the user's behavior causes any loss to the platform or/and its affiliated companies, the user shall bear full loss compensation responsibility and complete the fee payment within the time limit required by the Kuaishou platform;<br />
+(2) If the user's behavior causes any loss to the platform or/and its affiliated companies, the user shall bear full loss compensation responsibility and complete the fee payment within the time limit required by the FansFans platform;<br />
 (3) The company and/or platform has the right to require users to compensate the company for losses caused by the user's behavior;<br />
 (4) The platform has the right to announce the handling results, and has the right to decide whether to restore the use of related accounts according to the actual situation. For behaviors suspected of violating laws and regulations or suspected of illegal crimes, the platform will save relevant records and has the right to report to relevant authorities, cooperate with relevant authorities to investigate, report to the public security organ, etc. according to law.<br />
 <br />

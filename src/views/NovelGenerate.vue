@@ -1582,7 +1582,7 @@ import { trackClickPublishButton } from '@/utils/analytics';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { aiUrl, baseUrl } from '@/util/config';
-import { parseToUnixTimestamp } from '@/util/utils';
+import { parseToUnixTimestamp, apiErrorMessage } from '@/util/utils';
 
 import UploadMask from '@/components/UploadMask.vue';
 import LoadingMask from '@/components/LoadingMask.vue';
@@ -6870,7 +6870,7 @@ const fetchUserInfo = async () => {
     if (res.code == 0) {
       userInfo.value = res.data;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error fetching user info:', error);
@@ -6889,7 +6889,7 @@ const fetchUserBalance = async () => {
       systemFrozenBalance.value = Math.max(0, totalBalance - balance);
       balanceInfo.value = res.data;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error fetching user balance:', error);

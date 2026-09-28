@@ -92,6 +92,7 @@
 
 <script setup lang="ts">
 import UploadMask  from "./UploadMask.vue";
+import { apiErrorMessage } from '@/util/utils';
 import { ref, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
@@ -116,7 +117,7 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:visible", "submit"]);
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const step = ref(1);
 const selectedReason = ref("");
@@ -195,7 +196,7 @@ async function onFileChange(e: Event) {
         imageList.value.push(data.data.url);
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     toast(t('fail'));
@@ -243,7 +244,7 @@ async function submit() {
       toast(t("report.success"));
       close();
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     console.error(error);

@@ -1241,7 +1241,7 @@ import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
-import { formatDuration, formatUpdateTime, initLanguage, processImageUrl } from '@/util/utils';
+import { formatDuration, formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
@@ -5060,7 +5060,7 @@ const doGenerateVideo = async () => {
     if (balanceResponse.code == 200) {
       balanceInfo.value = balanceResponse.data;
     } else {
-      toast(locale.value == 'en' ? balanceResponse.msg : locale.value == 'zh' ? balanceResponse.msg_cn : locale.value == 'tc' ? balanceResponse.msg_tc : balanceResponse.msg_jp);
+      toast(apiErrorMessage(balanceResponse));
     }
   } catch (error) {
     console.log('Failed to fetch balance:', error);
@@ -5697,7 +5697,7 @@ const doGeneratePhoto = async () => {
     if (balanceResponse.code == 200) {
       balanceInfo.value = balanceResponse.data;
     } else {
-      toast(locale.value == 'en' ? balanceResponse.msg : locale.value == 'zh' ? balanceResponse.msg_cn : locale.value == 'tc' ? balanceResponse.msg_tc : balanceResponse.msg_jp);
+      toast(apiErrorMessage(balanceResponse));
     }
   } catch (error) {
     console.log('Failed to fetch balance:', error);

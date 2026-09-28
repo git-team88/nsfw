@@ -132,6 +132,7 @@
 
 <script setup lang="ts" name="UserSubscriptionEdit">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import KycRequiredModal from "@/components/KycRequiredModal.vue";
@@ -144,7 +145,7 @@ import { useI18n } from "vue-i18n";
 import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 function trimZeros(val: string | number): string {
   const s = String(val);
@@ -195,7 +196,7 @@ async function fetchSubscriptionList() {
     if (res.code == 200 || res.code == 0) {
       priceOptions.value = res.data.plans || [];
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Error fetching subscription list:', error);
@@ -237,7 +238,7 @@ async function fetchSubscription() {
       initialBenefits.value = benefits.value;
       initialSelectedId.value = selectedId.value;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error(error);
@@ -271,7 +272,7 @@ async function handleCreateAccount() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+      toast(apiErrorMessage(kycRes));
       return;
     }
 
@@ -296,7 +297,7 @@ async function handleCountrySelected(country: string) {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -315,7 +316,7 @@ async function handleChangeAccount() {
     if (data.code === 200 || data.code === 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -334,7 +335,7 @@ async function handleViewAccount() {
     if (data.code == 200 || data.code == 0) {
       window.location.href = data.data?.url;
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));
@@ -368,7 +369,7 @@ async function onSave() {
         window.location.href = '/user-subscription';
       }, 500);
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     console.error(error);

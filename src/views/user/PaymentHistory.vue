@@ -290,7 +290,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, apiErrorMessage } from '@/util/utils';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import { fiatPrefix, fiatSuffix, scaleFiatPrice } from '@/util/currency';
 
@@ -396,7 +396,7 @@ async function fetchDramaUnlockList() {
     } else {
       dramaUnlockList.value = [];
       total.value = 0;
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     dramaUnlockList.value = [];
@@ -511,7 +511,7 @@ async function fetchData() {
       }
     }
     if (res && (res.code !== 0 && res.code !== 200)) {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -551,7 +551,7 @@ async function fetchProcessingData() {
           isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
         }));
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else if (activeSubTab.value === 'recharge') {
       const res = await api.userAiSubscribeList(page.value, pageSize.value) as any;
@@ -582,7 +582,7 @@ async function fetchProcessingData() {
 
         total.value = res.data?.allnums || 0;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else if (activeSubTab.value === 'topup') {
       const res = await api.userPaymentOrderList(page.value, pageSize.value) as any;
@@ -607,7 +607,7 @@ async function fetchProcessingData() {
         }));
         total.value = res.data?.allnums || 0;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }
   } catch (error) {
@@ -664,7 +664,7 @@ async function confirmInvoice() {
         invoiceEmail.value = '';
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } catch (error) {
       toast(t('fail'));
@@ -688,7 +688,7 @@ async function viewInvoice(item: any) {
       const url = window.URL.createObjectURL(res);
       window.location.href = url;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -715,7 +715,7 @@ async function downloadInvoice(item: any) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -764,7 +764,7 @@ async function turnOffAutoRenewal(itemId: string) {
     if (res.code === 0 || res.code === 200) {
       window.location.href = res.data?.url;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -782,7 +782,7 @@ async function turnOnAutoRenewal(itemId: string, type: number) {
     if (res.code == 0 || res.code == 200) {
       window.location.href = res.data?.url;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -797,7 +797,7 @@ async function viewAllPaymentHistory() {
   if (res.code == 0 || res.code == 200) {
     window.location.href = res.data?.url;
   } else {
-    toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+    toast(apiErrorMessage(res))
   }
 }
 

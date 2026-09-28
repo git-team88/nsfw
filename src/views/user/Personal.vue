@@ -211,6 +211,7 @@
 
 <script setup lang="ts" name="UserPersonalInfo">
 import { ref, onMounted, computed } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import router from "@/router";
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
@@ -219,7 +220,7 @@ import api from "@/api/index";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import defaultAvatar from "@/assets/images/base/avatar.png";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const sidebarKey = ref("personal");
 interface InfoData {
@@ -359,7 +360,7 @@ async function getKycDetail() {
         };
       }
     } else {
-      toast(locale.value == 'en' ? kycRes.msg : locale.value == 'zh' ? kycRes.msg_cn : locale.value == 'tc' ? kycRes.msg_tc : kycRes.msg_jp);
+      toast(apiErrorMessage(kycRes));
     }
   } catch (e) {
     console.error(e);
@@ -383,7 +384,7 @@ onMounted(async () => {
         showSensitive.value = data.info?.show_nsfw == '1';
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (e) {
     console.error(e);
@@ -430,7 +431,7 @@ function onToggleSensitive() {
     .then((res: any) => {
       if (res.code !== 200 && res.code !== 0) {
         showSensitive.value = !showSensitive.value;
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       } else {
         toast(t('success'));
 

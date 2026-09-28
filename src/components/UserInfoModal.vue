@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from "vue-i18n";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import { toast } from "@/util/toast";
@@ -63,7 +64,7 @@ import { baseUrl } from "@/util/config";
 import UploadMask from "@/components/UploadMask.vue";
 import BirthPicker from "./BirthPicker.vue";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const props = defineProps<{
   visible: boolean;
   userInfo?: any;
@@ -138,7 +139,7 @@ function handleFile(e: Event) {
         if (typeof url === "string") avatar.value = url;
         toast(t('success'));
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     })
     .catch((e) => {

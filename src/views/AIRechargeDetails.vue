@@ -161,7 +161,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
-import { formatTimestamp } from "@/util/utils";
+import { formatTimestamp, apiErrorMessage } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -345,7 +345,7 @@ function fetchTransactions() {
       } else {
         transactions.value = [];
         totalFromApi.value = 0;
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }).catch((error) => {
       loading.value = false;
@@ -378,7 +378,7 @@ function fetchTransactions() {
       } else {
         transactions.value = [];
         totalFromApi.value = 0;
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }).catch((error) => {
       console.log(error)
@@ -419,7 +419,7 @@ function fetchTransactions() {
       } else {
         transactions.value = [];
         totalFromApi.value = 0;
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }).catch((error) => {
       console.log(error)

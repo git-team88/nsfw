@@ -394,7 +394,7 @@ import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
@@ -1141,7 +1141,7 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
-    if (notifyError) toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    if (notifyError) toast(apiErrorMessage(data));
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;
@@ -1357,7 +1357,7 @@ async function uploadImageAsync(pf: PreviewFile): Promise<boolean> {
         return true;
       }
     } else {
-      toast(locale.value === "en" ? res.msg : locale.value === "zh" ? res.msg_cn : locale.value === "tc" ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     toast(String(error));
@@ -1983,7 +1983,7 @@ async function onSubmit() {
       toast(t("success"));
       router.push(`/publish/success?type=${4}`);
     } else {
-      toast(locale.value === "en" ? res.msg : locale.value === "zh" ? res.msg_cn : locale.value === "tc" ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error("Publish error:", error);

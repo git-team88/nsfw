@@ -793,7 +793,7 @@ const contentSwitch = useContentSwitchStore();
 import { toast } from "@/util/toast";
 import { trackClickPublishButton } from "@/utils/analytics";
 import { baseUrl } from "@/util/config";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -1399,7 +1399,7 @@ async function handleTitleBlur() {
             coverPreview.value = url;
           }
         } else {
-          toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+          toast(apiErrorMessage(data))
         }
       } catch (error) {
         console.error("Cover upload error:", error);
@@ -1473,7 +1473,7 @@ async function goToNextStep() {
                 coverPreview.value = url;
               }
             } else {
-              toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+              toast(apiErrorMessage(data))
             }
           } catch (error) {
             console.error("Cover upload error:", error);
@@ -1929,7 +1929,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error("Get post details error:", error);
@@ -2120,7 +2120,7 @@ async function onSubmit() {
       localStorage.removeItem('novelCoverSettings');
       router.push(`/publish/success?type=${2}`);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     console.error("Publish error:", error);
@@ -2849,7 +2849,7 @@ async function handleCaptionImageChange(event: Event) {
       const url = (data?.data && (data.data.url || data.data)) || data?.url;
       if (typeof url === 'string') insertCaptionImage(url);
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (e) {
     console.error('Caption image upload error:', e);
@@ -3418,7 +3418,7 @@ async function doToggleCollectionSensitive() {
       selectedCollection.value.is_nsfw = newNsfw;
       form.value.content = newNsfw == 1 ? 'yes' : 'no';
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Toggle sensitive error:', error);
@@ -4566,7 +4566,7 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
-    toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    toast(apiErrorMessage(data));
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;
@@ -4677,7 +4677,7 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
                   coverPreview.value = url;
                 }
               } else {
-                toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : locale.value == 'zh' ? data.msg_jp : data.msg_jp)
+                toast(apiErrorMessage(data))
               }
             }
           } catch (error) {

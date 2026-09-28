@@ -114,7 +114,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { baseUrl, redirectUrl } from "@/util/config";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-import { initLanguage } from "@/util/utils";
+import { initLanguage, apiErrorMessage } from '@/util/utils';
 import api from "@/api/index";
 import router from "@/router";
 import { trackLogin, setUserId } from "@/utils/analytics";
@@ -300,7 +300,7 @@ function goEmailLogin() {
 
         redirectAfterAuth();
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     })
     .catch((err: any) => {
@@ -344,7 +344,7 @@ function googleLogin() {
           agreeRef.value.showAgree();
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
 
         localStorage.removeItem("lType");
       }

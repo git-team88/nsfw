@@ -834,7 +834,7 @@ import { baseUrl } from "@/util/config";
 import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -1558,7 +1558,7 @@ async function doToggleCollectionSensitive() {
       selectedCollection.value.is_nsfw = newNsfw;
       form.value.content = newNsfw == 1 ? 'yes' : 'no';
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error('Toggle sensitive error:', error);
@@ -2417,7 +2417,7 @@ function uploadImage(pf: PreviewFile): Promise<boolean> {
         }
         return true;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
         return false;
       }
     })
@@ -2498,7 +2498,7 @@ async function onReuploadPicked(e: Event) {
           coverPreview.value = pf._preview;
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
         isUpload.value = false;
       }
     })
@@ -2520,7 +2520,7 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
-    if (notifyError) toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    if (notifyError) toast(apiErrorMessage(data));
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;
@@ -2661,7 +2661,7 @@ function onCoverConfirmed(coverUrl: string) {
         }
         isUpload.value = false;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
         coverPreview.value = coverUrl;
         isUpload.value = false;
       }
@@ -3681,7 +3681,7 @@ async function onSubmit() {
       toast(t("success"));
       router.push(`/publish/success?type=${1}`);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     console.error("Publish error:", error);
@@ -4421,7 +4421,7 @@ async function getPostDetails() {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp)
+      toast(apiErrorMessage(data))
     }
   } catch (error) {
     console.error("Get post details error:", error);

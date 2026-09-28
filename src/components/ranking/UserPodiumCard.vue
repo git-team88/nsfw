@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import defaultAvatar from '@/assets/images/base/avatar.png'
@@ -112,7 +113,7 @@ async function toggleFollow() {
 
 // 按语言取后端返回的提示文案
 function localeMsg(res: any): string {
-  return locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp
+  return apiErrorMessage(res)
 }
 
 function onErr(e: Event) {

@@ -47,6 +47,7 @@
 
 <script setup lang="ts" name="TokenWithdrawModal">
 import { ref, computed, onMounted, watch } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
@@ -58,7 +59,7 @@ import metamaskIcon from '@/assets/images/wallet/metamask.png';
 import phantomIcon from '@/assets/images/wallet/phantom.png';
 import walletconnectIcon from '@/assets/images/wallet/walletconnect.png';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const router = useRouter();
 
 const props = defineProps<{
@@ -176,7 +177,7 @@ async function handleConfirm() {
       emit('close');
       router.replace('/token-withdraw-success');
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     toast(t("fail"));

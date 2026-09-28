@@ -220,7 +220,7 @@ const composerLoading = ref(false);
 // 底部输入框出现时留出的高度，垫在本页容器里（不让组件去动 body）
 const composerHeight = ref(0);
 import { toast } from '@/util/toast';
-import { formatTimestamp, processImageUrl } from '@/util/utils';
+import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
 import { trackBookView } from '@/util/viewTracker';
 import defaultCover from '@/assets/images/base/cover.png';
@@ -228,7 +228,7 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
 const route = useRoute();
 const router = useRouter();
@@ -452,10 +452,10 @@ async function fetchCollectionDetail() {
           await fetchAuthorInfo(resolvedAuthorId, showNsfw);
         }
       } else {
-        toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+        toast(apiErrorMessage(response));
       }
     } else {
-      toast(locale.value == 'en' ? response.msg : locale.value == 'zh' ? response.msg_cn : locale.value == 'tc' ? response.msg_tc : response.msg_jp);
+      toast(apiErrorMessage(response));
     }
   } catch (error) {
     console.error('Failed to fetch collection detail:', error);
@@ -510,7 +510,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         }
       }
     } else {
-      toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+      toast(apiErrorMessage(data));
     }
   } catch (error) {
     console.error('Failed to fetch author info:', error);
@@ -553,7 +553,7 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
     try {
       const res = await api.setAdult({ is_adult: 1 }) as any;
       if (res.code != 0 && res.code != 200) {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
         return;
       }
     } catch (error) {
@@ -650,7 +650,7 @@ async function toggleFollow() {
         authorInfo.value.isFollow = 0;
         authorInfo.value.followerCount = Math.max(0, authorInfo.value.followerCount - 1);
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     } else {
       const res = await api.follow(data) as any;
@@ -658,7 +658,7 @@ async function toggleFollow() {
         authorInfo.value.isFollow = 1;
         authorInfo.value.followerCount = authorInfo.value.followerCount + 1;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     }
   } catch (error) {
@@ -676,14 +676,14 @@ async function toggleLike() {
       if (res.code == 0 || res.code == 200) {
         isLiked.value = false;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     } else {
       const res = await api.likeBook({ book_id: collection.value.id }) as any;
       if (res.code == 0 || res.code == 200) {
         isLiked.value = true;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     }
   } catch (error) {
@@ -777,7 +777,7 @@ async function deleteChapter(chapter: Chapter | null) {
         toast(t('success'));
         await refreshChapters();
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     } catch (error) {
       console.error(error);

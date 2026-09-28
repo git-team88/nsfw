@@ -30,13 +30,14 @@
 
 <script setup lang="ts" name="UserProfileSettings">
 import { ref, onMounted } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import router from "@/router";
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import api from "@/api/index";
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const sidebarKey = ref("profile");
 const userInfo = ref<Record<string, any>>({});
@@ -49,7 +50,7 @@ onMounted(async () => {
     if (res.code == 200 || res.code == 0) {
       userInfo.value = res.data || {};
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (e) {
     console.error(e);

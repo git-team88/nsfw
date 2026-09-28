@@ -377,7 +377,7 @@ import { toast } from '@/util/toast';
 import { trackShare } from '@/utils/analytics';
 import { baseUrl } from '@/util/config';
 import { uploadVideoFile, PartUploadError } from '@/util/uploadVideo';
-import { formatTimestamp } from '@/util/utils';
+import { formatTimestamp, apiErrorMessage } from '@/util/utils';
 import { useRoute, useRouter } from "vue-router";
 import EmptyState from '@/components/EmptyState.vue';
 import UploadMask from '@/components/UploadMask.vue';
@@ -677,7 +677,7 @@ async function handleDeleteConfirmDirect(commentId: string | number, isReply: bo
         }
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -740,7 +740,7 @@ async function toggleCommentLike(c: any) {
       c.liked = !c.liked;
       c.likes = parseInt(c.likes) + (c.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -760,7 +760,7 @@ async function toggleReplyLike(r: any) {
       r.liked = !r.liked;
       r.likes = parseInt(r.likes) + (r.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -1085,7 +1085,7 @@ async function submitComment() {
         });
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     console.log(error);
@@ -1329,7 +1329,7 @@ async function toggleFav() {
         }
         emit('update-post-data', { isFav: true, favNum: favNum.value });
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     } else {
       const res = await api.unlikeBook({ book_id: props.detail.book_id }) as any;
@@ -1342,7 +1342,7 @@ async function toggleFav() {
         }
         emit('update-post-data', { isFav: false, favNum: favNum.value });
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+        toast(apiErrorMessage(res));
       }
     }
   } catch (error) {
@@ -2138,7 +2138,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
           chapter.likes = previousLikes + 1;
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else {
       // Unlike chapter
@@ -2151,7 +2151,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
           chapter.likes = Math.max(0, previousLikes - 1);
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }
   } catch (error) {

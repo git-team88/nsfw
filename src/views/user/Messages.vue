@@ -60,6 +60,7 @@
 
 <script setup lang="ts" name="UserMessages">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import Pagination from "@/components/Pagination.vue";
 import SubscriptionExpiring from "./messages/SubscriptionExpiring.vue";
@@ -77,7 +78,7 @@ import { toast } from "@/util/toast";
 
 const emit = defineEmits(['messageInfoUpdated']);
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const sidebarKey = ref("messages");
@@ -227,7 +228,7 @@ async function fetchData() {
         console.error('Error updating message info:', error);
       }
     } else {
-      toast(locale.value == 'en' ? r.msg : locale.value == 'zh' ? r.msg_cn : locale.value == 'tc' ? r.msg_tc : r.msg_jp);
+      toast(apiErrorMessage(r));
     }
   } catch (e) {
     console.error(e);

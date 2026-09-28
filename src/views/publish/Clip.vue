@@ -407,7 +407,7 @@ import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
 import router from "@/router";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
-import { processImageUrl } from "@/util/utils";
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import UploadMask from "@/components/UploadMask.vue";
 import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -607,7 +607,7 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
-    if (notifyError) toast(locale.value == 'en' ? data.msg : locale.value == 'zh' ? data.msg_cn : locale.value == 'tc' ? data.msg_tc : data.msg_jp);
+    if (notifyError) toast(apiErrorMessage(data));
   } catch (error) {
     console.error("Subscription check error:", error);
     hasActiveSubscription.value = false;

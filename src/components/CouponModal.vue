@@ -30,11 +30,12 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
@@ -75,7 +76,7 @@ async function handleConfirm() {
       const couponInfo = res.data?.info || {};
       emit('confirm', couponInfo);
     } else {
-      errorMessage.value = locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp;
+      errorMessage.value = apiErrorMessage(res);
     }
   } catch (error) {
     console.error('Error checking promo code:', error);

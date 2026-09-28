@@ -55,10 +55,11 @@
 // 价格默认选第一个档位；关闭订阅后 plan 为空、拿不到以前的说明，权益说明直接从空开始。
 // 保存后不跳页，emit('saved', planId) 交给发布页处理（关闭弹窗、自动选中订阅用户可见）。
 import { ref, watch, onMounted } from "vue";
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from "vue-i18n";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const props = defineProps({
   visible: {
@@ -88,7 +89,7 @@ function trimZeros(val: string | number): string {
 }
 
 function apiMsg(data: any) {
-  return locale.value == "en" ? data.msg : locale.value == "zh" ? data.msg_cn : locale.value == "tc" ? data.msg_tc : data.msg_jp;
+  return apiErrorMessage(data);
 }
 
 // 价格档位随发布页一起预加载（组件跟页面一起挂载），打开弹窗时直接可用，

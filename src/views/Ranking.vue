@@ -134,6 +134,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { apiErrorMessage } from '@/util/utils';
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
@@ -319,7 +320,7 @@ async function loadUserRank(reset = false) {
     // 请求期间切换了子榜/主榜则丢弃本次结果
     if (reqUserTab !== userTab.value || mode.value !== 'user') return
     if (res.code !== 0 && res.code !== 200) {
-      toast((locale.value === 'en' ? res.msg : locale.value === 'zh' ? res.msg_cn : locale.value === 'tc' ? res.msg_tc : res.msg_jp) || t('fail'))
+      toast((apiErrorMessage(res)) || t('fail'))
     }
     const list = ((res.code === 0 || res.code === 200) && res.data?.data) ? res.data.data : []
     const mapped: RankedUser[] = list.map((it: any, i: number) => ({

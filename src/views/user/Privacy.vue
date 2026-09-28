@@ -24,6 +24,7 @@
 
 <script setup lang="ts" name="UserPrivacy">
 import Header from "@/components/Header.vue";
+import { apiErrorMessage } from '@/util/utils';
 import UserSidebar from "@/components/UserSidebar.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
@@ -31,7 +32,7 @@ import { useI18n } from "vue-i18n";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const sidebarKey = ref("privacy");
 const saving = ref(false);
 
@@ -69,7 +70,7 @@ onMounted(async () => {
       info.value.is_anonymous_subs = res.data?.is_anonymous_subs || '0';
       info.value.is_anonymous_comment = res.data?.is_anonymous_comment || '0';
     } else {
-      const msg = locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp;
+      const msg = apiErrorMessage(res);
       toast(msg || t('fail'));
     }
   } catch (e) {

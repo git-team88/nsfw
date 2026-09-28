@@ -989,7 +989,7 @@ import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import { pickPlan } from "@/util/bookRechargePlan";
-import { formatTimestamp, initLanguage, processImageUrl } from "@/util/utils";
+import { formatTimestamp, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
@@ -2766,7 +2766,7 @@ async function fetchDetail(newId: number) {
         nextId.value = null;
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
 
       detail.value = {
         id: newId,
@@ -3174,7 +3174,7 @@ async function searchByMention(mention: string) {
       if (userId) {
         router.push({ path: "/user-home", query: { id: userId } });
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else {
       toast(t('fail'));
@@ -3380,7 +3380,7 @@ async function handleDeleteConfirmDirect(commentId: string, isReply: boolean = f
         }
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -3451,7 +3451,7 @@ async function handleDeleteConfirm() {
         await loadCommentToReplyList(rid);
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -4406,7 +4406,7 @@ async function onSubscribe() {
       }
       router.push(`/subscription-payment?id=${detail.value.author.id}`);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp);
+      toast(apiErrorMessage(res));
     }
   } catch (error) {
     toast(t('fail'));
@@ -4614,7 +4614,7 @@ async function toggleFollow() {
     if (res.code === 0 || res.code === 200) {
       detail.value.isFollowed = !detail.value.isFollowed;
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -4668,7 +4668,7 @@ async function toggleCommentLike(c: any) {
       c.liked = !c.liked;
       c.likes = parseInt(c.likes) + (c.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -4688,7 +4688,7 @@ async function toggleReplyLike(r: any) {
       r.liked = !r.liked;
       r.likes = parseInt(r.likes) + (r.liked ? 1 : -1);
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -5562,7 +5562,7 @@ async function submitComment() {
         });
       }
     } else {
-      toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+      toast(apiErrorMessage(res))
     }
   } catch (error) {
     toast(t('fail'));
@@ -5594,7 +5594,7 @@ async function toggleLike() {
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else {
       // Unlike post
@@ -5609,7 +5609,7 @@ async function toggleLike() {
         detail.value.likes = likes.value;
         detail.value.liked = liked.value;
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }
   } catch (error) {
@@ -5646,7 +5646,7 @@ async function toggleFav() {
           detail.value.favNum = favNum.value;
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else {
       const res = isStandalone
@@ -5663,7 +5663,7 @@ async function toggleFav() {
           detail.value.favNum = favNum.value;
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }
   } catch (error) {
@@ -5703,7 +5703,7 @@ async function toggleCollectionLike(item: any) {
           likes.value = previousLikes + 1;
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     } else {
       // Unlike collection item
@@ -5716,7 +5716,7 @@ async function toggleCollectionLike(item: any) {
           likes.value = Math.max(0, previousLikes - 1);
         }
       } else {
-        toast(locale.value == 'en' ? res.msg : locale.value == 'zh' ? res.msg_cn : locale.value == 'tc' ? res.msg_tc : res.msg_jp)
+        toast(apiErrorMessage(res))
       }
     }
   } catch (error) {
