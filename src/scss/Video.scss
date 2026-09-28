@@ -2406,9 +2406,16 @@
     cursor: pointer;
   }
 
+  // 和其他四个发布页一致：正文色、淡化 0.75。
+  // 上面 .perm-option span 的选择器更具体（color / opacity 0.65），这里用 !important 压过它；
+  // 模板里 revenue-hint 也已挪到选项文字 span 外面，不然父级的 0.65 会叠加上去
   .revenue-hint {
-    color: #ff4f9a;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    color: #f5f5f5 !important;
     font-weight: 700;
+    opacity: 0.75 !important;
   }
 
   .plan-list {

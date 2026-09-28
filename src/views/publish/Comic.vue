@@ -4850,31 +4850,4 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
  @use '@/scss/Comic.scss';
-/* 可见范围：「订阅用户可见」后的收益分成说明 + 价格设置入口 */
-/* 页面里 .perm-option span 的选择器更具体，这里用 !important 压过它：收益分成用正文色（不淡化），价格设置用主题色 */
-.submit-image .perm-option .revenue-hint {
-  color: #f5f5f5 !important;
-  font-weight: 700;
-  opacity: 0.75 !important;
-}
-.submit-image .perm-option .price-setting-link {
-  color: #ff4f9a !important;
-  font-weight: 700;
-  opacity: 1 !important;
-}
-.submit-image .perm-option .price-setting-link {
-  cursor: pointer;
-  white-space: nowrap;
-}
-/* 收益分成后面的说明图标：颜色跟文字一样（currentColor），点击弹说明弹窗 */
-.submit-image .perm-option .revenue-hint {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-}
-.submit-image .perm-option .revenue-hint .revenue-info-icon {
-  margin-left: 6px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
 </style>

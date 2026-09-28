@@ -685,7 +685,7 @@
                 @click="handlePermissionChange(opt.key, index)"
               >
                 <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                <span>{{ t(opt.labelKey) }}<span v-if="opt.key === 'partial'" class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）</span></span>
+                <span>{{ t(opt.labelKey) }}</span><span v-if="opt.key === 'partial'" class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）</span>
               </div>
             </div>
 
@@ -1294,9 +1294,26 @@ const PAID_DRAMA_PROMPT_COUNT = 10;
 const paidDramaCount = ref(0);
 const showSubscribePrompt = ref(false);
 const showRevenueInfo = ref(false);
-// 只要还没开通订阅且付费漫剧已满 10 部，每次点「付费用户可见」都弹；保存成功后 hasActiveSubscription 变 true 就不再弹
-function maybePromptSubscription(permission: string) {
-  if (permission !== 'partial') return;
+// 只要还没开通订阅且付费漫剧已满 10 部，每次点「付费用户可见」都弹；保存成功后 hasActiveSubscription 变 true 就不再弹。
+// 页面进入时拉的数据可能已经过期（另一个窗口发了作品 / 设了订阅），所以每次点击都重新拉一次
+// 个人信息（priced_book_count）和订阅状态再判断；请求期间重复点击直接忽略。
+let checkingPaidDrama = false;
+async function maybePromptSubscription(permission: string) {
+  if (permission !== 'partial' || checkingPaidDrama) return;
+  checkingPaidDrama = true;
+  try {
+    const [infoRes] = await Promise.all([
+      api.userInfo() as Promise<any>,
+      checkSubscriptionStatus(),
+    ]);
+    if (infoRes?.code === 0 && infoRes.data) {
+      paidDramaCount.value = Number(infoRes.data.priced_book_count ?? 0) || 0;
+    }
+  } catch (e) {
+    console.error('refresh paid drama count failed', e);
+  } finally {
+    checkingPaidDrama = false;
+  }
   if (hasActiveSubscription.value || paidDramaCount.value < PAID_DRAMA_PROMPT_COUNT) return;
   showSubscribePrompt.value = true;
 }
@@ -2736,8 +2753,8 @@ function cancelLeave() {
 function handleUserInfoLoaded(userInfo: any) {
   if (userInfo) {
     isAdult.value = userInfo.is_adult == 1;
-    // 已发布的单部付费漫剧数量：个人信息接口的 priced_book_count（兼容放在 info 里的情况）
-    paidDramaCount.value = Number(userInfo.priced_book_count ?? userInfo.info?.priced_book_count ?? 0) || 0;
+    // 已发布的单部付费漫剧数量：个人信息接口顶层的 priced_book_count
+    paidDramaCount.value = Number(userInfo.priced_book_count ?? 0) || 0;
   }
 }
 
