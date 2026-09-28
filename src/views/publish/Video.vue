@@ -774,7 +774,7 @@
     <DramaSubscribePromptModal
       :visible="showSubscribePrompt"
       :count="paidDramaCount"
-      @cancel="showSubscribePrompt = false"
+      @cancel="onSubscribePromptCancel"
       @saved="onSubscribePromptSaved"
     />
     <!-- 「收益分成80%」旁的说明 -->
@@ -1297,9 +1297,12 @@ const showRevenueInfo = ref(false);
 // 只要还没开通订阅且付费漫剧已满 10 部，每次点「付费用户可见」都弹；保存成功后 hasActiveSubscription 变 true 就不再弹。
 // 页面进入时拉的数据可能已经过期（另一个窗口发了作品 / 设了订阅），所以每次点击都重新拉一次
 // 个人信息（priced_book_count）和订阅状态再判断；请求期间重复点击直接忽略。
+// 返回 true 表示弹了窗（这次不选中「付费用户可见」，等弹窗里设置成功后再补选）；返回 false 表示可以直接选中。
 let checkingPaidDrama = false;
-async function maybePromptSubscription(permission: string) {
-  if (permission !== 'partial' || checkingPaidDrama) return;
+let pendingPaidAction: (() => void) | null = null;
+async function maybePromptSubscription(permission: string): Promise<boolean> {
+  if (permission !== 'partial') return false;
+  if (checkingPaidDrama) return true;
   checkingPaidDrama = true;
   try {
     const [infoRes] = await Promise.all([
@@ -1314,14 +1317,24 @@ async function maybePromptSubscription(permission: string) {
   } finally {
     checkingPaidDrama = false;
   }
-  if (hasActiveSubscription.value || paidDramaCount.value < PAID_DRAMA_PROMPT_COUNT) return;
+  if (hasActiveSubscription.value || paidDramaCount.value < PAID_DRAMA_PROMPT_COUNT) return false;
   showSubscribePrompt.value = true;
+  return true;
+}
+// 弹窗点「不设置订阅」/ 关闭：不选中付费，丢掉待执行的选择
+function onSubscribePromptCancel() {
+  showSubscribePrompt.value = false;
+  pendingPaidAction = null;
 }
 // 弹窗里已调 modifySubscription 设好订阅价格；这里先按已开通处理，再重新拉一次订阅状态以服务端为准
 function onSubscribePromptSaved() {
   showSubscribePrompt.value = false;
   hasActiveSubscription.value = true;
   checkSubscriptionStatus();
+  // 订阅设好了，补上刚才被拦下的「付费用户可见」选择
+  const action = pendingPaidAction;
+  pendingPaidAction = null;
+  action?.();
 }
 
 // Computed
@@ -1600,8 +1613,12 @@ watch(batchCollectionChapterList, (list) => {
 }, { immediate: true });
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
+  if (await maybePromptSubscription(permission)) {
+    // 先弹订阅设置弹窗，不选中；设置成功后再回来选
+    pendingPaidAction = () => handleBatchPermissionChange(permission, _index);
+    return;
+  }
   batchPermission.value = permission as 'public' | 'partial' | 'private';
-  maybePromptSubscription(permission);
 
   if (permission === 'partial' && batchCollectionChapterList.value.length > 0) {
     batchPartialStartChapter.value = batchCollectionChapterList.value[0];
@@ -3024,8 +3041,12 @@ function toggleSensitive(val: string) {
 }
 
 async function handlePermissionChange(permission: string, _index: number) {
+  if (await maybePromptSubscription(permission)) {
+    // 先弹订阅设置弹窗，不选中；设置成功后再回来选
+    pendingPaidAction = () => handlePermissionChange(permission, _index);
+    return;
+  }
   form.value.permission = permission;
-  maybePromptSubscription(permission);
 }
 
 function cancelSensitive() {

@@ -2454,6 +2454,8 @@
         font-size: 14px;
         font-weight: 700;
         color: #e7e7e7;
+        // 和上一行可见范围的选项文字一样淡化
+        opacity: 0.65;
       }
     }
   }

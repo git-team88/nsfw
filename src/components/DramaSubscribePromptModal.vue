@@ -279,8 +279,8 @@ async function onSave() {
 .actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  gap: 24px;
 }
 
 .btn {
