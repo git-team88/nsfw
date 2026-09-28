@@ -262,32 +262,6 @@
             </div>
           </div>
 
-          <div class="perm-box">
-            <div class="form-label-inner">
-              <label class="form-label">{{ t("submit.permission") }}:</label>
-              <div class="info-icon" @mouseover="adjustTooltipPosition">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <div class="info-tooltip">
-                  <div class="tooltip-content">
-                    <div v-html="t('submit.permissionInfo')"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="perm-options">
-              <div
-                class="perm-option"
-                :class="{ active: form.permission === opt.key }"
-                v-for="(opt, index) in permOptions"
-                :key="opt.key"
-                @click="handlePermissionChange(opt.key, index)"
-              >
-                <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                <span>{{ t(opt.labelKey) }}</span>
-              </div>
-            </div>
-          </div>
-
         </div>
 
         <!-- Batch mode: collection + batch settings in one white container -->
@@ -328,7 +302,7 @@
                           <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
                         </div>
 
-                        <div class="content-sensitive" v-if="(contentSwitch.showSensitiveToggle) || collectionPriceText">
+                        <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
                           <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
                             <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
 
@@ -347,12 +321,6 @@
                               alt=""
                               @click="toggleCollectionSensitive"
                             />
-                          </div>
-                          <!-- 价格跟在敏感开关后面（间距见 .content-sensitive 的 gap）；开关不显示时它就是第一个元素，自然靠左 -->
-                          <div class="collection-price" v-if="collectionPriceText">
-                            <span class="form-label price-label">{{ t('collection.fullSeriesPrice') }}</span>
-                            <span class="price-amount">{{ collectionPriceText }}</span>
-                            <span class="price-hint">({{ t('collection.priceHint') }})</span>
                           </div>
                         </div>
                         <div class="content-language">
@@ -423,9 +391,19 @@
                       </div>
                     </div>
                   </span>
-                  {{ t('novel.batchPublish.partialEnd') }}
+                  {{ t('novel.batchPublish.partialEndDrama') }}
                 </span>
                 <span v-else>{{ t(opt.labelKey) }}</span>
+              </div>
+            </div>
+            <!-- 选了「付费用户可见」：列出合集的付费档位，发布时同步到合集 -->
+            <div class="plan-list" v-if="batchPermission === 'partial' && bookPlans.length">
+              <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+              <div class="plan-options">
+                <div class="plan-option" v-for="plan in bookPlans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
+                  <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
+                  <span>{{ planLabel(plan) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -478,133 +456,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Single mode: collection-section -->
-        <div v-if="!isBatchPublish" class="collection-section">
-          <div class="form-item">
-            <div class="collection-row">
-              <div class="collection-group">
-                <div class="form-label-inner">
-                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
-                  <div class="info-icon" @mouseover="adjustTooltipPosition">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                    <div class="info-tooltip">
-                      <div class="tooltip-content">
-                        <div v-html="t('submit.collectionInfo')"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="switch-collection-btn" @click="openCollectionListModal">
-                    <span>{{ t('collection.switchCollection') }}</span>
-                    <img src="@/assets/images/publish/switch.png" alt="" />
-                  </div>
-                </div>
-
-                <div class="collection-display">
-                  <div class="collection-info" v-if="selectedCollection">
-                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
-                    <div class="collection-text">
-                      <div class="collection-top">
-                        <!-- 标题单独一行；价格挪到下面「是否含敏感内容」开关后面 -->
-                        <div class="collection-title-row">
-                          <span class="collection-name">{{ selectedCollection.name }}</span>
-                        </div>
-                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
-                      </div>
-
-                      <div class="content-sensitive" v-if="(contentSwitch.showSensitiveToggle) || collectionPriceText">
-                        <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
-                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
-
-                          <div class="info-icon" @mouseover="adjustTooltipPosition">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                            <div class="info-tooltip">
-                              <div class="tooltip-content">
-                                <div v-html="t('submit.sensitiveContent')"></div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <img
-                            class="sensitive-switch"
-                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
-                            alt=""
-                            @click="toggleCollectionSensitive"
-                          />
-                        </div>
-                        <!-- 价格跟在敏感开关后面（间距见 .content-sensitive 的 gap）；开关不显示时它就是第一个元素，自然靠左 -->
-                        <div class="collection-price" v-if="collectionPriceText">
-                          <span class="form-label price-label">{{ t('collection.fullSeriesPrice') }}</span>
-                          <span class="price-amount">{{ collectionPriceText }}</span>
-                          <span class="price-hint">({{ t('collection.priceHint') }})</span>
-                        </div>
-                      </div>
-                      <div class="content-language">
-                        <label class="form-label">{{ t('submit.language') }}</label>
-                        <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
-                        <div class="lang-row">
-                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
-                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
-                              <span>{{ currentLangLabel }}</span>
-                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </div>
-                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
-                              <div
-                                class="lang-dropdown-item"
-                                v-for="opt in langOptions"
-                                :key="opt.key"
-                                :class="{ active: collectionLanguage === opt.key }"
-                                @click="handleCollectionLanguageChange(opt.key)"
-                              >{{ t(opt.labelKey) }}</div>
-                            </div>
-                          </div>
-                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="collection-info clickable" @click="openCollectionListModal" v-else>
-                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="collection-group" v-if="!isNoCollection">
-                <label class="form-label"><b>*</b>{{ t("collection.orderInCollection") }}</label>
-                <div class="collection-select">
-                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
-                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
-                    <div class="select-arrow">
-                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
-                    </div>
-                  </div>
-                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
-                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
-                      {{ episode.label }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cover Image -->
-        <!-- <div class="section">
-          <div class="form-item">
-            <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}</label>
-            <div class="cover-row">
-              <div class="cover-box">
-                <img v-if="coverPreview" :src="coverPreview" alt="" />
-                <img v-else src="@/assets/images/base/cover.png" alt="" />
-              </div>
-              <div class="reupload-box">
-                <button class="reupload" @click="pickCover">{{ t("submit.cover.set") }}</button>
-              </div>
-            </div>
-          </div>
-        </div> -->
 
         <!-- Title & Description (single mode only) -->
         <div v-if="!isBatchPublish" class="content-section">
@@ -688,15 +539,167 @@
           </div>
         </div>
 
-        <!-- Submit -->
-        <div class="submit-row">
-          <button v-if="isBatchPublish" class="submit" :disabled="isUpload" @click="onBatchPublish">
-            {{ t("submit.submit") }}
-          </button>
-          <button v-else class="submit" @click="onSubmit">
-            {{ t("submit.submit") }}
-          </button>
+        <!-- Single mode: collection-section -->
+        <div v-if="!isBatchPublish" class="collection-section">
+          <div class="form-item">
+            <div class="collection-row">
+              <div class="collection-group">
+                <div class="form-label-inner">
+                  <label class="form-label"><b>*</b>{{ t("submit.collection") }}</label>
+                  <div class="info-icon" @mouseover="adjustTooltipPosition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div class="info-tooltip">
+                      <div class="tooltip-content">
+                        <div v-html="t('submit.collectionInfo')"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="switch-collection-btn" @click="openCollectionListModal">
+                    <span>{{ t('collection.switchCollection') }}</span>
+                    <img src="@/assets/images/publish/switch.png" alt="" />
+                  </div>
+                </div>
+
+                <div class="collection-display">
+                  <div class="collection-info" v-if="selectedCollection">
+                    <img v-if="selectedCollection.cover" :src="processImageUrl(selectedCollection.cover)" alt="" class="collection-cover" />
+                    <div class="collection-text">
+                      <div class="collection-top">
+                        <!-- 标题单独一行；价格挪到下面「是否含敏感内容」开关后面 -->
+                        <div class="collection-title-row">
+                          <span class="collection-name">{{ selectedCollection.name }}</span>
+                        </div>
+                        <span class="collection-desc" v-if="selectedCollection.description">{{ selectedCollection.description }}</span>
+                      </div>
+
+                      <div class="content-sensitive" v-if="contentSwitch.showSensitiveToggle">
+                        <div class="sensitive-left" v-if="contentSwitch.showSensitiveToggle">
+                          <label class="form-label"><b>*</b>{{ t("submit.contentSettings") }}</label>
+
+                          <div class="info-icon" @mouseover="adjustTooltipPosition">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <div class="info-tooltip">
+                              <div class="tooltip-content">
+                                <div v-html="t('submit.sensitiveContent')"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <img
+                            class="sensitive-switch"
+                            :src="selectedCollection?.is_nsfw == 1 ? requireSwitchOn : requireSwitchOff"
+                            alt=""
+                            @click="toggleCollectionSensitive"
+                          />
+                        </div>
+                      </div>
+                      <div class="content-language">
+                        <label class="form-label">{{ t('submit.language') }}</label>
+                        <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
+                        <div class="lang-row">
+                          <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
+                            <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
+                              <span>{{ currentLangLabel }}</span>
+                              <svg class="lang-arrow" :class="{ rotated: langDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                            <div class="lang-dropdown-menu" v-if="langDropdownOpen">
+                              <div
+                                class="lang-dropdown-item"
+                                v-for="opt in langOptions"
+                                :key="opt.key"
+                                :class="{ active: collectionLanguage === opt.key }"
+                                @click="handleCollectionLanguageChange(opt.key)"
+                              >{{ t(opt.labelKey) }}</div>
+                            </div>
+                          </div>
+                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="collection-info clickable" @click="openCollectionListModal" v-else>
+                    <span class="collection-name no-collection">{{ t('collection.noCollection') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="collection-group" v-if="!isNoCollection">
+                <label class="form-label"><b>*</b>{{ t("collection.orderInCollection") }}</label>
+                <div class="collection-select">
+                  <div class="custom-select" :class="{ 'open': showEpisodeDropdown }" @click="toggleEpisodeDropdown($event)">
+                    <span class="select-value">{{ getEpisodeLabel(selectedEpisodeNumber) }}</span>
+                    <div class="select-arrow">
+                      <img src="@/assets/images/publish/arrow_icon.png" alt="Down" />
+                    </div>
+                  </div>
+                  <div class="custom-dropdown" v-if="showEpisodeDropdown" :class="{ 'dropdown-top': episodeDropdownPosition === 'top' }">
+                    <div class="collection-dropdown-item" v-for="episode in episodes" :key="episode.value" @click="selectEpisode(episode.value)" :class="{ 'selected': selectedEpisodeNumber == episode.value }">
+                      {{ episode.label }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Cover Image -->
+        <!-- <div class="section">
+          <div class="form-item">
+            <label class="form-label"><b>*</b>{{ t("submit.coverLabel") }}</label>
+            <div class="cover-row">
+              <div class="cover-box">
+                <img v-if="coverPreview" :src="coverPreview" alt="" />
+                <img v-else src="@/assets/images/base/cover.png" alt="" />
+              </div>
+              <div class="reupload-box">
+                <button class="reupload" @click="pickCover">{{ t("submit.cover.set") }}</button>
+              </div>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Single mode: 可见范围放在最后（公开 / 付费用户可见；已去掉「仅自己可见」） -->
+        <div v-if="!isBatchPublish" class="section perm-section">
+          <div class="perm-box">
+            <div class="form-label-inner">
+              <label class="form-label">{{ t("submit.permission") }}:</label>
+              <div class="info-icon" @mouseover="adjustTooltipPosition">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <div class="info-tooltip">
+                  <div class="tooltip-content">
+                    <div v-html="t('submit.permissionInfo')"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="perm-options">
+              <div
+                class="perm-option"
+                :class="{ active: form.permission === opt.key }"
+                v-for="(opt, index) in permOptions"
+                :key="opt.key"
+                @click="handlePermissionChange(opt.key, index)"
+              >
+                <img :src="form.permission === opt.key ? selectActive : select" alt="" />
+                <span>{{ t(opt.labelKey) }}<span v-if="opt.key === 'partial'" class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）</span></span>
+              </div>
+            </div>
+
+              <!-- 选了「付费用户可见」：列出合集的付费档位，发布时同步到合集 -->
+              <div class="plan-list" v-if="form.permission === 'partial' && bookPlans.length">
+                <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+                <div class="plan-options">
+                  <div class="plan-option" v-for="plan in bookPlans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
+                    <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
+                    <span>{{ planLabel(plan) }}</span>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+
         <div class="agreement-row">
           <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
             <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
@@ -705,6 +708,15 @@
           <span class="agreement-text"
             >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
           >
+        </div>
+        <!-- Submit -->
+        <div class="submit-row">
+          <button v-if="isBatchPublish" class="submit" :disabled="isUpload" @click="onBatchPublish">
+            {{ t("submit.submit") }}
+          </button>
+          <button v-else class="submit" @click="onSubmit">
+            {{ t("submit.submit") }}
+          </button>
         </div>
       </div>
     </div>
@@ -756,12 +768,15 @@
       @confirm="confirmConvention"
     />
 
-    <!-- Subscription Prompt Modal -->
-    <SubscriptionPriceModal
-      :visible="showSubscriptionModal"
-      @cancel="closeSubscriptionModal"
-      @saved="onSubscriptionSaved"
+    <!-- 已发布 N 部单部付费漫剧但没开通订阅：点「付费用户可见」时引导设置订阅月费 -->
+    <DramaSubscribePromptModal
+      :visible="showSubscribePrompt"
+      :count="paidDramaCount"
+      @cancel="showSubscribePrompt = false"
+      @saved="onSubscribePromptSaved"
     />
+    <!-- 「收益分成80%」旁的说明 -->
+    <TextInfoModal :visible="showRevenueInfo" :text="t('user.subscription.tip')" @close="showRevenueInfo = false" />
 
     <!-- Edit Collection Modal -->
     <EditCollectionModal
@@ -772,7 +787,6 @@
       :collection-name="isCreateFromCollectionList ? projectNameForNewCollection : ''"
       :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
       :is-nsfw="0"
-      :price="selectedCollection?.price || ''"
       :type="3"
       :session-id="selectedProject?.session_id || route.query.session_id || sessionId || ''"
       :story-summary="selectedProject?.result_async?.generate_manju_outline?.synopsis || ''"
@@ -831,7 +845,8 @@ import LoadingMask from "@/components/LoadingMask.vue";
 import PreviewModal from "@/components/PreviewModal.vue";
 import ProjectVideoViewModal from "@/components/ProjectVideoViewModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
-import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
+import DramaSubscribePromptModal from "@/components/DramaSubscribePromptModal.vue";
+import TextInfoModal from "@/components/TextInfoModal.vue";
 import CollectionListModal from "@/components/CollectionListModal.vue";
 import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
@@ -1016,7 +1031,7 @@ const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
   // 漫剧的「订阅用户可见」对外叫「付费用户可见」（值还是 partial / access_rights 2，只是文案）
   { key: "partial", labelKey: "submit.permPaid" },
-  { key: "private", labelKey: "submit.permPrivate" },
+  // 漫剧不提供「仅自己可见」
 ];
 
 interface DropdownItem {
@@ -1148,17 +1163,54 @@ const selectedCollection = ref<{ id: string | number; name: string; cover?: stri
 // 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
 // 这里只把它换算成展示文案。合集没存过价格，这一行就不渲染。
 
-// 档位列表拉失败（或后端没配档位）时自动建合集用的兜底档位 id
-const DEFAULT_PLAN_ID = '1';
-
+// 「付费用户可见」下面的合集付费档位列表。页面加载时拉一次（fetch 内部有缓存）。
+const bookPlans = ref<BookRechargePlan[]>([]);
+const selectedPlanId = ref<string>('');
+const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
+const planLabel = (plan: BookRechargePlan) => `${planPriceText(plan, t('aiRecharge.unit'))}/${t('submit.perSeries')}`;
+async function loadBookPlans() {
+  try {
+    bookPlans.value = await fetchBookRechargePlans();
+  } catch {
+    bookPlans.value = [];
+  }
+  syncSelectedPlanFromCollection();
+}
+// 默认选中：合集已设的档位（按价格匹配），没有就第一档
+function syncSelectedPlanFromCollection() {
+  const plans = bookPlans.value;
+  if (!plans.length) return;
+  const price = selectedCollection.value?.price;
+  const hit = price !== undefined && price !== null && price !== ''
+    ? plans.find(pl => String(pl.price) === String(price))
+    : undefined;
+  selectedPlanId.value = planKey(hit || plans[0]);
+}
+watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection());
 /**
- * 自动建合集时默认选中的档位 —— 接口返回的第一档（前端不排序，顺序以后端为准）。
- * 调用方是 await 的，列表没回来之前不会去建合集；拉失败时返回 null，由调用方用 DEFAULT_PLAN_ID 兜底。
- * 只有真的要自动建合集时才会走到这里请求档位列表（fetch 内部有缓存，不会重复打请求）。
+ * 发布前把列表里选的档位同步到合集：「付费用户可见」且已有合集时，每次发布都调修改合集接口传 plan_id。
+ * 失败只提示，不阻塞发布（作品照常发，价格保持合集原来的）。
  */
-async function firstPlan(): Promise<BookRechargePlan | null> {
-  const plans = await fetchBookRechargePlans();
-  return plans[0] || null;
+async function syncCollectionPlan(permission: string) {
+  if (permission !== 'partial' || !selectedCollection.value?.id) return;
+  const plan = bookPlans.value.find(pl => planKey(pl) === selectedPlanId.value);
+  if (!plan) return;
+  // 每次发布都把选中的 plan_id 写到合集上（不按价格是否变化跳过）
+  try {
+    const res = await api.modifyCollection({
+      book_id: selectedCollection.value.id,
+      plan_id: planKey(plan),
+      price: plan.price,
+    }) as any;
+    if (res.code == 0 || res.code == 200) {
+      selectedCollection.value.price = plan.price;
+      selectedCollection.value.currency = plan.currency || selectedCollection.value.currency;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
+    }
+  } catch (e) {
+    console.error('sync collection plan failed', e);
+  }
 }
 const collectionPriceText = computed(() => {
   const price = selectedCollection.value?.price;
@@ -1219,10 +1271,23 @@ const isLoadingCollections = ref(false);
 // Community Convention Modal
 const showConventionModal = ref(false);
 
-// Subscription prompt modal
-const showSubscriptionModal = ref(false);
-// 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
-let pendingSubscriptionAction: (() => void) | null = null;
+// 漫剧发布页不检查博主有没有开通订阅（选「付费用户可见」直接生效）。
+// 只在「已发布 ≥ PAID_DRAMA_PROMPT_COUNT 部单部付费漫剧、且还没开通订阅」时，点「付费用户可见」弹一次引导设置订阅月费。
+const PAID_DRAMA_PROMPT_COUNT = 10;
+const paidDramaCount = ref(0);
+const showSubscribePrompt = ref(false);
+let subscribePromptShown = false;   // 一次页面内只弹一次
+const showRevenueInfo = ref(false);
+function maybePromptSubscription(permission: string) {
+  if (permission !== 'partial' || subscribePromptShown) return;
+  if (hasActiveSubscription.value || paidDramaCount.value < PAID_DRAMA_PROMPT_COUNT) return;
+  subscribePromptShown = true;
+  showSubscribePrompt.value = true;
+}
+function onSubscribePromptSaved() {
+  showSubscribePrompt.value = false;
+  hasActiveSubscription.value = true;
+}
 
 // Computed
 const captionLength = ref(0);
@@ -1393,13 +1458,11 @@ async function handlePublishFromSelection() {
             const storySummary = (targetProject.result_async?.generate_manju_outline?.synopsis
               || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
               || '').slice(0, 1000);
-            // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
-            const defaultPlan = await firstPlan();
+            // 默认建的合集不设价格（不传 plan_id），发布时按「付费用户可见」下选的档位再同步
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
               language: collectionLanguage.value,
-              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -1413,8 +1476,8 @@ async function handlePublishFromSelection() {
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
-                price: defaultPlan?.price ?? '',
-                currency: defaultPlan?.currency || ''
+                price: '',
+                currency: ''
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1478,7 +1541,7 @@ const showBatchChapterDropdown = ref(false);
 const batchPermOptions = [
   { key: 'public', labelKey: 'submit.permPublic' },
   { key: 'partial', labelKey: 'submit.permPaid' },
-  { key: 'private', labelKey: 'submit.permPrivate' },
+  // 漫剧不提供「仅自己可见」
 ];
 
 const batchCollectionChapterList = computed(() => {
@@ -1500,10 +1563,8 @@ watch(batchCollectionChapterList, (list) => {
 }, { immediate: true });
 
 async function handleBatchPermissionChange(permission: string, _index: number) {
-  if (_index === 1 && !(await ensureSubscriptionOrPrompt(() => handleBatchPermissionChange(permission, _index)))) {
-    return;
-  }
   batchPermission.value = permission as 'public' | 'partial' | 'private';
+  maybePromptSubscription(permission);
 
   if (permission === 'partial' && batchCollectionChapterList.value.length > 0) {
     batchPartialStartChapter.value = batchCollectionChapterList.value[0];
@@ -1598,6 +1659,9 @@ async function onBatchPublish() {
     showConventionModal.value = true;
     return;
   }
+
+  // 先把「付费用户可见」下选的档位同步到合集，再逐集发布
+  await syncCollectionPlan(batchPermission.value);
 
   batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
     chapter,
@@ -2077,7 +2141,7 @@ function handleCollectionDropdownScroll(event: Event) {
   }
 }
 
-async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string }) {
+async function handleSaveCollection(collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string }) {
   showEditCollectionModal.value = false;
   // 弹窗里可能改过语言，同步回页面的语言下拉，否则下拉一直显示旧值，
   // 之后再触发自动创建还会拿这个过期的值去建合集
@@ -2091,7 +2155,7 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       description: collection.description,
       is_nsfw: collection.is_nsfw ?? 0,
       language: collection.language || collectionLanguage.value,
-      price: collection.price ?? ''
+      price: ''
     };
 
     if (collection.is_nsfw == 1) {
@@ -2125,13 +2189,6 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         coverPreview.value = collection.cover;
       }
       selectedCollection.value.is_nsfw = collection.is_nsfw ?? 0;
-      // 价格也要同步 —— 漫剧合集在弹窗里改了档位，封面下那行才会跟着变。
-      // 非漫剧的弹窗不带这个字段（undefined），别把已有的值抹掉。
-      if (collection.price !== undefined) {
-        selectedCollection.value.price = collection.price;
-        // 币种也用弹窗选中档位的，别留上一个合集的
-        selectedCollection.value.currency = collection.currency || '';
-      }
       if (collection.is_nsfw == 1) {
         form.value.content = 'yes';
       } else if (collection.is_nsfw == 0 && form.value.content !== 'no') {
@@ -2147,12 +2204,6 @@ async function handleSaveCollection(collection: { id: string | number; name: str
         collections.value[index].cover = collection.cover;
       }
       collections.value[index].is_nsfw = collection.is_nsfw ?? 0;
-      if (collection.price !== undefined) {
-        collections.value[index].price = collection.price;
-        // 列表接口带下来的 plan 是旧档位，价格改了就过期了，
-        // 清掉免得下次从列表里选中时又被 planPriceOf 优先读到
-        collections.value[index].plan = null;
-      }
     }
   }
 }
@@ -2518,13 +2569,11 @@ async function handlePublish(publishData?: any) {
           const storySummary = (publishData?.project?.result_async?.generate_manju_outline?.synopsis
             || selectedProject.value?.result_async?.generate_manju_outline?.synopsis
             || '').slice(0, 1000);
-          // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
-          const defaultPlan = await firstPlan();
+          // 默认建的合集不设价格（不传 plan_id），发布时按「付费用户可见」下选的档位再同步
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
             language: collectionLanguage.value,
-            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
             cover: project.result_async?.generate_manju_cover || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -2538,8 +2587,8 @@ async function handlePublish(publishData?: any) {
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,
-              price: defaultPlan?.price ?? '',
-              currency: defaultPlan?.currency || ''
+              price: '',
+              currency: ''
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -2600,24 +2649,6 @@ function confirmConvention() {
   onSubmit();
 }
 
-// Subscription prompt modal methods
-function closeSubscriptionModal() {
-  showSubscriptionModal.value = false;
-  pendingSubscriptionAction = null;
-}
-
-// 订阅价格弹窗保存成功：视为已开通订阅，并补执行刚才被拦下的「订阅用户可见」选择
-// （planId 判空是兜底，正常保存一定带着选中的档位）
-function onSubscriptionSaved(planId: string) {
-  showSubscriptionModal.value = false;
-  const action = pendingSubscriptionAction;
-  pendingSubscriptionAction = null;
-  if (planId && planId != '0') {
-    hasActiveSubscription.value = true;
-    action?.();
-  }
-}
-
 // 查询当前用户是否已设置订阅价格。返回：'active' 已设置 / 'inactive' 确认没设置 / 'error' 请求失败或返回码不是 0。
 // notifyError：点击「订阅用户可见」时触发的检查，失败要提示用户
 async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 'inactive' | 'error'> {
@@ -2628,6 +2659,8 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
     if (data.code === 0) {
       const subscription = data.data;
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
+      // 已发布的单部付费漫剧数量（字段名待后端确认）
+      paidDramaCount.value = Number(subscription?.paid_drama_count ?? 0) || 0;
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
     if (notifyError) toast(apiErrorMessage(data));
@@ -2637,30 +2670,6 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
     if (notifyError) toast(t("fail"));
   }
   return 'error';
-}
-
-// 点「订阅用户可见」时确认是否可以直接选中：
-// - 页面已确认设置过价格 → 直接放行，不再请求
-// - 否则重新请求一次最新状态（避免加载时接口还没回来 / 失败 / 别的标签页刚设置过价格时误弹）：
-//   有价格 → 放行；确认没价格 → 记下这次操作并弹订阅价格设置弹窗；请求失败 → 提示错误，不弹窗、不选中
-// 请求期间重复点击直接忽略
-let checkingSubscription = false;
-async function ensureSubscriptionOrPrompt(action: () => void): Promise<boolean> {
-  if (hasActiveSubscription.value) return true;
-  if (checkingSubscription) return false;
-  checkingSubscription = true;
-  let result: 'active' | 'inactive' | 'error';
-  try {
-    result = await checkSubscriptionStatus(true);
-  } finally {
-    checkingSubscription = false;
-  }
-  if (result === 'active') return true;
-  if (result === 'inactive') {
-    pendingSubscriptionAction = action;
-    showSubscriptionModal.value = true;
-  }
-  return false;
 }
 
 // Methods
@@ -2973,12 +2982,9 @@ function toggleSensitive(val: string) {
   }
 }
 
-async function handlePermissionChange(permission: string, index: number) {
-  if (index == 1 && !(await ensureSubscriptionOrPrompt(() => handlePermissionChange(permission, index)))) {
-    return;
-  }
-
+async function handlePermissionChange(permission: string, _index: number) {
   form.value.permission = permission;
+  maybePromptSubscription(permission);
 }
 
 function cancelSensitive() {
@@ -4082,6 +4088,8 @@ async function onSubmit() {
     }
   }
 
+  // 先把「付费用户可见」下选的档位同步到合集，再发作品
+  await syncCollectionPlan(form.value.permission);
   isUpload.value = true;
 
   try {
@@ -4207,13 +4215,11 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
           if (book_id === 0) {
             const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
               || '').slice(0, 1000);
-            // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
-            const defaultPlan = await firstPlan();
+            // 默认建的合集不设价格（不传 plan_id），发布时按「付费用户可见」下选的档位再同步
             const createRes = await api.addCollection({
               title,
               type: 3,
               language: collectionLanguage.value,
-              plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4227,8 +4233,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 description: storySummary || t('collectionSettings.sampleDescription'),
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
-                price: defaultPlan?.price ?? '',
-                currency: defaultPlan?.currency || ''
+                price: '',
+                currency: ''
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4433,13 +4439,11 @@ async function initBatchPublish(session_id: string) {
         if (book_id == 0) {
           const storySummary = (selectedProject.value?.result_async?.generate_manju_outline?.synopsis
             || '').slice(0, 1000);
-          // 默认选中接口返回的第一档，并把该档的价格回填到合集上显示
-          const defaultPlan = await firstPlan();
+          // 默认建的合集不设价格（不传 plan_id），发布时按「付费用户可见」下选的档位再同步
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
             language: collectionLanguage.value,
-            plan_id: defaultPlan ? String(defaultPlan.plan_id ?? defaultPlan.id) : DEFAULT_PLAN_ID,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0
@@ -4453,8 +4457,8 @@ async function initBatchPublish(session_id: string) {
               description: storySummary || t('collectionSettings.sampleDescription'),
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,
-              price: defaultPlan?.price ?? '',
-              currency: defaultPlan?.currency || ''
+              price: '',
+              currency: ''
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';
@@ -4503,6 +4507,7 @@ async function initBatchPublish(session_id: string) {
 }
 
 onMounted(async () => {
+    loadBookPlans();
     await contentSwitch.ensureLoaded();
     document.addEventListener("click", handleClickOutside);
 

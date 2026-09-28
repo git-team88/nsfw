@@ -42,9 +42,19 @@
                     </div>
                   </div>
                 </span>
-                <span class="partial-end-text">{{ t('novel.batchPublish.partialEnd') }}</span>
+                <span class="partial-end-text">{{ t(collectionType === '3' ? 'novel.batchPublish.partialEndDrama' : 'novel.batchPublish.partialEnd') }}</span>
               </div>
               <span v-else>{{ t(opt.labelKey) }}</span>
+            </div>
+          </div>
+          <!-- 漫剧合集：选「从第 N 集起付费」时列出合集的单部付费档位（和发布页一致） -->
+          <div class="plan-list" v-if="showPlanList">
+            <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+            <div class="plan-options">
+              <div class="plan-option" v-for="plan in plans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
+                <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
+                <span>{{ planPriceText(plan, t('aiRecharge.unit')) }}/{{ t('submit.perSeries') }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -53,7 +63,7 @@
           <div class="section-label">{{ isEpisode ? t('collectionSettings.batchPermPreviewEpisode') : t('collectionSettings.batchPermPreview') }}</div>
           <div class="chapter-list">
             <div class="chapter-item" v-for="chapter in chapters" :key="chapter.id">
-              <span class="chapter-index">{{ isEpisode ? t('recordList.episode', { episode: chapter.index }) : t('chapter', { chapter: chapter.index }) }}</span>
+              <span class="chapter-index">{{ isEpisode ? t('recordList.video.episode', { episode: chapter.index }) : t('chapter', { chapter: chapter.index }) }}</span>
               <span class="chapter-perm" :class="{ 'perm-partial': getAccessRightsPerm(chapter) == 'partial' }">{{ getAccessRightsText(chapter) }}</span>
             </div>
           </div>
@@ -73,12 +83,15 @@ import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import select from '@/assets/images/publish/select.png';
 import selectActive from '@/assets/images/publish/select_active.png';
+import { fetchBookRechargePlans, findPlanByPrice, planPriceText, type BookRechargePlan } from '@/util/bookRechargePlan';
 
 const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
   collectionType: string;
+  /** 合集当前的单部价格（漫剧），用来回显默认选中的档位 */
+  currentPrice?: string | number;
   chapters: Array<{
     id: string | number;
     title: string;
@@ -89,20 +102,45 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'confirm', type: number, startChapter?: number): void;
+  (e: 'confirm', type: number, startChapter?: number, plan?: BookRechargePlan): void;
 }>();
 
-const isEpisode = (props.collectionType === '1' || props.collectionType === '3');
+// 合集设置页一进来就渲染这个弹窗，那时合集类型还没回来，所以必须是 computed 而不是只算一次
+const isEpisode = computed(() => props.collectionType === '1' || props.collectionType === '3');
 
 const permOptions = [
   { key: 'public', labelKey: 'novel.batchPublish.allPublic' },
   { key: 'partial', labelKey: 'novel.batchPublish.partialStart' },
-  { key: 'private', labelKey: 'novel.batchPublish.allPrivate' },
+  // 「全部私密」选项已隐藏（只保留全部公开 / 从第 N 章起限定）
 ];
 
 const selectedPerm = ref('public');
 const partialStartChapter = ref(1);
 const showPartialDropdown = ref(false);
+
+// --- 漫剧合集的单部付费档位 ---
+const plans = ref<BookRechargePlan[]>([]);
+const selectedPlanId = ref('');
+const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
+const showPlanList = computed(() => props.collectionType === '3' && selectedPerm.value === 'partial' && plans.value.length > 0);
+const selectedPlan = computed(() => plans.value.find((pl) => planKey(pl) === selectedPlanId.value));
+
+// 默认选中：合集已设的档位（按价格匹配），没有就第一档
+function syncSelectedPlan() {
+  if (!plans.value.length) return;
+  const hit = findPlanByPrice(plans.value, props.currentPrice);
+  selectedPlanId.value = planKey(hit || plans.value[0]);
+}
+
+async function loadPlans() {
+  if (props.collectionType !== '3') return;
+  try {
+    plans.value = await fetchBookRechargePlans();
+  } catch {
+    plans.value = [];
+  }
+  syncSelectedPlan();
+}
 
 const chapterNumbers = computed(() => {
   return props.chapters.map((ch) => ch.index);
@@ -113,6 +151,7 @@ watch(() => props.visible, (val) => {
     selectedPerm.value = 'public';
     partialStartChapter.value = 1;
     showPartialDropdown.value = false;
+    loadPlans();
   }
 });
 
@@ -160,7 +199,7 @@ function handleConfirm() {
   const typeMap: Record<string, number> = { public: 1, partial: 2, private: 3 };
   const type = typeMap[selectedPerm.value] || 1;
   if (type === 2) {
-    emit('confirm', type, partialStartChapter.value);
+    emit('confirm', type, partialStartChapter.value, showPlanList.value ? selectedPlan.value : undefined);
   } else {
     emit('confirm', type);
   }
@@ -233,6 +272,46 @@ function handleConfirm() {
 
   .perm-section {
     margin-bottom: 20px;
+
+    .plan-list {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-top: 16px;
+
+      .plan-list-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #f5f5f5;
+        opacity: 0.55;
+      }
+
+      .plan-options {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .plan-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+
+        span {
+          font-size: 14px;
+          font-weight: 700;
+          color: #f5f5f5;
+        }
+      }
+    }
 
     .section-label {
       font-size: 14px;

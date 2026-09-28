@@ -324,6 +324,7 @@ export default {
       batchSettings: "일괄 설정",
       partialStart: "컬렉션의 ",
       partialEnd: "화부터 구독자 전용으로 제한됩니다(미구독자는 앞 1000자 공개), 나머지 화는 전체 공개됩니다",
+      partialEndDrama: "화부터 유료 사용자 전용으로 제한되며, 그 이전 화는 전체 공개됩니다",
       allPublic: "전체 공개",
       allPrivate: "전체 비공개",
       cancelOperation: "작업 취소"
@@ -1775,6 +1776,14 @@ export default {
     permPublic: "공개",
     permPartial: "구독자 전용",
     permPaid: "유료 이용자 전용",
+    revenueShare: "수익 배분 80%",
+    singlePrice: "작품 가격",
+    perSeries: "전편",
+    paidDramaPromptTitle: "유료 애니 드라마를 {count}편 게시했습니다. 구독 요금을 설정할까요?",
+    paidDramaPromptDesc: "구독한 사용자는 구독 기간 동안 이 계정의 모든 유료 작품을 볼 수 있습니다.",
+    paidDramaPromptHint: "[내 정보 - 구독 설정]에서 언제든지 변경할 수 있습니다",
+    noSubscription: "설정 안 함",
+    confirmSetting: "설정하기",
     permPrivate: "나만 보기",
     imgtip: "(첫 번째 이미지 공개)",
     articleTip: "(앞 1000자 공개)",
@@ -2694,6 +2703,10 @@ export default {
     }
   },
   collectionSettings: {
+    paidSetting: "유료 설정",
+    modifyPrice: "가격 변경",
+    priceModalTitle: "애니 드라마 유료 설정",
+    priceOff: "사용 안 함(전체 화 공개)",
     notFound: "컬렉션이 존재하지 않습니다",
     back: "돌아가기",
     title: "기본 정보",

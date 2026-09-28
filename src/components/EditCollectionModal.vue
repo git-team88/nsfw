@@ -97,20 +97,6 @@
           ></textarea>
         </div>
 
-        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
-        <div class="form-group" v-if="showPriceRow">
-          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}<span class="char-counter">({{ t('collection.priceHint') }})</span></label>
-          <div class="price-options">
-            <div
-              class="price-option"
-              v-for="plan in rechargePlans"
-              :key="plan.id"
-              :class="{ active: selectedPlanId === plan.id }"
-              @click="selectedPlanId = plan.id"
-            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
-          </div>
-        </div>
-
         <!-- Language Section -->
         <div class="form-group">
           <label class="form-label"><b class="required">*</b>{{ t('submit.language') }}</label>
@@ -171,13 +157,6 @@ import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import CollectionCoverModal from './CollectionCoverModal.vue';
 import SensitiveConfirmModal from './SensitiveConfirmModal.vue';
 
-import {
-  fetchBookRechargePlans,
-  findPlanByPrice,
-  planPriceText,
-  type BookRechargePlan,
-} from '@/util/bookRechargePlan';
-
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
 
@@ -204,39 +183,14 @@ const props = defineProps<{
   sessionId?: string;
   storySummary?: string;
   language?: string;
-  /** 合集已存的价格（原始金额），用来回显选中的档位 */
-  price?: string | number;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string }): void;
+  (e: 'save', collection: { id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string }): void;
 }>();
 
 const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
-
-// --- 收费档 ---------------------------------------------------------------
-// 只有漫剧（type 3）的合集有这一行。没选过档的默认落在第一档。
-const rechargePlans = ref<BookRechargePlan[]>([]);
-const selectedPlanId = ref('');
-
-const showPriceRow = computed(
-  () => String(props.type ?? '') === '3' && rechargePlans.value.length > 0,
-);
-const selectedPlan = computed(
-  () => rechargePlans.value.find((p) => p.id === selectedPlanId.value),
-);
-
-function syncSelectedPlan() {
-  if (!rechargePlans.value.length) return;
-  const matched = findPlanByPrice(rechargePlans.value, props.price);
-  selectedPlanId.value = matched ? matched.id : rechargePlans.value[0].id;
-}
-
-fetchBookRechargePlans().then((plans) => {
-  rechargePlans.value = plans;
-  syncSelectedPlan();
-});
 
 const langOptions = [
   { key: "en", labelKey: "submit.langEn" },
@@ -472,11 +426,6 @@ async function handleSave() {
       if (selectedLanguage.value !== initialLanguage.value) {
         params.language = selectedLanguage.value;
       }
-      // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
-      if (showPriceRow.value && selectedPlan.value) {
-        params.price = selectedPlan.value.price;
-        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
-      }
 
       const response = await api.modifyCollection(params) as any;
       if (response.code === 0) {
@@ -486,9 +435,7 @@ async function handleSave() {
           cover: coverUrl.value,
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
-          language: selectedLanguage.value,
-          price: showPriceRow.value ? selectedPlan.value?.price : undefined,
-          currency: showPriceRow.value ? selectedPlan.value?.currency : undefined
+          language: selectedLanguage.value
         });
         handleCancel();
       } else {
@@ -506,12 +453,6 @@ async function handleSave() {
         cover: coverUrl.value,
         is_nsfw: computedIsNsfw.value,
         language: selectedLanguage.value,
-        ...(showPriceRow.value && selectedPlan.value
-          ? {
-              price: selectedPlan.value.price,
-              plan_id: selectedPlan.value.plan_id ?? selectedPlan.value.id,
-            }
-          : {}),
       };
 
       const response = await api.addCollection(params) as any;
@@ -522,9 +463,7 @@ async function handleSave() {
           cover: coverUrl.value,
           description: description.value.trim(),
           is_nsfw: computedIsNsfw.value,
-          language: selectedLanguage.value,
-          price: showPriceRow.value ? selectedPlan.value?.price : undefined,
-          currency: showPriceRow.value ? selectedPlan.value?.currency : undefined
+          language: selectedLanguage.value
         });
         handleCancel();
       } else {
@@ -1009,44 +948,6 @@ function handleModalKeydown(e: KeyboardEvent) {
   }
 }
 
-/* 收费档位：一排胶囊按钮，选中的填深色 */
-.price-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  /* .form-label 没有下边距，这里自己隔开标题 */
-  margin-top: 12px;
-}
-
-.price-option {
-  /* 不铺满整行 —— 只有一个档位时通栏很难看，按钮宽度固定下限 */
-  flex: 0 0 auto;
-  min-width: 136px;
-  padding: 0 16px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #161122;
-  background: #FFFFFF;
-  border: 2px solid rgba(22, 17, 34, 0.12);
-  border-radius: 12px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.price-option:hover {
-  border-color: rgba(22, 17, 34, 0.3);
-}
-
-.price-option.active {
-  background: #161122;
-  border-color: #161122;
-  color: #FFFFFF;
-}
 
 /* 保存按钮的加载态：文字换成加载中 + 旁边一个小转圈，
    和 BatchPublishDialog 的 .btn-spinner 一套写法；颜色跟着按钮文字走 */

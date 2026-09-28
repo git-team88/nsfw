@@ -46,20 +46,6 @@
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
-        <!-- Price Section：只有漫剧（type 3）的合集有收费档 -->
-        <div class="form-group" v-if="showPriceRow">
-          <label class="form-label"><b class="required">*</b>{{ t('collection.price') }}<span class="char-counter">({{ t('collection.priceHint') }})</span></label>
-          <div class="price-options">
-            <div
-              class="price-option"
-              v-for="plan in rechargePlans"
-              :key="plan.id"
-              :class="{ active: selectedPlanId === plan.id }"
-              @click="selectedPlanId = plan.id"
-            >{{ planPriceText(plan, t('aiRecharge.unit')) }}</div>
-          </div>
-        </div>
-
         <!-- Sensitive Content Section -->
         <div class="form-group" v-if="contentSwitch.showSensitiveToggle">
           <div class="form-label-inner">
@@ -171,12 +157,6 @@ import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
 import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import { baseUrl } from '@/util/config';
-import {
-  fetchBookRechargePlans,
-  findPlanByPrice,
-  planPriceText,
-  type BookRechargePlan,
-} from '@/util/bookRechargePlan';
 import CollectionCoverModal from '@/components/CollectionCoverModal.vue';
 import SensitiveConfirmModal from '@/components/SensitiveConfirmModal.vue';
 
@@ -244,26 +224,7 @@ const langDropdownRef = ref<HTMLElement | null>(null);
 const selectedLanguage = ref(defaultLang);
 
 // --- 收费档 ---------------------------------------------------------------
-// 档位由接口下发，金额不写死。只有漫剧（type 3）的合集有这一行；
-// 没选过档的合集默认落在第一档。
-const rechargePlans = ref<BookRechargePlan[]>([]);
-const selectedPlanId = ref('');
 const collectionType = ref('');
-const originalPrice = ref('');
-
-const showPriceRow = computed(
-  () => collectionType.value == '3' && rechargePlans.value.length > 0,
-);
-const selectedPlan = computed(
-  () => rechargePlans.value.find((p) => p.id === selectedPlanId.value),
-);
-
-/** 档位和合集详情哪个先到不一定，两边到齐都调一次 */
-function syncSelectedPlan() {
-  if (!rechargePlans.value.length || selectedPlanId.value) return;
-  const matched = findPlanByPrice(rechargePlans.value, originalPrice.value);
-  selectedPlanId.value = matched ? matched.id : rechargePlans.value[0].id;
-}
 const languageModified = ref(false);
 const originalLanguage = ref(defaultLang);
 
@@ -346,11 +307,6 @@ function adjustTooltipPosition(event: MouseEvent) {
 
 onMounted(async () => {
   await contentSwitch.ensureLoaded();
-  fetchBookRechargePlans().then((plans) => {
-    rechargePlans.value = plans;
-    syncSelectedPlan();
-  });
-
   // 新建模式的类型只能从地址栏拿（user-home 的「新建合集」带 ?type= 进来）；
   // 编辑模式下面 loadCollection 会用合集真实的 type 覆盖掉它
   collectionType.value = String(route.query.type ?? '');
@@ -384,11 +340,6 @@ async function loadCollection(id: string) {
         originalLanguage.value = bookInfo.language;
       }
       collectionType.value = String(bookInfo.type ?? '');
-      // 当前档位在外层 data.plan（设了是对象 { price, currency }，没设是空数组 []），
-      // book_info 里只有 plan_id 没有 price；不从这里读的话编辑时会默认落到第一档
-      const plan = data.plan && !Array.isArray(data.plan) ? data.plan : {};
-      originalPrice.value = String(plan.price ?? bookInfo.price ?? '');
-      syncSelectedPlan();
     }
   } catch (error) {
     console.error('Failed to load collection:', error);
@@ -437,15 +388,9 @@ async function handleSave() {
       if (selectedLanguage.value !== originalLanguage.value) {
         params.language = selectedLanguage.value;
       }
-
-      // 价格每次都带上 —— 没选过档的合集这次会把默认的第一档存下去
-      if (showPriceRow.value && selectedPlan.value) {
-        params.price = selectedPlan.value.price;
-        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
-      }
     } else {
       // 合集类型跟着入口走（用户主页按当前 tab 带 ?type= 进来）。
-      // 不传的话后端按默认类型建，漫剧合集就不是 type 3，价格档位也挂不上。
+      // 不传的话后端按默认类型建，漫剧合集就不是 type 3。
       // 缺省 2 和 EditCollectionModal 的 props.type || 2 保持一致。
       params.type = Number(collectionType.value) || 2;
       params.title = collectionName.value.trim();
@@ -453,11 +398,6 @@ async function handleSave() {
       params.cover = coverUrl.value;
       params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
-
-      if (showPriceRow.value && selectedPlan.value) {
-        params.price = selectedPlan.value.price;
-        params.plan_id = selectedPlan.value.plan_id ?? selectedPlan.value.id;
-      }
     }
 
     let response;
@@ -1160,44 +1100,6 @@ function goBack() {
   }
 }
 
-/* 收费档位：一排胶囊按钮，选中的填深色 */
-.price-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  /* .form-label 没有下边距，这里自己隔开标题 */
-  margin-top: 12px;
-}
-
-.price-option {
-  /* 不铺满整行 —— 只有一个档位时通栏很难看，按钮宽度固定下限 */
-  flex: 0 0 auto;
-  min-width: 136px;
-  padding: 0 16px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #FFFFFF;
-  background: #222222;
-  border: 2px solid #3d3d3d;
-  border-radius: 12px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.price-option:hover {
-  border-color: rgba(22, 17, 34, 0.3);
-}
-
-.price-option.active {
-  border: 1px solid #ff9aca;
-  background: linear-gradient(145deg, #ff65ab, #f02c80);
-  box-shadow: 0 0 6px rgba(255, 50, 140, 0.65);
-}
 
 /* 保存按钮的加载态：文字换成加载中 + 旁边一个小转圈，
    和 BatchPublishDialog 的 .btn-spinner 一套写法；颜色跟着按钮文字走 */

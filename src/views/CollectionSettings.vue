@@ -43,13 +43,15 @@
               <span class="info-value">{{ collection.title }}</span>
             </div>
 
-            <!-- 价格：只有漫剧（type 3）的合集有收费档 -->
-            <div class="info-item" v-if="collectionPriceText">
-              <span class="info-label">{{ t('collection.price') }}：</span>
-              <span class="info-value price-value">{{ collectionPriceText }}<span class="price-unit">/{{ t('collection.fullSeries') }}</span><span
-                class="chapter-access"
-                v-if="chapterAccessText"
-              >{{ chapterAccessText }}</span></span>
+            <!-- 单部付费设置：只有漫剧（type 3）的合集有收费档；「修改价格」打开档位弹窗 -->
+            <div class="info-item" v-if="collection.type == '3'">
+              <span class="info-label">{{ t('collectionSettings.paidSetting') }}：</span>
+              <span class="info-value price-value">
+                <template v-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
+                <template v-else>{{ t('collectionSettings.priceOff') }}</template>
+                <button class="btn btn-modify-price" v-if="collection.status != '2'" @click="showPriceModal = true">{{ t('collectionSettings.modifyPrice') }}</button>
+                <span class="chapter-access" v-if="chapterAccessText">{{ chapterAccessText }}</span>
+              </span>
             </div>
 
             <div class="info-item">
@@ -108,9 +110,18 @@
       @confirm="confirmDelete"
     />
 
+    <DramaPriceModal
+      :visible="showPriceModal"
+      :book-id="collection.id"
+      :current-price="collection.price"
+      @close="showPriceModal = false"
+      @saved="onPriceSaved"
+    />
+
     <BatchPermissionModal
       :visible="showBatchPermission"
       :collection-type="collection.type"
+      :current-price="collection.price"
       :chapters="batchChapters"
       @close="showBatchPermission = false"
       @confirm="confirmBatchPermission"
@@ -126,12 +137,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import api from '@/api/index';
-import { planPriceText } from '@/util/bookRechargePlan';
+import { planPriceText, type BookRechargePlan } from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal.vue';
 import BatchPermissionModal from '@/components/BatchPermissionModal.vue';
+import DramaPriceModal from '@/components/DramaPriceModal.vue';
 import defaultCover from '@/assets/images/base/cover.png';
 
 const { t } = useI18n();
@@ -145,6 +157,7 @@ const showConfirmFinish = ref(false);
 const showDeleteNotice = ref(false);
 const showConfirmDelete = ref(false);
 const showBatchPermission = ref(false);
+const showPriceModal = ref(false);
 const batchChapters = ref<Array<{ id: string | number; title: string; index: number; status?: string }>>([]);
 
 const collection = ref({
@@ -356,9 +369,41 @@ function handleBatchPermission() {
   showBatchPermission.value = true;
 }
 
-async function confirmBatchPermission(type: number, startChapter?: number) {
+// 「修改价格」保存后：重新拉一次合集详情，刷新价格、章节权限统计
+async function onPriceSaved() {
+  try {
+    const detailRes = await api.getSelfCollectionDetail(collection.value.id) as any;
+    if (detailRes.code == 0 || detailRes.code == 200) {
+      const detailData = detailRes.data || {};
+      const bookInfo = detailData.book_info || {};
+      const plan = (detailData.plan && !Array.isArray(detailData.plan) ? detailData.plan : {}) as any;
+      collection.value.price = plan.price ?? '';
+      collection.value.currency = plan.currency || '';
+      collection.value.group = Array.isArray(detailData.group) ? detailData.group : [];
+      collection.value.chatpers = detailData.chatpers || [];
+      collection.value.chapter_count = bookInfo.chapter_count || '';
+      collection.value.chapter_count_private = bookInfo.chapter_count_private || 0;
+    }
+  } catch (error) {
+    console.error('refresh price failed:', error);
+  }
+}
+
+async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan) {
   showBatchPermission.value = false;
   try {
+    // 漫剧合集选了「从第 N 集起付费」并带了档位：先把档位写到合集上，价格没变就不用调
+    if (plan && String(collection.value.price ?? '') !== String(plan.price)) {
+      const planRes = await api.modifyCollection({
+        book_id: collection.value.id,
+        plan_id: String(plan.plan_id ?? plan.id ?? ''),
+        price: plan.price,
+      }) as any;
+      if (!(planRes.code == 0 || planRes.code == 200)) {
+        toast(apiErrorMessage(planRes) || t('fail'));
+        return;
+      }
+    }
     const data: any = {
       book_id: collection.value.id,
       type: type
@@ -371,14 +416,8 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
       toast(collection.value.type == '1' || collection.value.type == '3'
         ? t('collectionSettings.batchPermSuccessEpisode')
         : t('collectionSettings.batchPermSuccess'));
-      const detailRes = await api.getSelfCollectionDetail(collection.value.id) as any;
-      if (detailRes.code == 0 || detailRes.code == 200) {
-        const detailData = detailRes.data || {};
-        const bookInfo = detailData.book_info || {};
-        collection.value.chatpers = detailData.chatpers || [];
-        collection.value.chapter_count = bookInfo.chapter_count || '';
-        collection.value.chapter_count_private = bookInfo.chapter_count_private || 0;
-      }
+      // 重新拉详情：章节权限、数量和（可能改了的）价格一起刷新
+      await onPriceSaved();
     } else {
       toast(apiErrorMessage(res));
     }
@@ -1032,6 +1071,27 @@ async function confirmBatchPermission(type: number, startChapter?: number) {
 .detail-section .info-item .info-value.price-value {
   font-weight: 800;
   color: #FF4D8E;
+}
+
+/* 「修改价格」按钮：跟在价格后面，和章节权限统计同一行 */
+.detail-section .info-item .info-value.price-value {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.detail-section .info-item .info-value.price-value .btn-modify-price {
+  background: linear-gradient(135deg, #ff4f9a, #ff2d7f);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 2px 12px rgba(255,79,154,0.3);
+  border-radius: 8px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .detail-section .info-item .info-value.price-value .price-unit {

@@ -2347,3 +2347,67 @@
     }
   }
 }
+
+// ---- 漫剧发布页：可见范围（放在最后）+ 「付费用户可见」下的合集付费档位列表 ----
+.submit-video {
+  .perm-section .perm-box,
+  .batch-perm-settings {
+    flex-wrap: wrap;
+  }
+
+  // 批量设置是块级布局，没有 gap，档位列表和上面的选项之间自己留间距
+  .batch-perm-settings .plan-list {
+    margin-top: 16px;
+  }
+
+  .revenue-info-icon {
+    vertical-align: -3px;
+    margin-left: 2px;
+    cursor: pointer;
+  }
+
+  .revenue-hint {
+    color: #ff4f9a;
+    font-weight: 700;
+  }
+
+  .plan-list {
+    flex-basis: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+
+    .plan-list-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e7e7e7;
+      opacity: 0.55;
+    }
+
+    .plan-options {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .plan-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+
+      img {
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #e7e7e7;
+      }
+    }
+  }
+}
