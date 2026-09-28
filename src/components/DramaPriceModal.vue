@@ -8,7 +8,7 @@
       <div class="modal-body">
         <div class="perm-section">
           <div class="section-label">{{ t('collectionSettings.paidSetting') }}</div>
-          <div class="perm-options">
+          <div class="perm-options" v-if="plansReady">
             <div class="perm-option" :class="{ selected: selectedId === OFF }" @click="selectedId = OFF">
               <img :src="selectedId === OFF ? selectActive : select" alt="" />
               <span>{{ t('collectionSettings.priceOff') }}</span>
@@ -38,7 +38,7 @@
 <script setup lang="ts" name="DramaPriceModal">
 // 漫剧合集设置页「修改价格」弹窗：不开启（全部章节设为公开）或选一个付费档位。
 // 保存：选档位 → 修改合集的 plan_id / price；不开启 → 档位清零，并把全部章节批量设为公开。
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
@@ -53,6 +53,8 @@ const props = defineProps<{
   bookId: string | number;
   /** 合集当前价格（美分原始值），用于回显选中档位；空 = 未开启 */
   currentPrice?: string | number;
+  /** 合集当前档位 id（修改价格时作为 old_plan_id 传给后端；空 = 未开启） */
+  currentPlanId?: string | number;
 }>();
 
 const emit = defineEmits<{
@@ -66,18 +68,38 @@ const selectedId = ref<string>(OFF);
 const saving = ref(false);
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 
-watch(() => props.visible, async (v) => {
-  if (!v) return;
+// 档位列表是否已经拿到：没拿到之前不渲染选项，避免先闪一下「不开启」再跳到当前档位
+const plansReady = ref(false);
+
+// 回显：优先按档位 id 匹配，退回按价格匹配
+function syncSelected() {
+  const curId = props.currentPlanId;
+  const cur = props.currentPrice;
+  const hit = (curId !== undefined && curId !== null && String(curId) !== '' && String(curId) !== '0'
+      ? plans.value.find(pl => planKey(pl) === String(curId))
+      : undefined)
+    || (cur !== undefined && cur !== null && cur !== ''
+      ? plans.value.find(pl => String(pl.price) === String(cur))
+      : undefined);
+  selectedId.value = hit ? planKey(hit) : OFF;
+}
+
+async function loadPlans() {
   try {
     plans.value = await fetchBookRechargePlans();
   } catch {
     plans.value = [];
   }
-  const cur = props.currentPrice;
-  const hit = cur !== undefined && cur !== null && cur !== ''
-    ? plans.value.find(pl => String(pl.price) === String(cur))
-    : undefined;
-  selectedId.value = hit ? planKey(hit) : OFF;
+  plansReady.value = true;
+}
+
+// 组件挂载时就把档位预加载好（fetch 内部有缓存），打开弹窗时能同步回显
+onMounted(loadPlans);
+
+watch(() => props.visible, async (v) => {
+  if (!v) return;
+  if (!plansReady.value) await loadPlans();
+  syncSelected();
 });
 
 function handleClose() {
@@ -92,9 +114,9 @@ async function handleSave() {
     const plan = plans.value.find(pl => planKey(pl) === selectedId.value) || null;
     const res = await api.modifyCollection({
       book_id: props.bookId,
-      // 不开启付费：plan_id 传 0 清掉档位
-      plan_id: plan ? planKey(plan) : 0,
-      price: plan ? plan.price : 0,
+      // 改价格只传新旧档位 id：old_plan_id = 合集当前档位（没设过传 0），new_plan_id = 选中的档位（不开启传 0）
+      old_plan_id: props.currentPlanId ? String(props.currentPlanId) : 0,
+      new_plan_id: plan ? planKey(plan) : 0,
     }) as any;
     if (!(res.code == 0 || res.code == 200)) {
       toast(apiErrorMessage(res) || t('fail'));

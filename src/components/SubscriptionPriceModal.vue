@@ -3,7 +3,7 @@
     <div class="sub-price-modal">
       <button class="close-btn" @click="onCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
-      <div class="modal-title">{{ t("user.subscription.title") }}</div>
+      <div class="modal-title">{{ t("user.subscription.title") }}<span class="modal-subtitle">{{ t("user.subscription.modalSubtitle") }}</span></div>
 
       <div class="modal-body">
         <div class="section">
@@ -26,19 +26,6 @@
             </div>
           </div>
         </div>
-        <div class="section">
-          <div class="label">
-            {{ t("user.subscription.benefitsLabel") }}
-            <span class="count">{{ benefits.length }}/500</span>
-          </div>
-          <textarea
-            class="textarea"
-            v-model="benefits"
-            :maxlength="500"
-            spellcheck="false"
-            :placeholder="t('user.subscription.benefitsText')"
-          ></textarea>
-        </div>
       </div>
 
       <div class="actions">
@@ -50,7 +37,7 @@
 </template>
 
 <script setup lang="ts" name="SubscriptionPriceModal">
-// 发布页「订阅用户可见」未设置订阅价格时弹出，直接在弹窗里设置价格和权益说明。
+// 发布页「订阅用户可见」未设置订阅价格时弹出（点「价格设置」也会打开），在弹窗里选订阅价格。
 // 只有「没设置过价格」才会打开，所以不请求 post/getSubscriptionPlan 回显：
 // 价格默认选第一个档位；关闭订阅后 plan 为空、拿不到以前的说明，权益说明直接从空开始。
 // 保存后不跳页，emit('saved', planId) 交给发布页处理（关闭弹窗、自动选中订阅用户可见）。
@@ -75,7 +62,6 @@ const emit = defineEmits<{
 
 const priceOptions = ref<any[]>([]);
 const selectedId = ref<string>("");
-const benefits = ref("");
 const loading = ref(false);
 const plansLoaded = ref(false);
 const saving = ref(false);
@@ -121,12 +107,11 @@ onMounted(() => {
   loadPlans(false);
 });
 
-// 每次打开：默认选中第一个档位，权益说明清空
+// 每次打开：默认选中第一个档位
 watch(
   () => props.visible,
   (val) => {
     if (!val) return;
-    benefits.value = "";
     selectedId.value = priceOptions.value[0]?.plan_id || "";
     if (!plansLoaded.value) loadPlans(true);
   }
@@ -142,7 +127,8 @@ async function onSave() {
   saving.value = true;
   try {
     // 打开弹窗说明当前没有生效的价格，所以始终连同档位一起提交
-    const res = await api.modifySubscription({ plan_id: selectedId.value, description: benefits.value });
+    // 弹窗里不再填权益说明，提交默认文案
+    const res = await api.modifySubscription({ plan_id: selectedId.value, description: t("user.subscription.benefitsText") });
     const data = res as any;
     if (data.code === 200 || data.code === 0) {
       toast(t("success"));
@@ -215,8 +201,12 @@ async function onSave() {
   color: #f5f5f5;
 }
 
-.section + .section {
-  margin-top: 24px;
+.modal-subtitle {
+  margin-left: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f5f5;
+  opacity: 0.6;
 }
 
 .label {
@@ -272,35 +262,12 @@ async function onSave() {
   }
 }
 
-.textarea {
-  width: 100%;
-  height: 140px;
-  margin-top: 16px;
-  padding: 18px 16px;
-  box-sizing: border-box;
-  font-family: inherit;
-  outline: none;
-  resize: none;
-  border: 1px solid #3d3d3d;
-  border-radius: 14px;
-  background: #111;
-  color: #f5f5f5;
-
-  &:focus {
-    border-color: #ff4f9a;
-    box-shadow: 0 0 0 2px rgba(255, 79, 154, 0.25);
-  }
-  &::placeholder {
-    color: #f5f5f5;
-    opacity: 0.4;
-  }
-}
 
 .actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  gap: 24px; // 和其他弹窗（DramaPriceModal / BatchPermissionModal）的按钮间距一致
 }
 
 .btn {
@@ -349,9 +316,6 @@ async function onSave() {
   }
   .price-options {
     gap: 12px;
-  }
-  .textarea {
-    height: 120px;
   }
   .actions {
     gap: 8px;

@@ -1997,6 +1997,33 @@
     }
   }
 
+  // 下方空间不够时翻到图标上方：小箭头也跟着翻到底部
+  .info-tooltip.tooltip-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 10px;
+
+    &::before {
+      top: auto;
+      bottom: -8px;
+      border-bottom: none;
+      border-top: 8px solid #3d3d3d;
+    }
+    &::after {
+      top: auto;
+      bottom: -5px;
+      border-bottom: none;
+      border-top: 7px solid #1a1a1a;
+    }
+  }
+
+  // fixed 定位时 top 由 JS 算好，不再用 bottom: 100%
+  .info-tooltip.tooltip-above.tooltip-fixed {
+    bottom: auto;
+    margin-bottom: 0;
+  }
+
   .mention-dropdown {
     position: fixed;
     width: 480px;
@@ -2358,6 +2385,19 @@
   // 批量设置是块级布局，没有 gap，档位列表和上面的选项之间自己留间距
   .batch-perm-settings .plan-list {
     margin-top: 16px;
+  }
+
+  // 批量设置档位列表右侧的「收益分成80% ⓘ」
+  .batch-perm-settings .plan-list .plan-revenue {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ff4f9a;
+    cursor: pointer;
+    white-space: nowrap;
   }
 
   .revenue-info-icon {

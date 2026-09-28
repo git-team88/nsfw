@@ -405,6 +405,8 @@
                   <span>{{ planLabel(plan) }}</span>
                 </div>
               </div>
+              <!-- 右侧：收益分成说明，点图标弹说明弹窗 -->
+              <span class="plan-revenue" @click.stop="showRevenueInfo = true">{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
             </div>
           </div>
         </div>
@@ -864,6 +866,7 @@ import {
   planPriceText,
   planPriceOf,
   planCurrencyOf,
+  planIdOf,
   type BookRechargePlan,
 } from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
@@ -898,9 +901,10 @@ function adjustTooltipPosition(event: MouseEvent) {
   const infoIcon = event.currentTarget as HTMLElement;
   const tooltip = infoIcon.querySelector('.info-tooltip') as HTMLElement;
   if (tooltip) {
-    tooltip.classList.remove('tooltip-align-left', 'tooltip-fixed');
+    tooltip.classList.remove('tooltip-align-left', 'tooltip-fixed', 'tooltip-above');
     tooltip.style.position = '';
     tooltip.style.top = '';
+    tooltip.style.bottom = '';
     tooltip.style.left = '';
     tooltip.style.right = '';
     tooltip.style.marginTop = '';
@@ -914,6 +918,14 @@ function adjustTooltipPosition(event: MouseEvent) {
     const wouldOverflowLeft = infoIconRect.right - tooltipWidth < margin;
     const wouldOverflowRight = infoIconRect.left + tooltipWidth > windowWidth - margin;
 
+    // 下方放不下（且上方放得下）就翻到图标上方显示
+    const tooltipHeight = tooltip.offsetHeight || 0;
+    const spaceBelow = window.innerHeight - infoIconRect.bottom;
+    const showAbove = tooltipHeight > 0
+      && spaceBelow < tooltipHeight + margin + 10
+      && infoIconRect.top > tooltipHeight + margin + 10;
+    if (showAbove) tooltip.classList.add('tooltip-above');
+
     if (!wouldOverflowLeft) return;
 
     if (!wouldOverflowRight) {
@@ -923,7 +935,9 @@ function adjustTooltipPosition(event: MouseEvent) {
 
     tooltip.classList.add('tooltip-align-left', 'tooltip-fixed');
     tooltip.style.position = 'fixed';
-    tooltip.style.top = `${infoIconRect.bottom + 10}px`;
+    tooltip.style.top = showAbove
+      ? `${infoIconRect.top - tooltipHeight - 10}px`
+      : `${infoIconRect.bottom + 10}px`;
     tooltip.style.left = `${margin}px`;
     tooltip.style.right = 'auto';
     tooltip.style.marginTop = '0';
@@ -1157,7 +1171,7 @@ const projectDetailsCache = ref<Record<string, any>>({});
 const previewProject = ref<any>(null);
 
 // Collection
-const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string } | null>(null);
+const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string; plan_id?: string } | null>(null);
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
 // 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
@@ -1180,10 +1194,12 @@ async function loadBookPlans() {
 function syncSelectedPlanFromCollection() {
   const plans = bookPlans.value;
   if (!plans.length) return;
+  const curId = selectedCollection.value?.plan_id;
   const price = selectedCollection.value?.price;
-  const hit = price !== undefined && price !== null && price !== ''
-    ? plans.find(pl => String(pl.price) === String(price))
-    : undefined;
+  const hit = (curId && curId !== '0' ? plans.find(pl => planKey(pl) === curId) : undefined)
+    || (price !== undefined && price !== null && price !== ''
+      ? plans.find(pl => String(pl.price) === String(price))
+      : undefined);
   selectedPlanId.value = planKey(hit || plans[0]);
 }
 watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection());
@@ -1195,14 +1211,15 @@ async function syncCollectionPlan(permission: string) {
   if (permission !== 'partial' || !selectedCollection.value?.id) return;
   const plan = bookPlans.value.find(pl => planKey(pl) === selectedPlanId.value);
   if (!plan) return;
-  // 每次发布都把选中的 plan_id 写到合集上（不按价格是否变化跳过）
+  // 每次发布都把选中的档位写到合集上：old_plan_id = 合集当前档位（没设过传 0），new_plan_id = 选中的档位
   try {
     const res = await api.modifyCollection({
       book_id: selectedCollection.value.id,
-      plan_id: planKey(plan),
-      price: plan.price,
+      old_plan_id: selectedCollection.value.plan_id || 0,
+      new_plan_id: planKey(plan),
     }) as any;
     if (res.code == 0 || res.code == 200) {
+      selectedCollection.value.plan_id = planKey(plan);
       selectedCollection.value.price = plan.price;
       selectedCollection.value.currency = plan.currency || selectedCollection.value.currency;
     } else {
@@ -1477,7 +1494,8 @@ async function handlePublishFromSelection() {
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
                 price: '',
-                currency: ''
+                currency: '',
+                plan_id: ''
               };
               selectedEpisodeNumber.value = '1';
               isNoCollection.value = false;
@@ -1497,7 +1515,8 @@ async function handlePublishFromSelection() {
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
                 language: searchRes.data?.book_info?.language || collectionLanguage.value,
                 price: planPriceOf(searchRes.data),
-                currency: planCurrencyOf(searchRes.data)
+                currency: planCurrencyOf(searchRes.data),
+                plan_id: planIdOf(searchRes.data)
               };
               isNoCollection.value = false;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -1991,7 +2010,8 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       language: collection.language || collectionLanguage.value,
       // 价格读接口新下发的 plan，没有再退回老的顶层 price
       price: planPriceOf(collection),
-      currency: planCurrencyOf(collection)
+      currency: planCurrencyOf(collection),
+      plan_id: planIdOf(collection)
     };
 
     coverPreview.value = collection.cover || '';
@@ -2155,7 +2175,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       description: collection.description,
       is_nsfw: collection.is_nsfw ?? 0,
       language: collection.language || collectionLanguage.value,
-      price: ''
+      price: '',
+      plan_id: ''
     };
 
     if (collection.is_nsfw == 1) {
@@ -2588,7 +2609,8 @@ async function handlePublish(publishData?: any) {
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,
               price: '',
-              currency: ''
+              currency: '',
+              plan_id: ''
             };
             selectedEpisodeNumber.value = '1';
             isNoCollection.value = false;
@@ -2609,7 +2631,8 @@ async function handlePublish(publishData?: any) {
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
               language: searchRes.data?.book_info?.language || collectionLanguage.value,
               price: planPriceOf(searchRes.data),
-              currency: planCurrencyOf(searchRes.data)
+              currency: planCurrencyOf(searchRes.data),
+              plan_id: planIdOf(searchRes.data)
             };
             selectedEpisodeNumber.value = episodeNumber.toString();
             isNoCollection.value = false;
@@ -3125,6 +3148,7 @@ async function getPostDetails() {
           // 详情接口也下发了合集的收费档，编辑态一样要把价格显示出来
           price: planPriceOf(data.data?.plan ? data.data : postData),
           currency: planCurrencyOf(data.data?.plan ? data.data : postData),
+          plan_id: planIdOf(data.data?.plan ? data.data : postData),
           // 敏感开关的状态取合集自己的 is_nsfw，不然编辑态永远显示关
           is_nsfw: data.data?.book_info?.is_nsfw ?? 0,
           language: data.data?.book_info?.language || collectionLanguage.value,
@@ -4234,7 +4258,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
                 language: collectionLanguage.value,
                 price: '',
-                currency: ''
+                currency: '',
+                plan_id: ''
               };
               selectedCollectionId.value = createRes.data.book_id;
               selectedEpisodeNumber.value = '1';
@@ -4255,7 +4280,8 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
                 is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
                 language: searchRes.data?.book_info?.language || collectionLanguage.value,
                 price: planPriceOf(searchRes.data),
-                currency: planCurrencyOf(searchRes.data)
+                currency: planCurrencyOf(searchRes.data),
+                plan_id: planIdOf(searchRes.data)
               };
               selectedCollectionId.value = book_id;
               selectedEpisodeNumber.value = episodeNumber.toString();
@@ -4458,7 +4484,8 @@ async function initBatchPublish(session_id: string) {
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,
               price: '',
-              currency: ''
+              currency: '',
+              plan_id: ''
             };
             selectedCollectionId.value = createRes.data.book_id;
             selectedEpisodeNumber.value = '1';
@@ -4479,7 +4506,8 @@ async function initBatchPublish(session_id: string) {
               is_nsfw: searchRes.data?.book_info?.is_nsfw ?? 0,
               language: searchRes.data?.book_info?.language || collectionLanguage.value,
               price: planPriceOf(searchRes.data),
-              currency: planCurrencyOf(searchRes.data)
+              currency: planCurrencyOf(searchRes.data),
+              plan_id: planIdOf(searchRes.data)
             };
             selectedCollectionId.value = book_id;
             selectedEpisodeNumber.value = episodeNumber.toString();

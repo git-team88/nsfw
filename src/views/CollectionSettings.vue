@@ -114,6 +114,7 @@
       :visible="showPriceModal"
       :book-id="collection.id"
       :current-price="collection.price"
+      :current-plan-id="collection.plan_id"
       @close="showPriceModal = false"
       @saved="onPriceSaved"
     />
@@ -122,6 +123,7 @@
       :visible="showBatchPermission"
       :collection-type="collection.type"
       :current-price="collection.price"
+      :current-plan-id="collection.plan_id"
       :chapters="batchChapters"
       @close="showBatchPermission = false"
       @confirm="confirmBatchPermission"
@@ -137,7 +139,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import api from '@/api/index';
-import { planPriceText, type BookRechargePlan } from '@/util/bookRechargePlan';
+import { planPriceText, planIdOf, type BookRechargePlan } from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
@@ -175,6 +177,8 @@ const collection = ref({
   is_nsfw: '0',
   price: '' as string | number,
   currency: '',
+  /** 当前档位 id（修改价格时作为 old_plan_id）；空 = 未开启 */
+  plan_id: '',
   /** 按 access_rights 分组的章节数：1 公开 / 2 订阅可见 / 3 仅自己可见 */
   group: [] as { access_rights: string | number; num: string | number }[],
   chatpers: [] as any[]
@@ -247,6 +251,7 @@ onMounted(async () => {
           // 没设档位就留空，价格那一行不渲染
           price: plan.price ?? '',
           currency: plan.currency || '',
+          plan_id: planIdOf({ plan: data.plan, plan_id: bookInfo.plan_id }),
           group: Array.isArray(data.group) ? data.group : [],
           chatpers: data.chatpers || [],
         };
@@ -379,6 +384,7 @@ async function onPriceSaved() {
       const plan = (detailData.plan && !Array.isArray(detailData.plan) ? detailData.plan : {}) as any;
       collection.value.price = plan.price ?? '';
       collection.value.currency = plan.currency || '';
+      collection.value.plan_id = planIdOf({ plan: detailData.plan, plan_id: bookInfo.plan_id });
       collection.value.group = Array.isArray(detailData.group) ? detailData.group : [];
       collection.value.chatpers = detailData.chatpers || [];
       collection.value.chapter_count = bookInfo.chapter_count || '';
@@ -392,12 +398,13 @@ async function onPriceSaved() {
 async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan) {
   showBatchPermission.value = false;
   try {
-    // 漫剧合集选了「从第 N 集起付费」并带了档位：先把档位写到合集上，价格没变就不用调
-    if (plan && String(collection.value.price ?? '') !== String(plan.price)) {
+    // 漫剧合集选了「从第 N 集起付费」并带了档位：先把档位写到合集上（传新旧档位 id），档位没变就不用调
+    const newPlanId = plan ? String(plan.plan_id ?? plan.id ?? '') : '';
+    if (plan && String(collection.value.plan_id || '') !== newPlanId) {
       const planRes = await api.modifyCollection({
         book_id: collection.value.id,
-        plan_id: String(plan.plan_id ?? plan.id ?? ''),
-        price: plan.price,
+        old_plan_id: collection.value.plan_id || 0,
+        new_plan_id: newPlanId,
       }) as any;
       if (!(planRes.code == 0 || planRes.code == 200)) {
         toast(apiErrorMessage(planRes) || t('fail'));

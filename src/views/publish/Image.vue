@@ -204,24 +204,6 @@
           @change="onReuploadPicked"
         />
 
-        <!-- Permission -->
-        <div class="inline-perm-row">
-          <div class="perm-group">
-            <span class="perm-label">{{ t('submit.permission') }}</span>
-            <div class="perm-options">
-              <div
-                class="perm-option"
-                :class="{ active: form.permission === opt.key }"
-                v-for="opt in permOptions"
-                :key="opt.key"
-                @click="handlePermissionChange(opt.key)"
-              >
-                <img :src="form.permission === opt.key ? selectActive : select" alt="" />
-                <span>{{ t(opt.labelKey) }}<span v-if="opt.key == 'partial'" style="font-weight: 400">{{ t("submit.imgtip") }}</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Publish Form -->
@@ -300,11 +282,22 @@
             </div>
           </div>
         </div>
+      </div>
 
+      <!-- 敏感内容 / 语言 / 可见范围：单独一个带边框的块，放在标题和描述下面 -->
+      <div class="form-section meta-section" v-if="showFullContent">
         <!-- Content Settings -->
         <div class="inline-perm-row" v-if="contentSwitch.showSensitiveToggle">
           <div class="perm-group">
             <span class="perm-label">{{ t('submit.contentSettings') }}</span>
+            <div class="info-icon" @mouseover="adjustTooltipPosition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <div class="info-tooltip">
+                <div class="tooltip-content">
+                  <div v-html="t('submit.sensitiveContent')"></div>
+                </div>
+              </div>
+            </div>
             <div class="perm-options">
               <div
                 class="perm-option"
@@ -341,6 +334,33 @@
             </div>
           </div>
         </div>
+
+        <!-- Permission -->
+        <div class="inline-perm-row">
+          <div class="perm-group">
+            <span class="perm-label">{{ t('submit.permission') }}</span>
+            <div class="info-icon" @mouseover="adjustTooltipPosition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <div class="info-tooltip">
+                <div class="tooltip-content">
+                  <div v-html="t('submit.permissionInfo')"></div>
+                </div>
+              </div>
+            </div>
+            <div class="perm-options">
+              <div
+                class="perm-option"
+                :class="{ active: form.permission === opt.key }"
+                v-for="opt in permOptions"
+                :key="opt.key"
+                @click="handlePermissionChange(opt.key)"
+              >
+                <img :src="form.permission === opt.key ? selectActive : select" alt="" />
+                <span>{{ t(opt.labelKey) }}<span v-if="opt.key == 'partial'" style="font-weight: 500">{{ t("submit.imgtip") }}</span></span><template v-if="opt.key == 'partial'"><span class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>）</span><span class="price-setting-link" @click.stop="openPriceSetting">{{ t('submit.priceSetting') }}</span></template>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Publish Button -->
@@ -373,6 +393,7 @@
       @cancel="closeSubscriptionModal"
       @saved="onSubscriptionSaved"
     />
+    <TextInfoModal :visible="showRevenueInfo" :text="t('user.subscription.tip')" @close="showRevenueInfo = false" />
 
     <!-- Community Convention Modal -->
     <CommunityConventionModal
@@ -399,6 +420,7 @@ import Header from "@/components/Header.vue";
 import Pagination from "@/components/Pagination.vue";
 import MediaPreviewModal from "@/components/MediaPreviewModal.vue";
 import SubscriptionPriceModal from "@/components/SubscriptionPriceModal.vue";
+import TextInfoModal from "@/components/TextInfoModal.vue";
 import CommunityConventionModal from "@/components/CommunityConventionModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
@@ -430,10 +452,62 @@ const TITLE_MAX = 60;
 const DESC_MAX = 4000;
 const pageSize = 15;
 
+// 说明图标的气泡：靠边时自动换到左对齐 / fixed 定位（和漫画发布页一致）
+function adjustTooltipPosition(event: MouseEvent) {
+  const infoIcon = event.currentTarget as HTMLElement;
+  const tooltip = infoIcon.querySelector('.info-tooltip') as HTMLElement;
+  if (tooltip) {
+    tooltip.classList.remove('tooltip-align-left', 'tooltip-fixed', 'tooltip-above');
+    tooltip.style.position = '';
+    tooltip.style.top = '';
+    tooltip.style.bottom = '';
+    tooltip.style.left = '';
+    tooltip.style.right = '';
+    tooltip.style.marginTop = '';
+    tooltip.style.removeProperty('--arrow-left');
+
+    const infoIconRect = infoIcon.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const tooltipWidth = 280;
+    const margin = 10;
+
+    const wouldOverflowLeft = infoIconRect.right - tooltipWidth < margin;
+    const wouldOverflowRight = infoIconRect.left + tooltipWidth > windowWidth - margin;
+
+    // 下方放不下（且上方放得下）就翻到图标上方显示
+    const tooltipHeight = tooltip.offsetHeight || 0;
+    const spaceBelow = window.innerHeight - infoIconRect.bottom;
+    const showAbove = tooltipHeight > 0
+      && spaceBelow < tooltipHeight + margin + 10
+      && infoIconRect.top > tooltipHeight + margin + 10;
+    if (showAbove) tooltip.classList.add('tooltip-above');
+
+    if (!wouldOverflowLeft) return;
+
+    if (!wouldOverflowRight) {
+      tooltip.classList.add('tooltip-align-left');
+      return;
+    }
+
+    tooltip.classList.add('tooltip-align-left', 'tooltip-fixed');
+    tooltip.style.position = 'fixed';
+    tooltip.style.top = showAbove
+      ? `${infoIconRect.top - tooltipHeight - 10}px`
+      : `${infoIconRect.bottom + 10}px`;
+    tooltip.style.left = `${margin}px`;
+    tooltip.style.right = 'auto';
+    tooltip.style.marginTop = '0';
+
+    const iconCenterX = infoIconRect.left + infoIconRect.width / 2;
+    const arrowOffset = iconCenterX - margin;
+    tooltip.style.setProperty('--arrow-left', `${Math.max(8, Math.min(arrowOffset, tooltipWidth - 20))}px`);
+  }
+}
+
 const permOptions = [
   { key: "public", labelKey: "submit.permPublic" },
   { key: "partial", labelKey: "submit.permPartial" },
-  { key: "private", labelKey: "submit.permPrivate" },
+  // 已去掉「仅自己可见」
 ];
 
 const contentOptions = [
@@ -510,6 +584,13 @@ const hasActiveSubscription = ref(false);
 const showSubscriptionModal = ref(false);
 // 未设置订阅价格时点了「订阅用户可见」，先记下这次操作，弹窗里保存成功后再补执行（自动选中）
 let pendingSubscriptionAction: (() => void) | null = null;
+// 「收益分成80%」说明弹窗
+const showRevenueInfo = ref(false);
+// 点「价格设置」：直接打开订阅价格弹窗改价格（不带待执行的选择）
+function openPriceSetting() {
+  pendingSubscriptionAction = null;
+  showSubscriptionModal.value = true;
+}
 const agreeTerms = ref(true);
 const showConventionModal = ref(false);
 
@@ -2175,5 +2256,32 @@ watch(locale, () => {
 
 <style lang="scss" scoped>
 @use '@/scss/Image.scss';
+/* 可见范围：「订阅用户可见」后的收益分成说明 + 价格设置入口 */
+/* 页面里 .perm-option span 的选择器更具体，这里用 !important 压过它：收益分成用正文色（不淡化），价格设置用主题色 */
+.submit-image .perm-option .revenue-hint {
+  color: #f5f5f5 !important;
+  font-weight: 700;
+  opacity: 0.75 !important;
+}
+.submit-image .perm-option .price-setting-link {
+  color: #ff4f9a !important;
+  font-weight: 700;
+  opacity: 1 !important;
+}
+.submit-image .perm-option .price-setting-link {
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* 收益分成后面的说明图标：颜色跟文字一样（currentColor），点击弹说明弹窗 */
+.submit-image .perm-option .revenue-hint {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.submit-image .perm-option .revenue-hint .revenue-info-icon {
+  margin-left: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 </style>
 

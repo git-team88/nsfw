@@ -92,6 +92,8 @@ const props = defineProps<{
   collectionType: string;
   /** 合集当前的单部价格（漫剧），用来回显默认选中的档位 */
   currentPrice?: string | number;
+  /** 合集当前档位 id，优先用它回显 */
+  currentPlanId?: string | number;
   chapters: Array<{
     id: string | number;
     title: string;
@@ -128,7 +130,11 @@ const selectedPlan = computed(() => plans.value.find((pl) => planKey(pl) === sel
 // 默认选中：合集已设的档位（按价格匹配），没有就第一档
 function syncSelectedPlan() {
   if (!plans.value.length) return;
-  const hit = findPlanByPrice(plans.value, props.currentPrice);
+  const curId = props.currentPlanId;
+  const byId = curId !== undefined && curId !== null && String(curId) !== '' && String(curId) !== '0'
+    ? plans.value.find((pl) => planKey(pl) === String(curId))
+    : undefined;
+  const hit = byId || findPlanByPrice(plans.value, props.currentPrice);
   selectedPlanId.value = planKey(hit || plans.value[0]);
 }
 

@@ -773,6 +773,33 @@
     }
   }
 
+  // 下方空间不够时翻到图标上方：小箭头也跟着翻到底部
+  .info-tooltip.tooltip-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 10px;
+
+    &::before {
+      top: auto;
+      bottom: -8px;
+      border-bottom: none;
+      border-top: 8px solid #3d3d3d;
+    }
+    &::after {
+      top: auto;
+      bottom: -5px;
+      border-bottom: none;
+      border-top: 7px solid #1a1a1a;
+    }
+  }
+
+  // fixed 定位时 top 由 JS 算好，不再用 bottom: 100%
+  .info-tooltip.tooltip-above.tooltip-fixed {
+    bottom: auto;
+    margin-bottom: 0;
+  }
+
   .collection-section {
     margin-bottom: 30px;
     padding: 20px 18px;
