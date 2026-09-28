@@ -2709,6 +2709,7 @@ export default {
     modifyPrice: "แก้ไขราคา",
     priceModalTitle: "ตั้งค่าอนิเมะดราม่าแบบชำระเงิน",
     priceOff: "ปิด (ตั้งทุกตอนเป็นสาธารณะ)",
+    priceOffShort: "ปิด",
     notFound: "ไม่พบคอลเลกชันนี้",
     back: "ย้อนกลับ",
     title: "ข้อมูลพื้นฐาน",

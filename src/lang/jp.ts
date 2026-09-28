@@ -3299,6 +3299,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     modifyPrice: "価格を変更",
     priceModalTitle: "アニメドラマ有料設定",
     priceOff: "無効（全話を公開に設定）",
+    priceOffShort: "無効",
     notFound: "コレクションが見つかりません",
     back: "戻る",
     title: "基本情報",

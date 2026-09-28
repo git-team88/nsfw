@@ -63,7 +63,7 @@
           <div class="section-label">{{ isEpisode ? t('collectionSettings.batchPermPreviewEpisode') : t('collectionSettings.batchPermPreview') }}</div>
           <div class="chapter-list">
             <div class="chapter-item" v-for="chapter in chapters" :key="chapter.id">
-              <span class="chapter-index">{{ isEpisode ? t('recordList.video.episode', { episode: chapter.index }) : t('chapter', { chapter: chapter.index }) }}</span>
+              <span class="chapter-index">{{ isEpisode ? t('submit.video.episode', { episode: chapter.index }) : t('chapter', { chapter: chapter.index }) }}</span>
               <span class="chapter-perm" :class="{ 'perm-partial': getAccessRightsPerm(chapter) == 'partial' }">{{ getAccessRightsText(chapter) }}</span>
             </div>
           </div>

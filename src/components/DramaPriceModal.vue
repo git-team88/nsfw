@@ -37,7 +37,7 @@
 
 <script setup lang="ts" name="DramaPriceModal">
 // 漫剧合集设置页「修改价格」弹窗：不开启（全部章节设为公开）或选一个付费档位。
-// 保存：选档位 → 修改合集的 plan_id / price；不开启 → 档位清零，并把全部章节批量设为公开。
+// 保存：只调修改合集接口传 old_plan_id / new_plan_id（不开启 → new_plan_id 传 0），章节权限由后端处理。
 import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
@@ -121,14 +121,6 @@ async function handleSave() {
     if (!(res.code == 0 || res.code == 200)) {
       toast(apiErrorMessage(res) || t('fail'));
       return;
-    }
-    if (!plan) {
-      // 不开启：全部章节设为公开
-      const r2 = await api.batchModifyPostAccessRights({ book_id: props.bookId, type: 1 }) as any;
-      if (!(r2.code == 0 || r2.code == 200)) {
-        toast(apiErrorMessage(r2) || t('fail'));
-        return;
-      }
     }
     toast(t('success'));
     emit('saved', { plan });
@@ -244,7 +236,7 @@ async function handleSave() {
     }
 
     span {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 700;
       color: #f5f5f5;
       line-height: 30px;
@@ -253,7 +245,7 @@ async function handleSave() {
     .perm-content{
       display: flex;
       align-items: center;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 700;
       color: #f5f5f5;
       line-height: 30px;

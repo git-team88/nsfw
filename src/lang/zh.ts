@@ -3347,6 +3347,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     modifyPrice: "修改价格",
     priceModalTitle: "漫剧单部付费设置",
     priceOff: "不开启（全部章节设为公开）",
+    priceOffShort: "不开启",
     notFound: "合集不存在",
     back: "返回",
     title: "基本信息",

@@ -3238,6 +3238,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     modifyPrice: "Change price",
     priceModalTitle: "Drama paid access",
     priceOff: "Off (all episodes public)",
+    priceOffShort: "Off",
     notFound: "Collection not found",
     back: "Back",
     title: "Basic Info",

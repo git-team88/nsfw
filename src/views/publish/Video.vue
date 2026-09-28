@@ -1293,17 +1293,18 @@ const showConventionModal = ref(false);
 const PAID_DRAMA_PROMPT_COUNT = 10;
 const paidDramaCount = ref(0);
 const showSubscribePrompt = ref(false);
-let subscribePromptShown = false;   // 一次页面内只弹一次
 const showRevenueInfo = ref(false);
+// 只要还没开通订阅且付费漫剧已满 10 部，每次点「付费用户可见」都弹；保存成功后 hasActiveSubscription 变 true 就不再弹
 function maybePromptSubscription(permission: string) {
-  if (permission !== 'partial' || subscribePromptShown) return;
+  if (permission !== 'partial') return;
   if (hasActiveSubscription.value || paidDramaCount.value < PAID_DRAMA_PROMPT_COUNT) return;
-  subscribePromptShown = true;
   showSubscribePrompt.value = true;
 }
+// 弹窗里已调 modifySubscription 设好订阅价格；这里先按已开通处理，再重新拉一次订阅状态以服务端为准
 function onSubscribePromptSaved() {
   showSubscribePrompt.value = false;
   hasActiveSubscription.value = true;
+  checkSubscriptionStatus();
 }
 
 // Computed
@@ -2682,8 +2683,6 @@ async function checkSubscriptionStatus(notifyError = false): Promise<'active' | 
     if (data.code === 0) {
       const subscription = data.data;
       hasActiveSubscription.value = !!(subscription && subscription.plan && parseFloat(subscription.plan.price) > 0);
-      // 已发布的单部付费漫剧数量（字段名待后端确认）
-      paidDramaCount.value = Number(subscription?.paid_drama_count ?? 0) || 0;
       return hasActiveSubscription.value ? 'active' : 'inactive';
     }
     if (notifyError) toast(apiErrorMessage(data));
@@ -2737,6 +2736,8 @@ function cancelLeave() {
 function handleUserInfoLoaded(userInfo: any) {
   if (userInfo) {
     isAdult.value = userInfo.is_adult == 1;
+    // 已发布的单部付费漫剧数量：个人信息接口的 priced_book_count（兼容放在 info 里的情况）
+    paidDramaCount.value = Number(userInfo.priced_book_count ?? userInfo.info?.priced_book_count ?? 0) || 0;
   }
 }
 

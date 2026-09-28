@@ -48,7 +48,7 @@
               <span class="info-label">{{ t('collectionSettings.paidSetting') }}：</span>
               <span class="info-value price-value">
                 <template v-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
-                <template v-else>{{ t('collectionSettings.priceOff') }}</template>
+                <template v-else>{{ t('collectionSettings.priceOffShort') }}</template>
                 <button class="btn btn-modify-price" v-if="collection.status != '2'" @click="showPriceModal = true">{{ t('collectionSettings.modifyPrice') }}</button>
                 <span class="chapter-access" v-if="chapterAccessText">{{ chapterAccessText }}</span>
               </span>

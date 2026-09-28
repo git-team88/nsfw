@@ -628,7 +628,7 @@
                 <img :src="form.permission === opt.key ? selectActive : select" alt="" />
                 <span>{{ t(opt.labelKey) }}
                   <b v-if="opt.key == 'partial'"> {{ t("submit.articleTip") }}</b>
-                </span><template v-if="opt.key == 'partial'"><span class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>）</span><span class="price-setting-link" @click.stop="openPriceSetting">{{ t('submit.priceSetting') }}</span></template>
+                </span><template v-if="opt.key == 'partial'"><span class="revenue-hint">（{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" @click.stop="showRevenueInfo = true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）</span><span class="price-setting-link" @click.stop="openPriceSetting">{{ t('submit.priceSetting') }}</span></template>
               </div>
             </div>
           </div>
@@ -1578,7 +1578,7 @@ watch(batchCollectionChapterList, (list) => {
 const batchPermOptions = [
   { key: 'public', labelKey: 'submit.permPublic' },
   { key: 'partial', labelKey: 'submit.permPartial' },
-  { key: 'private', labelKey: 'submit.permPrivate' },
+  // 批量发布已去掉「仅自己可见」
 ];
 
 async function handleBatchPermissionChange(permission: string, _index: number) {

@@ -2709,6 +2709,7 @@ export default {
     modifyPrice: "가격 변경",
     priceModalTitle: "애니 드라마 유료 설정",
     priceOff: "사용 안 함(전체 화 공개)",
+    priceOffShort: "사용 안 함",
     notFound: "컬렉션이 존재하지 않습니다",
     back: "돌아가기",
     title: "기본 정보",

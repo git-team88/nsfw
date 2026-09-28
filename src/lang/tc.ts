@@ -3331,6 +3331,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     modifyPrice: "修改價格",
     priceModalTitle: "漫劇單部付費設置",
     priceOff: "不開啟（全部章節設為公開）",
+    priceOffShort: "不開啟",
     notFound: "合集不存在",
     back: "返回",
     title: "基本信息",
