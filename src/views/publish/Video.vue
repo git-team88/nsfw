@@ -1714,9 +1714,6 @@ async function onBatchPublish() {
     return;
   }
 
-  // 先把「付费用户可见」下选的档位同步到合集，再逐集发布
-  await syncCollectionPlan(batchPermission.value);
-
   batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
     chapter,
     status: 'waiting' as const
@@ -1818,6 +1815,10 @@ async function runBatchPublishLoop() {
     }
   }
 
+  // 至少有一集发布成功后，再把「付费用户可见」下选的档位同步到合集
+  if (batchPublishChapterStatuses.value.some(item => item.status === 'success')) {
+    await syncCollectionPlan(batchPermission.value);
+  }
   handleBatchPublishComplete();
 }
 
@@ -4151,8 +4152,6 @@ async function onSubmit() {
     }
   }
 
-  // 先把「付费用户可见」下选的档位同步到合集，再发作品
-  await syncCollectionPlan(form.value.permission);
   isUpload.value = true;
 
   try {
@@ -4204,6 +4203,8 @@ async function onSubmit() {
     const res = JSON.parse(result);
 
     if (res.code === 0 || res.code === 200) {
+      // 作品发布成功后，再把「付费用户可见」下选的档位同步到合集
+      await syncCollectionPlan(form.value.permission);
       router.push(`/publish/success`);
     } else {
       toast(apiErrorMessage(res))
