@@ -4616,10 +4616,10 @@ const estimatedVideoPower = computed(() => {
   let costPerSecond = 0;
 
   if (videoLimitMode.value === 'fast') {
-    // 极速版有自己的每秒单价：480P / 768P 各一个字段
+    // 极速版有自己的每秒单价：480P / 768P 各一个字段（缺失按 0 算，最终兜底显示 1）
     costPerSecond = Number(selectedVideoQuality.value === '768P'
       ? balanceInfo.value.single_video_cost_768p_per_second_fast
-      : balanceInfo.value.single_video_cost_480p_per_second_fast);
+      : balanceInfo.value.single_video_cost_480p_per_second_fast) || 0;
   } else if (pricingQuality.value == '720P') {
     if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
@@ -6069,7 +6069,7 @@ const estimateVideoPowerForRecord = (userSelected: any): number => {
     // 极速版：按记录的分辨率取 480P / 768P 的极速版单价
     costPerSecond = Number(String(userSelected?.simple_video_resolution || '').includes('768')
       ? info.single_video_cost_768p_per_second_fast
-      : info.single_video_cost_480p_per_second_fast);
+      : info.single_video_cost_480p_per_second_fast) || 0;
   } else if (isNsfw) {
     costPerSecond = Number(quality === '1080P'
       ? info.single_video_cost_1080p_per_second_nsfw
