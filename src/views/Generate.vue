@@ -1121,9 +1121,7 @@ const selectedNsfwVersion = ref<string>(DEFAULT_VIDEO_VERSION);
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
 
-// 计价用的画质档。余额接口只有 720P / 1080P 两个每秒单价字段，极速版的 480P / 768P
-// 一律按 720P 的单价算 —— 否则两个分支都不命中，costPerSecond 恒为 0，算力永远显示 1。
-// 等后端下发 480p / 768p 单价后，把这里换成真实字段即可。
+// 计价用的画质档（非极速版）：按 720P / 1080P 两个每秒单价字段计价；极速版走 *_fast 字段，不经过这里。
 const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
 
 const refVideoMaxSeconds = computed(() => videoProfile.value.refVideoMaxSeconds);
@@ -4617,7 +4615,12 @@ const estimatedVideoPower = computed(() => {
   }
   let costPerSecond = 0;
 
-  if (pricingQuality.value == '720P') {
+  if (videoLimitMode.value === 'fast') {
+    // 极速版有自己的每秒单价：480P / 768P 各一个字段
+    costPerSecond = Number(selectedVideoQuality.value === '768P'
+      ? balanceInfo.value.single_video_cost_768p_per_second_fast
+      : balanceInfo.value.single_video_cost_480p_per_second_fast);
+  } else if (pricingQuality.value == '720P') {
     if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
@@ -6042,7 +6045,7 @@ const estimateVideoPowerForRecord = (userSelected: any): number => {
 
   const mode = userSelected?.simple_video_generate_mode || 'multi_modal_reference';
   const isNsfw = userSelected?.story_mode === 'nsfw';
-  // 余额接口只有 720P / 1080P 两个单价，极速版的 480P / 768P 一律按 720P 算（同 pricingQuality）
+  // 非极速版按 720P / 1080P 计价；极速版在下面单独按 480P / 768P 的 fast 单价算
   const quality = String(userSelected?.simple_video_resolution || '').includes('1080') ? '1080P' : '720P';
 
   const list = userSelected?.others?.list || [];
@@ -6062,7 +6065,12 @@ const estimateVideoPowerForRecord = (userSelected: any): number => {
   }
 
   let costPerSecond = 0;
-  if (isNsfw) {
+  if (userSelected?.video_nsfw_model_type === 'fast') {
+    // 极速版：按记录的分辨率取 480P / 768P 的极速版单价
+    costPerSecond = Number(String(userSelected?.simple_video_resolution || '').includes('768')
+      ? info.single_video_cost_768p_per_second_fast
+      : info.single_video_cost_480p_per_second_fast);
+  } else if (isNsfw) {
     costPerSecond = Number(quality === '1080P'
       ? info.single_video_cost_1080p_per_second_nsfw
       : info.single_video_cost_720p_per_second_nsfw);

@@ -3648,7 +3648,12 @@ const estimatedVideoComputingPower = computed(() => {
   }
   let costPerSecond = 0;
 
-  if (pricingQuality.value === '720P') {
+  if (videoLimitMode.value === 'fast') {
+    // 极速版有自己的每秒单价：480P / 768P 各一个字段
+    costPerSecond = Number(selectedVideoQuality.value === '768P'
+      ? balanceInfo.value.single_video_cost_768p_per_second_fast
+      : balanceInfo.value.single_video_cost_480p_per_second_fast);
+  } else if (pricingQuality.value === '720P') {
     if (effectiveVideoMode.value === 'unlimited') {
       costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
     } else {
