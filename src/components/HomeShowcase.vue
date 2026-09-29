@@ -143,7 +143,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
-import { apiErrorMessage } from '@/util/utils';
+import { apiErrorMessage, apiLang } from '@/util/utils';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
@@ -250,7 +250,7 @@ async function loadBooks() {
   await contentSwitch.ensureLoaded();
   await waitRegionReady();
   try {
-    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, locale.value === 'zh' ? 'cn' : locale.value, contentSwitch.showNsfw, contentSwitch.channel)) as any;
+    const bookRes = (await api.popularBookRank(1, 10, 'week', 0, apiLang(), contentSwitch.showNsfw, contentSwitch.channel)) as any;
     const list = ((bookRes.code === 0 || bookRes.code === 200) && (bookRes.data?.data || bookRes.data)) || [];
     books.value = (Array.isArray(list) && list.length)
       ? list.map((it: any) => {

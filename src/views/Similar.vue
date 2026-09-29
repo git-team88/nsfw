@@ -121,7 +121,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { toast } from '@/util/toast';
-import { formatUpdateTime, initLanguage, apiErrorMessage } from '@/util/utils';
+import { formatUpdateTime, initLanguage, apiErrorMessage, apiLang } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -255,7 +255,7 @@ async function loadData(fromLoadMore = false) {
   try {
     // Get language from URL parameter, fallback to system locale
     const urlLang = route.query.lang as string;
-    const requestLang = urlLang || (locale.value == 'zh' ? 'cn' : locale.value);
+    const requestLang = urlLang || (apiLang());
 
     const showNsfw = contentSwitch.showNsfw;
     const urlSessionId = route.query.session_id as string;

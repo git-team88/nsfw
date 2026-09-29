@@ -989,7 +989,7 @@ import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
 import { pickPlan } from "@/util/bookRechargePlan";
-import { formatTimestamp, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
+import { formatTimestamp, initLanguage, processImageUrl, apiErrorMessage, apiLang } from '@/util/utils';
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
@@ -2519,7 +2519,7 @@ async function fetchDetail(newId: number) {
   const type = route.query.type as string || "";
   const cid = route.query.cid as string || "";
   const contentType = route.query.tab as string || route.query.contentType as string || "";
-  const language = locale.value == 'zh' ? 'cn' : locale.value;
+  const language = apiLang();
   // 未登录用户确认满18岁后缓存的成年标识，随详情接口下发
   // 仅未登录且本地自声明满18岁（is_adult=1）时才传该参数；其余情况不传（JSON.stringify 会忽略 undefined）
   const isAdult = (!localStorage.getItem('token') && localStorage.getItem('is_adult') == '1') ? 1 : undefined;

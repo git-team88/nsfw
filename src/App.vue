@@ -27,7 +27,7 @@ const router = useRouter();
 const routeViewKey = computed(() => {
   const path = route.fullPath;
   const pathOnly = route.path;
-  const LANGS = 'ja|en|zh-cn|zh-tw';
+  const LANGS = 'ja|en|zh-cn|zh-tw|ko|th';
   const TYPES = 'novel|comic|drama|photo|video';
   const isHome =
     pathOnly === '/' ||
@@ -50,14 +50,19 @@ const languageFontMap: Record<string, string> = {
   'en': 'en',
   'jp': 'ja',
   'zh': 'cn',
-  'tc': 'tc'
+  'tc': 'tc',
+  // 韩、泰没有专门的字体类，走英文那套系统字体（日文字体栈里没有韩文/泰文字形）
+  'ko': 'en',
+  'th': 'en'
 };
 
 const htmlLangMap: Record<string, string> = {
   'jp': 'ja',
   'en': 'en',
   'zh': 'zh-CN',
-  'tc': 'zh-TW'
+  'tc': 'zh-TW',
+  'ko': 'ko',
+  'th': 'th'
 };
 
 // 站点地址（canonical 用）始终用当前实际访问地址（含协议/端口/域名）；
@@ -129,7 +134,7 @@ function computeSeoUrls(): { canonical: string; mobile: string | null } {
   // 用路径判断而非 route.name（初始加载 / SEO 渲染时 route.name 可能尚未就绪）。
   //   / | /{lang} | /{lang}/{type} | /{type}
   const cleanPath = path === '/' ? '/' : path;
-  const LANGS = 'ja|en|zh-cn|zh-tw';
+  const LANGS = 'ja|en|zh-cn|zh-tw|ko|th';
   const TYPES = 'novel|comic|drama|photo|video';
   const isHome =
     path === '/' ||

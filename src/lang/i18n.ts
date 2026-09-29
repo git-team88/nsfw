@@ -4,6 +4,8 @@ import en from "./en";
 import jp from "./jp";
 import zh from "./zh";
 import tc from "./tc";
+import ko from "./ko";
+import th from "./th";
 
 interface SocialMedia {
   title: string;
@@ -35,11 +37,13 @@ const messages: TranslationMessages = {
   jp: { ...(jp as any) },
   zh: { ...(zh as any) },
   tc: { ...(tc as any) },
+  ko: { ...(ko as any) },
+  th: { ...(th as any) },
 };
 
 /**
- * 浏览器语言 → 站点语言：繁体（zh-TW / zh-HK / zh-MO / zh-Hant）→ tc，其余中文 → zh，日文 → jp，英文 → en。
- * 按浏览器的语言偏好顺序取第一个站点支持的；都不支持（韩、泰等）→ en。
+ * 浏览器语言 → 站点语言：繁体（zh-TW / zh-HK / zh-MO / zh-Hant）→ tc，其余中文 → zh，日文 → jp，英文 → en，韩文 → ko，泰文 → th。
+ * 按浏览器的语言偏好顺序取第一个站点支持的；都不支持 → en。
  */
 export function detectBrowserLang(): string {
   const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""];
@@ -49,6 +53,8 @@ export function detectBrowserLang(): string {
     if (l.startsWith("zh")) return /(tw|hk|mo|hant)/.test(l) ? "tc" : "zh";
     if (l.startsWith("ja")) return "jp";
     if (l.startsWith("en")) return "en";
+    if (l.startsWith("ko")) return "ko";
+    if (l.startsWith("th")) return "th";
   }
   return "en";
 }
@@ -66,7 +72,7 @@ function readSavedLang(): string {
 //   b. 用户在导航里手动切换过语言才存 lang（Header changeLang），之后一直用用户切的
 const locale = (readSavedLang() || detectBrowserLang()).toLowerCase();
 
-document.documentElement.lang = ({ jp: 'ja', en: 'en', zh: 'zh-CN', tc: 'zh-TW' }[locale] || 'en');
+document.documentElement.lang = ({ jp: 'ja', en: 'en', zh: 'zh-CN', tc: 'zh-TW', ko: 'ko', th: 'th' }[locale] || 'en');
 
 const i18n = createI18n({
   legacy: false,

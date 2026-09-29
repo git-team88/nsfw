@@ -4190,7 +4190,7 @@ const removeCharacter = (character: any) => {
 
 // Content type selection
 const selectContentType = (type: string) => {
-  const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw' };
+  const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw', 'ko': 'ko', 'th': 'th' };
   const urlLang = i18nToUrlLang[locale.value] || 'ja';
   const targetPath = `/${urlLang}/${type}`;
   // 用 router.replace 而非 history.replaceState：后者不会更新 vue-router 的 route，
@@ -8184,7 +8184,7 @@ onMounted(async () => {
   const routeContentType = route.meta.contentType as string | undefined;
   const path = window.location.pathname;
   const pathSegments = path
-    .replace(/^\/(ja|en|zh-cn|zh-tw)/, '')
+    .replace(/^\/(ja|en|zh-cn|zh-tw|ko|th)/, '')
     .replace(/\/index\.html$/, '')
     .split('/')
     .filter(Boolean);

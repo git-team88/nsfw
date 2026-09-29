@@ -470,7 +470,7 @@ import bannerSlotImage from '@/assets/images/home/banner.jpg';
 import bannerSlotVideo from '@/assets/images/home/banner.mp4';
 import heroBgVideo from '@/assets/images/home/video.mp4';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
-import { formatDuration, formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
+import { formatDuration, formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage, apiLang } from '@/util/utils';
 
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
@@ -978,9 +978,9 @@ const loadContent = async (page = 1) => {
     switch (currentActiveTab) {
       case 'suggested':
         if (currentContentType === 4 || currentContentType === 5) {
-          res = await api.homeRecommendPostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
+          res = await api.homeRecommendPostList(page, pageSize.value, currentContentType, apiLang(), showNsfw, channel) as any;
         } else {
-          res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
+          res = await api.homePostList(page, pageSize.value, currentContentType, apiLang(), showNsfw, channel) as any;
         }
         break;
       case 'following':
@@ -998,7 +998,7 @@ const loadContent = async (page = 1) => {
         }
         break;
       default:
-        res = await api.homePostList(page, pageSize.value, currentContentType, locale.value == 'zh' ? 'cn' : locale.value, showNsfw, channel) as any;
+        res = await api.homePostList(page, pageSize.value, currentContentType, apiLang(), showNsfw, channel) as any;
     }
 
     // Check if this request is still the latest one

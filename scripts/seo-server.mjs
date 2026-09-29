@@ -33,7 +33,7 @@ const RENDER_DEADLINE_MS = parseInt(process.env.SEO_RENDER_DEADLINE_MS || '20000
 // RSS 超过该阈值（MB）主动回收 browser，避免高峰期被 PM2 整个重启丢缓存（P5）
 const MEM_SOFT_LIMIT_MB = parseInt(process.env.SEO_MEM_SOFT_LIMIT_MB || '400', 10)
 
-const LANG_MAP = { ja: 'ja', en: 'en', 'zh-cn': 'zh-CN', 'zh-tw': 'zh-TW' }
+const LANG_MAP = { ja: 'ja', en: 'en', 'zh-cn': 'zh-CN', 'zh-tw': 'zh-TW', ko: 'ko', th: 'th' }
 const CONTENT_TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
 
 const SEO_TITLES = {
@@ -43,7 +43,7 @@ const SEO_TITLES = {
 }
 
 function detectLang(url) {
-  const match = url.match(/\/(ja|en|zh-cn|zh-tw)\//)
+  const match = url.match(/\/(ja|en|zh-cn|zh-tw|ko|th)\//)
   return match ? match[1] : 'ja'
 }
 
@@ -59,7 +59,8 @@ function generateSkeleton(url, query = {}) {
   const htmlLang = LANG_MAP[lang] || 'ja'
   const pageType = detectPageType(url)
   const titles = pageType ? SEO_TITLES[pageType] : null
-  const title = titles ? (titles[lang] || titles.ja) : 'MoeGen 萌創'
+  // 韩、泰没有单独的标题文案，退回英文
+  const title = titles ? (titles[lang] || (lang === 'ko' || lang === 'th' ? titles.en : titles.ja)) : 'MoeGen 萌創'
   const description = 'MoeGen 萌創は二次元AI創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。'
 
   return `<!DOCTYPE html>

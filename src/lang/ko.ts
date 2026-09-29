@@ -1801,6 +1801,8 @@ export default {
     langJp: "일본어",
     langZh: "중국어 간체",
     langTc: "중국어 번체",
+    langKo: "한국어",
+    langTh: "태국어",
     interactiveSettings: "상호작용 설정",
     allowComments: "댓글 허용",
     allowRepost: "공유 허용",

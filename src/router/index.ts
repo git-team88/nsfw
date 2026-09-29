@@ -11,6 +11,8 @@ const LANG_URL_TO_I18N: Record<string, string> = {
   en: 'en',
   'zh-cn': 'zh',
   'zh-tw': 'tc',
+  ko: 'ko',
+  th: 'th',
 };
 
 const LANG_URL_TO_HTML: Record<string, string> = {
@@ -18,6 +20,8 @@ const LANG_URL_TO_HTML: Record<string, string> = {
   en: 'en',
   'zh-cn': 'zh-CN',
   'zh-tw': 'zh-TW',
+  ko: 'ko',
+  th: 'th',
 };
 
 const CONTENT_TYPES = ['novel', 'comic', 'photo', 'video'];

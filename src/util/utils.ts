@@ -168,10 +168,21 @@ export function processImageUrl(url: string | undefined, quality: number = 60): 
 
 /**
  * 取接口返回的错误提示，按当前界面语言挑对应字段。
- * 后端错误都带 msg / msg_cn / msg_jp / msg_tc 四份文案，直接用它的，
+ * 后端错误都带 msg / msg_cn / msg_jp / msg_tc 几份文案（韩、泰对应 msg_ko / msg_th，没有就退回英文 msg），直接用它的，
  * 别再兜一个笼统的「操作失败」——那样用户看不出到底哪儿不对。
  * 接口没给文案时返回空串，调用方自己决定兜底（一般是 t('fail')）。
  */
+/**
+ * 传给列表 / 推荐 / 搜索接口的语言参数：zh → cn；
+ * 韩、泰是纯界面语言，后端没有对应的内容语言，统一传 en；其余（en / jp / tc）原样。
+ */
+export function apiLang(): string {
+  const l = i18n.global.locale.value as string;
+  if (l == 'zh') return 'cn';
+  if (l == 'ko' || l == 'th') return 'en';
+  return l;
+}
+
 export function apiErrorMessage(res: any): string {
   if (!res) return '';
   const lang = i18n.global.locale.value as string;
@@ -180,6 +191,8 @@ export function apiErrorMessage(res: any): string {
     lang == 'zh' ? res.msg_cn :
     lang == 'tc' ? res.msg_tc :
     lang == 'jp' ? res.msg_jp :
+    lang == 'ko' ? res.msg_ko :
+    lang == 'th' ? res.msg_th :
     res.msg;
   return (msg || res.msg || '').toString().trim();
 }

@@ -2320,6 +2320,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     langJp: "日语",
     langZh: "简体中文",
     langTc: "繁体中文",
+    langKo: "韩语",
+    langTh: "泰语",
     interactiveSettings: "互动设置",
     allowComments: "允许评论",
     allowRepost: "允许转发",

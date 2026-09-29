@@ -301,7 +301,7 @@ import Sidebar from '@/components/Sidebar.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import { toast } from '@/util/toast';
-import { formatTimestamp, apiErrorMessage } from '@/util/utils';
+import { formatTimestamp, apiErrorMessage, apiLang } from '@/util/utils';
 import { baseUrl } from '@/util/config';
 
 // Import images
@@ -584,7 +584,7 @@ async function fetchDetail() {
   // Use props values if available, otherwise fall back to route query
   const contentType = props.contentType || (route.query.contentType as string || "");
   // Use current locale as language
-  const language = locale.value == 'zh' ? 'cn' : locale.value;
+  const language = apiLang();
   // 未登录用户确认满18岁后缓存的成年标识，随详情接口下发
   // 仅未登录且本地自声明满18岁（is_adult=1）时才传该参数；其余情况不传（JSON.stringify 会忽略 undefined）
   const isAdult = (!localStorage.getItem('token') && localStorage.getItem('is_adult') == '1') ? 1 : undefined;

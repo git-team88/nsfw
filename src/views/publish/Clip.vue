@@ -467,7 +467,7 @@ const DESC_MAX = 4000;
 
 const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
-const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc" }[locale.value] || "jp");
+const defaultLang = ({ en: "en", jp: "jp", zh: "cn", tc: "tc", ko: "ko", th: "th" }[locale.value] || "en");
 
 const form = ref({
   title: "",
@@ -545,6 +545,8 @@ const langOptions = [
   { key: "jp", labelKey: "submit.langJp" },
   { key: "cn", labelKey: "submit.langZh" },
   { key: "tc", labelKey: "submit.langTc" },
+  { key: "ko", labelKey: "submit.langKo" },
+  { key: "th", labelKey: "submit.langTh" },
 ];
 
 const langDropdownOpen = ref(false);

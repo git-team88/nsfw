@@ -1801,6 +1801,8 @@ export default {
     langJp: "ภาษาญี่ปุ่น",
     langZh: "จีนตัวย่อ",
     langTc: "จีนตัวเต็ม",
+    langKo: "ภาษาเกาหลี",
+    langTh: "ภาษาไทย",
     interactiveSettings: "ตั้งค่าการโต้ตอบ",
     allowComments: "อนุญาตความคิดเห็น",
     allowRepost: "อนุญาตการแชร์",

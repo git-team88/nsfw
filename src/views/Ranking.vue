@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { apiErrorMessage } from '@/util/utils';
+import { apiErrorMessage, apiLang } from '@/util/utils';
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
@@ -241,7 +241,7 @@ async function loadWorkRank(reset = false) {
   const reqType = type.value
   try {
     await contentSwitch.ensureLoaded()
-    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, locale.value === 'zh' ? 'cn' : locale.value, contentSwitch.showNsfw, contentSwitch.channel)) as any
+    const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, apiLang(), contentSwitch.showNsfw, contentSwitch.channel)) as any
     // 请求期间切换了筛选类型则丢弃本次结果
     if (reqType !== type.value || mode.value !== 'work') return
     const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []

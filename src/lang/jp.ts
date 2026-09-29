@@ -2038,6 +2038,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     langJp: "日本語",
     langZh: "簡体字中国語",
     langTc: "繁体字中国語",
+    langKo: "韓国語",
+    langTh: "タイ語",
     interactiveSettings: "インタラクション設定",
     allowComments: "コメントを許可",
     allowRepost: "転載を許可",

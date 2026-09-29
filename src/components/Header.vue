@@ -301,7 +301,9 @@ const langList = [
   { value: 'jp', label: '日本語' },
   { value: 'en', label: 'English' },
   { value: 'tc', label: '中文繁體' },
-  { value: 'zh', label: '中文简体' }
+  { value: 'zh', label: '中文简体' },
+  { value: 'ko', label: '한국어' },
+  { value: 'th', label: 'ไทย' }
 ];
 // 没手动切过语言时 localStorage 里没有 lang（首次按浏览器语言显示），用当前语言做选中态
 const lang = localStorage.getItem("lang");

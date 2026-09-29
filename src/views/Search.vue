@@ -235,7 +235,7 @@ const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
 // 来源数据请求中：输入框先不显示，接口回来才露出
 const composerLoading = ref(false);
 import { toast } from '@/util/toast';
-import { formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage } from '@/util/utils';
+import { formatUpdateTime, initLanguage, processImageUrl, apiErrorMessage, apiLang } from '@/util/utils';
 import { baseUrl } from '@/util/config';
 
 const { t, locale } = useI18n();
@@ -468,7 +468,7 @@ async function loadData(fromLoadMore = false) {
             type: postFilter.value,
             page: postsPage.value,
             limit: postsLimit.value,
-            language: locale.value == 'zh' ? 'cn' : locale.value,
+            language: apiLang(),
             show_nsfw: showNsfw,
           }) as any;
 

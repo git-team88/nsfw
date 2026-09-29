@@ -7,7 +7,7 @@
 
 SEO_SERVICE="http://127.0.0.1:3001"
 SITE="https://www.fansfans.ai"
-LANGS=("ja" "en" "zh-cn" "zh-tw")
+LANGS=("ja" "en" "zh-cn" "zh-tw" "ko" "th")
 TYPES=("novel" "comic" "drama" "photo" "video")
 
 log() { echo "[warm] $*"; }

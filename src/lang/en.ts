@@ -2215,6 +2215,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     langJp: "Japanese",
     langZh: "Chinese (Simplified)",
     langTc: "Chinese (Traditional)",
+    langKo: "Korean",
+    langTh: "Thai",
     interactiveSettings: "Interactive Settings",
     allowComments: "Allow Comments",
     allowRepost: "Allow Repost",
