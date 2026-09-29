@@ -660,18 +660,20 @@ const contentSectionRef = ref<HTMLElement | null>(null);
 // 从详情页/搜索页点做同款、做视频、做续集跳回首页时，停在推荐列表这一屏。
 // 用户是奔着「看列表 + 底部输入框」来的，滚到顶部的 hero 反而把输入框顶出视野。
 const FEED_SCROLL_OFFSET = 70; // 顶部固定 header 的高度
-const scrollToFeed = () => {
+// extraOffset：在「列表顶部 - header」的基础上再往上留多少像素（切语言时用，让列表标题上方有点呼吸空间）；
+// 传了 extraOffset 就不再强制把 hero 顶出视口。
+const scrollToFeed = (extraOffset = 0) => {
   const el = contentSectionRef.value;
   if (!el) {
     window.scrollTo({ top: 0, behavior: 'auto' });
     return;
   }
-  let top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET;
+  let top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET - extraOffset;
   // 至少要滚到 hero 完全离开视口。只按「列表顶部 - header」算的话，
   // hero 和列表之间的间距不足 header 高度时，hero 底边还露在视口里，
   // 吸底输入框的判定条件就不成立。
   const hero = heroSectionRef.value;
-  if (hero) {
+  if (hero && !extraOffset) {
     top = Math.max(top, hero.getBoundingClientRect().bottom + window.scrollY + 1);
   }
   window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
@@ -1520,12 +1522,15 @@ watch(viewMode, (newMode) => {
   }
 });
 
-watch(() => locale.value, () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+// 切语言：列表按新语言重载，停在推荐列表顶部（hero 之下），不再回到页面最顶。
+// 要等新数据渲染完再定位：列表清空时页面变短，先滚的话浏览器的滚动锚定会在数据插入后把位置又往下带。
+watch(() => locale.value, async () => {
   currentPage.value = 1;
   allContent.value = [];
-  loadContent(1);
   setSeoMeta();
+  await loadContent(1);
+  await nextTick();
+  scrollToFeed(20);
 });
 
 // 输入框回填完做同款来源后，停在推荐列表这一屏
