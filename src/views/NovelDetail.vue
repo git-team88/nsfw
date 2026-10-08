@@ -575,7 +575,7 @@ const reportOptions = computed(() => {
 
 const contentSwitch = useContentSwitchStore();
 async function fetchDetail() {
-  const id = route.query.id as string;
+  const id = route.params.id as string;
   if (!id) return;
 
   // Get query parameters
@@ -864,7 +864,7 @@ function setChapterNavigation() {
 
 // Load comments
 async function loadComments(page = 1, loadMore = false) {
-  const id = route.query.id as string;
+  const id = route.params.id as string;
   if (!id) return;
 
   if (loadMore) {
@@ -903,7 +903,7 @@ async function toggleLike() {
     goAuth();
     return;
   }
-  const id = route.query.id as string;
+  const id = route.params.id as string;
   if (!id) return;
 
   try {
@@ -1010,7 +1010,7 @@ async function submitComment() {
     return;
   }
 
-  const id = route.query.id as string;
+  const id = route.params.id as string;
 
   try {
     let parentId = 0;
@@ -1502,11 +1502,8 @@ function navigateToChapter(chapter: any) {
 function doNavigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
   router.replace({
-    path: '/detail',
-    query: {
-      ...route.query,
-      id: chapter.post_id
-    }
+    path: `/detail/${chapter.post_id}`,
+    query: route.query
   });
 
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
@@ -1551,10 +1548,10 @@ function toggleToc() {
 
 // Share content
 async function shareContent() {
-  const id = route.query.id as string;
+  const id = route.params.id as string;
   if (!id) return;
 
-  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+  const shareUrl = `${window.location.origin}/detail/${id}`;
 
   try {
     await navigator.clipboard.writeText(shareUrl);
@@ -1723,13 +1720,10 @@ async function enterCollectionMode(type: number) {
         targetChapterId = detail.value.id;
       }
 
-      if (targetChapterId && targetChapterId !== route.query.id) {
+      if (targetChapterId && String(targetChapterId) !== String(route.params.id)) {
         router.replace({
-          path: '/detail',
-          query: {
-            ...route.query,
-            id: targetChapterId
-          }
+          path: `/detail/${targetChapterId}`,
+          query: route.query
         });
       } else {
         if (localStorage.getItem('token')) {
@@ -1918,11 +1912,8 @@ function goPrev() {
     if (prevId.value) {
       // 保留当前路由的所有查询参数，只更新 id
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: prevId.value
-        }
+        path: `/detail/${prevId.value}`,
+        query: route.query
       });
     }
   }
@@ -1941,11 +1932,8 @@ function goNext() {
     if (nextId.value) {
       // 保留当前路由的所有查询参数，只更新 id
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: nextId.value
-        }
+        path: `/detail/${nextId.value}`,
+        query: route.query
       });
     }
   }
@@ -2052,7 +2040,7 @@ function updatePostData(data: any) {
 }
 
 // Watch for route changes
-watch(() => route.query.id, async (newId) => {
+watch(() => route.params.id, async (newId) => {
   if (newId) {
     await fetchDetail();
   }

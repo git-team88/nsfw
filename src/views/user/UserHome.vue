@@ -2211,7 +2211,6 @@ function goMakeSequelSubscribe() {
 function goDetail(id: number | string, authorId?: number | string) {
   const type = Number(activeContentType.value);
   const queryParams: any = {
-    id: id,
     tab: activeContentType.value,
   };
 
@@ -2230,7 +2229,7 @@ function goDetail(id: number | string, authorId?: number | string) {
   }
 
   router.push({
-    path: '/detail',
+    path: `/detail/${id}`,
     query: queryParams
   });
 }

@@ -51,11 +51,11 @@ function toDetail(post: any, comment: any) {
   }
 
   if (comment && !comment.parent_id) {
-    router.push(`/detail?id=${post.post_id}&cid=${comment.comment_id}`);
+    router.push(`/detail/${post.post_id}?cid=${comment.comment_id}`);
   } else if (comment && comment.parent_id) {
-    router.push(`/detail?id=${post.post_id}&cid=${comment.parent_id}&rid=${comment.comment_id}`);
+    router.push(`/detail/${post.post_id}?cid=${comment.parent_id}&rid=${comment.comment_id}`);
   } else {
-    router.push(`/detail?id=${post.post_id}`);
+    router.push(`/detail/${post.post_id}`);
   }
 }
 

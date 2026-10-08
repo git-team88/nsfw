@@ -647,9 +647,8 @@ function goToDetail(post: any) {
   if (String(post.type) === '4' || String(post.type) === '5') {
     // type=5 => 详情接口拼 fromSearch，靠 keyword 还原这份搜索结果，才能算出上一个/下一个
     router.push({
-      path: '/detail',
+      path: `/detail/${post.id}`,
       query: {
-        id: post.id,
         tab: postFilter.value.toString(),
         type: '5',
         keyword: searchKeyword.value || '',

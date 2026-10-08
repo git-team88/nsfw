@@ -382,7 +382,7 @@ const layoutWaterfall = () => {
 function goToDetail(item: any) {
   const bookId = item.book_id || item.id;
   if (String(item.type) === '4' || String(item.type) === '5') {
-    router.push({ path: '/detail', query: { id: item.id, tab: 'similar' } });
+    router.push({ path: `/detail/${item.id}`, query: { tab: 'similar' } });
   } else {
     router.push(`/collection/${bookId}`);
   }

@@ -98,7 +98,7 @@ function updateHreflang() {
 // mobile（移动端 alternate）：仅以下 4 类页面输出，其余页面为 null（不加 alternate）：
 //   首页/语言页/分类页  → m 站首页
 //   合集详情  /collection/:id            → /detail/book-public/:id
-//   作品详情  /detail?id=x&contentType=t → /detail?id=x&source=t
+//   作品详情  /detail/x?contentType=t    → /detail?id=x&source=t
 //   社区主页  /user-home?id=x            → /user/x
 function computeSeoUrls(): { canonical: string; mobile: string | null } {
   const { site: SITE_ORIGIN, mobile: MOBILE_ORIGIN } = resolveOrigins();
@@ -121,12 +121,14 @@ function computeSeoUrls(): { canonical: string; mobile: string | null } {
     };
   }
 
-  if (path === '/detail' && q.id) {
-    // contentType 直接透传成移动端的 source（novel/comic/video…）
+  const det = path.match(/^\/detail\/([^/?#]+)/);
+  if (det) {
+    const id = det[1];
+    // contentType 直接透传成移动端的 source（novel/comic/video…）；m 站仍是 ?id= 形式
     const t = q.contentType ? String(q.contentType) : '';
     return {
-      canonical: `${SITE_ORIGIN}/detail?id=${q.id}${t ? `&contentType=${t}` : ''}`,
-      mobile: `${MOBILE_ORIGIN}/detail?id=${q.id}${t ? `&source=${t}` : ''}`,
+      canonical: `${SITE_ORIGIN}/detail/${id}${t ? `?contentType=${t}` : ''}`,
+      mobile: `${MOBILE_ORIGIN}/detail?id=${id}${t ? `&source=${t}` : ''}`,
     };
   }
 
@@ -200,7 +202,7 @@ onMounted(() => {
     updateHreflang();
   });
 
-  // canonical/alternate 依赖 query（如 /detail?id=x），用 fullPath 监听
+  // canonical/alternate 依赖 query（如 /detail/x?contentType=t），用 fullPath 监听
   watch(() => route.fullPath, () => {
     updateAltAndCanonical();
   });

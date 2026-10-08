@@ -597,7 +597,7 @@ function goMakeSimilar(sessionId: string) {
 
 function navigateToChapter(chapter: Chapter) {
   const ct = collection.value?.type || '';
-  router.push(`/detail?id=${chapter.id}${ct ? `&tab=${ct}` : ''}`);
+  router.push(`/detail/${chapter.id}${ct ? `?tab=${ct}` : ''}`);
 }
 
 function startReading() {
@@ -611,10 +611,10 @@ function continueReading() {
   const history = collection.value?.history;
   if (!history) return;
   const ct = collection.value?.type || '';
-  const ctParam = ct ? `&tab=${ct}` : '';
+  const ctParam = ct ? `?tab=${ct}` : '';
 
   if (isOwn.value) {
-    router.push(`/detail?id=${history.post_id}${ctParam}`);
+    router.push(`/detail/${history.post_id}${ctParam}`);
     return;
   }
 
@@ -622,7 +622,7 @@ function continueReading() {
     // nsfw content - allow directly without age/sensitive checks
   }
 
-  router.push(`/detail?id=${history.post_id}${ctParam}`);
+  router.push(`/detail/${history.post_id}${ctParam}`);
 }
 
 function confirmSensitiveContent() {

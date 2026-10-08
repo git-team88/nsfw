@@ -1110,7 +1110,8 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
   if (String(type) === '4' || String(type) === '5') {
-    router.push({ path: '/detail', query: detailQuery(postId || bookId) });
+    const q = detailQuery(postId || bookId);
+    router.push({ path: `/detail/${q.id}`, query: { tab: q.tab, type: q.type } });
   } else {
     router.push(`/collection/${bookId}`);
   }
@@ -1120,7 +1121,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
 const detailHref = (bookId: string, type?: string, postId?: string | number) => {
   if (String(type) === '4' || String(type) === '5') {
     const q = detailQuery(postId || bookId);
-    return `/detail?id=${q.id}&tab=${q.tab}&type=${q.type}`;
+    return `/detail/${q.id}?tab=${q.tab}&type=${q.type}`;
   }
   return `/collection/${bookId}`;
 };

@@ -40,7 +40,7 @@ function toDetail(post: any) {
     return false;
   }
 
-  router.push(`/detail?id=${post.post_id}`);
+  router.push(`/detail/${post.post_id}`);
 }
 
 function goUserHome(userId: string) {

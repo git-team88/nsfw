@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
@@ -146,9 +146,18 @@ const routes = [
     component: () => import("@/views/publish/Clip.vue"),
   },
   {
-    path: "/detail",
+    path: "/detail/:id",
     name: "Detail",
     component: () => import("@/views/Detail.vue"),
+  },
+  {
+    // 旧地址 /detail?id=x 兼容：后端推送、m 站、已分享出去的链接还是这种形式，
+    // 转成 /detail/x，其余 query（tab/type/cid/rid…）原样带过去
+    path: "/detail",
+    redirect: (to: RouteLocation) => {
+      const { id, ...rest } = to.query;
+      return id ? { path: `/detail/${id}`, query: rest } : { path: "/" };
+    },
   },
   {
     path: "/search",

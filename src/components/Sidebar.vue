@@ -1355,7 +1355,7 @@ async function share() {
   const id = props.detail?.id;
   if (!id) return;
 
-  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+  const shareUrl = `${window.location.origin}/detail/${id}`;
 
   try {
     await navigator.clipboard.writeText(shareUrl);
@@ -1991,7 +1991,7 @@ watch(() => props.detail, (newDetail) => {
  * 按地址栏的 id 比对（切章时地址栏的 id 会跟着换），接口两种主键都认，取不到再退回详情自己的 id。
  */
 function findActiveChapterIndex(): number {
-  const targetId = String(route.query.id ?? (props.detail as any)?.id ?? '').trim();
+  const targetId = String(route.params.id ?? (props.detail as any)?.id ?? '').trim();
   if (!targetId) return -1;
   return chapters.value.findIndex((c: any) =>
     String(c?.post_id ?? '') === targetId || String(c?.id ?? '') === targetId);

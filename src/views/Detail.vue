@@ -1029,7 +1029,7 @@ const route = useRoute();
 const router = useRouter();
 
 // --- State ---
-const id = ref<number>(Number(route.query.id));
+const id = ref<number>(Number(route.params.id));
 const contentType = ref<string>(route.query.tab as string || route.query.contentType as string || "");
 const isNovelType = computed(() => contentType.value === '2' || contentType.value === 'novel' || detail.value.type === '2');
 const isStandaloneType = computed(() => detail.value.type === '4' || detail.value.type === '5');
@@ -1650,11 +1650,8 @@ async function enterCollectionMode() {
   if (detail.value.type == '1') {
     if (nextChapterId.value) {
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: nextChapterId.value
-        }
+        path: `/detail/${nextChapterId.value}`,
+        query: route.query
       });
     }
   }
@@ -1674,14 +1671,11 @@ async function enterCollectionMode() {
 // Enter current chapter
 async function enterCurrentChapter() {
   // Only navigate if the current ID is different from the route ID
-  if (String(detail.value.id) !== route.query.id) {
+  if (String(detail.value.id) !== String(route.params.id)) {
     // Enter current chapter
     router.replace({
-      path: '/detail',
-      query: {
-        ...route.query,
-        id: detail.value.id
-      }
+      path: `/detail/${detail.value.id}`,
+      query: route.query
     });
   }
 
@@ -1702,11 +1696,8 @@ async function goToNextChapter() {
     await loadChapters();
 
     router.replace({
-      path: '/detail',
-      query: {
-        ...route.query,
-        id: nextChapterId.value
-      }
+      path: `/detail/${nextChapterId.value}`,
+      query: route.query
     });
   }
 }
@@ -1949,13 +1940,10 @@ async function enterNextOrCurrentChapter() {
       targetChapterId = String(detail.value.id);
     }
 
-    if (targetChapterId && targetChapterId !== route.query.id) {
+    if (targetChapterId && String(targetChapterId) !== String(route.params.id)) {
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: targetChapterId
-        }
+        path: `/detail/${targetChapterId}`,
+        query: route.query
       });
     }
   }
@@ -2029,11 +2017,8 @@ async function navigateToChapter(chapter: any) {
 async function doNavigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
   router.replace({
-    path: '/detail',
-    query: {
-      ...route.query,
-      id: chapter.post_id
-    }
+    path: `/detail/${chapter.post_id}`,
+    query: route.query
   });
 
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
@@ -3047,7 +3032,7 @@ function searchByTag(tag: string) {
  * 按地址栏的 id 比对（切集时 router.replace 会同步这个 id），取不到再退回详情自己的 id。
  */
 function findActiveCollectionIndex(): number {
-  const targetId = String(route.query.id ?? detail.value?.id ?? '').trim();
+  const targetId = String(route.params.id ?? detail.value?.id ?? '').trim();
   if (!targetId) return -1;
   return collections.value.findIndex((item: any) => String(item?.post_id ?? '') === targetId);
 }
@@ -4430,11 +4415,8 @@ function goPrev() {
     slideSwitch('down', () => {
       activeTab.value = 'detail';
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: targetId
-        }
+        path: `/detail/${targetId}`,
+        query: route.query
       });
     });
   }
@@ -4456,11 +4438,8 @@ function goNext() {
     slideSwitch('up', () => {
       activeTab.value = 'detail';
       router.replace({
-        path: '/detail',
-        query: {
-          ...route.query,
-          id: targetId
-        }
+        path: `/detail/${targetId}`,
+        query: route.query
       });
     });
   }
@@ -5725,10 +5704,10 @@ async function toggleCollectionLike(item: any) {
 }
 
 async function share() {
-  const id = route.query.id as string;
+  const id = route.params.id as string;
   if (!id) return;
 
-  const shareUrl = `${window.location.origin}/detail?id=${id}`;
+  const shareUrl = `${window.location.origin}/detail/${id}`;
 
   try {
     await navigator.clipboard.writeText(shareUrl);
@@ -6077,7 +6056,7 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => route.query.id,
+  () => route.params.id,
   async (newId) => {
     if (newId) {
       id.value = Number(newId);
