@@ -660,20 +660,18 @@ const contentSectionRef = ref<HTMLElement | null>(null);
 // 从详情页/搜索页点做同款、做视频、做续集跳回首页时，停在推荐列表这一屏。
 // 用户是奔着「看列表 + 底部输入框」来的，滚到顶部的 hero 反而把输入框顶出视野。
 const FEED_SCROLL_OFFSET = 70; // 顶部固定 header 的高度
-// extraOffset：在「列表顶部 - header」的基础上再往上留多少像素（切语言时用，让列表标题上方有点呼吸空间）；
-// 传了 extraOffset 就不再强制把 hero 顶出视口。
-const scrollToFeed = (extraOffset = 0) => {
+const scrollToFeed = () => {
   const el = contentSectionRef.value;
   if (!el) {
     window.scrollTo({ top: 0, behavior: 'auto' });
     return;
   }
-  let top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET - extraOffset;
+  let top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET;
   // 至少要滚到 hero 完全离开视口。只按「列表顶部 - header」算的话，
   // hero 和列表之间的间距不足 header 高度时，hero 底边还露在视口里，
   // 吸底输入框的判定条件就不成立。
   const hero = heroSectionRef.value;
-  if (hero && !extraOffset) {
+  if (hero) {
     top = Math.max(top, hero.getBoundingClientRect().bottom + window.scrollY + 1);
   }
   window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
@@ -1523,15 +1521,32 @@ watch(viewMode, (newMode) => {
   }
 });
 
-// 切语言：列表按新语言重载，停在推荐列表顶部（hero 之下），不再回到页面最顶。
+// 切语言：列表按新语言重载。定位按切换前用户在哪决定：
+//   - 正在看推荐列表（列表标题已经到 header 下面、且还没滚过列表底部）：停在列表标题上方一点（header 之下再留 20px）；
+//   - 其它位置（hero 这一屏、或已经滚到列表下面的页脚）：回到页面最顶。
 // 要等新数据渲染完再定位：列表清空时页面变短，先滚的话浏览器的滚动锚定会在数据插入后把位置又往下带。
+const LOCALE_FEED_GAP = 20;
 watch(() => locale.value, async () => {
+  let wasInFeed = false;
+  const feedEl = contentSectionRef.value;
+  if (feedEl) {
+    const rect = feedEl.getBoundingClientRect();
+    wasInFeed = rect.top <= FEED_SCROLL_OFFSET && rect.bottom > FEED_SCROLL_OFFSET;
+  }
+
   currentPage.value = 1;
   allContent.value = [];
   setSeoMeta();
   await loadContent(1);
   await nextTick();
-  scrollToFeed(20);
+
+  const el = contentSectionRef.value;
+  if (!wasInFeed || !el) {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    return;
+  }
+  const top = el.getBoundingClientRect().top + window.scrollY - FEED_SCROLL_OFFSET - LOCALE_FEED_GAP;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
 });
 
 // 输入框回填完做同款来源后，停在推荐列表这一屏
