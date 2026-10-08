@@ -1836,44 +1836,57 @@ const checkProjectOwnershipByEstimate = async (stepName?: string) => {
   return false;
 };
 
-const checkServerStateSync = async (expectedStepName?: string, expectedStepStatus?: string, expectedStepChapterIndex?: number): Promise<boolean> => {
+/**
+ * 生成类操作点击前，先向服务端核对一次进度 —— 另一个窗口可能已经操作过，本地状态是旧的。
+ * 判断口径和页面加载（detailProject 分支）保持一致，避免误判：
+ *   - step_status 为 DOING / PREPARE：有任务在跑 → 过期；
+ *   - step_status 为 FAIL：只有「失败章就是最新章」（step_chapter_index >= max(chapters)）才算过期；
+ *     失败章后面还有更新的成功章时，页面本来就按成功态显示，不算过期。allowFail（重试失败章）时也不算。
+ *   - 传了 chapterIndex：服务端「最新章」≠ 期望值 → 过期。
+ *     最新章 = chapters 里的最大章号（chapters 只含成功章；没有章节时按 0 算，和大纲页一致），
+ *     不用 step_chapter_index —— 它只是最近一次任务的章，重生成前面某一章后会小于已有章数；
+ *     allowFail 时比的是 step_chapter_index（要重试的就是服务端记录的失败章）。
+ * 过期：toast「进度已更新」+ 1 秒后刷新页面，和后端 10407 的处理一致。
+ * 详情接口失败：提示并拦下，不能在状态未知时继续发生成请求。
+ * 核对通过说明本地和服务端一致，这里不改本地状态（改了反而有副作用）。
+ */
+const checkServerStateSync = async (expect: { chapterIndex?: number; allowFail?: boolean } = {}): Promise<boolean> => {
+  let res: any;
   try {
-    const res = await api.detailProject(sessionId.value) as any;
-    if (res.code !== 200) return false;
-
-    const serverStepName = res.data?.step_name;
-    const serverStepStatus = res.data?.step_status;
-    const serverStepChapterIndex = res.data?.step_chapter_index;
-
-    currentStepName.value = serverStepName || currentStepName.value;
-    if (serverStepStatus) taskStatus.value = serverStepStatus;
-    if (serverStepChapterIndex !== undefined && serverStepChapterIndex !== null) {
-      stepChapterIndex.value = serverStepChapterIndex;
-    }
-    if (res.data?.chapters) {
-      chapters.value = res.data.chapters;
-    }
-
-    if (expectedStepName !== undefined || expectedStepStatus !== undefined) {
-      if ((expectedStepName !== undefined && serverStepName !== expectedStepName) ||
-          (expectedStepStatus !== undefined && serverStepStatus !== expectedStepStatus)) {
-        toast(t('novel.error.staleOperation'));
-        setTimeout(() => { window.location.reload(); }, 1000);
-        return false;
-      }
-    }
-
-    if (expectedStepChapterIndex !== undefined && serverStepChapterIndex !== undefined && serverStepChapterIndex !== null && serverStepChapterIndex !== expectedStepChapterIndex) {
-      toast(t('novel.error.staleOperation'));
-      setTimeout(() => { window.location.reload(); }, 1000);
-      return false;
-    }
-
-    return true;
+    res = await api.detailProject(sessionId.value);
   } catch (error) {
     console.error('Error checking server state sync:', error);
+    toast(t('fail'));
     return false;
   }
+  if (res?.code !== 200 || !res.data) {
+    if (!handleSessionTimeout(res?.code)) toast(apiErrorMessage(res) || t('fail'));
+    return false;
+  }
+
+  const data = res.data;
+  const serverStatus = String(data.step_status || '');
+  const serverChapters: any[] = Array.isArray(data.chapters) ? data.chapters : [];
+  const serverStepIndex = Number(data.step_chapter_index) || 0;
+  const maxServerChapter = serverChapters.length > 0
+    ? Math.max(...serverChapters.map((c: any) => Number(c.chapter) || 0))
+    : 0;
+  const failedIsLatest = serverStatus === 'FAIL' && serverStepIndex >= maxServerChapter;
+
+  let stale = false;
+  if (serverStatus === 'DOING' || serverStatus === 'PREPARE') stale = true;
+  else if (failedIsLatest && !expect.allowFail) stale = true;
+  if (!stale && expect.chapterIndex !== undefined) {
+    const compareTo = expect.allowFail ? serverStepIndex : maxServerChapter;
+    if (compareTo !== expect.chapterIndex) stale = true;
+  }
+
+  if (stale) {
+    toast(t('novel.error.staleOperation'));
+    setTimeout(() => { window.location.reload(); }, 1000);
+    return false;
+  }
+  return true;
 };
 
 const isCoverSendClicked = ref<boolean>(false);
@@ -3790,7 +3803,8 @@ const regenerateOutline = async () => {
     return;
   }
   if (await checkProjectOwnershipByEstimate('outline')) return;
-  // if (!await checkServerStateSync('SUCCESS')) return;
+  // 先核对服务端进度（别的窗口可能已经生成了章节 / 有任务在跑）—— 暂时关闭
+  // if (!await checkServerStateSync({ chapterIndex: stepChapterIndex.value })) return;
 
   hideEdit();
 
@@ -4020,7 +4034,8 @@ const sendRegenerateRequest = async () => {
   }
 
   try {
-    // if (!await checkServerStateSync('SUCCESS')) {
+    // 先核对服务端进度：最新章要和本地一致，且没有任务在跑 —— 暂时关闭
+    // if (!await checkServerStateSync({ chapterIndex: stepChapterIndex.value })) {
     //   isSendingRegenerate.value = false;
     //   return;
     // }
@@ -4942,7 +4957,14 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
     return;
   }
 
-  // if (!await checkServerStateSync('SUCCESS')) return;
+  // 先核对服务端进度：重试失败章时服务端本来就是 FAIL，只核对失败的是不是这一章；
+  // 正常生成下一章时要求没有任务在跑、且服务端最新章和本地一致
+  // —— 暂时关闭
+  // if (retryChapter !== undefined) {
+  //   if (!await checkServerStateSync({ chapterIndex: retryChapter, allowFail: true })) { isRetryingChapter.value = false; return; }
+  // } else if (!await checkServerStateSync({ chapterIndex: stepChapterIndex.value })) {
+  //   return;
+  // }
 
   if (!skipBalanceCheck) isNextLoading.value = true;
   try {
@@ -5937,7 +5959,13 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
     return;
   }
 
-  // if (!await checkServerStateSync('SUCCESS')) return;
+  // 先核对服务端进度：本地是 FAIL 时走的是从失败章重试，允许服务端为 FAIL 并核对失败章；否则要求最新章一致、无任务在跑
+  // —— 暂时关闭
+  // if (taskStatus.value == 'FAIL') {
+  //   if (!await checkServerStateSync({ chapterIndex: stepChapterIndex.value, allowFail: true })) return;
+  // } else if (!await checkServerStateSync({ chapterIndex: stepChapterIndex.value })) {
+  //   return;
+  // }
 
   hideEdit();
 
@@ -10929,7 +10957,8 @@ async function doGenerateNovelCover() {
   }
 
   try {
-    // if (!await checkServerStateSync('SUCCESS')) return;
+    // 先核对服务端没有任务在跑（封面不涉及章数）—— 暂时关闭
+    // if (!await checkServerStateSync()) return;
     if (await isTaskLimitExceeded()) return;
 
     const newReferenceImages = uploadedCoverImages.value.map(img => img.image);
