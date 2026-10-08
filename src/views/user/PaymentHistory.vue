@@ -618,7 +618,7 @@ async function fetchProcessingData() {
 }
 
 function goUserHome(userId: string) {
-  router.push(`/user-home?id=${userId}`);
+  router.push(`/user-home/${userId}`);
 }
 
 // Get time unit based on plan_id

@@ -353,7 +353,7 @@ async function confirmDelete() {
       toast(t('collectionSettings.deleteSuccess'));
 
       setTimeout(() => {
-        router.push(`/user-home?id=${collection.value.user_id}`);
+        router.push(`/user-home/${collection.value.user_id}`);
       }, 1000);
     } else {
       toast(apiErrorMessage(res));

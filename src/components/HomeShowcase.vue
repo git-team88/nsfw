@@ -285,7 +285,7 @@ watch(locale, () => { loadBooks(); });
 
 const onAvatarErr = (e: Event) => { const el = e.target as HTMLImageElement; if (el) el.src = defaultAvatar; };
 
-function goUser(c: Creator) { router.push(`/user-home?id=${c.id}`); }
+function goUser(c: Creator) { router.push(`/user-home/${c.id}`); }
 function goRankUser() { router.push('/rank?tab=user'); }
 function goRankWork() { router.push('/rank'); }
 function goWork(w: Work) {

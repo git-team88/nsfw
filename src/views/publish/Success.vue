@@ -31,7 +31,7 @@ function goBack() {
 function toProfile() {
   const uid = localStorage.getItem('uid')
   if (uid) {
-    router.push(`/user-home?id=${uid}`)
+    router.push(`/user-home/${uid}`)
   } else {
     router.push('/user-home')
   }

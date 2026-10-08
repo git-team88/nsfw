@@ -76,7 +76,7 @@ function goDetail() {
 
 // 点击作者头像/昵称跳转个人主页
 function goUser() {
-  if (props.w.authorId) router.push(`/user-home?id=${props.w.authorId}`)
+  if (props.w.authorId) router.push(`/user-home/${props.w.authorId}`)
 }
 
 function onAvatarErr(e: Event) {

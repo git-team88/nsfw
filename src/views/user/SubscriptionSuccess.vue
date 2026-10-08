@@ -72,8 +72,7 @@ function backToCommunity() {
   const id = route.query.id;
   if (id) {
     router.replace({
-      path: "/user-home",
-      query: { id: id }
+      path: `/user-home/${id}`
     });
   } else {
     router.replace('/');

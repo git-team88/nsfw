@@ -418,7 +418,7 @@ async function handleSave() {
           router.push(`/collection-settings/${id}`);
         } else {
           const uid = route.query.uid || localStorage.getItem('uid');
-          router.push(`/user-home?id=${uid}&type=${type}`);
+          router.push(`/user-home/${uid}?type=${type}`);
         }
       }, 500);
     } else {

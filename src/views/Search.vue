@@ -661,7 +661,7 @@ function goToDetail(post: any) {
 
 
 function goToUserHome(userId: number) {
-  router.push(`/user-home?id=${userId}`);
+  router.push(`/user-home/${userId}`);
 }
 
 async function toggleLike(post: Post) {

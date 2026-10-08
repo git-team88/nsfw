@@ -529,8 +529,7 @@ function goNav(item: { path: string; name?: string }, index: number) {
     const userId = userInfo.value?.info?.id || localStorage.getItem("uid");
     navIndex.value = index;
     router.push({
-      path: "/user-home",
-      query: { id: userId }
+      path: `/user-home/${userId}`
     });
     return false;
   }
@@ -696,10 +695,7 @@ function showExit() {
 function toUserHome() {
   isShowExit.value = false;
   router.push({
-    path: "/user-home",
-    query: {
-      id: userInfo.value.info.id,
-    },
+    path: `/user-home/${userInfo.value.info.id}`,
   });
 }
 
@@ -711,11 +707,8 @@ function toUserHomeTab(tab: number) {
   }
 
   router.replace({
-    path: "/user-home",
-    query: {
-      id: userId,
-      tab: tab
-    },
+    path: `/user-home/${userId}`,
+    query: { tab: tab },
   });
 }
 

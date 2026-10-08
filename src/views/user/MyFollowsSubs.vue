@@ -232,7 +232,7 @@ function toggleAutoRenew(item: any) {
 }
 
 function goUserHome(userId: string) {
-  router.push(`/user-home?id=${userId}`);
+  router.push(`/user-home/${userId}`);
 }
 
 function handleClickOutside(e: MouseEvent) {

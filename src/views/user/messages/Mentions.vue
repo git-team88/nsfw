@@ -58,7 +58,7 @@ function toDetail(post: any, comment: any) {
 }
 
 function goUserHome(userId: string) {
-  router.push(`/user-home?id=${userId}`);
+  router.push(`/user-home/${userId}`);
 }
 </script>
 

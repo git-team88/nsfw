@@ -72,7 +72,7 @@ const delay = computed(() => props.u.rank === 1 ? 180 : props.u.rank === 2 ? 60 
 const lift = computed(() => props.u.rank === 1 ? 44 : props.u.rank === 2 ? 22 : 0)
 
 function goUser() {
-  if (props.u.id) router.push(`/user-home?id=${props.u.id}`)
+  if (props.u.id) router.push(`/user-home/${props.u.id}`)
 }
 
 let following = false

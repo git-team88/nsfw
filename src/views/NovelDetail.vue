@@ -1682,7 +1682,7 @@ async function handleReportSubmit(reason: string) {
 // Navigate to user home
 function navigateToUserHome() {
   if (detail.value.author.id) {
-    router.push({ path: '/user-home', query: { id: detail.value.author.id } });
+    router.push({ path: `/user-home/${detail.value.author.id}` });
   }
 }
 

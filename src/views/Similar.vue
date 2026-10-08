@@ -401,7 +401,7 @@ const onCardTiltReset = (e: MouseEvent) => {
 
 function goToUserHome(userId: number | undefined) {
   if (userId) {
-    router.push(`/user-home?id=${userId}`);
+    router.push(`/user-home/${userId}`);
   }
 }
 

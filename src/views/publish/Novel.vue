@@ -4201,7 +4201,7 @@ async function handleBatchPublishFromModal() {
 function handleBatchPublishAllSuccess(count: number) {
   const sid = selectedProject.value?.session_id || (route.query.session_id as string);
   toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
-  router.push(`/user-home?id=${uid}&type=2`);
+  router.push(`/user-home/${uid}?type=2`);
 }
 
 async function onBatchPublish() {
@@ -4335,7 +4335,7 @@ function handleBatchPublishComplete() {
 function handleBatchPublishExit() {
   const sid = selectedProject.value?.session_id || (route.query.session_id as string);
   showBatchPublishFail.value = false;
-  router.push(`/user-home?id=${uid}&type=2`);
+  router.push(`/user-home/${uid}?type=2`);
 }
 
 function handleBatchPublishRetry() {

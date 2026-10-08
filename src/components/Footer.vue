@@ -41,7 +41,7 @@ const navigateTo = (path: string) => {
 
   if (path === '/user-home') {
     const uid = localStorage.getItem('uid') || '';
-    router.push({ path: '/user-home', query: { id: uid } });
+    router.push({ path: `/user-home/${uid}` });
   } else {
     router.push(path);
   }

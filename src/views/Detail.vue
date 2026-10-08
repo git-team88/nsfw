@@ -3157,7 +3157,7 @@ async function searchByMention(mention: string) {
     if (res.code === 0 || res.code === 200) {
       const userId = res.data?.user_id;
       if (userId) {
-        router.push({ path: "/user-home", query: { id: userId } });
+        router.push({ path: `/user-home/${userId}` });
       } else {
         toast(apiErrorMessage(res))
       }
@@ -5185,7 +5185,7 @@ function closePreviewModal() {
 
 function navigateToUserHome() {
   if (detail.value.author.id) {
-    router.push({ path: '/user-home', query: { id: detail.value.author.id } });
+    router.push({ path: `/user-home/${detail.value.author.id}` });
   }
 }
 

@@ -61,7 +61,7 @@ const isSelf = computed(() => {
 })
 
 function goUser() {
-  if (props.u.id) router.push(`/user-home?id=${props.u.id}`)
+  if (props.u.id) router.push(`/user-home/${props.u.id}`)
 }
 
 let following = false

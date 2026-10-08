@@ -528,7 +528,7 @@ function formatPrice(raw: string, currency?: string, isWeb3 = false): string {
 
 function goHome() {
   const type = collection.value?.type || '1';
-  router.push(`/user-home?id=${authorInfo.value.id}&type=${type}`);
+  router.push(`/user-home/${authorInfo.value.id}?type=${type}`);
 }
 
 function goPublish() {

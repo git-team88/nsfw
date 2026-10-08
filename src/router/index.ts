@@ -190,9 +190,19 @@ const routes = [
     component: () => import("@/views/NovelGenerate.vue"),
   },
   {
-    path: "/user-home",
+    path: "/user-home/:id",
     name: "UserHome",
     component: () => import("@/views/user/UserHome.vue"),
+  },
+  {
+    // 旧地址 /user-home?id=x 兼容：转成 /user-home/x，其余 query（type/tab/fav）原样带过去；
+    // 没带 id 的（如未登录点「个人中心」）用本地 uid，再没有就回首页
+    path: "/user-home",
+    redirect: (to: RouteLocation) => {
+      const { id, ...rest } = to.query;
+      const uid = id || localStorage.getItem("uid") || "";
+      return uid ? { path: `/user-home/${uid}`, query: rest } : { path: "/" };
+    },
   },
   {
     path: "/subscription-payment",

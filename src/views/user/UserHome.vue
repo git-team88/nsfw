@@ -795,7 +795,7 @@ function syncFavoriteQuery() {
   newQuery.type = String(favoriteContentType.value);
   newQuery.fav = '1';
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
-    router.replace({ path: "/user-home", query: newQuery });
+    router.replace({ path: `/user-home/${route.params.id}`, query: newQuery });
   }
 }
 
@@ -924,7 +924,7 @@ async function fetchCollections(reset = false) {
     }
     collectionsLoading.value = true;
 
-    let authorId = route.query.id;
+    let authorId = route.params.id;
     // Ensure authorId is a string
     if (Array.isArray(authorId)) {
       authorId = authorId[0];
@@ -1163,7 +1163,7 @@ let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Fetch user info using authorInfo API
 async function fetchUserInfo() {
-  let authorId = route.query.id;
+  let authorId = route.params.id;
   // Ensure authorId is a string
   if (Array.isArray(authorId)) {
     authorId = authorId[0];
@@ -1232,7 +1232,7 @@ async function fetchUserInfo() {
 
 // Refresh only the following and follower counts after a follow action
 async function fetchUserStats() {
-  let authorId = route.query.id;
+  let authorId = route.params.id;
   if (Array.isArray(authorId)) authorId = authorId[0];
 
   const localUid = localStorage.getItem('uid');
@@ -1335,7 +1335,7 @@ onMounted(async () => {
   await fetchUserInfo();
 
   // 上报个人主页浏览（10 分钟内只上报一次）
-  trackHomeView((route.query.id as string) || userInfo.value.id);
+  trackHomeView((route.params.id as string) || userInfo.value.id);
 
     // type 已经在 activeContentType 初始化时就从地址栏解析过了，这里不用再读一遍
 
@@ -1408,11 +1408,11 @@ watch(currentTab, () => {
   }
 });
 
-let lastId = ref(route.query.id);
+let lastId = ref<any>(route.params.id);
 let lastTab = ref(route.query.tab);
 let lastType = ref(route.query.type);
 
-watch(() => [route.query.id, route.query.tab, route.query.type, route.query.fav], async ([newId, newTab, newType, newFav], [oldId, oldTab, oldType, oldFav]) => {
+watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav], async ([newId, newTab, newType, newFav], [oldId, oldTab, oldType, oldFav]) => {
 
   const idChanged = newId !== oldId;
   const tabChanged = newTab !== oldTab;
@@ -1599,7 +1599,7 @@ function setActiveContentType(typeId: number | string, fromRoute = false) {
 
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
     router.replace({
-      path: "/user-home",
+      path: `/user-home/${route.params.id}`,
       query: newQuery,
     });
   }
@@ -1670,7 +1670,7 @@ function showFollowList(tab: "following" | "fans", fromRouteOrEvent: boolean | M
 
     if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
       router.replace({
-        path: "/user-home",
+        path: `/user-home/${route.params.id}`,
         query: newQuery,
       });
     }
@@ -1698,7 +1698,7 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
 
     if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
       router.replace({
-        path: "/user-home",
+        path: `/user-home/${route.params.id}`,
         query: newQuery,
       });
     }
@@ -1708,7 +1708,7 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
 async function fetchFollowList(reset = false) {
   if (reset) followPage.value = 1;
 
-  let authorId = route.query.id;
+  let authorId = route.params.id;
   // Ensure authorId is a string
   if (Array.isArray(authorId)) {
     authorId = authorId[0];
@@ -1855,7 +1855,7 @@ function goSubscribe() {
 }
 
 function goUserHome(userId: number) {
-  router.replace(`/user-home?id=${userId}`);
+  router.replace(`/user-home/${userId}`);
 }
 
 async function sharePage() {
@@ -1961,7 +1961,7 @@ async function loadPosts(reset = false) {
   const currentDateRange = dateRange.value;
 
   loading.value = true;
-  let authorId = route.query.id;
+  let authorId = route.params.id;
 
   // Ensure authorId is a string
   if (Array.isArray(authorId)) {
@@ -2216,13 +2216,13 @@ function goDetail(id: number | string, authorId?: number | string) {
 
   if (type !== 4 && type !== 5) {
     queryParams.type = type;
-    queryParams.uid = authorId || route.query.id || '';
+    queryParams.uid = authorId || route.params.id || '';
   } else {
     // 图片、视频是单篇作品，来源是博主主页 => 详情接口拼 fromBloggerIndex。
     // 把 uid 和当前的搜索/日期筛选一起带过去，后端才能还原出同一份列表，
     // 详情页才有上一个/下一个可切。
     queryParams.type = 4;
-    queryParams.uid = authorId || route.query.id || '';
+    queryParams.uid = authorId || route.params.id || '';
     if (searchKeyword.value) queryParams.keyword = searchKeyword.value;
     if (dateRange.value?.start) queryParams.start_day = dateRange.value.start;
     if (dateRange.value?.end) queryParams.end_day = dateRange.value.end;

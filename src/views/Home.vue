@@ -1127,7 +1127,7 @@ const detailHref = (bookId: string, type?: string, postId?: string | number) => 
 };
 
 const navigateToUserHome = (userId: number) => {
-  router.push({ path: '/user-home', query: { id: userId } });
+  router.push({ path: `/user-home/${userId}` });
 };
 
 const toggleUserFollow = async (user: any) => {

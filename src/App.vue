@@ -34,8 +34,8 @@ const routeViewKey = computed(() => {
     new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(pathOnly) ||
     new RegExp(`^/(${TYPES})/?$`).test(pathOnly);
   // 个人主页：只认用户 id，query 里的 type / tab 不参与
-  if (pathOnly === '/user-home') {
-    return `user-home:${route.query.id ?? ''}`;
+  if (pathOnly.startsWith('/user-home/')) {
+    return `user-home:${route.params.id ?? ''}`;
   }
 
   // 我的项目：数据只跟当前登录用户走，query 里就一个 tab，用固定 key
@@ -98,8 +98,13 @@ function updateHreflang() {
 // mobile（移动端 alternate）：仅以下 4 类页面输出，其余页面为 null（不加 alternate）：
 //   首页/语言页/分类页  → m 站首页
 //   合集详情  /collection/:id            → /detail/book-public/:id
-//   作品详情  /detail/x?contentType=t    → /detail?id=x&source=t
-//   社区主页  /user-home?id=x            → /user/x
+//   作品详情  /detail/x?tab=2             → /detail/novel/x
+//   社区主页  /user-home/x               → /user/x
+// 内容类型 → m 站详情页目录名；key 同时收数字（tab）和英文名（contentType）
+const MOBILE_TYPE_DIR: Record<string, string> = {
+  '1': 'comic', '2': 'novel', '3': 'drama', '4': 'image', '5': 'video',
+  comic: 'comic', novel: 'novel', drama: 'drama', image: 'image', photo: 'image', video: 'video',
+};
 function computeSeoUrls(): { canonical: string; mobile: string | null } {
   const { site: SITE_ORIGIN, mobile: MOBILE_ORIGIN } = resolveOrigins();
   const path = route.path;
@@ -114,21 +119,25 @@ function computeSeoUrls(): { canonical: string; mobile: string | null } {
     };
   }
 
-  if (path === '/user-home' && q.id) {
+  const uh = path.match(/^\/user-home\/([^/?#]+)/);
+  if (uh) {
     return {
-      canonical: `${SITE_ORIGIN}/user-home?id=${q.id}`,
-      mobile: `${MOBILE_ORIGIN}/user/${q.id}`,
+      canonical: `${SITE_ORIGIN}/user-home/${uh[1]}`,
+      mobile: `${MOBILE_ORIGIN}/user/${uh[1]}`,
     };
   }
 
   const det = path.match(/^\/detail\/([^/?#]+)/);
   if (det) {
     const id = det[1];
-    // contentType 直接透传成移动端的 source（novel/comic/video…）；m 站仍是 ?id= 形式
     const t = q.contentType ? String(q.contentType) : '';
+    // m 站作品详情是 /detail/{类型}/{id}（comic/novel/drama/image/video）。
+    // PC 地址栏里类型在 tab（数字 1-5）或 contentType（英文名）里，映射成 m 站的目录名；
+    // 两个都没有时不知道类型，不输出移动端 alternate，免得指到一个不存在的地址
+    const typeDir = MOBILE_TYPE_DIR[String(q.tab ?? t)] || '';
     return {
       canonical: `${SITE_ORIGIN}/detail/${id}${t ? `?contentType=${t}` : ''}`,
-      mobile: `${MOBILE_ORIGIN}/detail?id=${id}${t ? `&source=${t}` : ''}`,
+      mobile: typeDir ? `${MOBILE_ORIGIN}/detail/${typeDir}/${id}` : null,
     };
   }
 
