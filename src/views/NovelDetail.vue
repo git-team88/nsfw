@@ -1947,24 +1947,14 @@ function goToCollection() {
 
 // Close page
 function closePage() {
-  const currentHost = window.location.hostname;
-  const referrer = document.referrer;
-  let isFromExternal = false;
-  let isReferrerEmpty = !referrer;
-
-  if (referrer) {
-    try {
-      const referrerHost = new URL(referrer).hostname;
-      isFromExternal = !!(referrerHost && referrerHost !== currentHost);
-    } catch (e) {
-      isFromExternal = true;
-    }
-  }
-
-  if (window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
-    router.push('/');
-  } else {
+  // 和 Detail.vue 一样：只看 vue-router 挂在 history.state.back 上的站内上一页，
+  // 有就退回去，没有（直接打开的链接等）才回首页。不再看 document.referrer / history.length，
+  // SPA 里 referrer 一直是最初进站那一页的，从外站链接进来会被误判成「要出站」而回首页。
+  const hasInAppBack = !!(window.history.state && (window.history.state as any).back);
+  if (hasInAppBack) {
     router.back();
+  } else {
+    router.push('/');
   }
 }
 

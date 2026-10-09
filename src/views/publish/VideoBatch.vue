@@ -282,6 +282,18 @@
                   maxlength="60"
                 />
               </div>
+              <!-- 每集描述（可不填）：和单个发布页一样的富文本框，支持 # 话题 / @ 提及，提交时取纯文本 -->
+              <div class="batch-chapter-fields">
+                <div class="batch-field-label">
+                  <span class="field-name">{{ t('submit.descriptionLabel') }}</span>
+                </div>
+                <span class="batch-char-count">({{ getBatchChapterDesc(chapter.chapter).length }}/{{ DESC_MAX }})</span>
+              </div>
+              <CaptionEditor
+                v-model="localItems[chapter.chapter - 1].desc"
+                :max-length="DESC_MAX"
+                :placeholder="t('submit.descriptionPlaceholder')"
+              />
             </div>
           </div>
         </div>
@@ -410,6 +422,7 @@ import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import SwitchCollectionModal from "@/components/SwitchCollectionModal.vue";
 import BatchPublishProgressDialog from "@/components/BatchPublishProgressDialog.vue";
 import BatchUploadProgressDialog from "@/components/BatchUploadProgressDialog.vue";
+import CaptionEditor from "@/components/CaptionEditor.vue";
 import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
@@ -917,6 +930,8 @@ interface LocalItem {
   name: string;
   /** 发布用的标题，默认文件名去掉扩展名 */
   title: string;
+  /** 发布用的描述，可空 */
+  desc: string;
   size: number;
   duration: number;
   status: LocalItemStatus;
@@ -964,6 +979,11 @@ function updateBatchChapterTitle(chapterNum: number, event: Event) {
   const item = localItems.value[chapterNum - 1];
   if (item) item.title = (event.target as HTMLInputElement).value;
 }
+
+function getBatchChapterDesc(chapterNum: number): string {
+  return localItems.value[chapterNum - 1]?.desc || '';
+}
+
 
 function localItemStatusText(item: LocalItem): string {
   switch (item.status) {
@@ -1046,6 +1066,7 @@ async function addLocalFiles(files: File[]) {
       file,
       name: file.name,
       title: fileBaseName(file.name).substring(0, 60),
+      desc: '',
       size: parseFloat((file.size / (1024 * 1024)).toFixed(1)),
       duration: meta.duration,
       status: 'waiting',
@@ -1254,7 +1275,7 @@ async function runBatchPublishLoop() {
         type: 3,
         title,
         cover: coverPreview.value || (selectedCollection.value?.cover || ''),
-        content: '',
+        content: item.desc.trim().substring(0, DESC_MAX),
         is_nsfw: computedIsNsfw.value,
         access_rights: accessRights,
         video_url: item.url,

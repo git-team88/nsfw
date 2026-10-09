@@ -1,4 +1,12 @@
 // 本地批量上传页（VideoBatch.vue）独有的样式；通用部分仍在 Video.scss
+// 每集描述：复用发布页的富文本描述框（CaptionEditor），这里只管它在列表项里的间距
+.submit-video .batch-chapter-edit-section .batch-chapter-input-wrap + .batch-chapter-fields {
+  margin-top: 12px;
+}
+.submit-video .batch-chapter-edit-section .caption-editor .desc-input-wrap {
+  margin-top: 8px;
+}
+
 .submit-video .batch-local-upload {
   // Video.scss 里 .hidden-file 是铺满父容器的透明层；这页 input 挂在 .upload-tabs 下，
   // 铺满会把文件列表整个盖住，所有点击都变成选文件。缩成 1px 并关掉事件，只靠 ref.click() 触发
