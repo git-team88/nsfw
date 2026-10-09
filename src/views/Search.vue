@@ -1244,11 +1244,19 @@ $line: #2c2c2c;
 
   .content-image {
     width: 100%;
-    aspect-ratio: 3 / 4;
     position: relative;
     overflow: hidden;
+    // 3:4 用 padding 占位撑高，不用 aspect-ratio（Safari 里撑不开，见 Home.scss）
+    &::before {
+      content: '';
+      display: block;
+      padding-top: 133.333%;
+    }
 
     img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;

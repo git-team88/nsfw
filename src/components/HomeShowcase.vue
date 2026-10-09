@@ -668,12 +668,14 @@ onBeforeUnmount(() => {
 .mg-ring { position: relative; height: 420px; user-select: none; z-index: 1; }
 .ring-card {
   position: absolute; left: 50%; top: 52%;
-  width: 600px; aspect-ratio: 3 / 4;
+  width: 600px;
   transform: translate(-50%, -50%);
   border: 1px solid #3d3d3d; border-radius: 18px; overflow: hidden;
   box-shadow: 0 28px 60px rgba(0, 0, 0, 0.22);
   cursor: pointer; will-change: transform;
 }
+/* 3:4 用 padding 占位撑高，不用 aspect-ratio（Safari 里撑不开，见 Home.scss）；卡内元素都是绝对定位 */
+.ring-card::before, .marquee-card::before { content: ''; display: block; padding-top: 133.333%; }
 /* 卡片按 2× 超采样渲染（再缩小到相同显示尺寸）以提升清晰度；卡内元素同比 ×2，仅作用于 3D 环形卡（不影响跑马灯） */
 .ring-card .rank-badge { font-size: 32px; padding: 10px 28px; border-width: 6px; }
 .ring-card .card-foot { padding: 90px 36px 36px; }
@@ -709,7 +711,7 @@ onBeforeUnmount(() => {
 @keyframes mgMarqL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes mgMarqR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 .marquee-card {
-  position: relative; flex: none; width: 132px; aspect-ratio: 3 / 4;
+  position: relative; flex: none; width: 132px;
   margin-right: 14px; border: 1px solid #3d3d3d; border-radius: 18px; overflow: hidden;
   box-shadow: 0 15px 35px rgba(0,0,0,0.5); cursor: pointer;
 }

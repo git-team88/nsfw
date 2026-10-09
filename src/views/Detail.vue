@@ -4055,29 +4055,16 @@ function zoomOut() {
 }
 
 function closePage() {
-  const currentHost = window.location.hostname;
-  const referrer = document.referrer;
-  let isFromExternal = false;
-  let isReferrerEmpty = !referrer;
-
-  if (referrer) {
-    try {
-      const referrerHost = new URL(referrer).hostname;
-      isFromExternal = !!(referrerHost && referrerHost !== currentHost);
-    } catch (e) {
-      isFromExternal = true;
-    }
-  }
-
-  // vue-router 会把上一条站内记录挂在 history.state.back 上。
-  // 从 Stripe 回来 → 成功页 → replace 到详情页这条路径上它是 null，
-  // 这时 history.back() 退回去的是 Stripe 的地址，所以直接回首页。
+  // 只看 vue-router 挂在 history.state.back 上的站内上一页：
+  //   有 → 退回去（合集页、首页、搜索页…）；
+  //   没有 → 这是本次会话里第一个站内页面（直接打开的链接、从 Stripe 回来后 replace 到的详情页），退回去会出站，直接回首页。
+  // 以前还掺了 document.referrer 和 history.length 的判断，但 SPA 里 referrer 一直是最初进站那一页的，
+  // 新标签页直接打开合集再点进详情时 referrer 为空、history.length 又只有 2，会被误判成「直接打开的详情页」而回首页。
   const hasInAppBack = !!(window.history.state && (window.history.state as any).back);
-
-  if (!hasInAppBack || window.history.length <= 1 || isFromExternal || (isReferrerEmpty && window.history.length <= 2)) {
-    router.push('/');
-  } else {
+  if (hasInAppBack) {
     router.back();
+  } else {
+    router.push('/');
   }
 }
 
