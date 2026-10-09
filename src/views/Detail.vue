@@ -120,7 +120,7 @@
                           <span class="subtitle-label">{{ t('detail.subtitle') }}：{{ selectedSubtitleLang ? t(subtitleLangMap[selectedSubtitleLang] || '') : t('detail.subtitleNone') }}</span>
                         <svg class="subtitle-arrow" viewBox="0 0 12 12" width="10" height="10"><path d="M3 5l3 3 3-3" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <div class="subtitle-menu" v-show="showSubtitleMenu" @click.stop>
-                          <div class="subtitle-option" v-for="lang in subtitleMenuLangs" :key="lang" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang] || '') }}</div>
+                          <div class="subtitle-option" v-for="lang in subtitleMenuLangs" :key="lang" :class="{ active: lang === (selectedSubtitleLang || 'none') }" @click="selectSubtitle(lang)">{{ lang === 'none' ? t('detail.subtitleNone') : t(subtitleLangMap[lang] || '') }}</div>
                         </div>
                       </div>
                        <div class="volume-control" :class="{ 'volume-active': showVolumeSlider || isDraggingVolume }" @mouseenter="showVolumeSlider = true" @mouseleave="onVolumeControlLeave">
@@ -1076,21 +1076,23 @@ const showSubtitleMenu = ref(false);
 const subtitleCues = ref<{ start: number; end: number; text: string }[]>([]);
 const currentSubtitleText = ref('');
 
-const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: 'novel.language.tc', jp: 'novel.language.jp', en: 'novel.language.en' };
+const subtitleLangMap: Record<string, string> = { cn: 'novel.language.zh', tc: 'novel.language.tc', jp: 'novel.language.jp', en: 'novel.language.en', kr: 'novel.language.kr', th: 'novel.language.th' };
 
 // 字幕语言的固定顺序。既是下拉项的排列顺序（后端返回顺序不保证稳定，
 // 排一下菜单才不会每次进来都跳），也是「导航语言没有对应字幕」时的兜底优先级：
-// 英语 -> 日语 -> 中文简体 -> 中文繁体。
-const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc'];
+// 英语 -> 日语 -> 中文简体 -> 中文繁体 -> 韩语 -> 泰语。
+const SUBTITLE_LANG_ORDER = ['en', 'jp', 'cn', 'tc', 'kr', 'th'];
 
 
-// 已经选了某个语言时，下拉项按漫剧自身的语言排（作品自身的语言本来就不在列表里）。
+// 已经选了某个语言时，下拉项按漫剧自身的语言排，自身语言的字幕排在最后。
 // 认不出作品语言就退回 SUBTITLE_LANG_ORDER。
 const SUBTITLE_MENU_ORDER: Record<string, string[]> = {
-  cn: ['jp', 'en', 'tc'],
-  tc: ['jp', 'en', 'cn'],
-  jp: ['en', 'tc', 'cn'],
-  en: ['jp', 'tc', 'cn'],
+  cn: ['jp', 'en', 'tc', 'kr', 'th'],
+  tc: ['jp', 'en', 'cn', 'kr', 'th'],
+  jp: ['en', 'tc', 'cn', 'kr', 'th'],
+  en: ['jp', 'tc', 'cn', 'kr', 'th'],
+  kr: ['en', 'jp', 'tc', 'cn', 'th'],
+  th: ['en', 'jp', 'tc', 'cn', 'kr'],
 };
 
 /** 导航语言换算成后端的字幕语言码（后端把简体叫 cn，导航里叫 zh） */
@@ -1125,14 +1127,13 @@ function handleDramaUnlocked() {
   fetchDetail(Number(detail.value?.id ?? id.value));
 }
 
-// 真正能选的字幕语言：后端返回了哪些就有哪些，去掉作品自身的语言（漫剧是中文简体
-// 就不给简体字幕）和认不出来的语言码，再按固定顺序排。
+// 真正能选的字幕语言：后端返回了哪些就有哪些（作品自身的语言也列出来，不再过滤），
+// 只去掉认不出来的语言码，再按固定顺序排。
 // 这个数组为空 = 一条字幕都没有 = 整个开关不显示。
 const availableSubtitleLangs = computed(() => {
-  const ownLang = detail.value?.language || '';
   const langs = subtitles.value
     .map(s => s.lang)
-    .filter(l => !!subtitleLangMap[l] && l !== ownLang);
+    .filter(l => !!subtitleLangMap[l]);
   return SUBTITLE_LANG_ORDER.filter(l => langs.includes(l));
 });
 
@@ -1221,13 +1222,16 @@ function updateCurrentSubtitle() {
 
 // 单选菜单。「无」固定排在最前且一直在（随时可以关字幕），后面的语言分两种排法：
 //   当前是「无」        -> 英语 -> 日语 -> 中文简体 -> 中文繁体
-//   当前选了某个语言    -> 按漫剧自身语言定的顺序（SUBTITLE_MENU_ORDER），且不列出当前选中的那个
+//   当前选了某个语言    -> 按漫剧自身语言定的顺序（SUBTITLE_MENU_ORDER），当前选中的也列出并高亮
 const subtitleMenuLangs = computed(() => {
   const available = availableSubtitleLangs.value;
   if (!selectedSubtitleLang.value) return ['none', ...available];
 
-  const order = SUBTITLE_MENU_ORDER[detail.value?.language || ''] || SUBTITLE_LANG_ORDER;
-  const langs = order.filter(l => available.includes(l) && l !== selectedSubtitleLang.value);
+  // SUBTITLE_MENU_ORDER 里没写作品自身的语言，补在后面，保证后端给的每种字幕都能选到
+  const order = [...(SUBTITLE_MENU_ORDER[detail.value?.language || ''] || []), ...SUBTITLE_LANG_ORDER]
+    .filter((l, i, arr) => arr.indexOf(l) === i);
+  // 当前选中的也列出来（高亮），下拉里能看全后端给的每种字幕
+  const langs = order.filter(l => available.includes(l));
   return ['none', ...langs];
 });
 

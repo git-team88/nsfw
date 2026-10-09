@@ -1,0 +1,138 @@
+// 本地批量上传页（VideoBatch.vue）独有的样式；通用部分仍在 Video.scss
+.submit-video .batch-local-upload {
+  // Video.scss 里 .hidden-file 是铺满父容器的透明层；这页 input 挂在 .upload-tabs 下，
+  // 铺满会把文件列表整个盖住，所有点击都变成选文件。缩成 1px 并关掉事件，只靠 ref.click() 触发
+  > .hidden-file {
+    position: absolute;
+    inset: auto;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .upload-area {
+    cursor: pointer;
+  }
+  .form-label-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .batch-file-count {
+    font-size: 14px;
+    color: #8a8a8a;
+  }
+  .batch-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .batch-file-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    background: #1a1a1a;
+    &.fail { border-color: rgba(250, 45, 71, 0.5); }
+  }
+  .batch-file-index {
+    flex: 0 0 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background: #ff4f9a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .batch-file-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .batch-file-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+  }
+  .batch-file-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f5f5f5;
+  }
+  .batch-file-meta {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: #8a8a8a;
+    white-space: nowrap;
+  }
+  .status-progress-bar {
+    height: 8px;
+    background: #2f2f2f;
+    border-radius: 4px;
+    overflow: hidden;
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: #ff4f9a;
+      transition: width 0.2s ease;
+      &.success { background: #05df4b; }
+      &.error { background: #fa2d47; }
+      &.uploading { background: #ff4f9a; }
+    }
+  }
+  .batch-file-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .batch-file-status {
+    font-size: 12px;
+    color: #8a8a8a;
+    &.success { color: #22C55E; }
+    &.fail { color: #FA2D47; }
+    &.uploading { color: #ff4f9a; }
+  }
+  .batch-file-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    .action-link {
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      // 播放 / 重试：主题色；重新上传：正文色；上移下移：正文色淡一点；删除：红
+      &.play, &.retry { color: #ff4f9a; }
+      &.reupload { color: #f5f5f5; }
+      &.move { color: #f5f5f5; opacity: 0.85; }
+      &.remove { color: #FA2D47; }
+      &.disabled { opacity: 0.5; pointer-events: none; }
+    }
+  }
+  .batch-file-add {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0 0;
+    .btn { flex: 0 0 auto; }
+  }
+  .batch-file-add-tip {
+    font-size: 12px;
+    color: #8a8a8a;
+  }
+}

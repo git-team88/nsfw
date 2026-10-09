@@ -109,7 +109,7 @@
                     <span class="price-unit">{{ priceUnit }}{{ activeTab == 'credits_pack' ? '' : getBillingPeriodText(plan.billing_period || '1') }}</span>
                   </div>
                   <div v-if="activeTab === 'credits_pack' && plan.original_price" class="plan-strikethrough-price">
-                    <span>{{ pricePrefix }}{{ formatPrice(plan.original_price) }}{{ priceUnit }}</span>
+                    <span>{{ pricePrefix }}{{ formatPrice(getPlanOriginalPrice(plan)) }}{{ priceUnit }}</span>
                   </div>
                 </div>
 
@@ -264,6 +264,7 @@ interface RechargePlan {
     price: string;
     currency: string;
     discount_price?: string;
+    original_price?: string;
   };
   period: string;
   credits: string;
@@ -494,7 +495,7 @@ function switchTab(tab: string) {
 function switchPaymentTab(tab: string) {
   if (paymentTab.value === tab) return;
   paymentTab.value = tab;
-  activeTab.value = 'subscription';
+  // 切支付方式不动「订阅 / 算力包」的选中，按当前 tab 重新拉对应支付方式的档位
   selectedPlan.value = 0;
   couponCode.value = '';
   couponInfo.value = null;
@@ -786,6 +787,17 @@ function formatPrice(price: string | number): string {
 
 function getPlanPrice(plan: RechargePlan): string {
   return paymentTab.value === 'usdt' && plan.web3?.price ? plan.web3.price : plan.price;
+}
+
+// 算力包的划线价。USDT 下主价格取的是 web3.price（链上金额，formatPrice 不缩放），
+// 但 original_price 只有顶层一份、美元下发的是美分，直接显示就是没除 100。
+// 优先用 web3 里的 original_price；没有就按法币规则先缩放成元再交给 formatPrice。
+function getPlanOriginalPrice(plan: RechargePlan): string {
+  if (paymentTab.value === 'usdt') {
+    if (plan.web3?.original_price) return plan.web3.original_price;
+    return plan.original_price ? String(scaleFiatAmount(plan.original_price, fiatCurrency.value)) : '';
+  }
+  return plan.original_price || '';
 }
 
 function openLink() {
