@@ -41,7 +41,9 @@ function postAnother() {
   const map: Record<string, string> = {
     3: '/publish/video',
     1: '/publish/comic',
-    2: '/publish/novel'
+    2: '/publish/novel',
+    // 漫剧本地批量上传页（没有入口，靠链接打开），「继续发布」要回到它自己
+    batch: '/publish/video-batch',
   }
   router.push(map[type] || '/publish/video')
 }

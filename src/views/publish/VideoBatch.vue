@@ -1383,7 +1383,8 @@ function handleBatchPublishComplete() {
 
 function handleBatchPublishAllSuccess(count: number) {
   toast(t('novel.batchPublish.allPublishSuccess', { count, unit: t('novel.batchPublish.allPublishSuccessUnitChapter') }));
-  router.push(`/user-home/${uid}?type=3`);
+  // 全部发布成功后和单个发布一样进成功页；「继续发布」回到本页
+  router.push('/publish/success?type=batch');
 }
 
 function handleBatchPublishExit() {
