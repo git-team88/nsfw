@@ -3546,26 +3546,29 @@ $pinkopacity: rgba(255,79,154,0.12);
       font-weight: 800;
       color: $ink;
     }
-    img { width: 18px; height: 18px; }
+    img { display: none; }
   }
   .gp-generate {
+    // 和首页输入框的生成按钮（PromptComposer .generate-novel-btn）同一套
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    min-width: 68px;
     height: 44px;
-    padding: 0 22px;
-    // 和顶部 .type-btn.active 同一套：粉色渐变 + 粉边 + 发光
-    border: 1px solid #ff7ab5;
-    border-radius: 27px;
-    background: linear-gradient(145deg, #ff69ac, #ec317f);
+    padding: 0 28px;
+    background: linear-gradient(145deg, #ff65ab, #f02c80);
+    border: 2px solid #ff9aca;
+    border-radius: 18px;
+    box-shadow: 0 0 23px rgba(255, 50, 140, .65);
     color: #fff;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 0 22px rgba(255,61,140,.55);
-    transition: filter .12s, box-shadow .12s;
-    &:hover { filter: brightness(1.06); box-shadow: 0 0 26px rgba(255,61,140,.7); }
-    &.loading { opacity: .7; pointer-events: none; }
+    transition: filter .15s;
+    &:hover { filter: brightness(1.08); }
+    &:active { transform: scale(0.95); }
+    &.loading { opacity: .6; pointer-events: none; }
   }
   .gp-spinner {
     width: 14px;
