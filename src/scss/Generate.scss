@@ -3051,7 +3051,8 @@ $pinkopacity: rgba(255,79,154,0.12);
     .input-textarea {
       height: 140px;
       font-size: 14px;
-      line-height: 24px;
+      // @ 引用标签高 28px，行高给到 36px 行与行之间才不会贴在一起
+      line-height: 36px;
     }
     // 首尾帧模式用的是 textarea，高度和上面的 contenteditable 对齐
     .start-end-frames-input {

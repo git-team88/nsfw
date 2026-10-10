@@ -682,7 +682,8 @@ $pinkopacity: rgba(255,79,154,0.12);
     overflow-y: auto;
     font-family: inherit;
     font-size: 18px;
-    line-height: 32px;
+    // @ 引用标签高 32px，行高 36px 让标签行之间留出间距
+    line-height: 36px;
     resize: none;
     outline: none;
     text-decoration: none;
@@ -1114,6 +1115,7 @@ $pinkopacity: rgba(255,79,154,0.12);
       height: 28px;
       min-height: 28px;
       max-height: 28px;
+      line-height: 28px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
