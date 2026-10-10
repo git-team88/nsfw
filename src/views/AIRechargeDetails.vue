@@ -499,7 +499,6 @@ $highlight: rgba(255,255,255,0.06);
 
 .ai-recharge-details {
   width: 100%;
-  background: $cream;
 }
 
 .container {

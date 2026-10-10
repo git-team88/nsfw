@@ -843,7 +843,6 @@ $green: #22A06B;
 
 .ai-recharge {
   width: 100%;
-  background: $cream;
 }
 
 .container {
