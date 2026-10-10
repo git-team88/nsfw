@@ -1044,23 +1044,14 @@ async function addLocalFiles(files: File[]) {
     toast(t('submit.video.batchLimit', { max: MAX_LOCAL_FILES }));
     list = files.slice(0, room);
   }
+  // 不合格的跳过、其余照常；原因先攒着，最后合成一条提示，不一个文件弹一次
+  const skipped: Record<SkipReason, number> = { format: 0, size: 0, duration: 0, timeout: 0, corrupted: 0 };
   for (const file of list) {
-    if (!validateVideoFormat(file)) continue;
-    if (file.size > MAX_FILE_SIZE) {
-      toast(t('submit.video.sizeError'));
-      continue;
-    }
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!ALLOWED_EXTENSIONS.includes(ext)) { skipped.format++; continue; }
+    if (file.size > MAX_FILE_SIZE) { skipped.size++; continue; }
     const meta = await readVideoMetadata(file);
-    if (!meta.ok) {
-      toast(t(
-        meta.reason === 'duration'
-          ? 'submit.video.durationLimit'
-          : meta.reason === 'timeout'
-            ? 'submit.video.readTimeoutError'
-            : 'submit.video.corruptedError',
-      ));
-      continue;
-    }
+    if (!meta.ok) { skipped[meta.reason]++; continue; }
     localItems.value.push({
       uid: ++localItemSeq,
       file,
@@ -1076,7 +1067,28 @@ async function addLocalFiles(files: File[]) {
       localSessionId: '',
     });
   }
+  toastSkipped(skipped);
   pumpUploads();
+}
+
+type SkipReason = 'format' | 'size' | 'duration' | 'timeout' | 'corrupted';
+const SKIP_REASON_KEY: Record<SkipReason, string> = {
+  format: 'submit.video.batchSkipFormat',
+  size: 'submit.video.batchSkipSize',
+  duration: 'submit.video.batchSkipDuration',
+  timeout: 'submit.video.batchSkipTimeout',
+  corrupted: 'submit.video.batchSkipCorrupted',
+};
+
+/** 「已跳过 N 个文件：格式不支持 ×1、超过 5GB ×2」，一批只弹一次 */
+function toastSkipped(skipped: Record<SkipReason, number>) {
+  const total = Object.values(skipped).reduce((a, b) => a + b, 0);
+  if (!total) return;
+  const reasons = (Object.keys(skipped) as SkipReason[])
+    .filter(k => skipped[k] > 0)
+    .map(k => `${t(SKIP_REASON_KEY[k])} ×${skipped[k]}`)
+    .join('、');
+  toast(t('submit.video.batchSkipped', { count: total, reasons }));
 }
 
 /** 补位：没到并发上限就从等待队列里拿下一个开始传 */
