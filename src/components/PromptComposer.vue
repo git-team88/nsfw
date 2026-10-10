@@ -3115,8 +3115,8 @@ function frameImageFitsLimit(url: string | null, limitMode: string): boolean {
   if (meta.width && meta.height) {
     const ratio = meta.width / meta.height;
     if (ratio < pf.ratioMin || ratio > pf.ratioMax) return false;
-    if (meta.width < pf.dimMin || meta.width > pf.dimMax) return false;
-    if (meta.height < pf.dimMin || meta.height > pf.dimMax) return false;
+    if (meta.width < pf.imageDimMin || meta.width > pf.imageDimMax) return false;
+    if (meta.height < pf.imageDimMin || meta.height > pf.imageDimMax) return false;
   }
   return true;
 }

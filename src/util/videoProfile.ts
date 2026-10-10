@@ -89,16 +89,20 @@ export interface VideoProfile {
   refAudioMaxClips: number;
   modifyMinSeconds: number;
   extendMinSeconds: number;
+  // 参考视频的宽高范围（px）与宽高比
   dimMin: number;
   dimMax: number;
   ratioMin: number;
   ratioMax: number;
+  // 参考图 / 首尾帧图片的宽高范围（px），宽高比和视频共用 ratioMin / ratioMax
+  imageDimMin: number;
+  imageDimMax: number;
   // 参考视频的宽 × 高 像素总数区间，0 表示该档位不校验
   areaMin: number;
   areaMax: number;
 }
 
-// refVideoMaxClips / refAudioMaxClips / audioMaxSize 为 0 表示不限制
+// refVideoMaxClips / refAudioMaxClips / audioMaxSize 为 0 表示不限制（段数走 Generate.vue 里按版本算的 5 / 10）
 export const VIDEO_PROFILES: Record<string, VideoProfile> = {
   fast: {
     maxInputChars: 7000,
@@ -112,6 +116,7 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     refAudioMinSeconds: 2, refAudioMaxSeconds: 15, refAudioBudget: 15, refAudioMaxClips: 3,
     modifyMinSeconds: 2, extendMinSeconds: 2,
     dimMin: 256, dimMax: 5760, ratioMin: 0.4, ratioMax: 2.5,
+    imageDimMin: 256, imageDimMax: 5760,
     areaMin: 0, areaMax: 0,
   },
   unlimited: {
@@ -122,10 +127,11 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     defaultRatio: '16:9',
     durationMin: 2, durationMax: 30, defaultDuration: '30', durationMarks: [2, 10, 20, 30],
     imageMaxCount: 10, imageMaxSize: 20 * MB, videoMaxSize: 100 * MB, audioMaxSize: 0,
-    refVideoMinSeconds: 1, refVideoMaxSeconds: 15, refVideoBudget: 30, refVideoMaxClips: 0,
-    refAudioMinSeconds: 0, refAudioMaxSeconds: 0, refAudioBudget: 0, refAudioMaxClips: 0,
+    refVideoMinSeconds: 1, refVideoMaxSeconds: 15, refVideoBudget: 15, refVideoMaxClips: 0,
+    refAudioMinSeconds: 1, refAudioMaxSeconds: 15, refAudioBudget: 15, refAudioMaxClips: 0,
     modifyMinSeconds: 1, extendMinSeconds: 1,
     dimMin: 240, dimMax: 4096, ratioMin: 1 / 8, ratioMax: 8,
+    imageDimMin: 240, imageDimMax: 8000,
     areaMin: 0, areaMax: 0,
   },
   normal: {
@@ -138,9 +144,10 @@ export const VIDEO_PROFILES: Record<string, VideoProfile> = {
     durationMin: 4, durationMax: 30, defaultDuration: '30', durationMarks: [4, 10, 20, 30],
     imageMaxCount: 30, imageMaxSize: 30 * MB, videoMaxSize: 200 * MB, audioMaxSize: 0,
     refVideoMinSeconds: 2, refVideoMaxSeconds: 30, refVideoBudget: 30, refVideoMaxClips: 0,
-    refAudioMinSeconds: 0, refAudioMaxSeconds: 0, refAudioBudget: 0, refAudioMaxClips: 0,
+    refAudioMinSeconds: 2, refAudioMaxSeconds: 30, refAudioBudget: 30, refAudioMaxClips: 0,
     modifyMinSeconds: 4, extendMinSeconds: 2,
     dimMin: 300, dimMax: 6000, ratioMin: 0.4, ratioMax: 2.5,
+    imageDimMin: 300, imageDimMax: 6000,
     // 超级版参考视频还要求宽 × 高 落在 [614×664, 3326×2494] 之间
     areaMin: 614 * 664, areaMax: 3326 * 2494,
   },

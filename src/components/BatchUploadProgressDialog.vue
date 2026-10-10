@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
@@ -77,6 +77,14 @@ const props = defineProps<{
   visible: boolean;
   items: { uid: number; name: string; status: 'waiting' | 'uploading' | 'success' | 'fail'; progress: number }[];
 }>();
+
+// 遮罩期间锁住页面滚动（和 Header 的抽屉同一做法），关闭或组件销毁时恢复
+watch(() => props.visible, (v) => {
+  document.body.style.overflow = v ? 'hidden' : '';
+}, { immediate: true });
+onUnmounted(() => {
+  document.body.style.overflow = '';
+});
 
 /** 已经有结果的（成功或失败）都算完成，总进度条按每个文件的百分比平均 */
 const doneCount = computed(() => props.items.filter(i => i.status === 'success' || i.status === 'fail').length);

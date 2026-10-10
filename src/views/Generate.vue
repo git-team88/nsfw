@@ -2,7 +2,596 @@
   <div class="generate-page">
     <Header :cur="-1" @balanceInfoLoaded="handleBalanceInfoLoaded"></Header>
 
-    <div class="container">
+    <div class="container gen-layout">
+    <!-- 左侧参数面板：原底部输入框的东西按「版本 / 创作模式 / 提示词 / 输出参数」摊开。
+         保留 .bottom-generator 这个类是为了沿用它下面 .input-area 那套输入框样式，定位由 .gen-layout 覆盖 -->
+    <aside class="bottom-generator gen-panel">
+      <div class="input-type-box">
+        <div class="content-type-selector">
+          <div
+            :class="['type-btn', { active: bottomActiveTab == 'video' }]"
+            @click="switchBottomTab('video')"
+          >
+            <div class="type-text">
+              <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.video') }}</span>
+            </div>
+          </div>
+          <div
+            :class="['type-btn', { active: bottomActiveTab == 'photo' }]"
+            @click="switchBottomTab('photo')"
+          >
+            <div class="type-text">
+              <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.photo') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 视频 ================= -->
+      <template v-if="bottomActiveTab == 'video'">
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">1 · {{ t('generatePanel.version') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ t('generatePanel.versionDesc') }}</span>
+          <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="gp-field">
+            <span class="gp-field-label">{{ t('generatePanel.modeLabel') }}</span>
+            <div class="unlimited-switch" :class="{ active: effectiveVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
+              <span class="unlimited-dot"></span>
+              <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
+            </div>
+          </div>
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('generatePanel.versionLabel') }}</span>
+            <div class="gp-cards">
+              <div
+                v-for="opt in nsfwVersionOptions"
+                :key="opt.value"
+                class="gp-card"
+                :class="{ active: selectedNsfwVersion == opt.value }"
+                @click="selectNsfwVersion(opt.value)"
+              >
+                <span class="gp-card-title">{{ opt.label }}</span>
+                <span class="gp-card-desc">{{ versionLimitText(opt.value) }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">2 · {{ t('generatePanel.mode') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ t('generatePanel.modeDesc.' + selectedVideoMultimodal) }}</span>
+          <div class="gp-pills">
+            <div
+              v-for="option in videoMultimodalOptions"
+              :key="option.value"
+              class="gp-pill"
+              :class="{ active: selectedVideoMultimodal == option.value }"
+              @click="selectVideoMultimodal(option.value)"
+            >{{ option.label }}</div>
+          </div>
+        </section>
+
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">3 · {{ t('generatePanel.prompt') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ t('generatePanel.promptDesc') }}</span>
+          <!-- 视频修改 / 续写：原视频放在画面描述上面，单独一行 -->
+          <template v-if="selectedVideoMultimodal == 'videoExtend' || selectedVideoMultimodal == 'videoModify'">
+            <div class="gp-field-label gp-prompt-label">
+              <span>{{ t('generatePanel.refVideos') }}</span>
+            </div>
+            <div class="video-extend-input gp-origin-video">
+              <div class="video-upload" :class="{ uploaded: uploadedVideo }">
+                <input
+                  ref="videoInputRef"
+                  type="file"
+                  accept="video/mp4,video/quicktime"
+                  class="file-input"
+                  style="display: none;"
+                  @change="handleVideoUpload"
+                />
+                <div class="upload-area" @click="uploadedVideo && !isUploading ? playVideo({ videoUrl: uploadedVideo, videoCover: uploadedVideoCover }) : triggerExtendVideoUpload()">
+                  <template v-if="uploadedVideo">
+                    <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
+                    <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
+                    <span class="image-name">{{ t('home.video') }}1</span>
+                    <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
+                    <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
+                  </template>
+                  <template v-else>
+                    <img class="upload-icon video-icon" src="@/assets/images/home/img_icon.png" alt="Upload" />
+                    <span class="upload-label">{{ t('home.contentType.video') }}</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+          <div class="gp-field-label gp-prompt-label">
+            <span>{{ t('generatePanel.promptLabel') }}</span>
+            <span class="gp-field-value">{{ videoPromptCharCount }} / {{ videoProfile.maxInputChars }}</span>
+          </div>
+        <!-- Video Generator -->
+        <div class="input-area gp-input-area">
+          <input
+            ref="videoRefInput"
+            type="file"
+            multiple
+            :accept="'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
+            class="file-input"
+            style="display: none;"
+            @change="handleVideoRefUpload"
+          />
+          <div :class="['input-inner', { collapsed: isVideoInputCollapsed }]">
+
+            <!-- Multi-modal Reference Mode -->
+            <template v-if="selectedVideoMultimodal == 'multimodal'">
+              <div
+                ref="videoEditableInputRef"
+                :data-video-mode="selectedVideoMultimodal"
+                :data-mode="selectedVideoMultimodal"
+                @vue:mounted="onVideoInputMounted"
+                :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
+                contenteditable="true"
+                spellcheck="false"
+                :data-placeholder="videoPlaceholderDisplay"
+                @input="handleVideoInput"
+                @compositionstart="handleCompositionStart"
+                @compositionend="handleVideoCompositionEnd"
+                @keydown="handleVideoKeydown"
+                @click="handleVideoInputClick"
+                @focus="handleVideoInputFocus"
+                @blur="handleVideoInputBlur"
+                @paste="handleVideoPaste"
+              ></div>
+
+              <!-- @ Dropdown -->
+              <div v-if="showVideoRefDropdown" class="at-dropdown">
+                <div
+                  v-for="(item, index) in videoRefDropdownItems"
+                  :key="item.id"
+                  class="dropdown-item"
+                  @mousedown.prevent="selectVideoRefItem(item)"
+                >
+                  <div class="dropdown-img">
+                    <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                  </div>
+                  <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
+                  <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
+                  <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- Start and End Frames Mode -->
+            <template v-else-if="selectedVideoMultimodal == 'startEndFrames'">
+              <div class="start-end-frames-input">
+
+                <textarea
+                  :class="['frames-textarea', { collapsed: isVideoInputCollapsed }]"
+                  :placeholder="t('home.input.placeholder')"
+                  v-model="videoInput"
+                  spellcheck="false"
+                  @input="handleVideoTextareaInput"
+                ></textarea>
+              </div>
+            </template>
+
+            <!-- Video Extend Mode -->
+            <template v-else-if="selectedVideoMultimodal == 'videoExtend'">
+              <div class="video-extend-input">
+                <div
+                  ref="videoEditableInputRef"
+                  :data-video-mode="selectedVideoMultimodal"
+                  :data-mode="selectedVideoMultimodal"
+                  @vue:mounted="onVideoInputMounted"
+                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
+                  contenteditable="true"
+                  spellcheck="false"
+                  :data-placeholder="videoPlaceholderDisplay"
+                  @input="handleVideoInput"
+                  @compositionstart="handleCompositionStart"
+                  @compositionend="handleVideoCompositionEnd"
+                  @keydown="handleVideoKeydown"
+                  @click="handleVideoInputClick"
+                  @focus="handleVideoInputFocus"
+                  @blur="handleVideoInputBlur"
+                  @paste="handleVideoPaste"
+                ></div>
+
+                <div v-if="showVideoRefDropdown" class="at-dropdown">
+                  <div
+                    v-for="(item, index) in videoRefDropdownItems"
+                    :key="item.id"
+                    class="dropdown-item"
+                    @mousedown.prevent="selectVideoRefItem(item)"
+                  >
+                    <div class="dropdown-img">
+                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                    </div>
+                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="selectedVideoMultimodal == 'videoModify'">
+              <div class="video-extend-input">
+                <div
+                  ref="videoEditableInputRef"
+                  :data-video-mode="selectedVideoMultimodal"
+                  :data-mode="selectedVideoMultimodal"
+                  @vue:mounted="onVideoInputMounted"
+                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
+                  contenteditable="true"
+                  spellcheck="false"
+                  :data-placeholder="videoPlaceholderDisplay"
+                  @input="handleVideoInput"
+                  @compositionstart="handleCompositionStart"
+                  @compositionend="handleVideoCompositionEnd"
+                  @keydown="handleVideoKeydown"
+                  @click="handleVideoInputClick"
+                  @focus="handleVideoInputFocus"
+                  @blur="handleVideoInputBlur"
+                  @paste="handleVideoPaste"
+                ></div>
+
+                <div v-if="showVideoRefDropdown" class="at-dropdown">
+                  <div
+                    v-for="(item, index) in videoRefDropdownItems"
+                    :key="item.id"
+                    class="dropdown-item"
+                    @mousedown.prevent="selectVideoRefItem(item)"
+                  >
+                    <div class="dropdown-img">
+                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
+                    </div>
+                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
+                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+          </div>
+        </div>
+        </section>
+
+        <!-- 参考素材：图 / 视频 / 音频各自一个上传区，传完的列在对应区下面 -->
+        <section v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">4 · {{ t('generatePanel.refs') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ refsSummaryText() }} {{ t('generatePanel.refsHint') }}</span>
+
+          <div class="gp-ref-group">
+            <span class="gp-field-label">{{ t('generatePanel.refImages') }}<span class="gp-field-use">{{ t('generatePanel.refImagesUse') }}</span><span class="gp-field-value">{{ refsOf('image').length }} / {{ refImageMaxCount }}</span></span>
+            <div class="gp-dropzone" @click="pickVideoRef('image')" @dragover.prevent @drop.prevent="dropVideoRef($event, 'image')">
+              <img class="gp-dropzone-icon" src="@/assets/images/home/img_icon.png" alt="" />
+              <span>{{ t('generatePanel.dropImages', { left: Math.max(0, refImageMaxCount - refsOf('image').length) }) }}</span>
+              <span class="gp-dropzone-hint">{{ refImageHint() }}</span>
+            </div>
+            <div v-if="refsOf('image').length" class="gp-ref-list">
+              <div v-for="(ref, index) in refsOf('image')" :key="ref.id" class="gp-ref-item">
+                <span class="gp-ref-badge">{{ index + 1 }}</span>
+                <img class="gp-ref-thumb" :src="ref.image" alt="" :title="ref.name" @click="openImageViewer(ref.image)" />
+                <span class="gp-ref-title">{{ t('home.img') }}{{ index + 1 }}</span>
+                <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removeVideoRef(ref.id)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="gp-ref-group">
+            <span class="gp-field-label">{{ t('generatePanel.refVideos') }}<span class="gp-field-use">{{ t('generatePanel.refVideosUse') }}</span><span class="gp-field-value">{{ refsOf('video').length }} / {{ refVideoMaxCount }}</span></span>
+            <div class="gp-dropzone" @click="pickVideoRef('video')" @dragover.prevent @drop.prevent="dropVideoRef($event, 'video')">
+              <img class="gp-dropzone-icon" src="@/assets/images/home/img_icon.png" alt="" />
+              <span>{{ t('generatePanel.dropVideos', { left: Math.max(0, refVideoMaxCount - refsOf('video').length) }) }}</span>
+              <span class="gp-dropzone-hint">{{ refVideoHint() }}</span>
+            </div>
+            <div v-if="refsOf('video').length" class="gp-ref-list">
+              <div v-for="(ref, index) in refsOf('video')" :key="ref.id" class="gp-ref-item">
+                <span class="gp-ref-badge">{{ index + ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}</span>
+                <div class="gp-ref-thumb video" :title="ref.name" @click="playUploadedVideo(ref)">
+                  <img :src="ref.cover" alt="" />
+                  <img class="gp-ref-play" src="@/assets/images/detail/play.png" alt="" />
+                </div>
+                <span class="gp-ref-title">{{ t('home.video') }}{{ index + ((selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 2 : 1) }}</span>
+                <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removeVideoRef(ref.id)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="gp-ref-group">
+            <span class="gp-field-label">{{ t('generatePanel.refAudios') }}<span class="gp-field-use">{{ t('generatePanel.refAudiosUse') }}</span><span class="gp-field-value">{{ refsOf('audio').length }} / {{ refAudioMaxCount }}</span></span>
+            <div class="gp-dropzone" @click="pickVideoRef('audio')" @dragover.prevent @drop.prevent="dropVideoRef($event, 'audio')">
+              <img class="gp-dropzone-icon" src="@/assets/images/home/audio.png" alt="" />
+              <span>{{ t('generatePanel.dropAudios', { left: Math.max(0, refAudioMaxCount - refsOf('audio').length) }) }}</span>
+              <span class="gp-dropzone-hint">{{ refAudioHint() }}</span>
+            </div>
+            <div v-if="refsOf('audio').length" class="gp-ref-list">
+              <div v-for="(ref, index) in refsOf('audio')" :key="ref.id" class="gp-ref-item">
+                <span class="gp-ref-badge">{{ index + 1 }}</span>
+                <div class="gp-ref-thumb audio" :title="ref.name" @click="playAudio(ref)">
+                  <img src="@/assets/images/home/audio.png" alt="" />
+                  <img class="gp-ref-play" src="@/assets/images/detail/play.png" alt="" />
+                </div>
+                <span class="gp-ref-title">{{ t('home.audio') }}{{ index + 1 }}</span>
+                <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removeVideoRef(ref.id)" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 首尾帧模式：两张图各自一个上传区，放在提示词下面单独一段 -->
+        <section v-else-if="selectedVideoMultimodal == 'startEndFrames'" class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">4 · {{ t('generatePanel.frames') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ framesLimitText() }}</span>
+          <input ref="startFrameInput" type="file" accept="image/*" class="file-input" style="display: none;" @change="handleStartFrameChange" />
+          <input ref="endFrameInput" type="file" accept="image/*" class="file-input" style="display: none;" @change="handleEndFrameChange" />
+          <div class="gp-frames">
+            <div class="gp-ref-group">
+              <span class="gp-field-label">{{ t('home.start') }}</span>
+              <div class="gp-dropzone gp-frame-zone" :class="{ uploaded: startFrameImage }" @click="startFrameImage ? openImageViewer(startFrameImage) : triggerStartFrameUpload()" @dragover.prevent @drop.prevent="dropFrame($event, 'start')">
+                <template v-if="startFrameImage">
+                  <img class="gp-frame-preview" :src="startFrameImage" alt="" />
+                  <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removeStartFrame" />
+                </template>
+                <template v-else>
+                  <img class="gp-dropzone-icon" src="@/assets/images/home/img_icon.png" alt="" />
+                  <span>{{ t('generatePanel.dropImagesPlain') }}</span>
+                </template>
+              </div>
+            </div>
+            <div class="gp-frames-swap" :title="t('generatePanel.framesSwap')" @click="swapFrames">
+              <img src="@/assets/images/home/exchange.png" alt="" />
+            </div>
+            <div class="gp-ref-group">
+              <span class="gp-field-label">{{ t('home.end') }}</span>
+              <div class="gp-dropzone gp-frame-zone" :class="{ uploaded: endFrameImage }" @click="endFrameImage ? openImageViewer(endFrameImage) : triggerEndFrameUpload()" @dragover.prevent @drop.prevent="dropFrame($event, 'end')">
+                <template v-if="endFrameImage">
+                  <img class="gp-frame-preview" :src="endFrameImage" alt="" />
+                  <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removeEndFrame" />
+                </template>
+                <template v-else>
+                  <img class="gp-dropzone-icon" src="@/assets/images/home/img_icon.png" alt="" />
+                  <span>{{ t('generatePanel.dropImagesPlain') }}</span>
+                </template>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">5 · {{ t('generatePanel.output') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ versionLimitText(selectedNsfwVersion) }}</span>
+
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('home.videoSettings.quality') }}</span>
+            <div class="gp-pills">
+              <div
+                v-for="quality in videoQualityOptions"
+                :key="quality.value"
+                class="gp-pill"
+                :class="{ active: selectedVideoQuality == quality.value }"
+                @click="selectedVideoQuality = quality.value"
+              >{{ quality.label }}</div>
+            </div>
+          </div>
+
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('home.videoSettings.ratio') }}</span>
+            <div v-if="selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="gp-pills">
+              <div class="gp-pill active fixed">{{ t('home.videoSettings.ratioAuto') }}</div>
+            </div>
+            <div v-else class="gp-pills">
+              <div
+                v-for="ratio in videoRatioOptions"
+                :key="ratio.value"
+                class="gp-pill"
+                :class="{ active: selectedVideoRatio == ratio.value }"
+                @click="selectedVideoRatio = ratio.value"
+              ><RatioIcon :value="ratio.value" />{{ ratio.label }}</div>
+            </div>
+          </div>
+
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('home.videoSettings.duration') }}<span v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="gp-field-value">{{ selectedVideoDuration }}s</span></span>
+            <div v-if="selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="gp-pills">
+              <div class="gp-pill active fixed">{{ t('home.videoSettings.durationAuto') }}</div>
+            </div>
+            <div v-else class="duration-slider">
+              <div class="slider-track"></div>
+              <div class="slider-marks">
+                <template v-for="mark in sliderMarks" :key="mark.value">
+                  <div class="mark" :style="{ left: mark.position, transform: 'translateX(-50%)' }"></div>
+                  <div class="mark-label" :style="{ left: mark.position, transform: 'translateX(-50%)' }">
+                    {{ mark.value }}s
+                  </div>
+                </template>
+              </div>
+              <div class="slider-value" :style="{ left: getSliderValuePosition() }">
+                {{ selectedVideoDuration }}s
+              </div>
+              <input
+                type="range"
+                :min="videoProfile.durationMin"
+                :max="videoProfile.durationMax"
+                step="1"
+                :value="selectedVideoDuration"
+                @input="onVideoDurationChange"
+                @mousedown.stop="saveLastValidDuration"
+                @mouseup="validateDurationAndRestore"
+                @click.stop
+                class="slider-input"
+              />
+             </div>
+          </div>
+
+          <!-- 优化提示词开关：放在输出参数最后一行 -->
+          <div v-if="!isVideoEditMode" class="gp-field gp-switch-row" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
+            <span class="gp-field-label">{{ t('home.option.optimizePrompt') }}<img class="gp-switch" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" /></span>
+          </div>
+        </section>
+
+        <div class="gp-footer">
+          <span class="gp-cost">{{ t('generatePanel.estimatedCost') }}<b>{{ estimatedVideoPower }}</b><img src="@/assets/images/home/power.png" alt="" /></span>
+          <button class="gp-generate" :class="{ loading: isVideoGenerating }" @click="generateVideo">
+            <span v-if="isVideoGenerating" class="gp-spinner"></span>
+            <span>{{ t('generatePanel.start') }}</span>
+          </button>
+        </div>
+      </template>
+
+      <!-- ================= 图片 ================= -->
+      <template v-else>
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">1 · {{ t('generatePanel.photoMode') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ t('generatePanel.photoModeDesc') }}</span>
+          <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" :class="{ active: effectivePhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
+            <span class="unlimited-dot"></span>
+            <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
+          </div>
+        </section>
+
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">2 · {{ t('generatePanel.prompt') }}</span>
+          </div>
+          <div class="gp-field-label gp-prompt-label">
+            <span>{{ t('generatePanel.promptLabel') }}</span>
+            <span class="gp-field-value">{{ photoPromptCharCount }} / {{ getPhotoMaxInputLimit() }}</span>
+          </div>
+        <!-- Photo Generator -->
+        <div class="input-area gp-input-area">
+          <input
+            ref="photoFileInput"
+            type="file"
+            multiple
+            accept="image/*"
+            class="file-input"
+            style="display: none;"
+            @change="handlePhotoFileChange"
+          />
+          <div :class="['input-inner', { collapsed: isPhotoInputCollapsed }]">
+
+            <div
+              ref="photoEditableInputRef"
+              :key="`photo-input-${photoInputKey}`"
+              @vue:mounted="onPhotoInputMounted"
+              :class="['input-textarea', { collapsed: isPhotoInputCollapsed, 'has-focus': isPhotoInputFocused }]"
+              contenteditable="true"
+              spellcheck="false"
+              @input="handlePhotoInput"
+              @compositionstart="handleCompositionStart"
+              @compositionend="handlePhotoCompositionEnd"
+              @keydown="handlePhotoKeydown"
+              @focus="handlePhotoInputFocus"
+              @blur="handlePhotoInputBlur"
+              @paste="handlePhotoPaste"
+              :data-placeholder="photoPlaceholderDisplay"
+            ></div>
+
+            <!-- @ Dropdown for photo -->
+            <div v-if="showPhotoRefDropdown" class="at-dropdown photo-at-dropdown">
+              <div
+                v-for="(item, index) in photoRefDropdownItems"
+                :key="item.id"
+                class="dropdown-item"
+                @mousedown.prevent="selectPhotoRefItem(item)"
+              >
+                <div class="dropdown-img">
+                  <img :src="item.url" :alt="item.name" />
+                </div>
+                <span>{{ t('home.img') }}{{ index + 1 }}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        </section>
+
+        <!-- 参考素材：单独一块，和视频 tab 一致 -->
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">3 · {{ t('generatePanel.refs') }}</span>
+          </div>
+          <span class="gp-section-desc">{{ t('generatePanel.photoRefsDesc', { images: photoMaxImages }) }}</span>
+          <div class="gp-ref-group">
+            <span class="gp-field-label">{{ t('generatePanel.refImages') }}<span class="gp-field-value">{{ uploadedPhotoImages.length }} / {{ photoMaxImages }}</span></span>
+            <div class="gp-dropzone" @click="triggerPhotoUpload" @dragover.prevent @drop.prevent="dropPhotoRef($event)">
+              <img class="gp-dropzone-icon" src="@/assets/images/home/img_icon.png" alt="" />
+              <span>{{ t('generatePanel.dropImages', { left: Math.max(0, photoMaxImages - uploadedPhotoImages.length) }) }}</span>
+              <span class="gp-dropzone-hint">{{ photoRefHint() }}</span>
+            </div>
+            <div v-if="uploadedPhotoImages.length" class="gp-ref-list">
+              <div v-for="(image, index) in uploadedPhotoImages" :key="image.id" class="gp-ref-item">
+                <span class="gp-ref-badge">{{ index + 1 }}</span>
+                <img class="gp-ref-thumb" :src="image.image" alt="" @click="openImageViewer(image.image)" />
+                <span class="gp-ref-title">{{ t('recordList.image') }}{{ index + 1 }}</span>
+                <img class="gp-ref-remove" src="@/assets/images/home/remove.png" alt="" @click.stop="removePhotoImage(image.id)" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="gp-section">
+          <div class="gp-section-head">
+            <span class="gp-section-title">4 · {{ t('generatePanel.output') }}</span>
+          </div>
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('home.photoSettings.quality') }}</span>
+            <div class="gp-pills">
+              <div
+                v-for="quality in photoQualityOptions"
+                :key="quality.value"
+                class="gp-pill"
+                :class="{ active: selectedPhotoQuality == quality.value }"
+                @click="selectedPhotoQuality = quality.value"
+              >{{ quality.label }}</div>
+            </div>
+          </div>
+          <div class="gp-field">
+            <span class="gp-field-label">{{ t('home.photoSettings.ratio') }}</span>
+            <div class="gp-pills">
+              <div
+                v-for="ratio in photoRatioOptions"
+                :key="ratio.value"
+                class="gp-pill"
+                :class="{ active: selectedPhotoRatio == ratio.value }"
+                @click="selectedPhotoRatio = ratio.value"
+              ><RatioIcon :value="ratio.value" />{{ ratio.label }}</div>
+            </div>
+          </div>
+
+          <div class="gp-field gp-switch-row" @mousedown.prevent @click.stop="enablePhotoOptimizePrompt = !enablePhotoOptimizePrompt">
+            <span class="gp-field-label">{{ t('home.option.optimizePrompt') }}<img class="gp-switch" :src="enablePhotoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" /></span>
+          </div>
+        </section>
+
+        <div class="gp-footer">
+          <span class="gp-cost">{{ t('generatePanel.estimatedCost') }}<b>{{ estimatedPhotoPower }}</b><img src="@/assets/images/home/power.png" alt="" /></span>
+          <button class="gp-generate" :class="{ loading: isPhotoGenerating }" @click="generatePhoto">
+            <span v-if="isPhotoGenerating" class="gp-spinner"></span>
+            <span>{{ t('generatePanel.start') }}</span>
+          </button>
+        </div>
+      </template>
+    </aside>
+
+    <!-- 右侧：生成记录 -->
+    <section class="gen-results">
       <div class="filter-bar">
         <div class="type-selector" @click.stop="toggleTypeDropdown">
           <div class="type-selector-info">
@@ -42,7 +631,7 @@
         </div>
 
         <!-- Record List -->
-        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '360px' : '0' }">
+        <div v-else-if="!isLoading && displayRecords.length > 0" class="record-list" :style="{ paddingBottom: displayRecords.length > 0 ? '40px' : '0' }">
           <div v-for="(record, index) in displayRecords"
             :key="record.session_id || record.id"
             class="record-item"
@@ -399,583 +988,7 @@
         </div>
 
       </div>
-    </div>
-
-    <!-- Bottom Generator -->
-    <div class="bottom-generator">
-      <div class="bottom-container">
-        <div class="input-type-box">
-          <div class="content-type-selector">
-            <div
-              :class="['type-btn', { active: bottomActiveTab == 'video' }]"
-              @click="switchBottomTab('video')"
-            >
-              <div class="type-text">
-                <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.video') }}</span>
-              </div>
-            </div>
-            <div
-              :class="['type-btn', { active: bottomActiveTab == 'photo' }]"
-              @click="switchBottomTab('photo')"
-            >
-              <div class="type-text">
-                <span>{{ contentSwitch.showAdultLabel ? 'R18 ' : '' }}{{ t('home.contentType.photo') }}</span>
-              </div>
-            </div>
-          </div>
-
-
-        </div>
-
-        <!-- Photo Generator -->
-        <div v-if="bottomActiveTab == 'photo'" class="input-area">
-          <input
-            ref="photoFileInput"
-            type="file"
-            multiple
-            accept="image/*"
-            class="file-input"
-            style="display: none;"
-            @change="handlePhotoFileChange"
-          />
-          <div :class="['input-inner', { collapsed: isPhotoInputCollapsed }]">
-            <!-- Uploaded Images Preview -->
-            <div v-if="uploadedPhotoImages.length > 0" class="uploaded-images">
-              <div
-                v-for="(image, index) in uploadedPhotoImages"
-                :key="image.id"
-                class="uploaded-image-item"
-              >
-                <span class="image-index">{{ index + 1 }}</span>
-                <img :src="image.image" class="uploaded-image" @click="openImageViewer(image.image)" />
-                <span class="image-name" @click="openImageViewer(image.image)">{{ t('recordList.image') }}{{ index + 1 }}</span>
-                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removePhotoImage(image.id)" />
-              </div>
-            </div>
-
-            <div
-              ref="photoEditableInputRef"
-              :key="`photo-input-${photoInputKey}`"
-              :class="['input-textarea', { collapsed: isPhotoInputCollapsed, 'has-focus': isPhotoInputFocused }]"
-              contenteditable="true"
-              spellcheck="false"
-              @input="handlePhotoInput"
-              @compositionstart="handleCompositionStart"
-              @compositionend="handlePhotoCompositionEnd"
-              @keydown="handlePhotoKeydown"
-              @focus="handlePhotoInputFocus"
-              @blur="handlePhotoInputBlur"
-              @paste="handlePhotoPaste"
-              :data-placeholder="photoPlaceholderDisplay"
-            ></div>
-
-            <!-- @ Dropdown for photo -->
-            <div v-if="showPhotoRefDropdown" class="at-dropdown photo-at-dropdown">
-              <div
-                v-for="(item, index) in photoRefDropdownItems"
-                :key="item.id"
-                class="dropdown-item"
-                @mousedown.prevent="selectPhotoRefItem(item)"
-              >
-                <div class="dropdown-img">
-                  <img :src="item.url" :alt="item.name" />
-                </div>
-                <span>{{ t('home.img') }}{{ index + 1 }}</span>
-              </div>
-            </div>
-
-            <div class="input-box" :class="{ collapsed: isPhotoInputCollapsed }">
-              <div class="input-options" v-show="!isPhotoInputCollapsed">
-
-                <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" :class="{ active: effectivePhotoMode == 'unlimited' }" @mousedown.prevent @click="switchPhotoMode(currentPhotoMode == 'normal' ? 'unlimited' : 'normal', currentPhotoMode == 'normal' ? 2 : 1)">
-                  <span class="unlimited-dot"></span>
-                  <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                </div>
-
-                <div class="option-btn reference-btn" @mousedown.prevent @click="triggerPhotoUpload">
-                  <img src="@/assets/images/home/img_icon.png" alt="" />
-                  <span>{{ t('home.option.reference') }}</span>
-                </div>
-
-                <div class="photo-settings-selector" @mousedown.prevent @click="showPhotoSettings = !showPhotoSettings" :class="{ open: showPhotoSettings }">
-                  <div class="selector-header">
-                    <span>{{ selectedPhotoQuality }}</span>
-                    <span class="settings-divider"></span>
-                    <span>{{ selectedPhotoRatio }}</span>
-                    <span class="settings-line"></span>
-                    <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
-                  </div>
-                  <div class="dropdown" v-if="showPhotoSettings" @click.stop @mousedown.stop>
-                    <div class="settings-section">
-                      <span class="settings-label">{{ t('home.photoSettings.quality') }}</span>
-                      <div class="settings-options">
-                        <div
-                          v-for="quality in photoQualityOptions"
-                          :key="quality.value"
-                          class="dropdown-item"
-                          :class="{ active: selectedPhotoQuality == quality.value }"
-                          @click.stop="selectedPhotoQuality = quality.value"
-                        >
-                          {{ quality.label }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-label">{{ t('home.photoSettings.ratio') }}</span>
-                      <div class="settings-options">
-                        <div
-                          v-for="ratio in photoRatioOptions"
-                          :key="ratio.value"
-                          class="dropdown-item"
-                          :class="{ active: selectedPhotoRatio == ratio.value }"
-                          @click.stop="selectedPhotoRatio = ratio.value"
-                        >
-                          <RatioIcon :value="ratio.value" />{{ ratio.label }}
-                        </div>
-                         </div>
-                       </div>
-                     </div>
-                   </div>
-
-                  <div class="optimize-prompt-switch" @mousedown.prevent @click.stop="enablePhotoOptimizePrompt = !enablePhotoOptimizePrompt">
-                    {{ t('home.option.optimizePrompt') }}
-                    <img class="optimize-prompt-icon" :src="enablePhotoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
-                  </div>
-                </div>
-
-              <div class="generate-box">
-                <div class="generate-btn" :class="{ loading: isPhotoGenerating }" @click="generatePhoto">
-                  <div class="generate-novel-btn">
-                    <span>{{ estimatedPhotoPower }}</span>
-                    <div v-if="isPhotoGenerating" class="loading-spinner-small"></div>
-                    <img v-else src="@/assets/images/home/power.png" alt="Power" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Video Generator -->
-        <div v-else class="input-area">
-          <input
-            ref="videoRefInput"
-            type="file"
-            multiple
-            :accept="'image/*,video/mp4,video/quicktime,audio/mp3,audio/wav'"
-            class="file-input"
-            style="display: none;"
-            @change="handleVideoRefUpload"
-          />
-          <div :class="['input-inner', { collapsed: isVideoInputCollapsed }]">
-            <!-- Uploaded Reference Files Preview - Only show in multimodal mode -->
-            <div v-if="(selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideoRefs.length > 0" class="uploaded-images">
-              <div
-                v-for="(ref, index) in uploadedVideoRefs"
-                :key="ref.id"
-                class="uploaded-image-item"
-              >
-                <span class="image-index">{{ uploadedVideoRefs.filter(r => r.type == ref.type).findIndex(r => r.id === ref.id) + 1 + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 1 : 0) }}</span>
-                <div class="uploaded-item-wrapper">
-                  <div v-if="ref.type == 'video'" class="video-thumbnail-wrapper" @click="playUploadedVideo(ref)">
-                    <img :src="ref.cover" class="uploaded-image" />
-                    <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
-                  </div>
-                  <img v-else-if="ref.type == 'image'" :src="ref.image" class="uploaded-image" @click="openImageViewer(ref.image)" />
-                  <div v-else-if="ref.type == 'audio'" class="audio-thumbnail-wrapper" @click="playAudio(ref)">
-                    <img src="@/assets/images/home/audio.png" class="uploaded-image audio-icon" />
-                    <img src="@/assets/images/detail/play.png" alt="play" class="play-icon-small" />
-                  </div>
-                </div>
-                <span class="tooltip-name">{{ ref.name }}</span>
-                <span class="image-name" @click="ref.type == 'video' ? playUploadedVideo(ref) : ref.type == 'audio' ? playAudio(ref) : ref.type == 'image' ? openImageViewer(ref.image) : undefined">
-                  {{ ref.type == 'video' ? t('home.video') : ref.type == 'audio' ? t('home.audio') : t('home.img') }}{{ uploadedVideoRefs.filter(r => r.type == ref.type).findIndex(r => r.id === ref.id) + 1 + (ref.type == 'video' && (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') && uploadedVideo ? 1 : 0) }}
-                </span>
-                <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideoRef(ref.id)" />
-              </div>
-            </div>
-
-            <!-- Multi-modal Reference Mode -->
-            <template v-if="selectedVideoMultimodal == 'multimodal'">
-              <div
-                ref="videoEditableInputRef"
-                :data-video-mode="selectedVideoMultimodal"
-                :data-mode="selectedVideoMultimodal"
-                @vue:mounted="onVideoInputMounted"
-                :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
-                contenteditable="true"
-                spellcheck="false"
-                :data-placeholder="videoPlaceholderDisplay"
-                @input="handleVideoInput"
-                @compositionstart="handleCompositionStart"
-                @compositionend="handleVideoCompositionEnd"
-                @keydown="handleVideoKeydown"
-                @click="handleVideoInputClick"
-                @focus="handleVideoInputFocus"
-                @blur="handleVideoInputBlur"
-                @paste="handleVideoPaste"
-              ></div>
-
-              <!-- @ Dropdown -->
-              <div v-if="showVideoRefDropdown" class="at-dropdown">
-                <div
-                  v-for="(item, index) in videoRefDropdownItems"
-                  :key="item.id"
-                  class="dropdown-item"
-                  @mousedown.prevent="selectVideoRefItem(item)"
-                >
-                  <div class="dropdown-img">
-                    <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
-                  </div>
-                  <span v-if="item.type === 'video'">{{ t('home.video') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'video').length + 1 }}</span>
-                  <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'audio').length + 1 }}</span>
-                  <span v-else>{{ t('home.img') }}{{ videoRefDropdownItems.slice(0, index).filter((i: any) => i.type === 'image').length + 1 }}</span>
-                </div>
-              </div>
-            </template>
-
-            <!-- Start and End Frames Mode -->
-            <template v-else-if="selectedVideoMultimodal == 'startEndFrames'">
-              <div class="start-end-frames-input">
-                <div class="frames-upload-section">
-                  <div class="frame-upload" :class="{ uploaded: startFrameImage }">
-                    <input
-                      ref="startFrameInput"
-                      type="file"
-                      accept="image/*"
-                      class="file-input"
-                      style="display: none;"
-                      @change="handleStartFrameChange"
-                    />
-                    <div class="upload-area" @click="triggerStartFrameUpload">
-                      <img v-if="startFrameImage" :src="startFrameImage" class="frame-preview" />
-                      <template v-else>
-                        <img class="upload-icon start-icon" src="@/assets/images/home/img_icon.png" alt="Upload" />
-                        <span class="upload-label">{{ t('home.start') }}</span>
-                      </template>
-                    </div>
-                    <img v-if="startFrameImage" class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeStartFrame" />
-                  </div>
-
-                  <img class="arrow-icon" src="@/assets/images/home/exchange.png" alt="Exchange" @click="swapFrames" />
-
-                  <div class="frame-upload" :class="{ uploaded: endFrameImage }">
-                    <input
-                      ref="endFrameInput"
-                      type="file"
-                      accept="image/*"
-                      class="file-input"
-                      style="display: none;"
-                      @change="handleEndFrameChange"
-                    />
-                    <div class="upload-area" @click="triggerEndFrameUpload">
-                      <img v-if="endFrameImage" :src="endFrameImage" class="frame-preview" />
-                      <template v-else>
-                        <img class="upload-icon end-icon" src="@/assets/images/home/img_icon.png" alt="Upload" />
-                        <span class="upload-label">{{ t('home.end') }}</span>
-                      </template>
-                    </div>
-                    <img v-if="endFrameImage" class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click="removeEndFrame" />
-                  </div>
-                </div>
-
-                <textarea
-                  :class="['frames-textarea', { collapsed: isVideoInputCollapsed }]"
-                  :placeholder="t('home.input.placeholder')"
-                  v-model="videoInput"
-                  spellcheck="false"
-                  @input="handleVideoTextareaInput"
-                ></textarea>
-              </div>
-            </template>
-
-            <!-- Video Extend Mode -->
-            <template v-else-if="selectedVideoMultimodal == 'videoExtend'">
-              <div class="video-extend-input">
-                <div class="video-upload" :class="{ uploaded: uploadedVideo }">
-                  <input
-                    ref="videoInputRef"
-                    type="file"
-                    accept="video/mp4,video/quicktime"
-                    class="file-input"
-                    style="display: none;"
-                    @change="handleVideoUpload"
-                  />
-                  <div class="upload-area" @click="uploadedVideo && !isUploading ? playVideo({ videoUrl: uploadedVideo, videoCover: uploadedVideoCover }) : triggerExtendVideoUpload()">
-                    <template v-if="uploadedVideo">
-                      <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
-                      <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
-                      <span class="image-name">{{ t('home.video') }}1</span>
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
-                      <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
-                    </template>
-                    <template v-else>
-                      <img class="upload-icon video-icon" src="@/assets/images/home/img_icon.png" alt="Upload" />
-                      <span class="upload-label">{{ t('home.contentType.video') }}</span>
-                    </template>
-                  </div>
-                </div>
-
-                <div
-                  ref="videoEditableInputRef"
-                  :data-video-mode="selectedVideoMultimodal"
-                  :data-mode="selectedVideoMultimodal"
-                  @vue:mounted="onVideoInputMounted"
-                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
-                  contenteditable="true"
-                  spellcheck="false"
-                  :data-placeholder="videoPlaceholderDisplay"
-                  @input="handleVideoInput"
-                  @compositionstart="handleCompositionStart"
-                  @compositionend="handleVideoCompositionEnd"
-                  @keydown="handleVideoKeydown"
-                  @click="handleVideoInputClick"
-                  @focus="handleVideoInputFocus"
-                  @blur="handleVideoInputBlur"
-                  @paste="handleVideoPaste"
-                ></div>
-
-                <div v-if="showVideoRefDropdown" class="at-dropdown">
-                  <div
-                    v-for="(item, index) in videoRefDropdownItems"
-                    :key="item.id"
-                    class="dropdown-item"
-                    @mousedown.prevent="selectVideoRefItem(item)"
-                  >
-                    <div class="dropdown-img">
-                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
-                    </div>
-                     <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
-                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
-                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <template v-else-if="selectedVideoMultimodal == 'videoModify'">
-              <div class="video-extend-input">
-                <div class="video-upload" :class="{ uploaded: uploadedVideo }">
-                  <input
-                    ref="videoInputRef"
-                    type="file"
-                    accept="video/mp4,video/quicktime"
-                    class="file-input"
-                    style="display: none;"
-                    @change="handleVideoUpload"
-                  />
-                  <div class="upload-area" @click="uploadedVideo && !isUploading ? playVideo({ videoUrl: uploadedVideo, videoCover: uploadedVideoCover }) : triggerExtendVideoUpload()">
-                    <template v-if="uploadedVideo">
-                      <img v-if="uploadedVideoCover" :src="uploadedVideoCover" class="preview-video" />
-                      <video v-else :src="uploadedVideo" class="preview-video" muted preload="metadata"></video>
-                      <span class="image-name">{{ t('home.video') }}1</span>
-                      <img class="remove-btn" src="@/assets/images/home/remove.png" alt="Remove" @click.stop="removeVideo" />
-                      <img class="play-icon" src="@/assets/images/detail/play.png" alt="Play" />
-                    </template>
-                    <template v-else>
-                      <img class="upload-icon video-icon" src="@/assets/images/home/img_icon.png" alt="Upload" />
-                      <span class="upload-label">{{ t('home.contentType.video') }}</span>
-                    </template>
-                  </div>
-                </div>
-
-                <div
-                  ref="videoEditableInputRef"
-                  :data-video-mode="selectedVideoMultimodal"
-                  :data-mode="selectedVideoMultimodal"
-                  @vue:mounted="onVideoInputMounted"
-                  :class="['input-textarea', { collapsed: isVideoInputCollapsed, 'has-focus': isVideoInputFocused }]"
-                  contenteditable="true"
-                  spellcheck="false"
-                  :data-placeholder="videoPlaceholderDisplay"
-                  @input="handleVideoInput"
-                  @compositionstart="handleCompositionStart"
-                  @compositionend="handleVideoCompositionEnd"
-                  @keydown="handleVideoKeydown"
-                  @click="handleVideoInputClick"
-                  @focus="handleVideoInputFocus"
-                  @blur="handleVideoInputBlur"
-                  @paste="handleVideoPaste"
-                ></div>
-
-                <div v-if="showVideoRefDropdown" class="at-dropdown">
-                  <div
-                    v-for="(item, index) in videoRefDropdownItems"
-                    :key="item.id"
-                    class="dropdown-item"
-                    @mousedown.prevent="selectVideoRefItem(item)"
-                  >
-                    <div class="dropdown-img">
-                      <img :src="item.type === 'audio' ? audioIcon : item.type === 'video' ? (item.cover || item.image) : item.image" :alt="item.name" />
-                    </div>
-                    <span v-if="item.type === 'video'">{{ t('home.video') }}{{ item.id === 'uploaded-video' ? 1 : uploadedVideoRefs.filter((r: any) => r.type === 'video').findIndex((r: any) => r.id === item.id) + 2 }}</span>
-                    <span v-else-if="item.type === 'audio'">{{ t('home.audio') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'audio').findIndex((r: any) => r.id === item.id) + 1 }}</span>
-                    <span v-else>{{ t('home.img') }}{{ uploadedVideoRefs.filter((r: any) => r.type === 'image').findIndex((r: any) => r.id === item.id) + 1 }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <div class="input-box" :class="{ collapsed: isVideoInputCollapsed }">
-              <div class="input-options" v-show="!isVideoInputCollapsed">
-                <div v-if="contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion" class="unlimited-switch" :class="{ active: effectiveVideoMode == 'unlimited' }" @mousedown.prevent @click="switchVideoMode(currentVideoMode == 'normal' ? 'unlimited' : 'normal', currentVideoMode == 'normal' ? 2 : 1)">
-                  <span class="unlimited-dot"></span>
-                  <span class="unlimited-label">{{ t('home.mode.unlimited') }}</span>
-                </div>
-
-                <div class="video-selector" @mousedown.prevent @click="showVideoMultimodalDropdown = !showVideoMultimodalDropdown; showNsfwVersionDropdown = false; showVideoSettings = false" :class="{ open: showVideoMultimodalDropdown }">
-                  <div class="selector-header">
-                    <span>{{ videoMultimodalOptions.find(opt => opt.value == selectedVideoMultimodal)?.label || selectedVideoMultimodal }}</span>
-                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
-                  </div>
-                  <div class="dropdown" v-if="showVideoMultimodalDropdown" @click.stop @mousedown.stop>
-                    <div
-                      v-for="option in videoMultimodalOptions"
-                      :key="option.value"
-                      class="dropdown-item"
-                      :class="{ active: selectedVideoMultimodal == option.value }"
-                      @click.stop="selectVideoMultimodal(option.value)"
-                    >
-                      <span>{{ option.label }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- NSFW Version Selector - only show in unlimited mode -->
-                <div v-if="nsfwVersionOptions.length > 1" class="video-selector nsfw-version-selector" @mousedown.prevent @click="showNsfwVersionDropdown = !showNsfwVersionDropdown; showVideoMultimodalDropdown = false; showVideoSettings = false" :class="{ open: showNsfwVersionDropdown }">
-                  <div class="selector-header">
-                    <span>{{ nsfwVersionOptions.find(opt => opt.value === selectedNsfwVersion)?.label || selectedNsfwVersion }}</span>
-                    <img class="dropdown-arrow" src="@/assets/images/novel/arrow.png" alt="" />
-                  </div>
-                  <div class="dropdown" v-if="showNsfwVersionDropdown" @click.stop @mousedown.stop>
-                    <div
-                      v-for="option in nsfwVersionOptions"
-                      :key="option.value"
-                      class="dropdown-item"
-                      :class="{ active: selectedNsfwVersion == option.value }"
-                      @click.stop="selectNsfwVersion(option.value)"
-                    >
-                      <span>{{ option.label }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="selectedVideoMultimodal == 'multimodal' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'" class="option-btn reference-btn" @mousedown.prevent @click="triggerVideoUpload">
-                  <img src="@/assets/images/home/img_icon.png" alt="" />
-                  <span>{{ t('home.option.reference') }}</span>
-                </div>
-
-                <div class="video-settings-selector" @mousedown.prevent @click="showVideoSettings = !showVideoSettings; showVideoMultimodalDropdown = false" :class="{ open: showVideoSettings }">
-                  <div class="selector-header">
-                    <span>{{ selectedVideoQuality }}</span>
-                    <span class="settings-divider"></span>
-                    <span v-if="selectedVideoMultimodal == 'startEndFrames' || selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend'">{{ t('home.videoSettings.ratioAuto') }}</span>
-                    <span v-else class="settings-ratio"><RatioIcon :value="selectedVideoRatio" />{{ selectedVideoRatio }}</span>
-                    <span class="settings-divider"></span>
-                    <span>{{ (selectedVideoMultimodal == 'videoModify' || selectedVideoMultimodal == 'videoExtend') ? t('home.videoSettings.durationAuto') : `${selectedVideoDuration}s` }}</span>
-                    <span class="settings-line"></span>
-                    <img class="dropdown-arrow" src="@/assets/images/home/menu.png" alt="" />
-                  </div>
-                  <div class="dropdown" v-if="showVideoSettings" @click.stop @mousedown.stop>
-                    <div class="settings-section">
-                      <span class="settings-label">{{ t('home.videoSettings.quality') }}</span>
-                      <div class="settings-options">
-                        <div
-                          v-for="quality in videoQualityOptions"
-                          :key="quality.value"
-                          class="dropdown-item"
-                          :class="{ active: selectedVideoQuality == quality.value }"
-                          @click.stop="selectedVideoQuality = quality.value"
-                        >
-                          {{ quality.label }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="settings-section" v-if="selectedVideoMultimodal != 'startEndFrames' && selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'">
-                      <span class="settings-label">{{ t('home.videoSettings.ratio') }}</span>
-                      <div class="settings-options">
-                        <div
-                          v-for="ratio in videoRatioOptions"
-                          :key="ratio.value"
-                          class="dropdown-item"
-                          :class="{ active: selectedVideoRatio == ratio.value }"
-                          @click.stop="selectedVideoRatio = ratio.value"
-                        >
-                          <RatioIcon :value="ratio.value" />{{ ratio.label }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="settings-section" v-else>
-                      <span class="settings-label">{{ t('home.videoSettings.ratio') }}</span>
-                      <div class="settings-options">
-                        <div class="dropdown-item active">
-                          {{ t('home.videoSettings.ratioAuto') }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="settings-section" v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'">
-                      <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
-                      <div class="duration-slider">
-                        <div class="slider-track"></div>
-                        <div class="slider-marks">
-                          <template v-for="mark in sliderMarks" :key="mark.value">
-                            <div class="mark" :style="{ left: mark.position, transform: 'translateX(-50%)' }"></div>
-                            <div class="mark-label" :style="{ left: mark.position, transform: 'translateX(-50%)' }">
-                              {{ mark.value }}s
-                            </div>
-                          </template>
-                        </div>
-                        <div class="slider-value" :style="{ left: getSliderValuePosition() }">
-                          {{ selectedVideoDuration }}s
-                        </div>
-                        <input
-                          type="range"
-                          :min="videoProfile.durationMin"
-                          :max="videoProfile.durationMax"
-                          step="1"
-                          :value="selectedVideoDuration"
-                          @input="onVideoDurationChange"
-                          @mousedown.stop="saveLastValidDuration"
-                          @mouseup="validateDurationAndRestore"
-                          @click.stop
-                          class="slider-input"
-                        />
-                       </div>
-                     </div>
-                    <div class="settings-section" v-else>
-                      <span class="settings-label">{{ t('home.videoSettings.duration') }}</span>
-                      <div class="settings-options">
-                        <div class="dropdown-item active">
-                          {{ t('home.videoSettings.durationAuto') }}
-                        </div>
-                      </div>
-                    </div>
-                   </div>
-                </div>
-
-                <div v-if="selectedVideoMultimodal != 'videoModify' && selectedVideoMultimodal != 'videoExtend'" class="optimize-prompt-switch" @mousedown.prevent @click.stop="enableVideoOptimizePrompt = !enableVideoOptimizePrompt">
-                  {{ t('home.option.optimizePrompt') }}
-                  <img class="optimize-prompt-icon" :src="enableVideoOptimizePrompt ? optimizePromptOn : optimizePromptOff" alt="" />
-                </div>
-              </div>
-
-              <div class="generate-box">
-                <!-- <div class="cover-cost-display">
-                  <img class="info-icon" src="@/assets/images/home/intro.png" alt="" @click="showComputingPowerEstimateModal = true" />
-                </div> -->
-                <div class="generate-btn" :class="{ loading: isVideoGenerating }" @click="generateVideo">
-                  <div class="generate-novel-btn">
-                    <span>{{ estimatedVideoPower }}</span>
-                    <div v-if="isVideoGenerating" class="loading-spinner-small"></div>
-                    <img v-else src="@/assets/images/home/power.png" alt="Power" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
+    </section>
     </div>
 
     <!-- Insufficient Balance Modal -->
@@ -1111,6 +1124,10 @@ const canRegenerateRecord = (record: any) =>
 const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
+// 图片 tab 参考图上限（张数 / 单张大小），面板说明和上传校验共用
+const photoMaxImages = computed(() => currentPhotoMode.value === 'unlimited' ? 10 : 7);
+// 站点强制 NSFW 时 currentPhotoMode 会被置成 unlimited（30MB）；大陆等普通模式按 gpt-image2 的 10MB
+const photoMaxImageMb = computed(() => currentPhotoMode.value === 'unlimited' ? 30 : 10);
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
@@ -1120,6 +1137,22 @@ const selectedNsfwVersion = ref<string>(DEFAULT_VIDEO_VERSION);
 // 三档的参数与文件限制集中在 @/util/videoProfile，Home.vue 共用同一张表。
 const videoLimitMode = computed(() => videoLimitModeOf(selectedNsfwVersion.value, effectiveVideoMode.value));
 const videoProfile = computed(() => profileOf(videoLimitMode.value));
+// 参考素材数量上限（面板显示和上传校验共用）：
+// 图片按档位配置；视频 / 音频加强版 5 段、其余 10 段，极速版再压到 3 段；修改 / 续写模式原视频占掉一个视频名额
+const isVideoEditMode = computed(() => selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend');
+const refImageMaxCount = computed(() => videoProfile.value.imageMaxCount);
+const refVideoMaxCount = computed(() => {
+  const pf = videoProfile.value;
+  let max = (videoLimitMode.value === 'unlimited' ? 5 : 10) - (isVideoEditMode.value ? 1 : 0);
+  if (pf.refVideoMaxClips > 0) max = Math.min(max, pf.refVideoMaxClips);
+  return max;
+});
+const refAudioMaxCount = computed(() => {
+  const pf = videoProfile.value;
+  let max = videoLimitMode.value === 'unlimited' ? 5 : 10;
+  if (pf.refAudioMaxClips > 0) max = Math.min(max, pf.refAudioMaxClips);
+  return max;
+});
 
 // 计价用的画质档（非极速版）：按 720P / 1080P 两个每秒单价字段计价；极速版走 *_fast 字段，不经过这里。
 const pricingQuality = computed(() => (selectedVideoQuality.value === '1080P' ? '1080P' : '720P'));
@@ -1289,73 +1322,21 @@ const checkReducedMotion = () => {
 };
 
 const startPhotoTypewriter = () => {
+  // 面板布局：placeholder 直接整句显示，不再打字机式地打出来再删掉
   if (photoTypewriterTimer) {
     clearTimeout(photoTypewriterTimer);
     photoTypewriterTimer = null;
   }
-  if (prefersReducedMotion.value || isPhotoInputFocused.value) {
-    photoPlaceholderDisplay.value = photoPlaceholderFull.value;
-    return;
-  }
-  photoTypewriterState.value = { charIndex: 0, deleting: false };
-  const tick = () => {
-    const s = photoTypewriterState.value;
-    if (!s.deleting) {
-      s.charIndex++;
-      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, s.charIndex);
-      if (s.charIndex >= photoPlaceholderFull.value.length) {
-        s.deleting = true;
-        photoTypewriterTimer = setTimeout(tick, 1500);
-        return;
-      }
-      photoTypewriterTimer = setTimeout(tick, 85);
-    } else {
-      s.charIndex--;
-      photoPlaceholderDisplay.value = photoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
-      if (s.charIndex <= 0) {
-        s.deleting = false;
-        photoTypewriterTimer = setTimeout(tick, 380);
-        return;
-      }
-      photoTypewriterTimer = setTimeout(tick, 42);
-    }
-  };
-  photoTypewriterTimer = setTimeout(tick, 700);
+  photoPlaceholderDisplay.value = photoPlaceholderFull.value;
 };
 
 const startVideoTypewriter = () => {
+  // 面板布局：placeholder 直接整句显示，不再打字机式地打出来再删掉
   if (videoTypewriterTimer) {
     clearTimeout(videoTypewriterTimer);
     videoTypewriterTimer = null;
   }
-  if (prefersReducedMotion.value || isVideoInputFocused.value) {
-    videoPlaceholderDisplay.value = videoPlaceholderFull.value;
-    return;
-  }
-  videoTypewriterState.value = { charIndex: 0, deleting: false };
-  const tick = () => {
-    const s = videoTypewriterState.value;
-    if (!s.deleting) {
-      s.charIndex++;
-      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, s.charIndex);
-      if (s.charIndex >= videoPlaceholderFull.value.length) {
-        s.deleting = true;
-        videoTypewriterTimer = setTimeout(tick, 1500);
-        return;
-      }
-      videoTypewriterTimer = setTimeout(tick, 85);
-    } else {
-      s.charIndex--;
-      videoPlaceholderDisplay.value = videoPlaceholderFull.value.slice(0, Math.max(0, s.charIndex));
-      if (s.charIndex <= 0) {
-        s.deleting = false;
-        videoTypewriterTimer = setTimeout(tick, 380);
-        return;
-      }
-      videoTypewriterTimer = setTimeout(tick, 42);
-    }
-  };
-  videoTypewriterTimer = setTimeout(tick, 700);
+  videoPlaceholderDisplay.value = videoPlaceholderFull.value;
 };
 
 const getInputCharCount = (element: HTMLElement): number => {
@@ -2183,6 +2164,13 @@ const triggerPhotoUpload = () => {
   }
 };
 
+/** 图片 tab 参考图：拖进上传区的文件走和点选一样的校验 */
+function dropPhotoRef(e: DragEvent) {
+  const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.type.startsWith('image/'));
+  if (!files.length) return;
+  handlePhotoFileChange({ target: { files, value: '' } } as unknown as Event);
+}
+
 const handlePhotoFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -2190,8 +2178,8 @@ const handlePhotoFileChange = async (event: Event) => {
     let files = Array.from(input.files);
 
     // Photo upload limits based on mode
-    const maxPhotos = currentPhotoMode.value === 'unlimited' ? 10 : 7;
-    const maxFileSizeMB = currentPhotoMode.value === 'unlimited' ? 30 : 30;
+    const maxPhotos = photoMaxImages.value;
+    const maxFileSizeMB = photoMaxImageMb.value;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -2470,11 +2458,16 @@ const imageDimensionError = async (file: File): Promise<string> => {
   const isPhotoUnlimited = bottomActiveTab.value === 'photo' && currentPhotoMode.value === 'unlimited';
   const isVideoUnlimited = bottomActiveTab.value === 'video' && videoLimitMode.value === 'unlimited';
   if (isPhotoUnlimited) {
+    // seedream5.0：宽高比 [1/16, 16]，单边 > 14px，总像素 [196, 6000×6000]
     if (ratio < 1 / 16 || ratio > 16) {
       return t('home.error.imageRatioLimit');
     }
     if (width < 14 || height < 14) {
       return t('home.error.imageDimensionLimit');
+    }
+    const area = width * height;
+    if (area < 196 || area > 6000 * 6000) {
+      return t('home.error.imageAreaLimit');
     }
   } else if (bottomActiveTab.value === 'video' && videoLimitMode.value === 'fast') {
     // 极速版视频参考图片：宽高比 [0.4, 2.5]，像素 [256, 5760]
@@ -2583,6 +2576,43 @@ const dataURLToFile = (dataUrl: string, filename: string): File => {
   return new File([u8arr], filename, { type: mime });
 };
 
+// ===== 参考素材区：按类型分开上传 / 列表（同一个 hidden input，同一套校验 handleVideoRefUpload）=====
+type VideoRefKind = 'image' | 'video' | 'audio';
+const REF_ACCEPT: Record<VideoRefKind, string> = {
+  image: 'image/*',
+  video: 'video/mp4,video/quicktime',
+  audio: 'audio/mp3,audio/mpeg,audio/wav',
+};
+function refsOf(kind: VideoRefKind) {
+  return uploadedVideoRefs.value.filter((r: any) => r.type === kind);
+}
+/** 修改 / 续写模式下还没传原视频：先提示，不让传参考素材（和老的 triggerVideoUpload 一致） */
+function originVideoMissing(): boolean {
+  if (isVideoEditMode.value && !uploadedVideo.value) {
+    toast(t('home.error.videoModifyRequired'));
+    return true;
+  }
+  return false;
+}
+function pickVideoRef(kind: VideoRefKind) {
+  if (originVideoMissing()) return;
+  const input = videoRefInput.value;
+  if (!input) return;
+  input.accept = REF_ACCEPT[kind];
+  input.click();
+}
+/** 拖进某个区的文件只收那一类，其余忽略；走和点选一样的校验 */
+function dropVideoRef(e: DragEvent, kind: VideoRefKind) {
+  const files = Array.from(e.dataTransfer?.files || []).filter((f) => {
+    if (kind === 'image') return f.type.startsWith('image/');
+    if (kind === 'video') return f.type.startsWith('video/');
+    return f.type.startsWith('audio/');
+  });
+  if (!files.length) return;
+  if (originVideoMissing()) return;
+  handleVideoRefUpload({ target: { files, value: '' } } as unknown as Event);
+}
+
 const handleVideoRefUpload = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -2601,7 +2631,7 @@ const handleVideoRefUpload = async (event: Event) => {
       const existingImages = uploadedVideoRefs.value.filter(ref => ref.type === 'image').length;
       const newImages = files.filter(f => !f.type.startsWith('video/') && !f.type.startsWith('audio/')).length;
 
-      const maxImages = isUnlimited ? 10 : 30;
+      const maxImages = refImageMaxCount.value;
 
       if (existingImages + newImages > maxImages) {
         toast(t('home.error.maxPhotoReached', { max: maxImages }));
@@ -2643,16 +2673,15 @@ const handleVideoRefUpload = async (event: Event) => {
       const newAudios = files.filter(f => f.type.startsWith('audio/')).length;
 
       const isEdit = selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend';
-      const maxVideos = isUnlimited ? 5 : 10;
-      const maxExtraVideos = isEdit ? maxVideos - 1 : maxVideos;
+      const maxExtraVideos = refVideoMaxCount.value;
 
       if (existingVideos + newVideos > maxExtraVideos) {
         toast(t('home.error.maxVideoCount', { max: maxExtraVideos }));
         input.value = '';
         return;
       }
-      if (existingAudios + newAudios > (isUnlimited ? 5 : 10)) {
-        toast(t('home.error.maxAudioCount', { max: isUnlimited ? 5 : 10 }));
+      if (existingAudios + newAudios > refAudioMaxCount.value) {
+        toast(t('home.error.maxAudioCount', { max: refAudioMaxCount.value }));
         input.value = '';
         return;
       }
@@ -3705,6 +3734,41 @@ const videoDrafts = ref<Record<VideoMode, VideoModeDraft>>({
 const videoPromptText = ref('');
 const videoPromptHtml = ref('');
 
+// 面板里提示词上方的字数。直接按 DOM 用 getInputCharCount 数（和上限校验同一口径，@ 引用标签不算），
+// 用 MutationObserver 盯着输入框：打字、做同款回填、生成后清空、切模式重建节点都会刷新。
+// 首尾帧是纯文本 textarea，直接数 videoInput。
+const videoPromptCharCount = ref(0);
+const photoPromptCharCount = ref(0);
+let videoCountObserver: MutationObserver | null = null;
+let photoCountObserver: MutationObserver | null = null;
+function refreshVideoPromptCount() {
+  const el = videoEditableInputRef.value;
+  videoPromptCharCount.value = selectedVideoMultimodal.value === 'startEndFrames'
+    ? videoInput.value.length
+    : (el ? getInputCharCount(el) : 0);
+}
+function refreshPhotoPromptCount() {
+  const el = photoEditableInputRef.value;
+  photoPromptCharCount.value = el ? getInputCharCount(el) : 0;
+}
+function observePromptCount(kind: 'video' | 'photo') {
+  const el = kind === 'video' ? videoEditableInputRef.value : photoEditableInputRef.value;
+  const refresh = kind === 'video' ? refreshVideoPromptCount : refreshPhotoPromptCount;
+  if (kind === 'video') { videoCountObserver?.disconnect(); videoCountObserver = null; }
+  else { photoCountObserver?.disconnect(); photoCountObserver = null; }
+  if (!el) { refresh(); return; }
+  const ob = new MutationObserver(() => refresh());
+  ob.observe(el, { childList: true, characterData: true, subtree: true });
+  if (kind === 'video') videoCountObserver = ob; else photoCountObserver = ob;
+  refresh();
+}
+function onPhotoInputMounted() {
+  nextTick(() => observePromptCount('photo'));
+}
+watch(videoInput, refreshVideoPromptCount);
+watch(selectedVideoMultimodal, () => nextTick(refreshVideoPromptCount));
+watch(bottomActiveTab, () => nextTick(() => { observePromptCount('video'); observePromptCount('photo'); }));
+
 function currentVideoMode2(): VideoMode {
   return (VIDEO_MODES.includes(selectedVideoMultimodal.value as VideoMode)
     ? selectedVideoMultimodal.value : 'multimodal') as VideoMode;
@@ -3989,6 +4053,7 @@ function onVideoInputMounted(vnode: any) {
   const html = videoPromptHtml.value || '';
   if (el.innerHTML !== html) el.innerHTML = html;
   previousVideoInputHtml.value = el.innerHTML;
+  nextTick(() => observePromptCount('video'));
 }
 
 // 当前挂着的参考物数量（含首尾帧和原视频），切模式时全部丢弃，有就先确认
@@ -4043,6 +4108,70 @@ const doSelectVideoMultimodal = (from: VideoMode, target: VideoMode) => {
 // 切换 NSFW 版本。两个版本的参考文件限制不一样（加强版更严：图片 20MB/10 张、
 // 视频 100MB、单个参考视频 15s、多模态总时长 15s；超级版按普通模式走），
 // 已经填的内容换个版本很可能就超标了，所以切换时直接清空重来。
+// ===== 左侧参数面板：各档位 / 当前模式的限制说明（数据来自 util/videoProfile）=====
+function versionLimitText(version: string): string {
+  const prof = profileOf(videoLimitModeOf(version, effectiveVideoMode.value));
+  return t('generatePanel.versionLimit', {
+    quality: prof.qualityOptions.map((q) => q.label).join(' / '),
+    min: prof.durationMin,
+    max: prof.durationMax,
+  });
+}
+/** 图片 tab 参考图限制（和 handlePhotoFileChange / imageDimensionError 里的数值一致） */
+function photoRefHint(): string {
+  const mb = photoMaxImageMb.value;
+  if (currentPhotoMode.value === 'unlimited') {
+    return t('generatePanel.photoRefHintUnlimited', { mb, min: 14, max: 6000 });
+  }
+  return t('generatePanel.refImageHint', { mb, min: 300, max: 6000, rmin: '0.4', rmax: '2.5' });
+}
+/** 当前版本的参考素材总览：X版 最多支持 X 张参考图、X 段参考视频、X 段参考音频 */
+function refsSummaryText(): string {
+  return t('generatePanel.refsSummary', {
+    version: t(`home.nsfwVersion.${selectedNsfwVersion.value}`),
+    images: refImageMaxCount.value,
+    videos: refVideoMaxCount.value,
+    audios: refAudioMaxCount.value,
+  });
+}
+/** 参考图限制：格式 / 单张大小 / 宽高 / 宽高比 */
+function refImageHint(): string {
+  const prof = videoProfile.value;
+  const fmt = (n: number) => String(Math.round(n * 1000) / 1000);
+  return t('generatePanel.refImageHint', {
+    mb: Math.round(prof.imageMaxSize / MB),
+    min: prof.imageDimMin,
+    max: prof.imageDimMax,
+    rmin: fmt(prof.ratioMin),
+    rmax: fmt(prof.ratioMax),
+  });
+}
+/** 参考视频限制：格式 / 单个大小 / 单段与总时长 / 宽高 / 宽高比 */
+function refVideoHint(): string {
+  const prof = videoProfile.value;
+  const fmt = (n: number) => String(Math.round(n * 1000) / 1000);
+  return t('generatePanel.refVideoHint', {
+    mb: Math.round(prof.videoMaxSize / MB),
+    smin: prof.refVideoMinSeconds,
+    smax: prof.refVideoMaxSeconds,
+    budget: prof.refVideoBudget,
+    min: prof.dimMin,
+    max: prof.dimMax,
+    rmin: fmt(prof.ratioMin),
+    rmax: fmt(prof.ratioMax),
+  });
+}
+/** 参考音频限制：格式 / 单个大小，有时长限制的档位再带上时长 */
+function refAudioHint(): string {
+  const prof = videoProfile.value;
+  const mb = Math.round((prof.audioMaxSize > 0 ? prof.audioMaxSize : 15 * MB) / MB);
+  const base = t('generatePanel.refAudioHint', { mb });
+  if (prof.refAudioBudget > 0) {
+    return base + t('generatePanel.refAudioHintDur', { smin: prof.refAudioMinSeconds, smax: prof.refAudioMaxSeconds, budget: prof.refAudioBudget });
+  }
+  return base;
+}
+
 const selectNsfwVersion = (version: string) => {
   showNsfwVersionDropdown.value = false;
   if (selectedNsfwVersion.value === version) return;
@@ -4196,6 +4325,26 @@ const triggerStartFrameUpload = () => {
 const triggerEndFrameUpload = () => {
   endFrameInput.value?.click();
 };
+
+/** 首尾帧的限制说明：单张大小、宽高范围、宽高比，取自当前档位的 videoProfile */
+function framesLimitText(): string {
+  const prof = videoProfile.value;
+  const fmt = (n: number) => String(Math.round(n * 100) / 100);
+  return t('generatePanel.framesDesc', {
+    mb: Math.round(prof.imageMaxSize / MB),
+    min: prof.imageDimMin,
+    max: prof.imageDimMax,
+    rmin: fmt(prof.ratioMin),
+    rmax: fmt(prof.ratioMax),
+  });
+}
+/** 拖到首帧 / 尾帧上传区的图片，走和点选一样的校验 */
+function dropFrame(e: DragEvent, which: 'start' | 'end') {
+  const file = Array.from(e.dataTransfer?.files || []).find((f) => f.type.startsWith('image/'));
+  if (!file) return;
+  const fake = { target: { files: [file], value: '' } } as unknown as Event;
+  if (which === 'start') handleStartFrameChange(fake); else handleEndFrameChange(fake);
+}
 
 const handleStartFrameChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -5728,7 +5877,7 @@ const scrollToRecord = (sessionId: string) => {
   isPositioningTarget.value = true;
   const rect = targetElement.getBoundingClientRect();
   const bottomGenerator = document.querySelector('.bottom-generator') as HTMLElement | null;
-  const bottomHeight = bottomGenerator ? bottomGenerator.offsetHeight : 0;
+  const bottomHeight = 0; // 面板在左侧，不再占底部高度
   const headerHeight = 140;
   const visibleCenter = (window.innerHeight - bottomHeight - headerHeight) / 2 + headerHeight;
   const targetCenter = rect.top + window.scrollY + rect.height / 2;
@@ -5874,6 +6023,8 @@ watch(() => locale.value, () => {
 
 
 onUnmounted(() => {
+  videoCountObserver?.disconnect();
+  photoCountObserver?.disconnect();
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('userLogout', onUserLogout);
@@ -6205,7 +6356,7 @@ const regenerateFromRecord = async (record: any) => {
 
     nextTick(() => {
       const bottomGenerator = document.querySelector('.bottom-generator') as HTMLElement | null;
-      const bottomOffset = bottomGenerator ? bottomGenerator.offsetHeight : 120;
+      const bottomOffset = 0; // 面板在左侧，不再占底部高度
       const scrollPosition = Math.max(0, document.body.scrollHeight - window.innerHeight - bottomOffset + 20);
       window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     });

@@ -2998,3 +2998,598 @@ $pinkopacity: rgba(255,79,154,0.12);
   0% { left: -100%; }
   100% { left: 100%; }
 }
+
+/* ===================== 生成页：左参数面板 + 右记录列表 ===================== */
+.container.gen-layout {
+  max-width: none; // 铺满，两边只留 .container 的 30px 内边距
+  padding-bottom: 0;
+  display: grid;
+  grid-template-columns: minmax(560px, 46%) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.gen-results {
+  min-width: 0;
+}
+
+/* 面板沿用 .bottom-generator 下 .input-area 的输入框样式，但定位改成左栏吸顶 */
+.gen-layout .bottom-generator.gen-panel {
+  // 顶到页面最上面（抵消 .container 的 140px 上内边距），自己滚；上面那段被固定的 header 盖住，
+  // 和右侧列表滚过 header 下面的感觉一样。内容顶部再补回 140px，初始状态第一段不会被 header 挡住
+  position: sticky;
+  top: 0;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 20;
+  height: 100vh;
+  margin-top: -100px;
+  padding: 100px 6px 20px 0;
+  overflow-y: auto;
+  // 面板滚到底后不再把滚轮事件传给页面（避免右侧列表跟着滚）
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+
+  .input-type-box {
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
+
+  /* 提示词输入框已经在 .gp-section 卡片里，自己不再套一层粗边框 + 投影，改成浅色内框 */
+  .input-area.gp-input-area {
+    margin-top: 8px;
+    padding: 12px;
+    max-width: none;
+    border: 1px solid $line;
+    border-radius: 12px;
+    box-shadow: none;
+    background: $cream;
+    transition: border-color .15s;
+    &:focus-within { border-color: $pink; }
+    .input-inner { display: block; }
+    .input-textarea {
+      height: 140px;
+      font-size: 14px;
+      line-height: 24px;
+    }
+    // 首尾帧模式用的是 textarea，高度和上面的 contenteditable 对齐
+    .start-end-frames-input {
+      display: block;
+    }
+    .frames-textarea {
+      display: block;
+      width: 100%;
+      height: 140px;
+      min-height: 140px;
+      max-height: none;
+      font-size: 14px;
+      line-height: 24px;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+  }
+
+  .gp-section {
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    background: $paper;
+    border: 1px solid $line;
+    border-radius: 16px;
+  }
+
+  .gp-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .gp-section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+    white-space: nowrap;
+  }
+  .gp-section-desc {
+    display: block;
+    font-size: 12px;
+    line-height: 1.5;
+    color: $sub;
+    margin-bottom: 10px;
+    // 放在分组最下面的说明
+    &.gp-section-foot {
+      margin: 14px 0 0;
+    }
+  }
+
+  .unlimited-switch {
+    margin: 0;
+    // 图片 tab 里没有标签行，开关自己站一行
+    .gp-section-desc + & { margin-bottom: 2px; }
+  }
+
+  .gp-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .gp-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid $line;
+    border-radius: 12px;
+    background: $cream;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    &:hover { border-color: #3d3d3d; }
+    &.active {
+      border-color: $pink;
+      background: $pinkopacity;
+    }
+  }
+  .gp-card-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: $ink;
+  }
+  .gp-card-desc {
+    font-size: 11px;
+    line-height: 1.5;
+    color: $sub;
+  }
+
+  .gp-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .gp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background: $cream;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .15s, background .15s;
+    &:hover { border-color: #3d3d3d; }
+    &.active {
+      border-color: $pink;
+      background: $pinkopacity;
+      color: $pink;
+    }
+    &.fixed { cursor: default; }
+  }
+
+  .gp-field {
+    margin-top: 12px;
+  }
+  .gp-section-desc + .gp-field { margin-top: 0; }
+  // 输出参数里的开关行：左标题、右开关
+  .gp-switch-row {
+    cursor: pointer;
+    user-select: none;
+    // 开关紧跟在标题后面，不贴右边
+    .gp-field-label { justify-content: flex-start; gap: 10px; margin-bottom: 0; }
+    .gp-switch { width: 44px; height: 23px; }
+  }
+  .gp-field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: $ink;
+    margin-bottom: 8px;
+  }
+  /* 时长滑块：和原设置下拉里的同一套 */
+    .duration-slider {
+      position: relative;
+      padding-top: 30px;
+      padding-bottom: 25px;
+
+      .slider-value {
+        position: absolute;
+        top: 2px;
+        transform: translateX(-50%);
+        color: $ink;
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .slider-track {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        background: $line;
+        border-radius: 2px;
+      }
+
+      .slider-marks {
+        position: absolute;
+        top: 28px;
+        left: 0;
+        width: 100%;
+        height: 4px;
+
+        .mark {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 4px;
+          background: $muted;
+          border-radius: 50%;
+          z-index: 5;
+        }
+
+        .mark-label {
+          position: absolute;
+          top: calc(50% + 8px);
+          transform: translateX(-50%);
+          font-size: 12px;
+          color: $muted;
+          white-space: nowrap;
+        }
+      }
+
+      .slider-input {
+        position: absolute;
+        top: calc(28px - 3px);
+        left: 0;
+        width: 100%;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+        z-index: 10;
+
+        &::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 6px;
+          background: transparent;
+        }
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          border: 2px solid $pink;
+          background: #fff;
+          box-shadow: none;
+          cursor: pointer;
+          transition: transform 0.16s;
+          margin-top: 1px;
+        }
+
+        &::-moz-range-track {
+          width: 100%;
+          height: 6px;
+          background: transparent;
+        }
+
+        &::-moz-range-thumb {
+          width: 12px;
+          height: 12px;
+          border: 2px solid $pink;
+          background: #fff;
+          border-radius: 50%;
+          box-shadow: none;
+          cursor: pointer;
+        }
+      }
+
+      .slider-labels {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+
+        span {
+          flex: 1;
+          font-size: 12px;
+          font-weight: 600;
+          color: $muted;
+          text-align: center;
+        }
+      }
+    }
+
+  .gp-field-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: $sub;
+  }
+
+  .gp-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    .gp-ref-btn { flex: 0 0 auto; }
+  }
+  .gp-tools-hint {
+    font-size: 11px;
+    line-height: 1.5;
+    color: $sub;
+  }
+  .gp-optimize {
+    flex: 0 0 auto;
+    // 面板里的优化开关缩小一号 /* gp-optimize-small */
+    padding: 3px 8px;
+    gap: 4px;
+    font-size: 12px;
+    border-radius: 9px;
+    .optimize-prompt-icon {
+      width: 36px;
+      height: 19px;
+    }
+  }
+  // 视频修改 / 续写：原视频放在画面描述上面，单独一行
+  .video-extend-input.gp-origin-video {
+    margin: 8px 0 14px;
+  }
+
+  /* 参考素材区 */
+  .gp-ref-group {
+    margin-top: 14px;
+  }
+  .gp-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 18px 12px;
+    border: 1px dashed #3d3d3d;
+    border-radius: 12px;
+    background: $cream;
+    color: $sub;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+    &:hover { border-color: $pink; color: $ink; }
+    // 图标是深色 png，暗色站上反成白色
+    .gp-dropzone-icon { width: 24px; height: 24px; opacity: .9; filter: brightness(0) invert(1); }
+    // 上传框里第二行：这一类素材的限制说明
+    .gp-dropzone-hint { font-size: 12px; line-height: 1.5; color: $muted; text-align: center; }
+  }
+  .gp-ref-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  // 和右侧记录里的素材小格（.photo-thumbnail）同一套：64×64、粗边框、左上角序号、底部标题
+  .gp-ref-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $cream;
+    border: 1px solid $line;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .gp-ref-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    z-index: 10;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $pink;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .gp-ref-thumb {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    object-fit: contain;
+    &.audio img:first-child { width: 44px; height: 44px; }
+    &.video img:first-child { width: 100%; height: 100%; object-fit: contain; }
+    .gp-ref-play {
+      // play.png 四周留白很多，按 100px 放才能看出来
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 80px;
+      height: 80px;
+      transform: translate(-50%, -40%);
+      object-fit: contain;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+    }
+  }
+  .gp-ref-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 3px 4px;
+    font-size: 11px;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: linear-gradient(180deg, rgba(16, 24, 40, 0) 0%, rgba(22, 17, 34, 0.9) 100%);
+    pointer-events: none;
+  }
+  .gp-ref-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 10;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  /* 面板里的输入框不要那条自定义的粉色闪烁光标 */
+  .input-area.gp-input-area .input-textarea:not(.has-focus):empty::after {
+    display: none;
+  }
+  /* 段落说明放在选项下面单独一行时的间距 */
+  .gp-desc-below {
+    margin: 10px 0 0;
+    text-align: left;
+  }
+  /* 上传区固定高度，有没有文件都一样 */
+  .gp-ref-group .gp-dropzone {
+    min-height: 150px;
+  }
+
+  // 分组标题后面的用途提示：参考图（人物 / 场景 / 风格）
+  .gp-field-use {
+    flex: 1;
+    margin-left: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    color: $muted;
+  }
+  .gp-prompt-label {
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: $sub;
+  }
+
+  /* 首尾帧 */
+  .gp-frames {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    .gp-ref-group { margin-top: 10px; min-width: 0; }
+  }
+  .gp-frame-zone {
+    position: relative;
+    &.uploaded {
+      padding: 0;
+      border-style: solid;
+      border-color: $line;
+      background: $cream;
+    }
+    .gp-frame-preview {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    .gp-ref-remove { top: 6px; right: 6px; }
+  }
+  // 两个上传区中间的交换按钮（上传区上面还有一行标签，往下压一点和框对齐）
+  .gp-frames-swap {
+    width: 32px;
+    height: 32px;
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid $line;
+    border-radius: 50%;
+    background: $paper;
+    cursor: pointer;
+    transition: transform .15s;
+    img { width: 16px; height: 16px; }
+    &:hover { transform: rotate(180deg); }
+  }
+
+  .gp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: $paper;
+    border: 1px solid $line;
+    border-radius: 16px;
+  }
+  .gp-cost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $sub;
+    b {
+      font-size: 18px;
+      font-weight: 800;
+      color: $ink;
+    }
+    img { width: 18px; height: 18px; }
+  }
+  .gp-generate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 22px;
+    // 和顶部 .type-btn.active 同一套：粉色渐变 + 粉边 + 发光
+    border: 1px solid #ff7ab5;
+    border-radius: 27px;
+    background: linear-gradient(145deg, #ff69ac, #ec317f);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 22px rgba(255,61,140,.55);
+    transition: filter .12s, box-shadow .12s;
+    &:hover { filter: brightness(1.06); box-shadow: 0 0 26px rgba(255,61,140,.7); }
+    &.loading { opacity: .7; pointer-events: none; }
+  }
+  .gp-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: gpSpin .8s linear infinite;
+  }
+}
+
+@keyframes gpSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 860px) {
+  .container.gen-layout {
+    grid-template-columns: 1fr;
+  }
+  .gen-layout .bottom-generator.gen-panel {
+    position: static;
+    height: auto;
+    margin-top: 0;
+    padding-top: 0;
+    overflow: visible;
+  }
+}
