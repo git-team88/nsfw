@@ -20,12 +20,13 @@ $pinkopacity: rgba(255,79,154,0.12);
   position: relative;
   max-width: 840px;
   margin: 0 auto;
-  padding: 140px 30px 20px;
+  // header 约 68px 高，上面留 100px 就够；底部不留（列表最后一条自己有间距）
+  padding: 100px 30px 0;
 }
 
 .filter-bar {
   position: sticky;
-  top: 120px;
+  top: 100px;
   right: 0;
   display: flex;
   justify-content: flex-end;
@@ -3021,7 +3022,6 @@ $pinkopacity: rgba(255,79,154,0.12);
 /* ===================== 生成页：左参数面板 + 右记录列表 ===================== */
 .container.gen-layout {
   max-width: none; // 铺满，两边只留 .container 的 30px 内边距
-  padding-bottom: 0;
   display: grid;
   grid-template-columns: minmax(560px, 46%) minmax(0, 1fr);
   gap: 24px;
@@ -3034,8 +3034,8 @@ $pinkopacity: rgba(255,79,154,0.12);
 
 /* 面板沿用 .bottom-generator 下 .input-area 的输入框样式，但定位改成左栏吸顶 */
 .gen-layout .bottom-generator.gen-panel {
-  // 顶到页面最上面（抵消 .container 的 140px 上内边距），自己滚；上面那段被固定的 header 盖住，
-  // 和右侧列表滚过 header 下面的感觉一样。内容顶部再补回 140px，初始状态第一段不会被 header 挡住
+  // 顶到页面最上面，自己滚；上面那段被固定的 header 盖住，和右侧列表滚过 header 下面的感觉一样。
+  // 内容顶部再补回 100px，滚动后第一段不会被 header 挡住
   position: sticky;
   top: 0;
   left: auto;
