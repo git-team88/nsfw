@@ -28,6 +28,7 @@ export default {
     refsHint: "업로드 후 프롬프트에서 {'@'}이름 으로 용도를 지정할 수 있습니다.",
     refImages: "참고 이미지",
     refVideos: "참고 영상",
+    originVideo: "원본 영상",
     refAudios: "참고 오디오",
     refImagesUse: " (인물 / 장면 / 스타일)",
     refVideosUse: " (동작 / 카메라 워크)",

@@ -82,7 +82,7 @@
           <!-- 视频修改 / 续写：原视频放在画面描述上面，单独一行 -->
           <template v-if="selectedVideoMultimodal == 'videoExtend' || selectedVideoMultimodal == 'videoModify'">
             <div class="gp-field-label gp-prompt-label">
-              <span>{{ t('generatePanel.refVideos') }}</span>
+              <span>{{ t('generatePanel.originVideo') }}</span>
             </div>
             <div class="video-extend-input gp-origin-video">
               <div class="video-upload" :class="{ uploaded: uploadedVideo }">

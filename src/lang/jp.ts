@@ -28,6 +28,7 @@ export default {
     refsHint: "アップロード後、プロンプト内で {'@'}名前 を使って用途を指定できます。",
     refImages: "参考画像",
     refVideos: "参考動画",
+    originVideo: "元の動画",
     refAudios: "参考音声",
     refImagesUse: "（人物 / シーン / スタイル）",
     refVideosUse: "（動き / カメラワーク）",

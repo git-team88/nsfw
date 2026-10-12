@@ -28,6 +28,7 @@ export default {
     refsHint: "上传素材后，就能在提示词里用 {'@'}名字 指定它的用途。",
     refImages: "参考图",
     refVideos: "参考视频",
+    originVideo: "原视频",
     refAudios: "参考音频",
     refImagesUse: "（人物 / 场景 / 风格）",
     refVideosUse: "（动作 / 运镜）",

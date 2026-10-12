@@ -28,6 +28,7 @@ export default {
     refsHint: "After uploading, use {'@'}name in the prompt to tell the model how to use each reference.",
     refImages: "Reference images",
     refVideos: "Reference videos",
+    originVideo: "Source video",
     refAudios: "Reference audio",
     refImagesUse: " (characters / scenes / style)",
     refVideosUse: " (motion / camera moves)",
