@@ -482,8 +482,13 @@ $pinkopacity: rgba(255,79,154,0.12);
   white-space: nowrap;
   opacity: .85;
   transition: opacity .15s, color .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  img, .action-svg { width: 16px; height: 16px; }
+  // 悬浮时文字变主题色，图标保持原色（png 本来就不跟着变，svg 这里钉住）
+  .action-svg { color: $ink; }
   &:hover { opacity: 1; color: $pink; }
-  &.publish { color: $pink; opacity: 1; }
 }
 
 .published-text {

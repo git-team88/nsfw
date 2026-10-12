@@ -747,10 +747,10 @@
               <!-- 底部操作 - 仅在任务完成后显示 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="photo-footer">
                 <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
-                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">{{ t('recordList.publish') }}</span>
-                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">{{ t('recordList.regenerate') }}</span>
-                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length" @click="editImage(record, 0)">{{ t('recordList.edit') }}</span>
-                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length && record.user_selected?.story_mode != 'nsfw'" @click="downloadSingleImage(record.images[0])">{{ t('recordList.download') }}</span>
+                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)"><img src="@/assets/images/project/publish.png" alt="" />{{ t('recordList.publish') }}</span>
+                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)"><img src="@/assets/images/home/renew.png" alt="" />{{ t('recordList.regenerate') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length" @click="editImage(record, 0)"><svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>{{ t('recordList.edit') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length && record.user_selected?.story_mode != 'nsfw'" @click="downloadSingleImage(record.images[0])"><svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>{{ t('recordList.download') }}</span>
 
                 <div class="photo-more">
                   <img class="more-dots" src="@/assets/images/detail/menu.png" alt="more" @click.stop="showPhotoMoreOptions(record, $event)" />
@@ -949,9 +949,9 @@
               <!-- 视频底部操作 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
                 <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
-                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">{{ t('recordList.publish') }}</span>
-                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">{{ t('recordList.regenerate') }}</span>
-                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && record.videoUrl && record.user_selected?.story_mode != 'nsfw'" @click="downloadVideo(record)">{{ t('recordList.download') }}</span>
+                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)"><img src="@/assets/images/project/publish.png" alt="" />{{ t('recordList.publish') }}</span>
+                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)"><img src="@/assets/images/home/renew.png" alt="" />{{ t('recordList.regenerate') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && record.videoUrl && record.user_selected?.story_mode != 'nsfw'" @click="downloadVideo(record)"><svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>{{ t('recordList.download') }}</span>
 
                 <div class="video-more">
                   <img class="more-dots" src="@/assets/images/detail/menu.png" alt="more" @click.stop="showVideoMoreOptions(record, $event)" />
