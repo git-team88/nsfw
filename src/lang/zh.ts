@@ -2275,6 +2275,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   recordList: {
+    publish: "发布",
+    regenerate: "重新生成",
+    edit: "编辑",
     title: "生成",
     all: "全部",
     photo: "图片",

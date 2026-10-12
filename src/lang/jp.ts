@@ -1992,6 +1992,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     }
   },
   recordList: {
+    publish: "公開",
+    regenerate: "再生成",
+    edit: "編集",
     title: "生成",
     all: "すべて",
     photo: "画像",

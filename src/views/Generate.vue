@@ -730,13 +730,7 @@
                       <img :src="processImageUrl(image)" alt="generated" class="grid-image" @click="openImageViewer(image)" />
                       <!-- 图片操作按钮 - 仅在任务成功后显示 -->
                       <div v-if="isTaskSuccess(record.step_status || record.status)" class="photo-item-overlay">
-                        <div class="overlay-btn download-btn" @click.stop="downloadSingleImage(image)">
-                          <img src="@/assets/images/home/download.png" alt="download" />
-                        </div>
-
-                        <div class="overlay-btn edit-btn" @click.stop="editImage(record, index)">
-                          <img src="@/assets/images/home/edit.png" alt="edit" />
-                        </div>
+                        <!-- 编辑 / 下载已挪到底部文字操作，缩略图上不再悬浮图标 -->
 
                       </div>
                     </div>
@@ -753,12 +747,10 @@
               <!-- 底部操作 - 仅在任务完成后显示 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="photo-footer">
                 <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
-                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">
-                  <img src="@/assets/images/project/publish.png" alt="publish" />
-                </div>
-                <div class="regenerate-btn" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">
-                  <img src="@/assets/images/home/renew.png" alt="regenerate" />
-                </div>
+                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishPhoto(record)">{{ t('recordList.publish') }}</span>
+                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">{{ t('recordList.regenerate') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length" @click="editImage(record, 0)">{{ t('recordList.edit') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && (record.images || []).length && record.user_selected?.story_mode != 'nsfw'" @click="downloadSingleImage(record.images[0])">{{ t('recordList.download') }}</span>
 
                 <div class="photo-more">
                   <img class="more-dots" src="@/assets/images/detail/menu.png" alt="more" @click.stop="showPhotoMoreOptions(record, $event)" />
@@ -930,9 +922,7 @@
                   <div class="play-overlay">
                     <img src="@/assets/images/detail/play.png" alt="play" class="play-icon" />
                   </div>
-                  <div class="download-btn" @click.stop="downloadVideo(record)">
-                    <img src="@/assets/images/home/download.png" alt="download" />
-                  </div>
+                  <!-- 下载已挪到底部文字操作，封面上不再悬浮图标 -->
                 </div>
               </div>
 
@@ -959,12 +949,9 @@
               <!-- 视频底部操作 -->
               <div v-if="!isTaskProcessing(record.step_status || record.status)" class="video-footer">
                 <span v-if="record.is_publish == 1" class="published-text">{{ t('home.published') }}</span>
-                <div class="publish-btn" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">
-                  <img src="@/assets/images/project/publish.png" alt="publish" />
-                </div>
-                <div class="regenerate-btn" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">
-                  <img src="@/assets/images/home/renew.png" alt="regenerate" />
-                </div>
+                <span class="action-text publish" v-else-if="isTaskSuccess(record.step_status || record.status)" @click="publishVideo(record)">{{ t('recordList.publish') }}</span>
+                <span class="action-text" v-if="canRegenerateRecord(record)" @click="regenerateRecord(record)">{{ t('recordList.regenerate') }}</span>
+                <span class="action-text" v-if="isTaskSuccess(record.step_status || record.status) && record.videoUrl && record.user_selected?.story_mode != 'nsfw'" @click="downloadVideo(record)">{{ t('recordList.download') }}</span>
 
                 <div class="video-more">
                   <img class="more-dots" src="@/assets/images/detail/menu.png" alt="more" @click.stop="showVideoMoreOptions(record, $event)" />

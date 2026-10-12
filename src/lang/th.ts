@@ -1761,6 +1761,9 @@ export default {
     }
   },
   recordList: {
+    publish: "เผยแพร่",
+    regenerate: "สร้างใหม่",
+    edit: "แก้ไข",
     title: "สร้าง",
     all: "ทั้งหมด",
     photo: "รูปภาพ",

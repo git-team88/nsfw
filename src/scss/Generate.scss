@@ -472,6 +472,20 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 }
 
+// 记录底部的文字操作：发布 / 重新生成 / 编辑 / 下载
+.action-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: $ink;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  opacity: .85;
+  transition: opacity .15s, color .15s;
+  &:hover { opacity: 1; color: $pink; }
+  &.publish { color: $pink; opacity: 1; }
+}
+
 .published-text {
   color: #99A1AF;
   font-size: 12px;

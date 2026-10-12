@@ -1761,6 +1761,9 @@ export default {
     }
   },
   recordList: {
+    publish: "게시",
+    regenerate: "다시 생성",
+    edit: "편집",
     title: "생성",
     all: "전체",
     photo: "이미지",

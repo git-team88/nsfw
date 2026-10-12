@@ -2170,6 +2170,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   recordList: {
+    publish: "Publish",
+    regenerate: "Regenerate",
+    edit: "Edit",
     title: "Generate",
     all: "All",
     photo: "Image",

@@ -2269,6 +2269,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     }
   },
   recordList: {
+    publish: "發布",
+    regenerate: "重新生成",
+    edit: "編輯",
     title: "生成",
     all: "全部",
     photo: "圖片",
