@@ -236,7 +236,7 @@ import { ref, watch, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import { getGaClientId } from "@/utils/analytics";
+import { getGaClientId, trackSelectSubscriptionPlan, trackPaymentSubmit, trackSelectUsdtTab, trackSelectExtraCreditTab } from "@/utils/analytics";
 import { toast } from "@/util/toast";
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
@@ -484,6 +484,7 @@ function getList() {
 }
 
 function switchTab(tab: string) {
+  if (tab === 'credits_pack' && activeTab.value !== 'credits_pack') trackSelectExtraCreditTab();
   activeTab.value = tab;
   selectedPlan.value = 0;
   couponCode.value = '';
@@ -494,6 +495,7 @@ function switchTab(tab: string) {
 
 function switchPaymentTab(tab: string) {
   if (paymentTab.value === tab) return;
+  if (tab === 'usdt') trackSelectUsdtTab();
   paymentTab.value = tab;
   // 切支付方式不动「订阅 / 算力包」的选中，按当前 tab 重新拉对应支付方式的档位
   selectedPlan.value = 0;
@@ -504,6 +506,7 @@ function switchPaymentTab(tab: string) {
 }
 
 function selectPlan(planId: number | string) {
+  if (selectedPlan.value !== planId) trackSelectSubscriptionPlan();
   selectedPlan.value = planId;
   if (couponCode.value) {
     couponCode.value = '';
@@ -553,6 +556,8 @@ async function handleRecharge() {
     toast(t('subscribe.agreeFirst'));
     return;
   }
+  // 选好套餐点确认（现金 / USDT 两条路都从这里走）
+  if (selectedPlan.value) trackPaymentSubmit();
 
   if (paymentTab.value === 'usdt') {
     if (!selectedPlan.value) {

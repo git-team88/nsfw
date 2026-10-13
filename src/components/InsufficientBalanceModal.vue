@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="insufficient-balance-modal">
     <div class="modal-content">
-      <button class="close-btn" @click="$emit('cancel')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+      <button class="close-btn" @click="onCancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5f5f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
 
       <h3 class="modal-title">{{ t('novel.insufficientBalance') }}</h3>
       <p class="modal-message">
@@ -14,15 +14,17 @@
         </template>
       </p>
       <div class="modal-actions">
-        <button class="modal-cancel-btn" @click="$emit('cancel')">{{ t('novel.cancel') }}</button>
-        <button class="modal-recharge-btn" @click="$emit('recharge')">{{ t('novel.goRecharge') }}</button>
+        <button class="modal-cancel-btn" @click="onCancel">{{ t('novel.cancel') }}</button>
+        <button class="modal-recharge-btn" @click="onRecharge">{{ t('novel.goRecharge') }}</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { trackCreditOutagePrompt, trackCreditOutagePromptCancel, trackCreditOutagePromptRedirect } from '@/utils/analytics';
 
 const { t } = useI18n();
 
@@ -37,6 +39,17 @@ const emit = defineEmits<{
   cancel: [];
   recharge: [];
 }>();
+
+// GA：弹窗显示时上报一次；「取消」按钮和右上角关闭都上报取消；「去充值」上报跳转
+watch(() => props.visible, (v) => { if (v) trackCreditOutagePrompt(); });
+function onCancel() {
+  trackCreditOutagePromptCancel();
+  emit('cancel');
+}
+function onRecharge() {
+  trackCreditOutagePromptRedirect();
+  emit('recharge');
+}
 </script>
 
 <style lang="scss" scoped>

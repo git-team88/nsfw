@@ -169,6 +169,53 @@ export function trackClickGenerateButton() {
   gtag("event", "click_generate_button");
 }
 
+// ---- 充值相关 ----
+/** 算力不足提示框弹出 */
+export function trackCreditOutagePrompt() {
+  gtag("event", "credit_outage_prompt");
+}
+/** 算力不足提示框：取消 / 关闭 */
+export function trackCreditOutagePromptCancel() {
+  gtag("event", "credit_outage_prompt_cancel");
+}
+/** 算力不足提示框：确定跳转充值 */
+export function trackCreditOutagePromptRedirect() {
+  gtag("event", "credit_outage_prompt_redirect");
+}
+/** 充值页选中套餐（订阅 / 算力包都报） */
+export function trackSelectSubscriptionPlan() {
+  gtag("event", "select_subscription_plan");
+}
+/** 选套餐后点确认支付（现金 / USDT 都报） */
+export function trackPaymentSubmit() {
+  gtag("event", "payment_submit");
+}
+/** 支付结果页 */
+export function trackPaymentSuccess() {
+  gtag("event", "payment_success");
+}
+export function trackPaymentFailed() {
+  gtag("event", "payment_failed");
+}
+/** 充值页切到 USDT 付款页签 */
+export function trackSelectUsdtTab() {
+  gtag("event", "select_usdt_tab");
+}
+/** 充值页切到算力包页签 */
+export function trackSelectExtraCreditTab() {
+  gtag("event", "select_extra_credit_tab");
+}
+
+// ---- 订阅付费相关 ----
+/** 博主主页的订阅按钮 */
+export function trackSubscribeToCreator() {
+  gtag("event", "subscribe_to_creator");
+}
+/** 作品详情页的订阅按钮 */
+export function trackSubscribeToContent() {
+  gtag("event", "subscribe_to_content");
+}
+
 // 用 set 不用 config：config 每调一次都会顺带发一条 page_view，
 // 登录时同步一次 uid 就多一条 PV，数据会虚高。
 export function setUserId(userId: string) {

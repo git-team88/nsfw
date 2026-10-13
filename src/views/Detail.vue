@@ -1014,7 +1014,7 @@ import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
-import { trackShare } from "@/utils/analytics";
+import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
 
@@ -4363,6 +4363,7 @@ function handleImageClick(index: number) {
 }
 
 async function onSubscribe() {
+  trackSubscribeToContent();
   const token = localStorage.getItem('token');
   if (!token) {
     goAuth();

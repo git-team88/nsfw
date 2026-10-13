@@ -8,7 +8,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn confirm" @click="$emit('go-subscribe')">{{ t('home.makeSequelSubscribeGo') }}</button>
+        <button class="btn confirm" @click="onGoSubscribe">{{ t('home.makeSequelSubscribeGo') }}</button>
       </div>
     </div>
   </div>
@@ -16,6 +16,7 @@
 
 <script setup lang="ts" name="MakeSequelSubscribeModal">
 import { useI18n } from 'vue-i18n';
+import { trackSubscribeToCreator } from '@/utils/analytics';
 const { t } = useI18n();
 
 defineProps({
@@ -25,7 +26,13 @@ defineProps({
   }
 });
 
-defineEmits(['go-subscribe', 'close']);
+const emit = defineEmits(['go-subscribe', 'close']);
+
+// GA：「去订阅」点击即上报（登录判断在父组件，上报在其之前）
+function onGoSubscribe() {
+  trackSubscribeToCreator();
+  emit('go-subscribe');
+}
 </script>
 
 <style lang="scss" scoped>

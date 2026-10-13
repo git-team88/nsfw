@@ -27,10 +27,13 @@
 import Header from "@/components/Header.vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { trackPaymentFailed } from "@/utils/analytics";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
+
+trackPaymentFailed();
 
 function backToPayment() {
   router.replace('/ai-recharge');

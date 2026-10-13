@@ -227,6 +227,7 @@ import defaultCover from '@/assets/images/base/cover.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
+import { trackSubscribeToCreator } from '@/utils/analytics';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -693,6 +694,8 @@ async function toggleLike() {
 
 function toggleSubscribe() {
   if (!authorInfo.value.id) return;
+  // GA：点击博主订阅按钮（登录判断之前，与博主主页一致）
+  trackSubscribeToCreator();
 
   const token = localStorage.getItem('token');
   if (!token) {

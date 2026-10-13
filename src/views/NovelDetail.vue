@@ -311,7 +311,7 @@ import collectIcon from '@/assets/images/detail/collect.png';
 import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import makeIcon from '@/assets/images/base/make.png';
-import { trackShare } from '@/utils/analytics';
+import { trackShare, trackSubscribeToContent } from '@/utils/analytics';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -965,6 +965,7 @@ async function toggleFav() {
 }
 
 async function onSubscribe() {
+  trackSubscribeToContent();
   const token = localStorage.getItem('token');
   if (!token) {
     goAuth();

@@ -43,12 +43,14 @@ import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 // 上报由 analytics.ts 的 PURCHASE_REPORT_SOURCE 开关决定：
 // 开关是 "server" 时 trackPurchase 内部直接跳过，这里照常调用即可
-import { trackPurchase } from "@/utils/analytics";
+import { trackPurchase, trackPaymentSuccess } from "@/utils/analytics";
 import { scaleFiatAmount } from "@/util/currency";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
+
+trackPaymentSuccess();
 
 // 上报金额：
 //   USDT（前端跳转时拼的）就是实际转账数量，原样上报；

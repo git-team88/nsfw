@@ -502,6 +502,7 @@ import {
 import { useMasonry } from "@/util/masonry";
 import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
+import { trackSubscribeToCreator } from "@/utils/analytics";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import { processImageUrl, initLanguage, formatTimestamp, apiErrorMessage } from '@/util/utils';
@@ -1850,6 +1851,7 @@ async function toggleFollow() {
 }
 
 function goSubscribe() {
+  trackSubscribeToCreator();
   if (!checkLogin()) return;
   router.push(`/subscription-payment?id=${userInfo.value.id}`);
 }
