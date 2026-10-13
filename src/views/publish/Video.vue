@@ -957,6 +957,36 @@ const uploadProgress = ref(0);
 const videoUploadPercent = ref(0);
 const videoSize = ref(0);
 const videoDuration = ref(0);
+
+// 发布时要带 duration（秒）。本地上传的在读元数据时已经拿到；
+// 从 AI 作品选的 / 带 url 参数进来的 / 编辑已有作品的，接口不一定返回时长，
+// 这里用 <video> 只加载 metadata 读一下，读不到就按 0 传，不挡发布。
+function probeVideoDuration(url: string): Promise<number> {
+  return new Promise((resolve) => {
+    if (!url) return resolve(0);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    let settled = false;
+    const done = (d: number) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      video.removeAttribute('src');
+      video.load();
+      resolve(d);
+    };
+    const timer = window.setTimeout(() => done(0), 10000);
+    video.onloadedmetadata = () => done(isFinite(video.duration) && video.duration > 0 ? Math.round(video.duration) : 0);
+    video.onerror = () => done(0);
+    video.src = url;
+  });
+}
+
+// 非本地上传的视频：优先用接口给的 duration，没有就探测一次
+async function fillVideoDuration(url: string, given?: any) {
+  const d = Number(given) || 0;
+  videoDuration.value = d > 0 ? d : await probeVideoDuration(url);
+}
 const videoType = ref("");
 const videoFile = ref<File | null>(null);
 const videoUrl = ref("");
@@ -1771,6 +1801,8 @@ async function runBatchPublishLoop() {
           const videoOutput = chapterRes.data.result_async.final_video_output;
           payload.video_url = videoOutput.video_url_1080p || videoOutput.video_url;
           payload.video_cover_url = videoOutput.video_cover_url || '';
+          // 漫剧项目时长在 final_video_output.duration（秒，如 58.447），没有就探测一次
+          payload.duration = Number(videoOutput.duration) || await probeVideoDuration(payload.video_url);
         }
         if (chapterRes.data.chapter_description) {
           payload.content = chapterRes.data.chapter_description;
@@ -2582,6 +2614,7 @@ async function handlePublish(publishData?: any) {
         // Set video URL from final_video_output, prefer 1080p if available
         if (resultAsync?.final_video_output) {
           videoUrl.value = resultAsync.final_video_output.video_url_1080p || resultAsync.final_video_output.video_url;
+          fillVideoDuration(videoUrl.value, resultAsync.final_video_output.duration);
           uploadSuccess.value = true;
           uploadProgress.value = 100;
         }
@@ -3174,6 +3207,7 @@ async function getPostDetails() {
 
       if (postData.video_url) {
         videoUrl.value = postData.video_url;
+        fillVideoDuration(videoUrl.value, postData.duration);
         uploadSuccess.value = true;
         uploadProgress.value = 100;
       }
@@ -4169,6 +4203,7 @@ async function onSubmit() {
       is_nsfw: computedIsNsfw.value,
       access_rights: form.value.permission == "partial" ? 2 : form.value.permission == "private" ? 3 : 1,
       video_url: videoUrl.value,
+      duration: videoDuration.value || 0,
       book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
       chapter_index: selectedCollection.value ? parseInt(selectedEpisodeNumber.value) : 0,
       cover_color: '',
@@ -4254,6 +4289,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
 
   if (urlParam && urlParam.trim()) {
     videoUrl.value = urlParam;
+    fillVideoDuration(videoUrl.value, route.query.duration);
     uploadSuccess.value = true;
     uploadProgress.value = 100;
 

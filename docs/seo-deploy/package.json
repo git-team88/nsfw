@@ -1,0 +1,9 @@
+{
+  "name": "blfans-seo-render",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2",
+    "puppeteer": "^25.3.0"
+  }
+}

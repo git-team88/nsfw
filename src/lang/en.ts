@@ -3400,5 +3400,13 @@ If you have any questions, complaints, comments or suggestions regarding persona
     empty: "No works in this category yet",
     loading: "Loading...",
     noMore: "No more"
+  },
+  notFound: {
+    title: "Page not found",
+    desc: "The page may have been moved or deleted, or the URL may be incorrect.",
+    back: "Back to Home",
+    guide: "Guide",
+    terms: "Terms",
+    pageTitle: "Page Not Found — FansFans"
   }
 };

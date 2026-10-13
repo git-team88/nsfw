@@ -2421,7 +2421,106 @@ function setSeoMeta(title: string, description: string, type: string) {
     document.head.appendChild(metaDescription);
   }
   metaDescription.setAttribute('content', pageDescription);
+
+  // —— og:* / CreativeWork 结构化数据 ——
+  // 详情页是站内最重要的内容实体页：给爬虫一份 CreativeWork（含封面/作者/时间）
+  // 和社交分享卡片信息。seo-server 渲染 SPA 时会把这些标签原样带出。
+  const origin = window.location.origin;
+  const pageUrl = `${origin}${route.path}`;
+  setOgMeta('og:title', pageTitle);
+  setOgMeta('og:description', pageDescription);
+  setOgMeta('og:type', 'article');
+  setOgMeta('og:url', pageUrl);
+  const coverUrl = detail.value?.cover ? processImageUrl(detail.value.cover) : '';
+  if (coverUrl) {
+    setOgMeta('og:image', coverUrl);
+    setOgMeta('twitter:image', coverUrl, true);
+  }
+  injectWorkJsonLd({
+    name: title,
+    description: trimmedDesc,
+    image: coverUrl || undefined,
+    author: detail.value?.author?.nickname || undefined,
+    date: /^\d{4}-\d{2}-\d{2}/.test(String(detail.value?.time || '')) ? String(detail.value.time) : undefined,
+    type: detail.value?.type ? String(detail.value.type) : '',
+  });
 }
+
+// —— og:* / JSON-LD 的进出场管理 ——
+// ⚠️ 离开详情页时必须恢复被改写的 og:* 并移除 JSON-LD，否则上一个作品的信息
+//    会残留到下一个页面（SPA 不刷新 head，这是比缺标签更容易踩的坑）。
+const TYPE_DIR_MAP: Record<string, string> = { '1': 'comic', '2': 'novel', '3': 'drama', '4': 'photo', '5': 'video' };
+const SITE_NAME_FOR_LD = 'FansFans 萌創';
+const TYPE_NAME_MAP: Record<string, string> = {
+  comic: 'AI漫画', novel: 'AI小説', drama: 'アニメドラマ', photo: 'イラスト', video: '動画',
+};
+let ogModified: Array<{ el: HTMLMetaElement; prev: string | null }> = [];
+let ldWorkEl: HTMLScriptElement | null = null;
+
+function setOgMeta(key: string, content: string, isName = false) {
+  const sel = isName ? `meta[name="${key}"]` : `meta[property="${key}"]`;
+  let m = document.head.querySelector<HTMLMetaElement>(sel);
+  if (!m) {
+    m = document.createElement('meta');
+    m.setAttribute(isName ? 'name' : 'property', key);
+    document.head.appendChild(m);
+    ogModified.push({ el: m, prev: null }); // 新建的，离开时直接移除
+  } else if (!ogModified.some(x => x.el === m)) {
+    ogModified.push({ el: m, prev: m.getAttribute('content') }); // 覆盖前记下原值
+  }
+  m.setAttribute('content', content);
+}
+
+function injectWorkJsonLd(data: { name: string; description: string; image?: string; author?: string; date?: string; type?: string }) {
+  ldWorkEl?.remove();
+  ldWorkEl = null;
+  const origin = window.location.origin;
+  const pageUrl = `${origin}${route.path}`;
+  const work: Record<string, unknown> = {
+    '@type': 'CreativeWork',
+    '@id': `${pageUrl}#work`,
+    name: data.name,
+    description: data.description,
+    url: pageUrl,
+    inLanguage: document.documentElement.lang || 'ja',
+    isPartOf: { '@id': `${origin}/#website` },
+  };
+  if (data.image) work.image = data.image;
+  if (data.author) work.author = { '@type': 'Person', name: data.author };
+  if (data.date) work.datePublished = data.date;
+
+  const graph: Record<string, unknown>[] = [work];
+
+  // 三级面包屑：首页 → 内容分类 → 作品（分类 URL 用站内真实存在的 /{type} 路由）
+  const typeDir = data.type ? TYPE_DIR_MAP[data.type] : '';
+  if (typeDir) {
+    graph.push({
+      '@type': 'BreadcrumbList',
+      '@id': `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: SITE_NAME_FOR_LD, item: `${origin}/` },
+        { '@type': 'ListItem', position: 2, name: TYPE_NAME_MAP[typeDir] || typeDir, item: `${origin}/${typeDir}` },
+        { '@type': 'ListItem', position: 3, name: data.name, item: pageUrl },
+      ],
+    });
+  }
+
+  ldWorkEl = document.createElement('script');
+  ldWorkEl.type = 'application/ld+json';
+  ldWorkEl.setAttribute('data-seo', 'creativework');
+  ldWorkEl.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
+  document.head.appendChild(ldWorkEl);
+}
+
+onBeforeUnmount(() => {
+  for (const { el, prev } of ogModified) {
+    if (prev === null) el.remove();
+    else el.setAttribute('content', prev);
+  }
+  ogModified = [];
+  ldWorkEl?.remove();
+  ldWorkEl = null;
+});
 
 // API Data Load
 /**

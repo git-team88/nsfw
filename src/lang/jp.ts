@@ -3461,5 +3461,13 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     empty: "この条件の作品はまだありません",
     loading: "読み込み中...",
     noMore: "これ以上ありません"
+  },
+  notFound: {
+    title: "ページが見つかりません",
+    desc: "お探しのページは移動または削除されたか、URL が正しくない可能性があります。",
+    back: "ホームへ戻る",
+    guide: "使い方ガイド",
+    terms: "利用規約",
+    pageTitle: "ページが見つかりません - FansFans 萌創"
   }
 };

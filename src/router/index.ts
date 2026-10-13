@@ -359,8 +359,12 @@ const routes = [
   //   component: () => import("@/views/Ranking.vue"),
   // },
   {
+    // 未知路径 → 404 页（不再重定向回首页）。
+    // 之前 redirect:"/" 会让任何乱路径都「200 + 首页内容」，形成无限重复内容（soft 404）；
+    // 配合 seo-server 对 NotFound 的 seo-status 标记返回真实 404 状态码。
     path: "/:pathMatch(.*)*",
-    redirect: "/",
+    name: "NotFound",
+    component: () => import("@/views/NotFound.vue"),
   },
 ];
 

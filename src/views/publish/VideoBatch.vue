@@ -1291,6 +1291,7 @@ async function runBatchPublishLoop() {
         is_nsfw: computedIsNsfw.value,
         access_rights: accessRights,
         video_url: item.url,
+        duration: item.duration || 0,
         book_id: selectedCollection.value ? (selectedCollection.value.id || 0) : 0,
         chapter_index: collectionChapterIndex,
         cover_color: '',

@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "npm run sitemap && run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
+    "sitemap": "node scripts/gen-sitemap.mjs",
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix"

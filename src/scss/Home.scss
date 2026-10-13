@@ -173,6 +173,12 @@ $pinkopacity: rgba(255,79,154,0.12);
       position: relative;
       display: inline-block;
       margin: 0 0 12px;
+      // 速度线原来用 left/right: -70px 挂在标题外侧，标语一长（韩语/泰语）标题撑满宽度后
+      // 速度线就超出 .hero-section，整页出横向滚动条。改成留出 70px 内边距、速度线贴边放，
+      // 标题短时视觉位置不变，标题长时也不会溢出。
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0 70px;
 
       .hero-speedlines {
         position: absolute;
@@ -193,12 +199,12 @@ $pinkopacity: rgba(255,79,154,0.12);
         span:nth-child(3) { width: 22px; }
 
         &.left {
-          left: -70px;
+          left: 0;
           transform: rotate(26deg);
         }
 
         &.right {
-          right: -70px;
+          right: 0;
           align-items: flex-end;
           transform: rotate(-26deg);
         }
@@ -211,6 +217,8 @@ $pinkopacity: rgba(255,79,154,0.12);
       font-weight: 900;
       text-align: center;
       margin: 0;
+      // 长标语在任意宽度都能断行，不把容器撑出横向滚动条
+      overflow-wrap: anywhere;
       color: #fff;
       line-height: 1.07;
       letter-spacing: -1.5px;
@@ -1429,6 +1437,10 @@ $pinkopacity: rgba(255,79,154,0.12);
   }
 
   .hero-section .hero-content {
+    .hero-title-wrap {
+      padding: 0;
+    }
+
     .hero-title {
       font-size: 22px;
       margin-bottom: 18px;

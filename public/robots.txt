@@ -1,0 +1,152 @@
+# robots.txt — FansFans 萌創
+# https://www.fansfans.ai/
+# 更新日期: 2026-10-10
+
+# ---------- 默认：全量放行 ----------
+User-agent: *
+Allow: /
+Disallow: /seo-render
+
+# 需登录 / 个人中心 / 支付流程页面，无索引价值
+Disallow: /login
+Disallow: /register
+Disallow: /reset-send
+Disallow: /reset-password
+Disallow: /publish/
+Disallow: /my-projects
+Disallow: /character-library
+Disallow: /generate
+Disallow: /novel/
+Disallow: /*/novel/
+Disallow: /create-collection
+Disallow: /collection-settings/
+Disallow: /subscription-payment
+Disallow: /subscription-success
+Disallow: /subscription-fail
+Disallow: /drama-unlock-success
+Disallow: /drama-unlock-fail
+Disallow: /aitool-payment-success
+Disallow: /aitool-payment-fail
+Disallow: /token-withdraw-success
+Disallow: /account-success
+Disallow: /account-fail
+Disallow: /user-home
+Disallow: /user-personal
+Disallow: /user-personal-edit
+Disallow: /user-interactive
+Disallow: /user-invite
+Disallow: /user-revenue
+Disallow: /user-subscription
+Disallow: /user-kyc
+Disallow: /user-privacy
+Disallow: /user-message
+Disallow: /user-account
+Disallow: /user-profile
+Disallow: /user-profile-edit
+Disallow: /user-payment-history
+
+# ---------- 搜索引擎（必须放行：它们把搜索用户带回来） ----------
+# 成人站策略：网页正常收录；Googlebot-Image 拒绝 —— 作品封面不进图片搜索（图搜里的成人图容易触发 SafeSearch 整站降权）
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# ---------- 生成式引擎 / AI 爬虫（GEO 关键） ----------
+# 成人站策略：只放行「搜索/引用型」爬虫（回答问题时引用本站并附链接，能带回流量）；
+# 「训练型」爬虫（GPTBot / ClaudeBot / Google-Extended / Applebot-Extended / meta-externalagent / Amazonbot）一律拒绝，
+# 本站内容不进入模型训练集。
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+# ---------- 明确拒绝：数据商 / 内容搬运 / 公开数据集 ----------
+# 这些爬虫抓走内容用于卖数据、做聚合站或灌进公开数据集，不产生任何回访流量，
+# 而且会把本站原创内容直接送到竞品手上。
+# 注意：robots 只对「守规矩」的爬虫有效，真正的硬拦在 nginx（$is_content_scraper → 403）。
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+# ---------- 索引资产声明 ----------
+Sitemap: https://www.fansfans.ai/sitemap.xml

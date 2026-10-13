@@ -88,9 +88,81 @@ function updateHtmlLang() {
   document.documentElement.lang = htmlLangMap[locale.value] || 'en';
 }
 
+// —— hreflang / og:locale ——
+// hreflang 只给「有独立语言 URL 变体」的页面输出：
+//   /                    → 6 个 /{lang} + x-default=/
+//   /{lang}              → 同上（base 为空）
+//   /{lang}/{type}、/{type} → 6 个 /{lang}/{type} + x-default=/{type}
+// 其余路由（详情页/条款页等）是「单 URL 多语言」（语言由 localStorage/浏览器决定），
+// 不存在「每个语言一个 URL」的对应关系，输出 hreflang 反而制造错误信号，因此不输出。
+// ⚠️ 刻意不在 index.html 里写静态 hreflang：index.html 是所有路由共用的壳，
+//    写死的 hreflang 对非首页路由全是错的（这正是历史上把它删掉的原因）。
+//    爬虫走 seo-server 渲染，App.vue 运行时注入的 hreflang 会出现在渲染结果里。
+const LANG_URLS = ['ja', 'en', 'zh-cn', 'zh-tw', 'ko', 'th'];
+const HREFLANG_MAP: Record<string, string> = {
+  ja: 'ja', en: 'en', 'zh-cn': 'zh-Hans', 'zh-tw': 'zh-Hant', ko: 'ko', th: 'th',
+};
+const OG_LOCALE_MAP: Record<string, string> = {
+  jp: 'ja_JP', en: 'en_US', zh: 'zh_CN', tc: 'zh_TW', ko: 'ko_KR', th: 'th_TH',
+};
+const OG_LOCALE_ALL = ['ja_JP', 'en_US', 'zh_CN', 'zh_TW', 'ko_KR', 'th_TH'];
+
 function updateHreflang() {
-  // 不再输出 hreflang：清除任何已有的 hreflang 链接（含 index.html 里可能残留的写死项）
+  // 先清掉旧值（含路由切换残留），再按当前路由决定是否注入
   document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
+
+  const path = route.path;
+  const LANGS = 'ja|en|zh-cn|zh-tw|ko|th';
+  const TYPES = 'novel|comic|drama|photo|video';
+  let base: string | null = null;
+  if (path === '/') {
+    base = '';
+  } else {
+    const langMatch = path.match(new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`));
+    if (langMatch) {
+      base = langMatch[2] || '';
+    } else {
+      const typeMatch = path.match(new RegExp(`^/(${TYPES})/?$`));
+      if (typeMatch) base = `/${typeMatch[1]}`;
+    }
+  }
+  if (base === null) return; // 非首页族路由：没有语言 URL 变体，不输出
+
+  const site = resolveOrigins().site;
+  const frag = document.createDocumentFragment();
+  const add = (hreflang: string, href: string) => {
+    const link = document.createElement('link');
+    link.rel = 'alternate';
+    link.hreflang = hreflang;
+    link.href = href;
+    link.setAttribute('data-hreflang', '');
+    frag.appendChild(link);
+  };
+  for (const lg of LANG_URLS) add(HREFLANG_MAP[lg], `${site}/${lg}${base}`);
+  add('x-default', `${site}${base === '' ? '/' : base}`);
+  document.head.appendChild(frag);
+}
+
+// og:locale 跟随当前语言；og:locale:alternate 列出其余语言（社交卡片的多语言声明）
+function updateOgLocale() {
+  const cur = OG_LOCALE_MAP[locale.value] || 'ja_JP';
+  let meta = document.head.querySelector<HTMLMetaElement>('meta[property="og:locale"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('property', 'og:locale');
+    document.head.appendChild(meta);
+  }
+  if (meta.content !== cur) meta.content = cur;
+  document.querySelectorAll('meta[property="og:locale:alternate"]').forEach(el => el.remove());
+  const frag = document.createDocumentFragment();
+  for (const l of OG_LOCALE_ALL) {
+    if (l === cur) continue;
+    const m = document.createElement('meta');
+    m.setAttribute('property', 'og:locale:alternate');
+    m.content = l;
+    frag.appendChild(m);
+  }
+  document.head.appendChild(frag);
 }
 
 // 根据当前路由计算「PC 自指 canonical」与「对应的移动端 alternate」URL。
@@ -193,6 +265,7 @@ onMounted(() => {
   updateBodyFontClass();
   updateHtmlLang();
   updateHreflang();
+  updateOgLocale();
   updateAltAndCanonical();
 
   window.addEventListener('storage', (e) => {
@@ -220,6 +293,7 @@ onMounted(() => {
 watch(locale, () => {
   updateBodyFontClass();
   updateHtmlLang();
+  updateOgLocale();
 });
 </script>
 

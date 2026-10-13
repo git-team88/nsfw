@@ -298,6 +298,41 @@ const isMakeSequelLoading = ref(false);
 const showMakeSequelSubscribeModal = ref(false);
 const makeSequelAuthorId = ref('');
 
+// —— SEO：搜索结果页不收录 ——
+// 搜索结果页是典型的薄页/近重复内容，且 URL 无限多（keyword 任意组合），
+// 收录会稀释全站质量分。这里改为 noindex + 规范标题。
+// 注意：复用 index.html 已有的 robots meta（改内容而非新增第二个），
+// 离开本页时恢复原值，避免 noindex 残留到其它页面。
+const searchRobotsEl = ref<HTMLMetaElement | null>(null);
+let searchPrevRobots: string | null = null;
+
+function setSearchNoindex() {
+  document.title = searchKeyword.value
+    ? `${searchKeyword.value} - FansFans 萌創`
+    : '検索 - FansFans 萌創';
+  let robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+  if (robots) {
+    searchPrevRobots = robots.getAttribute('content');
+    robots.setAttribute('content', 'noindex, follow');
+  } else {
+    robots = document.createElement('meta');
+    robots.name = 'robots';
+    robots.content = 'noindex, follow';
+    document.head.appendChild(robots);
+  }
+  searchRobotsEl.value = robots;
+}
+
+function restoreSearchRobots() {
+  if (searchRobotsEl.value) {
+    if (searchPrevRobots !== null) searchRobotsEl.value.setAttribute('content', searchPrevRobots);
+    else searchRobotsEl.value.remove();
+    searchRobotsEl.value = null;
+  }
+}
+
+onBeforeUnmount(restoreSearchRobots);
+
 // Tabs and filters data
 const tabs = ref([
   { value: 'posts', label: t('search.posts') },
@@ -909,6 +944,9 @@ function getCountry(): Promise<void> {
 onMounted(async () => {
   // 初始化语言设置
   await initLanguage();
+
+  // 搜索结果页 noindex（离开时由 onBeforeUnmount 恢复）
+  setSearchNoindex();
 
   window.scrollTo(0, 0);
   window.addEventListener("resize", layoutWaterfall);

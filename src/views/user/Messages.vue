@@ -286,6 +286,9 @@ async function fetchData() {
   background: #ff4f9a;
 }
 .tabs {
+  flex-wrap: wrap;
+  max-width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: flex-end;
   gap: 24px;
@@ -294,6 +297,7 @@ async function fetchData() {
   margin-bottom: 24px;
 }
 .tab-item {
+  white-space: nowrap;
   position: relative;
   display: flex;
   align-items: center;
@@ -334,6 +338,7 @@ async function fetchData() {
   height: 18px;
   width: auto;
   margin-left: 6px;
+  vertical-align: middle;
   padding: 0 5px;
   background: linear-gradient(145deg, #ff65ab, #f02c80);
   border: none;
@@ -342,7 +347,7 @@ async function fetchData() {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
-  line-height: 1;
+  line-height: 18px;
   animation: pulse 1.5s ease-in-out infinite;
 }
 .content-area {

@@ -2870,5 +2870,13 @@ export default {
     empty: "이 카테고리에는 아직 작품이 없습니다",
     loading: "로딩 중...",
     noMore: "더 이상 없습니다"
+  },
+  notFound: {
+    title: "페이지를 찾을 수 없습니다",
+    desc: "찾으시는 페이지가 이동 또는 삭제되었거나 URL이 올바르지 않을 수 있습니다.",
+    back: "홈으로 돌아가기",
+    guide: "이용 가이드",
+    terms: "이용약관",
+    pageTitle: "페이지를 찾을 수 없습니다 - FansFans 萌創"
   }
 };

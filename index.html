@@ -4,9 +4,178 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 成人内容站点声明：Google/Bing 据此纳入 SafeSearch 过滤；不加反而会被判定后整站降权 -->
+    <meta name="rating" content="adult" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <!-- 提前建连：GTM / reCAPTCHA 是首屏就加载的第三方；API 为正式站接口，DNS 预解析降低接口首包延迟 -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="preconnect" href="https://www.google.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.moegen.ai" />
     <meta name="description" content="FansFans 萌創は、日本・台湾・香港のクリエイター向け二次元 AI 創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。30K 文字無料からスタート。" />
     <meta name="keywords" content="AI小説生成,AI漫画生成,AIアニメドラマ,二次元AI,ひとこと小説,AI執筆ツール,FansFans,萌創,なろう AI" />
     <title>FansFans 萌創 - AI で小説・漫画・アニメドラマを一括生成｜ひとことで物語を</title>
+
+    <!-- ===== SEO / GEO 静态兜底 =====
+         这里的内容是不依赖框架的「第一层」元数据，保证：不执行 JS 的抓取器、
+         或被 nginx 误判为非爬虫的 AI 抓取器，也能拿到 canonical 与社交元信息。
+         框架挂载后 App.vue 会按路由覆盖 canonical/alternate；seo-server 会给爬虫注入完整版。
+
+         域名适配：下面的 canonical / og / twitter / JSON-LD 里的正式域名，
+         由紧跟其后的脚本按当前 location.origin 就地改写（含 unhead 运行时兜底），
+         这样测试站（wwwtest.fansfans.ai）不会把自己的静态源码指向正式域名，
+         正式站（www.fansfans.ai）行为完全不变。 -->
+    <link rel="canonical" href="https://www.fansfans.ai/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FansFans 萌創" />
+    <meta property="og:title" content="FansFans 萌創 - AI で小説・漫画・アニメドラマを一括生成" />
+    <meta property="og:description" content="FansFans 萌創は、日本・台湾・香港のクリエイター向け二次元 AI 創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。30K 文字無料からスタート。" />
+    <meta property="og:url" content="https://www.fansfans.ai/" />
+    <!-- og:image 必须是 1200x630（社交卡片标准比例）。之前用 640x200 的 logo，
+         在 X/Facebook/LINE 的分享卡里会被裁切或留白。重新生成用 scripts/gen-og-image.py -->
+    <meta property="og:image" content="https://www.fansfans.ai/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="FansFans 萌創 - AI Novel, Comic and Anime Drama" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="zh_TW" />
+    <meta property="og:locale:alternate" content="ko_KR" />
+    <meta property="og:locale:alternate" content="th_TH" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FansFans 萌創 - AI で小説・漫画・アニメドラマを一括生成" />
+    <meta name="twitter:description" content="FansFans 萌創は、日本・台湾・香港のクリエイター向け二次元 AI 創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。30K 文字無料からスタート。" />
+    <meta name="twitter:image" content="https://www.fansfans.ai/og-image.png" />
+
+    <!-- ===== 域名适配（必须在静态兜底之后、且同步执行）=====
+         把上面静态标签里硬编码的正式域名，统一改写为当前访问域名。
+         正式站 origin 即 https://www.fansfans.ai，改写结果与原值完全一致 → 零影响；
+         测试站则被改写为 https://wwwtest.fansfans.ai，不再出现跨域 og:image / JSON-LD。
+         同时注册全局函数 __seoAdaptDomain，供框架挂载后再次调用（兜底 unhead 重建的节点）。 -->
+    <script>
+      (function () {
+        var PROD_ORIGIN = 'https://www.fansfans.ai';
+        var origin = location.origin;
+
+        function adapt(root) {
+          try {
+            if (origin === PROD_ORIGIN) return; // 正式站短路，行为零变化
+            root = root || document;
+
+            // 1) 属性类：canonical / og:url / og:image / twitter:image
+            var sel = 'link[rel="canonical"][href], meta[property="og:url"][content], ' +
+                      'meta[property="og:image"][content], meta[name="twitter:image"][content]';
+            Array.prototype.forEach.call(root.querySelectorAll(sel), function (el) {
+              var attr = el.hasAttribute('href') ? 'href' : 'content';
+              var v = el.getAttribute(attr) || '';
+              if (v.indexOf(PROD_ORIGIN) === 0) el.setAttribute(attr, origin + v.slice(PROD_ORIGIN.length));
+            });
+
+            // 2) JSON-LD：优先替换 __FANSFANS_ORIGIN__ 占位符，其次整体替换正式域名
+            Array.prototype.forEach.call(root.querySelectorAll('script[type="application/ld+json"]'), function (el) {
+              var t = el.textContent || '';
+              var next = t.split('__FANSFANS_ORIGIN__').join(origin);
+              if (next.indexOf(PROD_ORIGIN) !== -1) next = next.split(PROD_ORIGIN).join(origin);
+              if (next !== t) el.textContent = next;
+            });
+          } catch (e) {}
+        }
+
+        window.__seoAdaptDomain = adapt;
+        adapt(document);
+
+        // 3) 兜底：unhead 在客户端重建 canonical 等节点时可能会写回定值，延迟再适配一次
+        function ready(fn) {
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+          else fn();
+        }
+        ready(function () {
+          adapt(document);
+          setTimeout(function () { adapt(document); }, 600);
+        });
+      })();
+    </script>
+
+    <!-- 首屏同步自指 canonical：在框架挂载前就把 canonical 指到自己，
+         避免「SPA 未跑完」时被抓到一张 canonical 指向首页的 HTML。
+         框架挂载后 App.vue 会按其路由规则覆盖（含 /detail/:id?contentType= 等）。 -->
+    <script>
+      (function () {
+        try {
+          var path = location.pathname.replace(/\/+$/, '');
+          if (!path) path = '/';
+          var url = location.origin + path;
+          var can = document.head.querySelector('link[rel="canonical"]');
+          if (!can) {
+            can = document.createElement('link');
+            can.rel = 'canonical';
+            document.head.appendChild(can);
+          }
+          can.href = url;
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- 全站级结构化数据：WebSite + Organization + SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.fansfans.ai/#website",
+          "url": "https://www.fansfans.ai/",
+          "name": "FansFans 萌創",
+          "alternateName": ["FansFans", "萌創", "萌创", "FansFans萌創", "FansFans萌创"],
+          "description": "FansFans 萌創は、日本・台湾・香港のクリエイター向け二次元 AI 創作プラットフォーム。ひとこと入力で小説・漫画・アニメドラマを自動生成。",
+          "inLanguage": "ja",
+          "publisher": { "@id": "https://www.fansfans.ai/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "__FANSFANS_ORIGIN__/search?keyword={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://www.fansfans.ai/#organization",
+          "name": "FansFans 萌創",
+          "alternateName": ["FansFans", "萌創"],
+          "url": "https://www.fansfans.ai/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.fansfans.ai/logo.png",
+            "width": 720,
+            "height": 200
+          },
+          "description": "日本・台湾・香港のクリエイター向けの二次元 AI 創作プラットフォーム。"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://www.fansfans.ai/#app",
+          "name": "FansFans 萌創",
+          "url": "https://www.fansfans.ai/",
+          "applicationCategory": "MultimediaApplication",
+          "applicationSubCategory": "AI content generation",
+          "operatingSystem": "Web",
+          "inLanguage": ["ja", "en", "zh-CN", "zh-TW", "ko", "th"],
+          "description": "ひとつのアイデアから AI 小説・漫画・アニメドラマ・イラストを生成できる二次元 AI 創作プラットフォーム。",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "JPY",
+            "description": "無料枠 30,000 文字から利用可能"
+          }
+        }
+      ]
+    }
+    </script>
+
     <style type="text/css">
       .grecaptcha-badge {
         display: none;
