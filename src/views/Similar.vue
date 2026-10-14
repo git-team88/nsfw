@@ -754,11 +754,20 @@ $line: #2c2c2c;
       top: 50%;
       transform: translateX(-50%) translateY(-42%);
       z-index: 1;
+      // 必须给定宽高，否则卡片窄时 div 被压扁、图片溢出，translateX(-50%) 回移不够，图标往右偏。
+      // 尺寸和首页一致：90px，≤480px 时 64px
+      width: 90px;
+      height: 90px;
 
       img {
-        width: 60px;
-        height: 60px;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
+      }
+
+      @media (max-width: 480px) {
+        width: 64px;
+        height: 64px;
       }
     }
 
