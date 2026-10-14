@@ -25,7 +25,7 @@
           :key="chapter.chapter"
           class="chapter-progress-item"
         >
-          <span class="chapter-name">{{ t('chapter', { chapter: chapter.chapter }) }}</span>
+          <span class="chapter-name">{{ t(itemLabelKey || 'chapter', { chapter: chapter.chapter, n: chapter.chapter }) }}</span>
           <div class="chapter-status-wrap">
             <img
               v-if="chapter.status === 'success'"
@@ -78,6 +78,8 @@ const { t } = useI18n();
 const props = defineProps<{
   visible: boolean;
   chapters: { chapter: number; status: 'success' | 'fail' | 'publishing' | 'waiting' | 'unpublished' }[];
+  /** 每一项的名称文案 key，默认「第{chapter}章」；短剧批量传「第{n}个」 */
+  itemLabelKey?: string;
 }>();
 
 defineEmits(['close', 'complete']);

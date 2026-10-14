@@ -1,0 +1,35 @@
+// 短剧本地批量上传页：每个作品一组（封面 + 标题/描述）的分组头；其余样式来自 Clip.scss
+.submit-video .full-content {
+  .clip-batch-item {
+    margin-bottom: 28px;
+  }
+  .clip-batch-item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+    margin: 0 4px 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3d3d3d;
+  }
+  .clip-batch-item-no {
+    flex: none;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f5f5f5;
+  }
+  .clip-batch-item-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+    color: #8a8a8a;
+  }
+  .set-cover-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

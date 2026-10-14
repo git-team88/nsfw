@@ -44,6 +44,9 @@ function postAnother() {
     2: '/publish/novel',
     // 漫剧本地批量上传页（没有入口，靠链接打开），「继续发布」要回到它自己
     batch: '/publish/video-batch',
+    // 短剧单个 / 本地批量上传页：「继续发布」各回自己的页
+    5: '/publish/clip',
+    'clip-batch': '/publish/clip-batch',
   }
   router.push(map[type] || '/publish/video')
 }

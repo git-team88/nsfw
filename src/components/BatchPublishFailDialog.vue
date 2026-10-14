@@ -43,6 +43,9 @@ const props = defineProps<{
   visible: boolean;
   chapters: { chapter: number; status: 'success' | 'fail' | 'unpublished' }[];
   failedChapter?: number;
+  /** 每一项的名称文案 key / 失败提示文案 key；短剧批量传自己的 */
+  itemLabelKey?: string;
+  failMessageKey?: string;
 }>();
 
 defineEmits(['close', 'exit', 'retry']);
@@ -53,7 +56,7 @@ const unpublishedCount = computed(() => props.chapters.filter(c => c.status === 
 
 const failMessage = computed(() => {
   if (props.failedChapter) {
-    return t('novel.batchPublish.failMessage', { chapter: props.failedChapter });
+    return t(props.failMessageKey || 'novel.batchPublish.failMessage', { chapter: props.failedChapter });
   }
   return '';
 });

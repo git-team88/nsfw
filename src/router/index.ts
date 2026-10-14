@@ -127,6 +127,12 @@ const routes = [
     component: () => import("@/views/publish/VideoBatch.vue"),
   },
   {
+    // 短剧本地批量上传页（没有入口，靠链接打开）
+    path: "/publish/clip-batch",
+    name: "PublishClipBatch",
+    component: () => import("@/views/publish/ClipBatch.vue"),
+  },
+  {
     path: "/publish/comic",
     name: "PublishComic",
     component: () => import("@/views/publish/Comic.vue"),
