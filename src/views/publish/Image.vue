@@ -1052,8 +1052,9 @@ function buildTabList(): TabItem[] {
   return [
     { name: t("submit.tabs.video"), path: "/publish/clip" },
     { name: t("submit.tabs.photo"), path: "/publish/image" },
-    { name: t("submit.tabs.manhua"), path: "/publish/comic" },
-    { name: t("submit.tabs.novel"), path: "/publish/novel" },
+    // 和 Header 一样，nsfw 站不开放漫画 / 小说发布
+  // { name: t("submit.tabs.manhua"), path: "/publish/comic" },
+    // { name: t("submit.tabs.novel"), path: "/publish/novel" },
   ];
 }
 
