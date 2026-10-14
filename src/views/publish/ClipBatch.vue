@@ -85,6 +85,7 @@
               <div class="perm-options">
                 <div
                   class="perm-option"
+                  :class="{ active: batchContent === opt.key }"
                   v-for="opt in contentOptions"
                   :key="opt.key"
                   @click="batchContent = opt.key"
@@ -123,6 +124,7 @@
               <div class="perm-options">
                 <div
                   class="perm-option"
+                  :class="{ active: batchPermission === opt.key }"
                   v-for="opt in permOptions"
                   :key="opt.key"
                   @click="handlePermissionChange(opt.key)"
