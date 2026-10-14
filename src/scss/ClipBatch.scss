@@ -1,15 +1,33 @@
-// 短剧本地批量上传页：每个作品一组（封面 + 标题/描述）的分组头；其余样式来自 Clip.scss
+// 短剧本地批量上传页：每个作品一个整体框（分组头 + 封面 + 标题/描述），内部各块不再各自描边；其余样式来自 Clip.scss
 .submit-video .full-content {
   .clip-batch-item {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
+    border: 1px solid #3d3d3d;
+    border-radius: 14px;
+    background: #1a1a1a;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    overflow: hidden;
+
+    // 整体框里的封面块 / 标题描述块：去掉自己的边框和阴影，用虚线分隔
+    .section,
+    .content-section {
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .content-section {
+      border-top: 1px dashed #3d3d3d;
+    }
   }
   .clip-batch-item-head {
     display: flex;
     align-items: baseline;
     gap: 10px;
     min-width: 0;
-    margin: 0 4px 10px;
-    padding-bottom: 8px;
+    padding: 12px 18px;
+    background: #2c2c2c;
     border-bottom: 1px solid #3d3d3d;
   }
   .clip-batch-item-no {
