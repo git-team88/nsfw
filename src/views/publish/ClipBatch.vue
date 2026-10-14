@@ -28,9 +28,13 @@
             <div class="cover-row">
               <div class="cover-upload">
                 <img v-if="coverOf(item)" :src="processImageUrl(coverOf(item))" alt="" class="cover-preview" />
+                <div v-else-if="coverPending(item)" class="cover-placeholder cover-generating">
+                  <span class="cover-spinner"></span>
+                  <span>{{ t('submit.video.clipCoverGenerating') }}</span>
+                </div>
                 <div v-else class="cover-placeholder">
                   <img src="@/assets/images/user/upload.png" alt="" />
-                  <span>{{ coverPending(item) ? t('submit.video.clipCoverGenerating') : t('collection.uploadCover') }}</span>
+                  <span>{{ t('collection.uploadCover') }}</span>
                 </div>
               </div>
               <button class="set-cover-btn" :disabled="item.status !== 'success' || isPublishing" @click="openCoverModal(item)">{{ t('submit.image.setting') }}</button>
@@ -133,7 +137,7 @@
 
         <!-- Publish button -->
         <div class="submit-btn-wrap">
-          <button class="submit-btn" :disabled="isPublishing" @click="onBatchPublish">{{ isPublishing ? t('submit.count') : t('submit.submit') }}</button>
+          <button class="submit-btn" :disabled="isPublishing || isWaitingCovers" @click="onBatchPublish">{{ isPublishing || isWaitingCovers ? t('submit.count') : t('submit.submit') }}</button>
           <div class="agreement-row">
             <div class="checkbox" :class="{ checked: agreeTerms }" @click="agreeTerms = !agreeTerms">
               <img v-if="agreeTerms" src="@/assets/images/register/check_active.png" alt="" />
@@ -357,6 +361,9 @@ function confirmConvention() {
 // 每个视频一张封面，按 uid 存；上传成功后自动抽第一帧并传到图床当默认封面，用户可以在弹窗里改。
 const covers = ref<Record<number, string>>({});
 const coverGenerating = ref<Record<number, boolean>>({});
+// 正在抽帧 / 上传的默认封面任务，按 uid 存；点发布时如果还有没完成的，先等它们
+const coverTasks = new Map<number, Promise<void>>();
+const isWaitingCovers = ref(false);
 const showCoverModal = ref(false);
 const coverEditingItem = ref<LocalItem | null>(null);
 
@@ -388,7 +395,7 @@ watch(
     }
     for (const item of localItems.value) {
       if (item.status === "success" && !covers.value[item.uid] && !coverGenerating.value[item.uid]) {
-        generateDefaultCover(item);
+        coverTasks.set(item.uid, generateDefaultCover(item).finally(() => coverTasks.delete(item.uid)));
       }
     }
   },
@@ -506,6 +513,15 @@ async function onBatchPublish() {
   if (!allUploaded.value) {
     toast(t("submit.video.batchNotFinished"));
     return;
+  }
+  // 视频刚传完、默认封面还在抽帧上传：等它们做完再校验，按钮期间置灰
+  if (coverTasks.size > 0) {
+    isWaitingCovers.value = true;
+    try {
+      await Promise.all(Array.from(coverTasks.values()));
+    } finally {
+      isWaitingCovers.value = false;
+    }
   }
   const missingCover = localItems.value.findIndex(i => !coverOf(i));
   if (missingCover >= 0) {

@@ -51,3 +51,24 @@
     cursor: not-allowed;
   }
 }
+
+
+// 默认封面抽帧 / 上传中：封面框里转圈 + 文案
+.submit-video .full-content .cover-placeholder.cover-generating {
+  .cover-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #ff4f9a;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: clip-cover-spin 0.8s linear infinite;
+  }
+  span:not(.cover-spinner) {
+    font-size: 12px;
+    color: #f5f5f5;
+    opacity: 0.6;
+  }
+}
+@keyframes clip-cover-spin {
+  to { transform: rotate(360deg); }
+}

@@ -1084,12 +1084,32 @@
   }
 }
 
+// 窄屏两侧留白和漫剧发布页一致：容器满宽 + 32px 内边距，返回按钮跟着内容对齐
+@media (max-width: 1200px) {
+  .submit-video {
+    .submit-container {
+      width: 100%;
+      max-width: none;
+      padding: 0 32px;
+    }
+
+    .back {
+      left: 30px;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .submit-video {
     padding: 100px 16px 20px;
 
     .submit-container {
       width: 100%;
+      padding: 0;
+    }
+
+    .back {
+      left: 0;
     }
 
     .main-tabs {

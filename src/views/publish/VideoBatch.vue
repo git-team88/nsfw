@@ -77,7 +77,6 @@
           </div>
           <div class="batch-file-add" v-if="canAddMore">
             <button class="btn" @click="pickLocalFiles">{{ t('submit.video.batchAddMore') }}</button>
-            <span class="batch-file-add-tip">{{ t('submit.video.batchUploadCta', { max: MAX_LOCAL_FILES }) }}</span>
           </div>
         </div>
 
