@@ -8,7 +8,7 @@ const app = express()
 const PORT = process.env.SEO_PORT || 3002
 // 站点自身地址（爬虫渲染的目标站）。默认 FansFans；部署到其它站时用 SPA_URL 覆盖。
 const SPA_URL = process.env.SPA_URL || 'https://www.fansfans.ai'
-const CACHE_DIR = process.env.CACHE_DIR || '/data/seo-cache/nsfw'
+const CACHE_DIR = process.env.CACHE_DIR || '/data/seo-cache/fansfans'
 const CACHE_TTL = parseInt(process.env.CACHE_TTL || '86400', 10)
 
 // 判定「这次抓取是不是爬虫」的兜底名单（nginx 的 $is_bot 才是主判据）。

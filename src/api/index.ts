@@ -952,9 +952,11 @@ export default {
     }),
 
   // 「我的项目 / 发布页选作品 / 任务进度」都是用户自己的内容，不带 is_nsfw，后端默认返回全部
-  getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number) =>
+  // extra：按需追加的查询参数（如漫剧发布页传 { is_merged_video: 1 }），不传则和原来一样
+  getProject: (publish_type: number, type: string, page: number, limit: number, has_chapter: number, extra?: Record<string, string | number>) =>
     axios.request({
-      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter,
+      url: "app/project/list?is_publish=" + publish_type + '&story_type=' + type + '&page=' + page + '&limit=' + limit + '&has_chapter=' + has_chapter
+        + (extra ? '&' + Object.entries(extra).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&') : ''),
       method: "GET",
       baseURL: aiUrl,
     }),

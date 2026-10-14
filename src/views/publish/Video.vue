@@ -2351,7 +2351,7 @@ function selectChapter(chapter: any) {
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(0, 'manju', currentPage.value, 10, 1) as any;
+    const response = await api.getProject(0, 'manju', currentPage.value, 10, 1, { is_merged_video: 1 }) as any;
     if (response.code != 200) {
       toast(t('fail'));
       return;
