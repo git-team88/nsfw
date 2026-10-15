@@ -289,7 +289,11 @@ function flushSessionEnd(beacon = false) {
   if (beacon) void flush(true);
 }
 
-/** page_view：路由切换时调；page_name 用路由 name / 路径，内容类型和 id 从路由参数里推 */
+/**
+ * page_view：路由切换时调，只报这几个页面：
+ * home 首页 / generate 生成页（含小说生成页 /novel/:id）/ user_home 个人主页 /
+ * detail 作品详情 / collection_detail 合集详情 / search 搜索页。其它路由不报。
+ */
 export function trackPageView(info: {
   path: string;
   name?: string;
@@ -300,14 +304,33 @@ export function trackPageView(info: {
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
+  let page_name = "";
   const extra: Record<string, unknown> = {};
-  if (/^\/detail/.test(path)) { extra.work_id = p.id || q.id; }
-  else if (/^\/novel\//.test(path)) { extra.work_id = p.id; extra.content_type = "novel"; }
-  else if (/^\/collection\//.test(path)) { extra.collection_id = p.id; }
-  else if (/^\/user-home/.test(path)) { extra.blogger_id = p.id; }
-  const m = path.match(/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/)?(novel|comic|drama|photo|video)\/?$/);
-  if (m) extra.content_type = m[1];
-  enqueue("page_view", { page_name: info.name || path, path, ...extra }, sid);
+  let m: RegExpMatchArray | null;
+  if ((m = path.match(/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(novel|comic|drama|photo|video)\/?)?$/))) {
+    page_name = "home";
+    if (m[1]) extra.content_type = m[1] === "photo" ? "image" : m[1];
+  } else if (/^\/generate\/?$/.test(path)) {
+    page_name = "generate";
+  } else if (/^\/novel\/[^/]+/.test(path)) {
+    page_name = "generate";
+    extra.content_type = "novel";
+    extra.gen_session_id = p.id;
+  } else if (/^\/user-home/.test(path)) {
+    page_name = "user_home";
+    extra.blogger_id = p.id || q.uid;
+  } else if (/^\/detail/.test(path)) {
+    page_name = "detail";
+    extra.work_id = p.id || q.id;
+  } else if (/^\/collection\/[^/]+/.test(path)) {
+    page_name = "collection_detail";
+    extra.collection_id = p.id;
+  } else if (/^\/search\/?$/.test(path)) {
+    page_name = "search";
+    extra.keyword = q.keyword;
+  }
+  if (!page_name) return;
+  enqueue("page_view", { page_name, path, ...extra }, sid);
 }
 
 /**
