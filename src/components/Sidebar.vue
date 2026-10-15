@@ -879,16 +879,9 @@ async function loadComments(page: number = 1, append: boolean = false) {
         return commentObj;
       });
 
-      // Filter out the comment with the same ID as cid or rid parameter only if they exist
-      const cid = route.query.cid as string || "";
-      const rid = route.query.rid as string || "";
-      let filteredComments = newComments;
-      if (cid || rid) {
-        filteredComments = newComments.filter((comment: { id: string | number; }) => {
-          // Ensure both are strings for comparison
-          return String(comment.id) !== String(cid) && String(comment.id) !== String(rid);
-        });
-      }
+      // 带 cid 进来时不在这里把那条过滤掉：loadCommentDetail 成功后会把它挪到最前面并去重；
+      // 详情接口失败列表里至少还有这条，不会整个空掉
+      const filteredComments = newComments;
 
       if (append) {
         comments.value = [...comments.value, ...filteredComments];
@@ -1237,6 +1230,7 @@ async function loadCommentDetail(commentId: string) {
       }
 
       // Add to the beginning of the comments list
+      comments.value = comments.value.filter((c: any) => String(c.id) !== String(commentObj.id));
       comments.value.unshift(commentObj);
     }
   } catch (error) {
@@ -1959,20 +1953,29 @@ function close() {
   emit('close');
 }
 
+// 打开评论 tab 时：先拉列表，再把地址栏 cid / rid 指向的那条（从消息列表点进来的）拉详情置顶
+async function loadCommentsWithPinned() {
+  await loadComments();
+  const cid = route.query.cid as string || "";
+  if (cid) await loadCommentDetail(cid);
+  const rid = route.query.rid as string || "";
+  if (rid) await loadCommentToReplyList(rid);
+}
+
 // Watch for activeTab changes from parent
 watch(() => props.activeTab, (newTab) => {
   activeTab.value = newTab;
   if (newTab == 'toc') {
     loadChapters();
   } else if (newTab == 'comment') {
-    loadComments();
+    loadCommentsWithPinned();
   }
 }, { immediate: true });
 
 // Watch for visible changes to reload comments when sidebar opens
 watch(() => props.visible, (newVisible) => {
   if (newVisible && activeTab.value === 'comment') {
-    loadComments();
+    loadCommentsWithPinned();
   } else if (newVisible && activeTab.value === 'toc') {
     // 侧栏是后打开的，这时候目录可能已经加载过了，补一次定位
     locateActiveChapter();
