@@ -338,7 +338,7 @@ function googleLogin() {
         localStorage.removeItem("lType");
         localStorage.setItem("uid", res.data.user_id);
         setUserId(String(res.data.user_id));
-        trackUserIdentify(String(res.data.user_id), "third_party");
+        trackUserIdentify(String(res.data.user_id), "google");
         trackLogin();
 
         redirectAfterAuth();

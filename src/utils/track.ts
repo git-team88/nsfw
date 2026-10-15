@@ -121,10 +121,10 @@ function landingInfo(): Record<string, string> {
   const path = typeof window !== "undefined" ? window.location.pathname : "";
   const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   let m: RegExpMatchArray | null;
-  if ((m = path.match(/^\/detail\/([^/?#]+)/))) return { landing_type: "work", work_id: m[1] };
-  if (path === "/detail" && q.get("id")) return { landing_type: "work", work_id: q.get("id") || "" };
-  if ((m = path.match(/^\/novel\/([^/?#]+)/))) return { landing_type: "work", work_id: m[1] };
-  if ((m = path.match(/^\/collection\/([^/?#]+)/))) return { landing_type: "collection", collection_id: m[1] };
+  if ((m = path.match(/^\/detail\/([^/?#]+)/))) return { landing_type: "work", post_id: m[1] };
+  if (path === "/detail" && q.get("id")) return { landing_type: "work", post_id: q.get("id") || "" };
+  if ((m = path.match(/^\/novel\/([^/?#]+)/))) return { landing_type: "work", post_id: m[1] };
+  if ((m = path.match(/^\/collection\/([^/?#]+)/))) return { landing_type: "collection", book_id: m[1] };
   if ((m = path.match(/^\/user-home\/([^/?#]+)/))) return { landing_type: "blogger", blogger_id: m[1] };
   if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?$/.test(path) || /^\/(?:ja|en|zh-cn|zh-tw|ko|th)\/(?:novel|comic|drama|photo|video)\/?$/.test(path)) return { landing_type: "home" };
   return { landing_type: "other" };
@@ -321,10 +321,10 @@ export function trackPageView(info: {
     extra.blogger_id = p.id || q.uid;
   } else if (/^\/detail/.test(path)) {
     page_name = "detail";
-    extra.work_id = p.id || q.id;
+    extra.post_id = p.id || q.id;
   } else if (/^\/collection\/[^/]+/.test(path)) {
     page_name = "collection_detail";
-    extra.collection_id = p.id;
+    extra.book_id = p.id;
   } else if (/^\/search\/?$/.test(path)) {
     page_name = "search";
     extra.keyword = q.keyword;
@@ -338,7 +338,7 @@ export function trackPageView(info: {
     };
     page_name = "publish";
     extra.publish_type = publishType[m[1]] || m[1];
-    if (q.id || q.post_id) extra.work_id = q.id || q.post_id; // 编辑作品时带
+    if (q.id || q.post_id) extra.post_id = q.id || q.post_id; // 编辑作品时带
   }
   if (!page_name) return;
   enqueue("page_view", { page_name, path, ...extra }, sid);
@@ -348,7 +348,7 @@ export function trackPageView(info: {
  * user_identify：游客登录 / 注册成功时，以及已登录用户冷启动确认身份时调。
  * 冷启动的 auto 只在本次会话第一次拿到 uid 时报一次（Header 每次拉 userInfo 都会调进来）。
  */
-export function trackUserIdentify(userId: string | number, loginType: "email" | "phone" | "third_party" | "auto") {
+export function trackUserIdentify(userId: string | number, loginType: "email" | "phone" | "google" | "auto") {
   const uid = String(userId || "");
   if (!uid) return;
   if (loginType === "auto") {

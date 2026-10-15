@@ -567,7 +567,7 @@ function googleRegister() {
       if (res.code == 0) {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
-        if (res.data.user_id) trackUserIdentify(String(res.data.user_id), "third_party");
+        if (res.data.user_id) trackUserIdentify(String(res.data.user_id), "google");
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
         trackSignUp();
