@@ -312,6 +312,7 @@ import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackShare, trackSubscribeToContent } from '@/utils/analytics';
+import { trackChapterView, trackCatalogChapterClick } from '@/utils/track';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -746,6 +747,9 @@ async function fetchDetail() {
         latest_read_chapter_index: res.data.latest_read_chapter_index || '',
         session_id: data.session_id || bookSessionId || ''
       };
+
+      // 埋点：小说章节曝光（同一会话同一章只记一次）
+      trackChapterView({ post_id: detail.value.id, book_id: detail.value.book_id, content_type: 'novel', user_id: detail.value.author?.id, chapter_index: detail.value.chapter_index || undefined });
 
       likes.value = detail.value.likes;
       liked.value = detail.value.liked;
@@ -1488,6 +1492,7 @@ async function toggleFollow() {
 // Navigate to chapter
 function navigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
+  trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: 'novel', user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
     if (detail.value.author.id && detail.value.author.id === uid) {

@@ -1015,6 +1015,7 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
+import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf } from "@/utils/track";
 
 const { t, locale } = useI18n();
 
@@ -1983,6 +1984,7 @@ async function loadChapters() {
 // Navigate to chapter
 async function navigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
+  trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
     if (detail.value.author.id && detail.value.author.id == uid) {
@@ -2809,6 +2811,13 @@ async function fetchDetail(newId: number) {
       // 不是漫剧、或者这条没有字幕，loadSubtitles 里都会显式清空，
       // 不会把上一条的字幕留在开关里。
       loadSubtitles(newId);
+
+      // 埋点：详情页曝光（同一会话同一作品只记一次）。合集下的章节记 chapter_view，单独的视频 / 图片记 work_view
+      if (detail.value.book_id && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
+        trackChapterView({ post_id: detail.value.id, book_id: detail.value.book_id, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id, chapter_index: detail.value.chapter_index || undefined });
+      } else {
+        trackWorkView({ post_id: detail.value.id, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id, duration: detail.value.duration || undefined });
+      }
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {

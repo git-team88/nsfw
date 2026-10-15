@@ -292,6 +292,8 @@ export function trackPageView(info: {
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
+  prevPagePath = curPagePath;
+  curPagePath = path;
   let page_name = "";
   const extra: Record<string, unknown> = {};
   let m: RegExpMatchArray | null;
@@ -371,3 +373,81 @@ export function initTracking() {
   window.addEventListener("pagehide", () => { flushSessionEnd(true); void flush(true); });
 }
 
+// ============================================================
+// 九、浏览量曝光：collection_view / chapter_view / work_view / catalog_chapter_click
+// 「一次浏览」= 详情页加载完成；同一会话内同一目标只计 1 次（sessionStorage 记已曝光的 key），
+// 目标变了或换了会话才再计。字段名按接口：post_id / book_id / user_id（博主）。
+// ============================================================
+let prevPagePath = "";
+let curPagePath = "";
+let lastChapterPostId = "";
+const KEY_VIEWED = "trk_viewed";
+
+/** 作品 type 数字 → 内容类型：1 漫画 / 2 小说 / 3 漫剧 / 4 图片 / 5 视频 */
+export function contentTypeOf(type: unknown): string {
+  const m: Record<string, string> = { "1": "comic", "2": "novel", "3": "drama", "4": "image", "5": "video" };
+  return m[String(type ?? "")] || "";
+}
+
+/** 本会话里这个目标是否已经曝光过；没曝光过就记下来并返回 false */
+function viewedThisSession(key: string): boolean {
+  const sid = currentSessionId(false);
+  let list: string[] = [];
+  try { list = JSON.parse(safeGet(sessionStorage, KEY_VIEWED) || "[]"); } catch { list = []; }
+  const k = sid + "|" + key;
+  if (list.includes(k)) return true;
+  list.push(k);
+  if (list.length > 300) list = list.slice(list.length - 300);
+  safeSet(sessionStorage, KEY_VIEWED, JSON.stringify(list));
+  return false;
+}
+
+/**
+ * 入口来源：按上一个路由推。没有上一个路由（直接打开 / 刷新）时，
+ * 外站 referrer 当分享链接 share，其它算 other。
+ */
+function entrySourceOf(kind: "collection" | "chapter" | "work"): string {
+  const prev = prevPagePath;
+  if (!prev) {
+    let ref = "";
+    try { ref = document.referrer || ""; } catch { ref = ""; }
+    if (ref && !ref.startsWith(window.location.origin)) return "share";
+    return "other";
+  }
+  if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(?:novel|comic|drama|photo|video)\/?)?$/.test(prev)) return "home_feed";
+  if (/^\/user-home/.test(prev)) return "community";
+  if (/^\/search/.test(prev)) return "search";
+  if (/^\/collection\//.test(prev)) return kind === "chapter" ? "catalog" : "other";
+  if (/^\/detail/.test(prev)) return kind === "chapter" ? "auto_play" : "recommend";
+  return "other";
+}
+
+/** 9.1.1 合集详情页曝光 */
+export function trackCollectionView(p: { book_id: string | number; book_title?: string; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
+  if (!p.book_id || viewedThisSession("collection:" + p.book_id)) return;
+  track("collection_view", { ...p, entry_source: entrySourceOf("collection") });
+}
+
+/** 9.1.2 章节（小说 / 漫画 / 漫剧的作品详情页）曝光 */
+export function trackChapterView(p: { post_id: string | number; book_id: string | number; content_type: string; user_id?: string | number; chapter_index?: string | number }) {
+  if (!p.post_id) return;
+  const prev = lastChapterPostId;
+  lastChapterPostId = String(p.post_id);
+  if (viewedThisSession("chapter:" + p.post_id)) return;
+  track("chapter_view", {
+    ...p,
+    entry_source: entrySourceOf("chapter"),
+    prev_post_id: prev && prev !== String(p.post_id) ? prev : undefined,
+  });
+}
+
+/** 9.1.3 视频 / 图片作品详情页曝光 */
+export function trackWorkView(p: { post_id: string | number; content_type: string; user_id?: string | number; duration?: string | number }) {
+  if (!p.post_id || viewedThisSession("work:" + p.post_id)) return;
+  track("work_view", { ...p, entry_source: entrySourceOf("work") });
+}
+
+/** 9.1.4 目录里点某一章 */
+export function trackCatalogChapterClick(p: { book_id: string | number; post_id: string | number; chapter_index?: string | number; content_type: string; user_id?: string | number }) {
+  track("catalog_chapter_click", p);
+}

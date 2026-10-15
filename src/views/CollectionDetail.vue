@@ -228,6 +228,7 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
+import { trackCollectionView, trackCatalogChapterClick, contentTypeOf } from '@/utils/track';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -448,6 +449,9 @@ async function fetchCollectionDetail() {
           session_id: finalBookInfo.session_id || ''
         };
 
+        // 埋点：合集详情页曝光（同一会话同一合集只记一次）
+        trackCollectionView({ book_id: collection.value.id, book_title: collection.value.title, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });
+
         // 从 book_info 获取作者后，请求博主详情接口
         if (resolvedAuthorId) {
           await fetchAuthorInfo(resolvedAuthorId, showNsfw);
@@ -597,6 +601,7 @@ function goMakeSimilar(sessionId: string) {
 }
 
 function navigateToChapter(chapter: Chapter) {
+  trackCatalogChapterClick({ book_id: collection.value?.id || '', post_id: chapter.id, chapter_index: (chapter as any).chapter_index ?? (chapter as any).index ?? undefined, content_type: contentTypeOf(collection.value?.type), user_id: collection.value?.authorId || undefined });
   const ct = collection.value?.type || '';
   router.push(`/detail/${chapter.id}${ct ? `?tab=${ct}` : ''}`);
 }
