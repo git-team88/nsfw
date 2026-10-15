@@ -406,7 +406,7 @@ function viewedThisSession(key: string): boolean {
  * 入口来源：按上一个路由推。没有上一个路由（直接打开 / 刷新）时，
  * 外站 referrer 当分享链接 share，其它算 other。
  */
-function entrySourceOf(kind: "collection" | "chapter" | "work"): string {
+function entrySourceOf(): string {
   const prev = prevPagePath;
   if (!prev) {
     let ref = "";
@@ -414,18 +414,19 @@ function entrySourceOf(kind: "collection" | "chapter" | "work"): string {
     if (ref && !ref.startsWith(window.location.origin)) return "share";
     return "other";
   }
-  if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(?:novel|comic|drama|photo|video)\/?)?$/.test(prev)) return "home_feed";
-  if (/^\/user-home/.test(prev)) return "community";
+  // 取值和 page_view 的 page_name 一套：home / user_home / search / collection_detail / detail
+  if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(?:novel|comic|drama|photo|video)\/?)?$/.test(prev)) return "home";
+  if (/^\/user-home/.test(prev)) return "user_home";
   if (/^\/search/.test(prev)) return "search";
-  if (/^\/collection\//.test(prev)) return kind === "chapter" ? "catalog" : "other";
-  if (/^\/detail/.test(prev)) return kind === "chapter" ? "auto_play" : "recommend";
+  if (/^\/collection\//.test(prev)) return "collection_detail";
+  if (/^\/detail/.test(prev)) return "detail";
   return "other";
 }
 
 /** 9.1.1 合集详情页曝光 */
 export function trackCollectionView(p: { book_id: string | number; book_title?: string; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
   if (!p.book_id || viewedThisSession("collection:" + p.book_id)) return;
-  track("collection_view", { ...p, entry_source: entrySourceOf("collection") });
+  track("collection_view", { ...p, entry_source: entrySourceOf() });
 }
 
 /** 9.1.2 章节（小说 / 漫画 / 漫剧的作品详情页）曝光 */
@@ -436,7 +437,7 @@ export function trackChapterView(p: { post_id: string | number; book_id: string 
   if (viewedThisSession("chapter:" + p.post_id)) return;
   track("chapter_view", {
     ...p,
-    entry_source: entrySourceOf("chapter"),
+    entry_source: entrySourceOf(),
     prev_post_id: prev && prev !== String(p.post_id) ? prev : undefined,
   });
 }
@@ -444,7 +445,7 @@ export function trackChapterView(p: { post_id: string | number; book_id: string 
 /** 9.1.3 视频 / 图片作品详情页曝光 */
 export function trackWorkView(p: { post_id: string | number; content_type: string; user_id?: string | number; duration?: string | number }) {
   if (!p.post_id || viewedThisSession("work:" + p.post_id)) return;
-  track("work_view", { ...p, entry_source: entrySourceOf("work") });
+  track("work_view", { ...p, entry_source: entrySourceOf() });
 }
 
 /** 9.1.4 目录里点某一章 */

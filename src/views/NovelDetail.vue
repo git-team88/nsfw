@@ -2066,6 +2066,12 @@ onMounted(async () => {
   fetchBookGenSwitch();
   await fetchDetail();
 
+  // 从评论消息点进来（带 cid / rid）：自动打开侧栏并切到评论 tab，Sidebar 里会按 cid 把那条置顶
+  if (route.query.cid || route.query.rid) {
+    activeTab.value = 'comment';
+    showSidebar.value = true;
+  }
+
   // Add scroll event listener for comments list
   setTimeout(() => {
     const commentsList = document.querySelector('.comments-list');
