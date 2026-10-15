@@ -291,7 +291,7 @@ function flushSessionEnd(beacon = false) {
 
 /**
  * page_view：路由切换时调，只报这几个页面：
- * home 首页 / generate 生成页（含小说生成页 /novel/:id）/ user_home 个人主页 /
+ * home 首页 / generate 生成页（视频 / 图片）/ novel_generate 小说生成页（/novel/:id）/ user_home 个人主页 /
  * detail 作品详情 / collection_detail 合集详情 / search 搜索页 / publish 发布页。其它路由不报。
  */
 export function trackPageView(info: {
@@ -313,8 +313,7 @@ export function trackPageView(info: {
   } else if (/^\/generate\/?$/.test(path)) {
     page_name = "generate";
   } else if (/^\/novel\/[^/]+/.test(path)) {
-    page_name = "generate";
-    extra.content_type = "novel";
+    page_name = "novel_generate";
     extra.gen_session_id = p.id;
   } else if (/^\/user-home/.test(path)) {
     page_name = "user_home";
