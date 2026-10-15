@@ -13,6 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
 import { pageSlideDir } from '@/util/pageSlide';
+import { initTracking } from '@/utils/track';
 
 const contentSwitch = useContentSwitchStore();
 const { locale } = useI18n();
@@ -261,6 +262,8 @@ function updateAltAndCanonical() {
 }
 
 onMounted(() => {
+  // 埋点：首访（带推广来源）/ 会话开始结束 / 冷启动身份确认
+  initTracking();
   void contentSwitch.ensureLoaded();
   updateBodyFontClass();
   updateHtmlLang();

@@ -163,6 +163,7 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
+import { trackUserIdentify } from "@/utils/track";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
@@ -523,6 +524,7 @@ function goEmailRegister() {
           trackSignUp();
 
           localStorage.setItem("token", res.data.token);
+          if (res.data.user_id) trackUserIdentify(String(res.data.user_id), "email");
           localStorage.setItem("isFirstRegister", "1");
           redirectAfterAuth();
         } else {
@@ -565,6 +567,7 @@ function googleRegister() {
       if (res.code == 0) {
         isShowLoad.value = false;
         localStorage.setItem("token", res.data.token);
+        if (res.data.user_id) trackUserIdentify(String(res.data.user_id), "third_party");
         localStorage.removeItem("rType");
         localStorage.removeItem('inviteCode');
         trackSignUp();

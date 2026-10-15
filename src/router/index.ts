@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
+import { trackPageView } from "@/utils/track";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
@@ -425,6 +426,11 @@ router.beforeEach((to, from, next) => {
   }
 
   next();
+});
+
+// 埋点：每次路由切换报一条 page_view（带页面名 / 作品 / 合集 / 博主 id）
+router.afterEach((to) => {
+  trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any });
 });
 
 export default router;

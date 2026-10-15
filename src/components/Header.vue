@@ -214,6 +214,7 @@
 
 <script setup lang="ts" name="AppHeader">
 import Agree from "@/components/Agree.vue";
+import { trackUserIdentify, trackLogout } from "@/utils/track";
 import { apiErrorMessage } from '@/util/utils';
 import UploadMask from "@/components/UploadMask.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
@@ -618,6 +619,7 @@ function getUserInfo() {
         postCount.value = data.data.product_count ?? data.data.book_count ?? 0;
         emit('userInfoLoaded', data.data);
         setUserId(String(data.data.info.id));
+        trackUserIdentify(String(data.data.info.id), "auto");
       } else {
         toast(apiErrorMessage(data))
       }
@@ -657,6 +659,7 @@ function getLoginUserInfo() {
 
         localStorage.setItem('uid', data.data.info.id);
         setUserId(String(data.data.info.id));
+        trackUserIdentify(String(data.data.info.id), "auto");
       } else {
         toast(apiErrorMessage(data));
       }
@@ -734,6 +737,7 @@ function confirmLogout() {
   localStorage.removeItem("is_adult");
 
   clearUserId();
+  trackLogout();
   provider.value = null;
   isShowExit.value = false;
   isLogin.value = false;

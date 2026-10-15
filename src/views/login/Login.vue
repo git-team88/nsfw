@@ -107,6 +107,7 @@
 
 <script setup lang="ts" name="Login">
 import Header from "@/components/Header.vue";
+import { trackUserIdentify } from "@/utils/track";
 import Agree from "@/components/Agree.vue";
 import UploadMask from "@/components/UploadMask.vue";
 
@@ -296,6 +297,7 @@ function goEmailLogin() {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("uid", res.data.user_id);
         setUserId(String(res.data.user_id));
+        trackUserIdentify(String(res.data.user_id), "email");
         trackLogin();
 
         redirectAfterAuth();
@@ -336,6 +338,7 @@ function googleLogin() {
         localStorage.removeItem("lType");
         localStorage.setItem("uid", res.data.user_id);
         setUserId(String(res.data.user_id));
+        trackUserIdentify(String(res.data.user_id), "third_party");
         trackLogin();
 
         redirectAfterAuth();
