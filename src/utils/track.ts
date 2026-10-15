@@ -119,7 +119,7 @@ function landingInfo(): Record<string, string> {
   if (path === "/detail" && q.get("id")) return { landing_type: "detail", post_id: q.get("id") || "" };
   if ((m = path.match(/^\/novel\/([^/?#]+)/))) return { landing_type: "novel_generate", gen_session_id: m[1] };
   if ((m = path.match(/^\/collection\/([^/?#]+)/))) return { landing_type: "collection_detail", book_id: m[1] };
-  if ((m = path.match(/^\/user-home\/([^/?#]+)/))) return { landing_type: "user_home", blogger_id: m[1] };
+  if ((m = path.match(/^\/user-home\/([^/?#]+)/))) return { landing_type: "user_home", user_id: m[1] };
   if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?$/.test(path) || /^\/(?:ja|en|zh-cn|zh-tw|ko|th)\/(?:novel|comic|drama|photo|video)\/?$/.test(path)) return { landing_type: "home" };
   return { landing_type: "other" };
 }
@@ -309,7 +309,7 @@ export function trackPageView(info: {
     extra.gen_session_id = p.id;
   } else if (/^\/user-home/.test(path)) {
     page_name = "user_home";
-    extra.blogger_id = p.id || q.uid;
+    extra.user_id = p.id || q.uid;
   } else if (/^\/detail/.test(path)) {
     page_name = "detail";
     extra.post_id = p.id || q.id;
@@ -342,14 +342,10 @@ export function trackPageView(info: {
 export function trackUserIdentify(userId: string | number, loginType: "email" | "google") {
   const uid = String(userId || "");
   if (!uid) return;
-  const firstKey = "trk_login_" + uid;
-  const isFirstLogin = !safeGet(localStorage, firstKey);
-  if (isFirstLogin) safeSet(localStorage, firstKey, "1");
   track("user_identify", {
     user_id: uid,
     anonymous_id: safeGet(localStorage, KEY_DEVICE),
     login_type: loginType,
-    is_first_login: isFirstLogin,
   });
 }
 
