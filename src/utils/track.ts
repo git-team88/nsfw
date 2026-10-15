@@ -182,7 +182,8 @@ function buildHeader(deviceId: string) {
     device_id: deviceId,
     user_id: getUserId() || "",
     client_type: clientType(),
-    platform: osName(),
+    platform: clientType(), // 端口：web 桌面浏览器 / h5 手机浏览器（os 放在 first_visit 的 params 里）
+    product: "fansfans",
     app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
   };
 }
