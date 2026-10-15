@@ -3,7 +3,8 @@
 // 事件名和 params 按《埋点字段定义.md》填；移动端独有的事件（plus_click / next_step_click / first_open）不在这里。
 //
 // 用法：各页面调下面导出的 trackXxx()；新事件直接 track(event_name, params)。
-// 事件先进队列，攒一批（最多 10 条或 3 秒）发一次；页面隐藏 / 关闭时用 sendBeacon 把剩下的一次送出。
+// 事件先存进本地队列（localStorage），满 1 分钟或攒够 50 条才请求一次上报接口；
+// 页面隐藏 / 关闭时用 sendBeacon 把剩下的一次送出，发失败的留在本地下次打开再发。
 import { baseUrl } from "@/util/config";
 import { getGaClientId } from "@/utils/analytics";
 
@@ -150,10 +151,33 @@ function utmParams(): Record<string, string> {
 
 type TrackEvent = { event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
 
-const queue: TrackEvent[] = [];
+// 事件不是来一条发一条：先存进 localStorage 队列，满 1 分钟或攒够 50 条才请求一次上报接口。
+// 存本地是为了刷新 / 关页不丢：下次打开时把上次没发完的一起带上。
+const KEY_QUEUE = "trk_queue";
+const FLUSH_DELAY = 60 * 1000;
+const FLUSH_MAX = 50;
+const QUEUE_CAP = 500; // 本地最多攒这么多，再多丢最旧的，避免 localStorage 撑爆
+let queue: TrackEvent[] = loadQueue();
 let flushTimer: number | null = null;
-const FLUSH_DELAY = 3000;
-const FLUSH_MAX = 10;
+let flushing = false;
+
+function loadQueue(): TrackEvent[] {
+  try {
+    const raw = safeGet(localStorage, KEY_QUEUE);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveQueue() {
+  if (queue.length > QUEUE_CAP) queue = queue.slice(queue.length - QUEUE_CAP);
+  if (queue.length === 0) safeDel(localStorage, KEY_QUEUE);
+  else safeSet(localStorage, KEY_QUEUE, JSON.stringify(queue));
+}
+function armTimer() {
+  if (flushTimer == null && typeof window !== "undefined") {
+    flushTimer = window.setTimeout(() => void flush(), FLUSH_DELAY);
+  }
+}
 
 function buildHeader(deviceId: string) {
   return {
@@ -172,31 +196,49 @@ function enqueue(eventName: string, params: Record<string, unknown>, sessionId?:
     session_id: sessionId || currentSessionId(),
     params,
   });
-  if (isDebug) console.log("[Track Debug]", eventName, params);
+  saveQueue();
+  if (isDebug) console.log("[Track Debug]", eventName, params, `(队列 ${queue.length})`);
   if (queue.length >= FLUSH_MAX) void flush();
-  else if (flushTimer == null) flushTimer = window.setTimeout(() => void flush(), FLUSH_DELAY);
+  else armTimer();
 }
 
 /** 把队列里的事件发出去。beacon=true 用 sendBeacon（页面关闭 / 隐藏时用，fetch 可能发不出去） */
 async function flush(beacon = false) {
   if (flushTimer != null) { clearTimeout(flushTimer); flushTimer = null; }
-  if (queue.length === 0) return;
-  const events = queue.splice(0, queue.length);
+  if (queue.length === 0 || flushing) return;
+  flushing = true;
+  const events = queue.slice(0, FLUSH_MAX);
   try {
     const body = JSON.stringify({ header: buildHeader(await getDeviceId()), events });
     if (beacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
-      // sendBeacon 只能发简单类型，服务端要能接 text/plain 的 JSON 串
+      // sendBeacon 只能发简单类型，服务端要能接 text/plain 的 JSON 串。
+      // 它不返回结果，按已发出处理（发不出去也只是丢这一批）
       navigator.sendBeacon(REPORT_URL, new Blob([body], { type: "text/plain" }));
+      queue = queue.slice(events.length);
+      saveQueue();
       return;
     }
-    await fetch(REPORT_URL, {
+    const res = await fetch(REPORT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
       keepalive: true,
     });
+    if (res.ok) {
+      // 发成功才从本地队列里去掉，失败留着下一轮再发
+      queue = queue.slice(events.length);
+      saveQueue();
+      if (isDebug) console.log("[Track Debug] 已上报", events.length, "条");
+    } else if (isDebug) {
+      console.warn("[Track Debug] 上报失败 HTTP", res.status);
+    }
   } catch (err) {
     if (isDebug) console.warn("[Track Debug] 上报失败", err);
+  } finally {
+    flushing = false;
+    // 还有剩（一批没发完 / 发失败）：接着排下一次
+    if (queue.length >= FLUSH_MAX) void flush();
+    else if (queue.length > 0) armTimer();
   }
 }
 
@@ -305,6 +347,8 @@ export function trackLogout() {
  */
 export function initTracking() {
   if (typeof window === "undefined") return;
+  // 上次没发完的先排上（满 50 立即发，否则 1 分钟后发）
+  if (queue.length >= FLUSH_MAX) void flush(); else if (queue.length > 0) armTimer();
   trackFirstVisit();
   currentSessionId();
   // 已登录用户冷启动：带着 uid 报一次 auto 身份确认
