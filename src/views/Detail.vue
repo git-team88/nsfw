@@ -3080,7 +3080,8 @@ async function loadCommentDetail(commentId: string) {
         }
       }
 
-      // Add to the beginning of the comments list
+      // 挪到最前面：列表里已经有这条的话先去掉，避免重复
+      comments.value = comments.value.filter((c: any) => String(c.id) !== String(commentObj.id));
       comments.value.unshift(commentObj);
     }
   } catch (error) {
@@ -3332,16 +3333,9 @@ async function loadComments(page: number = 1, append: boolean = false) {
         return commentObj;
       });
 
-      // Filter out the comment with the same ID as cid or rid parameter only if they exist
-      const cid = route.query.cid as string || "";
-      const rid = route.query.rid as string || "";
-      let filteredComments = newComments;
-      if (cid || rid) {
-        filteredComments = newComments.filter((comment: { id: string | number; }) => {
-          // Ensure both are strings for comparison
-          return String(comment.id) !== String(cid) && String(comment.id) !== String(rid);
-        });
-      }
+      // 带 cid 进来时不在这里把那条过滤掉：loadCommentDetail 成功后会把它挪到最前面并去重；
+      // 万一详情接口失败，列表里至少还有这条，不会整个空掉
+      const filteredComments = newComments;
 
       if (append) {
         comments.value = [...comments.value, ...filteredComments];
