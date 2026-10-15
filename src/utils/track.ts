@@ -292,7 +292,7 @@ function flushSessionEnd(beacon = false) {
 /**
  * page_view：路由切换时调，只报这几个页面：
  * home 首页 / generate 生成页（含小说生成页 /novel/:id）/ user_home 个人主页 /
- * detail 作品详情 / collection_detail 合集详情 / search 搜索页。其它路由不报。
+ * detail 作品详情 / collection_detail 合集详情 / search 搜索页 / publish 发布页。其它路由不报。
  */
 export function trackPageView(info: {
   path: string;
@@ -328,6 +328,11 @@ export function trackPageView(info: {
   } else if (/^\/search\/?$/.test(path)) {
     page_name = "search";
     extra.keyword = q.keyword;
+  } else if ((m = path.match(/^\/publish\/(video|video-batch|clip|clip-batch|comic|novel|image)\/?$/))) {
+    // 发布页：publish_type = video / video_batch / clip / clip_batch / comic / novel / image；/publish/success 不报
+    page_name = "publish";
+    extra.publish_type = m[1].replace("-", "_");
+    if (q.id || q.post_id) extra.work_id = q.id || q.post_id; // 编辑作品时带
   }
   if (!page_name) return;
   enqueue("page_view", { page_name, path, ...extra }, sid);
