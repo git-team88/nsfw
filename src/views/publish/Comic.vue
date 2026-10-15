@@ -813,6 +813,7 @@
 
 <script setup lang="ts" name="PublishComic">
 import Header from "@/components/Header.vue";
+import { pickNewPostId, submitPostWatermark } from "@/util/watermark";
 import ConfirmLeaveModal from "@/components/ConfirmLeaveModal.vue";
 import SensitiveConfirmModal from "@/components/SensitiveConfirmModal.vue";
 import SetImageCoverModal from "@/components/SetImageCoverModal.vue";
@@ -1479,6 +1480,8 @@ async function runBatchPublishLoop() {
       const res = JSON.parse(result);
 
       if (res.code == 0 || res.code == 200) {
+        // 每发布成功一个作品就提交图片加水印任务
+        submitPostWatermark(pickNewPostId(res));
         batchPublishChapterStatuses.value[i].status = 'success';
       } else {
         batchPublishChapterStatuses.value[i].status = 'fail';
@@ -3703,6 +3706,8 @@ async function onSubmit() {
     const res = JSON.parse(result);
 
     if (res.code == 0 || res.code == 200) {
+      // 新发布 / 编辑保存成功后都提交图片加水印任务（编辑可能换了图）
+      submitPostWatermark(postId.value || pickNewPostId(res));
       toast(t("success"));
       router.push(`/publish/success?type=${1}`);
     } else {

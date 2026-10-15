@@ -960,6 +960,14 @@ export default {
       method: "GET",
       baseURL: aiUrl,
     }),
+  // 作品发布成功后提交图片加水印任务（后端只处理图片类作品 type 1/2/3/4）；表单提交，siteid 由拦截器带
+  postsWatermark: (post_id: string | number) =>
+    axios.request({
+      url: "app/posts_watermark",
+      data: { post_id },
+      method: "POST",
+      baseURL: aiUrl,
+    }),
   readSingleProject: (data: any) =>
     axios.request({
       url: `app/project/set_readed`,

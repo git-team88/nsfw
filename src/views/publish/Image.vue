@@ -408,6 +408,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
+import { pickNewPostId, submitPostWatermark } from "@/util/watermark";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
@@ -2064,6 +2065,8 @@ async function onSubmit() {
     const res = JSON.parse(result);
 
     if (res.code === 0 || res.code === 200) {
+      // 新发布 / 编辑保存成功后都提交图片加水印任务（编辑可能换了图）
+      submitPostWatermark(isEditMode ? editPostId.value : pickNewPostId(res));
       toast(t("success"));
       router.push(`/publish/success?type=${4}`);
     } else {
