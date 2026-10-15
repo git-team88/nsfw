@@ -98,11 +98,6 @@ function osName(): string {
   if (/Linux/i.test(UA)) return "Linux";
   return "other";
 }
-function deviceType(): string {
-  if (/iPad|Tablet/i.test(UA)) return "tablet";
-  if (/Mobile|Android|iPhone/i.test(UA)) return "mobile";
-  return "desktop";
-}
 function browserName(): string {
   if (/Edg\//i.test(UA)) return "Edge";
   if (/OPR\//i.test(UA)) return "Opera";
@@ -135,7 +130,7 @@ function utmParams(): Record<string, string> {
   try {
     const q = new URLSearchParams(window.location.search);
     const v = (q.get("utm_source") || "").trim();
-    if (v) out.utm_source = v;
+    if (v) out.source = v;
   } catch { /* ignore */ }
   return out;
 }
@@ -265,7 +260,7 @@ export function trackFirstVisit() {
     landing_page: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
     ...landingInfo(),
     ...utmParams(),
-    device: deviceType(),
+    device: clientType(),
     os: osName(),
     browser: browserName(),
   });
