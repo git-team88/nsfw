@@ -16,7 +16,6 @@ const KEY_FIRST_VISIT = "trk_first_visit_at";
 const KEY_SESSION = "trk_session_id";
 const KEY_SESSION_ACTIVE = "trk_session_active";
 const KEY_SESSION_START = "trk_session_start";
-const KEY_SESSION_PV = "trk_session_pv";
 const KEY_IDENTIFIED = "trk_identified_uid";
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 
@@ -71,7 +70,6 @@ function currentSessionId(touch = true): string {
     sid = "s_" + uuid();
     safeSet(sessionStorage, KEY_SESSION, sid);
     safeSet(sessionStorage, KEY_SESSION_START, String(now));
-    safeSet(sessionStorage, KEY_SESSION_PV, "0");
     safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
     enqueue("session_start", { start_reason: reason }, sid);
   }
@@ -276,7 +274,7 @@ export function trackFirstVisit() {
   });
 }
 
-/** session_end：带会话时长和本会话的浏览页数（给"会话>10s / 当日>2次浏览"用） */
+/** session_end：带会话时长（给"会话>10s"用）；本会话浏览页数后台按 session_id 数 page_view 即可 */
 function flushSessionEnd(beacon = false) {
   const sid = safeGet(sessionStorage, KEY_SESSION);
   const start = Number(safeGet(sessionStorage, KEY_SESSION_START)) || 0;
@@ -286,8 +284,7 @@ function flushSessionEnd(beacon = false) {
   if (ended === sid) return; // 同一会话只报一次结束
   safeSet(sessionStorage, "trk_session_ended", sid);
   enqueue("session_end", {
-    duration_sec: Math.max(0, Math.round((last - start) / 1000)),
-    page_views: Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0,
+    duration: Math.max(0, Math.round((last - start) / 1000)),
   }, sid);
   if (beacon) void flush(true);
 }
@@ -300,7 +297,6 @@ export function trackPageView(info: {
   query?: Record<string, any>;
 }) {
   const sid = currentSessionId();
-  safeSet(sessionStorage, KEY_SESSION_PV, String((Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0) + 1));
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
