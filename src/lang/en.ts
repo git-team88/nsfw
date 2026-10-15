@@ -3010,7 +3010,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       message: "Check your payment details and balance, then try again."
     },
     watchWork: "Watch now",
-    backToPay: "Back to payment",
+    backToPay: "Back to work",
     unlockTip: "Unlock the full series for just {price} — follow serialized works to the finale",
     unlockFullSeries: "Unlock Full Series",
     payAgree: "By paying you agree to the ",

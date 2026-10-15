@@ -2480,7 +2480,7 @@ export default {
       message: "결제 정보나 잔액을 확인한 후 다시 시도해 주세요"
     },
     watchWork: "작품 보기",
-    backToPay: "결제 페이지로 돌아가기",
+    backToPay: "작품으로 돌아가기",
     unlockTip: "애니 드라마 전편 잠금 해제는 {price}이면 충분! 연재 중인 작품도 완결까지 이어서 볼 수 있어요",
     unlockFullSeries: "전편 잠금 해제",
     payAgree: "결제하면 동의하는 것으로 간주됩니다",

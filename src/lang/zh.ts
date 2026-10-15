@@ -3119,7 +3119,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       message: "请检查支付信息或余额，确认无误后返回重试"
     },
     watchWork: "观看作品",
-    backToPay: "返回支付页",
+    backToPay: "返回作品",
     unlockTip: "解锁漫剧全集仅需{price} 连载作品可以追更到大结局",
     unlockFullSeries: "解锁全集",
     payAgree: "支付即同意",

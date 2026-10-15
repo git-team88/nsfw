@@ -2701,7 +2701,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       message: "お支払い情報と残高をご確認のうえ、もう一度お試しください。"
     },
     watchWork: "作品を見る",
-    backToPay: "支払いページへ戻る",
+    backToPay: "作品に戻る",
     unlockTip: "{price}で全話を解除、連載作品は完結まで追えます",
     unlockFullSeries: "全話を解除",
     payAgree: "お支払いで",

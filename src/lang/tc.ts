@@ -3111,7 +3111,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       message: "請檢查支付資訊或餘額，確認無誤後返回重試"
     },
     watchWork: "觀看作品",
-    backToPay: "返回支付頁",
+    backToPay: "返回作品",
     unlockTip: "解鎖漫劇全集僅需{price} 連載作品可以追更到大結局",
     unlockFullSeries: "解鎖全集",
     payAgree: "支付即同意",
