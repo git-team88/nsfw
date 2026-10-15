@@ -328,9 +328,15 @@ export function trackPageView(info: {
     page_name = "search";
     extra.keyword = q.keyword;
   } else if ((m = path.match(/^\/publish\/(video|video-batch|clip|clip-batch|comic|novel|image)\/?$/))) {
-    // 发布页：publish_type = video / video_batch / clip / clip_batch / comic / novel / image；/publish/success 不报
+    // 发布页：路径里的 video 是漫剧、clip 是视频，上报按内容类型给：
+    // drama / drama_batch / video / video_batch / comic / novel / image；/publish/success 不报
+    const publishType: Record<string, string> = {
+      video: "drama", "video-batch": "drama_batch",
+      clip: "video", "clip-batch": "video_batch",
+      comic: "comic", novel: "novel", image: "image",
+    };
     page_name = "publish";
-    extra.publish_type = m[1].replace("-", "_");
+    extra.publish_type = publishType[m[1]] || m[1];
     if (q.id || q.post_id) extra.work_id = q.id || q.post_id; // 编辑作品时带
   }
   if (!page_name) return;
