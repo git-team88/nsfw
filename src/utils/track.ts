@@ -70,7 +70,7 @@ function currentSessionId(touch = true): string {
     safeSet(sessionStorage, KEY_SESSION, sid);
     safeSet(sessionStorage, KEY_SESSION_START, String(now));
     safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
-    enqueue("session_start", { start_reason: reason }, sid);
+    enqueue("session_start", { start_reason: reason });
   }
   if (touch) safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
   return sid;
@@ -146,7 +146,7 @@ function utmParams(): Record<string, string> {
 // 发送（队列 + 批量）
 // ============================================================
 
-type TrackEvent = { event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
+type TrackEvent = { event_name: string; event_time: number; params: Record<string, unknown> };
 
 // 事件不是来一条发一条：先存进 localStorage 队列，满 1 分钟或攒够 50 条才请求一次上报接口。
 // 存本地是为了刷新 / 关页不丢：下次打开时把上次没发完的一起带上。
@@ -187,11 +187,10 @@ function buildHeader(deviceId: string) {
   };
 }
 
-function enqueue(eventName: string, params: Record<string, unknown>, sessionId?: string) {
+function enqueue(eventName: string, params: Record<string, unknown>) {
   queue.push({
     event_name: eventName,
     event_time: Date.now(),
-    session_id: sessionId || currentSessionId(),
     params,
   });
   saveQueue();
@@ -274,7 +273,7 @@ export function trackFirstVisit() {
   });
 }
 
-/** session_end：带会话时长（给"会话>10s"用）；本会话浏览页数后台按 session_id 数 page_view 即可 */
+/** session_end：带会话时长（给"会话>10s"用） */
 function flushSessionEnd(beacon = false) {
   const sid = safeGet(sessionStorage, KEY_SESSION);
   const start = Number(safeGet(sessionStorage, KEY_SESSION_START)) || 0;
@@ -285,7 +284,7 @@ function flushSessionEnd(beacon = false) {
   safeSet(sessionStorage, "trk_session_ended", sid);
   enqueue("session_end", {
     duration: Math.max(0, Math.round((last - start) / 1000)),
-  }, sid);
+  });
   if (beacon) void flush(true);
 }
 
@@ -300,7 +299,7 @@ export function trackPageView(info: {
   params?: Record<string, any>;
   query?: Record<string, any>;
 }) {
-  const sid = currentSessionId();
+  currentSessionId(); // 刷新会话活动时间（超时会自动开新会话）
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
@@ -340,7 +339,7 @@ export function trackPageView(info: {
     if (q.id || q.post_id) extra.post_id = q.id || q.post_id; // 编辑作品时带
   }
   if (!page_name) return;
-  enqueue("page_view", { page_name, path, ...extra }, sid);
+  enqueue("page_view", { page_name, path, ...extra });
 }
 
 /**
@@ -383,7 +382,7 @@ export function initTracking() {
       const sid = currentSessionId();
       if (sid === before) {
         safeDel(sessionStorage, "trk_session_ended");
-        enqueue("session_start", { start_reason: "resume" as SessionStartReason }, sid);
+        enqueue("session_start", { start_reason: "resume" as SessionStartReason });
       }
     }
   });
