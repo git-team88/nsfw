@@ -56,7 +56,7 @@ async function getDeviceId(): Promise<string> {
 }
 
 /**
- * 当前会话 id。30 分钟没动作就开新会话（并补报 session_start）。
+ * 当前会话 id。30 分钟没动作就开新会话（先补报上一个会话的 session_end）。
  * touch=true 表示这是一次用户动作，刷新「最后活动时间」。
  */
 function currentSessionId(touch = true): string {
@@ -64,13 +64,11 @@ function currentSessionId(touch = true): string {
   let sid = safeGet(sessionStorage, KEY_SESSION);
   const last = Number(safeGet(sessionStorage, KEY_SESSION_ACTIVE)) || 0;
   if (!sid || (last && now - last > SESSION_TIMEOUT)) {
-    const reason: SessionStartReason = sid ? "timeout_restart" : "cold_start";
     if (sid) flushSessionEnd();
     sid = "s_" + uuid();
     safeSet(sessionStorage, KEY_SESSION, sid);
     safeSet(sessionStorage, KEY_SESSION_START, String(now));
     safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
-    enqueue("session_start", { start_reason: reason });
   }
   if (touch) safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
   return sid;
@@ -243,10 +241,8 @@ export function track(eventName: string, params: Record<string, unknown> = {}) {
 }
 
 // ============================================================
-// 二、用户概况：first_visit / session_start / session_end / page_view / user_identify
+// 二、用户概况：first_open / session_end / page_view / user_identify
 // ============================================================
-
-type SessionStartReason = "cold_start" | "resume" | "timeout_restart";
 
 /**
  * first_visit：这台设备（浏览器）第一次打开网站时报一次，带推广来源。
@@ -350,7 +346,7 @@ export function trackUserIdentify(userId: string | number, loginType: "email" | 
 }
 
 /**
- * 应用启动时调一次：报 first_visit（首次），开会话（session_start），
+ * 应用启动时调一次：报 first_open（首次），开会话，
  * 并挂上页面隐藏 / 关闭时的 session_end + 批量兜底发送。
  */
 export function initTracking() {
@@ -365,14 +361,11 @@ export function initTracking() {
       flushSessionEnd(true);
       void flush(true);
     } else {
-      // 回到前台：超过 30 分钟会在 currentSessionId 里开新会话（timeout_restart）；
-      // 没超时就是同一会话恢复，报一条 resume
+      // 回到前台：超过 30 分钟会在 currentSessionId 里开新会话；
+      // 没超时就是同一会话恢复，允许它之后再报一次 session_end
       const before = safeGet(sessionStorage, KEY_SESSION);
       const sid = currentSessionId();
-      if (sid === before) {
-        safeDel(sessionStorage, "trk_session_ended");
-        enqueue("session_start", { start_reason: "resume" as SessionStartReason });
-      }
+      if (sid === before) safeDel(sessionStorage, "trk_session_ended");
     }
   });
   window.addEventListener("pagehide", () => { flushSessionEnd(true); void flush(true); });
