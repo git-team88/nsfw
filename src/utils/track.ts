@@ -129,15 +129,13 @@ function landingInfo(): Record<string, string> {
   return { landing_type: "other" };
 }
 
-/** 推广来源：落地 URL 上的 utm_source（X / facebook / youtube / instagram / tiktok …），顺带 medium / campaign */
+/** 推广来源：落地 URL 上的 utm_source（X / facebook / youtube / instagram / tiktok …） */
 function utmParams(): Record<string, string> {
   const out: Record<string, string> = {};
   try {
     const q = new URLSearchParams(window.location.search);
-    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
-      const v = (q.get(k) || "").trim();
-      if (v) out[k] = v;
-    }
+    const v = (q.get("utm_source") || "").trim();
+    if (v) out.utm_source = v;
   } catch { /* ignore */ }
   return out;
 }
