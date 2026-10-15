@@ -2816,7 +2816,8 @@ async function fetchDetail(newId: number) {
 
         // Auto enter collection mode when book has chapters
         isCollectionMode.value = true;
-        activeTab.value = 'collection';
+        // 从消息列表点评论进来（带 cid / rid）要看的是评论，评论在「详情」tab 里，不切到合集 tab
+        activeTab.value = (cid || route.query.rid) ? 'detail' : 'collection';
         isRightPanelHidden.value = false;
 
         // 地址栏带的这一集不一定在第一页，翻到它所在的页并滚到列表中间
