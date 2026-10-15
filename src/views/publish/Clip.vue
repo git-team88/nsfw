@@ -154,8 +154,8 @@
 
             <div class="upload-status-box">
               <div class="status-header">
-                <div class="status-info success">
-                  <span class="status-text">{{ t('submit.video.uploadSuccess') }}</span>
+                <div class="status-info" :class="{ success: !isUpload }">
+                  <span class="status-text">{{ isUpload ? t('submit.video.uploading') : t('submit.video.uploadSuccess') }}</span>
                   <div class="video-meta-box">格式:mp4</div>
                 </div>
                 <div class="status-actions">
@@ -173,7 +173,13 @@
                   </div>
                 </div>
               </div>
-
+              <div class="status-progress-bar">
+                <div
+                  class="progress-fill"
+                  :class="{ success: !isUpload, uploading: isUpload }"
+                  :style="{ width: (isUpload ? uploadProgress : 100) + '%' }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1759,10 +1765,7 @@ function onReuploadPicked(e: Event) {
     handleVideoFile(file);
   }
   target.value = "";
-  showFullContent.value = false;
-  videoUrl.value = "";
-  videoFile.value = null;
-  coverUrl.value = "";
+  // 重新上传时表单留在原地：遮罩和状态栏显示进度，传完直接换成新视频；传失败保留原来的
 }
 
 // Local upload handlers
