@@ -262,7 +262,7 @@ type SessionStartReason = "cold_start" | "resume" | "timeout_restart";
 export function trackFirstVisit() {
   if (safeGet(localStorage, KEY_FIRST_VISIT)) return;
   safeSet(localStorage, KEY_FIRST_VISIT, String(Date.now()));
-  track("first_visit", {
+  track("first_open", {
     referrer: typeof document !== "undefined" ? document.referrer || "" : "",
     landing_page: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
     ...landingInfo(),
