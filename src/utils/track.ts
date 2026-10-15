@@ -121,11 +121,11 @@ function landingInfo(): Record<string, string> {
   const path = typeof window !== "undefined" ? window.location.pathname : "";
   const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   let m: RegExpMatchArray | null;
-  if ((m = path.match(/^\/detail\/([^/?#]+)/))) return { landing_type: "work", post_id: m[1] };
-  if (path === "/detail" && q.get("id")) return { landing_type: "work", post_id: q.get("id") || "" };
-  if ((m = path.match(/^\/novel\/([^/?#]+)/))) return { landing_type: "work", post_id: m[1] };
-  if ((m = path.match(/^\/collection\/([^/?#]+)/))) return { landing_type: "collection", book_id: m[1] };
-  if ((m = path.match(/^\/user-home\/([^/?#]+)/))) return { landing_type: "blogger", blogger_id: m[1] };
+  if ((m = path.match(/^\/detail\/([^/?#]+)/))) return { landing_type: "detail", post_id: m[1] };
+  if (path === "/detail" && q.get("id")) return { landing_type: "detail", post_id: q.get("id") || "" };
+  if ((m = path.match(/^\/novel\/([^/?#]+)/))) return { landing_type: "novel_generate", gen_session_id: m[1] };
+  if ((m = path.match(/^\/collection\/([^/?#]+)/))) return { landing_type: "collection_detail", book_id: m[1] };
+  if ((m = path.match(/^\/user-home\/([^/?#]+)/))) return { landing_type: "user_home", blogger_id: m[1] };
   if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?$/.test(path) || /^\/(?:ja|en|zh-cn|zh-tw|ko|th)\/(?:novel|comic|drama|photo|video)\/?$/.test(path)) return { landing_type: "home" };
   return { landing_type: "other" };
 }
