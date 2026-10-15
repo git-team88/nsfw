@@ -16,7 +16,6 @@ const KEY_FIRST_VISIT = "trk_first_visit_at";
 const KEY_SESSION = "trk_session_id";
 const KEY_SESSION_ACTIVE = "trk_session_active";
 const KEY_SESSION_START = "trk_session_start";
-const KEY_IDENTIFIED = "trk_identified_uid";
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 const isDebug = typeof window !== "undefined" && !/moegen\.ai$|fansfans\.ai$|blfans\.ai$/.test(window.location.hostname);
@@ -345,16 +344,12 @@ export function trackPageView(info: {
 }
 
 /**
- * user_identify：游客登录 / 注册成功时，以及已登录用户冷启动确认身份时调。
- * 冷启动的 auto 只在本次会话第一次拿到 uid 时报一次（Header 每次拉 userInfo 都会调进来）。
+ * user_identify：登录 / 注册成功时调，把登录前的 device_id 和账号绑上（身份缝合）。
+ * 已登录状态下的日常事件 header 里本来就带 user_id，不需要再报。
  */
-export function trackUserIdentify(userId: string | number, loginType: "email" | "phone" | "google" | "auto") {
+export function trackUserIdentify(userId: string | number, loginType: "email" | "google") {
   const uid = String(userId || "");
   if (!uid) return;
-  if (loginType === "auto") {
-    if (safeGet(sessionStorage, KEY_IDENTIFIED) === uid) return;
-  }
-  safeSet(sessionStorage, KEY_IDENTIFIED, uid);
   const firstKey = "trk_login_" + uid;
   const isFirstLogin = !safeGet(localStorage, firstKey);
   if (isFirstLogin) safeSet(localStorage, firstKey, "1");
@@ -364,11 +359,6 @@ export function trackUserIdentify(userId: string | number, loginType: "email" | 
     login_type: loginType,
     is_first_login: isFirstLogin,
   });
-}
-
-/** 登出：清掉本会话的身份确认标记，再登录会重新报 */
-export function trackLogout() {
-  safeDel(sessionStorage, KEY_IDENTIFIED);
 }
 
 /**
@@ -381,9 +371,6 @@ export function initTracking() {
   if (queue.length >= FLUSH_MAX) void flush(); else if (queue.length > 0) armTimer();
   trackFirstVisit();
   currentSessionId();
-  // 已登录用户冷启动：带着 uid 报一次 auto 身份确认
-  const uid = getUserId();
-  if (uid) trackUserIdentify(uid, "auto");
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
