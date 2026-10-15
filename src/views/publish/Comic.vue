@@ -1672,7 +1672,8 @@ function handleCloseCollectionListModal() {
 }
 
 function handleSelectCollectionCard(collection: any) {
-  if (!route.query.session_id && !selectedProject.value?.session_id && !postId.value) return;
+  // 本地上传（没有 AI 项目 / 不是编辑）也要能在弹窗里切换合集，不能直接 return；
+  // 只有编辑 AI 生成的作品时，才在下面弹「切换合集」确认
   if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== collection.id) {
     pendingCollectionId.value = collection.id;
     pendingCollectionData.value = collection;

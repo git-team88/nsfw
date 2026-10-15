@@ -5,8 +5,13 @@
 // 用法：各页面调下面导出的 trackXxx()；新事件直接 track(event_name, params)。
 // 事件先存进本地队列（localStorage），满 1 分钟或攒够 50 条才请求一次上报接口；
 // 页面隐藏 / 关闭时用 sendBeacon 把剩下的一次送出，发失败的留在本地下次打开再发。
-import { baseUrl } from "@/util/config";
+import { baseUrl, IS_TESTNET } from "@/util/config";
 import { getGaClientId } from "@/utils/analytics";
+
+// 上报总开关：接口还没上正式，只在本地和测试环境开（IS_TESTNET 由部署脚本按 test / prod 切换）。
+// 关掉时不入队、不存本地、不请求 /report，也不写首访标记（以后正式打开时老用户不会被漏报 first_open）。
+// 正式环境要打开：改成 true，或 .env 里配 VITE_TRACK_ENABLED=true
+const TRACK_ENABLED = IS_TESTNET || (import.meta as any).env?.VITE_TRACK_ENABLED === "true";
 
 // 上报地址：默认挂在 API 域名下的 /report；单独部署时用 VITE_TRACK_HOST 覆盖（带协议、不带尾斜杠）
 const REPORT_URL = ((import.meta as any).env?.VITE_TRACK_HOST || baseUrl.replace(/\/+$/, "")) + "/report";
@@ -18,7 +23,8 @@ const KEY_SESSION_ACTIVE = "trk_session_active";
 const KEY_SESSION_START = "trk_session_start";
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 
-const isDebug = typeof window !== "undefined" && !/moegen\.ai$|fansfans\.ai$|blfans\.ai$/.test(window.location.hostname);
+// 调试日志：本地和测试环境打。原来按域名结尾判断，wwwtest.fansfans.ai / wwwtest.blfans.ai 会被误当成正式环境
+const isDebug = IS_TESTNET;
 
 function safeGet(store: Storage, key: string): string {
   try { return store.getItem(key) || ""; } catch { return ""; }
@@ -179,6 +185,7 @@ function buildHeader(deviceId: string) {
 }
 
 function enqueue(eventName: string, params: Record<string, unknown>) {
+  if (!TRACK_ENABLED) return;
   queue.push({
     event_name: eventName,
     event_time: Date.now(),
@@ -192,6 +199,7 @@ function enqueue(eventName: string, params: Record<string, unknown>) {
 
 /** 把队列里的事件发出去。beacon=true 用 sendBeacon（页面关闭 / 隐藏时用，fetch 可能发不出去） */
 async function flush(beacon = false) {
+  if (!TRACK_ENABLED) return;
   if (flushTimer != null) { clearTimeout(flushTimer); flushTimer = null; }
   if (queue.length === 0 || flushing) return;
   flushing = true;
@@ -352,7 +360,7 @@ export function trackUserIdentify(userId: string | number, loginType: "email" | 
  * 并挂上页面隐藏 / 关闭时的 session_end + 批量兜底发送。
  */
 export function initTracking() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !TRACK_ENABLED) return;
   // 上次没发完的先排上（满 50 立即发，否则 1 分钟后发）
   if (queue.length >= FLUSH_MAX) void flush(); else if (queue.length > 0) armTimer();
   trackFirstVisit();
