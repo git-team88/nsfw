@@ -433,7 +433,7 @@ function entrySourceOf(): string {
 }
 
 /** 9.1.1 合集详情页曝光 */
-export function trackCollectionView(p: { book_id: string | number; book_title?: string; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
+export function trackCollectionView(p: { book_id: string | number; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
   if (!p.book_id || viewedThisSession("collection:" + p.book_id)) return;
   track("collection_view", { ...p, entry_source: entrySourceOf() });
 }
