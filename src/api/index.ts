@@ -1,6 +1,18 @@
 import axios from "../util/request";
 import { aiUrl } from "../util/config";
 
+// 浏览器首选语言是否为简体中文：zh / zh-CN / zh-Hans / zh-SG 等算，
+// 繁体（zh-TW / zh-HK / zh-MO / zh-Hant）不算
+const isChineseBrowserLanguage = (): boolean => {
+  try {
+    const lang = String((navigator.languages && navigator.languages[0]) || navigator.language || "").toLowerCase();
+    if (!lang.startsWith("zh")) return false;
+    return !/(^|-)(tw|hk|mo|hant)(-|$)/.test(lang);
+  } catch {
+    return false;
+  }
+};
+
 const appendContentChannel = (showNsfw: number | undefined, channel?: number) =>
   (showNsfw !== undefined ? '&show_nsfw=' + showNsfw : '') + (channel !== undefined ? '&channel=' + channel : '');
 
@@ -813,10 +825,17 @@ export default {
       method: "GET",
     }),
 
+  // 国家码：浏览器首选语言是简体中文时，不管 IP 在哪都按中国大陆处理（countryCode 改成 CN），
+  // 所有调 getCode 的地方（内容开关、NSFW 开关、敏感内容等）都跟着走中国大陆的逻辑
   getCode: () =>
-    axios.request({
+    (axios.request({
       url: "login/getCountryCode",
       method: "POST",
+    }) as Promise<any>).then((res: any) => {
+      if (isChineseBrowserLanguage() && res && res.code == 0) {
+        res.data = { ...(res.data || {}), countryCode: "CN" };
+      }
+      return res;
     }),
 
   report: (data: any) =>

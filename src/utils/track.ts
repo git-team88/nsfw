@@ -5,16 +5,17 @@
 // 用法：各页面调下面导出的 trackXxx()；新事件直接 track(event_name, params)。
 // 事件先存进本地队列（localStorage），满 1 分钟或攒够 50 条才请求一次上报接口；
 // 页面隐藏 / 关闭时用 sendBeacon 把剩下的一次送出，发失败的留在本地下次打开再发。
-import { baseUrl, IS_TESTNET } from "@/util/config";
+import { IS_TESTNET, trackUrl } from "@/util/config";
 import { getGaClientId } from "@/utils/analytics";
 
-// 上报总开关：接口还没上正式，只在本地和测试环境开（IS_TESTNET 由部署脚本按 test / prod 切换）。
-// 关掉时不入队、不存本地、不请求 /report，也不写首访标记（以后正式打开时老用户不会被漏报 first_open）。
-// 正式环境要打开：改成 true，或 .env 里配 VITE_TRACK_ENABLED=true
-const TRACK_ENABLED = IS_TESTNET || (import.meta as any).env?.VITE_TRACK_ENABLED === "true";
+// 上报总开关：本地 / 测试 / 正式先全部关掉。
+// 关掉时不入队、不存本地、不请求 /report，也不写首访标记（以后打开时老用户不会被漏报 first_open）。
+// 要打开：把 false 改成 IS_TESTNET（本地和测试环境开、正式关），
+// 或者 .env 里配 VITE_TRACK_ENABLED=true（只在本地 / 某个环境开）
+const TRACK_ENABLED = false || (import.meta as any).env?.VITE_TRACK_ENABLED === "true";
 
-// 上报地址：默认挂在 API 域名下的 /report；单独部署时用 VITE_TRACK_HOST 覆盖（带协议、不带尾斜杠）
-const REPORT_URL = ((import.meta as any).env?.VITE_TRACK_HOST || baseUrl.replace(/\/+$/, "")) + "/report";
+// 上报地址：域名在 config.ts 的 trackUrl 里配
+const REPORT_URL = trackUrl + "report";
 
 const KEY_DEVICE = "trk_device_id";
 const KEY_FIRST_VISIT = "trk_first_visit_at";
@@ -90,9 +91,9 @@ function getUserId(): string {
 
 const UA = typeof navigator !== "undefined" ? navigator.userAgent : "";
 
-/** web = 桌面浏览器，h5 = 手机 / 平板浏览器 */
-function clientType(): "web" | "h5" {
-  return /Mobile|Android|iPhone|iPad|iPod/i.test(UA) ? "h5" : "web";
+// pc
+function clientType(): "web" {
+  return "web";
 }
 function osName(): string {
   if (/iPhone|iPad|iPod/i.test(UA)) return "iOS";
@@ -178,8 +179,8 @@ function buildHeader(deviceId: string) {
     device_id: deviceId,
     user_id: getUserId() || "",
     client_type: clientType(),
-    platform: clientType(), // 端口：web 桌面浏览器 / h5 手机浏览器（os 放在 first_visit 的 params 里）
-    product: "fansfans",
+    platform: clientType(), // 端口：PC 站固定 web（os 放在 first_open 的 params 里）
+    source: "fansfans", // 平台（来源站点）
     app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
   };
 }

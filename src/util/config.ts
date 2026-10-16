@@ -1,6 +1,8 @@
 export const baseUrl = "https://test.addaiaroot.com/";
 export const redirectUrl = "https://wwwtest.fansfans.ai";
 export const aiUrl = "https://testapi.addaiaroot.com/";
+// 埋点上报域名
+export const trackUrl = "https://track-test.blfans.ai/";
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
 // export const baseUrl = "https://api.moegen.ai/";
