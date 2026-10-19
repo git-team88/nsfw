@@ -51,7 +51,7 @@ const { t } = useI18n();
 const props = defineProps<{
   visible: boolean;
   bookId: string | number;
-  /** 合集当前价格（美分原始值），用于回显选中档位；空 = 未开启 */
+  /** 合集当前价格（原始值，日元不缩放），用于回显选中档位；空 = 未开启 */
   currentPrice?: string | number;
   /** 合集当前档位 id（修改价格时作为 old_plan_id 传给后端；空 = 未开启） */
   currentPlanId?: string | number;

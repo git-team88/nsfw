@@ -129,7 +129,7 @@
                       </div>
                       <div class="drama-meta">
                         <span class="drama-price">
-                          {{ item.isWeb3 ? trimZeros(item.web3Price ?? '') + ' USDT' : fiatPrefix(item.fiatCurrency || 'usd') + scaleDramaPrice(item.price ?? '') + fiatSuffix(item.fiatCurrency || 'usd', t('aiRecharge.unit')) }}
+                          {{ item.isWeb3 ? trimZeros(item.web3Price ?? '') + ' USDT' : fiatPrefix(item.fiatCurrency || 'jpy') + scaleFiatPrice(item.price ?? '', item.fiatCurrency || 'jpy') + fiatSuffix(item.fiatCurrency || 'jpy', t('aiRecharge.unit')) }}
                         </span>
                         <span class="drama-state">{{ t('collection.unlockedFullSeries') }}</span>
                       </div>
@@ -214,7 +214,7 @@
                     <div class="td time">{{ formatTimestamp(item.issued_at || item.pay_time) }}</div>
                     <div class="td info">{{ activeSubTab == 'recharge' ? t('user.paymentHistory.tabRecharge') : activeSubTab == 'topup' ? t('user.paymentHistory.tabTopUp') : t('user.paymentHistory.subscriptionType')}}</div>
                     <div class="td quantity">{{ item.quantity || 1 }}</div>
-                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency || 'usd') }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : scaleFiatPrice(item.amount, item.currency || 'usd') }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency || 'usd', t('aiRecharge.unit')) }}</div>
+                    <div class="td amount">{{ isWeb3Order(item) ? '' : fiatPrefix(item.currency || 'jpy') }}{{ isWeb3Order(item) ? trimZeros(item.web3?.price) : scaleFiatPrice(item.amount, item.currency || 'jpy') }} {{ isWeb3Order(item) ? (item.web3?.currency || 'USDT') : fiatSuffix(item.currency || 'jpy', t('aiRecharge.unit')) }}</div>
                     <div class="td actions">
                       <template v-if="item.is_invoiced === '1'">
                         <button class="btn-view" @click="viewInvoice(item)">
@@ -304,8 +304,10 @@ function trimZeros(val: string | number): string {
   return num.toString();
 }
 
+/** 是不是 USDT 订单：先看订单号前缀 web3_，没有前缀再看接口下发的单位是不是 USDT */
 function isWeb3Order(item: any): boolean {
-  return (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3');
+  if (String(item?.stripe_subscription_id || item?.order_id || '').toLowerCase().startsWith('web3')) return true;
+  return /^usdt$/i.test(String(item?.currency || item?.web3?.currency || '').trim());
 }
 
 function getPlanDescLang() {
@@ -353,11 +355,8 @@ const dramaUnlockList = ref<DramaUnlockItem[]>([]);
  * 这里不兜住的话，一旦请求抛异常就一直停在转圈。
  */
 /**
- * 漫剧订单的金额换算。
- *
- * 这个列表不管单位是什么（usd / jpy / usdt），接口都是放大 100 倍下发的（9900 -> 99），
- * 所以一律除以 100。不用 scaleFiatPrice（它只在明确是 usd 时才除），法币和 USDT 都走这个函数：
- * 法币在模板里直接调，USDT 在下面先除好存进 web3Price。
+ * 漫剧订单 USDT 金额换算：接口放大 100 倍下发（9900 -> 99），这里除回来存进 web3Price。
+ * 法币走 scaleFiatPrice：日元原值，只有 usd 才除以 100。
  */
 function scaleDramaPrice(value: unknown): string {
   const raw = String(value ?? '').trim();
@@ -376,7 +375,7 @@ async function fetchDramaUnlockList() {
       dramaUnlockList.value = list.map((item: any) => {
         const info = item.book_info || {};
         // 按订单的单位（currency）判断：usdt 就是链上支付，显示成「X USDT」；其余都按法币走。
-        // 金额不管什么单位都是放大 100 倍下发的，展示时统一用 scaleDramaPrice 除回来。
+        // 法币按 currency 走 scaleFiatPrice（日元原值）；USDT 是放大 100 倍下发的，用 scaleDramaPrice 除回来。
         // currency 取不到时才退回看 pay_type —— 老订单可能没带这个字段。
         const orderCurrency = String(item.currency || '').trim();
         const isWeb3 = orderCurrency
@@ -387,7 +386,7 @@ async function fetchDramaUnlockList() {
           cover: info.cover || '',
           title: info.title || '',
           price: item.price,
-          fiatCurrency: item.currency || 'usd',
+          fiatCurrency: item.currency || 'jpy',
           isWeb3,
           web3Price: isWeb3 ? scaleDramaPrice(item.price) : '',
         } as DramaUnlockItem;
@@ -541,14 +540,14 @@ async function fetchProcessingData() {
           name: item.author?.nickname || '',
           avatar: item.author?.avatar || '',
           price: item.plan?.price || 0,
-          // 法币单位没下发就按 usd：美元后端给的是美分，scaleFiatPrice 只在 usd 时才除以 100
-          fiatCurrency: item.currency || item.plan?.currency || 'usd',
+          // 法币单位没下发就按日元（原值）；只有 usd 才除以 100
+          fiatCurrency: item.currency || item.plan?.currency || 'jpy',
           web3Price: item.plan?.web3?.price || '',
           startTime: item.start_at || item.created_at || '',
           endTime: item.expire_at || '',
           autoRenew: item.cancel_at_period_end == '1',
           stripeSubscriptionId: item.stripe_subscription_id || '',
-          isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
+          isWeb3: isWeb3Order(item),
         }));
       } else {
         toast(apiErrorMessage(res))
@@ -562,7 +561,7 @@ async function fetchProcessingData() {
           id: item.id,
           avatar: '',
           price: item.amount || 0,
-          fiatCurrency: item.currency || item.plan?.currency || 'usd',
+          fiatCurrency: item.currency || item.plan?.currency || 'jpy',
           web3Price: item.web3?.price || '',
           startTime: item.created_at || '',
           endTime: item.current_period_end || '',
@@ -577,7 +576,7 @@ async function fetchProcessingData() {
             plan_id: item.plan?.plan_id || 1
           },
           stripeSubscriptionId: item.stripe_subscription_id || '',
-          isWeb3: (item.stripe_subscription_id || '').toLowerCase().startsWith('web3'),
+          isWeb3: isWeb3Order(item),
         }));
 
         total.value = res.data?.allnums || 0;
@@ -595,11 +594,10 @@ async function fetchProcessingData() {
           price: item.amount || item.plan?.price || 0,
           web3Price: item.web3?.price || '',
           currency: item.web3?.currency || 'USDT',
-          // 现金订单一律按美元显示（金额是美分，除以 100）。接口上老订单的 currency 还是 jpy，
-          // 但现在套餐都已经换成美元单位了，不按它走
-          fiatCurrency: 'usd',
+          // 法币单位按接口下发，没下发按日元（原值）；只有 usd 才除以 100
+          fiatCurrency: item.currency || item.plan?.currency || 'jpy',
           pay_time: item.pay_time || item.created_at || '',
-          isWeb3: (item.stripe_subscription_id || item.order_id || '').toLowerCase().startsWith('web3'),
+          isWeb3: isWeb3Order(item),
           plan_info: {
             name: item.plan_desc?.[0]?.name || item.plan?.name || '',
             description: item.plan_desc?.[0]?.description || item.plan?.description || '',

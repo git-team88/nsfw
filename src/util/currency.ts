@@ -1,17 +1,16 @@
 // 法币金额的显示形式，按接口下发的 currency 字段决定：
-//   jpy -> 日元后缀                       例：1,200 日元
-//   其他（usd / 缺省 / 认不出）-> $ 前缀     例：$1,200
+//   usd -> $ 前缀                        例：$1,200
+//   其他（jpy / 缺省 / 认不出）-> 日元后缀   例：1,200 日元
 // USDT 等加密支付不走这里，仍然是「数字 + USDT」。
 //
-// 兜底方向是「美元」：只有明确拿到日元相关的 currency 才显示日元，
-// 取不到 currency、或者认不出的值，一律按美元显示。
+// 兜底方向是「日元」：只有明确拿到 usd 才显示 $，取不到 currency 一律按日元显示。
+// 日元金额按原值展示，不除以 100。
 
-const JPY_CODES = ['jpy', 'jp', 'yen', 'yens', '¥', '日元', '日圓', '円'];
+const USD_CODES = ['usd', 'us', 'usa', 'dollar', 'dollars', '$', '美元', '美金'];
 
 // 是否用美元形式显示（$ 前缀）
 export function isUsdDisplay(currency: unknown): boolean {
-  const c = String(currency ?? '').trim().toLowerCase();
-  return !JPY_CODES.includes(c);
+  return isExplicitUsd(currency);
 }
 
 // 放在金额数字前面的部分
@@ -29,10 +28,7 @@ export function fiatSuffix(currency: unknown, yenUnit: string): string {
 // 日元金额按原值展示；USDT 是链上金额，不走这里。
 export const USD_PRICE_SCALE = 100;
 
-// 注意这里用的是「明确下发 usd」而不是 isUsdDisplay。
-// isUsdDisplay 的兜底方向是美元（取不到 currency 也当美元，为的是显示 $ 前缀），
-// 拿它来判断要不要除以 100 的话，接口没回 currency 时金额会凭空缩小 100 倍。
-const USD_CODES = ['usd', 'us', 'usa', 'dollar', 'dollars', '$', '美元', '美金'];
+// 只有明确下发 usd 才除以 100；jpy / 缺省一律原值
 function isExplicitUsd(currency: unknown): boolean {
   return USD_CODES.includes(String(currency ?? '').trim().toLowerCase());
 }

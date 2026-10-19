@@ -192,8 +192,8 @@ const collectionPriceText = computed(() => {
   if (collection.value.type != '3') return '';
   const price = collection.value.price;
   if (price === undefined || price === null || price === '') return '';
-  // 金额是美分，currency 缺省时也按 usd 缩放
-  const currency = collection.value.currency || 'usd';
+  // currency 缺省按日元，原值展示
+  const currency = collection.value.currency || 'jpy';
   return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
 });
 

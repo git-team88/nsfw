@@ -69,7 +69,7 @@ const props = defineProps<{
   postId?: string | number;
   /** 作者 id —— 现在的下单接口按作者维度走 */
   authorId?: string | number;
-  /** 法币价格，原始金额（usd 下是美分） */
+  /** 法币价格，原始金额（日元原值；usd 下是美分） */
   price?: string | number;
   currency?: string;
   /** USDT 价格。没单独下发就退回法币换算后的数值 */
@@ -102,8 +102,8 @@ function resolvePlanId(): string {
 const showWalletModal = ref(false);
 const isLoading = ref(false);
 
-// 金额一律是美分，currency 缺省时也按 usd 缩放，否则 1200 会显示成 $1200
-const payCurrency = computed(() => props.currency || 'usd');
+// currency 缺省按日元，原值展示
+const payCurrency = computed(() => props.currency || 'jpy');
 
 /** 把金额包一层 span 好上色，其余部分还是多语言原文 */
 const unlockTipHtml = computed(() =>

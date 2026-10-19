@@ -5,16 +5,15 @@ import { fiatPrefix, fiatSuffix, scaleFiatPrice } from "@/util/currency";
 // 漫剧合集的收费档位。
 //
 // 档位由 book/getBookRechargePlan 下发，前端不写死金额。返回形如：
-//   data.plan_list: [{ id, plan_id, price: "1000.00", currency: "usd", sort_num: "100", ... }]
+//   data.plan_list: [{ id, plan_id, price: "1000.00", currency: "jpy", sort_num: "100", ... }]
 //
-// price 是美分（后端 usd 一律下发分），展示要除以 100 —— 这件事交给
-// util/currency 的 scaleFiatPrice，日元不缩放的规则也在那儿。
+// 日元 price 按原值展示；只有 usd 才除以 100 —— 规则在 util/currency 的 scaleFiatPrice。
 // ---------------------------------------------------------------------------
 
 export interface BookRechargePlan {
   id: string;
   plan_id?: string;
-  /** 原始金额，usd 下是美分 */
+  /** 原始金额（日元原值；usd 下是美分） */
   price: string;
   currency?: string;
   price_id?: string;
@@ -57,13 +56,12 @@ export async function fetchBookRechargePlans(): Promise<BookRechargePlan[]> {
 /**
  * 档位的展示文案，例：$10 / 1000日元。
  *
- * 后端下发的是美分，展示要除以 100。scaleFiatPrice 只在「明确是 usd」时才缩放，
- * 所以 currency 缺省时这里补成 usd —— 漫剧收费的金额一律是美分，不补的话
- * 1000 会原样显示成 $1000。
+ * 日元金额按原值展示；只有明确下发 usd 才除以 100（scaleFiatPrice 里处理）。
+ * currency 缺省按日元。
  */
 export function planPriceText(plan: BookRechargePlan | null | undefined, yenUnit = ""): string {
   if (!plan) return "";
-  const currency = plan.currency || "usd";
+  const currency = plan.currency || "jpy";
   return `${fiatPrefix(currency)}${scaleFiatPrice(plan.price, currency)}${fiatSuffix(currency, yenUnit)}`;
 }
 
@@ -98,7 +96,7 @@ export function planPriceOf(source: any): string | number {
   return price === undefined || price === null ? "" : price;
 }
 
-/** 合集币种。取不到就留空，由展示处按 usd 兜底（金额一律是美分） */
+/** 合集币种。取不到就留空，由展示处按日元兜底 */
 export function planCurrencyOf(source: any): string {
   return pickPlan(source?.plan)?.currency || source?.currency || "";
 }

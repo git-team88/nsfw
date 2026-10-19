@@ -119,24 +119,22 @@ import CountrySelectModal from "@/components/CountrySelectModal.vue";
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import {toast} from "@/util/toast";
-import { fiatPrefix, scaleFiatAmount } from "@/util/currency";
+import { fiatPrefix, fiatSuffix } from "@/util/currency";
 import api from "@/api/index";
 
 const { t } = useI18n();
 const sidebarKey = ref("revenue");
 
-// 收益走美元：接口的 available_usd / pending_usd
+// 收益结算走日元：接口的 available_jpy / pending_jpy，原值展示，不除以 100
 const availableAmount = ref<number | null>(null);
 const pendingAmount = ref<number | null>(null);
 
 function fiatAmount(v: number | null): string {
   if (v == null) return '--';
-  // 接口下发的是美分（9900 = $99），展示前除以 100
-  const num = scaleFiatAmount(v, 'usd');
   // 最多两位小数、四舍五入，末尾多余的 0 去掉：
   // 9.9 -> 9.9，10 -> 10，1234.567 -> 1,234.57
-  const rounded = Math.round(num * 100) / 100;
-  return `${fiatPrefix('usd')}${rounded.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  const rounded = Math.round(Number(v) * 100) / 100;
+  return `${fiatPrefix('jpy')}${rounded.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${fiatSuffix('jpy', t('user.revenue.yen'))}`;
 }
 
 const accountStatus = ref('');
@@ -160,8 +158,8 @@ async function fetchBalance() {
     const data = res as any;
 
     if (data.code == 200 || data.code == 0) {
-      availableAmount.value = data.data.balance?.available_usd || 0;
-      pendingAmount.value = data.data.balance?.pending_usd || 0;
+      availableAmount.value = data.data.balance?.available_jpy || 0;
+      pendingAmount.value = data.data.balance?.pending_jpy || 0;
     } else {
       toast(apiErrorMessage(data));
     }
