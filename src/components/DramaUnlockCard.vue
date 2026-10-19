@@ -4,14 +4,16 @@
     <!-- 价格要单独上色，所以整句走 v-html；插进去的只有自己算出来的金额文案 -->
     <p class="unlock-tip" v-html="unlockTipHtml"></p>
 
-    <div class="pay-methods">
+    <!-- 只剩现金一种支付方式时，整行选项没有意义，跟着 showUsdt 一起隐藏 -->
+    <div class="pay-methods" v-if="showUsdt">
       <!-- 现金支付先不看博主的 Stripe 开通状态（blogger_status）：始终可选并默认选中。
            canPayCash 现在恒为 true，恢复时把它改回按 blogger_status 判断即可 -->
       <label v-if="canPayCash" class="pay-method" :class="{ active: payMethod === 'cash' }" @click="payMethod = 'cash'">
         <span class="radio"></span>
         <span class="label">{{ t('subscribe.cashPay') }}</span>
       </label>
-      <label class="pay-method" :class="{ active: payMethod === 'usdt' }" @click="payMethod = 'usdt'">
+      <!-- USDT 支付先隐藏（showUsdt），要放出来时改成 true 即可 -->
+      <label v-if="showUsdt" class="pay-method" :class="{ active: payMethod === 'usdt' }" @click="payMethod = 'usdt'">
         <span class="radio"></span>
         <span class="label">{{ t('subscribe.usdtPay') }}</span>
       </label>
@@ -88,6 +90,8 @@ const router = useRouter();
 // 现金支付先不看博主的 Stripe 开通状态：这里恒为 true，
 // 恢复时改回 Number(props.bloggerStatus) == 1，并把 payMethod 初值改回 canPayCash.value ? 'cash' : 'usdt'
 const canPayCash = computed(() => true);
+// USDT 支付先隐藏：选项不渲染，支付方式固定现金。要放出来时改成 true
+const showUsdt = false;
 // 现金始终可选，默认就选现金；下面的 watch 在 canPayCash 恒为 true 时不会触发
 const payMethod = ref<'cash' | 'usdt'>('cash');
 watch(canPayCash, (ok) => {
