@@ -2334,10 +2334,14 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     image: "圖片",
     generateFailed: "生成失敗。您上傳的信息不符合平台規則，請修改後重試",
     pollNetworkError: "網路異常，請重新整理頁面查看最新狀態",
-    generateFailedInsufficientBalance: "算力不足，請充值後重試。",
-    generateFailedModeMismatch: "模式選擇錯誤，請切換為視頻編輯模式重新生成，失敗任務將不扣算力。",
+    generateFailedInsufficientBalance: "帳戶餘額不足，充值後可繼續生成",
+    generateFailedModeMismatch: "模式選擇錯誤，請切換為視頻編輯模式後重新生成，失敗任務將不扣算力。",
     // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
-    generateFailedCopyright: "生成內容有版權風險，請修改後重試，失敗任務將不扣算力。",
+    generateFailedCopyright: "檢測到版權受限素材，請更換無版權素材再嘗試，失敗任務將不扣算力。",
+    generateFailedSensitive: "內容包含違規信息，請修改素材或提示詞後重試，失敗任務將不扣算力。",
+    generateFailedPixelTooSmall: "上傳圖片像素尺寸過小，請更換分辨率更高的圖片，失敗任務將不扣算力。",
+    generateFailedTextTooLong: "提示詞內容過長，請精簡描述文字，失敗任務將不扣算力。",
+    generateFailedInputVideoDuration: "輸入視頻時長 + 生成時長總和超過 30 秒限制，請縮短時長，失敗任務將不扣算力。",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
     generateFailedUpstream: "模型生成出錯，請點擊重新生成，失敗任務將不扣算力。",
     // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key

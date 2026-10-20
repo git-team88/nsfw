@@ -2235,10 +2235,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
     image: "Image",
     generateFailed: "Generation failed. The information you uploaded does not comply with platform rules. Please revise and try again.",
     pollNetworkError: "Network error. Refresh the page to see the latest status",
-    generateFailedInsufficientBalance: "Insufficient computing power, please recharge and retry.",
-    generateFailedModeMismatch: "Incorrect mode selected. Please switch to Video Modify mode and generate again. Failed tasks will not consume computing power.",
+    generateFailedInsufficientBalance: "Insufficient account balance. Recharge to continue generating.",
+    generateFailedModeMismatch: "Incorrect mode selected. Please switch to Video Edit mode and generate again. Failed tasks will not consume computing power.",
     // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
-    generateFailedCopyright: "The generated content may involve copyright risks. Please revise and try again. Failed tasks will not consume computing power.",
+    generateFailedCopyright: "Copyright-restricted material detected. Please replace it with copyright-free material and try again. Failed tasks will not consume computing power.",
+    generateFailedSensitive: "The content contains prohibited information. Please revise the material or prompt and try again. Failed tasks will not consume computing power.",
+    generateFailedPixelTooSmall: "The uploaded image is too small. Please use a higher-resolution image. Failed tasks will not consume computing power.",
+    generateFailedTextTooLong: "The prompt is too long. Please shorten the description. Failed tasks will not consume computing power.",
+    generateFailedInputVideoDuration: "The input video length plus the generation length exceeds the 30-second limit. Please shorten it. Failed tasks will not consume computing power.",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
     generateFailedUpstream: "Model generation error. Please tap regenerate. Failed tasks will not consume computing power.",
     // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key

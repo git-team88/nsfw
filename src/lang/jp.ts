@@ -2057,10 +2057,14 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     image: "画像",
     generateFailed: "生成に失敗しました。アップロードされた情報がプラットフォーム規約に適合していません。修正してから再度お試しください。",
     pollNetworkError: "ネットワークエラーが発生しました。ページを再読み込みして最新の状態をご確認ください",
-    generateFailedInsufficientBalance: "算力不足です。チャージして再試行してください。",
-    generateFailedModeMismatch: "モードの選択が正しくありません。ビデオ修正モードに切り替えて再生成してください。失敗したタスクの算力は消費されません。",
+    generateFailedInsufficientBalance: "アカウント残高が不足しています。チャージ後に生成を続けられます。",
+    generateFailedModeMismatch: "モードの選択が正しくありません。動画編集モードに切り替えてから再生成してください。失敗したタスクの算力は消費されません。",
     // 生成内容有版权风险：后端 status_message 里带 copyright restrictions
-    generateFailedCopyright: "生成内容に著作権リスクがあります。修正して再試行してください。失敗したタスクの算力は消費されません。",
+    generateFailedCopyright: "著作権で制限された素材が検出されました。著作権フリーの素材に差し替えて再試行してください。失敗したタスクの算力は消費されません。",
+    generateFailedSensitive: "内容に規約違反の情報が含まれています。素材またはプロンプトを修正して再試行してください。失敗したタスクの算力は消費されません。",
+    generateFailedPixelTooSmall: "アップロードした画像の解像度が小さすぎます。より高解像度の画像に差し替えてください。失敗したタスクの算力は消費されません。",
+    generateFailedTextTooLong: "プロンプトが長すぎます。説明文を短くしてください。失敗したタスクの算力は消費されません。",
+    generateFailedInputVideoDuration: "入力動画の長さと生成時間の合計が 30 秒の上限を超えています。時間を短くしてください。失敗したタスクの算力は消費されません。",
     // 上游模型接口故障：后端 status_message 里带 Upstream task
     generateFailedUpstream: "モデルの生成でエラーが発生しました。再生成をタップしてください。失敗したタスクの算力は消費されません。",
     // 上游故障的文案也拆成三段：只换前缀，「重试」和后半句复用 generateFailedRetry 那两个 key

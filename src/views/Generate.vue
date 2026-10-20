@@ -4645,24 +4645,38 @@ function resolveFailReason(
   isVideo = false,
 ): { reason: string; insufficient: boolean; matched: boolean; retryable: boolean; retryPrefix?: string } {
   const msg = (statusMessage || '').toLowerCase();
-
-  if (msg.includes('credit is not enough') || msg.includes('recharge')) {
-    return { reason: t('recordList.generateFailedInsufficientBalance'), insufficient: true, matched: true, retryable: false };
-  }
-
-  // 后端同时回 `ratio` must be `adaptive` 和 `duration` must be -1 时，说明当前模式
-  // 传的比例和时长都不是自适应值 —— 这两个参数只有视频修改/续写模式才会按自适应提交。
-  // 必须两条都命中：只有 ratio 一条时首尾帧模式也会触发，指向视频修改会误导用户。
-  // 去掉反引号和引号再匹配，兼容后端换标点的写法。
+  // 去掉反引号和引号再匹配，兼容后端换标点的写法
   const plain = msg.replace(/[`'"]/g, '');
-  if (/ratio\s+must\s+be\s+adaptive/.test(plain) && /duration\s+must\s+be\s+-1/.test(plain)) {
-    return { reason: t('recordList.generateFailedModeMismatch'), insufficient: false, matched: true, retryable: false };
-  }
+  const hit = (reasonKey: string, insufficient = false) =>
+    ({ reason: t(reasonKey), insufficient, matched: true, retryable: false });
 
-  // 版权风险：后端回 copyright restrictions。按词组匹配，中间的空格 / 换行都容忍，
-  // restriction 单复数都算；只出现 copyright 一个词的其它报错不会误判到这条
+  // 算力 / 余额不足：credit is not enough / recharge / insufficient balance
+  if (msg.includes('credit is not enough') || msg.includes('recharge') || msg.includes('insufficient balance')) {
+    return hit('recordList.generateFailedInsufficientBalance', true);
+  }
+  // 输入视频时长 + 生成时长超过 30 秒：input_video_duration。要放在 duration must be -1 前面，别被它截走
+  if (plain.includes('input_video_duration')) {
+    return hit('recordList.generateFailedInputVideoDuration');
+  }
+  // 模式选错：duration must be -1（时长只有视频修改 / 续写模式才按自适应 -1 提交）
+  if (/duration\s+must\s+be\s+-1/.test(plain)) {
+    return hit('recordList.generateFailedModeMismatch');
+  }
+  // 违规内容：sensitive information / inappropriate content
+  if (plain.includes('sensitive information') || plain.includes('inappropriate content')) {
+    return hit('recordList.generateFailedSensitive');
+  }
+  // 版权受限：copyright restrictions（restriction 单复数都算）
   if (/copyright\s+restriction/.test(plain)) {
-    return { reason: t('recordList.generateFailedCopyright'), insufficient: false, matched: true, retryable: false };
+    return hit('recordList.generateFailedCopyright');
+  }
+  // 参考图像素太小：InvalidParameter.PixelCountTooSmall
+  if (plain.includes('pixelcounttoosmall')) {
+    return hit('recordList.generateFailedPixelTooSmall');
+  }
+  // 提示词太长：text too long
+  if (/text\s+too\s+long/.test(plain)) {
+    return hit('recordList.generateFailedTextTooLong');
   }
 
   // 上游模型接口故障：后端回 Upstream task ...
