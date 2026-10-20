@@ -14,6 +14,7 @@ import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
 import { pageSlideDir } from '@/util/pageSlide';
 import { initTracking } from '@/utils/track';
+import { applyRouteTitle } from '@/utils/pageTitle';
 
 const contentSwitch = useContentSwitchStore();
 const { locale } = useI18n();
@@ -294,6 +295,7 @@ onMounted(() => {
 });
 
 watch(locale, () => {
+  applyRouteTitle(route);
   updateBodyFontClass();
   updateHtmlLang();
   updateOgLocale();

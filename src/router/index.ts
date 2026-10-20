@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
 import { trackPageView } from "@/utils/track";
+import { applyRouteTitle } from "@/utils/pageTitle";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
@@ -79,6 +80,7 @@ const routes = [
   {
     path: "/reset-send",
     name: "ResetSend",
+    meta: { titleKey: "pageTitle.resetSend" },
     component: ResetSend,
   },
   // {
@@ -99,63 +101,75 @@ const routes = [
   {
     path: "/ai-recharge",
     name: "AIRecharge",
+    meta: { titleKey: "pageTitle.recharge" },
     component: () => import("@/views/AIRecharge.vue"),
   },
   {
     path: "/ai-points-details",
     name: "AIRechargeDetails",
+    meta: { titleKey: "pageTitle.rechargeDetails" },
     component: () => import("@/views/AIRechargeDetails.vue"),
   },
   {
     path: "/computing-rules",
     name: "ComputingPowerRules",
+    meta: { titleKey: "pageTitle.computingRules" },
     component: () => import("@/views/ComputingPowerRules.vue"),
   },
   {
     path: "/reset-password",
     name: "ResetPassword",
+    meta: { titleKey: "pageTitle.resetPassword" },
     component: ResetPassword,
   },
   {
     path: "/publish/video",
     name: "PublishVideo",
+    meta: { titleKey: "pageTitle.publishVideo" },
     component: () => import("@/views/publish/Video.vue"),
   },
   {
     // 漫剧本地批量上传：页面上不放入口，直接用链接打开
     path: "/publish/video-batch",
     name: "PublishVideoBatch",
+    meta: { titleKey: "pageTitle.publishVideoBatch" },
     component: () => import("@/views/publish/VideoBatch.vue"),
   },
   {
     // 短剧本地批量上传页（没有入口，靠链接打开）
     path: "/publish/clip-batch",
     name: "PublishClipBatch",
+    meta: { titleKey: "pageTitle.publishClipBatch" },
     component: () => import("@/views/publish/ClipBatch.vue"),
   },
   {
     path: "/publish/comic",
     name: "PublishComic",
+    meta: { titleKey: "pageTitle.publishComic" },
     component: () => import("@/views/publish/Comic.vue"),
   },
   {
     path: "/publish/novel",
     name: "PublishNovel",
+    meta: { titleKey: "pageTitle.publishNovel" },
     component: () => import("@/views/publish/Novel.vue"),
   },
   {
     path: "/publish/success",
     name: "PublishSuccess",
+    meta: { titleKey: "pageTitle.publishSuccess" },
     component: () => import("@/views/publish/Success.vue"),
   },
   {
     path: "/publish/image",
     name: "PublishImage",
+    meta: { titleKey: "pageTitle.publishImage" },
     component: () => import("@/views/publish/Image.vue"),
   },
   {
     path: "/publish/clip",
     name: "PublishClip",
+    meta: { titleKey: "pageTitle.publishClip" },
     component: () => import("@/views/publish/Clip.vue"),
   },
   {
@@ -180,11 +194,13 @@ const routes = [
   {
     path: "/similar",
     name: "Similar",
+    meta: { titleKey: "pageTitle.similar" },
     component: () => import("@/views/Similar.vue"),
   },
   {
     path: "/my-projects",
     name: "MyProjects",
+    meta: { titleKey: "pageTitle.myProjects" },
     component: () => import("@/views/MyProjects.vue"),
   },
   {
@@ -220,67 +236,80 @@ const routes = [
   {
     path: "/subscription-payment",
     name: "SubscriptionPayment",
+    meta: { titleKey: "pageTitle.subscriptionPayment" },
     component: () => import("@/views/user/SubscriptionPayment.vue"),
   },
   {
     path: "/subscription-success",
     name: "SubscriptionSuccess",
+    meta: { titleKey: "pageTitle.paySuccess" },
     component: () => import("@/views/user/SubscriptionSuccess.vue"),
   },
   {
     path: "/subscription-fail",
     name: "SubscriptionFailed",
+    meta: { titleKey: "pageTitle.payFailed" },
     component: () => import("@/views/user/SubscriptionFailed.vue"),
   },
   {
     // 漫剧解锁的支付结果页。带 post_id，成功页的「观看作品」按它回详情
     path: "/drama-unlock-success",
     name: "DramaUnlockSuccess",
+    meta: { titleKey: "pageTitle.paySuccess" },
     component: () => import("@/views/user/DramaUnlockSuccess.vue"),
   },
   {
     path: "/drama-unlock-fail",
     name: "DramaUnlockFailed",
+    meta: { titleKey: "pageTitle.payFailed" },
     component: () => import("@/views/user/DramaUnlockFailed.vue"),
   },
   {
     path: "/aitool-payment-success",
     name: "AIToolPaymentSuccess",
+    meta: { titleKey: "pageTitle.paySuccess" },
     component: () => import("@/views/user/AIToolPaymentSuccess.vue"),
   },
   {
     path: "/token-withdraw-success",
     name: "TokenWithdrawSuccess",
+    meta: { titleKey: "pageTitle.withdrawSuccess" },
     component: () => import("@/views/user/TokenWithdrawSuccess.vue"),
   },
   {
     path: "/aitool-payment-fail",
     name: "AIToolPaymentFailed",
+    meta: { titleKey: "pageTitle.payFailed" },
     component: () => import("@/views/user/AIToolPaymentFailed.vue"),
   },
   {
     path: "/user-personal",
     name: "UserPersonalInfo",
+    meta: { titleKey: "pageTitle.personal" },
     component: () => import("@/views/user/Personal.vue"),
   },
   {
     path: "/user-personal-edit",
     name: "UserPersonalEdit",
+    meta: { titleKey: "pageTitle.personalEdit" },
     component: () => import("@/views/user/PersonalEdit.vue"),
   },
   {
     path: "/user-interactive",
     name: "UserInteractive",
+    meta: { titleKey: "pageTitle.interactive" },
     component: () => import("@/views/user/Interactive.vue"),
   },
   {
     path: "/user-invite",
     name: "InviteRevenue",
+    meta: { titleKey: "pageTitle.invite" },
     component: () => import("@/views/user/InviteRevenue.vue"),
   },
   {
     path: "/user-revenue",
     name: "UserRevenue",
+    meta: { titleKey: "pageTitle.revenue" },
     component: () => import("@/views/user/Revenue.vue"),
   },
   // {
@@ -291,71 +320,85 @@ const routes = [
   {
     path: "/user-subscription",
     name: "UserSubscription",
+    meta: { titleKey: "pageTitle.subscription" },
     component: () => import("@/views/user/Subscription.vue"),
   },
   {
     path: "/user-kyc",
     name: "UserKyc",
+    meta: { titleKey: "pageTitle.kyc" },
     component: () => import("@/views/user/KycVerify.vue"),
   },
   {
     path: "/user-subscription-edit",
     name: "UserSubscriptionEdit",
+    meta: { titleKey: "pageTitle.subscriptionEdit" },
     component: () => import("@/views/user/SubscriptionEdit.vue"),
   },
   {
     path: "/account-success",
     name: "AccountSuccess",
+    meta: { titleKey: "pageTitle.accountSuccess" },
     component: () => import("@/views/user/AccountSuccess.vue"),
   },
   {
     path: "/account-fail",
     name: "AccountFailed",
+    meta: { titleKey: "pageTitle.accountFailed" },
     component: () => import("@/views/user/AccountFailed.vue"),
   },
   {
     path: "/user-privacy",
     name: "UserPrivacy",
+    meta: { titleKey: "pageTitle.privacy" },
     component: () => import("@/views/user/Privacy.vue"),
   },
   {
     path: "/user-message",
     name: "UserMessages",
+    meta: { titleKey: "pageTitle.messages" },
     component: () => import("@/views/user/Messages.vue"),
   },
   {
     path: "/user-account",
     name: "UserAccount",
+    meta: { titleKey: "pageTitle.account" },
     component: () => import("@/views/user/Account.vue"),
   },
   {
     path: "/user-profile",
     name: "UserProfileSettings",
+    meta: { titleKey: "pageTitle.profile" },
     component: () => import("@/views/user/Profile.vue"),
   },
   {
     path: "/user-profile-edit",
     name: "UserProfileEdit",
+    meta: { titleKey: "pageTitle.profileEdit" },
     component: () => import("@/views/user/ProfileEdit.vue"),
   },
   {
     path: "/user-payment-history",
     name: "PaymentHistory",
+    meta: { titleKey: "pageTitle.paymentHistory" },
     component: () => import("@/views/user/PaymentHistory.vue"),
   },
   {
     path: "/collection/:id",
     name: "CollectionDetail",
+    meta: { titleKey: "pageTitle.collection" },
     component: () => import("@/views/CollectionDetail.vue"),
   },
   {
     path: "/collection-settings/:id",
     name: "CollectionSettings",
+    meta: { titleKey: "pageTitle.collectionSettings" },
     component: () => import("@/views/CollectionSettings.vue"),
   },
   {
     path: "/create-collection",
     name: "CreateCollection",
+    meta: { titleKey: "pageTitle.createCollection" },
     component: () => import("@/views/CreateCollection.vue"),
   },
   // 排行榜入口暂时隐藏，需要放出时把这段注释解开。
@@ -430,6 +473,8 @@ router.beforeEach((to, from, next) => {
 
 // 埋点：每次路由切换报一条 page_view（带页面名 / 作品 / 合集 / 博主 id）
 router.afterEach((to) => {
+  // 浏览器标签标题：配了 meta.titleKey 的路由统一设成「页面名 - 站点名」
+  applyRouteTitle(to);
   trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any });
 });
 

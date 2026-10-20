@@ -1,4 +1,48 @@
 export default {
+  // 浏览器标签标题：页面名 - 站点名（router meta.titleKey 里引用；有自己 SEO 标题的页面不用）
+  pageTitle: {
+    siteName: "FansFans",
+    recharge: "충전",
+    rechargeDetails: "크레딧 내역",
+    computingRules: "크레딧 규칙",
+    resetPassword: "비밀번호 재설정",
+    resetSend: "비밀번호 찾기",
+    publishVideo: "동영상 게시",
+    publishVideoBatch: "동영상 일괄 게시",
+    publishClip: "애니 드라마 게시",
+    publishClipBatch: "애니 드라마 일괄 게시",
+    publishComic: "만화 게시",
+    publishNovel: "소설 게시",
+    publishImage: "이미지 게시",
+    publishSuccess: "게시 완료",
+    similar: "유사 콘텐츠",
+    myProjects: "내 프로젝트",
+    subscriptionPayment: "크리에이터 구독",
+    paySuccess: "결제 완료",
+    payFailed: "결제 실패",
+    withdrawSuccess: "출금 완료",
+    personal: "개인 정보",
+    personalEdit: "개인 정보 수정",
+    interactive: "상호작용 데이터",
+    invite: "초대하고 수익 얻기",
+    revenue: "수익",
+    subscription: "구독 설정",
+    subscriptionEdit: "구독 설정 수정",
+    kyc: "본인 인증",
+    accountSuccess: "계정 생성 완료",
+    accountFailed: "계정 생성 실패",
+    privacy: "개인정보 설정",
+    messages: "메시지",
+    account: "계정 관리",
+    profile: "커뮤니티 설정",
+    profileEdit: "커뮤니티 설정 수정",
+    paymentHistory: "결제 내역",
+    collection: "컬렉션",
+    collectionSettings: "컬렉션 설정",
+    createCollection: "컬렉션 만들기",
+    paymentTerms: "결제 약관",
+    search: "검색",
+  },
   generatePanel: {
     version: "버전 선택",
     versionDesc: "버전마다 지원하는 해상도, 길이, 소재 제한이 다르며 전환하면 아래 옵션이 자동으로 맞춰집니다.",
@@ -2670,7 +2714,7 @@ export default {
     home: {
       title: "FansFans 창작 - AI 소설・만화・만화・애니 드라마 한 번에 생성｜한 문장으로 쓰는 소설 AI 창작 도구, 이차원 AI 창작, FansFans, 萌創, AI 동인 창작",
       keywords: "AI 소설 생성기, AI 만화 생성기, AI 애니 드라마 생성, AI 만화 생성, 한 문장으로 소설 생성, AI 글쓰기 도구, 이차원 AI 창작, FansFans, 萌創, AI 동인 창작",
-      description: "FansFans 萌創는 중화권과 일본 시장을 겨냥한 AI 이차원 창작 플랫폼입니다. 영감 한 문장만 입력하면 소설・만화・만화・애니 드라마를 생성할 수 있으며, 무료로 30K자부터 시작해 AI가 당신의 무한한 이야기를 지켜줍니다.",
+      description: "FansFans는 중화권과 일본 시장을 겨냥한 AI 이차원 창작 플랫폼입니다. 영감 한 문장만 입력하면 소설・만화・만화・애니 드라마를 생성할 수 있으며, 무료로 30K자부터 시작해 AI가 당신의 무한한 이야기를 지켜줍니다.",
       novel: {
         title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 쓰는 3만자 장편 웹소설 - FansFans",
         keywords: "AI 소설 생성기,AI로 소설 쓰기,AI 웹소설,무료 AI 소설,장편 소설 생성,웹소설 작성 AI,소설 개요 AI,이차원 소설 AI",
@@ -2703,39 +2747,39 @@ export default {
       description: "[[title]] - [[description]]"
     },
     communityConvention: {
-      title: "커뮤니티 가이드라인 - FansFans 萌創 창작 공약",
+      title: "커뮤니티 가이드라인 - FansFans 창작 공약",
       keywords: "커뮤니티 가이드라인, 창작 규범, FansFans 공약, 콘텐츠 심사, 콘텐츠 플랫폼, 공약",
       description: "FansFans 커뮤니티 가이드라인은 건강하고 우호적이며 창의력 넘치는 이차원 창작 환경을 만들어, 모든 사용자와 함께 창작 커뮤니티를 지켜나가는 것을 목표로 합니다."
     },
     terms: {
-      title: "서비스 약관 - FansFans 萌創 이용약관",
+      title: "서비스 약관 - FansFans 이용약관",
       keywords: "서비스 이용약관,사용자 계약,이용 계약,법적 사항,서비스 계약,법적 고지",
-      description: "FansFans 萌創의 서비스 약관과 이용약관을 확인하고, 당신의 권리와 의무, AI 콘텐츠 저작권에 대해 알아보세요."
+      description: "FansFans의 서비스 약관과 이용약관을 확인하고, 당신의 권리와 의무, AI 콘텐츠 저작권에 대해 알아보세요."
     },
     privacy: {
-      title: "개인정보 처리방침 - FansFans 萌創 개인정보 보호",
+      title: "개인정보 처리방침 - FansFans 개인정보 보호",
       keywords: "개인정보처리방침,개인정보 보호,데이터 보안,쿠키 정책,GDPR",
-      description: "FansFans 萌創은 당신의 개인정보와 창작 프라이버시를 소중히 여기며, 당신의 개인정보와 창작 프라이버시를 보호합니다."
+      description: "FansFans은 당신의 개인정보와 창작 프라이버시를 소중히 여기며, 당신의 개인정보와 창작 프라이버시를 보호합니다."
     },
     login: {
-      title: "로그인 - FansFans 萌創｜AI 창작 플랫폼",
+      title: "로그인 - FansFans｜AI 창작 플랫폼",
       keywords: "FansFans 로그인, 계정 로그인, AI 창작 로그인, 로그인",
       description: "FansFans 계정으로 로그인하고, AI 소설・만화・애니 드라마 창작 여정을 계속하세요."
     },
     signup: {
-      title: "무료 회원가입 - AI 창작 여정을 시작하세요｜FansFans 萌創",
+      title: "무료 회원가입 - AI 창작 여정을 시작하세요｜FansFans",
       keywords: "FansFans 회원가입, 무료 AI 창작, AI 창작 플랫폼, 이차원 창작, 회원가입",
-      description: "FansFans 萌創에 무료로 가입하고, 즉시 3만자 분량과 AI 소설・만화・애니 드라마 전체 창작 도구를 받아보세요."
+      description: "FansFans에 무료로 가입하고, 즉시 3만자 분량과 AI 소설・만화・애니 드라마 전체 창작 도구를 받아보세요."
     },
     characterLibrary: {
-      title: "AI 캐릭터 라이브러리 - 나만의 만화 캐릭터 만들기｜FansFans 萌創",
+      title: "AI 캐릭터 라이브러리 - 나만의 만화 캐릭터 만들기｜FansFans",
       keywords: "AI 캐릭터 생성,캐릭터 라이브러리,이차원 캐릭터,만화 캐릭터,AI 인물 창작,캐릭터 디자인",
       description: "FansFans AI 캐릭터 라이브러리는 다양한 공식 캐릭터와 커스텀 캐릭터를 제공하여, 당신만의 독특한 이차원 만화 캐릭터를 손쉽게 만들 수 있도록 도와줍니다."
     },
     userHome: {
-      title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리｜FansFans 萌創",
+      title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리｜FansFans",
       keywords: "내 작품, AI 소설, 만화, 애니 드라마, 작품 관리, 창작 관리, FansFans",
-      description: "FansFans 萌創에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요."
+      description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요."
     },
     novelGenerate: {
       title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 만드는 3만자 장편 소설 - FansFans",
@@ -2882,6 +2926,6 @@ export default {
     back: "홈으로 돌아가기",
     guide: "이용 가이드",
     terms: "이용약관",
-    pageTitle: "페이지를 찾을 수 없습니다 - FansFans 萌創"
+    pageTitle: "페이지를 찾을 수 없습니다 - FansFans"
   }
 };

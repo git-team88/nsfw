@@ -224,6 +224,7 @@ import { useMasonry } from '@/util/masonry';
 import { coverAspect } from '@/util/coverRatio';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { setPageTitle } from '@/utils/pageTitle';
 import Header from '@/components/Header.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import UploadMask from '@/components/UploadMask.vue';
@@ -307,9 +308,7 @@ const searchRobotsEl = ref<HTMLMetaElement | null>(null);
 let searchPrevRobots: string | null = null;
 
 function setSearchNoindex() {
-  document.title = searchKeyword.value
-    ? `${searchKeyword.value} - FansFans 萌創`
-    : '検索 - FansFans 萌創';
+  setPageTitle(searchKeyword.value || t('pageTitle.search'));
   let robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
   if (robots) {
     searchPrevRobots = robots.getAttribute('content');

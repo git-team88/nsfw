@@ -210,6 +210,7 @@ import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdul
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
+import { setPageTitle } from '@/utils/pageTitle';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
@@ -448,6 +449,8 @@ async function fetchCollectionDetail() {
           } : null,
           session_id: finalBookInfo.session_id || ''
         };
+        // 浏览器标签：合集标题 - 站点名（没标题就用路由上配的「合集」）
+        if (collection.value.title) setPageTitle(collection.value.title);
 
         // 埋点：合集详情页曝光（同一会话同一合集只记一次）
         trackCollectionView({ book_id: collection.value.id, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });

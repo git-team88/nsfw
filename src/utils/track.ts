@@ -8,11 +8,8 @@
 import { IS_TESTNET, trackUrl } from "@/util/config";
 import { getGaClientId } from "@/utils/analytics";
 
-// 上报总开关：本地 / 测试 / 正式先全部关掉。
-// 关掉时不入队、不存本地、不请求 /report，也不写首访标记（以后打开时老用户不会被漏报 first_open）。
-// 要打开：把 false 改成 IS_TESTNET（本地和测试环境开、正式关），
-// 或者 .env 里配 VITE_TRACK_ENABLED=true（只在本地 / 某个环境开）
-const TRACK_ENABLED = false || (import.meta as any).env?.VITE_TRACK_ENABLED === "true";
+// 上报总开关：先全部关掉，不入队、不存本地、不请求 /report。要打开改成 true
+const TRACK_ENABLED = false;
 
 // 上报地址：域名在 config.ts 的 trackUrl 里配
 const REPORT_URL = trackUrl + "report";

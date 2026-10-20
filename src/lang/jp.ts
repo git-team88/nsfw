@@ -1,4 +1,48 @@
 export default {
+  // 浏览器标签标题：页面名 - 站点名（router meta.titleKey 里引用；有自己 SEO 标题的页面不用）
+  pageTitle: {
+    siteName: "FansFans",
+    recharge: "チャージ",
+    rechargeDetails: "クレジット履歴",
+    computingRules: "クレジットルール",
+    resetPassword: "パスワード再設定",
+    resetSend: "パスワードをお忘れの方",
+    publishVideo: "動画を投稿",
+    publishVideoBatch: "動画を一括投稿",
+    publishClip: "アニメドラマを投稿",
+    publishClipBatch: "アニメドラマを一括投稿",
+    publishComic: "漫画を投稿",
+    publishNovel: "小説を投稿",
+    publishImage: "画像を投稿",
+    publishSuccess: "投稿完了",
+    similar: "類似コンテンツ",
+    myProjects: "マイプロジェクト",
+    subscriptionPayment: "クリエイターを購読",
+    paySuccess: "お支払い完了",
+    payFailed: "お支払い失敗",
+    withdrawSuccess: "出金完了",
+    personal: "個人情報",
+    personalEdit: "個人情報を編集",
+    interactive: "インタラクションデータ",
+    invite: "招待で稼ぐ",
+    revenue: "収益",
+    subscription: "購読設定",
+    subscriptionEdit: "購読設定を編集",
+    kyc: "本人確認",
+    accountSuccess: "アカウント作成完了",
+    accountFailed: "アカウント作成失敗",
+    privacy: "プライバシー設定",
+    messages: "メッセージ",
+    account: "アカウント管理",
+    profile: "コミュニティ設定",
+    profileEdit: "コミュニティ設定を編集",
+    paymentHistory: "お支払い履歴",
+    collection: "シリーズ",
+    collectionSettings: "シリーズ設定",
+    createCollection: "シリーズを作成",
+    paymentTerms: "支払い規約",
+    search: "検索",
+  },
   generatePanel: {
     version: "バージョン選択",
     versionDesc: "バージョンごとに対応する解像度・長さ・素材制限が異なります。切り替えると下の項目が自動で変わります。",
@@ -3259,7 +3303,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     home: {
       title: "FansFans - AI小説・漫画・アニメドラマ生成｜ことばと物語",
       keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,FansFans,萌創,AI同人創作",
-      description: "FansFans 萌創は、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
+      description: "FansFansは、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
       novel: {
         title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - FansFans",
         keywords: "AI小説生成器,AI小説執筆,AI Web小説,無料AI小説,長編小説生成,Web小説AI,小説プロットAI,二次元小説AI",
@@ -3276,12 +3320,12 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
         description: "FansFans の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
       },
       photo: {
-        title: "AIイラスト・画像生成ツール FansFans 萌創｜高品質な二次元キャラクターを作成",
+        title: "AIイラスト・画像生成ツール FansFans｜高品質な二次元キャラクターを作成",
         keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, FansFans, 萌創",
         description: "FansFansのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
       },
       video: {
-        title: "AI動画生成ツール FansFans 萌創｜イラストやテキストから二次元ビデオを作成",
+        title: "AI動画生成ツール FansFans｜イラストやテキストから二次元ビデオを作成",
         keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, FansFans, 萌創",
         description: "FansFansのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
       }
@@ -3307,12 +3351,12 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       description: "FansFansはユーザーのプロフィールと創作のプライバシーを尊重し保護します。"
     },
     login: {
-      title: "ログイン - FansFans 萌｜AI 創作アカウント",
+      title: "ログイン - FansFans｜AI 創作アカウント",
       keywords: "FansFansログイン,アカウントログイン,サインイン",
       description: "FansFansアカウントにログインして、AI小説・漫画・アニメドラマの創作を続けましょう。"
     },
     signup: {
-      title: "無料登録 - AI 創作の旅を始める｜FansFans 萌創",
+      title: "無料登録 - AI 創作の旅を始める｜FansFans",
       keywords: "FansFans登録,無料AI創作,AI創作プラットフォーム",
       description: "FansFans萌創に無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
     },
@@ -3473,6 +3517,6 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     back: "ホームへ戻る",
     guide: "使い方ガイド",
     terms: "利用規約",
-    pageTitle: "ページが見つかりません - FansFans 萌創"
+    pageTitle: "ページが見つかりません - FansFans"
   }
 };

@@ -1,4 +1,48 @@
 export default {
+  // 浏览器标签标题：页面名 - 站点名（router meta.titleKey 里引用；有自己 SEO 标题的页面不用）
+  pageTitle: {
+    siteName: "FansFans",
+    recharge: "充值",
+    rechargeDetails: "算力明细",
+    computingRules: "算力规则",
+    resetPassword: "重置密码",
+    resetSend: "找回密码",
+    publishVideo: "发布视频",
+    publishVideoBatch: "批量发布视频",
+    publishClip: "发布漫剧",
+    publishClipBatch: "批量发布漫剧",
+    publishComic: "发布漫画",
+    publishNovel: "发布小说",
+    publishImage: "发布图片",
+    publishSuccess: "发布成功",
+    similar: "相似内容",
+    myProjects: "我的项目",
+    subscriptionPayment: "订阅博主",
+    paySuccess: "支付成功",
+    payFailed: "支付失败",
+    withdrawSuccess: "提现成功",
+    personal: "个人信息",
+    personalEdit: "编辑个人信息",
+    interactive: "互动数据",
+    invite: "邀请赚钱",
+    revenue: "收益",
+    subscription: "订阅设置",
+    subscriptionEdit: "编辑订阅设置",
+    kyc: "实名认证",
+    accountSuccess: "创建账户成功",
+    accountFailed: "创建账户失败",
+    privacy: "隐私设置",
+    messages: "消息",
+    account: "账户管理",
+    profile: "社区设置",
+    profileEdit: "编辑社区设置",
+    paymentHistory: "支付记录",
+    collection: "合集",
+    collectionSettings: "合集设置",
+    createCollection: "创建合集",
+    paymentTerms: "支付条款",
+    search: "搜索",
+  },
   generatePanel: {
     version: "选择版本",
     versionDesc: "不同版本支持的分辨率、时长与素材限制不同，切换后下方选项会自动适配。",
@@ -3305,9 +3349,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
   },
   seo: {
     home: {
-      title: "FansFans 創作 - AI 小説・漫画・漫画・漫劇一鍵生成｜一句話小説AI創作工具二次元AI創作,FansFans,萌創,AI同人創作",
-      keywords: "AI小説生成器,AI漫画生成器,AI漫劇生成,AI漫畫生成,一句話生成小説,AI寫作工具,二次元AI創作,FansFans,萌創,AI同人創作",
-      description: "FansFans 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫画・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
+      title: "FansFans - AI 小说、漫画、漫剧一键生成｜一句话开始创作",
+      keywords: "AI小说生成器,AI漫画生成器,AI漫剧生成,AI漫画生成,一句话生成小说,AI写作工具,二次元AI创作,FansFans,萌创,AI同人创作",
+      description: "FansFans 萌创是面向华语圈与日本市场的 AI 二次元创作平台。输入一句灵感即可生成小说・漫画・漫剧，免费 30K 字起步，AI 守护你的无限故事。",
       novel: {
         title: "AI 小说生成器线上免费｜一句话写出 30K 长篇网文 - FansFans",
         keywords: "AI小说生成器,AI写小说,AI网文,免费AI小说,长篇小说生成,网文写作AI,小说大纲AI,二次元小说AI",
@@ -3324,60 +3368,60 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
         description: "FansFans AI 漫剧生成器，将小说 / 创意一句话转换为二次元动画短剧，自动生成分镜、对白、配音与动态画面，动画创作者的 AI 神器。"
       },
       photo: {
-        title: "AI 图片与插画生成器 FansFans 萌创｜一键生成高质量二次元角色立绘",
+        title: "AI 图片与插画生成器 FansFans｜一键生成高质量二次元角色立绘",
         keywords: "AI图片生成, AI插画, 二次元立绘, 角色设计 AI, FansFans, 萌创",
         description: "FansFans AI 图片生成工具，专注于二次元美学。输入描述词即可快速生成专业级的动漫插画、角色设计与精美立绘，让您的想象力化为现实。"
       },
       video: {
-        title: "AI 视频生成器 FansFans 萌创｜图文快速转换二次元动态视频",
+        title: "AI 视频生成器 FansFans｜图文快速转换二次元动态视频",
         keywords: "AI视频生成, 图生视频, 文生视频, 二次元短视频, FansFans, 萌创",
         description: "使用 FansFans AI 视频生成工具，轻松将静态插画或文字描述转换为流畅的二次元动态视频。为您的社交媒体创作吸睛的短视频内容。"
       }
     },
     detail: {
-      title: `[[title]] - FansFans 二次元 AI 創作`,
+      title: `[[title]] - FansFans`,
       keywords: `[[title]],AI[[type]],二次元[[type]]`,
       description: `[[title]] - [[description]]`
     },
     communityConvention: {
-      title: "社區準則 - FansFans 萌創創作公約",
-      keywords: "社區準則,創作規範,FansFans公約,內容审核,内容平台,公約",
-      description: "FansFans 社區準則旨在打造健康、友善、富有創造力的二次元創作環境，與所有用戶共同守護創作社區。"
+      title: "社区准则 - FansFans 创作公约",
+      keywords: "社区准则,创作规范,FansFans公约,内容审核,内容平台,公约",
+      description: "FansFans 社区准则旨在打造健康、友善、富有创造力的二次元创作环境，与所有用户共同守护创作社区。"
     },
     terms: {
-      title: "服務條款 - FansFans 萌創用戶協議",
-      keywords: "服務條款,用戶協議,使用協議,法律事項,服務協議,法律聲明",
-      description: "查看 FansFans 萌創的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
+      title: "服务条款 - FansFans 用户协议",
+      keywords: "服务条款,用户协议,使用协议,法律事项,服务协议,法律声明",
+      description: "查看 FansFans 萌创的服务条款与用户协议，了解你的权利、义务，以及 AI 内容版权。"
     },
     privacy: {
-      title: "隱私政策 - FansFans 萌創個人資料保護",
-      keywords: "隱私政策,個人資料保護,資料安全,Cookie政策,GDPR",
-      description: "FansFans 萌創重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
+      title: "隐私政策 - FansFans 个人资料保护",
+      keywords: "隐私政策,个人资料保护,资料安全,Cookie政策,GDPR",
+      description: "FansFans 萌创重视你的个人资讯与创作隐私，保护你的个人资料与创作隐私。"
     },
     login: {
-      title: "登入 - FansFans 萌創｜AI 創作平台",
-      keywords: "FansFans登入,帳號登入,AI創作登入,登入",
-      description: "登入你的 FansFans 帳號，繼續創作你的 AI 小說、漫畫、漫劇創作之旅。"
+      title: "登入 - FansFans｜AI 创作平台",
+      keywords: "FansFans登入,帐号登入,AI创作登入,登入",
+      description: "登入你的 FansFans 帐号，继续创作你的 AI 小说、漫画、漫剧创作之旅。"
     },
     signup: {
-      title: "免費註冊 - 開啟你的 AI 創作之旅｜FansFans 萌創",
-      keywords: "FansFans註冊,免費AI創作,AI創作平台,二次元創作,註冊",
-      description: "免費註冊 FansFans 萌創，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
+      title: "免费注册 - 开启你的 AI 创作之旅｜FansFans",
+      keywords: "FansFans注册,免费AI创作,AI创作平台,二次元创作,注册",
+      description: "免费注册 FansFans 萌创，立即获得 30K 字数 + AI 小说、漫画、漫剧全创作工具。"
     },
     characterLibrary: {
-      title: "AI 角色庫 - 創建專屬漫畫角色｜FansFans 萌創",
-      keywords: "AI角色生成,角色庫,二次元角色,漫畫角色,AI人物創作,角色設計",
-      description: "FansFans AI 角色庫提供豐富的官方角色與自定義角色，助你輕鬆創建獨特的二次元漫畫角色。"
+      title: "AI 角色库 - 创建专属漫画角色｜FansFans",
+      keywords: "AI角色生成,角色库,二次元角色,漫画角色,AI人物创作,角色设计",
+      description: "FansFans AI 角色库提供丰富的官方角色与自定义角色，助你轻松创建独特的二次元漫画角色。"
     },
     userHome: {
-      title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇｜FansFans 萌創",
-      keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
-      description: "在 FansFans 萌創中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
+      title: "我的作品 - 管理我的 AI 小说、漫画、漫剧｜FansFans",
+      keywords: "我的作品,AI小说,漫画,漫剧,作品管理,创作管理,FansFans",
+      description: "在 FansFans 萌创中管理你的 AI 小说、漫画、漫剧作品，追踪粉丝、收藏与互动数据。"
     },
     novelGenerate: {
-      title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - FansFans",
-      keywords: "AI小說生成,線上小說,AI小說,AI寫小說,AI故事,小說生成器,二次創作,小說AI",
-      description: "FansFans AI 小說生成器，言情、BL、耽美、輕小說等多題材，自動生成 30K 字作品輕鬆。"
+      title: "AI 小说生成器线上免费｜一句话生成 30K 长篇小说 - FansFans",
+      keywords: "AI小说生成,线上小说,AI小说,AI写小说,AI故事,小说生成器,二次创作,小说AI",
+      description: "FansFans AI 小说生成器，言情、BL、耽美、轻小说等多题材，自动生成 30K 字作品轻松。"
     }
   },
   collectionDetail: {
@@ -3521,6 +3565,6 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     back: "返回首页",
     guide: "使用指南",
     terms: "服务条款",
-    pageTitle: "页面不存在 - FansFans 萌創"
+    pageTitle: "页面不存在 - FansFans"
   }
 };
