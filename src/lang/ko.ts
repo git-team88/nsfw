@@ -2716,8 +2716,8 @@ export default {
   },
   seo: {
     home: {
-      title: "FansFans 창작 - AI 소설・만화・만화・애니 드라마 한 번에 생성｜한 문장으로 쓰는 소설 AI 창작 도구, 이차원 AI 창작, FansFans, 萌創, AI 동인 창작",
-      keywords: "AI 소설 생성기, AI 만화 생성기, AI 애니 드라마 생성, AI 만화 생성, 한 문장으로 소설 생성, AI 글쓰기 도구, 이차원 AI 창작, FansFans, 萌創, AI 동인 창작",
+      title: "FansFans 창작 - AI 소설・만화・만화・애니 드라마 한 번에 생성｜한 문장으로 쓰는 소설 AI 창작 도구, 이차원 AI 창작, FansFans, AI 동인 창작",
+      keywords: "AI 소설 생성기, AI 만화 생성기, AI 애니 드라마 생성, AI 만화 생성, 한 문장으로 소설 생성, AI 글쓰기 도구, 이차원 AI 창작, FansFans, AI 동인 창작",
       description: "FansFans는 중화권과 일본 시장을 겨냥한 AI 이차원 창작 플랫폼입니다. 영감 한 문장만 입력하면 소설・만화・만화・애니 드라마를 생성할 수 있으며, 무료로 30K자부터 시작해 AI가 당신의 무한한 이야기를 지켜줍니다.",
       novel: {
         title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 쓰는 3만자 장편 웹소설 - FansFans",
@@ -2735,13 +2735,13 @@ export default {
         description: "FansFans AI 애니 드라마 생성기, 소설이나 아이디어 한 문장을 이차원 애니메이션 숏드라마로 변환합니다. 콘티, 대사, 더빙, 동적 화면을 자동으로 생성하는, 애니메이션 창작자를 위한 AI 필수 도구입니다."
       },
       photo: {
-        title: "AI 이미지 & 일러스트 생성기 FansFans 萌创｜한 번에 만드는 고퀄리티 이차원 캐릭터 일러스트",
-        keywords: "AI 이미지 생성, AI 일러스트, 이차원 캐릭터 일러스트, 캐릭터 디자인 AI, FansFans, 萌创",
+        title: "AI 이미지 & 일러스트 생성기 FansFans｜한 번에 만드는 고퀄리티 이차원 캐릭터 일러스트",
+        keywords: "AI 이미지 생성, AI 일러스트, 이차원 캐릭터 일러스트, 캐릭터 디자인 AI, FansFans",
         description: "FansFans AI 이미지 생성 도구는 이차원 미학에 집중합니다. 설명 키워드만 입력하면 전문가급 애니메이션 일러스트, 캐릭터 디자인, 정교한 일러스트를 빠르게 생성해 당신의 상상을 현실로 만들어줍니다."
       },
       video: {
-        title: "AI 동영상 생성기 FansFans 萌创｜이미지와 텍스트를 빠르게 이차원 동영상으로 변환",
-        keywords: "AI 동영상 생성, 이미지로 동영상 생성, 텍스트로 동영상 생성, 이차원 숏폼 동영상, FansFans, 萌创",
+        title: "AI 동영상 생성기 FansFans｜이미지와 텍스트를 빠르게 이차원 동영상으로 변환",
+        keywords: "AI 동영상 생성, 이미지로 동영상 생성, 텍스트로 동영상 생성, 이차원 숏폼 동영상, FansFans",
         description: "FansFans AI 동영상 생성 도구를 사용해 정지된 일러스트나 텍스트 설명을 매끄러운 이차원 동영상으로 손쉽게 변환하세요. 소셜 미디어를 사로잡을 숏폼 동영상 콘텐츠를 만들어보세요."
       }
     },

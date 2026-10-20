@@ -3306,7 +3306,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
   seo: {
     home: {
       title: "FansFans - AI小説・漫画・アニメドラマ生成｜ことばと物語",
-      keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,FansFans,萌創,AI同人創作",
+      keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,FansFans,AI同人創作",
       description: "FansFansは、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
       novel: {
         title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - FansFans",
@@ -3325,12 +3325,12 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       },
       photo: {
         title: "AIイラスト・画像生成ツール FansFans｜高品質な二次元キャラクターを作成",
-        keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, FansFans, 萌創",
+        keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, FansFans",
         description: "FansFansのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
       },
       video: {
         title: "AI動画生成ツール FansFans｜イラストやテキストから二次元ビデオを作成",
-        keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, FansFans, 萌創",
+        keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, FansFans",
         description: "FansFansのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
       }
     },
@@ -3362,7 +3362,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     signup: {
       title: "無料登録 - AI 創作の旅を始める｜FansFans",
       keywords: "FansFans登録,無料AI創作,AI創作プラットフォーム",
-      description: "FansFans萌創に無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
+      description: "FansFansに無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
     },
     characterLibrary: {
       title: "AIキャラクター設定ライブラリー - 独自のキャラクター設定を追加｜FansFans",

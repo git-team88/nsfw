@@ -3338,8 +3338,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
   seo: {
     home: {
       title: "FansFans - AI 小說、漫畫、漫劇一鍵生成｜一句話開始創作",
-      keywords: "AI小說生成器,AI漫畫生成器,AI漫劇生成,AI漫畫生成,一句話生成小說,AI寫作工具,二次元AI創作,FansFans,萌創,AI同人創作",
-      description: "FansFans 萌創是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
+      keywords: "AI小說生成器,AI漫畫生成器,AI漫劇生成,AI漫畫生成,一句話生成小說,AI寫作工具,二次元AI創作,FansFans,AI同人創作",
+      description: "FansFans是面向華語圈與日本市場的 AI 二次元創作平台。輸入一句靈感即可生成小說・漫畫・漫劇，免費 30K 字起步，AI 守護你的無限故事。",
       novel: {
         title: "AI 小說生成器線上免費｜一句話寫出 30K 長篇網文 - FansFans",
         keywords: "AI小說生成器,AI寫小說,AI網文,免費AI小說,長篇小說生成,網文寫作AI,小說大綱AI,二次元小說AI",
@@ -3357,12 +3357,12 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       },
       photo: {
         title: "AI 圖片與插畫生成器 FansFans｜一鍵生成高品質二次元角色立繪",
-        keywords: "AI圖片生成, AI插畫, 二次元立繪, 角色設計 AI, FansFans, 萌創",
+        keywords: "AI圖片生成, AI插畫, 二次元立繪, 角色設計 AI, FansFans",
         description: "FansFans AI 圖片生成工具，專注於二次元美學。輸入描述詞即可快速生成專業級的動漫插畫、角色設計與精美立繪，讓您的想像力化為現實。"
       },
       video: {
         title: "AI 影片生成器 FansFans｜圖文快速轉換二次元動態影片",
-        keywords: "AI影片生成, 圖生影片, 文生影片, 二次元短影音, FansFans, 萌創",
+        keywords: "AI影片生成, 圖生影片, 文生影片, 二次元短影音, FansFans",
         description: "使用 FansFans AI 影片生成工具，輕鬆將靜態插畫或文字描述轉換為流暢的二次元動態影片。為您的社群媒體創作吸睛的短影音內容。"
       }
     },
@@ -3379,12 +3379,12 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     terms: {
       title: "服務條款 - FansFans 用戶協議",
       keywords: "服務條款,用戶協議,使用協議,法律事項,服務協議,法律聲明",
-      description: "查看 FansFans 萌創的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
+      description: "查看 FansFans的服務條款與用戶協議，了解你的權利、義務，以及 AI 內容版權。"
     },
     privacy: {
       title: "隱私政策 - FansFans 個人資料保護",
       keywords: "隱私政策,個人資料保護,資料安全,Cookie政策,GDPR",
-      description: "FansFans 萌創重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
+      description: "FansFans重視你的個人資訊與創作隱私，保護你的個人資料與創作隱私。"
     },
     login: {
       title: "登入 - FansFans｜AI 創作平台",
@@ -3394,7 +3394,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     signup: {
       title: "免費註冊 - 開啟你的 AI 創作之旅｜FansFans",
       keywords: "FansFans註冊,免費AI創作,AI創作平台,二次元創作,註冊",
-      description: "免費註冊 FansFans 萌創，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
+      description: "免費註冊 FansFans，立即獲得 30K 字數 + AI 小說、漫畫、漫劇全創作工具。"
     },
     characterLibrary: {
       title: "AI 角色庫 - 創建專屬漫畫角色｜FansFans",
@@ -3404,7 +3404,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     userHome: {
       title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇｜FansFans",
       keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
-      description: "在 FansFans 萌創中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
+      description: "在 FansFans中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。"
     },
     novelGenerate: {
       title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 - FansFans",

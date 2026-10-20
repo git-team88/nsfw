@@ -1,6 +1,6 @@
-# FansFans 萌創
+# FansFans
 
-> FansFans 萌創（https://www.fansfans.ai/）は、日本・台湾・香港を中心とするアジアのクリエイター向けの二次元 AI 創作プラットフォームです。
+> FansFans（https://www.fansfans.ai/）は、日本・台湾・香港を中心とするアジアのクリエイター向けの二次元 AI 創作プラットフォームです。
 > ひとつのアイデアを入力するだけで、AI 小説・AI 漫画・AI アニメドラマを自動生成できます。無料枠は 30,000 文字から。
 > FansFans is a 2D (anime-style) AI creation platform for creators in Japan, Taiwan and Hong Kong — generate AI novels, comics and short anime dramas from a single prompt.
 
@@ -26,7 +26,7 @@ URL 形式は `https://www.fansfans.ai/{lang}` または `https://www.fansfans.a
 ## 内容使用与引用说明 / Usage & citation
 
 - 本サイトの公開ページ（首页、语言页、分类页、使用指南、条款类页面）可被搜索引擎与生成式引擎抓取、索引与引用。
-- 引用时请标注来源名称 **FansFans 萌創**，并链接到 https://www.fansfans.ai/ 。
+- 引用时请标注来源名称 **FansFans**，并链接到 https://www.fansfans.ai/ 。
 - 用户生成作品（`/detail/*`）与创作者主页（`/user-home/*`）的著作权归其创作者所有，引用时请同时保留作品页链接。
 - 请勿将本站内容用于训练或微调模型的商业用途，除非已获得书面授权（见服务条款 https://www.fansfans.ai/terms ）。
 - 需登录的页面（`/login`、`/my-projects`、`/user-*`、支付流程页等）不属于公开内容，请勿抓取。

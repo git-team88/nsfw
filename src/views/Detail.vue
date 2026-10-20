@@ -2452,7 +2452,7 @@ function setSeoMeta(title: string, description: string, type: string) {
 // ⚠️ 离开详情页时必须恢复被改写的 og:* 并移除 JSON-LD，否则上一个作品的信息
 //    会残留到下一个页面（SPA 不刷新 head，这是比缺标签更容易踩的坑）。
 const TYPE_DIR_MAP: Record<string, string> = { '1': 'comic', '2': 'novel', '3': 'drama', '4': 'photo', '5': 'video' };
-const SITE_NAME_FOR_LD = 'FansFans 萌創';
+const SITE_NAME_FOR_LD = 'FansFans';
 const TYPE_NAME_MAP: Record<string, string> = {
   comic: 'AI漫画', novel: 'AI小説', drama: 'アニメドラマ', photo: 'イラスト', video: '動画',
 };

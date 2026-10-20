@@ -1,4 +1,4 @@
-# robots.txt — FansFans 萌創
+# robots.txt — FansFans
 # https://www.fansfans.ai/
 # 更新日期: 2026-10-10
 
