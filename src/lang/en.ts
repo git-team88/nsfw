@@ -547,6 +547,7 @@ If we have reasonable grounds to believe that any of your acts violate or may vi
     maxCoverImages: "Maximum {max} images allowed",
     maxCoverSize: "Image size exceeds limit, maximum supported is {max}MB",
     invalidCoverImageType: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
+    invalidCoverImageTypeUnlimited: "Unsupported image format. {mode} mode only accepts JPG or PNG images",
     imageDimensionError: "Image width and height must be greater than 14 pixels",
     imageAspectRatioError: "Image aspect ratio out of range (width/height should be between 1/16 and 16)",
     uploadFormat: "Supported formats: jpg, jpeg, png, webp, up to 10MB each",
@@ -2105,6 +2106,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       maxItemReached: "Up to {max} characters and reference images in total",
       maxPhotoSize: "Image size exceeds limit, maximum supported is 10MB",
       invalidPhotoFormat: "Unsupported image format. Please upload JPG, PNG, or WEBP format images",
+      invalidPhotoFormatUnlimited: "Unsupported image format. {mode} mode only accepts JPG or PNG images",
       invalidVideoFormat: "Unsupported video format. Please upload MP4 or MOV videos",
       invalidAudioFormat: "Unsupported audio format. Please upload MP3 or WAV audio",
       corruptedImage: "The image file is corrupted and cannot be recognized. Please reselect or save it again before uploading",
@@ -3277,6 +3279,12 @@ If you have any questions, complaints, comments or suggestions regarding persona
       title: "[[title]] - FansFans AI Anime Creation",
       keywords: "[[title]],AI [[type]],anime [[type]]",
       description: "[[title]] - [[description]]"
+    },
+    collection: {
+      title: "[[title]] | [[type]] · [[episodes]] episodes | [[site]]",
+      description: "[[intro]]. [[episodes]] episodes, created by [[author]].",
+      descriptionFallback: "[[title]], a [[type]] by [[author]] with [[episodes]] episodes on [[site]].",
+      types: { comic: "Comic", novel: "Novel", drama: "Anime Drama", image: "Illustration", video: "Video" }
     },
     communityConvention: {
       title: "Community Guidelines — FansFans Creator Code of Conduct",

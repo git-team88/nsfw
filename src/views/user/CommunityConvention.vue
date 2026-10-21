@@ -33,14 +33,6 @@ const isHide = ref(false);
 function setSeoMeta() {
   document.title = t('seo.communityConvention.title');
 
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', t('seo.communityConvention.keywords'));
-
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');

@@ -1928,6 +1928,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       maxItemReached: "キャラクターと参考画像は合計最大{max}個まで",
       maxPhotoSize: "画像サイズが制限を超えています。最大10MBまでサポートしています",
       invalidPhotoFormat: "サポートされていない画像形式です。JPG、PNG、またはWEBP形式の画像をアップロードしてください",
+      invalidPhotoFormatUnlimited: "対応していない画像形式です。{mode}モードでは JPG・PNG のみアップロードできます",
       invalidVideoFormat: "サポートされていない動画形式です。MP4 または MOV 形式の動画をアップロードしてください",
       invalidAudioFormat: "サポートされていない音声形式です。MP3 または WAV 形式の音声をアップロードしてください",
       corruptedImage: "画像ファイルが破損しています。認識できません。再度選択するか、別途保存してからアップロードしてください",
@@ -2909,6 +2910,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     maxCoverImages: "アップロードできる画像は{max}枚までです",
     maxCoverSize: "画像サイズが制限を超えています。最大{max}MBまでサポートしています",
     invalidCoverImageType: "サポートされていない画像形式です。JPG、PNG、またはWEBP形式の画像をアップロードしてください",
+    invalidCoverImageTypeUnlimited: "対応していない画像形式です。{mode}モードでは JPG・PNG のみアップロードできます",
     imageDimensionError: "画像の幅と高さは14ピクセル以上である必要があります",
     imageAspectRatioError: "画像のアスペクト比が範囲外です（幅/高さは1/16〜16の間である必要があります）",
     uploadFormat: "サポートフォーマット：jpg, jpeg, png, webp、1枚あたり最大10MB",
@@ -3338,6 +3340,12 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       title: "[[title]] - FansFans 二次元 AI クリエイション",
       keywords: "[[title]],AI[[type]],二次元[[type]]",
       description: "[[title]] - [[description]]"
+    },
+    collection: {
+      title: "[[title]]｜[[type]]・全[[episodes]]話｜[[site]]",
+      description: "[[intro]]。全[[episodes]]話連載中、[[author]]作。",
+      descriptionFallback: "[[author]]作の[[type]]「[[title]]」、全[[episodes]]話。[[site]]で読む。",
+      types: { comic: "漫画", novel: "小説", drama: "アニメドラマ", image: "イラスト", video: "動画" }
     },
     communityConvention: {
       title: "コミュニティガイドライン - FansFans クリエイター行動規範",

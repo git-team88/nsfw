@@ -2473,7 +2473,8 @@ const triggerInsertImageFileUpload = () => {
 };
 
 const checkInsertImageItemLimit = () => {
-  const maxImages = 10;
+  // NSFW 项目的配图参考图最多 3 张（Vega 模型），普通项目 10 张
+  const maxImages = userSelectedSettings.value?.story_mode === 'nsfw' ? 3 : 10;
   if (insertImageRefImages.value.length >= maxImages) {
     toast(t('novel.maxCoverImages', { max: maxImages }));
     return false;
@@ -2497,8 +2498,10 @@ const handleInsertImageFileChange = async (event: Event) => {
   if (!files || files.length == 0) return;
   const file = files[0];
 
-  const maxImages = 10;
-  const maxSizeMB = 30;
+  // NSFW 项目的配图走 Vega 模型：参考图 0~3 张、单张 ≤10MB；普通项目 10 张 / 30MB
+  const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
+  const maxImages = isUnlimitedMode ? 3 : 10;
+  const maxSizeMB = isUnlimitedMode ? 10 : 30;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   if (insertImageRefImages.value.length >= maxImages) {
@@ -9001,14 +9004,6 @@ const fetchChapterDetailForGeneration = async () => {
 function setSeoMeta() {
   document.title = t('seo.novelGenerate.title');
 
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', t('seo.novelGenerate.keywords'));
-
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');
@@ -10378,9 +10373,10 @@ async function handleCoverFileChange(event: Event) {
   // Determine limits based on mode
   // Default to normal mode limits if mode is not available
   // Unlimited (NSFW) mode is determined from the current project settings
+  // NSFW 项目的封面走 Vega 模型：参考图 0~3 张、单张 ≤10MB；普通项目 7 张 / 10MB
   const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
-  const maxImages = isUnlimitedMode ? 10 : 7;
-  const maxSizeMB = isUnlimitedMode ? 30 : 10;
+  const maxImages = isUnlimitedMode ? 3 : 7;
+  const maxSizeMB = isUnlimitedMode ? 10 : 10;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   // Check maximum count limit
@@ -10697,7 +10693,7 @@ function checkLogin() {
 function checkCoverItemLimit() {
   // Unlimited (NSFW) mode is determined from the current project settings
   const isUnlimitedMode = userSelectedSettings.value?.story_mode === 'nsfw';
-  const maxImages = isUnlimitedMode ? 10 : 7;
+  const maxImages = isUnlimitedMode ? 3 : 7;
   if (combinedCoverItems.value.length >= maxImages) {
     toast(t('novel.maxCoverImages', { max: maxImages }));
     return false;

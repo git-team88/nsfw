@@ -1,4 +1,5 @@
-import CryptoJS from 'crypto-js';
+// 只用到 MD5：按子模块引入，不打整个 crypto-js（SEO T17）
+import MD5 from 'crypto-js/md5';
 
 interface AuthParams {
   ts: string;
@@ -6,7 +7,7 @@ interface AuthParams {
 }
 
 function md5(str: string): string {
-  return CryptoJS.MD5(str).toString();
+  return MD5(str).toString();
 }
 
 function detectDevTools(): boolean {

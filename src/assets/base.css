@@ -16,6 +16,11 @@ a {
   color: #ffffff;
 }
 
+/* 站内 SEO 链接：外观完全跟随父元素，只为让爬虫拿到 href（点击仍走 router） */
+a.seo-link {
+  color: inherit;
+}
+
 html,
 body,
 menu,

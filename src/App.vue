@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { setLocale } from '@/lang/i18n';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
 import { pageSlideDir } from '@/util/pageSlide';
@@ -67,15 +68,9 @@ const htmlLangMap: Record<string, string> = {
   'th': 'th'
 };
 
-// 站点地址（canonical 用）始终用当前实际访问地址（含协议/端口/域名）；
-// 移动端域名仍按正式/测试区分：正式站(*.fansfans.ai)→ m.fansfans.ai，其它 → mtest.fansfans.ai。
+// 站点地址（canonical 用）始终用当前实际访问地址（含协议/端口/域名）
 function resolveOrigins() {
-  const host = window.location.hostname;
-  const isProd = !host.startsWith('wwwtest') && host.endsWith('fansfans.ai');
-  return {
-    site: window.location.origin,
-    mobile: isProd ? 'https://m.fansfans.ai' : 'https://mtest.fansfans.ai',
-  };
+  return { site: window.location.origin };
 }
 
 function updateBodyFontClass() {
@@ -140,8 +135,11 @@ function updateHreflang() {
     link.setAttribute('data-hreflang', '');
     frag.appendChild(link);
   };
-  for (const lg of LANG_URLS) add(HREFLANG_MAP[lg], `${site}/${lg}${base}`);
-  add('x-default', `${site}${base === '' ? '/' : base}`);
+  // 规范策略（T08 方案甲）：英文版就是不带前缀的 /（和 x-default 同一个 URL，Google 允许），
+  // /en… 只是它的别名（canonical 指回不带前缀的地址），其余语言各自带前缀。
+  const unprefixed = `${site}${base === '' ? '/' : base}`;
+  for (const lg of LANG_URLS) add(HREFLANG_MAP[lg], lg === 'en' ? unprefixed : `${site}/${lg}${base}`);
+  add('x-default', unprefixed);
   document.head.appendChild(frag);
 }
 
@@ -167,91 +165,49 @@ function updateOgLocale() {
   document.head.appendChild(frag);
 }
 
-// 根据当前路由计算「PC 自指 canonical」与「对应的移动端 alternate」URL。
-// canonical：所有页面都自指当前页。
-// mobile（移动端 alternate）：仅以下 4 类页面输出，其余页面为 null（不加 alternate）：
-//   首页/语言页/分类页  → m 站首页
-//   合集详情  /collection/:id            → /detail/book-public/:id
-//   作品详情  /detail/x?tab=2             → /detail/novel/x
-//   社区主页  /user-home/x               → /user/x
-// 内容类型 → m 站详情页目录名；key 同时收数字（tab）和英文名（contentType）
-const MOBILE_TYPE_DIR: Record<string, string> = {
-  '1': 'comic', '2': 'novel', '3': 'drama', '4': 'image', '5': 'video',
-  comic: 'comic', novel: 'novel', drama: 'drama', image: 'image', photo: 'image', video: 'video',
-};
-function computeSeoUrls(): { canonical: string; mobile: string | null } {
-  const { site: SITE_ORIGIN, mobile: MOBILE_ORIGIN } = resolveOrigins();
+// 根据当前路由计算「PC 自指 canonical」：所有页面都自指当前页。
+// 移动端 alternate（m.blfans.ai）已移除（SEO T13）：m 站 canonical 指向主站首页，
+// 两边互指反而让搜索引擎拿不准规范地址。
+function computeSeoUrls(): { canonical: string } {
+  const { site: SITE_ORIGIN } = resolveOrigins();
   const path = route.path;
   const q = route.query;
 
   const col = path.match(/^\/collection\/([^/?#]+)/);
   if (col) {
-    const id = col[1];
-    return {
-      canonical: `${SITE_ORIGIN}/collection/${id}`,
-      mobile: `${MOBILE_ORIGIN}/detail/book-public/${id}`,
-    };
+    return { canonical: `${SITE_ORIGIN}/collection/${col[1]}` };
   }
 
   const uh = path.match(/^\/user-home\/([^/?#]+)/);
   if (uh) {
-    return {
-      canonical: `${SITE_ORIGIN}/user-home/${uh[1]}`,
-      mobile: `${MOBILE_ORIGIN}/user/${uh[1]}`,
-    };
+    return { canonical: `${SITE_ORIGIN}/user-home/${uh[1]}` };
   }
 
   const det = path.match(/^\/detail\/([^/?#]+)/);
   if (det) {
     const id = det[1];
     const t = q.contentType ? String(q.contentType) : '';
-    // m 站作品详情是 /detail/{类型}/{id}（comic/novel/drama/image/video）。
-    // PC 地址栏里类型在 tab（数字 1-5）或 contentType（英文名）里，映射成 m 站的目录名；
-    // 两个都没有时不知道类型，不输出移动端 alternate，免得指到一个不存在的地址
-    const typeDir = MOBILE_TYPE_DIR[String(q.tab ?? t)] || '';
-    return {
-      canonical: `${SITE_ORIGIN}/detail/${id}${t ? `?contentType=${t}` : ''}`,
-      mobile: typeDir ? `${MOBILE_ORIGIN}/detail/${typeDir}/${id}` : null,
-    };
+    return { canonical: `${SITE_ORIGIN}/detail/${id}${t ? `?contentType=${t}` : ''}` };
   }
 
-  // 首页 / 语言页 / 分类页（Home 组件）：canonical 自指当前页；移动端 alternate 指向 m 站首页。
-  // 用路径判断而非 route.name（初始加载 / SEO 渲染时 route.name 可能尚未就绪）。
-  //   / | /{lang} | /{lang}/{type} | /{type}
-  const cleanPath = path === '/' ? '/' : path;
-  const LANGS = 'ja|en|zh-cn|zh-tw|ko|th';
-  const TYPES = 'novel|comic|drama|photo|video';
-  const isHome =
-    path === '/' ||
-    new RegExp(`^/(${LANGS})(/(${TYPES}))?/?$`).test(path) ||
-    new RegExp(`^/(${TYPES})/?$`).test(path);
-  return {
-    canonical: `${SITE_ORIGIN}${cleanPath}`,
-    mobile: isHome ? `${MOBILE_ORIGIN}/` : null,
-  };
+  // 其余页面（首页 / 语言页 / 分类页 / 静态页）：canonical 自指当前路径。
+  // 分页页（?page=N，仅 SEO 预渲染时出现）要带上页码自指，不然第 2 页起会被当成第 1 页的重复页
+  const pageNo = parseInt(String(q.page || ''), 10);
+  const pageSuffix = pageNo > 1 ? `?page=${pageNo}` : '';
+  // T08 方案甲：/en 和 /en/{type} 是不带前缀地址的别名，canonical 指回 / 和 /{type}，
+  // 不然 / 与 /en 两个 URL 同一份英文内容，互为重复页
+  const enAlias = path.match(/^\/en(\/(novel|comic|drama|photo|video))?\/?$/);
+  const selfPath = enAlias ? (enAlias[1] || '/') : (path === '/' ? '/' : path);
+  return { canonical: `${SITE_ORIGIN}${selfPath}${pageSuffix}` };
 }
 
-// A/C：所有页面写 PC 自指 canonical；仅 4 类页面写移动端 alternate。
-// 原地复用已有 <link>，值没变化就不动（避免切换内容类型 tab 时无谓地删除重建）。
+// 所有页面写 PC 自指 canonical。原地复用已有 <link>，值没变化就不动。
+// 历史版本写过的移动端 alternate（link[rel=alternate][media]）这里顺手清掉。
 function updateAltAndCanonical() {
-  const { canonical, mobile } = computeSeoUrls();
+  const { canonical } = computeSeoUrls();
 
-  // 移动端 alternate
-  let alt = document.head.querySelector<HTMLLinkElement>('link[rel="alternate"][media]');
-  if (mobile) {
-    if (!alt) {
-      alt = document.createElement('link');
-      alt.rel = 'alternate';
-      alt.media = 'only screen and (max-width: 640px)';
-      alt.setAttribute('data-alt-mobile', '');
-      document.head.appendChild(alt);
-    }
-    if (alt.href !== mobile) alt.href = mobile;
-  } else if (alt) {
-    alt.remove();
-  }
+  document.head.querySelectorAll('link[rel="alternate"][media]').forEach(el => el.remove());
 
-  // canonical（所有页面都有）
   let can = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
   if (!can) {
     can = document.createElement('link');
@@ -276,7 +232,7 @@ onMounted(() => {
     if (e.key == 'lang') {
       const newLang = e.newValue || 'en';
       if (newLang !== locale.value) {
-        locale.value = newLang;
+        setLocale(newLang);
       }
       updateBodyFontClass();
       updateHtmlLang();

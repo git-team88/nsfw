@@ -295,6 +295,13 @@
               <div class="loading-spinner"></div>
               <div class="loading-text">{{ t('home.loading') }}</div>
             </div>
+            <!-- 分页链接（SEO T07）：只在 seo-server 预渲染时输出，爬虫顺着 ?page=N 抓下一页；
+                 真实用户看不到这个链接，仍然是滚动自动加载 -->
+            <a
+              v-if="isSeoPrerender && hasMoreContent && allContent.length > 0"
+              class="load-more-link seo-link"
+              :href="nextPageHref"
+            >{{ t('home.loadMore') }}</a>
             <div v-if="!hasMoreContent && allContent.length > 0" class="no-more-text">{{ t('home.noMore') }}</div>
           </template>
 
@@ -445,7 +452,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, type ComponentPublicInstance, defineAsyncComponent } from 'vue';
 import { toast, limitToast } from '@/util/toast';
 import Header from '@/components/Header.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
@@ -459,7 +466,8 @@ import Footer from '@/components/Footer.vue';
 import ProcessList from '@/components/ProcessList.vue';
 import { useMasonry } from '@/util/masonry';
 import { coverAspect } from '@/util/coverRatio';
-import Hero3DBackground from '@/components/Hero3DBackground.vue';
+// three.js 800KB+，hero 3D 背景改成异步组件，不进首屏入口（SEO T17）
+const Hero3DBackground = defineAsyncComponent(() => import('@/components/Hero3DBackground.vue'));
 import HomeShowcase from '@/components/HomeShowcase.vue';
 import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
@@ -1252,7 +1260,7 @@ const handleSearch = () => {
 
 
 function setSeoMeta(type?: string) {
-  let title: string, keywords: string, description: string;
+  let title: string, description: string;
 
   if (type) {
     const seoKeyMap: Record<string, string> = {
@@ -1265,28 +1273,17 @@ function setSeoMeta(type?: string) {
     const seoKey = seoKeyMap[type];
     if (seoKey) {
       title = t(`${seoKey}.title`);
-      keywords = t(`${seoKey}.keywords`);
       description = t(`${seoKey}.description`);
     } else {
       title = t('seo.home.title');
-      keywords = t('seo.home.keywords');
       description = t('seo.home.description');
     }
   } else {
     title = t('seo.home.title');
-    keywords = t('seo.home.keywords');
     description = t('seo.home.description');
   }
 
   document.title = title;
-
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', keywords);
 
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
@@ -1466,6 +1463,54 @@ function handlePageChange(page: number) {
   loadContent(page);
 }
 
+// —— SEO 分页（T07）——
+// seo-server 渲染时注入 window.__SEO_PRERENDER__ = true。只有这时才：
+//   1. 列表底部输出「加载更多」真实链接（?page=N+1）
+//   2. 按 ?page=N 从第 N 页开始取数据
+//   3. <head> 里写 rel=prev / rel=next
+// 真实用户不走这些，还是滚动自动加载。
+const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
+const pageHref = (n: number) => (n <= 1 ? route.path : `${route.path}?page=${n}`);
+const nextPageHref = computed(() => pageHref(currentPage.value + 1));
+
+/** 目录页结构化数据（T10）：当前列表前 20 条输出 ItemList；离开页面时删掉 */
+function updateItemListJsonLd() {
+  document.head.querySelectorAll('script[data-seo-itemlist]').forEach(el => el.remove());
+  const items = allContent.value.slice(0, 20);
+  if (!items.length) return;
+  const origin = window.location.origin;
+  const el = document.createElement('script');
+  el.type = 'application/ld+json';
+  el.setAttribute('data-seo-itemlist', '');
+  el.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${origin}${route.path}#itemlist`,
+    numberOfItems: items.length,
+    itemListElement: items.map((item: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.title || '',
+      url: `${origin}${detailHref(item.book_id || item.id, item.type, item.id)}`,
+    })),
+  });
+  document.head.appendChild(el);
+}
+
+function updatePaginationLinks() {
+  document.head.querySelectorAll('link[data-seo-pagination]').forEach(el => el.remove());
+  if (!isSeoPrerender) return;
+  const add = (rel: 'prev' | 'next', href: string) => {
+    const link = document.createElement('link');
+    link.rel = rel;
+    link.href = `${window.location.origin}${href}`;
+    link.setAttribute('data-seo-pagination', '');
+    document.head.appendChild(link);
+  };
+  if (currentPage.value > 1) add('prev', pageHref(currentPage.value - 1));
+  if (hasMoreContent.value) add('next', pageHref(currentPage.value + 1));
+}
+
 const handleScrollToBottom = () => {
   const filter = contentTypeFilterRef.value;
   const shouldShowFilterTabs = activeContentTab.value === 'suggested' || viewMode.value === 'content';
@@ -1595,7 +1640,11 @@ onMounted(async () => {
     console.error('Error loading last content tab or type:', error);
   }
 
-  loadContent(1);
+  // 预渲染时带 ?page=N 打开（爬虫沿分页链接进来）：从第 N 页开始
+  const startPage = isSeoPrerender ? parseInt(String(route.query.page || ''), 10) : NaN;
+  if (startPage > 1) currentPage.value = startPage;
+  // 不 await：后面的 banner / 监听 / 首次注册检查不等列表接口；分页 link 等列表回来再写
+  loadContent(currentPage.value).then(() => { updatePaginationLinks(); updateItemListJsonLd(); });
 
   window.addEventListener('resize', handleResize);
 
@@ -1603,6 +1652,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  document.head.querySelectorAll('link[data-seo-pagination], script[data-seo-itemlist]').forEach(el => el.remove());
   window.removeEventListener('resize', handleResize);
   window.removeEventListener('scroll', handleScrollToBottom);
 });

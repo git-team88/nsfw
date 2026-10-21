@@ -15,15 +15,16 @@
         </div>
 
         <div class="nav">
-          <div
-            class="nav-item"
+          <a
+            class="nav-item seo-link"
             :class="{ on: cur == index }"
             v-for="(item, index) in navList"
             :key="index"
-            @click="goNav(item, index)"
+            :href="navHref(item.path)"
+            @click.prevent="goNav(item, index)"
           >
             <span>{{ item.name }}</span>
-          </div>
+          </a>
         </div>
       </div>
 
@@ -221,6 +222,7 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 
 import { onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { setLocale } from "@/lang/i18n";
 import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
@@ -497,6 +499,16 @@ function handleDrawerKeydown(e: KeyboardEvent) {
   }
 }
 
+/** 导航项的真实 href（SEO 用，爬虫能顺着抓；点击仍由 goNav 走 router） */
+function navHref(path: string): string {
+  if (!path) return '#';
+  if (path === '/user-home') {
+    const uid = userInfo.value?.info?.id || localStorage.getItem('uid');
+    return uid ? `/user-home/${uid}` : '/login';
+  }
+  return path;
+}
+
 function goNav(item: { path: string; name?: string }, index: number) {
   const token = localStorage.getItem("token");
 
@@ -570,7 +582,7 @@ function changeLang(lang: string) {
   isShowLang.value = false;
   langText.value = lang;
   localStorage.setItem("lang", lang);
-  locale.value = lang;
+  setLocale(lang);
 }
 
 function getMessageInfo() {

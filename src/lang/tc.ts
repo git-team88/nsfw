@@ -611,6 +611,7 @@ iii. 慫恿、誘導他人參與可能會造成人身傷害或導致死亡的危
     maxCoverImages: "最多可上傳{max}張圖片",
     maxCoverSize: "圖片大小超過限制，最大支援{max}MB",
     invalidCoverImageType: "不支援的圖片格式，請上傳 JPG、PNG 或 WEBP 格式圖片",
+    invalidCoverImageTypeUnlimited: "不支援的圖片格式，{mode}模式僅支援 JPG、PNG 格式圖片",
     imageDimensionError: "圖片寬高需大於14像素",
     imageAspectRatioError: "圖片寬高比超出限制（寬/高應在1/16到16之間）",
     uploadFormat: "支援格式：jpg, jpeg, png, webp，每張不超過10MB",
@@ -2205,6 +2206,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       maxItemReached: "角色和參考圖總共最多{max}個",
       maxPhotoSize: "圖片大小超過限制，最大支援10MB",
       invalidPhotoFormat: "不支援的圖片格式，請上傳 JPG、PNG 或 WEBP 格式圖片",
+      invalidPhotoFormatUnlimited: "不支援的圖片格式，{mode}模式僅支援 JPG、PNG 格式圖片",
       invalidVideoFormat: "不支援的影片格式，請上傳 MP4 或 MOV 格式影片",
       invalidAudioFormat: "不支援的音訊格式，請上傳 MP3 或 WAV 格式音訊",
       corruptedImage: "圖片檔案已損壞，無法識別，請重新選擇或另存後上傳",
@@ -3370,6 +3372,12 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       title: `[[title]] - FansFans 二次元 AI 創作`,
       keywords: `[[title]],AI[[type]],二次元[[type]]`,
       description: `[[title]] - [[description]]`
+    },
+    collection: {
+      title: "[[title]]｜[[type]]・全 [[episodes]] 話｜[[site]]",
+      description: "[[intro]]。[[episodes]] 話連載中，[[author]] 創作。",
+      descriptionFallback: "[[author]] 創作的[[type]]《[[title]]》，共 [[episodes]] 話，在 [[site]] 閱讀。",
+      types: { comic: "漫畫", novel: "小說", drama: "漫劇", image: "圖片", video: "影片" }
     },
     communityConvention: {
       title: "社區準則 - FansFans 創作公約",

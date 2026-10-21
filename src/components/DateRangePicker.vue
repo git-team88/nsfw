@@ -66,6 +66,9 @@ import arrowDown from "@/assets/images/user/arrow.png";
 import dateIcon from "@/assets/images/user/date.png";
 import dateGreenIcon from "@/assets/images/user/date_green.png";
 import dayjs from "dayjs";
+// element-plus 全站只用到这一个组件：局部按需引入，不再全局 app.use(ElementPlus)（SEO T17）
+import { ElDatePicker } from "element-plus";
+import "element-plus/es/components/date-picker/style/css";
 
 const { t, locale } = useI18n();
 const props = defineProps<{

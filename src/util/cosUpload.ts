@@ -1,4 +1,6 @@
-import CryptoJS from "crypto-js";
+// 只用到 SHA1 / HmacSHA1：按子模块引入（SEO T17）
+import SHA1 from "crypto-js/sha1";
+import HmacSHA1 from "crypto-js/hmac-sha1";
 import SparkMD5 from "spark-md5";
 import api from "@/api/index";
 
@@ -278,7 +280,7 @@ export function buildAuthorization(opts: {
   expiredTime: number;
 }): string {
   const keyTime = `${opts.startTime};${opts.expiredTime}`;
-  const signKey = CryptoJS.HmacSHA1(keyTime, opts.secretKey).toString();
+  const signKey = HmacSHA1(keyTime, opts.secretKey).toString();
 
   const { list: paramList, string: paramString } = buildParamParts(opts.params || {});
 
@@ -291,8 +293,8 @@ export function buildAuthorization(opts: {
     "",
   ].join("\n");
 
-  const stringToSign = ["sha1", keyTime, CryptoJS.SHA1(httpString).toString(), ""].join("\n");
-  const signature = CryptoJS.HmacSHA1(stringToSign, signKey).toString();
+  const stringToSign = ["sha1", keyTime, SHA1(httpString).toString(), ""].join("\n");
+  const signature = HmacSHA1(stringToSign, signKey).toString();
 
   return [
     "q-sign-algorithm=sha1",

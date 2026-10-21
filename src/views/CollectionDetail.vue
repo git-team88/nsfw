@@ -15,7 +15,7 @@
       <template v-else-if="collection">
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <span class="breadcrumb-item" @click="goHome">{{ authorInfo.nickname }}{{ t('collectionDetail.community') }}</span>
+          <a class="breadcrumb-item seo-link" :href="authorInfo.id ? `/user-home/${authorInfo.id}` : '#'" @click.prevent="goHome">{{ authorInfo.nickname }}{{ t('collectionDetail.community') }}</a>
           <span class="breadcrumb-arrow">|</span>
           <span class="breadcrumb-item active">{{ collection.title }}</span>
         </div>
@@ -26,7 +26,7 @@
           <div class="author-section">
             <div class="author-left">
               <div class="cover-image">
-                <img :src="processImageUrl(collection.cover) || defaultCover" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
+                <img :src="processImageUrl(collection.cover) || defaultCover" :alt="collection.title" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultCover }" />
                 <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                   <span class="r18-text">R18</span>
                 </div>
@@ -150,7 +150,7 @@
                     class="chapter-status"
                     :class="getPermClass(chapter.accessRights)"
                   >{{ getPermText(chapter.accessRights) }}</span>
-                  <span class="chapter-title">{{ chapter.title }}</span>
+                  <a class="chapter-title seo-link" :href="chapterHref(chapter)" @click.prevent>{{ chapter.title }}</a>
                 </div>
                 <div class="chapter-right" v-if="isOwn && collection.status != '2'">
                   <div class="chapter-action" @click.stop="editChapter(chapter)">
@@ -210,7 +210,8 @@ import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdul
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
-import { setPageTitle } from '@/utils/pageTitle';
+import { siteName } from '@/utils/pageTitle';
+import { applySeoMeta, restoreSeoMeta, applyJsonLd, goNotFoundIfMissing, safeJoin, clamp } from '@/utils/seoMeta';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
@@ -221,7 +222,7 @@ const composerLoading = ref(false);
 // 底部输入框出现时留出的高度，垫在本页容器里（不让组件去动 body）
 const composerHeight = ref(0);
 import { toast } from '@/util/toast';
-import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
+import { formatTimestamp, parseToUnixTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import { eventBus } from '@/utils/eventBus';
 import { trackBookView } from '@/util/viewTracker';
 import defaultCover from '@/assets/images/base/cover.png';
@@ -411,9 +412,15 @@ async function fetchCollectionDetail() {
       }
 
       if (response.code == 0) {
-        const finalData = response.data;
+        const finalData = response.data || {};
         const finalBookInfo = finalData.book_info || finalData;
         const chaptersData = finalData.chatpers || finalData.chapters || [];
+
+        // 接口成功但没有合集数据（id 不存在）→ 404 页，不渲染空壳（T04）
+        if (!finalBookInfo || !(finalBookInfo.id || finalData.book_id)) {
+          goNotFoundIfMissing(router, route, { code: 0, data: null });
+          return;
+        }
 
         isOwn.value = isSelf;
         isLiked.value = finalData.is_fav == 1;
@@ -449,8 +456,8 @@ async function fetchCollectionDetail() {
           } : null,
           session_id: finalBookInfo.session_id || ''
         };
-        // 浏览器标签：合集标题 - 站点名（没标题就用路由上配的「合集」）
-        if (collection.value.title) setPageTitle(collection.value.title);
+        // 先按合集信息写一遍 SEO meta（标题/描述/og），拿到作者昵称后再补一遍
+        applyCollectionSeo();
 
         // 埋点：合集详情页曝光（同一会话同一合集只记一次）
         trackCollectionView({ book_id: collection.value.id, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });
@@ -458,12 +465,14 @@ async function fetchCollectionDetail() {
         // 从 book_info 获取作者后，请求博主详情接口
         if (resolvedAuthorId) {
           await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+          applyCollectionSeo();
         }
       } else {
-        toast(apiErrorMessage(response));
+        // 合集不存在 → 404 页（真实 404 给爬虫，T04）；其它错误照旧提示
+        if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response));
       }
     } else {
-      toast(apiErrorMessage(response));
+      if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response));
     }
   } catch (error) {
     console.error('Failed to fetch collection detail:', error);
@@ -532,6 +541,93 @@ function formatPrice(raw: string, currency?: string, isWeb3 = false): string {
   if (isNaN(num) || !raw) return raw;
   if (isWeb3) return String(parseFloat(raw));
   return scaleFiatPrice(raw, currency);
+}
+
+/**
+ * 合集页独立 SEO meta（T02）：
+ *   title       = 合集标题（截 30 字）｜类型・全 N 话｜站点名
+ *   description = 简介（截 110 字）。N 话连载中，作者 创作。 没简介时用回退模板
+ *   og:url      = 当前地址（去查询串）；og:image = 合集封面
+ * 离开页面时在 onBeforeUnmount 里 restoreSeoMeta() 还原。
+ */
+function applyCollectionSeo() {
+  const c = collection.value;
+  if (!c) return;
+  const title = clamp(c.title, 30);
+  if (!title) return;
+  const typeKey = contentTypeOf(c.type);
+  const typeLabel = typeKey ? t(`seo.collection.types.${typeKey}`) : '';
+  const episodes = String(c.latestChapterIndex || c.chapters?.length || 0);
+  const author = clamp(authorInfo.value?.nickname, 40);
+  const site = siteName();
+  const intro = clamp(c.description, 110);
+
+  const fill = (tpl: string) => tpl
+    .replace(/\[\[title\]\]/g, title)
+    .replace(/\[\[type\]\]/g, typeLabel)
+    .replace(/\[\[episodes\]\]/g, episodes)
+    .replace(/\[\[author\]\]/g, author)
+    .replace(/\[\[site\]\]/g, site)
+    .replace(/\[\[intro\]\]/g, intro);
+
+  // 标题模板按「｜」/「 | 」分段拼；类型为空时整段丢掉，不留「・全 0 话」这种空壳
+  const titleTpl = t('seo.collection.title');
+  const sep = titleTpl.includes('｜') ? '｜' : ' | ';
+  const titleParts = titleTpl.split(sep).map(fill).map(x => x.trim()).filter(seg => seg && !/^[・·]/.test(seg));
+  const pageTitle = safeJoin(titleParts.length ? titleParts : [title, site], sep);
+  const description = fill(t(intro ? 'seo.collection.description' : 'seo.collection.descriptionFallback'));
+
+  const image = c.cover && c.cover !== defaultCover ? processImageUrl(c.cover) : undefined;
+  applySeoMeta({ title: pageTitle, description, image });
+  applyJsonLd(buildCollectionJsonLd({ title, description, image, author, site }));
+}
+
+/** 单集的真实地址（和 navigateToChapter 跳的一致），给目录里的 <a href> 和 JSON-LD 用 */
+function chapterHref(chapter: { id: string | number }): string {
+  const ct = collection.value?.type || '';
+  return `/detail/${chapter.id}${ct ? `?tab=${ct}` : ''}`;
+}
+
+/**
+ * 合集页结构化数据（T10）：CollectionPage（作者 / 更新时间 / 前 20 话 hasPart）+ BreadcrumbList。
+ * 没有真实评分和点赞数，不输出 aggregateRating / interactionStatistic（不能编）。
+ */
+function buildCollectionJsonLd(o: { title: string; description: string; image?: string; author: string; site: string }) {
+  const c = collection.value;
+  if (!c) return [];
+  const origin = window.location.origin;
+  const pageUrl = `${origin}${route.path}`;
+  const authorUrl = authorInfo.value?.id ? `${origin}/user-home/${authorInfo.value.id}` : undefined;
+  const updatedUnix = parseToUnixTimestamp(c.lastUpdate || '');
+  const dateModified = updatedUnix ? new Date(updatedUnix * 1000).toISOString() : undefined;
+  const parts = (c.chapters || []).slice(0, 20).map((ch, i) => ({
+    '@type': 'CreativeWork',
+    position: i + 1,
+    name: ch.title || `#${i + 1}`,
+    url: `${origin}${chapterHref(ch)}`,
+  }));
+
+  const page: Record<string, unknown> = {
+    '@type': 'CollectionPage',
+    '@id': `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: o.title,
+    description: o.description,
+    inLanguage: document.documentElement.lang || undefined,
+    isPartOf: { '@id': `${origin}/#website` },
+  };
+  if (o.image) page.image = o.image;
+  if (o.author) page.author = { '@type': 'Person', name: o.author, url: authorUrl };
+  if (dateModified) page.dateModified = dateModified;
+  if (parts.length) page.hasPart = parts;
+
+  const crumbs: Record<string, unknown>[] = [
+    { '@type': 'ListItem', position: 1, name: o.site, item: `${origin}/` },
+  ];
+  if (o.author && authorUrl) crumbs.push({ '@type': 'ListItem', position: 2, name: o.author, item: authorUrl });
+  crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: o.title, item: pageUrl });
+
+  return [page, { '@type': 'BreadcrumbList', '@id': `${pageUrl}#breadcrumb`, itemListElement: crumbs }];
 }
 
 function goHome() {
@@ -858,6 +954,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   eventBus.off('userLoggedOut', onUserLoggedOut);
+  restoreSeoMeta();
 });
 </script>
 

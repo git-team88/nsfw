@@ -1112,9 +1112,11 @@ const userInfo = ref<any>(null);
 const isTeenager = computed(() => !userInfo.value || userInfo.value.is_adult != 1);
 const currentPhotoMode = ref('normal');
 // 图片 tab 参考图上限（张数 / 单张大小），面板说明和上传校验共用
-const photoMaxImages = computed(() => currentPhotoMode.value === 'unlimited' ? 10 : 7);
-// 站点强制 NSFW 时 currentPhotoMode 会被置成 unlimited（30MB）；大陆等普通模式按 gpt-image2 的 10MB
-const photoMaxImageMb = computed(() => currentPhotoMode.value === 'unlimited' ? 30 : 10);
+const photoMaxImages = computed(() => currentPhotoMode.value === 'unlimited' ? 3 : 7);
+// 图片 NSFW 模式走 Vega 模型：参考图 0~3 张、单张 ≤10MB；普通模式 7 张 / 10MB
+const photoMaxImageMb = computed(() => currentPhotoMode.value === 'unlimited' ? 10 : 10);
+// 图片格式不按模式区分
+const photoValidImageTypes = computed(() => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
@@ -2169,7 +2171,7 @@ const handlePhotoFileChange = async (event: Event) => {
     const maxFileSizeMB = photoMaxImageMb.value;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validImageTypes = photoValidImageTypes.value;
 
     // 批量选择：能收多少收多少 —— 不合格式的跳过，超出数量的截掉，最后只弹一条提示
     const kept: File[] = [];
@@ -5840,18 +5842,9 @@ function setSeoMeta(tab: string) {
   if (!seoKey) return;
 
   const title = t(`${seoKey}.title`);
-  const keywords = t(`${seoKey}.keywords`);
   const description = t(`${seoKey}.description`);
 
   document.title = title;
-
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', keywords);
 
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {

@@ -611,6 +611,7 @@ iii. 怂恿、诱导他人参与可能会造成人身伤害或导致死亡的危
     maxCoverImages: "最多可上传{max}张图片",
     maxCoverSize: "图片大小超过限制，最大支持{max}MB",
     invalidCoverImageType: "不支持的图片格式，请上传 JPG、PNG 或 WEBP 格式图片",
+    invalidCoverImageTypeUnlimited: "不支持的图片格式，{mode}模式仅支持 JPG、PNG 格式图片",
     imageDimensionError: "图片宽高需大于14像素",
     imageAspectRatioError: "图片宽高比超出限制（宽/高应在1/16到16之间）",
     uploadFormat: "支持格式：jpg, jpeg, png, webp，每张不超过10MB",
@@ -2211,6 +2212,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       maxItemReached: "角色和参考图总共最多{max}个",
       maxPhotoSize: "图片大小超过限制，最大支持10MB",
       invalidPhotoFormat: "不支持的图片格式，请上传 JPG、PNG 或 WEBP 格式图片",
+      invalidPhotoFormatUnlimited: "不支持的图片格式，{mode}模式仅支持 JPG、PNG 格式图片",
       invalidVideoFormat: "不支持的视频格式，请上传 MP4 或 MOV 格式视频",
       invalidAudioFormat: "不支持的音频格式，请上传 MP3 或 WAV 格式音频",
       corruptedImage: "图片文件已损坏，无法识别，请重新选择或另存后上传",
@@ -2724,8 +2726,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     type: {
       comic: "漫画",
-      novel: "小說",
-      drama: "漫劇"
+      novel: "小说",
+      drama: "漫剧"
     },
     lock: {
       tip: "订阅者可以查看全文",
@@ -3355,7 +3357,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     home: {
       title: "FansFans - AI 小说、漫画、漫剧一键生成｜一句话开始创作",
       keywords: "AI小说生成器,AI漫画生成器,AI漫剧生成,AI漫画生成,一句话生成小说,AI写作工具,二次元AI创作,FansFans,AI同人创作",
-      description: "FansFans是面向华语圈与日本市场的 AI 二次元创作平台。输入一句灵感即可生成小说・漫画・漫剧，免费 30K 字起步，AI 守护你的无限故事。",
+      description: "FansFans是面向华语圈与日本市场的 AI 二次元创作平台。输入一句灵感即可生成小说、漫画、漫剧，免费 30K 字起步，AI 守护你的无限故事。",
       novel: {
         title: "AI 小说生成器线上免费｜一句话写出 30K 长篇网文 - FansFans",
         keywords: "AI小说生成器,AI写小说,AI网文,免费AI小说,长篇小说生成,网文写作AI,小说大纲AI,二次元小说AI",
@@ -3386,6 +3388,12 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       title: `[[title]] - FansFans`,
       keywords: `[[title]],AI[[type]],二次元[[type]]`,
       description: `[[title]] - [[description]]`
+    },
+    collection: {
+      title: "[[title]]｜[[type]]·全 [[episodes]] 话｜[[site]]",
+      description: "[[intro]]。[[episodes]] 话连载中，[[author]] 创作。",
+      descriptionFallback: "[[author]] 创作的[[type]]《[[title]]》，共 [[episodes]] 话，在 [[site]] 阅读。",
+      types: { comic: "漫画", novel: "小说", drama: "漫剧", image: "图片", video: "视频" }
     },
     communityConvention: {
       title: "社区准则 - FansFans 创作公约",

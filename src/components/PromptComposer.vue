@@ -29,15 +29,16 @@
               <div class="make-source-tip" v-if="makeSourceTip">{{ makeSourceTip }}</div>
               <!-- Content Type Selector：做同款 / 做续集 / 图片做视频时来源已经定了类型，不给切 -->
               <div class="content-type-selector" v-if="!simplifyForMakeSource">
-                <div
+                <a
                   v-for="(type, index) in contentTypeOptions"
                   :key="type.value"
-                  class="type-btn"
+                  class="type-btn seo-link"
                   :class="{ active: contentType == type.value }"
-                  @click="selectContentType(type.value)"
+                  :href="toolPageHref(type.value)"
+                  @click.prevent="selectContentType(type.value)"
                 >
                   <span>{{ type.label }}</span>
-                </div>
+                </a>
               </div>
 
               <div class="main-right">
@@ -3780,6 +3781,10 @@ const checkItemLimit = () => {
 
   // Photo upload limits based on mode
   let maxPhotos = currentMode === 'unlimited' ? 10 : 7;
+  // 图片 NSFW 模式走 Vega 模型：参考图最多 3 张
+  if (contentType.value === 'photo' && currentMode === 'unlimited') {
+    maxPhotos = PHOTO_UNLIMITED_MAX_COUNT;
+  }
   if (contentType.value === 'video' && (selectedVideoMultimodal.value === 'multimodal' || selectedVideoMultimodal.value === 'videoModify' || selectedVideoMultimodal.value === 'videoExtend')) {
     maxPhotos = videoProfile.value.imageMaxCount;
   }
@@ -3954,6 +3959,9 @@ const switchDramaMode = (mode: string, index: number) => {
 
 const PHOTO_NORMAL_MAX_COUNT = 7;
 const PHOTO_NORMAL_MAX_SIZE = 10 * 1024 * 1024;
+// 图片 NSFW 模式（Vega 模型）的参考图限制：0~3 张、单张 ≤10MB（格式不按模式区分）
+const PHOTO_UNLIMITED_MAX_COUNT = 3;
+const PHOTO_UNLIMITED_MAX_SIZE = 10 * 1024 * 1024;
 
 function pickPhotoImagesForNormalMode() {
   const kept: any[] = [];
@@ -4194,10 +4202,13 @@ const removeCharacter = (character: any) => {
 
 
 // Content type selection
+const I18N_TO_URL_LANG: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw', 'ko': 'ko', 'th': 'th' };
+
+/** 工具页地址 /{lang}/{type}：tab 输出成真实 <a href>，爬虫能顺着抓到 5 个工具页 */
+const toolPageHref = (type: string) => `/${I18N_TO_URL_LANG[locale.value] || 'ja'}/${type}`;
+
 const selectContentType = (type: string) => {
-  const i18nToUrlLang: Record<string, string> = { 'jp': 'ja', 'en': 'en', 'zh': 'zh-cn', 'tc': 'zh-tw', 'ko': 'ko', 'th': 'th' };
-  const urlLang = i18nToUrlLang[locale.value] || 'ja';
-  const targetPath = `/${urlLang}/${type}`;
+  const targetPath = toolPageHref(type);
   // 用 router.replace 而非 history.replaceState：后者不会更新 vue-router 的 route，
   // 导致 App.vue 里依赖 route 的 canonical/alternate/hreflang 不会随内容类型切换而更新。
   if (route.path !== targetPath) {
@@ -6070,9 +6081,11 @@ const handleFileChange = async (event: Event) => {
     let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 10 * 1024 * 1024;
     let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 10;
 
+    // 图片 NSFW 模式走 Vega 模型：参考图 0~3 张、单张 ≤10MB
     if (contentType.value === 'photo' && currentMode === 'unlimited') {
-      maxFileSizeBytes = 30 * 1024 * 1024;
-      maxFileSizeMB = 30;
+      maxPhotos = PHOTO_UNLIMITED_MAX_COUNT;
+      maxFileSizeBytes = PHOTO_UNLIMITED_MAX_SIZE;
+      maxFileSizeMB = PHOTO_UNLIMITED_MAX_SIZE / MB;
     }
 
     // Comic and Drama modes have 10MB image size limit

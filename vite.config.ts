@@ -86,11 +86,11 @@ export default defineConfig({
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        // SEO T17：element-plus 已改按需（只有日期组件用），mammoth/cfb 只在发布小说页用，
+        // 都不再手动分包，让它们跟着各自的页面懒加载；之前 doc 包被入口 modulepreload 了 95KB。
         manualChunks: {
           vendor: ['vue', 'vue-router', 'vue-i18n', 'pinia'],
-          ui: ['element-plus'],
-          utils: ['axios', 'dayjs', 'bignumber.js', 'uuid'],
-          doc: ['mammoth', 'cfb']
+          utils: ['axios', 'dayjs', 'bignumber.js', 'uuid']
         }
       }
     },

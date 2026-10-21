@@ -1188,6 +1188,16 @@ $pinkopacity: rgba(255,79,154,0.12);
   justify-content: center;
 }
 
+// SEO 预渲染时才渲染的分页链接（真实用户看不到）
+.load-more-link {
+  display: block;
+  width: fit-content;
+  margin: 16px auto 0;
+  color: $muted;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .no-more-text {
   text-align: center;
   padding: 20px 0;

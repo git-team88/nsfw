@@ -292,6 +292,7 @@ export default {
     maxCoverImages: "최대 {max}장의 이미지를 업로드할 수 있습니다",
     maxCoverSize: "이미지 크기가 제한을 초과했습니다. 최대 {max}MB까지 지원합니다",
     invalidCoverImageType: "지원하지 않는 이미지 형식입니다. JPG, PNG 또는 WEBP 형식의 이미지를 업로드해주세요",
+    invalidCoverImageTypeUnlimited: "지원하지 않는 이미지 형식입니다. {mode} 모드에서는 JPG, PNG만 업로드할 수 있습니다",
     imageDimensionError: "이미지 가로세로 크기는 14픽셀보다 커야 합니다",
     imageAspectRatioError: "이미지 가로세로 비율이 제한을 초과했습니다 (가로/세로 비율은 1/16~16 사이여야 함)",
     uploadFormat: "지원 형식: jpg, jpeg, png, webp (장당 최대 10MB)",
@@ -1701,6 +1702,7 @@ export default {
       maxItemReached: "캐릭터와 참고 이미지는 총 최대 {max}개까지 가능합니다",
       maxPhotoSize: "이미지 크기가 제한을 초과했습니다. 최대 10MB까지 지원합니다",
       invalidPhotoFormat: "지원하지 않는 이미지 형식입니다. JPG, PNG 또는 WEBP 형식의 이미지를 업로드해주세요",
+      invalidPhotoFormatUnlimited: "지원하지 않는 이미지 형식입니다. {mode} 모드에서는 JPG, PNG만 업로드할 수 있습니다",
       invalidVideoFormat: "지원하지 않는 동영상 형식입니다. MP4 또는 MOV 형식의 동영상을 업로드해 주세요",
       invalidAudioFormat: "지원하지 않는 오디오 형식입니다. MP3 또는 WAV 형식의 오디오를 업로드해 주세요",
       corruptedImage: "이미지 파일이 손상되어 인식할 수 없습니다. 다시 선택하거나 다른 이름으로 저장한 후 업로드해 주세요",
@@ -2716,7 +2718,7 @@ export default {
   },
   seo: {
     home: {
-      title: "FansFans 창작 - AI 소설・만화・만화・애니 드라마 한 번에 생성｜한 문장으로 쓰는 소설 AI 창작 도구, 이차원 AI 창작, FansFans, AI 동인 창작",
+      title: "FansFans - AI 소설・만화・애니 드라마 원클릭 생성｜한 문장으로 창작 시작",
       keywords: "AI 소설 생성기, AI 만화 생성기, AI 애니 드라마 생성, AI 만화 생성, 한 문장으로 소설 생성, AI 글쓰기 도구, 이차원 AI 창작, FansFans, AI 동인 창작",
       description: "FansFans는 중화권과 일본 시장을 겨냥한 AI 이차원 창작 플랫폼입니다. 영감 한 문장만 입력하면 소설・만화・만화・애니 드라마를 생성할 수 있으며, 무료로 30K자부터 시작해 AI가 당신의 무한한 이야기를 지켜줍니다.",
       novel: {
@@ -2749,6 +2751,12 @@ export default {
       title: "[[title]] - FansFans 이차원 AI 창작",
       keywords: "[[title]],AI [[type]],이차원 [[type]]",
       description: "[[title]] - [[description]]"
+    },
+    collection: {
+      title: "[[title]]｜[[type]] · 전 [[episodes]]화｜[[site]]",
+      description: "[[intro]]. [[episodes]]화 연재 중, [[author]] 제작.",
+      descriptionFallback: "[[author]]의 [[type]] 《[[title]]》, 전 [[episodes]]화. [[site]]에서 감상.",
+      types: { comic: "만화", novel: "소설", drama: "애니 드라마", image: "일러스트", video: "영상" }
     },
     communityConvention: {
       title: "커뮤니티 가이드라인 - FansFans 창작 공약",

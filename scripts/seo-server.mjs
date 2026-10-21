@@ -535,10 +535,21 @@ let activeRenders = 0
 
 async function renderPage(url) {
   const b = await getBrowser()
-  const page = await b.newPage()
+  // T01：每次渲染用独立的 BrowserContext（相当于一个干净的无痕窗口），渲染完关掉。
+  // 同一个 browser 复用 ~20 次时，上一个 /th 页面写进 localStorage 的 lang 会带到
+  // 下一个不带前缀的页面（/collection/123），把它渲染成泰文。独立 context 后
+  // localStorage / cookie 每次都是空的，不带前缀的页面稳定按默认语言（en）渲染。
+  const context = await b.createBrowserContext()
+  const page = await context.newPage()
   const work = (async () => {
     await page.setViewport({ width: 1440, height: 900 })
-    await page.setUserAgent('Mozilla/5.0 (compatible; FansFans-SEO-Renderer/1.0; +https://www.fansfans.ai/)')
+    // UA 和 Accept-Language 一起用 CDP 设：acceptLanguage 同时决定请求头和 navigator.languages，
+    // 前端 detectBrowserLang() 一定拿到 en，语言规则就是「URL 前缀 > 默认 en」。
+    const cdp = await page.createCDPSession()
+    await cdp.send('Network.setUserAgentOverride', {
+      userAgent: 'Mozilla/5.0 (compatible; FansFans-SEO-Renderer/1.0; +https://www.fansfans.ai/)',
+      acceptLanguage: 'en',
+    })
     // 注入 SEO 预渲染标记：Home.vue 据此按 URL 显示对应内容类型并保留地址，
     // 而不是像真实用户那样重置为默认内容类型 / 只保留域名。
     // 同时抹掉 navigator.webdriver（配合 --disable-blink-features=AutomationControlled），
@@ -574,8 +585,9 @@ async function renderPage(url) {
     clearTimeout(deadlineTimer)
     return result
   } finally {
-    // 无论成功/超时/异常都强制关掉 page，避免 page 泄漏累积内存。
+    // 无论成功/超时/异常都强制关掉 page 和 context，避免泄漏累积内存。
     await page.close().catch(() => {})
+    await context.close().catch(() => {})
     renderCount++
   }
 }

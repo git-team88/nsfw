@@ -403,10 +403,10 @@
           <!-- Right Header: User Info & Actions -->
           <div class="right-header-box" :class="{ 'with-border': isScrolled }">
             <div class="right-header">
-              <div class="user-info" @click="navigateToUserHome">
+              <a class="user-info seo-link" :href="detail.author?.id ? `/user-home/${detail.author.id}` : '#'" @click.prevent="navigateToUserHome">
                 <img class="avatar" :src="detail.author?.avatar || defaultAvatar" alt="" @error="e => { const target = e.target as HTMLImageElement; if (target) target.src = defaultAvatar }" />
                 <span class="nickname">{{ detail.author?.nickname }}</span>
-              </div>
+              </a>
 
               <div class="right-header-actions">
                 <div v-if="detail.author?.id != uid">
@@ -455,9 +455,9 @@
             <div class="collection-chapters-count">
               <span>{{ t('detail.updatedChapters', { count: chapterCount }) }}</span>
 
-              <div class="collection-link" @click="goToCollectionDetail">
+              <a class="collection-link seo-link" :href="`/collection/${detail.book_id}`" @click.prevent="goToCollectionDetail">
                 {{ t('detail.viewCollectionInfo') }}
-              </div>
+              </a>
               <div class="make-similar-wrap" v-if="detail.session_id && detail.type != '5'">
                 <div class="make-similar-btn" @click.stop="goMakeSimilar(detail.session_id)">
                   <img :src="makeIcon" alt="" class="make-icon" />
@@ -984,6 +984,7 @@ import SensitiveNsfwPanel from "@/components/SensitiveNsfwPanel.vue";
 import DramaUnlockCard from "@/components/DramaUnlockCard.vue";
 
 import { useRoute, useRouter } from "vue-router";
+import { goNotFoundIfMissing } from "@/utils/seoMeta";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
@@ -2387,20 +2388,10 @@ function formatContent(content: string): string {
   return result;
 }
 
-function setSeoMeta(title: string, description: string, type: string) {
-  const typeMap: { [key: string]: string } = {
-    '1': t('detail.type.comic'),
-    '2': t('detail.type.novel'),
-    '3': t('detail.type.drama')
-  };
-
-  const typeLabel = typeMap[type] || '';
-
+// type 以前只用来拼 meta keywords，keywords 已删（SEO T13），参数保留以免改动调用处
+function setSeoMeta(title: string, description: string, _type: string) {
   let pageTitle = t('seo.detail.title');
   pageTitle = pageTitle.replace(/\[\[title\]\]/g, title);
-
-  let keywords = t('seo.detail.keywords');
-  keywords = keywords.replace(/\[\[title\]\]/g, title).replace(/\[\[type\]\]/g, typeLabel);
 
   const trimmedDesc = description.replace(/<[^>]*>/g, '').replace(/[\n\r]+/g, '').substring(0, 80);
   let pageDescription = t('seo.detail.description');
@@ -2408,15 +2399,7 @@ function setSeoMeta(title: string, description: string, type: string) {
 
   document.title = pageTitle;
 
-  let metaKeywords = document.querySelector('meta[name="Keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', keywords);
-
-  let metaDescription = document.querySelector('meta[name="Description"]');
+  let metaDescription = document.querySelector('meta[name="description" i]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');
     metaDescription.setAttribute('name', 'description');
@@ -2864,6 +2847,8 @@ async function fetchDetail(newId: number) {
         nextId.value = null;
       }
     } else {
+      // 作品不存在 → 404 页（真实 404 给爬虫，T04）；其它错误照旧提示
+      if (goNotFoundIfMissing(router, route, res)) return;
       toast(apiErrorMessage(res))
 
       detail.value = {

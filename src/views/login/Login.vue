@@ -150,13 +150,6 @@ declare global {
 
 function setSeoMeta() {
   document.title = t('seo.login.title');
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', t('seo.login.keywords'));
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');

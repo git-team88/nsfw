@@ -1,5 +1,5 @@
 import { baseUrl } from './config';
-import i18n, { detectBrowserLang } from '../lang/i18n';
+import i18n, { detectBrowserLang, setLocale } from '../lang/i18n';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -40,7 +40,7 @@ export async function initLanguage() {
     return savedLang;
   }
   const lang = detectBrowserLang();
-  i18n.global.locale.value = lang;
+  await setLocale(lang);
   return lang;
 }
 

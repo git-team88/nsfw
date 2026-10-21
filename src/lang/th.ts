@@ -292,6 +292,7 @@ export default {
     maxCoverImages: "อัปโหลดรูปภาพได้สูงสุด {max} รูป",
     maxCoverSize: "ขนาดรูปภาพเกินกำหนด รองรับสูงสุด {max}MB",
     invalidCoverImageType: "ไม่รองรับรูปแบบไฟล์นี้ กรุณาอัปโหลดภาพในรูปแบบ JPG, PNG หรือ WEBP",
+    invalidCoverImageTypeUnlimited: "ไม่รองรับรูปแบบไฟล์นี้ โหมด {mode} รองรับเฉพาะรูป JPG และ PNG",
     imageDimensionError: "ความกว้างและความสูงของภาพต้องมากกว่า 14 พิกเซล",
     imageAspectRatioError: "อัตราส่วนกว้างยาวของภาพเกินกำหนด (อัตราส่วนกว้าง/สูง ต้องอยู่ระหว่าง 1/16 ถึง 16)",
     uploadFormat: "รองรับไฟล์: jpg, jpeg, png, webp (ไม่เกิน 10MB ต่อรูป)",
@@ -1701,6 +1702,7 @@ export default {
       maxItemReached: "ภาพตัวละครและภาพอ้างอิงรวมกันได้สูงสุด {max} รูป",
       maxPhotoSize: "ขนาดรูปภาพเกินขีดจำกัด รองรับสูงสุด 10MB",
       invalidPhotoFormat: "ไม่รองรับรูปแบบไฟล์นี้ กรุณาอัปโหลดภาพในรูปแบบ JPG, PNG หรือ WEBP",
+      invalidPhotoFormatUnlimited: "ไม่รองรับรูปแบบไฟล์นี้ โหมด {mode} รองรับเฉพาะรูป JPG และ PNG",
       invalidVideoFormat: "ไม่รองรับรูปแบบวิดีโอนี้ กรุณาอัปโหลดวิดีโอในรูปแบบ MP4 หรือ MOV",
       invalidAudioFormat: "ไม่รองรับรูปแบบเสียงนี้ กรุณาอัปโหลดเสียงในรูปแบบ MP3 หรือ WAV",
       corruptedImage: "ไฟล์รูปภาพเสียหาย ไม่สามารถอ่านได้ กรุณาเลือกใหม่หรือบันทึกใหม่แล้วอัปโหลดอีกครั้ง",
@@ -2716,7 +2718,7 @@ export default {
   },
   seo: {
     home: {
-      title: "FansFans สร้างสรรค์ - สร้าง AI นิยาย・มังงะ・มังงะ・อนิเมะดราม่า ในคลิกเดียว｜เครื่องมือ AI เขียนนิยายจากประโยคเดียว, การสร้างสรรค์ AI แนวอนิเมะ, FansFans, การสร้างสรรค์ AI แนวโดจิน",
+      title: "FansFans - สร้างนิยาย มังงะ อนิเมะดราม่าด้วย AI ในคลิกเดียว | เริ่มสร้างสรรค์จากประโยคเดียว",
       keywords: "เครื่องมือสร้างนิยาย AI, เครื่องมือสร้างมังงะ AI, สร้างอนิเมะดราม่าด้วย AI, สร้างมังงะด้วย AI, สร้างนิยายจากประโยคเดียว, เครื่องมือเขียนด้วย AI, การสร้างสรรค์ AI แนวอนิเมะ, FansFans, การสร้างสรรค์ AI แนวโดจิน",
       description: "FansFans คือแพลตฟอร์มสร้างสรรค์ AI แนวอนิเมะสำหรับตลาดจีนและญี่ปุ่น เพียงป้อนไอเดียหนึ่งประโยคก็สามารถสร้างนิยาย・มังงะ・มังงะ・อนิเมะดราม่าได้ทันที เริ่มต้นฟรี 30,000 ตัวอักษร ให้ AI ดูแลเรื่องราวไม่รู้จบของคุณ",
       novel: {
@@ -2749,6 +2751,12 @@ export default {
       title: "[[title]] - FansFans สร้างสรรค์ AI แนวอนิเมะ",
       keywords: "[[title]],AI [[type]],[[type]] แนวอนิเมะ",
       description: "[[title]] - [[description]]"
+    },
+    collection: {
+      title: "[[title]] | [[type]] · [[episodes]] ตอน | [[site]]",
+      description: "[[intro]] [[episodes]] ตอน สร้างโดย [[author]]",
+      descriptionFallback: "[[type]] เรื่อง [[title]] โดย [[author]] ทั้งหมด [[episodes]] ตอน อ่านได้ที่ [[site]]",
+      types: { comic: "มังงะ", novel: "นิยาย", drama: "อนิเมะดราม่า", image: "ภาพประกอบ", video: "วิดีโอ" }
     },
     communityConvention: {
       title: "แนวทางชุมชน - ข้อตกลงการสร้างสรรค์ FansFans",

@@ -222,13 +222,6 @@ declare global {
 
 function setSeoMeta() {
   document.title = t('seo.signup.title');
-  let metaKeywords = document.querySelector('meta[name="keywords"]');
-  if (!metaKeywords) {
-    metaKeywords = document.createElement('meta');
-    metaKeywords.setAttribute('name', 'keywords');
-    document.head.appendChild(metaKeywords);
-  }
-  metaKeywords.setAttribute('content', t('seo.signup.keywords'));
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');

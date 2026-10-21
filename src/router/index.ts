@@ -6,7 +6,7 @@ import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
 import ResetPassword from "@/views/login/ResetPassword.vue";
-import i18n from "@/lang/i18n";
+import i18n, { setLocale } from "@/lang/i18n";
 
 const LANG_URL_TO_I18N: Record<string, string> = {
   ja: 'jp',
@@ -441,10 +441,10 @@ const router = createRouter({
 });
 
 // Subdomain routing logic
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const langFromMeta = to.meta.lang as string | undefined;
   if (langFromMeta) {
-    i18n.global.locale.value = langFromMeta;
+    await setLocale(langFromMeta);
     document.documentElement.lang = LANG_URL_TO_HTML[Object.entries(LANG_URL_TO_I18N).find(([, v]) => v === langFromMeta)?.[0] || 'ja'] || 'ja';
     localStorage.setItem('lang', langFromMeta);
   }
