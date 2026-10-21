@@ -3246,21 +3246,21 @@ If you have any questions, complaints, comments or suggestions regarding persona
   },
   seo: {
     home: {
-      title: "FansFans - AI Novel, Comic & Anime Drama Generator | One Line, Infinite Stories",
+      title: "FansFans - AI Novel, Comic & Anime Drama Generator {'|'} One Line, Infinite Stories",
       keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, FansFans, AI writing tool",
       description: "FansFans turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start.",
       novel: {
-        title: "AI Novel Generator Online Free | Write 30K Long-Form Web Novels in One Line - FansFans",
+        title: "AI Novel Generator Online Free {'|'} Write 30K Long-Form Web Novels in One Line - FansFans",
         keywords: "AI novel generator,AI write novels,AI web novels,free AI novel,long-form novel generator,web novel AI,novel outline AI,anime novel AI",
         description: "FansFans AI Novel Generator — input one creative line to auto-generate a 30K-word long-form web novel. Supports xianxia, romance, BL, isekai & more. Top choice for TW/HK/JP creators."
       },
       comic: {
-        title: "AI Comic Generator | Text to Manga, Webtoon & Panels - FansFans",
+        title: "AI Comic Generator {'|'} Text to Manga, Webtoon & Panels - FansFans",
         keywords: "AI comic generator, text to comic, AI manga generator, webtoon AI, AI comic panels, character consistency",
         description: "Turn text into comics & manga with FansFans. Auto-paneling, consistent characters, multi-style: manga, webtoon, chibi."
       },
       drama: {
-        title: "AI Anime Drama Generator | One Line to Animated Short - FansFans",
+        title: "AI Anime Drama Generator {'|'} One Line to Animated Short - FansFans",
         keywords: "AI anime drama, AI animated short, anime script AI, AI short anime, vertical anime AI",
         description: "Turn one line into a 1-3 min anime drama short. Auto storyboard, dialogue, voice, BGM. Built for anime creators."
       },
@@ -3281,7 +3281,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       description: "[[title]] - [[description]]"
     },
     collection: {
-      title: "[[title]] | [[type]] · [[episodes]] episodes | [[site]]",
+      title: "[[title]] {'|'} [[type]] · [[episodes]] episodes {'|'} [[site]]",
       description: "[[intro]]. [[episodes]] episodes, created by [[author]].",
       descriptionFallback: "[[title]], a [[type]] by [[author]] with [[episodes]] episodes on [[site]].",
       types: { comic: "Comic", novel: "Novel", drama: "Anime Drama", image: "Illustration", video: "Video" }
@@ -3302,27 +3302,27 @@ If you have any questions, complaints, comments or suggestions regarding persona
       description: "FansFans respects your personal information and creative privacy."
     },
     login: {
-      title: "Log In — Continue Your AI Story | FansFans",
+      title: "Log In — Continue Your AI Story {'|'} FansFans",
       keywords: "FansFans login, account login, sign in, log in",
       description: "Log in to your FansFans account and continue creating AI-powered novels, comics, and anime dramas."
     },
     signup: {
-      title: "Sign Up Free — Start Your AI Story Today | FansFans",
+      title: "Sign Up Free — Start Your AI Story Today {'|'} FansFans",
       keywords: "FansFans sign up, free AI creation, AI writing account, register",
       description: "Sign up free and instantly get 30K creation words + full AI novel, comic & anime drama tools."
     },
     characterLibrary: {
-      title: "AI Character Library — Create Custom Manga Characters | FansFans",
+      title: "AI Character Library — Create Custom Manga Characters {'|'} FansFans",
       keywords: "AI character generator, character library, anime characters, manga characters, AI character creation",
       description: "FansFans AI Character Library offers official and custom characters to help you create unique 2D manga characters."
     },
     userHome: {
-      title: "My Works — Manage Your AI Novels, Comics & Anime Drama | FansFans",
+      title: "My Works — Manage Your AI Novels, Comics & Anime Drama {'|'} FansFans",
       keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
       description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data."
     },
     novelGenerate: {
-      title: "AI Novel Generator Online Free | Write 30K Stories in One Click - FansFans",
+      title: "AI Novel Generator Online Free {'|'} Write 30K Stories in One Click - FansFans",
       keywords: "AI novel generator, long-form story generator, textai, AI story maker, AI novel AI, write novel AI, AI novel tool",
       description: "Generate full 30K+ word novels from one line. Multiple genres: romance, BL, school romance, sci-fi, fantasy. Built for global writers."
     }

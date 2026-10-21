@@ -417,7 +417,8 @@ async function fetchCollectionDetail() {
         const chaptersData = finalData.chatpers || finalData.chapters || [];
 
         // 接口成功但没有合集数据（id 不存在）→ 404 页，不渲染空壳（T04）
-        if (!finalBookInfo || !(finalBookInfo.id || finalData.book_id)) {
+        // 接口会把请求的 book_id 原样回显，所以只看 book_info 自己有没有 id / 标题
+        if (!finalBookInfo || !(finalBookInfo.id || finalBookInfo.title)) {
           goNotFoundIfMissing(router, route, { code: 0, data: null });
           return;
         }

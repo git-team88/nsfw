@@ -36,6 +36,8 @@ export function cleanupExpiredViews() {
  * 超过 10 分钟则清除缓存，检测到无缓存后重新上报。
  */
 async function reportOnce(cacheKey: string, report: () => Promise<any>) {
+  // SEO 预渲染（爬虫）不算浏览，不上报，否则作品浏览量会被爬虫刷高
+  if ((window as any).__SEO_PRERENDER__ === true) return
   // 同一个 key 正在请求中，直接跳过（缓存要等接口返回才写，这期间不挡重复调用）
   if (inFlight.has(cacheKey)) return
   try {

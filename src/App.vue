@@ -216,6 +216,15 @@ function updateAltAndCanonical() {
     document.head.appendChild(can);
   }
   if (can.href !== canonical) can.href = canonical;
+
+  // og:url 跟 canonical 保持一致（index.html 里写死的是首页；详情/合集页自己会再覆盖成页面地址）
+  let og = document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+  if (!og) {
+    og = document.createElement('meta');
+    og.setAttribute('property', 'og:url');
+    document.head.appendChild(og);
+  }
+  if (og.content !== canonical) og.content = canonical;
 }
 
 onMounted(() => {
@@ -244,10 +253,12 @@ onMounted(() => {
     updateHreflang();
   });
 
-  // canonical/alternate 依赖 query（如 /detail/x?contentType=t），用 fullPath 监听
+  // canonical/alternate 依赖 query（如 /detail/x?contentType=t），用 fullPath 监听。
+  // flush: 'post'：等上一个页面卸载完再写——详情/合集页离开时会把自己改过的 og:url 还原成旧值，
+  // 如果这里先写、它后还原，新页面的 og:url 就被还原成旧的了。
   watch(() => route.fullPath, () => {
     updateAltAndCanonical();
-  });
+  }, { flush: 'post' });
 });
 
 watch(locale, () => {

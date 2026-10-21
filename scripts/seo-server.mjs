@@ -382,7 +382,8 @@ const BAD_RENDER_PATTERNS = [
 
 // 渲染成功的最低门槛：body 里除脚本/样式/注释外，至少要有这么多可见文本。
 // 前端没起来时 body 基本是空的（≈0 字符）；正常首页/分类页是数千字符。
-const MIN_RENDER_TEXT = 120
+// 视频 / 图片类作品详情页本身文字很少（实测 160 字左右），门槛放到 60，只拦真正的空页。
+const MIN_RENDER_TEXT = parseInt(process.env.SEO_MIN_RENDER_TEXT || '60', 10)
 
 function isBadRender(html) {
   if (!html) return true
