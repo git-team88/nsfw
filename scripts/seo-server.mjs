@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer'
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import http from 'node:http'
 
 const app = express()
 const PORT = process.env.SEO_PORT || 3002
@@ -10,6 +11,20 @@ const PORT = process.env.SEO_PORT || 3002
 const SPA_URL = process.env.SPA_URL || 'https://www.fansfans.ai'
 const CACHE_DIR = process.env.CACHE_DIR || '/data/seo-cache/fansfans'
 const CACHE_TTL = parseInt(process.env.CACHE_TTL || '86400', 10)
+// ============================================================
+// 缓存策略（SEO T05）：
+//   L2 nginx proxy_cache（1h，use_stale + background_update，见 vhost 的 /seo-render）
+//   L3 本服务：内存 LRU（MEM_CACHE_MAX 条 / MEM_CACHE_TTL 秒）→ 文件缓存（CACHE_TTL 内新鲜）
+//   新鲜期过了但还在 CACHE_STALE_TTL 内：先把旧页立刻吐给爬虫，再后台重渲染（stale-while-revalidate），
+//   爬虫永远不用等渲染；完全没缓存时才同步渲染（最多 SYNC_RENDER_TIMEOUT）。
+// ============================================================
+const CACHE_STALE_TTL = parseInt(process.env.CACHE_STALE_TTL || String(7 * 86400), 10)
+const MEM_CACHE_MAX = parseInt(process.env.SEO_MEM_CACHE_MAX || '2000', 10)
+const MEM_CACHE_TTL = parseInt(process.env.SEO_MEM_CACHE_TTL || '900', 10)
+// 给 nginx proxy_cache 用的响应头：完整页 1h、404 5min、骨架/降级页不缓存
+const NGINX_CACHE_OK = 'public, max-age=3600'
+const NGINX_CACHE_404 = 'public, max-age=300'
+const NGINX_NO_STORE = 'no-store'
 
 // 判定「这次抓取是不是爬虫」的兜底名单（nginx 的 $is_bot 才是主判据）。
 // 只覆盖两类：搜索引擎 + 生成式引擎（GEO）—— 它们要么把搜索用户带回来，
@@ -457,21 +472,48 @@ function getCachePath(url) {
   return path.join(CACHE_DIR, `${hash}.html`)
 }
 
+// —— L3 内存缓存（LRU：Map 的插入顺序即访问顺序）——
+const memCache = new Map() // url -> { html, mtime }
+function memGet(url) {
+  const e = memCache.get(url)
+  if (!e) return null
+  if (Date.now() - e.readAt > MEM_CACHE_TTL * 1000) { memCache.delete(url); return null }
+  memCache.delete(url); memCache.set(url, e) // 刷新 LRU 顺序
+  return e
+}
+function memSet(url, html, mtime) {
+  memCache.delete(url)
+  memCache.set(url, { html, mtime, readAt: Date.now() })
+  while (memCache.size > MEM_CACHE_MAX) memCache.delete(memCache.keys().next().value)
+}
+
+/**
+ * 读缓存：返回 { html, stale } 或 null。
+ *   stale=false：CACHE_TTL 内，直接用
+ *   stale=true ：过了 CACHE_TTL 但还在 CACHE_STALE_TTL 内，先用旧页、后台重渲染
+ *   超过 CACHE_STALE_TTL：当没有（文件由 sweep 清）
+ */
 function getCache(url) {
+  const now = Date.now()
+  const m = memGet(url)
+  if (m) return { html: m.html, stale: now - m.mtime > CACHE_TTL * 1000 }
   const filePath = getCachePath(url)
-  if (!fs.existsSync(filePath)) return null
-  const stat = fs.statSync(filePath)
-  if (Date.now() - stat.mtimeMs > CACHE_TTL * 1000) {
-    fs.unlinkSync(filePath)
+  let stat
+  try { stat = fs.statSync(filePath) } catch { return null }
+  const age = now - stat.mtimeMs
+  if (age > (CACHE_TTL + CACHE_STALE_TTL) * 1000) {
+    try { fs.unlinkSync(filePath) } catch {}
     return null
   }
-  return fs.readFileSync(filePath, 'utf-8')
+  let html
+  try { html = fs.readFileSync(filePath, 'utf-8') } catch { return null }
+  memSet(url, html, stat.mtimeMs)
+  return { html, stale: age > CACHE_TTL * 1000 }
 }
 
 function setCache(url, html) {
+  memSet(url, html, Date.now())
   // ⚠️ 写缓存失败（目录不存在 / 磁盘满 / 权限不足）绝不能影响本次渲染结果的返回。
-  // 以前这里没有 try/catch：一旦写失败就向上抛，整次渲染被丢弃、爬虫只拿到骨架，
-  // 而日志里只有一句 ENOENT，看起来像「渲染失败」，极难定位。
   try {
     fs.writeFileSync(getCachePath(url), html)
   } catch (e) {
@@ -480,6 +522,7 @@ function setCache(url, html) {
 }
 
 function invalidateCache(url) {
+  memCache.delete(url)
   const filePath = getCachePath(url)
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
 }
@@ -517,7 +560,7 @@ function sweepExpiredCache() {
       const filePath = path.join(CACHE_DIR, file)
       try {
         const stat = fs.statSync(filePath)
-        if (now - stat.mtimeMs > CACHE_TTL * 1000) {
+        if (now - stat.mtimeMs > (CACHE_TTL + CACHE_STALE_TTL) * 1000) {
           fs.unlinkSync(filePath)
           removed++
         }
@@ -592,75 +635,157 @@ async function renderPage(url) {
   }
 }
 
+// —— 渲染去重 + 后台队列（SEO T05）——
+// inflight：同一 URL 同时只跑一次渲染，并发抓取共用结果（爬虫一次来几十个请求时不再各渲染各的）。
+// bgQueue：后台重渲染（stale 刷新 / warm 预热）排队，占用的还是 MAX_CONCURRENT 那几个槽位，
+//          前台（缓存全无的同步渲染）优先，队列有上限、按 URL 去重。
+const inflight = new Map() // url -> Promise<{ html, kind }>
+const bgQueue = []
+const bgQueued = new Set()
+const BG_QUEUE_MAX = parseInt(process.env.SEO_BG_QUEUE_MAX || '500', 10)
+
+/**
+ * 渲染一次并按结果写缓存。返回 { html, kind }：
+ *   kind = 'ok' | 'notfound' | 'bad'（坏渲染：不写缓存）
+ * 同一 URL 并发调用共用同一个 Promise。
+ */
+function renderAndCache(url) {
+  const existing = inflight.get(url)
+  if (existing) return existing
+  activeRenders++
+  const p = renderPage(url)
+    .then(html => {
+      if (isNotFoundRender(html)) {
+        const withNoindex = ensureNoindex(html)
+        setCache(url, withNoindex)
+        console.log(`[not-found] 404: ${url}`)
+        return { html: withNoindex, kind: 'notfound' }
+      }
+      // 坏渲染（CF 拦截页 / 前端没起来）：绝不写缓存，否则一张错误页会喂爬虫 24h
+      if (isBadRender(html)) {
+        console.error(`[bad-render] rejected, not cached: ${url}`)
+        return { html, kind: 'bad' }
+      }
+      setCache(url, html)
+      return { html, kind: 'ok' }
+    })
+    .finally(() => {
+      activeRenders--
+      inflight.delete(url)
+      pumpBgQueue()
+    })
+  inflight.set(url, p)
+  return p
+}
+
+function scheduleBgRender(url, reason) {
+  if (inflight.has(url) || bgQueued.has(url)) return false
+  if (bgQueue.length >= BG_QUEUE_MAX) { console.warn(`[bg] queue full, drop: ${url}`); return false }
+  bgQueue.push({ url, reason })
+  bgQueued.add(url)
+  pumpBgQueue()
+  return true
+}
+
+function pumpBgQueue() {
+  while (bgQueue.length && activeRenders < MAX_CONCURRENT) {
+    const { url, reason } = bgQueue.shift()
+    bgQueued.delete(url)
+    renderAndCache(url)
+      .then(r => { if (r.kind !== 'bad') refreshNginxCache(url) })
+      .then(() => console.log(`[bg] ${reason} rendered: ${url}`))
+      .catch(e => console.error(`[bg] ${reason} failed: ${url} - ${e.message}`))
+  }
+}
+
+// 后台渲染完成后，让 nginx 的 proxy_cache 也换成新页：
+// 带 X-SEO-Refresh 头 + 爬虫 UA 回环请求一次，nginx 对这个头 proxy_cache_bypass，
+// 回源拿到刚写好的缓存并存起来，下一个真爬虫直接命中新页。
+// 回环走 SEO_NGINX_LOOPBACK（默认 http://127.0.0.1:80，Host 用站点域名）。
+const NGINX_LOOPBACK = process.env.SEO_NGINX_LOOPBACK || 'http://127.0.0.1:80'
+// 用 node:http 而不是 fetch：fetch 不允许自定义 Host 头，回环会落到默认 vhost
+function refreshNginxCache(url) {
+  return new Promise(resolve => {
+    try {
+      const u = new URL(url)
+      const lb = new URL(NGINX_LOOPBACK)
+      const req = http.request({
+        host: lb.hostname,
+        port: lb.port || 80,
+        path: `${u.pathname}${u.search}`,
+        method: 'GET',
+        headers: {
+          Host: u.host,
+          'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html) seo-refresh',
+          'X-SEO-Refresh': '1',
+          'X-Forwarded-Proto': 'https',
+        },
+        timeout: 15000,
+      }, res => { res.resume(); res.on('end', resolve); res.on('error', resolve) })
+      req.on('timeout', () => { req.destroy(); resolve() })
+      req.on('error', resolve)
+      req.end()
+    } catch { resolve() }
+  })
+}
+
+/** 预热 / 刷新允许的路径：只接受站内的公开可索引页，别让外部拿这个口子刷渲染 */
+const WARM_PATH_RE = /^\/(?:|(?:ja|en|zh-cn|zh-tw|ko|th)(?:\/(?:novel|comic|drama|photo|video))?|(?:novel|comic|drama|photo|video)|collection\/\d+|detail\/\d+|user-home\/\d+)\/?$/
+
 app.get('/render', async (req, res) => {
   // 优先取 nginx 传来的 X-Render-Url（用 $request_uri，不受 rewrite 影响，且请求头不会被 query 解析截断）
   const targetUrl = req.get('x-render-url') || req.query.url
   if (!targetUrl) return res.status(400).send('Missing url parameter')
 
+  const sendSkeleton = (tag) => {
+    res.set('X-SEO-Cache', tag)
+    res.set('Cache-Control', NGINX_NO_STORE)
+    res.type('html').send(generateSkeleton(targetUrl, req.query))
+  }
+  const sendHtml = (html, tag) => {
+    res.set('X-SEO-Cache', tag)
+    if (isNotFoundRender(html)) {
+      res.set('Cache-Control', NGINX_CACHE_404)
+      return res.status(404).type('html').send(html)
+    }
+    res.set('Cache-Control', NGINX_CACHE_OK)
+    res.type('html').send(html)
+  }
+
   try {
     const cached = getCache(targetUrl)
     if (cached) {
-      res.set('X-SEO-Cache', 'HIT')
-      // 404 页也走缓存，命中时还原真实 404 状态码
-      if (isNotFoundRender(cached)) return res.status(404).type('html').send(cached)
-      return res.type('html').send(cached)
+      if (cached.stale) {
+        // 过期但还能用：先给旧页，后台重渲染（stale-while-revalidate）
+        scheduleBgRender(targetUrl, 'stale-refresh')
+        return sendHtml(cached.html, 'STALE')
+      }
+      return sendHtml(cached.html, 'HIT')
     }
 
-    // 并发上限：槽位满时直接降级返回骨架，避免并发风暴吃爆内存（P1）。
-    // 超时后转后台的渲染仍占实际资源，也计入此计数（P3）。
-    if (activeRenders >= MAX_CONCURRENT) {
-      res.set('X-SEO-Cache', 'OVERLOAD-SKELETON')
-      return res.type('html').send(generateSkeleton(targetUrl, req.query))
+    // 完全没缓存。槽位满了（且这个 URL 没在渲染中）直接给骨架，避免并发风暴吃爆内存。
+    if (activeRenders >= MAX_CONCURRENT && !inflight.has(targetUrl)) {
+      return sendSkeleton('OVERLOAD-SKELETON')
     }
 
-    // 无缓存：混合策略。启动一次渲染，在 SYNC_RENDER_TIMEOUT 内完成
-    // → 直接返回带正文/图片的完整 HTML（爬虫首次抓取即有内容）；
-    // 若超时未完成 → 先返回带 meta 的骨架，同一次渲染继续在后台跑完并写缓存
-    // （不重复渲染），下次请求直接命中。渲染失败则降级返回骨架 200（保住 meta）。
+    // 同步等 SYNC_RENDER_TIMEOUT：完成 → 给完整页；超时 → 先给骨架，渲染继续在后台写缓存
     let responded = false
-    activeRenders++
-
     const timer = setTimeout(() => {
       if (responded) return
       responded = true
-      res.set('X-SEO-Cache', 'MISS-TIMEOUT-ASYNC')
-      res.type('html').send(generateSkeleton(targetUrl, req.query))
+      sendSkeleton('MISS-TIMEOUT-ASYNC')
     }, SYNC_RENDER_TIMEOUT)
 
-    renderPage(targetUrl)
-      .then(html => {
-        // ① 404 页（NotFound 路由）：返回真实 404 + noindex，并写缓存（下次命中直接 404）。
-        //    必须放在坏渲染检测之前 —— 404 页可见文本少，会被 MIN_RENDER_TEXT 误判为坏渲染。
-        if (isNotFoundRender(html)) {
-          const withNoindex = ensureNoindex(html)
-          setCache(targetUrl, withNoindex)
-          console.log(`[not-found] 404: ${targetUrl}`)
-          if (responded) return
-          clearTimeout(timer)
-          responded = true
-          res.set('X-SEO-Cache', 'MISS-404')
-          return res.status(404).type('html').send(withNoindex)
-        }
-        // 坏渲染（CF 拦截页 / 前端没起来）：绝不写缓存，本次直接给骨架。
-        // 否则一张带 noindex 的错误页会被缓存 24h，持续喂给 Googlebot。
-        if (isBadRender(html)) {
-          console.error(`[bad-render] rejected, not cached: ${targetUrl}`)
-          if (responded) return
-          clearTimeout(timer)
-          responded = true
-          res.set('X-SEO-Cache', 'BAD-RENDER-SKELETON')
-          return res.status(200).type('html').send(generateSkeleton(targetUrl, req.query))
-        }
-        setCache(targetUrl, html)
+    renderAndCache(targetUrl)
+      .then(({ html, kind }) => {
         if (responded) {
-          // 已超时吐过骨架：此次渲染仅用于写缓存
-          console.log(`Async render cached (after timeout): ${targetUrl}`)
+          if (kind !== 'bad') console.log(`Async render cached (after timeout): ${targetUrl}`)
           return
         }
         clearTimeout(timer)
         responded = true
-        res.set('X-SEO-Cache', 'MISS')
-        res.type('html').send(html)
+        if (kind === 'bad') return sendSkeleton('BAD-RENDER-SKELETON')
+        sendHtml(html, kind === 'notfound' ? 'MISS-404' : 'MISS')
       })
       .catch(e => {
         console.error(`Render failed: ${targetUrl} - ${e.message}`)
@@ -668,17 +793,144 @@ app.get('/render', async (req, res) => {
         clearTimeout(timer)
         responded = true
         // 渲染失败降级：返回带 meta 的骨架，至少保证 title/description/canonical 可抓取
-        res.set('X-SEO-Cache', 'ERROR-FALLBACK')
-        res.status(200).type('html').send(generateSkeleton(targetUrl, req.query))
-      })
-      .finally(() => {
-        // 释放渲染槽位（前台命中、后台写缓存、降级失败三路都走这里）。
-        activeRenders--
+        sendSkeleton('ERROR-FALLBACK')
       })
   } catch (e) {
     console.error(`Render handler error: ${targetUrl} - ${e.message}`)
-    // 兜底：即便 getCache 等同步逻辑异常，也返回骨架而非报错，避免爬虫拿到 5xx
-    res.status(200).type('html').send(generateSkeleton(targetUrl, req.query))
+    sendSkeleton('HANDLER-ERROR-SKELETON')
+  }
+})
+
+// 预热 / 刷新：发布或更新作品后由前端调一次（nginx 暴露为 /seo-warm，有限流）。
+// 只收站内公开页路径，清掉旧缓存并排队后台渲染，立即返回，不阻塞发布流程。
+app.get('/warm', (req, res) => {
+  const raw = String(req.query.url || '')
+  let u
+  try { u = new URL(raw, SITE_URL) } catch { return res.status(400).json({ ok: false, error: 'bad url' }) }
+  const site = new URL(SITE_URL)
+  if (u.host !== site.host) return res.status(400).json({ ok: false, error: 'host not allowed' })
+  const pathOnly = u.pathname.replace(/\/+$/, '') || '/'
+  if (!WARM_PATH_RE.test(pathOnly)) return res.status(400).json({ ok: false, error: 'path not allowed' })
+  const target = `${site.origin}${pathOnly}`
+  invalidateCache(target)
+  const queued = scheduleBgRender(target, 'warm')
+  res.json({ ok: true, queued, url: target })
+})
+
+// ============================================================
+// T06 方案 B：真实用户的「壳」也带上详情页的 title / 封面 / 作品名
+// ------------------------------------------------------------
+// 真实用户访问 /collection/:id、/detail/:id 时 nginx 不再直接吐静态 index.html，
+// 而是走这里：拿 SPA 的 index.html，把该 URL 预渲染缓存里的 <title>、description、
+// og:*、canonical、hreflang、html lang 换进 <head>，并在 #app 里放一块静态占位
+// （封面 + 标题 + 简介，样式内联），再加 <link rel="preload"> 预载封面。
+// 页面 JS 起来后 Vue 挂载会把占位整块换掉，用户在等 JS 的这 1～2 秒看到的是内容而不是白屏。
+// 没有预渲染缓存时原样返回 index.html，并排队后台渲染一次，下个用户就有了。
+// 壳里不含任何用户数据，nginx 可以短缓存（见 vhost 里的 location）。
+// ============================================================
+const SPA_INDEX_HTML = process.env.SPA_INDEX_HTML || `/data/wwwroot/${new URL(SPA_URL).host}/index.html`
+let spaIndexCache = { mtime: 0, html: '' }
+function readSpaIndex() {
+  try {
+    const st = fs.statSync(SPA_INDEX_HTML)
+    if (st.mtimeMs !== spaIndexCache.mtime) {
+      spaIndexCache = { mtime: st.mtimeMs, html: fs.readFileSync(SPA_INDEX_HTML, 'utf-8') }
+    }
+    return spaIndexCache.html
+  } catch (e) {
+    console.error(`[shell] cannot read ${SPA_INDEX_HTML}: ${e.message}`)
+    return ''
+  }
+}
+
+function pickHead(html, re) {
+  const m = html.match(re)
+  return m ? m[0] : ''
+}
+function attrOf(tag, name) {
+  const m = tag.match(new RegExp(`${name}=["']([^"']*)["']`, 'i'))
+  return m ? decodeEntities(m[1]) : ''
+}
+
+/** 从预渲染结果里挑出 head 信息，组装成用户壳 */
+function buildShell(spaHtml, rendered) {
+  const head = rendered.split('</head>')[0]
+  const lang = (head.match(/<html[^>]*\blang=["']([^"']*)["']/i) || [])[1] || ''
+  const title = pickHead(head, /<title>[^<]*<\/title>/i)
+  const desc = pickHead(head, /<meta\s+name=["']description["'][^>]*>/i)
+  const ogs = head.match(/<meta\s+property=["']og:(?:title|description|type|url|image|image:width|image:height|image:alt|locale(?::alternate)?)["'][^>]*>/gi) || []
+  const tw = head.match(/<meta\s+name=["']twitter:[a-z_]+["'][^>]*>/gi) || []
+  const canonical = pickHead(head, /<link\s+rel=["']canonical["'][^>]*>/i)
+  const hreflang = head.match(/<link\s+rel=["']alternate["'][^>]*hreflang=[^>]*>/gi) || []
+
+  let out = spaHtml
+  if (lang) out = out.replace(/<html([^>]*)\blang=["'][^"']*["']/i, `<html$1lang="${lang}"`)
+  // 去掉 index.html 自带的同类标签，再把渲染结果里的塞到 </head> 前
+  const strip = [
+    /<title>[^<]*<\/title>\s*/i,
+    /<meta\s+name=["']description["'][^>]*>\s*/gi,
+    /<meta\s+property=["']og:(?:title|description|type|url|image|image:width|image:height|image:alt|locale(?::alternate)?)["'][^>]*>\s*/gi,
+    /<meta\s+name=["']twitter:[a-z_]+["'][^>]*>\s*/gi,
+    /<link\s+rel=["']canonical["'][^>]*>\s*/gi,
+  ]
+  for (const re of strip) out = out.replace(re, '')
+
+  const ogImage = ogs.map(t => (/property=["']og:image["']/i.test(t) ? attrOf(t, 'content') : '')).find(Boolean) || ''
+  const coverUrl = ogImage && !ogImage.endsWith('/og-image.png') ? ogImage : ''
+  const titleText = title ? decodeEntities(title.replace(/<\/?title>/gi, '')).trim() : ''
+  const descText = desc ? attrOf(desc, 'content') : ''
+
+  const headTags = [title, desc, ...ogs, ...tw, canonical, ...hreflang].filter(Boolean)
+  if (coverUrl) headTags.push(`<link rel="preload" as="image" href="${escapeAttr(coverUrl)}" fetchpriority="high">`)
+  out = out.replace('</head>', `  <!-- seo-shell: 来自预渲染缓存的页面信息，Vue 挂载后由页面自己维护 -->\n  ${headTags.join('\n  ')}\n</head>`)
+
+  // #app 里的静态占位：封面 + 标题 + 简介。样式全部内联（首屏不依赖外部 CSS）。
+  // Vue 挂载时会清空 #app，这块只活到 JS 起来为止。
+  const name = titleText.split(/[｜|]/)[0].replace(/\s+-\s+[^-]*$/, '').trim()
+  // 只有拿到真实封面（不是站点默认 og 图）才放占位：没封面说明页面还没写自己的 SEO 信息，
+  // 这时 title 是站点默认标题，放出来反而是错的
+  if (name && coverUrl) {
+    const placeholder =
+      `<div class="seo-shell" style="max-width:1200px;margin:0 auto;padding:88px 40px 40px;display:flex;gap:28px;align-items:flex-start;font-family:system-ui,-apple-system,'PingFang SC','Hiragino Sans',sans-serif;color:#161122">` +
+      (coverUrl ? `<img src="${escapeAttr(coverUrl)}" alt="${escapeAttr(name)}" width="180" height="240" style="width:180px;height:240px;object-fit:cover;border-radius:12px;background:#eee;flex:none">` : '') +
+      `<div style="min-width:0"><h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;font-weight:700">${escapeAttr(name)}</h1>` +
+      (descText ? `<p style="margin:0;font-size:14px;line-height:1.7;color:#6A7282;white-space:pre-line">${escapeAttr(descText)}</p>` : '') +
+      `</div></div>`
+    out = out.replace(/<div id="app"><\/div>/, `<div id="app">${placeholder}</div>`)
+  }
+  return out
+}
+
+app.get('/shell', (req, res) => {
+  const targetUrl = req.get('x-render-url') || req.query.url
+  const spa = readSpaIndex()
+  res.set('Cache-Control', 'no-cache')
+  if (!spa) return res.status(503).send('index.html unavailable')
+  if (!targetUrl) return res.type('html').send(spa)
+  try {
+    // 预渲染缓存按完整 URL 存；用户带了查询串而缓存只有纯路径时也能用
+    let cached = getCache(targetUrl)
+    let pathOnlyUrl = targetUrl
+    try { const u = new URL(targetUrl); pathOnlyUrl = `${u.origin}${u.pathname}` } catch {}
+    if (!cached && pathOnlyUrl !== targetUrl) cached = getCache(pathOnlyUrl)
+    if (!cached) {
+      // 没渲染过：原样返回壳，后台渲染一次备用（去重 + 队列上限）
+      scheduleBgRender(pathOnlyUrl, 'shell-miss')
+      res.set('X-SEO-Shell', 'PLAIN')
+      return res.type('html').send(spa)
+    }
+    // 404 的渲染结果不往壳里塞（SPA 自己会显示 404 页）
+    if (isNotFoundRender(cached.html)) {
+      res.set('X-SEO-Shell', 'PLAIN-404')
+      return res.type('html').send(spa)
+    }
+    if (cached.stale) scheduleBgRender(pathOnlyUrl, 'shell-stale')
+    res.set('X-SEO-Shell', cached.stale ? 'STALE' : 'HIT')
+    return res.type('html').send(buildShell(spa, cached.html))
+  } catch (e) {
+    console.error(`[shell] ${targetUrl} - ${e.message}`)
+    res.set('X-SEO-Shell', 'ERROR')
+    return res.type('html').send(spa)
   }
 })
 
@@ -695,6 +947,7 @@ app.post('/invalidate', express.json(), async (req, res) => {
         try { fs.unlinkSync(filePath) } catch {}
       }
     }
+    memCache.clear()
   }
   res.json({ ok: true })
 })
@@ -716,7 +969,8 @@ app.listen(PORT, () => {
   console.log(`SEO render service running on port ${PORT}`)
   console.log(`  SPA URL: ${SPA_URL}`)
   console.log(`  Cache dir: ${CACHE_DIR}`)
-  console.log(`  Cache TTL: ${CACHE_TTL}s`)
+  console.log(`  User shell (T06-B) from: ${SPA_INDEX_HTML}`)
+  console.log(`  Cache TTL: ${CACHE_TTL}s fresh + ${CACHE_STALE_TTL}s stale-while-revalidate; mem LRU ${MEM_CACHE_MAX}/${MEM_CACHE_TTL}s`)
   console.log(`  CF bypass (host-resolver): ${process.env.SEO_RESOLVER_RULES ? 'ON -> ' + process.env.SEO_RESOLVER_RULES : 'OFF (direct render)'}`)
   console.log(`  Mem guard: maxRenders=${BROWSER_MAX_RENDERS} maxConcurrent=${MAX_CONCURRENT} deadline=${RENDER_DEADLINE_MS}ms softLimit=${MEM_SOFT_LIMIT_MB}MB`)
 })

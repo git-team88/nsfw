@@ -146,3 +146,18 @@ export function goNotFoundIfMissing(router: { replace: (to: any) => any }, route
   router.replace({ name: 'NotFound', params: { pathMatch: route.path.replace(/^\//, '').split('/') }, query: route.query });
   return true;
 }
+
+// ---- 发布 / 更新后预热预渲染缓存（T05）----
+
+/**
+ * 通知渲染服务重渲染某个公开页并刷新缓存（nginx 的 /seo-warm → seo-server /warm）。
+ * 发布作品、改合集信息后调一次，让爬虫下次来就拿到新内容。
+ * 只发请求不等结果，失败也不影响业务；本地开发（localhost）不发。
+ */
+export function warmSeo(path: string) {
+  try {
+    if (!path || /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) return;
+    const p = path.startsWith('/') ? path : `/${path}`;
+    fetch(`/seo-warm?url=${encodeURIComponent(p)}`, { method: 'GET', keepalive: true, credentials: 'omit' }).catch(() => {});
+  } catch { /* ignore */ }
+}

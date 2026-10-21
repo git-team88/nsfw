@@ -849,6 +849,7 @@ import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import { useRoute } from "vue-router";
+import { warmSeo } from '@/utils/seoMeta';
 
 const isUpload = ref(false);
 
@@ -3710,6 +3711,8 @@ async function onSubmit() {
       // 新发布 / 编辑保存成功后都提交图片加水印任务（编辑可能换了图）
       submitPostWatermark(postId.value || pickNewPostId(res));
       toast(t("success"));
+      // 预热预渲染缓存：爬虫下次抓这个合集页就是新内容（T05）
+      if (selectedCollection.value?.id) warmSeo(`/collection/${selectedCollection.value.id}`);
       router.push(`/publish/success?type=${1}`);
     } else {
       toast(apiErrorMessage(res));

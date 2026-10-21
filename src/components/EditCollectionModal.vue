@@ -149,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
+import { warmSeo } from '@/utils/seoMeta';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
@@ -431,6 +432,7 @@ async function handleSave() {
 
       const response = await api.modifyCollection(params) as any;
       if (response.code === 0) {
+        if (props.isEdit && props.collectionId) warmSeo(`/collection/${props.collectionId}`); // 预热预渲染缓存（T05）
         emit('save', {
           id: props.collectionId,
           name: collectionName.value.trim(),

@@ -860,6 +860,7 @@ import { useContentSwitchStore } from "@/stores/contentSwitch";
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
+import { warmSeo } from '@/utils/seoMeta';
 import { toast } from "@/util/toast";
 import {
   fetchBookRechargePlans,
@@ -4243,6 +4244,8 @@ async function onSubmit() {
     if (res.code === 0 || res.code === 200) {
       // 作品发布成功后，再把「付费用户可见」下选的档位同步到合集
       await syncCollectionPlan(form.value.permission);
+      // 预热预渲染缓存：爬虫下次抓这个合集页就是新内容（T05）
+      if (selectedCollection.value?.id) warmSeo(`/collection/${selectedCollection.value.id}`);
       router.push(`/publish/success`);
     } else {
       toast(apiErrorMessage(res))
