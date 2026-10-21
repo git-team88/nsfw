@@ -3429,6 +3429,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     },
   },
   collectionSettings: {
+    category: "カテゴリ",
     paidSetting: "有料設定",
     modifyPrice: "価格を変更",
     priceModalTitle: "アニメドラマ有料設定",

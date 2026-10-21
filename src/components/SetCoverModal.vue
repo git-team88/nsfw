@@ -97,6 +97,7 @@
                 alt=""
                 class="preview-img"
                 ref="previewImgRef"
+                :style="imageStyle"
               />
               <div class="crop-frame"></div>
             </div>

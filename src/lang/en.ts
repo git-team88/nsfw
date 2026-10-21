@@ -3368,6 +3368,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
   },
   collectionSettings: {
+    category: "Category",
     paidSetting: "Paid access",
     modifyPrice: "Change price",
     priceModalTitle: "Drama paid access",

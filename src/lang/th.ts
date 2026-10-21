@@ -2839,6 +2839,7 @@ export default {
     }
   },
   collectionSettings: {
+    category: "หมวดหมู่",
     paidSetting: "ตั้งค่าแบบชำระเงิน",
     modifyPrice: "แก้ไขราคา",
     priceModalTitle: "ตั้งค่าอนิเมะดราม่าแบบชำระเงิน",

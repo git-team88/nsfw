@@ -3461,6 +3461,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
   },
   collectionSettings: {
+    category: "分類",
     paidSetting: "單部付費設置",
     modifyPrice: "修改價格",
     priceModalTitle: "漫劇單部付費設置",

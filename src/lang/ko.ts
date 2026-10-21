@@ -2839,6 +2839,7 @@ export default {
     }
   },
   collectionSettings: {
+    category: "카테고리",
     paidSetting: "유료 설정",
     modifyPrice: "가격 변경",
     priceModalTitle: "애니 드라마 유료 설정",

@@ -3477,6 +3477,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
   },
   collectionSettings: {
+    category: "分类",
     paidSetting: "单部付费设置",
     modifyPrice: "修改价格",
     priceModalTitle: "漫剧单部付费设置",

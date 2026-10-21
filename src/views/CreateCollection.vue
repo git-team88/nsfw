@@ -46,6 +46,26 @@
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
+        <!-- Category Section：分类下拉，列表来自接口，默认选中第一个 -->
+        <div class="form-group">
+          <label class="form-label"><b class="required">*</b>{{ t('collectionSettings.category') }}</label>
+          <div class="lang-dropdown" :class="{ open: tagDropdownOpen }" ref="tagDropdownRef">
+            <div class="lang-dropdown-trigger" @click="tagDropdownOpen = !tagDropdownOpen">
+              <span>{{ currentTagLabel }}</span>
+              <svg class="lang-arrow" :class="{ rotated: tagDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="lang-dropdown-menu" v-if="tagDropdownOpen">
+              <div
+                class="lang-dropdown-item"
+                v-for="tag in bookTags"
+                :key="tag.tag_id"
+                :class="{ active: String(selectedTagId) === String(tag.tag_id) }"
+                @click="selectedTagId = tag.tag_id; tagDropdownOpen = false"
+              >{{ bookTagLabel(tag) }}</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sensitive Content Section -->
         <div class="form-group" v-if="contentSwitch.showSensitiveToggle">
           <div class="form-label-inner">
@@ -148,7 +168,8 @@
 </template>
 
 <script setup lang="ts" name="CreateCollection">
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
+import { bookTags, loadBookTags, bookTagLabel } from '@/util/bookTags';
 import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -223,6 +244,25 @@ const langOptions = [
 const langDropdownOpen = ref(false);
 const langDropdownUp = ref(false);
 const langDropdownRef = ref<HTMLElement | null>(null);
+
+// —— 分类（标签）下拉：列表来自接口，默认选中第一个；修改时按合集当前的 tag_id 回显 ——
+const selectedTagId = ref<string | number>('');
+const initialTagId = ref<string | number>('');
+const tagDropdownOpen = ref(false);
+const tagDropdownRef = ref<HTMLElement | null>(null);
+const currentTagLabel = computed(() => bookTagLabel(bookTags.value.find(t => String(t.tag_id) === String(selectedTagId.value))) || '');
+async function initBookTags(currentTagId?: string | number) {
+  const list = await loadBookTags();
+  const cur = currentTagId !== undefined && currentTagId !== null && String(currentTagId) !== '' ? String(currentTagId) : '';
+  const hit = cur ? list.find(t => String(t.tag_id) === cur) : undefined;
+  selectedTagId.value = hit ? hit.tag_id : (list[0]?.tag_id ?? '');
+  initialTagId.value = hit ? hit.tag_id : '';
+}
+function closeTagDropdownOnOutside(e: MouseEvent) {
+  if (tagDropdownOpen.value && tagDropdownRef.value && !tagDropdownRef.value.contains(e.target as Node)) tagDropdownOpen.value = false;
+}
+onMounted(() => document.addEventListener('click', closeTagDropdownOnOutside));
+onBeforeUnmount(() => document.removeEventListener('click', closeTagDropdownOnOutside));
 const selectedLanguage = ref(defaultLang);
 
 // --- 收费档 ---------------------------------------------------------------
@@ -319,6 +359,8 @@ onMounted(async () => {
     await loadCollection(id as string);
   } else {
     description.value = t('collection.defaultDescription');
+    // 新建：拉分类列表，默认选中第一个（编辑模式在 loadCollection 里按合集当前分类回显）
+    initBookTags();
   }
 });
 
@@ -337,6 +379,7 @@ async function loadCollection(id: string) {
       originalDescription.value = bookInfo.description || '';
       originalCover.value = bookInfo.cover || '';
       originalIsNsfw.value = bookInfo.is_nsfw == 1 ? 1 : 0;
+      await initBookTags(bookInfo.tag_id);
       if (bookInfo.language) {
         selectedLanguage.value = bookInfo.language;
         originalLanguage.value = bookInfo.language;
@@ -390,6 +433,9 @@ async function handleSave() {
       if (selectedLanguage.value !== originalLanguage.value) {
         params.language = selectedLanguage.value;
       }
+      if (String(selectedTagId.value) !== String(initialTagId.value) && selectedTagId.value !== '') {
+        params.tag_id = selectedTagId.value;
+      }
     } else {
       // 合集类型跟着入口走（用户主页按当前 tab 带 ?type= 进来）。
       // 不传的话后端按默认类型建，漫剧合集就不是 type 3。
@@ -400,6 +446,7 @@ async function handleSave() {
       params.cover = coverUrl.value;
       params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
+      if (selectedTagId.value !== '') params.tag_id = selectedTagId.value;
     }
 
     let response;
@@ -728,12 +775,14 @@ function goBack() {
     top: calc(100% + 6px);
     left: 0;
     width: 100%;
+    max-width: 400px; // 和触发框同宽（触发框限了 400，菜单不限会比它宽一截）
+    max-height: 240px; // 分类多了也只占这么高，超出滚动
+    overflow-y: auto;
     border: 1px solid #3d3d3d;
     border-radius: 10px;
     background: #222;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 100;
-    overflow: hidden;
   }
 
   .lang-dropdown-item {

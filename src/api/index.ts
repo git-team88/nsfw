@@ -879,12 +879,23 @@ export default {
       url: "book/getBookListPublic?type=" + type + '&page=' + page + '&limit=' + limit + '&user_id=' + user_id,
       method: "GET"
     }),
-  addCollection: (data: any) =>
-    axios.request({
+  // 新建合集。没传 tag_id（发布页自动建合集、快速建合集这些场景）时，
+  // 先拉一次分类列表，默认用第一个；表单里用户选过的直接按传入的走。
+  addCollection: async (data: any) => {
+    let payload = data;
+    if (payload && payload.tag_id === undefined) {
+      try {
+        const res = await axios.request({ url: "book/getBookTagsListPublic", method: "GET" }) as any;
+        const first = res?.code === 0 ? (res.data?.tags || res.data?.list || [])[0] : undefined;
+        if (first && first.tag_id !== undefined && first.tag_id !== null) payload = { ...payload, tag_id: first.tag_id };
+      } catch { /* 拉不到分类就按原参数建，不影响发布 */ }
+    }
+    return axios.request({
       url: "book/addBook",
-      data: data,
+      data: payload,
       method: "POST",
-    }),
+    });
+  },
   searchCollection: (data: any) =>
     axios.request({
       url: "book/searchBooks",
@@ -904,6 +915,12 @@ export default {
       method: "POST",
     }),
 
+  // 合集分类（标签）列表，新建 / 修改合集的「分类」下拉用
+  getBookTagsList: () =>
+    axios.request({
+      url: "book/getBookTagsListPublic",
+      method: "GET",
+    }),
   modifyCollection: (data: any) =>
     axios.request({
       url: "book/updateBookName",
