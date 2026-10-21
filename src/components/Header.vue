@@ -583,7 +583,18 @@ function changeLang(lang: string) {
   langText.value = lang;
   localStorage.setItem("lang", lang);
   setLocale(lang);
+
+  // 当前在带语言前缀的页面（/ko、/ko/novel、/novel）时，把地址也换成新语言的（/th、/th/novel）。
+  // 不然地址栏还是 /ko/...，一刷新路由守卫会按 URL 前缀把语言和 localStorage 又改回韩语。
+  const urlLang = I18N_TO_URL_LANG[lang];
+  const type = route.meta.contentType as string | undefined;
+  if (urlLang && (route.meta.lang || type)) {
+    const target = `/${urlLang}${type ? `/${type}` : ""}`;
+    if (route.path !== target) router.replace({ path: target, query: route.query });
+  }
 }
+
+const I18N_TO_URL_LANG: Record<string, string> = { jp: "ja", en: "en", zh: "zh-cn", tc: "zh-tw", ko: "ko", th: "th" };
 
 function getMessageInfo() {
   api
