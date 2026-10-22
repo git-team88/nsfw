@@ -21,7 +21,8 @@ import path from 'node:path'
 
 const SITE_URL = (process.env.SEO_SITE_URL || 'https://www.fansfans.ai').replace(/\/+$/, '')
 const LANGS = ['ja', 'en', 'zh-cn', 'zh-tw', 'ko', 'th']
-const TYPES = ['novel', 'comic', 'drama', 'photo', 'video']
+// nsfw 站没有漫剧（路由 CONTENT_TYPES 里没有 drama），sitemap 不能列，否则全是 404
+const TYPES = ['novel', 'comic', 'photo', 'video']
 
 // 内容型 URL 上限（防止采集失控撑爆 sitemap；单文件上限 5 万条）
 const MAX_CONTENT_URLS = parseInt(process.env.SITEMAP_MAX_URLS || '2000', 10)
@@ -29,6 +30,8 @@ const MAX_CONTENT_URLS = parseInt(process.env.SITEMAP_MAX_URLS || '2000', 10)
 const HARVEST_PATHS = ['/', ...LANGS.map(l => `/${l}`)]
 
 // ---- 静态 URL 清单（与 src/router/index.ts 的有效公开路由核对过）----
+// 注意：/ai-recharge、/ai-points-details 是登录后才有内容的页，爬虫打开会被转回首页（canonical 变成 /），
+// 列进 sitemap 只会制造重复页，所以不列。
 function staticUrls() {
   const urls = []
   urls.push({ path: '/', priority: '1.0', freq: 'daily' })
@@ -37,12 +40,8 @@ function staticUrls() {
   for (const t of TYPES) urls.push({ path: `/${t}`, priority: '0.8', freq: 'daily' })
   urls.push({ path: '/guide.html', priority: '0.7', freq: 'monthly' })
   urls.push({ path: '/about.html', priority: '0.7', freq: 'monthly' })
+  // /terms /privacy /payment-terms 的路由在本站是注释掉的（404），不列
   urls.push({ path: '/computing-rules', priority: '0.6', freq: 'monthly' })
-  urls.push({ path: '/ai-recharge', priority: '0.6', freq: 'weekly' })
-  urls.push({ path: '/terms', priority: '0.5', freq: 'yearly' })
-  urls.push({ path: '/privacy', priority: '0.5', freq: 'yearly' })
-  urls.push({ path: '/payment-terms', priority: '0.5', freq: 'yearly' })
-  urls.push({ path: '/ai-points-details', priority: '0.4', freq: 'monthly' })
   return urls
 }
 

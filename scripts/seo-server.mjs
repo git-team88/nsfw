@@ -90,7 +90,8 @@ function detectLang(url) {
   // ⚠️ 原实现要求语言段后必须跟 "/"，导致 /en、/ko 这类「语言首页」被误判成 ja。
   const path = String(url).replace(/^https?:\/\/[^/]+/i, '').split('?')[0]
   const m = path.match(/^\/(ja|en|zh-cn|zh-tw|ko|th)(\/|$)/)
-  return m ? m[1] : 'ja'
+  // 无前缀页默认 en（和 T01 的「URL 前缀 > 默认 en」一致；骨架页以前默认 ja，和正式渲染结果对不上）
+  return m ? m[1] : 'en'
 }
 
 // 页面类型 —— 决定骨架标题与结构化数据。

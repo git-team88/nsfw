@@ -1115,8 +1115,6 @@ const currentPhotoMode = ref('normal');
 const photoMaxImages = computed(() => currentPhotoMode.value === 'unlimited' ? 3 : 7);
 // 图片 NSFW 模式走 Vega 模型：参考图 0~3 张、单张 ≤10MB；普通模式 7 张 / 10MB
 const photoMaxImageMb = computed(() => currentPhotoMode.value === 'unlimited' ? 10 : 10);
-// 图片格式不按模式区分
-const photoValidImageTypes = computed(() => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const currentVideoMode = ref('normal');
 const effectivePhotoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentPhotoMode.value);
 const effectiveVideoMode = computed(() => contentSwitch.mode === 2 ? 'unlimited' : currentVideoMode.value);
@@ -2171,7 +2169,7 @@ const handlePhotoFileChange = async (event: Event) => {
     const maxFileSizeMB = photoMaxImageMb.value;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
-    const validImageTypes = photoValidImageTypes.value;
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
     // 批量选择：能收多少收多少 —— 不合格式的跳过，超出数量的截掉，最后只弹一条提示
     const kept: File[] = [];
