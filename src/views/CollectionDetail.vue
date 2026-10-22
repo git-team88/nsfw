@@ -959,7 +959,7 @@ function onUserLoggedOut() {
 }
 
 onMounted(async () => {
-  // 合集数据到之前只显示站点名，不先闪一下别的标题
+  // 合集数据到之前只显示站点名，拿到后再拼完整标题
   document.title = siteName();
   eventBus.on('userLoggedOut', onUserLoggedOut);
   await getCountry();

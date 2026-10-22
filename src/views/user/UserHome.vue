@@ -1278,13 +1278,14 @@ function showToast(msg: string, icon = successIcon) {
 }
 
 /**
- * 标题（UGC 规则）：作者 | 用户社区 | 品牌；用户信息还没到时只显示站点名，不先闪一下旧的固定标题。
+ * 标题（UGC 规则）：作者 | 用户社区 | 品牌；用户信息还没到时先显示「用户社区 | 品牌」。
  * description：优先用户社区描述（主页简介），没有用固定文案。
  */
 function setSeoMeta() {
   const author = clamp(userInfo.value?.nickname, 40);
   const site = siteName();
-  document.title = author ? safeJoin([author, t('seo.parts.community'), site], TITLE_SEP) : site;
+  // 昵称还没回来时先显示「用户社区 | 站点名」，拿到后补上昵称
+  document.title = safeJoin([author, t('seo.parts.community'), site], TITLE_SEP);
   setMetaKeywords(author ? [author, t('seo.parts.community'), site] : '');
   const fill = (tpl: string) => tpl.replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
   const pageDescription = clamp(userInfo.value?.description, 110) || (author ? fill(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
