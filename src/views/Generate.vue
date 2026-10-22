@@ -1048,6 +1048,7 @@
 <script setup lang="ts" name="Generate">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { setMetaKeywords } from '@/utils/seoMeta';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -5843,6 +5844,8 @@ function setSeoMeta(tab: string) {
   const description = t(`${seoKey}.description`);
 
   document.title = title;
+  // 生成页和首页的图片 / 视频分类用同一套 TDK，keywords 也一起写
+  setMetaKeywords(t(`${seoKey}.keywords`));
 
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {

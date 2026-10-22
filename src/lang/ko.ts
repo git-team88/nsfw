@@ -2717,84 +2717,91 @@ export default {
     copyright: "© 2026 FansFans 모든 권리 보유."
   },
   seo: {
+    parts: {
+      ongoing: "연재 중", finished: "완결",
+      freeEpisode: "이번 화 무료", paidEpisode: "이번 화 유료",
+      community: "유저 커뮤니티"
+    },
     home: {
-      title: "FansFans - AI 소설・만화・애니 드라마 원클릭 생성｜한 문장으로 창작 시작",
+      title: "AI 소설・만화・애니 드라마 원클릭 생성｜한 문장으로 창작 시작 {'|'} FansFans",
       keywords: "AI 소설 생성기, AI 만화 생성기, AI 애니 드라마 생성, AI 만화 생성, 한 문장으로 소설 생성, AI 글쓰기 도구, 이차원 AI 창작, FansFans, AI 동인 창작",
       description: "FansFans는 중화권과 일본 시장을 겨냥한 AI 이차원 창작 플랫폼입니다. 영감 한 문장만 입력하면 소설・만화・만화・애니 드라마를 생성할 수 있으며, 무료로 30K자부터 시작해 AI가 당신의 무한한 이야기를 지켜줍니다.",
       novel: {
-        title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 쓰는 3만자 장편 웹소설 - FansFans",
+        title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 쓰는 3만자 장편 웹소설 {'|'} FansFans",
         keywords: "AI 소설 생성기,AI로 소설 쓰기,AI 웹소설,무료 AI 소설,장편 소설 생성,웹소설 작성 AI,소설 개요 AI,이차원 소설 AI",
         description: "FansFans AI 소설 생성기, 아이디어 한 문장만 입력하면 3만자 장편 웹소설이 자동으로 생성됩니다. 판타지, 로맨스, BL, 이세계 등 다양한 장르를 지원하며, 대만・홍콩・일본 창작자들이 가장 선호합니다."
       },
       comic: {
-        title: "AI 만화 생성기 온라인 무료 이용｜텍스트로 한 번에 만드는 이차원 만화 - FansFans",
+        title: "AI 만화 생성기 온라인 무료 이용｜텍스트로 한 번에 만드는 이차원 만화 {'|'} FansFans",
         keywords: "AI 만화 생성기,원클릭 만화 생성,AI 만화 스토리보드,이차원 AI 드로잉,일본 만화풍 AI,세로 스크롤 만화 생성,캐릭터 일관성",
         description: "FansFans AI 만화 생성기, 텍스트를 한 번에 만화로 변환하고 자동 콘티 구성과 캐릭터 일관성을 보장합니다. 일본 만화, 세로 스크롤 만화, Q버전 등 다양한 이차원 화풍을 지원합니다."
       },
       drama: {
-        title: "AI 애니 드라마 생성기｜한 문장으로 만드는 이차원 애니메이션 숏드라마 - FansFans",
+        title: "AI 애니 드라마 생성기｜한 문장으로 만드는 이차원 애니메이션 숏드라마 {'|'} FansFans",
         keywords: "AI 애니 드라마 생성,AI 애니메이션 단편극,이차원 애니메이션 AI,AI 애니메이션 대본,AI 숏폼 드라마,애니메이션 드라마 생성,Anime Drama AI",
         description: "FansFans AI 애니 드라마 생성기, 소설이나 아이디어 한 문장을 이차원 애니메이션 숏드라마로 변환합니다. 콘티, 대사, 더빙, 동적 화면을 자동으로 생성하는, 애니메이션 창작자를 위한 AI 필수 도구입니다."
       },
       photo: {
-        title: "AI 이미지 & 일러스트 생성기 FansFans｜한 번에 만드는 고퀄리티 이차원 캐릭터 일러스트",
+        title: "AI 이미지 & 일러스트 생성기｜한 번에 만드는 고퀄리티 이차원 캐릭터 일러스트 {'|'} FansFans",
         keywords: "AI 이미지 생성, AI 일러스트, 이차원 캐릭터 일러스트, 캐릭터 디자인 AI, FansFans",
         description: "FansFans AI 이미지 생성 도구는 이차원 미학에 집중합니다. 설명 키워드만 입력하면 전문가급 애니메이션 일러스트, 캐릭터 디자인, 정교한 일러스트를 빠르게 생성해 당신의 상상을 현실로 만들어줍니다."
       },
       video: {
-        title: "AI 동영상 생성기 FansFans｜이미지와 텍스트를 빠르게 이차원 동영상으로 변환",
+        title: "AI 동영상 생성기｜이미지와 텍스트를 빠르게 이차원 동영상으로 변환 {'|'} FansFans",
         keywords: "AI 동영상 생성, 이미지로 동영상 생성, 텍스트로 동영상 생성, 이차원 숏폼 동영상, FansFans",
         description: "FansFans AI 동영상 생성 도구를 사용해 정지된 일러스트나 텍스트 설명을 매끄러운 이차원 동영상으로 손쉽게 변환하세요. 소셜 미디어를 사로잡을 숏폼 동영상 콘텐츠를 만들어보세요."
       }
     },
     detail: {
-      title: "[[title]] - FansFans 이차원 AI 창작",
+      title: "[[title]] - 이차원 AI 창작 {'|'} FansFans",
       keywords: "[[title]],AI [[type]],이차원 [[type]]",
-      description: "[[title]] - [[description]]"
+      description: "[[title]] - [[description]]",
+      descriptionFallback: "[[title]] - [[site]] [[site]]에서 「[[title]]」의 상세 내용을 확인하고 창작자의 더 많은 작품과 컬렉션을 살펴보세요."
     },
     collection: {
       title: "[[title]]｜[[type]] · 전 [[episodes]]화｜[[site]]",
       description: "[[intro]]. [[episodes]]화 연재 중, [[author]] 제작.",
-      descriptionFallback: "[[author]]의 [[type]] 《[[title]]》, 전 [[episodes]]화. [[site]]에서 감상.",
+      descriptionFallback: "[[title]] - [[site]] 컬렉션 「[[title]]」의 작품을 둘러보고 [[site]]에서 컬렉션 내용을 살펴보며 더 많은 작품을 찾아보세요.",
       types: { comic: "만화", novel: "소설", drama: "애니 드라마", image: "일러스트", video: "영상" }
     },
     communityConvention: {
-      title: "커뮤니티 가이드라인 - FansFans 창작 공약",
+      title: "커뮤니티 가이드라인 - 창작 공약 {'|'} FansFans",
       keywords: "커뮤니티 가이드라인, 창작 규범, FansFans 공약, 콘텐츠 심사, 콘텐츠 플랫폼, 공약",
       description: "FansFans 커뮤니티 가이드라인은 건강하고 우호적이며 창의력 넘치는 이차원 창작 환경을 만들어, 모든 사용자와 함께 창작 커뮤니티를 지켜나가는 것을 목표로 합니다."
     },
     terms: {
-      title: "서비스 약관 - FansFans 이용약관",
+      title: "서비스 약관 - 이용약관 {'|'} FansFans",
       keywords: "서비스 이용약관,사용자 계약,이용 계약,법적 사항,서비스 계약,법적 고지",
       description: "FansFans의 서비스 약관과 이용약관을 확인하고, 당신의 권리와 의무, AI 콘텐츠 저작권에 대해 알아보세요."
     },
     privacy: {
-      title: "개인정보 처리방침 - FansFans 개인정보 보호",
+      title: "개인정보 처리방침 - 개인정보 보호 {'|'} FansFans",
       keywords: "개인정보처리방침,개인정보 보호,데이터 보안,쿠키 정책,GDPR",
       description: "FansFans은 당신의 개인정보와 창작 프라이버시를 소중히 여기며, 당신의 개인정보와 창작 프라이버시를 보호합니다."
     },
     login: {
-      title: "로그인 - FansFans｜AI 창작 플랫폼",
+      title: "로그인｜AI 창작 플랫폼 {'|'} FansFans",
       keywords: "FansFans 로그인, 계정 로그인, AI 창작 로그인, 로그인",
       description: "FansFans 계정으로 로그인하고, AI 소설・만화・애니 드라마 창작 여정을 계속하세요."
     },
     signup: {
-      title: "무료 회원가입 - AI 창작 여정을 시작하세요｜FansFans",
+      title: "무료 회원가입 - AI 창작 여정을 시작하세요 {'|'} FansFans",
       keywords: "FansFans 회원가입, 무료 AI 창작, AI 창작 플랫폼, 이차원 창작, 회원가입",
       description: "FansFans에 무료로 가입하고, 즉시 3만자 분량과 AI 소설・만화・애니 드라마 전체 창작 도구를 받아보세요."
     },
     characterLibrary: {
-      title: "AI 캐릭터 라이브러리 - 나만의 만화 캐릭터 만들기｜FansFans",
+      title: "AI 캐릭터 라이브러리 - 나만의 만화 캐릭터 만들기 {'|'} FansFans",
       keywords: "AI 캐릭터 생성,캐릭터 라이브러리,이차원 캐릭터,만화 캐릭터,AI 인물 창작,캐릭터 디자인",
       description: "FansFans AI 캐릭터 라이브러리는 다양한 공식 캐릭터와 커스텀 캐릭터를 제공하여, 당신만의 독특한 이차원 만화 캐릭터를 손쉽게 만들 수 있도록 도와줍니다."
     },
     userHome: {
-      title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리｜FansFans",
+      title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리 {'|'} FansFans",
       keywords: "내 작품, AI 소설, 만화, 애니 드라마, 작품 관리, 창작 관리, FansFans",
-      description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요."
+      description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요.",
+      descriptionFallback: "[[author]]님의 프로필 - [[site]] [[author]]님의 프로필에 오신 것을 환영합니다. [[site]]에서 게시한 작품과 컬렉션을 둘러보고 관심 있는 콘텐츠를 찾아보세요."
     },
     novelGenerate: {
-      title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 만드는 3만자 장편 소설 - FansFans",
+      title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 만드는 3만자 장편 소설 {'|'} FansFans",
       keywords: "AI 소설 생성,온라인 소설,AI 소설,AI 소설 쓰기,AI 스토리,소설 생성기,2차 창작,소설 AI",
       description: "FansFans AI 소설 생성기, 로맨스, BL, 탐미, 라이트노벨 등 다양한 장르로 3만자 작품을 손쉽게 자동 생성합니다."
     }
@@ -2939,6 +2946,6 @@ export default {
     back: "홈으로 돌아가기",
     guide: "이용 가이드",
     terms: "이용약관",
-    pageTitle: "페이지를 찾을 수 없습니다 - FansFans"
+    pageTitle: "페이지를 찾을 수 없습니다 {'|'} FansFans"
   }
 };

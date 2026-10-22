@@ -3306,84 +3306,91 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     copyright: "© 2026 FansFans All Rights Reserved."
   },
   seo: {
+    parts: {
+      ongoing: "連載中", finished: "完結",
+      freeEpisode: "本話無料", paidEpisode: "本話有料",
+      community: "ユーザーコミュニティ"
+    },
     home: {
-      title: "FansFans - AI小説・漫画・アニメドラマ生成｜ことばと物語",
+      title: "AI小説・漫画・アニメドラマ生成｜ことばと物語 {'|'} FansFans",
       keywords: "AI小説生成器,AI漫画生成器,AIアニメドラマ,AIまんが生成,一文で物語,FansFans,AI同人創作",
       description: "FansFansは、日本、台湾、香港をはじめとするアジアのクリエイターのためのAI二次元創作プラットフォームです。一つのインスピレーションから小説・漫画・アニメドラマを生成可能。無料30K文字から始められます。",
       novel: {
-        title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く - FansFans",
+        title: "AI小説ジェネレーター無料｜ひとことで30K長編Web小説を書く {'|'} FansFans",
         keywords: "AI小説生成器,AI小説執筆,AI Web小説,無料AI小説,長編小説生成,Web小説AI,小説プロットAI,二次元小説AI",
         description: "FansFans AI小説ジェネレーター、ひと言のアイデアから30K文字の長編Web小説を自動生成。玄幻・恋愛・BL・異世界など多ジャンル対応。台湾・香港・日本のクリエイターに選ばれる。"
       },
       comic: {
-        title: "AI 漫画ジェネレーター｜テキストから漫画・コマ割り自動生成 - FansFans",
+        title: "AI 漫画ジェネレーター｜テキストから漫画・コマ割り自動生成 {'|'} FansFans",
         keywords: "AI漫画,AI漫画生成,AI manga,テキストから漫画,自動コマ割り,キャラ一貫性,二次元AI絵",
         description: "FansFans AI 漫画ジェネレーターは、テキストを漫画に自動変換。コマ割り・キャラクター一貫性を AI が担保、少年漫画・少女漫画・チビキャラ対応。"
       },
       drama: {
-        title: "AI アニメドラマ生成｜ひとことで二次元アニメショート - FansFans",
+        title: "AI アニメドラマ生成｜ひとことで二次元アニメショート {'|'} FansFans",
         keywords: "AIアニメドラマ,AIアニメ短編,アニメ脚本AI,アニメ自動生成,ショートアニメAI,AI 声優",
         description: "FansFans の AI で、ひとことから 1〜3 分の二次元アニメショートドラマを自動生成。コマ割り・台詞・音声・BGM すべて自動。"
       },
       photo: {
-        title: "AIイラスト・画像生成ツール FansFans｜高品質な二次元キャラクターを作成",
+        title: "AIイラスト・画像生成ツール｜高品質な二次元キャラクターを作成 {'|'} FansFans",
         keywords: "AIイラスト生成, AI画像生成, 二次元 キャラクターデザイン, 立ち絵 AI, FansFans",
         description: "FansFansのAI画像生成機能で、プロ顔負けの二次元イラストやキャラクター立ち絵を瞬時に作成。思い描いた設定を入力するだけで、理想の美少女・美男子イラストが完成します。"
       },
       video: {
-        title: "AI動画生成ツール FansFans｜イラストやテキストから二次元ビデオを作成",
+        title: "AI動画生成ツール｜イラストやテキストから二次元ビデオを作成 {'|'} FansFans",
         keywords: "AI動画生成, 画像から動画, テキストから動画, 二次元ショートビデオ, FansFans",
         description: "FansFansのAI動画生成機能を使えば、静止画イラストやテキストプロンプトから滑らかに動く二次元ショートビデオを作成できます。SNS向けのアニメーション制作に最適です。"
       }
     },
     detail: {
-      title: "[[title]] - FansFans 二次元 AI クリエイション",
+      title: "[[title]] - 二次元 AI クリエイション {'|'} FansFans",
       keywords: "[[title]],AI[[type]],二次元[[type]]",
-      description: "[[title]] - [[description]]"
+      description: "[[title]] - [[description]]",
+      descriptionFallback: "[[title]] - [[site]] [[site]]で「[[title]]」の詳細を見て、クリエイターの他の作品やコレクションを探しましょう。"
     },
     collection: {
       title: "[[title]]｜[[type]]・全[[episodes]]話｜[[site]]",
       description: "[[intro]]。全[[episodes]]話連載中、[[author]]作。",
-      descriptionFallback: "[[author]]作の[[type]]「[[title]]」、全[[episodes]]話。[[site]]で読む。",
+      descriptionFallback: "[[title]] - [[site]] コレクション 「[[title]]」の作品を見る。[[site]]でコレクションの内容を探り、気になる作品をもっと見つけましょう。",
       types: { comic: "漫画", novel: "小説", drama: "アニメドラマ", image: "イラスト", video: "動画" }
     },
     communityConvention: {
-      title: "コミュニティガイドライン - FansFans クリエイター行動規範",
+      title: "コミュニティガイドライン - クリエイター行動規範 {'|'} FansFans",
       keywords: "コミュニティガイドライン,行動規範,クリエイタールール",
       description: "FansFansのコミュニティガイドラインを読んで、健全で創造的なコミュニティを共に作りましょう。"
     },
     terms: {
-      title: "利用規約 - FansFans ユーザー契約",
+      title: "利用規約 - ユーザー契約 {'|'} FansFans",
       keywords: "利用規約,ユーザー契約,法的事項",
       description: "FansFansの利用規約とユーザー契約を確認し、あなたの権利、義務、AIコンテンツの著作権を理解してください。"
     },
     privacy: {
-      title: "プライバシーポリシー - FansFans プロフィール保護",
+      title: "プライバシーポリシー - プロフィール保護 {'|'} FansFans",
       keywords: "プライバシーポリシー,プロフィール保護,データ保護,Cookie",
       description: "FansFansはユーザーのプロフィールと創作のプライバシーを尊重し保護します。"
     },
     login: {
-      title: "ログイン - FansFans｜AI 創作アカウント",
+      title: "ログイン｜AI 創作アカウント {'|'} FansFans",
       keywords: "FansFansログイン,アカウントログイン,サインイン",
       description: "FansFansアカウントにログインして、AI小説・漫画・アニメドラマの創作を続けましょう。"
     },
     signup: {
-      title: "無料登録 - AI 創作の旅を始める｜FansFans",
+      title: "無料登録 - AI 創作の旅を始める {'|'} FansFans",
       keywords: "FansFans登録,無料AI創作,AI創作プラットフォーム",
       description: "FansFansに無料登録し、すぐに30K文字 + AI小説・漫画・アニメドラマツール一式を入手。"
     },
     characterLibrary: {
-      title: "AIキャラクター設定ライブラリー - 独自のキャラクター設定を追加｜FansFans",
+      title: "AIキャラクター設定ライブラリー - 独自のキャラクター設定を追加 {'|'} FansFans",
       keywords: "AIキャラクター設定生成,キャラクター設定ライブラリー,アニメキャラクター設定,漫画キャラクター設定",
       description: "FansFansのAIキャラクター設定ライブラリーは、公式キャラクター設定とカスタムキャラクター設定を提供し、独自の二次元キャラクター設定の追加を支援します。"
     },
     userHome: {
-      title: "マイ作品 - AI小説・漫画・アニメドラマを管理｜FansFans",
+      title: "マイ作品 - AI小説・漫画・アニメドラマを管理 {'|'} FansFans",
       keywords: "マイ作品,AI小説,漫画,アニメドラマ,作品管理,クリエイターダッシュボード",
-      description: "FansFansでAI小説、漫画、アニメドラマを管理し、フォロワー、メンバーシップ者、エンゲージメントデータを追跡します。"
+      description: "FansFansでAI小説、漫画、アニメドラマを管理し、フォロワー、メンバーシップ者、エンゲージメントデータを追跡します。",
+      descriptionFallback: "[[author]]のマイページ - [[site]] [[author]]のマイページへようこそ。[[site]]で投稿作品やコレクションを見て、気になるコンテンツを見つけましょう。"
     },
     novelGenerate: {
-      title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成｜FansFans",
+      title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成 {'|'} FansFans",
       keywords: "AI小説生成,AI小説,長編小説,AI執筆,AI物語,小説作成AI,二次創作",
       description: "FansFansのAI小説ジェネレーターは、ロマンス、BL、学園もの、SF、ファンタジーなど多ジャンルに対応。30K文字の作品を簡単に作成できます。"
     }
@@ -3530,6 +3537,6 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     back: "ホームへ戻る",
     guide: "使い方ガイド",
     terms: "利用規約",
-    pageTitle: "ページが見つかりません - FansFans"
+    pageTitle: "ページが見つかりません {'|'} FansFans"
   }
 };

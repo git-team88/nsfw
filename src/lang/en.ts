@@ -3245,59 +3245,65 @@ If you have any questions, complaints, comments or suggestions regarding persona
     copyright: "© 2026 FansFans All Rights Reserved."
   },
   seo: {
+    parts: {
+      ongoing: "Ongoing", finished: "Completed",
+      freeEpisode: "This Episode Free", paidEpisode: "This Episode Paid",
+      community: "Creator Community"
+    },
     home: {
-      title: "FansFans - AI Novel, Comic & Anime Drama Generator {'|'} One Line, Infinite Stories",
+      title: "AI Novel, Comic & Anime Drama Generator {'|'} One Line, Infinite Stories {'|'} FansFans",
       keywords: "AI novel generator, AI comic generator, AI anime drama, AI manga generator, AI story generator, one line story AI, FansFans, AI writing tool",
       description: "FansFans turns one line into a full AI-generated novel, comic, or anime drama. Built for creators across Japan, Taiwan, Hong Kong & worldwide. 30K free words to start.",
       novel: {
-        title: "AI Novel Generator Online Free {'|'} Write 30K Long-Form Web Novels in One Line - FansFans",
+        title: "AI Novel Generator Online Free {'|'} Write 30K Long-Form Web Novels in One Line {'|'} FansFans",
         keywords: "AI novel generator,AI write novels,AI web novels,free AI novel,long-form novel generator,web novel AI,novel outline AI,anime novel AI",
         description: "FansFans AI Novel Generator — input one creative line to auto-generate a 30K-word long-form web novel. Supports xianxia, romance, BL, isekai & more. Top choice for TW/HK/JP creators."
       },
       comic: {
-        title: "AI Comic Generator {'|'} Text to Manga, Webtoon & Panels - FansFans",
+        title: "AI Comic Generator {'|'} Text to Manga, Webtoon & Panels {'|'} FansFans",
         keywords: "AI comic generator, text to comic, AI manga generator, webtoon AI, AI comic panels, character consistency",
         description: "Turn text into comics & manga with FansFans. Auto-paneling, consistent characters, multi-style: manga, webtoon, chibi."
       },
       drama: {
-        title: "AI Anime Drama Generator {'|'} One Line to Animated Short - FansFans",
+        title: "AI Anime Drama Generator {'|'} One Line to Animated Short {'|'} FansFans",
         keywords: "AI anime drama, AI animated short, anime script AI, AI short anime, vertical anime AI",
         description: "Turn one line into a 1-3 min anime drama short. Auto storyboard, dialogue, voice, BGM. Built for anime creators."
       },
       photo: {
-        title: "AI Anime Image & Art Generator by FansFans",
+        title: "AI Anime Image & Art Generator {'|'} FansFans",
         keywords: "AI anime art generator, AI image creator, anime character design, FansFans",
         description: "Generate breathtaking anime art, character designs, and illustrations with FansFans's AI image generator. Just type your prompt and get high-quality anime photos instantly."
       },
       video: {
-        title: "AI Video Generator by FansFans",
+        title: "AI Video Generator {'|'} FansFans",
         keywords: "AI video generator, image to video, text to video, anime short video, FansFans",
         description: "Create smooth, dynamic anime videos from text prompts or static images with FansFans's AI video generator. Perfect for creating engaging short-form content for social media."
       }
     },
     detail: {
-      title: "[[title]] - FansFans AI Anime Creation",
+      title: "[[title]] - AI Anime Creation {'|'} FansFans",
       keywords: "[[title]],AI [[type]],anime [[type]]",
-      description: "[[title]] - [[description]]"
+      description: "[[title]] - [[description]]",
+      descriptionFallback: "[[title]] - [[site]]. View the details of \"[[title]]\" on [[site]] and explore more works and collections from the creator."
     },
     collection: {
       title: "[[title]] {'|'} [[type]] · [[episodes]] episodes {'|'} [[site]]",
       description: "[[intro]]. [[episodes]] episodes, created by [[author]].",
-      descriptionFallback: "[[title]], a [[type]] by [[author]] with [[episodes]] episodes on [[site]].",
+      descriptionFallback: "[[title]] - [[site]] Collection. Browse the works in \"[[title]]\" and explore this collection on [[site]] to discover more works you'll enjoy.",
       types: { comic: "Comic", novel: "Novel", drama: "Anime Drama", image: "Illustration", video: "Video" }
     },
     communityConvention: {
-      title: "Community Guidelines — FansFans Creator Code of Conduct",
+      title: "Community Guidelines — Creator Code of Conduct {'|'} FansFans",
       keywords: "community guidelines, creator rules, content policy, community policy",
       description: "Read FansFans's community guidelines to keep our AI creator community safe and inspiring."
     },
     terms: {
-      title: "Terms of Service — FansFans User Agreement",
+      title: "Terms of Service — User Agreement {'|'} FansFans",
       keywords: "terms of service, user agreement, user agreement, legal terms",
       description: "Read FansFans's Terms of Service to understand your rights, responsibilities, and AI content ownership."
     },
     privacy: {
-      title: "Privacy Policy — How FansFans Protects Your Data",
+      title: "Privacy Policy — How We Protect Your Data {'|'} FansFans",
       keywords: "privacy policy, data protection, personal information, cookie policy",
       description: "FansFans respects your personal information and creative privacy."
     },
@@ -3319,10 +3325,11 @@ If you have any questions, complaints, comments or suggestions regarding persona
     userHome: {
       title: "My Works — Manage Your AI Novels, Comics & Anime Drama {'|'} FansFans",
       keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
-      description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data."
+      description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data.",
+      descriptionFallback: "[[author]]'s profile - [[site]]. Welcome to [[author]]'s profile. Browse their works and collections on [[site]] and discover content you'll enjoy."
     },
     novelGenerate: {
-      title: "AI Novel Generator Online Free {'|'} Write 30K Stories in One Click - FansFans",
+      title: "AI Novel Generator Online Free {'|'} Write 30K Stories in One Click {'|'} FansFans",
       keywords: "AI novel generator, long-form story generator, textai, AI story maker, AI novel AI, write novel AI, AI novel tool",
       description: "Generate full 30K+ word novels from one line. Multiple genres: romance, BL, school romance, sci-fi, fantasy. Built for global writers."
     }
@@ -3469,6 +3476,6 @@ If you have any questions, complaints, comments or suggestions regarding persona
     back: "Back to Home",
     guide: "Guide",
     terms: "Terms",
-    pageTitle: "Page Not Found - FansFans"
+    pageTitle: "Page Not Found {'|'} FansFans"
   }
 };

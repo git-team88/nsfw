@@ -386,7 +386,7 @@ const routes = [
   {
     path: "/collection/:id",
     name: "CollectionDetail",
-    meta: { titleKey: "pageTitle.collection" },
+    // 标题由页面按合集数据自己拼（UGC 规则），不配固定的 titleKey，免得先闪一下「合集 - 站点名」
     component: () => import("@/views/CollectionDetail.vue"),
   },
   {

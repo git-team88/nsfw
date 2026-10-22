@@ -28,6 +28,28 @@ export function safeJoin(parts: Array<string | null | undefined>, sep = '｜'): 
 }
 
 /** 去掉 html 标签和换行，截断到 max 个字符 */
+/** UGC 标题各段之间统一用「 | 」隔开，空段自动丢掉 */
+export const TITLE_SEP = ' | ';
+
+/**
+ * meta keywords：传空就删掉标签。Google 不用它排名，按运营要求输出；
+ * 每次路由切换 router.afterEach 会先删一次，页面再按自己的内容写，不会把上一页的留给下一页。
+ */
+export function setMetaKeywords(keywords: Array<string | null | undefined> | string | null | undefined) {
+  if (typeof document === 'undefined') return;
+  const content = Array.isArray(keywords)
+    ? Array.from(new Set(keywords.map(k => String(k ?? '').trim()).filter(Boolean))).join(',')
+    : String(keywords ?? '').trim();
+  let el = document.head.querySelector<HTMLMetaElement>('meta[name="keywords" i]');
+  if (!content) { el?.remove(); return; }
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute('name', 'keywords');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
 export function clamp(text: unknown, max: number): string {
   const s = String(text ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
   return s.length > max ? s.slice(0, max) : s;

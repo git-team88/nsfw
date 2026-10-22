@@ -204,14 +204,16 @@
 <script setup lang="ts" name="CollectionDetail">
 import PromptComposer from '@/components/PromptComposer.vue';
 import { scaleFiatPrice } from '@/util/currency';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import Header from '@/components/Header.vue';
 import SensitiveContentAdultConfirmModal from '@/components/SensitiveContentAdultConfirmModal.vue';
 import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmModal.vue';
 import DeleteChapterConfirmModal from '@/components/DeleteChapterConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
 import { siteName } from '@/utils/pageTitle';
-import { applySeoMeta, restoreSeoMeta, applyJsonLd, goNotFoundIfMissing, safeJoin, clamp } from '@/utils/seoMeta';
+import i18n from '@/lang/i18n';
+import { applySeoMeta, restoreSeoMeta, applyJsonLd, goNotFoundIfMissing, safeJoin, clamp, setMetaKeywords, TITLE_SEP } from '@/utils/seoMeta';
+import { bookTags, bookTagLabel, loadBookTags } from '@/util/bookTags';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
@@ -265,6 +267,8 @@ interface Collection {
   latestChapterIndex: string;
   type: string;
   status: string;
+  // 分类标签 id（页面标题「主要题材与形式」用）
+  tag_id?: string | number;
   chapters: Chapter[];
   is_nsfw: number | string;
   chapter_count_private: number | string;
@@ -439,6 +443,7 @@ async function fetchCollectionDetail() {
           latestChapterIndex: finalBookInfo.chapter_count || '',
           type: finalBookInfo.type || '',
           status: finalBookInfo.status || '',
+          tag_id: finalBookInfo.tag_id || '',
           is_nsfw: finalBookInfo.is_nsfw || 0,
           chapter_count_private: finalBookInfo.chapter_count_private || 0,
           readIndexes: Array.isArray(finalData.indexs) ? finalData.indexs.map(Number) : [],
@@ -551,6 +556,9 @@ function formatPrice(raw: string, currency?: string, isWeb3 = false): string {
  *   og:url      = 当前地址（去查询串）；og:image = 合集封面
  * 离开页面时在 onBeforeUnmount 里 restoreSeoMeta() 还原。
  */
+let seoTagsRequested = false;
+// 切换语言后标题 / 描述里的固定词（连载、品牌名…）要跟着换
+watch(() => i18n.global.locale.value, () => applyCollectionSeo());
 function applyCollectionSeo() {
   const c = collection.value;
   if (!c) return;
@@ -571,12 +579,20 @@ function applyCollectionSeo() {
     .replace(/\[\[site\]\]/g, site)
     .replace(/\[\[intro\]\]/g, intro);
 
-  // 标题模板按「｜」/「 | 」分段拼；类型为空时整段丢掉，不留「・全 0 话」这种空壳
-  const titleTpl = t('seo.collection.title');
-  const sep = titleTpl.includes('｜') ? '｜' : ' | ';
-  const titleParts = titleTpl.split(sep).map(fill).map(x => x.trim()).filter(seg => seg && !/^[・·]/.test(seg));
-  const pageTitle = safeJoin(titleParts.length ? titleParts : [title, site], sep);
-  const description = fill(t(intro ? 'seo.collection.description' : 'seo.collection.descriptionFallback'));
+  // 标题（UGC 规则）：合集名 | 主要题材与形式 | 作者 | 连载状态 | 品牌；题材 / 状态没有就整段省略
+  const tag = c.tag_id ? bookTags.value.find(x => String(x.tag_id) === String(c.tag_id)) : undefined;
+  if (c.tag_id && !tag && !seoTagsRequested) {
+    seoTagsRequested = true;
+    loadBookTags().then(() => { if (bookTags.value.length) applyCollectionSeo(); });
+  }
+  // 「主要题材与形式」只取合集的分类标签（只有漫剧合集有），不拼内容类型
+  const genre = bookTagLabel(tag);
+  const status = c.status ? t(c.status == '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
+  const pageTitle = safeJoin([title, genre, author, status, site], TITLE_SEP);
+  // keywords：作品名 + 分类标签 + 作者
+  setMetaKeywords([title, genre, author]);
+  // description：优先用户写的合集描述，没有才用固定文案
+  const description = intro || fill(t('seo.collection.descriptionFallback'));
 
   const image = c.cover && c.cover !== defaultCover ? processImageUrl(c.cover) : undefined;
   applySeoMeta({ title: pageTitle, description, image });
@@ -943,6 +959,8 @@ function onUserLoggedOut() {
 }
 
 onMounted(async () => {
+  // 合集数据到之前只显示站点名，不先闪一下别的标题
+  document.title = siteName();
   eventBus.on('userLoggedOut', onUserLoggedOut);
   await getCountry();
   fetchCollectionDetail();

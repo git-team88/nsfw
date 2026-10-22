@@ -883,7 +883,8 @@ export default {
   // 先拉一次分类列表，默认用第一个；表单里用户选过的直接按传入的走。
   addCollection: async (data: any) => {
     let payload = data;
-    if (payload && payload.tag_id === undefined) {
+    // 只有漫剧合集（type 3）有分类：没传 tag_id 时自动取列表第一个；其他类型不加
+    if (payload && payload.type == 3 && payload.tag_id === undefined) {
       try {
         const res = await axios.request({ url: "book/getBookTagsListPublic", method: "GET" }) as any;
         const first = res?.code === 0 ? (res.data?.tags || res.data?.list || [])[0] : undefined;

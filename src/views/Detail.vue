@@ -984,7 +984,9 @@ import SensitiveNsfwPanel from "@/components/SensitiveNsfwPanel.vue";
 import DramaUnlockCard from "@/components/DramaUnlockCard.vue";
 
 import { useRoute, useRouter } from "vue-router";
-import { goNotFoundIfMissing } from "@/utils/seoMeta";
+import { goNotFoundIfMissing, safeJoin, clamp, setMetaKeywords, TITLE_SEP } from "@/utils/seoMeta";
+import { siteName } from "@/utils/pageTitle";
+import { bookTags, bookTagLabel, loadBookTags } from "@/util/bookTags";
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
@@ -2389,13 +2391,40 @@ function formatContent(content: string): string {
 }
 
 // type 以前只用来拼 meta keywords，keywords 已删（SEO T13），参数保留以免改动调用处
-function setSeoMeta(title: string, description: string, _type: string) {
-  let pageTitle = t('seo.detail.title');
-  pageTitle = pageTitle.replace(/\[\[title\]\]/g, title);
+// 详情页标题要用的所属合集信息（连载状态 / 分类标签），没合集时为 null
+const seoBook = ref<{ status: string; tag_id: string | number } | null>(null);
+let seoTagsRequested = false;
 
-  const trimmedDesc = description.replace(/<[^>]*>/g, '').replace(/[\n\r]+/g, '').substring(0, 80);
-  let pageDescription = t('seo.detail.description');
-  pageDescription = pageDescription.replace(/\[\[title\]\]/g, title).replace(/\[\[description\]\]/g, trimmedDesc);
+/** 「免费范围」只分两种：本集免费 / 本集收费（按这一集自己的 access_rights） */
+function freeRangeLabel(): string {
+  return t(detail.value?.permission === 'public' ? 'seo.parts.freeEpisode' : 'seo.parts.paidEpisode');
+}
+
+/**
+ * 页面标题（UGC 规则）：合集名 | 本集标题 | 主要题材与形式 | 作者 | 免费范围 | 连载状态 | 品牌
+ * 合集名 / 题材 / 连载状态 作品可能没有，没有就整段省略，不编。
+ * description：优先作品描述，没有描述用固定文案。
+ */
+function setSeoMeta(title: string, description: string, _type: string) {
+  const site = siteName();
+  const author = clamp(detail.value?.author?.nickname, 40);
+  const tagId = seoBook.value?.tag_id;
+  const tag = tagId ? bookTags.value.find(x => String(x.tag_id) === String(tagId)) : undefined;
+  if (tagId && !tag && !seoTagsRequested) {
+    // 分类列表还没拉过：拉一次，拿到后把标题重算一遍
+    seoTagsRequested = true;
+    loadBookTags().then(() => { if (bookTags.value.length) setSeoMeta(title, description, _type); });
+  }
+  // 「主要题材与形式」只取所属合集的分类标签（只有漫剧合集有），不拼内容类型
+  const genre = bookTagLabel(tag);
+  const status = seoBook.value?.status ? t(seoBook.value.status === '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
+  const pageTitle = safeJoin([clamp(detail.value?.book_title, 30), clamp(title, 40), genre, author, freeRangeLabel(), status, site], TITLE_SEP);
+  // keywords：作品名 + 本集名 + 分类标签（有什么写什么，不编）
+  setMetaKeywords([clamp(detail.value?.book_title, 30), clamp(title, 40), genre]);
+
+  const trimmedDesc = clamp(description, 110);
+  const pageDescription = trimmedDesc || t('seo.detail.descriptionFallback')
+    .replace(/\[\[title\]\]/g, title).replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
 
   document.title = pageTitle;
 
@@ -2724,6 +2753,7 @@ async function fetchDetail(newId: number) {
 
       let bookIsNsfw = 0;
       let bookSessionId = '';
+      seoBook.value = null;
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
@@ -2735,6 +2765,8 @@ async function fetchDetail(newId: number) {
             if (bookData?.session_id) {
               bookSessionId = bookData.session_id;
             }
+            // 页面标题要用的合集信息：连载状态 / 分类标签
+            seoBook.value = { status: String(bookData?.status ?? ''), tag_id: bookData?.tag_id ?? '' };
           }
         } catch (e) {
           // ignore
@@ -6076,6 +6108,8 @@ function handleContextMenu(e: MouseEvent) {
 }
 
 onMounted(async () => {
+  // 作品数据到之前只显示站点名，不先顶着 index.html 里的首页标题
+  document.title = siteName();
   // 是从上 / 下一个滑过来的：这次加载不弹全屏遮罩（方向由 App.vue 在滑完后清空）
   if (pageSlideDir.value) slideLoading.value = true;
   // 初始化语言设置

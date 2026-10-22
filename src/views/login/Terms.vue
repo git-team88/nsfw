@@ -19,6 +19,7 @@ import Header from "@/components/Header.vue";
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { setMetaKeywords } from "@/utils/seoMeta";
 import { initLanguage } from "@/util/utils";
 
 const router = useRouter();
@@ -40,6 +41,7 @@ function setSeoMeta() {
     document.head.appendChild(metaDescription);
   }
   metaDescription.setAttribute('content', t('seo.terms.description'));
+  setMetaKeywords(t('seo.terms.keywords'));
 }
 
 function setNoIndexMeta() {

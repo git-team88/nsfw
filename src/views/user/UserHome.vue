@@ -502,6 +502,8 @@ import {
 import { useMasonry } from "@/util/masonry";
 import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
+import { safeJoin, clamp, setMetaKeywords, TITLE_SEP } from "@/utils/seoMeta";
+import { siteName } from "@/utils/pageTitle";
 import { trackSubscribeToCreator } from "@/utils/analytics";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
@@ -1275,15 +1277,24 @@ function showToast(msg: string, icon = successIcon) {
   }, 3000);
 }
 
+/**
+ * 标题（UGC 规则）：作者 | 用户社区 | 品牌；用户信息还没到时只显示站点名，不先闪一下旧的固定标题。
+ * description：优先用户社区描述（主页简介），没有用固定文案。
+ */
 function setSeoMeta() {
-  document.title = t('seo.userHome.title');
+  const author = clamp(userInfo.value?.nickname, 40);
+  const site = siteName();
+  document.title = author ? safeJoin([author, t('seo.parts.community'), site], TITLE_SEP) : site;
+  setMetaKeywords(author ? [author, t('seo.parts.community'), site] : '');
+  const fill = (tpl: string) => tpl.replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
+  const pageDescription = clamp(userInfo.value?.description, 110) || (author ? fill(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
   let metaDescription = document.querySelector('meta[name="description"]');
   if (!metaDescription) {
     metaDescription = document.createElement('meta');
     metaDescription.setAttribute('name', 'description');
     document.head.appendChild(metaDescription);
   }
-  metaDescription.setAttribute('content', t('seo.userHome.description'));
+  metaDescription.setAttribute('content', pageDescription);
 }
 
 // Get user region
@@ -1327,6 +1338,8 @@ onMounted(async () => {
 
   // First fetch user info
   await fetchUserInfo();
+  // 拿到昵称 / 简介后再设一次标题和描述
+  setSeoMeta();
 
   // 上报个人主页浏览（10 分钟内只上报一次）
   trackHomeView((route.params.id as string) || userInfo.value.id);

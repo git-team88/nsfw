@@ -45,8 +45,8 @@
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
-        <!-- Category Section：分类下拉，列表来自接口，默认选中第一个 -->
-        <div class="form-group">
+        <!-- Category Section：分类下拉，只有漫剧合集（type 3）有；列表来自接口，默认选中第一个 -->
+        <div class="form-group" v-if="isDramaCollection">
           <label class="form-label"><b class="required">*</b>{{ t('collectionSettings.category') }}</label>
           <div class="lang-dropdown" :class="{ open: tagDropdownOpen }" ref="tagDropdownRef">
             <div class="lang-dropdown-trigger" @click="tagDropdownOpen = !tagDropdownOpen">
@@ -233,7 +233,11 @@ const initialTagId = ref<string | number>('');
 const tagDropdownOpen = ref(false);
 const tagDropdownRef = ref<HTMLElement | null>(null);
 const currentTagLabel = computed(() => bookTagLabel(bookTags.value.find(t => String(t.tag_id) === String(selectedTagId.value))) || '');
+// 分类只给漫剧合集（type 3）用，其他类型不显示、不传 tag_id
+const isDramaCollection = computed(() => props.type == 3);
+
 async function initBookTags(currentTagId?: string | number) {
+  if (!isDramaCollection.value) return;
   const list = await loadBookTags();
   const cur = currentTagId !== undefined && currentTagId !== null && String(currentTagId) !== '' ? String(currentTagId) : '';
   const hit = cur ? list.find(t => String(t.tag_id) === cur) : undefined;
@@ -471,7 +475,7 @@ async function handleSave() {
       if (selectedLanguage.value !== initialLanguage.value) {
         params.language = selectedLanguage.value;
       }
-      if (String(selectedTagId.value) !== String(initialTagId.value) && selectedTagId.value !== '') {
+      if (isDramaCollection.value && String(selectedTagId.value) !== String(initialTagId.value) && selectedTagId.value !== '') {
         params.tag_id = selectedTagId.value;
       }
 
@@ -503,7 +507,7 @@ async function handleSave() {
         is_nsfw: computedIsNsfw.value,
         language: selectedLanguage.value,
       };
-      if (selectedTagId.value !== '') params.tag_id = selectedTagId.value;
+      if (isDramaCollection.value && selectedTagId.value !== '') params.tag_id = selectedTagId.value;
 
       const response = await api.addCollection(params) as any;
       if (response.code === 0) {

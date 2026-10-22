@@ -46,8 +46,8 @@
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
-        <!-- Category Section：分类下拉，列表来自接口，默认选中第一个 -->
-        <div class="form-group">
+        <!-- Category Section：分类下拉，只有漫剧合集（type 3）有；列表来自接口，默认选中第一个 -->
+        <div class="form-group" v-if="isDramaCollection">
           <label class="form-label"><b class="required">*</b>{{ t('collectionSettings.category') }}</label>
           <div class="lang-dropdown" :class="{ open: tagDropdownOpen }" ref="tagDropdownRef">
             <div class="lang-dropdown-trigger" @click="tagDropdownOpen = !tagDropdownOpen">
@@ -252,6 +252,7 @@ const tagDropdownOpen = ref(false);
 const tagDropdownRef = ref<HTMLElement | null>(null);
 const currentTagLabel = computed(() => bookTagLabel(bookTags.value.find(t => String(t.tag_id) === String(selectedTagId.value))) || '');
 async function initBookTags(currentTagId?: string | number) {
+  if (!isDramaCollection.value) return;
   const list = await loadBookTags();
   const cur = currentTagId !== undefined && currentTagId !== null && String(currentTagId) !== '' ? String(currentTagId) : '';
   const hit = cur ? list.find(t => String(t.tag_id) === cur) : undefined;
@@ -267,6 +268,8 @@ const selectedLanguage = ref(defaultLang);
 
 // --- 收费档 ---------------------------------------------------------------
 const collectionType = ref('');
+// 分类只给漫剧合集（type 3）用，其他类型不显示、不传 tag_id
+const isDramaCollection = computed(() => collectionType.value == '3');
 const languageModified = ref(false);
 const originalLanguage = ref(defaultLang);
 
@@ -379,12 +382,12 @@ async function loadCollection(id: string) {
       originalDescription.value = bookInfo.description || '';
       originalCover.value = bookInfo.cover || '';
       originalIsNsfw.value = bookInfo.is_nsfw == 1 ? 1 : 0;
+      collectionType.value = String(bookInfo.type ?? '');
       await initBookTags(bookInfo.tag_id);
       if (bookInfo.language) {
         selectedLanguage.value = bookInfo.language;
         originalLanguage.value = bookInfo.language;
       }
-      collectionType.value = String(bookInfo.type ?? '');
     }
   } catch (error) {
     console.error('Failed to load collection:', error);
@@ -433,7 +436,7 @@ async function handleSave() {
       if (selectedLanguage.value !== originalLanguage.value) {
         params.language = selectedLanguage.value;
       }
-      if (String(selectedTagId.value) !== String(initialTagId.value) && selectedTagId.value !== '') {
+      if (isDramaCollection.value && String(selectedTagId.value) !== String(initialTagId.value) && selectedTagId.value !== '') {
         params.tag_id = selectedTagId.value;
       }
     } else {
@@ -446,7 +449,7 @@ async function handleSave() {
       params.cover = coverUrl.value;
       params.is_nsfw = computedIsNsfw.value;
       params.language = selectedLanguage.value;
-      if (selectedTagId.value !== '') params.tag_id = selectedTagId.value;
+      if (isDramaCollection.value && selectedTagId.value !== '') params.tag_id = selectedTagId.value;
     }
 
     let response;

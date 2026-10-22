@@ -487,6 +487,7 @@ import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/base/video.png";
 
 import { useI18n } from 'vue-i18n';
+import { setMetaKeywords } from "@/utils/seoMeta";
 import PromptComposer from '@/components/PromptComposer.vue';
 import { ensureRegion, userRegion, hasFetchedRegion } from '@/util/region';
 
@@ -1259,8 +1260,11 @@ const handleSearch = () => {
 };
 
 
+// 最近一次设的分类（novel / comic …），切语言时按它重设，不然分类页切语言后标题会退回首页的
+let lastSeoType: string | undefined;
 function setSeoMeta(type?: string) {
-  let title: string, description: string;
+  lastSeoType = type;
+  let title: string, description: string, keywords: string;
 
   if (type) {
     const seoKeyMap: Record<string, string> = {
@@ -1274,13 +1278,16 @@ function setSeoMeta(type?: string) {
     if (seoKey) {
       title = t(`${seoKey}.title`);
       description = t(`${seoKey}.description`);
+      keywords = t(`${seoKey}.keywords`);
     } else {
       title = t('seo.home.title');
       description = t('seo.home.description');
+      keywords = t('seo.home.keywords');
     }
   } else {
     title = t('seo.home.title');
     description = t('seo.home.description');
+    keywords = t('seo.home.keywords');
   }
 
   document.title = title;
@@ -1292,6 +1299,7 @@ function setSeoMeta(type?: string) {
     document.head.appendChild(metaDescription);
   }
   metaDescription.setAttribute('content', description);
+  setMetaKeywords(keywords);
 }
 
 // Handle window resize
@@ -1581,7 +1589,7 @@ watch(() => locale.value, async () => {
 
   currentPage.value = 1;
   allContent.value = [];
-  setSeoMeta();
+  setSeoMeta(lastSeoType);
   await loadContent(1);
   await nextTick();
 
