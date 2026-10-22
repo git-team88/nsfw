@@ -2756,12 +2756,14 @@ export default {
       title: "[[title]] - สร้างสรรค์ AI แนวอนิเมะ {'|'} FansFans",
       keywords: "[[title]],AI [[type]],[[type]] แนวอนิเมะ",
       description: "[[title]] - [[description]]",
-      descriptionFallback: "[[title]] - [[site]] ดูรายละเอียดของ「[[title]]」บน [[site]] และสำรวจผลงานและคอลเลกชันอื่น ๆ ของผู้สร้าง"
+      descriptionFallback: "ดูรายละเอียดของ「[[title]]」บน [[site]] และสำรวจผลงานและคอลเลกชันอื่น ๆ ของผู้สร้าง",
+      titleFallback: "[[title]] {'|'} [[site]]"
     },
     collection: {
       title: "[[title]] {'|'} [[type]] · [[episodes]] ตอน {'|'} [[site]]",
       description: "[[intro]] [[episodes]] ตอน สร้างโดย [[author]]",
-      descriptionFallback: "[[title]] - คอลเลกชัน [[site]] ดูผลงานใน「[[title]]」และสำรวจคอลเลกชันบน [[site]] เพื่อค้นพบผลงานที่น่าสนใจเพิ่มเติม",
+      descriptionFallback: "ดูผลงานใน「[[title]]」และสำรวจคอลเลกชันบน [[site]] เพื่อค้นพบผลงานที่น่าสนใจเพิ่มเติม",
+      titleFallback: "[[title]] {'|'} คอลเลกชัน [[site]]",
       types: { comic: "มังงะ", novel: "นิยาย", drama: "อนิเมะดราม่า", image: "ภาพประกอบ", video: "วิดีโอ" }
     },
     communityConvention: {
@@ -2798,7 +2800,8 @@ export default {
       title: "ผลงานของฉัน - จัดการนิยาย มังงะ และอนิเมะดราม่า AI ของฉัน {'|'} FansFans",
       keywords: "ผลงานของฉัน, นิยาย AI, มังงะ, อนิเมะดราม่า, จัดการผลงาน, จัดการการสร้างสรรค์, FansFans",
       description: "จัดการผลงานนิยาย มังงะ และอนิเมะดราม่า AI ของคุณใน FansFans พร้อมติดตามผู้ติดตาม การบันทึก และข้อมูลการมีส่วนร่วม",
-      descriptionFallback: "หน้าโปรไฟล์ของ [[author]] - [[site]] ยินดีต้อนรับสู่หน้าโปรไฟล์ของ [[author]] ดูผลงานและคอลเลกชันที่เผยแพร่บน [[site]] และค้นพบเนื้อหาที่คุณสนใจ"
+      descriptionFallback: "ยินดีต้อนรับสู่หน้าโปรไฟล์ของ [[author]] ดูผลงานและคอลเลกชันที่เผยแพร่บน [[site]] และค้นพบเนื้อหาที่คุณสนใจ",
+      titleFallback: "หน้าโปรไฟล์ของ [[author]] {'|'} [[site]]"
     },
     novelGenerate: {
       title: "เครื่องมือสร้างนิยาย AI ออนไลน์ฟรี｜สร้างนิยายยาว 30,000 ตัวอักษรจากประโยคเดียว {'|'} FansFans",

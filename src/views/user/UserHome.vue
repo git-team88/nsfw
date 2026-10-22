@@ -1285,7 +1285,10 @@ function setSeoMeta() {
   const author = clamp(userInfo.value?.nickname, 40);
   const site = siteName();
   // 昵称还没回来时先显示「用户社区 | 站点名」，拿到后补上昵称
-  document.title = safeJoin([author, t('seo.parts.community'), site], TITLE_SEP);
+  const community = t('seo.parts.community');
+  document.title = community
+    ? safeJoin([author, community, site], TITLE_SEP)
+    : author ? t('seo.userHome.titleFallback').replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site) : site;
   setMetaKeywords(author ? [author, t('seo.parts.community'), site] : '');
   const fill = (tpl: string) => tpl.replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
   const pageDescription = clamp(userInfo.value?.description, 110) || (author ? fill(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));

@@ -2756,12 +2756,14 @@ export default {
       title: "[[title]] - 이차원 AI 창작 {'|'} FansFans",
       keywords: "[[title]],AI [[type]],이차원 [[type]]",
       description: "[[title]] - [[description]]",
-      descriptionFallback: "[[title]] - [[site]] [[site]]에서 「[[title]]」의 상세 내용을 확인하고 창작자의 더 많은 작품과 컬렉션을 살펴보세요."
+      descriptionFallback: "[[site]]에서 「[[title]]」의 상세 내용을 확인하고 창작자의 더 많은 작품과 컬렉션을 살펴보세요.",
+      titleFallback: "[[title]] {'|'} [[site]]"
     },
     collection: {
       title: "[[title]]｜[[type]] · 전 [[episodes]]화｜[[site]]",
       description: "[[intro]]. [[episodes]]화 연재 중, [[author]] 제작.",
-      descriptionFallback: "[[title]] - [[site]] 컬렉션 「[[title]]」의 작품을 둘러보고 [[site]]에서 컬렉션 내용을 살펴보며 더 많은 작품을 찾아보세요.",
+      descriptionFallback: "「[[title]]」의 작품을 둘러보고 [[site]]에서 컬렉션 내용을 살펴보며 더 많은 작품을 찾아보세요.",
+      titleFallback: "[[title]] {'|'} [[site]] 컬렉션",
       types: { comic: "만화", novel: "소설", drama: "애니 드라마", image: "일러스트", video: "영상" }
     },
     communityConvention: {
@@ -2798,7 +2800,8 @@ export default {
       title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리 {'|'} FansFans",
       keywords: "내 작품, AI 소설, 만화, 애니 드라마, 작품 관리, 창작 관리, FansFans",
       description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요.",
-      descriptionFallback: "[[author]]님의 프로필 - [[site]] [[author]]님의 프로필에 오신 것을 환영합니다. [[site]]에서 게시한 작품과 컬렉션을 둘러보고 관심 있는 콘텐츠를 찾아보세요."
+      descriptionFallback: "[[author]]님의 프로필에 오신 것을 환영합니다. [[site]]에서 게시한 작품과 컬렉션을 둘러보고 관심 있는 콘텐츠를 찾아보세요.",
+      titleFallback: "[[author]]님의 프로필 {'|'} [[site]]"
     },
     novelGenerate: {
       title: "AI 소설 생성기 온라인 무료 이용｜한 문장으로 만드는 3만자 장편 소설 {'|'} FansFans",

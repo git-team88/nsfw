@@ -3284,12 +3284,14 @@ If you have any questions, complaints, comments or suggestions regarding persona
       title: "[[title]] - AI Anime Creation {'|'} FansFans",
       keywords: "[[title]],AI [[type]],anime [[type]]",
       description: "[[title]] - [[description]]",
-      descriptionFallback: "[[title]] - [[site]]. View the details of \"[[title]]\" on [[site]] and explore more works and collections from the creator."
+      descriptionFallback: "View the details of \"[[title]]\" on [[site]] and explore more works and collections from the creator.",
+      titleFallback: "[[title]] {'|'} [[site]]"
     },
     collection: {
       title: "[[title]] {'|'} [[type]] · [[episodes]] episodes {'|'} [[site]]",
       description: "[[intro]]. [[episodes]] episodes, created by [[author]].",
-      descriptionFallback: "[[title]] - [[site]] Collection. Browse the works in \"[[title]]\" and explore this collection on [[site]] to discover more works you'll enjoy.",
+      descriptionFallback: "Browse the works in \"[[title]]\" and explore this collection on [[site]] to discover more works you'll enjoy.",
+      titleFallback: "[[title]] {'|'} [[site]] Collection",
       types: { comic: "Comic", novel: "Novel", drama: "Anime Drama", image: "Illustration", video: "Video" }
     },
     communityConvention: {
@@ -3326,7 +3328,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       title: "My Works — Manage Your AI Novels, Comics & Anime Drama {'|'} FansFans",
       keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
       description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data.",
-      descriptionFallback: "[[author]]'s profile - [[site]]. Welcome to [[author]]'s profile. Browse their works and collections on [[site]] and discover content you'll enjoy."
+      descriptionFallback: "Welcome to [[author]]'s profile. Browse their works and collections on [[site]] and discover content you'll enjoy.",
+      titleFallback: "[[author]]'s Profile {'|'} [[site]]"
     },
     novelGenerate: {
       title: "AI Novel Generator Online Free {'|'} Write 30K Stories in One Click {'|'} FansFans",

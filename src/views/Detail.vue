@@ -2418,7 +2418,15 @@ function setSeoMeta(title: string, description: string, _type: string) {
   // 「主要题材与形式」只取所属合集的分类标签（只有漫剧合集有），不拼内容类型
   const genre = bookTagLabel(tag);
   const status = seoBook.value?.status ? t(seoBook.value.status === '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
-  const pageTitle = safeJoin([clamp(detail.value?.book_title, 30), clamp(title, 40), genre, author, freeRangeLabel(), status, site], TITLE_SEP);
+  const bookName = clamp(detail.value?.book_title, 30);
+  const workName = clamp(title, 40);
+  const extras = [genre, author, freeRangeLabel(), status];
+  // 作品名以外的段一个都拼不出来时，用兜底标题「{作品名} | 品牌」；连作品名都没有就只剩品牌
+  const pageTitle = extras.some(Boolean)
+    ? safeJoin([bookName, workName, ...extras, site], TITLE_SEP)
+    : (workName || bookName)
+      ? t('seo.detail.titleFallback').replace(/\[\[title\]\]/g, workName || bookName).replace(/\[\[site\]\]/g, site)
+      : site;
   // keywords：作品名 + 本集名 + 分类标签（有什么写什么，不编）
   setMetaKeywords([clamp(detail.value?.book_title, 30), clamp(title, 40), genre]);
 

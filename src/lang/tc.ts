@@ -3377,12 +3377,14 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       title: `[[title]] - 二次元 AI 創作 {'|'} FansFans`,
       keywords: `[[title]],AI[[type]],二次元[[type]]`,
       description: `[[title]] - [[description]]`,
-      descriptionFallback: "[[title]] - [[site]] 在 [[site]] 查看「[[title]]」的詳細內容，探索創作者的更多作品與合集。"
+      descriptionFallback: "在 [[site]] 查看「[[title]]」的詳細內容，探索創作者的更多作品與合集。",
+      titleFallback: "[[title]] {'|'} [[site]]"
     },
     collection: {
       title: "[[title]]｜[[type]]・全 [[episodes]] 話｜[[site]]",
       description: "[[intro]]。[[episodes]] 話連載中，[[author]] 創作。",
-      descriptionFallback: "[[title]] - [[site]] 合集 瀏覽「[[title]]」中的作品，在 [[site]] 探索合集內容，發現更多感興趣的作品。",
+      descriptionFallback: "瀏覽「[[title]]」中的作品，在 [[site]] 探索合集內容，發現更多感興趣的作品。",
+      titleFallback: "[[title]] {'|'} [[site]] 合集",
       types: { comic: "漫畫", novel: "小說", drama: "漫劇", image: "圖片", video: "影片" }
     },
     communityConvention: {
@@ -3419,7 +3421,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇 {'|'} FansFans",
       keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
       description: "在 FansFans中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。",
-      descriptionFallback: "[[author]]的個人主頁 - [[site]] 歡迎來到[[author]]的個人主頁，在 [[site]] 瀏覽其發布的作品與合集，發現你感興趣的內容。"
+      descriptionFallback: "歡迎來到[[author]]的個人主頁，在 [[site]] 瀏覽其發布的作品與合集，發現你感興趣的內容。",
+      titleFallback: "[[author]]的個人主頁 {'|'} [[site]]"
     },
     novelGenerate: {
       title: "AI 小說生成器線上免費｜一句話生成 30K 長篇小說 {'|'} FansFans",

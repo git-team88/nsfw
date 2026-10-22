@@ -3345,12 +3345,14 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       title: "[[title]] - 二次元 AI クリエイション {'|'} FansFans",
       keywords: "[[title]],AI[[type]],二次元[[type]]",
       description: "[[title]] - [[description]]",
-      descriptionFallback: "[[title]] - [[site]] [[site]]で「[[title]]」の詳細を見て、クリエイターの他の作品やコレクションを探しましょう。"
+      descriptionFallback: "[[site]]で「[[title]]」の詳細を見て、クリエイターの他の作品やコレクションを探しましょう。",
+      titleFallback: "[[title]] {'|'} [[site]]"
     },
     collection: {
       title: "[[title]]｜[[type]]・全[[episodes]]話｜[[site]]",
       description: "[[intro]]。全[[episodes]]話連載中、[[author]]作。",
-      descriptionFallback: "[[title]] - [[site]] コレクション 「[[title]]」の作品を見る。[[site]]でコレクションの内容を探り、気になる作品をもっと見つけましょう。",
+      descriptionFallback: "「[[title]]」の作品を見る。[[site]]でコレクションの内容を探り、気になる作品をもっと見つけましょう。",
+      titleFallback: "[[title]] {'|'} [[site]] コレクション",
       types: { comic: "漫画", novel: "小説", drama: "アニメドラマ", image: "イラスト", video: "動画" }
     },
     communityConvention: {
@@ -3387,7 +3389,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       title: "マイ作品 - AI小説・漫画・アニメドラマを管理 {'|'} FansFans",
       keywords: "マイ作品,AI小説,漫画,アニメドラマ,作品管理,クリエイターダッシュボード",
       description: "FansFansでAI小説、漫画、アニメドラマを管理し、フォロワー、メンバーシップ者、エンゲージメントデータを追跡します。",
-      descriptionFallback: "[[author]]のマイページ - [[site]] [[author]]のマイページへようこそ。[[site]]で投稿作品やコレクションを見て、気になるコンテンツを見つけましょう。"
+      descriptionFallback: "[[author]]のマイページへようこそ。[[site]]で投稿作品やコレクションを見て、気になるコンテンツを見つけましょう。",
+      titleFallback: "[[author]]のマイページ {'|'} [[site]]"
     },
     novelGenerate: {
       title: "AI小説ジェネレーター - ひとことで30K文字の長編小説を生成 {'|'} FansFans",

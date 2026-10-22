@@ -588,7 +588,10 @@ function applyCollectionSeo() {
   // 「主要题材与形式」只取合集的分类标签（只有漫剧合集有），不拼内容类型
   const genre = bookTagLabel(tag);
   const status = c.status ? t(c.status == '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
-  const pageTitle = safeJoin([title, genre, author, status, site], TITLE_SEP);
+  // 标签 / 作者 / 状态一个都没有时，用兜底标题「{合集名} | 品牌 合集」
+  const pageTitle = [genre, author, status].some(Boolean)
+    ? safeJoin([title, genre, author, status, site], TITLE_SEP)
+    : t('seo.collection.titleFallback').replace(/\[\[title\]\]/g, title).replace(/\[\[site\]\]/g, site);
   // keywords：作品名 + 分类标签 + 作者
   setMetaKeywords([title, genre, author]);
   // description：优先用户写的合集描述，没有才用固定文案
