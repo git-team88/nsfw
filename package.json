@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run sitemap && run-p type-check \"build-only {@}\" --",
+    "build": "run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "preview": "vite preview",
