@@ -45,7 +45,7 @@
                       </div>
                     </div>
 
-                    <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && (isImagesLoaded || detail.type !== '1')">
+                    <div class="last-chapter-section" v-if="isChapterNavigationLoaded && (bookGenSwitch == '2' || !nextChapterId) && (isImagesLoaded || detail.type != '1')">
                       <span class="last-chapter-txt">{{ t("detail.lock.lastChapterTip") }}</span>
                       <button class="last-chapter-btn" @click="goToHomePage">{{ t("detail.lock.goGenerate") }}</button>
                     </div>
@@ -900,7 +900,7 @@
     <ImageViewer
       :visible="showLargeViewer"
       :images="largeImage"
-      :initial-index="currentImageIndex"
+      :initial-index="largeViewerIndex"
       @close="closeLargeViewer"
     />
 
@@ -1008,7 +1008,7 @@ const composerHeight = ref(0);
 // 漫剧 / 图片 / 视频：输入框排进左侧区域底部，把媒体顶上去
 // 漫画（type 1）是整页滚动的长图，顶不动，改成浮在左侧区域底部
 const isPanelComposerType = computed(() => ['1', '3', '4', '5'].includes(String(detail.value?.type ?? '')));
-const isOverlayComposerType = computed(() => String(detail.value?.type ?? '') === '1');
+const isOverlayComposerType = computed(() => detail.value?.type == '1');
 // 全屏下不显示输入框，媒体也要恢复满高
 const composerOpen = computed(() => composerActive.value && isPanelComposerType.value && !isPageFullscreen.value);
 import EmptyState from "@/components/EmptyState.vue";
@@ -1035,8 +1035,8 @@ const router = useRouter();
 // --- State ---
 const id = ref<number>(Number(route.params.id));
 const contentType = ref<string>(route.query.tab as string || route.query.contentType as string || "");
-const isNovelType = computed(() => contentType.value === '2' || contentType.value === 'novel' || detail.value.type === '2');
-const isStandaloneType = computed(() => detail.value.type === '4' || detail.value.type === '5');
+const isNovelType = computed(() => contentType.value == '2' || contentType.value === 'novel' || detail.value.type == '2');
+const isStandaloneType = computed(() => detail.value.type == '4' || detail.value.type == '5');
 const isPlaying = ref(false);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
@@ -1432,6 +1432,8 @@ interface imgItem {
 }
 
 const largeImage = ref([] as imgItem[])
+// 大图预览器打开时从第几张开始（和左侧作品轮播的 currentImageIndex 分开）
+const largeViewerIndex = ref(0);
 const bigImage = ref([] as imgItem[])
 
 // Detail Data
@@ -1729,6 +1731,10 @@ function goMakeSimilar(sessionId: string) {
 }
 
 async function goMakeSimilarVideo() {
+  if (isChinaRegion.value && (detail.value.is_nsfw == '1' || detail.value.book_is_nsfw == 1)) {
+    toast(t('home.error.nsfwRegionRestricted'));
+    return;
+  }
   const postId = detail.value.id || '';
   if (!postId) return;
 
@@ -2037,9 +2043,9 @@ async function doNavigateToChapter(chapter: any) {
   activeTab.value = 'collection';
   isRightPanelHidden.value = false;
 
-  await loadChapters();
-  // loadChapters 把列表重置回第一页了，这一集可能在后面几页，重新定位一次
-  await locateActiveCollection();
+  // 目录列表和上下集交给路由 watcher → fetchDetail 去拉。
+  // 以前这里也 loadChapters + locateActiveCollection 一遍：同一合集至少请求三次，
+  // 后回来的那次还可能按上一集算出上下集。
 }
 
 // Set chapter navigation
@@ -2064,7 +2070,8 @@ async function setChapterNavigation() {
     prevChapterId.value = collections.value[currentIndex - 1].post_id;
   }
 
-  if (currentIndex < collections.value.length - 1) {
+  // 当前集不在已加载的列表里（-1）：不给下一集，免得跳到第 1 集
+  if (currentIndex !== -1 && currentIndex < collections.value.length - 1) {
     nextChapterId.value = collections.value[currentIndex + 1].post_id;
   }
 
@@ -2078,7 +2085,8 @@ async function setChapterNavigation() {
   isRightPanelHidden.value = false;
 
   // Mark chapter navigation as loaded to enable last-chapter-section display
-  isChapterNavigationLoaded.value = true;
+  // 没定位到当前集时先不算加载完（不然「最后一集」提示会误显示），locateActiveCollection 翻到后会再算一次
+  isChapterNavigationLoaded.value = currentIndex !== -1 || !hasMoreCollections.value;
 
   // await loadChapters();
 }
@@ -2137,7 +2145,8 @@ async function recordViewHistory() {
   if (currentIndex === -1) {
     return;
   }
-  const chapterIndex = currentIndex + 1;
+  // 记这一集自己的 chapter_index（「继续阅读」也是按它找的），没有才用列表下标 +1
+  const chapterIndex = Number(collections.value[currentIndex]?.chapter_index) || (currentIndex + 1);
 
   if (!bookId) {
     return;
@@ -2232,7 +2241,7 @@ function handleLeftPanelWheel(event: WheelEvent) {
   // 在底部输入框（做同款 / 做续集）里滚动是在看输入内容，不能切作品
   if (isComposerTarget(event.target)) return;
   // 漫画(1) / 漫剧(2) 是往下读的长内容，滚轮留给右侧滚动条
-  if (detail.value.type === '1' || detail.value.type === '2') return;
+  if (detail.value.type == '1' || detail.value.type == '2') return;
   // 短剧(3) / 图片(4) / 视频(5)：滚轮上下 = 上一个 / 下一个作品
   if (detail.value.type !== '3' && detail.value.type !== '4' && detail.value.type !== '5') return;
 
@@ -2296,7 +2305,8 @@ let collectionObserver: IntersectionObserver | null = null;
 // 触底哨兵：无论是合集列表内部滚动（桌面）还是整页滚动（移动端堆叠布局），
 // 只要哨兵进入视口就加载下一页，避免依赖列表元素自身的固定高度滚动。
 function setupCollectionObserver() {
-  if (collectionObserver) return;
+  // 切出再切回合集 tab 时哨兵是新节点：断开旧的重新观察
+  if (collectionObserver) collectionObserver.disconnect();
   collectionObserver = new IntersectionObserver((entries) => {
     if (entries[0]?.isIntersecting && !loadingMoreCollections.value && hasMoreCollections.value && !isLoadingCollections.value) {
       loadCollections(true);
@@ -2380,7 +2390,10 @@ function formatContent(content: string): string {
     const numValue = parseInt(value);
     if (numValue > 0) {
       // 真实用户，添加蓝色可点击的span标签
-      return `<span style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${user}')">${user}</span>`;
+      // 用户名拼进 onclick 属性和标签内容前先转义，名字里的引号 / 尖括号不能破坏结构（防 XSS）
+      const jsArg = String(user).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const label = String(user).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<span style="color: #00d3f2; cursor: pointer;" onclick="window.searchByMention('@${jsArg}')">${label}</span>`;
     } else {
       // 普通文案，只显示用户名
       return user;
@@ -2397,7 +2410,9 @@ let seoTagsRequested = false;
 
 /** 「免费范围」只分两种：本集免费 / 本集收费（按这一集自己的 access_rights） */
 function freeRangeLabel(): string {
-  return t(detail.value?.permission === 'public' ? 'seo.parts.freeEpisode' : 'seo.parts.paidEpisode');
+  const p = detail.value?.permission;
+  if (p == 'private') return '';
+  return t(p == 'public' ? 'seo.parts.freeEpisode' : 'seo.parts.paidEpisode');
 }
 
 /**
@@ -2413,7 +2428,8 @@ function setSeoMeta(title: string, description: string, _type: string) {
   if (tagId && !tag && !seoTagsRequested) {
     // 分类列表还没拉过：拉一次，拿到后把标题重算一遍
     seoTagsRequested = true;
-    loadBookTags().then(() => { if (bookTags.value.length) setSeoMeta(title, description, _type); });
+    // 分类表回来时可能已经切到别的作品了：按当前作品重算
+    loadBookTags().then(() => { if (bookTags.value.length && detail.value?.id && !isNovelType.value) setSeoMeta(detail.value.title, detail.value.description, String(detail.value.type)); });
   }
   // 「主要题材与形式」只取所属合集的分类标签（只有漫剧合集有），不拼内容类型
   const genre = bookTagLabel(tag);
@@ -2422,7 +2438,7 @@ function setSeoMeta(title: string, description: string, _type: string) {
   const workName = clamp(title, 40);
   const extras = [genre, author, freeRangeLabel(), status];
   // 作品名以外的段一个都拼不出来时，用兜底标题「{作品名} | 品牌」；连作品名都没有就只剩品牌
-  const pageTitle = extras.some(Boolean)
+  const pageTitle = [genre, author, status].some(Boolean)
     ? safeJoin([bookName, workName, ...extras, site], TITLE_SEP)
     : (workName || bookName)
       ? t('seo.detail.titleFallback').replace(/\[\[title\]\]/g, workName || bookName).replace(/\[\[site\]\]/g, site)
@@ -2457,6 +2473,10 @@ function setSeoMeta(title: string, description: string, _type: string) {
   if (coverUrl) {
     setOgMeta('og:image', coverUrl);
     setOgMeta('twitter:image', coverUrl, true);
+  } else {
+    // 这个作品没封面：还原成进页面前的值，不留上一个作品的封面
+    resetOgMeta('og:image');
+    resetOgMeta('twitter:image', true);
   }
   injectWorkJsonLd({
     name: title,
@@ -2479,6 +2499,13 @@ const TYPE_NAME_MAP: Record<string, string> = {
 let ogModified: Array<{ el: HTMLMetaElement; prev: string | null }> = [];
 let ldWorkEl: HTMLScriptElement | null = null;
 
+// 切语言：标题里的「本集免费 / 连载中 / 分类名 / 品牌」都跟语言走，重算一遍
+watch(locale, () => {
+  if (detail.value?.id && !isNovelType.value && !isLoading.value) {
+    setSeoMeta(detail.value.title, detail.value.description, String(detail.value.type));
+  }
+});
+
 function setOgMeta(key: string, content: string, isName = false) {
   const sel = isName ? `meta[name="${key}"]` : `meta[property="${key}"]`;
   let m = document.head.querySelector<HTMLMetaElement>(sel);
@@ -2491,6 +2518,19 @@ function setOgMeta(key: string, content: string, isName = false) {
     ogModified.push({ el: m, prev: m.getAttribute('content') }); // 覆盖前记下原值
   }
   m.setAttribute('content', content);
+}
+
+function resetOgMeta(key: string, isName = false) {
+  const sel = isName ? `meta[name="${key}"]` : `meta[property="${key}"]`;
+  const m = document.head.querySelector<HTMLMetaElement>(sel);
+  const rec = m ? ogModified.find(x => x.el === m) : undefined;
+  if (!m || !rec) return;
+  if (rec.prev === null) {
+    m.remove();
+    ogModified = ogModified.filter(x => x !== rec);
+  } else {
+    m.setAttribute('content', rec.prev);
+  }
 }
 
 function injectWorkJsonLd(data: { name: string; description: string; image?: string; author?: string; date?: string; type?: string }) {
@@ -2574,8 +2614,14 @@ const playingPostId = computed(() => {
   return String(detail.value?.id || '');
 });
 
+// fetchDetail 刚拉完详情（含权限）并已发起字幕请求的那一集
+let justFetchedPostId = '';
 watch(playingPostId, (id) => {
   if (!id) return;
+  // 刚由 fetchDetail 处理过：不再重复请求详情权限和字幕（只跳过这一次）
+  const justFetched = id === justFetchedPostId;
+  justFetchedPostId = '';
+  if (justFetched) return;
   // 每一集的 access_rights 各自独立，切集时按这一集重新取一遍详情里的权限，
   // 不然锁沿用的还是最初打开那一集的（该放的不放、该锁的不锁）
   refreshPlayingPermission(id);
@@ -2623,8 +2669,16 @@ async function refreshPlayingPermission(postId: string) {
   }
 }
 
+// fetchDetail 的请求序号：快速切上一个 / 下一个 / 切集时，旧请求回来直接丢，不覆盖新作品
+let fetchDetailSeq = 0;
+// 漫剧视频加载超时兜底的定时器（卸载时清）
+let videoLoadingTimer: ReturnType<typeof setTimeout> | null = null;
+
 async function fetchDetail(newId: number) {
+  const seq = ++fetchDetailSeq;
+  const isStale = () => seq !== fetchDetailSeq;
   await contentSwitch.ensureLoaded();
+  if (isStale()) return;
   // Get query parameters at the beginning
   const type = route.query.type as string || "";
   const cid = route.query.cid as string || "";
@@ -2753,9 +2807,20 @@ async function fetchDetail(newId: number) {
     }).then(r => r.json());
 
     const res = await detailPromise;
+    if (isStale()) return;
 
     if (res.code == 0 || res.code == 200) {
-      const data = res.data.post || res.data;
+      const data = res.data?.post || res.data;
+      // code 0 但没有作品数据：按不存在处理（以前渲染一个 200 空壳）
+      if (!data || (typeof data == 'object' && !Object.keys(data).length)) {
+        if (goNotFoundIfMissing(router, route, { code: 0, data: null })) return;
+      }
+      // 不带 tab 的分享链接（/detail/123）打开的是小说：直接切给 NovelDetail，
+      // 不再把 Detail 这一整套（SEO / og / 评论 / 埋点 / 合集）先跑一遍
+      if (data && data.type == '2' && !isNovelType.value) {
+        detail.value.type = '2';
+        return;
+      }
       // 收费档位。没设置时接口给的是空数组 []，设置了才是对象，交给 pickPlan 收口
       const detailPlan = (pickPlan(data.plan ?? res.data?.plan) ?? {}) as any;
 
@@ -2765,6 +2830,7 @@ async function fetchDetail(newId: number) {
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
+          if (isStale()) return;
           if (bookRes.code === 0) {
             const bookData = bookRes.data?.book_info || bookRes.data;
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
@@ -2823,6 +2889,7 @@ async function fetchDetail(newId: number) {
         duration: data.duration || 0
       } as DetailData;
 
+      justFetchedPostId = String(detail.value.id || '');
       setSeoMeta(
         detail.value.title,
         detail.value.description,
@@ -2845,6 +2912,7 @@ async function fetchDetail(newId: number) {
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
         await loadChapters();
+        if (isStale()) return;
 
         // Auto enter collection mode when book has chapters
         isCollectionMode.value = true;
@@ -2858,6 +2926,9 @@ async function fetchDetail(newId: number) {
         if (localStorage.getItem('token')) {
           await recordViewHistory();
         }
+      } else {
+        // 没合集 / 独立作品：从合集章节切过来时要退出合集模式，不然图片轮播、上下箭头的判断会错
+        isCollectionMode.value = false;
       }
 
       totalComments.value = res.data.comment_total || '';
@@ -2929,9 +3000,14 @@ async function fetchDetail(newId: number) {
         session_id: '',
         duration: 0
       };
+      // 失败直接 return 了，不会走 loadComments，评论区的 loading 在这里关掉
+      isLoadingComments.value = false;
       return;
     }
   } catch (error) {
+    if (isStale()) return;
+    // 预渲染时拿不到数据就给爬虫 404，不输出 200 空壳
+    if ((window as any).__SEO_PRERENDER__ === true && goNotFoundIfMissing(router, route, null)) return;
     detail.value = {
       id: newId,
       author: {
@@ -2977,8 +3053,10 @@ async function fetchDetail(newId: number) {
     comments.value = [];
     totalComments.value = '';
   } finally {
-    isLoading.value = false;
+    // 过期请求不碰 loading（那是新请求的）
+    if (!isStale()) isLoading.value = false;
   }
+  if (isStale()) return;
 
   // Reset states
   currentImageIndex.value = 0;
@@ -2987,7 +3065,8 @@ async function fetchDetail(newId: number) {
   isPlaying.value = false;
 
   if (detail.value.type == '3') {
-    setTimeout(() => {
+    if (videoLoadingTimer) clearTimeout(videoLoadingTimer);
+    videoLoadingTimer = setTimeout(() => {
       if (isVideoLoading.value) {
         isVideoLoading.value = false;
       }
@@ -2996,6 +3075,7 @@ async function fetchDetail(newId: number) {
 
   // Load comments after fetching detail
   await loadComments();
+  if (isStale()) return;
 
   // Load comment detail if cid parameter exists
   if (cid) {
@@ -3209,6 +3289,12 @@ async function locateActiveCollection() {
   for (let i = 0; i < MAX_LOCATE_PAGES; i++) {
     const index = findActiveCollectionIndex();
     if (index !== -1) {
+      // 当前集是已加载的最后一条、后面还有：多拉一页，「下一集」才拿得到
+      if (index === collections.value.length - 1 && hasMoreCollections.value && !loadingMoreCollections.value) {
+        await loadCollections(true);
+      }
+      // 列表变长了，上下集按完整列表重算
+      setChapterNavigation();
       await scrollCollectionToActive(index);
       return;
     }
@@ -3311,6 +3397,7 @@ async function searchByMention(mention: string) {
 (window as any).searchByTag = searchByTag;
 (window as any).searchByMention = searchByMention;
 
+let loadedCommentCount = 0;
 async function loadComments(page: number = 1, append: boolean = false) {
   // Set loading state
   if (append) {
@@ -3377,9 +3464,11 @@ async function loadComments(page: number = 1, append: boolean = false) {
         comments.value = filteredComments;
       }
 
+      // 按接口实际返回的条数算（带 cid 时会额外往最前面插一条，不能用 comments.length 比）
+      loadedCommentCount = (append ? loadedCommentCount : 0) + filteredComments.length;
       const totalComments = parseInt(res.data?.allnums) || 0;
       currentPage.value = page;
-      hasMoreComments.value = comments.value.length < totalComments;
+      hasMoreComments.value = loadedCommentCount < totalComments;
     } else {
       if (!append) {
         comments.value = [];
@@ -3401,7 +3490,9 @@ async function loadComments(page: number = 1, append: boolean = false) {
 }
 
 // Delete comment - show confirm modal only if there are replies
-function deleteComment(commentId: string, isReply: boolean = false) {
+function deleteComment(rawCommentId: string | number, isReply: boolean = false) {
+  // 模板传的是数字 id，统一成字符串再比（以前 String(c.id) === 数字 永远不相等，点删除没反应）
+  const commentId = String(rawCommentId);
   // Close dropdown menu
   activeCommentMoreId.value = null;
 
@@ -3410,14 +3501,14 @@ function deleteComment(commentId: string, isReply: boolean = false) {
 
   // Check in main comments
   for (const c of comments.value) {
-    if (String(c.id) === commentId) {
+    if (String(c.id) === String(commentId)) {
       comment = c;
       break;
     }
     // Check in replies
     if (c.replies) {
       for (const r of c.replies) {
-        if (String(r.id) === commentId) {
+        if (String(r.id) === String(commentId)) {
           comment = r;
           isReply = true;
           break;
@@ -4017,7 +4108,7 @@ function onVideoEnded() {
   }
 
   // 视频（type 5）：播完循环播放，不停在封面上
-  if (detail.value.type === '5' && videoRef.value) {
+  if (detail.value.type == '5' && videoRef.value) {
     isVideoEnded.value = false;
     videoRef.value.play().catch(() => {
       isPlaying.value = false;
@@ -4028,7 +4119,7 @@ function onVideoEnded() {
   // 漫剧（type 3）合集模式：一集播完自动接下一集；到最后一集就单集循环。
   // 换集必须走 playCollectionItem —— 合集列表接口不带视频地址，光改 currentCollectionIndex 视频不会换，
   // 得跳到下一集的 post 重新拉详情，新视频源到位后 watch(currentVideoSrc) 会自动播放。
-  if (isCollectionMode.value && detail.value.type === '3' && collections.value.length > 0) {
+  if (isCollectionMode.value && detail.value.type == '3' && collections.value.length > 0) {
     const nextEpisode = collections.value[currentCollectionIndex.value + 1];
     if (nextEpisode) {
       playCollectionItem(nextEpisode);
@@ -4223,8 +4314,9 @@ function confirmSensitiveContent() {
   } else if (pendingChapter.value) {
     const chapter = pendingChapter.value;
     pendingChapter.value = null;
-    doNavigateToChapter(chapter);
-    fetchDetail(id.value);
+    // 跳到别的集：路由变化会触发 watcher 拉新的一集，这里不再用旧 id 再拉一次（以前两个请求并发互相覆盖）
+    if (chapter && String(chapter.post_id) != String(route.params.id)) doNavigateToChapter(chapter);
+    else fetchDetail(id.value);
   } else {
     fetchDetail(id.value);
   }
@@ -4292,8 +4384,10 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
   pendingChapter.value = null;
   if (action) {
     action();
-  } else if (chapter) {
+  } else if (chapter && chapter.post_id && String(chapter.post_id) != String(route.params.id)) {
+    // 跳别的集交给路由 watcher 拉，不再用旧 id 再拉一次
     doNavigateToChapter(chapter);
+    return;
   }
   fetchDetail(id.value);
 }
@@ -4303,16 +4397,19 @@ function prevImage() {
     const nextIndex = currentImageIndex.value - 1;
     if (galleryContentRef.value) {
       requestAnimationFrame(() => {
-        galleryContentRef.value!.style.transition = "none";
-        galleryContentRef.value!.style.transform = `translateX(-${nextIndex * 100}%)`;
-        galleryContentRef.value!.style.willChange = "transform";
+        // 先停在当前位置，下一帧再带过渡移到目标（以前先无过渡跳到目标，过渡就没了）
+        const el = galleryContentRef.value;
+        if (!el) { currentImageIndex.value = nextIndex; return; }
+        el.style.willChange = "transform";
 
-        void galleryContentRef.value!.offsetHeight;
+        void el.offsetHeight;
 
         requestAnimationFrame(() => {
-          galleryContentRef.value!.style.transition =
-            "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
-          galleryContentRef.value!.style.transform = `translateX(-${nextIndex * 100}%)`;
+          const el2 = galleryContentRef.value;
+          if (el2) {
+            el2.style.transition = "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+            el2.style.transform = `translateX(-${nextIndex * 100}%)`;
+          }
 
           currentImageIndex.value = nextIndex;
 
@@ -4336,16 +4433,19 @@ function nextImage() {
     if (galleryContentRef.value) {
 
       requestAnimationFrame(() => {
-        galleryContentRef.value!.style.transition = "none";
-        galleryContentRef.value!.style.transform = `translateX(-${nextIndex * 100}%)`;
-        galleryContentRef.value!.style.willChange = "transform";
+        // 先停在当前位置，下一帧再带过渡移到目标（以前先无过渡跳到目标，过渡就没了）
+        const el = galleryContentRef.value;
+        if (!el) { currentImageIndex.value = nextIndex; return; }
+        el.style.willChange = "transform";
 
-        void galleryContentRef.value!.offsetHeight;
+        void el.offsetHeight;
 
         requestAnimationFrame(() => {
-          galleryContentRef.value!.style.transition =
-            "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
-          galleryContentRef.value!.style.transform = `translateX(-${nextIndex * 100}%)`;
+          const el2 = galleryContentRef.value;
+          if (el2) {
+            el2.style.transition = "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+            el2.style.transform = `translateX(-${nextIndex * 100}%)`;
+          }
 
           currentImageIndex.value = nextIndex;
 
@@ -4367,16 +4467,19 @@ function goToImage(index: number) {
   if (index < 0 || index >= carouselSlideCount.value) return;
   if (galleryContentRef.value) {
     requestAnimationFrame(() => {
-      galleryContentRef.value!.style.transition = "none";
-      galleryContentRef.value!.style.transform = `translateX(-${index * 100}%)`;
-      galleryContentRef.value!.style.willChange = "transform";
+      // 先停在当前位置，下一帧再带过渡移到目标
+      const el = galleryContentRef.value;
+      if (!el) { currentImageIndex.value = index; return; }
+      el.style.willChange = "transform";
 
-      void galleryContentRef.value!.offsetHeight;
+      void el.offsetHeight;
 
       requestAnimationFrame(() => {
-        galleryContentRef.value!.style.transition =
-          "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
-        galleryContentRef.value!.style.transform = `translateX(-${index * 100}%)`;
+        const el2 = galleryContentRef.value;
+        if (el2) {
+          el2.style.transition = "transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+          el2.style.transform = `translateX(-${index * 100}%)`;
+        }
 
         currentImageIndex.value = index;
 
@@ -4402,6 +4505,7 @@ function openLargeViewer(type: number) {
     largeImage.value = detail.value.images
   }
 
+  largeViewerIndex.value = type == 2 ? Math.max(0, largeImage.value.length - 1) : currentImageIndex.value;
   showLargeViewer.value = true;
 }
 
@@ -4642,38 +4746,50 @@ function toggleCommentVideoPlay(event: Event) {
 }
 
 // Generate video poster from first frame
+// 评论视频的封面：每个地址只截一次帧并缓存（以前写在模板里，每次重渲染都新建一个 <video> 去下载视频，且永不释放）
+const videoPosterCache = new Map<string, string>();
+const videoPosterPending = new Set<string>();
 function getVideoPoster(videoUrl: string): string {
-  // Create a canvas element to capture the first frame
+  if (!videoUrl) return '';
+  const cached = videoPosterCache.get(videoUrl);
+  if (cached != undefined) return cached;
+  if (videoPosterPending.has(videoUrl)) return '';
+  videoPosterPending.add(videoUrl);
+
   const canvas = document.createElement('canvas');
   const video = document.createElement('video');
-
-  // Set video source
-  video.src = videoUrl;
   video.crossOrigin = 'anonymous';
-
-  // Capture the first frame when video is loaded
+  video.muted = true;
+  const release = () => {
+    videoPosterPending.delete(videoUrl);
+    video.removeAttribute('src');
+    video.load();
+  };
   video.addEventListener('loadeddata', () => {
-    // Set canvas size to match video dimensions
-    canvas.width = video.videoWidth || 320;
-    canvas.height = video.videoHeight || 240;
-
-    // Draw the first frame on canvas
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    let posterUrl = '';
+    try {
+      canvas.width = video.videoWidth || 320;
+      canvas.height = video.videoHeight || 240;
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      posterUrl = canvas.toDataURL('image/jpeg');
+    } catch {
+      // 跨域等原因截不了帧：不设封面
     }
-
-    // Convert canvas to base64 image
-    const posterUrl = canvas.toDataURL('image/jpeg');
-
-    // Update the video's poster attribute
-    const videoElements = document.querySelectorAll(`video[src="${videoUrl}"]`);
-    videoElements.forEach((el: any) => {
-      el.poster = posterUrl;
-    });
-  });
-
-  // Return empty string initially, poster will be set after video loads
+    videoPosterCache.set(videoUrl, posterUrl);
+    // 直接改已经渲染出来的 <video>（不拼选择器：地址里有引号会让 querySelectorAll 抛错）
+    if (posterUrl) {
+      document.querySelectorAll('video').forEach((el: any) => {
+        if (el.getAttribute('src') == videoUrl) el.poster = posterUrl;
+      });
+    }
+    release();
+  }, { once: true });
+  video.addEventListener('error', () => {
+    videoPosterCache.set(videoUrl, '');
+    release();
+  }, { once: true });
+  video.src = videoUrl;
   return '';
 }
 
@@ -5274,11 +5390,13 @@ function removeFile(index: number) {
   uploadedFiles.value.splice(index, 1);
 }
 
-function previewFileItem(file: any, index: number) {
-  if (file.type === 'image') {
-    const uploadedImages = uploadedFiles.value.filter(f => f.type === 'image').map(f => ({ image_url: f.url }));
-    largeImage.value = uploadedImages;
-    currentImageIndex.value = index;
+function previewFileItem(file: any, _index: number) {
+  if (file.type == 'image') {
+    const imageFiles = uploadedFiles.value.filter(f => f.type == 'image');
+    largeImage.value = imageFiles.map(f => ({ image_url: f.url }));
+    // index 是图片 / 视频混排的下标，换成在图片里的位置；
+    // 以前写进左侧作品轮播的 currentImageIndex，轮播圆点会跳、底部输入框还会被关掉
+    largeViewerIndex.value = Math.max(0, imageFiles.indexOf(file));
     showLargeViewer.value = true;
   } else if (file.type === 'video') {
     // 暂停左侧主视频
@@ -5312,6 +5430,7 @@ function navigateToUserHome() {
 // Comment media functions
 function previewCommentImage(imageUrl: string) {
   largeImage.value = [{ image_url: imageUrl }];
+  largeViewerIndex.value = 0;
   showLargeViewer.value = true;
 }
 
@@ -5356,7 +5475,8 @@ function handleScroll() {
     isScrolled.value = scrollContentRef.value.scrollTop > 10;
 
     // Check if scrolled to near bottom (within 10px) for loading more comments
-    if (!loadingMore.value && hasMoreComments.value) {
+    // 切作品后第一页还在加载时不触发（不然会先追加旧页码的下一页）
+    if (!loadingMore.value && !isLoadingComments.value && hasMoreComments.value) {
       const scrollTop = scrollContentRef.value.scrollTop;
       const scrollHeight = scrollContentRef.value.scrollHeight;
       const clientHeight = scrollContentRef.value.clientHeight;
@@ -5555,7 +5675,8 @@ async function submitComment() {
           if (spanText.startsWith('@')) {
             const username = spanText.substring(1);
             // 构建正则表达式，匹配@username，前面没有空格的情况
-            const regex = new RegExp(`(^|[^\s])@${username}`, 'g');
+            const escapedName = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(^|[^\\s])@${escapedName}`, 'g');
             processedContent = processedContent.replace(regex, (match, prefix) => {
               return `${prefix} @${username}`;
             });
@@ -5723,7 +5844,7 @@ async function toggleFav() {
     return;
   }
 
-  const isStandalone = detail.value.type === '4' || detail.value.type === '5';
+  const isStandalone = detail.value.type == '4' || detail.value.type == '5';
 
   if (!isStandalone && (!detail.value.book_id || Number(detail.value.book_id) == 0)) return;
 
@@ -5951,7 +6072,7 @@ function handleFullscreenChange() {
     if (!isCollectionMode.value) {
       // 非合集模式：退出全屏后恢复右侧面板（覆盖 type 1/3/4/5）
       isRightPanelHidden.value = false;
-    } else if (detail.value.type === '1') {
+    } else if (detail.value.type == '1') {
       // 合集模式 + 图片类型：恢复并切到合集 tab
       isRightPanelHidden.value = false;
       activeTab.value = 'collection';
@@ -6087,9 +6208,11 @@ function stopDragTracking() {
 }
 
 /** 当前作品是不是自己的（本地 uid == 作者 id） */
-const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && String(detail.value.author.id) === String(uid));
+const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && detail.value.author.id == uid);
 
 function handleKeyDown(e: KeyboardEvent) {
+  // 小说由 NovelDetail 自己处理（它知道作者是谁），这里不重复拦，不然作者看自己的小说也被拦
+  if (isNovelType.value) return;
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
     // 作者看自己的作品：不拦 F12 / 右键
     if (isOwnPost.value) return;
@@ -6110,11 +6233,17 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function handleContextMenu(e: MouseEvent) {
+  // 小说由 NovelDetail 自己处理
+  if (isNovelType.value) return;
   // 作者看自己的作品：不拦右键
   if (isOwnPost.value) return;
+  // 输入框 / 可编辑区域（评论框、底部输入框）放行右键，不然没法右键粘贴
+  const target = e.target as HTMLElement | null;
+  if (target?.closest?.('input, textarea, [contenteditable="true"], [contenteditable=""]')) return;
   e.preventDefault();
 }
 
+let rightFooterObserver: ResizeObserver | null = null;
 onMounted(async () => {
   // 作品数据到之前只显示站点名，不先顶着 index.html 里的首页标题
   document.title = siteName();
@@ -6146,12 +6275,12 @@ onMounted(async () => {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
   });
 
-  const resizeObserver = new ResizeObserver(() => {
+  rightFooterObserver = new ResizeObserver(() => {
     updateScrollContentPadding();
   });
 
   if (rightFooterRef.value) {
-    resizeObserver.observe(rightFooterRef.value);
+    rightFooterObserver.observe(rightFooterRef.value);
   }
 });
 
@@ -6175,12 +6304,21 @@ onBeforeUnmount(() => {
     collectionObserver.disconnect();
     collectionObserver = null;
   }
+  rightFooterObserver?.disconnect();
+  rightFooterObserver = null;
+  if (videoLoadingTimer) clearTimeout(videoLoadingTimer);
+  if (volumeSliderTimer.value) clearTimeout(volumeSliderTimer.value);
+  // 评论里 #标签 / @提及 的点击回调挂在 window 上，离开页面摘掉，别让 window 一直引用这个组件
+  delete (window as any).searchByTag;
+  delete (window as any).searchByMention;
 });
 
 watch(
   () => route.params.id,
   async (newId) => {
-    if (newId) {
+    // 只处理详情页自己的 id 变化：去合集页 / 博主页时参数也叫 id，别拿它再拉一次作品详情
+    // （以前会把合集页 / 博主页 replace 成 404，或把别的作品的 SEO 写到新页面上）
+    if (newId && route.name === 'Detail') {
       id.value = Number(newId);
       contentType.value = route.query.tab as string || route.query.contentType as string || "";
       await getCountry();

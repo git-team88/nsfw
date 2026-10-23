@@ -1052,7 +1052,7 @@ import { setMetaKeywords } from '@/utils/seoMeta';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
-import { formatTimestamp, processImageUrl } from '@/util/utils';
+import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import Header from '@/components/Header.vue';
 import RatioIcon from '@/components/RatioIcon.vue';
 import arrowIcon from '@/assets/images/publish/arrow_icon.png';
@@ -1158,7 +1158,7 @@ const showModeSwitchFileWarning = ref(false);
 const isPositioningTarget = ref(false);
 
 
-const typeOptions = ref([
+const typeOptions = computed(() => [
   { value: 'all', label: t('recordList.photo') + '&' + t('recordList.video') },
   { value: 'simple_video', label: t('recordList.video') },
   { value: 'simple_image', label: t('recordList.photo') },
@@ -2096,7 +2096,21 @@ const resetPhotoSettings = () => {
   currentPhotoMode.value = 'normal';
 };
 
+// 视频输入框的提示词存档（DOM 重建时靠它回填）一起清掉，
+// 不然切模式 / 切回视频 tab 时，刚提交的提示词连同指向已清空素材的 @标签 又冒出来
+const clearVideoPromptState = () => {
+  videoPromptHtml.value = '';
+  videoPromptText.value = '';
+  videoDrafts.value = {
+    multimodal: emptyVideoModeDraft(),
+    startEndFrames: emptyVideoModeDraft(),
+    videoModify: emptyVideoModeDraft(),
+    videoExtend: emptyVideoModeDraft(),
+  };
+};
+
 const resetVideoSettings = () => {
+  clearVideoPromptState();
   selectedVideoMultimodal.value = 'multimodal';
   videoInput.value = '';
   uploadedVideoRefs.value = [];
@@ -2252,7 +2266,7 @@ const handlePhotoFileChange = async (event: Event) => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error)?.message || t('fail'));
     } finally {
       isUploading.value = false;
       input.value = '';
@@ -2499,10 +2513,12 @@ const captureVideoFirstFrame = (file: File): Promise<string> => {
     video.playsInline = true;
 
     let hasResolved = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
     const captureFrame = () => {
       if (hasResolved) return;
       hasResolved = true;
+      if (timeout) clearTimeout(timeout);
 
       try {
         const canvas = document.createElement('canvas');
@@ -2535,15 +2551,22 @@ const captureVideoFirstFrame = (file: File): Promise<string> => {
 
     video.onerror = () => {
       if (!hasResolved) {
+        hasResolved = true;
+        if (timeout) clearTimeout(timeout);
         URL.revokeObjectURL(video.src);
         reject(new Error(t('home.error.videoLoadFailed')));
       }
     };
 
-    // 添加超时处理，防止无限等待
-    const timeout = setTimeout(() => {
-      if (!hasResolved && video.readyState >= 2) {
+    // 超时处理，防止无限等待：3 秒还没截到帧，能截就截，截不了就放弃（调用方会不带封面继续上传）
+    timeout = setTimeout(() => {
+      if (hasResolved) return;
+      if (video.readyState >= 2) {
         captureFrame();
+      } else {
+        hasResolved = true;
+        URL.revokeObjectURL(video.src);
+        reject(new Error(t('home.error.videoLoadFailed')));
       }
     }, 3000);
 
@@ -2886,7 +2909,7 @@ const handleVideoRefUpload = async (event: Event) => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error)?.message || t('fail'));
     } finally {
       isUploading.value = false;
       input.value = '';
@@ -4217,9 +4240,9 @@ async function uploadImage(file: File, mode: string): Promise<string> {
   const res = await fetch(baseUrl + "user/uploadImage", params);
   const data = await res.json();
   if (data.code == 0 || data.code == 200) {
-    return data.data.url || '';
+    return data.data?.url || '';
   } else {
-    throw new Error(data.msg);
+    throw new Error(apiErrorMessage(data) || t('fail'));
   }
 }
 
@@ -4233,7 +4256,7 @@ async function uploadVideo(file: File): Promise<string> {
   const getUrlRes = response;
 
   if (getUrlRes.code !== 0 && getUrlRes.code !== 200) {
-    throw new Error(getUrlRes.msg);
+    throw new Error(apiErrorMessage(getUrlRes) || t('fail'));
   }
 
   const presignedUrl = getUrlRes.data.url;
@@ -4269,7 +4292,7 @@ async function uploadAudio(file: File): Promise<string> {
   const getUrlRes = response;
 
   if (getUrlRes.code !== 0 && getUrlRes.code !== 200) {
-    throw new Error(getUrlRes.msg);
+    throw new Error(apiErrorMessage(getUrlRes) || t('fail'));
   }
 
   const presignedUrl = getUrlRes.data.url;
@@ -4366,7 +4389,7 @@ const handleStartFrameChange = async (event: Event) => {
       }
     } catch (error) {
       console.error('Failed to upload start frame:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error)?.message || t('fail'));
     } finally {
       isUploading.value = false;
     }
@@ -4405,7 +4428,7 @@ const handleEndFrameChange = async (event: Event) => {
       }
     } catch (error) {
       console.error('Failed to upload end frame:', error);
-      toast((error as Error).message || '上传失败');
+      toast((error as Error)?.message || t('fail'));
     } finally {
       isUploading.value = false;
     }
@@ -4773,15 +4796,15 @@ const estimatedVideoPower = computed(() => {
       : balanceInfo.value.single_video_cost_480p_per_second_fast) || 0;
   } else if (pricingQuality.value == '720P') {
     if (effectiveVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw);
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second_nsfw) || 0;
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second);
+      costPerSecond = Number(balanceInfo.value.single_video_cost_720p_per_second) || 0;
     }
   } else if (pricingQuality.value == '1080P') {
     if (effectiveVideoMode.value === 'unlimited') {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw);
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second_nsfw) || 0;
     } else {
-      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second);
+      costPerSecond = Number(balanceInfo.value.single_video_cost_1080p_per_second) || 0;
     }
   }
 
@@ -4925,11 +4948,18 @@ const pollTaskStatus = async (taskId: string) => {
         if (!isTaskProcessing(taskData.status)) {
           stopPolling(taskId);
         }
+      } else {
+        // 记录已经不在当前列表（被删了 / 切筛选过滤掉了）：别再轮询
+        stopPolling(taskId);
       }
     } else {
       // 只有能识别出的明确业务失败（如余额不足）才立刻判失败；
       // 其余非 200 一律当成「这次请求失败」，任务状态不动。
       const recordIndex = records.value.findIndex(r => r.session_id == taskId);
+      if (recordIndex === -1) {
+        stopPolling(taskId);
+        return;
+      }
       const failed = resolveFailReason(
         response.message || response.msg || '',
         records.value[recordIndex]?.story_type === 'simple_video',
@@ -4942,6 +4972,9 @@ const pollTaskStatus = async (taskId: string) => {
           fail_retryable: failed.retryable,
           fail_retry_prefix: failed.retryPrefix || ''
         };
+        // 定位 / 分页时 displayRecords 是另一份数组，也同步，不然列表上「余额不足 → 失败」不刷新
+        const di = displayRecords.value.findIndex((r: any) => r.session_id == taskId);
+        if (di !== -1) displayRecords.value[di] = { ...records.value[recordIndex] };
         if (failed.insufficient) showInsufficientBalanceModal.value = true;
         stopPolling(taskId);
       } else {
@@ -4963,17 +4996,21 @@ const pollIntervalOf = (taskId: string): number => {
 
 // 用自调度的 setTimeout 而不是 setInterval：等上一次请求回来再排下一次，
 // 后端慢的时候不会把请求叠着发；连续失败时按次数退避，别在服务端不稳时反复打。
+// 每个任务当前轮询链的代号
+const pollingGen = new Map<string, number>();
 const startPolling = (taskId: string) => {
   if (pollingTasks.value.has(taskId)) return;
 
   pollingTasks.value.add(taskId);
   pollFailCounts.value.set(taskId, 0);
+  const gen = (pollingGen.get(taskId) || 0) + 1;
+  pollingGen.set(taskId, gen);
 
   const tick = async () => {
-    if (!pollingTasks.value.has(taskId)) return;
+    if (!pollingTasks.value.has(taskId) || pollingGen.get(taskId) !== gen) return;
     await pollTaskStatus(taskId);
-    // pollTaskStatus 里可能已经 stopPolling 了
-    if (!pollingTasks.value.has(taskId)) return;
+    // pollTaskStatus 里可能已经 stopPolling 了；或者期间被停掉又重新挂了一条新链
+    if (!pollingTasks.value.has(taskId) || pollingGen.get(taskId) !== gen) return;
     const fails = pollFailCounts.value.get(taskId) || 0;
     const delay = fails > 0
       ? Math.min(POLL_INTERVAL_MS * (fails + 1), POLL_MAX_INTERVAL_MS)
@@ -5430,7 +5467,7 @@ const doGeneratePhoto = async () => {
       if (errMsg.toLowerCase().includes('credit is not enough') || errMsg.toLowerCase().includes('recharge')) {
         showInsufficientBalanceModal.value = true;
       } else {
-        toast(errMsg);
+        toast(errMsg || t('fail'));
       }
     }
   } catch (error) {
@@ -5703,7 +5740,9 @@ const doGenerateVideo = async () => {
       uploadedVideoCover.value = '';
       uploadedVideoDuration.value = 0;
       uploadedVideoRefs.value = [];
+      clearVideoPromptState();
       selectedVideoMultimodal.value = 'multimodal';
+      // 本项目强制 NSFW 由 effectiveVideoMode（contentSwitch.mode == 2）兜住，这里回 normal 即可
       currentVideoMode.value = 'normal';
       // 分辨率 / 比例 / 时长跟着当前档位走，别写死 720P / 30s —— 极速版没有这两个值
       resetVideoParams();
@@ -5832,6 +5871,9 @@ const handleScroll = () => {
   }
 };
 
+// 重新生成 / 编辑图片会直接改 bottomActiveTab，不走 switchBottomTab：TDK 也要跟着换
+watch(bottomActiveTab, (tab) => setSeoMeta(tab));
+
 function setSeoMeta(tab: string) {
   const seoKeyMap: Record<string, string> = {
     'photo': 'seo.home.photo',
@@ -5861,6 +5903,8 @@ const selectType = (type: string) => {
   showTypeDropdown.value = false;
   currentPage.value = 1;
 
+  // 切筛选后列表重建：先停掉旧列表的轮询，loadRecords 会给新列表里处理中的记录重新挂上
+  stopAllPolling();
   loadRecords();
 };
 
@@ -5956,7 +6000,8 @@ onMounted(async () => {
   }
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/');
+    // 未登录：和本页其他操作、Header 入口一致，去登录页
+    router.push('/login');
     return false;
   }
 
@@ -6101,8 +6146,11 @@ const playVideo = (record: any) => {
 };
 
 const playVideoItem = (item: any) => {
-  if (item.type === 'video' && (item.url || item.videoUrl || item.image)) {
+  if (item.type == 'video' && (item.url || item.videoUrl || item.image)) {
     playingVideoUrl.value = item.url || item.videoUrl || item.image;
+    // 不沿用上一次播放的竖屏布局 / 禁止下载
+    playingVideoRatio.value = item.ratio || '16:9';
+    playingVideoIsUnlimited.value = false;
     showVideoModal.value = true;
   } else {
     console.log('[playVideoItem] not a video or no url:', item.type, item.url, item.image);
@@ -6154,8 +6202,10 @@ const shareVideo = (record: any) => {
 };
 
 const playUploadedVideo = (ref: any) => {
-  if (ref.type === 'video' && (ref.url || ref.videoUrl || ref.image)) {
+  if (ref.type == 'video' && (ref.url || ref.videoUrl || ref.image)) {
     playingVideoUrl.value = ref.url || ref.videoUrl || ref.image;
+    playingVideoRatio.value = ref.ratio || '16:9';
+    playingVideoIsUnlimited.value = false;
     showVideoModal.value = true;
   }
 };
@@ -6785,6 +6835,8 @@ const handleConfirmDelete = async () => {
   try {
     const response = await api.deleteProject({ session_id: recordToDelete.value.session_id }) as any;
     if (response.code == 200) {
+      // 删的可能是处理中的记录，它的轮询一起停掉
+      stopPolling(recordToDelete.value.session_id);
       const index = records.value.findIndex(r => r.session_id == recordToDelete.value.session_id);
       if (index !== -1) {
         records.value.splice(index, 1);
@@ -6812,11 +6864,6 @@ const editImage = (record: any, index: number) => {
   isPhotoInputCollapsed.value = false;
   lastCollapseState = null;
 
-  if (photoEditableInputRef.value) {
-    photoEditableInputRef.value.innerHTML = '';
-    const textNode = document.createTextNode(record.topic || record.description || '');
-    photoEditableInputRef.value.appendChild(textNode);
-  }
 
   const images = record.images || [];
   if (images[index]) {
@@ -6848,12 +6895,17 @@ const editImage = (record: any, index: number) => {
 
   photoInputKey.value++;
 
-  nextTick(() => {
-    const recordElement = document.querySelector(`[data-session-id="${record.session_id}"]`);
-    if (recordElement) {
-      recordElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // photoInputKey++ 会重建输入框：等新节点挂上再写提示词（以前先写后重建，写进去的立刻丢了）
+  const editText = record.topic || record.description || '';
+  setTimeout(() => {
+    if (photoEditableInputRef.value) {
+      photoEditableInputRef.value.innerHTML = '';
+      photoEditableInputRef.value.appendChild(document.createTextNode(editText));
     }
-  });
+  }, 100);
+
+  // 滚到这条记录（以前用的 data-session-id 选择器模板里没有，永远找不到）
+  nextTick(() => scrollToRecord(record.session_id));
 };
 
 const downloadSingleImage = async (imageUrl: string) => {
@@ -6993,9 +7045,7 @@ const getPositionInText = (element: HTMLElement, range: Range): number => {
 };
 
 const checkAgeForUnlimitedMode = (modeType: string): boolean => {
-  if (!userInfo.value) {
-    return false;
-  }
+  // 用户信息还没拿到（接口慢 / 失败）时不能直接放行：isTeenager 对空 userInfo 也是 true，下面会弹年龄问询
 
   if (isTeenager.value) {
     pendingModeType.value = modeType;

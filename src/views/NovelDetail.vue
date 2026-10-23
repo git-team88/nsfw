@@ -75,7 +75,7 @@
         <div class="action-btn toc-btn" @click="toggleToc">
           <img src="@/assets/images/detail/collection.png" alt="" />
         </div>
-        <div class="action-btn fav-btn" :class="{ active: isFav }" @click="toggleFav">
+        <div class="action-btn fav-btn" v-if="Number(detail.book_id) > 0" :class="{ active: isFav }" @click="toggleFav">
           <img :src="isFav ? collectActiveIcon : collectIcon" alt="Collect" />
           <span class="action-count">{{ favNum }}</span>
         </div>
@@ -213,7 +213,7 @@
         <div class="action-btn toc-btn" @click="toggleToc" v-if="isCollectionMode">
           <img src="@/assets/images/detail/collection.png" alt="" />
         </div>
-        <div class="action-btn fav-btn" :class="{ active: isFav }" @click="toggleFav">
+        <div class="action-btn fav-btn" v-if="Number(detail.book_id) > 0" :class="{ active: isFav }" @click="toggleFav">
           <img :src="isFav ? collectActiveIcon : collectIcon" alt="Collect" />
           <span class="action-count">{{ favNum }}</span>
         </div>
@@ -303,7 +303,7 @@ import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmMo
 import { toast } from '@/util/toast';
 import { formatTimestamp, apiErrorMessage, apiLang } from '@/util/utils';
 import { baseUrl } from '@/util/config';
-import { safeJoin, clamp, setMetaKeywords, TITLE_SEP } from '@/utils/seoMeta';
+import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta, goNotFoundIfMissing } from '@/utils/seoMeta';
 import { siteName } from '@/utils/pageTitle';
 
 // Import images
@@ -528,7 +528,7 @@ const isSensitiveContent = computed(() => {
   if (detail.value.book_id && Number(detail.value.book_id) > 0) {
     return detail.value.book_is_nsfw == 1;
   }
-  return detail.value.is_nsfw === '1';
+  return detail.value.is_nsfw == '1';
 });
 const isAllowSensitiveContent = ref(true);
 const uid = localStorage.getItem('uid') || '';
@@ -577,9 +577,16 @@ const reportOptions = computed(() => {
 });
 
 const contentSwitch = useContentSwitchStore();
+// fetchDetail 的请求序号：切章 / 快速连点上下章时，旧请求回来直接丢
+let fetchDetailSeq = 0;
+// 合集详情（只用来拿 NSFW 标记、连载状态）按 book_id 缓存，同一合集切章不再重复请求
+const bookDetailCache = new Map<string, any>();
+
 async function fetchDetail() {
   const id = route.params.id as string;
   if (!id) return;
+  const seq = ++fetchDetailSeq;
+  const isStale = () => seq !== fetchDetailSeq;
 
   // Get query parameters
   const type = route.query.type as string || "";
@@ -597,6 +604,7 @@ async function fetchDetail() {
 
   try {
     await contentSwitch.ensureLoaded();
+    if (isStale()) return;
     let requestData = null;
 
     if (type == "1") {
@@ -698,17 +706,30 @@ async function fetchDetail() {
     });
 
     const res = await response.json();
+    if (isStale()) return;
 
     if (res.code == 0 || res.code == 200) {
-      const data = res.data.post;
+      const data = res.data?.post;
+      // code 0 但没有章节数据：按不存在处理（以前 data.book_id 直接报错，页面是个空壳）
+      if (!data) {
+        if (goNotFoundIfMissing(router, route, { code: 0, data: null })) return;
+        toast(t('fail'));
+        return;
+      }
 
       let bookIsNsfw = 0;
       seoBookStatus = '';
       let bookSessionId = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
-          const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
-          if (bookRes.code === 0) {
+          const bookKey = String(data.book_id);
+          let bookRes = bookDetailCache.get(bookKey);
+          if (!bookRes) {
+            bookRes = await api.getCollectionDetail(bookKey) as any;
+            if (isStale()) return;
+            if (bookRes?.code == 0 || bookRes?.code == 200) bookDetailCache.set(bookKey, bookRes);
+          }
+          if (bookRes.code == 0 || bookRes.code == 200) {
             const bookData = bookRes.data?.book_info || bookRes.data;
             seoBookStatus = bookData?.status ? String(bookData.status) : '';
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
@@ -725,7 +746,8 @@ async function fetchDetail() {
 
       detail.value = {
         id: data.id || id,
-        author: res.data.author,
+        // 作者字段偶尔缺：给个空壳，模板里 detail.author.id 不至于报错整页不渲染
+        author: res.data.author || { id: '', nickname: '', avatar: '' },
         isFollowed: data.is_followed == 1 || false,
         time: formatTimestamp(data.created_at) || "",
         title: data.title || "",
@@ -762,15 +784,13 @@ async function fetchDetail() {
       favNum.value = detail.value.favNum;
       isFav.value = detail.value.isFav;
 
-      // Check if user is underage
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const parsedUserInfo = JSON.parse(userInfo);
-        isUnderage.value = parsedUserInfo.is_teenager == 1;
-      }
+      // 未成年（详情接口 is_teenager == 1）：敏感内容始终锁定，不能靠本地开关放开（和 Detail.vue 一致）。
+      // 以前读的是 localStorage.userInfo，全站没有地方写它，恒为 false。
+      isUnderage.value = detail.value.is_teenager == 1;
 
       // Load chapters list
       await loadChapters();
+      if (isStale()) return;
 
       // Set chapter navigation
       setChapterNavigation();
@@ -803,13 +823,19 @@ async function fetchDetail() {
         nextId.value = '';
       }
     } else {
+      // 章节不存在 → 404 页（和 Detail.vue 一致）；其它错误照旧提示
+      if (goNotFoundIfMissing(router, route, res)) return;
       toast(apiErrorMessage(res));
     }
   } catch (error) {
+    if (isStale()) return;
     console.error('Error fetching novel detail:', error);
+    // 预渲染时拿不到数据就给爬虫 404
+    if ((window as any).__SEO_PRERENDER__ === true && goNotFoundIfMissing(router, route, null)) return;
     toast(t('fail'));
   } finally {
-    isLoading.value = false;
+    // 过期请求不碰 loading（那是新请求的）
+    if (!isStale()) isLoading.value = false;
     // Scroll to top after loading new content
     nextTick(() => {
       if (novelContentRef.value) {
@@ -829,12 +855,31 @@ async function loadChapters() {
   }
 
   try {
-    const response = await api.singleCollection(String(detail.value.book_id), 1, 50) as any;
-    if (response.code === 0) {
-      chapters.value = response.data?.data || [];
-      chapterCount.value = response.data?.allnums || response.data?.count || 0;
-      setChapterNavigation();
+    // 目录一页 50 条：当前章不在已加载的页里就继续往后翻（最多 20 页）；
+    // 当前章是已加载的最后一条且后面还有，再多拉一页，保证「下一章」拿得到
+    const PAGE = 50;
+    const bookId = String(detail.value.book_id);
+    const curIndex = Number(detail.value.chapter_index);
+    let list: any[] = [];
+    let total = 0;
+    let ok = false;
+    for (let page = 1; page <= 20; page++) {
+      const response = await api.singleCollection(bookId, page, PAGE) as any;
+      if (response.code !== 0) break;
+      ok = true;
+      const pageData = response.data?.data || [];
+      total = Number(response.data?.allnums || response.data?.count || 0);
+      list = list.concat(pageData);
+      const hasMore = pageData.length >= PAGE && list.length < total;
+      if (!hasMore || !curIndex) break;
+      const idx = list.findIndex(c => Number(c.chapter_index) === curIndex);
+      if (idx !== -1 && idx < list.length - 1) break;
     }
+    // 翻页期间切了别的合集：这份不要了
+    if (!ok || bookId !== String(detail.value.book_id)) return;
+    chapters.value = list;
+    chapterCount.value = total;
+    setChapterNavigation();
   } catch (error) {
     console.error('Error loading chapters:', error);
   }
@@ -867,7 +912,8 @@ function setChapterNavigation() {
     prevChapterId.value = chapters.value[currentIndex - 1].post_id;
   }
 
-  if (currentIndex < chapters.value.length - 1) {
+  // 找不到当前章（-1）时不给上一章 / 下一章，免得「下一章」跳到第 1 章
+  if (currentIndex !== -1 && currentIndex < chapters.value.length - 1) {
     nextChapterId.value = chapters.value[currentIndex + 1].post_id;
   }
 }
@@ -917,12 +963,17 @@ async function toggleLike() {
   if (!id) return;
 
   try {
-    const response = await api.likePost({ post_id: id }) as any;
-    if (response.code === 0) {
+    // 已点赞再点是取消：调 dislikePost（和 Detail / 首页一致；以前不管赞没赞都调 like）
+    const response = (liked.value
+      ? await api.dislikePost({ post_id: id })
+      : await api.likePost({ post_id: id })) as any;
+    if (response.code == 0 || response.code == 200) {
       liked.value = !liked.value;
       likes.value += liked.value ? 1 : -1;
       detail.value.liked = liked.value;
       detail.value.likes = likes.value;
+    } else {
+      toast(apiErrorMessage(response) || t('fail'));
     }
   } catch (error) {
     console.error('Error toggling like:', error);
@@ -1501,7 +1552,7 @@ function navigateToChapter(chapter: any) {
   trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: 'novel', user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
-    if (detail.value.author.id && detail.value.author.id === uid) {
+    if (detail.value.author.id && detail.value.author.id == uid) {
       // author bypass
     } else {
       // nsfw content - allow directly without age/sensitive checks
@@ -1584,11 +1635,11 @@ function confirmSensitiveContent() {
   showSensitiveContentConfirmModal.value = false;
   localStorage.setItem('allowSensitiveContent', '1');
   isAllowSensitiveContent.value = true;
-  if (pendingChapter.value) {
-    const chapter = pendingChapter.value;
-    pendingChapter.value = null;
+  const chapter = pendingChapter.value;
+  pendingChapter.value = null;
+  // 跳到别的章：路由变化会触发 watcher 拉新章，这里不再用旧 id 再拉一次（以前两个请求并发互相覆盖）
+  if (chapter && chapter.post_id && String(chapter.post_id) !== String(route.params.id)) {
     doNavigateToChapter(chapter);
-    fetchDetail();
   } else {
     fetchDetail();
   }
@@ -1656,10 +1707,12 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
   isAllowSensitiveContent.value = true;
   const chapter = pendingChapter.value;
   pendingChapter.value = null;
-  if (chapter) {
+  // 同上：跳别的章交给路由 watcher 拉，留在本章才手动重拉
+  if (chapter && chapter.post_id && String(chapter.post_id) !== String(route.params.id)) {
     doNavigateToChapter(chapter);
+  } else {
+    fetchDetail();
   }
-  fetchDetail();
 }
 
 // Open report modal
@@ -1782,9 +1835,10 @@ async function recordViewHistory() {
   }
 
   const bookId = detail.value.book_id;
-  const chapterIndex = currentCollectionIndex.value + 1;
+  // 用这一章自己的 chapter_index（「继续阅读」也是按它找的）；没有才退回列表下标 +1
+  const chapterIndex = Number(detail.value.chapter_index) || (currentCollectionIndex.value >= 0 ? currentCollectionIndex.value + 1 : 0);
 
-  if (!bookId) {
+  if (!bookId || !chapterIndex) {
     return false;
   }
 
@@ -2038,20 +2092,25 @@ function updatePostData(data: any) {
   }
   if (data.totalComments !== undefined) {
     totalComments.value = data.totalComments;
+    // 按钮上显示的是 detail.comment_total，一起更新
+    detail.value.comment_total = Number(data.totalComments) || 0;
   }
 }
 
 // Watch for route changes
 watch(() => route.params.id, async (newId) => {
-  if (newId) {
+  // 只处理详情页自己的 id 变化：去博主页 / 合集页时参数也叫 id，别拿它拉小说详情
+  if (newId && route.name === 'Detail') {
     await fetchDetail();
   }
 });
 
+// 挂评论列表滚动监听的定时器（卸载时清）
+let commentsListTimer: ReturnType<typeof setTimeout> | undefined;
 // Mounted
 // Disable F12 and right-click context menu
 /** 当前作品是不是自己的（本地 uid == 作者 id） */
-const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && String(detail.value.author.id) === String(uid));
+const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && detail.value.author.id == uid);
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
@@ -2064,6 +2123,9 @@ function handleKeyDown(e: KeyboardEvent) {
 function handleContextMenu(e: MouseEvent) {
   // 作者看自己的作品：不拦右键
   if (isOwnPost.value) return;
+  // 输入框 / 可编辑区域（评论框、底部输入框）放行右键，不然没法右键粘贴
+  const target = e.target as HTMLElement | null;
+  if (target?.closest?.('input, textarea, [contenteditable="true"], [contenteditable=""]')) return;
   e.preventDefault();
 }
 
@@ -2077,7 +2139,7 @@ function setSeoMeta() {
   if (!d?.id) return;
   const author = clamp(d.author?.nickname, 40);
   const freeRange = t(d.permission === 'public' ? 'seo.parts.freeEpisode' : 'seo.parts.paidEpisode');
-  const status = seoBookStatus ? t(seoBookStatus === '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
+  const status = seoBookStatus ? t(seoBookStatus == '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
   const bookName = clamp(d.book_title, 30);
   const workName = clamp(d.title, 40);
   const extras = [author, freeRange, status];
@@ -2093,14 +2155,7 @@ function setSeoMeta() {
   const pageDescription = trimmedDesc || t('seo.detail.descriptionFallback')
     .replace(/\[\[title\]\]/g, d.title || '').replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
 
-  document.title = pageTitle;
-  let meta = document.querySelector('meta[name="description" i]');
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.setAttribute('name', 'description');
-    document.head.appendChild(meta);
-  }
-  meta.setAttribute('content', pageDescription);
+  applySeoMeta({ title: pageTitle, description: pageDescription });
 }
 // 切语言后标题里的「本集免费 / 连载中」等文案要跟着换
 watch(locale, () => setSeoMeta());
@@ -2117,7 +2172,7 @@ onMounted(async () => {
   }
 
   // Add scroll event listener for comments list
-  setTimeout(() => {
+  commentsListTimer = setTimeout(() => {
     const commentsList = document.querySelector('.comments-list');
     if (commentsList) {
       commentsList.addEventListener('scroll', handleCommentsScroll, { passive: true });
@@ -2134,6 +2189,9 @@ onMounted(async () => {
 
 // Unmounted
 onUnmounted(() => {
+  if (commentsListTimer) clearTimeout(commentsListTimer);
+  // og:* / description 还原成进页面前的值
+  restoreSeoMeta();
   // Remove event listeners
   const commentsList = document.querySelector('.comments-list');
   if (commentsList) {

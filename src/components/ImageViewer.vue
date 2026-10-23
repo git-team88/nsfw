@@ -6,7 +6,7 @@
 
     <div class="viewer-content" @click.stop>
       <img
-        :src="images[currentIndex].image_url"
+        :src="images[currentIndex]?.image_url"
         alt=""
         :style="{ transform: `scale(${zoomLevel / 100})` }"
       />
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts" name="ImageViewer">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 interface ImageItem {
   image_url: string;
@@ -71,6 +71,14 @@ const emit = defineEmits<{
 // State
 const currentIndex = ref(props.initialIndex || 0);
 const zoomLevel = ref(100);
+
+// 每次打开都从调用方给的那张开始（以前只在创建时读一次：上次翻到第 3 张，再打开只有 1 张的预览就越界报错）
+watch(() => props.visible, (v) => {
+  if (!v) return;
+  const max = Math.max(0, (props.images?.length || 1) - 1);
+  currentIndex.value = Math.min(Math.max(0, props.initialIndex || 0), max);
+  zoomLevel.value = 100;
+});
 
 // Computed properties
 const hasPrevImage = computed(() => {
